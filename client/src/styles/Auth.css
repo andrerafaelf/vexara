@@ -1,0 +1,86 @@
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.auth-box {
+  background: #fff;
+  padding: 40px;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 400px;
+  color: #333;
+}
+
+.auth-box h1 {
+  text-align: center;
+  margin-bottom: 10px;
+  color: #667eea;
+  font-size: 32px;
+}
+
+.tagline {
+  text-align: center;
+  color: #666;
+  margin-bottom: 30px;
+  font-style: italic;
+}
+
+.auth-box form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.auth-box input {
+  padding: 12px;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  font-size: 16px;
+  background: #f9f9f9;
+  color: #333;
+}
+
+.auth-box input:focus {
+  border-color: #667eea;
+  background: #fff;
+}
+
+.auth-box button[type='submit'] {
+  background: #667eea;
+  color: white;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 6px;
+  margin-top: 10px;
+}
+
+.auth-box button[type='submit']:hover {
+  background: #5568d3;
+}
+
+.toggle-btn {
+  background: transparent;
+  color: #667eea;
+  padding: 10px;
+  margin-top: 20px;
+  font-size: 14px;
+}
+
+.toggle-btn:hover {
+  text-decoration: underline;
+}
+
+.error {
+  background: #e74c3c;
+  color: white;
+  padding: 10px;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 14px;
+}

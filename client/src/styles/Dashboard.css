@@ -1,0 +1,437 @@
+.dashboard {
+  padding: 20px;
+}
+
+.dashboard-header {
+  margin-bottom: 30px;
+}
+
+.dashboard-header h2 {
+  color: #e94560;
+  font-size: 32px;
+  margin-bottom: 10px;
+}
+
+.empire-stats {
+  color: #a8dadc;
+  font-size: 16px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.dashboard-card {
+  background: #16213e;
+  border-radius: 8px;
+  padding: 20px;
+  border: 2px solid #0f3460;
+  transition: all 0.3s ease;
+}
+
+.dashboard-card:hover {
+  border-color: #e94560;
+  transform: translateY(-2px);
+}
+
+.dashboard-card h3 {
+  color: #e94560;
+  margin-bottom: 15px;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Resources Card */
+.resource-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.resource-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #0f3460;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+.resource-icon {
+  font-size: 20px;
+}
+
+.resource-label {
+  flex: 1;
+  color: #a8dadc;
+  font-weight: 500;
+}
+
+.resource-value {
+  color: #f1faee;
+  font-weight: bold;
+  font-size: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.production-rate {
+  font-size: 11px;
+  color: #4caf50;
+  font-weight: normal;
+  margin-top: 2px;
+}
+
+/* Military Card */
+.military-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.total-troops {
+  background: #0f3460;
+  padding: 15px;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.troops-count {
+  display: block;
+  font-size: 32px;
+  font-weight: bold;
+  color: #e94560;
+  line-height: 1;
+}
+
+.troops-label {
+  display: block;
+  color: #a8dadc;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+.troop-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.troop-line {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 15px;
+  background: #0f3460;
+  border-radius: 4px;
+  color: #f1faee;
+}
+
+.troop-line span:last-child {
+  color: #e94560;
+  font-weight: bold;
+}
+
+.no-troops {
+  color: #a8dadc;
+  text-align: center;
+  padding: 20px;
+  background: #0f3460;
+  border-radius: 6px;
+}
+
+/* Activity Lists */
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.activity-item {
+  background: #0f3460;
+  padding: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.activity-item:hover {
+  background: #1a4971;
+  transform: translateX(5px);
+}
+
+.activity-village {
+  color: #e94560;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.activity-details {
+  color: #f1faee;
+  font-size: 14px;
+  margin-bottom: 5px;
+  text-transform: capitalize;
+}
+
+.activity-time {
+  color: #a8dadc;
+  font-size: 12px;
+}
+
+.no-activity {
+  color: #a8dadc;
+  text-align: center;
+  padding: 30px;
+  background: #0f3460;
+  border-radius: 6px;
+}
+
+/* Quick Actions */
+.quick-actions-card {
+  grid-column: span 2;
+}
+
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 15px;
+}
+
+.action-btn {
+  background: #e94560;
+  color: white;
+  padding: 20px 15px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.action-btn:hover:not(:disabled) {
+  background: #c73851;
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(233, 69, 96, 0.4);
+}
+
+.action-btn:disabled {
+  background: #0f3460;
+  color: #a8dadc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Villages Overview */
+.villages-overview {
+  grid-column: 1 / -1;
+}
+
+.villages-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 15px;
+}
+
+.village-summary {
+  background: #0f3460;
+  padding: 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.village-summary:hover {
+  background: #1a4971;
+  border-color: #e94560;
+  transform: translateY(-2px);
+}
+
+.village-summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.village-summary-name {
+  color: #f1faee;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.village-summary-coords {
+  color: #a8dadc;
+  font-size: 12px;
+}
+
+.village-summary-stats {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #a8dadc;
+}
+
+.village-summary-resources {
+  display: flex;
+  gap: 12px;
+  font-size: 14px;
+  color: #f1faee;
+}
+
+@media (max-width: 768px) {
+  .quick-actions-card {
+    grid-column: span 1;
+  }
+
+  .villages-overview {
+    grid-column: span 1;
+  }
+
+  .villages-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Attack Modal */
+.attack-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.attack-modal {
+  background: #16213e;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.attack-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 2px solid #0f3460;
+}
+
+.attack-modal-header h3 {
+  color: #e94560;
+  margin: 0;
+  font-size: 22px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #e94560;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.close-btn:hover {
+  background: #0f3460;
+}
+
+.attack-modal-content {
+  padding: 20px;
+}
+
+.attack-info-section {
+  margin-bottom: 20px;
+}
+
+.attack-info-section:last-child {
+  margin-bottom: 0;
+}
+
+.attack-info-section h4 {
+  color: #4caf50;
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.attack-info-section p {
+  color: #f1faee;
+  margin: 0;
+  font-size: 16px;
+}
+
+.arrival-countdown {
+  color: #e94560 !important;
+  font-weight: bold;
+  font-size: 20px !important;
+}
+
+.troops-breakdown {
+  background: #0f3460;
+  padding: 12px;
+  border-radius: 6px;
+}
+
+.troop-line {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #1a4971;
+}
+
+.troop-line:last-child {
+  border-bottom: none;
+}
+
+.troop-line span {
+  color: #f1faee;
+}
+
+.troop-count {
+  color: #4caf50 !important;
+  font-weight: bold;
+}
