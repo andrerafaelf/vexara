@@ -1,7 +1,6 @@
-const express = require('express');
-const auth = require('../middleware/auth');
-const Node = require('../models/Node');
-const User = require('../models/User');
+import express from 'express';
+import auth from '../middleware/auth.js';
+import Node from '../models/Node.js';
 
 const router = express.Router();
 
@@ -10,7 +9,8 @@ router.get('/area/:x/:y', auth, async (req, res) => {
   try {
     const x = parseInt(req.params.x);
     const y = parseInt(req.params.y);
-    const range = 10; // 10x10 grid
+    // 10x10 grid
+    const range = 10;
 
     const villages = await Node.find({
       x: { $gte: x - range, $lte: x + range },
@@ -51,4 +51,4 @@ router.get('/village/:villageId', auth, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

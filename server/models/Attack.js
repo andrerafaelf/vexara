@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const attackSchema = new mongoose.Schema({
   attacker: {
@@ -17,7 +17,7 @@ const attackSchema = new mongoose.Schema({
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      required: false,
     },
     village: {
       type: mongoose.Schema.Types.ObjectId,
@@ -58,6 +58,9 @@ const attackSchema = new mongoose.Schema({
     defenderLosses: mongoose.Schema.Types.Mixed,
     resourcesStolen: mongoose.Schema.Types.Mixed,
     victory: Boolean,
+    conquered: Boolean,
+    controlReduced: Boolean,
+    remainingControl: Number,
   },
   createdAt: {
     type: Date,
@@ -65,4 +68,4 @@ const attackSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model('Attack', attackSchema);
+export default mongoose.model('Attack', attackSchema);

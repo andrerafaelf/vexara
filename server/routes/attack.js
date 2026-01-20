@@ -1,7 +1,7 @@
-const express = require('express');
-const auth = require('../middleware/auth');
-const Attack = require('../models/Attack');
-const Node = require('../models/Node');
+import express from 'express';
+import auth from '../middleware/auth.js';
+import Attack from '../models/Attack.js';
+import Node from '../models/Node.js';
 
 const router = express.Router();
 
@@ -19,6 +19,15 @@ router.post('/send', auth, async (req, res) => {
 
     if (!defenderVillage) {
       return res.status(404).json({ error: 'Target village not found' });
+    }
+
+    // Check if target is already conquered by a player
+    if (defenderVillage.owner && defenderVillage.owner.toString() === req.userId) {
+      return res.status(400).json({ error: 'Cannot attack your own village' });
+    }
+
+    if (defenderVillage.owner) {
+      return res.status(400).json({ error: 'Cannot attack conquered nodes' });
     }
 
     // Check if has troops
@@ -42,7 +51,8 @@ router.post('/send', auth, async (req, res) => {
     const distance = Math.sqrt(
       Math.pow(defenderVillage.x - attackerVillage.x, 2) + Math.pow(defenderVillage.y - attackerVillage.y, 2)
     );
-    const travelTimeMinutes = distance * 5; // 5 minutes per tile
+    // 5 minutes per tile
+    const travelTimeMinutes = distance * 5;
     const arrivesAt = new Date(Date.now() + travelTimeMinutes * 60 * 1000);
 
     const attack = new Attack({
@@ -110,4 +120,4 @@ router.get('/outgoing/:villageId', auth, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

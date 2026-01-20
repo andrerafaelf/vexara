@@ -1,17 +1,20 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const rateLimit = require('express-rate-limit');
-require('dotenv').config();
+import cors from 'cors';
+import dotenv from 'dotenv';
+import express from 'express';
+import rateLimit from 'express-rate-limit';
+import mongoose from 'mongoose';
+import Node from './models/Node.js';
+import adminRoutes from './routes/admin.js';
+import attackRoutes from './routes/attack.js';
+import authRoutes from './routes/auth.js';
+import buildingRoutes from './routes/building.js';
+import mapRoutes from './routes/map.js';
+import nodeRoutes from './routes/node.js';
+import reportRoutes from './routes/report.js';
+import troopRoutes from './routes/troop.js';
+import { processArrivedAttacks } from './utils/combat.js';
 
-const authRoutes = require('./routes/auth');
-const nodeRoutes = require('./routes/node');
-const buildingRoutes = require('./routes/building');
-const troopRoutes = require('./routes/troop');
-const mapRoutes = require('./routes/map');
-const attackRoutes = require('./routes/attack');
-const reportRoutes = require('./routes/report');
-const adminRoutes = require('./routes/admin');
+dotenv.config();
 
 const app = express();
 
@@ -22,8 +25,10 @@ app.use(express.json());
 // Rate limiting (disabled in development)
 if (process.env.NODE_ENV === 'production') {
   const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
+    // 15 minutes
+    windowMs: 15 * 60 * 1000,
+    // limit each IP to 100 requests per windowMs
+    max: 100,
   });
   app.use('/api/', limiter);
 }
@@ -52,13 +57,11 @@ mongoose
 
 // Start resource production interval (every minute)
 setInterval(() => {
-  const Node = require('./models/Node');
   Node.updateAllResources();
 }, 60000);
 
 // Start combat resolution interval (every 10 seconds)
 setInterval(() => {
-  const { processArrivedAttacks } = require('./utils/combat');
   processArrivedAttacks();
 }, 10000);
 

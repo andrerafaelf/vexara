@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const villageSchema = new mongoose.Schema({
   name: {
@@ -165,4 +165,4 @@ villageSchema.statics.updateAllResources = async function () {
   }
 };
 
-module.exports = mongoose.model('Village', villageSchema);
+export default mongoose.model('Village', villageSchema);

@@ -1,5 +1,6 @@
-const Attack = require('../models/Attack');
-const Node = require('../models/Node');
+import Attack from '../models/Attack.js';
+import Node from '../models/Node.js';
+import User from '../models/User.js';
 
 // Troop stats
 const TROOP_STATS = {
@@ -81,8 +82,8 @@ async function resolveCombat(attack) {
         }
 
         const baseLossRate = attackerWins ? powerRatio * 0.5 : 0.8;
-        // Add randomness: ±25% variation
-        const randomFactor = 0.75 + Math.random() * 0.5; // 0.75 to 1.25
+        // Add randomness: ±25% variation (0.75 to 1.25)
+        const randomFactor = 0.75 + Math.random() * 0.5;
         // Weaker troops (lower defense) die more easily
         const defenseFactor = 1 + (50 - TROOP_STATS[troopType].defense) / 100;
         const lossRate = Math.min(baseLossRate * randomFactor * defenseFactor, 1);
@@ -90,7 +91,7 @@ async function resolveCombat(attack) {
       }
     }
 
-    // Check if all non-overseer troops died, if so, overseer dies too
+    // Check if all non overseer troops died, if so, overseer dies too
     const totalAttackTroops = Object.entries(attack.troops)
       .filter(([type]) => type !== 'overseer')
       .reduce((sum, [type, count]) => sum + count, 0);
@@ -112,18 +113,19 @@ async function resolveCombat(attack) {
         // Weaker troops (lower defense) die more easily
         const defenseFactor = 1 + (50 - TROOP_STATS[troopType].defense) / 100;
         const lossRate = Math.min(baseLossRate * randomFactor * defenseFactor, 1);
-        defenderLosses[troopType] = Math.min(Math.ceil(count * lossRate), count);
-        defenderVillage.troops[troopType] -= defenderLosses[troopType];
+        const losses = Math.min(Math.ceil(count * lossRate), count);
+        defenderLosses[troopType] = losses;
+        const currentTroops = defenderVillage.troops[troopType] || 0;
+        defenderVillage.troops[troopType] = Math.max(0, currentTroops - losses);
         // Update population for lost troops
-        defenderVillage.population.current = Math.max(
-          0,
-          defenderVillage.population.current - defenderLosses[troopType]
-        );
+        defenderVillage.population.current = Math.max(0, defenderVillage.population.current - losses);
       }
     }
 
     // Calculate loot if attacker wins
     let resourcesStolen = { biomass: 0, alloy: 0, ore: 0 };
+    let conquered = false;
+
     if (attackerWins) {
       // Calculate carry capacity based on troop stats
       let lootCapacity = 0;
@@ -156,7 +158,7 @@ async function resolveCombat(attack) {
             Object.values(attack.troops).reduce((a, b) => a + b, 0));
       const actualLoot = Math.min(
         resourcesStolen.biomass + resourcesStolen.alloy + resourcesStolen.ore,
-        survivingCarryCapacity
+        survivingCarryCapacity,
       );
 
       if (actualLoot > 0) {
@@ -168,20 +170,16 @@ async function resolveCombat(attack) {
       }
     }
 
-    // Save defender village
-    await defenderVillage.save();
-
     // Handle node conquest if overseer is present and attacker wins
-    let conquered = false;
     if (attackerWins && attack.troops.overseer > 0 && (attackerLosses.overseer || 0) < attack.troops.overseer) {
-      // Overseer survived - reduce control level by 50 (takes 2 attacks to conquer)
+      // Overseer survived, reduce control level by 50 (takes 2 attacks to conquer)
       defenderVillage.controlLevel = Math.max(0, (defenderVillage.controlLevel || 100) - 50);
 
       if (defenderVillage.controlLevel === 0) {
         // Node conquered! Transfer ownership
         const attackerVillage = await Node.findById(attack.attacker.village);
-        const oldOwner = await require('../models/User').findById(defenderVillage.owner);
-        const newOwner = await require('../models/User').findById(attackerVillage.owner);
+        const oldOwner = await User.findById(defenderVillage.owner);
+        const newOwner = await User.findById(attackerVillage.owner);
 
         // Remove from old owner
         if (oldOwner) {
@@ -197,13 +195,15 @@ async function resolveCombat(attack) {
 
         // Transfer ownership
         defenderVillage.owner = attackerVillage.owner;
-        defenderVillage.controlLevel = 100; // Reset control
+        // Reset control
+        defenderVillage.controlLevel = 100;
         defenderVillage.name = `Conquered Node`;
         conquered = true;
       }
-
-      await defenderVillage.save();
     }
+
+    // Save defender village with updated control level
+    await defenderVillage.save();
 
     // Return surviving troops to attacker village
     const attackerVillage = await Node.findById(attack.attacker.village);
@@ -225,8 +225,9 @@ async function resolveCombat(attack) {
       resourcesStolen,
       victory: attackerWins,
       conquered: conquered,
-      controlReduced:
+      controlReduced: Boolean(
         attackerWins && attack.troops.overseer > 0 && (attackerLosses.overseer || 0) < attack.troops.overseer,
+      ),
       remainingControl: defenderVillage.controlLevel,
     };
     await attack.save();
@@ -234,11 +235,12 @@ async function resolveCombat(attack) {
     console.log(
       `Combat resolved: Attack ${attack._id} - ${attackerWins ? 'Attacker' : 'Defender'} wins${
         conquered ? ' - NODE CONQUERED!' : ''
-      }`
+      }`,
     );
+    console.log('Result saved to database:', JSON.stringify(attack.result, null, 2));
   } catch (err) {
     console.error('Error resolving combat:', err);
   }
 }
 
-module.exports = { processArrivedAttacks };
+export { processArrivedAttacks };

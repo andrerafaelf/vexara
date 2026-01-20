@@ -1,8 +1,7 @@
-const express = require('express');
-const auth = require('../middleware/auth');
-const Attack = require('../models/Attack');
-const Node = require('../models/Node');
-const User = require('../models/User');
+import express from 'express';
+import auth from '../middleware/auth.js';
+import Attack from '../models/Attack.js';
+import Node from '../models/Node.js';
 
 const router = express.Router();
 
@@ -31,4 +30,4 @@ router.get('/reports/:villageId', auth, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

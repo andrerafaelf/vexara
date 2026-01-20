@@ -1,12 +1,12 @@
-const express = require('express');
-const auth = require('../middleware/auth');
-const User = require('../models/User');
-const Node = require('../models/Node');
-const Attack = require('../models/Attack');
+import express from 'express';
+import Attack from '../models/Attack.js';
+import Node from '../models/Node.js';
+import User from '../models/User.js';
+import { processArrivedAttacks } from '../utils/combat.js';
 
 const router = express.Router();
 
-// Get all users (admin only - no auth check for dev)
+// Get all users (admin only, no auth check for dev)
 router.get('/users', async (req, res) => {
   try {
     const users = await User.find({}, { password: 0 }).populate('villages').sort({ createdAt: -1 });
@@ -297,7 +297,6 @@ router.post('/attacks/:attackId/complete', async (req, res) => {
     await attack.save();
 
     // Trigger combat resolution
-    const { processArrivedAttacks } = require('../utils/combat');
     await processArrivedAttacks();
 
     res.json({ success: true, message: 'Attack completed' });
@@ -306,4 +305,4 @@ router.post('/attacks/:attackId/complete', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

@@ -1,6 +1,6 @@
-const express = require('express');
-const auth = require('../middleware/auth');
-const Node = require('../models/Node');
+import express from 'express';
+import auth from '../middleware/auth.js';
+import Node from '../models/Node.js';
 
 const router = express.Router();
 
@@ -105,4 +105,4 @@ router.post('/check-queue', auth, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

@@ -1,15 +1,19 @@
 // Script to populate the map with random nodes
-// Run with: node create-test-nodes.js
+// Run with: node create test nodes.js
 
-require('dotenv').config();
-const mongoose = require('mongoose');
-const Node = require('./models/Node');
+import dotenv from 'dotenv';
+import mongoose from 'mongoose';
+import Node from './models/Node.js';
+
+dotenv.config();
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/neon-dominion';
 
 // Configuration
-const MAP_SIZE = 100; // 100x100 map
-const NUM_NODES = 50; // Number of nodes to create
+// 100x100 map
+const MAP_SIZE = 100;
+// Number of nodes to create
+const NUM_NODES = 50;
 
 // Node types with different bonuses and characteristics
 const NODE_TYPES = [
@@ -38,7 +42,8 @@ async function createTestNodes() {
 
     let nodesCreated = 0;
     let attempts = 0;
-    const maxAttempts = NUM_NODES * 3; // Prevent infinite loop
+    // Prevent infinite loop
+    const maxAttempts = NUM_NODES * 3;
 
     while (nodesCreated < NUM_NODES && attempts < maxAttempts) {
       attempts++;
@@ -50,7 +55,8 @@ async function createTestNodes() {
       // Check if node already exists at this position
       const existingNode = await Node.findOne({ x, y });
       if (existingNode) {
-        continue; // Skip this position
+        // Skip this position
+        continue;
       }
 
       // Select node type
@@ -74,7 +80,7 @@ async function createTestNodes() {
       if (nodeType.troopBonus) troopMultiplier = 1.5;
       if (nodeType.lowDefense) troopMultiplier = 0.3;
 
-      // Create neutral node with type-specific attributes
+      // Create neutral node with type specific attributes
       const node = await Node.create({
         name: nodeType.name,
         x,
