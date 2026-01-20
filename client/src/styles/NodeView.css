@@ -282,8 +282,15 @@
   background: #0f3460;
   padding: 20px;
   border-radius: 8px;
-  text-align: center;
   position: relative;
+  overflow: hidden;
+}
+
+.building-card-image {
+  width: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-bottom: 10px;
 }
 
 .building-card.upgrading {
@@ -316,7 +323,7 @@
 .building-header {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 8px;
   margin-bottom: 10px;
 }
@@ -414,6 +421,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 10px;
+}
+
+.troop-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border-radius: 4px;
 }
 
 .troop-name {
@@ -439,7 +454,7 @@
 
 .train-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 15px;
 }
 
@@ -447,6 +462,15 @@
   background: #1a4971;
   padding: 15px;
   border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+.troop-card-image {
+  width: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-bottom: 10px;
 }
 
 .troop-header {

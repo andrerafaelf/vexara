@@ -47,6 +47,8 @@ export interface Village {
   trainingQueue: TrainingQueueItem[];
   lastResourceUpdate: Date;
   points: number;
+  control?: number;
+  controlLevel?: number;
 }
 
 export interface BuildQueueItem {
@@ -73,6 +75,9 @@ export interface Attack {
       name: string;
       x: number;
       y: number;
+      buildings?: {
+        shieldGrid?: number;
+      };
     };
   };
   defender: {
@@ -85,15 +90,25 @@ export interface Attack {
       name: string;
       x: number;
       y: number;
+      buildings?: {
+        shieldGrid?: number;
+      };
     };
   };
   troops: {
     lancerDrone: number;
     assaultTrooper: number;
     breakerUnit: number;
-    reconDrone: number;
+    reconOperative: number;
     skimmerBike: number;
     siegeMech: number;
+    bulwarkGuard: number;
+    suppressorTeam: number;
+    disruptorUnit: number;
+    interceptorBike: number;
+    annihilatorPlatform: number;
+    overseer: number;
+    [key: string]: number;
   };
   arrivesAt: Date;
   type: 'attack' | 'support' | 'scout';
@@ -103,17 +118,31 @@ export interface Attack {
       lancerDrone?: number;
       assaultTrooper?: number;
       breakerUnit?: number;
-      reconDrone?: number;
+      reconOperative?: number;
       skimmerBike?: number;
       siegeMech?: number;
+      bulwarkGuard?: number;
+      suppressorTeam?: number;
+      disruptorUnit?: number;
+      interceptorBike?: number;
+      annihilatorPlatform?: number;
+      overseer?: number;
+      [key: string]: number | undefined;
     };
     defenderLosses: {
       lancerDrone?: number;
       assaultTrooper?: number;
       breakerUnit?: number;
-      reconDrone?: number;
+      reconOperative?: number;
       skimmerBike?: number;
       siegeMech?: number;
+      bulwarkGuard?: number;
+      suppressorTeam?: number;
+      disruptorUnit?: number;
+      interceptorBike?: number;
+      annihilatorPlatform?: number;
+      overseer?: number;
+      [key: string]: number | undefined;
     };
     resourcesStolen: {
       biomass: number;
@@ -121,5 +150,10 @@ export interface Attack {
       ore: number;
     };
     victory: boolean;
+    conquered?: boolean;
+    controlReduced?: boolean;
+    remainingControl?: number;
+    nodeLifeReduced?: boolean;
+    remainingNodeLife?: number;
   };
 }

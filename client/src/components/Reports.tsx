@@ -26,15 +26,36 @@ const Reports: React.FC<ReportsProps> = ({ village }) => {
   const [reports, setReports] = useState<Attack[]>([]);
   const [selectedReport, setSelectedReport] = useState<Attack | null>(null);
   const [loading, setLoading] = useState(true);
+  const [viewedReports, setViewedReports] = useState<Set<string>>(() => {
+    // Load viewed reports from localStorage
+    const saved = localStorage.getItem('viewedReports');
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
 
   useEffect(() => {
     loadReports();
   }, [village._id]);
 
+  // Save viewed reports to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('viewedReports', JSON.stringify(Array.from(viewedReports)));
+  }, [viewedReports]);
+
   const loadReports = async () => {
     try {
       setLoading(true);
       const response = await getReports(village._id);
+      console.log('API Response:', response);
+      console.log('Reports data:', response.data);
+      // Debug: Check if reports have control data
+      response.data.forEach((report: Attack, index: number) => {
+        console.log(`Report ${index} result:`, {
+          controlReduced: report.result?.controlReduced,
+          remainingControl: report.result?.remainingControl,
+          conquered: report.result?.conquered,
+          fullResult: report.result,
+        });
+      });
       setReports(response.data);
     } catch (err) {
       console.error('Error loading reports:', err);
@@ -64,6 +85,11 @@ const Reports: React.FC<ReportsProps> = ({ village }) => {
     const isMyAttack = isAttacker(selectedReport);
     const myRole = isMyAttack ? 'attacker' : 'defender';
     const enemyRole = isMyAttack ? 'defender' : 'attacker';
+
+    // Mark report as viewed
+    if (!viewedReports.has(selectedReport._id)) {
+      setViewedReports(new Set(viewedReports).add(selectedReport._id));
+    }
 
     return (
       <div className="reports-container">
@@ -98,6 +124,13 @@ const Reports: React.FC<ReportsProps> = ({ village }) => {
             </div>
           )}
 
+          {selectedReport.result.nodeLifeReduced && (
+            <div className="control-notice">
+              ⚡ Node life reduced! Remaining: {selectedReport.result.remainingNodeLife || 0}/
+              {selectedReport.defender.village?.buildings?.shieldGrid ? 100 : 0}
+            </div>
+          )}
+
           <div className="report-section">
             <h3>Strike Information</h3>
             <p>
@@ -113,12 +146,19 @@ const Reports: React.FC<ReportsProps> = ({ village }) => {
               {selectedReport.defender.village?.name || 'Unknown'} ({selectedReport.defender.village?.x || '?'}|
               {selectedReport.defender.village?.y || '?'})
             </p>
-            {selectedReport.result?.remainingControl !== undefined && (
-              <p>
-                <strong>Node Control:</strong> {selectedReport.result.remainingControl}/100
-                {selectedReport.result.conquered && ' (Conquered!)'}
-              </p>
-            )}
+            {selectedReport.result?.remainingControl !== undefined &&
+              selectedReport.result.remainingControl !== null && (
+                <p>
+                  <strong>Node Control:</strong> {selectedReport.result.remainingControl}/100
+                  {selectedReport.result.conquered && ' (Conquered!)'}
+                </p>
+              )}
+            {selectedReport.result?.remainingNodeLife !== undefined &&
+              selectedReport.result.remainingNodeLife !== null && (
+                <p>
+                  <strong>Node Life:</strong> {selectedReport.result.remainingNodeLife}/100
+                </p>
+              )}
           </div>
 
           <div className="report-section">
@@ -143,7 +183,7 @@ const Reports: React.FC<ReportsProps> = ({ village }) => {
                           <td className="losses">{selectedReport.result?.attackerLosses?.[troopType] || 0}</td>
                           <td>{count - (selectedReport.result?.attackerLosses?.[troopType] || 0)}</td>
                         </tr>
-                      ) : null
+                      ) : null,
                     )}
                   </>
                 )}
@@ -158,7 +198,7 @@ const Reports: React.FC<ReportsProps> = ({ village }) => {
                           <td className="losses">{lost}</td>
                           <td>-</td>
                         </tr>
-                      )
+                      ),
                   )}
               </tbody>
             </table>
@@ -183,7 +223,7 @@ const Reports: React.FC<ReportsProps> = ({ village }) => {
                           <td>{troopNames[troop] || troop}</td>
                           <td className="losses">{lost}</td>
                         </tr>
-                      )
+                      ),
                   )}
                 {enemyRole === 'defender' &&
                   selectedReport.result?.defenderLosses &&
@@ -194,7 +234,7 @@ const Reports: React.FC<ReportsProps> = ({ village }) => {
                           <td>{troopNames[troop] || troop}</td>
                           <td className="losses">{lost}</td>
                         </tr>
-                      )
+                      ),
                   )}
               </tbody>
             </table>
@@ -245,34 +285,39 @@ const Reports: React.FC<ReportsProps> = ({ village }) => {
         <div className="reports-list">
           {reports.map((report) => {
             const isMyAttack = isAttacker(report);
+            const hasBeenViewed = viewedReports.has(report._id);
             const won = isMyAttack ? report.result.victory : !report.result.victory;
 
             return (
               <div
                 key={report._id}
-                className={`report-item ${won ? 'won' : 'lost'}`}
+                className={`report-item ${hasBeenViewed ? (won ? 'won' : 'lost') : ''}`}
                 onClick={() => setSelectedReport(report)}
               >
-                <div className="report-icon">{won ? '🎉' : '💀'}</div>
+                <div className="report-icon">{hasBeenViewed ? (won ? '🎉' : '💀') : '⚔️'}</div>
                 <div className="report-info">
                   <div className="report-title">
-                    {isMyAttack ? (
-                      <>
-                        Strike on {report.defender.village?.name || 'Unknown'} ({report.defender.village?.x || '?'}|
-                        {report.defender.village?.y || '?'})
-                      </>
+                    {hasBeenViewed ? (
+                      isMyAttack ? (
+                        <>
+                          Strike on {report.defender.village?.name || 'Unknown'} ({report.defender.village?.x || '?'}|
+                          {report.defender.village?.y || '?'})
+                        </>
+                      ) : (
+                        <>
+                          Defense against {report.attacker.user?.username || 'Unknown'} from{' '}
+                          {report.attacker.village?.name || 'Unknown'} ({report.attacker.village?.x || '?'}|
+                          {report.attacker.village?.y || '?'})
+                        </>
+                      )
                     ) : (
-                      <>
-                        Defense against {report.attacker.user?.username || 'Unknown'} from{' '}
-                        {report.attacker.village?.name || 'Unknown'} ({report.attacker.village?.x || '?'}|
-                        {report.attacker.village?.y || '?'})
-                      </>
+                      'Combat Report'
                     )}
                   </div>
                   <div className="report-meta">
-                    <span className={won ? 'victory' : 'defeat'}>{won ? 'Victory' : 'Defeat'}</span>
+                    {hasBeenViewed && <span className={won ? 'victory' : 'defeat'}>{won ? 'Victory' : 'Defeat'}</span>}
                     <span className="report-date">{formatDate(report.arrivesAt)}</span>
-                    {isMyAttack && report.result.resourcesStolen && (
+                    {hasBeenViewed && isMyAttack && report.result.resourcesStolen && (
                       <span className="loot">
                         💰{' '}
                         {report.result.resourcesStolen.biomass +

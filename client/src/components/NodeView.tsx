@@ -4,6 +4,30 @@ import '../styles/NodeView.css';
 import { Village } from '../types/game';
 import Toast from './Toast';
 
+// Import troop images
+import annihilatorplatformImg from '../assets/troops/annihilatorplatform.png';
+import assaulttrooperImg from '../assets/troops/assaulttrooper.png';
+import breakerunitImg from '../assets/troops/breakerunit.png';
+import bulwarkguardImg from '../assets/troops/bulwarkguard.png';
+import disruptorunitImg from '../assets/troops/disruptorunit.png';
+import interceptorbikeImg from '../assets/troops/interceptorbike.png';
+import lancerdroneImg from '../assets/troops/lancerdrone.png';
+import overseerImg from '../assets/troops/overseer.png';
+import reconoperativeImg from '../assets/troops/reconoperative.png';
+import siegemechImg from '../assets/troops/siegemech.png';
+import skimmerbikeImg from '../assets/troops/skimmerbike.png';
+import suppressorteamImg from '../assets/troops/suppressorteam.png';
+
+// Import building images
+import alloyforgeImg from '../assets/buildings/alloyforge.png';
+import biomassfarmImg from '../assets/buildings/biomassfarm.png';
+import commandcoreImg from '../assets/buildings/commandcore.png';
+import lifesupportImg from '../assets/buildings/lifesupport.png';
+import oreextractorImg from '../assets/buildings/oreextractor.png';
+import recruitmentcoreImg from '../assets/buildings/recruitmentcore.png';
+import shieldgridImg from '../assets/buildings/shieldgrid.png';
+import storagevaultImg from '../assets/buildings/storagevault.png';
+
 interface NodeViewProps {
   village: Village;
   onUpdate: () => void;
@@ -42,6 +66,17 @@ const BUILDING_COSTS: { [key: string]: any } = {
   shieldGrid: { biomass: 50, alloy: 100, ore: 20, time: 300, factor: 1.32 },
 };
 
+const BUILDING_IMAGES: { [key: string]: any } = {
+  commandCore: commandcoreImg,
+  troopFabricator: recruitmentcoreImg,
+  lifeSupport: lifesupportImg,
+  storageVault: storagevaultImg,
+  biomassFarm: biomassfarmImg,
+  alloyForge: alloyforgeImg,
+  oreExtractor: oreextractorImg,
+  shieldGrid: shieldgridImg,
+};
+
 const TROOP_NAMES: { [key: string]: string } = {
   assaultTrooper: 'Assault Trooper',
   lancerDrone: 'Lancer Drone',
@@ -55,6 +90,21 @@ const TROOP_NAMES: { [key: string]: string } = {
   interceptorBike: 'Interceptor Bike',
   annihilatorPlatform: 'Annihilator Platform',
   overseer: 'Overseer',
+};
+
+const TROOP_IMAGES: { [key: string]: any } = {
+  assaultTrooper: assaulttrooperImg,
+  lancerDrone: lancerdroneImg,
+  breakerUnit: breakerunitImg,
+  reconOperative: reconoperativeImg,
+  skimmerBike: skimmerbikeImg,
+  siegeMech: siegemechImg,
+  bulwarkGuard: bulwarkguardImg,
+  suppressorTeam: suppressorteamImg,
+  disruptorUnit: disruptorunitImg,
+  interceptorBike: interceptorbikeImg,
+  annihilatorPlatform: annihilatorplatformImg,
+  overseer: overseerImg,
 };
 
 const TROOP_DESCRIPTIONS: { [key: string]: string } = {
@@ -424,6 +474,13 @@ const NodeView: React.FC<NodeViewProps> = ({ village, onUpdate }) => {
                 const isUpgrading = village.buildQueue.some((item) => item.building === key);
                 return (
                   <div key={key} className={`building-card ${isUpgrading ? 'upgrading' : ''}`}>
+                    {BUILDING_IMAGES[key] && (
+                      <img
+                        src={BUILDING_IMAGES[key].src || BUILDING_IMAGES[key]}
+                        alt={BUILDING_NAMES[key]}
+                        className="building-card-image"
+                      />
+                    )}
                     <div className="building-header">
                       <h4>{BUILDING_NAMES[key]}</h4>
                       <span className="building-info" title={BUILDING_DESCRIPTIONS[key]}>
@@ -501,6 +558,13 @@ const NodeView: React.FC<NodeViewProps> = ({ village, onUpdate }) => {
                       const { canTrain, missingRequirements } = checkTroopRequirements(type);
                       return (
                         <div key={type} className={`train-card ${!canTrain ? 'disabled' : ''}`}>
+                          {TROOP_IMAGES[type] && (
+                            <img
+                              src={TROOP_IMAGES[type].src || TROOP_IMAGES[type]}
+                              alt={TROOP_NAMES[type]}
+                              className="troop-card-image"
+                            />
+                          )}
                           <div className="troop-header">
                             <h5>{TROOP_NAMES[type]}</h5>
                             <span className="troop-info" title={TROOP_DESCRIPTIONS[type]}>
@@ -595,7 +659,7 @@ const NodeView: React.FC<NodeViewProps> = ({ village, onUpdate }) => {
                           <span>{TROOP_NAMES[troopType] || troopType}:</span>
                           <span className="troop-count">{count as number}</span>
                         </div>
-                      )
+                      ),
                   )}
                 </div>
               </div>
@@ -606,8 +670,8 @@ const NodeView: React.FC<NodeViewProps> = ({ village, onUpdate }) => {
                   {selectedAttack.type === 'attack'
                     ? '⚔️ Attack'
                     : selectedAttack.type === 'support'
-                    ? '🛡️ Support'
-                    : '🔍 Scout'}
+                      ? '🛡️ Support'
+                      : '🔍 Scout'}
                 </p>
               </div>
             </div>

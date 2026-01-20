@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { getIncomingAttacks, getMapArea, getOutgoingAttacks, getVillageInfo, sendAttack } from '../services/api';
 import '../styles/Map.css';
 import { Village } from '../types/game';
@@ -19,9 +20,11 @@ interface MapVillage {
   };
   points: number;
   buildings?: { wall: number };
+  control?: number;
 }
 
 const Map: React.FC<MapProps> = ({ currentVillage, onRefresh }) => {
+  const { user } = useAuth();
   const [villages, setVillages] = useState<MapVillage[]>([]);
   const [selectedVillage, setSelectedVillage] = useState<MapVillage | null>(null);
   const [centerX, setCenterX] = useState(currentVillage.x);
@@ -207,6 +210,12 @@ const Map: React.FC<MapProps> = ({ currentVillage, onRefresh }) => {
   const handleSendAttack = async () => {
     if (!selectedVillage) return;
 
+    // Check if node is conquered
+    if (selectedVillage.control !== undefined && selectedVillage.control <= 0) {
+      alert('Cannot attack a conquered node!');
+      return;
+    }
+
     const totalTroops = Object.values(attackTroops).reduce((a, b) => a + b, 0);
     if (totalTroops === 0) {
       alert('Select at least one troop!');
@@ -279,13 +288,13 @@ const Map: React.FC<MapProps> = ({ currentVillage, onRefresh }) => {
           >
             {village && <div className="village-marker">{isCurrent ? '🏛️' : '🏘️'}</div>}
             <div className="cell-coords">{isOutOfBounds ? '—' : `${x}|${y}`}</div>
-          </div>
+          </div>,
         );
       }
       grid.push(
         <div key={y} className="map-row">
           {row}
-        </div>
+        </div>,
       );
     }
 
@@ -406,7 +415,7 @@ const Map: React.FC<MapProps> = ({ currentVillage, onRefresh }) => {
                 </div>
               )}
 
-              {selectedVillage._id !== currentVillage._id && (
+              {selectedVillage._id !== currentVillage._id && selectedVillage.owner?.username !== user?.username && (
                 <div className="village-actions">
                   {!showAttackForm ? (
                     <button className="attack-btn" onClick={() => setShowAttackForm(true)}>
@@ -414,7 +423,30 @@ const Map: React.FC<MapProps> = ({ currentVillage, onRefresh }) => {
                     </button>
                   ) : (
                     <div className="attack-form">
-                      <h4>Select Troops</h4>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <h4>Select Troops</h4>
+                        <button
+                          onClick={() => {
+                            const allTroops: any = {};
+                            Object.keys(attackTroops).forEach((type) => {
+                              allTroops[type] = currentVillage.troops[type as keyof typeof currentVillage.troops];
+                            });
+                            setAttackTroops(allTroops);
+                          }}
+                          className="send-all-btn"
+                          style={{
+                            padding: '5px 10px',
+                            fontSize: '12px',
+                            backgroundColor: '#4a9eff',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          📦 Send All
+                        </button>
+                      </div>
                       <div className="troop-selector">
                         {Object.entries(attackTroops).map(([type, amount]) => {
                           const available = currentVillage.troops[type as keyof typeof currentVillage.troops];
