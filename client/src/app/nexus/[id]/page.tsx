@@ -6,15 +6,17 @@ import { useAuth } from '@/context/AuthContext';
 import { getMyNexuses, getNexus } from '@/services/api';
 import '@/styles/Game.css';
 import { Nexus } from '@/types/game';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
 export default function NexusPage() {
   const [nexuses, setVillages] = useState<Nexus[]>([]);
   const [selectedNexus, setSelectedNexus] = useState<Nexus | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const params = useParams();
   const nexusId = params.id as string;
 
@@ -44,6 +46,10 @@ export default function NexusPage() {
   }, [nexusId]);
 
   useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
       router.push('/auth');
@@ -55,6 +61,7 @@ export default function NexusPage() {
   }, [loadVillages, router]);
 
   const handleSelectNexus = (nexus: Nexus) => {
+    setIsMobileMenuOpen(false);
     router.push(`/nexus/${nexus._id}`);
   };
 
@@ -72,6 +79,14 @@ export default function NexusPage() {
 
       <header className="game-header">
         <div className="header-left">
+          <button
+            className="menu-toggle"
+            onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+            aria-label="Toggle navigation menu"
+            aria-expanded={isMobileMenuOpen}
+          >
+            ☰
+          </button>
           <h1>Neon Dominion</h1>
           <span className="username">Welcome, {user?.username}</span>
         </div>
@@ -92,6 +107,63 @@ export default function NexusPage() {
           </button>
         </div>
       </header>
+
+      <button
+        type="button"
+        className={`mobile-drawer-backdrop ${isMobileMenuOpen ? 'open' : ''}`}
+        aria-label="Close navigation menu"
+        onClick={() => setIsMobileMenuOpen(false)}
+      />
+
+      <aside className={`mobile-drawer ${isMobileMenuOpen ? 'open' : ''}`}>
+        <div className="mobile-drawer-links">
+          <button
+            className="nav-btn"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              router.push('/');
+            }}
+          >
+            📊 Dashboard
+          </button>
+          <button
+            className="nav-btn"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              router.push('/map');
+            }}
+          >
+            🗺️ Starfield
+          </button>
+          <button
+            className="nav-btn"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              router.push('/reports');
+            }}
+          >
+            📜 Combat Logs
+          </button>
+        </div>
+        <div className="mobile-drawer-nexuses">
+          <h3>Your Nexuses</h3>
+          {nexuses.map((nexus) => (
+            <div
+              key={nexus._id}
+              className={`nexus-item ${selectedNexus._id === nexus._id ? 'active' : ''}`}
+              onClick={() => handleSelectNexus(nexus)}
+            >
+              <div className="nexus-name">{nexus.name}</div>
+              <div className="nexus-coords">
+                ({nexus.x}|{nexus.y})
+              </div>
+              <div className="nexus-points">{nexus.points} inf</div>
+              {nexus.buildQueue.length > 0 && <div className="nexus-badge">🏗️</div>}
+              {nexus.trainingQueue.length > 0 && <div className="nexus-badge">🎖️</div>}
+            </div>
+          ))}
+        </div>
+      </aside>
 
       <div className="game-content">
         <nav className="nexus-nav">

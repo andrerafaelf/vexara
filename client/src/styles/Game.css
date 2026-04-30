@@ -213,3 +213,119 @@
 .create-nexus-btn:active {
   transform: translateY(0);
 }
+
+.menu-toggle {
+  display: none;
+  background: transparent;
+  color: #f1faee;
+  border: 1px solid #0f3460;
+  border-radius: 6px;
+  font-size: 20px;
+  line-height: 1;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-drawer {
+  display: none;
+}
+
+.mobile-drawer-backdrop {
+  display: none;
+}
+
+.mobile-drawer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.mobile-drawer-links .nav-btn {
+  width: 100%;
+  text-align: left;
+  border: 1px solid #0f3460;
+}
+
+.mobile-drawer-nexuses {
+  border-top: 1px solid #0f3460;
+  padding-top: 14px;
+}
+
+.mobile-drawer-nexuses h3 {
+  color: #e94560;
+  margin-bottom: 12px;
+  font-size: 17px;
+}
+
+@media (max-width: 768px) {
+  .game-header {
+    padding: 12px 16px;
+  }
+
+  .menu-toggle {
+    display: inline-flex;
+  }
+
+  .header-left {
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .header-left h1 {
+    font-size: 20px;
+  }
+
+  .username {
+    display: none;
+  }
+
+  .header-center,
+  .nexus-nav {
+    display: none;
+  }
+
+  .mobile-drawer {
+    display: block;
+    max-height: 0;
+    overflow: hidden;
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    transition: max-height 0.3s ease;
+    padding: 0 16px;
+    position: relative;
+    z-index: 6;
+  }
+
+  .mobile-drawer-backdrop.open {
+    display: block;
+    position: fixed;
+    inset: 0;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 5;
+  }
+
+  .mobile-drawer.open {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 16px;
+  }
+
+  .game-content {
+    display: block;
+  }
+
+  .main-content {
+    padding: 14px;
+  }
+
+  .header-right .logout-btn {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+}
