@@ -1,6 +1,6 @@
 import express from 'express';
-import auth from '../middleware/auth.js';
 import prisma from '../lib/prisma.js';
+import auth from '../middleware/auth.js';
 import { computeResourceUpdate, serializeNexus } from '../models/Nexus.js';
 
 const router = express.Router();
@@ -10,9 +10,15 @@ const TROOP_COSTS = {
   lancerDrone: { biomass: 50, alloy: 30, ore: 10, population: 1, time: 600 },
   assaultTrooper: { biomass: 30, alloy: 30, ore: 70, population: 1, time: 900 },
   breakerUnit: { biomass: 60, alloy: 30, ore: 40, population: 1, time: 840 },
-  reconDrone: { biomass: 100, alloy: 30, ore: 60, population: 1, time: 960 },
+  reconOperative: { biomass: 100, alloy: 30, ore: 60, population: 1, time: 960 },
   skimmerBike: { biomass: 125, alloy: 100, ore: 150, population: 3, time: 1500 },
   siegeMech: { biomass: 125, alloy: 100, ore: 250, population: 4, time: 1800 },
+  bulwarkGuard: { biomass: 80, alloy: 120, ore: 100, population: 2, time: 1200 },
+  suppressorTeam: { biomass: 90, alloy: 80, ore: 90, population: 2, time: 1300 },
+  disruptorUnit: { biomass: 110, alloy: 150, ore: 130, population: 2, time: 1400 },
+  interceptorBike: { biomass: 150, alloy: 120, ore: 180, population: 3, time: 1600 },
+  annihilatorPlatform: { biomass: 200, alloy: 180, ore: 300, population: 5, time: 2400 },
+  overseer: { biomass: 300, alloy: 250, ore: 200, population: 5, time: 3000 },
 };
 
 // Train troops
@@ -96,7 +102,8 @@ router.post('/check-queue', auth, async (req, res) => {
 
     while (trainingQueue.length > 0 && new Date(trainingQueue[0].completesAt) <= now) {
       const training = trainingQueue.shift();
-      troopUpdates[training.troopType] = (troopUpdates[training.troopType] || nexus[training.troopType] || 0) + training.amount;
+      troopUpdates[training.troopType] =
+        (troopUpdates[training.troopType] || nexus[training.troopType] || 0) + training.amount;
       completed = true;
     }
 

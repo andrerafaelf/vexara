@@ -1,6 +1,7 @@
 import express from 'express';
 import prisma from '../lib/prisma.js';
 import auth from '../middleware/auth.js';
+import { getNexusIntelForUser } from '../utils/scouting.js';
 
 const router = express.Router();
 
@@ -29,6 +30,7 @@ router.get('/area/:x/:y', auth, async (req, res) => {
       y: v.y,
       points: v.points,
       owner: v.owner ? { _id: v.owner.id, id: v.owner.id, username: v.owner.username, points: v.owner.points } : null,
+      intelLevel: v.ownerId === req.userId ? 'owned' : 'public',
     }));
 
     res.json(result);
@@ -40,36 +42,13 @@ router.get('/area/:x/:y', auth, async (req, res) => {
 // Get nexus details (for other players)
 router.get('/nexus/:nexusId', auth, async (req, res) => {
   try {
-    const nexus = await prisma.nexus.findUnique({
-      where: { id: parseInt(req.params.nexusId) },
-      include: {
-        owner: { select: { id: true, username: true, points: true } },
-      },
-    });
+    const nexus = await getNexusIntelForUser(req.userId, parseInt(req.params.nexusId));
 
     if (!nexus) {
       return res.status(404).json({ error: 'Nexus not found' });
     }
 
-    const publicData = {
-      _id: nexus.id,
-      id: nexus.id,
-      name: nexus.name,
-      x: nexus.x,
-      y: nexus.y,
-      points: nexus.points,
-      owner: nexus.owner
-        ? {
-            _id: nexus.owner.id,
-            id: nexus.owner.id,
-            username: nexus.owner.username,
-            points: nexus.owner.points,
-          }
-        : null,
-      buildings: { shieldGrid: nexus.shieldGrid },
-    };
-
-    res.json(publicData);
+    res.json(nexus);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

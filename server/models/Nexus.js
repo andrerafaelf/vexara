@@ -69,6 +69,39 @@ export async function refreshResources(nexus) {
   });
 }
 
+export async function applyCompletedQueues(nexus) {
+  const now = new Date();
+  const buildQueue = Array.isArray(nexus.buildQueue) ? [...nexus.buildQueue] : [];
+  const trainingQueue = Array.isArray(nexus.trainingQueue) ? [...nexus.trainingQueue] : [];
+  const updates = {};
+
+  if (buildQueue.length > 0 && new Date(buildQueue[0].completesAt) <= now) {
+    const [build, ...remainingQueue] = buildQueue;
+    updates[build.building] = build.targetLevel;
+    updates.buildQueue = remainingQueue;
+
+    if (build.building === 'lifeSupport') {
+      updates.populationMax = Math.floor(24 * Math.pow(1.17, build.targetLevel));
+    }
+  }
+
+  while (trainingQueue.length > 0 && new Date(trainingQueue[0].completesAt) <= now) {
+    const training = trainingQueue.shift();
+    updates[training.troopType] = (updates[training.troopType] || nexus[training.troopType] || 0) + training.amount;
+  }
+
+  updates.trainingQueue = trainingQueue;
+
+  if (Object.keys(updates).length === 1 && updates.trainingQueue === trainingQueue && !updates.buildQueue) {
+    return nexus;
+  }
+
+  return prisma.nexus.update({
+    where: { id: nexus.id },
+    data: updates,
+  });
+}
+
 /** Bulk-update resources for all nexuses (called on interval) */
 export async function updateAllResources() {
   try {
@@ -149,32 +182,46 @@ export function serializeAttack(a) {
     _id: a.id,
     id: a.id,
     attacker: {
-      user: a.attackerUserId,
-      nexus: a.attackerNexusId,
-      ...(a.attackerNexus
+      user: {
+        _id: a.attackerUserId,
+        id: a.attackerUserId,
+        username: a.attackerUsername,
+      },
+      nexus: a.attackerNexus
         ? {
-            nexusData: {
-              _id: a.attackerNexus.id,
-              name: a.attackerNexus.name,
-              x: a.attackerNexus.x,
-              y: a.attackerNexus.y,
-            },
+            _id: a.attackerNexus.id,
+            id: a.attackerNexus.id,
+            name: a.attackerNexus.name,
+            x: a.attackerNexus.x,
+            y: a.attackerNexus.y,
+            buildings:
+              a.attackerNexus.shieldGrid !== undefined ? { shieldGrid: a.attackerNexus.shieldGrid } : undefined,
           }
-        : {}),
+        : {
+            _id: a.attackerNexusId,
+            id: a.attackerNexusId,
+          },
     },
     defender: {
-      user: a.defenderUserId,
-      nexus: a.defenderNexusId,
-      ...(a.defenderNexus
+      user: {
+        _id: a.defenderUserId,
+        id: a.defenderUserId,
+        username: a.defenderUsername,
+      },
+      nexus: a.defenderNexus
         ? {
-            nexusData: {
-              _id: a.defenderNexus.id,
-              name: a.defenderNexus.name,
-              x: a.defenderNexus.x,
-              y: a.defenderNexus.y,
-            },
+            _id: a.defenderNexus.id,
+            id: a.defenderNexus.id,
+            name: a.defenderNexus.name,
+            x: a.defenderNexus.x,
+            y: a.defenderNexus.y,
+            buildings:
+              a.defenderNexus.shieldGrid !== undefined ? { shieldGrid: a.defenderNexus.shieldGrid } : undefined,
           }
-        : {}),
+        : {
+            _id: a.defenderNexusId,
+            id: a.defenderNexusId,
+          },
     },
     troops: a.troops,
     arrivesAt: a.arrivesAt,

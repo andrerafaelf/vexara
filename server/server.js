@@ -12,6 +12,7 @@ import nexusRoutes from './routes/nexus.js';
 import reportRoutes from './routes/report.js';
 import troopRoutes from './routes/troop.js';
 import { processArrivedAttacks } from './utils/combat.js';
+import { ensureNeutralNexusPool } from './utils/neutralNexuses.js';
 
 dotenv.config();
 
@@ -44,7 +45,15 @@ app.use('/api/report', reportRoutes);
 // PostgreSQL connection check via Prisma
 prisma
   .$connect()
-  .then(() => console.log('✅ PostgreSQL connected successfully'))
+  .then(async () => {
+    console.log('✅ PostgreSQL connected successfully');
+    const neutralSync = await ensureNeutralNexusPool();
+    if (neutralSync.created > 0) {
+      console.log(
+        `🌌 Spawned ${neutralSync.created} neutral nexuses (${neutralSync.neutralCount}/${neutralSync.targetNeutralCount})`,
+      );
+    }
+  })
   .catch((err) => {
     console.error('❌ PostgreSQL connection error:', err.message);
     console.log('\n💡 To fix this:');
@@ -62,6 +71,13 @@ setInterval(() => {
 setInterval(() => {
   processArrivedAttacks();
 }, 10000);
+
+// Keep neutral nexus pool filled as the world gets conquered
+setInterval(() => {
+  ensureNeutralNexusPool().catch((err) => {
+    console.error('Error syncing neutral nexus pool:', err);
+  });
+}, 60000);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

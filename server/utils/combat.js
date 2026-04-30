@@ -1,4 +1,5 @@
 import prisma from '../lib/prisma.js';
+import { buildDetailedScoutIntel } from './scouting.js';
 
 // Troop stats
 const TROOP_STATS = {
@@ -44,6 +45,36 @@ async function resolveCombat(attack) {
     // Reload defender nexus with fresh data
     const defenderNexus = await prisma.nexus.findUnique({ where: { id: attack.defenderNexusId } });
     const attackTroops = attack.troops; // JSON object from DB
+
+    if (attack.type === 'scout') {
+      const attackerNexus = await prisma.nexus.findUnique({ where: { id: attack.attackerNexusId } });
+      if (attackerNexus && defenderNexus) {
+        await prisma.nexus.update({
+          where: { id: attack.attackerNexusId },
+          data: {
+            reconOperative: attackerNexus.reconOperative + (attackTroops.reconOperative || 0),
+            populationCurrent: attackerNexus.populationCurrent + (attackTroops.reconOperative || 0),
+          },
+        });
+      }
+
+      await prisma.attack.update({
+        where: { id: attack.id },
+        data: {
+          status: 'completed',
+          result: {
+            mission: 'scout',
+            victory: true,
+            intel: defenderNexus ? buildDetailedScoutIntel(defenderNexus) : null,
+            attackerLosses: {},
+            defenderLosses: {},
+            resourcesStolen: { biomass: 0, alloy: 0, ore: 0 },
+          },
+        },
+      });
+
+      return;
+    }
 
     // Calculate attack and defense power
     let attackPower = 0;

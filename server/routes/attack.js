@@ -5,6 +5,21 @@ import { serializeAttack } from '../models/Nexus.js';
 
 const router = express.Router();
 
+const TROOP_KEYS = [
+  'lancerDrone',
+  'assaultTrooper',
+  'breakerUnit',
+  'reconOperative',
+  'skimmerBike',
+  'siegeMech',
+  'bulwarkGuard',
+  'suppressorTeam',
+  'disruptorUnit',
+  'interceptorBike',
+  'annihilatorPlatform',
+  'overseer',
+];
+
 // Send attack
 router.post('/send', auth, async (req, res) => {
   try {
@@ -27,8 +42,21 @@ router.post('/send', auth, async (req, res) => {
       return res.status(400).json({ error: 'Cannot attack your own nexus' });
     }
 
-    if (defenderNexus.ownerId) {
-      return res.status(400).json({ error: 'Cannot attack conquered nexuses' });
+    const totalTroopsRequested = Object.values(troops).reduce((sum, amount) => sum + Number(amount || 0), 0);
+    if (totalTroopsRequested <= 0) {
+      return res.status(400).json({ error: 'Select at least one troop' });
+    }
+
+    const isScoutMission = type === 'scout';
+    if (isScoutMission) {
+      const reconOperatives = Number(troops.reconOperative || 0);
+      const nonScoutTroops = TROOP_KEYS.filter((troopType) => troopType !== 'reconOperative').some(
+        (troopType) => Number(troops[troopType] || 0) > 0,
+      );
+
+      if (reconOperatives <= 0 || nonScoutTroops) {
+        return res.status(400).json({ error: 'Scout missions require Recon Operatives only' });
+      }
     }
 
     // Check troop availability
@@ -49,7 +77,7 @@ router.post('/send', auth, async (req, res) => {
     const distance = Math.sqrt(
       Math.pow(defenderNexus.x - attackerNexus.x, 2) + Math.pow(defenderNexus.y - attackerNexus.y, 2),
     );
-    const travelTimeMinutes = distance * 5;
+    const travelTimeMinutes = distance * (isScoutMission ? 4 : 5);
     const arrivesAt = new Date(Date.now() + travelTimeMinutes * 60 * 1000);
 
     const [attack] = await prisma.$transaction([
@@ -101,7 +129,7 @@ router.get('/incoming/:nexusId', auth, async (req, res) => {
           where: { id: a.attackerUserId },
           select: { id: true, username: true },
         });
-        return { ...serializeAttack(a), attackerUsername: attackerUser?.username };
+        return serializeAttack({ ...a, attackerUsername: attackerUser?.username });
       }),
     );
 
@@ -134,7 +162,7 @@ router.get('/outgoing/:nexusId', auth, async (req, res) => {
               select: { id: true, username: true },
             })
           : null;
-        return { ...serializeAttack(a), defenderUsername: defenderUser?.username };
+        return serializeAttack({ ...a, defenderUsername: defenderUser?.username });
       }),
     );
 

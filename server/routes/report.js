@@ -35,11 +35,11 @@ router.get('/reports/:nexusId', auth, async (req, res) => {
             ? prisma.user.findUnique({ where: { id: r.defenderUserId }, select: { id: true, username: true } })
             : null,
         ]);
-        return {
-          ...serializeAttack(r),
+        return serializeAttack({
+          ...r,
           attackerUsername: attackerUser?.username,
           defenderUsername: defenderUser?.username,
-        };
+        });
       }),
     );
 
