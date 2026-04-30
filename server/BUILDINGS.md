@@ -4,7 +4,7 @@
 
 Neon Dominion currently features 8 building types. Buildings define your nexus economy, population capacity, troop access, defense, and overall progression.
 
-Building upgrades use a single build queue, so only **one building can be upgraded at a time** per nexus.
+Building upgrades use a build queue with a maximum of **5 queued upgrades** per nexus.
 
 ---
 
@@ -13,18 +13,39 @@ Building upgrades use a single build queue, so only **one building can be upgrad
 - Upgrades consume **Biomass**, **Alloy**, and **Ore** immediately when construction starts.
 - Upgrade time is tracked in **seconds** on the server.
 - Each building has a growth factor, so every new level costs more than the last one.
-- If a build queue is already active, no other building can be started.
+- A nexus can queue up to 5 building upgrades.
 - Completed upgrades are applied when the build queue is checked by the game.
+
+## Upgrade Requirements (Enforced)
+
+Building upgrades now validate prerequisites against the next target level, including unlock and milestone thresholds.
+
+- Command Core: max 20, no unlock, milestones at Lv4 (Life Support Lv2), Lv6 (Shield Grid Lv2), Lv10 (Storage Vault Lv5)
+- Recruitment Core: max 15, unlock Command Core Lv2, milestones at Lv4 (Biomass Farm Lv2), Lv6 (Alloy Forge Lv2), Lv10 (Life Support Lv5)
+- Life Support: max 20, unlock Command Core Lv2, milestones at Lv4 (Biomass Farm Lv2), Lv8 (Storage Vault Lv4)
+- Storage Vault: max 20, unlock Command Core Lv2, milestones at Lv4 (Ore Extractor Lv2), Lv6 (Alloy Forge Lv2), Lv10 (Command Core Lv8)
+- Biomass Farm: max 20, unlock Life Support Lv1, milestones at Lv6 (Recruitment Core Lv2), Lv10 (Life Support Lv5)
+- Alloy Forge: max 15, unlock Ore Extractor Lv2, milestones at Lv6 (Command Core Lv4), Lv10 (Ore Extractor Lv8)
+- Ore Extractor: max 20, unlock Command Core Lv1, milestones at Lv8 (Alloy Forge Lv4)
+- Shield Grid: max 15, unlock Command Core Lv3, milestones at Lv4 (Storage Vault Lv3), Lv8 (Alloy Forge Lv5)
 
 ### Upgrade Cost Formula
 
-For a building at current level $L$:
+For a building upgrading from level $L$ to $L+1$, staged multipliers are used:
+
+- Target levels 1-5: cost multiplier 1.5, time multiplier 1.25
+- Target levels 6-10: cost multiplier 1.65, time multiplier 1.35
+- Target levels 11+: cost multiplier 1.8, time multiplier 1.45
+
+The price for each upgrade step is calculated cumulatively from base values.
+
+For target level $T$:
 
 $$
-\text{cost at next level} = \lfloor \text{base cost} \times \text{factor}^{L} \rfloor
+	ext{value}(T)=\left\lfloor \text{base value} \times \prod_{i=2}^{T}m(i) \right\rfloor
 $$
 
-The same scaling is used for upgrade time.
+where $m(i)$ is selected from the staged multipliers above.
 
 ---
 

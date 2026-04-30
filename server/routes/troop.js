@@ -4,6 +4,7 @@ import auth from '../middleware/auth.js';
 import { computeResourceUpdate, serializeNexus } from '../models/Nexus.js';
 
 const router = express.Router();
+const MAX_TRAINING_QUEUE = 100;
 
 // Troop costs
 const TROOP_COSTS = {
@@ -63,8 +64,14 @@ router.post('/train', auth, async (req, res) => {
       return res.status(400).json({ error: 'Insufficient population capacity' });
     }
 
-    const completesAt = new Date(Date.now() + cost.time * amount * 1000);
     const trainingQueue = Array.isArray(nexus.trainingQueue) ? nexus.trainingQueue : [];
+    if (trainingQueue.length >= MAX_TRAINING_QUEUE) {
+      return res.status(400).json({ error: `Training queue is full (${MAX_TRAINING_QUEUE}/${MAX_TRAINING_QUEUE})` });
+    }
+
+    const queueStart =
+      trainingQueue.length > 0 ? new Date(trainingQueue[trainingQueue.length - 1].completesAt).getTime() : Date.now();
+    const completesAt = new Date(queueStart + cost.time * amount * 1000);
     const newQueue = [...trainingQueue, { troopType, amount, completesAt }];
 
     const updated = await prisma.nexus.update({

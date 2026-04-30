@@ -32,6 +32,17 @@ const BUILDING_KEYS = [
   'shieldGrid',
 ];
 
+const STARTER_NEXUS_DATA = {
+  commandCore: 0,
+  troopFabricator: 0,
+  lifeSupport: 1,
+  storageVault: 1,
+  biomassFarm: 1,
+  alloyForge: 1,
+  oreExtractor: 1,
+  shieldGrid: 0,
+};
+
 const toInt = (value, fallback = 0) => {
   const parsed = Number.parseInt(String(value), 10);
   return Number.isFinite(parsed) ? parsed : fallback;
@@ -331,6 +342,146 @@ router.post('/users/:userId/complete-strike', async (req, res) => {
   }
 });
 
+// Complete current build queue item for a user's nexus
+router.post('/users/:userId/complete-build', async (req, res) => {
+  try {
+    const userId = toInt(req.params.userId);
+    const nexus = await findTargetNexus(userId, req.body.nexusId);
+
+    if (!nexus) {
+      return res.status(404).json({ error: 'No nexus found for this user' });
+    }
+
+    const buildQueue = Array.isArray(nexus.buildQueue) ? nexus.buildQueue : [];
+    if (buildQueue.length === 0) {
+      return res.status(400).json({ error: 'No building in queue' });
+    }
+
+    const [build, ...remainingQueue] = buildQueue;
+    const data = {
+      [build.building]: build.targetLevel,
+      buildQueue: remainingQueue,
+    };
+
+    if (build.building === 'lifeSupport') {
+      data.populationMax = Math.floor(24 * Math.pow(1.17, build.targetLevel));
+      data.populationCurrent = Math.min(nexus.populationCurrent, data.populationMax);
+    }
+
+    const updated = await prisma.nexus.update({ where: { id: nexus.id }, data });
+
+    res.json({ success: true, nexus: serializeNexus(updated) });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Complete all troop training queue entries for a user's nexus
+router.post('/users/:userId/complete-training', async (req, res) => {
+  try {
+    const userId = toInt(req.params.userId);
+    const nexus = await findTargetNexus(userId, req.body.nexusId);
+
+    if (!nexus) {
+      return res.status(404).json({ error: 'No nexus found for this user' });
+    }
+
+    const trainingQueue = Array.isArray(nexus.trainingQueue) ? nexus.trainingQueue : [];
+    if (trainingQueue.length === 0) {
+      return res.status(400).json({ error: 'No troops in training' });
+    }
+
+    const troopUpdates = {};
+    let totalPopulationAdded = 0;
+
+    for (const training of trainingQueue) {
+      const amount = toInt(training.amount);
+      if (amount <= 0) {
+        continue;
+      }
+      troopUpdates[training.troopType] = (troopUpdates[training.troopType] || nexus[training.troopType] || 0) + amount;
+      totalPopulationAdded += amount;
+    }
+
+    const updated = await prisma.nexus.update({
+      where: { id: nexus.id },
+      data: {
+        ...troopUpdates,
+        populationCurrent: nexus.populationCurrent + totalPopulationAdded,
+        trainingQueue: [],
+      },
+    });
+
+    res.json({ success: true, nexus: serializeNexus(updated) });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Reset user account to starter game state
+router.post('/users/:userId/reset-account', async (req, res) => {
+  try {
+    const userId = toInt(req.params.userId);
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const resetResult = await prisma.$transaction(async (tx) => {
+      const userNexuses = await tx.nexus.findMany({ where: { ownerId: userId }, select: { id: true } });
+      const nexusIds = userNexuses.map((n) => n.id);
+
+      if (nexusIds.length > 0) {
+        await tx.attack.deleteMany({
+          where: {
+            OR: [{ attackerNexusId: { in: nexusIds } }, { defenderNexusId: { in: nexusIds } }],
+          },
+        });
+      }
+
+      await tx.attack.deleteMany({
+        where: {
+          OR: [{ attackerUserId: userId }, { defenderUserId: userId }],
+        },
+      });
+
+      await tx.nexus.deleteMany({ where: { ownerId: userId } });
+
+      await tx.user.update({
+        where: { id: userId },
+        data: { points: 0 },
+      });
+
+      const starterNexus = await tx.nexus.create({
+        data: {
+          name: `${user.username}'s Nexus`,
+          ownerId: user.id,
+          x: Math.floor(Math.random() * 100),
+          y: Math.floor(Math.random() * 100),
+          ...STARTER_NEXUS_DATA,
+          buildQueue: [],
+          trainingQueue: [],
+          populationCurrent: 5,
+          populationMax: 24,
+          biomass: 500,
+          alloy: 500,
+          ore: 500,
+          controlLevel: 100,
+          points: 5,
+          lastResourceUpdate: new Date(),
+        },
+      });
+
+      return starterNexus;
+    });
+
+    res.json({ success: true, message: 'Account reset to starter state', nexus: serializeNexus(resetResult) });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Delete user
 router.delete('/users/:userId', async (req, res) => {
   try {
@@ -528,13 +679,24 @@ router.post('/nexuses/:nexusId/complete-training', async (req, res) => {
       return res.status(400).json({ error: 'No troops in training' });
     }
 
-    const [training, ...remainingQueue] = trainingQueue;
+    const troopUpdates = {};
+    let totalPopulationAdded = 0;
+
+    for (const training of trainingQueue) {
+      const amount = toInt(training.amount);
+      if (amount <= 0) {
+        continue;
+      }
+      troopUpdates[training.troopType] = (troopUpdates[training.troopType] || nexus[training.troopType] || 0) + amount;
+      totalPopulationAdded += amount;
+    }
+
     const updated = await prisma.nexus.update({
       where: { id: nexus.id },
       data: {
-        [training.troopType]: (nexus[training.troopType] || 0) + training.amount,
-        populationCurrent: nexus.populationCurrent + training.amount,
-        trainingQueue: remainingQueue,
+        ...troopUpdates,
+        populationCurrent: nexus.populationCurrent + totalPopulationAdded,
+        trainingQueue: [],
       },
     });
 

@@ -61,6 +61,45 @@
   background: #e94560;
 }
 
+.map-controls button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.map-controls button:disabled:hover {
+  background: #1a4971;
+}
+
+.map-coordinate-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(15, 52, 96, 0.9);
+}
+
+.map-coordinate-controls span {
+  color: #f1faee;
+  font-size: 13px;
+}
+
+.map-coordinate-controls input {
+  width: 72px;
+  padding: 6px 8px;
+  border: 1px solid #457b9d;
+  border-radius: 6px;
+  background: #16213e;
+  color: #f1faee;
+  font-size: 13px;
+  text-align: center;
+}
+
+.map-coordinate-controls input:focus {
+  outline: none;
+  border-color: #e94560;
+}
+
 .map-content {
   display: flex;
   flex: 1;

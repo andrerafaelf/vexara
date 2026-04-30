@@ -36,6 +36,14 @@ router.post('/register', async (req, res) => {
           ownerId: newUser.id,
           x: Math.floor(Math.random() * 100),
           y: Math.floor(Math.random() * 100),
+          commandCore: 0,
+          troopFabricator: 0,
+          lifeSupport: 1,
+          storageVault: 1,
+          biomassFarm: 1,
+          alloyForge: 1,
+          oreExtractor: 1,
+          shieldGrid: 0,
         },
       });
 

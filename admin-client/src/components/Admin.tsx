@@ -316,6 +316,29 @@ const Admin: React.FC = () => {
     }
   };
 
+  const handleResetUser = async (user: User) => {
+    const confirmed = window.confirm(
+      `Reset account "${user.username}" to starter state? This will remove all nexuses, attacks, queues, troops, and resources progress.`,
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await adminFetch(`http://localhost:3002/api/admin/users/${user._id}/reset-account`, {
+        method: 'POST',
+      });
+
+      if (res.ok) {
+        showToast(`Account reset for ${user.username}`, 'success');
+        loadData();
+      } else {
+        const data = await res.json();
+        showToast(data.error || 'Failed to reset account', 'error');
+      }
+    } catch (err) {
+      showToast('Error resetting account', 'error');
+    }
+  };
+
   const handleCompleteAttack = async (attackId: string) => {
     try {
       const res = await adminFetch(`http://localhost:3002/api/admin/attacks/${attackId}/complete`, {
@@ -349,6 +372,56 @@ const Admin: React.FC = () => {
       }
     } catch (err) {
       showToast('Error completing user strike', 'error');
+    }
+  };
+
+  const handleCompleteUserBuild = async (user: User) => {
+    const targetNexusId = user.nexuses?.[0]?._id;
+    if (!targetNexusId) {
+      showToast('User has no nexus to complete build for', 'error');
+      return;
+    }
+
+    try {
+      const res = await adminFetch(`http://localhost:3002/api/admin/users/${user._id}/complete-build`, {
+        method: 'POST',
+        body: JSON.stringify({ nexusId: targetNexusId }),
+      });
+
+      if (res.ok) {
+        showToast(`Completed current build for ${user.username}`, 'success');
+        loadData();
+      } else {
+        const data = await res.json();
+        showToast(data.error || 'Failed to complete build', 'error');
+      }
+    } catch (err) {
+      showToast('Error completing build', 'error');
+    }
+  };
+
+  const handleCompleteUserTraining = async (user: User) => {
+    const targetNexusId = user.nexuses?.[0]?._id;
+    if (!targetNexusId) {
+      showToast('User has no nexus to complete training for', 'error');
+      return;
+    }
+
+    try {
+      const res = await adminFetch(`http://localhost:3002/api/admin/users/${user._id}/complete-training`, {
+        method: 'POST',
+        body: JSON.stringify({ nexusId: targetNexusId }),
+      });
+
+      if (res.ok) {
+        showToast(`Completed all queued training for ${user.username}`, 'success');
+        loadData();
+      } else {
+        const data = await res.json();
+        showToast(data.error || 'Failed to complete troop queue', 'error');
+      }
+    } catch (err) {
+      showToast('Error completing troop queue', 'error');
     }
   };
 
@@ -414,6 +487,15 @@ const Admin: React.FC = () => {
                     </button>
                     <button className="btn-small" onClick={() => handleCompleteUserStrike(user)}>
                       Complete Strike
+                    </button>
+                    <button className="btn-small" onClick={() => handleCompleteUserBuild(user)}>
+                      Complete Build
+                    </button>
+                    <button className="btn-small" onClick={() => handleCompleteUserTraining(user)}>
+                      Complete Troops
+                    </button>
+                    <button className="btn-small btn-warning" onClick={() => handleResetUser(user)}>
+                      Reset Account
                     </button>
                     <button className="btn-danger" onClick={() => handleDeleteUser(user._id, user.username)}>
                       Delete

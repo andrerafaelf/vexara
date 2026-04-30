@@ -75,15 +75,16 @@ export async function applyCompletedQueues(nexus) {
   const trainingQueue = Array.isArray(nexus.trainingQueue) ? [...nexus.trainingQueue] : [];
   const updates = {};
 
-  if (buildQueue.length > 0 && new Date(buildQueue[0].completesAt) <= now) {
-    const [build, ...remainingQueue] = buildQueue;
+  while (buildQueue.length > 0 && new Date(buildQueue[0].completesAt) <= now) {
+    const build = buildQueue.shift();
     updates[build.building] = build.targetLevel;
-    updates.buildQueue = remainingQueue;
 
     if (build.building === 'lifeSupport') {
       updates.populationMax = Math.floor(24 * Math.pow(1.17, build.targetLevel));
     }
   }
+
+  updates.buildQueue = buildQueue;
 
   while (trainingQueue.length > 0 && new Date(trainingQueue[0].completesAt) <= now) {
     const training = trainingQueue.shift();

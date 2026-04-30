@@ -3,7 +3,7 @@
 import AdBanner from '@/components/AdBanner';
 import NexusView from '@/components/NexusView';
 import { useAuth } from '@/context/AuthContext';
-import { getMyNexuses } from '@/services/api';
+import { getMyNexuses, getNexus } from '@/services/api';
 import '@/styles/Game.css';
 import { Nexus } from '@/types/game';
 import { useParams, useRouter } from 'next/navigation';
@@ -20,10 +20,22 @@ export default function NexusPage() {
 
   const loadVillages = useCallback(async () => {
     try {
-      const response = await getMyNexuses();
-      setVillages(response.data);
-      const nexus = response.data.find((v: Nexus) => v._id === nexusId);
-      setSelectedNexus(nexus || null);
+      const [nexusesResponse, nexusResponse] = await Promise.allSettled([getMyNexuses(), getNexus(nexusId)]);
+
+      if (nexusesResponse.status === 'fulfilled') {
+        setVillages(nexusesResponse.value.data);
+      } else {
+        console.error('Error loading nexuses:', nexusesResponse.reason);
+        setVillages([]);
+      }
+
+      if (nexusResponse.status === 'fulfilled') {
+        setSelectedNexus(nexusResponse.value.data);
+      } else {
+        console.error('Error loading selected nexus:', nexusResponse.reason);
+        setSelectedNexus(null);
+      }
+
       setLoading(false);
     } catch (err) {
       console.error('Error loading nexuses:', err);

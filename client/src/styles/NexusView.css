@@ -130,6 +130,64 @@
   font-weight: bold;
 }
 
+.intro-quests {
+  background: #0f3460;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}
+
+.intro-quests-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.intro-quests-header h4 {
+  color: #a8dadc;
+  margin: 0;
+}
+
+.intro-quests-header span {
+  color: #4caf50;
+  font-weight: bold;
+}
+
+.intro-quest-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px;
+  background: #1a4971;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.intro-quest-item:last-child {
+  margin-bottom: 0;
+}
+
+.intro-quest-item.completed {
+  border-left: 3px solid #4caf50;
+}
+
+.intro-quest-icon {
+  line-height: 1.2;
+}
+
+.intro-quest-title {
+  color: #f1faee;
+  font-weight: bold;
+  margin: 0;
+}
+
+.intro-quest-description {
+  color: #a8dadc;
+  margin: 2px 0 0 0;
+  font-size: 12px;
+}
+
 /* Attack Modal */
 .attack-modal-overlay {
   position: fixed;
@@ -286,6 +344,15 @@
   overflow: hidden;
 }
 
+.building-card.disabled {
+  opacity: 0.6;
+  border: 2px solid #666;
+}
+
+.building-card.disabled h4 {
+  color: #888;
+}
+
 .building-card-image {
   width: 100%;
   object-fit: cover;
@@ -388,6 +455,11 @@
 
 .building-card button:hover:not(:disabled) {
   background: #c73851;
+}
+
+.building-card button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Troops Tab */

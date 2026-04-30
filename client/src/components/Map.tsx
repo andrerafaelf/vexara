@@ -44,6 +44,10 @@ const TROOP_LABELS: Record<string, string> = {
   overseer: 'Overseer',
 };
 
+const VISIBLE_RANGE = 5;
+const BASE_CELL_SIZE = 60;
+const BASE_GRID_BORDER = 2;
+
 const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   const { user } = useAuth();
   const [nexuses, setVillages] = useState<MapNexus[]>([]);
@@ -72,7 +76,43 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [targetX, setTargetX] = useState(String(currentNexus.x));
+  const [targetY, setTargetY] = useState(String(currentNexus.y));
   const reconAvailable = currentNexus.troops?.reconOperative || 0;
+  const visibleRange = VISIBLE_RANGE;
+  const visibleDiameter = visibleRange * 2 + 1;
+
+  const clampCoordinate = (value: string, fallback: number) => {
+    const parsed = Number.parseInt(value, 10);
+    if (Number.isNaN(parsed)) {
+      return fallback;
+    }
+
+    return Math.max(0, Math.min(99, parsed));
+  };
+
+  const handleJumpToCoordinates = () => {
+    const nextX = clampCoordinate(targetX, centerX);
+    const nextY = clampCoordinate(targetY, centerY);
+    setCenterX(nextX);
+    setCenterY(nextY);
+    setTargetX(String(nextX));
+    setTargetY(String(nextY));
+  };
+
+  const handleResetMap = () => {
+    setCenterX(currentNexus.x);
+    setCenterY(currentNexus.y);
+    setTargetX(String(currentNexus.x));
+    setTargetY(String(currentNexus.y));
+  };
+
+  const handleCoordinateKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleJumpToCoordinates();
+    }
+  };
 
   // Helper function to get nexus type information
   const getNodeTypeInfo = (nodeName: string): string => {
@@ -118,6 +158,11 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
     };
     selectCurrentNexus();
   }, [currentNexus._id]);
+
+  useEffect(() => {
+    setTargetX(String(centerX));
+    setTargetY(String(centerY));
+  }, [centerX, centerY]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -189,9 +234,9 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
       // Store offset for visual feedback
       setDragOffset({ x: deltaX, y: deltaY });
 
-      // Update map position in real-time during drag (increased threshold for slower movement)
-      const cellsX = Math.round(-deltaX / 90);
-      const cellsY = Math.round(deltaY / 90);
+      const dragThreshold = 90;
+      const cellsX = Math.round(-deltaX / dragThreshold);
+      const cellsY = Math.round(deltaY / dragThreshold);
 
       if (cellsX !== 0 || cellsY !== 0) {
         setCenterX((prev) => Math.max(0, Math.min(99, prev + cellsX)));
@@ -297,11 +342,10 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
 
   const renderGrid = () => {
     const grid = [];
-    const range = 5;
 
-    for (let y = centerY + range; y >= centerY - range; y--) {
+    for (let y = centerY + visibleRange; y >= centerY - visibleRange; y--) {
       const row = [];
-      for (let x = centerX - range; x <= centerX + range; x++) {
+      for (let x = centerX - visibleRange; x <= centerX + visibleRange; x++) {
         // Check if coordinates are outside the valid map range (0-99)
         const isOutOfBounds = x < 0 || x > 99 || y < 0 || y > 99;
 
@@ -337,19 +381,18 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   const getCrosshairPosition = () => {
     if (!selectedNexus) return null;
 
-    const range = 5;
     // Calculate cell position relative to the grid
-    const relX = selectedNexus.x - (centerX - range);
-    const relY = centerY + range - selectedNexus.y;
+    const relX = selectedNexus.x - (centerX - visibleRange);
+    const relY = centerY + visibleRange - selectedNexus.y;
 
     // Check if selected nexus is within visible range
-    if (relX < 0 || relX > range * 2 || relY < 0 || relY > range * 2) {
+    if (relX < 0 || relX > visibleRange * 2 || relY < 0 || relY > visibleRange * 2) {
       return null; // Don't show crosshair if selected nexus is off-screen
     }
 
-    const cellSize = 60; // matches .map-cell width/height
-    const gridBorder = 2; // .map-grid border width
-    const gridSize = (range * 2 + 1) * cellSize + gridBorder * 2; // 11 cells * 60px + borders
+    const cellSize = BASE_CELL_SIZE;
+    const gridBorder = BASE_GRID_BORDER;
+    const gridSize = visibleDiameter * cellSize + gridBorder * 2;
 
     // Position relative to centered grid, accounting for border
     const left = `calc(50% - ${gridSize / 2}px + ${relX * cellSize + cellSize / 2 + gridBorder}px)`;
@@ -366,21 +409,37 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
           <span>
             Viewing: ({centerX}|{centerY}) | Map Size: 100x100 (10,000 hexes)
           </span>
-          <span className="map-hint">💡 Drag to pan • Arrow keys to navigate</span>
+          <span className="map-hint">💡 Drag to pan • Arrow keys to navigate • Jump to coordinates</span>
         </div>
         <div className="map-controls">
           <button onClick={() => setCenterY(Math.min(99, centerY + 5))}>⬆️ North</button>
           <button onClick={() => setCenterX(Math.max(0, centerX - 5))}>⬅️ West</button>
-          <button
-            onClick={() => {
-              setCenterX(currentNexus.x);
-              setCenterY(currentNexus.y);
-            }}
-          >
-            🏠 Center
-          </button>
+          <button onClick={handleResetMap}>🏠 Reset Map</button>
           <button onClick={() => setCenterX(Math.min(99, centerX + 5))}>➡️ East</button>
           <button onClick={() => setCenterY(Math.max(0, centerY - 5))}>⬇️ South</button>
+          <div className="map-coordinate-controls">
+            <span>Go to</span>
+            <input
+              type="number"
+              min={0}
+              max={99}
+              value={targetX}
+              onChange={(e) => setTargetX(e.target.value)}
+              onKeyDown={handleCoordinateKeyDown}
+              aria-label="Target X coordinate"
+            />
+            <span>|</span>
+            <input
+              type="number"
+              min={0}
+              max={99}
+              value={targetY}
+              onChange={(e) => setTargetY(e.target.value)}
+              onKeyDown={handleCoordinateKeyDown}
+              aria-label="Target Y coordinate"
+            />
+            <button onClick={handleJumpToCoordinates}>Jump</button>
+          </div>
         </div>
       </div>
 
@@ -395,6 +454,8 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
             onDragStart={(e) => e.preventDefault()}
             style={{
               cursor: isDragging ? 'grabbing' : 'grab',
+              width: `${visibleDiameter * BASE_CELL_SIZE + BASE_GRID_BORDER * 2}px`,
+              height: `${visibleDiameter * BASE_CELL_SIZE + BASE_GRID_BORDER * 2}px`,
             }}
           >
             {renderGrid()}

@@ -96,8 +96,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
           <div className={`report-result ${selectedReport.result.victory ? 'victory' : 'defeat'}`}>
             {scoutReport ? (
               <span>🔍 Recon complete. Intelligence updated.</span>
-            ) : (
-            {isMyAttack ? (
+            ) : isMyAttack ? (
               selectedReport.result.victory ? (
                 <>
                   <span>🎉 Victory! You won the strike</span>
@@ -110,7 +109,6 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
               <span>💀 Defeat! Your nexus was raided</span>
             ) : (
               <span>🛡️ Victory! You defended successfully</span>
-            )}
             )}
           </div>
 
@@ -135,93 +133,94 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
           )}
 
           {!scoutReport && (
-
-          {selectedReport.result.controlReduced && !selectedReport.result.conquered && (
-            <div className="control-notice">
-              🎯 Control reduced! Remaining: {selectedReport.result.remainingControl}/100
-            </div>
-          )}
-
-          {selectedReport.result.nexusLifeReduced && (
-            <div className="control-notice">
-              ⚡ Nexus life reduced! Remaining: {selectedReport.result.remainingNexusLife || 0}/
-              {selectedReport.defender.nexus?.buildings?.shieldGrid ? 100 : 0}
-            </div>
-          )}
-
-          <div className="report-section">
-            <h3>Strike Information</h3>
-            <p>
-              <strong>Date:</strong> {formatDate(selectedReport.arrivesAt)}
-            </p>
-            <p>
-              <strong>Striker:</strong> {selectedReport.attacker.user?.username || 'Unknown'} from{' '}
-              {selectedReport.attacker.nexus?.name || 'Unknown'} ({selectedReport.attacker.nexus?.x || '?'}|
-              {selectedReport.attacker.nexus?.y || '?'})
-            </p>
-            <p>
-              <strong>Defender:</strong> {selectedReport.defender.user?.username || 'Unknown'} from{' '}
-              {selectedReport.defender.nexus?.name || 'Unknown'} ({selectedReport.defender.nexus?.x || '?'}|
-              {selectedReport.defender.nexus?.y || '?'})
-            </p>
-            {selectedReport.result?.remainingControl !== undefined &&
-              selectedReport.result.remainingControl !== null && (
-                <p>
-                  <strong>Nexus Control:</strong> {selectedReport.result.remainingControl}/100
-                  {selectedReport.result.conquered && ' (Conquered!)'}
-                </p>
+            <>
+              {selectedReport.result.controlReduced && !selectedReport.result.conquered && (
+                <div className="control-notice">
+                  🎯 Control reduced! Remaining: {selectedReport.result.remainingControl}/100
+                </div>
               )}
-            {selectedReport.result?.remainingNexusLife !== undefined &&
-              selectedReport.result.remainingNexusLife !== null && (
-                <p>
-                  <strong>Nexus Life:</strong> {selectedReport.result.remainingNexusLife}/100
-                </p>
-              )}
-          </div>
 
-          <div className="report-section">
-            <h3>Your Forces</h3>
-            <table className="report-table">
-              <thead>
-                <tr>
-                  <th>Unit</th>
-                  <th>Sent</th>
-                  <th>Lost</th>
-                  <th>Survived</th>
-                </tr>
-              </thead>
-              <tbody>
-                {myRole === 'attacker' && (
-                  <>
-                    {Object.entries(selectedReport.troops).map(([troopType, count]) =>
-                      count > 0 ? (
-                        <tr key={troopType}>
-                          <td>{troopNames[troopType] || troopType}</td>
-                          <td>{count}</td>
-                          <td className="losses">{selectedReport.result?.attackerLosses?.[troopType] || 0}</td>
-                          <td>{count - (selectedReport.result?.attackerLosses?.[troopType] || 0)}</td>
-                        </tr>
-                      ) : null,
+              {selectedReport.result.nexusLifeReduced && (
+                <div className="control-notice">
+                  ⚡ Nexus life reduced! Remaining: {selectedReport.result.remainingNexusLife || 0}/
+                  {selectedReport.defender.nexus?.buildings?.shieldGrid ? 100 : 0}
+                </div>
+              )}
+
+              <div className="report-section">
+                <h3>Strike Information</h3>
+                <p>
+                  <strong>Date:</strong> {formatDate(selectedReport.arrivesAt)}
+                </p>
+                <p>
+                  <strong>Striker:</strong> {selectedReport.attacker.user?.username || 'Unknown'} from{' '}
+                  {selectedReport.attacker.nexus?.name || 'Unknown'} ({selectedReport.attacker.nexus?.x || '?'}|
+                  {selectedReport.attacker.nexus?.y || '?'})
+                </p>
+                <p>
+                  <strong>Defender:</strong> {selectedReport.defender.user?.username || 'Unknown'} from{' '}
+                  {selectedReport.defender.nexus?.name || 'Unknown'} ({selectedReport.defender.nexus?.x || '?'}|
+                  {selectedReport.defender.nexus?.y || '?'})
+                </p>
+                {selectedReport.result?.remainingControl !== undefined &&
+                  selectedReport.result.remainingControl !== null && (
+                    <p>
+                      <strong>Nexus Control:</strong> {selectedReport.result.remainingControl}/100
+                      {selectedReport.result.conquered && ' (Conquered!)'}
+                    </p>
+                  )}
+                {selectedReport.result?.remainingNexusLife !== undefined &&
+                  selectedReport.result.remainingNexusLife !== null && (
+                    <p>
+                      <strong>Nexus Life:</strong> {selectedReport.result.remainingNexusLife}/100
+                    </p>
+                  )}
+              </div>
+
+              <div className="report-section">
+                <h3>Your Forces</h3>
+                <table className="report-table">
+                  <thead>
+                    <tr>
+                      <th>Unit</th>
+                      <th>Sent</th>
+                      <th>Lost</th>
+                      <th>Survived</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {myRole === 'attacker' && (
+                      <>
+                        {Object.entries(selectedReport.troops).map(([troopType, count]) =>
+                          count > 0 ? (
+                            <tr key={troopType}>
+                              <td>{troopNames[troopType] || troopType}</td>
+                              <td>{count}</td>
+                              <td className="losses">{selectedReport.result?.attackerLosses?.[troopType] || 0}</td>
+                              <td>{count - (selectedReport.result?.attackerLosses?.[troopType] || 0)}</td>
+                            </tr>
+                          ) : null,
+                        )}
+                      </>
                     )}
-                  </>
-                )}
-                {myRole === 'defender' &&
-                  selectedReport.result?.defenderLosses &&
-                  Object.entries(selectedReport.result.defenderLosses).map(
-                    ([troop, lost]) =>
-                      Number(lost) > 0 && (
-                        <tr key={troop}>
-                          <td>{troopNames[troop] || troop}</td>
-                          <td>-</td>
-                          <td className="losses">{lost}</td>
-                          <td>-</td>
-                        </tr>
-                      ),
-                  )}
-                  )}
-              </tbody>
-            </table>
-          </div>
+                    {myRole === 'defender' &&
+                      selectedReport.result?.defenderLosses &&
+                      Object.entries(selectedReport.result.defenderLosses).map(
+                        ([troop, lost]) =>
+                          Number(lost) > 0 && (
+                            <tr key={troop}>
+                              <td>{troopNames[troop] || troop}</td>
+                              <td>-</td>
+                              <td className="losses">{lost}</td>
+                              <td>-</td>
+                            </tr>
+                          ),
+                      )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
 
           <div className="report-section">
             <h3>Enemy Forces</h3>

@@ -33,6 +33,9 @@ interface NexusViewProps {
   onUpdate: () => void;
 }
 
+const MAX_BUILD_QUEUE = 5;
+const MAX_TRAINING_QUEUE = 100;
+
 const BUILDING_NAMES: { [key: string]: string } = {
   commandCore: 'Command Core',
   troopFabricator: 'Recruitment Core',
@@ -56,14 +59,98 @@ const BUILDING_DESCRIPTIONS: { [key: string]: string } = {
 };
 
 const BUILDING_COSTS: { [key: string]: any } = {
-  commandCore: { biomass: 90, alloy: 80, ore: 70, time: 180, factor: 1.26 },
-  troopFabricator: { biomass: 200, alloy: 170, ore: 90, time: 300, factor: 1.28 },
-  lifeSupport: { biomass: 80, alloy: 100, ore: 70, time: 240, factor: 1.3 },
-  storageVault: { biomass: 60, alloy: 50, ore: 40, time: 180, factor: 1.27 },
-  biomassFarm: { biomass: 50, alloy: 60, ore: 40, time: 180, factor: 1.25 },
-  alloyForge: { biomass: 65, alloy: 40, ore: 40, time: 180, factor: 1.25 },
-  oreExtractor: { biomass: 75, alloy: 65, ore: 70, time: 240, factor: 1.25 },
-  shieldGrid: { biomass: 50, alloy: 100, ore: 20, time: 300, factor: 1.32 },
+  commandCore: { biomass: 90, alloy: 80, ore: 70, time: 180 },
+  troopFabricator: { biomass: 200, alloy: 170, ore: 90, time: 300 },
+  lifeSupport: { biomass: 80, alloy: 100, ore: 70, time: 240 },
+  storageVault: { biomass: 60, alloy: 50, ore: 40, time: 180 },
+  biomassFarm: { biomass: 50, alloy: 60, ore: 40, time: 180 },
+  alloyForge: { biomass: 65, alloy: 40, ore: 40, time: 180 },
+  oreExtractor: { biomass: 75, alloy: 65, ore: 70, time: 240 },
+  shieldGrid: { biomass: 50, alloy: 100, ore: 20, time: 300 },
+};
+
+const BUILDING_RULES: {
+  [key: string]: {
+    maxLevel: number;
+    unlock?: { building: string; level: number };
+    milestones: Array<{ level: number; requires: Array<{ building: string; level: number }> }>;
+  };
+} = {
+  commandCore: {
+    maxLevel: 20,
+    milestones: [
+      { level: 4, requires: [{ building: 'lifeSupport', level: 2 }] },
+      { level: 6, requires: [{ building: 'shieldGrid', level: 2 }] },
+      { level: 10, requires: [{ building: 'storageVault', level: 5 }] },
+    ],
+  },
+  troopFabricator: {
+    maxLevel: 15,
+    unlock: { building: 'commandCore', level: 2 },
+    milestones: [
+      { level: 4, requires: [{ building: 'biomassFarm', level: 2 }] },
+      { level: 6, requires: [{ building: 'alloyForge', level: 2 }] },
+      { level: 10, requires: [{ building: 'lifeSupport', level: 5 }] },
+    ],
+  },
+  lifeSupport: {
+    maxLevel: 20,
+    unlock: { building: 'commandCore', level: 2 },
+    milestones: [
+      { level: 4, requires: [{ building: 'biomassFarm', level: 2 }] },
+      { level: 8, requires: [{ building: 'storageVault', level: 4 }] },
+    ],
+  },
+  storageVault: {
+    maxLevel: 20,
+    unlock: { building: 'commandCore', level: 2 },
+    milestones: [
+      { level: 4, requires: [{ building: 'oreExtractor', level: 2 }] },
+      { level: 6, requires: [{ building: 'alloyForge', level: 2 }] },
+      { level: 10, requires: [{ building: 'commandCore', level: 8 }] },
+    ],
+  },
+  biomassFarm: {
+    maxLevel: 20,
+    unlock: { building: 'lifeSupport', level: 1 },
+    milestones: [
+      { level: 6, requires: [{ building: 'troopFabricator', level: 2 }] },
+      { level: 10, requires: [{ building: 'lifeSupport', level: 5 }] },
+    ],
+  },
+  alloyForge: {
+    maxLevel: 15,
+    unlock: { building: 'oreExtractor', level: 2 },
+    milestones: [
+      { level: 6, requires: [{ building: 'commandCore', level: 4 }] },
+      { level: 10, requires: [{ building: 'oreExtractor', level: 8 }] },
+    ],
+  },
+  oreExtractor: {
+    maxLevel: 20,
+    unlock: { building: 'commandCore', level: 1 },
+    milestones: [{ level: 8, requires: [{ building: 'alloyForge', level: 4 }] }],
+  },
+  shieldGrid: {
+    maxLevel: 15,
+    unlock: { building: 'commandCore', level: 3 },
+    milestones: [
+      { level: 4, requires: [{ building: 'storageVault', level: 3 }] },
+      { level: 8, requires: [{ building: 'alloyForge', level: 5 }] },
+    ],
+  },
+};
+
+const COST_SCALING = {
+  early: 1.5,
+  mid: 1.65,
+  late: 1.8,
+};
+
+const TIME_SCALING = {
+  early: 1.25,
+  mid: 1.35,
+  late: 1.45,
 };
 
 const BUILDING_IMAGES: { [key: string]: any } = {
@@ -169,6 +256,13 @@ interface ToastMessage {
   type: 'success' | 'error' | 'info';
 }
 
+interface IntroQuest {
+  id: string;
+  title: string;
+  description: string;
+  completed: boolean;
+}
+
 const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'buildings' | 'troops' | 'map'>('overview');
   const [trainAmount, setTrainAmount] = useState<{ [key: string]: number }>({});
@@ -226,8 +320,13 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
   };
 
   const handleUpgrade = async (building: string) => {
+    if (nexus.buildQueue.length >= MAX_BUILD_QUEUE) {
+      showToast(`Build queue is full (${MAX_BUILD_QUEUE}/${MAX_BUILD_QUEUE})`, 'error');
+      return;
+    }
+
     try {
-      const response = await upgradeBuilding(nexus._id, building);
+      await upgradeBuilding(nexus._id, building);
       showToast(`${BUILDING_NAMES[building]} upgrade started!`, 'success');
       onUpdate();
     } catch (err: any) {
@@ -236,6 +335,11 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
   };
 
   const handleTrainTroops = async (troopType: string) => {
+    if (nexus.trainingQueue.length >= MAX_TRAINING_QUEUE) {
+      showToast(`Training queue is full (${MAX_TRAINING_QUEUE}/${MAX_TRAINING_QUEUE})`, 'error');
+      return;
+    }
+
     const amount = trainAmount[troopType] || 1;
 
     // Check requirements
@@ -341,17 +445,151 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
 
   const getBuildingCost = (building: string, currentLevel: number) => {
     const base = BUILDING_COSTS[building];
-    const factor = Math.pow(base.factor, currentLevel);
+    const targetLevel = currentLevel + 1;
+
+    let biomass = base.biomass;
+    let alloy = base.alloy;
+    let ore = base.ore;
+    let time = base.time;
+
+    for (let level = 2; level <= targetLevel; level += 1) {
+      const costMultiplier = level <= 5 ? COST_SCALING.early : level <= 10 ? COST_SCALING.mid : COST_SCALING.late;
+      const timeMultiplier = level <= 5 ? TIME_SCALING.early : level <= 10 ? TIME_SCALING.mid : TIME_SCALING.late;
+      biomass *= costMultiplier;
+      alloy *= costMultiplier;
+      ore *= costMultiplier;
+      time *= timeMultiplier;
+    }
 
     return {
-      biomass: Math.floor(base.biomass * factor),
-      alloy: Math.floor(base.alloy * factor),
-      ore: Math.floor(base.ore * factor),
-      time: Math.floor(base.time * factor),
+      biomass: Math.floor(biomass),
+      alloy: Math.floor(alloy),
+      ore: Math.floor(ore),
+      time: Math.floor(time),
     };
   };
 
+  const getRequirementsForTargetLevel = (building: string, targetLevel: number) => {
+    const rule = BUILDING_RULES[building];
+    if (!rule) return [] as Array<{ building: string; level: number }>;
+
+    const merged = new Map<string, number>();
+
+    if (building !== 'commandCore' && targetLevel >= 1) {
+      merged.set('commandCore', 1);
+    }
+
+    if (rule.unlock && targetLevel >= 1) {
+      merged.set(rule.unlock.building, rule.unlock.level);
+    }
+
+    for (const milestone of rule.milestones) {
+      if (targetLevel >= milestone.level) {
+        for (const requirement of milestone.requires) {
+          const existing = merged.get(requirement.building) || 0;
+          merged.set(requirement.building, Math.max(existing, requirement.level));
+        }
+      }
+    }
+
+    return Array.from(merged.entries()).map(([requiredBuilding, level]) => ({ building: requiredBuilding, level }));
+  };
+
+  const checkBuildingRequirements = (building: string) => {
+    const rule = BUILDING_RULES[building];
+    if (!rule) return { canUpgrade: true, missingRequirements: [], atMax: false };
+
+    const plannedBuildings = { ...nexus.buildings } as any;
+    for (const queued of nexus.buildQueue || []) {
+      plannedBuildings[queued.building] = Math.max(plannedBuildings[queued.building] || 0, queued.targetLevel);
+    }
+
+    const currentLevel = plannedBuildings[building] || 0;
+    if (currentLevel >= rule.maxLevel) {
+      return {
+        canUpgrade: false,
+        missingRequirements: [`Max level reached (Lv${rule.maxLevel})`],
+        atMax: true,
+      };
+    }
+
+    const targetLevel = currentLevel + 1;
+    const requirements = getRequirementsForTargetLevel(building, targetLevel);
+
+    const missing: string[] = [];
+    for (const requirement of requirements) {
+      if ((plannedBuildings as any)[requirement.building] < requirement.level) {
+        missing.push(`${BUILDING_NAMES[requirement.building]} Lv${requirement.level}`);
+      }
+    }
+
+    return { canUpgrade: missing.length === 0, missingRequirements: missing, atMax: false };
+  };
+
+  const getIntroQuests = (): IntroQuest[] => {
+    const assaultTroopers = nexus.troops.assaultTrooper || 0;
+    const reconOperatives = nexus.troops.reconOperative || 0;
+    return [
+      {
+        id: 'command-core-online',
+        title: 'Power The Nexus',
+        description: 'Upgrade Command Core to Lv1.',
+        completed: nexus.buildings.commandCore >= 1,
+      },
+      {
+        id: 'start-fabrication',
+        title: 'Enable Recruitment',
+        description: 'Upgrade Recruitment Core to Lv1.',
+        completed: nexus.buildings.troopFabricator >= 1,
+      },
+      {
+        id: 'increase-capacity',
+        title: 'Secure Capacity',
+        description: 'Upgrade Storage Vault to Lv2.',
+        completed: nexus.buildings.storageVault >= 2,
+      },
+      {
+        id: 'raise-force',
+        title: 'Field Troops',
+        description: 'Train 5 Assault Troopers.',
+        completed: assaultTroopers >= 5,
+      },
+      {
+        id: 'fortify-core',
+        title: 'Fortify The Core',
+        description: 'Upgrade Command Core to Lv2.',
+        completed: nexus.buildings.commandCore >= 2,
+      },
+      {
+        id: 'unlock-defenses',
+        title: 'Activate Shield Grid',
+        description: 'Upgrade Shield Grid to Lv1.',
+        completed: nexus.buildings.shieldGrid >= 1,
+      },
+      {
+        id: 'stabilize-income',
+        title: 'Stabilize Production',
+        description: 'Upgrade Biomass Farm and Ore Extractor to Lv2.',
+        completed: nexus.buildings.biomassFarm >= 2 && nexus.buildings.oreExtractor >= 2,
+      },
+      {
+        id: 'expand-logistics',
+        title: 'Expand Logistics',
+        description: 'Upgrade Alloy Forge to Lv2.',
+        completed: nexus.buildings.alloyForge >= 2,
+      },
+      {
+        id: 'deploy-recon',
+        title: 'Deploy Recon',
+        description: 'Train 1 Recon Operative.',
+        completed: reconOperatives >= 1,
+      },
+    ];
+  };
+
   const production = calculateProduction();
+  const introQuests = getIntroQuests();
+  const completedIntroQuests = introQuests.filter((quest) => quest.completed).length;
 
   return (
     <div className="nexus-view">
@@ -412,6 +650,24 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
                 Coordinates: ({nexus.x}|{nexus.y})
               </p>
               <p>Influence: {nexus.points}</p>
+            </div>
+
+            <div className="intro-quests">
+              <div className="intro-quests-header">
+                <h4>Intro Quests</h4>
+                <span>
+                  {completedIntroQuests}/{introQuests.length}
+                </span>
+              </div>
+              {introQuests.map((quest) => (
+                <div key={quest.id} className={`intro-quest-item ${quest.completed ? 'completed' : ''}`}>
+                  <span className="intro-quest-icon">{quest.completed ? '✅' : '⬜'}</span>
+                  <div>
+                    <p className="intro-quest-title">{quest.title}</p>
+                    <p className="intro-quest-description">{quest.description}</p>
+                  </div>
+                </div>
+              ))}
             </div>
 
             {nexus.buildQueue.length > 0 && (
@@ -478,10 +734,20 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
 
             <div className="buildings-grid">
               {Object.entries(nexus.buildings).map(([key, level]) => {
-                const cost = getBuildingCost(key, level);
+                const queuedForBuilding = nexus.buildQueue.filter((item) => item.building === key).length;
+                const plannedLevel = level + queuedForBuilding;
                 const isUpgrading = nexus.buildQueue.some((item) => item.building === key);
+                const maxLevel = BUILDING_RULES[key]?.maxLevel || 0;
+                const isAtMax = plannedLevel >= maxLevel;
+                const cost = isAtMax ? null : getBuildingCost(key, plannedLevel);
+                const { canUpgrade, missingRequirements, atMax } = checkBuildingRequirements(key);
+                const isBuildQueueFull = nexus.buildQueue.length >= MAX_BUILD_QUEUE;
+                const isDisabled = isBuildQueueFull || !canUpgrade || atMax;
                 return (
-                  <div key={key} className={`building-card ${isUpgrading ? 'upgrading' : ''}`}>
+                  <div
+                    key={key}
+                    className={`building-card ${isUpgrading ? 'upgrading' : ''} ${isDisabled ? 'disabled' : ''}`}
+                  >
                     {BUILDING_IMAGES[key] && (
                       <img
                         src={BUILDING_IMAGES[key].src || BUILDING_IMAGES[key]}
@@ -495,7 +761,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
                         ℹ️
                       </span>
                     </div>
-                    <p>Level: {level}</p>
+                    <p>
+                      Level: {level} / {maxLevel}
+                    </p>
                     {isUpgrading && (
                       <div className="upgrading-status">
                         <span className="upgrading-badge">⚙️ Upgrading...</span>
@@ -504,18 +772,40 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
                         </span>
                       </div>
                     )}
-                    <div className="building-cost">
-                      <p>Upgrade Cost:</p>
-                      <div className="cost-details">
-                        <span>🧬 {cost.biomass}</span>
-                        <span>⚙️ {cost.alloy}</span>
-                        <span>💎 {cost.ore}</span>
+                    {cost ? (
+                      <div className="building-cost">
+                        <p>Upgrade Cost:</p>
+                        <div className="cost-details">
+                          <span>🧬 {cost.biomass}</span>
+                          <span>⚙️ {cost.alloy}</span>
+                          <span>💎 {cost.ore}</span>
+                        </div>
+                        <p className="build-time">
+                          ⏱️ {Math.floor(cost.time / 60)}m {cost.time % 60}s
+                        </p>
                       </div>
-                      <p className="build-time">
-                        ⏱️ {Math.floor(cost.time / 60)}m {cost.time % 60}s
-                      </p>
-                    </div>
-                    <button onClick={() => handleUpgrade(key)} disabled={nexus.buildQueue.length > 0}>
+                    ) : (
+                      <div className="building-cost">
+                        <p className="build-time">🏁 Max level reached</p>
+                      </div>
+                    )}
+                    {isBuildQueueFull && (
+                      <div className="requirements-missing">
+                        <p className="requires-label">🔒 Queue Full:</p>
+                        <p className="requirement-item">• Build queue limit reached ({MAX_BUILD_QUEUE})</p>
+                      </div>
+                    )}
+                    {!canUpgrade && (
+                      <div className="requirements-missing">
+                        <p className="requires-label">🔒 Requires:</p>
+                        {missingRequirements.map((req, idx) => (
+                          <p key={idx} className="requirement-item">
+                            • {req}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                    <button onClick={() => handleUpgrade(key)} disabled={isDisabled}>
                       Upgrade
                     </button>
                   </div>
@@ -564,8 +854,10 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
                   <div className="train-grid">
                     {Object.entries(TROOP_COSTS).map(([type, costs]) => {
                       const { canTrain, missingRequirements } = checkTroopRequirements(type);
+                      const isTrainingQueueFull = nexus.trainingQueue.length >= MAX_TRAINING_QUEUE;
+                      const isTrainDisabled = !canTrain || isTrainingQueueFull;
                       return (
-                        <div key={type} className={`train-card ${!canTrain ? 'disabled' : ''}`}>
+                        <div key={type} className={`train-card ${isTrainDisabled ? 'disabled' : ''}`}>
                           {TROOP_IMAGES[type] && (
                             <img
                               src={TROOP_IMAGES[type].src || TROOP_IMAGES[type]}
@@ -588,6 +880,12 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
                           <p className="train-time">
                             ⏱️ {Math.floor(costs.time / 60)}m {costs.time % 60}s
                           </p>
+                          {isTrainingQueueFull && (
+                            <div className="requirements-missing">
+                              <p className="requires-label">🔒 Queue Full:</p>
+                              <p className="requirement-item">• Training queue limit reached ({MAX_TRAINING_QUEUE})</p>
+                            </div>
+                          )}
                           {!canTrain && (
                             <div className="requirements-missing">
                               <p className="requires-label">🔒 Requires:</p>
@@ -606,9 +904,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
                               onChange={(e) =>
                                 setTrainAmount({ ...trainAmount, [type]: parseInt(e.target.value) || 1 })
                               }
-                              disabled={!canTrain}
+                              disabled={isTrainDisabled}
                             />
-                            <button onClick={() => handleTrainTroops(type)} disabled={!canTrain}>
+                            <button onClick={() => handleTrainTroops(type)} disabled={isTrainDisabled}>
                               Train
                             </button>
                           </div>
