@@ -1,123 +1,35 @@
-import mongoose from 'mongoose';
+import prisma from '../lib/prisma.js';
 
-const villageSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-  },
-  owner: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: false,
-  },
-  x: {
-    type: Number,
-    required: true,
-  },
-  y: {
-    type: Number,
-    required: true,
-  },
-  resources: {
-    biomass: { type: Number, default: 500 },
-    alloy: { type: Number, default: 500 },
-    ore: { type: Number, default: 500 },
-  },
-  buildings: {
-    commandCore: { type: Number, default: 1 },
-    troopFabricator: { type: Number, default: 0 },
-    lifeSupport: { type: Number, default: 1 },
-    storageVault: { type: Number, default: 1 },
-    biomassFarm: { type: Number, default: 1 },
-    alloyForge: { type: Number, default: 1 },
-    oreExtractor: { type: Number, default: 1 },
-    shieldGrid: { type: Number, default: 0 },
-  },
-  troops: {
-    lancerDrone: { type: Number, default: 0 },
-    assaultTrooper: { type: Number, default: 0 },
-    breakerUnit: { type: Number, default: 0 },
-    reconOperative: { type: Number, default: 0 },
-    skimmerBike: { type: Number, default: 0 },
-    siegeMech: { type: Number, default: 0 },
-    bulwarkGuard: { type: Number, default: 0 },
-    suppressorTeam: { type: Number, default: 0 },
-    disruptorUnit: { type: Number, default: 0 },
-    interceptorBike: { type: Number, default: 0 },
-    annihilatorPlatform: { type: Number, default: 0 },
-    overseer: { type: Number, default: 0 },
-  },
-  population: {
-    current: { type: Number, default: 5 },
-    max: { type: Number, default: 24 },
-  },
-  buildQueue: [
-    {
-      building: String,
-      targetLevel: Number,
-      completesAt: Date,
-    },
-  ],
-  trainingQueue: [
-    {
-      troopType: String,
-      amount: Number,
-      completesAt: Date,
-    },
-  ],
-  lastResourceUpdate: {
-    type: Date,
-    default: Date.now,
-  },
-  points: {
-    type: Number,
-    default: 5,
-  },
-  controlLevel: {
-    type: Number,
-    default: 100,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+// --- Pure computation helpers ---
 
-// Calculate resource production per hour
-villageSchema.methods.getResourceProduction = function () {
+export function getResourceProduction(village) {
   const baseProduction = 30;
   return {
-    biomass: baseProduction * Math.pow(1.2, this.buildings.biomassFarm - 1),
-    alloy: baseProduction * Math.pow(1.2, this.buildings.alloyForge - 1),
-    ore: baseProduction * Math.pow(1.2, this.buildings.oreExtractor - 1),
+    biomass: baseProduction * Math.pow(1.2, village.biomassFarm - 1),
+    alloy: baseProduction * Math.pow(1.2, village.alloyForge - 1),
+    ore: baseProduction * Math.pow(1.2, village.oreExtractor - 1),
   };
-};
+}
 
-// Update resources based on time elapsed
-villageSchema.methods.updateResources = function () {
+export function getMaxStorage(village) {
+  return 1000 * Math.pow(1.3, village.storageVault);
+}
+
+export function computeResourceUpdate(village) {
   const now = new Date();
-  const hoursSinceLastUpdate = (now - this.lastResourceUpdate) / (1000 * 60 * 60);
+  const hoursSinceLastUpdate = (now - village.lastResourceUpdate) / (1000 * 60 * 60);
+  const production = getResourceProduction(village);
+  const maxStorage = getMaxStorage(village);
+  return {
+    biomass: Math.min(village.biomass + production.biomass * hoursSinceLastUpdate, maxStorage),
+    alloy: Math.min(village.alloy + production.alloy * hoursSinceLastUpdate, maxStorage),
+    ore: Math.min(village.ore + production.ore * hoursSinceLastUpdate, maxStorage),
+    lastResourceUpdate: now,
+  };
+}
 
-  const production = this.getResourceProduction();
-  const maxStorage = this.getMaxStorage();
-
-  this.resources.biomass = Math.min(this.resources.biomass + production.biomass * hoursSinceLastUpdate, maxStorage);
-  this.resources.alloy = Math.min(this.resources.alloy + production.alloy * hoursSinceLastUpdate, maxStorage);
-  this.resources.ore = Math.min(this.resources.ore + production.ore * hoursSinceLastUpdate, maxStorage);
-
-  this.lastResourceUpdate = now;
-};
-
-// Get max storage capacity
-villageSchema.methods.getMaxStorage = function () {
-  return 1000 * Math.pow(1.3, this.buildings.storageVault);
-};
-
-// Calculate village points based on buildings, troops, and resources
-villageSchema.methods.calculatePoints = function () {
+export function calculatePoints(village) {
   let points = 0;
-
-  // Building points (each level adds points based on building type)
   const buildingPoints = {
     commandCore: 10,
     troopFabricator: 16,
@@ -128,41 +40,150 @@ villageSchema.methods.calculatePoints = function () {
     oreExtractor: 6,
     shieldGrid: 8,
   };
-
-  for (const [building, level] of Object.entries(this.buildings)) {
-    points += buildingPoints[building] * level;
+  for (const [building, pts] of Object.entries(buildingPoints)) {
+    points += pts * (village[building] || 0);
   }
-
-  // Troop points (each troop type has different value)
   const troopPoints = {
     lancerDrone: 1,
     assaultTrooper: 2,
     breakerUnit: 1,
-    reconDrone: 2,
+    reconOperative: 2,
     skimmerBike: 3,
     siegeMech: 4,
   };
-
-  for (const [troopType, count] of Object.entries(this.troops)) {
-    points += troopPoints[troopType] * count;
+  for (const [troopType, pts] of Object.entries(troopPoints)) {
+    points += pts * (village[troopType] || 0);
   }
-
   return Math.floor(points);
-};
+}
 
-// Update points whenever village is saved
-villageSchema.pre('save', function (next) {
-  this.points = this.calculatePoints();
-  next();
-});
+// --- DB helpers ---
 
-// Static method to update all villages
-villageSchema.statics.updateAllResources = async function () {
-  const villages = await this.find({});
-  for (const village of villages) {
-    village.updateResources();
-    await village.save();
+/** Refresh resource counts in DB and return updated village */
+export async function refreshResources(village) {
+  const resourceUpdate = computeResourceUpdate(village);
+  const points = calculatePoints({ ...village, ...resourceUpdate });
+  return prisma.village.update({
+    where: { id: village.id },
+    data: { ...resourceUpdate, points },
+  });
+}
+
+/** Bulk-update resources for all villages (called on interval) */
+export async function updateAllResources() {
+  try {
+    const villages = await prisma.village.findMany();
+    for (const village of villages) {
+      const resourceUpdate = computeResourceUpdate(village);
+      const points = calculatePoints({ ...village, ...resourceUpdate });
+      await prisma.village.update({
+        where: { id: village.id },
+        data: { ...resourceUpdate, points },
+      });
+    }
+  } catch (err) {
+    console.error('Error updating resources:', err);
   }
-};
+}
 
-export default mongoose.model('Village', villageSchema);
+// --- Serialization: maps flat Prisma row → nested shape the frontend expects ---
+
+export function serializeVillage(v, opts = {}) {
+  const base = {
+    _id: v.id,
+    id: v.id,
+    name: v.name,
+    owner: v.ownerId,
+    x: v.x,
+    y: v.y,
+    resources: {
+      biomass: v.biomass,
+      alloy: v.alloy,
+      ore: v.ore,
+    },
+    buildings: {
+      commandCore: v.commandCore,
+      troopFabricator: v.troopFabricator,
+      lifeSupport: v.lifeSupport,
+      storageVault: v.storageVault,
+      biomassFarm: v.biomassFarm,
+      alloyForge: v.alloyForge,
+      oreExtractor: v.oreExtractor,
+      shieldGrid: v.shieldGrid,
+    },
+    troops: {
+      lancerDrone: v.lancerDrone,
+      assaultTrooper: v.assaultTrooper,
+      breakerUnit: v.breakerUnit,
+      reconOperative: v.reconOperative,
+      skimmerBike: v.skimmerBike,
+      siegeMech: v.siegeMech,
+      bulwarkGuard: v.bulwarkGuard,
+      suppressorTeam: v.suppressorTeam,
+      disruptorUnit: v.disruptorUnit,
+      interceptorBike: v.interceptorBike,
+      annihilatorPlatform: v.annihilatorPlatform,
+      overseer: v.overseer,
+    },
+    population: {
+      current: v.populationCurrent,
+      max: v.populationMax,
+    },
+    buildQueue: v.buildQueue,
+    trainingQueue: v.trainingQueue,
+    lastResourceUpdate: v.lastResourceUpdate,
+    points: v.points,
+    controlLevel: v.controlLevel,
+    createdAt: v.createdAt,
+  };
+
+  if (opts.ownerData) {
+    base.owner = opts.ownerData;
+  }
+
+  return base;
+}
+
+export function serializeAttack(a) {
+  return {
+    _id: a.id,
+    id: a.id,
+    attacker: {
+      user: a.attackerUserId,
+      village: a.attackerVillageId,
+      ...(a.attackerVillage
+        ? {
+            villageData: {
+              _id: a.attackerVillage.id,
+              name: a.attackerVillage.name,
+              x: a.attackerVillage.x,
+              y: a.attackerVillage.y,
+            },
+          }
+        : {}),
+    },
+    defender: {
+      user: a.defenderUserId,
+      village: a.defenderVillageId,
+      ...(a.defenderVillage
+        ? {
+            villageData: {
+              _id: a.defenderVillage.id,
+              name: a.defenderVillage.name,
+              x: a.defenderVillage.x,
+              y: a.defenderVillage.y,
+            },
+          }
+        : {}),
+    },
+    troops: a.troops,
+    arrivesAt: a.arrivesAt,
+    type: a.type,
+    status: a.status,
+    result: a.result,
+    createdAt: a.createdAt,
+  };
+}
+
+// Dummy export to satisfy any leftover default imports during transition
+export default { serializeVillage, serializeAttack, updateAllResources };

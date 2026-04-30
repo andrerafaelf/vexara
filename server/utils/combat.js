@@ -1,6 +1,4 @@
-import Attack from '../models/Attack.js';
-import Node from '../models/Node.js';
-import User from '../models/User.js';
+import prisma from '../lib/prisma.js';
 
 // Troop stats
 const TROOP_STATS = {
@@ -18,16 +16,19 @@ const TROOP_STATS = {
   overseer: { attack: 0, defense: 30, speed: 15, carry: 0 },
 };
 
+const TROOP_KEYS = Object.keys(TROOP_STATS);
+
 // Process attacks that have arrived
 async function processArrivedAttacks() {
   try {
     const now = new Date();
-    const arrivedAttacks = await Attack.find({
-      status: 'traveling',
-      arrivesAt: { $lte: now },
-    })
-      .populate('attacker.village')
-      .populate('defender.village');
+    const arrivedAttacks = await prisma.attack.findMany({
+      where: { status: 'traveling', arrivesAt: { lte: now } },
+      include: {
+        attackerVillage: true,
+        defenderVillage: true,
+      },
+    });
 
     for (const attack of arrivedAttacks) {
       await resolveCombat(attack);
@@ -37,207 +38,200 @@ async function processArrivedAttacks() {
   }
 }
 
-// Resolve combat
+// Resolve combat for a single attack
 async function resolveCombat(attack) {
   try {
-    const defenderVillage = await Node.findById(attack.defender.village);
+    // Reload defender village with fresh data
+    const defenderVillage = await prisma.village.findUnique({ where: { id: attack.defenderVillageId } });
+    const attackTroops = attack.troops; // JSON object from DB
 
     // Calculate attack and defense power
     let attackPower = 0;
     let defensePower = 0;
 
-    // Attacker power
-    for (const [troopType, count] of Object.entries(attack.troops)) {
-      if (count > 0 && TROOP_STATS[troopType]) {
-        attackPower += TROOP_STATS[troopType].attack * count;
+    for (const troopType of TROOP_KEYS) {
+      const atkCount = attackTroops[troopType] || 0;
+      if (atkCount > 0 && TROOP_STATS[troopType]) {
+        attackPower += TROOP_STATS[troopType].attack * atkCount;
       }
-    }
-
-    // Defender power (troops + wall bonus)
-    for (const [troopType, count] of Object.entries(defenderVillage.troops)) {
-      if (count > 0 && TROOP_STATS[troopType]) {
-        defensePower += TROOP_STATS[troopType].defense * count;
+      const defCount = defenderVillage[troopType] || 0;
+      if (defCount > 0 && TROOP_STATS[troopType]) {
+        defensePower += TROOP_STATS[troopType].defense * defCount;
       }
     }
 
     // Shield Grid bonus (2% per level)
-    const wallBonus = 1 + defenderVillage.buildings.shieldGrid * 0.02;
-    defensePower *= wallBonus;
+    defensePower *= 1 + defenderVillage.shieldGrid * 0.02;
 
-    // Determine winner
     const attackerWins = attackPower > defensePower;
     const powerRatio = attackerWins ? defensePower / attackPower : attackPower / defensePower;
 
     // Calculate losses
     const attackerLosses = {};
     const defenderLosses = {};
+    const defenderTroopUpdates = {};
 
-    // Attacker losses (proportional to defense power with randomness)
-    for (const [troopType, count] of Object.entries(attack.troops)) {
+    // Attacker losses
+    for (const troopType of TROOP_KEYS) {
+      const count = attackTroops[troopType] || 0;
       if (count > 0 && TROOP_STATS[troopType]) {
-        // Skip overseer in initial loss calculation
         if (troopType === 'overseer') {
           attackerLosses[troopType] = 0;
           continue;
         }
-
         const baseLossRate = attackerWins ? powerRatio * 0.5 : 0.8;
-        // Add randomness: ±25% variation (0.75 to 1.25)
         const randomFactor = 0.75 + Math.random() * 0.5;
-        // Weaker troops (lower defense) die more easily
         const defenseFactor = 1 + (50 - TROOP_STATS[troopType].defense) / 100;
         const lossRate = Math.min(baseLossRate * randomFactor * defenseFactor, 1);
         attackerLosses[troopType] = Math.max(0, Math.ceil(count * lossRate));
       }
     }
 
-    // Check if all non overseer troops died, if so, overseer dies too
-    const totalAttackTroops = Object.entries(attack.troops)
-      .filter(([type]) => type !== 'overseer')
-      .reduce((sum, [type, count]) => sum + count, 0);
-    const totalAttackLosses = Object.entries(attackerLosses)
-      .filter(([type]) => type !== 'overseer')
-      .reduce((sum, [type, losses]) => sum + losses, 0);
+    // If all non-overseer troops died, overseer dies too
+    const totalNonOverseerSent = TROOP_KEYS.filter((t) => t !== 'overseer').reduce(
+      (sum, t) => sum + (attackTroops[t] || 0),
+      0,
+    );
+    const totalNonOverseerLost = TROOP_KEYS.filter((t) => t !== 'overseer').reduce(
+      (sum, t) => sum + (attackerLosses[t] || 0),
+      0,
+    );
 
-    if (attack.troops.overseer > 0 && totalAttackTroops > 0 && totalAttackLosses >= totalAttackTroops) {
-      // All troops died, overseer dies too
-      attackerLosses.overseer = attack.troops.overseer;
+    if ((attackTroops.overseer || 0) > 0 && totalNonOverseerSent > 0 && totalNonOverseerLost >= totalNonOverseerSent) {
+      attackerLosses.overseer = attackTroops.overseer;
     }
 
-    // Defender losses (proportional to attack power with randomness)
-    for (const [troopType, count] of Object.entries(defenderVillage.troops)) {
+    // Defender losses
+    let defenderPopLost = 0;
+    for (const troopType of TROOP_KEYS) {
+      const count = defenderVillage[troopType] || 0;
       if (count > 0 && TROOP_STATS[troopType]) {
         const baseLossRate = attackerWins ? 0.8 : powerRatio * 0.5;
-        // Add randomness (±25%)
         const randomFactor = 0.75 + Math.random() * 0.5;
-        // Weaker troops (lower defense) die more easily
         const defenseFactor = 1 + (50 - TROOP_STATS[troopType].defense) / 100;
         const lossRate = Math.min(baseLossRate * randomFactor * defenseFactor, 1);
         const losses = Math.min(Math.ceil(count * lossRate), count);
         defenderLosses[troopType] = losses;
-        const currentTroops = defenderVillage.troops[troopType] || 0;
-        defenderVillage.troops[troopType] = Math.max(0, currentTroops - losses);
-        // Update population for lost troops
-        defenderVillage.population.current = Math.max(0, defenderVillage.population.current - losses);
+        defenderTroopUpdates[troopType] = Math.max(0, count - losses);
+        defenderPopLost += losses;
       }
     }
 
-    // Calculate loot if attacker wins
+    // Loot calculation
     let resourcesStolen = { biomass: 0, alloy: 0, ore: 0 };
     let conquered = false;
+    const defenderResourceUpdates = {};
 
     if (attackerWins) {
-      // Calculate carry capacity based on troop stats
       let lootCapacity = 0;
-      for (const [troopType, count] of Object.entries(attack.troops)) {
+      for (const troopType of TROOP_KEYS) {
+        const count = attackTroops[troopType] || 0;
         if (count > 0 && TROOP_STATS[troopType]) {
           lootCapacity += TROOP_STATS[troopType].carry * count;
         }
       }
 
-      const availableResources =
-        defenderVillage.resources.biomass + defenderVillage.resources.alloy + defenderVillage.resources.ore;
+      const availableResources = defenderVillage.biomass + defenderVillage.alloy + defenderVillage.ore;
+      const lootPercentage = availableResources > 0 ? Math.min(lootCapacity / availableResources, 0.5) : 0;
 
-      const lootPercentage = Math.min(lootCapacity / availableResources, 0.5);
+      resourcesStolen.biomass = Math.floor(defenderVillage.biomass * lootPercentage);
+      resourcesStolen.alloy = Math.floor(defenderVillage.alloy * lootPercentage);
+      resourcesStolen.ore = Math.floor(defenderVillage.ore * lootPercentage);
 
-      resourcesStolen.biomass = Math.floor(defenderVillage.resources.biomass * lootPercentage);
-      resourcesStolen.alloy = Math.floor(defenderVillage.resources.alloy * lootPercentage);
-      resourcesStolen.ore = Math.floor(defenderVillage.resources.ore * lootPercentage);
+      defenderResourceUpdates.biomass = defenderVillage.biomass - resourcesStolen.biomass;
+      defenderResourceUpdates.alloy = defenderVillage.alloy - resourcesStolen.alloy;
+      defenderResourceUpdates.ore = defenderVillage.ore - resourcesStolen.ore;
 
-      // Deduct resources from defender
-      defenderVillage.resources.biomass -= resourcesStolen.biomass;
-      defenderVillage.resources.alloy -= resourcesStolen.alloy;
-      defenderVillage.resources.ore -= resourcesStolen.ore;
+      // Calculate surviving carry capacity
+      const totalTroopsSent = Object.values(attackTroops).reduce((a, b) => a + b, 0);
+      const totalLost = Object.values(attackerLosses).reduce((a, b) => a + b, 0);
+      const surviveRatio = totalTroopsSent > 0 ? 1 - totalLost / totalTroopsSent : 0;
+      const survivingCarry = lootCapacity * surviveRatio;
+      const totalLooted = resourcesStolen.biomass + resourcesStolen.alloy + resourcesStolen.ore;
+      const actualLoot = Math.min(totalLooted, survivingCarry);
 
-      // Add resources to attacker (if troops survived to carry it back)
-      const attackerVillage = await Node.findById(attack.attacker.village);
-      const survivingCarryCapacity =
-        lootCapacity *
-        (1 -
-          Object.values(attackerLosses).reduce((a, b) => a + b, 0) /
-            Object.values(attack.troops).reduce((a, b) => a + b, 0));
-      const actualLoot = Math.min(
-        resourcesStolen.biomass + resourcesStolen.alloy + resourcesStolen.ore,
-        survivingCarryCapacity,
-      );
-
-      if (actualLoot > 0) {
-        const lootRatio = actualLoot / (resourcesStolen.biomass + resourcesStolen.alloy + resourcesStolen.ore);
-        attackerVillage.resources.biomass += Math.floor(resourcesStolen.biomass * lootRatio);
-        attackerVillage.resources.alloy += Math.floor(resourcesStolen.alloy * lootRatio);
-        attackerVillage.resources.ore += Math.floor(resourcesStolen.ore * lootRatio);
-        await attackerVillage.save();
+      if (actualLoot > 0 && totalLooted > 0) {
+        const lootRatio = actualLoot / totalLooted;
+        const attackerVillage = await prisma.village.findUnique({ where: { id: attack.attackerVillageId } });
+        await prisma.village.update({
+          where: { id: attack.attackerVillageId },
+          data: {
+            biomass: attackerVillage.biomass + Math.floor(resourcesStolen.biomass * lootRatio),
+            alloy: attackerVillage.alloy + Math.floor(resourcesStolen.alloy * lootRatio),
+            ore: attackerVillage.ore + Math.floor(resourcesStolen.ore * lootRatio),
+          },
+        });
       }
     }
 
-    // Handle node conquest if overseer is present and attacker wins
-    if (attackerWins && attack.troops.overseer > 0 && (attackerLosses.overseer || 0) < attack.troops.overseer) {
-      // Overseer survived, reduce control level by 50 (takes 2 attacks to conquer)
-      defenderVillage.controlLevel = Math.max(0, (defenderVillage.controlLevel || 100) - 50);
+    // Handle node conquest via overseer
+    let newControlLevel = defenderVillage.controlLevel;
+    const overseerSurvived =
+      attackerWins && (attackTroops.overseer || 0) > 0 && (attackerLosses.overseer || 0) < (attackTroops.overseer || 0);
 
-      if (defenderVillage.controlLevel === 0) {
-        // Node conquered! Transfer ownership
-        const attackerVillage = await Node.findById(attack.attacker.village);
-        const oldOwner = await User.findById(defenderVillage.owner);
-        const newOwner = await User.findById(attackerVillage.owner);
+    if (overseerSurvived) {
+      newControlLevel = Math.max(0, (defenderVillage.controlLevel || 100) - 50);
 
-        // Remove from old owner
-        if (oldOwner) {
-          oldOwner.villages = oldOwner.villages.filter((v) => !v.equals(defenderVillage._id));
-          await oldOwner.save();
-        }
+      if (newControlLevel === 0) {
+        const attackerVillage = await prisma.village.findUnique({ where: { id: attack.attackerVillageId } });
+        const newOwnerId = attackerVillage.ownerId;
 
-        // Add to new owner
-        if (newOwner) {
-          newOwner.villages.push(defenderVillage._id);
-          await newOwner.save();
-        }
-
-        // Transfer ownership
-        defenderVillage.owner = attackerVillage.owner;
-        // Reset control
-        defenderVillage.controlLevel = 100;
-        defenderVillage.name = `Conquered Node`;
+        // Transfer ownership — no villages array to update in SQL, just set ownerId
+        defenderTroopUpdates.ownerId = newOwnerId;
+        defenderTroopUpdates.controlLevel = 100;
+        defenderTroopUpdates.name = 'Conquered Node';
         conquered = true;
       }
     }
 
-    // Save defender village with updated control level
-    await defenderVillage.save();
+    // Save defender village
+    await prisma.village.update({
+      where: { id: defenderVillage.id },
+      data: {
+        ...defenderTroopUpdates,
+        ...defenderResourceUpdates,
+        populationCurrent: Math.max(0, defenderVillage.populationCurrent - defenderPopLost),
+        controlLevel: conquered ? 100 : newControlLevel,
+      },
+    });
 
     // Return surviving troops to attacker village
-    const attackerVillage = await Node.findById(attack.attacker.village);
-    if (attackerVillage) {
-      for (const [troopType, count] of Object.entries(attack.troops)) {
-        if (count > 0) {
-          const survived = count - (attackerLosses[troopType] || 0);
-          attackerVillage.troops[troopType] = (attackerVillage.troops[troopType] || 0) + survived;
-        }
+    const attackerTroopReturns = {};
+    for (const troopType of TROOP_KEYS) {
+      const sent = attackTroops[troopType] || 0;
+      if (sent > 0) {
+        attackerTroopReturns[troopType] = sent - (attackerLosses[troopType] || 0);
       }
-      await attackerVillage.save();
+    }
+    const attackerVillage = await prisma.village.findUnique({ where: { id: attack.attackerVillageId } });
+    if (attackerVillage) {
+      const returnData = {};
+      for (const [troopType, survived] of Object.entries(attackerTroopReturns)) {
+        returnData[troopType] = (attackerVillage[troopType] || 0) + survived;
+      }
+      await prisma.village.update({ where: { id: attack.attackerVillageId }, data: returnData });
     }
 
-    // Update attack with results
-    attack.status = 'completed';
-    attack.result = {
-      attackerLosses,
-      defenderLosses,
-      resourcesStolen,
-      victory: attackerWins,
-      conquered: conquered,
-      controlReduced: Boolean(
-        attackerWins && attack.troops.overseer > 0 && (attackerLosses.overseer || 0) < attack.troops.overseer,
-      ),
-      remainingControl: defenderVillage.controlLevel,
-    };
-    await attack.save();
+    // Mark attack as completed
+    await prisma.attack.update({
+      where: { id: attack.id },
+      data: {
+        status: 'completed',
+        result: {
+          attackerLosses,
+          defenderLosses,
+          resourcesStolen,
+          victory: attackerWins,
+          conquered,
+          controlReduced: overseerSurvived,
+          remainingControl: newControlLevel,
+        },
+      },
+    });
 
     console.log(
-      `Combat resolved: Attack ${attack._id} - ${attackerWins ? 'Attacker' : 'Defender'} wins${
-        conquered ? ' - NODE CONQUERED!' : ''
-      }`,
+      `Combat resolved: Attack ${attack.id} - ${attackerWins ? 'Attacker' : 'Defender'} wins${conquered ? ' - NODE CONQUERED!' : ''}`,
     );
-    console.log('Result saved to database:', JSON.stringify(attack.result, null, 2));
   } catch (err) {
     console.error('Error resolving combat:', err);
   }

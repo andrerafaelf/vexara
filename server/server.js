@@ -2,8 +2,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
-import mongoose from 'mongoose';
-import Node from './models/Node.js';
+import prisma from './lib/prisma.js';
+import { updateAllResources } from './models/Node.js';
 import adminRoutes from './routes/admin.js';
 import attackRoutes from './routes/attack.js';
 import authRoutes from './routes/auth.js';
@@ -43,21 +43,21 @@ app.use('/api/attack', attackRoutes);
 app.use('/api/report', reportRoutes);
 app.use('/api/admin', adminRoutes);
 
-// MongoDB connection
-mongoose
-  .connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/not-tribos', {})
-  .then(() => console.log('✅ MongoDB connected successfully'))
+// PostgreSQL connection check via Prisma
+prisma
+  .$connect()
+  .then(() => console.log('✅ PostgreSQL connected successfully'))
   .catch((err) => {
-    console.error('❌ MongoDB connection error:', err.message);
+    console.error('❌ PostgreSQL connection error:', err.message);
     console.log('\n💡 To fix this:');
-    console.log('   1. Start MongoDB: net start MongoDB (Windows) or brew services start mongodb-community (Mac)');
-    console.log('   2. Or use MongoDB Atlas: https://www.mongodb.com/cloud/atlas/register');
-    console.log('   3. Update MONGODB_URI in .env with your connection string\n');
+    console.log('   1. Start PostgreSQL or run: docker compose -f ../util/docker-compose.yml up -d');
+    console.log('   2. Set DATABASE_URL in .env (e.g. postgresql://user:pass@localhost:5432/neon_dominion)');
+    console.log('   3. Run: npm run db:migrate\n');
   });
 
 // Start resource production interval (every minute)
 setInterval(() => {
-  Node.updateAllResources();
+  updateAllResources();
 }, 60000);
 
 // Start combat resolution interval (every 10 seconds)

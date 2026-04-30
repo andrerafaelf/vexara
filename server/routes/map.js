@@ -1,6 +1,6 @@
 import express from 'express';
+import prisma from '../lib/prisma.js';
 import auth from '../middleware/auth.js';
-import Node from '../models/Node.js';
 
 const router = express.Router();
 
@@ -9,15 +9,29 @@ router.get('/area/:x/:y', auth, async (req, res) => {
   try {
     const x = parseInt(req.params.x);
     const y = parseInt(req.params.y);
-    // 10x10 grid
     const range = 10;
 
-    const villages = await Node.find({
-      x: { $gte: x - range, $lte: x + range },
-      y: { $gte: y - range, $lte: y + range },
-    }).populate('owner', 'username points');
+    const villages = await prisma.village.findMany({
+      where: {
+        x: { gte: x - range, lte: x + range },
+        y: { gte: y - range, lte: y + range },
+      },
+      include: {
+        owner: { select: { id: true, username: true, points: true } },
+      },
+    });
 
-    res.json(villages);
+    const result = villages.map((v) => ({
+      _id: v.id,
+      id: v.id,
+      name: v.name,
+      x: v.x,
+      y: v.y,
+      points: v.points,
+      owner: v.owner ? { _id: v.owner.id, id: v.owner.id, username: v.owner.username, points: v.owner.points } : null,
+    }));
+
+    res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -26,23 +40,33 @@ router.get('/area/:x/:y', auth, async (req, res) => {
 // Get village details (for other players)
 router.get('/village/:villageId', auth, async (req, res) => {
   try {
-    const village = await Node.findById(req.params.villageId).populate('owner', 'username points tribe');
+    const village = await prisma.village.findUnique({
+      where: { id: parseInt(req.params.villageId) },
+      include: {
+        owner: { select: { id: true, username: true, points: true } },
+      },
+    });
 
     if (!village) {
       return res.status(404).json({ error: 'Village not found' });
     }
 
-    // Only return limited info for other players' villages
     const publicData = {
-      _id: village._id,
+      _id: village.id,
+      id: village.id,
       name: village.name,
       x: village.x,
       y: village.y,
-      owner: village.owner,
       points: village.points,
-      buildings: {
-        wall: village.buildings.wall,
-      },
+      owner: village.owner
+        ? {
+            _id: village.owner.id,
+            id: village.owner.id,
+            username: village.owner.username,
+            points: village.owner.points,
+          }
+        : null,
+      buildings: { shieldGrid: village.shieldGrid },
     };
 
     res.json(publicData);

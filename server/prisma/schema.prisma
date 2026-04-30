@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  username  String    @unique @db.VarChar(20)
+  email     String    @unique
+  password  String
+  points    Int       @default(0)
+  createdAt DateTime  @default(now())
+  villages  Village[]
+}
+
+model Village {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  ownerId Int?
+  owner   User? @relation(fields: [ownerId], references: [id])
+
+  x Int
+  y Int
+
+  // Resources
+  biomass Float @default(500)
+  alloy   Float @default(500)
+  ore     Float @default(500)
+
+  // Buildings
+  commandCore     Int @default(1)
+  troopFabricator Int @default(0)
+  lifeSupport     Int @default(1)
+  storageVault    Int @default(1)
+  biomassFarm     Int @default(1)
+  alloyForge      Int @default(1)
+  oreExtractor    Int @default(1)
+  shieldGrid      Int @default(0)
+
+  // Troops
+  lancerDrone         Int @default(0)
+  assaultTrooper      Int @default(0)
+  breakerUnit         Int @default(0)
+  reconOperative      Int @default(0)
+  skimmerBike         Int @default(0)
+  siegeMech           Int @default(0)
+  bulwarkGuard        Int @default(0)
+  suppressorTeam      Int @default(0)
+  disruptorUnit       Int @default(0)
+  interceptorBike     Int @default(0)
+  annihilatorPlatform Int @default(0)
+  overseer            Int @default(0)
+
+  // Population
+  populationCurrent Int @default(5)
+  populationMax     Int @default(24)
+
+  // Queues (JSON arrays)
+  buildQueue    Json @default("[]")
+  trainingQueue Json @default("[]")
+
+  lastResourceUpdate DateTime @default(now())
+  points             Int      @default(5)
+  controlLevel       Int      @default(100)
+  createdAt          DateTime @default(now())
+
+  attacksAsAttacker Attack[] @relation("AttackerVillage")
+  attacksAsDefender Attack[] @relation("DefenderVillage")
+}
+
+enum AttackType {
+  attack
+  support
+  scout
+}
+
+enum AttackStatus {
+  traveling
+  completed
+  cancelled
+}
+
+model Attack {
+  id Int @id @default(autoincrement())
+
+  attackerUserId    Int
+  attackerVillageId Int
+  defenderUserId    Int?
+  defenderVillageId Int
+
+  attackerVillage Village @relation("AttackerVillage", fields: [attackerVillageId], references: [id])
+  defenderVillage Village @relation("DefenderVillage", fields: [defenderVillageId], references: [id])
+
+  troops    Json
+  arrivesAt DateTime
+  type      AttackType   @default(attack)
+  status    AttackStatus @default(traveling)
+  result    Json?
+
+  createdAt DateTime @default(now())
+}

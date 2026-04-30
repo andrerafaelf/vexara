@@ -1,6 +1,7 @@
 import express from 'express';
+import prisma from '../lib/prisma.js';
 import auth from '../middleware/auth.js';
-import Node from '../models/Node.js';
+import { computeResourceUpdate, serializeVillage } from '../models/Node.js';
 
 const router = express.Router();
 
@@ -34,8 +35,8 @@ router.post('/upgrade', auth, async (req, res) => {
   try {
     const { villageId, building } = req.body;
 
-    const village = await Node.findById(villageId);
-    if (!village || village.owner.toString() !== req.userId) {
+    const village = await prisma.village.findUnique({ where: { id: parseInt(villageId) } });
+    if (!village || village.ownerId !== req.userId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
@@ -43,41 +44,40 @@ router.post('/upgrade', auth, async (req, res) => {
       return res.status(400).json({ error: 'Invalid building' });
     }
 
-    // Update resources
-    village.updateResources();
+    // Apply resource tick
+    const resourceUpdate = computeResourceUpdate(village);
+    const currentVillage = { ...village, ...resourceUpdate };
 
-    const currentLevel = village.buildings[building];
+    const currentLevel = village[building];
     const cost = getBuildingCost(building, currentLevel);
 
     // Check resources
-    if (
-      village.resources.biomass < cost.biomass ||
-      village.resources.alloy < cost.alloy ||
-      village.resources.ore < cost.ore
-    ) {
+    if (currentVillage.biomass < cost.biomass || currentVillage.alloy < cost.alloy || currentVillage.ore < cost.ore) {
       return res.status(400).json({ error: 'Insufficient resources' });
     }
 
     // Check if already building
-    if (village.buildQueue.length > 0) {
+    const buildQueue = Array.isArray(village.buildQueue) ? village.buildQueue : [];
+    if (buildQueue.length > 0) {
       return res.status(400).json({ error: 'Already building something' });
     }
 
-    // Deduct resources
-    village.resources.biomass -= cost.biomass;
-    village.resources.alloy -= cost.alloy;
-    village.resources.ore -= cost.ore;
-
-    // Add to build queue
+    // Deduct resources and add to queue
     const completesAt = new Date(Date.now() + cost.time * 1000);
-    village.buildQueue.push({
-      building,
-      targetLevel: currentLevel + 1,
-      completesAt,
+    const newQueue = [...buildQueue, { building, targetLevel: currentLevel + 1, completesAt }];
+
+    const updated = await prisma.village.update({
+      where: { id: village.id },
+      data: {
+        ...resourceUpdate,
+        biomass: currentVillage.biomass - cost.biomass,
+        alloy: currentVillage.alloy - cost.alloy,
+        ore: currentVillage.ore - cost.ore,
+        buildQueue: newQueue,
+      },
     });
 
-    await village.save();
-    res.json({ success: true, completesAt, village });
+    res.json({ success: true, completesAt, village: serializeVillage(updated) });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -88,30 +88,36 @@ router.post('/check-queue', auth, async (req, res) => {
   try {
     const { villageId } = req.body;
 
-    const village = await Node.findById(villageId);
-    if (!village || village.owner.toString() !== req.userId) {
+    const village = await prisma.village.findUnique({ where: { id: parseInt(villageId) } });
+    if (!village || village.ownerId !== req.userId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
     const now = new Date();
+    const buildQueue = Array.isArray(village.buildQueue) ? village.buildQueue : [];
     let completed = false;
+    const data = {};
 
-    if (village.buildQueue.length > 0 && village.buildQueue[0].completesAt <= now) {
-      const build = village.buildQueue.shift();
-      village.buildings[build.building] = build.targetLevel;
+    if (buildQueue.length > 0 && new Date(buildQueue[0].completesAt) <= now) {
+      const [build, ...remainingQueue] = buildQueue;
+      data[build.building] = build.targetLevel;
+      data.buildQueue = remainingQueue;
+      completed = true;
 
       // Update max population if life support was upgraded
       if (build.building === 'lifeSupport') {
-        village.population.max = 24 * Math.pow(1.17, village.buildings.lifeSupport);
+        data.populationMax = Math.floor(24 * Math.pow(1.17, build.targetLevel));
       }
-
-      completed = true;
     }
 
-    village.updateResources();
-    await village.save();
+    // Apply resource tick
+    const resourceUpdate = computeResourceUpdate(village);
+    const updated = await prisma.village.update({
+      where: { id: village.id },
+      data: { ...resourceUpdate, ...data },
+    });
 
-    res.json({ completed, village });
+    res.json({ completed, village: serializeVillage(updated) });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

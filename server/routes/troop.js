@@ -1,6 +1,7 @@
 import express from 'express';
 import auth from '../middleware/auth.js';
-import Node from '../models/Node.js';
+import prisma from '../lib/prisma.js';
+import { computeResourceUpdate, serializeVillage } from '../models/Node.js';
 
 const router = express.Router();
 
@@ -19,8 +20,8 @@ router.post('/train', auth, async (req, res) => {
   try {
     const { villageId, troopType, amount } = req.body;
 
-    const village = await Node.findById(villageId);
-    if (!village || village.owner.toString() !== req.userId) {
+    const village = await prisma.village.findUnique({ where: { id: parseInt(villageId) } });
+    if (!village || village.ownerId !== req.userId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
@@ -28,11 +29,13 @@ router.post('/train', auth, async (req, res) => {
       return res.status(400).json({ error: 'Invalid troop type' });
     }
 
-    if (village.buildings.troopFabricator === 0) {
+    if (village.troopFabricator === 0) {
       return res.status(400).json({ error: 'Recruitment Core required' });
     }
 
-    village.updateResources();
+    // Apply resource tick
+    const resourceUpdate = computeResourceUpdate(village);
+    const currentVillage = { ...village, ...resourceUpdate };
 
     const cost = TROOP_COSTS[troopType];
     const totalCost = {
@@ -42,36 +45,35 @@ router.post('/train', auth, async (req, res) => {
       population: cost.population * amount,
     };
 
-    // Check resources
     if (
-      village.resources.biomass < totalCost.biomass ||
-      village.resources.alloy < totalCost.alloy ||
-      village.resources.ore < totalCost.ore
+      currentVillage.biomass < totalCost.biomass ||
+      currentVillage.alloy < totalCost.alloy ||
+      currentVillage.ore < totalCost.ore
     ) {
       return res.status(400).json({ error: 'Insufficient resources' });
     }
 
-    // Check population
-    if (village.population.current + totalCost.population > village.population.max) {
+    if (village.populationCurrent + totalCost.population > village.populationMax) {
       return res.status(400).json({ error: 'Insufficient population capacity' });
     }
 
-    // Deduct resources
-    village.resources.biomass -= totalCost.biomass;
-    village.resources.alloy -= totalCost.alloy;
-    village.resources.ore -= totalCost.ore;
-    village.population.current += totalCost.population;
-
-    // Add to training queue
     const completesAt = new Date(Date.now() + cost.time * amount * 1000);
-    village.trainingQueue.push({
-      troopType,
-      amount,
-      completesAt,
+    const trainingQueue = Array.isArray(village.trainingQueue) ? village.trainingQueue : [];
+    const newQueue = [...trainingQueue, { troopType, amount, completesAt }];
+
+    const updated = await prisma.village.update({
+      where: { id: village.id },
+      data: {
+        ...resourceUpdate,
+        biomass: currentVillage.biomass - totalCost.biomass,
+        alloy: currentVillage.alloy - totalCost.alloy,
+        ore: currentVillage.ore - totalCost.ore,
+        populationCurrent: village.populationCurrent + totalCost.population,
+        trainingQueue: newQueue,
+      },
     });
 
-    await village.save();
-    res.json({ success: true, completesAt, village });
+    res.json({ success: true, completesAt, village: serializeVillage(updated) });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -82,24 +84,29 @@ router.post('/check-queue', auth, async (req, res) => {
   try {
     const { villageId } = req.body;
 
-    const village = await Node.findById(villageId);
-    if (!village || village.owner.toString() !== req.userId) {
+    const village = await prisma.village.findUnique({ where: { id: parseInt(villageId) } });
+    if (!village || village.ownerId !== req.userId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
     const now = new Date();
+    const trainingQueue = Array.isArray(village.trainingQueue) ? [...village.trainingQueue] : [];
+    const troopUpdates = {};
     let completed = false;
 
-    while (village.trainingQueue.length > 0 && village.trainingQueue[0].completesAt <= now) {
-      const training = village.trainingQueue.shift();
-      village.troops[training.troopType] += training.amount;
+    while (trainingQueue.length > 0 && new Date(trainingQueue[0].completesAt) <= now) {
+      const training = trainingQueue.shift();
+      troopUpdates[training.troopType] = (troopUpdates[training.troopType] || village[training.troopType] || 0) + training.amount;
       completed = true;
     }
 
-    village.updateResources();
-    await village.save();
+    const resourceUpdate = computeResourceUpdate(village);
+    const updated = await prisma.village.update({
+      where: { id: village.id },
+      data: { ...resourceUpdate, ...troopUpdates, trainingQueue },
+    });
 
-    res.json({ completed, village });
+    res.json({ completed, village: serializeVillage(updated) });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

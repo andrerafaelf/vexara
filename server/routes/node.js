@@ -1,28 +1,25 @@
 import express from 'express';
+import prisma from '../lib/prisma.js';
 import auth from '../middleware/auth.js';
-import Node from '../models/Node.js';
-import User from '../models/User.js';
+import { refreshResources, serializeVillage } from '../models/Node.js';
 
 const router = express.Router();
 
 // Create a new village
 router.post('/create', auth, async (req, res) => {
   try {
-    const user = await User.findById(req.userId);
+    const user = await prisma.user.findUnique({ where: { id: req.userId } });
 
-    // Create new village at random coordinates
-    const village = new Node({
-      name: req.body.name || `${user.username}'s Village`,
-      owner: user._id,
-      x: Math.floor(Math.random() * 100),
-      y: Math.floor(Math.random() * 100),
+    const village = await prisma.village.create({
+      data: {
+        name: req.body.name || `${user.username}'s Village`,
+        ownerId: user.id,
+        x: Math.floor(Math.random() * 100),
+        y: Math.floor(Math.random() * 100),
+      },
     });
-    await village.save();
 
-    user.villages.push(village._id);
-    await user.save();
-
-    res.json(village);
+    res.json(serializeVillage(village));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -31,19 +28,16 @@ router.post('/create', auth, async (req, res) => {
 // Get user's villages
 router.get('/my-villages', auth, async (req, res) => {
   try {
-    const user = await User.findById(req.userId).populate('villages');
+    const villages = await prisma.village.findMany({ where: { ownerId: req.userId } });
 
-    // Update resources and points for all villages
-    for (const village of user.villages) {
-      village.updateResources();
-      await village.save();
-    }
+    // Update resources and recalculate points for all villages
+    const updated = await Promise.all(villages.map((v) => refreshResources(v)));
 
-    // Update user's total points
-    await user.calculateTotalPoints();
-    await user.save();
+    // Recalculate total user points
+    const totalPoints = updated.reduce((sum, v) => sum + v.points, 0);
+    await prisma.user.update({ where: { id: req.userId }, data: { points: totalPoints } });
 
-    res.json(user.villages);
+    res.json(updated.map((v) => serializeVillage(v)));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -52,20 +46,19 @@ router.get('/my-villages', auth, async (req, res) => {
 // Get specific village
 router.get('/:villageId', auth, async (req, res) => {
   try {
-    const village = await Node.findById(req.params.villageId);
+    const village = await prisma.village.findUnique({ where: { id: parseInt(req.params.villageId) } });
 
     if (!village) {
       return res.status(404).json({ error: 'Village not found' });
     }
 
-    if (village.owner.toString() !== req.userId) {
+    if (village.ownerId !== req.userId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
-    village.updateResources();
-    await village.save();
+    const updated = await refreshResources(village);
 
-    res.json(village);
+    res.json(serializeVillage(updated));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
