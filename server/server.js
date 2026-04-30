@@ -4,7 +4,6 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 import prisma from './lib/prisma.js';
 import { updateAllResources } from './models/Nexus.js';
-import adminRoutes from './routes/admin.js';
 import attackRoutes from './routes/attack.js';
 import authRoutes from './routes/auth.js';
 import buildingRoutes from './routes/building.js';
@@ -41,7 +40,6 @@ app.use('/api/troop', troopRoutes);
 app.use('/api/map', mapRoutes);
 app.use('/api/attack', attackRoutes);
 app.use('/api/report', reportRoutes);
-app.use('/api/admin', adminRoutes);
 
 // PostgreSQL connection check via Prisma
 prisma

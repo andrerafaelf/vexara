@@ -1,7 +1,7 @@
 {
-  "name": "not-tribos-server",
+  "name": "Neon-Dominion-Server",
   "version": "1.0.0",
-  "description": "Backend server for Not-Tribos game",
+  "description": "Backend server for Neon Dominion game",
   "main": "server.js",
   "type": "module",
   "scripts": {
@@ -16,13 +16,15 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.0.0",
-    "express": "^4.18.2",
     "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2",
-    "dotenv": "^16.3.1",
     "cors": "^2.8.5",
-    "express-rate-limit": "^7.1.5"
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.20.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.2",
