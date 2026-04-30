@@ -164,7 +164,7 @@
   transform: translateX(5px);
 }
 
-.activity-village {
+.activity-nexus {
   color: #e94560;
   font-weight: bold;
   margin-bottom: 5px;
@@ -228,18 +228,18 @@
   opacity: 0.6;
 }
 
-/* Villages Overview */
-.villages-overview {
+/* Nexuses Overview */
+.nexuses-overview {
   grid-column: 1 / -1;
 }
 
-.villages-list {
+.nexuses-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 15px;
 }
 
-.village-summary {
+.nexus-summary {
   background: #0f3460;
   padding: 15px;
   border-radius: 6px;
@@ -248,31 +248,31 @@
   border: 2px solid transparent;
 }
 
-.village-summary:hover {
+.nexus-summary:hover {
   background: #1a4971;
   border-color: #e94560;
   transform: translateY(-2px);
 }
 
-.village-summary-header {
+.nexus-summary-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
 }
 
-.village-summary-name {
+.nexus-summary-name {
   color: #f1faee;
   font-weight: bold;
   font-size: 16px;
 }
 
-.village-summary-coords {
+.nexus-summary-coords {
   color: #a8dadc;
   font-size: 12px;
 }
 
-.village-summary-stats {
+.nexus-summary-stats {
   display: flex;
   gap: 15px;
   margin-bottom: 10px;
@@ -280,7 +280,7 @@
   color: #a8dadc;
 }
 
-.village-summary-resources {
+.nexus-summary-resources {
   display: flex;
   gap: 12px;
   font-size: 14px;
@@ -292,11 +292,11 @@
     grid-column: span 1;
   }
 
-  .villages-overview {
+  .nexuses-overview {
     grid-column: span 1;
   }
 
-  .villages-list {
+  .nexuses-list {
     grid-template-columns: 1fr;
   }
 }

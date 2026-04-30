@@ -186,11 +186,11 @@
   z-index: 1;
 }
 
-.map-cell.has-village {
+.map-cell.has-nexus {
   background: rgba(255, 255, 255, 0.15);
 }
 
-.map-cell.current-village {
+.map-cell.current-nexus {
   background: rgba(255, 255, 255, 0.15);
   border: 2px solid #888;
 }
@@ -200,7 +200,7 @@
   border: 2px solid #aaa;
 }
 
-.village-marker {
+.nexus-marker {
   font-size: 24px;
   line-height: 1;
 }
@@ -219,13 +219,13 @@
   padding: 20px;
 }
 
-.village-details h3 {
+.nexus-details h3 {
   color: #e94560;
   margin-bottom: 15px;
   font-size: 20px;
 }
 
-.node-info-icon {
+.nexus-info-icon {
   display: inline-block;
   margin-left: 8px;
   color: #a8dadc;
@@ -234,7 +234,7 @@
   transition: color 0.2s;
 }
 
-.node-info-icon:hover {
+.nexus-info-icon:hover {
   color: #00d9ff;
 }
 
@@ -256,7 +256,7 @@
   font-weight: bold;
 }
 
-.village-actions {
+.nexus-actions {
   margin-top: 20px;
 }
 
@@ -421,7 +421,7 @@
     height: 50px;
   }
 
-  .village-marker {
+  .nexus-marker {
     font-size: 20px;
   }
 }

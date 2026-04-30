@@ -100,7 +100,7 @@ These are your fundamental troops that form the backbone of your army. Most requ
 
 **Role:** Scout / Intelligence Unit
 
-**Description:** Fast, lightly equipped operative used to gather intelligence, scan enemy nodes, and detect incoming forces. **This is the only scout unit in the game.**
+**Description:** Fast, lightly equipped operative used to gather intelligence, scan enemy nexuses, and detect incoming forces. **This is the only scout unit in the game.**
 
 **Stats:**
 
@@ -123,7 +123,7 @@ These are your fundamental troops that form the backbone of your army. Most requ
 - 5 Assault Troopers
 - 5 Lancer Drones
 
-**Note:** Use this unit to scout enemy nodes before launching attacks!
+**Note:** Use this unit to scout enemy nexuses before launching attacks!
 
 ---
 
@@ -193,7 +193,7 @@ These are your fundamental troops that form the backbone of your army. Most requ
 
 **Role:** Elite Defensive Infantry
 
-**Description:** Heavily shielded unit deployed to significantly strengthen node defenses. Ideal for protecting high-value nodes.
+**Description:** Heavily shielded unit deployed to significantly strengthen nexus defenses. Ideal for protecting high-value nexuses.
 
 **Stats:**
 
@@ -278,7 +278,7 @@ These are your fundamental troops that form the backbone of your army. Most requ
 
 **Role:** Rapid Response Unit
 
-**Description:** Extremely fast unit used to chase scouts, reinforce nearby nodes, or intercept raids. The fastest unit in the game.
+**Description:** Extremely fast unit used to chase scouts, reinforce nearby nexuses, or intercept raids. The fastest unit in the game.
 
 **Stats:**
 
@@ -298,9 +298,9 @@ These are your fundamental troops that form the backbone of your army. Most requ
 **Requirements:**
 
 - Recruitment Core: Level 4
-- Must have at least 50 Skimmer Bikes in the node
+- Must have at least 50 Skimmer Bikes in the nexus
 
-**Tactical Use:** Deploy these to catch fleeing scouts or intercept incoming raids before they reach your node.
+**Tactical Use:** Deploy these to catch fleeing scouts or intercept incoming raids before they reach your nexus.
 
 ---
 
@@ -340,7 +340,7 @@ These are your fundamental troops that form the backbone of your army. Most requ
 
 **Role:** Conquest / Control Unit
 
-**Description:** Non-combat command unit required to reduce Control Level and permanently override and capture enemy nodes. Similar to the Nobleman in Tribal Wars.
+**Description:** Non-combat command unit required to reduce Control Level and permanently override and capture enemy nexuses. Similar to the Nobleman in Tribal Wars.
 
 **Stats:**
 
@@ -362,30 +362,30 @@ These are your fundamental troops that form the backbone of your army. Most requ
 - Recruitment Core: Level 5
 - Command Core: Level 3
 - Shield Grid: Level 2
-- **Maximum 1 Overseer per node**
+- **Maximum 1 Overseer per nexus**
 
 **Important Notes:**
 
 - Overseers do NOT participate in combat
 - They survive attacks as long as at least one other troop survives
 - **If all other troops die, the Overseer dies too** - always send strong escorts!
-- Each successful attack with an Overseer reduces the target node's Control Level
-- When Control Level reaches 0, the node is conquered and ownership transfers
+- Each successful attack with an Overseer reduces the target nexus's Control Level
+- When Control Level reaches 0, the nexus is conquered and ownership transfers
 - Losing an Overseer is extremely costly - protect them with powerful armies!
 
 **Conquest Mechanics:**
 
-1. Train 1 Overseer at your node (takes 50 minutes)
+1. Train 1 Overseer at your nexus (takes 50 minutes)
 2. Send Overseer with an attacking army
 3. Win the battle to reduce enemy Control Level by 1
 4. Repeat until Control Level reaches 0
-5. Node is conquered and becomes yours
+5. Nexus is conquered and becomes yours
 
 ---
 
 ## Training Requirements Summary
 
-| Unit                 | Command Core | Recruitment Core | Life Support | Shield Grid | Ore Extractor | Alloy Forge | Troop Requirements                    | Max Per Node |
+| Unit                 | Command Core | Recruitment Core | Life Support | Shield Grid | Ore Extractor | Alloy Forge | Troop Requirements                    | Max Per Nexus |
 | -------------------- | ------------ | ---------------- | ------------ | ----------- | ------------- | ----------- | ------------------------------------- | ------------ |
 | Assault Trooper      | -            | Lv1              | -            | -           | -             | -           | -                                     | Unlimited    |
 | Lancer Drone         | -            | Lv2              | -            | -           | -             | -           | 5 Assault Troopers                    | Unlimited    |
@@ -413,11 +413,11 @@ These are your fundamental troops that form the backbone of your army. Most requ
 
 - Each defending troop contributes its **Defense stat × Quantity** to total defense power
 - Shield Grid provides a +2% bonus per level to total defense
-- Higher defense power protects your node
+- Higher defense power protects your nexus
 
 ### Speed Mechanics
 
-- Speed determines travel time between nodes
+- Speed determines travel time between nexuses
 - Average speed of attacking army = weighted average of all troops sent
 - Faster armies arrive sooner but may be weaker
 - Slower armies (with Siege Mechs/Annihilators) are powerful but take longer
@@ -465,13 +465,13 @@ These are your fundamental troops that form the backbone of your army. Most requ
 - Unlock Disruptor Units (Lv4 Recruitment Core)
 - Train Suppressor Teams (Lv3 Command Core)
 - Build up Skimmer Bike fleet for fast raids
-- Train Bulwark Guards (Lv5 Life Support) to defend key nodes
+- Train Bulwark Guards (Lv5 Life Support) to defend key nexuses
 
 ### Late Game (Command Core 7+)
 
 - Train Interceptor Bikes (requires 50 Skimmer Bikes)
 - Unlock Annihilator Platforms (Lv6 Command Core)
-- Train 1 Overseer per node for conquest capability
+- Train 1 Overseer per nexus for conquest capability
 - Maintain balanced armies with all unit types
 
 ### Army Composition Suggestions
@@ -498,7 +498,7 @@ These are your fundamental troops that form the backbone of your army. Most requ
 - 20 Annihilator Platforms
 - 50 Assault Troopers (escort)
 - 1 Overseer (for conquest)
-- Purpose: Maximum destruction, node conquest, slow but devastating
+- Purpose: Maximum destruction, nexus conquest, slow but devastating
 
 **Defensive Garrison:**
 
@@ -511,20 +511,20 @@ These are your fundamental troops that form the backbone of your army. Most requ
 **Scout Mission:**
 
 - 1 Recon Operative
-- Purpose: Gather intelligence on enemy node before attacking
+- Purpose: Gather intelligence on enemy nexus before attacking
 
 ---
 
 ## Frequently Asked Questions
 
-**Q: Why can I only train 1 Overseer per node?**
-A: Overseers are extremely powerful conquest units. Limiting them to 1 per node ensures conquest requires strategic planning and multiple coordinated attacks.
+**Q: Why can I only train 1 Overseer per nexus?**
+A: Overseers are extremely powerful conquest units. Limiting them to 1 per nexus ensures conquest requires strategic planning and multiple coordinated attacks.
 
 **Q: What happens if my Overseer dies in battle?**
 A: Overseers have 0 attack and don't participate in combat directly. They survive as long as at least one other troop survives. **However, if your entire army is wiped out, the Overseer dies with them.** Always send sufficient escorts to protect your Overseer! If the attack fails but troops survive, the Overseer returns home safely, but no Control Level reduction occurs.
 
-**Q: How many attacks with an Overseer does it take to conquer a node?**
-A: Each node starts with a Control Level (typically 100). Each successful attack with an Overseer reduces this by 1. So approximately 100 successful attacks are needed, though this may vary based on game balance.
+**Q: How many attacks with an Overseer does it take to conquer a nexus?**
+A: Each nexus starts with a Control Level (typically 100). Each successful attack with an Overseer reduces this by 1. So approximately 100 successful attacks are needed, though this may vary based on game balance.
 
 **Q: Can I scout without Recon Operatives?**
 A: No, Recon Operative is the only scout unit. Always train some before attacking unknown targets!

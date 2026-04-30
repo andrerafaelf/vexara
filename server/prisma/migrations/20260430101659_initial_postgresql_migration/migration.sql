@@ -17,7 +17,7 @@ CREATE TABLE "User" (
 );
 
 -- CreateTable
-CREATE TABLE "Village" (
+CREATE TABLE "Nexus" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "ownerId" INTEGER,
@@ -55,16 +55,16 @@ CREATE TABLE "Village" (
     "controlLevel" INTEGER NOT NULL DEFAULT 100,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "Village_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Nexus_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Attack" (
     "id" SERIAL NOT NULL,
     "attackerUserId" INTEGER NOT NULL,
-    "attackerVillageId" INTEGER NOT NULL,
+    "attackerNexusId" INTEGER NOT NULL,
     "defenderUserId" INTEGER,
-    "defenderVillageId" INTEGER NOT NULL,
+    "defenderNexusId" INTEGER NOT NULL,
     "troops" JSONB NOT NULL,
     "arrivesAt" TIMESTAMP(3) NOT NULL,
     "type" "AttackType" NOT NULL DEFAULT 'attack',
@@ -82,10 +82,10 @@ CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- AddForeignKey
-ALTER TABLE "Village" ADD CONSTRAINT "Village_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Nexus" ADD CONSTRAINT "Nexus_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Attack" ADD CONSTRAINT "Attack_attackerVillageId_fkey" FOREIGN KEY ("attackerVillageId") REFERENCES "Village"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Attack" ADD CONSTRAINT "Attack_attackerNexusId_fkey" FOREIGN KEY ("attackerNexusId") REFERENCES "Nexus"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Attack" ADD CONSTRAINT "Attack_defenderVillageId_fkey" FOREIGN KEY ("defenderVillageId") REFERENCES "Village"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Attack" ADD CONSTRAINT "Attack_defenderNexusId_fkey" FOREIGN KEY ("defenderNexusId") REFERENCES "Nexus"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

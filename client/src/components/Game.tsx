@@ -1,31 +1,31 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { createVillage, getMyVillages } from '../services/api';
+import { createNexus, getMyNexuses } from '../services/api';
 import '../styles/Game.css';
-import { Village } from '../types/game';
+import { Nexus } from '../types/game';
 import AdBanner from './AdBanner';
 import Admin from './Admin';
 import Dashboard from './Dashboard';
 import Map from './Map';
-import NodeView from './NodeView';
+import NexusView from './NexusView';
 import Reports from './Reports';
 
 const Game: React.FC = () => {
-  const [villages, setVillages] = useState<Village[]>([]);
-  const [selectedVillage, setSelectedVillage] = useState<Village | null>(null);
-  const [view, setView] = useState<'dashboard' | 'village' | 'map' | 'reports' | 'admin'>('dashboard');
+  const [nexuses, setVillages] = useState<Nexus[]>([]);
+  const [selectedNexus, setSelectedNexus] = useState<Nexus | null>(null);
+  const [view, setView] = useState<'dashboard' | 'nexus' | 'map' | 'reports' | 'admin'>('dashboard');
   const [loading, setLoading] = useState(true);
   const { user, logout } = useAuth();
 
   const loadVillages = useCallback(async () => {
     try {
-      const response = await getMyVillages();
+      const response = await getMyNexuses();
       setVillages(response.data);
 
-      // Update selected village with fresh data
-      setSelectedVillage((prev) => {
+      // Update selected nexus with fresh data
+      setSelectedNexus((prev) => {
         if (prev) {
-          const updatedSelected = response.data.find((v: Village) => v._id === prev._id);
+          const updatedSelected = response.data.find((v: Nexus) => v._id === prev._id);
           return updatedSelected || prev;
         } else if (response.data.length > 0) {
           return response.data[0];
@@ -35,7 +35,7 @@ const Game: React.FC = () => {
 
       setLoading(false);
     } catch (err) {
-      console.error('Error loading villages:', err);
+      console.error('Error loading nexuses:', err);
       setLoading(false);
     }
   }, []);
@@ -47,26 +47,26 @@ const Game: React.FC = () => {
     return () => clearInterval(interval);
   }, [loadVillages]);
 
-  const handleSelectVillage = (village: Village) => {
-    setSelectedVillage(village);
-    setView('village');
+  const handleSelectNexus = (nexus: Nexus) => {
+    setSelectedNexus(nexus);
+    setView('nexus');
   };
 
-  const handleViewChange = (newView: 'dashboard' | 'village' | 'map' | 'reports' | 'admin') => {
-    // Reload villages when navigating away from admin
+  const handleViewChange = (newView: 'dashboard' | 'nexus' | 'map' | 'reports' | 'admin') => {
+    // Reload nexuses when navigating away from admin
     if (view === 'admin' && newView !== 'admin') {
       loadVillages();
     }
     setView(newView);
   };
 
-  const handleCreateVillage = async () => {
+  const handleCreateNexus = async () => {
     try {
-      await createVillage();
+      await createNexus();
       await loadVillages();
     } catch (err) {
-      console.error('Error creating node:', err);
-      alert('Failed to create node');
+      console.error('Error creating nexus:', err);
+      alert('Failed to create nexus');
     }
   };
 
@@ -74,8 +74,8 @@ const Game: React.FC = () => {
     return <div className="loading">Loading...</div>;
   }
 
-  // Show create village prompt if user has no villages
-  if (villages.length === 0) {
+  // Show create nexus prompt if user has no nexuses
+  if (nexuses.length === 0) {
     return (
       <div className="game-container">
         <AdBanner slot="1234567890" className="ad-banner-top" />
@@ -92,11 +92,11 @@ const Game: React.FC = () => {
         </header>
 
         <main className="game-main">
-          <div className="no-villages">
+          <div className="no-nexuses">
             <h2>Welcome to Neon Dominion!</h2>
-            <p>You don't have any nodes yet. Let's create your first node to start your empire!</p>
-            <button onClick={handleCreateVillage} className="create-village-btn">
-              Create Your First Node
+            <p>You don't have any nexuses yet. Let's create your first nexus to start your empire!</p>
+            <button onClick={handleCreateNexus} className="create-nexus-btn">
+              Create Your First Nexus
             </button>
           </div>
         </main>
@@ -124,23 +124,23 @@ const Game: React.FC = () => {
             📊 Dashboard
           </button>
           <button
-            className={`nav-btn ${view === 'village' ? 'active' : ''}`}
-            onClick={() => handleViewChange('village')}
-            disabled={!selectedVillage}
+            className={`nav-btn ${view === 'nexus' ? 'active' : ''}`}
+            onClick={() => handleViewChange('nexus')}
+            disabled={!selectedNexus}
           >
-            🏛️ Node
+            🏛️ Nexus
           </button>
           <button
             className={`nav-btn ${view === 'map' ? 'active' : ''}`}
             onClick={() => handleViewChange('map')}
-            disabled={!selectedVillage}
+            disabled={!selectedNexus}
           >
             🗺️ Starfield
           </button>
           <button
             className={`nav-btn ${view === 'reports' ? 'active' : ''}`}
             onClick={() => handleViewChange('reports')}
-            disabled={!selectedVillage}
+            disabled={!selectedNexus}
           >
             📜 Combat Logs
           </button>
@@ -156,30 +156,30 @@ const Game: React.FC = () => {
       </header>
 
       <div className="game-content">
-        <nav className="village-nav">
-          <h3>Your Nodes</h3>
-          {villages.map((village) => (
+        <nav className="nexus-nav">
+          <h3>Your Nexuses</h3>
+          {nexuses.map((nexus) => (
             <div
-              key={village._id}
-              className={`village-item ${selectedVillage?._id === village._id ? 'active' : ''}`}
-              onClick={() => handleSelectVillage(village)}
+              key={nexus._id}
+              className={`nexus-item ${selectedNexus?._id === nexus._id ? 'active' : ''}`}
+              onClick={() => handleSelectNexus(nexus)}
             >
-              <div className="village-name">{village.name}</div>
-              <div className="village-coords">
-                ({village.x}|{village.y})
+              <div className="nexus-name">{nexus.name}</div>
+              <div className="nexus-coords">
+                ({nexus.x}|{nexus.y})
               </div>
-              <div className="village-points">{village.points} inf</div>
-              {village.buildQueue.length > 0 && <div className="village-badge">🏗️</div>}
-              {village.trainingQueue.length > 0 && <div className="village-badge">🎖️</div>}
+              <div className="nexus-points">{nexus.points} inf</div>
+              {nexus.buildQueue.length > 0 && <div className="nexus-badge">🏗️</div>}
+              {nexus.trainingQueue.length > 0 && <div className="nexus-badge">🎖️</div>}
             </div>
           ))}
         </nav>
 
         <main className="main-content">
-          {view === 'dashboard' && <Dashboard villages={villages} onSelectVillage={handleSelectVillage} />}
-          {view === 'village' && selectedVillage && <NodeView village={selectedVillage} onUpdate={loadVillages} />}
-          {view === 'map' && selectedVillage && <Map currentVillage={selectedVillage} onRefresh={loadVillages} />}
-          {view === 'reports' && selectedVillage && <Reports village={selectedVillage} />}
+          {view === 'dashboard' && <Dashboard nexuses={nexuses} onSelectNexus={handleSelectNexus} />}
+          {view === 'nexus' && selectedNexus && <NexusView nexus={selectedNexus} onUpdate={loadVillages} />}
+          {view === 'map' && selectedNexus && <Map currentNexus={selectedNexus} onRefresh={loadVillages} />}
+          {view === 'reports' && selectedNexus && <Reports nexus={selectedNexus} />}
           {view === 'admin' && <Admin />}
         </main>
       </div>

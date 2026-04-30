@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getIncomingAttacks, getMapArea, getOutgoingAttacks, getVillageInfo, sendAttack } from '../services/api';
+import { getIncomingAttacks, getMapArea, getOutgoingAttacks, getNexusInfo, sendAttack } from '../services/api';
 import '../styles/Map.css';
-import { Village } from '../types/game';
+import { Nexus } from '../types/game';
 
 interface MapProps {
-  currentVillage: Village;
+  currentNexus: Nexus;
   onRefresh: () => void;
 }
 
-interface MapVillage {
+interface MapNexus {
   _id: string;
   name: string;
   x: number;
@@ -23,12 +23,12 @@ interface MapVillage {
   control?: number;
 }
 
-const Map: React.FC<MapProps> = ({ currentVillage, onRefresh }) => {
+const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   const { user } = useAuth();
-  const [villages, setVillages] = useState<MapVillage[]>([]);
-  const [selectedVillage, setSelectedVillage] = useState<MapVillage | null>(null);
-  const [centerX, setCenterX] = useState(currentVillage.x);
-  const [centerY, setCenterY] = useState(currentVillage.y);
+  const [nexuses, setVillages] = useState<MapNexus[]>([]);
+  const [selectedNexus, setSelectedNexus] = useState<MapNexus | null>(null);
+  const [centerX, setCenterX] = useState(currentNexus.x);
+  const [centerY, setCenterY] = useState(currentNexus.y);
   const [showAttackForm, setShowAttackForm] = useState(false);
   const [attackTroops, setAttackTroops] = useState({
     lancerDrone: 0,
@@ -51,7 +51,7 @@ const Map: React.FC<MapProps> = ({ currentVillage, onRefresh }) => {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
-  // Helper function to get node type information
+  // Helper function to get nexus type information
   const getNodeTypeInfo = (nodeName: string): string => {
     if (nodeName.includes('Resource Depot')) {
       return 'Resource Depot: 2x Resources - High biomass, alloy, and ore production. Perfect farming target.';
@@ -64,7 +64,7 @@ const Map: React.FC<MapProps> = ({ currentVillage, onRefresh }) => {
     } else if (nodeName.includes('Neutral Settlement')) {
       return 'Neutral Settlement: Standard resources and defenses. Balanced expansion target.';
     }
-    return 'Unknown node type';
+    return 'Unknown nexus type';
   };
 
   useEffect(() => {
@@ -83,18 +83,18 @@ const Map: React.FC<MapProps> = ({ currentVillage, onRefresh }) => {
     return () => clearInterval(interval);
   }, [centerX, centerY]);
 
-  // Pre-select current node on mount
+  // Pre-select current nexus on mount
   useEffect(() => {
-    const selectCurrentVillage = async () => {
+    const selectCurrentNexus = async () => {
       try {
-        const response = await getVillageInfo(currentVillage._id);
-        setSelectedVillage(response.data);
+        const response = await getNexusInfo(currentNexus._id);
+        setSelectedNexus(response.data);
       } catch (err) {
-        console.error('Error loading current node:', err);
+        console.error('Error loading current nexus:', err);
       }
     };
-    selectCurrentVillage();
-  }, [currentVillage._id]);
+    selectCurrentNexus();
+  }, [currentNexus._id]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -135,8 +135,8 @@ const Map: React.FC<MapProps> = ({ currentVillage, onRefresh }) => {
   const loadAttacks = async () => {
     try {
       const [incoming, outgoing] = await Promise.all([
-        getIncomingAttacks(currentVillage._id),
-        getOutgoingAttacks(currentVillage._id),
+        getIncomingAttacks(currentNexus._id),
+        getOutgoingAttacks(currentNexus._id),
       ]);
       setIncomingAttacks(incoming.data);
       setOutgoingAttacks(outgoing.data);
@@ -190,7 +190,7 @@ const Map: React.FC<MapProps> = ({ currentVillage, onRefresh }) => {
     }
   };
 
-  const handleVillageClick = async (village: MapVillage, e?: React.MouseEvent) => {
+  const handleVillageClick = async (nexus: MapNexus, e?: React.MouseEvent) => {
     if (e) {
       e.stopPropagation();
     }
@@ -199,20 +199,20 @@ const Map: React.FC<MapProps> = ({ currentVillage, onRefresh }) => {
       return;
     }
     try {
-      const response = await getVillageInfo(village._id);
-      setSelectedVillage(response.data);
+      const response = await getNexusInfo(nexus._id);
+      setSelectedNexus(response.data);
       setShowAttackForm(false);
     } catch (err) {
-      console.error('Error loading village:', err);
+      console.error('Error loading nexus:', err);
     }
   };
 
   const handleSendAttack = async () => {
-    if (!selectedVillage) return;
+    if (!selectedNexus) return;
 
-    // Check if node is conquered
-    if (selectedVillage.control !== undefined && selectedVillage.control <= 0) {
-      alert('Cannot attack a conquered node!');
+    // Check if nexus is conquered
+    if (selectedNexus.control !== undefined && selectedNexus.control <= 0) {
+      alert('Cannot attack a conquered nexus!');
       return;
     }
 
@@ -223,7 +223,7 @@ const Map: React.FC<MapProps> = ({ currentVillage, onRefresh }) => {
     }
 
     try {
-      await sendAttack(currentVillage._id, selectedVillage._id, attackTroops);
+      await sendAttack(currentNexus._id, selectedNexus._id, attackTroops);
       alert('Strike sent!');
       setShowAttackForm(false);
       setAttackTroops({
@@ -270,23 +270,23 @@ const Map: React.FC<MapProps> = ({ currentVillage, onRefresh }) => {
         // Check if coordinates are outside the valid map range (0-99)
         const isOutOfBounds = x < 0 || x > 99 || y < 0 || y > 99;
 
-        const village = !isOutOfBounds ? villages.find((v) => v.x === x && v.y === y) : null;
-        const isCurrent = village?._id === currentVillage._id;
+        const nexus = !isOutOfBounds ? nexuses.find((v) => v.x === x && v.y === y) : null;
+        const isCurrent = nexus?._id === currentNexus._id;
 
         row.push(
           <div
             key={`${x}-${y}`}
-            className={`map-cell ${isOutOfBounds ? 'out-of-bounds' : ''} ${village ? 'has-village' : ''} ${
-              isCurrent ? 'current-village' : ''
-            } ${selectedVillage?._id === village?._id ? 'selected' : ''}`}
-            onClick={(e) => !isOutOfBounds && village && handleVillageClick(village, e)}
+            className={`map-cell ${isOutOfBounds ? 'out-of-bounds' : ''} ${nexus ? 'has-nexus' : ''} ${
+              isCurrent ? 'current-nexus' : ''
+            } ${selectedNexus?._id === nexus?._id ? 'selected' : ''}`}
+            onClick={(e) => !isOutOfBounds && nexus && handleVillageClick(nexus, e)}
             title={
-              isOutOfBounds ? 'Out of bounds' : village ? `${village.name} (${village.x}|${village.y})` : `(${x}|${y})`
+              isOutOfBounds ? 'Out of bounds' : nexus ? `${nexus.name} (${nexus.x}|${nexus.y})` : `(${x}|${y})`
             }
             data-x={x}
             data-y={y}
           >
-            {village && <div className="village-marker">{isCurrent ? '🏛️' : '🏘️'}</div>}
+            {nexus && <div className="nexus-marker">{isCurrent ? '🏛️' : '🏘️'}</div>}
             <div className="cell-coords">{isOutOfBounds ? '—' : `${x}|${y}`}</div>
           </div>,
         );
@@ -302,16 +302,16 @@ const Map: React.FC<MapProps> = ({ currentVillage, onRefresh }) => {
   };
 
   const getCrosshairPosition = () => {
-    if (!selectedVillage) return null;
+    if (!selectedNexus) return null;
 
     const range = 5;
     // Calculate cell position relative to the grid
-    const relX = selectedVillage.x - (centerX - range);
-    const relY = centerY + range - selectedVillage.y;
+    const relX = selectedNexus.x - (centerX - range);
+    const relY = centerY + range - selectedNexus.y;
 
-    // Check if selected village is within visible range
+    // Check if selected nexus is within visible range
     if (relX < 0 || relX > range * 2 || relY < 0 || relY > range * 2) {
-      return null; // Don't show crosshair if selected village is off-screen
+      return null; // Don't show crosshair if selected nexus is off-screen
     }
 
     const cellSize = 60; // matches .map-cell width/height
@@ -340,8 +340,8 @@ const Map: React.FC<MapProps> = ({ currentVillage, onRefresh }) => {
           <button onClick={() => setCenterX(Math.max(0, centerX - 5))}>⬅️ West</button>
           <button
             onClick={() => {
-              setCenterX(currentVillage.x);
-              setCenterY(currentVillage.y);
+              setCenterX(currentNexus.x);
+              setCenterY(currentNexus.y);
             }}
           >
             🏠 Center
@@ -366,7 +366,7 @@ const Map: React.FC<MapProps> = ({ currentVillage, onRefresh }) => {
           >
             {renderGrid()}
           </div>
-          {selectedVillage && getCrosshairPosition() && (
+          {selectedNexus && getCrosshairPosition() && (
             <div
               className="map-crosshair"
               style={{
@@ -384,39 +384,39 @@ const Map: React.FC<MapProps> = ({ currentVillage, onRefresh }) => {
         </div>
 
         <div className="map-sidebar">
-          {selectedVillage ? (
-            <div className="village-details">
+          {selectedNexus ? (
+            <div className="nexus-details">
               <h3>
-                {selectedVillage.name}
-                {!selectedVillage.owner && (
-                  <span className="node-info-icon" title={getNodeTypeInfo(selectedVillage.name)}>
+                {selectedNexus.name}
+                {!selectedNexus.owner && (
+                  <span className="nexus-info-icon" title={getNodeTypeInfo(selectedNexus.name)}>
                     ℹ️
                   </span>
                 )}
               </h3>
               <div className="detail-line">
                 <span>Owner:</span>
-                <span>{selectedVillage.owner?.username || 'Neutral'}</span>
+                <span>{selectedNexus.owner?.username || 'Neutral'}</span>
               </div>
               <div className="detail-line">
                 <span>Location:</span>
                 <span>
-                  ({selectedVillage.x}|{selectedVillage.y})
+                  ({selectedNexus.x}|{selectedNexus.y})
                 </span>
               </div>
               <div className="detail-line">
                 <span>Points:</span>
-                <span>{selectedVillage.points}</span>
+                <span>{selectedNexus.points}</span>
               </div>
-              {selectedVillage.buildings && (
+              {selectedNexus.buildings && (
                 <div className="detail-line">
                   <span>Shield Grid:</span>
-                  <span>Level {selectedVillage.buildings.wall}</span>
+                  <span>Level {selectedNexus.buildings.wall}</span>
                 </div>
               )}
 
-              {selectedVillage._id !== currentVillage._id && selectedVillage.owner?.username !== user?.username && (
-                <div className="village-actions">
+              {selectedNexus._id !== currentNexus._id && selectedNexus.owner?.username !== user?.username && (
+                <div className="nexus-actions">
                   {!showAttackForm ? (
                     <button className="attack-btn" onClick={() => setShowAttackForm(true)}>
                       ⚔️ Send Strike
@@ -429,7 +429,7 @@ const Map: React.FC<MapProps> = ({ currentVillage, onRefresh }) => {
                           onClick={() => {
                             const allTroops: any = {};
                             Object.keys(attackTroops).forEach((type) => {
-                              allTroops[type] = currentVillage.troops[type as keyof typeof currentVillage.troops];
+                              allTroops[type] = currentNexus.troops[type as keyof typeof currentNexus.troops];
                             });
                             setAttackTroops(allTroops);
                           }}
@@ -449,7 +449,7 @@ const Map: React.FC<MapProps> = ({ currentVillage, onRefresh }) => {
                       </div>
                       <div className="troop-selector">
                         {Object.entries(attackTroops).map(([type, amount]) => {
-                          const available = currentVillage.troops[type as keyof typeof currentVillage.troops];
+                          const available = currentNexus.troops[type as keyof typeof currentNexus.troops];
                           return (
                             <div key={type} className="troop-select-row">
                               <span className="troop-type">{type}</span>
@@ -485,11 +485,11 @@ const Map: React.FC<MapProps> = ({ currentVillage, onRefresh }) => {
             </div>
           ) : (
             <div className="no-selection">
-              <p>Click on a node to view details</p>
+              <p>Click on a nexus to view details</p>
               <p className="legend">
-                🏛️ = Your node
+                🏛️ = Your nexus
                 <br />
-                🏘️ = Other nodes
+                🏘️ = Other nexuses
               </p>
             </div>
           )}
@@ -501,7 +501,7 @@ const Map: React.FC<MapProps> = ({ currentVillage, onRefresh }) => {
                   <h4>🛡️ Incoming ({incomingAttacks.length})</h4>
                   {incomingAttacks.map((attack) => (
                     <div key={attack._id} className="attack-item incoming">
-                      <div className="attack-from">From: {attack.attacker.village.name}</div>
+                      <div className="attack-from">From: {attack.attacker.nexus.name}</div>
                       <div className="attack-time">{formatTime(attack.arrivesAt)}</div>
                     </div>
                   ))}
@@ -513,7 +513,7 @@ const Map: React.FC<MapProps> = ({ currentVillage, onRefresh }) => {
                   <h4>⚔️ Outgoing ({outgoingAttacks.length})</h4>
                   {outgoingAttacks.map((attack) => (
                     <div key={attack._id} className="attack-item outgoing">
-                      <div className="attack-to">To: {attack.defender.village.name}</div>
+                      <div className="attack-to">To: {attack.defender.nexus.name}</div>
                       <div className="attack-time">{formatTime(attack.arrivesAt)}</div>
                     </div>
                   ))}

@@ -3,13 +3,13 @@ import dotenv from 'dotenv';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import prisma from './lib/prisma.js';
-import { updateAllResources } from './models/Node.js';
+import { updateAllResources } from './models/Nexus.js';
 import adminRoutes from './routes/admin.js';
 import attackRoutes from './routes/attack.js';
 import authRoutes from './routes/auth.js';
 import buildingRoutes from './routes/building.js';
 import mapRoutes from './routes/map.js';
-import nodeRoutes from './routes/node.js';
+import nexusRoutes from './routes/nexus.js';
 import reportRoutes from './routes/report.js';
 import troopRoutes from './routes/troop.js';
 import { processArrivedAttacks } from './utils/combat.js';
@@ -35,7 +35,7 @@ if (process.env.NODE_ENV === 'production') {
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/village', nodeRoutes);
+app.use('/api/nexus', nexusRoutes);
 app.use('/api/building', buildingRoutes);
 app.use('/api/troop', troopRoutes);
 app.use('/api/map', mapRoutes);

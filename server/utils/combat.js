@@ -25,8 +25,8 @@ async function processArrivedAttacks() {
     const arrivedAttacks = await prisma.attack.findMany({
       where: { status: 'traveling', arrivesAt: { lte: now } },
       include: {
-        attackerVillage: true,
-        defenderVillage: true,
+        attackerNexus: true,
+        defenderNexus: true,
       },
     });
 
@@ -41,8 +41,8 @@ async function processArrivedAttacks() {
 // Resolve combat for a single attack
 async function resolveCombat(attack) {
   try {
-    // Reload defender village with fresh data
-    const defenderVillage = await prisma.village.findUnique({ where: { id: attack.defenderVillageId } });
+    // Reload defender nexus with fresh data
+    const defenderNexus = await prisma.nexus.findUnique({ where: { id: attack.defenderNexusId } });
     const attackTroops = attack.troops; // JSON object from DB
 
     // Calculate attack and defense power
@@ -54,14 +54,14 @@ async function resolveCombat(attack) {
       if (atkCount > 0 && TROOP_STATS[troopType]) {
         attackPower += TROOP_STATS[troopType].attack * atkCount;
       }
-      const defCount = defenderVillage[troopType] || 0;
+      const defCount = defenderNexus[troopType] || 0;
       if (defCount > 0 && TROOP_STATS[troopType]) {
         defensePower += TROOP_STATS[troopType].defense * defCount;
       }
     }
 
     // Shield Grid bonus (2% per level)
-    defensePower *= 1 + defenderVillage.shieldGrid * 0.02;
+    defensePower *= 1 + defenderNexus.shieldGrid * 0.02;
 
     const attackerWins = attackPower > defensePower;
     const powerRatio = attackerWins ? defensePower / attackPower : attackPower / defensePower;
@@ -104,7 +104,7 @@ async function resolveCombat(attack) {
     // Defender losses
     let defenderPopLost = 0;
     for (const troopType of TROOP_KEYS) {
-      const count = defenderVillage[troopType] || 0;
+      const count = defenderNexus[troopType] || 0;
       if (count > 0 && TROOP_STATS[troopType]) {
         const baseLossRate = attackerWins ? 0.8 : powerRatio * 0.5;
         const randomFactor = 0.75 + Math.random() * 0.5;
@@ -131,16 +131,16 @@ async function resolveCombat(attack) {
         }
       }
 
-      const availableResources = defenderVillage.biomass + defenderVillage.alloy + defenderVillage.ore;
+      const availableResources = defenderNexus.biomass + defenderNexus.alloy + defenderNexus.ore;
       const lootPercentage = availableResources > 0 ? Math.min(lootCapacity / availableResources, 0.5) : 0;
 
-      resourcesStolen.biomass = Math.floor(defenderVillage.biomass * lootPercentage);
-      resourcesStolen.alloy = Math.floor(defenderVillage.alloy * lootPercentage);
-      resourcesStolen.ore = Math.floor(defenderVillage.ore * lootPercentage);
+      resourcesStolen.biomass = Math.floor(defenderNexus.biomass * lootPercentage);
+      resourcesStolen.alloy = Math.floor(defenderNexus.alloy * lootPercentage);
+      resourcesStolen.ore = Math.floor(defenderNexus.ore * lootPercentage);
 
-      defenderResourceUpdates.biomass = defenderVillage.biomass - resourcesStolen.biomass;
-      defenderResourceUpdates.alloy = defenderVillage.alloy - resourcesStolen.alloy;
-      defenderResourceUpdates.ore = defenderVillage.ore - resourcesStolen.ore;
+      defenderResourceUpdates.biomass = defenderNexus.biomass - resourcesStolen.biomass;
+      defenderResourceUpdates.alloy = defenderNexus.alloy - resourcesStolen.alloy;
+      defenderResourceUpdates.ore = defenderNexus.ore - resourcesStolen.ore;
 
       // Calculate surviving carry capacity
       const totalTroopsSent = Object.values(attackTroops).reduce((a, b) => a + b, 0);
@@ -152,50 +152,50 @@ async function resolveCombat(attack) {
 
       if (actualLoot > 0 && totalLooted > 0) {
         const lootRatio = actualLoot / totalLooted;
-        const attackerVillage = await prisma.village.findUnique({ where: { id: attack.attackerVillageId } });
-        await prisma.village.update({
-          where: { id: attack.attackerVillageId },
+        const attackerNexus = await prisma.nexus.findUnique({ where: { id: attack.attackerNexusId } });
+        await prisma.nexus.update({
+          where: { id: attack.attackerNexusId },
           data: {
-            biomass: attackerVillage.biomass + Math.floor(resourcesStolen.biomass * lootRatio),
-            alloy: attackerVillage.alloy + Math.floor(resourcesStolen.alloy * lootRatio),
-            ore: attackerVillage.ore + Math.floor(resourcesStolen.ore * lootRatio),
+            biomass: attackerNexus.biomass + Math.floor(resourcesStolen.biomass * lootRatio),
+            alloy: attackerNexus.alloy + Math.floor(resourcesStolen.alloy * lootRatio),
+            ore: attackerNexus.ore + Math.floor(resourcesStolen.ore * lootRatio),
           },
         });
       }
     }
 
-    // Handle node conquest via overseer
-    let newControlLevel = defenderVillage.controlLevel;
+    // Handle nexus conquest via overseer
+    let newControlLevel = defenderNexus.controlLevel;
     const overseerSurvived =
       attackerWins && (attackTroops.overseer || 0) > 0 && (attackerLosses.overseer || 0) < (attackTroops.overseer || 0);
 
     if (overseerSurvived) {
-      newControlLevel = Math.max(0, (defenderVillage.controlLevel || 100) - 50);
+      newControlLevel = Math.max(0, (defenderNexus.controlLevel || 100) - 50);
 
       if (newControlLevel === 0) {
-        const attackerVillage = await prisma.village.findUnique({ where: { id: attack.attackerVillageId } });
-        const newOwnerId = attackerVillage.ownerId;
+        const attackerNexus = await prisma.nexus.findUnique({ where: { id: attack.attackerNexusId } });
+        const newOwnerId = attackerNexus.ownerId;
 
-        // Transfer ownership — no villages array to update in SQL, just set ownerId
+        // Transfer ownership — no nexuses array to update in SQL, just set ownerId
         defenderTroopUpdates.ownerId = newOwnerId;
         defenderTroopUpdates.controlLevel = 100;
-        defenderTroopUpdates.name = 'Conquered Node';
+        defenderTroopUpdates.name = 'Conquered Nexus';
         conquered = true;
       }
     }
 
-    // Save defender village
-    await prisma.village.update({
-      where: { id: defenderVillage.id },
+    // Save defender nexus
+    await prisma.nexus.update({
+      where: { id: defenderNexus.id },
       data: {
         ...defenderTroopUpdates,
         ...defenderResourceUpdates,
-        populationCurrent: Math.max(0, defenderVillage.populationCurrent - defenderPopLost),
+        populationCurrent: Math.max(0, defenderNexus.populationCurrent - defenderPopLost),
         controlLevel: conquered ? 100 : newControlLevel,
       },
     });
 
-    // Return surviving troops to attacker village
+    // Return surviving troops to attacker nexus
     const attackerTroopReturns = {};
     for (const troopType of TROOP_KEYS) {
       const sent = attackTroops[troopType] || 0;
@@ -203,13 +203,13 @@ async function resolveCombat(attack) {
         attackerTroopReturns[troopType] = sent - (attackerLosses[troopType] || 0);
       }
     }
-    const attackerVillage = await prisma.village.findUnique({ where: { id: attack.attackerVillageId } });
-    if (attackerVillage) {
+    const attackerNexus = await prisma.nexus.findUnique({ where: { id: attack.attackerNexusId } });
+    if (attackerNexus) {
       const returnData = {};
       for (const [troopType, survived] of Object.entries(attackerTroopReturns)) {
-        returnData[troopType] = (attackerVillage[troopType] || 0) + survived;
+        returnData[troopType] = (attackerNexus[troopType] || 0) + survived;
       }
-      await prisma.village.update({ where: { id: attack.attackerVillageId }, data: returnData });
+      await prisma.nexus.update({ where: { id: attack.attackerNexusId }, data: returnData });
     }
 
     // Mark attack as completed

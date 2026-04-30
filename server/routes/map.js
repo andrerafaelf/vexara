@@ -4,14 +4,14 @@ import auth from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Get map data (villages in range)
+// Get map data (nexuses in range)
 router.get('/area/:x/:y', auth, async (req, res) => {
   try {
     const x = parseInt(req.params.x);
     const y = parseInt(req.params.y);
     const range = 10;
 
-    const villages = await prisma.village.findMany({
+    const nexuses = await prisma.nexus.findMany({
       where: {
         x: { gte: x - range, lte: x + range },
         y: { gte: y - range, lte: y + range },
@@ -21,7 +21,7 @@ router.get('/area/:x/:y', auth, async (req, res) => {
       },
     });
 
-    const result = villages.map((v) => ({
+    const result = nexuses.map((v) => ({
       _id: v.id,
       id: v.id,
       name: v.name,
@@ -37,36 +37,36 @@ router.get('/area/:x/:y', auth, async (req, res) => {
   }
 });
 
-// Get village details (for other players)
-router.get('/village/:villageId', auth, async (req, res) => {
+// Get nexus details (for other players)
+router.get('/nexus/:nexusId', auth, async (req, res) => {
   try {
-    const village = await prisma.village.findUnique({
-      where: { id: parseInt(req.params.villageId) },
+    const nexus = await prisma.nexus.findUnique({
+      where: { id: parseInt(req.params.nexusId) },
       include: {
         owner: { select: { id: true, username: true, points: true } },
       },
     });
 
-    if (!village) {
-      return res.status(404).json({ error: 'Village not found' });
+    if (!nexus) {
+      return res.status(404).json({ error: 'Nexus not found' });
     }
 
     const publicData = {
-      _id: village.id,
-      id: village.id,
-      name: village.name,
-      x: village.x,
-      y: village.y,
-      points: village.points,
-      owner: village.owner
+      _id: nexus.id,
+      id: nexus.id,
+      name: nexus.name,
+      x: nexus.x,
+      y: nexus.y,
+      points: nexus.points,
+      owner: nexus.owner
         ? {
-            _id: village.owner.id,
-            id: village.owner.id,
-            username: village.owner.username,
-            points: village.owner.points,
+            _id: nexus.owner.id,
+            id: nexus.owner.id,
+            username: nexus.owner.username,
+            points: nexus.owner.points,
           }
         : null,
-      buildings: { shieldGrid: village.shieldGrid },
+      buildings: { shieldGrid: nexus.shieldGrid },
     };
 
     res.json(publicData);

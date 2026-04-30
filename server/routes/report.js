@@ -1,29 +1,29 @@
 import express from 'express';
 import prisma from '../lib/prisma.js';
 import auth from '../middleware/auth.js';
-import { serializeAttack } from '../models/Node.js';
+import { serializeAttack } from '../models/Nexus.js';
 
 const router = express.Router();
 
 // Get attack reports
-router.get('/reports/:villageId', auth, async (req, res) => {
+router.get('/reports/:nexusId', auth, async (req, res) => {
   try {
-    const villageId = parseInt(req.params.villageId);
-    const village = await prisma.village.findUnique({ where: { id: villageId } });
-    if (!village || village.ownerId !== req.userId) {
+    const nexusId = parseInt(req.params.nexusId);
+    const nexus = await prisma.nexus.findUnique({ where: { id: nexusId } });
+    if (!nexus || nexus.ownerId !== req.userId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
     const reports = await prisma.attack.findMany({
       where: {
-        OR: [{ attackerVillageId: villageId }, { defenderVillageId: villageId }],
+        OR: [{ attackerNexusId: nexusId }, { defenderNexusId: nexusId }],
         status: 'completed',
       },
       orderBy: { createdAt: 'desc' },
       take: 20,
       include: {
-        attackerVillage: { select: { id: true, name: true, x: true, y: true } },
-        defenderVillage: { select: { id: true, name: true, x: true, y: true } },
+        attackerNexus: { select: { id: true, name: true, x: true, y: true } },
+        defenderNexus: { select: { id: true, name: true, x: true, y: true } },
       },
     });
 

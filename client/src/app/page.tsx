@@ -3,25 +3,25 @@
 import AdBanner from '@/components/AdBanner';
 import Dashboard from '@/components/Dashboard';
 import { useAuth } from '@/context/AuthContext';
-import { createVillage, getMyVillages } from '@/services/api';
+import { createNexus, getMyNexuses } from '@/services/api';
 import '@/styles/Game.css';
-import { Village } from '@/types/game';
+import { Nexus } from '@/types/game';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
 export default function Home() {
-  const [villages, setVillages] = useState<Village[]>([]);
+  const [nexuses, setVillages] = useState<Nexus[]>([]);
   const [loading, setLoading] = useState(true);
   const { user, logout } = useAuth();
   const router = useRouter();
 
   const loadVillages = useCallback(async () => {
     try {
-      const response = await getMyVillages();
+      const response = await getMyNexuses();
       setVillages(response.data);
       setLoading(false);
     } catch (err) {
-      console.error('Error loading nodes:', err);
+      console.error('Error loading nexuses:', err);
       const token = localStorage.getItem('token');
       if (!token) {
         router.push('/auth');
@@ -41,17 +41,17 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [loadVillages, router]);
 
-  const handleSelectVillage = (village: Village) => {
-    router.push(`/node/${village._id}`);
+  const handleSelectNexus = (nexus: Nexus) => {
+    router.push(`/nexus/${nexus._id}`);
   };
 
-  const handleCreateVillage = async () => {
+  const handleCreateNexus = async () => {
     try {
-      await createVillage();
+      await createNexus();
       await loadVillages();
     } catch (err) {
-      console.error('Error creating node:', err);
-      alert('Failed to create node');
+      console.error('Error creating nexus:', err);
+      alert('Failed to create nexus');
     }
   };
 
@@ -59,7 +59,7 @@ export default function Home() {
     return <div className="loading">Loading...</div>;
   }
 
-  if (villages.length === 0) {
+  if (nexuses.length === 0) {
     return (
       <div className="game-container">
         <AdBanner slot="1234567890" className="ad-banner-top" />
@@ -76,11 +76,11 @@ export default function Home() {
         </header>
 
         <main className="game-main">
-          <div className="no-villages">
+          <div className="no-nexuses">
             <h2>Welcome to Neon Dominion!</h2>
-            <p>You don&apos;t have any nodes yet. Let&apos;s create your first node to start your empire!</p>
-            <button onClick={handleCreateVillage} className="create-village-btn">
-              Create Your First Node
+            <p>You don&apos;t have any nexuses yet. Let&apos;s create your first nexus to start your empire!</p>
+            <button onClick={handleCreateNexus} className="create-nexus-btn">
+              Create Your First Nexus
             </button>
           </div>
         </main>
@@ -121,23 +121,23 @@ export default function Home() {
       </header>
 
       <div className="game-content">
-        <nav className="village-nav">
-          <h3>Your Nodes</h3>
-          {villages.map((village) => (
-            <div key={village._id} className="village-item" onClick={() => handleSelectVillage(village)}>
-              <div className="village-name">{village.name}</div>
-              <div className="village-coords">
-                ({village.x}|{village.y})
+        <nav className="nexus-nav">
+          <h3>Your Nexuses</h3>
+          {nexuses.map((nexus) => (
+            <div key={nexus._id} className="nexus-item" onClick={() => handleSelectNexus(nexus)}>
+              <div className="nexus-name">{nexus.name}</div>
+              <div className="nexus-coords">
+                ({nexus.x}|{nexus.y})
               </div>
-              <div className="village-points">{village.points} inf</div>
-              {village.buildQueue.length > 0 && <div className="village-badge">🏗️</div>}
-              {village.trainingQueue.length > 0 && <div className="village-badge">🎖️</div>}
+              <div className="nexus-points">{nexus.points} inf</div>
+              {nexus.buildQueue.length > 0 && <div className="nexus-badge">🏗️</div>}
+              {nexus.trainingQueue.length > 0 && <div className="nexus-badge">🎖️</div>}
             </div>
           ))}
         </nav>
 
         <main className="main-content">
-          <Dashboard villages={villages} onSelectVillage={handleSelectVillage} />
+          <Dashboard nexuses={nexuses} onSelectNexus={handleSelectNexus} />
         </main>
       </div>
 

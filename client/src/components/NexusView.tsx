@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { checkBuildQueue, checkTrainingQueue, getOutgoingAttacks, trainTroops, upgradeBuilding } from '../services/api';
-import '../styles/NodeView.css';
-import { Village } from '../types/game';
+import '../styles/NexusView.css';
+import { Nexus } from '../types/game';
 import Toast from './Toast';
 
 // Import troop images
@@ -28,8 +28,8 @@ import recruitmentcoreImg from '../assets/buildings/recruitmentcore.png';
 import shieldgridImg from '../assets/buildings/shieldgrid.png';
 import storagevaultImg from '../assets/buildings/storagevault.png';
 
-interface NodeViewProps {
-  village: Village;
+interface NexusViewProps {
+  nexus: Nexus;
   onUpdate: () => void;
 }
 
@@ -45,14 +45,14 @@ const BUILDING_NAMES: { [key: string]: string } = {
 };
 
 const BUILDING_DESCRIPTIONS: { [key: string]: string } = {
-  commandCore: 'Increases max population and unlocks new buildings. Required for node expansion.',
+  commandCore: 'Increases max population and unlocks new buildings. Required for nexus expansion.',
   troopFabricator: 'Allows training of combat units. Higher levels reduce training time.',
   lifeSupport: 'Increases maximum population capacity for housing more troops and workers.',
   storageVault: 'Increases resource storage capacity. Protects resources from raids.',
   biomassFarm: 'Produces Biomass per hour. Higher levels increase production rate.',
   alloyForge: 'Produces Alloy per hour. Higher levels increase production rate.',
   oreExtractor: 'Produces Ore per hour. Higher levels increase production rate.',
-  shieldGrid: 'Increases defensive bonus. Protects your node from enemy attacks.',
+  shieldGrid: 'Increases defensive bonus. Protects your nexus from enemy attacks.',
 };
 
 const BUILDING_COSTS: { [key: string]: any } = {
@@ -115,23 +115,23 @@ const TROOP_DESCRIPTIONS: { [key: string]: string } = {
   breakerUnit:
     'Heavy assault unit. Armored shock unit designed to breach defenses and deal high structural and troop damage. Requires Lv2 Recruitment Core, Lv2 Ore Extractor, 10 Assault Troopers.',
   reconOperative:
-    'Scout & intelligence unit. Fast, lightly equipped operative used to gather intelligence, scan enemy nodes, and detect incoming forces. Requires Lv3 Recruitment Core, 5 Assault Troopers, 5 Lancer Drones.',
+    'Scout & intelligence unit. Fast, lightly equipped operative used to gather intelligence, scan enemy nexuses, and detect incoming forces. Requires Lv3 Recruitment Core, 5 Assault Troopers, 5 Lancer Drones.',
   skimmerBike:
     'Fast raid unit. High-speed hover bike used for quick strikes, resource extraction, and rapid retreats. Requires Lv3 Recruitment Core, Lv3 Alloy Forge, 20 Assault Troopers, 10 Lancer Drones.',
   siegeMech:
     'Heavy siege unit. Massive mechanized unit specialized in destroying fortifications and shield grids. Requires Lv4 Recruitment Core, Lv4 Ore Extractor, 30 Assault Troopers, 10 Breaker Units.',
   bulwarkGuard:
-    'Elite defensive infantry. Heavily shielded unit deployed to significantly strengthen node defenses. Requires Lv3 Recruitment Core, Lv5 Life Support.',
+    'Elite defensive infantry. Heavily shielded unit deployed to significantly strengthen nexus defenses. Requires Lv3 Recruitment Core, Lv5 Life Support.',
   suppressorTeam:
     'Ranged support unit. Long-range fireteam that weakens enemy forces before direct engagement. Requires Lv3 Recruitment Core, Lv3 Command Core.',
   disruptorUnit:
     'Anti-armor & anti-mech unit. Specialized unit using EMP weapons to counter heavy units and machinery. Requires Lv4 Recruitment Core.',
   interceptorBike:
-    'Rapid response unit. Extremely fast unit used to chase scouts, reinforce nearby nodes, or intercept raids. Requires Lv4 Recruitment Core, 50 Skimmer Bikes.',
+    'Rapid response unit. Extremely fast unit used to chase scouts, reinforce nearby nexuses, or intercept raids. Requires Lv4 Recruitment Core, 50 Skimmer Bikes.',
   annihilatorPlatform:
     'Heavy artillery unit. Slow but devastating artillery platform capable of inflicting massive damage. Requires Lv6 Recruitment Core, Lv6 Command Core.',
   overseer:
-    'Conquest & control unit. Non-combat command unit required to reduce Control Level and permanently capture enemy nodes. Requires Lv5 Recruitment Core, Lv3 Command Core, Lv2 Shield Grid. Only 1 per node.',
+    'Conquest & control unit. Non-combat command unit required to reduce Control Level and permanently capture enemy nexuses. Requires Lv5 Recruitment Core, Lv3 Command Core, Lv2 Shield Grid. Only 1 per nexus.',
 };
 
 const TROOP_REQUIREMENTS: { [key: string]: any } = {
@@ -146,7 +146,7 @@ const TROOP_REQUIREMENTS: { [key: string]: any } = {
   disruptorUnit: { buildings: { troopFabricator: 4 } },
   interceptorBike: { buildings: { troopFabricator: 4 }, troops: { skimmerBike: 50 } },
   annihilatorPlatform: { buildings: { troopFabricator: 6, commandCore: 6 } },
-  overseer: { buildings: { troopFabricator: 5, commandCore: 3, shieldGrid: 2 }, maxPerVillage: 1 },
+  overseer: { buildings: { troopFabricator: 5, commandCore: 3, shieldGrid: 2 }, maxPerNexus: 1 },
 };
 
 const TROOP_COSTS: { [key: string]: any } = {
@@ -169,7 +169,7 @@ interface ToastMessage {
   type: 'success' | 'error' | 'info';
 }
 
-const NodeView: React.FC<NodeViewProps> = ({ village, onUpdate }) => {
+const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'buildings' | 'troops' | 'map'>('overview');
   const [trainAmount, setTrainAmount] = useState<{ [key: string]: number }>({});
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -196,12 +196,12 @@ const NodeView: React.FC<NodeViewProps> = ({ village, onUpdate }) => {
     }, 5000);
     loadOutgoingAttacks();
     return () => clearInterval(interval);
-  }, [village]);
+  }, [nexus]);
 
   const checkQueues = async () => {
     try {
-      await checkBuildQueue(village._id);
-      await checkTrainingQueue(village._id);
+      await checkBuildQueue(nexus._id);
+      await checkTrainingQueue(nexus._id);
       onUpdate();
     } catch (err) {
       console.error('Error checking queues:', err);
@@ -210,7 +210,7 @@ const NodeView: React.FC<NodeViewProps> = ({ village, onUpdate }) => {
 
   const loadOutgoingAttacks = async () => {
     try {
-      const response = await getOutgoingAttacks(village._id);
+      const response = await getOutgoingAttacks(nexus._id);
       setOutgoingAttacks(response.data);
     } catch (err) {
       console.error('Error loading outgoing attacks:', err);
@@ -219,7 +219,7 @@ const NodeView: React.FC<NodeViewProps> = ({ village, onUpdate }) => {
 
   const handleUpgrade = async (building: string) => {
     try {
-      const response = await upgradeBuilding(village._id, building);
+      const response = await upgradeBuilding(nexus._id, building);
       showToast(`${BUILDING_NAMES[building]} upgrade started!`, 'success');
       onUpdate();
     } catch (err: any) {
@@ -236,7 +236,7 @@ const NodeView: React.FC<NodeViewProps> = ({ village, onUpdate }) => {
       // Check building requirements
       if (requirements.buildings) {
         for (const [building, level] of Object.entries(requirements.buildings)) {
-          if ((village.buildings as any)[building] < (level as number)) {
+          if ((nexus.buildings as any)[building] < (level as number)) {
             showToast(`Requires ${BUILDING_NAMES[building]} Level ${level}`, 'error');
             return;
           }
@@ -246,28 +246,28 @@ const NodeView: React.FC<NodeViewProps> = ({ village, onUpdate }) => {
       // Check troop requirements
       if (requirements.troops) {
         for (const [troop, count] of Object.entries(requirements.troops)) {
-          if ((village.troops as any)[troop] < (count as number)) {
-            showToast(`Requires ${count}x ${TROOP_NAMES[troop]} in this node`, 'error');
+          if ((nexus.troops as any)[troop] < (count as number)) {
+            showToast(`Requires ${count}x ${TROOP_NAMES[troop]} in this nexus`, 'error');
             return;
           }
         }
       }
 
-      // Check max per node
-      if (requirements.maxPerVillage) {
-        if ((village.troops as any)[troopType] >= requirements.maxPerVillage) {
-          showToast(`Maximum ${requirements.maxPerVillage} ${TROOP_NAMES[troopType]} per node`, 'error');
+      // Check max per nexus
+      if (requirements.maxPerNexus) {
+        if ((nexus.troops as any)[troopType] >= requirements.maxPerNexus) {
+          showToast(`Maximum ${requirements.maxPerNexus} ${TROOP_NAMES[troopType]} per nexus`, 'error');
           return;
         }
-        if (amount > requirements.maxPerVillage - (village.troops as any)[troopType]) {
-          showToast(`Can only train ${requirements.maxPerVillage - (village.troops as any)[troopType]} more`, 'error');
+        if (amount > requirements.maxPerNexus - (nexus.troops as any)[troopType]) {
+          showToast(`Can only train ${requirements.maxPerNexus - (nexus.troops as any)[troopType]} more`, 'error');
           return;
         }
       }
     }
 
     try {
-      await trainTroops(village._id, troopType, amount);
+      await trainTroops(nexus._id, troopType, amount);
       showToast(`Training ${amount}x ${TROOP_NAMES[troopType]} started!`, 'success');
       setTrainAmount({ ...trainAmount, [troopType]: 1 });
       onUpdate();
@@ -299,7 +299,7 @@ const NodeView: React.FC<NodeViewProps> = ({ village, onUpdate }) => {
     // Check building requirements
     if (requirements.buildings) {
       for (const [building, level] of Object.entries(requirements.buildings)) {
-        if ((village.buildings as any)[building] < (level as number)) {
+        if ((nexus.buildings as any)[building] < (level as number)) {
           missing.push(`${BUILDING_NAMES[building]} Lv${level}`);
         }
       }
@@ -308,15 +308,15 @@ const NodeView: React.FC<NodeViewProps> = ({ village, onUpdate }) => {
     // Check troop requirements
     if (requirements.troops) {
       for (const [troop, count] of Object.entries(requirements.troops)) {
-        if ((village.troops as any)[troop] < (count as number)) {
+        if ((nexus.troops as any)[troop] < (count as number)) {
           missing.push(`${count}x ${TROOP_NAMES[troop]}`);
         }
       }
     }
 
-    // Check max per node
-    if (requirements.maxPerVillage && (village.troops as any)[troopType] >= requirements.maxPerVillage) {
-      missing.push(`Max ${requirements.maxPerVillage} per node (already have ${(village.troops as any)[troopType]})`);
+    // Check max per nexus
+    if (requirements.maxPerNexus && (nexus.troops as any)[troopType] >= requirements.maxPerNexus) {
+      missing.push(`Max ${requirements.maxPerNexus} per nexus (already have ${(nexus.troops as any)[troopType]})`);
     }
 
     return { canTrain: missing.length === 0, missingRequirements: missing };
@@ -325,9 +325,9 @@ const NodeView: React.FC<NodeViewProps> = ({ village, onUpdate }) => {
   const calculateProduction = () => {
     const baseProduction = 30;
     return {
-      biomass: Math.floor(baseProduction * Math.pow(1.2, village.buildings.biomassFarm - 1)),
-      alloy: Math.floor(baseProduction * Math.pow(1.2, village.buildings.alloyForge - 1)),
-      ore: Math.floor(baseProduction * Math.pow(1.2, village.buildings.oreExtractor - 1)),
+      biomass: Math.floor(baseProduction * Math.pow(1.2, nexus.buildings.biomassFarm - 1)),
+      alloy: Math.floor(baseProduction * Math.pow(1.2, nexus.buildings.alloyForge - 1)),
+      ore: Math.floor(baseProduction * Math.pow(1.2, nexus.buildings.oreExtractor - 1)),
     };
   };
 
@@ -346,35 +346,35 @@ const NodeView: React.FC<NodeViewProps> = ({ village, onUpdate }) => {
   const production = calculateProduction();
 
   return (
-    <div className="node-view">
-      <div className="node-header">
-        <h2>{village.name}</h2>
+    <div className="nexus-view">
+      <div className="nexus-header">
+        <h2>{nexus.name}</h2>
         <div className="resources">
           <div className="resource" title="Biomass">
             <span className="resource-icon">🧬</span>
             <span className="resource-amount">
-              {Math.floor(village.resources.biomass)}
+              {Math.floor(nexus.resources.biomass)}
               <span className="production-rate">+{production.biomass}/h</span>
             </span>
           </div>
           <div className="resource" title="Alloy">
             <span className="resource-icon">⚙️</span>
             <span className="resource-amount">
-              {Math.floor(village.resources.alloy)}
+              {Math.floor(nexus.resources.alloy)}
               <span className="production-rate">+{production.alloy}/h</span>
             </span>
           </div>
           <div className="resource" title="Ore">
             <span className="resource-icon">💎</span>
             <span className="resource-amount">
-              {Math.floor(village.resources.ore)}
+              {Math.floor(nexus.resources.ore)}
               <span className="production-rate">+{production.ore}/h</span>
             </span>
           </div>
           <div className="resource" title="Population">
             <span className="resource-icon">👥</span>
             <span className="resource-amount">
-              {village.population.current}/{village.population.max}
+              {nexus.population.current}/{nexus.population.max}
             </span>
           </div>
         </div>
@@ -398,18 +398,18 @@ const NodeView: React.FC<NodeViewProps> = ({ village, onUpdate }) => {
       <div className="tab-content">
         {activeTab === 'overview' && (
           <div className="overview-tab">
-            <h3>Node Overview</h3>
+            <h3>Nexus Overview</h3>
             <div className="stats">
               <p>
-                Coordinates: ({village.x}|{village.y})
+                Coordinates: ({nexus.x}|{nexus.y})
               </p>
-              <p>Influence: {village.points}</p>
+              <p>Influence: {nexus.points}</p>
             </div>
 
-            {village.buildQueue.length > 0 && (
+            {nexus.buildQueue.length > 0 && (
               <div className="queue-section">
                 <h4>Fabrication Queue</h4>
-                {village.buildQueue.map((item, idx) => (
+                {nexus.buildQueue.map((item, idx) => (
                   <div key={idx} className="queue-item">
                     {BUILDING_NAMES[item.building]} → Level {item.targetLevel}
                     <span className="queue-time">{formatTime(item.completesAt)}</span>
@@ -418,10 +418,10 @@ const NodeView: React.FC<NodeViewProps> = ({ village, onUpdate }) => {
               </div>
             )}
 
-            {village.trainingQueue.length > 0 && (
+            {nexus.trainingQueue.length > 0 && (
               <div className="queue-section">
                 <h4>Training Queue</h4>
-                {village.trainingQueue.map((item, idx) => (
+                {nexus.trainingQueue.map((item, idx) => (
                   <div key={idx} className="queue-item">
                     {item.amount}x {TROOP_NAMES[item.troopType] || item.troopType}
                     <span className="queue-time">{formatTime(item.completesAt)}</span>
@@ -441,8 +441,8 @@ const NodeView: React.FC<NodeViewProps> = ({ village, onUpdate }) => {
                     style={{ cursor: 'pointer' }}
                   >
                     <span>
-                      Strike on {attack.defender?.village?.name || 'Unknown'} ({attack.defender?.village?.x || '?'}|
-                      {attack.defender?.village?.y || '?'})
+                      Strike on {attack.defender?.nexus?.name || 'Unknown'} ({attack.defender?.nexus?.x || '?'}|
+                      {attack.defender?.nexus?.y || '?'})
                     </span>
                     <span className="queue-time">{formatTime(attack.arrivesAt)}</span>
                   </div>
@@ -456,10 +456,10 @@ const NodeView: React.FC<NodeViewProps> = ({ village, onUpdate }) => {
           <div className="buildings-tab">
             <h3>Buildings</h3>
 
-            {village.buildQueue.length > 0 && (
+            {nexus.buildQueue.length > 0 && (
               <div className="queue-section">
                 <h4>Fabrication Queue</h4>
-                {village.buildQueue.map((item, idx) => (
+                {nexus.buildQueue.map((item, idx) => (
                   <div key={idx} className="queue-item">
                     {BUILDING_NAMES[item.building]} → Level {item.targetLevel}
                     <span className="queue-time">{formatTime(item.completesAt)}</span>
@@ -469,9 +469,9 @@ const NodeView: React.FC<NodeViewProps> = ({ village, onUpdate }) => {
             )}
 
             <div className="buildings-grid">
-              {Object.entries(village.buildings).map(([key, level]) => {
+              {Object.entries(nexus.buildings).map(([key, level]) => {
                 const cost = getBuildingCost(key, level);
-                const isUpgrading = village.buildQueue.some((item) => item.building === key);
+                const isUpgrading = nexus.buildQueue.some((item) => item.building === key);
                 return (
                   <div key={key} className={`building-card ${isUpgrading ? 'upgrading' : ''}`}>
                     {BUILDING_IMAGES[key] && (
@@ -492,7 +492,7 @@ const NodeView: React.FC<NodeViewProps> = ({ village, onUpdate }) => {
                       <div className="upgrading-status">
                         <span className="upgrading-badge">⚙️ Upgrading...</span>
                         <span className="queue-time-small">
-                          {formatTime(village.buildQueue.find((item) => item.building === key)!.completesAt)}
+                          {formatTime(nexus.buildQueue.find((item) => item.building === key)!.completesAt)}
                         </span>
                       </div>
                     )}
@@ -507,7 +507,7 @@ const NodeView: React.FC<NodeViewProps> = ({ village, onUpdate }) => {
                         ⏱️ {Math.floor(cost.time / 60)}m {cost.time % 60}s
                       </p>
                     </div>
-                    <button onClick={() => handleUpgrade(key)} disabled={village.buildQueue.length > 0}>
+                    <button onClick={() => handleUpgrade(key)} disabled={nexus.buildQueue.length > 0}>
                       Upgrade
                     </button>
                   </div>
@@ -521,14 +521,14 @@ const NodeView: React.FC<NodeViewProps> = ({ village, onUpdate }) => {
           <div className="troops-tab">
             <h3>Troops</h3>
 
-            {village.buildings.troopFabricator === 0 ? (
+            {nexus.buildings.troopFabricator === 0 ? (
               <p>Build a Recruitment Core to train troops!</p>
             ) : (
               <>
-                {village.trainingQueue.length > 0 && (
+                {nexus.trainingQueue.length > 0 && (
                   <div className="queue-section">
                     <h4>🔨 Training Queue</h4>
-                    {village.trainingQueue.map((item, idx) => (
+                    {nexus.trainingQueue.map((item, idx) => (
                       <div key={idx} className="queue-item">
                         <span>
                           {item.amount}x {TROOP_NAMES[item.troopType] || item.troopType}
@@ -542,7 +542,7 @@ const NodeView: React.FC<NodeViewProps> = ({ village, onUpdate }) => {
                 <div className="troops-current">
                   <h4>Current Troops</h4>
                   <div className="troop-list">
-                    {Object.entries(village.troops).map(([type, count]) => (
+                    {Object.entries(nexus.troops).map(([type, count]) => (
                       <div key={type} className="troop-item">
                         <span className="troop-name">{TROOP_NAMES[type] || type}</span>
                         <span className="troop-count">{count}</span>
@@ -619,7 +619,7 @@ const NodeView: React.FC<NodeViewProps> = ({ village, onUpdate }) => {
             <h3>Starfield</h3>
             <p>Starfield functionality coming soon...</p>
             <p>
-              Your node is at: ({village.x}|{village.y})
+              Your nexus is at: ({nexus.x}|{nexus.y})
             </p>
           </div>
         )}
@@ -639,8 +639,8 @@ const NodeView: React.FC<NodeViewProps> = ({ village, onUpdate }) => {
               <div className="attack-info-section">
                 <h4>Target</h4>
                 <p>
-                  {selectedAttack.defender?.village?.name || 'Unknown'}({selectedAttack.defender?.village?.x || '?'}|
-                  {selectedAttack.defender?.village?.y || '?'})
+                  {selectedAttack.defender?.nexus?.name || 'Unknown'}({selectedAttack.defender?.nexus?.x || '?'}|
+                  {selectedAttack.defender?.nexus?.y || '?'})
                 </p>
               </div>
 
@@ -682,4 +682,4 @@ const NodeView: React.FC<NodeViewProps> = ({ village, onUpdate }) => {
   );
 };
 
-export default NodeView;
+export default NexusView;

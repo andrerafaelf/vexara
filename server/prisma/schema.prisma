@@ -14,10 +14,10 @@ model User {
   password  String
   points    Int       @default(0)
   createdAt DateTime  @default(now())
-  villages  Village[]
+  nexuses  Nexus[]
 }
 
-model Village {
+model Nexus {
   id   Int    @id @default(autoincrement())
   name String
 
@@ -69,8 +69,8 @@ model Village {
   controlLevel       Int      @default(100)
   createdAt          DateTime @default(now())
 
-  attacksAsAttacker Attack[] @relation("AttackerVillage")
-  attacksAsDefender Attack[] @relation("DefenderVillage")
+  attacksAsAttacker Attack[] @relation("AttackerNexus")
+  attacksAsDefender Attack[] @relation("DefenderNexus")
 }
 
 enum AttackType {
@@ -89,12 +89,12 @@ model Attack {
   id Int @id @default(autoincrement())
 
   attackerUserId    Int
-  attackerVillageId Int
+  attackerNexusId Int
   defenderUserId    Int?
-  defenderVillageId Int
+  defenderNexusId Int
 
-  attackerVillage Village @relation("AttackerVillage", fields: [attackerVillageId], references: [id])
-  defenderVillage Village @relation("DefenderVillage", fields: [defenderVillageId], references: [id])
+  attackerNexus Nexus @relation("AttackerNexus", fields: [attackerNexusId], references: [id])
+  defenderNexus Nexus @relation("DefenderNexus", fields: [defenderNexusId], references: [id])
 
   troops    Json
   arrivesAt DateTime

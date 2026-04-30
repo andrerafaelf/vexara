@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getOutgoingAttacks } from '../services/api';
 import '../styles/Dashboard.css';
-import { Village } from '../types/game';
+import { Nexus } from '../types/game';
 
 const TROOP_NAMES: { [key: string]: string } = {
   lancerDrone: 'Lancer Drone',
@@ -19,11 +19,11 @@ const TROOP_NAMES: { [key: string]: string } = {
 };
 
 interface DashboardProps {
-  villages: Village[];
-  onSelectVillage: (village: Village) => void;
+  nexuses: Nexus[];
+  onSelectNexus: (nexus: Nexus) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ villages, onSelectVillage }) => {
+const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [outgoingAttacks, setOutgoingAttacks] = useState<any[]>([]);
   const [selectedAttack, setSelectedAttack] = useState<any | null>(null);
@@ -39,29 +39,29 @@ const Dashboard: React.FC<DashboardProps> = ({ villages, onSelectVillage }) => {
     loadOutgoingAttacks();
     const interval = setInterval(loadOutgoingAttacks, 10000);
     return () => clearInterval(interval);
-  }, [villages]);
+  }, [nexuses]);
 
   const loadOutgoingAttacks = async () => {
     try {
-      const allAttacks = await Promise.all(villages.map((v) => getOutgoingAttacks(v._id)));
+      const allAttacks = await Promise.all(nexuses.map((v) => getOutgoingAttacks(v._id)));
       const attacks = allAttacks.flatMap((response) => response.data);
       setOutgoingAttacks(attacks);
     } catch (err) {
       console.error('Error loading outgoing attacks:', err);
     }
   };
-  const totalPoints = villages.reduce((sum, v) => sum + v.points, 0);
+  const totalPoints = nexuses.reduce((sum, v) => sum + v.points, 0);
 
-  const calculateProduction = (village: Village) => {
+  const calculateProduction = (nexus: Nexus) => {
     const baseProduction = 30;
     return {
-      biomass: Math.floor(baseProduction * Math.pow(1.2, village.buildings.biomassFarm - 1)),
-      alloy: Math.floor(baseProduction * Math.pow(1.2, village.buildings.alloyForge - 1)),
-      ore: Math.floor(baseProduction * Math.pow(1.2, village.buildings.oreExtractor - 1)),
+      biomass: Math.floor(baseProduction * Math.pow(1.2, nexus.buildings.biomassFarm - 1)),
+      alloy: Math.floor(baseProduction * Math.pow(1.2, nexus.buildings.alloyForge - 1)),
+      ore: Math.floor(baseProduction * Math.pow(1.2, nexus.buildings.oreExtractor - 1)),
     };
   };
 
-  const totalProduction = villages.reduce(
+  const totalProduction = nexuses.reduce(
     (sum, v) => {
       const prod = calculateProduction(v);
       return {
@@ -73,7 +73,7 @@ const Dashboard: React.FC<DashboardProps> = ({ villages, onSelectVillage }) => {
     { biomass: 0, alloy: 0, ore: 0 }
   );
 
-  const totalResources = villages.reduce(
+  const totalResources = nexuses.reduce(
     (sum, v) => ({
       biomass: sum.biomass + Math.floor(v.resources.biomass),
       alloy: sum.alloy + Math.floor(v.resources.alloy),
@@ -81,7 +81,7 @@ const Dashboard: React.FC<DashboardProps> = ({ villages, onSelectVillage }) => {
     }),
     { biomass: 0, alloy: 0, ore: 0 }
   );
-  const totalTroops = villages.reduce(
+  const totalTroops = nexuses.reduce(
     (sum, v) => ({
       lancerDrone: sum.lancerDrone + v.troops.lancerDrone,
       assaultTrooper: sum.assaultTrooper + v.troops.assaultTrooper,
@@ -114,8 +114,8 @@ const Dashboard: React.FC<DashboardProps> = ({ villages, onSelectVillage }) => {
 
   const totalTroopCount = Object.values(totalTroops).reduce((a, b) => a + b, 0);
 
-  const activeBuilding = villages.filter((v) => v.buildQueue.length > 0);
-  const activeTraining = villages.filter((v) => v.trainingQueue.length > 0);
+  const activeBuilding = nexuses.filter((v) => v.buildQueue.length > 0);
+  const activeTraining = nexuses.filter((v) => v.trainingQueue.length > 0);
 
   const formatTime = (date: Date) => {
     const diff = new Date(date).getTime() - currentTime.getTime();
@@ -135,7 +135,7 @@ const Dashboard: React.FC<DashboardProps> = ({ villages, onSelectVillage }) => {
       <div className="dashboard-header">
         <h2>Command Overview</h2>
         <p className="empire-stats">
-          {villages.length} {villages.length === 1 ? 'Node' : 'Nodes'} • {totalPoints} Total Influence
+          {nexuses.length} {nexuses.length === 1 ? 'Nexus' : 'Nexuses'} • {totalPoints} Total Influence
         </p>
       </div>
 
@@ -195,7 +195,7 @@ const Dashboard: React.FC<DashboardProps> = ({ villages, onSelectVillage }) => {
               <p className="no-troops">
                 {outgoingAttacks.length > 0
                   ? 'All troops deployed on missions! Train reinforcements in your Recruitment Core!'
-                  : villages.some((v) => v.buildings.troopFabricator > 0)
+                  : nexuses.some((v) => v.buildings.troopFabricator > 0)
                   ? 'No troops trained yet. Train some in your Recruitment Core!'
                   : 'No troops yet. Build a Recruitment Core!'}
               </p>
@@ -208,13 +208,13 @@ const Dashboard: React.FC<DashboardProps> = ({ villages, onSelectVillage }) => {
           <h3>🏗️ Construction</h3>
           {activeBuilding.length > 0 ? (
             <div className="activity-list">
-              {activeBuilding.map((village) => (
-                <div key={village._id} className="activity-item" onClick={() => onSelectVillage(village)}>
-                  <div className="activity-village">{village.name}</div>
+              {activeBuilding.map((nexus) => (
+                <div key={nexus._id} className="activity-item" onClick={() => onSelectNexus(nexus)}>
+                  <div className="activity-nexus">{nexus.name}</div>
                   <div className="activity-details">
-                    {village.buildQueue[0].building} → Lvl {village.buildQueue[0].targetLevel}
+                    {nexus.buildQueue[0].building} → Lvl {nexus.buildQueue[0].targetLevel}
                   </div>
-                  <div className="activity-time">{formatTime(village.buildQueue[0].completesAt)}</div>
+                  <div className="activity-time">{formatTime(nexus.buildQueue[0].completesAt)}</div>
                 </div>
               ))}
             </div>
@@ -228,13 +228,13 @@ const Dashboard: React.FC<DashboardProps> = ({ villages, onSelectVillage }) => {
           <h3>🎖️ Training</h3>
           {activeTraining.length > 0 ? (
             <div className="activity-list">
-              {activeTraining.map((village) => (
-                <div key={village._id} className="activity-item" onClick={() => onSelectVillage(village)}>
-                  <div className="activity-village">{village.name}</div>
+              {activeTraining.map((nexus) => (
+                <div key={nexus._id} className="activity-item" onClick={() => onSelectNexus(nexus)}>
+                  <div className="activity-nexus">{nexus.name}</div>
                   <div className="activity-details">
-                    {village.trainingQueue[0].amount}x {village.trainingQueue[0].troopType}
+                    {nexus.trainingQueue[0].amount}x {nexus.trainingQueue[0].troopType}
                   </div>
-                  <div className="activity-time">{formatTime(village.trainingQueue[0].completesAt)}</div>
+                  <div className="activity-time">{formatTime(nexus.trainingQueue[0].completesAt)}</div>
                 </div>
               ))}
             </div>
@@ -255,12 +255,12 @@ const Dashboard: React.FC<DashboardProps> = ({ villages, onSelectVillage }) => {
                   onClick={() => setSelectedAttack(attack)}
                   style={{ cursor: 'pointer' }}
                 >
-                  <div className="activity-village">
-                    {villages.find((v) => v._id === attack.attacker.village)?.name || 'Unknown'}
+                  <div className="activity-nexus">
+                    {nexuses.find((v) => v._id === attack.attacker.nexus)?.name || 'Unknown'}
                   </div>
                   <div className="activity-details">
-                    → {attack.defender?.village?.name || 'Unknown'} ({attack.defender?.village?.x || '?'}|
-                    {attack.defender?.village?.y || '?'})
+                    → {attack.defender?.nexus?.name || 'Unknown'} ({attack.defender?.nexus?.x || '?'}|
+                    {attack.defender?.nexus?.y || '?'})
                   </div>
                   <div className="activity-time">{formatTime(attack.arrivesAt)}</div>
                 </div>
@@ -273,8 +273,8 @@ const Dashboard: React.FC<DashboardProps> = ({ villages, onSelectVillage }) => {
         <div className="dashboard-card quick-actions-card">
           <h3>⚡ Quick Actions</h3>
           <div className="quick-actions">
-            <button className="action-btn" onClick={() => onSelectVillage(villages[0])}>
-              🏛️ Manage Node
+            <button className="action-btn" onClick={() => onSelectNexus(nexuses[0])}>
+              🏛️ Manage Nexus
             </button>
             <button className="action-btn" disabled>
               🤝 Syndicates
@@ -288,28 +288,28 @@ const Dashboard: React.FC<DashboardProps> = ({ villages, onSelectVillage }) => {
           </div>
         </div>
 
-        {/* Villages Quick View */}
-        <div className="dashboard-card villages-overview">
-          <h3>🏘️ Your Nodes</h3>
-          <div className="villages-list">
-            {villages.map((village) => (
-              <div key={village._id} className="village-summary" onClick={() => onSelectVillage(village)}>
-                <div className="village-summary-header">
-                  <span className="village-summary-name">{village.name}</span>
-                  <span className="village-summary-coords">
-                    ({village.x}|{village.y})
+        {/* Nexuses Quick View */}
+        <div className="dashboard-card nexuses-overview">
+          <h3>🏘️ Your Nexuses</h3>
+          <div className="nexuses-list">
+            {nexuses.map((nexus) => (
+              <div key={nexus._id} className="nexus-summary" onClick={() => onSelectNexus(nexus)}>
+                <div className="nexus-summary-header">
+                  <span className="nexus-summary-name">{nexus.name}</span>
+                  <span className="nexus-summary-coords">
+                    ({nexus.x}|{nexus.y})
                   </span>
                 </div>
-                <div className="village-summary-stats">
-                  <span>📊 {village.points} inf</span>
+                <div className="nexus-summary-stats">
+                  <span>📊 {nexus.points} inf</span>
                   <span>
-                    👥 {village.population.current}/{village.population.max}
+                    👥 {nexus.population.current}/{nexus.population.max}
                   </span>
                 </div>
-                <div className="village-summary-resources">
-                  <span>🧬 {Math.floor(village.resources.biomass)}</span>
-                  <span>⚙️ {Math.floor(village.resources.alloy)}</span>
-                  <span>💎 {Math.floor(village.resources.ore)}</span>
+                <div className="nexus-summary-resources">
+                  <span>🧬 {Math.floor(nexus.resources.biomass)}</span>
+                  <span>⚙️ {Math.floor(nexus.resources.alloy)}</span>
+                  <span>💎 {Math.floor(nexus.resources.ore)}</span>
                 </div>
               </div>
             ))}
@@ -329,14 +329,14 @@ const Dashboard: React.FC<DashboardProps> = ({ villages, onSelectVillage }) => {
             <div className="attack-modal-content">
               <div className="attack-info-section">
                 <h4>From</h4>
-                <p>{villages.find((v) => v._id === selectedAttack.attacker.village)?.name || 'Unknown'}</p>
+                <p>{nexuses.find((v) => v._id === selectedAttack.attacker.nexus)?.name || 'Unknown'}</p>
               </div>
 
               <div className="attack-info-section">
                 <h4>Target</h4>
                 <p>
-                  {selectedAttack.defender?.village?.name || 'Unknown'}({selectedAttack.defender?.village?.x || '?'}|
-                  {selectedAttack.defender?.village?.y || '?'})
+                  {selectedAttack.defender?.nexus?.name || 'Unknown'}({selectedAttack.defender?.nexus?.x || '?'}|
+                  {selectedAttack.defender?.nexus?.y || '?'})
                 </p>
               </div>
 

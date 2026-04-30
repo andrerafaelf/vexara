@@ -1,6 +1,6 @@
 import express from 'express';
 import prisma from '../lib/prisma.js';
-import { serializeVillage } from '../models/Node.js';
+import { serializeNexus } from '../models/Nexus.js';
 import { processArrivedAttacks } from '../utils/combat.js';
 
 const router = express.Router();
@@ -9,13 +9,13 @@ const router = express.Router();
 router.get('/users', async (req, res) => {
   try {
     const users = await prisma.user.findMany({
-      select: { id: true, username: true, email: true, points: true, createdAt: true, villages: true },
+      select: { id: true, username: true, email: true, points: true, createdAt: true, nexuses: true },
       orderBy: { createdAt: 'desc' },
     });
     const result = users.map((u) => ({
       ...u,
       _id: u.id,
-      villages: u.villages.map((v) => serializeVillage(v)),
+      nexuses: u.nexuses.map((v) => serializeNexus(v)),
     }));
     res.json(result);
   } catch (error) {
@@ -28,7 +28,7 @@ router.get('/stats', async (req, res) => {
   try {
     const [userCount, villageCount, attackCount, topUsers] = await Promise.all([
       prisma.user.count(),
-      prisma.village.count(),
+      prisma.nexus.count(),
       prisma.attack.count(),
       prisma.user.findMany({
         select: { id: true, username: true, points: true },
@@ -57,16 +57,16 @@ router.delete('/users/:userId', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Delete attacks and villages in the right order (FK constraints)
-    const userVillages = await prisma.village.findMany({ where: { ownerId: userId }, select: { id: true } });
+    // Delete attacks and nexuses in the right order (FK constraints)
+    const userVillages = await prisma.nexus.findMany({ where: { ownerId: userId }, select: { id: true } });
     const villageIds = userVillages.map((v) => v.id);
 
     await prisma.attack.deleteMany({
       where: {
-        OR: [{ attackerVillageId: { in: villageIds } }, { defenderVillageId: { in: villageIds } }],
+        OR: [{ attackerNexusId: { in: villageIds } }, { defenderNexusId: { in: villageIds } }],
       },
     });
-    await prisma.village.deleteMany({ where: { ownerId: userId } });
+    await prisma.nexus.deleteMany({ where: { ownerId: userId } });
     await prisma.user.delete({ where: { id: userId } });
 
     res.json({ success: true, message: 'User deleted' });
@@ -75,33 +75,33 @@ router.delete('/users/:userId', async (req, res) => {
   }
 });
 
-// Give resources to village
-router.post('/villages/:villageId/resources', async (req, res) => {
+// Give resources to nexus
+router.post('/nexuses/:nexusId/resources', async (req, res) => {
   try {
     const { biomass, alloy, ore } = req.body;
-    const village = await prisma.village.findUnique({ where: { id: parseInt(req.params.villageId) } });
+    const nexus = await prisma.nexus.findUnique({ where: { id: parseInt(req.params.nexusId) } });
 
-    if (!village) {
-      return res.status(404).json({ error: 'Village not found' });
+    if (!nexus) {
+      return res.status(404).json({ error: 'Nexus not found' });
     }
 
-    const updated = await prisma.village.update({
-      where: { id: village.id },
+    const updated = await prisma.nexus.update({
+      where: { id: nexus.id },
       data: {
-        biomass: village.biomass + (biomass || 0),
-        alloy: village.alloy + (alloy || 0),
-        ore: village.ore + (ore || 0),
+        biomass: nexus.biomass + (biomass || 0),
+        alloy: nexus.alloy + (alloy || 0),
+        ore: nexus.ore + (ore || 0),
       },
     });
 
-    res.json({ success: true, village: serializeVillage(updated) });
+    res.json({ success: true, nexus: serializeNexus(updated) });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Add troops to village
-router.post('/villages/:villageId/troops', async (req, res) => {
+// Add troops to nexus
+router.post('/nexuses/:nexusId/troops', async (req, res) => {
   try {
     const {
       lancerDrone = 0,
@@ -118,9 +118,9 @@ router.post('/villages/:villageId/troops', async (req, res) => {
       overseer = 0,
     } = req.body;
 
-    const village = await prisma.village.findUnique({ where: { id: parseInt(req.params.villageId) } });
-    if (!village) {
-      return res.status(404).json({ error: 'Village not found' });
+    const nexus = await prisma.nexus.findUnique({ where: { id: parseInt(req.params.nexusId) } });
+    if (!nexus) {
+      return res.status(404).json({ error: 'Nexus not found' });
     }
 
     const troopsAdded =
@@ -137,33 +137,33 @@ router.post('/villages/:villageId/troops', async (req, res) => {
       annihilatorPlatform +
       overseer;
 
-    const updated = await prisma.village.update({
-      where: { id: village.id },
+    const updated = await prisma.nexus.update({
+      where: { id: nexus.id },
       data: {
-        lancerDrone: village.lancerDrone + lancerDrone,
-        assaultTrooper: village.assaultTrooper + assaultTrooper,
-        breakerUnit: village.breakerUnit + breakerUnit,
-        reconOperative: village.reconOperative + reconOperative,
-        skimmerBike: village.skimmerBike + skimmerBike,
-        siegeMech: village.siegeMech + siegeMech,
-        bulwarkGuard: village.bulwarkGuard + bulwarkGuard,
-        suppressorTeam: village.suppressorTeam + suppressorTeam,
-        disruptorUnit: village.disruptorUnit + disruptorUnit,
-        interceptorBike: village.interceptorBike + interceptorBike,
-        annihilatorPlatform: village.annihilatorPlatform + annihilatorPlatform,
-        overseer: village.overseer + overseer,
-        populationCurrent: village.populationCurrent + troopsAdded,
+        lancerDrone: nexus.lancerDrone + lancerDrone,
+        assaultTrooper: nexus.assaultTrooper + assaultTrooper,
+        breakerUnit: nexus.breakerUnit + breakerUnit,
+        reconOperative: nexus.reconOperative + reconOperative,
+        skimmerBike: nexus.skimmerBike + skimmerBike,
+        siegeMech: nexus.siegeMech + siegeMech,
+        bulwarkGuard: nexus.bulwarkGuard + bulwarkGuard,
+        suppressorTeam: nexus.suppressorTeam + suppressorTeam,
+        disruptorUnit: nexus.disruptorUnit + disruptorUnit,
+        interceptorBike: nexus.interceptorBike + interceptorBike,
+        annihilatorPlatform: nexus.annihilatorPlatform + annihilatorPlatform,
+        overseer: nexus.overseer + overseer,
+        populationCurrent: nexus.populationCurrent + troopsAdded,
       },
     });
 
-    res.json({ success: true, village: serializeVillage(updated) });
+    res.json({ success: true, nexus: serializeNexus(updated) });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Add building levels to village
-router.post('/villages/:villageId/buildings', async (req, res) => {
+// Add building levels to nexus
+router.post('/nexuses/:nexusId/buildings', async (req, res) => {
   try {
     const {
       commandCore = 0,
@@ -176,43 +176,43 @@ router.post('/villages/:villageId/buildings', async (req, res) => {
       shieldGrid = 0,
     } = req.body;
 
-    const village = await prisma.village.findUnique({ where: { id: parseInt(req.params.villageId) } });
-    if (!village) {
-      return res.status(404).json({ error: 'Village not found' });
+    const nexus = await prisma.nexus.findUnique({ where: { id: parseInt(req.params.nexusId) } });
+    if (!nexus) {
+      return res.status(404).json({ error: 'Nexus not found' });
     }
 
-    const newLifeSupport = village.lifeSupport + lifeSupport;
+    const newLifeSupport = nexus.lifeSupport + lifeSupport;
 
-    const updated = await prisma.village.update({
-      where: { id: village.id },
+    const updated = await prisma.nexus.update({
+      where: { id: nexus.id },
       data: {
-        commandCore: village.commandCore + commandCore,
-        troopFabricator: village.troopFabricator + troopFabricator,
+        commandCore: nexus.commandCore + commandCore,
+        troopFabricator: nexus.troopFabricator + troopFabricator,
         lifeSupport: newLifeSupport,
-        storageVault: village.storageVault + storageVault,
-        biomassFarm: village.biomassFarm + biomassFarm,
-        alloyForge: village.alloyForge + alloyForge,
-        oreExtractor: village.oreExtractor + oreExtractor,
-        shieldGrid: village.shieldGrid + shieldGrid,
+        storageVault: nexus.storageVault + storageVault,
+        biomassFarm: nexus.biomassFarm + biomassFarm,
+        alloyForge: nexus.alloyForge + alloyForge,
+        oreExtractor: nexus.oreExtractor + oreExtractor,
+        shieldGrid: nexus.shieldGrid + shieldGrid,
         populationMax: Math.floor(24 * Math.pow(1.17, newLifeSupport)),
       },
     });
 
-    res.json({ success: true, village: serializeVillage(updated) });
+    res.json({ success: true, nexus: serializeNexus(updated) });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
 // Complete build queue instantly
-router.post('/villages/:villageId/complete-build', async (req, res) => {
+router.post('/nexuses/:nexusId/complete-build', async (req, res) => {
   try {
-    const village = await prisma.village.findUnique({ where: { id: parseInt(req.params.villageId) } });
-    if (!village) {
-      return res.status(404).json({ error: 'Village not found' });
+    const nexus = await prisma.nexus.findUnique({ where: { id: parseInt(req.params.nexusId) } });
+    if (!nexus) {
+      return res.status(404).json({ error: 'Nexus not found' });
     }
 
-    const buildQueue = Array.isArray(village.buildQueue) ? village.buildQueue : [];
+    const buildQueue = Array.isArray(nexus.buildQueue) ? nexus.buildQueue : [];
     if (buildQueue.length === 0) {
       return res.status(400).json({ error: 'No building in queue' });
     }
@@ -226,57 +226,57 @@ router.post('/villages/:villageId/complete-build', async (req, res) => {
       data.populationMax = Math.floor(24 * Math.pow(1.17, build.targetLevel));
     }
 
-    const updated = await prisma.village.update({ where: { id: village.id }, data });
-    res.json({ success: true, village: serializeVillage(updated) });
+    const updated = await prisma.nexus.update({ where: { id: nexus.id }, data });
+    res.json({ success: true, nexus: serializeNexus(updated) });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
 // Complete training queue instantly
-router.post('/villages/:villageId/complete-training', async (req, res) => {
+router.post('/nexuses/:nexusId/complete-training', async (req, res) => {
   try {
-    const village = await prisma.village.findUnique({ where: { id: parseInt(req.params.villageId) } });
-    if (!village) {
-      return res.status(404).json({ error: 'Village not found' });
+    const nexus = await prisma.nexus.findUnique({ where: { id: parseInt(req.params.nexusId) } });
+    if (!nexus) {
+      return res.status(404).json({ error: 'Nexus not found' });
     }
 
-    const trainingQueue = Array.isArray(village.trainingQueue) ? village.trainingQueue : [];
+    const trainingQueue = Array.isArray(nexus.trainingQueue) ? nexus.trainingQueue : [];
     if (trainingQueue.length === 0) {
       return res.status(400).json({ error: 'No troops in training' });
     }
 
     const [training, ...remainingQueue] = trainingQueue;
-    const updated = await prisma.village.update({
-      where: { id: village.id },
+    const updated = await prisma.nexus.update({
+      where: { id: nexus.id },
       data: {
-        [training.troopType]: (village[training.troopType] || 0) + training.amount,
-        populationCurrent: village.populationCurrent + training.amount,
+        [training.troopType]: (nexus[training.troopType] || 0) + training.amount,
+        populationCurrent: nexus.populationCurrent + training.amount,
         trainingQueue: remainingQueue,
       },
     });
 
-    res.json({ success: true, village: serializeVillage(updated) });
+    res.json({ success: true, nexus: serializeNexus(updated) });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Delete village
-router.delete('/villages/:villageId', async (req, res) => {
+// Delete nexus
+router.delete('/nexuses/:nexusId', async (req, res) => {
   try {
-    const villageId = parseInt(req.params.villageId);
-    const village = await prisma.village.findUnique({ where: { id: villageId } });
-    if (!village) {
-      return res.status(404).json({ error: 'Village not found' });
+    const nexusId = parseInt(req.params.nexusId);
+    const nexus = await prisma.nexus.findUnique({ where: { id: nexusId } });
+    if (!nexus) {
+      return res.status(404).json({ error: 'Nexus not found' });
     }
 
     await prisma.attack.deleteMany({
-      where: { OR: [{ attackerVillageId: villageId }, { defenderVillageId: villageId }] },
+      where: { OR: [{ attackerNexusId: nexusId }, { defenderNexusId: nexusId }] },
     });
-    await prisma.village.delete({ where: { id: villageId } });
+    await prisma.nexus.delete({ where: { id: nexusId } });
 
-    res.json({ success: true, message: 'Village deleted' });
+    res.json({ success: true, message: 'Nexus deleted' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -288,8 +288,8 @@ router.get('/attacks', async (req, res) => {
     const attacks = await prisma.attack.findMany({
       where: { status: 'traveling' },
       include: {
-        attackerVillage: { select: { id: true, name: true, x: true, y: true } },
-        defenderVillage: { select: { id: true, name: true, x: true, y: true } },
+        attackerNexus: { select: { id: true, name: true, x: true, y: true } },
+        defenderNexus: { select: { id: true, name: true, x: true, y: true } },
       },
       orderBy: { arrivesAt: 'asc' },
     });

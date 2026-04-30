@@ -3,32 +3,32 @@
 import AdBanner from '@/components/AdBanner';
 import Reports from '@/components/Reports';
 import { useAuth } from '@/context/AuthContext';
-import { getMyVillages } from '@/services/api';
+import { getMyNexuses } from '@/services/api';
 import '@/styles/Game.css';
-import { Village } from '@/types/game';
+import { Nexus } from '@/types/game';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
 export default function ReportsPage() {
-  const [villages, setVillages] = useState<Village[]>([]);
-  const [selectedVillage, setSelectedVillage] = useState<Village | null>(null);
+  const [nexuses, setVillages] = useState<Nexus[]>([]);
+  const [selectedNexus, setSelectedNexus] = useState<Nexus | null>(null);
   const [loading, setLoading] = useState(true);
   const { user, logout } = useAuth();
   const router = useRouter();
 
   const loadVillages = useCallback(async () => {
     try {
-      const response = await getMyVillages();
+      const response = await getMyNexuses();
       setVillages(response.data);
-      if (!selectedVillage && response.data.length > 0) {
-        setSelectedVillage(response.data[0]);
+      if (!selectedNexus && response.data.length > 0) {
+        setSelectedNexus(response.data[0]);
       }
       setLoading(false);
     } catch (err) {
-      console.error('Error loading nodes:', err);
+      console.error('Error loading nexuses:', err);
       setLoading(false);
     }
-  }, [selectedVillage]);
+  }, [selectedNexus]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -41,16 +41,16 @@ export default function ReportsPage() {
     return () => clearInterval(interval);
   }, [loadVillages, router]);
 
-  const handleSelectVillage = (village: Village) => {
-    setSelectedVillage(village);
+  const handleSelectNexus = (nexus: Nexus) => {
+    setSelectedNexus(nexus);
   };
 
   if (loading) {
     return <div className="loading">Loading...</div>;
   }
 
-  if (!selectedVillage) {
-    return <div className="loading">No nodes available</div>;
+  if (!selectedNexus) {
+    return <div className="loading">No nexuses available</div>;
   }
 
   return (
@@ -82,27 +82,27 @@ export default function ReportsPage() {
       </header>
 
       <div className="game-content">
-        <nav className="village-nav">
-          <h3>Your Nodes</h3>
-          {villages.map((village) => (
+        <nav className="nexus-nav">
+          <h3>Your Nexuses</h3>
+          {nexuses.map((nexus) => (
             <div
-              key={village._id}
-              className={`village-item ${selectedVillage._id === village._id ? 'active' : ''}`}
-              onClick={() => handleSelectVillage(village)}
+              key={nexus._id}
+              className={`nexus-item ${selectedNexus._id === nexus._id ? 'active' : ''}`}
+              onClick={() => handleSelectNexus(nexus)}
             >
-              <div className="village-name">{village.name}</div>
-              <div className="village-coords">
-                ({village.x}|{village.y})
+              <div className="nexus-name">{nexus.name}</div>
+              <div className="nexus-coords">
+                ({nexus.x}|{nexus.y})
               </div>
-              <div className="village-points">{village.points} inf</div>
-              {village.buildQueue.length > 0 && <div className="village-badge">🏗️</div>}
-              {village.trainingQueue.length > 0 && <div className="village-badge">🎖️</div>}
+              <div className="nexus-points">{nexus.points} inf</div>
+              {nexus.buildQueue.length > 0 && <div className="nexus-badge">🏗️</div>}
+              {nexus.trainingQueue.length > 0 && <div className="nexus-badge">🎖️</div>}
             </div>
           ))}
         </nav>
 
         <main className="main-content">
-          <Reports village={selectedVillage} />
+          <Reports nexus={selectedNexus} />
         </main>
       </div>
 

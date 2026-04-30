@@ -7,7 +7,7 @@ interface User {
   username: string;
   email: string;
   points: number;
-  villages: any[];
+  nexuses: any[];
   createdAt: string;
 }
 
@@ -22,11 +22,11 @@ interface Attack {
   _id: string;
   attacker: {
     user: { username: string };
-    village: { _id: string; name: string; x: number; y: number };
+    nexus: { _id: string; name: string; x: number; y: number };
   };
   defender: {
     user: { username: string };
-    village: { _id: string; name: string; x: number; y: number };
+    nexus: { _id: string; name: string; x: number; y: number };
   };
   troops: {
     lancerDrone: number;
@@ -47,7 +47,7 @@ interface ToastMessage {
 
 interface Modal {
   type: 'resources' | 'troops' | 'buildings' | null;
-  villageId: string | null;
+  nexusId: string | null;
 }
 
 const Admin: React.FC = () => {
@@ -56,7 +56,7 @@ const Admin: React.FC = () => {
   const [attacks, setAttacks] = useState<Attack[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<ToastMessage | null>(null);
-  const [modal, setModal] = useState<Modal>({ type: null, villageId: null });
+  const [modal, setModal] = useState<Modal>({ type: null, nexusId: null });
   const [formData, setFormData] = useState<any>({});
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -116,13 +116,13 @@ const Admin: React.FC = () => {
     }
   };
 
-  const openResourceModal = (villageId: string) => {
-    setModal({ type: 'resources', villageId });
+  const openResourceModal = (nexusId: string) => {
+    setModal({ type: 'resources', nexusId });
     setFormData({ biomass: 1000, alloy: 1000, ore: 1000 });
   };
 
-  const openTroopModal = (villageId: string) => {
-    setModal({ type: 'troops', villageId });
+  const openTroopModal = (nexusId: string) => {
+    setModal({ type: 'troops', nexusId });
     setFormData({
       lancerDrone: 0,
       assaultTrooper: 0,
@@ -139,8 +139,8 @@ const Admin: React.FC = () => {
     });
   };
 
-  const openBuildingModal = (villageId: string) => {
-    setModal({ type: 'buildings', villageId });
+  const openBuildingModal = (nexusId: string) => {
+    setModal({ type: 'buildings', nexusId });
     setFormData({
       commandCore: 0,
       troopFabricator: 0,
@@ -154,15 +154,15 @@ const Admin: React.FC = () => {
   };
 
   const closeModal = () => {
-    setModal({ type: null, villageId: null });
+    setModal({ type: null, nexusId: null });
     setFormData({});
   };
 
   const handleSubmitResources = async () => {
-    if (!modal.villageId) return;
+    if (!modal.nexusId) return;
 
     try {
-      const res = await fetch(`http://localhost:3001/api/admin/villages/${modal.villageId}/resources`, {
+      const res = await fetch(`http://localhost:3001/api/admin/nexuses/${modal.nexusId}/resources`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -181,10 +181,10 @@ const Admin: React.FC = () => {
   };
 
   const handleSubmitTroops = async () => {
-    if (!modal.villageId) return;
+    if (!modal.nexusId) return;
 
     try {
-      const res = await fetch(`http://localhost:3001/api/admin/villages/${modal.villageId}/troops`, {
+      const res = await fetch(`http://localhost:3001/api/admin/nexuses/${modal.nexusId}/troops`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -203,10 +203,10 @@ const Admin: React.FC = () => {
   };
 
   const handleSubmitBuildings = async () => {
-    if (!modal.villageId) return;
+    if (!modal.nexusId) return;
 
     try {
-      const res = await fetch(`http://localhost:3001/api/admin/villages/${modal.villageId}/buildings`, {
+      const res = await fetch(`http://localhost:3001/api/admin/nexuses/${modal.nexusId}/buildings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -224,9 +224,9 @@ const Admin: React.FC = () => {
     }
   };
 
-  const handleCompleteBuild = async (villageId: string) => {
+  const handleCompleteBuild = async (nexusId: string) => {
     try {
-      const res = await fetch(`http://localhost:3001/api/admin/villages/${villageId}/complete-build`, {
+      const res = await fetch(`http://localhost:3001/api/admin/nexuses/${nexusId}/complete-build`, {
         method: 'POST',
       });
 
@@ -242,9 +242,9 @@ const Admin: React.FC = () => {
     }
   };
 
-  const handleCompleteTraining = async (villageId: string) => {
+  const handleCompleteTraining = async (nexusId: string) => {
     try {
-      const res = await fetch(`http://localhost:3001/api/admin/villages/${villageId}/complete-training`, {
+      const res = await fetch(`http://localhost:3001/api/admin/nexuses/${nexusId}/complete-training`, {
         method: 'POST',
       });
 
@@ -278,22 +278,22 @@ const Admin: React.FC = () => {
     }
   };
 
-  const handleDeleteVillage = async (villageId: string, villageName: string) => {
-    if (!window.confirm(`Delete node "${villageName}"?`)) return;
+  const handleDeleteNexus = async (nexusId: string, villageName: string) => {
+    if (!window.confirm(`Delete nexus "${villageName}"?`)) return;
 
     try {
-      const res = await fetch(`http://localhost:3001/api/admin/villages/${villageId}`, {
+      const res = await fetch(`http://localhost:3001/api/admin/nexuses/${nexusId}`, {
         method: 'DELETE',
       });
 
       if (res.ok) {
-        showToast(`Node "${villageName}" deleted`, 'success');
+        showToast(`Nexus "${villageName}" deleted`, 'success');
         loadData();
       } else {
-        showToast('Failed to delete node', 'error');
+        showToast('Failed to delete nexus', 'error');
       }
     } catch (err) {
-      showToast('Error deleting node', 'error');
+      showToast('Error deleting nexus', 'error');
     }
   };
 
@@ -545,7 +545,7 @@ const Admin: React.FC = () => {
           </div>
           <div className="stat-card">
             <h3>🏘️ {stats.villageCount}</h3>
-            <p>Total Nodes</p>
+            <p>Total Nexuses</p>
           </div>
           <div className="stat-card">
             <h3>⚔️ {stats.attackCount}</h3>
@@ -563,7 +563,7 @@ const Admin: React.FC = () => {
                 <th>Username</th>
                 <th>Email</th>
                 <th>Influence</th>
-                <th>Nodes</th>
+                <th>Nexuses</th>
                 <th>Joined</th>
                 <th>Actions</th>
               </tr>
@@ -575,29 +575,29 @@ const Admin: React.FC = () => {
                   <td>{user.email}</td>
                   <td>{user.points}</td>
                   <td>
-                    {user.villages.length}
-                    {user.villages.length > 0 && (
-                      <div className="village-actions">
-                        <button className="btn-small" onClick={() => openResourceModal(user.villages[0]._id)}>
+                    {user.nexuses.length}
+                    {user.nexuses.length > 0 && (
+                      <div className="nexus-actions">
+                        <button className="btn-small" onClick={() => openResourceModal(user.nexuses[0]._id)}>
                           💰 Resources
                         </button>
-                        <button className="btn-small" onClick={() => openTroopModal(user.villages[0]._id)}>
+                        <button className="btn-small" onClick={() => openTroopModal(user.nexuses[0]._id)}>
                           ⚔️ Troops
                         </button>
-                        <button className="btn-small" onClick={() => openBuildingModal(user.villages[0]._id)}>
+                        <button className="btn-small" onClick={() => openBuildingModal(user.nexuses[0]._id)}>
                           🏗️ Buildings
                         </button>
-                        <button className="btn-small" onClick={() => handleCompleteBuild(user.villages[0]._id)}>
+                        <button className="btn-small" onClick={() => handleCompleteBuild(user.nexuses[0]._id)}>
                           ⚡ Build
                         </button>
-                        <button className="btn-small" onClick={() => handleCompleteTraining(user.villages[0]._id)}>
+                        <button className="btn-small" onClick={() => handleCompleteTraining(user.nexuses[0]._id)}>
                           🎖️ Train
                         </button>
                         <button
                           className="btn-small btn-warning"
-                          onClick={() => handleDeleteVillage(user.villages[0]._id, user.villages[0].name)}
+                          onClick={() => handleDeleteNexus(user.nexuses[0]._id, user.nexuses[0].name)}
                         >
-                          🗑️ Node
+                          🗑️ Nexus
                         </button>
                       </div>
                     )}
@@ -650,8 +650,8 @@ const Admin: React.FC = () => {
                         <strong>{attack.attacker?.user?.username || 'Unknown'}</strong>
                         <br />
                         <small>
-                          {attack.attacker?.village?.name || 'Deleted'} ({attack.attacker?.village?.x || '?'}|
-                          {attack.attacker?.village?.y || '?'})
+                          {attack.attacker?.nexus?.name || 'Deleted'} ({attack.attacker?.nexus?.x || '?'}|
+                          {attack.attacker?.nexus?.y || '?'})
                         </small>
                       </td>
                       <td style={{ textAlign: 'center', fontSize: '20px' }}>→</td>
@@ -659,8 +659,8 @@ const Admin: React.FC = () => {
                         <strong>{attack.defender?.user?.username || 'Unknown'}</strong>
                         <br />
                         <small>
-                          {attack.defender?.village?.name || 'Deleted'} ({attack.defender?.village?.x || '?'}|
-                          {attack.defender?.village?.y || '?'})
+                          {attack.defender?.nexus?.name || 'Deleted'} ({attack.defender?.nexus?.x || '?'}|
+                          {attack.defender?.nexus?.y || '?'})
                         </small>
                       </td>
                       <td>{totalTroops} troops</td>

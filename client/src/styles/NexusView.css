@@ -1,15 +1,15 @@
-.node-view {
+.nexus-view {
   background: #16213e;
   border-radius: 8px;
   padding: 20px;
   min-height: 600px;
 }
 
-.node-header {
+.nexus-header {
   margin-bottom: 20px;
 }
 
-.node-header h2 {
+.nexus-header h2 {
   color: #e94560;
   margin-bottom: 15px;
   font-size: 28px;

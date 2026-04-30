@@ -1,7 +1,7 @@
 import express from 'express';
 import auth from '../middleware/auth.js';
 import prisma from '../lib/prisma.js';
-import { computeResourceUpdate, serializeVillage } from '../models/Node.js';
+import { computeResourceUpdate, serializeNexus } from '../models/Nexus.js';
 
 const router = express.Router();
 
@@ -18,10 +18,10 @@ const TROOP_COSTS = {
 // Train troops
 router.post('/train', auth, async (req, res) => {
   try {
-    const { villageId, troopType, amount } = req.body;
+    const { nexusId, troopType, amount } = req.body;
 
-    const village = await prisma.village.findUnique({ where: { id: parseInt(villageId) } });
-    if (!village || village.ownerId !== req.userId) {
+    const nexus = await prisma.nexus.findUnique({ where: { id: parseInt(nexusId) } });
+    if (!nexus || nexus.ownerId !== req.userId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
@@ -29,13 +29,13 @@ router.post('/train', auth, async (req, res) => {
       return res.status(400).json({ error: 'Invalid troop type' });
     }
 
-    if (village.troopFabricator === 0) {
+    if (nexus.troopFabricator === 0) {
       return res.status(400).json({ error: 'Recruitment Core required' });
     }
 
     // Apply resource tick
-    const resourceUpdate = computeResourceUpdate(village);
-    const currentVillage = { ...village, ...resourceUpdate };
+    const resourceUpdate = computeResourceUpdate(nexus);
+    const currentVillage = { ...nexus, ...resourceUpdate };
 
     const cost = TROOP_COSTS[troopType];
     const totalCost = {
@@ -53,27 +53,27 @@ router.post('/train', auth, async (req, res) => {
       return res.status(400).json({ error: 'Insufficient resources' });
     }
 
-    if (village.populationCurrent + totalCost.population > village.populationMax) {
+    if (nexus.populationCurrent + totalCost.population > nexus.populationMax) {
       return res.status(400).json({ error: 'Insufficient population capacity' });
     }
 
     const completesAt = new Date(Date.now() + cost.time * amount * 1000);
-    const trainingQueue = Array.isArray(village.trainingQueue) ? village.trainingQueue : [];
+    const trainingQueue = Array.isArray(nexus.trainingQueue) ? nexus.trainingQueue : [];
     const newQueue = [...trainingQueue, { troopType, amount, completesAt }];
 
-    const updated = await prisma.village.update({
-      where: { id: village.id },
+    const updated = await prisma.nexus.update({
+      where: { id: nexus.id },
       data: {
         ...resourceUpdate,
         biomass: currentVillage.biomass - totalCost.biomass,
         alloy: currentVillage.alloy - totalCost.alloy,
         ore: currentVillage.ore - totalCost.ore,
-        populationCurrent: village.populationCurrent + totalCost.population,
+        populationCurrent: nexus.populationCurrent + totalCost.population,
         trainingQueue: newQueue,
       },
     });
 
-    res.json({ success: true, completesAt, village: serializeVillage(updated) });
+    res.json({ success: true, completesAt, nexus: serializeNexus(updated) });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -82,31 +82,31 @@ router.post('/train', auth, async (req, res) => {
 // Check training queue
 router.post('/check-queue', auth, async (req, res) => {
   try {
-    const { villageId } = req.body;
+    const { nexusId } = req.body;
 
-    const village = await prisma.village.findUnique({ where: { id: parseInt(villageId) } });
-    if (!village || village.ownerId !== req.userId) {
+    const nexus = await prisma.nexus.findUnique({ where: { id: parseInt(nexusId) } });
+    if (!nexus || nexus.ownerId !== req.userId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
     const now = new Date();
-    const trainingQueue = Array.isArray(village.trainingQueue) ? [...village.trainingQueue] : [];
+    const trainingQueue = Array.isArray(nexus.trainingQueue) ? [...nexus.trainingQueue] : [];
     const troopUpdates = {};
     let completed = false;
 
     while (trainingQueue.length > 0 && new Date(trainingQueue[0].completesAt) <= now) {
       const training = trainingQueue.shift();
-      troopUpdates[training.troopType] = (troopUpdates[training.troopType] || village[training.troopType] || 0) + training.amount;
+      troopUpdates[training.troopType] = (troopUpdates[training.troopType] || nexus[training.troopType] || 0) + training.amount;
       completed = true;
     }
 
-    const resourceUpdate = computeResourceUpdate(village);
-    const updated = await prisma.village.update({
-      where: { id: village.id },
+    const resourceUpdate = computeResourceUpdate(nexus);
+    const updated = await prisma.nexus.update({
+      where: { id: nexus.id },
       data: { ...resourceUpdate, ...troopUpdates, trainingQueue },
     });
 
-    res.json({ completed, village: serializeVillage(updated) });
+    res.json({ completed, nexus: serializeNexus(updated) });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

@@ -1,53 +1,53 @@
 import express from 'express';
 import prisma from '../lib/prisma.js';
 import auth from '../middleware/auth.js';
-import { serializeAttack } from '../models/Node.js';
+import { serializeAttack } from '../models/Nexus.js';
 
 const router = express.Router();
 
 // Send attack
 router.post('/send', auth, async (req, res) => {
   try {
-    const { fromVillageId, toVillageId, troops, type = 'attack' } = req.body;
+    const { fromNexusId, toNexusId, troops, type = 'attack' } = req.body;
 
-    const [attackerVillage, defenderVillage] = await Promise.all([
-      prisma.village.findUnique({ where: { id: parseInt(fromVillageId) } }),
-      prisma.village.findUnique({ where: { id: parseInt(toVillageId) } }),
+    const [attackerNexus, defenderNexus] = await Promise.all([
+      prisma.nexus.findUnique({ where: { id: parseInt(fromNexusId) } }),
+      prisma.nexus.findUnique({ where: { id: parseInt(toNexusId) } }),
     ]);
 
-    if (!attackerVillage || attackerVillage.ownerId !== req.userId) {
+    if (!attackerNexus || attackerNexus.ownerId !== req.userId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
-    if (!defenderVillage) {
-      return res.status(404).json({ error: 'Target village not found' });
+    if (!defenderNexus) {
+      return res.status(404).json({ error: 'Target nexus not found' });
     }
 
-    if (defenderVillage.ownerId && defenderVillage.ownerId === req.userId) {
-      return res.status(400).json({ error: 'Cannot attack your own village' });
+    if (defenderNexus.ownerId && defenderNexus.ownerId === req.userId) {
+      return res.status(400).json({ error: 'Cannot attack your own nexus' });
     }
 
-    if (defenderVillage.ownerId) {
-      return res.status(400).json({ error: 'Cannot attack conquered nodes' });
+    if (defenderNexus.ownerId) {
+      return res.status(400).json({ error: 'Cannot attack conquered nexuses' });
     }
 
     // Check troop availability
     for (const [troopType, amount] of Object.entries(troops)) {
-      if ((attackerVillage[troopType] || 0) < amount) {
+      if ((attackerNexus[troopType] || 0) < amount) {
         return res.status(400).json({ error: `Insufficient ${troopType}` });
       }
     }
 
-    // Deduct troops and population from attacker village
+    // Deduct troops and population from attacker nexus
     let totalTroopsSent = 0;
     const troopDeductions = {};
     for (const [troopType, amount] of Object.entries(troops)) {
-      troopDeductions[troopType] = (attackerVillage[troopType] || 0) - amount;
+      troopDeductions[troopType] = (attackerNexus[troopType] || 0) - amount;
       totalTroopsSent += amount;
     }
 
     const distance = Math.sqrt(
-      Math.pow(defenderVillage.x - attackerVillage.x, 2) + Math.pow(defenderVillage.y - attackerVillage.y, 2),
+      Math.pow(defenderNexus.x - attackerNexus.x, 2) + Math.pow(defenderNexus.y - attackerNexus.y, 2),
     );
     const travelTimeMinutes = distance * 5;
     const arrivesAt = new Date(Date.now() + travelTimeMinutes * 60 * 1000);
@@ -56,19 +56,19 @@ router.post('/send', auth, async (req, res) => {
       prisma.attack.create({
         data: {
           attackerUserId: req.userId,
-          attackerVillageId: parseInt(fromVillageId),
-          defenderUserId: defenderVillage.ownerId ?? null,
-          defenderVillageId: parseInt(toVillageId),
+          attackerNexusId: parseInt(fromNexusId),
+          defenderUserId: defenderNexus.ownerId ?? null,
+          defenderNexusId: parseInt(toNexusId),
           troops,
           arrivesAt,
           type,
         },
       }),
-      prisma.village.update({
-        where: { id: attackerVillage.id },
+      prisma.nexus.update({
+        where: { id: attackerNexus.id },
         data: {
           ...troopDeductions,
-          populationCurrent: Math.max(0, attackerVillage.populationCurrent - totalTroopsSent),
+          populationCurrent: Math.max(0, attackerNexus.populationCurrent - totalTroopsSent),
         },
       }),
     ]);
@@ -80,17 +80,17 @@ router.post('/send', auth, async (req, res) => {
 });
 
 // Get incoming attacks
-router.get('/incoming/:villageId', auth, async (req, res) => {
+router.get('/incoming/:nexusId', auth, async (req, res) => {
   try {
-    const village = await prisma.village.findUnique({ where: { id: parseInt(req.params.villageId) } });
-    if (!village || village.ownerId !== req.userId) {
+    const nexus = await prisma.nexus.findUnique({ where: { id: parseInt(req.params.nexusId) } });
+    if (!nexus || nexus.ownerId !== req.userId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
     const attacks = await prisma.attack.findMany({
-      where: { defenderVillageId: village.id, status: 'traveling' },
+      where: { defenderNexusId: nexus.id, status: 'traveling' },
       include: {
-        attackerVillage: { select: { id: true, name: true, x: true, y: true } },
+        attackerNexus: { select: { id: true, name: true, x: true, y: true } },
       },
     });
 
@@ -112,17 +112,17 @@ router.get('/incoming/:villageId', auth, async (req, res) => {
 });
 
 // Get outgoing attacks
-router.get('/outgoing/:villageId', auth, async (req, res) => {
+router.get('/outgoing/:nexusId', auth, async (req, res) => {
   try {
-    const village = await prisma.village.findUnique({ where: { id: parseInt(req.params.villageId) } });
-    if (!village || village.ownerId !== req.userId) {
+    const nexus = await prisma.nexus.findUnique({ where: { id: parseInt(req.params.nexusId) } });
+    if (!nexus || nexus.ownerId !== req.userId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
     const attacks = await prisma.attack.findMany({
-      where: { attackerVillageId: village.id, status: 'traveling' },
+      where: { attackerNexusId: nexus.id, status: 'traveling' },
       include: {
-        defenderVillage: { select: { id: true, name: true, x: true, y: true } },
+        defenderNexus: { select: { id: true, name: true, x: true, y: true } },
       },
     });
 

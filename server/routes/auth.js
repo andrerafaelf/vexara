@@ -20,8 +20,8 @@ router.post('/register', async (req, res) => {
 
     const hashedPassword = await hashPassword(password);
 
-    // Create user and starting village in a transaction
-    const { user, village } = await prisma.$transaction(async (tx) => {
+    // Create user and starting nexus in a transaction
+    const { user, nexus } = await prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({
         data: {
           username,
@@ -30,16 +30,16 @@ router.post('/register', async (req, res) => {
         },
       });
 
-      const newVillage = await tx.village.create({
+      const newNexus = await tx.nexus.create({
         data: {
-          name: `${username}'s Village`,
+          name: `${username}'s Nexus`,
           ownerId: newUser.id,
           x: Math.floor(Math.random() * 100),
           y: Math.floor(Math.random() * 100),
         },
       });
 
-      return { user: newUser, village: newVillage };
+      return { user: newUser, nexus: newNexus };
     });
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });

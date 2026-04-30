@@ -41,58 +41,58 @@ export const login = (email: string, password: string) =>
     body: JSON.stringify({ email, password }),
   });
 
-// Villages
-export const createVillage = (name?: string) =>
-  apiRequest('/village/create', {
+// Nexuses
+export const createNexus = (name?: string) =>
+  apiRequest('/nexus/create', {
     method: 'POST',
     body: JSON.stringify({ name }),
   });
 
-export const getMyVillages = () => apiRequest('/village/my-villages');
+export const getMyNexuses = () => apiRequest('/nexus/my-nexuses');
 
-export const getVillage = (villageId: string) => apiRequest(`/village/${villageId}`);
+export const getNexus = (nexusId: string) => apiRequest(`/nexus/${nexusId}`);
 
 // Buildings
-export const upgradeBuilding = (villageId: string, building: string) =>
+export const upgradeBuilding = (nexusId: string, building: string) =>
   apiRequest('/building/upgrade', {
     method: 'POST',
-    body: JSON.stringify({ villageId, building }),
+    body: JSON.stringify({ nexusId, building }),
   });
 
-export const checkBuildQueue = (villageId: string) =>
+export const checkBuildQueue = (nexusId: string) =>
   apiRequest('/building/check-queue', {
     method: 'POST',
-    body: JSON.stringify({ villageId }),
+    body: JSON.stringify({ nexusId }),
   });
 
 // Troops
-export const trainTroops = (villageId: string, troopType: string, amount: number) =>
+export const trainTroops = (nexusId: string, troopType: string, amount: number) =>
   apiRequest('/troop/train', {
     method: 'POST',
-    body: JSON.stringify({ villageId, troopType, amount }),
+    body: JSON.stringify({ nexusId, troopType, amount }),
   });
 
-export const checkTrainingQueue = (villageId: string) =>
+export const checkTrainingQueue = (nexusId: string) =>
   apiRequest('/troop/check-queue', {
     method: 'POST',
-    body: JSON.stringify({ villageId }),
+    body: JSON.stringify({ nexusId }),
   });
 
 // Map
 export const getMapArea = (x: number, y: number) => apiRequest(`/map/area/${x}/${y}`);
 
-export const getVillageInfo = (villageId: string) => apiRequest(`/map/village/${villageId}`);
+export const getNexusInfo = (nexusId: string) => apiRequest(`/map/nexus/${nexusId}`);
 
 // Attacks
-export const sendAttack = (fromVillageId: string, toVillageId: string, troops: any, type: string = 'attack') =>
+export const sendAttack = (fromNexusId: string, toNexusId: string, troops: any, type: string = 'attack') =>
   apiRequest('/attack/send', {
     method: 'POST',
-    body: JSON.stringify({ fromVillageId, toVillageId, troops, type }),
+    body: JSON.stringify({ fromNexusId, toNexusId, troops, type }),
   });
 
-export const getIncomingAttacks = (villageId: string) => apiRequest(`/attack/incoming/${villageId}`);
+export const getIncomingAttacks = (nexusId: string) => apiRequest(`/attack/incoming/${nexusId}`);
 
-export const getOutgoingAttacks = (villageId: string) => apiRequest(`/attack/outgoing/${villageId}`);
+export const getOutgoingAttacks = (nexusId: string) => apiRequest(`/attack/outgoing/${nexusId}`);
 
 // Reports
-export const getReports = (villageId: string) => apiRequest(`/report/reports/${villageId}`);
+export const getReports = (nexusId: string) => apiRequest(`/report/reports/${nexusId}`);

@@ -4,7 +4,7 @@ export interface User {
   email: string;
 }
 
-export interface Village {
+export interface Nexus {
   _id: string;
   name: string;
   owner: string;
@@ -70,7 +70,7 @@ export interface Attack {
       _id: string;
       username: string;
     };
-    village: {
+    nexus: {
       _id: string;
       name: string;
       x: number;
@@ -85,7 +85,7 @@ export interface Attack {
       _id: string;
       username: string;
     };
-    village: {
+    nexus: {
       _id: string;
       name: string;
       x: number;
@@ -153,7 +153,7 @@ export interface Attack {
     conquered?: boolean;
     controlReduced?: boolean;
     remainingControl?: number;
-    nodeLifeReduced?: boolean;
-    remainingNodeLife?: number;
+    nexusLifeReduced?: boolean;
+    remainingNexusLife?: number;
   };
 }

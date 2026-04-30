@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { getReports } from '../services/api';
 import '../styles/Reports.css';
-import { Attack, Village } from '../types/game';
+import { Attack, Nexus } from '../types/game';
 
 interface ReportsProps {
-  village: Village;
+  nexus: Nexus;
 }
 
 const troopNames: Record<string, string> = {
@@ -22,7 +22,7 @@ const troopNames: Record<string, string> = {
   overseer: '👁️ Overseer',
 };
 
-const Reports: React.FC<ReportsProps> = ({ village }) => {
+const Reports: React.FC<ReportsProps> = ({ nexus }) => {
   const [reports, setReports] = useState<Attack[]>([]);
   const [selectedReport, setSelectedReport] = useState<Attack | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,7 +34,7 @@ const Reports: React.FC<ReportsProps> = ({ village }) => {
 
   useEffect(() => {
     loadReports();
-  }, [village._id]);
+  }, [nexus._id]);
 
   // Save viewed reports to localStorage whenever it changes
   useEffect(() => {
@@ -44,7 +44,7 @@ const Reports: React.FC<ReportsProps> = ({ village }) => {
   const loadReports = async () => {
     try {
       setLoading(true);
-      const response = await getReports(village._id);
+      const response = await getReports(nexus._id);
       console.log('API Response:', response);
       console.log('Reports data:', response.data);
       // Debug: Check if reports have control data
@@ -74,7 +74,7 @@ const Reports: React.FC<ReportsProps> = ({ village }) => {
   };
 
   const isAttacker = (report: Attack) => {
-    return report.attacker.village._id === village._id;
+    return report.attacker.nexus._id === nexus._id;
   };
 
   if (loading) {
@@ -112,7 +112,7 @@ const Reports: React.FC<ReportsProps> = ({ village }) => {
                 <span>💀 Defeat! Your strike failed</span>
               )
             ) : selectedReport.result.victory ? (
-              <span>💀 Defeat! Your node was raided</span>
+              <span>💀 Defeat! Your nexus was raided</span>
             ) : (
               <span>🛡️ Victory! You defended successfully</span>
             )}
@@ -124,10 +124,10 @@ const Reports: React.FC<ReportsProps> = ({ village }) => {
             </div>
           )}
 
-          {selectedReport.result.nodeLifeReduced && (
+          {selectedReport.result.nexusLifeReduced && (
             <div className="control-notice">
-              ⚡ Node life reduced! Remaining: {selectedReport.result.remainingNodeLife || 0}/
-              {selectedReport.defender.village?.buildings?.shieldGrid ? 100 : 0}
+              ⚡ Nexus life reduced! Remaining: {selectedReport.result.remainingNexusLife || 0}/
+              {selectedReport.defender.nexus?.buildings?.shieldGrid ? 100 : 0}
             </div>
           )}
 
@@ -138,25 +138,25 @@ const Reports: React.FC<ReportsProps> = ({ village }) => {
             </p>
             <p>
               <strong>Striker:</strong> {selectedReport.attacker.user?.username || 'Unknown'} from{' '}
-              {selectedReport.attacker.village?.name || 'Unknown'} ({selectedReport.attacker.village?.x || '?'}|
-              {selectedReport.attacker.village?.y || '?'})
+              {selectedReport.attacker.nexus?.name || 'Unknown'} ({selectedReport.attacker.nexus?.x || '?'}|
+              {selectedReport.attacker.nexus?.y || '?'})
             </p>
             <p>
               <strong>Defender:</strong> {selectedReport.defender.user?.username || 'Unknown'} from{' '}
-              {selectedReport.defender.village?.name || 'Unknown'} ({selectedReport.defender.village?.x || '?'}|
-              {selectedReport.defender.village?.y || '?'})
+              {selectedReport.defender.nexus?.name || 'Unknown'} ({selectedReport.defender.nexus?.x || '?'}|
+              {selectedReport.defender.nexus?.y || '?'})
             </p>
             {selectedReport.result?.remainingControl !== undefined &&
               selectedReport.result.remainingControl !== null && (
                 <p>
-                  <strong>Node Control:</strong> {selectedReport.result.remainingControl}/100
+                  <strong>Nexus Control:</strong> {selectedReport.result.remainingControl}/100
                   {selectedReport.result.conquered && ' (Conquered!)'}
                 </p>
               )}
-            {selectedReport.result?.remainingNodeLife !== undefined &&
-              selectedReport.result.remainingNodeLife !== null && (
+            {selectedReport.result?.remainingNexusLife !== undefined &&
+              selectedReport.result.remainingNexusLife !== null && (
                 <p>
-                  <strong>Node Life:</strong> {selectedReport.result.remainingNodeLife}/100
+                  <strong>Nexus Life:</strong> {selectedReport.result.remainingNexusLife}/100
                 </p>
               )}
           </div>
@@ -191,7 +191,7 @@ const Reports: React.FC<ReportsProps> = ({ village }) => {
                   selectedReport.result?.defenderLosses &&
                   Object.entries(selectedReport.result.defenderLosses).map(
                     ([troop, lost]) =>
-                      lost > 0 && (
+                      Number(lost) > 0 && (
                         <tr key={troop}>
                           <td>{troopNames[troop] || troop}</td>
                           <td>-</td>
@@ -218,7 +218,7 @@ const Reports: React.FC<ReportsProps> = ({ village }) => {
                   selectedReport.result?.attackerLosses &&
                   Object.entries(selectedReport.result.attackerLosses).map(
                     ([troop, lost]) =>
-                      lost > 0 && (
+                      Number(lost) > 0 && (
                         <tr key={troop}>
                           <td>{troopNames[troop] || troop}</td>
                           <td className="losses">{lost}</td>
@@ -229,7 +229,7 @@ const Reports: React.FC<ReportsProps> = ({ village }) => {
                   selectedReport.result?.defenderLosses &&
                   Object.entries(selectedReport.result.defenderLosses).map(
                     ([troop, lost]) =>
-                      lost > 0 && (
+                      Number(lost) > 0 && (
                         <tr key={troop}>
                           <td>{troopNames[troop] || troop}</td>
                           <td className="losses">{lost}</td>
@@ -274,12 +274,12 @@ const Reports: React.FC<ReportsProps> = ({ village }) => {
     <div className="reports-container">
       <div className="reports-header">
         <h2>📜 Combat Logs</h2>
-        <p>Showing last 20 reports for {village.name}</p>
+        <p>Showing last 20 reports for {nexus.name}</p>
       </div>
 
       {reports.length === 0 ? (
         <div className="no-reports">
-          <p>No combat reports yet. Strike other nodes or defend yours to see reports here!</p>
+          <p>No combat reports yet. Strike other nexuses or defend yours to see reports here!</p>
         </div>
       ) : (
         <div className="reports-list">
@@ -300,14 +300,14 @@ const Reports: React.FC<ReportsProps> = ({ village }) => {
                     {hasBeenViewed ? (
                       isMyAttack ? (
                         <>
-                          Strike on {report.defender.village?.name || 'Unknown'} ({report.defender.village?.x || '?'}|
-                          {report.defender.village?.y || '?'})
+                          Strike on {report.defender.nexus?.name || 'Unknown'} ({report.defender.nexus?.x || '?'}|
+                          {report.defender.nexus?.y || '?'})
                         </>
                       ) : (
                         <>
                           Defense against {report.attacker.user?.username || 'Unknown'} from{' '}
-                          {report.attacker.village?.name || 'Unknown'} ({report.attacker.village?.x || '?'}|
-                          {report.attacker.village?.y || '?'})
+                          {report.attacker.nexus?.name || 'Unknown'} ({report.attacker.nexus?.x || '?'}|
+                          {report.attacker.nexus?.y || '?'})
                         </>
                       )
                     ) : (

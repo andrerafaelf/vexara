@@ -1,5 +1,5 @@
-// Script to populate the map with random nodes
-// Run with: node create-test-nodes.js
+// Script to populate the map with random nexuses
+// Run with: node create-test-nexuses.js
 
 import dotenv from 'dotenv';
 import prisma from './lib/prisma.js';
@@ -9,11 +9,11 @@ dotenv.config();
 // Configuration
 // 100x100 map
 const MAP_SIZE = 100;
-// Number of nodes to create
-const NUM_NODES = 50;
+// Number of nexuses to create
+const NUM_NEXUSES = 50;
 
-// Node types with different bonuses and characteristics
-const NODE_TYPES = [
+// Nexus types with different bonuses and characteristics
+const NEXUS_TYPES = [
   { name: 'Neutral Settlement', weight: 40 },
   { name: 'Resource Depot', weight: 20, resourceBonus: true },
   { name: 'Military Outpost', weight: 15, troopBonus: true },
@@ -21,56 +21,56 @@ const NODE_TYPES = [
   { name: 'Abandoned Base', weight: 10, lowDefense: true },
 ];
 
-function selectNodeType() {
-  const totalWeight = NODE_TYPES.reduce((sum, type) => sum + type.weight, 0);
+function selectNexusType() {
+  const totalWeight = NEXUS_TYPES.reduce((sum, type) => sum + type.weight, 0);
   let random = Math.random() * totalWeight;
 
-  for (const type of NODE_TYPES) {
+  for (const type of NEXUS_TYPES) {
     random -= type.weight;
     if (random <= 0) return type;
   }
-  return NODE_TYPES[0];
+  return NEXUS_TYPES[0];
 }
 
-async function createTestNodes() {
+async function createTestNexuses() {
   try {
     console.log('Connected to PostgreSQL');
 
-    let nodesCreated = 0;
+    let nexusesCreated = 0;
     let attempts = 0;
     // Prevent infinite loop
-    const maxAttempts = NUM_NODES * 3;
+    const maxAttempts = NUM_NEXUSES * 3;
 
-    while (nodesCreated < NUM_NODES && attempts < maxAttempts) {
+    while (nexusesCreated < NUM_NEXUSES && attempts < maxAttempts) {
       attempts++;
 
       const x = Math.floor(Math.random() * MAP_SIZE);
       const y = Math.floor(Math.random() * MAP_SIZE);
 
       // Check if position is taken
-      const existingNode = await prisma.village.findFirst({ where: { x, y } });
-      if (existingNode) continue;
+      const existingNexus = await prisma.nexus.findFirst({ where: { x, y } });
+      if (existingNexus) continue;
 
-      const nodeType = selectNodeType();
+      const nexusType = selectNexusType();
 
       let biomass = Math.floor(Math.random() * 4000) + 1000;
       let alloy = Math.floor(Math.random() * 4000) + 1000;
       let ore = Math.floor(Math.random() * 2000) + 500;
 
-      if (nodeType.resourceBonus || nodeType.highResources) {
-        const multiplier = nodeType.highResources ? 1.5 : 2;
+      if (nexusType.resourceBonus || nexusType.highResources) {
+        const multiplier = nexusType.highResources ? 1.5 : 2;
         biomass *= multiplier;
         alloy *= multiplier;
         ore *= multiplier;
       }
 
       let troopMultiplier = 1;
-      if (nodeType.troopBonus) troopMultiplier = 1.5;
-      if (nodeType.lowDefense) troopMultiplier = 0.3;
+      if (nexusType.troopBonus) troopMultiplier = 1.5;
+      if (nexusType.lowDefense) troopMultiplier = 0.3;
 
-      const node = await prisma.village.create({
+      const nexus = await prisma.nexus.create({
         data: {
-          name: nodeType.name,
+          name: nexusType.name,
           x,
           y,
           biomass: Math.floor(biomass),
@@ -99,20 +99,20 @@ async function createTestNodes() {
         },
       });
 
-      nodesCreated++;
-      const typeInfo = nodeType.resourceBonus
+      nexusesCreated++;
+      const typeInfo = nexusType.resourceBonus
         ? ' [Resource Bonus]'
-        : nodeType.troopBonus
+        : nexusType.troopBonus
           ? ' [Military]'
-          : nodeType.highResources
+          : nexusType.highResources
             ? ' [Rich]'
-            : nodeType.lowDefense
+            : nexusType.lowDefense
               ? ' [Weak]'
               : '';
-      console.log(`Created node ${nodesCreated}/${NUM_NODES}: ${node.name}${typeInfo} at (${x}|${y})`);
+      console.log(`Created nexus ${nexusesCreated}/${NUM_NEXUSES}: ${nexus.name}${typeInfo} at (${x}|${y})`);
     }
 
-    console.log(`\n✅ Created ${nodesCreated} neutral nodes across the map!`);
+    console.log(`\n✅ Created ${nexusesCreated} neutral nexuses across the map!`);
     console.log(`Map size: ${MAP_SIZE}x${MAP_SIZE}`);
 
     await prisma.$disconnect();
@@ -122,4 +122,4 @@ async function createTestNodes() {
   }
 }
 
-createTestNodes();
+createTestNexuses();

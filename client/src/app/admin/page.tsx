@@ -3,25 +3,25 @@
 import AdBanner from '@/components/AdBanner';
 import Admin from '@/components/Admin';
 import { useAuth } from '@/context/AuthContext';
-import { getMyVillages } from '@/services/api';
+import { getMyNexuses } from '@/services/api';
 import '@/styles/Game.css';
-import { Village } from '@/types/game';
+import { Nexus } from '@/types/game';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
 export default function AdminPage() {
-  const [villages, setVillages] = useState<Village[]>([]);
+  const [nexuses, setVillages] = useState<Nexus[]>([]);
   const [loading, setLoading] = useState(true);
   const { user, logout } = useAuth();
   const router = useRouter();
 
   const loadVillages = useCallback(async () => {
     try {
-      const response = await getMyVillages();
+      const response = await getMyNexuses();
       setVillages(response.data);
       setLoading(false);
     } catch (err) {
-      console.error('Error loading nodes:', err);
+      console.error('Error loading nexuses:', err);
       setLoading(false);
     }
   }, []);
@@ -35,8 +35,8 @@ export default function AdminPage() {
     loadVillages();
   }, [loadVillages, router]);
 
-  const handleSelectVillage = (village: Village) => {
-    router.push(`/node/${village._id}`);
+  const handleSelectNexus = (nexus: Nexus) => {
+    router.push(`/nexus/${nexus._id}`);
   };
 
   if (loading) {
@@ -72,17 +72,17 @@ export default function AdminPage() {
       </header>
 
       <div className="game-content">
-        <nav className="village-nav">
-          <h3>Your Nodes</h3>
-          {villages.map((village) => (
-            <div key={village._id} className="village-item" onClick={() => handleSelectVillage(village)}>
-              <div className="village-name">{village.name}</div>
-              <div className="village-coords">
-                ({village.x}|{village.y})
+        <nav className="nexus-nav">
+          <h3>Your Nexuses</h3>
+          {nexuses.map((nexus) => (
+            <div key={nexus._id} className="nexus-item" onClick={() => handleSelectNexus(nexus)}>
+              <div className="nexus-name">{nexus.name}</div>
+              <div className="nexus-coords">
+                ({nexus.x}|{nexus.y})
               </div>
-              <div className="village-points">{village.points} inf</div>
-              {village.buildQueue.length > 0 && <div className="village-badge">🏗️</div>}
-              {village.trainingQueue.length > 0 && <div className="village-badge">🎖️</div>}
+              <div className="nexus-points">{nexus.points} inf</div>
+              {nexus.buildQueue.length > 0 && <div className="nexus-badge">🏗️</div>}
+              {nexus.trainingQueue.length > 0 && <div className="nexus-badge">🎖️</div>}
             </div>
           ))}
         </nav>

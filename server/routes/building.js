@@ -1,7 +1,7 @@
 import express from 'express';
 import prisma from '../lib/prisma.js';
 import auth from '../middleware/auth.js';
-import { computeResourceUpdate, serializeVillage } from '../models/Node.js';
+import { computeResourceUpdate, serializeNexus } from '../models/Nexus.js';
 
 const router = express.Router();
 
@@ -33,10 +33,10 @@ function getBuildingCost(building, currentLevel) {
 // Upgrade building
 router.post('/upgrade', auth, async (req, res) => {
   try {
-    const { villageId, building } = req.body;
+    const { nexusId, building } = req.body;
 
-    const village = await prisma.village.findUnique({ where: { id: parseInt(villageId) } });
-    if (!village || village.ownerId !== req.userId) {
+    const nexus = await prisma.nexus.findUnique({ where: { id: parseInt(nexusId) } });
+    if (!nexus || nexus.ownerId !== req.userId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
@@ -45,10 +45,10 @@ router.post('/upgrade', auth, async (req, res) => {
     }
 
     // Apply resource tick
-    const resourceUpdate = computeResourceUpdate(village);
-    const currentVillage = { ...village, ...resourceUpdate };
+    const resourceUpdate = computeResourceUpdate(nexus);
+    const currentVillage = { ...nexus, ...resourceUpdate };
 
-    const currentLevel = village[building];
+    const currentLevel = nexus[building];
     const cost = getBuildingCost(building, currentLevel);
 
     // Check resources
@@ -57,7 +57,7 @@ router.post('/upgrade', auth, async (req, res) => {
     }
 
     // Check if already building
-    const buildQueue = Array.isArray(village.buildQueue) ? village.buildQueue : [];
+    const buildQueue = Array.isArray(nexus.buildQueue) ? nexus.buildQueue : [];
     if (buildQueue.length > 0) {
       return res.status(400).json({ error: 'Already building something' });
     }
@@ -66,8 +66,8 @@ router.post('/upgrade', auth, async (req, res) => {
     const completesAt = new Date(Date.now() + cost.time * 1000);
     const newQueue = [...buildQueue, { building, targetLevel: currentLevel + 1, completesAt }];
 
-    const updated = await prisma.village.update({
-      where: { id: village.id },
+    const updated = await prisma.nexus.update({
+      where: { id: nexus.id },
       data: {
         ...resourceUpdate,
         biomass: currentVillage.biomass - cost.biomass,
@@ -77,7 +77,7 @@ router.post('/upgrade', auth, async (req, res) => {
       },
     });
 
-    res.json({ success: true, completesAt, village: serializeVillage(updated) });
+    res.json({ success: true, completesAt, nexus: serializeNexus(updated) });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -86,15 +86,15 @@ router.post('/upgrade', auth, async (req, res) => {
 // Check build queue completion
 router.post('/check-queue', auth, async (req, res) => {
   try {
-    const { villageId } = req.body;
+    const { nexusId } = req.body;
 
-    const village = await prisma.village.findUnique({ where: { id: parseInt(villageId) } });
-    if (!village || village.ownerId !== req.userId) {
+    const nexus = await prisma.nexus.findUnique({ where: { id: parseInt(nexusId) } });
+    if (!nexus || nexus.ownerId !== req.userId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
     const now = new Date();
-    const buildQueue = Array.isArray(village.buildQueue) ? village.buildQueue : [];
+    const buildQueue = Array.isArray(nexus.buildQueue) ? nexus.buildQueue : [];
     let completed = false;
     const data = {};
 
@@ -111,13 +111,13 @@ router.post('/check-queue', auth, async (req, res) => {
     }
 
     // Apply resource tick
-    const resourceUpdate = computeResourceUpdate(village);
-    const updated = await prisma.village.update({
-      where: { id: village.id },
+    const resourceUpdate = computeResourceUpdate(nexus);
+    const updated = await prisma.nexus.update({
+      where: { id: nexus.id },
       data: { ...resourceUpdate, ...data },
     });
 
-    res.json({ completed, village: serializeVillage(updated) });
+    res.json({ completed, nexus: serializeNexus(updated) });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
