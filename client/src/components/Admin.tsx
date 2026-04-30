@@ -78,9 +78,9 @@ const Admin: React.FC = () => {
   const loadData = async () => {
     try {
       const [usersRes, statsRes, attacksRes] = await Promise.all([
-        fetch('http://localhost:3001/api/admin/users'),
-        fetch('http://localhost:3001/api/admin/stats'),
-        fetch('http://localhost:3001/api/admin/attacks'),
+        fetch('http://localhost:3002/api/admin/users'),
+        fetch('http://localhost:3002/api/admin/stats'),
+        fetch('http://localhost:3002/api/admin/attacks'),
       ]);
 
       const usersData = await usersRes.json();
@@ -101,7 +101,7 @@ const Admin: React.FC = () => {
     if (!window.confirm(`Delete user "${username}"?`)) return;
 
     try {
-      const res = await fetch(`http://localhost:3001/api/admin/users/${userId}`, {
+      const res = await fetch(`http://localhost:3002/api/admin/users/${userId}`, {
         method: 'DELETE',
       });
 
@@ -162,7 +162,7 @@ const Admin: React.FC = () => {
     if (!modal.nexusId) return;
 
     try {
-      const res = await fetch(`http://localhost:3001/api/admin/nexuses/${modal.nexusId}/resources`, {
+      const res = await fetch(`http://localhost:3002/api/admin/nexuses/${modal.nexusId}/resources`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -184,7 +184,7 @@ const Admin: React.FC = () => {
     if (!modal.nexusId) return;
 
     try {
-      const res = await fetch(`http://localhost:3001/api/admin/nexuses/${modal.nexusId}/troops`, {
+      const res = await fetch(`http://localhost:3002/api/admin/nexuses/${modal.nexusId}/troops`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -206,7 +206,7 @@ const Admin: React.FC = () => {
     if (!modal.nexusId) return;
 
     try {
-      const res = await fetch(`http://localhost:3001/api/admin/nexuses/${modal.nexusId}/buildings`, {
+      const res = await fetch(`http://localhost:3002/api/admin/nexuses/${modal.nexusId}/buildings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -226,7 +226,7 @@ const Admin: React.FC = () => {
 
   const handleCompleteBuild = async (nexusId: string) => {
     try {
-      const res = await fetch(`http://localhost:3001/api/admin/nexuses/${nexusId}/complete-build`, {
+      const res = await fetch(`http://localhost:3002/api/admin/nexuses/${nexusId}/complete-build`, {
         method: 'POST',
       });
 
@@ -244,7 +244,7 @@ const Admin: React.FC = () => {
 
   const handleCompleteTraining = async (nexusId: string) => {
     try {
-      const res = await fetch(`http://localhost:3001/api/admin/nexuses/${nexusId}/complete-training`, {
+      const res = await fetch(`http://localhost:3002/api/admin/nexuses/${nexusId}/complete-training`, {
         method: 'POST',
       });
 
@@ -262,7 +262,7 @@ const Admin: React.FC = () => {
 
   const handleCompleteAttack = async (attackId: string) => {
     try {
-      const res = await fetch(`http://localhost:3001/api/admin/attacks/${attackId}/complete`, {
+      const res = await fetch(`http://localhost:3002/api/admin/attacks/${attackId}/complete`, {
         method: 'POST',
       });
 
@@ -282,7 +282,7 @@ const Admin: React.FC = () => {
     if (!window.confirm(`Delete nexus "${villageName}"?`)) return;
 
     try {
-      const res = await fetch(`http://localhost:3001/api/admin/nexuses/${nexusId}`, {
+      const res = await fetch(`http://localhost:3002/api/admin/nexuses/${nexusId}`, {
         method: 'DELETE',
       });
 
