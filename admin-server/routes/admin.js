@@ -1,9 +1,54 @@
 import express from 'express';
 import prisma from '../../server/lib/prisma.js';
 import { serializeNexus } from '../../server/models/Nexus.js';
+import { hashPassword } from '../../server/models/User.js';
 import { processArrivedAttacks } from '../../server/utils/combat.js';
 
 const router = express.Router();
+
+const TROOP_KEYS = [
+  'lancerDrone',
+  'assaultTrooper',
+  'breakerUnit',
+  'reconOperative',
+  'skimmerBike',
+  'siegeMech',
+  'bulwarkGuard',
+  'suppressorTeam',
+  'disruptorUnit',
+  'interceptorBike',
+  'annihilatorPlatform',
+  'overseer',
+];
+
+const BUILDING_KEYS = [
+  'commandCore',
+  'troopFabricator',
+  'lifeSupport',
+  'storageVault',
+  'biomassFarm',
+  'alloyForge',
+  'oreExtractor',
+  'shieldGrid',
+];
+
+const toInt = (value, fallback = 0) => {
+  const parsed = Number.parseInt(String(value), 10);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+async function findTargetNexus(userId, nexusId) {
+  if (nexusId) {
+    return prisma.nexus.findFirst({
+      where: { id: toInt(nexusId), ownerId: userId },
+    });
+  }
+
+  return prisma.nexus.findFirst({
+    where: { ownerId: userId },
+    orderBy: { createdAt: 'asc' },
+  });
+}
 
 // Get all users
 router.get('/users', async (req, res) => {
@@ -43,6 +88,244 @@ router.get('/stats', async (req, res) => {
       attackCount,
       topUsers: topUsers.map((u) => ({ ...u, _id: u.id })),
     });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Create user
+router.post('/users', async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+
+    if (!username || !email || !password) {
+      return res.status(400).json({ error: 'username, email, and password are required' });
+    }
+
+    const existingUser = await prisma.user.findFirst({
+      where: { OR: [{ username }, { email: String(email).toLowerCase() }] },
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ error: 'User already exists with that username or email' });
+    }
+
+    const hashedPassword = await hashPassword(password);
+
+    const created = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          username,
+          email: String(email).toLowerCase(),
+          password: hashedPassword,
+        },
+      });
+
+      const nexus = await tx.nexus.create({
+        data: {
+          name: `${username}'s Nexus`,
+          ownerId: user.id,
+          x: Math.floor(Math.random() * 100),
+          y: Math.floor(Math.random() * 100),
+        },
+      });
+
+      return { user, nexus };
+    });
+
+    res.json({
+      success: true,
+      user: {
+        _id: created.user.id,
+        id: created.user.id,
+        username: created.user.username,
+        email: created.user.email,
+      },
+      nexus: serializeNexus(created.nexus),
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update user email/password
+router.patch('/users/:userId', async (req, res) => {
+  try {
+    const userId = toInt(req.params.userId);
+    const { email, password } = req.body;
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const data = {};
+
+    if (email) {
+      const normalizedEmail = String(email).toLowerCase();
+      const emailOwner = await prisma.user.findFirst({
+        where: {
+          email: normalizedEmail,
+          NOT: { id: userId },
+        },
+      });
+
+      if (emailOwner) {
+        return res.status(400).json({ error: 'Email is already in use' });
+      }
+
+      data.email = normalizedEmail;
+    }
+
+    if (password) {
+      data.password = await hashPassword(password);
+    }
+
+    if (Object.keys(data).length === 0) {
+      return res.status(400).json({ error: 'No changes provided' });
+    }
+
+    const updated = await prisma.user.update({ where: { id: userId }, data });
+    res.json({
+      success: true,
+      user: {
+        _id: updated.id,
+        id: updated.id,
+        username: updated.username,
+        email: updated.email,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Add resources to a user's nexus
+router.post('/users/:userId/resources', async (req, res) => {
+  try {
+    const userId = toInt(req.params.userId);
+    const nexus = await findTargetNexus(userId, req.body.nexusId);
+
+    if (!nexus) {
+      return res.status(404).json({ error: 'No nexus found for this user' });
+    }
+
+    const biomass = Math.max(0, Number(req.body.biomass) || 0);
+    const alloy = Math.max(0, Number(req.body.alloy) || 0);
+    const ore = Math.max(0, Number(req.body.ore) || 0);
+
+    const updated = await prisma.nexus.update({
+      where: { id: nexus.id },
+      data: {
+        biomass: nexus.biomass + biomass,
+        alloy: nexus.alloy + alloy,
+        ore: nexus.ore + ore,
+      },
+    });
+
+    res.json({ success: true, nexus: serializeNexus(updated) });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Add troops to a user's nexus
+router.post('/users/:userId/troops', async (req, res) => {
+  try {
+    const userId = toInt(req.params.userId);
+    const nexus = await findTargetNexus(userId, req.body.nexusId);
+
+    if (!nexus) {
+      return res.status(404).json({ error: 'No nexus found for this user' });
+    }
+
+    const troopType = req.body.troopType;
+    const amount = Math.max(0, toInt(req.body.amount));
+
+    if (!TROOP_KEYS.includes(troopType)) {
+      return res.status(400).json({ error: 'Invalid troop type' });
+    }
+
+    if (amount <= 0) {
+      return res.status(400).json({ error: 'Amount must be greater than 0' });
+    }
+
+    const updated = await prisma.nexus.update({
+      where: { id: nexus.id },
+      data: {
+        [troopType]: (nexus[troopType] || 0) + amount,
+        populationCurrent: nexus.populationCurrent + amount,
+      },
+    });
+
+    res.json({ success: true, nexus: serializeNexus(updated) });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Modify a building level on a user's nexus
+router.post('/users/:userId/buildings', async (req, res) => {
+  try {
+    const userId = toInt(req.params.userId);
+    const nexus = await findTargetNexus(userId, req.body.nexusId);
+
+    if (!nexus) {
+      return res.status(404).json({ error: 'No nexus found for this user' });
+    }
+
+    const building = req.body.building;
+    const level = Math.max(0, toInt(req.body.level));
+
+    if (!BUILDING_KEYS.includes(building)) {
+      return res.status(400).json({ error: 'Invalid building' });
+    }
+
+    const data = {
+      [building]: level,
+    };
+
+    if (building === 'lifeSupport') {
+      const populationMax = Math.floor(24 * Math.pow(1.17, level));
+      data.populationMax = populationMax;
+      data.populationCurrent = Math.min(nexus.populationCurrent, populationMax);
+    }
+
+    const updated = await prisma.nexus.update({
+      where: { id: nexus.id },
+      data,
+    });
+
+    res.json({ success: true, nexus: serializeNexus(updated) });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Complete earliest active outgoing strike for a user
+router.post('/users/:userId/complete-strike', async (req, res) => {
+  try {
+    const userId = toInt(req.params.userId);
+    const attack = await prisma.attack.findFirst({
+      where: {
+        attackerUserId: userId,
+        status: 'traveling',
+      },
+      orderBy: { arrivesAt: 'asc' },
+    });
+
+    if (!attack) {
+      return res.status(404).json({ error: 'No active outgoing strike for this user' });
+    }
+
+    await prisma.attack.update({
+      where: { id: attack.id },
+      data: { arrivesAt: new Date() },
+    });
+
+    await processArrivedAttacks();
+
+    res.json({ success: true, message: 'User active strike completed' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -293,7 +576,25 @@ router.get('/attacks', async (req, res) => {
       orderBy: { arrivesAt: 'asc' },
     });
 
-    res.json(attacks.map((a) => ({ ...a, _id: a.id })));
+    const userIds = [...new Set(attacks.flatMap((a) => [a.attackerUserId, a.defenderUserId].filter(Boolean)))];
+    const users = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, username: true },
+    });
+    const userById = new Map(users.map((u) => [u.id, u.username]));
+
+    res.json(
+      attacks.map((a) => ({
+        ...a,
+        _id: a.id,
+        attacker: {
+          user: { username: userById.get(a.attackerUserId) || 'Unknown' },
+        },
+        defender: {
+          user: { username: userById.get(a.defenderUserId) || 'Neutral' },
+        },
+      })),
+    );
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

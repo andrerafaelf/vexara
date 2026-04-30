@@ -263,7 +263,21 @@
   font-size: 16px;
 }
 
+.form-group select {
+  background: #0f3460;
+  border: 1px solid #457b9d;
+  color: #f1faee;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
 .form-group input:focus {
+  outline: none;
+  border-color: #e94560;
+}
+
+.form-group select:focus {
   outline: none;
   border-color: #e94560;
 }
