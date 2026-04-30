@@ -20,6 +20,11 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
   const data = await response.json();
 
   if (!response.ok) {
+    if (response.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/auth';
+    }
     const error = new Error(data.error || 'Request failed');
     (error as any).response = { data };
     throw error;

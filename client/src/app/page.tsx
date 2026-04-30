@@ -22,10 +22,6 @@ export default function Home() {
       setLoading(false);
     } catch (err) {
       console.error('Error loading nexuses:', err);
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/auth');
-      }
       setLoading(false);
     }
   }, [router]);
@@ -108,9 +104,6 @@ export default function Home() {
           </button>
           <button className="nav-btn" onClick={() => router.push('/reports')}>
             📜 Combat Logs
-          </button>
-          <button className="nav-btn" onClick={() => router.push('/admin')}>
-            🛠️ Admin
           </button>
         </div>
         <div className="header-right">

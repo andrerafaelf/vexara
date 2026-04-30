@@ -73,9 +73,6 @@ export default function NexusPage() {
           <button className="nav-btn" onClick={() => router.push('/reports')}>
             📜 Combat Logs
           </button>
-          <button className="nav-btn" onClick={() => router.push('/admin')}>
-            🛠️ Admin
-          </button>
         </div>
         <div className="header-right">
           <button onClick={logout} className="logout-btn">

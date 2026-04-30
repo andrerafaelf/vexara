@@ -37,7 +37,7 @@ const Auth: React.FC = () => {
   return (
     <div className="auth-container">
       <div className="auth-box">
-        <h1>Not-Tribos</h1>
+        <h1>Neon Dominion</h1>
         <p className="tagline">Build. Conquer. Dominate.</p>
 
         <form onSubmit={handleSubmit}>

@@ -70,9 +70,6 @@ export default function ReportsPage() {
             🗺️ Starfield
           </button>
           <button className="nav-btn active">📜 Combat Logs</button>
-          <button className="nav-btn" onClick={() => router.push('/admin')}>
-            🛠️ Admin
-          </button>
         </div>
         <div className="header-right">
           <button onClick={logout} className="logout-btn">
