@@ -200,8 +200,16 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
 
   const checkQueues = async () => {
     try {
-      await checkBuildQueue(nexus._id);
-      await checkTrainingQueue(nexus._id);
+      const [buildResponse, trainingResponse] = await Promise.all([
+        checkBuildQueue(nexus._id),
+        checkTrainingQueue(nexus._id),
+      ]);
+      if (buildResponse.data?.completed) {
+        showToast('A building upgrade completed and was applied.', 'success');
+      }
+      if (trainingResponse.data?.completed) {
+        showToast('Training completed and your troops are ready.', 'success');
+      }
       onUpdate();
     } catch (err) {
       console.error('Error checking queues:', err);
@@ -278,7 +286,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
 
   const formatTime = (date: Date | string) => {
     const diff = new Date(date).getTime() - currentTime.getTime();
-    if (diff <= 0) return 'Ready';
+    if (diff <= 0) return 'Ready to apply';
 
     const hours = Math.floor(diff / 3600000);
     const minutes = Math.floor((diff % 3600000) / 60000);

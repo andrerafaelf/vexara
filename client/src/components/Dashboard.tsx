@@ -18,6 +18,17 @@ const TROOP_NAMES: { [key: string]: string } = {
   overseer: 'Overseer',
 };
 
+const BUILDING_NAMES: { [key: string]: string } = {
+  commandCore: 'Command Core',
+  troopFabricator: 'Recruitment Core',
+  lifeSupport: 'Life Support',
+  storageVault: 'Storage Vault',
+  biomassFarm: 'Biomass Farm',
+  alloyForge: 'Alloy Forge',
+  oreExtractor: 'Ore Extractor',
+  shieldGrid: 'Shield Grid',
+};
+
 interface DashboardProps {
   nexuses: Nexus[];
   onSelectNexus: (nexus: Nexus) => void;
@@ -70,7 +81,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
         ore: sum.ore + prod.ore,
       };
     },
-    { biomass: 0, alloy: 0, ore: 0 }
+    { biomass: 0, alloy: 0, ore: 0 },
   );
 
   const totalResources = nexuses.reduce(
@@ -79,7 +90,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
       alloy: sum.alloy + Math.floor(v.resources.alloy),
       ore: sum.ore + Math.floor(v.resources.ore),
     }),
-    { biomass: 0, alloy: 0, ore: 0 }
+    { biomass: 0, alloy: 0, ore: 0 },
   );
   const totalTroops = nexuses.reduce(
     (sum, v) => ({
@@ -109,7 +120,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
       interceptorBike: 0,
       annihilatorPlatform: 0,
       overseer: 0,
-    }
+    },
   );
 
   const totalTroopCount = Object.values(totalTroops).reduce((a, b) => a + b, 0);
@@ -187,7 +198,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
                       <span>{TROOP_NAMES[type] || type}</span>
                       <span>{count}</span>
                     </div>
-                  ) : null
+                  ) : null,
                 )}
               </div>
             )}
@@ -196,8 +207,8 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
                 {outgoingAttacks.length > 0
                   ? 'All troops deployed on missions! Train reinforcements in your Recruitment Core!'
                   : nexuses.some((v) => v.buildings.troopFabricator > 0)
-                  ? 'No troops trained yet. Train some in your Recruitment Core!'
-                  : 'No troops yet. Build a Recruitment Core!'}
+                    ? 'No troops trained yet. Train some in your Recruitment Core!'
+                    : 'No troops yet. Build a Recruitment Core!'}
               </p>
             )}
           </div>
@@ -212,7 +223,8 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
                 <div key={nexus._id} className="activity-item" onClick={() => onSelectNexus(nexus)}>
                   <div className="activity-nexus">{nexus.name}</div>
                   <div className="activity-details">
-                    {nexus.buildQueue[0].building} → Lvl {nexus.buildQueue[0].targetLevel}
+                    {BUILDING_NAMES[nexus.buildQueue[0].building] || nexus.buildQueue[0].building} → Lvl{' '}
+                    {nexus.buildQueue[0].targetLevel}
                   </div>
                   <div className="activity-time">{formatTime(nexus.buildQueue[0].completesAt)}</div>
                 </div>
@@ -232,7 +244,8 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
                 <div key={nexus._id} className="activity-item" onClick={() => onSelectNexus(nexus)}>
                   <div className="activity-nexus">{nexus.name}</div>
                   <div className="activity-details">
-                    {nexus.trainingQueue[0].amount}x {nexus.trainingQueue[0].troopType}
+                    {nexus.trainingQueue[0].amount}x{' '}
+                    {TROOP_NAMES[nexus.trainingQueue[0].troopType] || nexus.trainingQueue[0].troopType}
                   </div>
                   <div className="activity-time">{formatTime(nexus.trainingQueue[0].completesAt)}</div>
                 </div>
@@ -355,7 +368,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
                           <span>{TROOP_NAMES[troopType] || troopType}:</span>
                           <span className="troop-count">{count as number}</span>
                         </div>
-                      )
+                      ),
                   )}
                 </div>
               </div>
@@ -366,8 +379,8 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
                   {selectedAttack.type === 'attack'
                     ? '⚔️ Attack'
                     : selectedAttack.type === 'support'
-                    ? '🛡️ Support'
-                    : '🔍 Scout'}
+                      ? '🛡️ Support'
+                      : '🔍 Scout'}
                 </p>
               </div>
             </div>

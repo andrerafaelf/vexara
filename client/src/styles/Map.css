@@ -90,7 +90,9 @@
   border: 2px solid #ff3366;
   border-radius: 50%;
   background: rgba(255, 51, 102, 0.6);
-  box-shadow: 0 0 10px rgba(255, 51, 102, 1), 0 0 20px rgba(255, 51, 102, 0.8);
+  box-shadow:
+    0 0 10px rgba(255, 51, 102, 1),
+    0 0 20px rgba(255, 51, 102, 0.8);
   position: relative;
   z-index: 2;
 }
@@ -258,6 +260,48 @@
 
 .nexus-actions {
   margin-top: 20px;
+}
+
+.nexus-action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.intel-warning {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 6px;
+  background: #0f3460;
+  color: #a8dadc;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.intel-timestamp span:last-child {
+  font-size: 12px;
+}
+
+.scout-btn {
+  background: #22577a;
+  color: #f1faee;
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+.scout-btn:hover {
+  background: #2d6f99;
+}
+
+.scout-btn:disabled {
+  background: #3a4b5a;
+  color: #9aa8b3;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.scout-btn:disabled:hover {
+  background: #3a4b5a;
 }
 
 .attack-btn {

@@ -45,17 +45,6 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
     try {
       setLoading(true);
       const response = await getReports(nexus._id);
-      console.log('API Response:', response);
-      console.log('Reports data:', response.data);
-      // Debug: Check if reports have control data
-      response.data.forEach((report: Attack, index: number) => {
-        console.log(`Report ${index} result:`, {
-          controlReduced: report.result?.controlReduced,
-          remainingControl: report.result?.remainingControl,
-          conquered: report.result?.conquered,
-          fullResult: report.result,
-        });
-      });
       setReports(response.data);
     } catch (err) {
       console.error('Error loading reports:', err);
@@ -77,6 +66,8 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
     return report.attacker.nexus._id === nexus._id;
   };
 
+  const isScoutReport = (report: Attack) => report.type === 'scout' || report.result?.mission === 'scout';
+
   if (loading) {
     return <div className="reports-container">Loading reports...</div>;
   }
@@ -85,6 +76,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
     const isMyAttack = isAttacker(selectedReport);
     const myRole = isMyAttack ? 'attacker' : 'defender';
     const enemyRole = isMyAttack ? 'defender' : 'attacker';
+    const scoutReport = isScoutReport(selectedReport);
 
     // Mark report as viewed
     if (!viewedReports.has(selectedReport._id)) {
@@ -97,11 +89,14 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
           <button onClick={() => setSelectedReport(null)} className="btn-back">
             ← Back to Combat Logs
           </button>
-          <h2>Combat Report</h2>
+          <h2>{scoutReport ? 'Scout Report' : 'Combat Report'}</h2>
         </div>
 
         <div className="report-detail">
           <div className={`report-result ${selectedReport.result.victory ? 'victory' : 'defeat'}`}>
+            {scoutReport ? (
+              <span>🔍 Recon complete. Intelligence updated.</span>
+            ) : (
             {isMyAttack ? (
               selectedReport.result.victory ? (
                 <>
@@ -116,7 +111,30 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
             ) : (
               <span>🛡️ Victory! You defended successfully</span>
             )}
+            )}
           </div>
+
+          {scoutReport && selectedReport.result?.intel && (
+            <div className="report-section">
+              <h3>Scouted Intelligence</h3>
+              <p>
+                <strong>Resources:</strong> 🧬 {selectedReport.result.intel.resources.biomass} | ⚙️{' '}
+                {selectedReport.result.intel.resources.alloy} | 💎 {selectedReport.result.intel.resources.ore}
+              </p>
+              <p>
+                <strong>Population:</strong> {selectedReport.result.intel.population.current}/
+                {selectedReport.result.intel.population.max}
+              </p>
+              <p>
+                <strong>Control Level:</strong> {selectedReport.result.intel.controlLevel}/100
+              </p>
+              <p>
+                <strong>Shield Grid:</strong> {selectedReport.result.intel.buildings.shieldGrid}
+              </p>
+            </div>
+          )}
+
+          {!scoutReport && (
 
           {selectedReport.result.controlReduced && !selectedReport.result.conquered && (
             <div className="control-notice">
@@ -199,6 +217,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
                           <td>-</td>
                         </tr>
                       ),
+                  )}
                   )}
               </tbody>
             </table>
@@ -287,6 +306,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
             const isMyAttack = isAttacker(report);
             const hasBeenViewed = viewedReports.has(report._id);
             const won = isMyAttack ? report.result.victory : !report.result.victory;
+            const scoutReport = isScoutReport(report);
 
             return (
               <div
@@ -298,7 +318,12 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
                 <div className="report-info">
                   <div className="report-title">
                     {hasBeenViewed ? (
-                      isMyAttack ? (
+                      scoutReport ? (
+                        <>
+                          Scout report on {report.defender.nexus?.name || 'Unknown'} ({report.defender.nexus?.x || '?'}|
+                          {report.defender.nexus?.y || '?'})
+                        </>
+                      ) : isMyAttack ? (
                         <>
                           Strike on {report.defender.nexus?.name || 'Unknown'} ({report.defender.nexus?.x || '?'}|
                           {report.defender.nexus?.y || '?'})
@@ -315,9 +340,12 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
                     )}
                   </div>
                   <div className="report-meta">
-                    {hasBeenViewed && <span className={won ? 'victory' : 'defeat'}>{won ? 'Victory' : 'Defeat'}</span>}
+                    {hasBeenViewed && !scoutReport && (
+                      <span className={won ? 'victory' : 'defeat'}>{won ? 'Victory' : 'Defeat'}</span>
+                    )}
+                    {hasBeenViewed && scoutReport && <span className="victory">Scout</span>}
                     <span className="report-date">{formatDate(report.arrivesAt)}</span>
-                    {hasBeenViewed && isMyAttack && report.result.resourcesStolen && (
+                    {hasBeenViewed && !scoutReport && isMyAttack && report.result.resourcesStolen && (
                       <span className="loot">
                         💰{' '}
                         {report.result.resourcesStolen.biomass +

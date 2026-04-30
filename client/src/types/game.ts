@@ -49,6 +49,8 @@ export interface Nexus {
   points: number;
   control?: number;
   controlLevel?: number;
+  intelLevel?: 'public' | 'scouted' | 'owned';
+  scoutedAt?: string;
 }
 
 export interface BuildQueueItem {
@@ -155,5 +157,31 @@ export interface Attack {
     remainingControl?: number;
     nexusLifeReduced?: boolean;
     remainingNexusLife?: number;
+    mission?: 'scout';
+    intel?: {
+      resources: {
+        biomass: number;
+        alloy: number;
+        ore: number;
+      };
+      buildings: {
+        commandCore: number;
+        troopFabricator: number;
+        lifeSupport: number;
+        storageVault: number;
+        biomassFarm: number;
+        alloyForge: number;
+        oreExtractor: number;
+        shieldGrid: number;
+      };
+      troops: {
+        [key: string]: number;
+      };
+      population: {
+        current: number;
+        max: number;
+      };
+      controlLevel: number;
+    };
   };
 }
