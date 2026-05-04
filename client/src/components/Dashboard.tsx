@@ -99,11 +99,11 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
     { biomass: 0, alloy: 0, ore: 0 },
   );
 
-  const totalResources = nexuses.reduce(
+  const totalResourceCapacity = nexuses.reduce(
     (sum, v) => ({
-      biomass: sum.biomass + Math.floor(v.resources.biomass),
-      alloy: sum.alloy + Math.floor(v.resources.alloy),
-      ore: sum.ore + Math.floor(v.resources.ore),
+      biomass: sum.biomass + Math.floor(1000 * Math.pow(1.3, v.buildings.storageVault)),
+      alloy: sum.alloy + Math.floor(1000 * Math.pow(1.3, v.buildings.storageVault)),
+      ore: sum.ore + Math.floor(1000 * Math.pow(1.3, v.buildings.storageVault)),
     }),
     { biomass: 0, alloy: 0, ore: 0 },
   );
@@ -302,7 +302,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
               <span className="resource-icon">🧬</span>
               <span className="resource-label">Biomass</span>
               <span className="resource-value">
-                {totalResources.biomass.toLocaleString()}
+                {totalResourceCapacity.biomass.toLocaleString()}
                 <span className="production-rate">+{totalProduction.biomass}/h</span>
               </span>
             </div>
@@ -310,7 +310,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
               <span className="resource-icon">⚙️</span>
               <span className="resource-label">Alloy</span>
               <span className="resource-value">
-                {totalResources.alloy.toLocaleString()}
+                {totalResourceCapacity.alloy.toLocaleString()}
                 <span className="production-rate">+{totalProduction.alloy}/h</span>
               </span>
             </div>
@@ -318,7 +318,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
               <span className="resource-icon">💎</span>
               <span className="resource-label">Ore</span>
               <span className="resource-value">
-                {totalResources.ore.toLocaleString()}
+                {totalResourceCapacity.ore.toLocaleString()}
                 <span className="production-rate">+{totalProduction.ore}/h</span>
               </span>
             </div>
@@ -337,9 +337,9 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
               <div className="troop-breakdown">
                 {Object.entries(totalTroops).map(([type, count]) =>
                   count > 0 ? (
-                    <div key={type} className="troop-line">
-                      <span>{TROOP_NAMES[type] || type}</span>
-                      <span>{count}</span>
+                    <div key={type} className="battle-troop-line">
+                      <span className="battle-troop-name">{TROOP_NAMES[type] || type}</span>
+                      <span className="battle-troop-count">{count}</span>
                     </div>
                   ) : null,
                 )}

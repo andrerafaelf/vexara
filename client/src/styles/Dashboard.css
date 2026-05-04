@@ -122,16 +122,25 @@
   gap: 8px;
 }
 
-.troop-line {
+.battle-troop-line {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  column-gap: 12px;
   padding: 10px 15px;
   background: #0f3460;
   border-radius: 4px;
   color: #f1faee;
 }
 
-.troop-line span:last-child {
+.battle-troop-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.battle-troop-count {
   color: #e94560;
   font-weight: bold;
 }
