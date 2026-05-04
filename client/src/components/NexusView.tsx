@@ -611,6 +611,17 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
     return { unlockedBuildings, unlockedTroops };
   };
 
+  const getUnlockSummary = (building: string, targetLevel: number) => {
+    const { unlockedBuildings, unlockedTroops } = getUnlocksAtLevel(building, targetLevel);
+    const unlockedItems = [...unlockedBuildings, ...unlockedTroops];
+
+    if (unlockedItems.length === 0) {
+      return null;
+    }
+
+    return `Unlocks: ${formatList(unlockedItems)}`;
+  };
+
   const getBuildingUpgradeBenefit = (building: string, currentLevel: number) => {
     const targetLevel = currentLevel + 1;
 
@@ -618,54 +629,45 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
       case 'lifeSupport': {
         const currentCap = getPopulationCapAtLevel(currentLevel);
         const nextCap = getPopulationCapAtLevel(targetLevel);
-        return `Next benefit: Population cap ${currentCap.toLocaleString()} -> ${nextCap.toLocaleString()}`;
+        return `Population cap: ${currentCap.toLocaleString()} -> ${nextCap.toLocaleString()}`;
       }
       case 'storageVault': {
         const currentStorage = getStorageAtLevel(currentLevel);
         const nextStorage = getStorageAtLevel(targetLevel);
-        return `Next benefit: Resource storage ${currentStorage.toLocaleString()} -> ${nextStorage.toLocaleString()} per resource`;
+        return `Storage: ${currentStorage.toLocaleString()} -> ${nextStorage.toLocaleString()}`;
       }
       case 'biomassFarm': {
         const currentProduction = getProductionAtLevel('biomassFarm', currentLevel);
         const nextProduction = getProductionAtLevel('biomassFarm', targetLevel);
-        return `Next benefit: Biomass production ${currentProduction.toLocaleString()}/h -> ${nextProduction.toLocaleString()}/h`;
+        return `Biomass: +${currentProduction.toLocaleString()}/h -> +${nextProduction.toLocaleString()}/h`;
       }
       case 'alloyForge': {
         const currentProduction = getProductionAtLevel('alloyForge', currentLevel);
         const nextProduction = getProductionAtLevel('alloyForge', targetLevel);
-        return `Next benefit: Alloy production ${currentProduction.toLocaleString()}/h -> ${nextProduction.toLocaleString()}/h`;
+        return `Alloy: +${currentProduction.toLocaleString()}/h -> +${nextProduction.toLocaleString()}/h`;
       }
       case 'oreExtractor': {
         const currentProduction = getProductionAtLevel('oreExtractor', currentLevel);
         const nextProduction = getProductionAtLevel('oreExtractor', targetLevel);
-        return `Next benefit: Ore production ${currentProduction.toLocaleString()}/h -> ${nextProduction.toLocaleString()}/h`;
+        return `Ore: +${currentProduction.toLocaleString()}/h -> +${nextProduction.toLocaleString()}/h`;
       }
       case 'shieldGrid': {
         const currentBonus = Math.round(currentLevel * SHIELD_BONUS_PER_LEVEL * 100);
         const nextBonus = Math.round(targetLevel * SHIELD_BONUS_PER_LEVEL * 100);
-        return `Next benefit: Defense bonus ${currentBonus}% -> ${nextBonus}%`;
+        return `Defense bonus: ${currentBonus}% -> ${nextBonus}%`;
       }
       case 'commandCore':
       case 'troopFabricator': {
-        const { unlockedBuildings, unlockedTroops } = getUnlocksAtLevel(building, targetLevel);
-        const unlockParts = [];
+        const unlockSummary = getUnlockSummary(building, targetLevel);
 
-        if (unlockedBuildings.length > 0) {
-          unlockParts.push(`Buildings: ${formatList(unlockedBuildings)}`);
+        if (unlockSummary) {
+          return unlockSummary;
         }
 
-        if (unlockedTroops.length > 0) {
-          unlockParts.push(`Troops: ${formatList(unlockedTroops)}`);
-        }
-
-        if (unlockParts.length > 0) {
-          return `Next benefit: Unlocks ${unlockParts.join(' | ')}`;
-        }
-
-        return 'Next benefit: Advances higher-tier unlock requirements.';
+        return 'Unlocks: Higher-tier buildings and units';
       }
       default:
-        return 'Next benefit: Improves this structure.';
+        return 'Improves this structure';
     }
   };
 
@@ -1051,9 +1053,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
                 const maxLevel = BUILDING_RULES[key]?.maxLevel || 0;
                 const isAtMax = plannedLevel >= maxLevel;
                 const cost = isAtMax ? null : getBuildingCost(key, plannedLevel);
-                const upgradeBenefit = isAtMax
-                  ? 'Benefit: Maximum level reached'
-                  : getBuildingUpgradeBenefit(key, plannedLevel);
+                const upgradeBenefit = isAtMax ? 'Maximum level reached' : getBuildingUpgradeBenefit(key, plannedLevel);
                 const { canUpgrade, missingRequirements, atMax } = checkBuildingRequirements(key);
                 const isBuildQueueFull = nexus.buildQueue.length >= MAX_BUILD_QUEUE;
                 const hasResources =

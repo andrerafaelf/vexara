@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getIncomingAttacks, getMapArea, getNexusInfo, getOutgoingAttacks, sendAttack } from '../services/api';
 import '../styles/Map.css';
@@ -45,10 +45,13 @@ const TROOP_LABELS: Record<string, string> = {
 };
 
 const VISIBLE_RANGE = 5;
-const BASE_CELL_SIZE = 60;
-const BASE_GRID_BORDER = 2;
 const MAP_SIZE = 35;
 const MAP_MAX_INDEX = MAP_SIZE - 1;
+
+interface CrosshairPosition {
+  left: number;
+  top: number;
+}
 
 const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   const { user } = useAuth();
@@ -80,6 +83,8 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [targetX, setTargetX] = useState(String(currentNexus.x));
   const [targetY, setTargetY] = useState(String(currentNexus.y));
+  const [crosshairPosition, setCrosshairPosition] = useState<CrosshairPosition | null>(null);
+  const mapGridWrapperRef = useRef<HTMLDivElement | null>(null);
   const reconAvailable = currentNexus.troops?.reconOperative || 0;
   const visibleRange = VISIBLE_RANGE;
   const visibleDiameter = visibleRange * 2 + 1;
@@ -380,28 +385,39 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
     return grid;
   };
 
-  const getCrosshairPosition = () => {
-    if (!selectedNexus) return null;
+  useEffect(() => {
+    const updateCrosshairPosition = () => {
+      if (!selectedNexus || !mapGridWrapperRef.current) {
+        setCrosshairPosition(null);
+        return;
+      }
 
-    // Calculate cell position relative to the grid
-    const relX = selectedNexus.x - (centerX - visibleRange);
-    const relY = centerY + visibleRange - selectedNexus.y;
+      const selectedCell = mapGridWrapperRef.current.querySelector<HTMLElement>(
+        `[data-x="${selectedNexus.x}"][data-y="${selectedNexus.y}"]`,
+      );
 
-    // Check if selected nexus is within visible range
-    if (relX < 0 || relX > visibleRange * 2 || relY < 0 || relY > visibleRange * 2) {
-      return null; // Don't show crosshair if selected nexus is off-screen
-    }
+      if (!selectedCell) {
+        setCrosshairPosition(null);
+        return;
+      }
 
-    const cellSize = BASE_CELL_SIZE;
-    const gridBorder = BASE_GRID_BORDER;
-    const gridSize = visibleDiameter * cellSize + gridBorder * 2;
+      const wrapperRect = mapGridWrapperRef.current.getBoundingClientRect();
+      const cellRect = selectedCell.getBoundingClientRect();
 
-    // Position relative to centered grid, accounting for border
-    const left = `calc(50% - ${gridSize / 2}px + ${relX * cellSize + cellSize / 2 + gridBorder}px)`;
-    const top = `calc(50% - ${gridSize / 2}px + ${relY * cellSize + cellSize / 2 + gridBorder}px)`;
+      setCrosshairPosition({
+        left: cellRect.left - wrapperRect.left + cellRect.width / 2,
+        top: cellRect.top - wrapperRect.top + cellRect.height / 2,
+      });
+    };
 
-    return { left, top };
-  };
+    const frameId = window.requestAnimationFrame(updateCrosshairPosition);
+    window.addEventListener('resize', updateCrosshairPosition);
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      window.removeEventListener('resize', updateCrosshairPosition);
+    };
+  }, [selectedNexus, centerX, centerY, nexuses]);
 
   return (
     <div className="map-container">
@@ -446,7 +462,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
       </div>
 
       <div className="map-content">
-        <div className="map-grid-wrapper">
+        <div className="map-grid-wrapper" ref={mapGridWrapperRef}>
           <div
             className="map-grid"
             onMouseDown={handleMouseDown}
@@ -454,20 +470,16 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
             onMouseUp={(e) => handleMouseUp(e)}
             onMouseLeave={(e) => handleMouseUp(e)}
             onDragStart={(e) => e.preventDefault()}
-            style={{
-              cursor: isDragging ? 'grabbing' : 'grab',
-              width: `${visibleDiameter * BASE_CELL_SIZE + BASE_GRID_BORDER * 2}px`,
-              height: `${visibleDiameter * BASE_CELL_SIZE + BASE_GRID_BORDER * 2}px`,
-            }}
+            style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
           >
             {renderGrid()}
           </div>
-          {selectedNexus && getCrosshairPosition() && (
+          {selectedNexus && crosshairPosition && (
             <div
               className="map-crosshair"
               style={{
-                left: getCrosshairPosition()!.left,
-                top: getCrosshairPosition()!.top,
+                left: `${crosshairPosition.left}px`,
+                top: `${crosshairPosition.top}px`,
               }}
             >
               <div className="crosshair-line crosshair-top"></div>
