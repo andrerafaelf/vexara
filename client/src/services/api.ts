@@ -42,16 +42,10 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
 };
 
 // Auth
-export const register = (username: string, email: string, password: string) =>
-  apiRequest('/auth/register', {
-    method: 'POST',
-    body: JSON.stringify({ username, email, password }),
-  });
-
-export const login = (email: string, password: string) =>
+export const login = (username: string, password: string) =>
   apiRequest('/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ username, password }),
   });
 
 // Nexuses

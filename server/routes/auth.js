@@ -1,13 +1,16 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma.js';
-import { comparePassword, hashPassword } from '../models/User.js';
-import { validateEmail, validatePassword, validateUsername } from '../utils/validation.js';
+import { comparePassword } from '../models/User.js';
+import { validateUsername } from '../utils/validation.js';
 
 const router = express.Router();
 
 // Register
 router.post('/register', async (req, res) => {
+  return res.status(403).json({ error: 'Registration is disabled' });
+
+  /*
   try {
     const { username, email, password } = req.body;
     const normalizedUsername = typeof username === 'string' ? username.trim() : '';
@@ -73,19 +76,20 @@ router.post('/register', async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+  */
 });
 
 // Login
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
-    const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+    const { username, password } = req.body;
+    const normalizedUsername = typeof username === 'string' ? username.trim() : '';
 
-    if (!validateEmail(normalizedEmail) || typeof password !== 'string' || password.length === 0) {
+    if (!validateUsername(normalizedUsername) || typeof password !== 'string' || password.length === 0) {
       return res.status(400).json({ error: 'Invalid credentials' });
     }
 
-    const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+    const user = await prisma.user.findUnique({ where: { username: normalizedUsername } });
     if (!user) {
       return res.status(400).json({ error: 'Invalid credentials' });
     }
