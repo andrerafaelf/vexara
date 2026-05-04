@@ -14,8 +14,8 @@ router.post('/create', auth, async (req, res) => {
       data: {
         name: req.body.name || `${user.username}'s Nexus`,
         ownerId: user.id,
-        x: Math.floor(Math.random() * 25),
-        y: Math.floor(Math.random() * 25),
+        x: Math.floor(Math.random() * 35),
+        y: Math.floor(Math.random() * 35),
         commandCore: 0,
         troopFabricator: 0,
         lifeSupport: 1,

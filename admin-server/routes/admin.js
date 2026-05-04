@@ -136,8 +136,8 @@ router.post('/users', async (req, res) => {
         data: {
           name: `${username}'s Nexus`,
           ownerId: user.id,
-          x: Math.floor(Math.random() * 25),
-          y: Math.floor(Math.random() * 25),
+          x: Math.floor(Math.random() * 35),
+          y: Math.floor(Math.random() * 35),
         },
       });
 

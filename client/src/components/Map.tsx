@@ -47,6 +47,8 @@ const TROOP_LABELS: Record<string, string> = {
 const VISIBLE_RANGE = 5;
 const BASE_CELL_SIZE = 60;
 const BASE_GRID_BORDER = 2;
+const MAP_SIZE = 35;
+const MAP_MAX_INDEX = MAP_SIZE - 1;
 
 const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   const { user } = useAuth();
@@ -88,7 +90,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
       return fallback;
     }
 
-    return Math.max(0, Math.min(99, parsed));
+    return Math.max(0, Math.min(MAP_MAX_INDEX, parsed));
   };
 
   const handleJumpToCoordinates = () => {
@@ -171,7 +173,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
       switch (e.key) {
         case 'ArrowUp':
           e.preventDefault();
-          setCenterY((prev) => Math.min(99, prev + step));
+          setCenterY((prev) => Math.min(MAP_MAX_INDEX, prev + step));
           break;
         case 'ArrowDown':
           e.preventDefault();
@@ -183,7 +185,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
           break;
         case 'ArrowRight':
           e.preventDefault();
-          setCenterX((prev) => Math.min(99, prev + step));
+          setCenterX((prev) => Math.min(MAP_MAX_INDEX, prev + step));
           break;
       }
     };
@@ -239,8 +241,8 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
       const cellsY = Math.round(deltaY / dragThreshold);
 
       if (cellsX !== 0 || cellsY !== 0) {
-        setCenterX((prev) => Math.max(0, Math.min(99, prev + cellsX)));
-        setCenterY((prev) => Math.max(0, Math.min(99, prev + cellsY)));
+        setCenterX((prev) => Math.max(0, Math.min(MAP_MAX_INDEX, prev + cellsX)));
+        setCenterY((prev) => Math.max(0, Math.min(MAP_MAX_INDEX, prev + cellsY)));
         setDragStart({ x: e.clientX, y: e.clientY });
         setDragOffset({ x: 0, y: 0 });
       }
@@ -346,8 +348,8 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
     for (let y = centerY + visibleRange; y >= centerY - visibleRange; y--) {
       const row = [];
       for (let x = centerX - visibleRange; x <= centerX + visibleRange; x++) {
-        // Check if coordinates are outside the valid map range (0-99)
-        const isOutOfBounds = x < 0 || x > 99 || y < 0 || y > 99;
+        // Check if coordinates are outside the valid map range.
+        const isOutOfBounds = x < 0 || x > MAP_MAX_INDEX || y < 0 || y > MAP_MAX_INDEX;
 
         const nexus = !isOutOfBounds ? nexuses.find((v) => v.x === x && v.y === y) : null;
         const isCurrent = nexus?._id === currentNexus._id;
@@ -407,22 +409,22 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
         <h2>World Map</h2>
         <div className="map-info">
           <span>
-            Viewing: ({centerX}|{centerY}) | Map Size: 25x25 (625 hexes)
+            Viewing: ({centerX}|{centerY}) | Map Size: {MAP_SIZE}x{MAP_SIZE} ({MAP_SIZE * MAP_SIZE} hexes)
           </span>
           <span className="map-hint">💡 Drag to pan • Arrow keys to navigate • Jump to coordinates</span>
         </div>
         <div className="map-controls">
-          <button onClick={() => setCenterY(Math.min(99, centerY + 5))}>⬆️ North</button>
+          <button onClick={() => setCenterY(Math.min(MAP_MAX_INDEX, centerY + 5))}>⬆️ North</button>
           <button onClick={() => setCenterX(Math.max(0, centerX - 5))}>⬅️ West</button>
           <button onClick={handleResetMap}>🏠 Reset Map</button>
-          <button onClick={() => setCenterX(Math.min(99, centerX + 5))}>➡️ East</button>
+          <button onClick={() => setCenterX(Math.min(MAP_MAX_INDEX, centerX + 5))}>➡️ East</button>
           <button onClick={() => setCenterY(Math.max(0, centerY - 5))}>⬇️ South</button>
           <div className="map-coordinate-controls">
             <span>Go to</span>
             <input
               type="number"
               min={0}
-              max={99}
+              max={MAP_MAX_INDEX}
               value={targetX}
               onChange={(e) => setTargetX(e.target.value)}
               onKeyDown={handleCoordinateKeyDown}
@@ -432,7 +434,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
             <input
               type="number"
               min={0}
-              max={99}
+              max={MAP_MAX_INDEX}
               value={targetY}
               onChange={(e) => setTargetY(e.target.value)}
               onKeyDown={handleCoordinateKeyDown}

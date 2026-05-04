@@ -1,9 +1,13 @@
 import prisma from '../lib/prisma.js';
 
-const MAP_SIZE = 25;
-const MIN_NEUTRALS = 40;
-const NEUTRALS_PER_CAPTURED = 2;
-const NEUTRALS_PER_PLAYER = 6;
+const MAP_SIZE = 35;
+const MIN_NEUTRALS = 70;
+const NEUTRALS_PER_CAPTURED = 3;
+const NEUTRALS_PER_PLAYER = 9;
+const BASE_NEUTRAL_DIFFICULTY = 0.7;
+const MAX_NEUTRAL_DIFFICULTY = 1.35;
+const USER_DIFFICULTY_STEP = 0.015;
+const CAPTURE_DIFFICULTY_STEP = 0.004;
 
 const NEXUS_TYPES = [
   { name: 'Neutral Settlement', weight: 40 },
@@ -25,7 +29,12 @@ function selectNexusType() {
   return NEXUS_TYPES[0];
 }
 
-function buildNeutralNexusData(x, y) {
+function scaleTroopCount(min, max, troopMultiplier, difficultyScale) {
+  const raw = Math.floor(Math.random() * (max - min + 1)) + min;
+  return Math.max(0, Math.floor(raw * troopMultiplier * difficultyScale));
+}
+
+function buildNeutralNexusData(x, y, difficultyScale = BASE_NEUTRAL_DIFFICULTY) {
   const nexusType = selectNexusType();
 
   let biomass = Math.floor(Math.random() * 4000) + 1000;
@@ -40,8 +49,8 @@ function buildNeutralNexusData(x, y) {
   }
 
   let troopMultiplier = 1;
-  if (nexusType.troopBonus) troopMultiplier = 1.5;
-  if (nexusType.lowDefense) troopMultiplier = 0.3;
+  if (nexusType.troopBonus) troopMultiplier = 1.35;
+  if (nexusType.lowDefense) troopMultiplier = 0.55;
 
   return {
     name: nexusType.name,
@@ -50,25 +59,25 @@ function buildNeutralNexusData(x, y) {
     biomass: Math.floor(biomass),
     alloy: Math.floor(alloy),
     ore: Math.floor(ore),
-    commandCore: Math.floor(Math.random() * 4) + 1,
-    troopFabricator: Math.floor(Math.random() * 3),
-    lifeSupport: Math.floor(Math.random() * 4) + 2,
-    storageVault: Math.floor(Math.random() * 4) + 1,
-    biomassFarm: Math.floor(Math.random() * 4) + 1,
-    alloyForge: Math.floor(Math.random() * 4) + 1,
-    oreExtractor: Math.floor(Math.random() * 4) + 1,
+    commandCore: Math.max(1, Math.floor(Math.random() * 3) + Math.floor(difficultyScale)),
+    troopFabricator: Math.max(0, Math.floor(Math.random() * 2) + Math.floor((difficultyScale - 0.6) * 2)),
+    lifeSupport: Math.max(1, Math.floor(Math.random() * 3) + Math.floor(difficultyScale)),
+    storageVault: Math.max(1, Math.floor(Math.random() * 3) + Math.floor(difficultyScale)),
+    biomassFarm: Math.max(1, Math.floor(Math.random() * 3) + Math.floor(difficultyScale)),
+    alloyForge: Math.max(1, Math.floor(Math.random() * 3) + Math.floor(difficultyScale)),
+    oreExtractor: Math.max(1, Math.floor(Math.random() * 3) + Math.floor(difficultyScale)),
     shieldGrid: Math.floor(Math.random() * 2),
-    lancerDrone: Math.floor((Math.random() * 40 + 5) * troopMultiplier),
-    assaultTrooper: Math.floor((Math.random() * 30 + 5) * troopMultiplier),
-    breakerUnit: Math.floor((Math.random() * 25 + 5) * troopMultiplier),
-    reconOperative: Math.floor(Math.random() * 10 * troopMultiplier),
-    skimmerBike: Math.floor(Math.random() * 15 * troopMultiplier),
-    siegeMech: Math.floor(Math.random() * 8 * troopMultiplier),
-    bulwarkGuard: Math.floor(Math.random() * 10 * troopMultiplier),
-    suppressorTeam: Math.floor(Math.random() * 8 * troopMultiplier),
-    disruptorUnit: Math.floor(Math.random() * 8 * troopMultiplier),
-    interceptorBike: Math.floor(Math.random() * 5 * troopMultiplier),
-    annihilatorPlatform: Math.floor(Math.random() * 3 * troopMultiplier),
+    lancerDrone: scaleTroopCount(6, 14, troopMultiplier, difficultyScale),
+    assaultTrooper: scaleTroopCount(10, 18, troopMultiplier, difficultyScale),
+    breakerUnit: scaleTroopCount(2, 8, troopMultiplier, difficultyScale),
+    reconOperative: scaleTroopCount(0, 4, troopMultiplier, difficultyScale),
+    skimmerBike: scaleTroopCount(0, 4, troopMultiplier, difficultyScale),
+    siegeMech: scaleTroopCount(0, 2, troopMultiplier, difficultyScale),
+    bulwarkGuard: scaleTroopCount(0, 3, troopMultiplier, difficultyScale),
+    suppressorTeam: scaleTroopCount(0, 3, troopMultiplier, difficultyScale),
+    disruptorUnit: scaleTroopCount(0, 3, troopMultiplier, difficultyScale),
+    interceptorBike: scaleTroopCount(0, 2, troopMultiplier, difficultyScale),
+    annihilatorPlatform: scaleTroopCount(0, 1, troopMultiplier, difficultyScale),
     overseer: 0,
     ownerId: null,
   };
@@ -87,13 +96,13 @@ async function findOpenCoordinates() {
   return null;
 }
 
-export async function createNeutralNexus() {
+export async function createNeutralNexus(difficultyScale = BASE_NEUTRAL_DIFFICULTY) {
   const coordinates = await findOpenCoordinates();
   if (!coordinates) {
     return null;
   }
 
-  return prisma.nexus.create({ data: buildNeutralNexusData(coordinates.x, coordinates.y) });
+  return prisma.nexus.create({ data: buildNeutralNexusData(coordinates.x, coordinates.y, difficultyScale) });
 }
 
 export async function ensureNeutralNexusPool() {
@@ -104,6 +113,10 @@ export async function ensureNeutralNexusPool() {
   ]);
 
   const capturedCount = Math.max(0, totalNexusCount - userCount - neutralCount);
+  const neutralDifficulty = Math.min(
+    MAX_NEUTRAL_DIFFICULTY,
+    BASE_NEUTRAL_DIFFICULTY + userCount * USER_DIFFICULTY_STEP + capturedCount * CAPTURE_DIFFICULTY_STEP,
+  );
   const targetNeutralCount = Math.max(
     MIN_NEUTRALS,
     userCount * NEUTRALS_PER_PLAYER + capturedCount * NEUTRALS_PER_CAPTURED,
@@ -116,7 +129,7 @@ export async function ensureNeutralNexusPool() {
 
   let created = 0;
   for (let index = 0; index < missingCount; index += 1) {
-    const nexus = await createNeutralNexus();
+    const nexus = await createNeutralNexus(neutralDifficulty);
     if (!nexus) {
       break;
     }

@@ -54,8 +54,8 @@ router.post('/register', async (req, res) => {
         data: {
           name: `${username}'s Nexus`,
           ownerId: newUser.id,
-          x: Math.floor(Math.random() * 25),
-          y: Math.floor(Math.random() * 25),
+          x: Math.floor(Math.random() * 35),
+          y: Math.floor(Math.random() * 35),
           commandCore: 0,
           troopFabricator: 0,
           lifeSupport: 1,
