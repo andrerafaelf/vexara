@@ -2,6 +2,7 @@ import express from 'express';
 import prisma from '../lib/prisma.js';
 import auth from '../middleware/auth.js';
 import { serializeAttack } from '../models/Nexus.js';
+import { normalizeTroopPayload, parsePositiveInt } from '../utils/validation.js';
 
 const router = express.Router();
 
@@ -20,14 +21,33 @@ const TROOP_KEYS = [
   'overseer',
 ];
 
+const SUPPORTED_ATTACK_TYPES = new Set(['attack', 'scout']);
+
 // Send attack
 router.post('/send', auth, async (req, res) => {
   try {
     const { fromNexusId, toNexusId, troops, type = 'attack' } = req.body;
+    const parsedFromNexusId = parsePositiveInt(fromNexusId);
+    const parsedToNexusId = parsePositiveInt(toNexusId);
+
+    if (!parsedFromNexusId || !parsedToNexusId) {
+      return res.status(400).json({ error: 'Invalid nexus IDs' });
+    }
+
+    if (!SUPPORTED_ATTACK_TYPES.has(type)) {
+      return res.status(400).json({ error: 'Unsupported mission type' });
+    }
+
+    const normalizedPayload = normalizeTroopPayload(troops, TROOP_KEYS);
+    if (normalizedPayload.error) {
+      return res.status(400).json({ error: normalizedPayload.error });
+    }
+
+    const normalizedTroops = normalizedPayload.normalized;
 
     const [attackerNexus, defenderNexus] = await Promise.all([
-      prisma.nexus.findUnique({ where: { id: parseInt(fromNexusId) } }),
-      prisma.nexus.findUnique({ where: { id: parseInt(toNexusId) } }),
+      prisma.nexus.findUnique({ where: { id: parsedFromNexusId } }),
+      prisma.nexus.findUnique({ where: { id: parsedToNexusId } }),
     ]);
 
     if (!attackerNexus || attackerNexus.ownerId !== req.userId) {
@@ -42,16 +62,16 @@ router.post('/send', auth, async (req, res) => {
       return res.status(400).json({ error: 'Cannot attack your own nexus' });
     }
 
-    const totalTroopsRequested = Object.values(troops).reduce((sum, amount) => sum + Number(amount || 0), 0);
+    const totalTroopsRequested = Object.values(normalizedTroops).reduce((sum, amount) => sum + amount, 0);
     if (totalTroopsRequested <= 0) {
       return res.status(400).json({ error: 'Select at least one troop' });
     }
 
     const isScoutMission = type === 'scout';
     if (isScoutMission) {
-      const reconOperatives = Number(troops.reconOperative || 0);
+      const reconOperatives = normalizedTroops.reconOperative || 0;
       const nonScoutTroops = TROOP_KEYS.filter((troopType) => troopType !== 'reconOperative').some(
-        (troopType) => Number(troops[troopType] || 0) > 0,
+        (troopType) => normalizedTroops[troopType] > 0,
       );
 
       if (reconOperatives <= 0 || nonScoutTroops) {
@@ -60,7 +80,7 @@ router.post('/send', auth, async (req, res) => {
     }
 
     // Check troop availability
-    for (const [troopType, amount] of Object.entries(troops)) {
+    for (const [troopType, amount] of Object.entries(normalizedTroops)) {
       if ((attackerNexus[troopType] || 0) < amount) {
         return res.status(400).json({ error: `Insufficient ${troopType}` });
       }
@@ -69,7 +89,7 @@ router.post('/send', auth, async (req, res) => {
     // Deduct troops and population from attacker nexus
     let totalTroopsSent = 0;
     const troopDeductions = {};
-    for (const [troopType, amount] of Object.entries(troops)) {
+    for (const [troopType, amount] of Object.entries(normalizedTroops)) {
       troopDeductions[troopType] = (attackerNexus[troopType] || 0) - amount;
       totalTroopsSent += amount;
     }
@@ -84,10 +104,10 @@ router.post('/send', auth, async (req, res) => {
       prisma.attack.create({
         data: {
           attackerUserId: req.userId,
-          attackerNexusId: parseInt(fromNexusId),
+          attackerNexusId: parsedFromNexusId,
           defenderUserId: defenderNexus.ownerId ?? null,
-          defenderNexusId: parseInt(toNexusId),
-          troops,
+          defenderNexusId: parsedToNexusId,
+          troops: normalizedTroops,
           arrivesAt,
           type,
         },

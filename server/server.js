@@ -1,4 +1,5 @@
 import cors from 'cors';
+import { randomUUID } from 'crypto';
 import dotenv from 'dotenv';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
@@ -12,15 +13,75 @@ import nexusRoutes from './routes/nexus.js';
 import reportRoutes from './routes/report.js';
 import troopRoutes from './routes/troop.js';
 import { processArrivedAttacks } from './utils/combat.js';
+import { logError, logInfo, logWarn } from './utils/logger.js';
 import { ensureNeutralNexusPool } from './utils/neutralNexuses.js';
 
 dotenv.config();
 
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET is required');
+}
+
+const allowedCorsOrigins = (process.env.CORS_ORIGINS || '')
+  .split(',')
+  .map((v) => v.trim())
+  .filter(Boolean);
+
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use((req, res, next) => {
+  req.requestId = randomUUID();
+  res.setHeader('X-Request-Id', req.requestId);
+
+  const start = Date.now();
+  res.on('finish', () => {
+    logInfo('http_request', {
+      requestId: req.requestId,
+      method: req.method,
+      path: req.originalUrl,
+      status: res.statusCode,
+      durationMs: Date.now() - start,
+    });
+  });
+
+  next();
+});
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedCorsOrigins.length === 0 && process.env.NODE_ENV !== 'production') {
+        return callback(null, true);
+      }
+
+      if (allowedCorsOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+  }),
+);
 app.use(express.json());
+
+app.get('/healthz', (req, res) => {
+  res.json({ status: 'ok', uptime: process.uptime() });
+});
+
+app.get('/readyz', async (req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({ status: 'ready' });
+  } catch (error) {
+    res.status(503).json({ status: 'not-ready' });
+  }
+});
 
 // Rate limiting (disabled in development)
 if (process.env.NODE_ENV === 'production') {
@@ -46,40 +107,89 @@ app.use('/api/report', reportRoutes);
 prisma
   .$connect()
   .then(async () => {
-    console.log('✅ PostgreSQL connected successfully');
+    logInfo('postgres_connected');
     const neutralSync = await ensureNeutralNexusPool();
     if (neutralSync.created > 0) {
-      console.log(
-        `🌌 Spawned ${neutralSync.created} neutral nexuses (${neutralSync.neutralCount}/${neutralSync.targetNeutralCount})`,
-      );
+      logInfo('neutral_nexus_spawned', {
+        created: neutralSync.created,
+        neutralCount: neutralSync.neutralCount,
+        targetNeutralCount: neutralSync.targetNeutralCount,
+      });
     }
   })
   .catch((err) => {
-    console.error('❌ PostgreSQL connection error:', err.message);
-    console.log('\n💡 To fix this:');
-    console.log('   1. Start PostgreSQL or run: docker compose -f ../util/docker-compose.yml up -d');
-    console.log('   2. Set DATABASE_URL in .env (e.g. postgresql://user:pass@localhost:5432/neon_dominion)');
-    console.log('   3. Run: npm run db:migrate\n');
+    logError('postgres_connection_error', { message: err.message });
   });
+
+const JOB_LOCKS = {
+  updateResources: 9101,
+  processCombat: 9102,
+  syncNeutralPool: 9103,
+};
+
+async function runWithPgAdvisoryLock(lockId, jobName, jobHandler) {
+  try {
+    const lockRows = await prisma.$queryRaw`SELECT pg_try_advisory_lock(${lockId}) AS locked`;
+    const locked = Array.isArray(lockRows) && lockRows[0]?.locked;
+
+    if (!locked) {
+      logWarn('job_lock_skipped', { jobName, lockId });
+      return;
+    }
+
+    const startedAt = Date.now();
+    try {
+      await jobHandler();
+      logInfo('job_completed', { jobName, durationMs: Date.now() - startedAt });
+    } finally {
+      await prisma.$queryRaw`SELECT pg_advisory_unlock(${lockId})`;
+    }
+  } catch (error) {
+    logError('job_failed', { jobName, message: error.message });
+  }
+}
 
 // Start resource production interval (every minute)
 setInterval(() => {
-  updateAllResources();
+  void runWithPgAdvisoryLock(JOB_LOCKS.updateResources, 'update_resources', () => updateAllResources());
 }, 60000);
 
 // Start combat resolution interval (every 10 seconds)
 setInterval(() => {
-  processArrivedAttacks();
+  void runWithPgAdvisoryLock(JOB_LOCKS.processCombat, 'process_combat', () => processArrivedAttacks());
 }, 10000);
 
 // Keep neutral nexus pool filled as the world gets conquered
 setInterval(() => {
-  ensureNeutralNexusPool().catch((err) => {
-    console.error('Error syncing neutral nexus pool:', err);
+  void runWithPgAdvisoryLock(JOB_LOCKS.syncNeutralPool, 'sync_neutral_pool', async () => {
+    await ensureNeutralNexusPool();
   });
 }, 60000);
 
+app.use((error, req, res, next) => {
+  logError('unhandled_http_error', {
+    requestId: req.requestId,
+    method: req.method,
+    path: req.originalUrl,
+    message: error.message,
+  });
+  if (res.headersSent) {
+    return next(error);
+  }
+  return res.status(500).json({ error: 'Internal server error' });
+});
+
+process.on('unhandledRejection', (reason) => {
+  logError('process_unhandled_rejection', {
+    reason: reason instanceof Error ? reason.message : String(reason),
+  });
+});
+
+process.on('uncaughtException', (error) => {
+  logError('process_uncaught_exception', { message: error.message });
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  logInfo('server_started', { port: PORT });
 });

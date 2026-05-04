@@ -41,6 +41,18 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
     localStorage.setItem('viewedReports', JSON.stringify(Array.from(viewedReports)));
   }, [viewedReports]);
 
+  useEffect(() => {
+    if (!selectedReport || viewedReports.has(selectedReport._id)) {
+      return;
+    }
+
+    setViewedReports((prev) => {
+      const next = new Set(prev);
+      next.add(selectedReport._id);
+      return next;
+    });
+  }, [selectedReport, viewedReports]);
+
   const loadReports = async () => {
     try {
       setLoading(true);
@@ -77,11 +89,6 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
     const myRole = isMyAttack ? 'attacker' : 'defender';
     const enemyRole = isMyAttack ? 'defender' : 'attacker';
     const scoutReport = isScoutReport(selectedReport);
-
-    // Mark report as viewed
-    if (!viewedReports.has(selectedReport._id)) {
-      setViewedReports(new Set(viewedReports).add(selectedReport._id));
-    }
 
     return (
       <div className="reports-container">

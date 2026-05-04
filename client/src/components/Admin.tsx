@@ -50,6 +50,8 @@ interface Modal {
   nexusId: string | null;
 }
 
+const ADMIN_API_URL = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:3002/api/admin';
+
 const Admin: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -78,9 +80,9 @@ const Admin: React.FC = () => {
   const loadData = async () => {
     try {
       const [usersRes, statsRes, attacksRes] = await Promise.all([
-        fetch('http://localhost:3002/api/admin/users'),
-        fetch('http://localhost:3002/api/admin/stats'),
-        fetch('http://localhost:3002/api/admin/attacks'),
+        fetch(`${ADMIN_API_URL}/users`),
+        fetch(`${ADMIN_API_URL}/stats`),
+        fetch(`${ADMIN_API_URL}/attacks`),
       ]);
 
       const usersData = await usersRes.json();
@@ -101,7 +103,7 @@ const Admin: React.FC = () => {
     if (!window.confirm(`Delete user "${username}"?`)) return;
 
     try {
-      const res = await fetch(`http://localhost:3002/api/admin/users/${userId}`, {
+      const res = await fetch(`${ADMIN_API_URL}/users/${userId}`, {
         method: 'DELETE',
       });
 
@@ -162,7 +164,7 @@ const Admin: React.FC = () => {
     if (!modal.nexusId) return;
 
     try {
-      const res = await fetch(`http://localhost:3002/api/admin/nexuses/${modal.nexusId}/resources`, {
+      const res = await fetch(`${ADMIN_API_URL}/nexuses/${modal.nexusId}/resources`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -184,7 +186,7 @@ const Admin: React.FC = () => {
     if (!modal.nexusId) return;
 
     try {
-      const res = await fetch(`http://localhost:3002/api/admin/nexuses/${modal.nexusId}/troops`, {
+      const res = await fetch(`${ADMIN_API_URL}/nexuses/${modal.nexusId}/troops`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -206,7 +208,7 @@ const Admin: React.FC = () => {
     if (!modal.nexusId) return;
 
     try {
-      const res = await fetch(`http://localhost:3002/api/admin/nexuses/${modal.nexusId}/buildings`, {
+      const res = await fetch(`${ADMIN_API_URL}/nexuses/${modal.nexusId}/buildings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -226,7 +228,7 @@ const Admin: React.FC = () => {
 
   const handleCompleteBuild = async (nexusId: string) => {
     try {
-      const res = await fetch(`http://localhost:3002/api/admin/nexuses/${nexusId}/complete-build`, {
+      const res = await fetch(`${ADMIN_API_URL}/nexuses/${nexusId}/complete-build`, {
         method: 'POST',
       });
 
@@ -244,7 +246,7 @@ const Admin: React.FC = () => {
 
   const handleCompleteTraining = async (nexusId: string) => {
     try {
-      const res = await fetch(`http://localhost:3002/api/admin/nexuses/${nexusId}/complete-training`, {
+      const res = await fetch(`${ADMIN_API_URL}/nexuses/${nexusId}/complete-training`, {
         method: 'POST',
       });
 
@@ -262,7 +264,7 @@ const Admin: React.FC = () => {
 
   const handleCompleteAttack = async (attackId: string) => {
     try {
-      const res = await fetch(`http://localhost:3002/api/admin/attacks/${attackId}/complete`, {
+      const res = await fetch(`${ADMIN_API_URL}/attacks/${attackId}/complete`, {
         method: 'POST',
       });
 
@@ -282,7 +284,7 @@ const Admin: React.FC = () => {
     if (!window.confirm(`Delete nexus "${villageName}"?`)) return;
 
     try {
-      const res = await fetch(`http://localhost:3002/api/admin/nexuses/${nexusId}`, {
+      const res = await fetch(`${ADMIN_API_URL}/nexuses/${nexusId}`, {
         method: 'DELETE',
       });
 
@@ -311,8 +313,8 @@ const Admin: React.FC = () => {
                 {modal.type === 'resources'
                   ? '💰 Add Resources'
                   : modal.type === 'troops'
-                  ? '⚔️ Add Troops'
-                  : '🏗️ Add Building Levels'}
+                    ? '⚔️ Add Troops'
+                    : '🏗️ Add Building Levels'}
               </h3>
               <button className="modal-close" onClick={closeModal}>
                 ×
@@ -524,8 +526,8 @@ const Admin: React.FC = () => {
                   modal.type === 'resources'
                     ? handleSubmitResources
                     : modal.type === 'troops'
-                    ? handleSubmitTroops
-                    : handleSubmitBuildings
+                      ? handleSubmitTroops
+                      : handleSubmitBuildings
                 }
               >
                 Add {modal.type === 'resources' ? 'Resources' : modal.type === 'troops' ? 'Troops' : 'Levels'}
@@ -639,8 +641,8 @@ const Admin: React.FC = () => {
                     hours > 0
                       ? `${hours}h ${minutes % 60}m ${seconds % 60}s`
                       : minutes > 0
-                      ? `${minutes}m ${seconds % 60}s`
-                      : `${seconds}s`;
+                        ? `${minutes}m ${seconds % 60}s`
+                        : `${seconds}s`;
 
                   const totalTroops = Object.values(attack.troops).reduce((a, b) => a + b, 0);
 

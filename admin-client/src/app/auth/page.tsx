@@ -12,13 +12,14 @@ export default function AuthPage() {
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
 
-    if (username === 'andre' && password === 'andre') {
-      sessionStorage.setItem('admin_basic_auth', btoa('andre:andre'));
-      router.replace('/admin');
+    const normalizedUsername = username.trim();
+    if (!normalizedUsername || !password) {
+      setError('Enter username and password');
       return;
     }
 
-    setError('Invalid credentials');
+    sessionStorage.setItem('admin_basic_auth', btoa(`${normalizedUsername}:${password}`));
+    router.replace('/admin');
   };
 
   return (

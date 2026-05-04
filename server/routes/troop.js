@@ -2,6 +2,7 @@ import express from 'express';
 import prisma from '../lib/prisma.js';
 import auth from '../middleware/auth.js';
 import { computeResourceUpdate, serializeNexus } from '../models/Nexus.js';
+import { parsePositiveInt } from '../utils/validation.js';
 
 const router = express.Router();
 const MAX_TRAINING_QUEUE = 100;
@@ -22,12 +23,63 @@ const TROOP_COSTS = {
   overseer: { biomass: 300, alloy: 250, ore: 200, population: 5, time: 3000 },
 };
 
+const TROOP_REQUIREMENTS = {
+  assaultTrooper: { buildings: { troopFabricator: 1 } },
+  lancerDrone: { buildings: { troopFabricator: 2 }, troops: { assaultTrooper: 5 } },
+  breakerUnit: { buildings: { troopFabricator: 2, oreExtractor: 2 }, troops: { assaultTrooper: 10 } },
+  reconOperative: { buildings: { troopFabricator: 3 }, troops: { assaultTrooper: 5, lancerDrone: 5 } },
+  skimmerBike: { buildings: { troopFabricator: 3, alloyForge: 3 }, troops: { assaultTrooper: 20, lancerDrone: 10 } },
+  siegeMech: { buildings: { troopFabricator: 4, oreExtractor: 4 }, troops: { assaultTrooper: 30, breakerUnit: 10 } },
+  bulwarkGuard: { buildings: { troopFabricator: 3, lifeSupport: 5 } },
+  suppressorTeam: { buildings: { troopFabricator: 3, commandCore: 3 } },
+  disruptorUnit: { buildings: { troopFabricator: 4 } },
+  interceptorBike: { buildings: { troopFabricator: 4 }, troops: { skimmerBike: 50 } },
+  annihilatorPlatform: { buildings: { troopFabricator: 6, commandCore: 6 } },
+  overseer: { buildings: { troopFabricator: 5, commandCore: 3, shieldGrid: 2 }, maxPerNexus: 1 },
+};
+
+const BUILDING_NAMES = {
+  commandCore: 'Command Core',
+  troopFabricator: 'Recruitment Core',
+  lifeSupport: 'Life Support',
+  storageVault: 'Storage Vault',
+  biomassFarm: 'Biomass Farm',
+  alloyForge: 'Alloy Forge',
+  oreExtractor: 'Ore Extractor',
+  shieldGrid: 'Shield Grid',
+};
+
+const TROOP_NAMES = {
+  lancerDrone: 'Lancer Drone',
+  assaultTrooper: 'Assault Trooper',
+  breakerUnit: 'Breaker Unit',
+  reconOperative: 'Recon Operative',
+  skimmerBike: 'Skimmer Bike',
+  siegeMech: 'Siege Mech',
+  bulwarkGuard: 'Bulwark Guard',
+  suppressorTeam: 'Suppressor Team',
+  disruptorUnit: 'Disruptor Unit',
+  interceptorBike: 'Interceptor Bike',
+  annihilatorPlatform: 'Annihilator Platform',
+  overseer: 'Overseer',
+};
+
 // Train troops
 router.post('/train', auth, async (req, res) => {
   try {
     const { nexusId, troopType, amount } = req.body;
+    const parsedNexusId = parsePositiveInt(nexusId);
+    const parsedAmount = parsePositiveInt(amount);
 
-    const nexus = await prisma.nexus.findUnique({ where: { id: parseInt(nexusId) } });
+    if (!parsedNexusId) {
+      return res.status(400).json({ error: 'Invalid nexus ID' });
+    }
+
+    if (!parsedAmount || parsedAmount > 1000) {
+      return res.status(400).json({ error: 'Amount must be an integer between 1 and 1000' });
+    }
+
+    const nexus = await prisma.nexus.findUnique({ where: { id: parsedNexusId } });
     if (!nexus || nexus.ownerId !== req.userId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
@@ -40,16 +92,49 @@ router.post('/train', auth, async (req, res) => {
       return res.status(400).json({ error: 'Recruitment Core required' });
     }
 
+    const requirements = TROOP_REQUIREMENTS[troopType] || {};
+    if (requirements.buildings) {
+      for (const [building, requiredLevel] of Object.entries(requirements.buildings)) {
+        if ((nexus[building] || 0) < requiredLevel) {
+          return res
+            .status(400)
+            .json({ error: `Requires ${BUILDING_NAMES[building] || building} Level ${requiredLevel}` });
+        }
+      }
+    }
+
+    if (requirements.troops) {
+      for (const [requiredTroopType, requiredCount] of Object.entries(requirements.troops)) {
+        if ((nexus[requiredTroopType] || 0) < requiredCount) {
+          return res.status(400).json({
+            error: `Requires ${requiredCount}x ${TROOP_NAMES[requiredTroopType] || requiredTroopType} in this nexus`,
+          });
+        }
+      }
+    }
+
+    if (requirements.maxPerNexus) {
+      const queuedAmount = (Array.isArray(nexus.trainingQueue) ? nexus.trainingQueue : [])
+        .filter((entry) => entry.troopType === troopType)
+        .reduce((sum, entry) => sum + (Number(entry.amount) || 0), 0);
+      const currentPlusQueued = (nexus[troopType] || 0) + queuedAmount;
+      if (currentPlusQueued + parsedAmount > requirements.maxPerNexus) {
+        return res.status(400).json({
+          error: `Maximum ${requirements.maxPerNexus} ${TROOP_NAMES[troopType] || troopType} per nexus`,
+        });
+      }
+    }
+
     // Apply resource tick
     const resourceUpdate = computeResourceUpdate(nexus);
     const currentVillage = { ...nexus, ...resourceUpdate };
 
     const cost = TROOP_COSTS[troopType];
     const totalCost = {
-      biomass: cost.biomass * amount,
-      alloy: cost.alloy * amount,
-      ore: cost.ore * amount,
-      population: cost.population * amount,
+      biomass: cost.biomass * parsedAmount,
+      alloy: cost.alloy * parsedAmount,
+      ore: cost.ore * parsedAmount,
+      population: cost.population * parsedAmount,
     };
 
     if (
@@ -71,8 +156,8 @@ router.post('/train', auth, async (req, res) => {
 
     const queueStart =
       trainingQueue.length > 0 ? new Date(trainingQueue[trainingQueue.length - 1].completesAt).getTime() : Date.now();
-    const completesAt = new Date(queueStart + cost.time * amount * 1000);
-    const newQueue = [...trainingQueue, { troopType, amount, completesAt }];
+    const completesAt = new Date(queueStart + cost.time * parsedAmount * 1000);
+    const newQueue = [...trainingQueue, { troopType, amount: parsedAmount, completesAt }];
 
     const updated = await prisma.nexus.update({
       where: { id: nexus.id },

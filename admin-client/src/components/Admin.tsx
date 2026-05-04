@@ -66,6 +66,8 @@ const BUILDING_OPTIONS: Array<{ key: string; label: string }> = [
   { key: 'shieldGrid', label: 'Shield Grid' },
 ];
 
+const ADMIN_API_URL = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:3002/api/admin';
+
 const Admin: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -122,9 +124,9 @@ const Admin: React.FC = () => {
   const loadData = async () => {
     try {
       const [usersRes, statsRes, attacksRes] = await Promise.all([
-        adminFetch('http://localhost:3002/api/admin/users'),
-        adminFetch('http://localhost:3002/api/admin/stats'),
-        adminFetch('http://localhost:3002/api/admin/attacks'),
+        adminFetch(`${ADMIN_API_URL}/users`),
+        adminFetch(`${ADMIN_API_URL}/stats`),
+        adminFetch(`${ADMIN_API_URL}/attacks`),
       ]);
 
       const usersData = await usersRes.json();
@@ -176,7 +178,7 @@ const Admin: React.FC = () => {
     }
 
     try {
-      const res = await adminFetch('http://localhost:3002/api/admin/users', {
+      const res = await adminFetch(`${ADMIN_API_URL}/users`, {
         method: 'POST',
         body: JSON.stringify(addUserForm),
       });
@@ -209,7 +211,7 @@ const Admin: React.FC = () => {
       if (editUserForm.email) payload.email = editUserForm.email;
       if (editUserForm.password) payload.password = editUserForm.password;
 
-      const res = await adminFetch(`http://localhost:3002/api/admin/users/${selectedUser._id}`, {
+      const res = await adminFetch(`${ADMIN_API_URL}/users/${selectedUser._id}`, {
         method: 'PATCH',
         body: JSON.stringify(payload),
       });
@@ -232,7 +234,7 @@ const Admin: React.FC = () => {
     if (!selectedUser) return;
 
     try {
-      const res = await adminFetch(`http://localhost:3002/api/admin/users/${selectedUser._id}/resources`, {
+      const res = await adminFetch(`${ADMIN_API_URL}/users/${selectedUser._id}/resources`, {
         method: 'POST',
         body: JSON.stringify(resourcesForm),
       });
@@ -255,7 +257,7 @@ const Admin: React.FC = () => {
     if (!selectedUser) return;
 
     try {
-      const res = await adminFetch(`http://localhost:3002/api/admin/users/${selectedUser._id}/troops`, {
+      const res = await adminFetch(`${ADMIN_API_URL}/users/${selectedUser._id}/troops`, {
         method: 'POST',
         body: JSON.stringify(troopsForm),
       });
@@ -278,7 +280,7 @@ const Admin: React.FC = () => {
     if (!selectedUser) return;
 
     try {
-      const res = await adminFetch(`http://localhost:3002/api/admin/users/${selectedUser._id}/buildings`, {
+      const res = await adminFetch(`${ADMIN_API_URL}/users/${selectedUser._id}/buildings`, {
         method: 'POST',
         body: JSON.stringify(buildingsForm),
       });
@@ -301,7 +303,7 @@ const Admin: React.FC = () => {
     if (!window.confirm(`Delete user "${username}"?`)) return;
 
     try {
-      const res = await adminFetch(`http://localhost:3002/api/admin/users/${userId}`, {
+      const res = await adminFetch(`${ADMIN_API_URL}/users/${userId}`, {
         method: 'DELETE',
       });
 
@@ -323,7 +325,7 @@ const Admin: React.FC = () => {
     if (!confirmed) return;
 
     try {
-      const res = await adminFetch(`http://localhost:3002/api/admin/users/${user._id}/reset-account`, {
+      const res = await adminFetch(`${ADMIN_API_URL}/users/${user._id}/reset-account`, {
         method: 'POST',
       });
 
@@ -341,7 +343,7 @@ const Admin: React.FC = () => {
 
   const handleCompleteAttack = async (attackId: string) => {
     try {
-      const res = await adminFetch(`http://localhost:3002/api/admin/attacks/${attackId}/complete`, {
+      const res = await adminFetch(`${ADMIN_API_URL}/attacks/${attackId}/complete`, {
         method: 'POST',
       });
 
@@ -359,7 +361,7 @@ const Admin: React.FC = () => {
 
   const handleCompleteUserStrike = async (user: User) => {
     try {
-      const res = await adminFetch(`http://localhost:3002/api/admin/users/${user._id}/complete-strike`, {
+      const res = await adminFetch(`${ADMIN_API_URL}/users/${user._id}/complete-strike`, {
         method: 'POST',
       });
 
@@ -383,7 +385,7 @@ const Admin: React.FC = () => {
     }
 
     try {
-      const res = await adminFetch(`http://localhost:3002/api/admin/users/${user._id}/complete-build`, {
+      const res = await adminFetch(`${ADMIN_API_URL}/users/${user._id}/complete-build`, {
         method: 'POST',
         body: JSON.stringify({ nexusId: targetNexusId }),
       });
@@ -408,7 +410,7 @@ const Admin: React.FC = () => {
     }
 
     try {
-      const res = await adminFetch(`http://localhost:3002/api/admin/users/${user._id}/complete-training`, {
+      const res = await adminFetch(`${ADMIN_API_URL}/users/${user._id}/complete-training`, {
         method: 'POST',
         body: JSON.stringify({ nexusId: targetNexusId }),
       });

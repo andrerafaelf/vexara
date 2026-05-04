@@ -1,18 +1,38 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma.js';
-import { comparePassword, hashPassword } from '../models/User.js';
+import { comparePassword } from '../models/User.js';
+import { validateUsername } from '../utils/validation.js';
 
 const router = express.Router();
 
 // Register
 router.post('/register', async (req, res) => {
+  return res.status(403).json({ error: 'Registration is disabled' });
+
+  /*
   try {
     const { username, email, password } = req.body;
+    const normalizedUsername = typeof username === 'string' ? username.trim() : '';
+    const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+
+    if (!validateUsername(normalizedUsername)) {
+      return res
+        .status(400)
+        .json({ error: 'Username must be 3-20 characters and use letters, numbers, or underscores' });
+    }
+
+    if (!validateEmail(normalizedEmail)) {
+      return res.status(400).json({ error: 'Invalid email address' });
+    }
+
+    if (!validatePassword(password)) {
+      return res.status(400).json({ error: 'Password must be 8-72 characters' });
+    }
 
     // Check if user exists
     const existingUser = await prisma.user.findFirst({
-      where: { OR: [{ email: email.toLowerCase() }, { username }] },
+      where: { OR: [{ email: normalizedEmail }, { username: normalizedUsername }] },
     });
     if (existingUser) {
       return res.status(400).json({ error: 'User already exists' });
@@ -24,8 +44,8 @@ router.post('/register', async (req, res) => {
     const { user, nexus } = await prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({
         data: {
-          username,
-          email: email.toLowerCase(),
+          username: normalizedUsername,
+          email: normalizedEmail,
           password: hashedPassword,
         },
       });
@@ -56,14 +76,20 @@ router.post('/register', async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+  */
 });
 
 // Login
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
+    const normalizedUsername = typeof username === 'string' ? username.trim() : '';
 
-    const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+    if (!validateUsername(normalizedUsername) || typeof password !== 'string' || password.length === 0) {
+      return res.status(400).json({ error: 'Invalid credentials' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { username: normalizedUsername } });
     if (!user) {
       return res.status(400).json({ error: 'Invalid credentials' });
     }
