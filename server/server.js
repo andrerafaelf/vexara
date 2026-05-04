@@ -27,6 +27,15 @@ const allowedCorsOrigins = (process.env.CORS_ORIGINS || '')
   .map((v) => v.trim())
   .filter(Boolean);
 
+function matchesCorsOrigin(origin, rule) {
+  if (rule === '*') {
+    return true;
+  }
+
+  const escaped = rule.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
+  return new RegExp(`^${escaped}$`).test(origin);
+}
+
 const app = express();
 
 // Middleware
@@ -60,6 +69,10 @@ app.use(
       }
 
       if (allowedCorsOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      if (allowedCorsOrigins.some((rule) => matchesCorsOrigin(origin, rule))) {
         return callback(null, true);
       }
 
