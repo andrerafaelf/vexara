@@ -898,7 +898,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
                         ))}
                       </div>
                     )}
-                    {!hasResources && cost && (
+                    {!hasResources && cost && canUpgrade && (
                       <div className="requirements-missing insuff-resources">
                         <p className="requires-label">⚠️ Insufficient Resources:</p>
                         {nexus.resources.biomass < cost.biomass && (
