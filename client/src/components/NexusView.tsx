@@ -572,8 +572,8 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
       {
         id: 'fortify-core',
         title: 'Fortify The Core',
-        description: 'Upgrade Command Core to Lv2.',
-        completed: nexus.buildings.commandCore >= 2,
+        description: 'Upgrade Command Core to Lv3.',
+        completed: nexus.buildings.commandCore >= 3,
       },
       {
         id: 'unlock-defenses',

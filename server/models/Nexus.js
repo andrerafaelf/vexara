@@ -42,7 +42,7 @@ const QUEST_REWARD_BATCHES = [
     id: 'intermediate',
     isUnlocked: ({ completedBatchIds }) => completedBatchIds.has('intro'),
     isCompleted: ({ nexus }) =>
-      nexus.commandCore >= 2 &&
+      nexus.commandCore >= 3 &&
       nexus.shieldGrid >= 1 &&
       nexus.biomassFarm >= 2 &&
       nexus.alloyForge >= 2 &&
