@@ -411,6 +411,48 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
     return `${minutes}m ${seconds}s`;
   };
 
+  const formatDurationSeconds = (totalSeconds: number) => {
+    const safeTotalSeconds = Math.max(0, Math.floor(totalSeconds));
+    const hours = Math.floor(safeTotalSeconds / 3600);
+    const minutes = Math.floor((safeTotalSeconds % 3600) / 60);
+    const seconds = safeTotalSeconds % 60;
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${seconds}s`;
+    }
+    return `${minutes}m ${seconds}s`;
+  };
+
+  const getBuildQueueTimeDisplay = (index: number) => {
+    const queue = Array.isArray(nexus.buildQueue) ? nexus.buildQueue : [];
+    const item = queue[index];
+    if (!item) {
+      return { label: '', isWaiting: false };
+    }
+
+    const now = currentTime.getTime();
+    const endAt = new Date(item.completesAt).getTime();
+
+    if (index > 0) {
+      const startsAt = new Date(queue[index - 1].completesAt).getTime();
+      const ownDurationSeconds = Math.floor((endAt - startsAt) / 1000);
+
+      if (now < startsAt) {
+        return {
+          label: `Queued • ${formatDurationSeconds(ownDurationSeconds)}`,
+          isWaiting: true,
+        };
+      }
+    }
+
+    const remainingSeconds = Math.floor((endAt - now) / 1000);
+    if (remainingSeconds <= 0) {
+      return { label: 'Ready to apply', isWaiting: false };
+    }
+
+    return { label: formatDurationSeconds(remainingSeconds), isWaiting: false };
+  };
+
   const checkTroopRequirements = (troopType: string) => {
     const requirements = TROOP_REQUIREMENTS[troopType];
     if (!requirements) return { canTrain: true, missingRequirements: [] };
@@ -739,12 +781,18 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
             {nexus.buildQueue.length > 0 && (
               <div className="queue-section">
                 <h4>Fabrication Queue</h4>
-                {nexus.buildQueue.map((item, idx) => (
-                  <div key={idx} className="queue-item">
-                    {BUILDING_NAMES[item.building]} → Level {item.targetLevel}
-                    <span className="queue-time">{formatTime(item.completesAt)}</span>
-                  </div>
-                ))}
+                {nexus.buildQueue.map((item, idx) => {
+                  const queueTime = getBuildQueueTimeDisplay(idx);
+
+                  return (
+                    <div key={idx} className={`queue-item ${queueTime.isWaiting ? 'queue-item-waiting' : ''}`}>
+                      {BUILDING_NAMES[item.building]} → Level {item.targetLevel}
+                      <span className={queueTime.isWaiting ? 'queue-time-queued' : 'queue-time'}>
+                        {queueTime.label}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             )}
 
@@ -822,18 +870,26 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
             {nexus.buildQueue.length > 0 && (
               <div className="queue-section">
                 <h4>Fabrication Queue</h4>
-                {nexus.buildQueue.map((item, idx) => (
-                  <div key={idx} className="queue-item">
-                    {BUILDING_NAMES[item.building]} → Level {item.targetLevel}
-                    <span className="queue-time">{formatTime(item.completesAt)}</span>
-                  </div>
-                ))}
+                {nexus.buildQueue.map((item, idx) => {
+                  const queueTime = getBuildQueueTimeDisplay(idx);
+
+                  return (
+                    <div key={idx} className={`queue-item ${queueTime.isWaiting ? 'queue-item-waiting' : ''}`}>
+                      {BUILDING_NAMES[item.building]} → Level {item.targetLevel}
+                      <span className={queueTime.isWaiting ? 'queue-time-queued' : 'queue-time'}>
+                        {queueTime.label}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             )}
 
             <div className="buildings-grid">
               {Object.entries(nexus.buildings).map(([key, level]) => {
                 const queuedForBuilding = nexus.buildQueue.filter((item) => item.building === key).length;
+                const firstQueuedForBuilding = nexus.buildQueue.find((item) => item.building === key);
+                const firstQueuedForBuildingIndex = nexus.buildQueue.findIndex((item) => item.building === key);
                 const plannedLevel = level + queuedForBuilding;
                 const isUpgrading = nexus.buildQueue.some((item) => item.building === key);
                 const maxLevel = BUILDING_RULES[key]?.maxLevel || 0;
@@ -871,9 +927,17 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
                     {isUpgrading && (
                       <div className="upgrading-status">
                         <span className="upgrading-badge">⚙️ Upgrading...</span>
-                        <span className="queue-time-small">
-                          {formatTime(nexus.buildQueue.find((item) => item.building === key)!.completesAt)}
-                        </span>
+                        {firstQueuedForBuilding && (
+                          <span
+                            className={
+                              firstQueuedForBuildingIndex > 0
+                                ? 'queue-time-small queue-time-queued'
+                                : 'queue-time-small'
+                            }
+                          >
+                            {getBuildQueueTimeDisplay(firstQueuedForBuildingIndex).label}
+                          </span>
+                        )}
                       </div>
                     )}
                     {cost ? (
