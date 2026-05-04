@@ -43,6 +43,7 @@ function matchesCorsOrigin(origin, rule) {
 }
 
 const app = express();
+app.set('trust proxy', 1);
 
 // Middleware
 app.use((req, res, next) => {
@@ -107,13 +108,25 @@ app.get('/readyz', async (req, res) => {
 
 // Rate limiting (disabled in development)
 if (process.env.NODE_ENV === 'production') {
-  const limiter = rateLimit({
-    // 15 minutes
+  const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    // limit each IP to 100 requests per windowMs
-    max: 100,
+    max: Number(process.env.AUTH_RATE_LIMIT_MAX || 30),
+    standardHeaders: true,
+    legacyHeaders: false,
+    skip: (req) => req.method === 'OPTIONS',
+    message: { error: 'Too many login attempts, please try again in a few minutes.' },
   });
-  app.use('/api/', limiter);
+
+  const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: Number(process.env.API_RATE_LIMIT_MAX || 1200),
+    standardHeaders: true,
+    legacyHeaders: false,
+    skip: (req) => req.method === 'OPTIONS',
+  });
+
+  app.use('/api/auth/login', loginLimiter);
+  app.use('/api/', apiLimiter);
 }
 
 // Routes
