@@ -27,13 +27,19 @@ const allowedCorsOrigins = (process.env.CORS_ORIGINS || '')
   .map((v) => v.trim())
   .filter(Boolean);
 
+function normalizeOriginValue(value) {
+  return String(value).trim().replace(/\/+$/, '').toLowerCase();
+}
+
 function matchesCorsOrigin(origin, rule) {
   if (rule === '*') {
     return true;
   }
 
-  const escaped = rule.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
-  return new RegExp(`^${escaped}$`).test(origin);
+  const normalizedOrigin = normalizeOriginValue(origin);
+  const normalizedRule = normalizeOriginValue(rule);
+  const escaped = normalizedRule.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
+  return new RegExp(`^${escaped}$`).test(normalizedOrigin);
 }
 
 const app = express();
@@ -64,15 +70,18 @@ app.use(
         return callback(null, true);
       }
 
+      const normalizedOrigin = normalizeOriginValue(origin);
+      const normalizedAllowedOrigins = allowedCorsOrigins.map((v) => normalizeOriginValue(v));
+
       if (allowedCorsOrigins.length === 0 && process.env.NODE_ENV !== 'production') {
         return callback(null, true);
       }
 
-      if (allowedCorsOrigins.includes(origin)) {
+      if (normalizedAllowedOrigins.includes(normalizedOrigin)) {
         return callback(null, true);
       }
 
-      if (allowedCorsOrigins.some((rule) => matchesCorsOrigin(origin, rule))) {
+      if (allowedCorsOrigins.some((rule) => matchesCorsOrigin(normalizedOrigin, rule))) {
         return callback(null, true);
       }
 
