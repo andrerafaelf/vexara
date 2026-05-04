@@ -16,7 +16,15 @@ npm install
 cp .env.example .env
 ```
 
-Ensure `DATABASE_URL` is set in `.env`.
+Required environment variables:
+
+- `DATABASE_URL`
+- `JWT_SECRET`
+
+Recommended for production:
+
+- `NODE_ENV=production`
+- `CORS_ORIGINS=https://your-client.example.com,https://your-admin.example.com`
 
 ## Database
 
@@ -32,3 +40,12 @@ npm run dev
 ```
 
 Server runs on `http://localhost:3001` by default.
+
+## Health Endpoints
+
+- `GET /healthz` - process is running
+- `GET /readyz` - process can reach PostgreSQL
+
+## Mission Types
+
+The API currently supports `attack` and `scout` missions. `support` is intentionally disabled for alpha until rules are finalized.
