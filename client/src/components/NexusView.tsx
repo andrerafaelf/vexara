@@ -453,6 +453,37 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
     return { label: formatDurationSeconds(remainingSeconds), isWaiting: false };
   };
 
+  const getTrainingQueueTimeDisplay = (index: number) => {
+    const queue = Array.isArray(nexus.trainingQueue) ? nexus.trainingQueue : [];
+    const item = queue[index];
+    if (!item) {
+      return { label: '', isWaiting: false };
+    }
+
+    const now = currentTime.getTime();
+    const endAt = new Date(item.completesAt).getTime();
+
+    if (index > 0) {
+      const startsAt = new Date(queue[index - 1].completesAt).getTime();
+      // The per-entry duration naturally includes amount > 1 because completesAt is batch-based.
+      const ownDurationSeconds = Math.floor((endAt - startsAt) / 1000);
+
+      if (now < startsAt) {
+        return {
+          label: `Queued • ${formatDurationSeconds(ownDurationSeconds)}`,
+          isWaiting: true,
+        };
+      }
+    }
+
+    const remainingSeconds = Math.floor((endAt - now) / 1000);
+    if (remainingSeconds <= 0) {
+      return { label: 'Ready to apply', isWaiting: false };
+    }
+
+    return { label: formatDurationSeconds(remainingSeconds), isWaiting: false };
+  };
+
   const checkTroopRequirements = (troopType: string) => {
     const requirements = TROOP_REQUIREMENTS[troopType];
     if (!requirements) return { canTrain: true, missingRequirements: [] };
@@ -832,12 +863,18 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
             {nexus.trainingQueue.length > 0 && (
               <div className="queue-section">
                 <h4>Training Queue</h4>
-                {nexus.trainingQueue.map((item, idx) => (
-                  <div key={idx} className="queue-item">
-                    {item.amount}x {TROOP_NAMES[item.troopType] || item.troopType}
-                    <span className="queue-time">{formatTime(item.completesAt)}</span>
-                  </div>
-                ))}
+                {nexus.trainingQueue.map((item, idx) => {
+                  const queueTime = getTrainingQueueTimeDisplay(idx);
+
+                  return (
+                    <div key={idx} className={`queue-item ${queueTime.isWaiting ? 'queue-item-waiting' : ''}`}>
+                      {item.amount}x {TROOP_NAMES[item.troopType] || item.troopType}
+                      <span className={queueTime.isWaiting ? 'queue-time-queued' : 'queue-time'}>
+                        {queueTime.label}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             )}
 
@@ -1014,14 +1051,20 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
                 {nexus.trainingQueue.length > 0 && (
                   <div className="queue-section">
                     <h4>🔨 Training Queue</h4>
-                    {nexus.trainingQueue.map((item, idx) => (
-                      <div key={idx} className="queue-item">
-                        <span>
-                          {item.amount}x {TROOP_NAMES[item.troopType] || item.troopType}
-                        </span>
-                        <span className="queue-time">{formatTime(item.completesAt)}</span>
-                      </div>
-                    ))}
+                    {nexus.trainingQueue.map((item, idx) => {
+                      const queueTime = getTrainingQueueTimeDisplay(idx);
+
+                      return (
+                        <div key={idx} className={`queue-item ${queueTime.isWaiting ? 'queue-item-waiting' : ''}`}>
+                          <span>
+                            {item.amount}x {TROOP_NAMES[item.troopType] || item.troopType}
+                          </span>
+                          <span className={queueTime.isWaiting ? 'queue-time-queued' : 'queue-time'}>
+                            {queueTime.label}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
 
