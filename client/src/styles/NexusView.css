@@ -460,6 +460,12 @@
   border: none;
   padding: 0;
   line-height: 1;
+  width: auto;
+  color: #a8dadc;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: help;
   font-size: 14px;
   opacity: 0.7;
@@ -473,6 +479,18 @@
 .building-card p {
   color: #f1faee;
   margin-bottom: 15px;
+}
+
+.building-benefit {
+  color: #a8dadc !important;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: -4px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  background: rgba(15, 52, 96, 0.75);
+  border-left: 3px solid #4caf50;
+  border-radius: 4px;
 }
 
 .building-cost {
@@ -505,17 +523,17 @@
   font-size: 12px;
 }
 
-.building-card button {
+.building-upgrade-button {
   background: #e94560;
   color: white;
   width: 100%;
 }
 
-.building-card button:hover:not(:disabled) {
+.building-upgrade-button:hover:not(:disabled) {
   background: #c73851;
 }
 
-.building-card button:disabled {
+.building-upgrade-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
