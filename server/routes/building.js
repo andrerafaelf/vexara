@@ -8,14 +8,14 @@ const MAX_BUILD_QUEUE = 5;
 
 // Building costs and requirements
 const BUILDING_COSTS = {
-  commandCore: { biomass: 90, alloy: 80, ore: 70, time: 180 },
-  troopFabricator: { biomass: 200, alloy: 170, ore: 90, time: 300 },
-  lifeSupport: { biomass: 80, alloy: 100, ore: 70, time: 240 },
-  storageVault: { biomass: 60, alloy: 50, ore: 40, time: 180 },
-  biomassFarm: { biomass: 50, alloy: 60, ore: 40, time: 180 },
-  alloyForge: { biomass: 65, alloy: 40, ore: 40, time: 180 },
-  oreExtractor: { biomass: 75, alloy: 65, ore: 70, time: 240 },
-  shieldGrid: { biomass: 50, alloy: 100, ore: 20, time: 300 },
+  commandCore: { biomass: 90, alloy: 80, ore: 70, time: 45 },
+  troopFabricator: { biomass: 200, alloy: 170, ore: 90, time: 75 },
+  lifeSupport: { biomass: 80, alloy: 100, ore: 70, time: 60 },
+  storageVault: { biomass: 60, alloy: 50, ore: 40, time: 45 },
+  biomassFarm: { biomass: 50, alloy: 60, ore: 40, time: 45 },
+  alloyForge: { biomass: 65, alloy: 40, ore: 40, time: 45 },
+  oreExtractor: { biomass: 75, alloy: 65, ore: 70, time: 60 },
+  shieldGrid: { biomass: 50, alloy: 100, ore: 20, time: 75 },
 };
 
 const BUILDING_RULES = {

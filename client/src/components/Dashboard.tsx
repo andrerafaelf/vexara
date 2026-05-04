@@ -34,6 +34,21 @@ interface DashboardProps {
   onSelectNexus: (nexus: Nexus) => void;
 }
 
+interface DashboardQuest {
+  id: string;
+  title: string;
+  description: string;
+  completed: boolean;
+}
+
+interface DashboardQuestBatch {
+  id: string;
+  title: string;
+  quests: DashboardQuest[];
+  unlocked: boolean;
+  reward: string;
+}
+
 const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [outgoingAttacks, setOutgoingAttacks] = useState<any[]>([]);
@@ -139,6 +154,134 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
     if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
     if (minutes > 0) return `${minutes}m ${seconds}s`;
     return `${seconds}s`;
+  };
+
+  const getQuestBatches = (nexus: Nexus): DashboardQuestBatch[] => {
+    const assaultTroopers = nexus.troops.assaultTrooper || 0;
+    const reconOperatives = nexus.troops.reconOperative || 0;
+    const skimmerBikes = nexus.troops.skimmerBike || 0;
+    const hasOutgoingStrike = outgoingAttacks.some((attack) => attack.attacker?.nexus === nexus._id);
+
+    const introQuests: DashboardQuest[] = [
+      {
+        id: 'command-core-online',
+        title: 'Power The Nexus',
+        description: 'Upgrade Command Core to Lv1.',
+        completed: nexus.buildings.commandCore >= 1,
+      },
+      {
+        id: 'start-fabrication',
+        title: 'Enable Recruitment',
+        description: 'Upgrade Recruitment Core to Lv1.',
+        completed: nexus.buildings.troopFabricator >= 1,
+      },
+      {
+        id: 'increase-capacity',
+        title: 'Secure Capacity',
+        description: 'Upgrade Storage Vault to Lv2.',
+        completed: nexus.buildings.storageVault >= 2,
+      },
+      {
+        id: 'raise-force',
+        title: 'Field Troops',
+        description: 'Train 5 Assault Troopers.',
+        completed: assaultTroopers >= 5,
+      },
+    ];
+
+    const introComplete = introQuests.every((quest) => quest.completed);
+
+    const intermediateQuests: DashboardQuest[] = [
+      {
+        id: 'fortify-core',
+        title: 'Fortify The Core',
+        description: 'Upgrade Command Core to Lv2.',
+        completed: nexus.buildings.commandCore >= 2,
+      },
+      {
+        id: 'unlock-defenses',
+        title: 'Activate Shield Grid',
+        description: 'Upgrade Shield Grid to Lv1.',
+        completed: nexus.buildings.shieldGrid >= 1,
+      },
+      {
+        id: 'upgrade-biomass-chain',
+        title: 'Expand Biomass Chain',
+        description: 'Upgrade Biomass Farm to Lv2.',
+        completed: nexus.buildings.biomassFarm >= 2,
+      },
+      {
+        id: 'expand-logistics',
+        title: 'Expand Logistics',
+        description: 'Upgrade Alloy Forge to Lv2.',
+        completed: nexus.buildings.alloyForge >= 2,
+      },
+      {
+        id: 'deploy-recon',
+        title: 'Deploy Recon',
+        description: 'Train 1 Recon Operative.',
+        completed: reconOperatives >= 1,
+      },
+    ];
+
+    const intermediateComplete = intermediateQuests.every((quest) => quest.completed);
+
+    const advancedQuests: DashboardQuest[] = [
+      {
+        id: 'command-core-mastery',
+        title: 'Core Mastery',
+        description: 'Upgrade Command Core to Lv4.',
+        completed: nexus.buildings.commandCore >= 4,
+      },
+      {
+        id: 'extractor-specialization',
+        title: 'Extractor Specialization',
+        description: 'Upgrade Ore Extractor to Lv4.',
+        completed: nexus.buildings.oreExtractor >= 4,
+      },
+      {
+        id: 'defense-posture',
+        title: 'Defense Posture',
+        description: 'Upgrade Shield Grid to Lv2.',
+        completed: nexus.buildings.shieldGrid >= 2,
+      },
+      {
+        id: 'fast-raiders',
+        title: 'Fast Raiders',
+        description: 'Train 5 Skimmer Bikes.',
+        completed: skimmerBikes >= 5,
+      },
+      {
+        id: 'first-expedition',
+        title: 'First Expedition',
+        description: 'Launch 1 outgoing strike.',
+        completed: hasOutgoingStrike,
+      },
+    ];
+
+    return [
+      {
+        id: 'intro',
+        title: 'Intro Quests',
+        quests: introQuests,
+        unlocked: true,
+        reward: '+250 Biomass, +250 Alloy, +250 Ore, +5 Assault Troopers',
+      },
+      {
+        id: 'intermediate',
+        title: 'Intermediate Quests',
+        quests: intermediateQuests,
+        unlocked: introComplete,
+        reward: '+900 Biomass, +900 Alloy, +900 Ore, +10 Recon Operatives',
+      },
+      {
+        id: 'advanced',
+        title: 'Advanced Quests',
+        quests: advancedQuests,
+        unlocked: introComplete && intermediateComplete,
+        reward: '+2500 Biomass, +2500 Alloy, +2500 Ore, +20 Skimmer Bikes, +5 Siege Mechs',
+      },
+    ];
   };
 
   return (
@@ -326,6 +469,65 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        <div className="dashboard-card quests-overview">
+          <h3>🎯 Quest Progress</h3>
+
+          <div className="dashboard-quests-grid">
+            {nexuses.map((nexus) => {
+              const questBatches = getQuestBatches(nexus);
+              return (
+                <div key={`quests-${nexus._id}`} className="dashboard-quest-nexus-block">
+                  <div className="dashboard-quest-nexus-header">
+                    <span className="dashboard-quest-nexus-name">{nexus.name}</span>
+                    <button className="dashboard-quest-open-btn" onClick={() => onSelectNexus(nexus)}>
+                      Open
+                    </button>
+                  </div>
+
+                  {questBatches.map((batch) => {
+                    const completedCount = batch.quests.filter((quest) => quest.completed).length;
+                    const batchComplete = completedCount === batch.quests.length;
+                    return (
+                      <div
+                        key={`${nexus._id}-${batch.id}`}
+                        className={`intro-quests ${batch.unlocked ? '' : 'quest-batch-locked'}`}
+                      >
+                        <div className="intro-quests-header">
+                          <h4>{batch.title}</h4>
+                          <span>
+                            {completedCount}/{batch.quests.length}
+                          </span>
+                        </div>
+
+                        <p className="quest-batch-reward">Reward: {batch.reward}</p>
+
+                        {batch.unlocked && batchComplete && <p className="quest-batch-earned">Reward tier earned</p>}
+
+                        {batch.unlocked ? (
+                          batch.quests.map((quest) => (
+                            <div
+                              key={`${nexus._id}-${batch.id}-${quest.id}`}
+                              className={`intro-quest-item ${quest.completed ? 'completed' : ''}`}
+                            >
+                              <span className="intro-quest-icon">{quest.completed ? '✅' : '⬜'}</span>
+                              <div>
+                                <p className="intro-quest-title">{quest.title}</p>
+                                <p className="intro-quest-description">{quest.description}</p>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="quest-batch-lock-note">Complete the previous quest batch to unlock this one.</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

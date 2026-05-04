@@ -9,18 +9,18 @@ const MAX_TRAINING_QUEUE = 100;
 
 // Troop costs
 const TROOP_COSTS = {
-  lancerDrone: { biomass: 50, alloy: 30, ore: 10, population: 1, time: 600 },
-  assaultTrooper: { biomass: 30, alloy: 30, ore: 70, population: 1, time: 900 },
-  breakerUnit: { biomass: 60, alloy: 30, ore: 40, population: 1, time: 840 },
-  reconOperative: { biomass: 100, alloy: 30, ore: 60, population: 1, time: 960 },
-  skimmerBike: { biomass: 125, alloy: 100, ore: 150, population: 3, time: 1500 },
-  siegeMech: { biomass: 125, alloy: 100, ore: 250, population: 4, time: 1800 },
-  bulwarkGuard: { biomass: 80, alloy: 120, ore: 100, population: 2, time: 1200 },
-  suppressorTeam: { biomass: 90, alloy: 80, ore: 90, population: 2, time: 1300 },
-  disruptorUnit: { biomass: 110, alloy: 150, ore: 130, population: 2, time: 1400 },
-  interceptorBike: { biomass: 150, alloy: 120, ore: 180, population: 3, time: 1600 },
-  annihilatorPlatform: { biomass: 200, alloy: 180, ore: 300, population: 5, time: 2400 },
-  overseer: { biomass: 300, alloy: 250, ore: 200, population: 5, time: 3000 },
+  lancerDrone: { biomass: 50, alloy: 30, ore: 10, population: 1, time: 150 },
+  assaultTrooper: { biomass: 30, alloy: 30, ore: 70, population: 1, time: 225 },
+  breakerUnit: { biomass: 60, alloy: 30, ore: 40, population: 1, time: 210 },
+  reconOperative: { biomass: 100, alloy: 30, ore: 60, population: 1, time: 240 },
+  skimmerBike: { biomass: 125, alloy: 100, ore: 150, population: 3, time: 375 },
+  siegeMech: { biomass: 125, alloy: 100, ore: 250, population: 4, time: 450 },
+  bulwarkGuard: { biomass: 80, alloy: 120, ore: 100, population: 2, time: 300 },
+  suppressorTeam: { biomass: 90, alloy: 80, ore: 90, population: 2, time: 325 },
+  disruptorUnit: { biomass: 110, alloy: 150, ore: 130, population: 2, time: 350 },
+  interceptorBike: { biomass: 150, alloy: 120, ore: 180, population: 3, time: 400 },
+  annihilatorPlatform: { biomass: 200, alloy: 180, ore: 300, population: 5, time: 600 },
+  overseer: { biomass: 300, alloy: 250, ore: 200, population: 5, time: 750 },
 };
 
 const TROOP_REQUIREMENTS = {

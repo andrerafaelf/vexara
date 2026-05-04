@@ -125,9 +125,21 @@
   background: #215a8d;
 }
 
+.queue-item-waiting {
+  background: #0f3460;
+  opacity: 0.7;
+  border: 1px dashed #457b9d;
+}
+
 .queue-time {
   color: #e94560;
   font-weight: bold;
+}
+
+.queue-time-queued {
+  color: #457b9d;
+  font-size: 12px;
+  font-style: italic;
 }
 
 .intro-quests {
@@ -656,6 +668,14 @@
   border-radius: 4px;
   margin-bottom: 10px;
   border-left: 3px solid #e94560;
+}
+
+.insuff-resources {
+  border-left-color: #f4a261;
+}
+
+.insuff-resources .requires-label {
+  color: #f4a261;
 }
 
 .requires-label {

@@ -830,7 +830,12 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
                 const cost = isAtMax ? null : getBuildingCost(key, plannedLevel);
                 const { canUpgrade, missingRequirements, atMax } = checkBuildingRequirements(key);
                 const isBuildQueueFull = nexus.buildQueue.length >= MAX_BUILD_QUEUE;
-                const isDisabled = isBuildQueueFull || !canUpgrade || atMax;
+                const hasResources =
+                  !cost ||
+                  (nexus.resources.biomass >= cost.biomass &&
+                    nexus.resources.alloy >= cost.alloy &&
+                    nexus.resources.ore >= cost.ore);
+                const isDisabled = isBuildQueueFull || !canUpgrade || atMax || !hasResources;
                 return (
                   <div
                     key={key}
@@ -891,6 +896,26 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
                             • {req}
                           </p>
                         ))}
+                      </div>
+                    )}
+                    {!hasResources && cost && (
+                      <div className="requirements-missing insuff-resources">
+                        <p className="requires-label">⚠️ Insufficient Resources:</p>
+                        {nexus.resources.biomass < cost.biomass && (
+                          <p className="requirement-item">
+                            • Biomass: {Math.floor(nexus.resources.biomass)}/{cost.biomass}
+                          </p>
+                        )}
+                        {nexus.resources.alloy < cost.alloy && (
+                          <p className="requirement-item">
+                            • Alloy: {Math.floor(nexus.resources.alloy)}/{cost.alloy}
+                          </p>
+                        )}
+                        {nexus.resources.ore < cost.ore && (
+                          <p className="requirement-item">
+                            • Ore: {Math.floor(nexus.resources.ore)}/{cost.ore}
+                          </p>
+                        )}
                       </div>
                     )}
                     <button onClick={() => handleUpgrade(key)} disabled={isDisabled}>

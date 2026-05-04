@@ -1,6 +1,6 @@
 import prisma from '../lib/prisma.js';
 
-const MAP_SIZE = 100;
+const MAP_SIZE = 25;
 const MIN_NEUTRALS = 40;
 const NEUTRALS_PER_CAPTURED = 2;
 const NEUTRALS_PER_PLAYER = 6;

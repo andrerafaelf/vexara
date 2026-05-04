@@ -233,6 +233,10 @@
   grid-column: 1 / -1;
 }
 
+.quests-overview {
+  grid-column: 1 / -1;
+}
+
 .nexuses-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -287,6 +291,128 @@
   color: #f1faee;
 }
 
+.dashboard-quests-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 16px;
+}
+
+.dashboard-quest-nexus-block {
+  background: #0f3460;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.dashboard-quest-nexus-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.dashboard-quest-nexus-name {
+  color: #f1faee;
+  font-weight: bold;
+}
+
+.dashboard-quest-open-btn {
+  background: #1a4971;
+  color: #a8dadc;
+  border-radius: 4px;
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.dashboard-quest-open-btn:hover {
+  background: #245d8d;
+  color: #fff;
+}
+
+.intro-quests {
+  background: #0f3460;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}
+
+.quest-batch-locked {
+  opacity: 0.7;
+  border: 2px dashed #457b9d;
+}
+
+.intro-quests-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.intro-quests-header h4 {
+  color: #a8dadc;
+  margin: 0;
+}
+
+.intro-quests-header span {
+  color: #4caf50;
+  font-weight: bold;
+}
+
+.quest-batch-reward {
+  margin: 0 0 10px 0;
+  color: #f1faee;
+  font-size: 12px;
+  background: #1a4971;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.quest-batch-earned {
+  margin: 0 0 10px 0;
+  color: #4caf50;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.intro-quest-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px;
+  background: #1a4971;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.intro-quest-item:last-child {
+  margin-bottom: 0;
+}
+
+.intro-quest-item.completed {
+  border-left: 3px solid #4caf50;
+}
+
+.intro-quest-icon {
+  line-height: 1.2;
+}
+
+.intro-quest-title {
+  color: #f1faee;
+  font-weight: bold;
+  margin: 0;
+}
+
+.intro-quest-description {
+  color: #a8dadc;
+  margin: 2px 0 0 0;
+  font-size: 12px;
+}
+
+.quest-batch-lock-note {
+  margin: 0;
+  color: #a8dadc;
+  font-size: 13px;
+}
+
 @media (max-width: 768px) {
   .quick-actions-card {
     grid-column: span 1;
@@ -297,6 +423,10 @@
   }
 
   .nexuses-list {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-quests-grid {
     grid-template-columns: 1fr;
   }
 }

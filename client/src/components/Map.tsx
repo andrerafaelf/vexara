@@ -407,7 +407,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
         <h2>World Map</h2>
         <div className="map-info">
           <span>
-            Viewing: ({centerX}|{centerY}) | Map Size: 100x100 (10,000 hexes)
+            Viewing: ({centerX}|{centerY}) | Map Size: 25x25 (625 hexes)
           </span>
           <span className="map-hint">💡 Drag to pan • Arrow keys to navigate • Jump to coordinates</span>
         </div>
