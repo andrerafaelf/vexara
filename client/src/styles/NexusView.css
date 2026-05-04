@@ -43,6 +43,18 @@
   align-items: flex-start;
 }
 
+.resource-main {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 1px;
+}
+
+.resource-max {
+  font-size: 0.72em;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
 .production-rate {
   font-size: 11px;
   color: #4caf50;

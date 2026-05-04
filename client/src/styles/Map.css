@@ -297,6 +297,13 @@
   font-weight: bold;
 }
 
+.resource-max-inline {
+  font-size: 0.8em;
+  font-weight: 600;
+  opacity: 0.8;
+  margin-left: 2px;
+}
+
 .nexus-actions {
   margin-top: 20px;
 }

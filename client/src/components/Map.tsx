@@ -522,15 +522,36 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
                 <>
                   <div className="detail-line">
                     <span>Biomass:</span>
-                    <span>{selectedNexus.resources.biomass}</span>
+                    <span>
+                      {Math.floor(selectedNexus.resources.biomass).toLocaleString()}
+                      {selectedNexus.buildings?.storageVault !== undefined && (
+                        <span className="resource-max-inline">
+                          /{Math.floor(1000 * Math.pow(1.3, selectedNexus.buildings.storageVault)).toLocaleString()}
+                        </span>
+                      )}
+                    </span>
                   </div>
                   <div className="detail-line">
                     <span>Alloy:</span>
-                    <span>{selectedNexus.resources.alloy}</span>
+                    <span>
+                      {Math.floor(selectedNexus.resources.alloy).toLocaleString()}
+                      {selectedNexus.buildings?.storageVault !== undefined && (
+                        <span className="resource-max-inline">
+                          /{Math.floor(1000 * Math.pow(1.3, selectedNexus.buildings.storageVault)).toLocaleString()}
+                        </span>
+                      )}
+                    </span>
                   </div>
                   <div className="detail-line">
                     <span>Ore:</span>
-                    <span>{selectedNexus.resources.ore}</span>
+                    <span>
+                      {Math.floor(selectedNexus.resources.ore).toLocaleString()}
+                      {selectedNexus.buildings?.storageVault !== undefined && (
+                        <span className="resource-max-inline">
+                          /{Math.floor(1000 * Math.pow(1.3, selectedNexus.buildings.storageVault)).toLocaleString()}
+                        </span>
+                      )}
+                    </span>
                   </div>
                   {selectedNexus.population && (
                     <div className="detail-line">

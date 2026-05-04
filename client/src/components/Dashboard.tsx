@@ -87,6 +87,8 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
     };
   };
 
+  const getStorageCapacity = (nexus: Nexus) => Math.floor(1000 * Math.pow(1.3, nexus.buildings.storageVault));
+
   const totalProduction = nexuses.reduce(
     (sum, v) => {
       const prod = calculateProduction(v);
@@ -99,11 +101,20 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
     { biomass: 0, alloy: 0, ore: 0 },
   );
 
+  const totalResources = nexuses.reduce(
+    (sum, v) => ({
+      biomass: sum.biomass + Math.floor(v.resources.biomass),
+      alloy: sum.alloy + Math.floor(v.resources.alloy),
+      ore: sum.ore + Math.floor(v.resources.ore),
+    }),
+    { biomass: 0, alloy: 0, ore: 0 },
+  );
+
   const totalResourceCapacity = nexuses.reduce(
     (sum, v) => ({
-      biomass: sum.biomass + Math.floor(1000 * Math.pow(1.3, v.buildings.storageVault)),
-      alloy: sum.alloy + Math.floor(1000 * Math.pow(1.3, v.buildings.storageVault)),
-      ore: sum.ore + Math.floor(1000 * Math.pow(1.3, v.buildings.storageVault)),
+      biomass: sum.biomass + getStorageCapacity(v),
+      alloy: sum.alloy + getStorageCapacity(v),
+      ore: sum.ore + getStorageCapacity(v),
     }),
     { biomass: 0, alloy: 0, ore: 0 },
   );
@@ -302,7 +313,10 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
               <span className="resource-icon">🧬</span>
               <span className="resource-label">Biomass</span>
               <span className="resource-value">
-                {totalResourceCapacity.biomass.toLocaleString()}
+                <span className="resource-main">
+                  {totalResources.biomass.toLocaleString()}
+                  <span className="resource-max">/{totalResourceCapacity.biomass.toLocaleString()}</span>
+                </span>
                 <span className="production-rate">+{totalProduction.biomass}/h</span>
               </span>
             </div>
@@ -310,7 +324,10 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
               <span className="resource-icon">⚙️</span>
               <span className="resource-label">Alloy</span>
               <span className="resource-value">
-                {totalResourceCapacity.alloy.toLocaleString()}
+                <span className="resource-main">
+                  {totalResources.alloy.toLocaleString()}
+                  <span className="resource-max">/{totalResourceCapacity.alloy.toLocaleString()}</span>
+                </span>
                 <span className="production-rate">+{totalProduction.alloy}/h</span>
               </span>
             </div>
@@ -318,7 +335,10 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
               <span className="resource-icon">💎</span>
               <span className="resource-label">Ore</span>
               <span className="resource-value">
-                {totalResourceCapacity.ore.toLocaleString()}
+                <span className="resource-main">
+                  {totalResources.ore.toLocaleString()}
+                  <span className="resource-max">/{totalResourceCapacity.ore.toLocaleString()}</span>
+                </span>
                 <span className="production-rate">+{totalProduction.ore}/h</span>
               </span>
             </div>
@@ -463,9 +483,18 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
                   </span>
                 </div>
                 <div className="nexus-summary-resources">
-                  <span>🧬 {Math.floor(nexus.resources.biomass)}</span>
-                  <span>⚙️ {Math.floor(nexus.resources.alloy)}</span>
-                  <span>💎 {Math.floor(nexus.resources.ore)}</span>
+                  <span>
+                    🧬 {Math.floor(nexus.resources.biomass).toLocaleString()}
+                    <span className="resource-max">/{getStorageCapacity(nexus).toLocaleString()}</span>
+                  </span>
+                  <span>
+                    ⚙️ {Math.floor(nexus.resources.alloy).toLocaleString()}
+                    <span className="resource-max">/{getStorageCapacity(nexus).toLocaleString()}</span>
+                  </span>
+                  <span>
+                    💎 {Math.floor(nexus.resources.ore).toLocaleString()}
+                    <span className="resource-max">/{getStorageCapacity(nexus).toLocaleString()}</span>
+                  </span>
                 </div>
               </div>
             ))}

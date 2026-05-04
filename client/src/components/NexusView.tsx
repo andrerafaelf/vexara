@@ -662,6 +662,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
   };
 
   const production = calculateProduction();
+  const storageCapacity = Math.floor(1000 * Math.pow(1.3, nexus.buildings.storageVault));
   const questBatches = getQuestBatches();
 
   return (
@@ -672,21 +673,30 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
           <div className="resource" title="Biomass">
             <span className="resource-icon">🧬</span>
             <span className="resource-amount">
-              {Math.floor(nexus.resources.biomass)}
+              <span className="resource-main">
+                {Math.floor(nexus.resources.biomass).toLocaleString()}
+                <span className="resource-max">/{storageCapacity.toLocaleString()}</span>
+              </span>
               <span className="production-rate">+{production.biomass}/h</span>
             </span>
           </div>
           <div className="resource" title="Alloy">
             <span className="resource-icon">⚙️</span>
             <span className="resource-amount">
-              {Math.floor(nexus.resources.alloy)}
+              <span className="resource-main">
+                {Math.floor(nexus.resources.alloy).toLocaleString()}
+                <span className="resource-max">/{storageCapacity.toLocaleString()}</span>
+              </span>
               <span className="production-rate">+{production.alloy}/h</span>
             </span>
           </div>
           <div className="resource" title="Ore">
             <span className="resource-icon">💎</span>
             <span className="resource-amount">
-              {Math.floor(nexus.resources.ore)}
+              <span className="resource-main">
+                {Math.floor(nexus.resources.ore).toLocaleString()}
+                <span className="resource-max">/{storageCapacity.toLocaleString()}</span>
+              </span>
               <span className="production-rate">+{production.ore}/h</span>
             </span>
           </div>

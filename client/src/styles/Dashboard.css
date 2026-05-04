@@ -80,6 +80,18 @@
   align-items: flex-end;
 }
 
+.resource-main {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 1px;
+}
+
+.resource-max {
+  font-size: 0.72em;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
 .production-rate {
   font-size: 11px;
   color: #4caf50;
@@ -298,6 +310,10 @@
   gap: 12px;
   font-size: 14px;
   color: #f1faee;
+}
+
+.nexus-summary-resources .resource-max {
+  font-size: 0.78em;
 }
 
 .dashboard-quests-grid {
