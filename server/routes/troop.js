@@ -6,40 +6,23 @@ import { parsePositiveInt } from '../utils/validation.js';
 
 const router = express.Router();
 const MAX_TRAINING_QUEUE = 100;
-const TRAINING_TIME_MULTIPLIER = 0.7;
 
-// Troop costs
+// Training times (seconds per unit).
+// Basic/mid-tier troops are roughly half the original baseline.
+// Heavy strategic units (Siege Mech, Annihilator Platform, Overseer) are intentionally much longer.
 const TROOP_COSTS = {
-  lancerDrone: { biomass: 50, alloy: 30, ore: 10, population: 1, time: Math.round(150 * TRAINING_TIME_MULTIPLIER) },
-  assaultTrooper: { biomass: 30, alloy: 30, ore: 70, population: 1, time: Math.round(225 * TRAINING_TIME_MULTIPLIER) },
-  breakerUnit: { biomass: 60, alloy: 30, ore: 40, population: 1, time: Math.round(210 * TRAINING_TIME_MULTIPLIER) },
-  reconOperative: { biomass: 100, alloy: 30, ore: 60, population: 1, time: Math.round(240 * TRAINING_TIME_MULTIPLIER) },
-  skimmerBike: { biomass: 125, alloy: 100, ore: 150, population: 3, time: Math.round(375 * TRAINING_TIME_MULTIPLIER) },
-  siegeMech: { biomass: 125, alloy: 100, ore: 250, population: 4, time: Math.round(450 * TRAINING_TIME_MULTIPLIER) },
-  bulwarkGuard: { biomass: 80, alloy: 120, ore: 100, population: 2, time: Math.round(300 * TRAINING_TIME_MULTIPLIER) },
-  suppressorTeam: { biomass: 90, alloy: 80, ore: 90, population: 2, time: Math.round(325 * TRAINING_TIME_MULTIPLIER) },
-  disruptorUnit: {
-    biomass: 110,
-    alloy: 150,
-    ore: 130,
-    population: 2,
-    time: Math.round(350 * TRAINING_TIME_MULTIPLIER),
-  },
-  interceptorBike: {
-    biomass: 150,
-    alloy: 120,
-    ore: 180,
-    population: 3,
-    time: Math.round(400 * TRAINING_TIME_MULTIPLIER),
-  },
-  annihilatorPlatform: {
-    biomass: 200,
-    alloy: 180,
-    ore: 300,
-    population: 5,
-    time: Math.round(600 * TRAINING_TIME_MULTIPLIER),
-  },
-  overseer: { biomass: 300, alloy: 250, ore: 200, population: 5, time: Math.round(750 * TRAINING_TIME_MULTIPLIER) },
+  lancerDrone: { biomass: 50, alloy: 30, ore: 10, population: 1, time: 53 },
+  assaultTrooper: { biomass: 30, alloy: 30, ore: 70, population: 1, time: 79 },
+  breakerUnit: { biomass: 60, alloy: 30, ore: 40, population: 1, time: 74 },
+  reconOperative: { biomass: 100, alloy: 30, ore: 60, population: 1, time: 84 },
+  skimmerBike: { biomass: 125, alloy: 100, ore: 150, population: 3, time: 131 },
+  siegeMech: { biomass: 125, alloy: 100, ore: 250, population: 4, time: 600 },
+  bulwarkGuard: { biomass: 80, alloy: 120, ore: 100, population: 2, time: 105 },
+  suppressorTeam: { biomass: 90, alloy: 80, ore: 90, population: 2, time: 114 },
+  disruptorUnit: { biomass: 110, alloy: 150, ore: 130, population: 2, time: 123 },
+  interceptorBike: { biomass: 150, alloy: 120, ore: 180, population: 3, time: 140 },
+  annihilatorPlatform: { biomass: 200, alloy: 180, ore: 300, population: 5, time: 900 },
+  overseer: { biomass: 300, alloy: 250, ore: 200, population: 5, time: 1800 },
 };
 
 const TROOP_REQUIREMENTS = {

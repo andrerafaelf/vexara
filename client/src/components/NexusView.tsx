@@ -244,18 +244,18 @@ const STORAGE_GROWTH = 1.3;
 const SHIELD_BONUS_PER_LEVEL = 0.02;
 
 const TROOP_COSTS: { [key: string]: any } = {
-  assaultTrooper: { biomass: 30, alloy: 30, ore: 70, population: 1, time: 158 },
-  lancerDrone: { biomass: 50, alloy: 30, ore: 10, population: 1, time: 105 },
-  breakerUnit: { biomass: 60, alloy: 30, ore: 40, population: 1, time: 147 },
-  reconOperative: { biomass: 100, alloy: 30, ore: 60, population: 1, time: 168 },
-  skimmerBike: { biomass: 125, alloy: 100, ore: 150, population: 3, time: 263 },
-  siegeMech: { biomass: 125, alloy: 100, ore: 250, population: 4, time: 315 },
-  bulwarkGuard: { biomass: 80, alloy: 120, ore: 100, population: 2, time: 210 },
-  suppressorTeam: { biomass: 90, alloy: 80, ore: 90, population: 2, time: 228 },
-  disruptorUnit: { biomass: 110, alloy: 150, ore: 130, population: 2, time: 245 },
-  interceptorBike: { biomass: 150, alloy: 120, ore: 180, population: 3, time: 280 },
-  annihilatorPlatform: { biomass: 200, alloy: 180, ore: 300, population: 5, time: 420 },
-  overseer: { biomass: 300, alloy: 250, ore: 200, population: 5, time: 525 },
+  assaultTrooper: { biomass: 30, alloy: 30, ore: 70, population: 1, time: 79 },
+  lancerDrone: { biomass: 50, alloy: 30, ore: 10, population: 1, time: 53 },
+  breakerUnit: { biomass: 60, alloy: 30, ore: 40, population: 1, time: 74 },
+  reconOperative: { biomass: 100, alloy: 30, ore: 60, population: 1, time: 84 },
+  skimmerBike: { biomass: 125, alloy: 100, ore: 150, population: 3, time: 131 },
+  siegeMech: { biomass: 125, alloy: 100, ore: 250, population: 4, time: 600 },
+  bulwarkGuard: { biomass: 80, alloy: 120, ore: 100, population: 2, time: 105 },
+  suppressorTeam: { biomass: 90, alloy: 80, ore: 90, population: 2, time: 114 },
+  disruptorUnit: { biomass: 110, alloy: 150, ore: 130, population: 2, time: 123 },
+  interceptorBike: { biomass: 150, alloy: 120, ore: 180, population: 3, time: 140 },
+  annihilatorPlatform: { biomass: 200, alloy: 180, ore: 300, population: 5, time: 900 },
+  overseer: { biomass: 300, alloy: 250, ore: 200, population: 5, time: 1800 },
 };
 
 interface ToastMessage {
@@ -357,7 +357,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
 
     try {
       await upgradeBuilding(nexus._id, building);
-      showToast(`${BUILDING_NAMES[building]} upgrade started!`, 'success');
+      showToast(`${BUILDING_NAMES[building]} upgrade added to queue.`, 'info');
       onUpdate();
     } catch (err: any) {
       showToast(err.response?.data?.error || 'Error upgrading building', 'error');
@@ -416,7 +416,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
 
     try {
       await trainTroops(nexus._id, troopType, amount);
-      showToast(`Training ${amount}x ${TROOP_NAMES[troopType]} started!`, 'success');
+      showToast(`${amount}x ${TROOP_NAMES[troopType]} added to training queue.`, 'info');
       setTrainAmount({ ...trainAmount, [troopType]: '' });
       onUpdate();
     } catch (err: any) {
@@ -729,6 +729,11 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
   };
 
   const getQuestBatches = (): QuestBatch[] => {
+    // A batch that has had its reward claimed is permanently complete — quests inside it
+    // should show as done even if live state (e.g. troops lost in combat) no longer meets the condition.
+    const claimedBatches = new Set<string>(Array.isArray(nexus.questRewardClaims) ? nexus.questRewardClaims : []);
+    const done = (batchId: string, condition: boolean) => claimedBatches.has(batchId) || condition;
+
     const assaultTroopers = nexus.troops.assaultTrooper || 0;
     const reconOperatives = nexus.troops.reconOperative || 0;
     const skimmerBikes = nexus.troops.skimmerBike || 0;
@@ -738,95 +743,96 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
         id: 'command-core-online',
         title: 'Power The Nexus',
         description: 'Upgrade Command Core to Lv1.',
-        completed: nexus.buildings.commandCore >= 1,
+        completed: done('intro', nexus.buildings.commandCore >= 1),
       },
       {
         id: 'start-fabrication',
         title: 'Enable Recruitment',
         description: 'Upgrade Recruitment Core to Lv1.',
-        completed: nexus.buildings.troopFabricator >= 1,
+        completed: done('intro', nexus.buildings.troopFabricator >= 1),
       },
       {
         id: 'increase-capacity',
         title: 'Secure Capacity',
         description: 'Upgrade Storage Vault to Lv2.',
-        completed: nexus.buildings.storageVault >= 2,
+        completed: done('intro', nexus.buildings.storageVault >= 2),
       },
       {
         id: 'raise-force',
         title: 'Field Troops',
         description: 'Train 5 Assault Troopers.',
-        completed: assaultTroopers >= 5,
+        completed: done('intro', assaultTroopers >= 5),
       },
     ];
 
-    const introComplete = introQuests.every((quest) => quest.completed);
+    const introComplete = claimedBatches.has('intro') || introQuests.every((quest) => quest.completed);
 
     const intermediateQuests: IntroQuest[] = [
       {
         id: 'fortify-core',
         title: 'Fortify The Core',
         description: 'Upgrade Command Core to Lv3.',
-        completed: nexus.buildings.commandCore >= 3,
+        completed: done('intermediate', nexus.buildings.commandCore >= 3),
       },
       {
         id: 'unlock-defenses',
         title: 'Activate Shield Grid',
         description: 'Upgrade Shield Grid to Lv1.',
-        completed: nexus.buildings.shieldGrid >= 1,
+        completed: done('intermediate', nexus.buildings.shieldGrid >= 1),
       },
       {
         id: 'upgrade-biomass-chain',
         title: 'Expand Biomass Chain',
         description: 'Upgrade Biomass Farm to Lv2.',
-        completed: nexus.buildings.biomassFarm >= 2,
+        completed: done('intermediate', nexus.buildings.biomassFarm >= 2),
       },
       {
         id: 'expand-logistics',
         title: 'Expand Logistics',
         description: 'Upgrade Alloy Forge to Lv2.',
-        completed: nexus.buildings.alloyForge >= 2,
+        completed: done('intermediate', nexus.buildings.alloyForge >= 2),
       },
       {
         id: 'deploy-recon',
         title: 'Deploy Recon',
         description: 'Train 1 Recon Operative.',
-        completed: reconOperatives >= 1,
+        completed: done('intermediate', reconOperatives >= 1),
       },
     ];
 
-    const intermediateComplete = intermediateQuests.every((quest) => quest.completed);
+    const intermediateComplete =
+      claimedBatches.has('intermediate') || intermediateQuests.every((quest) => quest.completed);
 
     const advancedQuests: IntroQuest[] = [
       {
         id: 'command-core-mastery',
         title: 'Core Mastery',
         description: 'Upgrade Command Core to Lv4.',
-        completed: nexus.buildings.commandCore >= 4,
+        completed: done('advanced', nexus.buildings.commandCore >= 4),
       },
       {
         id: 'extractor-specialization',
         title: 'Extractor Specialization',
         description: 'Upgrade Ore Extractor to Lv4.',
-        completed: nexus.buildings.oreExtractor >= 4,
+        completed: done('advanced', nexus.buildings.oreExtractor >= 4),
       },
       {
         id: 'defense-posture',
         title: 'Defense Posture',
         description: 'Upgrade Shield Grid to Lv2.',
-        completed: nexus.buildings.shieldGrid >= 2,
+        completed: done('advanced', nexus.buildings.shieldGrid >= 2),
       },
       {
         id: 'fast-raiders',
         title: 'Fast Raiders',
         description: 'Train 5 Skimmer Bikes.',
-        completed: skimmerBikes >= 5,
+        completed: done('advanced', skimmerBikes >= 5),
       },
       {
         id: 'first-expedition',
         title: 'First Expedition',
         description: 'Launch 1 outgoing strike.',
-        completed: outgoingAttacks.length > 0,
+        completed: done('advanced', outgoingAttacks.length > 0),
       },
     ];
 

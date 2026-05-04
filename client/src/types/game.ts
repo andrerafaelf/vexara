@@ -45,6 +45,7 @@ export interface Nexus {
   };
   buildQueue: BuildQueueItem[];
   trainingQueue: TrainingQueueItem[];
+  questRewardClaims?: string[];
   lastResourceUpdate: Date;
   points: number;
   control?: number;
