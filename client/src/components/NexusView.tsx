@@ -284,6 +284,10 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
     setToast({ message, type });
   };
 
+  const handleInfoTap = (description: string) => {
+    showToast(description, 'info');
+  };
+
   useEffect(() => {
     // Update current time every second for real-time countdown
     const timeInterval = setInterval(() => {
@@ -954,9 +958,15 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
                     )}
                     <div className="building-header">
                       <h4>{BUILDING_NAMES[key]}</h4>
-                      <span className="building-info" title={BUILDING_DESCRIPTIONS[key]}>
+                      <button
+                        type="button"
+                        className="building-info"
+                        title={BUILDING_DESCRIPTIONS[key]}
+                        aria-label={`${BUILDING_NAMES[key]} info`}
+                        onClick={() => handleInfoTap(BUILDING_DESCRIPTIONS[key])}
+                      >
                         ℹ️
-                      </span>
+                      </button>
                     </div>
                     <p>
                       Level: {level} / {maxLevel}
@@ -1098,9 +1108,15 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
                           )}
                           <div className="troop-header">
                             <h5>{TROOP_NAMES[type]}</h5>
-                            <span className="troop-info" title={TROOP_DESCRIPTIONS[type]}>
+                            <button
+                              type="button"
+                              className="troop-info"
+                              title={TROOP_DESCRIPTIONS[type]}
+                              aria-label={`${TROOP_NAMES[type]} info`}
+                              onClick={() => handleInfoTap(TROOP_DESCRIPTIONS[type])}
+                            >
                               ℹ️
-                            </span>
+                            </button>
                           </div>
                           <div className="train-costs">
                             <span>🧬 {costs.biomass}</span>
