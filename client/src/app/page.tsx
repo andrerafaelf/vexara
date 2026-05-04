@@ -114,10 +114,10 @@ export default function Home() {
           <button className="nav-btn active" onClick={() => router.push('/')}>
             📊 Dashboard
           </button>
-          <button className="nav-btn" onClick={() => router.push('/map')}>
+          <button className="nav-btn" onClick={() => router.push('/starfield')}>
             🗺️ Starfield
           </button>
-          <button className="nav-btn" onClick={() => router.push('/reports')}>
+          <button className="nav-btn" onClick={() => router.push('/combat-logs')}>
             📜 Combat Logs
           </button>
         </div>
@@ -144,7 +144,7 @@ export default function Home() {
             className="nav-btn"
             onClick={() => {
               setIsMobileMenuOpen(false);
-              router.push('/map');
+              router.push('/starfield');
             }}
           >
             🗺️ Starfield
@@ -153,7 +153,7 @@ export default function Home() {
             className="nav-btn"
             onClick={() => {
               setIsMobileMenuOpen(false);
-              router.push('/reports');
+              router.push('/combat-logs');
             }}
           >
             📜 Combat Logs

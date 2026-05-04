@@ -9,7 +9,7 @@ import { Nexus } from '@/types/game';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
-export default function MapPage() {
+export default function StarfieldPage() {
   const [nexuses, setVillages] = useState<Nexus[]>([]);
   const [selectedNexus, setSelectedNexus] = useState<Nexus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -82,7 +82,7 @@ export default function MapPage() {
             📊 Dashboard
           </button>
           <button className="nav-btn active">🗺️ Starfield</button>
-          <button className="nav-btn" onClick={() => router.push('/reports')}>
+          <button className="nav-btn" onClick={() => router.push('/combat-logs')}>
             📜 Combat Logs
           </button>
         </div>
@@ -118,7 +118,7 @@ export default function MapPage() {
             className="nav-btn"
             onClick={() => {
               setIsMobileMenuOpen(false);
-              router.push('/reports');
+              router.push('/combat-logs');
             }}
           >
             📜 Combat Logs

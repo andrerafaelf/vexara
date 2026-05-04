@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { checkBuildQueue, checkTrainingQueue, getOutgoingAttacks, trainTroops, upgradeBuilding } from '../services/api';
 import '../styles/NexusView.css';
 import { Nexus } from '../types/game';
+import StarfieldMap from './Map';
 import Toast from './Toast';
 
 // Import troop images
@@ -59,14 +60,14 @@ const BUILDING_DESCRIPTIONS: { [key: string]: string } = {
 };
 
 const BUILDING_COSTS: { [key: string]: any } = {
-  commandCore: { biomass: 90, alloy: 80, ore: 70, time: 180 },
-  troopFabricator: { biomass: 200, alloy: 170, ore: 90, time: 300 },
-  lifeSupport: { biomass: 80, alloy: 100, ore: 70, time: 240 },
-  storageVault: { biomass: 60, alloy: 50, ore: 40, time: 180 },
-  biomassFarm: { biomass: 50, alloy: 60, ore: 40, time: 180 },
-  alloyForge: { biomass: 65, alloy: 40, ore: 40, time: 180 },
-  oreExtractor: { biomass: 75, alloy: 65, ore: 70, time: 240 },
-  shieldGrid: { biomass: 50, alloy: 100, ore: 20, time: 300 },
+  commandCore: { biomass: 90, alloy: 80, ore: 70, time: 45 },
+  troopFabricator: { biomass: 200, alloy: 170, ore: 90, time: 75 },
+  lifeSupport: { biomass: 80, alloy: 100, ore: 70, time: 60 },
+  storageVault: { biomass: 60, alloy: 50, ore: 40, time: 45 },
+  biomassFarm: { biomass: 50, alloy: 60, ore: 40, time: 45 },
+  alloyForge: { biomass: 65, alloy: 40, ore: 40, time: 45 },
+  oreExtractor: { biomass: 75, alloy: 65, ore: 70, time: 60 },
+  shieldGrid: { biomass: 50, alloy: 100, ore: 20, time: 75 },
 };
 
 const BUILDING_RULES: {
@@ -735,6 +736,18 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
               <p>Influence: {nexus.points}</p>
             </div>
 
+            {nexus.buildQueue.length > 0 && (
+              <div className="queue-section">
+                <h4>Fabrication Queue</h4>
+                {nexus.buildQueue.map((item, idx) => (
+                  <div key={idx} className="queue-item">
+                    {BUILDING_NAMES[item.building]} → Level {item.targetLevel}
+                    <span className="queue-time">{formatTime(item.completesAt)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {questBatches.map((batch) => {
               const completedCount = batch.quests.filter((quest) => quest.completed).length;
               const batchComplete = completedCount === batch.quests.length;
@@ -767,18 +780,6 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
                 </div>
               );
             })}
-
-            {nexus.buildQueue.length > 0 && (
-              <div className="queue-section">
-                <h4>Fabrication Queue</h4>
-                {nexus.buildQueue.map((item, idx) => (
-                  <div key={idx} className="queue-item">
-                    {BUILDING_NAMES[item.building]} → Level {item.targetLevel}
-                    <span className="queue-time">{formatTime(item.completesAt)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
 
             {nexus.trainingQueue.length > 0 && (
               <div className="queue-section">
@@ -1045,11 +1046,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
 
         {activeTab === 'map' && (
           <div className="map-tab">
-            <h3>Starfield</h3>
-            <p>Starfield functionality coming soon...</p>
-            <p>
-              Your nexus is at: ({nexus.x}|{nexus.y})
-            </p>
+            <StarfieldMap currentNexus={nexus} onRefresh={onUpdate} />
           </div>
         )}
       </div>
