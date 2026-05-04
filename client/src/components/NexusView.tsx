@@ -272,20 +272,31 @@ interface QuestBatch {
   reward: string;
 }
 
+interface InfoModalState {
+  title: string;
+  description: string;
+}
+
 const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'buildings' | 'troops' | 'map'>('overview');
-  const [trainAmount, setTrainAmount] = useState<{ [key: string]: number }>({});
+  const [trainAmount, setTrainAmount] = useState<{ [key: string]: string }>({});
   const [currentTime, setCurrentTime] = useState(new Date());
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const [outgoingAttacks, setOutgoingAttacks] = useState<any[]>([]);
   const [selectedAttack, setSelectedAttack] = useState<any | null>(null);
+  const [infoModal, setInfoModal] = useState<InfoModalState | null>(null);
 
   const showToast = (message: string, type: 'success' | 'error' | 'info') => {
     setToast({ message, type });
   };
 
-  const handleInfoTap = (description: string) => {
-    showToast(description, 'info');
+  const handleInfoTap = (title: string, description: string) => {
+    setInfoModal({ title, description });
+  };
+
+  const handleTrainAmountChange = (troopType: string, value: string) => {
+    const digitsOnly = value.replace(/\D/g, '');
+    setTrainAmount((prev) => ({ ...prev, [troopType]: digitsOnly }));
   };
 
   useEffect(() => {
@@ -353,7 +364,13 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
       return;
     }
 
-    const amount = trainAmount[troopType] || 1;
+    const rawAmount = trainAmount[troopType] ?? '';
+    const amount = rawAmount === '' ? 1 : Number.parseInt(rawAmount, 10);
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      showToast('Enter a troop amount greater than 0', 'error');
+      return;
+    }
 
     // Check requirements
     const requirements = TROOP_REQUIREMENTS[troopType];
@@ -394,7 +411,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
     try {
       await trainTroops(nexus._id, troopType, amount);
       showToast(`Training ${amount}x ${TROOP_NAMES[troopType]} started!`, 'success');
-      setTrainAmount({ ...trainAmount, [troopType]: 1 });
+      setTrainAmount({ ...trainAmount, [troopType]: '' });
       onUpdate();
     } catch (err: any) {
       showToast(err.response?.data?.error || 'Error training troops', 'error');
@@ -742,6 +759,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
   const production = calculateProduction();
   const storageCapacity = Math.floor(1000 * Math.pow(1.3, nexus.buildings.storageVault));
   const questBatches = getQuestBatches();
+  const currentTroops = Object.entries(nexus.troops).filter(([, count]) => Number(count) > 0);
 
   return (
     <div className="nexus-view">
@@ -963,7 +981,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
                         className="building-info"
                         title={BUILDING_DESCRIPTIONS[key]}
                         aria-label={`${BUILDING_NAMES[key]} info`}
-                        onClick={() => handleInfoTap(BUILDING_DESCRIPTIONS[key])}
+                        onClick={() => handleInfoTap(BUILDING_NAMES[key], BUILDING_DESCRIPTIONS[key])}
                       >
                         ℹ️
                       </button>
@@ -1080,14 +1098,18 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
 
                 <div className="troops-current">
                   <h4>Current Troops</h4>
-                  <div className="troop-list">
-                    {Object.entries(nexus.troops).map(([type, count]) => (
-                      <div key={type} className="troop-item">
-                        <span className="troop-name">{TROOP_NAMES[type] || type}</span>
-                        <span className="troop-count">{count}</span>
-                      </div>
-                    ))}
-                  </div>
+                  {currentTroops.length > 0 ? (
+                    <div className="troop-list">
+                      {currentTroops.map(([type, count]) => (
+                        <div key={type} className="troop-item">
+                          <span className="troop-name">{TROOP_NAMES[type] || type}</span>
+                          <span className="troop-count">{count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="empty-state">No troops stationed here yet.</p>
+                  )}
                 </div>
 
                 <div className="troops-train">
@@ -1113,7 +1135,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
                               className="troop-info"
                               title={TROOP_DESCRIPTIONS[type]}
                               aria-label={`${TROOP_NAMES[type]} info`}
-                              onClick={() => handleInfoTap(TROOP_DESCRIPTIONS[type])}
+                              onClick={() => handleInfoTap(TROOP_NAMES[type], TROOP_DESCRIPTIONS[type])}
                             >
                               ℹ️
                             </button>
@@ -1145,12 +1167,13 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
                           )}
                           <div className="train-controls">
                             <input
-                              type="number"
-                              min="1"
-                              value={trainAmount[type] || 1}
-                              onChange={(e) =>
-                                setTrainAmount({ ...trainAmount, [type]: parseInt(e.target.value) || 1 })
-                              }
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              placeholder="1"
+                              value={trainAmount[type] ?? ''}
+                              onChange={(e) => handleTrainAmountChange(type, e.target.value)}
+                              aria-label={`${TROOP_NAMES[type]} amount`}
                               disabled={isTrainDisabled}
                             />
                             <button onClick={() => handleTrainTroops(type)} disabled={isTrainDisabled}>
@@ -1174,6 +1197,24 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
         )}
       </div>
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+      {infoModal && (
+        <div className="attack-modal-overlay" onClick={() => setInfoModal(null)}>
+          <div className="attack-modal info-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="attack-modal-header">
+              <h3>{infoModal.title}</h3>
+              <button className="close-btn" onClick={() => setInfoModal(null)}>
+                ✕
+              </button>
+            </div>
+            <div className="attack-modal-content">
+              <div className="attack-info-section info-modal-body">
+                <p>{infoModal.description}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {selectedAttack && (
         <div className="attack-modal-overlay" onClick={() => setSelectedAttack(null)}>
