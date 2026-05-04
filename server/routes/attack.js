@@ -1,7 +1,7 @@
 import express from 'express';
 import prisma from '../lib/prisma.js';
 import auth from '../middleware/auth.js';
-import { serializeAttack } from '../models/Nexus.js';
+import { applyQuestRewards, serializeAttack } from '../models/Nexus.js';
 import { normalizeTroopPayload, parsePositiveInt } from '../utils/validation.js';
 
 const router = express.Router();
@@ -100,7 +100,7 @@ router.post('/send', auth, async (req, res) => {
     const travelTimeMinutes = distance * (isScoutMission ? 4 : 5);
     const arrivesAt = new Date(Date.now() + travelTimeMinutes * 60 * 1000);
 
-    const [attack] = await prisma.$transaction([
+    const [attack, updatedAttackerNexus] = await prisma.$transaction([
       prisma.attack.create({
         data: {
           attackerUserId: req.userId,
@@ -120,6 +120,7 @@ router.post('/send', auth, async (req, res) => {
         },
       }),
     ]);
+    await applyQuestRewards(updatedAttackerNexus, { hasOutgoingStrike: true });
 
     res.json({ success: true, attack: serializeAttack(attack) });
   } catch (error) {

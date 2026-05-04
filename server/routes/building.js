@@ -1,7 +1,7 @@
 import express from 'express';
 import prisma from '../lib/prisma.js';
 import auth from '../middleware/auth.js';
-import { computeResourceUpdate, serializeNexus } from '../models/Nexus.js';
+import { applyQuestRewards, computeResourceUpdate, serializeNexus } from '../models/Nexus.js';
 
 const router = express.Router();
 const MAX_BUILD_QUEUE = 5;
@@ -268,8 +268,9 @@ router.post('/upgrade', auth, async (req, res) => {
         buildQueue: newQueue,
       },
     });
+    const rewardApplied = await applyQuestRewards(updated);
 
-    res.json({ success: true, completesAt, nexus: serializeNexus(updated) });
+    res.json({ success: true, completesAt, nexus: serializeNexus(rewardApplied) });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -309,8 +310,9 @@ router.post('/check-queue', auth, async (req, res) => {
       where: { id: nexus.id },
       data: { ...resourceUpdate, ...data },
     });
+    const rewardApplied = await applyQuestRewards(updated);
 
-    res.json({ completed, nexus: serializeNexus(updated) });
+    res.json({ completed, nexus: serializeNexus(rewardApplied) });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

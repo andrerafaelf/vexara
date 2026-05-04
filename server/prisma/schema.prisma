@@ -62,6 +62,7 @@ model Nexus {
   // Queues (JSON arrays)
   buildQueue    Json @default("[]")
   trainingQueue Json @default("[]")
+  questRewardClaims Json @default("[]")
 
   lastResourceUpdate DateTime @default(now())
   points             Int      @default(5)

@@ -1,7 +1,7 @@
 import express from 'express';
 import prisma from '../lib/prisma.js';
 import auth from '../middleware/auth.js';
-import { computeResourceUpdate, serializeNexus } from '../models/Nexus.js';
+import { applyQuestRewards, computeResourceUpdate, serializeNexus } from '../models/Nexus.js';
 import { parsePositiveInt } from '../utils/validation.js';
 
 const router = express.Router();
@@ -189,8 +189,9 @@ router.post('/train', auth, async (req, res) => {
         trainingQueue: newQueue,
       },
     });
+    const rewardApplied = await applyQuestRewards(updated);
 
-    res.json({ success: true, completesAt, nexus: serializeNexus(updated) });
+    res.json({ success: true, completesAt, nexus: serializeNexus(rewardApplied) });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -223,8 +224,9 @@ router.post('/check-queue', auth, async (req, res) => {
       where: { id: nexus.id },
       data: { ...resourceUpdate, ...troopUpdates, trainingQueue },
     });
+    const rewardApplied = await applyQuestRewards(updated);
 
-    res.json({ completed, nexus: serializeNexus(updated) });
+    res.json({ completed, nexus: serializeNexus(rewardApplied) });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

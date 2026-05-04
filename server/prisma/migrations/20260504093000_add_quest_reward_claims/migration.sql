@@ -1,0 +1,2 @@
+ALTER TABLE "Nexus"
+ADD COLUMN "questRewardClaims" JSONB NOT NULL DEFAULT '[]';

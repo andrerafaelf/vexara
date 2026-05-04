@@ -1,7 +1,7 @@
 import express from 'express';
 import prisma from '../lib/prisma.js';
 import auth from '../middleware/auth.js';
-import { applyCompletedQueues, refreshResources, serializeNexus } from '../models/Nexus.js';
+import { applyCompletedQueues, applyQuestRewards, refreshResources, serializeNexus } from '../models/Nexus.js';
 
 const router = express.Router();
 
@@ -37,12 +37,21 @@ router.post('/create', auth, async (req, res) => {
 router.get('/my-nexuses', auth, async (req, res) => {
   try {
     const nexuses = await prisma.nexus.findMany({ where: { ownerId: req.userId } });
+    const outgoingAttacks = await prisma.attack.findMany({
+      where: {
+        attackerNexusId: { in: nexuses.map((nexus) => nexus.id) },
+        status: 'traveling',
+      },
+      select: { attackerNexusId: true },
+    });
+    const nexusesWithOutgoingAttacks = new Set(outgoingAttacks.map((attack) => attack.attackerNexusId));
 
     // Update resources and recalculate points for all nexuses
     const updated = await Promise.all(
       nexuses.map(async (v) => {
         const queueApplied = await applyCompletedQueues(v);
-        return refreshResources(queueApplied);
+        const refreshed = await refreshResources(queueApplied);
+        return applyQuestRewards(refreshed, { hasOutgoingStrike: nexusesWithOutgoingAttacks.has(v.id) });
       }),
     );
 
@@ -69,7 +78,8 @@ router.get('/:nexusId', auth, async (req, res) => {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
-    const updated = await refreshResources(await applyCompletedQueues(nexus));
+    const refreshed = await refreshResources(await applyCompletedQueues(nexus));
+    const updated = await applyQuestRewards(refreshed);
 
     res.json(serializeNexus(updated));
   } catch (error) {

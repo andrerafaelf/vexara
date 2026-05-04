@@ -119,7 +119,7 @@ if (process.env.NODE_ENV === 'production') {
 
   const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: Number(process.env.API_RATE_LIMIT_MAX || 1200),
+    max: Number(process.env.API_RATE_LIMIT_MAX || 4800),
     standardHeaders: true,
     legacyHeaders: false,
     skip: (req) => req.method === 'OPTIONS',

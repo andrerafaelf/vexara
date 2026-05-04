@@ -237,18 +237,18 @@ const TROOP_REQUIREMENTS: { [key: string]: any } = {
 };
 
 const TROOP_COSTS: { [key: string]: any } = {
-  assaultTrooper: { biomass: 30, alloy: 30, ore: 70, population: 1, time: 900 },
-  lancerDrone: { biomass: 50, alloy: 30, ore: 10, population: 1, time: 600 },
-  breakerUnit: { biomass: 60, alloy: 30, ore: 40, population: 1, time: 840 },
-  reconOperative: { biomass: 100, alloy: 30, ore: 60, population: 1, time: 960 },
-  skimmerBike: { biomass: 125, alloy: 100, ore: 150, population: 3, time: 1500 },
-  siegeMech: { biomass: 125, alloy: 100, ore: 250, population: 4, time: 1800 },
-  bulwarkGuard: { biomass: 80, alloy: 120, ore: 100, population: 2, time: 1200 },
-  suppressorTeam: { biomass: 90, alloy: 80, ore: 90, population: 2, time: 1300 },
-  disruptorUnit: { biomass: 110, alloy: 150, ore: 130, population: 2, time: 1400 },
-  interceptorBike: { biomass: 150, alloy: 120, ore: 180, population: 3, time: 1600 },
-  annihilatorPlatform: { biomass: 200, alloy: 180, ore: 300, population: 5, time: 2400 },
-  overseer: { biomass: 300, alloy: 250, ore: 200, population: 5, time: 3000 },
+  assaultTrooper: { biomass: 30, alloy: 30, ore: 70, population: 1, time: 158 },
+  lancerDrone: { biomass: 50, alloy: 30, ore: 10, population: 1, time: 105 },
+  breakerUnit: { biomass: 60, alloy: 30, ore: 40, population: 1, time: 147 },
+  reconOperative: { biomass: 100, alloy: 30, ore: 60, population: 1, time: 168 },
+  skimmerBike: { biomass: 125, alloy: 100, ore: 150, population: 3, time: 263 },
+  siegeMech: { biomass: 125, alloy: 100, ore: 250, population: 4, time: 315 },
+  bulwarkGuard: { biomass: 80, alloy: 120, ore: 100, population: 2, time: 210 },
+  suppressorTeam: { biomass: 90, alloy: 80, ore: 90, population: 2, time: 228 },
+  disruptorUnit: { biomass: 110, alloy: 150, ore: 130, population: 2, time: 245 },
+  interceptorBike: { biomass: 150, alloy: 120, ore: 180, population: 3, time: 280 },
+  annihilatorPlatform: { biomass: 200, alloy: 180, ore: 300, population: 5, time: 420 },
+  overseer: { biomass: 300, alloy: 250, ore: 200, population: 5, time: 525 },
 };
 
 interface ToastMessage {
