@@ -1,5 +1,5 @@
 export function getResourceProduction(nexus) {
-  const baseProduction = 30;
+  const baseProduction = 120;
   return {
     biomass: baseProduction * Math.pow(1.2, nexus.biomassFarm - 1),
     alloy: baseProduction * Math.pow(1.2, nexus.alloyForge - 1),

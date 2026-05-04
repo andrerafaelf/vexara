@@ -443,7 +443,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
   };
 
   const calculateProduction = () => {
-    const baseProduction = 30;
+    const baseProduction = 120;
     return {
       biomass: Math.floor(baseProduction * Math.pow(1.2, nexus.buildings.biomassFarm - 1)),
       alloy: Math.floor(baseProduction * Math.pow(1.2, nexus.buildings.alloyForge - 1)),
