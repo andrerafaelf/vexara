@@ -49,7 +49,7 @@ const BUILDING_NAMES: { [key: string]: string } = {
 };
 
 const BUILDING_DESCRIPTIONS: { [key: string]: string } = {
-  commandCore: 'Increases max population and unlocks new buildings. Required for nexus expansion.',
+  commandCore: 'Unlocks new buildings, units, and progression milestones. Required for nexus expansion.',
   troopFabricator: 'Allows training of combat units. Higher levels reduce training time.',
   lifeSupport: 'Increases maximum population capacity for housing more troops and workers.',
   storageVault: 'Increases resource storage capacity. Protects resources from raids.',
