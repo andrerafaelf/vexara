@@ -1,6 +1,7 @@
 'use client';
 
 import Admin from '@/components/Admin';
+import '@/styles/Admin.css';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
@@ -21,32 +22,14 @@ export default function AdminPage() {
 
   return (
     <main style={{ minHeight: '100vh', background: '#0a1228', color: '#eaf0ff' }}>
-      <header
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '1rem 1.25rem',
-          borderBottom: '1px solid #1e315f',
-        }}
-      >
-        <h1 style={{ margin: 0, fontSize: '1.4rem', color: '#ff4f72' }}>Neon Dominion Admin</h1>
-        <button
-          onClick={handleLogout}
-          style={{
-            padding: '0.55rem 0.85rem',
-            borderRadius: '8px',
-            border: 'none',
-            background: '#26457d',
-            color: '#fff',
-            cursor: 'pointer',
-          }}
-        >
+      <header className="admin-page-header">
+        <h1 className="admin-page-title">⚡ Neon Dominion Admin</h1>
+        <button className="admin-logout-btn" onClick={handleLogout}>
           Logout
         </button>
       </header>
 
-      <section style={{ padding: '1rem' }}>
+      <section style={{ padding: '1.5rem 1rem' }}>
         <Admin />
       </section>
     </main>

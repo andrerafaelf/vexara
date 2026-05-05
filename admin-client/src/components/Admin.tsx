@@ -453,9 +453,8 @@ const Admin: React.FC = () => {
     <div className="admin-panel">
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      <h2>Admin Controls</h2>
-
-      <div style={{ marginBottom: '20px' }}>
+      <div className="admin-top-bar">
+        <h2 className="admin-title">Admin Controls</h2>
         <button className="btn-primary" onClick={() => setModal('addUser')}>
           + Add User
         </button>
@@ -464,75 +463,79 @@ const Admin: React.FC = () => {
       {stats && (
         <div className="admin-stats">
           <div className="stat-card">
-            <h3>{stats.userCount}</h3>
-            <p>Total Users</p>
+            <div className="stat-card-icon">👥</div>
+            <div className="stat-card-body">
+              <h3>{stats.userCount}</h3>
+              <p>Total Users</p>
+            </div>
           </div>
           <div className="stat-card">
-            <h3>{stats.attackCount}</h3>
-            <p>Traveling Strikes</p>
+            <div className="stat-card-icon">⚔️</div>
+            <div className="stat-card-body">
+              <h3>{stats.attackCount}</h3>
+              <p>Traveling Strikes</p>
+            </div>
           </div>
         </div>
       )}
 
       <div className="admin-section">
-        <h3>All Users ({users.length})</h3>
-        <div className="users-table">
-          <table>
-            <thead>
-              <tr>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Influence</th>
-                <th>Joined</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user._id}>
-                  <td>{user.username}</td>
-                  <td>{user.email}</td>
-                  <td>{user.points}</td>
-                  <td>{new Date(user.createdAt).toLocaleDateString()}</td>
-                  <td>
-                    <button className="btn-small" onClick={() => openUserModal('editUser', user)}>
-                      Edit Login
-                    </button>
-                    <button className="btn-small" onClick={() => openUserModal('resources', user)}>
-                      Add Resources
-                    </button>
-                    <button className="btn-small" onClick={() => openUserModal('troops', user)}>
-                      Add Troops
-                    </button>
-                    <button className="btn-small" onClick={() => openUserModal('buildings', user)}>
-                      Set Building
-                    </button>
-                    <button className="btn-small" onClick={() => handleCompleteUserStrike(user)}>
-                      Complete Strike
-                    </button>
-                    <button className="btn-small" onClick={() => handleCompleteUserBuild(user)}>
-                      Complete Build
-                    </button>
-                    <button className="btn-small" onClick={() => handleCompleteUserTraining(user)}>
-                      Complete Troops
-                    </button>
-                    <button className="btn-small btn-warning" onClick={() => handleResetUser(user)}>
-                      Reset Account
-                    </button>
-                    <button className="btn-danger" onClick={() => handleDeleteUser(user._id, user.username)}>
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="admin-section-header">
+          <h3>All Users ({users.length})</h3>
+        </div>
+        <div className="user-cards">
+          {users.map((user) => (
+            <div key={user._id} className="user-card">
+              <div className="user-card-info">
+                <span className="user-card-name">{user.username}</span>
+                <div className="user-card-meta">
+                  <span>{user.email}</span>
+                  <span className="meta-pts">{user.points} pts</span>
+                  <span>Joined {new Date(user.createdAt).toLocaleDateString()}</span>
+                </div>
+              </div>
+              <div className="user-actions">
+                <button className="btn-action btn-edit" onClick={() => openUserModal('editUser', user)}>
+                  ✏️ Login
+                </button>
+                <div className="action-divider" />
+                <button className="btn-action btn-res" onClick={() => openUserModal('resources', user)}>
+                  + Resources
+                </button>
+                <button className="btn-action btn-troops" onClick={() => openUserModal('troops', user)}>
+                  + Troops
+                </button>
+                <button className="btn-action btn-bld" onClick={() => openUserModal('buildings', user)}>
+                  Set Building
+                </button>
+                <div className="action-divider" />
+                <button className="btn-action btn-cmpl" onClick={() => handleCompleteUserStrike(user)}>
+                  ⚡ Strike
+                </button>
+                <button className="btn-action btn-cmpl" onClick={() => handleCompleteUserBuild(user)}>
+                  ⚡ Build
+                </button>
+                <button className="btn-action btn-cmpl" onClick={() => handleCompleteUserTraining(user)}>
+                  ⚡ Train
+                </button>
+                <div className="action-divider" />
+                <button className="btn-action btn-reset" onClick={() => handleResetUser(user)}>
+                  ↺ Reset
+                </button>
+                <button className="btn-action btn-delete" onClick={() => handleDeleteUser(user._id, user.username)}>
+                  ✕ Delete
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
       {attacks.length > 0 && (
         <div className="admin-section">
-          <h3>Traveling Strikes ({attacks.length})</h3>
+          <div className="admin-section-header">
+            <h3>⚔️ Traveling Strikes ({attacks.length})</h3>
+          </div>
           <div className="attacks-table">
             <table>
               <thead>
@@ -568,8 +571,8 @@ const Admin: React.FC = () => {
                         <span className={diff <= 10000 ? 'time-urgent' : ''}>{timeStr}</span>
                       </td>
                       <td>
-                        <button className="btn-small btn-primary" onClick={() => handleCompleteAttack(attack._id)}>
-                          Complete
+                        <button className="btn-action btn-cmpl" onClick={() => handleCompleteAttack(attack._id)}>
+                          ⚡ Complete
                         </button>
                       </td>
                     </tr>
