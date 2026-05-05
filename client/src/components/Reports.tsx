@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getReports } from '../services/api';
+import { getReports, sendAttack } from '../services/api';
 import '../styles/Reports.css';
 import { Attack, Nexus } from '../types/game';
 
@@ -26,6 +26,12 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
   const [reports, setReports] = useState<Attack[]>([]);
   const [selectedReport, setSelectedReport] = useState<Attack | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showAttackForm, setShowAttackForm] = useState(false);
+  const [attackTroops, setAttackTroops] = useState({
+    lancerDrone: 0, assaultTrooper: 0, breakerUnit: 0, reconOperative: 0,
+    skimmerBike: 0, siegeMech: 0, bulwarkGuard: 0, suppressorTeam: 0,
+    disruptorUnit: 0, interceptorBike: 0, annihilatorPlatform: 0, overseer: 0,
+  });
   const [viewedReports, setViewedReports] = useState<Set<string>>(() => {
     // Load viewed reports from localStorage
     const saved = localStorage.getItem('viewedReports');
@@ -52,6 +58,36 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
       return next;
     });
   }, [selectedReport, viewedReports]);
+
+  useEffect(() => {
+    setShowAttackForm(false);
+    setAttackTroops({
+      lancerDrone: 0, assaultTrooper: 0, breakerUnit: 0, reconOperative: 0,
+      skimmerBike: 0, siegeMech: 0, bulwarkGuard: 0, suppressorTeam: 0,
+      disruptorUnit: 0, interceptorBike: 0, annihilatorPlatform: 0, overseer: 0,
+    });
+  }, [selectedReport?._id]);
+
+  const handleSendAttack = async () => {
+    if (!selectedReport) return;
+    const total = Object.values(attackTroops).reduce((a, b) => a + b, 0);
+    if (total === 0) {
+      alert('Select at least one troop!');
+      return;
+    }
+    try {
+      await sendAttack(nexus._id, selectedReport.defender.nexus._id, attackTroops, 'attack');
+      alert('Strike sent!');
+      setShowAttackForm(false);
+      setAttackTroops({
+        lancerDrone: 0, assaultTrooper: 0, breakerUnit: 0, reconOperative: 0,
+        skimmerBike: 0, siegeMech: 0, bulwarkGuard: 0, suppressorTeam: 0,
+        disruptorUnit: 0, interceptorBike: 0, annihilatorPlatform: 0, overseer: 0,
+      });
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Error sending strike');
+    }
+  };
 
   const loadReports = async () => {
     try {
@@ -118,6 +154,64 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
               <span>🛡️ Victory! You defended successfully</span>
             )}
           </div>
+
+          {scoutReport && isMyAttack && (
+            <div className="report-section scout-attack-section">
+              <div className="scout-target-bar">
+                <div className="scout-target-info">
+                  <span className="scout-target-label">Target</span>
+                  <span className="scout-target-name">
+                    {selectedReport.defender.nexus?.name || 'Unknown'}{' '}
+                    <span className="scout-target-coords">
+                      ({selectedReport.defender.nexus?.x ?? '?'}|{selectedReport.defender.nexus?.y ?? '?'})
+                    </span>
+                  </span>
+                </div>
+                <button
+                  className="scout-attack-btn"
+                  onClick={() => setShowAttackForm((v) => !v)}
+                >
+                  ⚔️ {showAttackForm ? 'Cancel' : 'Attack'}
+                </button>
+              </div>
+              {showAttackForm && (
+                <div className="scout-attack-form">
+                  <div className="scout-troop-list">
+                    {Object.entries(nexus.troops).map(([type, available]) => (
+                      <div key={type} className="scout-troop-row">
+                        <span className="scout-troop-label">{troopNames[type] || type}</span>
+                        <input
+                          type="number"
+                          min={0}
+                          max={available}
+                          value={attackTroops[type as keyof typeof attackTroops]}
+                          disabled={available <= 0}
+                          onChange={(e) =>
+                            setAttackTroops((prev) => ({
+                              ...prev,
+                              [type]: Math.min(Number(e.target.value), available),
+                            }))
+                          }
+                        />
+                        <span className="scout-troop-available">/{available}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="scout-attack-actions">
+                    <button
+                      className="scout-send-all-btn"
+                      onClick={() => setAttackTroops({ ...nexus.troops })}
+                    >
+                      Send All
+                    </button>
+                    <button className="scout-send-btn" onClick={handleSendAttack}>
+                      Send Attack
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {scoutReport && selectedReport.result?.intel && (
             <div className="report-section">

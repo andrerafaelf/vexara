@@ -229,6 +229,156 @@
   color: #ffd700;
 }
 
+/* Scout attack section */
+.scout-attack-section {
+  padding: 16px 20px;
+}
+
+.scout-target-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.scout-target-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.scout-target-label {
+  font-size: 11px;
+  color: #a8dadc;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.scout-target-name {
+  color: #f1faee;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.scout-target-coords {
+  color: #a8dadc;
+  font-weight: 400;
+  font-size: 13px;
+}
+
+.scout-attack-btn {
+  background: #e94560;
+  color: #fff;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.scout-attack-btn:hover {
+  background: #c73851;
+}
+
+.scout-attack-form {
+  margin-top: 16px;
+  border-top: 1px solid #1a4d8f;
+  padding-top: 14px;
+}
+
+.scout-troop-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.scout-troop-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #16213e;
+  padding: 8px 10px;
+  border-radius: 6px;
+}
+
+.scout-troop-label {
+  flex: 1;
+  color: #f1faee;
+  font-size: 13px;
+}
+
+.scout-troop-row input {
+  width: 56px;
+  padding: 5px 6px;
+  border: 1px solid #457b9d;
+  border-radius: 6px;
+  background: #0f3460;
+  color: #f1faee;
+  font-size: 13px;
+  text-align: center;
+}
+
+.scout-troop-row input:focus {
+  outline: none;
+  border-color: #e94560;
+}
+
+.scout-troop-row input:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.scout-troop-available {
+  color: #a8dadc;
+  font-size: 12px;
+  min-width: 28px;
+  text-align: right;
+}
+
+.scout-attack-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.scout-send-all-btn {
+  flex: 1;
+  background: #22577a;
+  color: #f1faee;
+  border: none;
+  padding: 10px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.scout-send-all-btn:hover {
+  background: #2d6f99;
+}
+
+.scout-send-btn {
+  flex: 1;
+  background: #e94560;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.scout-send-btn:hover {
+  background: #c73851;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .reports-container {
