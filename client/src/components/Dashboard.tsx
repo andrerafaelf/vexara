@@ -459,7 +459,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
             <div className="nexuses-list">
               {nexuses.map((nexus) => (
                 <div key={nexus._id} className="nexus-summary" onClick={() => onSelectNexus(nexus)}>
-                  <NexusMap nexus={nexus} compact />
+                  <NexusMap nexus={nexus} />
                   <div className="nexus-summary-header">
                     <span className="nexus-summary-name">{nexus.name}</span>
                     <span className="nexus-summary-coords">
