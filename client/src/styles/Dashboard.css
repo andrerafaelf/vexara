@@ -1,5 +1,644 @@
 .dashboard {
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ════════════════════════════════════════
+   HERO — selected nexus command panel
+════════════════════════════════════════ */
+.cc-hero {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 20px;
+  background: #16213e;
+  border: 2px solid #0f3460;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.cc-hero-map {
+  /* NexusMap fills naturally; no margin needed */
+}
+
+.cc-hero-map .nexus-map {
+  margin: 0;
+  border-radius: 0;
+  height: 100%;
+}
+
+.cc-hero-info {
+  padding: 20px 20px 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cc-hero-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.cc-nexus-name {
+  color: #e94560;
+  font-size: 24px;
+  margin: 0 0 4px 0;
+}
+
+.cc-nexus-meta {
+  color: #a8dadc;
+  font-size: 13px;
+}
+
+.cc-manage-btn {
+  background: #e94560;
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: bold;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.cc-manage-btn:hover {
+  background: #c73851;
+}
+
+/* Nexus switcher tabs */
+.cc-nexus-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cc-nexus-tab {
+  background: #0f3460;
+  color: #a8dadc;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  padding: 6px 14px;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.cc-nexus-tab:hover {
+  border-color: #a8dadc;
+  color: #fff;
+}
+
+.cc-nexus-tab.active {
+  background: #e94560;
+  color: #fff;
+}
+
+/* Resource blocks */
+.cc-resources {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cc-resource-block {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #0f3460;
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.cc-resource-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.cc-resource-text {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto 4px auto;
+  column-gap: 8px;
+  align-items: center;
+}
+
+.cc-resource-label {
+  color: #a8dadc;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.cc-resource-value {
+  color: #f1faee;
+  font-weight: bold;
+  font-size: 15px;
+  text-align: right;
+}
+
+.cc-resource-cap {
+  font-size: 0.72em;
+  opacity: 0.7;
+}
+
+.cc-resource-bar-wrap {
+  grid-column: 1 / -1;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  height: 4px;
+  overflow: hidden;
+}
+
+.cc-resource-bar {
+  height: 100%;
+  background: #e94560;
+  border-radius: 2px;
+  transition: width 0.6s ease;
+}
+
+.cc-resource-rate {
+  color: #4caf50;
+  font-size: 11px;
+  grid-column: 1 / -1;
+}
+
+/* ════════════════════════════════════════
+   Shared card base
+════════════════════════════════════════ */
+.cc-card {
+  background: #16213e;
+  border: 2px solid #0f3460;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.cc-card-title {
+  color: #e94560;
+  font-size: 16px;
+  font-weight: bold;
+  margin: 0 0 14px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ════════════════════════════════════════
+   Activity row (Construction / Training / Strikes)
+════════════════════════════════════════ */
+.cc-activity-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+/* ════════════════════════════════════════
+   Bottom row (Quests + Empire)
+════════════════════════════════════════ */
+.cc-bottom-row {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 20px;
+  align-items: start;
+}
+
+.cc-quests-panel {
+  /* inherits cc-card */
+}
+
+.cc-empire-panel {
+  position: sticky;
+  top: 20px;
+}
+
+.cc-empire-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.cc-empire-stat {
+  background: #0f3460;
+  border-radius: 6px;
+  padding: 12px 8px;
+  text-align: center;
+}
+
+.cc-empire-stat-value {
+  display: block;
+  color: #e94560;
+  font-size: 22px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.cc-empire-stat-label {
+  display: block;
+  color: #a8dadc;
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+.cc-troop-heading {
+  color: #a8dadc;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 10px 0;
+}
+
+/* ════════════════════════════════════════
+   Activity list (shared)
+════════════════════════════════════════ */
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.activity-item {
+  background: #0f3460;
+  padding: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.activity-item:hover {
+  background: #1a4971;
+  transform: translateX(4px);
+}
+
+.activity-nexus {
+  color: #e94560;
+  font-weight: bold;
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.activity-details {
+  color: #f1faee;
+  font-size: 13px;
+  margin-bottom: 4px;
+  text-transform: capitalize;
+}
+
+.activity-time {
+  color: #a8dadc;
+  font-size: 12px;
+}
+
+.no-activity {
+  color: #a8dadc;
+  text-align: center;
+  padding: 24px;
+  background: #0f3460;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+/* Troop breakdown (empire panel) */
+.troop-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.battle-troop-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  column-gap: 12px;
+  padding: 8px 12px;
+  background: #0f3460;
+  border-radius: 4px;
+  color: #f1faee;
+  font-size: 13px;
+}
+
+.battle-troop-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.battle-troop-count {
+  color: #e94560;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.no-troops {
+  color: #a8dadc;
+  text-align: center;
+  padding: 16px;
+  background: #0f3460;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+/* ════════════════════════════════════════
+   Quest panel (reused classes)
+════════════════════════════════════════ */
+.dashboard-quests-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 16px;
+}
+
+.dashboard-quest-nexus-block {
+  background: #0f3460;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.dashboard-quest-nexus-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.dashboard-quest-nexus-name {
+  color: #f1faee;
+  font-weight: bold;
+}
+
+.dashboard-quest-open-btn {
+  background: #1a4971;
+  color: #a8dadc;
+  border-radius: 4px;
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.dashboard-quest-open-btn:hover {
+  background: #245d8d;
+  color: #fff;
+}
+
+.intro-quests {
+  background: #0f3460;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+
+.intro-quests:last-child {
+  margin-bottom: 0;
+}
+
+.quest-batch-locked {
+  opacity: 0.7;
+  border: 2px dashed #457b9d;
+}
+
+.intro-quests-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.intro-quests-header h4 {
+  color: #a8dadc;
+  margin: 0;
+}
+
+.intro-quests-header span {
+  color: #4caf50;
+  font-weight: bold;
+}
+
+.quest-batch-reward {
+  margin: 0 0 10px 0;
+  color: #f1faee;
+  font-size: 12px;
+  background: #1a4971;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.quest-batch-earned {
+  margin: 0 0 10px 0;
+  color: #4caf50;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.intro-quest-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px;
+  background: #1a4971;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.intro-quest-item:last-child {
+  margin-bottom: 0;
+}
+
+.intro-quest-item.completed {
+  border-left: 3px solid #4caf50;
+}
+
+.intro-quest-icon {
+  line-height: 1.2;
+}
+
+.intro-quest-title {
+  color: #f1faee;
+  font-weight: bold;
+  margin: 0;
+}
+
+.intro-quest-description {
+  color: #a8dadc;
+  margin: 2px 0 0 0;
+  font-size: 12px;
+}
+
+.quest-batch-lock-note {
+  margin: 0;
+  color: #a8dadc;
+  font-size: 13px;
+}
+
+/* ════════════════════════════════════════
+   Responsive
+════════════════════════════════════════ */
+@media (max-width: 1100px) {
+  .cc-hero {
+    grid-template-columns: 1fr;
+  }
+  .cc-hero-info {
+    padding: 0 16px 16px 16px;
+  }
+  .cc-bottom-row {
+    grid-template-columns: 1fr;
+  }
+  .cc-empire-panel {
+    position: static;
+  }
+  .cc-empire-stats {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .cc-activity-row {
+    grid-template-columns: 1fr;
+  }
+  .dashboard-quests-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ════════════════════════════════════════
+   Attack Modal
+════════════════════════════════════════ */
+.attack-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.attack-modal {
+  background: #16213e;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.attack-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 2px solid #0f3460;
+}
+
+.attack-modal-header h3 {
+  color: #e94560;
+  margin: 0;
+  font-size: 22px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #e94560;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.close-btn:hover {
+  background: #0f3460;
+}
+
+.attack-modal-content {
+  padding: 20px;
+}
+
+.attack-info-section {
+  margin-bottom: 20px;
+}
+
+.attack-info-section:last-child {
+  margin-bottom: 0;
+}
+
+.attack-info-section h4 {
+  color: #a8dadc;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0 0 6px 0;
+}
+
+.attack-info-section p {
+  color: #f1faee;
+  margin: 0;
+  font-size: 16px;
+}
+
+.arrival-countdown {
+  color: #e94560 !important;
+  font-size: 24px !important;
+  font-weight: bold;
+}
+
+.troops-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.troop-line {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #0f3460;
+  border-radius: 4px;
+  color: #f1faee;
+}
+
+.troop-count {
+  color: #e94560;
+  font-weight: bold;
+}
+
+/* Legacy aliases (kept for any other usage in codebase) */
+.resource-max {
+  font-size: 0.72em;
+  font-weight: 600;
+  opacity: 0.8;
 }
 
 .dashboard-header {

@@ -5,10 +5,17 @@ import { applyCompletedQueues, applyQuestRewards, refreshResources, serializeNex
 
 const router = express.Router();
 
+const MAX_NEXUSES_PER_USER = 10;
+
 // Create a new nexus
 router.post('/create', auth, async (req, res) => {
   try {
     const user = await prisma.user.findUnique({ where: { id: req.userId } });
+
+    const existingCount = await prisma.nexus.count({ where: { ownerId: user.id } });
+    if (existingCount >= MAX_NEXUSES_PER_USER) {
+      return res.status(400).json({ error: `Maximum of ${MAX_NEXUSES_PER_USER} nexuses allowed per player` });
+    }
 
     const nexus = await prisma.nexus.create({
       data: {

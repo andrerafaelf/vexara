@@ -140,24 +140,6 @@ app.use('/api/attack', attackRoutes);
 app.use('/api/market', marketRoutes);
 app.use('/api/report', reportRoutes);
 
-// PostgreSQL connection check via Prisma
-prisma
-  .$connect()
-  .then(async () => {
-    logInfo('postgres_connected');
-    const neutralSync = await ensureNeutralNexusPool();
-    if (neutralSync.created > 0) {
-      logInfo('neutral_nexus_spawned', {
-        created: neutralSync.created,
-        neutralCount: neutralSync.neutralCount,
-        targetNeutralCount: neutralSync.targetNeutralCount,
-      });
-    }
-  })
-  .catch((err) => {
-    logError('postgres_connection_error', { message: err.message });
-  });
-
 const JOB_LOCKS = {
   updateResources: 9101,
   processCombat: 9102,
@@ -186,22 +168,45 @@ async function runWithPgAdvisoryLock(lockId, jobName, jobHandler) {
   }
 }
 
-// Start resource production interval (every minute)
-setInterval(() => {
-  void runWithPgAdvisoryLock(JOB_LOCKS.updateResources, 'update_resources', () => updateAllResources());
-}, 60000);
+// Connect to PostgreSQL then start all background jobs
+prisma
+  .$connect()
+  .then(async () => {
+    logInfo('postgres_connected');
 
-// Start combat resolution interval (every 10 seconds)
-setInterval(() => {
-  void runWithPgAdvisoryLock(JOB_LOCKS.processCombat, 'process_combat', () => processArrivedAttacks());
-}, 10000);
+    try {
+      const neutralSync = await ensureNeutralNexusPool();
+      if (neutralSync.created > 0) {
+        logInfo('neutral_nexus_spawned', {
+          created: neutralSync.created,
+          neutralCount: neutralSync.neutralCount,
+          targetNeutralCount: neutralSync.targetNeutralCount,
+        });
+      }
+    } catch (err) {
+      logError('neutral_nexus_pool_error', { message: err.message });
+    }
 
-// Keep neutral nexus pool filled as the world gets conquered
-setInterval(() => {
-  void runWithPgAdvisoryLock(JOB_LOCKS.syncNeutralPool, 'sync_neutral_pool', async () => {
-    await ensureNeutralNexusPool();
+    // Start resource production interval (every minute)
+    setInterval(() => {
+      void runWithPgAdvisoryLock(JOB_LOCKS.updateResources, 'update_resources', () => updateAllResources());
+    }, 60000);
+
+    // Start combat resolution interval (every 10 seconds)
+    setInterval(() => {
+      void runWithPgAdvisoryLock(JOB_LOCKS.processCombat, 'process_combat', () => processArrivedAttacks());
+    }, 10000);
+
+    // Keep neutral nexus pool filled as the world gets conquered
+    setInterval(() => {
+      void runWithPgAdvisoryLock(JOB_LOCKS.syncNeutralPool, 'sync_neutral_pool', async () => {
+        await ensureNeutralNexusPool();
+      });
+    }, 60000);
+  })
+  .catch((err) => {
+    logError('postgres_connection_error', { message: err.message });
   });
-}, 60000);
 
 app.use((error, req, res, next) => {
   logError('unhandled_http_error', {

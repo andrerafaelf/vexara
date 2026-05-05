@@ -54,6 +54,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [outgoingAttacks, setOutgoingAttacks] = useState<any[]>([]);
   const [selectedAttack, setSelectedAttack] = useState<any | null>(null);
+  const [focusedNexusId, setFocusedNexusId] = useState<string | null>(nexuses[0]?._id ?? null);
 
   useEffect(() => {
     const timeInterval = setInterval(() => {
@@ -151,6 +152,8 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
   );
 
   const totalTroopCount = Object.values(totalTroops).reduce((a, b) => a + b, 0);
+
+  const focusedNexus = nexuses.find((v) => v._id === focusedNexusId) ?? nexuses[0];
 
   const activeBuilding = nexuses.filter((v) => v.buildQueue.length > 0);
   const activeTraining = nexuses.filter((v) => v.trainingQueue.length > 0);
@@ -304,89 +307,91 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
 
   return (
     <div className="dashboard">
-      <div className="dashboard-header">
-        <h2>Command Overview</h2>
-        <p className="empire-stats">
-          {nexuses.length} {nexuses.length === 1 ? 'Nexus' : 'Nexuses'} • {totalPoints} Total Influence
-        </p>
-      </div>
-
-      <div className="dashboard-grid">
-        {/* Resources Overview */}
-        <div className="dashboard-card">
-          <h3>📦 Total Resources</h3>
-          <div className="resource-summary">
-            <div className="resource-line">
-              <span className="resource-icon">🧬</span>
-              <span className="resource-label">Biomass</span>
-              <span className="resource-value">
-                <span className="resource-main">
-                  {totalResources.biomass.toLocaleString()}
-                  <span className="resource-max">/{totalResourceCapacity.biomass.toLocaleString()}</span>
-                </span>
-                <span className="production-rate">+{totalProduction.biomass}/h</span>
-              </span>
-            </div>
-            <div className="resource-line">
-              <span className="resource-icon">⚙️</span>
-              <span className="resource-label">Alloy</span>
-              <span className="resource-value">
-                <span className="resource-main">
-                  {totalResources.alloy.toLocaleString()}
-                  <span className="resource-max">/{totalResourceCapacity.alloy.toLocaleString()}</span>
-                </span>
-                <span className="production-rate">+{totalProduction.alloy}/h</span>
-              </span>
-            </div>
-            <div className="resource-line">
-              <span className="resource-icon">💎</span>
-              <span className="resource-label">Ore</span>
-              <span className="resource-value">
-                <span className="resource-main">
-                  {totalResources.ore.toLocaleString()}
-                  <span className="resource-max">/{totalResourceCapacity.ore.toLocaleString()}</span>
-                </span>
-                <span className="production-rate">+{totalProduction.ore}/h</span>
-              </span>
-            </div>
+      {/* ── Hero: selected nexus ── */}
+      {focusedNexus && (
+        <div className="cc-hero">
+          <div className="cc-hero-map">
+            <NexusMap nexus={focusedNexus} />
           </div>
-        </div>
-
-        {/* Military Overview */}
-        <div className="dashboard-card">
-          <h3>⚔️ Battle Index</h3>
-          <div className="military-summary">
-            <div className="total-troops">
-              <span className="troops-count">{totalTroopCount}</span>
-              <span className="troops-label">Total Troops</span>
+          <div className="cc-hero-info">
+            <div className="cc-hero-header">
+              <div>
+                <h2 className="cc-nexus-name">{focusedNexus.name}</h2>
+                <span className="cc-nexus-meta">
+                  ({focusedNexus.x}|{focusedNexus.y}) &nbsp;·&nbsp; {focusedNexus.points} inf &nbsp;·&nbsp; 👥{' '}
+                  {focusedNexus.population.current}/{focusedNexus.population.max}
+                </span>
+              </div>
+              <button className="cc-manage-btn" onClick={() => onSelectNexus(focusedNexus)}>
+                Manage Nexus →
+              </button>
             </div>
-            {totalTroopCount > 0 && (
-              <div className="troop-breakdown">
-                {Object.entries(totalTroops).map(([type, count]) =>
-                  count > 0 ? (
-                    <div key={type} className="battle-troop-line">
-                      <span className="battle-troop-name">{TROOP_NAMES[type] || type}</span>
-                      <span className="battle-troop-count">{count}</span>
-                    </div>
-                  ) : null,
-                )}
+
+            {/* Nexus switcher (only when > 1 nexus) */}
+            {nexuses.length > 1 && (
+              <div className="cc-nexus-tabs">
+                {nexuses.map((n) => (
+                  <button
+                    key={n._id}
+                    className={`cc-nexus-tab${n._id === focusedNexus._id ? ' active' : ''}`}
+                    onClick={() => setFocusedNexusId(n._id)}
+                  >
+                    {n.name}
+                  </button>
+                ))}
               </div>
             )}
-            {totalTroopCount === 0 && (
-              <p className="no-troops">
-                {outgoingAttacks.length > 0
-                  ? 'All troops deployed on missions! Train reinforcements in your Recruitment Core!'
-                  : nexuses.some((v) => v.buildings.troopFabricator > 0)
-                    ? 'No troops trained yet. Train some in your Recruitment Core!'
-                    : 'No troops yet. Build a Recruitment Core!'}
-              </p>
-            )}
+
+            {/* Resources */}
+            <div className="cc-resources">
+              {[
+                {
+                  icon: '🧬',
+                  label: 'Biomass',
+                  val: Math.floor(focusedNexus.resources.biomass),
+                  cap: getStorageCapacity(focusedNexus),
+                  rate: calculateProduction(focusedNexus).biomass,
+                },
+                {
+                  icon: '⚙️',
+                  label: 'Alloy',
+                  val: Math.floor(focusedNexus.resources.alloy),
+                  cap: getStorageCapacity(focusedNexus),
+                  rate: calculateProduction(focusedNexus).alloy,
+                },
+                {
+                  icon: '💎',
+                  label: 'Ore',
+                  val: Math.floor(focusedNexus.resources.ore),
+                  cap: getStorageCapacity(focusedNexus),
+                  rate: calculateProduction(focusedNexus).ore,
+                },
+              ].map(({ icon, label, val, cap, rate }) => (
+                <div key={label} className="cc-resource-block">
+                  <span className="cc-resource-icon">{icon}</span>
+                  <div className="cc-resource-text">
+                    <span className="cc-resource-label">{label}</span>
+                    <span className="cc-resource-value">
+                      {val.toLocaleString()}
+                      <span className="cc-resource-cap">/{cap.toLocaleString()}</span>
+                    </span>
+                    <div className="cc-resource-bar-wrap">
+                      <div className="cc-resource-bar" style={{ width: `${Math.min(100, (val / cap) * 100)}%` }} />
+                    </div>
+                    <span className="cc-resource-rate">+{rate.toLocaleString()}/h</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
+      )}
 
-        {/* Active Buildings */}
-        <div className="dashboard-card">
-          <h3>🏗️ Construction</h3>
+      {/* ── Activity row ── */}
+      <div className="cc-activity-row">
+        {/* Construction */}
+        <div className="cc-card">
+          <h3 className="cc-card-title">🏗️ Construction</h3>
           {activeBuilding.length > 0 ? (
             <div className="activity-list">
               {activeBuilding.map((nexus) => (
@@ -405,9 +410,9 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
           )}
         </div>
 
-        {/* Active Training */}
-        <div className="dashboard-card">
-          <h3>🎖️ Training</h3>
+        {/* Training */}
+        <div className="cc-card">
+          <h3 className="cc-card-title">🎖️ Training</h3>
           {activeTraining.length > 0 ? (
             <div className="activity-list">
               {activeTraining.map((nexus) => (
@@ -426,18 +431,13 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
           )}
         </div>
 
-        {/* Outgoing Attacks */}
-        {outgoingAttacks.length > 0 && (
-          <div className="dashboard-card">
-            <h3>⚔️ Outgoing Strikes</h3>
+        {/* Outgoing Strikes */}
+        <div className="cc-card">
+          <h3 className="cc-card-title">⚔️ Outgoing Strikes</h3>
+          {outgoingAttacks.length > 0 ? (
             <div className="activity-list">
               {outgoingAttacks.map((attack) => (
-                <div
-                  key={attack._id}
-                  className="activity-item"
-                  onClick={() => setSelectedAttack(attack)}
-                  style={{ cursor: 'pointer' }}
-                >
+                <div key={attack._id} className="activity-item" onClick={() => setSelectedAttack(attack)}>
                   <div className="activity-nexus">
                     {nexuses.find((v) => v._id === attack.attacker.nexus)?.name || 'Unknown'}
                   </div>
@@ -449,112 +449,115 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
                 </div>
               ))}
             </div>
-          </div>
-        )}
-
-        {/* Nexuses + Quests — full-width row, side by side */}
-        <div className="dashboard-full-row">
-          <div className="dashboard-card nexuses-overview">
-            <h3>🏘️ Your Nexuses</h3>
-            <div className="nexuses-list">
-              {nexuses.map((nexus) => (
-                <div key={nexus._id} className="nexus-summary" onClick={() => onSelectNexus(nexus)}>
-                  <NexusMap nexus={nexus} />
-                  <div className="nexus-summary-header">
-                    <span className="nexus-summary-name">{nexus.name}</span>
-                    <span className="nexus-summary-coords">
-                      ({nexus.x}|{nexus.y})
-                    </span>
-                  </div>
-                  <div className="nexus-summary-stats">
-                    <span>📊 {nexus.points} inf</span>
-                    <span>
-                      👥 {nexus.population.current}/{nexus.population.max}
-                    </span>
-                  </div>
-                  <div className="nexus-summary-resources">
-                    <span>
-                      🧬 {Math.floor(nexus.resources.biomass).toLocaleString()}
-                      <span className="resource-max">/{getStorageCapacity(nexus).toLocaleString()}</span>
-                    </span>
-                    <span>
-                      ⚙️ {Math.floor(nexus.resources.alloy).toLocaleString()}
-                      <span className="resource-max">/{getStorageCapacity(nexus).toLocaleString()}</span>
-                    </span>
-                    <span>
-                      💎 {Math.floor(nexus.resources.ore).toLocaleString()}
-                      <span className="resource-max">/{getStorageCapacity(nexus).toLocaleString()}</span>
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="dashboard-card quests-overview">
-            <h3>🎯 Quest Progress</h3>
-
-            <div className="dashboard-quests-grid">
-              {nexuses.map((nexus) => {
-                const questBatches = getQuestBatches(nexus);
-                return (
-                  <div key={`quests-${nexus._id}`} className="dashboard-quest-nexus-block">
-                    <div className="dashboard-quest-nexus-header">
-                      <span className="dashboard-quest-nexus-name">{nexus.name}</span>
-                      <button className="dashboard-quest-open-btn" onClick={() => onSelectNexus(nexus)}>
-                        Open
-                      </button>
-                    </div>
-
-                    {questBatches.map((batch) => {
-                      const completedCount = batch.quests.filter((quest) => quest.completed).length;
-                      const batchComplete = completedCount === batch.quests.length;
-                      return (
-                        <div
-                          key={`${nexus._id}-${batch.id}`}
-                          className={`intro-quests ${batch.unlocked ? '' : 'quest-batch-locked'}`}
-                        >
-                          <div className="intro-quests-header">
-                            <h4>{batch.title}</h4>
-                            <span>
-                              {completedCount}/{batch.quests.length}
-                            </span>
-                          </div>
-
-                          <p className="quest-batch-reward">Reward: {batch.reward}</p>
-
-                          {batch.unlocked && batchComplete && <p className="quest-batch-earned">Reward tier earned</p>}
-
-                          {batch.unlocked ? (
-                            batch.quests.map((quest) => (
-                              <div
-                                key={`${nexus._id}-${batch.id}-${quest.id}`}
-                                className={`intro-quest-item ${quest.completed ? 'completed' : ''}`}
-                              >
-                                <span className="intro-quest-icon">{quest.completed ? '✅' : '⬜'}</span>
-                                <div>
-                                  <p className="intro-quest-title">{quest.title}</p>
-                                  <p className="intro-quest-description">{quest.description}</p>
-                                </div>
-                              </div>
-                            ))
-                          ) : (
-                            <p className="quest-batch-lock-note">
-                              Complete the previous quest batch to unlock this one.
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          ) : (
+            <p className="no-activity">No outgoing strikes</p>
+          )}
         </div>
-        {/* end dashboard-full-row */}
       </div>
 
+      {/* ── Bottom row: Quests (wide) + Empire summary (narrow) ── */}
+      <div className="cc-bottom-row">
+        {/* Quest progress */}
+        <div className="cc-card cc-quests-panel">
+          <h3 className="cc-card-title">🎯 Quest Progress</h3>
+          <div className="dashboard-quests-grid">
+            {nexuses.map((nexus) => {
+              const questBatches = getQuestBatches(nexus);
+              return (
+                <div key={`quests-${nexus._id}`} className="dashboard-quest-nexus-block">
+                  <div className="dashboard-quest-nexus-header">
+                    <span className="dashboard-quest-nexus-name">{nexus.name}</span>
+                    <button className="dashboard-quest-open-btn" onClick={() => onSelectNexus(nexus)}>
+                      Open
+                    </button>
+                  </div>
+                  {questBatches.map((batch) => {
+                    const completedCount = batch.quests.filter((q) => q.completed).length;
+                    const batchComplete = completedCount === batch.quests.length;
+                    return (
+                      <div
+                        key={`${nexus._id}-${batch.id}`}
+                        className={`intro-quests ${batch.unlocked ? '' : 'quest-batch-locked'}`}
+                      >
+                        <div className="intro-quests-header">
+                          <h4>{batch.title}</h4>
+                          <span>
+                            {completedCount}/{batch.quests.length}
+                          </span>
+                        </div>
+                        <p className="quest-batch-reward">Reward: {batch.reward}</p>
+                        {batch.unlocked && batchComplete && <p className="quest-batch-earned">Reward tier earned</p>}
+                        {batch.unlocked ? (
+                          batch.quests.map((quest) => (
+                            <div
+                              key={`${nexus._id}-${batch.id}-${quest.id}`}
+                              className={`intro-quest-item ${quest.completed ? 'completed' : ''}`}
+                            >
+                              <span className="intro-quest-icon">{quest.completed ? '✅' : '⬜'}</span>
+                              <div>
+                                <p className="intro-quest-title">{quest.title}</p>
+                                <p className="intro-quest-description">{quest.description}</p>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="quest-batch-lock-note">Complete the previous quest batch to unlock this one.</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Empire summary */}
+        <div className="cc-card cc-empire-panel">
+          <h3 className="cc-card-title">🌐 Empire</h3>
+          <div className="cc-empire-stats">
+            <div className="cc-empire-stat">
+              <span className="cc-empire-stat-value">{nexuses.length}</span>
+              <span className="cc-empire-stat-label">Nexuses</span>
+            </div>
+            <div className="cc-empire-stat">
+              <span className="cc-empire-stat-value">{nexuses.reduce((s, v) => s + v.points, 0)}</span>
+              <span className="cc-empire-stat-label">Total Influence</span>
+            </div>
+            <div className="cc-empire-stat">
+              <span className="cc-empire-stat-value">{totalTroopCount}</span>
+              <span className="cc-empire-stat-label">Total Troops</span>
+            </div>
+          </div>
+
+          {totalTroopCount > 0 && (
+            <>
+              <h4 className="cc-troop-heading">Troop Breakdown</h4>
+              <div className="troop-breakdown">
+                {Object.entries(totalTroops).map(([type, count]) =>
+                  count > 0 ? (
+                    <div key={type} className="battle-troop-line">
+                      <span className="battle-troop-name">{TROOP_NAMES[type] || type}</span>
+                      <span className="battle-troop-count">{count}</span>
+                    </div>
+                  ) : null,
+                )}
+              </div>
+            </>
+          )}
+          {totalTroopCount === 0 && (
+            <p className="no-troops">
+              {outgoingAttacks.length > 0
+                ? 'All troops on missions!'
+                : nexuses.some((v) => v.buildings.troopFabricator > 0)
+                  ? 'No troops trained yet.'
+                  : 'Build a Recruitment Core to train troops.'}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* ── Attack detail modal ── */}
       {selectedAttack && (
         <div className="attack-modal-overlay" onClick={() => setSelectedAttack(null)}>
           <div className="attack-modal" onClick={(e) => e.stopPropagation()}>

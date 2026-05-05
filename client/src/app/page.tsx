@@ -12,6 +12,7 @@ import { useCallback, useEffect, useState } from 'react';
 export default function Home() {
   const [nexuses, setVillages] = useState<Nexus[]>([]);
   const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -49,12 +50,16 @@ export default function Home() {
   };
 
   const handleCreateNexus = async () => {
+    if (creating) return;
+    setCreating(true);
     try {
       await createNexus();
       await loadVillages();
     } catch (err) {
       console.error('Error creating nexus:', err);
       alert('Failed to create nexus');
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -82,8 +87,8 @@ export default function Home() {
           <div className="no-nexuses">
             <h2>Welcome to Neon Dominion!</h2>
             <p>You don&apos;t have any nexuses yet. Let&apos;s create your first nexus to start your empire!</p>
-            <button onClick={handleCreateNexus} className="create-nexus-btn">
-              Create Your First Nexus
+            <button onClick={handleCreateNexus} className="create-nexus-btn" disabled={creating}>
+              {creating ? 'Creating...' : 'Create Your First Nexus'}
             </button>
           </div>
         </main>
