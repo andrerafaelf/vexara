@@ -235,11 +235,22 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
               <thead>
                 <tr>
                   <th>Unit</th>
-                  <th>Lost</th>
+                  <th>{scoutReport ? 'Detected' : 'Lost'}</th>
                 </tr>
               </thead>
               <tbody>
+                {scoutReport &&
+                  Object.entries(selectedReport.result?.intel?.troops || {}).map(
+                    ([troop, count]) =>
+                      Number(count) > 0 && (
+                        <tr key={troop}>
+                          <td>{troopNames[troop] || troop}</td>
+                          <td>{count}</td>
+                        </tr>
+                      ),
+                  )}
                 {enemyRole === 'attacker' &&
+                  !scoutReport &&
                   selectedReport.result?.attackerLosses &&
                   Object.entries(selectedReport.result.attackerLosses).map(
                     ([troop, lost]) =>
@@ -251,6 +262,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
                       ),
                   )}
                 {enemyRole === 'defender' &&
+                  !scoutReport &&
                   selectedReport.result?.defenderLosses &&
                   Object.entries(selectedReport.result.defenderLosses).map(
                     ([troop, lost]) =>
@@ -260,6 +272,12 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
                           <td className="losses">{lost}</td>
                         </tr>
                       ),
+                  )}
+                {scoutReport &&
+                  Object.values(selectedReport.result?.intel?.troops || {}).every((count) => Number(count) <= 0) && (
+                    <tr>
+                      <td colSpan={2}>No enemy troops detected.</td>
+                    </tr>
                   )}
               </tbody>
             </table>

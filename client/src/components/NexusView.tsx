@@ -459,11 +459,15 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
       return;
     }
 
+    const requirementsResult = checkTroopRequirements(troopType);
+    const maxTrainable = getMaxTrainableAmount(troopType, TROOP_COSTS[troopType], requirementsResult.canTrain);
     const rawAmount = trainAmount[troopType] ?? '';
-    const amount = rawAmount === '' ? 1 : Number.parseInt(rawAmount, 10);
+    const requestedAmount = rawAmount === '' ? 1 : Number.parseInt(rawAmount, 10);
+    const amount = Math.min(Number.isFinite(requestedAmount) ? requestedAmount : 0, maxTrainable);
 
     if (!Number.isFinite(amount) || amount <= 0) {
-      showToast('Enter a troop amount greater than 0', 'error');
+      showToast('Not enough population or resources to train this unit right now', 'error');
+      submittingRef.current.delete(key);
       return;
     }
 
@@ -649,6 +653,28 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     }
 
     return { canTrain: missing.length === 0, missingRequirements: missing };
+  };
+
+  const getMaxTrainableAmount = (troopType: string, costs: (typeof TROOP_COSTS)[string], canTrain: boolean) => {
+    if (!canTrain) return 0;
+
+    const byBiomass =
+      costs.biomass > 0 ? Math.floor(nexus.resources.biomass / costs.biomass) : Number.POSITIVE_INFINITY;
+    const byAlloy = costs.alloy > 0 ? Math.floor(nexus.resources.alloy / costs.alloy) : Number.POSITIVE_INFINITY;
+    const byOre = costs.ore > 0 ? Math.floor(nexus.resources.ore / costs.ore) : Number.POSITIVE_INFINITY;
+    const remainingPopulation = Math.max(0, nexus.population.max - nexus.population.current);
+    const byPopulation =
+      costs.population > 0 ? Math.floor(remainingPopulation / costs.population) : Number.POSITIVE_INFINITY;
+
+    let maxTrainable = Math.max(0, Math.floor(Math.min(byBiomass, byAlloy, byOre, byPopulation)));
+
+    const requirements = TROOP_REQUIREMENTS[troopType];
+    if (requirements?.maxPerNexus) {
+      const remainingAllowed = Math.max(0, requirements.maxPerNexus - ((nexus.troops as any)[troopType] || 0));
+      maxTrainable = Math.min(maxTrainable, remainingAllowed);
+    }
+
+    return maxTrainable;
   };
 
   const calculateProduction = () => {
@@ -1591,8 +1617,13 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                   <div className="train-grid">
                     {Object.entries(TROOP_COSTS).map(([type, costs]) => {
                       const { canTrain, missingRequirements } = checkTroopRequirements(type);
+                      const maxTrainable = getMaxTrainableAmount(type, costs, canTrain);
                       const isTrainingQueueFull = nexus.trainingQueue.length >= MAX_TRAINING_QUEUE;
-                      const isTrainDisabled = !canTrain || isTrainingQueueFull;
+                      const isTrainDisabled = !canTrain || isTrainingQueueFull || maxTrainable <= 0;
+                      const rawTrainAmount = trainAmount[type] ?? '';
+                      const parsedAmount = rawTrainAmount === '' ? 1 : Number.parseInt(rawTrainAmount, 10);
+                      const selectedAmount = Number.isFinite(parsedAmount) ? Math.max(1, parsedAmount) : 1;
+                      const shownAmount = maxTrainable > 0 ? Math.min(selectedAmount, maxTrainable) : 0;
                       return (
                         <div key={type} className={`train-card ${isTrainDisabled ? 'disabled' : ''}`}>
                           {TROOP_IMAGES[type] && (
@@ -1644,14 +1675,14 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                               type="text"
                               inputMode="numeric"
                               pattern="[0-9]*"
-                              placeholder="1"
+                              placeholder={maxTrainable > 0 ? `1-${maxTrainable}` : '0'}
                               value={trainAmount[type] ?? ''}
                               onChange={(e) => handleTrainAmountChange(type, e.target.value)}
                               aria-label={`${TROOP_NAMES[type]} amount`}
                               disabled={isTrainDisabled}
                             />
                             <button onClick={() => handleTrainTroops(type)} disabled={isTrainDisabled}>
-                              Train
+                              {shownAmount} /{maxTrainable} Train
                             </button>
                           </div>
                         </div>
