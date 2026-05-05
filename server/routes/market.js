@@ -121,6 +121,13 @@ router.post('/buy/:id', auth, async (req, res) => {
       return res.status(400).json({ error: `Insufficient ${listing.wantResource}` });
     }
 
+    const [sellerOwner, buyerOwner] = await Promise.all([
+      listing.sellerNexus.ownerId
+        ? prisma.user.findUnique({ where: { id: listing.sellerNexus.ownerId }, select: { username: true } })
+        : null,
+      prisma.user.findUnique({ where: { id: buyerNexus.ownerId }, select: { username: true } }),
+    ]);
+
     await prisma.$transaction([
       // Buyer pays wanted resource, receives offered resource
       prisma.nexus.update({
@@ -138,9 +145,34 @@ router.post('/buy/:id', auth, async (req, res) => {
         },
       }),
       prisma.marketListing.delete({ where: { id: listingId } }),
+      prisma.marketTransaction.create({
+        data: {
+          sellerNexusId: listing.sellerNexusId,
+          sellerUsername: sellerOwner?.username ?? 'Unknown',
+          buyerNexusId: parsedBuyerNexusId,
+          buyerUsername: buyerOwner?.username ?? 'Unknown',
+          offerResource: listing.offerResource,
+          offerAmount: listing.offerAmount,
+          wantResource: listing.wantResource,
+          wantAmount: listing.wantAmount,
+        },
+      }),
     ]);
 
     res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get last 10 completed transactions
+router.get('/history', auth, async (req, res) => {
+  try {
+    const transactions = await prisma.marketTransaction.findMany({
+      orderBy: { completedAt: 'desc' },
+      take: 10,
+    });
+    res.json(transactions);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

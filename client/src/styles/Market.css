@@ -343,9 +343,63 @@
   color: #a8dadc;
 }
 
+.market-history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.market-history-row {
+  background: #0f3460;
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.market-history-trade {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.market-history-resource {
+  color: #f1faee;
+}
+
+.market-history-arrow {
+  color: #e94560;
+}
+
+.market-history-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-size: 12px;
+  color: #a8dadc;
+}
+
+.market-history-time {
+  color: #5a7a9a;
+  font-size: 11px;
+}
+
 @media (max-width: 768px) {
   .market {
     padding: 12px;
+  }
+  .market-history-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .market-history-meta {
+    align-items: flex-start;
   }
 
   .market-form-trade {

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { buyMarketListing, cancelMarketListing, createMarketListing, getMarketListings } from '../services/api';
+import { buyMarketListing, cancelMarketListing, createMarketListing, getMarketHistory, getMarketListings } from '../services/api';
 import '../styles/Market.css';
 import { MarketListing, Nexus } from '../types/game';
 
@@ -22,6 +22,7 @@ const RESOURCE_ICONS: Record<string, string> = {
 
 const Market: React.FC<MarketProps> = ({ nexuses, onRefresh }) => {
   const [listings, setListings] = useState<MarketListing[]>([]);
+  const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -49,11 +50,21 @@ const Market: React.FC<MarketProps> = ({ nexuses, onRefresh }) => {
     }
   }, []);
 
+  const loadHistory = useCallback(async () => {
+    try {
+      const res = await getMarketHistory();
+      setHistory(Array.isArray(res.data) ? res.data : []);
+    } catch {
+      // history is non-critical, fail silently
+    }
+  }, []);
+
   useEffect(() => {
     loadListings();
+    loadHistory();
     const interval = setInterval(loadListings, 15000);
     return () => clearInterval(interval);
-  }, [loadListings]);
+  }, [loadListings, loadHistory]);
 
   useEffect(() => {
     if (nexuses.length > 0 && !formNexusId) {
@@ -97,7 +108,7 @@ const Market: React.FC<MarketProps> = ({ nexuses, onRefresh }) => {
     try {
       await buyMarketListing(listing.id, buyNexusId);
       setBuyingId(null);
-      await loadListings();
+      await Promise.all([loadListings(), loadHistory()]);
       onRefresh();
     } catch (err: any) {
       setBuyError(err.message || 'Failed to buy listing');
@@ -310,6 +321,33 @@ const Market: React.FC<MarketProps> = ({ nexuses, onRefresh }) => {
             );
           })}
         </div>
+      </div>
+
+      <div className="market-section">
+        <h3>Recent Transactions {history.length === 0 && <span className="market-empty-note">— none yet</span>}</h3>
+        {history.length > 0 && (
+          <div className="market-history">
+            {history.map((t: any) => (
+              <div key={t.id} className="market-history-row">
+                <div className="market-history-trade">
+                  <span className="market-history-resource">
+                    {RESOURCE_ICONS[t.offerResource]} {t.offerAmount.toLocaleString()} {RESOURCE_LABELS[t.offerResource]}
+                  </span>
+                  <span className="market-history-arrow">→</span>
+                  <span className="market-history-resource">
+                    {RESOURCE_ICONS[t.wantResource]} {t.wantAmount.toLocaleString()} {RESOURCE_LABELS[t.wantResource]}
+                  </span>
+                </div>
+                <div className="market-history-meta">
+                  <span>{t.sellerUsername} → {t.buyerUsername}</span>
+                  <span className="market-history-time">
+                    {new Date(t.completedAt).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

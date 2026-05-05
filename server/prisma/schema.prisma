@@ -76,6 +76,19 @@ model Nexus {
   marketListings    MarketListing[]
 }
 
+model MarketTransaction {
+  id             Int      @id @default(autoincrement())
+  sellerNexusId  Int
+  sellerUsername String
+  buyerNexusId   Int
+  buyerUsername  String
+  offerResource  String
+  offerAmount    Int
+  wantResource   String
+  wantAmount     Int
+  completedAt    DateTime @default(now())
+}
+
 model MarketListing {
   id            Int      @id @default(autoincrement())
   sellerNexusId Int

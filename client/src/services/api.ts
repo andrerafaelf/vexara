@@ -144,3 +144,4 @@ export const buyMarketListing = (listingId: number, buyerNexusId: string) =>
   });
 
 export const cancelMarketListing = (listingId: number) => apiRequest(`/market/${listingId}`, { method: 'DELETE' });
+export const getMarketHistory = () => apiRequest('/market/history');
