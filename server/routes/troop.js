@@ -180,6 +180,80 @@ router.post('/train', auth, async (req, res) => {
   }
 });
 
+// Cancel a training queue item with 85% resource refund
+router.post('/cancel-queue', auth, async (req, res) => {
+  try {
+    const { nexusId, index } = req.body;
+    const parsedIndex = parseInt(index, 10);
+
+    const nexus = await prisma.nexus.findUnique({ where: { id: parseInt(nexusId) } });
+    if (!nexus || nexus.ownerId !== req.userId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    const trainingQueue = Array.isArray(nexus.trainingQueue) ? [...nexus.trainingQueue] : [];
+    if (isNaN(parsedIndex) || parsedIndex < 0 || parsedIndex >= trainingQueue.length) {
+      return res.status(400).json({ error: 'Invalid queue index' });
+    }
+
+    const item = trainingQueue[parsedIndex];
+    const cost = TROOP_COSTS[item.troopType];
+    if (!cost) {
+      return res.status(400).json({ error: 'Invalid troop type in queue' });
+    }
+
+    const totalCost = {
+      biomass: cost.biomass * item.amount,
+      alloy: cost.alloy * item.amount,
+      ore: cost.ore * item.amount,
+      population: cost.population * item.amount,
+    };
+
+    const refund = {
+      biomass: Math.floor(totalCost.biomass * 0.85),
+      alloy: Math.floor(totalCost.alloy * 0.85),
+      ore: Math.floor(totalCost.ore * 0.85),
+    };
+
+    const itemCompletesAt = new Date(item.completesAt).getTime();
+    const newQueue = trainingQueue.filter((_, i) => i !== parsedIndex);
+
+    if (parsedIndex === 0 && newQueue.length > 0) {
+      const remaining = Math.max(0, itemCompletesAt - Date.now());
+      for (let i = 0; i < newQueue.length; i++) {
+        const oldAt = new Date(newQueue[i].completesAt).getTime();
+        newQueue[i] = { ...newQueue[i], completesAt: new Date(oldAt - remaining) };
+      }
+    } else if (parsedIndex > 0) {
+      const prevAt = new Date(trainingQueue[parsedIndex - 1].completesAt).getTime();
+      const duration = itemCompletesAt - prevAt;
+      for (let i = parsedIndex; i < newQueue.length; i++) {
+        const oldAt = new Date(newQueue[i].completesAt).getTime();
+        newQueue[i] = { ...newQueue[i], completesAt: new Date(oldAt - duration) };
+      }
+    }
+
+    const resourceUpdate = computeResourceUpdate(nexus);
+    const currentVillage = { ...nexus, ...resourceUpdate };
+
+    const updated = await prisma.nexus.update({
+      where: { id: nexus.id },
+      data: {
+        ...resourceUpdate,
+        biomass: currentVillage.biomass + refund.biomass,
+        alloy: currentVillage.alloy + refund.alloy,
+        ore: currentVillage.ore + refund.ore,
+        populationCurrent: Math.max(0, nexus.populationCurrent - totalCost.population),
+        trainingQueue: newQueue,
+      },
+    });
+
+    res.json({ success: true, refund, nexus: serializeNexus(updated) });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Check training queue
 router.post('/check-queue', auth, async (req, res) => {
   try {

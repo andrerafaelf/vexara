@@ -72,6 +72,12 @@ export const checkBuildQueue = (nexusId: string) =>
     body: JSON.stringify({ nexusId }),
   });
 
+export const cancelBuildQueueItem = (nexusId: string, index: number) =>
+  apiRequest('/building/cancel-queue', {
+    method: 'POST',
+    body: JSON.stringify({ nexusId, index }),
+  });
+
 // Troops
 export const trainTroops = (nexusId: string, troopType: string, amount: number) =>
   apiRequest('/troop/train', {
@@ -83,6 +89,12 @@ export const checkTrainingQueue = (nexusId: string) =>
   apiRequest('/troop/check-queue', {
     method: 'POST',
     body: JSON.stringify({ nexusId }),
+  });
+
+export const cancelTrainingQueueItem = (nexusId: string, index: number) =>
+  apiRequest('/troop/cancel-queue', {
+    method: 'POST',
+    body: JSON.stringify({ nexusId, index }),
   });
 
 // Map

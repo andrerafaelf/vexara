@@ -276,6 +276,70 @@ router.post('/upgrade', auth, async (req, res) => {
   }
 });
 
+// Cancel a build queue item with 85% resource refund
+router.post('/cancel-queue', auth, async (req, res) => {
+  try {
+    const { nexusId, index } = req.body;
+    const parsedIndex = parseInt(index, 10);
+
+    const nexus = await prisma.nexus.findUnique({ where: { id: parseInt(nexusId) } });
+    if (!nexus || nexus.ownerId !== req.userId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    const buildQueue = Array.isArray(nexus.buildQueue) ? [...nexus.buildQueue] : [];
+    if (isNaN(parsedIndex) || parsedIndex < 0 || parsedIndex >= buildQueue.length) {
+      return res.status(400).json({ error: 'Invalid queue index' });
+    }
+
+    const item = buildQueue[parsedIndex];
+    const cost = getBuildingCost(item.building, item.targetLevel - 1);
+    const refund = {
+      biomass: Math.floor(cost.biomass * 0.85),
+      alloy: Math.floor(cost.alloy * 0.85),
+      ore: Math.floor(cost.ore * 0.85),
+    };
+
+    const itemCompletesAt = new Date(item.completesAt).getTime();
+    const newQueue = buildQueue.filter((_, i) => i !== parsedIndex);
+
+    if (parsedIndex === 0 && newQueue.length > 0) {
+      // Cancelled the active item — shift remaining items to start from now
+      const remaining = Math.max(0, itemCompletesAt - Date.now());
+      for (let i = 0; i < newQueue.length; i++) {
+        const oldAt = new Date(newQueue[i].completesAt).getTime();
+        newQueue[i] = { ...newQueue[i], completesAt: new Date(oldAt - remaining) };
+      }
+    } else if (parsedIndex > 0) {
+      // Cancelled a waiting item — shift subsequent items back by its duration
+      const prevAt = new Date(buildQueue[parsedIndex - 1].completesAt).getTime();
+      const duration = itemCompletesAt - prevAt;
+      for (let i = parsedIndex; i < newQueue.length; i++) {
+        const oldAt = new Date(newQueue[i].completesAt).getTime();
+        newQueue[i] = { ...newQueue[i], completesAt: new Date(oldAt - duration) };
+      }
+    }
+
+    const resourceUpdate = computeResourceUpdate(nexus);
+    const currentVillage = { ...nexus, ...resourceUpdate };
+
+    const updated = await prisma.nexus.update({
+      where: { id: nexus.id },
+      data: {
+        ...resourceUpdate,
+        biomass: currentVillage.biomass + refund.biomass,
+        alloy: currentVillage.alloy + refund.alloy,
+        ore: currentVillage.ore + refund.ore,
+        buildQueue: newQueue,
+      },
+    });
+
+    res.json({ success: true, refund, nexus: serializeNexus(updated) });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Check build queue completion
 router.post('/check-queue', auth, async (req, res) => {
   try {

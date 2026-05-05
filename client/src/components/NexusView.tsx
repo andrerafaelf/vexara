@@ -1,5 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { checkBuildQueue, checkTrainingQueue, getOutgoingAttacks, trainTroops, upgradeBuilding } from '../services/api';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  cancelBuildQueueItem,
+  cancelTrainingQueueItem,
+  checkBuildQueue,
+  checkTrainingQueue,
+  getOutgoingAttacks,
+  trainTroops,
+  upgradeBuilding,
+} from '../services/api';
 import '../styles/NexusView.css';
 import { Nexus } from '../types/game';
 import StarfieldMap from './Map';
@@ -291,6 +299,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
   const [outgoingAttacks, setOutgoingAttacks] = useState<any[]>([]);
   const [selectedAttack, setSelectedAttack] = useState<any | null>(null);
   const [infoModal, setInfoModal] = useState<InfoModalState | null>(null);
+  const submittingRef = useRef<Set<string>>(new Set());
 
   const showToast = (message: string, type: 'success' | 'error' | 'info') => {
     setToast({ message, type });
@@ -354,14 +363,18 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
   };
 
   const handleUpgrade = async (building: string) => {
+    const key = `build-${building}`;
+    if (submittingRef.current.has(key)) return;
+    submittingRef.current.add(key);
+
     if (nexus.buildQueue.length >= MAX_BUILD_QUEUE) {
       showToast(`Build queue is full (${MAX_BUILD_QUEUE}/${MAX_BUILD_QUEUE})`, 'error');
+      submittingRef.current.delete(key);
       return;
     }
 
+    const queued = nexus.buildQueue.length > 0;
     try {
-      await upgradeBuilding(nexus._id, building);
-      const queued = nexus.buildQueue.length > 0;
       await upgradeBuilding(nexus._id, building);
       showToast(
         queued ? `${BUILDING_NAMES[building]} upgrade added to queue.` : `${BUILDING_NAMES[building]} upgrade started!`,
@@ -370,12 +383,19 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
       onUpdate();
     } catch (err: any) {
       showToast(err.response?.data?.error || 'Error upgrading building', 'error');
+    } finally {
+      submittingRef.current.delete(key);
     }
   };
 
   const handleTrainTroops = async (troopType: string) => {
+    const key = `train-${troopType}`;
+    if (submittingRef.current.has(key)) return;
+    submittingRef.current.add(key);
+
     if (nexus.trainingQueue.length >= MAX_TRAINING_QUEUE) {
       showToast(`Training queue is full (${MAX_TRAINING_QUEUE}/${MAX_TRAINING_QUEUE})`, 'error');
+      submittingRef.current.delete(key);
       return;
     }
 
@@ -423,9 +443,8 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
       }
     }
 
+    const queued = nexus.trainingQueue.length > 0;
     try {
-      await trainTroops(nexus._id, troopType, amount);
-      const queued = nexus.trainingQueue.length > 0;
       await trainTroops(nexus._id, troopType, amount);
       showToast(
         queued
@@ -437,6 +456,38 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
       onUpdate();
     } catch (err: any) {
       showToast(err.response?.data?.error || 'Error training troops', 'error');
+    } finally {
+      submittingRef.current.delete(key);
+    }
+  };
+
+  const handleCancelBuildQueue = async (index: number) => {
+    const key = `cancel-build-${index}`;
+    if (submittingRef.current.has(key)) return;
+    submittingRef.current.add(key);
+    try {
+      await cancelBuildQueueItem(nexus._id, index);
+      showToast('Build cancelled. 85% of resources refunded.', 'info');
+      onUpdate();
+    } catch (err: any) {
+      showToast(err.response?.data?.error || 'Error cancelling build', 'error');
+    } finally {
+      submittingRef.current.delete(key);
+    }
+  };
+
+  const handleCancelTrainingQueue = async (index: number) => {
+    const key = `cancel-train-${index}`;
+    if (submittingRef.current.has(key)) return;
+    submittingRef.current.add(key);
+    try {
+      await cancelTrainingQueueItem(nexus._id, index);
+      showToast('Training cancelled. 85% of resources refunded.', 'info');
+      onUpdate();
+    } catch (err: any) {
+      showToast(err.response?.data?.error || 'Error cancelling training', 'error');
+    } finally {
+      submittingRef.current.delete(key);
     }
   };
 
@@ -960,10 +1011,20 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
 
                   return (
                     <div key={idx} className={`queue-item ${queueTime.isWaiting ? 'queue-item-waiting' : ''}`}>
-                      {BUILDING_NAMES[item.building]} → Level {item.targetLevel}
-                      <span className={queueTime.isWaiting ? 'queue-time-queued' : 'queue-time'}>
-                        {queueTime.label}
-                      </span>
+                      <span>{BUILDING_NAMES[item.building]} → Level {item.targetLevel}</span>
+                      <div className="queue-item-actions">
+                        <span className={queueTime.isWaiting ? 'queue-time-queued' : 'queue-time'}>
+                          {queueTime.label}
+                        </span>
+                        <button
+                          type="button"
+                          className="queue-cancel-btn"
+                          onClick={() => handleCancelBuildQueue(idx)}
+                          title="Cancel (85% refund)"
+                        >
+                          ✕
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
@@ -1011,10 +1072,20 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
 
                   return (
                     <div key={idx} className={`queue-item ${queueTime.isWaiting ? 'queue-item-waiting' : ''}`}>
-                      {item.amount}x {TROOP_NAMES[item.troopType] || item.troopType}
-                      <span className={queueTime.isWaiting ? 'queue-time-queued' : 'queue-time'}>
-                        {queueTime.label}
-                      </span>
+                      <span>{item.amount}x {TROOP_NAMES[item.troopType] || item.troopType}</span>
+                      <div className="queue-item-actions">
+                        <span className={queueTime.isWaiting ? 'queue-time-queued' : 'queue-time'}>
+                          {queueTime.label}
+                        </span>
+                        <button
+                          type="button"
+                          className="queue-cancel-btn"
+                          onClick={() => handleCancelTrainingQueue(idx)}
+                          title="Cancel (85% refund)"
+                        >
+                          ✕
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
@@ -1055,10 +1126,20 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
 
                   return (
                     <div key={idx} className={`queue-item ${queueTime.isWaiting ? 'queue-item-waiting' : ''}`}>
-                      {BUILDING_NAMES[item.building]} → Level {item.targetLevel}
-                      <span className={queueTime.isWaiting ? 'queue-time-queued' : 'queue-time'}>
-                        {queueTime.label}
-                      </span>
+                      <span>{BUILDING_NAMES[item.building]} → Level {item.targetLevel}</span>
+                      <div className="queue-item-actions">
+                        <span className={queueTime.isWaiting ? 'queue-time-queued' : 'queue-time'}>
+                          {queueTime.label}
+                        </span>
+                        <button
+                          type="button"
+                          className="queue-cancel-btn"
+                          onClick={() => handleCancelBuildQueue(idx)}
+                          title="Cancel (85% refund)"
+                        >
+                          ✕
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
@@ -1211,12 +1292,20 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
 
                       return (
                         <div key={idx} className={`queue-item ${queueTime.isWaiting ? 'queue-item-waiting' : ''}`}>
-                          <span>
-                            {item.amount}x {TROOP_NAMES[item.troopType] || item.troopType}
-                          </span>
-                          <span className={queueTime.isWaiting ? 'queue-time-queued' : 'queue-time'}>
-                            {queueTime.label}
-                          </span>
+                          <span>{item.amount}x {TROOP_NAMES[item.troopType] || item.troopType}</span>
+                          <div className="queue-item-actions">
+                            <span className={queueTime.isWaiting ? 'queue-time-queued' : 'queue-time'}>
+                              {queueTime.label}
+                            </span>
+                            <button
+                              type="button"
+                              className="queue-cancel-btn"
+                              onClick={() => handleCancelTrainingQueue(idx)}
+                              title="Cancel (85% refund)"
+                            >
+                              ✕
+                            </button>
+                          </div>
                         </div>
                       );
                     })}

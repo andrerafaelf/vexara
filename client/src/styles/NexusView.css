@@ -804,6 +804,33 @@
   }
 }
 
+.queue-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.queue-cancel-btn {
+  background: transparent;
+  border: 1px solid #e94560;
+  color: #e94560;
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-size: 13px;
+  line-height: 1.4;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.15s ease, background 0.15s ease;
+  flex-shrink: 0;
+  width: auto;
+}
+
+.queue-cancel-btn:hover {
+  opacity: 1;
+  background: rgba(233, 69, 96, 0.15);
+}
+
 @media (max-width: 520px) {
   .tabs {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -814,8 +841,35 @@
   }
 
   .buildings-grid,
-  .train-grid,
+  .train-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .troop-list {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .building-card,
+  .train-card {
+    padding: 12px;
+  }
+
+  .building-card h4 {
+    font-size: 13px;
+  }
+
+  .train-card h5,
+  .troop-header h5 {
+    font-size: 13px;
+  }
+
+  .train-controls {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .train-controls input {
+    max-width: 100%;
+    width: 100%;
   }
 }
