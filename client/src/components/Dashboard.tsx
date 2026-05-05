@@ -452,123 +452,107 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
           </div>
         )}
 
-        {/* Quick Actions */}
-        <div className="dashboard-card quick-actions-card">
-          <h3>⚡ Quick Actions</h3>
-          <div className="quick-actions">
-            <button className="action-btn" onClick={() => onSelectNexus(nexuses[0])}>
-              🏛️ Manage Nexus
-            </button>
-            <button className="action-btn" disabled>
-              🤝 Syndicates
-            </button>
-            <button className="action-btn" disabled>
-              📊 Command Index
-            </button>
-            <button className="action-btn" disabled>
-              📬 Combat Logs
-            </button>
-          </div>
-        </div>
-
         {/* Nexuses + Quests — full-width row, side by side */}
         <div className="dashboard-full-row">
-        <div className="dashboard-card nexuses-overview">
-          <h3>🏘️ Your Nexuses</h3>
-          <div className="nexuses-list">
-            {nexuses.map((nexus) => (
-              <div key={nexus._id} className="nexus-summary" onClick={() => onSelectNexus(nexus)}>
-                <NexusMap nexus={nexus} compact />
-                <div className="nexus-summary-header">
-                  <span className="nexus-summary-name">{nexus.name}</span>
-                  <span className="nexus-summary-coords">
-                    ({nexus.x}|{nexus.y})
-                  </span>
-                </div>
-                <div className="nexus-summary-stats">
-                  <span>📊 {nexus.points} inf</span>
-                  <span>
-                    👥 {nexus.population.current}/{nexus.population.max}
-                  </span>
-                </div>
-                <div className="nexus-summary-resources">
-                  <span>
-                    🧬 {Math.floor(nexus.resources.biomass).toLocaleString()}
-                    <span className="resource-max">/{getStorageCapacity(nexus).toLocaleString()}</span>
-                  </span>
-                  <span>
-                    ⚙️ {Math.floor(nexus.resources.alloy).toLocaleString()}
-                    <span className="resource-max">/{getStorageCapacity(nexus).toLocaleString()}</span>
-                  </span>
-                  <span>
-                    💎 {Math.floor(nexus.resources.ore).toLocaleString()}
-                    <span className="resource-max">/{getStorageCapacity(nexus).toLocaleString()}</span>
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="dashboard-card quests-overview">
-          <h3>🎯 Quest Progress</h3>
-
-          <div className="dashboard-quests-grid">
-            {nexuses.map((nexus) => {
-              const questBatches = getQuestBatches(nexus);
-              return (
-                <div key={`quests-${nexus._id}`} className="dashboard-quest-nexus-block">
-                  <div className="dashboard-quest-nexus-header">
-                    <span className="dashboard-quest-nexus-name">{nexus.name}</span>
-                    <button className="dashboard-quest-open-btn" onClick={() => onSelectNexus(nexus)}>
-                      Open
-                    </button>
+          <div className="dashboard-card nexuses-overview">
+            <h3>🏘️ Your Nexuses</h3>
+            <div className="nexuses-list">
+              {nexuses.map((nexus) => (
+                <div key={nexus._id} className="nexus-summary" onClick={() => onSelectNexus(nexus)}>
+                  <NexusMap nexus={nexus} compact />
+                  <div className="nexus-summary-header">
+                    <span className="nexus-summary-name">{nexus.name}</span>
+                    <span className="nexus-summary-coords">
+                      ({nexus.x}|{nexus.y})
+                    </span>
                   </div>
-
-                  {questBatches.map((batch) => {
-                    const completedCount = batch.quests.filter((quest) => quest.completed).length;
-                    const batchComplete = completedCount === batch.quests.length;
-                    return (
-                      <div
-                        key={`${nexus._id}-${batch.id}`}
-                        className={`intro-quests ${batch.unlocked ? '' : 'quest-batch-locked'}`}
-                      >
-                        <div className="intro-quests-header">
-                          <h4>{batch.title}</h4>
-                          <span>
-                            {completedCount}/{batch.quests.length}
-                          </span>
-                        </div>
-
-                        <p className="quest-batch-reward">Reward: {batch.reward}</p>
-
-                        {batch.unlocked && batchComplete && <p className="quest-batch-earned">Reward tier earned</p>}
-
-                        {batch.unlocked ? (
-                          batch.quests.map((quest) => (
-                            <div
-                              key={`${nexus._id}-${batch.id}-${quest.id}`}
-                              className={`intro-quest-item ${quest.completed ? 'completed' : ''}`}
-                            >
-                              <span className="intro-quest-icon">{quest.completed ? '✅' : '⬜'}</span>
-                              <div>
-                                <p className="intro-quest-title">{quest.title}</p>
-                                <p className="intro-quest-description">{quest.description}</p>
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <p className="quest-batch-lock-note">Complete the previous quest batch to unlock this one.</p>
-                        )}
-                      </div>
-                    );
-                  })}
+                  <div className="nexus-summary-stats">
+                    <span>📊 {nexus.points} inf</span>
+                    <span>
+                      👥 {nexus.population.current}/{nexus.population.max}
+                    </span>
+                  </div>
+                  <div className="nexus-summary-resources">
+                    <span>
+                      🧬 {Math.floor(nexus.resources.biomass).toLocaleString()}
+                      <span className="resource-max">/{getStorageCapacity(nexus).toLocaleString()}</span>
+                    </span>
+                    <span>
+                      ⚙️ {Math.floor(nexus.resources.alloy).toLocaleString()}
+                      <span className="resource-max">/{getStorageCapacity(nexus).toLocaleString()}</span>
+                    </span>
+                    <span>
+                      💎 {Math.floor(nexus.resources.ore).toLocaleString()}
+                      <span className="resource-max">/{getStorageCapacity(nexus).toLocaleString()}</span>
+                    </span>
+                  </div>
                 </div>
-              );
-            })}
+              ))}
+            </div>
+          </div>
+
+          <div className="dashboard-card quests-overview">
+            <h3>🎯 Quest Progress</h3>
+
+            <div className="dashboard-quests-grid">
+              {nexuses.map((nexus) => {
+                const questBatches = getQuestBatches(nexus);
+                return (
+                  <div key={`quests-${nexus._id}`} className="dashboard-quest-nexus-block">
+                    <div className="dashboard-quest-nexus-header">
+                      <span className="dashboard-quest-nexus-name">{nexus.name}</span>
+                      <button className="dashboard-quest-open-btn" onClick={() => onSelectNexus(nexus)}>
+                        Open
+                      </button>
+                    </div>
+
+                    {questBatches.map((batch) => {
+                      const completedCount = batch.quests.filter((quest) => quest.completed).length;
+                      const batchComplete = completedCount === batch.quests.length;
+                      return (
+                        <div
+                          key={`${nexus._id}-${batch.id}`}
+                          className={`intro-quests ${batch.unlocked ? '' : 'quest-batch-locked'}`}
+                        >
+                          <div className="intro-quests-header">
+                            <h4>{batch.title}</h4>
+                            <span>
+                              {completedCount}/{batch.quests.length}
+                            </span>
+                          </div>
+
+                          <p className="quest-batch-reward">Reward: {batch.reward}</p>
+
+                          {batch.unlocked && batchComplete && <p className="quest-batch-earned">Reward tier earned</p>}
+
+                          {batch.unlocked ? (
+                            batch.quests.map((quest) => (
+                              <div
+                                key={`${nexus._id}-${batch.id}-${quest.id}`}
+                                className={`intro-quest-item ${quest.completed ? 'completed' : ''}`}
+                              >
+                                <span className="intro-quest-icon">{quest.completed ? '✅' : '⬜'}</span>
+                                <div>
+                                  <p className="intro-quest-title">{quest.title}</p>
+                                  <p className="intro-quest-description">{quest.description}</p>
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <p className="quest-batch-lock-note">
+                              Complete the previous quest batch to unlock this one.
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
-        </div>{/* end dashboard-full-row */}
+        {/* end dashboard-full-row */}
       </div>
 
       {selectedAttack && (

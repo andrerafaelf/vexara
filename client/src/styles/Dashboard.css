@@ -211,44 +211,6 @@
   border-radius: 6px;
 }
 
-/* Quick Actions */
-.quick-actions-card {
-  grid-column: span 2;
-}
-
-.quick-actions {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 15px;
-}
-
-.action-btn {
-  background: #e94560;
-  color: white;
-  padding: 20px 15px;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: bold;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-}
-
-.action-btn:hover:not(:disabled) {
-  background: #c73851;
-  transform: translateY(-3px);
-  box-shadow: 0 5px 15px rgba(233, 69, 96, 0.4);
-}
-
-.action-btn:disabled {
-  background: #0f3460;
-  color: #a8dadc;
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
 /* Full-width row: Nexuses + Quests side by side */
 .dashboard-full-row {
   grid-column: 1 / -1;
@@ -263,7 +225,7 @@
 
 .nexuses-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 15px;
 }
 
@@ -339,7 +301,7 @@
 
 .dashboard-quests-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
   gap: 16px;
 }
 
@@ -460,10 +422,6 @@
 }
 
 @media (max-width: 768px) {
-  .quick-actions-card {
-    grid-column: span 1;
-  }
-
   .nexuses-list {
     grid-template-columns: 1fr;
   }

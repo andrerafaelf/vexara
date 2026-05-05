@@ -85,6 +85,9 @@ export default function CombatLogsPage() {
             🗺️ Starfield
           </button>
           <button className="nav-btn active">📜 Combat Logs</button>
+          <button className="nav-btn" onClick={() => router.push('/market')}>
+            🏪 Market
+          </button>
         </div>
         <div className="header-right">
           <button onClick={logout} className="logout-btn">
@@ -122,6 +125,15 @@ export default function CombatLogsPage() {
           </button>
           <button className="nav-btn active" onClick={() => setIsMobileMenuOpen(false)}>
             📜 Combat Logs
+          </button>
+          <button
+            className="nav-btn"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              router.push('/market');
+            }}
+          >
+            🏪 Market
           </button>
         </div>
         <div className="mobile-drawer-nexuses">

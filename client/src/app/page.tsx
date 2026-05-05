@@ -120,6 +120,9 @@ export default function Home() {
           <button className="nav-btn" onClick={() => router.push('/combat-logs')}>
             📜 Combat Logs
           </button>
+          <button className="nav-btn" onClick={() => router.push('/market')}>
+            🏪 Market
+          </button>
         </div>
         <div className="header-right">
           <button onClick={logout} className="logout-btn">
@@ -157,6 +160,15 @@ export default function Home() {
             }}
           >
             📜 Combat Logs
+          </button>
+          <button
+            className="nav-btn"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              router.push('/market');
+            }}
+          >
+            🏪 Market
           </button>
         </div>
         <div className="mobile-drawer-nexuses">
