@@ -129,16 +129,36 @@ const Admin: React.FC = () => {
         adminFetch(`${ADMIN_API_URL}/attacks`),
       ]);
 
-      const usersData = await usersRes.json();
-      const statsData = await statsRes.json();
-      const attacksData = await attacksRes.json();
+      const [usersData, statsData, attacksData] = await Promise.all([
+        usersRes.json().catch(() => null),
+        statsRes.json().catch(() => null),
+        attacksRes.json().catch(() => null),
+      ]);
 
-      setUsers(usersData);
-      setStats({ userCount: statsData.userCount, attackCount: statsData.attackCount });
-      setAttacks(attacksData);
+      const normalizedUsers = Array.isArray(usersData)
+        ? usersData.map((user) => ({
+            ...user,
+            nexuses: Array.isArray(user?.nexuses) ? user.nexuses : [],
+          }))
+        : [];
+      const normalizedAttacks = Array.isArray(attacksData) ? attacksData : [];
+      const normalizedStats =
+        statsData && typeof statsData === 'object'
+          ? {
+              userCount: Number((statsData as { userCount?: number }).userCount ?? 0),
+              attackCount: Number((statsData as { attackCount?: number }).attackCount ?? 0),
+            }
+          : null;
+
+      setUsers(normalizedUsers);
+      setStats(normalizedStats);
+      setAttacks(normalizedAttacks);
       setLoading(false);
     } catch (err) {
       console.error('Error loading admin data:', err);
+      setUsers([]);
+      setStats(null);
+      setAttacks([]);
       setLoading(false);
     }
   };
@@ -537,7 +557,7 @@ const Admin: React.FC = () => {
                         ? `${minutes}m ${seconds % 60}s`
                         : `${seconds}s`;
 
-                  const totalTroops = Object.values(attack.troops).reduce((a, b) => a + Number(b || 0), 0);
+                  const totalTroops = Object.values(attack.troops || {}).reduce((a, b) => a + Number(b || 0), 0);
 
                   return (
                     <tr key={attack._id}>
@@ -634,7 +654,7 @@ const Admin: React.FC = () => {
                       value={resourcesForm.nexusId}
                       onChange={(e) => setResourcesForm({ ...resourcesForm, nexusId: e.target.value })}
                     >
-                      {selectedUser.nexuses.map((nexus) => (
+                      {(selectedUser.nexuses || []).map((nexus) => (
                         <option key={nexus._id} value={nexus._id}>
                           {nexus.name}
                         </option>
@@ -676,7 +696,7 @@ const Admin: React.FC = () => {
                       value={troopsForm.nexusId}
                       onChange={(e) => setTroopsForm({ ...troopsForm, nexusId: e.target.value })}
                     >
-                      {selectedUser.nexuses.map((nexus) => (
+                      {(selectedUser.nexuses || []).map((nexus) => (
                         <option key={nexus._id} value={nexus._id}>
                           {nexus.name}
                         </option>
@@ -715,7 +735,7 @@ const Admin: React.FC = () => {
                       value={buildingsForm.nexusId}
                       onChange={(e) => setBuildingsForm({ ...buildingsForm, nexusId: e.target.value })}
                     >
-                      {selectedUser.nexuses.map((nexus) => (
+                      {(selectedUser.nexuses || []).map((nexus) => (
                         <option key={nexus._id} value={nexus._id}>
                           {nexus.name}
                         </option>

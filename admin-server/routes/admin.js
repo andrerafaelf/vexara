@@ -66,13 +66,29 @@ async function findTargetNexus(userId, nexusId) {
 router.get('/users', async (req, res) => {
   try {
     const users = await prisma.user.findMany({
-      select: { id: true, username: true, email: true, points: true, createdAt: true, nexuses: true },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        points: true,
+        createdAt: true,
+        nexuses: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
       orderBy: { createdAt: 'desc' },
     });
     const result = users.map((u) => ({
       ...u,
       _id: u.id,
-      nexuses: u.nexuses.map((v) => serializeNexus(v)),
+      nexuses: u.nexuses.map((v) => ({
+        _id: v.id,
+        id: v.id,
+        name: v.name,
+      })),
     }));
     res.json(result);
   } catch (error) {
