@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getOutgoingAttacks } from '../services/api';
 import '../styles/Dashboard.css';
 import { Nexus } from '../types/game';
+import NexusMap from './NexusMap';
 
 const TROOP_NAMES: { [key: string]: string } = {
   lancerDrone: 'Lancer Drone',
@@ -470,6 +471,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
           <div className="nexuses-list">
             {nexuses.map((nexus) => (
               <div key={nexus._id} className="nexus-summary" onClick={() => onSelectNexus(nexus)}>
+                <NexusMap nexus={nexus} compact />
                 <div className="nexus-summary-header">
                   <span className="nexus-summary-name">{nexus.name}</span>
                   <span className="nexus-summary-coords">

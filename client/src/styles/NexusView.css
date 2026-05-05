@@ -101,6 +101,15 @@
   margin-bottom: 15px;
 }
 
+.nexus-overview-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: #a8dadc;
+  margin-bottom: 16px;
+  padding: 0 2px;
+}
+
 .stats {
   background: #0f3460;
   padding: 15px;

@@ -11,6 +11,7 @@ import {
 import '../styles/NexusView.css';
 import { Nexus } from '../types/game';
 import StarfieldMap from './Map';
+import NexusMap from './NexusMap';
 import Toast from './Toast';
 
 // Import troop images
@@ -1110,12 +1111,10 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
       <div className="tab-content">
         {activeTab === 'overview' && (
           <div className="overview-tab">
-            <h3>Nexus Overview</h3>
-            <div className="stats">
-              <p>
-                Coordinates: ({nexus.x}|{nexus.y})
-              </p>
-              <p>Influence: {nexus.points}</p>
+            <NexusMap nexus={nexus} onClickBuilding={() => setActiveTab('buildings')} />
+            <div className="nexus-overview-meta">
+              <span>📍 ({nexus.x}|{nexus.y})</span>
+              <span>📊 {nexus.points} inf</span>
             </div>
 
             {nexus.buildQueue.length > 0 && (

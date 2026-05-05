@@ -251,11 +251,11 @@
 
 /* Nexuses Overview */
 .nexuses-overview {
-  grid-column: 1 / -1;
+  grid-column: span 2;
 }
 
 .quests-overview {
-  grid-column: 1 / -1;
+  grid-column: span 2;
 }
 
 .nexuses-list {
@@ -266,11 +266,28 @@
 
 .nexus-summary {
   background: #0f3460;
-  padding: 15px;
+  padding: 0;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.3s ease;
   border: 2px solid transparent;
+  overflow: hidden;
+}
+
+.nexus-summary .nexus-map {
+  margin-bottom: 0;
+  border-radius: 0;
+}
+
+.nexus-summary-header,
+.nexus-summary-stats,
+.nexus-summary-resources {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.nexus-summary-header {
+  padding-top: 10px;
 }
 
 .nexus-summary:hover {
@@ -310,6 +327,7 @@
   gap: 12px;
   font-size: 14px;
   color: #f1faee;
+  padding-bottom: 12px;
 }
 
 .nexus-summary-resources .resource-max {
