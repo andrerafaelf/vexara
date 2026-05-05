@@ -516,14 +516,94 @@
   }
 }
 
+/* ── Mobile modal ── */
+.map-mobile-modal-overlay {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .map-content {
     flex-direction: column;
   }
 
   .map-sidebar {
+    display: none;
+  }
+
+  .map-mobile-modal-overlay {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    z-index: 200;
+    align-items: flex-end;
+    justify-content: center;
+    animation: fadeIn 0.18s ease;
+  }
+
+  .map-mobile-modal {
+    background: #16213e;
+    border-radius: 16px 16px 0 0;
     width: 100%;
-    border-left: none;
+    max-height: 75vh;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.25s ease;
     border-top: 2px solid #0f3460;
+  }
+
+  .map-mobile-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px 10px;
+    border-bottom: 1px solid #0f3460;
+    flex-shrink: 0;
+  }
+
+  .map-mobile-modal-header h3 {
+    color: #e94560;
+    margin: 0;
+    font-size: 18px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .map-mobile-modal-close {
+    background: none;
+    border: none;
+    color: #a8dadc;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    transition: color 0.2s;
+  }
+
+  .map-mobile-modal-close:hover {
+    color: #e94560;
+  }
+
+  .map-mobile-modal-body {
+    overflow-y: auto;
+    padding: 16px 20px 24px;
+    flex: 1;
+  }
+
+  /* Hide the h3 title inside body since header already shows it */
+  .map-mobile-modal-body .nexus-details > h3 {
+    display: none;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(60px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
   }
 }

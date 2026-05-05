@@ -27,17 +27,17 @@ const TROOP_COSTS = {
 
 const TROOP_REQUIREMENTS = {
   assaultTrooper: { buildings: { troopFabricator: 1 } },
-  lancerDrone: { buildings: { troopFabricator: 2 }, troops: { assaultTrooper: 5 } },
-  breakerUnit: { buildings: { troopFabricator: 2, oreExtractor: 2 }, troops: { assaultTrooper: 10 } },
-  reconOperative: { buildings: { troopFabricator: 3 }, troops: { assaultTrooper: 5, lancerDrone: 5 } },
-  skimmerBike: { buildings: { troopFabricator: 3, alloyForge: 3 }, troops: { assaultTrooper: 20, lancerDrone: 10 } },
-  siegeMech: { buildings: { troopFabricator: 4, oreExtractor: 4 }, troops: { assaultTrooper: 30, breakerUnit: 10 } },
-  bulwarkGuard: { buildings: { troopFabricator: 3, lifeSupport: 5 } },
-  suppressorTeam: { buildings: { troopFabricator: 3, commandCore: 3 } },
-  disruptorUnit: { buildings: { troopFabricator: 4 } },
-  interceptorBike: { buildings: { troopFabricator: 4 }, troops: { skimmerBike: 50 } },
-  annihilatorPlatform: { buildings: { troopFabricator: 6, commandCore: 6 } },
-  overseer: { buildings: { troopFabricator: 5, commandCore: 3, shieldGrid: 2 }, maxPerNexus: 1 },
+  lancerDrone: { buildings: { troopFabricator: 2 } },
+  breakerUnit: { buildings: { troopFabricator: 3, oreExtractor: 3 } },
+  reconOperative: { buildings: { troopFabricator: 3, commandCore: 2 } },
+  skimmerBike: { buildings: { troopFabricator: 4, alloyForge: 4 } },
+  siegeMech: { buildings: { troopFabricator: 5, oreExtractor: 5 } },
+  bulwarkGuard: { buildings: { troopFabricator: 4, lifeSupport: 6 } },
+  suppressorTeam: { buildings: { troopFabricator: 4, commandCore: 4 } },
+  disruptorUnit: { buildings: { troopFabricator: 5, oreExtractor: 4 } },
+  interceptorBike: { buildings: { troopFabricator: 6, alloyForge: 5 } },
+  annihilatorPlatform: { buildings: { troopFabricator: 7, commandCore: 6 } },
+  overseer: { buildings: { troopFabricator: 9, commandCore: 8, shieldGrid: 6 }, maxPerNexus: 1 },
 };
 
 const BUILDING_NAMES = {
@@ -101,16 +101,6 @@ router.post('/train', auth, async (req, res) => {
           return res
             .status(400)
             .json({ error: `Requires ${BUILDING_NAMES[building] || building} Level ${requiredLevel}` });
-        }
-      }
-    }
-
-    if (requirements.troops) {
-      for (const [requiredTroopType, requiredCount] of Object.entries(requirements.troops)) {
-        if ((nexus[requiredTroopType] || 0) < requiredCount) {
-          return res.status(400).json({
-            error: `Requires ${requiredCount}x ${TROOP_NAMES[requiredTroopType] || requiredTroopType} in this nexus`,
-          });
         }
       }
     }

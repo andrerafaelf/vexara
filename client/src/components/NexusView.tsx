@@ -233,17 +233,17 @@ const TROOP_DESCRIPTIONS: { [key: string]: string } = {
 
 const TROOP_REQUIREMENTS: { [key: string]: any } = {
   assaultTrooper: { buildings: { troopFabricator: 1 } },
-  lancerDrone: { buildings: { troopFabricator: 2 }, troops: { assaultTrooper: 5 } },
-  breakerUnit: { buildings: { troopFabricator: 2, oreExtractor: 2 }, troops: { assaultTrooper: 10 } },
-  reconOperative: { buildings: { troopFabricator: 3 }, troops: { assaultTrooper: 5, lancerDrone: 5 } },
-  skimmerBike: { buildings: { troopFabricator: 3, alloyForge: 3 }, troops: { assaultTrooper: 20, lancerDrone: 10 } },
-  siegeMech: { buildings: { troopFabricator: 4, oreExtractor: 4 }, troops: { assaultTrooper: 30, breakerUnit: 10 } },
-  bulwarkGuard: { buildings: { troopFabricator: 3, lifeSupport: 5 } },
-  suppressorTeam: { buildings: { troopFabricator: 3, commandCore: 3 } },
-  disruptorUnit: { buildings: { troopFabricator: 4 } },
-  interceptorBike: { buildings: { troopFabricator: 4 }, troops: { skimmerBike: 50 } },
-  annihilatorPlatform: { buildings: { troopFabricator: 6, commandCore: 6 } },
-  overseer: { buildings: { troopFabricator: 5, commandCore: 3, shieldGrid: 2 }, maxPerNexus: 1 },
+  lancerDrone: { buildings: { troopFabricator: 2 } },
+  breakerUnit: { buildings: { troopFabricator: 3, oreExtractor: 3 } },
+  reconOperative: { buildings: { troopFabricator: 3, commandCore: 2 } },
+  skimmerBike: { buildings: { troopFabricator: 4, alloyForge: 4 } },
+  siegeMech: { buildings: { troopFabricator: 5, oreExtractor: 5 } },
+  bulwarkGuard: { buildings: { troopFabricator: 4, lifeSupport: 6 } },
+  suppressorTeam: { buildings: { troopFabricator: 4, commandCore: 4 } },
+  disruptorUnit: { buildings: { troopFabricator: 5, oreExtractor: 4 } },
+  interceptorBike: { buildings: { troopFabricator: 6, alloyForge: 5 } },
+  annihilatorPlatform: { buildings: { troopFabricator: 7, commandCore: 6 } },
+  overseer: { buildings: { troopFabricator: 9, commandCore: 8, shieldGrid: 6 }, maxPerNexus: 1 },
 };
 
 const POPULATION_BASE = 24;
@@ -422,16 +422,6 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
         }
       }
 
-      // Check troop requirements
-      if (requirements.troops) {
-        for (const [troop, count] of Object.entries(requirements.troops)) {
-          if ((nexus.troops as any)[troop] < (count as number)) {
-            showToast(`Requires ${count}x ${TROOP_NAMES[troop]} in this nexus`, 'error');
-            return;
-          }
-        }
-      }
-
       // Check max per nexus
       if (requirements.maxPerNexus) {
         if ((nexus.troops as any)[troopType] >= requirements.maxPerNexus) {
@@ -591,15 +581,6 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
       for (const [building, level] of Object.entries(requirements.buildings)) {
         if ((nexus.buildings as any)[building] < (level as number)) {
           missing.push(`${BUILDING_NAMES[building]} Lv${level}`);
-        }
-      }
-    }
-
-    // Check troop requirements
-    if (requirements.troops) {
-      for (const [troop, count] of Object.entries(requirements.troops)) {
-        if ((nexus.troops as any)[troop] < (count as number)) {
-          missing.push(`${count}x ${TROOP_NAMES[troop]}`);
         }
       }
     }

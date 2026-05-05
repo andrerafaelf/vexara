@@ -169,6 +169,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
   };
 
   const getQuestBatches = (nexus: Nexus): DashboardQuestBatch[] => {
+    const claimedBatches = new Set(nexus.questRewardClaims || []);
     const assaultTroopers = nexus.troops.assaultTrooper || 0;
     const reconOperatives = nexus.troops.reconOperative || 0;
     const skimmerBikes = nexus.troops.skimmerBike || 0;
@@ -271,7 +272,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
       },
     ];
 
-    return [
+    const batches: DashboardQuestBatch[] = [
       {
         id: 'intro',
         title: 'Intro Quests',
@@ -294,6 +295,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
         reward: '+2500 Biomass, +2500 Alloy, +2500 Ore, +20 Skimmer Bikes, +5 Siege Mechs',
       },
     ];
+    return batches.filter((batch) => !claimedBatches.has(batch.id));
   };
 
   return (
@@ -465,7 +467,8 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
           </div>
         </div>
 
-        {/* Nexuses Quick View */}
+        {/* Nexuses + Quests — full-width row, side by side */}
+        <div className="dashboard-full-row">
         <div className="dashboard-card nexuses-overview">
           <h3>🏘️ Your Nexuses</h3>
           <div className="nexuses-list">
@@ -561,6 +564,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
             })}
           </div>
         </div>
+        </div>{/* end dashboard-full-row */}
       </div>
 
       {selectedAttack && (

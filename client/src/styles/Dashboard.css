@@ -249,13 +249,17 @@
   opacity: 0.6;
 }
 
-/* Nexuses Overview */
-.nexuses-overview {
-  grid-column: span 2;
+/* Full-width row: Nexuses + Quests side by side */
+.dashboard-full-row {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
 }
 
-.quests-overview {
-  grid-column: span 2;
+.dashboard-full-row > .dashboard-card {
+  flex: 1;
+  min-width: 0;
 }
 
 .nexuses-list {
@@ -461,8 +465,8 @@
     grid-column: span 1;
   }
 
-  .nexuses-overview {
-    grid-column: span 1;
+  .dashboard-full-row {
+    flex-direction: column;
   }
 
   .nexuses-list {

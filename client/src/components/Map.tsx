@@ -85,6 +85,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   const [targetY, setTargetY] = useState(String(currentNexus.y));
   const [crosshairPosition, setCrosshairPosition] = useState<CrosshairPosition | null>(null);
   const mapGridWrapperRef = useRef<HTMLDivElement | null>(null);
+  const touchDraggedRef = useRef(false);
   const reconAvailable = currentNexus.troops?.reconOperative || 0;
   const visibleRange = VISIBLE_RANGE;
   const visibleDiameter = visibleRange * 2 + 1;
@@ -265,12 +266,51 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
     }
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      touchDraggedRef.current = false;
+      const touch = e.touches[0];
+      setIsDragging(true);
+      setDragStart({ x: touch.clientX, y: touch.clientY });
+      setDragOffset({ x: 0, y: 0 });
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || e.touches.length !== 1) return;
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - dragStart.x;
+    const deltaY = touch.clientY - dragStart.y;
+
+    if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+      touchDraggedRef.current = true;
+    }
+
+    setDragOffset({ x: deltaX, y: deltaY });
+
+    const dragThreshold = 55;
+    const cellsX = Math.round(-deltaX / dragThreshold);
+    const cellsY = Math.round(deltaY / dragThreshold);
+
+    if (cellsX !== 0 || cellsY !== 0) {
+      setCenterX((prev) => Math.max(0, Math.min(MAP_MAX_INDEX, prev + cellsX)));
+      setCenterY((prev) => Math.max(0, Math.min(MAP_MAX_INDEX, prev + cellsY)));
+      setDragStart({ x: touch.clientX, y: touch.clientY });
+      setDragOffset({ x: 0, y: 0 });
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    setDragOffset({ x: 0, y: 0 });
+  };
+
   const handleVillageClick = async (nexus: MapNexus, e?: React.MouseEvent) => {
     if (e) {
       e.stopPropagation();
     }
-    // Don't process clicks if we were dragging
-    if (isDragging || Math.abs(dragOffset.x) > 5 || Math.abs(dragOffset.y) > 5) {
+    // Don't process clicks if we were dragging (mouse or touch)
+    if (touchDraggedRef.current || isDragging || Math.abs(dragOffset.x) > 5 || Math.abs(dragOffset.y) > 5) {
       return;
     }
     try {
@@ -419,6 +459,230 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
     };
   }, [selectedNexus, centerX, centerY, nexuses]);
 
+  const renderNexusContent = () => {
+    if (!selectedNexus) {
+      return (
+        <div className="no-selection">
+          <p>Select a nexus on the map to view its details</p>
+          <div className="legend">
+            <div>🏛️ Your Nexus</div>
+            <div>🏘️ Other Nexus</div>
+          </div>
+        </div>
+      );
+    }
+
+    const isOwn = selectedNexus.owner?.username === user?.username;
+    const isConquered = selectedNexus.control !== undefined && selectedNexus.control <= 0;
+    const hasIntel = selectedNexus.intelLevel === 'scouted' || selectedNexus.intelLevel === 'owned';
+    const isNpc =
+      selectedNexus.name.includes('Resource Depot') ||
+      selectedNexus.name.includes('Military Outpost') ||
+      selectedNexus.name.includes('Supply Cache') ||
+      selectedNexus.name.includes('Abandoned Base') ||
+      selectedNexus.name.includes('Neutral Settlement');
+
+    const availableTroops = Object.entries(currentNexus.troops || {}).filter(([, count]) => count > 0);
+
+    return (
+      <div className="nexus-details">
+        <h3>
+          {selectedNexus.name}
+          {isNpc && (
+            <span className="nexus-info-icon" title={getNodeTypeInfo(selectedNexus.name)}>
+              ℹ️
+            </span>
+          )}
+        </h3>
+
+        <div className="detail-line">
+          <span>Owner</span>
+          <span>{selectedNexus.owner?.username}</span>
+        </div>
+        <div className="detail-line">
+          <span>Points</span>
+          <span>{selectedNexus.points?.toLocaleString()}</span>
+        </div>
+        <div className="detail-line">
+          <span>Coordinates</span>
+          <span>
+            ({selectedNexus.x}|{selectedNexus.y})
+          </span>
+        </div>
+        {selectedNexus.controlLevel !== undefined && (
+          <div className="detail-line">
+            <span>Control</span>
+            <span>
+              {selectedNexus.control?.toFixed(1)}% (Lv {selectedNexus.controlLevel})
+            </span>
+          </div>
+        )}
+
+        {hasIntel && selectedNexus.resources && (
+          <>
+            <div className="detail-line">
+              <span>Biomass</span>
+              <span>{Math.floor(selectedNexus.resources.biomass).toLocaleString()}</span>
+            </div>
+            <div className="detail-line">
+              <span>Alloy</span>
+              <span>{Math.floor(selectedNexus.resources.alloy).toLocaleString()}</span>
+            </div>
+            <div className="detail-line">
+              <span>Ore</span>
+              <span>{Math.floor(selectedNexus.resources.ore).toLocaleString()}</span>
+            </div>
+          </>
+        )}
+
+        {hasIntel && selectedNexus.population && (
+          <div className="detail-line">
+            <span>Population</span>
+            <span>
+              {selectedNexus.population.current}/{selectedNexus.population.max}
+            </span>
+          </div>
+        )}
+
+        {hasIntel && selectedNexus.buildings?.shieldGrid !== undefined && (
+          <div className="detail-line">
+            <span>Shield Grid</span>
+            <span>Lv {selectedNexus.buildings.shieldGrid}</span>
+          </div>
+        )}
+
+        {hasIntel && selectedNexus.troops && (
+          <div className="detail-line">
+            <span>Troops</span>
+            <span>
+              {Object.values(selectedNexus.troops)
+                .reduce((a, b) => a + b, 0)
+                .toLocaleString()}
+            </span>
+          </div>
+        )}
+
+        {selectedNexus.intelLevel === 'scouted' && selectedNexus.scoutedAt && (
+          <div className="intel-warning intel-timestamp">
+            <span>🔍 Scouted: </span>
+            <span>{new Date(selectedNexus.scoutedAt).toLocaleString()}</span>
+          </div>
+        )}
+
+        {selectedNexus.intelLevel === 'public' && !isOwn && (
+          <div className="intel-warning">No intel — send a scout to reveal resources and troops.</div>
+        )}
+
+        {!isOwn && (
+          <div className="nexus-actions">
+            {!showAttackForm ? (
+              <div className="nexus-action-buttons">
+                <button
+                  className="scout-btn"
+                  onClick={() => {
+                    setMissionType('scout');
+                    setShowAttackForm(true);
+                  }}
+                  disabled={reconAvailable <= 0}
+                  title={reconAvailable <= 0 ? 'No Recon Operatives available' : 'Send scout mission'}
+                >
+                  🔍 Scout
+                </button>
+                <button
+                  className="attack-btn"
+                  onClick={() => {
+                    setMissionType('attack');
+                    setShowAttackForm(true);
+                  }}
+                  disabled={isConquered}
+                  title={isConquered ? 'Nexus already conquered' : 'Launch attack'}
+                >
+                  ⚔️ {isConquered ? 'Conquered' : 'Attack'}
+                </button>
+              </div>
+            ) : (
+              <div className="attack-form">
+                <h4>{missionType === 'scout' ? '🔍 Scout Mission' : '⚔️ Launch Attack'}</h4>
+                <div className="troop-selector">
+                  {(missionType === 'scout'
+                    ? [['reconOperative', currentNexus.troops?.reconOperative || 0]]
+                    : availableTroops
+                  ).map(([type, available]) => (
+                    <div key={type} className="troop-select-row">
+                      <span className="troop-type">{TROOP_LABELS[type] || type}</span>
+                      <input
+                        type="number"
+                        min={0}
+                        max={Number(available)}
+                        value={attackTroops[type as keyof typeof attackTroops]}
+                        onChange={(e) =>
+                          setAttackTroops((prev) => ({
+                            ...prev,
+                            [type]: Math.min(Number(e.target.value), Number(available)),
+                          }))
+                        }
+                      />
+                      <span className="troop-available">/{available}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="attack-form-actions">
+                  <button className="send-btn" onClick={handleSendAttack}>
+                    {missionType === 'scout' ? 'Send Scout' : 'Send Attack'}
+                  </button>
+                  <button
+                    className="cancel-btn"
+                    onClick={() => {
+                      setShowAttackForm(false);
+                      setMissionType('attack');
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderAttacksPanel = () => {
+    if (incomingAttacks.length === 0 && outgoingAttacks.length === 0) return null;
+
+    return (
+      <div className="attacks-panel">
+        {incomingAttacks.length > 0 && (
+          <div className="attacks-section">
+            <h4>⚠️ Incoming ({incomingAttacks.length})</h4>
+            {incomingAttacks.map((attack: any) => (
+              <div key={attack._id} className="attack-item incoming">
+                <div className="attack-from">
+                  From: <strong>{attack.attackerNexus?.name || 'Unknown'}</strong>
+                </div>
+                <div className="attack-time">Arrives: {formatTime(attack.arrivesAt)}</div>
+              </div>
+            ))}
+          </div>
+        )}
+        {outgoingAttacks.length > 0 && (
+          <div className="attacks-section">
+            <h4>🚀 Outgoing ({outgoingAttacks.length})</h4>
+            {outgoingAttacks.map((attack: any) => (
+              <div key={attack._id} className="attack-item outgoing">
+                <div className="attack-to">
+                  To: <strong>{attack.defenderNexus?.name || 'Unknown'}</strong>
+                </div>
+                <div className="attack-time">Arrives: {formatTime(attack.arrivesAt)}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="map-container">
       <div className="map-header">
@@ -427,14 +691,10 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
           <span>
             Viewing: ({centerX}|{centerY}) | Map Size: {MAP_SIZE}x{MAP_SIZE} ({MAP_SIZE * MAP_SIZE} hexes)
           </span>
-          <span className="map-hint">💡 Drag to pan • Arrow keys to navigate • Jump to coordinates</span>
+          <span className="map-hint">💡 Drag or swipe to pan • Jump to coordinates</span>
         </div>
         <div className="map-controls">
-          <button onClick={() => setCenterY(Math.min(MAP_MAX_INDEX, centerY + 5))}>⬆️ North</button>
-          <button onClick={() => setCenterX(Math.max(0, centerX - 5))}>⬅️ West</button>
           <button onClick={handleResetMap}>🏠 Reset Map</button>
-          <button onClick={() => setCenterX(Math.min(MAP_MAX_INDEX, centerX + 5))}>➡️ East</button>
-          <button onClick={() => setCenterY(Math.max(0, centerY - 5))}>⬇️ South</button>
           <div className="map-coordinate-controls">
             <span>Go to</span>
             <input
@@ -470,6 +730,9 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
             onMouseUp={(e) => handleMouseUp(e)}
             onMouseLeave={(e) => handleMouseUp(e)}
             onDragStart={(e) => e.preventDefault()}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
             style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
           >
             {renderGrid()}
@@ -492,255 +755,29 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
         </div>
 
         <div className="map-sidebar">
-          {selectedNexus ? (
-            <div className="nexus-details">
-              <h3>
-                {selectedNexus.name}
-                {!selectedNexus.owner && (
-                  <span className="nexus-info-icon" title={getNodeTypeInfo(selectedNexus.name)}>
-                    ℹ️
-                  </span>
-                )}
-              </h3>
-              <div className="detail-line">
-                <span>Owner:</span>
-                <span>{selectedNexus.owner?.username || 'Neutral'}</span>
-              </div>
-              <div className="detail-line">
-                <span>Location:</span>
-                <span>
-                  ({selectedNexus.x}|{selectedNexus.y})
-                </span>
-              </div>
-              <div className="detail-line">
-                <span>Points:</span>
-                <span>{selectedNexus.points}</span>
-              </div>
-              {selectedNexus.intelLevel !== 'public' && selectedNexus.buildings && (
-                <div className="detail-line">
-                  <span>Shield Grid:</span>
-                  <span>Level {selectedNexus.buildings.shieldGrid || 0}</span>
-                </div>
-              )}
-
-              {selectedNexus.intelLevel === 'public' &&
-                selectedNexus._id !== currentNexus._id &&
-                selectedNexus.owner && (
-                  <div className="intel-warning">
-                    Detailed nexus intel is hidden. Send a Recon Operative scout mission to reveal buildings, troops,
-                    resources, and control level.
-                  </div>
-                )}
-
-              {selectedNexus.intelLevel !== 'public' && selectedNexus.resources && (
-                <>
-                  <div className="detail-line">
-                    <span>Biomass:</span>
-                    <span>
-                      {Math.floor(selectedNexus.resources.biomass).toLocaleString()}
-                      {selectedNexus.buildings?.storageVault !== undefined && (
-                        <span className="resource-max-inline">
-                          /{Math.floor(1000 * Math.pow(1.3, selectedNexus.buildings.storageVault)).toLocaleString()}
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                  <div className="detail-line">
-                    <span>Alloy:</span>
-                    <span>
-                      {Math.floor(selectedNexus.resources.alloy).toLocaleString()}
-                      {selectedNexus.buildings?.storageVault !== undefined && (
-                        <span className="resource-max-inline">
-                          /{Math.floor(1000 * Math.pow(1.3, selectedNexus.buildings.storageVault)).toLocaleString()}
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                  <div className="detail-line">
-                    <span>Ore:</span>
-                    <span>
-                      {Math.floor(selectedNexus.resources.ore).toLocaleString()}
-                      {selectedNexus.buildings?.storageVault !== undefined && (
-                        <span className="resource-max-inline">
-                          /{Math.floor(1000 * Math.pow(1.3, selectedNexus.buildings.storageVault)).toLocaleString()}
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                  {selectedNexus.population && (
-                    <div className="detail-line">
-                      <span>Population:</span>
-                      <span>
-                        {selectedNexus.population.current}/{selectedNexus.population.max}
-                      </span>
-                    </div>
-                  )}
-                  {(selectedNexus.controlLevel !== undefined || selectedNexus.control !== undefined) && (
-                    <div className="detail-line">
-                      <span>Control:</span>
-                      <span>{selectedNexus.controlLevel ?? selectedNexus.control}</span>
-                    </div>
-                  )}
-                  {selectedNexus.scoutedAt && selectedNexus.intelLevel === 'scouted' && (
-                    <div className="detail-line intel-timestamp">
-                      <span>Scouted:</span>
-                      <span>{new Date(selectedNexus.scoutedAt).toLocaleString()}</span>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {selectedNexus._id !== currentNexus._id && selectedNexus.owner?.username !== user?.username && (
-                <div className="nexus-actions">
-                  {!showAttackForm ? (
-                    <div className="nexus-action-buttons">
-                      <button
-                        className="attack-btn"
-                        onClick={() => {
-                          setMissionType('attack');
-                          setShowAttackForm(true);
-                        }}
-                      >
-                        ⚔️ Send Strike
-                      </button>
-                      <button
-                        className="scout-btn"
-                        disabled={reconAvailable <= 0}
-                        title={reconAvailable <= 0 ? 'Requires at least 1 Recon Operative' : undefined}
-                        onClick={() => {
-                          if (reconAvailable <= 0) {
-                            return;
-                          }
-                          setMissionType('scout');
-                          setAttackTroops({
-                            lancerDrone: 0,
-                            assaultTrooper: 0,
-                            breakerUnit: 0,
-                            reconOperative: 1,
-                            skimmerBike: 0,
-                            siegeMech: 0,
-                            bulwarkGuard: 0,
-                            suppressorTeam: 0,
-                            disruptorUnit: 0,
-                            interceptorBike: 0,
-                            annihilatorPlatform: 0,
-                            overseer: 0,
-                          });
-                          setShowAttackForm(true);
-                        }}
-                      >
-                        🔍 Scout {reconAvailable <= 0 ? '(No Recon Operatives)' : ''}
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="attack-form">
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <h4>{missionType === 'scout' ? 'Scout Mission' : 'Select Troops'}</h4>
-                        <button
-                          onClick={() => {
-                            const allTroops: any = {};
-                            Object.keys(attackTroops).forEach((type) => {
-                              allTroops[type] =
-                                missionType === 'scout'
-                                  ? type === 'reconOperative'
-                                    ? currentNexus.troops[type as keyof typeof currentNexus.troops]
-                                    : 0
-                                  : currentNexus.troops[type as keyof typeof currentNexus.troops];
-                            });
-                            setAttackTroops(allTroops);
-                          }}
-                          className="send-all-btn"
-                          style={{
-                            padding: '5px 10px',
-                            fontSize: '12px',
-                            backgroundColor: '#4a9eff',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          📦 Send All
-                        </button>
-                      </div>
-                      <div className="troop-selector">
-                        {Object.entries(attackTroops).map(([type, amount]) => {
-                          if (missionType === 'scout' && type !== 'reconOperative') {
-                            return null;
-                          }
-                          const available = currentNexus.troops[type as keyof typeof currentNexus.troops];
-                          return (
-                            <div key={type} className="troop-select-row">
-                              <span className="troop-type">{TROOP_LABELS[type] || type}</span>
-                              <input
-                                type="number"
-                                min="0"
-                                max={available}
-                                value={amount}
-                                onChange={(e) =>
-                                  setAttackTroops({
-                                    ...attackTroops,
-                                    [type]: Math.min(parseInt(e.target.value) || 0, available),
-                                  })
-                                }
-                              />
-                              <span className="troop-available">/ {available}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                      <div className="attack-form-actions">
-                        <button onClick={handleSendAttack} className="send-btn">
-                          {missionType === 'scout' ? 'Send Scout' : 'Send Strike'}
-                        </button>
-                        <button onClick={() => setShowAttackForm(false)} className="cancel-btn">
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="no-selection">
-              <p>Click on a nexus to view details</p>
-              <p className="legend">
-                🏛️ = Your nexus
-                <br />
-                🏘️ = Other nexuses
-              </p>
-            </div>
-          )}
-
-          {(incomingAttacks.length > 0 || outgoingAttacks.length > 0) && (
-            <div className="attacks-panel">
-              {incomingAttacks.length > 0 && (
-                <div className="attacks-section">
-                  <h4>🛡️ Incoming ({incomingAttacks.length})</h4>
-                  {incomingAttacks.map((attack) => (
-                    <div key={attack._id} className="attack-item incoming">
-                      <div className="attack-from">From: {attack.attacker.nexus.name}</div>
-                      <div className="attack-time">{formatTime(attack.arrivesAt)}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {outgoingAttacks.length > 0 && (
-                <div className="attacks-section">
-                  <h4>⚔️ Outgoing ({outgoingAttacks.length})</h4>
-                  {outgoingAttacks.map((attack) => (
-                    <div key={attack._id} className="attack-item outgoing">
-                      <div className="attack-to">To: {attack.defender.nexus.name}</div>
-                      <div className="attack-time">{formatTime(attack.arrivesAt)}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+          {renderNexusContent()}
+          {renderAttacksPanel()}
         </div>
+
+        {selectedNexus && (
+          <div className="map-mobile-modal-overlay" onClick={() => { setSelectedNexus(null); setShowAttackForm(false); }}>
+            <div className="map-mobile-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="map-mobile-modal-header">
+                <h3>{selectedNexus.name}</h3>
+                <button
+                  className="map-mobile-modal-close"
+                  onClick={() => { setSelectedNexus(null); setShowAttackForm(false); }}
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="map-mobile-modal-body">
+                {renderNexusContent()}
+                {renderAttacksPanel()}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

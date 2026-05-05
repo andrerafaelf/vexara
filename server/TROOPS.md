@@ -10,7 +10,7 @@ Neon Dominion features 12 distinct troop types, each with specialized roles in c
 
 ### Basic Units
 
-These are your fundamental troops that form the backbone of your army. Most require having trained Assault Troopers first, establishing a natural progression path.
+These are your fundamental troops that form the backbone of your army. All units are unlocked purely through building levels.
 
 #### ⚔️ Assault Trooper
 
@@ -63,7 +63,6 @@ These are your fundamental troops that form the backbone of your army. Most requ
 **Requirements:**
 
 - Recruitment Core: Level 2
-- 5 Assault Troopers
 
 ---
 
@@ -90,9 +89,8 @@ These are your fundamental troops that form the backbone of your army. Most requ
 
 **Requirements:**
 
-- Recruitment Core: Level 2
-- Ore Extractor: Level 2
-- 10 Assault Troopers
+- Recruitment Core: Level 3
+- Ore Extractor: Level 3
 
 ---
 
@@ -120,8 +118,7 @@ These are your fundamental troops that form the backbone of your army. Most requ
 **Requirements:**
 
 - Recruitment Core: Level 3
-- 5 Assault Troopers
-- 5 Lancer Drones
+- Command Core: Level 2
 
 **Note:** Use this unit to scout enemy nexuses before launching attacks!
 
@@ -150,10 +147,8 @@ These are your fundamental troops that form the backbone of your army. Most requ
 
 **Requirements:**
 
-- Recruitment Core: Level 3
-- Alloy Forge: Level 3
-- 20 Assault Troopers
-- 10 Lancer Drones
+- Recruitment Core: Level 4
+- Alloy Forge: Level 4
 
 ---
 
@@ -180,14 +175,12 @@ These are your fundamental troops that form the backbone of your army. Most requ
 
 **Requirements:**
 
-- Recruitment Core: Level 4
-- Ore Extractor: Level 4
-- 30 Assault Troopers
-- 10 Breaker Units
+- Recruitment Core: Level 5
+- Ore Extractor: Level 5
 
 ---
 
-### Advanced Units (Building Requirements)
+### Advanced Units
 
 #### 🛡️ Bulwark Guard
 
@@ -212,8 +205,8 @@ These are your fundamental troops that form the backbone of your army. Most requ
 
 **Requirements:**
 
-- Recruitment Core: Level 3
-- Life Support: Level 5
+- Recruitment Core: Level 4
+- Life Support: Level 6
 
 ---
 
@@ -240,8 +233,8 @@ These are your fundamental troops that form the backbone of your army. Most requ
 
 **Requirements:**
 
-- Recruitment Core: Level 3
-- Command Core: Level 3
+- Recruitment Core: Level 4
+- Command Core: Level 4
 
 ---
 
@@ -268,11 +261,12 @@ These are your fundamental troops that form the backbone of your army. Most requ
 
 **Requirements:**
 
-- Recruitment Core: Level 4
+- Recruitment Core: Level 5
+- Ore Extractor: Level 4
 
 ---
 
-### Elite Units (Troop Requirements)
+### Elite Units
 
 #### 🏍️ Interceptor Bike
 
@@ -297,8 +291,8 @@ These are your fundamental troops that form the backbone of your army. Most requ
 
 **Requirements:**
 
-- Recruitment Core: Level 4
-- Must have at least 50 Skimmer Bikes in the nexus
+- Recruitment Core: Level 6
+- Alloy Forge: Level 5
 
 **Tactical Use:** Deploy these to catch fleeing scouts or intercept incoming raids before they reach your nexus.
 
@@ -327,7 +321,7 @@ These are your fundamental troops that form the backbone of your army. Most requ
 
 **Requirements:**
 
-- Recruitment Core: Level 6
+- Recruitment Core: Level 7
 - Command Core: Level 6
 
 **Tactical Use:** Use in large coordinated attacks. Its slow speed makes it vulnerable to interception, so escort with faster units.
@@ -359,9 +353,9 @@ These are your fundamental troops that form the backbone of your army. Most requ
 
 **Requirements:**
 
-- Recruitment Core: Level 5
-- Command Core: Level 3
-- Shield Grid: Level 2
+- Recruitment Core: Level 9
+- Command Core: Level 8
+- Shield Grid: Level 6
 - **Maximum 1 Overseer per nexus**
 
 **Important Notes:**
@@ -385,20 +379,20 @@ These are your fundamental troops that form the backbone of your army. Most requ
 
 ## Training Requirements Summary
 
-| Unit                 | Command Core | Recruitment Core | Life Support | Shield Grid | Ore Extractor | Alloy Forge | Troop Requirements                    | Max Per Nexus |
-| -------------------- | ------------ | ---------------- | ------------ | ----------- | ------------- | ----------- | ------------------------------------- | ------------ |
-| Assault Trooper      | -            | Lv1              | -            | -           | -             | -           | -                                     | Unlimited    |
-| Lancer Drone         | -            | Lv2              | -            | -           | -             | -           | 5 Assault Troopers                    | Unlimited    |
-| Breaker Unit         | -            | Lv2              | -            | -           | Lv2           | -           | 10 Assault Troopers                   | Unlimited    |
-| Recon Operative      | -            | Lv3              | -            | -           | -             | -           | 5 Assault Troopers, 5 Lancer Drones   | Unlimited    |
-| Skimmer Bike         | -            | Lv3              | -            | -           | -             | Lv3         | 20 Assault Troopers, 10 Lancer Drones | Unlimited    |
-| Siege Mech           | -            | Lv4              | -            | -           | Lv4           | -           | 30 Assault Troopers, 10 Breaker Units | Unlimited    |
-| Bulwark Guard        | -            | Lv3              | Lv5          | -           | -             | -           | -                                     | Unlimited    |
-| Suppressor Team      | Lv3          | Lv3              | -            | -           | -             | -           | -                                     | Unlimited    |
-| Disruptor Unit       | -            | Lv4              | -            | -           | -             | -           | -                                     | Unlimited    |
-| Interceptor Bike     | -            | Lv4              | -            | -           | -             | -           | 50 Skimmer Bikes                      | Unlimited    |
-| Annihilator Platform | Lv6          | Lv6              | -            | -           | -             | -           | -                                     | Unlimited    |
-| Overseer             | Lv3          | Lv5              | -            | Lv2         | -             | -           | -                                     | **1**        |
+| Unit                 | Command Core | Recruitment Core | Life Support | Shield Grid | Ore Extractor | Alloy Forge | Max Per Nexus |
+| -------------------- | ------------ | ---------------- | ------------ | ----------- | ------------- | ----------- | ------------- |
+| Assault Trooper      | -            | Lv1              | -            | -           | -             | -           | Unlimited     |
+| Lancer Drone         | -            | Lv2              | -            | -           | -             | -           | Unlimited     |
+| Breaker Unit         | -            | Lv3              | -            | -           | Lv3           | -           | Unlimited     |
+| Recon Operative      | Lv2          | Lv3              | -            | -           | -             | -           | Unlimited     |
+| Skimmer Bike         | -            | Lv4              | -            | -           | -             | Lv4         | Unlimited     |
+| Siege Mech           | -            | Lv5              | -            | -           | Lv5           | -           | Unlimited     |
+| Bulwark Guard        | -            | Lv4              | Lv6          | -           | -             | -           | Unlimited     |
+| Suppressor Team      | Lv4          | Lv4              | -            | -           | -             | -           | Unlimited     |
+| Disruptor Unit       | -            | Lv5              | -            | -           | Lv4           | -           | Unlimited     |
+| Interceptor Bike     | -            | Lv6              | -            | -           | -             | Lv5         | Unlimited     |
+| Annihilator Platform | Lv6          | Lv7              | -            | -           | -             | -           | Unlimited     |
+| Overseer             | Lv8          | Lv9              | -            | Lv6         | -             | -           | **1**         |
 
 ---
 
