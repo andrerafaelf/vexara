@@ -64,14 +64,14 @@ export default function NexusPage() {
       const [nexusesResponse, nexusResponse] = await Promise.allSettled([getMyNexuses(), getNexus(nexusId)]);
 
       if (nexusesResponse.status === 'fulfilled') {
-        const allNexuses = nexusesResponse.value.data;
+        const allNexuses: Nexus[] = Array.isArray(nexusesResponse.value.data) ? nexusesResponse.value.data : [];
         setVillages(allNexuses);
         await refreshCombatReportNotification(allNexuses);
 
         if (allNexuses.length > 0) {
-          const routeNexusId = allNexuses.find((nexus) => String(nexus._id) === nexusId)?._id;
+          const routeNexusId = allNexuses.find((nexus: Nexus) => String(nexus._id) === nexusId)?._id;
           const storedNexusId = localStorage.getItem(SELECTED_NEXUS_KEY);
-          const storedValidNexusId = allNexuses.find((nexus) => nexus._id === storedNexusId)?._id;
+          const storedValidNexusId = allNexuses.find((nexus: Nexus) => nexus._id === storedNexusId)?._id;
           const fallbackNexusId = routeNexusId ?? storedValidNexusId ?? allNexuses[0]._id;
 
           localStorage.setItem(SELECTED_NEXUS_KEY, fallbackNexusId);

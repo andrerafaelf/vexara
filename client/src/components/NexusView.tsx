@@ -4,6 +4,7 @@ import {
   cancelTrainingQueueItem,
   checkBuildQueue,
   checkTrainingQueue,
+  getIncomingAttacks,
   getOutgoingAttacks,
   renameNexus,
   trainTroops,
@@ -305,6 +306,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   const [trainAmount, setTrainAmount] = useState<{ [key: string]: string }>({});
   const [currentTime, setCurrentTime] = useState(new Date());
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [incomingAttacks, setIncomingAttacks] = useState<any[]>([]);
   const [outgoingAttacks, setOutgoingAttacks] = useState<any[]>([]);
   const [selectedAttack, setSelectedAttack] = useState<any | null>(null);
   const [infoModal, setInfoModal] = useState<InfoModalState | null>(null);
@@ -373,9 +375,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   useEffect(() => {
     const interval = setInterval(() => {
       checkQueues();
-      loadOutgoingAttacks();
+      loadAttacks();
     }, 15000);
-    loadOutgoingAttacks();
+    loadAttacks();
     return () => clearInterval(interval);
   }, [nexus]);
 
@@ -407,12 +409,16 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     }
   };
 
-  const loadOutgoingAttacks = async () => {
+  const loadAttacks = async () => {
     try {
-      const response = await getOutgoingAttacks(nexus._id);
-      setOutgoingAttacks(response.data);
+      const [incomingResponse, outgoingResponse] = await Promise.all([
+        getIncomingAttacks(nexus._id),
+        getOutgoingAttacks(nexus._id),
+      ]);
+      setIncomingAttacks(incomingResponse.data);
+      setOutgoingAttacks(outgoingResponse.data);
     } catch (err) {
-      console.error('Error loading outgoing attacks:', err);
+      console.error('Error loading strikes:', err);
     }
   };
 
@@ -1087,6 +1093,8 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   const activeTraining = nexus.trainingQueue[0];
   const activeBuildTimer = activeBuild ? getBuildQueueTimeDisplay(0).label : null;
   const activeTrainingTimer = activeTraining ? getTrainingQueueTimeDisplay(0).label : null;
+  const nextIncomingStrike = incomingAttacks[0];
+  const nextOutgoingStrike = outgoingAttacks[0];
 
   return (
     <div className="nexus-view">
@@ -1230,6 +1238,28 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                     : 'Open Troops'}
                 </span>
               </button>
+              <div className="overview-shortcut-card overview-strikes-card">
+                <span className="overview-shortcut-title">⚔️ Strikes</span>
+                <div className="strikes-card-split">
+                  <div className="strikes-card-half">
+                    <span className="strikes-card-label">Outgoing</span>
+                    <span className="strikes-card-value">
+                      {outgoingAttacks.length > 0
+                        ? `${outgoingAttacks.length} active • ${formatTime(nextOutgoingStrike.arrivesAt)}`
+                        : 'No outgoing strikes'}
+                    </span>
+                  </div>
+                  <div className="strikes-card-divider" />
+                  <div className="strikes-card-half">
+                    <span className="strikes-card-label">Incoming</span>
+                    <span className="strikes-card-value">
+                      {incomingAttacks.length > 0
+                        ? `${incomingAttacks.length} incoming • ${formatTime(nextIncomingStrike.arrivesAt)}`
+                        : 'No incoming strikes'}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {nexus.buildQueue.length > 0 && (
@@ -1324,26 +1354,6 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                     </div>
                   );
                 })}
-              </div>
-            )}
-
-            {outgoingAttacks.length > 0 && (
-              <div className="queue-section">
-                <h4>⚔️ Outgoing Strikes</h4>
-                {outgoingAttacks.map((attack) => (
-                  <div
-                    key={attack._id}
-                    className="queue-item clickable"
-                    onClick={() => setSelectedAttack(attack)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <span>
-                      Strike on {attack.defender?.nexus?.name || 'Unknown'} ({attack.defender?.nexus?.x || '?'}|
-                      {attack.defender?.nexus?.y || '?'})
-                    </span>
-                    <span className="queue-time">{formatTime(attack.arrivesAt)}</span>
-                  </div>
-                ))}
               </div>
             )}
           </div>

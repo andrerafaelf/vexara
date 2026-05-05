@@ -182,7 +182,7 @@
 
 .overview-shortcuts {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 16px;
 }
@@ -225,6 +225,44 @@
 .overview-shortcut-subtitle {
   font-size: 12px;
   color: #a8dadc;
+}
+
+.overview-strikes-card {
+  justify-content: flex-start;
+}
+
+.strikes-card-split {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  flex: 1;
+  gap: 0;
+}
+
+.strikes-card-half {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.strikes-card-divider {
+  width: 1px;
+  background: rgba(168, 218, 220, 0.2);
+  margin: 0 10px;
+  flex-shrink: 0;
+}
+
+.strikes-card-label {
+  font-weight: 700;
+  color: #f1faee;
+}
+
+.strikes-card-value {
+  color: #a8dadc;
+  word-break: break-word;
 }
 
 .stats {
