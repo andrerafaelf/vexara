@@ -119,16 +119,21 @@ const QUEST_REWARD_BATCHES = [
 
 export { QUEST_REWARD_BATCHES };
 
-function getQuestRewardClaims(nexus) {
-  return Array.isArray(nexus.questRewardClaims)
-    ? nexus.questRewardClaims.filter((value) => typeof value === 'string')
-    : [];
-}
-
 export async function applyQuestRewards(nexus, options = {}) {
-  const claimedRewards = new Set(getQuestRewardClaims(nexus));
+  // Quests are tracked per-user, not per-nexus. Skip for neutral nexuses.
+  if (!nexus.ownerId) return nexus;
+
+  const user = await prisma.user.findUnique({
+    where: { id: nexus.ownerId },
+    select: { id: true, questRewardClaims: true, completedQuestIds: true },
+  });
+  if (!user) return nexus;
+
+  const claimedRewards = new Set(
+    Array.isArray(user.questRewardClaims) ? user.questRewardClaims.filter((v) => typeof v === 'string') : [],
+  );
   const completedQuestIds = new Set(
-    Array.isArray(nexus.completedQuestIds) ? nexus.completedQuestIds.filter((v) => typeof v === 'string') : [],
+    Array.isArray(user.completedQuestIds) ? user.completedQuestIds.filter((v) => typeof v === 'string') : [],
   );
 
   const hasOutgoingStrike =
@@ -199,21 +204,29 @@ export async function applyQuestRewards(nexus, options = {}) {
   }
 
   const updatedCompletedIds = Array.from(completedQuestIds);
+  const updatedClaimedRewards = Array.from(claimedRewards);
   const questIdsChanged =
-    updatedCompletedIds.length !== (Array.isArray(nexus.completedQuestIds) ? nexus.completedQuestIds.length : 0);
+    updatedCompletedIds.length !== (Array.isArray(user.completedQuestIds) ? user.completedQuestIds.length : 0);
 
+  // Attach quest fields as virtual properties so serializeNexus can read them
   if (newlyClaimedRewards.length === 0 && !questIdsChanged) {
-    return nexus;
+    return { ...nexus, questRewardClaims: updatedClaimedRewards, completedQuestIds: updatedCompletedIds };
   }
 
-  data.questRewardClaims = Array.from(claimedRewards);
-  data.completedQuestIds = updatedCompletedIds;
-  data.points = calculatePoints({ ...nexus, ...data });
+  // Persist quest progress to user (user-level, not nexus-level)
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { questRewardClaims: updatedClaimedRewards, completedQuestIds: updatedCompletedIds },
+  });
 
-  return prisma.nexus.update({
+  // Apply resource/troop rewards to the nexus
+  data.points = calculatePoints({ ...nexus, ...data });
+  const updatedNexus = await prisma.nexus.update({
     where: { id: nexus.id },
     data,
   });
+
+  return { ...updatedNexus, questRewardClaims: updatedClaimedRewards, completedQuestIds: updatedCompletedIds };
 }
 
 // --- DB helpers ---

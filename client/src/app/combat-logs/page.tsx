@@ -49,7 +49,9 @@ export default function CombatLogsPage() {
       setVillages(response.data);
       await refreshCombatReportNotification(response.data);
       if (!selectedNexus && response.data.length > 0) {
-        setSelectedNexus(response.data[0]);
+        const storedId = localStorage.getItem('selectedNexusId');
+        const nexus = (storedId && response.data.find((n: Nexus) => String(n._id) === storedId)) || response.data[0];
+        setSelectedNexus(nexus);
       }
       setLoading(false);
     } catch (err) {
@@ -74,6 +76,7 @@ export default function CombatLogsPage() {
   }, [loadVillages, router]);
 
   const handleSelectNexus = (nexus: Nexus) => {
+    localStorage.setItem('selectedNexusId', String(nexus._id));
     setSelectedNexus(nexus);
     setIsMobileMenuOpen(false);
   };

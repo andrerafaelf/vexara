@@ -11,21 +11,22 @@ import { useCallback, useEffect, useState } from 'react';
 const SELECTED_NEXUS_KEY = 'selectedNexusId';
 
 export default function Home() {
-  const [nexuses, setVillages] = useState<Nexus[]>([]);
+  const [nexuses, setNexuses] = useState<Nexus[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const { user, logout } = useAuth();
   const router = useRouter();
 
-  const loadVillages = useCallback(async () => {
+  const loadNexuses = useCallback(async () => {
     try {
       const response = await getMyNexuses();
       const allNexuses = response.data;
-      setVillages(allNexuses);
+      setNexuses(allNexuses);
 
       if (allNexuses.length > 0) {
         const storedNexusId = localStorage.getItem(SELECTED_NEXUS_KEY);
-        const preferredNexus = allNexuses.find((nexus) => nexus._id === storedNexusId) ?? allNexuses[0];
+        const preferredNexus =
+          allNexuses.find((nexus: { _id: string | null }) => nexus._id === storedNexusId) ?? allNexuses[0];
         localStorage.setItem(SELECTED_NEXUS_KEY, preferredNexus._id);
         router.replace(`/nexus/${preferredNexus._id}`);
       }
@@ -43,17 +44,17 @@ export default function Home() {
       router.push('/auth');
       return;
     }
-    loadVillages();
-    const interval = setInterval(loadVillages, 30000);
+    loadNexuses();
+    const interval = setInterval(loadNexuses, 30000);
     return () => clearInterval(interval);
-  }, [loadVillages, router]);
+  }, [loadNexuses, router]);
 
   const handleCreateNexus = async () => {
     if (creating) return;
     setCreating(true);
     try {
       await createNexus();
-      await loadVillages();
+      await loadNexuses();
     } catch (err) {
       console.error('Error creating nexus:', err);
       alert('Failed to create nexus');

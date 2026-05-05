@@ -14,6 +14,9 @@ model User {
   points    Int       @default(0)
   createdAt DateTime  @default(now())
   nexuses  Nexus[]
+
+  questRewardClaims Json @default("[]")
+  completedQuestIds Json @default("[]")
 }
 
 model Nexus {
@@ -62,8 +65,6 @@ model Nexus {
   // Queues (JSON arrays)
   buildQueue         Json @default("[]")
   trainingQueue      Json @default("[]")
-  questRewardClaims  Json @default("[]")
-  completedQuestIds  Json @default("[]")
 
   lastResourceUpdate DateTime @default(now())
   points             Int      @default(5)

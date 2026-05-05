@@ -11,6 +11,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 export default function MarketPage() {
   const [nexuses, setVillages] = useState<Nexus[]>([]);
+  const [selectedNexusId, setSelectedNexusId] = useState<string | null>(null);
   const [hasUnreadReports, setHasUnreadReports] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -47,12 +48,17 @@ export default function MarketPage() {
       const response = await getMyNexuses();
       setVillages(response.data);
       await refreshCombatReportNotification(response.data);
+      if (!selectedNexusId) {
+        const storedId = localStorage.getItem('selectedNexusId');
+        if (storedId) setSelectedNexusId(storedId);
+        else if (response.data.length > 0) setSelectedNexusId(String(response.data[0]._id));
+      }
       setLoading(false);
     } catch (err) {
       console.error('Error loading nexuses:', err);
       setLoading(false);
     }
-  }, [refreshCombatReportNotification]);
+  }, [refreshCombatReportNotification, selectedNexusId]);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -70,6 +76,8 @@ export default function MarketPage() {
   }, [loadVillages, router]);
 
   const handleSelectNexus = (nexus: Nexus) => {
+    localStorage.setItem('selectedNexusId', String(nexus._id));
+    setSelectedNexusId(String(nexus._id));
     setIsMobileMenuOpen(false);
     router.push(`/nexus/${nexus._id}`);
   };
@@ -163,7 +171,11 @@ export default function MarketPage() {
         <div className="mobile-drawer-nexuses">
           <h3>Your Nexuses</h3>
           {nexuses.map((nexus) => (
-            <div key={nexus._id} className="nexus-item" onClick={() => handleSelectNexus(nexus)}>
+            <div
+              key={nexus._id}
+              className={`nexus-item ${String(nexus._id) === selectedNexusId ? 'active' : ''}`}
+              onClick={() => handleSelectNexus(nexus)}
+            >
               <div className="nexus-name">{nexus.name}</div>
               <div className="nexus-coords">
                 ({nexus.x}|{nexus.y})
@@ -180,7 +192,11 @@ export default function MarketPage() {
         <nav className="nexus-nav">
           <h3>Your Nexuses</h3>
           {nexuses.map((nexus) => (
-            <div key={nexus._id} className="nexus-item" onClick={() => handleSelectNexus(nexus)}>
+            <div
+              key={nexus._id}
+              className={`nexus-item ${String(nexus._id) === selectedNexusId ? 'active' : ''}`}
+              onClick={() => handleSelectNexus(nexus)}
+            >
               <div className="nexus-name">{nexus.name}</div>
               <div className="nexus-coords">
                 ({nexus.x}|{nexus.y})
