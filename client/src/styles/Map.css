@@ -398,9 +398,24 @@
 }
 
 .troop-select-row input {
-  width: 80px;
-  padding: 5px;
+  width: 60px;
+  padding: 6px 8px;
+  border: 1px solid #457b9d;
+  border-radius: 6px;
+  background: #16213e;
+  color: #f1faee;
+  font-size: 14px;
   text-align: center;
+}
+
+.troop-select-row input:focus {
+  outline: none;
+  border-color: #e94560;
+}
+
+.troop-select-row input:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .troop-available {

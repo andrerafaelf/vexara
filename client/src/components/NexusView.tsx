@@ -1119,8 +1119,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   const activeTraining = nexus.trainingQueue[0];
   const activeBuildTimer = activeBuild ? getBuildQueueTimeDisplay(0).label : null;
   const activeTrainingTimer = activeTraining ? getTrainingQueueTimeDisplay(0).label : null;
-  const nextIncomingStrike = incomingAttacks[0];
-  const nextOutgoingStrike = outgoingAttacks[0];
+
 
   return (
     <div className="nexus-view">
@@ -1269,11 +1268,20 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                 <div className="strikes-card-split">
                   <div className="strikes-card-half">
                     <span className="strikes-card-label">Outgoing</span>
-                    <span className="strikes-card-value">
-                      {outgoingAttacks.length > 0
-                        ? `${outgoingAttacks.length} active • ${formatTime(nextOutgoingStrike.arrivesAt)}`
-                        : 'No outgoing strikes'}
-                    </span>
+                    {outgoingAttacks.length > 0 ? (
+                      <div className="strikes-card-list">
+                        {outgoingAttacks.map((a: any) => (
+                          <div key={a._id} className="strikes-card-entry">
+                            <span className="strikes-card-entry-who">
+                              {a.defender?.nexus?.name ?? '?'}
+                            </span>
+                            <span className="strikes-card-entry-time">{formatTime(a.arrivesAt)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="strikes-card-value">No outgoing strikes</span>
+                    )}
                   </div>
                   <div className="strikes-card-divider" />
                   <div className="strikes-card-half">

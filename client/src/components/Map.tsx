@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getIncomingAttacks, getMapArea, getNexusInfo, getOutgoingAttacks, sendAttack } from '../services/api';
 import '../styles/Map.css';
@@ -60,7 +60,6 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   const [centerX, setCenterX] = useState(currentNexus.x);
   const [centerY, setCenterY] = useState(currentNexus.y);
   const [showAttackForm, setShowAttackForm] = useState(false);
-  const [missionType, setMissionType] = useState<'attack' | 'scout'>('attack');
   const [attackTroops, setAttackTroops] = useState({
     lancerDrone: 0,
     assaultTrooper: 0,
@@ -77,6 +76,22 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   });
   const [incomingAttacks, setIncomingAttacks] = useState<any[]>([]);
   const [outgoingAttacks, setOutgoingAttacks] = useState<any[]>([]);
+
+  const availableTroops = useMemo(() => {
+    const base: Record<string, number> = {};
+    for (const key of Object.keys(TROOP_LABELS)) {
+      base[key] = Number((currentNexus.troops as any)?.[key] || 0);
+    }
+    for (const attack of outgoingAttacks) {
+      const t = attack.troops as Record<string, number> | undefined;
+      if (t) {
+        for (const [type, count] of Object.entries(t)) {
+          if (type in base) base[type] = Math.max(0, base[type] - Number(count));
+        }
+      }
+    }
+    return base;
+  }, [currentNexus.troops, outgoingAttacks]);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -86,9 +101,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   const [crosshairPosition, setCrosshairPosition] = useState<CrosshairPosition | null>(null);
   const mapGridWrapperRef = useRef<HTMLDivElement | null>(null);
   const touchDraggedRef = useRef(false);
-  const reconAvailable = currentNexus.troops?.reconOperative || 0;
   const visibleRange = VISIBLE_RANGE;
-  const visibleDiameter = visibleRange * 2 + 1;
 
   const clampCoordinate = (value: string, fallback: number) => {
     const parsed = Number.parseInt(value, 10);
@@ -325,7 +338,6 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   const handleSendAttack = async () => {
     if (!selectedNexus) return;
 
-    // Check if nexus is conquered
     if (selectedNexus.control !== undefined && selectedNexus.control <= 0) {
       alert('Cannot attack a conquered nexus!');
       return;
@@ -337,22 +349,15 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
       return;
     }
 
-    if (missionType === 'scout') {
-      const nonReconSelected = Object.entries(attackTroops).some(
-        ([type, amount]) => type !== 'reconOperative' && Number(amount) > 0,
-      );
-
-      if (nonReconSelected || attackTroops.reconOperative <= 0) {
-        alert('Scout missions require Recon Operatives only.');
-        return;
-      }
-    }
+    const onlyRecon =
+      attackTroops.reconOperative > 0 &&
+      Object.entries(attackTroops).every(([type, amount]) => type === 'reconOperative' || Number(amount) === 0);
+    const resolvedType = onlyRecon ? 'scout' : 'attack';
 
     try {
-      await sendAttack(currentNexus._id, selectedNexus._id, attackTroops, missionType);
-      alert(missionType === 'scout' ? 'Recon mission sent!' : 'Strike sent!');
+      await sendAttack(currentNexus._id, selectedNexus._id, attackTroops, resolvedType);
+      alert(resolvedType === 'scout' ? 'Recon mission sent!' : 'Strike sent!');
       setShowAttackForm(false);
-      setMissionType('attack');
       setAttackTroops({
         lancerDrone: 0,
         assaultTrooper: 0,
@@ -375,40 +380,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   };
 
   const handleSendAllTroops = () => {
-    const allTroops = {
-      lancerDrone: Number(currentNexus.troops?.lancerDrone || 0),
-      assaultTrooper: Number(currentNexus.troops?.assaultTrooper || 0),
-      breakerUnit: Number(currentNexus.troops?.breakerUnit || 0),
-      reconOperative: Number(currentNexus.troops?.reconOperative || 0),
-      skimmerBike: Number(currentNexus.troops?.skimmerBike || 0),
-      siegeMech: Number(currentNexus.troops?.siegeMech || 0),
-      bulwarkGuard: Number(currentNexus.troops?.bulwarkGuard || 0),
-      suppressorTeam: Number(currentNexus.troops?.suppressorTeam || 0),
-      disruptorUnit: Number(currentNexus.troops?.disruptorUnit || 0),
-      interceptorBike: Number(currentNexus.troops?.interceptorBike || 0),
-      annihilatorPlatform: Number(currentNexus.troops?.annihilatorPlatform || 0),
-      overseer: Number(currentNexus.troops?.overseer || 0),
-    };
-
-    if (missionType === 'scout') {
-      setAttackTroops({
-        lancerDrone: 0,
-        assaultTrooper: 0,
-        breakerUnit: 0,
-        reconOperative: allTroops.reconOperative,
-        skimmerBike: 0,
-        siegeMech: 0,
-        bulwarkGuard: 0,
-        suppressorTeam: 0,
-        disruptorUnit: 0,
-        interceptorBike: 0,
-        annihilatorPlatform: 0,
-        overseer: 0,
-      });
-      return;
-    }
-
-    setAttackTroops(allTroops);
+    setAttackTroops(availableTroops as typeof attackTroops);
   };
 
   const formatTime = (date: Date) => {
@@ -519,7 +491,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
       selectedNexus.name.includes('Abandoned Base') ||
       selectedNexus.name.includes('Neutral Settlement');
 
-    const attackTroopRows = Object.entries(currentNexus.troops || {});
+    const attackTroopRows = Object.entries(availableTroops);
     const attackAvailableTroopTotal = attackTroopRows.reduce((sum, [, count]) => sum + Number(count || 0), 0);
 
     return (
@@ -614,38 +586,19 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
         {!isOwn && (
           <div className="nexus-actions">
             {!showAttackForm ? (
-              <div className="nexus-action-buttons">
-                <button
-                  className="scout-btn"
-                  onClick={() => {
-                    setMissionType('scout');
-                    setShowAttackForm(true);
-                  }}
-                  disabled={reconAvailable <= 0}
-                  title={reconAvailable <= 0 ? 'No Recon Operatives available' : 'Send scout mission'}
-                >
-                  🔍 Scout
-                </button>
-                <button
-                  className="attack-btn"
-                  onClick={() => {
-                    setMissionType('attack');
-                    setShowAttackForm(true);
-                  }}
-                  disabled={isConquered}
-                  title={isConquered ? 'Nexus already conquered' : 'Launch attack'}
-                >
-                  ⚔️ {isConquered ? 'Conquered' : 'Attack'}
-                </button>
-              </div>
+              <button
+                className="attack-btn"
+                onClick={() => setShowAttackForm(true)}
+                disabled={isConquered}
+                title={isConquered ? 'Nexus already conquered' : 'Launch attack'}
+              >
+                ⚔️ {isConquered ? 'Conquered' : 'Attack'}
+              </button>
             ) : (
               <div className="attack-form">
-                <h4>{missionType === 'scout' ? '🔍 Scout Mission' : '⚔️ Launch Attack'}</h4>
+                <h4>⚔️ Launch Attack</h4>
                 <div className="troop-selector">
-                  {(missionType === 'scout'
-                    ? [['reconOperative', currentNexus.troops?.reconOperative || 0]]
-                    : attackTroopRows
-                  ).map(([type, available]) => (
+                  {attackTroopRows.map(([type, available]) => (
                     <div key={type} className="troop-select-row">
                       <span className="troop-type">{TROOP_LABELS[type] || type}</span>
                       <input
@@ -669,33 +622,19 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
                   <button
                     className="send-all-btn"
                     onClick={handleSendAllTroops}
-                    disabled={
-                      missionType === 'scout'
-                        ? Number(currentNexus.troops?.reconOperative || 0) <= 0
-                        : attackAvailableTroopTotal <= 0
-                    }
-                    title={missionType === 'scout' ? 'Fill Recon Operatives' : 'Fill all available troops'}
+                    disabled={attackAvailableTroopTotal <= 0}
+                    title="Fill all available troops"
                   >
                     Send All
                   </button>
                   <button
                     className="send-btn"
                     onClick={handleSendAttack}
-                    disabled={
-                      missionType === 'scout'
-                        ? Number(currentNexus.troops?.reconOperative || 0) <= 0
-                        : attackAvailableTroopTotal <= 0
-                    }
+                    disabled={attackAvailableTroopTotal <= 0}
                   >
-                    {missionType === 'scout' ? 'Send Scout' : 'Send Attack'}
+                    Send Attack
                   </button>
-                  <button
-                    className="cancel-btn"
-                    onClick={() => {
-                      setShowAttackForm(false);
-                      setMissionType('attack');
-                    }}
-                  >
+                  <button className="cancel-btn" onClick={() => setShowAttackForm(false)}>
                     Cancel
                   </button>
                 </div>
