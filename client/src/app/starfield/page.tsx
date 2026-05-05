@@ -108,7 +108,7 @@ export default function StarfieldPage() {
         </div>
         <div className="header-center">
           <button className="nav-btn" onClick={() => router.push('/')}>
-            📊 All Nexuses
+            📊 Dashboard
           </button>
           <button className="nav-btn active">🗺️ Starfield</button>
           <button className="nav-btn" onClick={() => router.push('/market')}>
@@ -144,7 +144,7 @@ export default function StarfieldPage() {
               router.push('/');
             }}
           >
-            📊 All Nexuses
+            📊 Dashboard
           </button>
           <button className="nav-btn active" onClick={() => setIsMobileMenuOpen(false)}>
             🗺️ Starfield

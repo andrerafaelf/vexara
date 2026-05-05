@@ -108,7 +108,7 @@ export default function CombatLogsPage() {
         </div>
         <div className="header-center">
           <button className="nav-btn" onClick={() => router.push('/')}>
-            📊 All Nexuses
+            📊 Dashboard
           </button>
           <button className="nav-btn" onClick={() => router.push('/starfield')}>
             🗺️ Starfield
@@ -146,7 +146,7 @@ export default function CombatLogsPage() {
               router.push('/');
             }}
           >
-            📊 All Nexuses
+            📊 Dashboard
           </button>
           <button
             className="nav-btn"

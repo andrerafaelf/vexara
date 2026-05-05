@@ -148,19 +148,19 @@ export default function NexusPage() {
         </div>
         <div className="header-center">
           <button className="nav-btn active" onClick={() => router.push(`/nexus/${selectedNexus._id}`)}>
-            🛰️ Nexus
+            📊 Dashboard
           </button>
           <button className="nav-btn" onClick={() => router.push('/starfield')}>
             🗺️ Starfield
+          </button>
+          <button className="nav-btn" onClick={() => router.push('/market')}>
+            🏪 Market
           </button>
           <button className="nav-btn" onClick={() => router.push('/combat-logs')}>
             <span className="nav-btn-content">
               📜 Combat Logs
               {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
             </span>
-          </button>
-          <button className="nav-btn" onClick={() => router.push('/market')}>
-            🏪 Market
           </button>
         </div>
         <div className="header-right">
@@ -186,7 +186,7 @@ export default function NexusPage() {
               router.push(`/nexus/${selectedNexus._id}`);
             }}
           >
-            🛰️ Nexus
+            📊 Dashboard
           </button>
           <button
             className="nav-btn"
@@ -201,6 +201,15 @@ export default function NexusPage() {
             className="nav-btn"
             onClick={() => {
               setIsMobileMenuOpen(false);
+              router.push('/market');
+            }}
+          >
+            🏪 Market
+          </button>
+          <button
+            className="nav-btn"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
               router.push('/combat-logs');
             }}
           >
@@ -208,15 +217,6 @@ export default function NexusPage() {
               📜 Combat Logs
               {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
             </span>
-          </button>
-          <button
-            className="nav-btn"
-            onClick={() => {
-              setIsMobileMenuOpen(false);
-              router.push('/market');
-            }}
-          >
-            🏪 Market
           </button>
         </div>
         <div className="mobile-drawer-nexuses">
