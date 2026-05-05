@@ -5,6 +5,7 @@ import {
   checkBuildQueue,
   checkTrainingQueue,
   getOutgoingAttacks,
+  renameNexus,
   trainTroops,
   upgradeBuilding,
 } from '../services/api';
@@ -41,7 +42,10 @@ import storagevaultImg from '../assets/buildings/storagevault.png';
 interface NexusViewProps {
   nexus: Nexus;
   onUpdate: () => void;
+  initialTab?: NexusTab;
 }
+
+type NexusTab = 'overview' | 'buildings' | 'troops' | 'map';
 
 const MAX_BUILD_QUEUE = 5;
 const MAX_TRAINING_QUEUE = 5;
@@ -246,8 +250,8 @@ const TROOP_REQUIREMENTS: { [key: string]: any } = {
   overseer: { buildings: { troopFabricator: 9, commandCore: 8, shieldGrid: 6 }, maxPerNexus: 1 },
 };
 
-const POPULATION_BASE = 24;
-const POPULATION_GROWTH = 1.17;
+const POPULATION_BASE = 100;
+const POPULATION_GROWTH = 1.27;
 const STORAGE_BASE = 1000;
 const STORAGE_GROWTH = 1.3;
 const SHIELD_BONUS_PER_LEVEL = 0.02;
@@ -293,8 +297,11 @@ interface InfoModalState {
   description: string;
 }
 
-const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'buildings' | 'troops' | 'map'>('overview');
+const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'overview' }) => {
+  const [activeTab, setActiveTab] = useState<NexusTab>(initialTab);
+  const [isRenamingNexus, setIsRenamingNexus] = useState(false);
+  const [renameValue, setRenameValue] = useState(nexus.name);
+  const [isSavingNexusName, setIsSavingNexusName] = useState(false);
   const [trainAmount, setTrainAmount] = useState<{ [key: string]: string }>({});
   const [currentTime, setCurrentTime] = useState(new Date());
   const [toast, setToast] = useState<ToastMessage | null>(null);
@@ -311,6 +318,41 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
     setInfoModal({ title, description });
   };
 
+  const submitNexusRename = async () => {
+    const trimmed = renameValue.trim();
+    if (trimmed.length < 3 || trimmed.length > 32) {
+      showToast('Nexus name must be between 3 and 32 characters', 'error');
+      return;
+    }
+
+    if (trimmed === nexus.name) {
+      setIsRenamingNexus(false);
+      return;
+    }
+
+    try {
+      setIsSavingNexusName(true);
+      await renameNexus(nexus._id, trimmed);
+      showToast('Nexus renamed successfully', 'success');
+      setIsRenamingNexus(false);
+      onUpdate();
+    } catch (err: any) {
+      showToast(err.response?.data?.error || 'Error renaming nexus', 'error');
+    } finally {
+      setIsSavingNexusName(false);
+    }
+  };
+
+  const beginNexusRename = () => {
+    setRenameValue(nexus.name);
+    setIsRenamingNexus(true);
+  };
+
+  const cancelNexusRename = () => {
+    setRenameValue(nexus.name);
+    setIsRenamingNexus(false);
+  };
+
   const handleTrainAmountChange = (troopType: string, value: string) => {
     const digitsOnly = value.replace(/\D/g, '');
     setTrainAmount((prev) => ({ ...prev, [troopType]: digitsOnly }));
@@ -325,6 +367,10 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
   }, []);
 
   useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
+
+  useEffect(() => {
     const interval = setInterval(() => {
       checkQueues();
       loadOutgoingAttacks();
@@ -332,6 +378,12 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
     loadOutgoingAttacks();
     return () => clearInterval(interval);
   }, [nexus]);
+
+  useEffect(() => {
+    if (!isRenamingNexus) {
+      setRenameValue(nexus.name);
+    }
+  }, [isRenamingNexus, nexus.name]);
 
   const checkQueues = async () => {
     try {
@@ -1031,11 +1083,71 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
   const storageCapacity = Math.floor(1000 * Math.pow(1.3, nexus.buildings.storageVault));
   const questBatches = getQuestBatches();
   const currentTroops = Object.entries(nexus.troops).filter(([, count]) => Number(count) > 0);
+  const activeBuild = nexus.buildQueue[0];
+  const activeTraining = nexus.trainingQueue[0];
+  const activeBuildTimer = activeBuild ? getBuildQueueTimeDisplay(0).label : null;
+  const activeTrainingTimer = activeTraining ? getTrainingQueueTimeDisplay(0).label : null;
 
   return (
     <div className="nexus-view">
       <div className="nexus-header">
-        <h2>{nexus.name}</h2>
+        <div className="nexus-title-row">
+          {isRenamingNexus ? (
+            <>
+              <input
+                className="nexus-rename-input"
+                value={renameValue}
+                onChange={(e) => setRenameValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    submitNexusRename();
+                  }
+                  if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancelNexusRename();
+                  }
+                }}
+                maxLength={32}
+                autoFocus
+                aria-label="Edit nexus name"
+              />
+              <button
+                type="button"
+                className="nexus-rename-action save"
+                onClick={submitNexusRename}
+                disabled={isSavingNexusName}
+                title="Save Nexus Name"
+                aria-label="Save Nexus Name"
+              >
+                {isSavingNexusName ? '...' : '✓'}
+              </button>
+              <button
+                type="button"
+                className="nexus-rename-action cancel"
+                onClick={cancelNexusRename}
+                disabled={isSavingNexusName}
+                title="Cancel Rename"
+                aria-label="Cancel Rename"
+              >
+                ✕
+              </button>
+            </>
+          ) : (
+            <>
+              <h2>{nexus.name}</h2>
+              <button
+                type="button"
+                className="nexus-rename-btn"
+                onClick={beginNexusRename}
+                title="Rename Nexus"
+                aria-label="Rename Nexus"
+              >
+                ✎
+              </button>
+            </>
+          )}
+        </div>
         <div className="resources">
           <div className="resource" title="Biomass">
             <span className="resource-icon">🧬</span>
@@ -1076,28 +1188,48 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
         </div>
       </div>
 
-      <div className="tabs">
-        <button className={activeTab === 'overview' ? 'active' : ''} onClick={() => setActiveTab('overview')}>
-          Overview
-        </button>
-        <button className={activeTab === 'buildings' ? 'active' : ''} onClick={() => setActiveTab('buildings')}>
-          Buildings
-        </button>
-        <button className={activeTab === 'troops' ? 'active' : ''} onClick={() => setActiveTab('troops')}>
-          Troops
-        </button>
-        <button className={activeTab === 'map' ? 'active' : ''} onClick={() => setActiveTab('map')}>
-          Starfield
-        </button>
-      </div>
+      {activeTab !== 'overview' && (
+        <div className="tab-back-nav">
+          <button type="button" className="tab-back-btn" onClick={() => setActiveTab('overview')}>
+            ← Back to Nexus Overview
+          </button>
+        </div>
+      )}
 
       <div className="tab-content">
         {activeTab === 'overview' && (
           <div className="overview-tab">
             <NexusMap nexus={nexus} onClickBuilding={() => setActiveTab('buildings')} />
             <div className="nexus-overview-meta">
-              <span>📍 ({nexus.x}|{nexus.y})</span>
+              <span>
+                📍 ({nexus.x}|{nexus.y})
+              </span>
               <span>📊 {nexus.points} inf</span>
+            </div>
+
+            <div className="overview-shortcuts">
+              <button type="button" className="overview-shortcut-card" onClick={() => setActiveTab('buildings')}>
+                <span className="overview-shortcut-title">🏗️ Construction</span>
+                <span className="overview-shortcut-status">
+                  {activeBuild ? 'Active upgrade in progress' : 'No active construction'}
+                </span>
+                <span className="overview-shortcut-subtitle">
+                  {activeBuild
+                    ? `${BUILDING_NAMES[activeBuild.building] || activeBuild.building} → Lv${activeBuild.targetLevel} • ${activeBuildTimer}`
+                    : 'Open Buildings'}
+                </span>
+              </button>
+              <button type="button" className="overview-shortcut-card" onClick={() => setActiveTab('troops')}>
+                <span className="overview-shortcut-title">🎖️ Training</span>
+                <span className="overview-shortcut-status">
+                  {activeTraining ? 'Troops are being trained' : 'No active training'}
+                </span>
+                <span className="overview-shortcut-subtitle">
+                  {activeTraining
+                    ? `${activeTraining.amount}x ${TROOP_NAMES[activeTraining.troopType] || activeTraining.troopType} • ${activeTrainingTimer}`
+                    : 'Open Troops'}
+                </span>
+              </button>
             </div>
 
             {nexus.buildQueue.length > 0 && (
@@ -1108,7 +1240,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
 
                   return (
                     <div key={idx} className={`queue-item ${queueTime.isWaiting ? 'queue-item-waiting' : ''}`}>
-                      <span>{BUILDING_NAMES[item.building]} → Level {item.targetLevel}</span>
+                      <span>
+                        {BUILDING_NAMES[item.building]} → Level {item.targetLevel}
+                      </span>
                       <div className="queue-item-actions">
                         <span className={queueTime.isWaiting ? 'queue-time-queued' : 'queue-time'}>
                           {queueTime.label}
@@ -1171,7 +1305,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
 
                   return (
                     <div key={idx} className={`queue-item ${queueTime.isWaiting ? 'queue-item-waiting' : ''}`}>
-                      <span>{item.amount}x {TROOP_NAMES[item.troopType] || item.troopType}</span>
+                      <span>
+                        {item.amount}x {TROOP_NAMES[item.troopType] || item.troopType}
+                      </span>
                       <div className="queue-item-actions">
                         <span className={queueTime.isWaiting ? 'queue-time-queued' : 'queue-time'}>
                           {queueTime.label}
@@ -1225,7 +1361,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
 
                   return (
                     <div key={idx} className={`queue-item ${queueTime.isWaiting ? 'queue-item-waiting' : ''}`}>
-                      <span>{BUILDING_NAMES[item.building]} → Level {item.targetLevel}</span>
+                      <span>
+                        {BUILDING_NAMES[item.building]} → Level {item.targetLevel}
+                      </span>
                       <div className="queue-item-actions">
                         <span className={queueTime.isWaiting ? 'queue-time-queued' : 'queue-time'}>
                           {queueTime.label}
@@ -1391,7 +1529,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
 
                       return (
                         <div key={idx} className={`queue-item ${queueTime.isWaiting ? 'queue-item-waiting' : ''}`}>
-                          <span>{item.amount}x {TROOP_NAMES[item.troopType] || item.troopType}</span>
+                          <span>
+                            {item.amount}x {TROOP_NAMES[item.troopType] || item.troopType}
+                          </span>
                           <div className="queue-item-actions">
                             <span className={queueTime.isWaiting ? 'queue-time-queued' : 'queue-time'}>
                               {queueTime.label}

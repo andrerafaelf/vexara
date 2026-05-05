@@ -3,6 +3,7 @@ import prisma from '../../server/lib/prisma.js';
 import { serializeNexus } from '../../server/models/Nexus.js';
 import { hashPassword } from '../../server/models/User.js';
 import { processArrivedAttacks } from '../../server/utils/combat.js';
+import { getPopulationMax } from '../../server/utils/population.js';
 
 const router = express.Router();
 
@@ -138,6 +139,7 @@ router.post('/users', async (req, res) => {
           ownerId: user.id,
           x: Math.floor(Math.random() * 35),
           y: Math.floor(Math.random() * 35),
+          populationMax: getPopulationMax(1),
         },
       });
 
@@ -297,7 +299,7 @@ router.post('/users/:userId/buildings', async (req, res) => {
     };
 
     if (building === 'lifeSupport') {
-      const populationMax = Math.floor(24 * Math.pow(1.17, level));
+      const populationMax = getPopulationMax(level);
       data.populationMax = populationMax;
       data.populationCurrent = Math.min(nexus.populationCurrent, populationMax);
     }
@@ -364,7 +366,7 @@ router.post('/users/:userId/complete-build', async (req, res) => {
     };
 
     if (build.building === 'lifeSupport') {
-      data.populationMax = Math.floor(24 * Math.pow(1.17, build.targetLevel));
+      data.populationMax = getPopulationMax(build.targetLevel);
       data.populationCurrent = Math.min(nexus.populationCurrent, data.populationMax);
     }
 
@@ -463,7 +465,7 @@ router.post('/users/:userId/reset-account', async (req, res) => {
           buildQueue: [],
           trainingQueue: [],
           populationCurrent: 5,
-          populationMax: 24,
+          populationMax: getPopulationMax(STARTER_NEXUS_DATA.lifeSupport),
           biomass: 500,
           alloy: 500,
           ore: 500,
@@ -627,7 +629,7 @@ router.post('/nexuses/:nexusId/buildings', async (req, res) => {
         alloyForge: nexus.alloyForge + alloyForge,
         oreExtractor: nexus.oreExtractor + oreExtractor,
         shieldGrid: nexus.shieldGrid + shieldGrid,
-        populationMax: Math.floor(24 * Math.pow(1.17, newLifeSupport)),
+        populationMax: getPopulationMax(newLifeSupport),
       },
     });
 
@@ -656,7 +658,7 @@ router.post('/nexuses/:nexusId/complete-build', async (req, res) => {
       buildQueue: remainingQueue,
     };
     if (build.building === 'lifeSupport') {
-      data.populationMax = Math.floor(24 * Math.pow(1.17, build.targetLevel));
+      data.populationMax = getPopulationMax(build.targetLevel);
     }
 
     const updated = await prisma.nexus.update({ where: { id: nexus.id }, data });

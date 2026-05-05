@@ -1,4 +1,5 @@
 import prisma from '../lib/prisma.js';
+import { getPopulationMax } from './population.js';
 
 const MAP_SIZE = 35;
 const MIN_NEUTRALS = 70;
@@ -36,6 +37,7 @@ function scaleTroopCount(min, max, troopMultiplier, difficultyScale) {
 
 function buildNeutralNexusData(x, y, difficultyScale = BASE_NEUTRAL_DIFFICULTY) {
   const nexusType = selectNexusType();
+  const lifeSupport = Math.max(1, Math.floor(Math.random() * 3) + Math.floor(difficultyScale));
 
   let biomass = Math.floor(Math.random() * 4000) + 1000;
   let alloy = Math.floor(Math.random() * 4000) + 1000;
@@ -61,12 +63,13 @@ function buildNeutralNexusData(x, y, difficultyScale = BASE_NEUTRAL_DIFFICULTY) 
     ore: Math.floor(ore),
     commandCore: Math.max(1, Math.floor(Math.random() * 3) + Math.floor(difficultyScale)),
     troopFabricator: Math.max(0, Math.floor(Math.random() * 2) + Math.floor((difficultyScale - 0.6) * 2)),
-    lifeSupport: Math.max(1, Math.floor(Math.random() * 3) + Math.floor(difficultyScale)),
+    lifeSupport,
     storageVault: Math.max(1, Math.floor(Math.random() * 3) + Math.floor(difficultyScale)),
     biomassFarm: Math.max(1, Math.floor(Math.random() * 3) + Math.floor(difficultyScale)),
     alloyForge: Math.max(1, Math.floor(Math.random() * 3) + Math.floor(difficultyScale)),
     oreExtractor: Math.max(1, Math.floor(Math.random() * 3) + Math.floor(difficultyScale)),
     shieldGrid: Math.floor(Math.random() * 2),
+    populationMax: getPopulationMax(lifeSupport),
     lancerDrone: scaleTroopCount(6, 14, troopMultiplier, difficultyScale),
     assaultTrooper: scaleTroopCount(10, 18, troopMultiplier, difficultyScale),
     breakerUnit: scaleTroopCount(2, 8, troopMultiplier, difficultyScale),

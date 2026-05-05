@@ -2,6 +2,7 @@ import express from 'express';
 import prisma from '../lib/prisma.js';
 import auth from '../middleware/auth.js';
 import { applyCompletedQueues, applyQuestRewards, refreshResources, serializeNexus } from '../models/Nexus.js';
+import { getPopulationMax } from '../utils/population.js';
 
 const router = express.Router();
 
@@ -31,6 +32,7 @@ router.post('/create', auth, async (req, res) => {
         alloyForge: 1,
         oreExtractor: 1,
         shieldGrid: 0,
+        populationMax: getPopulationMax(1),
       },
     });
 
@@ -43,7 +45,10 @@ router.post('/create', auth, async (req, res) => {
 // Get user's nexuses
 router.get('/my-nexuses', auth, async (req, res) => {
   try {
-    const nexuses = await prisma.nexus.findMany({ where: { ownerId: req.userId } });
+    const nexuses = await prisma.nexus.findMany({
+      where: { ownerId: req.userId },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    });
     const outgoingAttacks = await prisma.attack.findMany({
       where: {
         attackerNexusId: { in: nexuses.map((nexus) => nexus.id) },
@@ -67,6 +72,36 @@ router.get('/my-nexuses', auth, async (req, res) => {
     await prisma.user.update({ where: { id: req.userId }, data: { points: totalPoints } });
 
     res.json(updated.map((v) => serializeNexus(v)));
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Rename a nexus
+router.patch('/:nexusId/name', auth, async (req, res) => {
+  try {
+    const nexusId = parseInt(req.params.nexusId);
+    const name = typeof req.body.name === 'string' ? req.body.name.trim() : '';
+
+    if (name.length < 3 || name.length > 32) {
+      return res.status(400).json({ error: 'Nexus name must be between 3 and 32 characters' });
+    }
+
+    const nexus = await prisma.nexus.findUnique({ where: { id: nexusId } });
+    if (!nexus) {
+      return res.status(404).json({ error: 'Nexus not found' });
+    }
+
+    if (nexus.ownerId !== req.userId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    const updated = await prisma.nexus.update({
+      where: { id: nexus.id },
+      data: { name },
+    });
+
+    res.json(serializeNexus(updated));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

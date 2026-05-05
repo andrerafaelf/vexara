@@ -3,29 +3,83 @@
 import AdBanner from '@/components/AdBanner';
 import NexusView from '@/components/NexusView';
 import { useAuth } from '@/context/AuthContext';
-import { getMyNexuses, getNexus } from '@/services/api';
+import { getMyNexuses, getNexus, getReports } from '@/services/api';
 import '@/styles/Game.css';
 import { Nexus } from '@/types/game';
-import { useParams, usePathname, useRouter } from 'next/navigation';
+import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
+
+const SELECTED_NEXUS_KEY = 'selectedNexusId';
+
+type NexusTab = 'overview' | 'buildings' | 'troops' | 'map';
+
+function parseTab(value: string | null): NexusTab {
+  if (value === 'buildings' || value === 'troops' || value === 'map') {
+    return value;
+  }
+
+  return 'overview';
+}
 
 export default function NexusPage() {
   const [nexuses, setVillages] = useState<Nexus[]>([]);
   const [selectedNexus, setSelectedNexus] = useState<Nexus | null>(null);
+  const [hasUnreadReports, setHasUnreadReports] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const params = useParams();
   const nexusId = params.id as string;
+  const activeTab = parseTab(searchParams.get('tab'));
+
+  const refreshCombatReportNotification = useCallback(async (allNexuses: Nexus[]) => {
+    if (allNexuses.length === 0) {
+      setHasUnreadReports(false);
+      return;
+    }
+
+    try {
+      const viewedReports = new Set<string>(JSON.parse(localStorage.getItem('viewedReports') || '[]'));
+      const reportResults = await Promise.allSettled(allNexuses.map((nexus) => getReports(nexus._id)));
+      const hasUnread = reportResults.some((result) => {
+        if (result.status !== 'fulfilled') {
+          return false;
+        }
+
+        const reports = Array.isArray(result.value.data) ? result.value.data : [];
+        return reports.some((report: { _id: string }) => !viewedReports.has(report._id));
+      });
+
+      setHasUnreadReports(hasUnread);
+    } catch {
+      setHasUnreadReports(false);
+    }
+  }, []);
 
   const loadVillages = useCallback(async () => {
     try {
       const [nexusesResponse, nexusResponse] = await Promise.allSettled([getMyNexuses(), getNexus(nexusId)]);
 
       if (nexusesResponse.status === 'fulfilled') {
-        setVillages(nexusesResponse.value.data);
+        const allNexuses = nexusesResponse.value.data;
+        setVillages(allNexuses);
+        await refreshCombatReportNotification(allNexuses);
+
+        if (allNexuses.length > 0) {
+          const routeNexusId = allNexuses.find((nexus) => String(nexus._id) === nexusId)?._id;
+          const storedNexusId = localStorage.getItem(SELECTED_NEXUS_KEY);
+          const storedValidNexusId = allNexuses.find((nexus) => nexus._id === storedNexusId)?._id;
+          const fallbackNexusId = routeNexusId ?? storedValidNexusId ?? allNexuses[0]._id;
+
+          localStorage.setItem(SELECTED_NEXUS_KEY, fallbackNexusId);
+
+          if (!routeNexusId) {
+            router.replace(`/nexus/${fallbackNexusId}`);
+          }
+        }
       } else {
         console.error('Error loading nexuses:', nexusesResponse.reason);
         setVillages([]);
@@ -33,6 +87,7 @@ export default function NexusPage() {
 
       if (nexusResponse.status === 'fulfilled') {
         setSelectedNexus(nexusResponse.value.data);
+        localStorage.setItem(SELECTED_NEXUS_KEY, String(nexusResponse.value.data._id));
       } else {
         console.error('Error loading selected nexus:', nexusResponse.reason);
         setSelectedNexus(null);
@@ -43,7 +98,7 @@ export default function NexusPage() {
       console.error('Error loading nexuses:', err);
       setLoading(false);
     }
-  }, [nexusId]);
+  }, [nexusId, refreshCombatReportNotification, router]);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -62,6 +117,7 @@ export default function NexusPage() {
 
   const handleSelectNexus = (nexus: Nexus) => {
     setIsMobileMenuOpen(false);
+    localStorage.setItem(SELECTED_NEXUS_KEY, String(nexus._id));
     router.push(`/nexus/${nexus._id}`);
   };
 
@@ -91,14 +147,20 @@ export default function NexusPage() {
           <span className="username">Welcome, {user?.username}</span>
         </div>
         <div className="header-center">
-          <button className="nav-btn" onClick={() => router.push('/')}>
-            📊 Dashboard
+          <button className="nav-btn active" onClick={() => router.push(`/nexus/${selectedNexus._id}`)}>
+            🛰️ Nexus
           </button>
           <button className="nav-btn" onClick={() => router.push('/starfield')}>
             🗺️ Starfield
           </button>
           <button className="nav-btn" onClick={() => router.push('/combat-logs')}>
-            📜 Combat Logs
+            <span className="nav-btn-content">
+              📜 Combat Logs
+              {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
+            </span>
+          </button>
+          <button className="nav-btn" onClick={() => router.push('/market')}>
+            🏪 Market
           </button>
         </div>
         <div className="header-right">
@@ -121,10 +183,10 @@ export default function NexusPage() {
             className="nav-btn"
             onClick={() => {
               setIsMobileMenuOpen(false);
-              router.push('/');
+              router.push(`/nexus/${selectedNexus._id}`);
             }}
           >
-            📊 Dashboard
+            🛰️ Nexus
           </button>
           <button
             className="nav-btn"
@@ -142,7 +204,19 @@ export default function NexusPage() {
               router.push('/combat-logs');
             }}
           >
-            📜 Combat Logs
+            <span className="nav-btn-content">
+              📜 Combat Logs
+              {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
+            </span>
+          </button>
+          <button
+            className="nav-btn"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              router.push('/market');
+            }}
+          >
+            🏪 Market
           </button>
         </div>
         <div className="mobile-drawer-nexuses">
@@ -186,7 +260,7 @@ export default function NexusPage() {
         </nav>
 
         <main className="main-content">
-          <NexusView nexus={selectedNexus} onUpdate={loadVillages} />
+          <NexusView nexus={selectedNexus} onUpdate={loadVillages} initialTab={activeTab} />
         </main>
       </div>
 

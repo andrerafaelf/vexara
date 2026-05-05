@@ -3,7 +3,7 @@
 import AdBanner from '@/components/AdBanner';
 import Market from '@/components/Market';
 import { useAuth } from '@/context/AuthContext';
-import { getMyNexuses } from '@/services/api';
+import { getMyNexuses, getReports } from '@/services/api';
 import '@/styles/Game.css';
 import { Nexus } from '@/types/game';
 import { usePathname, useRouter } from 'next/navigation';
@@ -11,22 +11,48 @@ import { useCallback, useEffect, useState } from 'react';
 
 export default function MarketPage() {
   const [nexuses, setVillages] = useState<Nexus[]>([]);
+  const [hasUnreadReports, setHasUnreadReports] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
+  const refreshCombatReportNotification = useCallback(async (allNexuses: Nexus[]) => {
+    if (allNexuses.length === 0) {
+      setHasUnreadReports(false);
+      return;
+    }
+
+    try {
+      const viewedReports = new Set<string>(JSON.parse(localStorage.getItem('viewedReports') || '[]'));
+      const reportResults = await Promise.allSettled(allNexuses.map((nexus) => getReports(nexus._id)));
+      const hasUnread = reportResults.some((result) => {
+        if (result.status !== 'fulfilled') {
+          return false;
+        }
+
+        const reports = Array.isArray(result.value.data) ? result.value.data : [];
+        return reports.some((report: { _id: string }) => !viewedReports.has(report._id));
+      });
+
+      setHasUnreadReports(hasUnread);
+    } catch {
+      setHasUnreadReports(false);
+    }
+  }, []);
+
   const loadVillages = useCallback(async () => {
     try {
       const response = await getMyNexuses();
       setVillages(response.data);
+      await refreshCombatReportNotification(response.data);
       setLoading(false);
     } catch (err) {
       console.error('Error loading nexuses:', err);
       setLoading(false);
     }
-  }, []);
+  }, [refreshCombatReportNotification]);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -77,7 +103,10 @@ export default function MarketPage() {
             🗺️ Starfield
           </button>
           <button className="nav-btn" onClick={() => router.push('/combat-logs')}>
-            📜 Combat Logs
+            <span className="nav-btn-content">
+              📜 Combat Logs
+              {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
+            </span>
           </button>
           <button className="nav-btn active">🏪 Market</button>
         </div>
@@ -122,7 +151,10 @@ export default function MarketPage() {
               router.push('/combat-logs');
             }}
           >
-            📜 Combat Logs
+            <span className="nav-btn-content">
+              📜 Combat Logs
+              {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
+            </span>
           </button>
           <button className="nav-btn active" onClick={() => setIsMobileMenuOpen(false)}>
             🏪 Market

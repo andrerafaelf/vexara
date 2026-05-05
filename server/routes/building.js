@@ -2,6 +2,7 @@ import express from 'express';
 import prisma from '../lib/prisma.js';
 import auth from '../middleware/auth.js';
 import { applyQuestRewards, computeResourceUpdate, serializeNexus } from '../models/Nexus.js';
+import { getPopulationMax } from '../utils/population.js';
 
 const router = express.Router();
 const MAX_BUILD_QUEUE = 5;
@@ -362,7 +363,7 @@ router.post('/check-queue', auth, async (req, res) => {
 
       // Update max population if life support was upgraded
       if (build.building === 'lifeSupport') {
-        data.populationMax = Math.floor(24 * Math.pow(1.17, build.targetLevel));
+        data.populationMax = getPopulationMax(build.targetLevel);
       }
     }
 

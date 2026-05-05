@@ -2,6 +2,7 @@ import express from 'express';
 import prisma from '../lib/prisma.js';
 import { serializeNexus } from '../models/Nexus.js';
 import { processArrivedAttacks } from '../utils/combat.js';
+import { getPopulationMax } from '../utils/population.js';
 
 const router = express.Router();
 
@@ -194,7 +195,7 @@ router.post('/nexuses/:nexusId/buildings', async (req, res) => {
         alloyForge: nexus.alloyForge + alloyForge,
         oreExtractor: nexus.oreExtractor + oreExtractor,
         shieldGrid: nexus.shieldGrid + shieldGrid,
-        populationMax: Math.floor(24 * Math.pow(1.17, newLifeSupport)),
+        populationMax: getPopulationMax(newLifeSupport),
       },
     });
 
@@ -223,7 +224,7 @@ router.post('/nexuses/:nexusId/complete-build', async (req, res) => {
       buildQueue: remainingQueue,
     };
     if (build.building === 'lifeSupport') {
-      data.populationMax = Math.floor(24 * Math.pow(1.17, build.targetLevel));
+      data.populationMax = getPopulationMax(build.targetLevel);
     }
 
     const updated = await prisma.nexus.update({ where: { id: nexus.id }, data });

@@ -59,6 +59,12 @@ export const getMyNexuses = () => apiRequest('/nexus/my-nexuses');
 
 export const getNexus = (nexusId: string) => apiRequest(`/nexus/${nexusId}`);
 
+export const renameNexus = (nexusId: string, name: string) =>
+  apiRequest(`/nexus/${nexusId}/name`, {
+    method: 'PATCH',
+    body: JSON.stringify({ name }),
+  });
+
 // Buildings
 export const upgradeBuilding = (nexusId: string, building: string) =>
   apiRequest('/building/upgrade', {
@@ -137,5 +143,4 @@ export const buyMarketListing = (listingId: number, buyerNexusId: string) =>
     body: JSON.stringify({ buyerNexusId }),
   });
 
-export const cancelMarketListing = (listingId: number) =>
-  apiRequest(`/market/${listingId}`, { method: 'DELETE' });
+export const cancelMarketListing = (listingId: number) => apiRequest(`/market/${listingId}`, { method: 'DELETE' });

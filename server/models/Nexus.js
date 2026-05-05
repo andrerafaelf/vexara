@@ -5,6 +5,7 @@ import {
   getMaxStorage as getMaxStorageBase,
   getResourceProduction as getResourceProductionBase,
 } from '../utils/economy.js';
+import { getPopulationMax } from '../utils/population.js';
 
 // --- Pure computation helpers ---
 
@@ -175,7 +176,11 @@ export async function applyQuestRewards(nexus, options = {}) {
   };
 
   for (const batch of QUEST_REWARD_BATCHES) {
-    if (!batch.isUnlocked({ completedBatchIds, claimedRewards }) || !completedBatchIds.has(batch.id) || claimedRewards.has(batch.id)) {
+    if (
+      !batch.isUnlocked({ completedBatchIds, claimedRewards }) ||
+      !completedBatchIds.has(batch.id) ||
+      claimedRewards.has(batch.id)
+    ) {
       continue;
     }
 
@@ -194,7 +199,8 @@ export async function applyQuestRewards(nexus, options = {}) {
   }
 
   const updatedCompletedIds = Array.from(completedQuestIds);
-  const questIdsChanged = updatedCompletedIds.length !== (Array.isArray(nexus.completedQuestIds) ? nexus.completedQuestIds.length : 0);
+  const questIdsChanged =
+    updatedCompletedIds.length !== (Array.isArray(nexus.completedQuestIds) ? nexus.completedQuestIds.length : 0);
 
   if (newlyClaimedRewards.length === 0 && !questIdsChanged) {
     return nexus;
@@ -233,8 +239,21 @@ export async function applyCompletedQueues(nexus) {
     updates[build.building] = build.targetLevel;
 
     if (build.building === 'lifeSupport') {
-      updates.populationMax = Math.floor(24 * Math.pow(1.17, build.targetLevel));
+      updates.populationMax = getPopulationMax(build.targetLevel);
     }
+  }
+
+  const effectiveLifeSupport = updates.lifeSupport ?? nexus.lifeSupport;
+  const recalculatedPopulationMax = getPopulationMax(effectiveLifeSupport);
+  const effectivePopulationMax = updates.populationMax ?? nexus.populationMax;
+  const effectivePopulationCurrent = updates.populationCurrent ?? nexus.populationCurrent;
+
+  if (effectivePopulationMax !== recalculatedPopulationMax) {
+    updates.populationMax = recalculatedPopulationMax;
+  }
+
+  if (effectivePopulationCurrent > recalculatedPopulationMax) {
+    updates.populationCurrent = recalculatedPopulationMax;
   }
 
   updates.buildQueue = buildQueue;

@@ -117,7 +117,7 @@ where $m(i)$ is selected from the staged multipliers above.
 - Recalculates maximum population with this formula:
 
 $$
-\text{population max} = \lfloor 24 \times 1.17^{\text{Life Support level}} \rfloor
+	ext{population max} = \lfloor 100 \times 1.27^{\text{Life Support level}} \rfloor
 $$
 
 - Adds **5 points per level** to nexus score.

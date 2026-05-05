@@ -413,6 +413,28 @@
   gap: 10px;
 }
 
+.send-all-btn {
+  flex: 1;
+  background: #22577a;
+  color: #f1faee;
+  padding: 12px;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+.send-all-btn:hover {
+  background: #2d6f99;
+}
+
+.send-all-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.send-all-btn:disabled:hover {
+  background: #22577a;
+}
+
 .send-btn {
   flex: 1;
   background: #e94560;
@@ -598,12 +620,22 @@
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 
   @keyframes slideUp {
-    from { transform: translateY(60px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from {
+      transform: translateY(60px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
   }
 }

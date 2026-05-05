@@ -9,10 +9,90 @@
   margin-bottom: 20px;
 }
 
+.nexus-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
 .nexus-header h2 {
   color: #e94560;
-  margin-bottom: 15px;
+  margin-bottom: 0;
   font-size: 28px;
+}
+
+.nexus-rename-btn {
+  background: #0f3460;
+  color: #a8dadc;
+  border: 1px solid #1d5b8f;
+  border-radius: 6px;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 16px;
+}
+
+.nexus-rename-btn:hover {
+  background: #154777;
+  border-color: #4da3d9;
+  color: #fff;
+}
+
+.nexus-rename-input {
+  background: #0f3460;
+  color: #f1faee;
+  border: 1px solid #1d5b8f;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  min-width: 220px;
+  max-width: 420px;
+}
+
+.nexus-rename-input:focus {
+  outline: none;
+  border-color: #4da3d9;
+  box-shadow: 0 0 0 2px rgba(77, 163, 217, 0.2);
+}
+
+.nexus-rename-action {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 6px;
+  border: 1px solid #1d5b8f;
+  background: #0f3460;
+  color: #a8dadc;
+  font-size: 14px;
+}
+
+.nexus-rename-action.save {
+  border-color: #2b8a57;
+  color: #6fe6a2;
+}
+
+.nexus-rename-action.cancel {
+  border-color: #ad3150;
+  color: #ff8aa3;
+}
+
+.nexus-rename-action:hover:not(:disabled) {
+  background: #154777;
+  color: #fff;
+}
+
+.nexus-rename-action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .resources {
@@ -62,32 +142,22 @@
   margin-top: 2px;
 }
 
-.tabs {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 20px;
-  border-bottom: 2px solid #0f3460;
-  padding-bottom: 10px;
+.tab-back-nav {
+  margin: 0 0 14px;
 }
 
-.tabs button {
-  background: transparent;
-  color: #a8dadc;
-  padding: 10px 20px;
-  border-radius: 6px 6px 0 0;
-  font-size: 16px;
-  min-width: 0;
-  white-space: nowrap;
-}
-
-.tabs button:hover {
+.tab-back-btn {
   background: #0f3460;
-  color: #fff;
+  color: #a8dadc;
+  border: 1px solid #1d5b8f;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
 }
 
-.tabs button.active {
-  background: #e94560;
+.tab-back-btn:hover {
+  background: #154777;
+  border-color: #4da3d9;
   color: #fff;
 }
 
@@ -108,6 +178,53 @@
   color: #a8dadc;
   margin-bottom: 16px;
   padding: 0 2px;
+}
+
+.overview-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.overview-shortcut-card {
+  background: #0f3460;
+  border: 1px solid #1d5b8f;
+  border-radius: 6px;
+  padding: 16px 18px;
+  min-height: 78px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  color: #f1faee;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+
+.overview-shortcut-card:hover {
+  border-color: #4da3d9;
+  background: #154777;
+  transform: translateY(-1px);
+}
+
+.overview-shortcut-title {
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.2px;
+}
+
+.overview-shortcut-status {
+  font-size: 13px;
+  color: #f1faee;
+  font-weight: 600;
+}
+
+.overview-shortcut-subtitle {
+  font-size: 12px;
+  color: #a8dadc;
 }
 
 .stats {
@@ -232,7 +349,9 @@
 .intro-quest-item.quest-actionable {
   cursor: pointer;
   border-left: 3px solid transparent;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .intro-quest-item.quest-actionable:hover {
@@ -251,7 +370,9 @@
   line-height: 1;
   flex-shrink: 0;
   opacity: 0.6;
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
 }
 
 .intro-quest-item.quest-actionable:hover .intro-quest-arrow {
@@ -835,17 +956,12 @@
     padding: 12px 14px;
   }
 
-  .tabs {
-    gap: 8px;
-  }
-
-  .tabs button {
-    padding: 10px 8px;
-    font-size: 14px;
-  }
-
   .map-tab {
     padding: 12px;
+  }
+
+  .overview-shortcuts {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -866,7 +982,9 @@
   line-height: 1.4;
   cursor: pointer;
   opacity: 0.7;
-  transition: opacity 0.15s ease, background 0.15s ease;
+  transition:
+    opacity 0.15s ease,
+    background 0.15s ease;
   flex-shrink: 0;
   width: auto;
 }
@@ -877,10 +995,6 @@
 }
 
 @media (max-width: 520px) {
-  .tabs {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .resource {
     flex-basis: 100%;
   }

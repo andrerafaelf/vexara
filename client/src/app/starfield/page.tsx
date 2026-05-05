@@ -3,7 +3,7 @@
 import AdBanner from '@/components/AdBanner';
 import Map from '@/components/Map';
 import { useAuth } from '@/context/AuthContext';
-import { getMyNexuses } from '@/services/api';
+import { getMyNexuses, getReports } from '@/services/api';
 import '@/styles/Game.css';
 import { Nexus } from '@/types/game';
 import { usePathname, useRouter } from 'next/navigation';
@@ -12,16 +12,42 @@ import { useCallback, useEffect, useState } from 'react';
 export default function StarfieldPage() {
   const [nexuses, setVillages] = useState<Nexus[]>([]);
   const [selectedNexus, setSelectedNexus] = useState<Nexus | null>(null);
+  const [hasUnreadReports, setHasUnreadReports] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
+  const refreshCombatReportNotification = useCallback(async (allNexuses: Nexus[]) => {
+    if (allNexuses.length === 0) {
+      setHasUnreadReports(false);
+      return;
+    }
+
+    try {
+      const viewedReports = new Set<string>(JSON.parse(localStorage.getItem('viewedReports') || '[]'));
+      const reportResults = await Promise.allSettled(allNexuses.map((nexus) => getReports(nexus._id)));
+      const hasUnread = reportResults.some((result) => {
+        if (result.status !== 'fulfilled') {
+          return false;
+        }
+
+        const reports = Array.isArray(result.value.data) ? result.value.data : [];
+        return reports.some((report: { _id: string }) => !viewedReports.has(report._id));
+      });
+
+      setHasUnreadReports(hasUnread);
+    } catch {
+      setHasUnreadReports(false);
+    }
+  }, []);
+
   const loadVillages = useCallback(async () => {
     try {
       const response = await getMyNexuses();
       setVillages(response.data);
+      await refreshCombatReportNotification(response.data);
       if (!selectedNexus && response.data.length > 0) {
         setSelectedNexus(response.data[0]);
       }
@@ -30,7 +56,7 @@ export default function StarfieldPage() {
       console.error('Error loading nexuses:', err);
       setLoading(false);
     }
-  }, [selectedNexus]);
+  }, [refreshCombatReportNotification, selectedNexus]);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -83,7 +109,10 @@ export default function StarfieldPage() {
           </button>
           <button className="nav-btn active">🗺️ Starfield</button>
           <button className="nav-btn" onClick={() => router.push('/combat-logs')}>
-            📜 Combat Logs
+            <span className="nav-btn-content">
+              📜 Combat Logs
+              {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
+            </span>
           </button>
           <button className="nav-btn" onClick={() => router.push('/market')}>
             🏪 Market
@@ -124,7 +153,10 @@ export default function StarfieldPage() {
               router.push('/combat-logs');
             }}
           >
-            📜 Combat Logs
+            <span className="nav-btn-content">
+              📜 Combat Logs
+              {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
+            </span>
           </button>
           <button
             className="nav-btn"

@@ -68,6 +68,34 @@
   white-space: nowrap;
 }
 
+.nav-btn-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.combat-report-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: #ff2d55;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 4px rgba(255, 45, 85, 0.32);
+  animation: reportDotPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes reportDotPulse {
+  0% {
+    box-shadow: 0 0 0 3px rgba(255, 45, 85, 0.32);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(255, 45, 85, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 3px rgba(255, 45, 85, 0);
+  }
+}
+
 .nav-btn:hover:not(:disabled) {
   background: #0f3460;
   color: #fff;
