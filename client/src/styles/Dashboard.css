@@ -252,13 +252,12 @@
 /* Full-width row: Nexuses + Quests side by side */
 .dashboard-full-row {
   grid-column: 1 / -1;
-  display: flex;
+  display: grid;
   gap: 20px;
-  align-items: flex-start;
 }
 
 .dashboard-full-row > .dashboard-card {
-  flex: 1;
+  width: 100%;
   min-width: 0;
 }
 
@@ -463,10 +462,6 @@
 @media (max-width: 768px) {
   .quick-actions-card {
     grid-column: span 1;
-  }
-
-  .dashboard-full-row {
-    flex-direction: column;
   }
 
   .nexuses-list {
