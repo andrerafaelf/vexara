@@ -115,3 +115,27 @@ export const getOutgoingAttacks = (nexusId: string) => apiRequest(`/attack/outgo
 
 // Reports
 export const getReports = (nexusId: string) => apiRequest(`/report/reports/${nexusId}`);
+
+// Market
+export const getMarketListings = () => apiRequest('/market');
+
+export const createMarketListing = (
+  nexusId: string,
+  offerResource: string,
+  offerAmount: number,
+  wantResource: string,
+  wantAmount: number,
+) =>
+  apiRequest('/market/list', {
+    method: 'POST',
+    body: JSON.stringify({ nexusId, offerResource, offerAmount, wantResource, wantAmount }),
+  });
+
+export const buyMarketListing = (listingId: number, buyerNexusId: string) =>
+  apiRequest(`/market/buy/${listingId}`, {
+    method: 'POST',
+    body: JSON.stringify({ buyerNexusId }),
+  });
+
+export const cancelMarketListing = (listingId: number) =>
+  apiRequest(`/market/${listingId}`, { method: 'DELETE' });

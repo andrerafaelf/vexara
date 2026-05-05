@@ -170,6 +170,10 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
 
   const getQuestBatches = (nexus: Nexus): DashboardQuestBatch[] => {
     const claimedBatches = new Set(nexus.questRewardClaims || []);
+    const completedQuestIds = new Set(nexus.completedQuestIds || []);
+    const done = (batchId: string, questId: string, condition: boolean) =>
+      completedQuestIds.has(questId) || claimedBatches.has(batchId) || condition;
+
     const assaultTroopers = nexus.troops.assaultTrooper || 0;
     const reconOperatives = nexus.troops.reconOperative || 0;
     const skimmerBikes = nexus.troops.skimmerBike || 0;
@@ -180,25 +184,25 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
         id: 'command-core-online',
         title: 'Power The Nexus',
         description: 'Upgrade Command Core to Lv1.',
-        completed: nexus.buildings.commandCore >= 1,
+        completed: done('intro', 'build_command_core_1', nexus.buildings.commandCore >= 1),
       },
       {
         id: 'start-fabrication',
         title: 'Enable Recruitment',
         description: 'Upgrade Recruitment Core to Lv1.',
-        completed: nexus.buildings.troopFabricator >= 1,
+        completed: done('intro', 'build_troop_fab_1', nexus.buildings.troopFabricator >= 1),
       },
       {
         id: 'increase-capacity',
         title: 'Secure Capacity',
         description: 'Upgrade Storage Vault to Lv2.',
-        completed: nexus.buildings.storageVault >= 2,
+        completed: done('intro', 'build_storage_vault_2', nexus.buildings.storageVault >= 2),
       },
       {
         id: 'raise-force',
         title: 'Field Troops',
         description: 'Train 5 Assault Troopers.',
-        completed: assaultTroopers >= 5,
+        completed: done('intro', 'train_assault_trooper_5', assaultTroopers >= 5),
       },
     ];
 
@@ -209,31 +213,31 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
         id: 'fortify-core',
         title: 'Fortify The Core',
         description: 'Upgrade Command Core to Lv3.',
-        completed: nexus.buildings.commandCore >= 3,
+        completed: done('intermediate', 'build_command_core_3', nexus.buildings.commandCore >= 3),
       },
       {
         id: 'unlock-defenses',
         title: 'Activate Shield Grid',
         description: 'Upgrade Shield Grid to Lv1.',
-        completed: nexus.buildings.shieldGrid >= 1,
+        completed: done('intermediate', 'build_shield_grid_1', nexus.buildings.shieldGrid >= 1),
       },
       {
         id: 'upgrade-biomass-chain',
         title: 'Expand Biomass Chain',
         description: 'Upgrade Biomass Farm to Lv2.',
-        completed: nexus.buildings.biomassFarm >= 2,
+        completed: done('intermediate', 'build_biomass_farm_2', nexus.buildings.biomassFarm >= 2),
       },
       {
         id: 'expand-logistics',
         title: 'Expand Logistics',
         description: 'Upgrade Alloy Forge to Lv2.',
-        completed: nexus.buildings.alloyForge >= 2,
+        completed: done('intermediate', 'build_alloy_forge_2', nexus.buildings.alloyForge >= 2),
       },
       {
         id: 'deploy-recon',
         title: 'Deploy Recon',
         description: 'Train 1 Recon Operative.',
-        completed: reconOperatives >= 1,
+        completed: done('intermediate', 'train_recon_operative_1', reconOperatives >= 1),
       },
     ];
 
@@ -244,31 +248,31 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
         id: 'command-core-mastery',
         title: 'Core Mastery',
         description: 'Upgrade Command Core to Lv4.',
-        completed: nexus.buildings.commandCore >= 4,
+        completed: done('advanced', 'build_command_core_4', nexus.buildings.commandCore >= 4),
       },
       {
         id: 'extractor-specialization',
         title: 'Extractor Specialization',
         description: 'Upgrade Ore Extractor to Lv4.',
-        completed: nexus.buildings.oreExtractor >= 4,
+        completed: done('advanced', 'build_ore_extractor_4', nexus.buildings.oreExtractor >= 4),
       },
       {
         id: 'defense-posture',
         title: 'Defense Posture',
         description: 'Upgrade Shield Grid to Lv2.',
-        completed: nexus.buildings.shieldGrid >= 2,
+        completed: done('advanced', 'build_shield_grid_2', nexus.buildings.shieldGrid >= 2),
       },
       {
         id: 'fast-raiders',
         title: 'Fast Raiders',
         description: 'Train 5 Skimmer Bikes.',
-        completed: skimmerBikes >= 5,
+        completed: done('advanced', 'train_skimmer_bike_5', skimmerBikes >= 5),
       },
       {
         id: 'first-expedition',
         title: 'First Expedition',
         description: 'Launch 1 outgoing strike.',
-        completed: hasOutgoingStrike,
+        completed: done('advanced', 'send_first_strike', hasOutgoingStrike),
       },
     ];
 

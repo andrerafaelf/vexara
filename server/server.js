@@ -9,6 +9,7 @@ import attackRoutes from './routes/attack.js';
 import authRoutes from './routes/auth.js';
 import buildingRoutes from './routes/building.js';
 import mapRoutes from './routes/map.js';
+import marketRoutes from './routes/market.js';
 import nexusRoutes from './routes/nexus.js';
 import reportRoutes from './routes/report.js';
 import troopRoutes from './routes/troop.js';
@@ -136,6 +137,7 @@ app.use('/api/building', buildingRoutes);
 app.use('/api/troop', troopRoutes);
 app.use('/api/map', mapRoutes);
 app.use('/api/attack', attackRoutes);
+app.use('/api/market', marketRoutes);
 app.use('/api/report', reportRoutes);
 
 // PostgreSQL connection check via Prisma

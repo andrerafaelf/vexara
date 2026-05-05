@@ -1,0 +1,181 @@
+import express from 'express';
+import prisma from '../lib/prisma.js';
+import auth from '../middleware/auth.js';
+import { parsePositiveInt } from '../utils/validation.js';
+
+const router = express.Router();
+
+const VALID_RESOURCES = new Set(['biomass', 'alloy', 'ore']);
+const MAX_LISTINGS_PER_NEXUS = 5;
+
+// Get all active listings
+router.get('/', auth, async (req, res) => {
+  try {
+    const listings = await prisma.marketListing.findMany({
+      include: {
+        sellerNexus: { select: { id: true, name: true, x: true, y: true, ownerId: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const enriched = await Promise.all(
+      listings.map(async (l) => {
+        const owner = l.sellerNexus.ownerId
+          ? await prisma.user.findUnique({
+              where: { id: l.sellerNexus.ownerId },
+              select: { id: true, username: true },
+            })
+          : null;
+        return { ...l, sellerUsername: owner?.username };
+      }),
+    );
+
+    res.json(enriched);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Create a listing
+router.post('/list', auth, async (req, res) => {
+  try {
+    const { nexusId, offerResource, offerAmount, wantResource, wantAmount } = req.body;
+    const parsedNexusId = parsePositiveInt(nexusId);
+    const parsedOffer = parsePositiveInt(offerAmount);
+    const parsedWant = parsePositiveInt(wantAmount);
+
+    if (!parsedNexusId || !parsedOffer || !parsedWant) {
+      return res.status(400).json({ error: 'Invalid parameters' });
+    }
+    if (!VALID_RESOURCES.has(offerResource) || !VALID_RESOURCES.has(wantResource)) {
+      return res.status(400).json({ error: 'Invalid resource type' });
+    }
+    if (offerResource === wantResource) {
+      return res.status(400).json({ error: 'Offer and want resources must differ' });
+    }
+
+    const nexus = await prisma.nexus.findUnique({ where: { id: parsedNexusId } });
+    if (!nexus || nexus.ownerId !== req.userId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+    if ((nexus[offerResource] || 0) < parsedOffer) {
+      return res.status(400).json({ error: `Insufficient ${offerResource}` });
+    }
+
+    const existingCount = await prisma.marketListing.count({ where: { sellerNexusId: parsedNexusId } });
+    if (existingCount >= MAX_LISTINGS_PER_NEXUS) {
+      return res.status(400).json({ error: `Maximum ${MAX_LISTINGS_PER_NEXUS} active listings per nexus` });
+    }
+
+    const [listing] = await prisma.$transaction([
+      prisma.marketListing.create({
+        data: {
+          sellerNexusId: parsedNexusId,
+          offerResource,
+          offerAmount: parsedOffer,
+          wantResource,
+          wantAmount: parsedWant,
+        },
+      }),
+      prisma.nexus.update({
+        where: { id: parsedNexusId },
+        data: { [offerResource]: nexus[offerResource] - parsedOffer },
+      }),
+    ]);
+
+    res.json({ success: true, listing });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Buy a listing
+router.post('/buy/:id', auth, async (req, res) => {
+  try {
+    const listingId = parsePositiveInt(req.params.id);
+    const { buyerNexusId } = req.body;
+    const parsedBuyerNexusId = parsePositiveInt(buyerNexusId);
+
+    if (!listingId || !parsedBuyerNexusId) {
+      return res.status(400).json({ error: 'Invalid parameters' });
+    }
+
+    const [listing, buyerNexus] = await Promise.all([
+      prisma.marketListing.findUnique({
+        where: { id: listingId },
+        include: { sellerNexus: true },
+      }),
+      prisma.nexus.findUnique({ where: { id: parsedBuyerNexusId } }),
+    ]);
+
+    if (!listing) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+    if (!buyerNexus || buyerNexus.ownerId !== req.userId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+    if (listing.sellerNexus.ownerId === req.userId) {
+      return res.status(400).json({ error: 'Cannot buy your own listing' });
+    }
+    if ((buyerNexus[listing.wantResource] || 0) < listing.wantAmount) {
+      return res.status(400).json({ error: `Insufficient ${listing.wantResource}` });
+    }
+
+    await prisma.$transaction([
+      // Buyer pays wanted resource, receives offered resource
+      prisma.nexus.update({
+        where: { id: parsedBuyerNexusId },
+        data: {
+          [listing.wantResource]: buyerNexus[listing.wantResource] - listing.wantAmount,
+          [listing.offerResource]: buyerNexus[listing.offerResource] + listing.offerAmount,
+        },
+      }),
+      // Seller receives wanted resource
+      prisma.nexus.update({
+        where: { id: listing.sellerNexusId },
+        data: {
+          [listing.wantResource]: listing.sellerNexus[listing.wantResource] + listing.wantAmount,
+        },
+      }),
+      prisma.marketListing.delete({ where: { id: listingId } }),
+    ]);
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Cancel a listing (seller only — refund offered resource)
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const listingId = parsePositiveInt(req.params.id);
+    if (!listingId) return res.status(400).json({ error: 'Invalid listing ID' });
+
+    const listing = await prisma.marketListing.findUnique({
+      where: { id: listingId },
+      include: { sellerNexus: true },
+    });
+
+    if (!listing) return res.status(404).json({ error: 'Listing not found' });
+    if (listing.sellerNexus.ownerId !== req.userId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    await prisma.$transaction([
+      prisma.nexus.update({
+        where: { id: listing.sellerNexusId },
+        data: {
+          [listing.offerResource]: listing.sellerNexus[listing.offerResource] + listing.offerAmount,
+        },
+      }),
+      prisma.marketListing.delete({ where: { id: listingId } }),
+    ]);
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+export default router;

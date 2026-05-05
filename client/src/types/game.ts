@@ -46,12 +46,30 @@ export interface Nexus {
   buildQueue: BuildQueueItem[];
   trainingQueue: TrainingQueueItem[];
   questRewardClaims?: string[];
+  completedQuestIds?: string[];
   lastResourceUpdate: Date;
   points: number;
   control?: number;
   controlLevel?: number;
   intelLevel?: 'public' | 'scouted' | 'owned';
   scoutedAt?: string;
+}
+
+export interface MarketListing {
+  id: number;
+  sellerNexusId: number;
+  sellerNexus: {
+    id: number;
+    name: string;
+    x: number;
+    y: number;
+  };
+  sellerUsername?: string;
+  offerResource: 'biomass' | 'alloy' | 'ore';
+  offerAmount: number;
+  wantResource: 'biomass' | 'alloy' | 'ore';
+  wantAmount: number;
+  createdAt: string;
 }
 
 export interface BuildQueueItem {

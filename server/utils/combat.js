@@ -4,6 +4,12 @@ import { buildDetailedScoutIntel } from './scouting.js';
 
 const TROOP_KEYS = Object.keys(TROOP_STATS);
 
+const TROOP_POPULATION_COST = {
+  lancerDrone: 1, assaultTrooper: 1, breakerUnit: 1, reconOperative: 1,
+  skimmerBike: 3, siegeMech: 4, bulwarkGuard: 2, suppressorTeam: 2,
+  disruptorUnit: 2, interceptorBike: 3, annihilatorPlatform: 5, overseer: 5,
+};
+
 // Process attacks that have arrived
 async function processArrivedAttacks() {
   try {
@@ -38,7 +44,6 @@ async function resolveCombat(attack) {
           where: { id: attack.attackerNexusId },
           data: {
             reconOperative: attackerNexus.reconOperative + (attackTroops.reconOperative || 0),
-            populationCurrent: attackerNexus.populationCurrent + (attackTroops.reconOperative || 0),
           },
         });
       }
@@ -214,6 +219,11 @@ async function resolveCombat(attack) {
       for (const [troopType, survived] of Object.entries(attackerTroopReturns)) {
         returnData[troopType] = (attackerNexus[troopType] || 0) + survived;
       }
+      let attackerPopFreed = 0;
+      for (const [troopType, lost] of Object.entries(attackerLosses)) {
+        attackerPopFreed += (lost || 0) * (TROOP_POPULATION_COST[troopType] || 1);
+      }
+      returnData.populationCurrent = Math.max(0, attackerNexus.populationCurrent - attackerPopFreed);
       await prisma.nexus.update({ where: { id: attack.attackerNexusId }, data: returnData });
     }
 

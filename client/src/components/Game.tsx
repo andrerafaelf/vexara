@@ -7,13 +7,14 @@ import AdBanner from './AdBanner';
 import Admin from './Admin';
 import Dashboard from './Dashboard';
 import Map from './Map';
+import Market from './Market';
 import NexusView from './NexusView';
 import Reports from './Reports';
 
 const Game: React.FC = () => {
   const [nexuses, setVillages] = useState<Nexus[]>([]);
   const [selectedNexus, setSelectedNexus] = useState<Nexus | null>(null);
-  const [view, setView] = useState<'dashboard' | 'nexus' | 'map' | 'reports' | 'admin'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'nexus' | 'map' | 'reports' | 'market' | 'admin'>('dashboard');
   const [loading, setLoading] = useState(true);
   const { user, logout } = useAuth();
 
@@ -52,7 +53,7 @@ const Game: React.FC = () => {
     setView('nexus');
   };
 
-  const handleViewChange = (newView: 'dashboard' | 'nexus' | 'map' | 'reports' | 'admin') => {
+  const handleViewChange = (newView: 'dashboard' | 'nexus' | 'map' | 'reports' | 'market' | 'admin') => {
     // Reload nexuses when navigating away from admin
     if (view === 'admin' && newView !== 'admin') {
       loadVillages();
@@ -144,6 +145,12 @@ const Game: React.FC = () => {
           >
             📜 Combat Logs
           </button>
+          <button
+            className={`nav-btn ${view === 'market' ? 'active' : ''}`}
+            onClick={() => handleViewChange('market')}
+          >
+            🏪 Market
+          </button>
           <button className={`nav-btn ${view === 'admin' ? 'active' : ''}`} onClick={() => handleViewChange('admin')}>
             🛠️ Admin
           </button>
@@ -180,6 +187,7 @@ const Game: React.FC = () => {
           {view === 'nexus' && selectedNexus && <NexusView nexus={selectedNexus} onUpdate={loadVillages} />}
           {view === 'map' && selectedNexus && <Map currentNexus={selectedNexus} onRefresh={loadVillages} />}
           {view === 'reports' && selectedNexus && <Reports nexus={selectedNexus} />}
+          {view === 'market' && <Market nexuses={nexuses} onRefresh={loadVillages} />}
           {view === 'admin' && <Admin />}
         </main>
       </div>

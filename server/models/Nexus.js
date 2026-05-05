@@ -28,8 +28,12 @@ const QUEST_REWARD_BATCHES = [
   {
     id: 'intro',
     isUnlocked: () => true,
-    isCompleted: ({ nexus }) =>
-      nexus.commandCore >= 1 && nexus.troopFabricator >= 1 && nexus.storageVault >= 2 && nexus.assaultTrooper >= 5,
+    quests: [
+      { id: 'build_command_core_1', check: ({ nexus }) => nexus.commandCore >= 1 },
+      { id: 'build_troop_fab_1', check: ({ nexus }) => nexus.troopFabricator >= 1 },
+      { id: 'build_storage_vault_2', check: ({ nexus }) => nexus.storageVault >= 2 },
+      { id: 'train_assault_trooper_5', check: ({ nexus }) => nexus.assaultTrooper >= 5 },
+    ],
     reward: {
       biomass: 250,
       alloy: 250,
@@ -41,12 +45,13 @@ const QUEST_REWARD_BATCHES = [
   {
     id: 'intermediate',
     isUnlocked: ({ claimedRewards }) => claimedRewards.has('intro'),
-    isCompleted: ({ nexus }) =>
-      nexus.commandCore >= 3 &&
-      nexus.shieldGrid >= 1 &&
-      nexus.biomassFarm >= 2 &&
-      nexus.alloyForge >= 2 &&
-      nexus.reconOperative >= 1,
+    quests: [
+      { id: 'build_command_core_3', check: ({ nexus }) => nexus.commandCore >= 3 },
+      { id: 'build_shield_grid_1', check: ({ nexus }) => nexus.shieldGrid >= 1 },
+      { id: 'build_biomass_farm_2', check: ({ nexus }) => nexus.biomassFarm >= 2 },
+      { id: 'build_alloy_forge_2', check: ({ nexus }) => nexus.alloyForge >= 2 },
+      { id: 'train_recon_operative_1', check: ({ nexus }) => nexus.reconOperative >= 1 },
+    ],
     reward: {
       biomass: 900,
       alloy: 900,
@@ -58,12 +63,13 @@ const QUEST_REWARD_BATCHES = [
   {
     id: 'advanced',
     isUnlocked: ({ claimedRewards }) => claimedRewards.has('intermediate'),
-    isCompleted: ({ nexus, hasOutgoingStrike }) =>
-      nexus.commandCore >= 4 &&
-      nexus.oreExtractor >= 4 &&
-      nexus.shieldGrid >= 2 &&
-      nexus.skimmerBike >= 5 &&
-      hasOutgoingStrike,
+    quests: [
+      { id: 'build_command_core_4', check: ({ nexus }) => nexus.commandCore >= 4 },
+      { id: 'build_ore_extractor_4', check: ({ nexus }) => nexus.oreExtractor >= 4 },
+      { id: 'build_shield_grid_2', check: ({ nexus }) => nexus.shieldGrid >= 2 },
+      { id: 'train_skimmer_bike_5', check: ({ nexus }) => nexus.skimmerBike >= 5 },
+      { id: 'send_first_strike', check: ({ hasOutgoingStrike }) => hasOutgoingStrike },
+    ],
     reward: {
       biomass: 2500,
       alloy: 2500,
@@ -75,12 +81,13 @@ const QUEST_REWARD_BATCHES = [
   {
     id: 'veteran',
     isUnlocked: ({ claimedRewards }) => claimedRewards.has('advanced'),
-    isCompleted: ({ nexus }) =>
-      nexus.commandCore >= 6 &&
-      nexus.troopFabricator >= 5 &&
-      nexus.lifeSupport >= 4 &&
-      nexus.siegeMech >= 3 &&
-      nexus.disruptorUnit >= 5,
+    quests: [
+      { id: 'build_command_core_6', check: ({ nexus }) => nexus.commandCore >= 6 },
+      { id: 'build_troop_fab_5', check: ({ nexus }) => nexus.troopFabricator >= 5 },
+      { id: 'build_life_support_4', check: ({ nexus }) => nexus.lifeSupport >= 4 },
+      { id: 'train_siege_mech_3', check: ({ nexus }) => nexus.siegeMech >= 3 },
+      { id: 'train_disruptor_unit_5', check: ({ nexus }) => nexus.disruptorUnit >= 5 },
+    ],
     reward: {
       biomass: 5000,
       alloy: 5000,
@@ -92,12 +99,13 @@ const QUEST_REWARD_BATCHES = [
   {
     id: 'conqueror',
     isUnlocked: ({ claimedRewards }) => claimedRewards.has('veteran'),
-    isCompleted: ({ nexus, hasCompletedAttack }) =>
-      nexus.commandCore >= 8 &&
-      nexus.oreExtractor >= 8 &&
-      nexus.shieldGrid >= 5 &&
-      nexus.annihilatorPlatform >= 1 &&
-      hasCompletedAttack,
+    quests: [
+      { id: 'build_command_core_8', check: ({ nexus }) => nexus.commandCore >= 8 },
+      { id: 'build_ore_extractor_8', check: ({ nexus }) => nexus.oreExtractor >= 8 },
+      { id: 'build_shield_grid_5', check: ({ nexus }) => nexus.shieldGrid >= 5 },
+      { id: 'train_annihilator_1', check: ({ nexus }) => nexus.annihilatorPlatform >= 1 },
+      { id: 'complete_attack', check: ({ hasCompletedAttack }) => hasCompletedAttack },
+    ],
     reward: {
       biomass: 10000,
       alloy: 10000,
@@ -108,6 +116,8 @@ const QUEST_REWARD_BATCHES = [
   },
 ];
 
+export { QUEST_REWARD_BATCHES };
+
 function getQuestRewardClaims(nexus) {
   return Array.isArray(nexus.questRewardClaims)
     ? nexus.questRewardClaims.filter((value) => typeof value === 'string')
@@ -116,6 +126,10 @@ function getQuestRewardClaims(nexus) {
 
 export async function applyQuestRewards(nexus, options = {}) {
   const claimedRewards = new Set(getQuestRewardClaims(nexus));
+  const completedQuestIds = new Set(
+    Array.isArray(nexus.completedQuestIds) ? nexus.completedQuestIds.filter((v) => typeof v === 'string') : [],
+  );
+
   const hasOutgoingStrike =
     options.hasOutgoingStrike ??
     Boolean(
@@ -133,9 +147,21 @@ export async function applyQuestRewards(nexus, options = {}) {
       }),
     );
 
+  const ctx = { nexus, hasOutgoingStrike, hasCompletedAttack };
+
+  // Permanently record each individual quest condition the first time it's met
+  for (const batch of QUEST_REWARD_BATCHES) {
+    for (const quest of batch.quests) {
+      if (!completedQuestIds.has(quest.id) && quest.check(ctx)) {
+        completedQuestIds.add(quest.id);
+      }
+    }
+  }
+
+  // A batch is fully complete when all its quests are permanently completed
   const completedBatchIds = new Set();
   for (const batch of QUEST_REWARD_BATCHES) {
-    if (batch.isCompleted({ nexus, hasOutgoingStrike, hasCompletedAttack })) {
+    if (batch.quests.every((q) => completedQuestIds.has(q.id))) {
       completedBatchIds.add(batch.id);
     }
   }
@@ -167,11 +193,15 @@ export async function applyQuestRewards(nexus, options = {}) {
     newlyClaimedRewards.push(batch.id);
   }
 
-  if (newlyClaimedRewards.length === 0) {
+  const updatedCompletedIds = Array.from(completedQuestIds);
+  const questIdsChanged = updatedCompletedIds.length !== (Array.isArray(nexus.completedQuestIds) ? nexus.completedQuestIds.length : 0);
+
+  if (newlyClaimedRewards.length === 0 && !questIdsChanged) {
     return nexus;
   }
 
   data.questRewardClaims = Array.from(claimedRewards);
+  data.completedQuestIds = updatedCompletedIds;
   data.points = calculatePoints({ ...nexus, ...data });
 
   return prisma.nexus.update({
@@ -289,6 +319,7 @@ export function serializeNexus(v, opts = {}) {
     buildQueue: v.buildQueue,
     trainingQueue: v.trainingQueue,
     questRewardClaims: v.questRewardClaims,
+    completedQuestIds: v.completedQuestIds,
     lastResourceUpdate: v.lastResourceUpdate,
     points: v.points,
     controlLevel: v.controlLevel,

@@ -60,17 +60,30 @@ model Nexus {
   populationMax     Int @default(24)
 
   // Queues (JSON arrays)
-  buildQueue    Json @default("[]")
-  trainingQueue Json @default("[]")
-  questRewardClaims Json @default("[]")
+  buildQueue         Json @default("[]")
+  trainingQueue      Json @default("[]")
+  questRewardClaims  Json @default("[]")
+  completedQuestIds  Json @default("[]")
 
   lastResourceUpdate DateTime @default(now())
   points             Int      @default(5)
   controlLevel       Int      @default(100)
   createdAt          DateTime @default(now())
 
-  attacksAsAttacker Attack[] @relation("AttackerNexus")
-  attacksAsDefender Attack[] @relation("DefenderNexus")
+  attacksAsAttacker Attack[]         @relation("AttackerNexus")
+  attacksAsDefender Attack[]         @relation("DefenderNexus")
+  marketListings    MarketListing[]
+}
+
+model MarketListing {
+  id            Int      @id @default(autoincrement())
+  sellerNexusId Int
+  sellerNexus   Nexus    @relation(fields: [sellerNexusId], references: [id], onDelete: Cascade)
+  offerResource String
+  offerAmount   Int
+  wantResource  String
+  wantAmount    Int
+  createdAt     DateTime @default(now())
 }
 
 enum AttackType {

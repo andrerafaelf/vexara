@@ -114,10 +114,7 @@ router.post('/send', auth, async (req, res) => {
       }),
       prisma.nexus.update({
         where: { id: attackerNexus.id },
-        data: {
-          ...troopDeductions,
-          populationCurrent: Math.max(0, attackerNexus.populationCurrent - totalTroopsSent),
-        },
+        data: troopDeductions,
       }),
     ]);
     await applyQuestRewards(updatedAttackerNexus, { hasOutgoingStrike: true });
