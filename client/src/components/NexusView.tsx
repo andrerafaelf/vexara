@@ -361,7 +361,12 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
 
     try {
       await upgradeBuilding(nexus._id, building);
-      showToast(`${BUILDING_NAMES[building]} upgrade added to queue.`, 'info');
+      const queued = nexus.buildQueue.length > 0;
+      await upgradeBuilding(nexus._id, building);
+      showToast(
+        queued ? `${BUILDING_NAMES[building]} upgrade added to queue.` : `${BUILDING_NAMES[building]} upgrade started!`,
+        queued ? 'info' : 'success',
+      );
       onUpdate();
     } catch (err: any) {
       showToast(err.response?.data?.error || 'Error upgrading building', 'error');
@@ -420,7 +425,14 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
 
     try {
       await trainTroops(nexus._id, troopType, amount);
-      showToast(`${amount}x ${TROOP_NAMES[troopType]} added to training queue.`, 'info');
+      const queued = nexus.trainingQueue.length > 0;
+      await trainTroops(nexus._id, troopType, amount);
+      showToast(
+        queued
+          ? `${amount}x ${TROOP_NAMES[troopType]} added to training queue.`
+          : `Training ${amount}x ${TROOP_NAMES[troopType]} started!`,
+        queued ? 'info' : 'success',
+      );
       setTrainAmount({ ...trainAmount, [troopType]: '' });
       onUpdate();
     } catch (err: any) {
