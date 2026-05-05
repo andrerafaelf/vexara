@@ -5,7 +5,7 @@ import { applyQuestRewards, computeResourceUpdate, serializeNexus } from '../mod
 import { parsePositiveInt } from '../utils/validation.js';
 
 const router = express.Router();
-const MAX_TRAINING_QUEUE = 100;
+const MAX_TRAINING_QUEUE = 5;
 
 // Training times (seconds per unit).
 // Basic/mid-tier troops are roughly half the original baseline.

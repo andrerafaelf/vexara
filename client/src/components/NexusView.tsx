@@ -35,7 +35,7 @@ interface NexusViewProps {
 }
 
 const MAX_BUILD_QUEUE = 5;
-const MAX_TRAINING_QUEUE = 100;
+const MAX_TRAINING_QUEUE = 5;
 
 const BUILDING_NAMES: { [key: string]: string } = {
   commandCore: 'Command Core',
