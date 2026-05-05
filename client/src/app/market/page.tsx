@@ -105,18 +105,18 @@ export default function MarketPage() {
         </div>
         <div className="header-center">
           <button className="nav-btn" onClick={() => router.push('/')}>
-            📊 Dashboard
+            📊 All Nexuses
           </button>
           <button className="nav-btn" onClick={() => router.push('/starfield')}>
             🗺️ Starfield
           </button>
+          <button className="nav-btn active">🏪 Market</button>
           <button className="nav-btn" onClick={() => router.push('/combat-logs')}>
             <span className="nav-btn-content">
               📜 Combat Logs
               {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
             </span>
           </button>
-          <button className="nav-btn active">🏪 Market</button>
         </div>
         <div className="header-right">
           <button onClick={logout} className="logout-btn">
@@ -141,7 +141,7 @@ export default function MarketPage() {
               router.push('/');
             }}
           >
-            📊 Dashboard
+            📊 All Nexuses
           </button>
           <button
             className="nav-btn"
@@ -151,6 +151,9 @@ export default function MarketPage() {
             }}
           >
             🗺️ Starfield
+          </button>
+          <button className="nav-btn active" onClick={() => setIsMobileMenuOpen(false)}>
+            🏪 Market
           </button>
           <button
             className="nav-btn"
@@ -163,9 +166,6 @@ export default function MarketPage() {
               📜 Combat Logs
               {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
             </span>
-          </button>
-          <button className="nav-btn active" onClick={() => setIsMobileMenuOpen(false)}>
-            🏪 Market
           </button>
         </div>
         <div className="mobile-drawer-nexuses">

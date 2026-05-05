@@ -108,19 +108,19 @@ export default function CombatLogsPage() {
         </div>
         <div className="header-center">
           <button className="nav-btn" onClick={() => router.push('/')}>
-            📊 Dashboard
+            📊 All Nexuses
           </button>
           <button className="nav-btn" onClick={() => router.push('/starfield')}>
             🗺️ Starfield
+          </button>
+          <button className="nav-btn" onClick={() => router.push('/market')}>
+            🏪 Market
           </button>
           <button className="nav-btn active">
             <span className="nav-btn-content">
               📜 Combat Logs
               {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
             </span>
-          </button>
-          <button className="nav-btn" onClick={() => router.push('/market')}>
-            🏪 Market
           </button>
         </div>
         <div className="header-right">
@@ -146,7 +146,7 @@ export default function CombatLogsPage() {
               router.push('/');
             }}
           >
-            📊 Dashboard
+            📊 All Nexuses
           </button>
           <button
             className="nav-btn"
@@ -157,12 +157,6 @@ export default function CombatLogsPage() {
           >
             🗺️ Starfield
           </button>
-          <button className="nav-btn active" onClick={() => setIsMobileMenuOpen(false)}>
-            <span className="nav-btn-content">
-              📜 Combat Logs
-              {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
-            </span>
-          </button>
           <button
             className="nav-btn"
             onClick={() => {
@@ -171,6 +165,12 @@ export default function CombatLogsPage() {
             }}
           >
             🏪 Market
+          </button>
+          <button className="nav-btn active" onClick={() => setIsMobileMenuOpen(false)}>
+            <span className="nav-btn-content">
+              📜 Combat Logs
+              {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
+            </span>
           </button>
         </div>
         <div className="mobile-drawer-nexuses">
