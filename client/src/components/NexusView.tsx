@@ -276,10 +276,11 @@ interface IntroQuest {
   title: string;
   description: string;
   completed: boolean;
+  tab: 'buildings' | 'troops' | 'map';
 }
 
 interface QuestBatch {
-  id: 'intro' | 'intermediate' | 'advanced';
+  id: 'intro' | 'intermediate' | 'advanced' | 'veteran' | 'conqueror';
   title: string;
   quests: IntroQuest[];
   unlocked: boolean;
@@ -804,6 +805,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
     const assaultTroopers = nexus.troops.assaultTrooper || 0;
     const reconOperatives = nexus.troops.reconOperative || 0;
     const skimmerBikes = nexus.troops.skimmerBike || 0;
+    const siegeMechs = nexus.troops.siegeMech || 0;
+    const disruptorUnits = nexus.troops.disruptorUnit || 0;
+    const annihilatorPlatforms = nexus.troops.annihilatorPlatform || 0;
 
     const introQuests: IntroQuest[] = [
       {
@@ -811,24 +815,28 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
         title: 'Power The Nexus',
         description: 'Upgrade Command Core to Lv1.',
         completed: done('intro', nexus.buildings.commandCore >= 1),
+        tab: 'buildings',
       },
       {
         id: 'start-fabrication',
         title: 'Enable Recruitment',
         description: 'Upgrade Recruitment Core to Lv1.',
         completed: done('intro', nexus.buildings.troopFabricator >= 1),
+        tab: 'buildings',
       },
       {
         id: 'increase-capacity',
         title: 'Secure Capacity',
         description: 'Upgrade Storage Vault to Lv2.',
         completed: done('intro', nexus.buildings.storageVault >= 2),
+        tab: 'buildings',
       },
       {
         id: 'raise-force',
         title: 'Field Troops',
         description: 'Train 5 Assault Troopers.',
         completed: done('intro', assaultTroopers >= 5),
+        tab: 'troops',
       },
     ];
 
@@ -840,30 +848,35 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
         title: 'Fortify The Core',
         description: 'Upgrade Command Core to Lv3.',
         completed: done('intermediate', nexus.buildings.commandCore >= 3),
+        tab: 'buildings',
       },
       {
         id: 'unlock-defenses',
         title: 'Activate Shield Grid',
         description: 'Upgrade Shield Grid to Lv1.',
         completed: done('intermediate', nexus.buildings.shieldGrid >= 1),
+        tab: 'buildings',
       },
       {
         id: 'upgrade-biomass-chain',
         title: 'Expand Biomass Chain',
         description: 'Upgrade Biomass Farm to Lv2.',
         completed: done('intermediate', nexus.buildings.biomassFarm >= 2),
+        tab: 'buildings',
       },
       {
         id: 'expand-logistics',
         title: 'Expand Logistics',
         description: 'Upgrade Alloy Forge to Lv2.',
         completed: done('intermediate', nexus.buildings.alloyForge >= 2),
+        tab: 'buildings',
       },
       {
         id: 'deploy-recon',
         title: 'Deploy Recon',
         description: 'Train 1 Recon Operative.',
         completed: done('intermediate', reconOperatives >= 1),
+        tab: 'troops',
       },
     ];
 
@@ -876,34 +889,119 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
         title: 'Core Mastery',
         description: 'Upgrade Command Core to Lv4.',
         completed: done('advanced', nexus.buildings.commandCore >= 4),
+        tab: 'buildings',
       },
       {
         id: 'extractor-specialization',
         title: 'Extractor Specialization',
         description: 'Upgrade Ore Extractor to Lv4.',
         completed: done('advanced', nexus.buildings.oreExtractor >= 4),
+        tab: 'buildings',
       },
       {
         id: 'defense-posture',
         title: 'Defense Posture',
         description: 'Upgrade Shield Grid to Lv2.',
         completed: done('advanced', nexus.buildings.shieldGrid >= 2),
+        tab: 'buildings',
       },
       {
         id: 'fast-raiders',
         title: 'Fast Raiders',
         description: 'Train 5 Skimmer Bikes.',
         completed: done('advanced', skimmerBikes >= 5),
+        tab: 'troops',
       },
       {
         id: 'first-expedition',
         title: 'First Expedition',
         description: 'Launch 1 outgoing strike.',
         completed: done('advanced', outgoingAttacks.length > 0),
+        tab: 'map',
       },
     ];
 
-    return [
+    const advancedComplete = claimedBatches.has('advanced') || advancedQuests.every((quest) => quest.completed);
+
+    const veteranQuests: IntroQuest[] = [
+      {
+        id: 'command-authority',
+        title: 'Command Authority',
+        description: 'Upgrade Command Core to Lv6.',
+        completed: done('veteran', nexus.buildings.commandCore >= 6),
+        tab: 'buildings',
+      },
+      {
+        id: 'veteran-recruits',
+        title: 'Veteran Recruits',
+        description: 'Upgrade Recruitment Core to Lv5.',
+        completed: done('veteran', nexus.buildings.troopFabricator >= 5),
+        tab: 'buildings',
+      },
+      {
+        id: 'population-surge',
+        title: 'Population Surge',
+        description: 'Upgrade Life Support to Lv4.',
+        completed: done('veteran', nexus.buildings.lifeSupport >= 4),
+        tab: 'buildings',
+      },
+      {
+        id: 'iron-fist',
+        title: 'Iron Fist',
+        description: 'Train 3 Siege Mechs.',
+        completed: done('veteran', siegeMechs >= 3),
+        tab: 'troops',
+      },
+      {
+        id: 'signal-jammers',
+        title: 'Signal Jammers',
+        description: 'Train 5 Disruptor Units.',
+        completed: done('veteran', disruptorUnits >= 5),
+        tab: 'troops',
+      },
+    ];
+
+    const veteranComplete = claimedBatches.has('veteran') || veteranQuests.every((quest) => quest.completed);
+
+    const conquerorQuests: IntroQuest[] = [
+      {
+        id: 'supreme-command',
+        title: 'Supreme Command',
+        description: 'Upgrade Command Core to Lv8.',
+        completed: done('conqueror', nexus.buildings.commandCore >= 8),
+        tab: 'buildings',
+      },
+      {
+        id: 'deep-extraction',
+        title: 'Deep Extraction',
+        description: 'Upgrade Ore Extractor to Lv8.',
+        completed: done('conqueror', nexus.buildings.oreExtractor >= 8),
+        tab: 'buildings',
+      },
+      {
+        id: 'fortress-shield',
+        title: 'Fortress Shield',
+        description: 'Upgrade Shield Grid to Lv5.',
+        completed: done('conqueror', nexus.buildings.shieldGrid >= 5),
+        tab: 'buildings',
+      },
+      {
+        id: 'unleash-annihilator',
+        title: 'Unleash Annihilator',
+        description: 'Train 1 Annihilator Platform.',
+        completed: done('conqueror', annihilatorPlatforms >= 1),
+        tab: 'troops',
+      },
+      {
+        id: 'raid-and-pillage',
+        title: 'Raid And Pillage',
+        description: 'Complete 1 attack on another nexus.',
+        completed: done('conqueror', false),
+        tab: 'map',
+      },
+    ];
+
+    const allBatches: QuestBatch[] = [
       {
         id: 'intro',
         title: 'Intro Quests',
@@ -922,10 +1020,27 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
         id: 'advanced',
         title: 'Advanced Quests',
         quests: advancedQuests,
-        unlocked: introComplete && intermediateComplete,
+        unlocked: intermediateComplete,
         reward: '+2500 Biomass, +2500 Alloy, +2500 Ore, +20 Skimmer Bikes, +5 Siege Mechs',
       },
+      {
+        id: 'veteran',
+        title: 'Veteran Quests',
+        quests: veteranQuests,
+        unlocked: advancedComplete,
+        reward: '+5000 Biomass, +5000 Alloy, +5000 Ore, +10 Siege Mechs, +5 Disruptor Units',
+      },
+      {
+        id: 'conqueror',
+        title: 'Conqueror Quests',
+        quests: conquerorQuests,
+        unlocked: veteranComplete,
+        reward: '+10000 Biomass, +10000 Alloy, +10000 Ore, +1 Annihilator Platform, +10 Siege Mechs',
+      },
     ];
+
+    // Hide batches that have already been claimed — next tier naturally appears
+    return allBatches.filter((batch) => !claimedBatches.has(batch.id));
   };
 
   const production = calculateProduction();
@@ -1033,7 +1148,6 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
 
             {questBatches.map((batch) => {
               const completedCount = batch.quests.filter((quest) => quest.completed).length;
-              const batchComplete = completedCount === batch.quests.length;
 
               return (
                 <div key={batch.id} className={`intro-quests ${batch.unlocked ? '' : 'quest-batch-locked'}`}>
@@ -1045,16 +1159,19 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
                   </div>
                   <p className="quest-batch-reward">Reward: {batch.reward}</p>
 
-                  {batch.unlocked && batchComplete && <p className="quest-batch-earned">Reward tier earned</p>}
-
                   {batch.unlocked ? (
                     batch.quests.map((quest) => (
-                      <div key={quest.id} className={`intro-quest-item ${quest.completed ? 'completed' : ''}`}>
+                      <div
+                        key={quest.id}
+                        className={`intro-quest-item ${quest.completed ? 'completed' : 'quest-actionable'}`}
+                        onClick={() => !quest.completed && setActiveTab(quest.tab)}
+                      >
                         <span className="intro-quest-icon">{quest.completed ? '✅' : '⬜'}</span>
-                        <div>
+                        <div className="intro-quest-content">
                           <p className="intro-quest-title">{quest.title}</p>
                           <p className="intro-quest-description">{quest.description}</p>
                         </div>
+                        {!quest.completed && <span className="intro-quest-arrow">›</span>}
                       </div>
                     ))
                   ) : (

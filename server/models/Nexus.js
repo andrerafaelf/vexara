@@ -40,7 +40,7 @@ const QUEST_REWARD_BATCHES = [
   },
   {
     id: 'intermediate',
-    isUnlocked: ({ completedBatchIds }) => completedBatchIds.has('intro'),
+    isUnlocked: ({ claimedRewards }) => claimedRewards.has('intro'),
     isCompleted: ({ nexus }) =>
       nexus.commandCore >= 3 &&
       nexus.shieldGrid >= 1 &&
@@ -57,7 +57,7 @@ const QUEST_REWARD_BATCHES = [
   },
   {
     id: 'advanced',
-    isUnlocked: ({ completedBatchIds }) => completedBatchIds.has('intro') && completedBatchIds.has('intermediate'),
+    isUnlocked: ({ claimedRewards }) => claimedRewards.has('intermediate'),
     isCompleted: ({ nexus, hasOutgoingStrike }) =>
       nexus.commandCore >= 4 &&
       nexus.oreExtractor >= 4 &&
@@ -70,6 +70,40 @@ const QUEST_REWARD_BATCHES = [
       ore: 2500,
       populationCurrent: 80,
       troops: { skimmerBike: 20, siegeMech: 5 },
+    },
+  },
+  {
+    id: 'veteran',
+    isUnlocked: ({ claimedRewards }) => claimedRewards.has('advanced'),
+    isCompleted: ({ nexus }) =>
+      nexus.commandCore >= 6 &&
+      nexus.troopFabricator >= 5 &&
+      nexus.lifeSupport >= 4 &&
+      nexus.siegeMech >= 3 &&
+      nexus.disruptorUnit >= 5,
+    reward: {
+      biomass: 5000,
+      alloy: 5000,
+      ore: 5000,
+      populationCurrent: 50,
+      troops: { siegeMech: 10, disruptorUnit: 5 },
+    },
+  },
+  {
+    id: 'conqueror',
+    isUnlocked: ({ claimedRewards }) => claimedRewards.has('veteran'),
+    isCompleted: ({ nexus, hasCompletedAttack }) =>
+      nexus.commandCore >= 8 &&
+      nexus.oreExtractor >= 8 &&
+      nexus.shieldGrid >= 5 &&
+      nexus.annihilatorPlatform >= 1 &&
+      hasCompletedAttack,
+    reward: {
+      biomass: 10000,
+      alloy: 10000,
+      ore: 10000,
+      populationCurrent: 100,
+      troops: { annihilatorPlatform: 1, siegeMech: 10 },
     },
   },
 ];
@@ -90,10 +124,18 @@ export async function applyQuestRewards(nexus, options = {}) {
         select: { id: true },
       }),
     );
+  const hasCompletedAttack =
+    options.hasCompletedAttack ??
+    Boolean(
+      await prisma.attack.findFirst({
+        where: { attackerNexusId: nexus.id, status: 'completed' },
+        select: { id: true },
+      }),
+    );
 
   const completedBatchIds = new Set();
   for (const batch of QUEST_REWARD_BATCHES) {
-    if (batch.isCompleted({ nexus, hasOutgoingStrike })) {
+    if (batch.isCompleted({ nexus, hasOutgoingStrike, hasCompletedAttack })) {
       completedBatchIds.add(batch.id);
     }
   }
@@ -107,7 +149,7 @@ export async function applyQuestRewards(nexus, options = {}) {
   };
 
   for (const batch of QUEST_REWARD_BATCHES) {
-    if (!batch.isUnlocked({ completedBatchIds }) || !completedBatchIds.has(batch.id) || claimedRewards.has(batch.id)) {
+    if (!batch.isUnlocked({ completedBatchIds, claimedRewards }) || !completedBatchIds.has(batch.id) || claimedRewards.has(batch.id)) {
       continue;
     }
 
