@@ -272,6 +272,21 @@ const TROOP_COSTS: { [key: string]: any } = {
   overseer: { biomass: 300, alloy: 250, ore: 200, population: 5, time: 1800 },
 };
 
+const TROOP_CATEGORIES: Record<string, 'offense' | 'defense'> = {
+  assaultTrooper: 'offense',
+  breakerUnit: 'offense',
+  reconOperative: 'offense',
+  skimmerBike: 'offense',
+  siegeMech: 'offense',
+  interceptorBike: 'offense',
+  annihilatorPlatform: 'offense',
+  overseer: 'offense',
+  lancerDrone: 'defense',
+  bulwarkGuard: 'defense',
+  suppressorTeam: 'defense',
+  disruptorUnit: 'defense',
+};
+
 interface ToastMessage {
   message: string;
   type: 'success' | 'error' | 'info';
@@ -1120,7 +1135,6 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   const activeBuildTimer = activeBuild ? getBuildQueueTimeDisplay(0).label : null;
   const activeTrainingTimer = activeTraining ? getTrainingQueueTimeDisplay(0).label : null;
 
-
   return (
     <div className="nexus-view">
       <div className="nexus-header">
@@ -1272,9 +1286,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                       <div className="strikes-card-list">
                         {outgoingAttacks.map((a: any) => (
                           <div key={a._id} className="strikes-card-entry">
-                            <span className="strikes-card-entry-who">
-                              {a.defender?.nexus?.name ?? '?'}
-                            </span>
+                            <span className="strikes-card-entry-who">{a.defender?.nexus?.name ?? '?'}</span>
                             <span className="strikes-card-entry-time">{formatTime(a.arrivesAt)}</span>
                           </div>
                         ))}
@@ -1506,7 +1518,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                           <span>⚙️ {cost.alloy}</span>
                           <span>💎 {cost.ore}</span>
                         </div>
-                        <p className="build-time">⏱️ {Math.floor(cost.time / 60)}m {cost.time % 60}s</p>
+                        <p className="build-time">
+                          ⏱️ {Math.floor(cost.time / 60)}m {cost.time % 60}s
+                        </p>
                       </div>
                     ) : (
                       <div className="building-cost">
@@ -1608,11 +1622,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                       {currentTroops.map(([type, count]) => (
                         <div key={type} className="troop-item">
                           {TROOP_IMAGES[type] && (
-                            <img
-                              src={TROOP_IMAGES[type].src || TROOP_IMAGES[type]}
-                              alt=""
-                              className="troop-icon"
-                            />
+                            <img src={TROOP_IMAGES[type].src || TROOP_IMAGES[type]} alt="" className="troop-icon" />
                           )}
                           <span className="troop-name">{TROOP_NAMES[type] || type}</span>
                           <span className="troop-count">{count}</span>
@@ -1626,84 +1636,96 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
 
                 <div className="troops-train">
                   <h4>Train Troops</h4>
-                  <div className="train-grid">
-                    {Object.entries(TROOP_COSTS).map(([type, costs]) => {
-                      const { canTrain, missingRequirements } = checkTroopRequirements(type);
-                      const maxTrainable = getMaxTrainableAmount(type, costs, canTrain);
-                      const isTrainingQueueFull = nexus.trainingQueue.length >= MAX_TRAINING_QUEUE;
-                      const isTrainDisabled = !canTrain || isTrainingQueueFull || maxTrainable <= 0;
-                      const rawTrainAmount = trainAmount[type] ?? '';
-                      const parsedAmount = rawTrainAmount === '' ? 1 : Number.parseInt(rawTrainAmount, 10);
-                      const selectedAmount = Number.isFinite(parsedAmount) ? Math.max(1, parsedAmount) : 1;
-                      const shownAmount = maxTrainable > 0 ? Math.min(selectedAmount, maxTrainable) : 0;
-                      return (
-                        <div key={type} className={`train-card ${isTrainDisabled ? 'disabled' : ''}`}>
-                          {TROOP_IMAGES[type] && (
-                            <img
-                              src={TROOP_IMAGES[type].src || TROOP_IMAGES[type]}
-                              alt={TROOP_NAMES[type]}
-                              className="troop-card-image"
-                            />
-                          )}
-                          <div className="troop-header">
-                            <h5>{TROOP_NAMES[type]}</h5>
-                            <button
-                              type="button"
-                              className="troop-info"
-                              title={TROOP_DESCRIPTIONS[type]}
-                              aria-label={`${TROOP_NAMES[type]} info`}
-                              onClick={() => handleInfoTap(TROOP_NAMES[type], TROOP_DESCRIPTIONS[type])}
-                            >
-                              ℹ️
-                            </button>
-                          </div>
-                          <div className="train-costs">
-                            <span>🧬 {costs.biomass}</span>
-                            <span>⚙️ {costs.alloy}</span>
-                            <span>💎 {costs.ore}</span>
-                            <span>👥 {costs.population}</span>
-                            <p className="train-time">⏱️ {Math.floor(costs.time / 60)}m {costs.time % 60}s</p>
-                          </div>
-                          {isTrainingQueueFull && (
-                            <div className="requirements-missing">
-                              <p className="requires-label">🔒 Queue Full:</p>
-                              <p className="requirement-item">• Training queue limit reached ({MAX_TRAINING_QUEUE})</p>
-                            </div>
-                          )}
-                          {!canTrain && (
-                            <div className="requirements-missing">
-                              <p className="requires-label">🔒 Requires:</p>
-                              {missingRequirements.map((req, idx) => (
-                                <p key={idx} className="requirement-item">
-                                  • {req}
-                                </p>
-                              ))}
-                            </div>
-                          )}
-                          <div className="train-controls-wrapper">
-                            {canTrain && maxTrainable > 0 && (
-                              <span className="train-max-label">Max trainable: {maxTrainable}</span>
-                            )}
-                            <div className="train-controls">
-                              <input
-                                type="text"
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                placeholder={maxTrainable > 0 ? `1–${maxTrainable}` : '0'}
-                                value={trainAmount[type] ?? ''}
-                                onChange={(e) => handleTrainAmountChange(type, e.target.value)}
-                                aria-label={`${TROOP_NAMES[type]} amount`}
-                                disabled={isTrainDisabled}
-                              />
-                              <button onClick={() => handleTrainTroops(type)} disabled={isTrainDisabled}>
-                                Train
-                              </button>
-                            </div>
-                          </div>
+                  {(['offense', 'defense'] as const).map((category) => {
+                    const categoryTroops = Object.entries(TROOP_COSTS).filter(
+                      ([type]) => TROOP_CATEGORIES[type] === category,
+                    );
+                    return (
+                      <div key={category} className="troop-category-section">
+                        <h4 className={`troop-category-heading troop-category-${category}`}>
+                          {category === 'offense' ? '⚔️ Offense' : '🛡️ Defense'}
+                        </h4>
+                        <div className="train-grid">
+                          {categoryTroops.map(([type, costs]) => {
+                            const { canTrain, missingRequirements } = checkTroopRequirements(type);
+                            const maxTrainable = getMaxTrainableAmount(type, costs, canTrain);
+                            const isTrainingQueueFull = nexus.trainingQueue.length >= MAX_TRAINING_QUEUE;
+                            const isTrainDisabled = !canTrain || isTrainingQueueFull || maxTrainable <= 0;
+                            return (
+                              <div key={type} className={`train-card ${isTrainDisabled ? 'disabled' : ''}`}>
+                                {TROOP_IMAGES[type] && (
+                                  <img
+                                    src={TROOP_IMAGES[type].src || TROOP_IMAGES[type]}
+                                    alt={TROOP_NAMES[type]}
+                                    className="troop-card-image"
+                                  />
+                                )}
+                                <div className="troop-header">
+                                  <h5>{TROOP_NAMES[type]}</h5>
+                                  <button
+                                    type="button"
+                                    className="troop-info"
+                                    title={TROOP_DESCRIPTIONS[type]}
+                                    aria-label={`${TROOP_NAMES[type]} info`}
+                                    onClick={() => handleInfoTap(TROOP_NAMES[type], TROOP_DESCRIPTIONS[type])}
+                                  >
+                                    ℹ️
+                                  </button>
+                                </div>
+                                <div className="train-costs">
+                                  <span>🧬 {costs.biomass}</span>
+                                  <span>⚙️ {costs.alloy}</span>
+                                  <span>💎 {costs.ore}</span>
+                                  <span>👥 {costs.population}</span>
+                                  <p className="train-time">
+                                    ⏱️ {Math.floor(costs.time / 60)}m {costs.time % 60}s
+                                  </p>
+                                </div>
+                                {isTrainingQueueFull && (
+                                  <div className="requirements-missing">
+                                    <p className="requires-label">🔒 Queue Full:</p>
+                                    <p className="requirement-item">
+                                      • Training queue limit reached ({MAX_TRAINING_QUEUE})
+                                    </p>
+                                  </div>
+                                )}
+                                {!canTrain && (
+                                  <div className="requirements-missing">
+                                    <p className="requires-label">🔒 Requires:</p>
+                                    {missingRequirements.map((req, idx) => (
+                                      <p key={idx} className="requirement-item">
+                                        • {req}
+                                      </p>
+                                    ))}
+                                  </div>
+                                )}
+                                <div className="train-controls-wrapper">
+                                  {canTrain && maxTrainable > 0 && (
+                                    <span className="train-max-label">Max trainable: {maxTrainable}</span>
+                                  )}
+                                  <div className="train-controls">
+                                    <input
+                                      type="text"
+                                      inputMode="numeric"
+                                      pattern="[0-9]*"
+                                      placeholder={maxTrainable > 0 ? `1–${maxTrainable}` : '0'}
+                                      value={trainAmount[type] ?? ''}
+                                      onChange={(e) => handleTrainAmountChange(type, e.target.value)}
+                                      aria-label={`${TROOP_NAMES[type]} amount`}
+                                      disabled={isTrainDisabled}
+                                    />
+                                    <button onClick={() => handleTrainTroops(type)} disabled={isTrainDisabled}>
+                                      Train
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
-                      );
-                    })}
-                  </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </>
             )}

@@ -640,7 +640,9 @@
 }
 
 .building-card:not(.disabled):not(.upgrading):hover {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(233, 69, 96, 0.2);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(233, 69, 96, 0.2);
 }
 
 .building-card.disabled {
@@ -894,6 +896,30 @@
   border-bottom: 1px solid rgba(168, 218, 220, 0.15);
 }
 
+.troop-category-section {
+  margin-bottom: 22px;
+}
+
+.troop-category-section:last-child {
+  margin-bottom: 0;
+}
+
+.troop-category-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.troop-category-offense {
+  color: #ff8fa3;
+  border-bottom-color: rgba(233, 69, 96, 0.35);
+}
+
+.troop-category-defense {
+  color: #9bd6ff;
+  border-bottom-color: rgba(77, 163, 217, 0.35);
+}
+
 .train-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
@@ -910,7 +936,9 @@
   flex-direction: column;
   border: 1px solid rgba(168, 218, 220, 0.08);
   border-top: 3px solid #2a5f8f;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .train-card:not(.disabled) {
@@ -918,7 +946,9 @@
 }
 
 .train-card:not(.disabled):hover {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(233, 69, 96, 0.2);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(233, 69, 96, 0.2);
 }
 
 .troop-card-image {
