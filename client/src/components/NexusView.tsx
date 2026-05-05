@@ -1252,11 +1252,20 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                   <div className="strikes-card-divider" />
                   <div className="strikes-card-half">
                     <span className="strikes-card-label">Incoming</span>
-                    <span className="strikes-card-value">
-                      {incomingAttacks.length > 0
-                        ? `${incomingAttacks.length} incoming • ${formatTime(nextIncomingStrike.arrivesAt)}`
-                        : 'No incoming strikes'}
-                    </span>
+                    {incomingAttacks.length > 0 ? (
+                      <div className="strikes-card-list">
+                        {incomingAttacks.map((a: any) => (
+                          <div key={a._id} className="strikes-card-entry">
+                            <span className="strikes-card-entry-who">
+                              {a.attacker?.user?.username ?? '?'} · {a.attacker?.nexus?.name ?? '?'}
+                            </span>
+                            <span className="strikes-card-entry-time">{formatTime(a.arrivesAt)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="strikes-card-value">No incoming strikes</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1264,7 +1273,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
 
             {nexus.buildQueue.length > 0 && (
               <div className="queue-section">
-                <h4>Fabrication Queue</h4>
+                <h4>Building Queue</h4>
                 {nexus.buildQueue.map((item, idx) => {
                   const queueTime = getBuildQueueTimeDisplay(idx);
 
@@ -1281,6 +1290,36 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                           type="button"
                           className="queue-cancel-btn"
                           onClick={() => handleCancelBuildQueue(idx)}
+                          title="Cancel (85% refund)"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {nexus.trainingQueue.length > 0 && (
+              <div className="queue-section">
+                <h4>Training Queue</h4>
+                {nexus.trainingQueue.map((item, idx) => {
+                  const queueTime = getTrainingQueueTimeDisplay(idx);
+
+                  return (
+                    <div key={idx} className={`queue-item ${queueTime.isWaiting ? 'queue-item-waiting' : ''}`}>
+                      <span>
+                        {item.amount}x {TROOP_NAMES[item.troopType] || item.troopType}
+                      </span>
+                      <div className="queue-item-actions">
+                        <span className={queueTime.isWaiting ? 'queue-time-queued' : 'queue-time'}>
+                          {queueTime.label}
+                        </span>
+                        <button
+                          type="button"
+                          className="queue-cancel-btn"
+                          onClick={() => handleCancelTrainingQueue(idx)}
                           title="Cancel (85% refund)"
                         >
                           ✕
@@ -1326,36 +1365,6 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                 </div>
               );
             })}
-
-            {nexus.trainingQueue.length > 0 && (
-              <div className="queue-section">
-                <h4>Training Queue</h4>
-                {nexus.trainingQueue.map((item, idx) => {
-                  const queueTime = getTrainingQueueTimeDisplay(idx);
-
-                  return (
-                    <div key={idx} className={`queue-item ${queueTime.isWaiting ? 'queue-item-waiting' : ''}`}>
-                      <span>
-                        {item.amount}x {TROOP_NAMES[item.troopType] || item.troopType}
-                      </span>
-                      <div className="queue-item-actions">
-                        <span className={queueTime.isWaiting ? 'queue-time-queued' : 'queue-time'}>
-                          {queueTime.label}
-                        </span>
-                        <button
-                          type="button"
-                          className="queue-cancel-btn"
-                          onClick={() => handleCancelTrainingQueue(idx)}
-                          title="Cancel (85% refund)"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
           </div>
         )}
 
@@ -1365,7 +1374,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
 
             {nexus.buildQueue.length > 0 && (
               <div className="queue-section">
-                <h4>Fabrication Queue</h4>
+                <h4>Building Queue</h4>
                 {nexus.buildQueue.map((item, idx) => {
                   const queueTime = getBuildQueueTimeDisplay(idx);
 
