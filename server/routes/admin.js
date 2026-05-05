@@ -27,21 +27,58 @@ router.get('/users', async (req, res) => {
 // Get database statistics
 router.get('/stats', async (req, res) => {
   try {
-    const [userCount, villageCount, attackCount, topUsers] = await Promise.all([
+    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    const [
+      userCount,
+      villageCount,
+      travelingAttackCount,
+      totalAttackCount,
+      newUsersThisWeek,
+      zeroNexusCount,
+      topUsers,
+      troopAgg,
+      pointsAgg,
+      marketCount,
+    ] = await Promise.all([
       prisma.user.count(),
       prisma.nexus.count(),
+      prisma.attack.count({ where: { status: 'traveling' } }),
       prisma.attack.count(),
+      prisma.user.count({ where: { createdAt: { gte: oneWeekAgo } } }),
+      prisma.user.count({ where: { nexuses: { none: {} } } }),
       prisma.user.findMany({
         select: { id: true, username: true, points: true },
         orderBy: { points: 'desc' },
         take: 10,
       }),
+      prisma.nexus.aggregate({
+        _sum: {
+          lancerDrone: true, assaultTrooper: true, breakerUnit: true,
+          reconOperative: true, skimmerBike: true, siegeMech: true,
+          bulwarkGuard: true, suppressorTeam: true, disruptorUnit: true,
+          interceptorBike: true, annihilatorPlatform: true, overseer: true,
+        },
+      }),
+      prisma.user.aggregate({ _avg: { points: true } }),
+      prisma.marketListing.count(),
     ]);
+
+    const troopSum = troopAgg._sum;
+    const totalTroops = Object.values(troopSum).reduce(
+      (acc, v) => acc + (v ?? 0), 0
+    );
 
     res.json({
       userCount,
       villageCount,
-      attackCount,
+      travelingAttackCount,
+      totalAttackCount,
+      newUsersThisWeek,
+      zeroNexusCount,
+      totalTroops,
+      avgPoints: Math.round(pointsAgg._avg.points ?? 0),
+      marketCount,
       topUsers: topUsers.map((u) => ({ ...u, _id: u.id })),
     });
   } catch (error) {

@@ -60,6 +60,61 @@
   letter-spacing: 0.05em;
 }
 
+.stat-card-warn {
+  border-color: #7a3a1a;
+}
+
+.stat-card-warn .stat-card-body h3 {
+  color: #f4a261;
+}
+
+/* ── Leaderboard ── */
+.leaderboard {
+  display: flex;
+  flex-direction: column;
+}
+
+.leaderboard-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 20px;
+  border-bottom: 1px solid #1a3060;
+  transition: background 0.15s;
+}
+
+.leaderboard-row:last-child {
+  border-bottom: none;
+}
+
+.leaderboard-row:hover {
+  background: #162540;
+}
+
+.leaderboard-rank {
+  font-weight: 700;
+  font-size: 14px;
+  min-width: 32px;
+  color: #7a9ec2;
+}
+
+.leaderboard-rank.rank-1 { color: #ffd700; }
+.leaderboard-rank.rank-2 { color: #c0c0c0; }
+.leaderboard-rank.rank-3 { color: #cd7f32; }
+
+.leaderboard-name {
+  flex: 1;
+  color: #f1faee;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.leaderboard-pts {
+  color: #a8dadc;
+  font-size: 13px;
+  font-weight: 600;
+}
+
 /* ── Section ── */
 .admin-section {
   background: #13203b;

@@ -16,9 +16,23 @@ interface User {
   nexuses: UserNexus[];
 }
 
+interface TopUser {
+  _id: string;
+  username: string;
+  points: number;
+}
+
 interface Stats {
   userCount: number;
-  attackCount: number;
+  villageCount: number;
+  travelingAttackCount: number;
+  totalAttackCount: number;
+  newUsersThisWeek: number;
+  zeroNexusCount: number;
+  totalTroops: number;
+  avgPoints: number;
+  marketCount: number;
+  topUsers: TopUser[];
 }
 
 interface Attack {
@@ -145,8 +159,16 @@ const Admin: React.FC = () => {
       const normalizedStats =
         statsData && typeof statsData === 'object'
           ? {
-              userCount: Number((statsData as { userCount?: number }).userCount ?? 0),
-              attackCount: Number((statsData as { attackCount?: number }).attackCount ?? 0),
+              userCount:            Number((statsData as any).userCount            ?? 0),
+              villageCount:         Number((statsData as any).villageCount         ?? 0),
+              travelingAttackCount: Number((statsData as any).travelingAttackCount ?? 0),
+              totalAttackCount:     Number((statsData as any).totalAttackCount     ?? 0),
+              newUsersThisWeek:     Number((statsData as any).newUsersThisWeek     ?? 0),
+              zeroNexusCount:       Number((statsData as any).zeroNexusCount       ?? 0),
+              totalTroops:          Number((statsData as any).totalTroops          ?? 0),
+              avgPoints:            Number((statsData as any).avgPoints            ?? 0),
+              marketCount:          Number((statsData as any).marketCount          ?? 0),
+              topUsers:             Array.isArray((statsData as any).topUsers) ? (statsData as any).topUsers : [],
             }
           : null;
 
@@ -461,22 +483,90 @@ const Admin: React.FC = () => {
       </div>
 
       {stats && (
-        <div className="admin-stats">
-          <div className="stat-card">
-            <div className="stat-card-icon">👥</div>
-            <div className="stat-card-body">
-              <h3>{stats.userCount}</h3>
-              <p>Total Users</p>
+        <>
+          <div className="admin-stats">
+            <div className="stat-card">
+              <div className="stat-card-icon">👥</div>
+              <div className="stat-card-body">
+                <h3>{stats.userCount}</h3>
+                <p>Total Players</p>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-card-icon">🏛️</div>
+              <div className="stat-card-body">
+                <h3>{stats.villageCount}</h3>
+                <p>Total Nexuses</p>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-card-icon">⚔️</div>
+              <div className="stat-card-body">
+                <h3>{stats.travelingAttackCount}</h3>
+                <p>Active Strikes</p>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-card-icon">🪖</div>
+              <div className="stat-card-body">
+                <h3>{stats.totalTroops.toLocaleString()}</h3>
+                <p>World Troops</p>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-card-icon">📈</div>
+              <div className="stat-card-body">
+                <h3>{stats.avgPoints.toLocaleString()}</h3>
+                <p>Avg Influence</p>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-card-icon">🆕</div>
+              <div className="stat-card-body">
+                <h3>{stats.newUsersThisWeek}</h3>
+                <p>New This Week</p>
+              </div>
+            </div>
+            <div className="stat-card stat-card-warn">
+              <div className="stat-card-icon">⚠️</div>
+              <div className="stat-card-body">
+                <h3>{stats.zeroNexusCount}</h3>
+                <p>No Nexus</p>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-card-icon">🛒</div>
+              <div className="stat-card-body">
+                <h3>{stats.marketCount}</h3>
+                <p>Market Listings</p>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-card-icon">📜</div>
+              <div className="stat-card-body">
+                <h3>{stats.totalAttackCount.toLocaleString()}</h3>
+                <p>All-time Strikes</p>
+              </div>
             </div>
           </div>
-          <div className="stat-card">
-            <div className="stat-card-icon">⚔️</div>
-            <div className="stat-card-body">
-              <h3>{stats.attackCount}</h3>
-              <p>Traveling Strikes</p>
+
+          {stats.topUsers.length > 0 && (
+            <div className="admin-section" style={{ marginBottom: 28 }}>
+              <div className="admin-section-header">
+                <h3>🏆 Top Players by Influence</h3>
+              </div>
+              <div className="leaderboard">
+                {stats.topUsers.map((u, i) => (
+                  <div key={u._id} className="leaderboard-row">
+                    <span className={`leaderboard-rank rank-${i + 1}`}>#{i + 1}</span>
+                    <span className="leaderboard-name">{u.username}</span>
+                    <span className="leaderboard-pts">{u.points.toLocaleString()} pts</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        </div>
+          )}
+        </>
       )}
 
       <div className="admin-section">
