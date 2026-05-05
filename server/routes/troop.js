@@ -37,7 +37,7 @@ const TROOP_REQUIREMENTS = {
   disruptorUnit: { buildings: { troopFabricator: 5, oreExtractor: 4 } },
   interceptorBike: { buildings: { troopFabricator: 6, alloyForge: 5 } },
   annihilatorPlatform: { buildings: { troopFabricator: 7, commandCore: 6 } },
-  overseer: { buildings: { troopFabricator: 9, commandCore: 8, shieldGrid: 6 }, maxPerNexus: 1 },
+  overseer: { buildings: { troopFabricator: 9, commandCore: 8, shieldGrid: 6 }, maxPerNexus: 3 },
 };
 
 const BUILDING_NAMES = {

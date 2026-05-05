@@ -1,6 +1,7 @@
 'use client';
 
 import AdBanner from '@/components/AdBanner';
+import { DocsDropdown, DocsMobileLinks } from '@/components/DocsDropdown';
 import Market from '@/components/Market';
 import { useAuth } from '@/context/AuthContext';
 import { getMyNexuses, getReports } from '@/services/api';
@@ -117,6 +118,7 @@ export default function MarketPage() {
               {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
             </span>
           </button>
+          <DocsDropdown />
         </div>
         <div className="header-right">
           <button onClick={logout} className="logout-btn">
@@ -167,6 +169,7 @@ export default function MarketPage() {
               {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
             </span>
           </button>
+          <DocsMobileLinks onNavigate={() => setIsMobileMenuOpen(false)} />
         </div>
         <div className="mobile-drawer-nexuses">
           <h3>Your Nexuses</h3>

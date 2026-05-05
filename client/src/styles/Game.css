@@ -111,6 +111,53 @@
   cursor: not-allowed;
 }
 
+.docs-menu {
+  position: relative;
+}
+
+.docs-toggle {
+  min-width: 98px;
+}
+
+.docs-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 180px;
+  background: #0f3460;
+  border: 1px solid #1a4f83;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  padding: 6px;
+  display: none;
+  z-index: 50;
+}
+
+.docs-menu.open .docs-dropdown {
+  display: block;
+}
+
+.docs-dropdown-item {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  color: #a8dadc;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+.docs-dropdown-item:hover {
+  background: #1a4f83;
+  color: #fff;
+}
+
+.docs-dropdown-item.active {
+  background: #e94560;
+  color: #fff;
+}
+
 .header-right {
   flex: 1;
   display: flex;
@@ -280,6 +327,89 @@
 .mobile-drawer-nexuses {
   border-top: 1px solid #0f3460;
   padding-top: 14px;
+}
+
+.mobile-docs-links {
+  border-top: 1px solid #0f3460;
+  margin-top: 6px;
+  padding-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.mobile-docs-links h4 {
+  margin: 0;
+  color: #a8dadc;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.docs-page-card {
+  background: #16213e;
+  border: 1px solid #1a4f83;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.docs-page-card h2 {
+  margin: 0 0 8px;
+  color: #ff4f72;
+}
+
+.docs-subtitle {
+  margin: 0 0 14px;
+  color: #a8dadc;
+}
+
+.docs-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.docs-item-card {
+  background: #0f3460;
+  border: 1px solid #1a4f83;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.docs-scaling-card {
+  margin-bottom: 14px;
+}
+
+.docs-item-card h3 {
+  margin: 0 0 6px;
+  color: #f1faee;
+}
+
+.docs-role,
+.docs-description,
+.docs-line {
+  margin: 0 0 8px;
+  color: #d7f5ff;
+}
+
+.docs-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.docs-tag {
+  background: #1a4f83;
+  border: 1px solid #2d7cd4;
+  border-radius: 6px;
+  padding: 4px 8px;
+  color: #e4f2ff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.docs-notes {
+  margin: 0 0 0 18px;
+  color: #9ed9ff;
 }
 
 .mobile-drawer-nexuses h3 {

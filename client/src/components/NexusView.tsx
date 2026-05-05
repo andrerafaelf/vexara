@@ -233,7 +233,7 @@ const TROOP_DESCRIPTIONS: { [key: string]: string } = {
   annihilatorPlatform:
     'Heavy artillery unit. Slow but devastating artillery platform capable of inflicting massive damage. Requires Lv6 Recruitment Core, Lv6 Command Core.',
   overseer:
-    'Conquest & control unit. Non-combat command unit required to reduce Control Level and permanently capture enemy nexuses. Requires Lv5 Recruitment Core, Lv3 Command Core, Lv2 Shield Grid. Only 1 per nexus.',
+    'Conquest & control unit. Non-combat command unit required to reduce Control Level and permanently capture enemy nexuses. Requires Lv5 Recruitment Core, Lv3 Command Core, Lv2 Shield Grid. Up to 3 per nexus.',
 };
 
 const TROOP_REQUIREMENTS: { [key: string]: any } = {
@@ -248,7 +248,7 @@ const TROOP_REQUIREMENTS: { [key: string]: any } = {
   disruptorUnit: { buildings: { troopFabricator: 5, oreExtractor: 4 } },
   interceptorBike: { buildings: { troopFabricator: 6, alloyForge: 5 } },
   annihilatorPlatform: { buildings: { troopFabricator: 7, commandCore: 6 } },
-  overseer: { buildings: { troopFabricator: 9, commandCore: 8, shieldGrid: 6 }, maxPerNexus: 1 },
+  overseer: { buildings: { troopFabricator: 9, commandCore: 8, shieldGrid: 6 }, maxPerNexus: 3 },
 };
 
 const POPULATION_BASE = 100;
