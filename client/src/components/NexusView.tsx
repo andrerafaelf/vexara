@@ -317,7 +317,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
     const interval = setInterval(() => {
       checkQueues();
       loadOutgoingAttacks();
-    }, 5000);
+    }, 15000);
     loadOutgoingAttacks();
     return () => clearInterval(interval);
   }, [nexus]);
@@ -328,13 +328,17 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate }) => {
         checkBuildQueue(nexus._id),
         checkTrainingQueue(nexus._id),
       ]);
-      if (buildResponse.data?.completed) {
+      const buildCompleted = buildResponse.data?.completed;
+      const trainingCompleted = trainingResponse.data?.completed;
+      if (buildCompleted) {
         showToast('A building upgrade completed and was applied.', 'success');
       }
-      if (trainingResponse.data?.completed) {
+      if (trainingCompleted) {
         showToast('Training completed and your troops are ready.', 'success');
       }
-      onUpdate();
+      if (buildCompleted || trainingCompleted) {
+        onUpdate();
+      }
     } catch (err) {
       console.error('Error checking queues:', err);
     }

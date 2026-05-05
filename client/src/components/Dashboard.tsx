@@ -63,7 +63,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
 
   useEffect(() => {
     loadOutgoingAttacks();
-    const interval = setInterval(loadOutgoingAttacks, 10000);
+    const interval = setInterval(loadOutgoingAttacks, 20000);
     return () => clearInterval(interval);
   }, [nexuses]);
 
