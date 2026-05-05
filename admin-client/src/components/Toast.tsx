@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import '../styles/Toast.css';
 
 interface ToastProps {
@@ -8,10 +8,13 @@ interface ToastProps {
 }
 
 const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
   useEffect(() => {
-    const timer = setTimeout(onClose, 3000);
+    const timer = setTimeout(() => onCloseRef.current(), 3000);
     return () => clearTimeout(timer);
-  }, [onClose]);
+  }, []);
 
   const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
 

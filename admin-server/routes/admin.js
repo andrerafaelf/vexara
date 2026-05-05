@@ -85,7 +85,7 @@ router.get('/stats', async (req, res) => {
     const [userCount, villageCount, attackCount, topUsers] = await Promise.all([
       prisma.user.count(),
       prisma.nexus.count(),
-      prisma.attack.count(),
+      prisma.attack.count({ where: { status: 'traveling' } }),
       prisma.user.findMany({
         select: { id: true, username: true, points: true },
         orderBy: { points: 'desc' },
