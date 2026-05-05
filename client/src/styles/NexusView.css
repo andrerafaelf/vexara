@@ -608,11 +608,17 @@
 .buildings-tab h3 {
   color: #e94560;
   margin-bottom: 20px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 700;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(168, 218, 220, 0.15);
 }
 
 .buildings-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
   gap: 15px;
 }
 
@@ -624,27 +630,40 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  border: 1px solid rgba(168, 218, 220, 0.08);
+  border-top: 3px solid #1d5b8f;
+  transition: box-shadow 0.2s ease;
+}
+
+.building-card:not(.disabled) {
+  border-top-color: #e94560;
+}
+
+.building-card:not(.disabled):not(.upgrading):hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(233, 69, 96, 0.2);
 }
 
 .building-card.disabled {
-  opacity: 0.6;
-  border: 2px solid #666;
+  opacity: 0.55;
 }
 
 .building-card.disabled h4 {
-  color: #888;
+  color: #aaa;
 }
 
 .building-card-image {
-  width: 100%;
+  width: calc(100% + 40px);
+  height: 120px;
   object-fit: cover;
-  border-radius: 4px;
-  margin-bottom: 10px;
+  object-position: center top;
+  margin: -20px -20px 12px;
+  border-radius: 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.25);
 }
 
 .building-card.upgrading {
-  border: 2px solid #e94560;
-  background: #1a2f4a;
+  border-top-color: #e94560;
+  background: #162b45;
 }
 
 .upgrading-status {
@@ -680,7 +699,9 @@
 .building-card h4 {
   color: #a8dadc;
   margin: 0;
-  font-size: 16px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
 }
 
 .building-info {
@@ -706,39 +727,50 @@
 
 .building-card p {
   color: #f1faee;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
+}
+
+.building-level {
+  font-size: 12px;
+  color: #a8dadc;
+  margin-bottom: 6px;
+  font-weight: 600;
 }
 
 .building-benefit {
   color: #a8dadc !important;
   font-size: 12px;
   line-height: 1.5;
-  margin-top: -4px;
-  margin-bottom: 12px;
-  padding: 10px 12px;
-  background: rgba(15, 52, 96, 0.75);
-  border-left: 3px solid #4caf50;
+  margin-top: -2px;
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  background: rgba(15, 52, 96, 0.6);
+  border-left: 2px solid #4caf50;
   border-radius: 4px;
 }
 
 .building-cost {
-  background: #1a4971;
-  padding: 10px;
+  background: rgba(26, 73, 113, 0.5);
+  padding: 8px 10px;
   border-radius: 6px;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 }
 
 .building-cost > p {
   color: #a8dadc;
-  font-size: 12px;
-  margin-bottom: 8px;
+  font-size: 11px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
 }
 
 .cost-details {
   display: flex;
   gap: 10px;
-  justify-content: center;
-  margin-bottom: 8px;
+  flex-wrap: nowrap;
+  align-items: center;
+  margin-bottom: 6px;
 }
 
 .cost-details span {
@@ -749,6 +781,8 @@
 .build-time {
   color: #e94560;
   font-size: 12px;
+  font-weight: 600;
+  margin: 0;
 }
 
 .building-upgrade-button {
@@ -756,6 +790,11 @@
   color: white;
   width: 100%;
   margin-top: auto;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.2px;
+  padding: 9px;
+  border-radius: 6px;
 }
 
 .building-upgrade-button:hover:not(:disabled) {
@@ -782,7 +821,13 @@
 
 .troops-current h4 {
   color: #a8dadc;
-  margin-bottom: 15px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 700;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(168, 218, 220, 0.15);
 }
 
 .empty-state {
@@ -791,36 +836,45 @@
 }
 
 .troop-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .troop-item {
   background: #1a4971;
-  padding: 10px;
-  border-radius: 4px;
+  padding: 8px 12px;
+  border-radius: 6px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
   gap: 10px;
+  border: 1px solid rgba(168, 218, 220, 0.1);
 }
 
 .troop-icon {
-  width: 32px;
-  height: 32px;
-  object-fit: contain;
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
   border-radius: 4px;
+  flex-shrink: 0;
 }
 
 .troop-name {
   color: #f1faee;
-  text-transform: capitalize;
+  font-size: 13px;
+  font-weight: 500;
+  flex: 1;
 }
 
 .troop-count {
-  color: #e94560;
-  font-weight: bold;
+  color: #4caf50;
+  font-weight: 700;
+  font-size: 15px;
+  background: rgba(76, 175, 80, 0.12);
+  padding: 2px 8px;
+  border-radius: 10px;
+  min-width: 28px;
+  text-align: center;
 }
 
 .troops-train {
@@ -832,43 +886,65 @@
 .troops-train h4 {
   color: #a8dadc;
   margin-bottom: 15px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 700;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(168, 218, 220, 0.15);
 }
 
 .train-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
   gap: 15px;
 }
 
 .train-card {
   background: #1a4971;
   padding: 15px;
-  border-radius: 6px;
+  border-radius: 8px;
   position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  border: 1px solid rgba(168, 218, 220, 0.08);
+  border-top: 3px solid #2a5f8f;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.train-card:not(.disabled) {
+  border-top-color: #e94560;
+}
+
+.train-card:not(.disabled):hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(233, 69, 96, 0.2);
 }
 
 .troop-card-image {
-  width: 100%;
+  width: calc(100% + 30px);
+  height: 130px;
   object-fit: cover;
-  border-radius: 4px;
-  margin-bottom: 10px;
+  object-position: center top;
+  margin: -15px -15px 12px;
+  border-radius: 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.25);
 }
 
 .troop-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  gap: 6px;
 }
 
 .troop-header h5 {
   color: #f1faee;
   margin: 0;
-  text-transform: capitalize;
-  font-size: 16px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
 }
 
 .troop-info {
@@ -876,55 +952,84 @@
   border: none;
   padding: 0;
   line-height: 1;
-  font-size: 16px;
+  font-size: 14px;
   cursor: help;
-  opacity: 0.7;
+  opacity: 0.6;
   transition: opacity 0.2s ease;
+  flex-shrink: 0;
 }
 
 .troop-info:hover {
   opacity: 1;
 }
 
-.train-card h5 {
-  color: #f1faee;
-  margin-bottom: 10px;
-  text-transform: capitalize;
-  font-size: 16px;
-}
-
 .train-costs {
   display: flex;
   gap: 10px;
-  margin-bottom: 15px;
   flex-wrap: wrap;
-  font-size: 14px;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 13px;
   color: #a8dadc;
+  background: rgba(15, 52, 96, 0.5);
+  padding: 8px 10px;
+  border-radius: 6px;
 }
 
 .train-time {
+  width: 100%;
   color: #e94560;
-  font-size: 13px;
-  margin-bottom: 10px;
-  text-align: center;
+  font-size: 12px;
+  margin: 0;
+  font-weight: 600;
+}
+
+.train-controls-wrapper {
+  margin-top: auto;
+}
+
+.train-max-label {
+  display: block;
+  font-size: 11px;
+  color: #a8dadc;
+  opacity: 0.65;
+  margin-bottom: 5px;
+  text-align: right;
 }
 
 .train-controls {
   display: flex;
-  gap: 10px;
-  align-items: center;
-  margin-top: auto;
+  align-items: stretch;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(233, 69, 96, 0.35);
 }
 
 .train-controls input {
-  flex: 1;
-  max-width: 80px;
+  flex: 0 0 52px;
+  width: 52px;
+  max-width: 52px;
+  border: none;
+  border-right: 1px solid rgba(233, 69, 96, 0.35);
+  border-radius: 0;
+  background: rgba(15, 52, 96, 0.8);
+  color: #f1faee;
+  text-align: center;
+  padding: 8px 4px;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .train-controls button {
   background: #e94560;
   color: white;
   flex: 1;
+  border: none;
+  border-radius: 0;
+  padding: 8px 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
 }
 
 .train-controls button:hover {
@@ -932,20 +1037,19 @@
 }
 
 .train-card.disabled {
-  opacity: 0.6;
-  border: 2px solid #666;
+  opacity: 0.5;
 }
 
 .train-card.disabled h5 {
-  color: #888;
+  color: #aaa;
 }
 
 .requirements-missing {
-  background: #0f3460;
-  padding: 10px;
+  background: rgba(15, 52, 96, 0.8);
+  padding: 7px 10px;
   border-radius: 4px;
-  margin-bottom: 10px;
-  border-left: 3px solid #e94560;
+  margin-bottom: 8px;
+  border-left: 2px solid #e94560;
 }
 
 .insuff-resources {
@@ -969,6 +1073,14 @@
   font-size: 11px;
   margin: 3px 0;
   line-height: 1.4;
+}
+
+.train-card.disabled .train-controls {
+  border-color: rgba(100, 100, 100, 0.25);
+}
+
+.train-card.disabled .train-controls input {
+  border-right-color: rgba(100, 100, 100, 0.25);
 }
 
 .train-controls input:disabled,
@@ -1077,6 +1189,16 @@
   .building-card,
   .train-card {
     padding: 12px;
+  }
+
+  .building-card-image {
+    width: calc(100% + 24px);
+    margin: -12px -12px 10px;
+  }
+
+  .troop-card-image {
+    width: calc(100% + 24px);
+    margin: -12px -12px 10px;
   }
 
   .building-card h4 {

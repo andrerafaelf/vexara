@@ -1493,15 +1493,12 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                     )}
                     {cost ? (
                       <div className="building-cost">
-                        <p>Upgrade Cost:</p>
                         <div className="cost-details">
                           <span>🧬 {cost.biomass}</span>
                           <span>⚙️ {cost.alloy}</span>
                           <span>💎 {cost.ore}</span>
                         </div>
-                        <p className="build-time">
-                          ⏱️ {Math.floor(cost.time / 60)}m {cost.time % 60}s
-                        </p>
+                        <p className="build-time">⏱️ {Math.floor(cost.time / 60)}m {cost.time % 60}s</p>
                       </div>
                     ) : (
                       <div className="building-cost">
@@ -1602,6 +1599,13 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                     <div className="troop-list">
                       {currentTroops.map(([type, count]) => (
                         <div key={type} className="troop-item">
+                          {TROOP_IMAGES[type] && (
+                            <img
+                              src={TROOP_IMAGES[type].src || TROOP_IMAGES[type]}
+                              alt=""
+                              className="troop-icon"
+                            />
+                          )}
                           <span className="troop-name">{TROOP_NAMES[type] || type}</span>
                           <span className="troop-count">{count}</span>
                         </div>
@@ -1650,10 +1654,8 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                             <span>⚙️ {costs.alloy}</span>
                             <span>💎 {costs.ore}</span>
                             <span>👥 {costs.population}</span>
+                            <p className="train-time">⏱️ {Math.floor(costs.time / 60)}m {costs.time % 60}s</p>
                           </div>
-                          <p className="train-time">
-                            ⏱️ {Math.floor(costs.time / 60)}m {costs.time % 60}s
-                          </p>
                           {isTrainingQueueFull && (
                             <div className="requirements-missing">
                               <p className="requires-label">🔒 Queue Full:</p>
@@ -1670,20 +1672,25 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                               ))}
                             </div>
                           )}
-                          <div className="train-controls">
-                            <input
-                              type="text"
-                              inputMode="numeric"
-                              pattern="[0-9]*"
-                              placeholder={maxTrainable > 0 ? `1-${maxTrainable}` : '0'}
-                              value={trainAmount[type] ?? ''}
-                              onChange={(e) => handleTrainAmountChange(type, e.target.value)}
-                              aria-label={`${TROOP_NAMES[type]} amount`}
-                              disabled={isTrainDisabled}
-                            />
-                            <button onClick={() => handleTrainTroops(type)} disabled={isTrainDisabled}>
-                              {shownAmount} /{maxTrainable} Train
-                            </button>
+                          <div className="train-controls-wrapper">
+                            {canTrain && maxTrainable > 0 && (
+                              <span className="train-max-label">Max trainable: {maxTrainable}</span>
+                            )}
+                            <div className="train-controls">
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                placeholder={maxTrainable > 0 ? `1–${maxTrainable}` : '0'}
+                                value={trainAmount[type] ?? ''}
+                                onChange={(e) => handleTrainAmountChange(type, e.target.value)}
+                                aria-label={`${TROOP_NAMES[type]} amount`}
+                                disabled={isTrainDisabled}
+                              />
+                              <button onClick={() => handleTrainTroops(type)} disabled={isTrainDisabled}>
+                                Train
+                              </button>
+                            </div>
                           </div>
                         </div>
                       );
