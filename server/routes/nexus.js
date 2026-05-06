@@ -47,7 +47,7 @@ router.get('/my-nexuses', auth, async (req, res) => {
   try {
     const nexuses = await prisma.nexus.findMany({
       where: { ownerId: req.userId },
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
     });
     const outgoingAttacks = await prisma.attack.findMany({
       where: {
