@@ -59,7 +59,8 @@ export const TROOPS_DOC: TroopDoc[] = [
     icon: '🔍',
     name: 'Recon Operative',
     role: 'Scout / support unit',
-    description: 'Lightly armed intel gatherer that reveals enemy nexus resources, troops, and defenses. Not a frontline fighter.',
+    description:
+      'Lightly armed intel gatherer that reveals enemy nexus resources, troops, and defenses. Not a frontline fighter.',
     stats: { attack: 5, defense: 20, speed: 25, carry: 10 },
     cost: { biomass: 100, alloy: 30, ore: 60, population: 1, time: '1m 24s' },
     requirements: ['Recruitment Core Lv3', 'Command Core Lv2'],
@@ -80,7 +81,8 @@ export const TROOPS_DOC: TroopDoc[] = [
     icon: '🤖',
     name: 'Siege Mech',
     role: 'Heavy defensive anchor',
-    description: 'Towering defensive platform with exceptional durability. Slow but nearly immovable when holding ground.',
+    description:
+      'Towering defensive platform with exceptional durability. Slow but nearly immovable when holding ground.',
     stats: { attack: 150, defense: 200, speed: 10, carry: 80 },
     cost: { biomass: 125, alloy: 100, ore: 250, population: 4, time: '10m 0s' },
     requirements: ['Recruitment Core Lv5', 'Ore Extractor Lv5'],
@@ -214,7 +216,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
       { level: 6, requires: ['Alloy Forge Lv2'] },
       { level: 10, requires: ['Command Core Lv8'] },
     ],
-    impact: ['Storage formula: floor(1000 * 1.3^level).'],
+    impact: ['Storage formula: floor(1000 * 1.5^level).'],
   },
   {
     key: 'biomassFarm',

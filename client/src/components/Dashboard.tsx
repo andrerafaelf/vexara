@@ -89,7 +89,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
     };
   };
 
-  const getStorageCapacity = (nexus: Nexus) => Math.floor(1000 * Math.pow(1.3, nexus.buildings.storageVault));
+  const getStorageCapacity = (nexus: Nexus) => Math.floor(1000 * Math.pow(1.5, nexus.buildings.storageVault));
 
   const totalProduction = nexuses.reduce(
     (sum, v) => {

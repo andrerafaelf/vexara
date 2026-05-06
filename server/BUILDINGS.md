@@ -19,6 +19,7 @@ Per-upgrade costs and times are calculated from base values with staged multipli
 ## Building Catalog
 
 ### Command Core
+
 - Role: Main progression gate
 - Base cost: Biomass 90, Alloy 80, Ore 70, Time 45s
 - Max level: 20
@@ -29,6 +30,7 @@ Per-upgrade costs and times are calculated from base values with staged multipli
   - Lv10 requires Storage Vault Lv5
 
 ### Recruitment Core (troopFabricator)
+
 - Role: Troop production and military unlock gate
 - Base cost: Biomass 200, Alloy 170, Ore 90, Time 75s
 - Max level: 15
@@ -39,6 +41,7 @@ Per-upgrade costs and times are calculated from base values with staged multipli
   - Lv10 requires Life Support Lv5
 
 ### Life Support
+
 - Role: Population cap scaling
 - Base cost: Biomass 80, Alloy 100, Ore 70, Time 60s
 - Max level: 20
@@ -47,9 +50,10 @@ Per-upgrade costs and times are calculated from base values with staged multipli
   - Lv4 requires Biomass Farm Lv2
   - Lv8 requires Storage Vault Lv4
 - Impact:
-  - Population max formula: floor(100 * 1.27^level)
+  - Population max formula: floor(100 \* 1.27^level)
 
 ### Storage Vault
+
 - Role: Resource cap scaling
 - Base cost: Biomass 60, Alloy 50, Ore 40, Time 45s
 - Max level: 20
@@ -59,9 +63,10 @@ Per-upgrade costs and times are calculated from base values with staged multipli
   - Lv6 requires Alloy Forge Lv2
   - Lv10 requires Command Core Lv8
 - Impact:
-  - Storage formula: floor(1000 * 1.3^level)
+  - Storage formula: floor(1000 \* 1.5^level)
 
 ### Biomass Farm
+
 - Role: Biomass production
 - Base cost: Biomass 50, Alloy 60, Ore 40, Time 45s
 - Max level: 20
@@ -70,9 +75,10 @@ Per-upgrade costs and times are calculated from base values with staged multipli
   - Lv6 requires Recruitment Core Lv2
   - Lv10 requires Life Support Lv5
 - Impact:
-  - Production scales as floor(600 * 1.35^(level-1))
+  - Production scales as floor(600 \* 1.35^(level-1))
 
 ### Alloy Forge
+
 - Role: Alloy production
 - Base cost: Biomass 65, Alloy 40, Ore 40, Time 45s
 - Max level: 15
@@ -81,9 +87,10 @@ Per-upgrade costs and times are calculated from base values with staged multipli
   - Lv6 requires Command Core Lv4
   - Lv10 requires Ore Extractor Lv8
 - Impact:
-  - Production scales as floor(600 * 1.35^(level-1))
+  - Production scales as floor(600 \* 1.35^(level-1))
 
 ### Ore Extractor
+
 - Role: Ore production
 - Base cost: Biomass 75, Alloy 65, Ore 70, Time 60s
 - Max level: 20
@@ -91,9 +98,10 @@ Per-upgrade costs and times are calculated from base values with staged multipli
 - Milestones:
   - Lv8 requires Alloy Forge Lv4
 - Impact:
-  - Production scales as floor(600 * 1.35^(level-1))
+  - Production scales as floor(600 \* 1.35^(level-1))
 
 ### Shield Grid
+
 - Role: Defensive multiplier
 - Base cost: Biomass 50, Alloy 100, Ore 20, Time 75s
 - Max level: 15

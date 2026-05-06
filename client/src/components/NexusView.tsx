@@ -254,7 +254,7 @@ const TROOP_REQUIREMENTS: { [key: string]: any } = {
 const POPULATION_BASE = 100;
 const POPULATION_GROWTH = 1.27;
 const STORAGE_BASE = 1000;
-const STORAGE_GROWTH = 1.3;
+const STORAGE_GROWTH = 1.5;
 const SHIELD_BONUS_PER_LEVEL = 0.02;
 
 const TROOP_COSTS: { [key: string]: any } = {
@@ -1127,7 +1127,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   };
 
   const production = calculateProduction();
-  const storageCapacity = Math.floor(1000 * Math.pow(1.3, nexus.buildings.storageVault));
+  const storageCapacity = getStorageAtLevel(nexus.buildings.storageVault);
   const questBatches = getQuestBatches();
   const currentTroops = Object.entries(nexus.troops).filter(([, count]) => Number(count) > 0);
   const activeBuild = nexus.buildQueue[0];
