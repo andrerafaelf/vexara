@@ -289,26 +289,22 @@ export async function applyCompletedQueues(nexus) {
 }
 
 const CONTROL_RECOVERY_AMOUNT = 10;
-const CONTROL_RECOVERY_INTERVAL_MS = 30 * 60 * 1000; // 30 minutes
 
-/** Gradually recover controlLevel for conquered nexuses (+10 every 30 min, starting 30 min after conquest) */
+/** Gradually recover controlLevel for owned nexuses below 100 (+10 per tick, tick fires every 30 min) */
 export async function recoverControlLevels() {
   try {
-    const now = new Date();
-    const threshold = new Date(now.getTime() - CONTROL_RECOVERY_INTERVAL_MS);
-    // Only recover owned nexuses that are below 100 and whose last recovery was at least 30 min ago
+    // Every tick, add 10 to all owned nexuses with controlLevel < 100
     const nexuses = await prisma.nexus.findMany({
       where: {
         ownerId: { not: null },
         controlLevel: { lt: 100 },
-        lastControlRecovery: { lte: threshold },
       },
     });
     for (const nexus of nexuses) {
       const newLevel = Math.min(nexus.controlLevel + CONTROL_RECOVERY_AMOUNT, 100);
       await prisma.nexus.update({
         where: { id: nexus.id },
-        data: { controlLevel: newLevel, lastControlRecovery: now },
+        data: { controlLevel: newLevel },
       });
     }
   } catch (err) {
