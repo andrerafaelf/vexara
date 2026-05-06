@@ -213,42 +213,42 @@ const TROOP_DESCRIPTIONS: { [key: string]: string } = {
   assaultTrooper:
     'Standard offensive infantry. Versatile frontline soldier used for sustained attacks and general combat operations. Requires Lv1 Recruitment Core.',
   lancerDrone:
-    'Anti-vehicle defensive unit. Autonomous unit equipped with precision lances, optimized to intercept fast attackers and hold defensive lines. Requires Lv2 Recruitment Core, 5 Assault Troopers.',
+    'Anti-vehicle defensive unit. Autonomous unit equipped with precision lances, optimized to intercept fast attackers and hold defensive lines. Requires Lv2 Recruitment Core.',
   breakerUnit:
-    'Heavy assault unit. Armored shock unit designed to breach defenses and deal high structural and troop damage. Requires Lv2 Recruitment Core, Lv2 Ore Extractor, 10 Assault Troopers.',
+    'Heavy assault unit. Armored shock unit designed to breach defenses and deal high structural and troop damage. Requires Lv3 Recruitment Core, Lv3 Ore Extractor.',
   reconOperative:
-    'Scout & intelligence unit. Fast, lightly equipped operative used to gather intelligence, scan enemy nexuses, and detect incoming forces. Requires Lv3 Recruitment Core, 5 Assault Troopers, 5 Lancer Drones.',
+    'Scout & intelligence unit. Fast, lightly equipped operative used to gather intelligence, scan enemy nexuses, and detect incoming forces. Requires Lv4 Recruitment Core, Lv3 Command Core.',
   skimmerBike:
-    'Fast raid unit. High-speed hover bike used for quick strikes, resource extraction, and rapid retreats. Requires Lv3 Recruitment Core, Lv3 Alloy Forge, 20 Assault Troopers, 10 Lancer Drones.',
+    'Fast raid unit. High-speed hover bike used for quick strikes, resource extraction, and rapid retreats. Requires Lv5 Recruitment Core, Lv4 Alloy Forge.',
   siegeMech:
-    'Heavy siege unit. Massive mechanized unit specialized in destroying fortifications and shield grids. Requires Lv4 Recruitment Core, Lv4 Ore Extractor, 30 Assault Troopers, 10 Breaker Units.',
+    'Heavy siege unit. Massive mechanized unit specialized in destroying fortifications and shield grids. Requires Lv10 Recruitment Core, Lv9 Ore Extractor, Lv8 Command Core.',
   bulwarkGuard:
-    'Elite defensive infantry. Heavily shielded unit deployed to significantly strengthen nexus defenses. Requires Lv3 Recruitment Core, Lv5 Life Support.',
+    'Elite defensive infantry. Heavily shielded unit deployed to significantly strengthen nexus defenses. Requires Lv5 Recruitment Core, Lv5 Life Support.',
   suppressorTeam:
-    'Ranged support unit. Long-range fireteam that weakens enemy forces before direct engagement. Requires Lv3 Recruitment Core, Lv3 Command Core.',
+    'Ranged support unit. Long-range fireteam that weakens enemy forces before direct engagement. Requires Lv7 Recruitment Core, Lv6 Command Core.',
   disruptorUnit:
-    'Anti-armor & anti-mech unit. Specialized unit using EMP weapons to counter heavy units and machinery. Requires Lv4 Recruitment Core.',
+    'Anti-armor & anti-mech unit. Specialized unit using EMP weapons to counter heavy units and machinery. Requires Lv7 Recruitment Core, Lv6 Ore Extractor.',
   interceptorBike:
-    'Rapid response unit. Extremely fast unit used to chase scouts, reinforce nearby nexuses, or intercept raids. Requires Lv4 Recruitment Core, 50 Skimmer Bikes.',
+    'Rapid response unit. Extremely fast unit used to chase scouts, reinforce nearby nexuses, or intercept raids. Requires Lv8 Recruitment Core, Lv7 Alloy Forge.',
   annihilatorPlatform:
-    'Heavy artillery unit. Slow but devastating artillery platform capable of inflicting massive damage. Requires Lv6 Recruitment Core, Lv6 Command Core.',
+    'Heavy artillery unit. Slow but devastating artillery platform capable of inflicting massive damage. Requires Lv12 Recruitment Core, Lv10 Command Core, Lv10 Shield Grid.',
   overseer:
-    'Conquest & control unit. Non-combat command unit required to reduce Control Level and permanently capture enemy nexuses. Requires Lv5 Recruitment Core, Lv3 Command Core, Lv2 Shield Grid. Up to 3 per nexus.',
+    'Conquest & control unit. Non-combat command unit required to reduce Control Level and permanently capture enemy nexuses. Requires Lv14 Recruitment Core, Lv14 Command Core, Lv13 Shield Grid. Up to 3 per nexus.',
 };
 
 const TROOP_REQUIREMENTS: { [key: string]: any } = {
   assaultTrooper: { buildings: { troopFabricator: 1 } },
   lancerDrone: { buildings: { troopFabricator: 2 } },
   breakerUnit: { buildings: { troopFabricator: 3, oreExtractor: 3 } },
-  reconOperative: { buildings: { troopFabricator: 3, commandCore: 2 } },
-  skimmerBike: { buildings: { troopFabricator: 4, alloyForge: 4 } },
-  siegeMech: { buildings: { troopFabricator: 5, oreExtractor: 5 } },
-  bulwarkGuard: { buildings: { troopFabricator: 4, lifeSupport: 6 } },
-  suppressorTeam: { buildings: { troopFabricator: 4, commandCore: 4 } },
-  disruptorUnit: { buildings: { troopFabricator: 5, oreExtractor: 4 } },
-  interceptorBike: { buildings: { troopFabricator: 6, alloyForge: 5 } },
-  annihilatorPlatform: { buildings: { troopFabricator: 7, commandCore: 6 } },
-  overseer: { buildings: { troopFabricator: 9, commandCore: 8, shieldGrid: 6 }, maxPerNexus: 3 },
+  reconOperative: { buildings: { troopFabricator: 4, commandCore: 3 } },
+  skimmerBike: { buildings: { troopFabricator: 5, alloyForge: 4 } },
+  bulwarkGuard: { buildings: { troopFabricator: 5, lifeSupport: 5 } },
+  suppressorTeam: { buildings: { troopFabricator: 7, commandCore: 6 } },
+  disruptorUnit: { buildings: { troopFabricator: 7, oreExtractor: 6 } },
+  interceptorBike: { buildings: { troopFabricator: 8, alloyForge: 7 } },
+  siegeMech: { buildings: { troopFabricator: 10, oreExtractor: 9, commandCore: 8 } },
+  annihilatorPlatform: { buildings: { troopFabricator: 12, commandCore: 10, shieldGrid: 10 } },
+  overseer: { buildings: { troopFabricator: 14, commandCore: 14, shieldGrid: 13 }, maxPerNexus: 3 },
 };
 
 const POPULATION_BASE = 100;
@@ -261,15 +261,15 @@ const TROOP_COSTS: { [key: string]: any } = {
   assaultTrooper: { biomass: 30, alloy: 30, ore: 70, population: 1, time: 79 },
   lancerDrone: { biomass: 50, alloy: 30, ore: 10, population: 1, time: 53 },
   breakerUnit: { biomass: 60, alloy: 30, ore: 40, population: 1, time: 74 },
-  reconOperative: { biomass: 100, alloy: 30, ore: 60, population: 1, time: 84 },
-  skimmerBike: { biomass: 125, alloy: 100, ore: 150, population: 3, time: 131 },
-  siegeMech: { biomass: 125, alloy: 100, ore: 250, population: 4, time: 600 },
-  bulwarkGuard: { biomass: 80, alloy: 120, ore: 100, population: 2, time: 105 },
-  suppressorTeam: { biomass: 90, alloy: 80, ore: 90, population: 2, time: 114 },
-  disruptorUnit: { biomass: 110, alloy: 150, ore: 130, population: 2, time: 123 },
-  interceptorBike: { biomass: 150, alloy: 120, ore: 180, population: 3, time: 140 },
-  annihilatorPlatform: { biomass: 200, alloy: 180, ore: 300, population: 5, time: 900 },
-  overseer: { biomass: 300, alloy: 250, ore: 200, population: 5, time: 1800 },
+  reconOperative: { biomass: 100, alloy: 30, ore: 60, population: 1, time: 300 },
+  skimmerBike: { biomass: 125, alloy: 100, ore: 150, population: 3, time: 600 },
+  bulwarkGuard: { biomass: 80, alloy: 120, ore: 100, population: 2, time: 480 },
+  suppressorTeam: { biomass: 90, alloy: 80, ore: 90, population: 2, time: 540 },
+  disruptorUnit: { biomass: 110, alloy: 150, ore: 130, population: 2, time: 900 },
+  interceptorBike: { biomass: 150, alloy: 120, ore: 180, population: 3, time: 1200 },
+  siegeMech: { biomass: 250, alloy: 200, ore: 400, population: 4, time: 3600 },
+  annihilatorPlatform: { biomass: 400, alloy: 350, ore: 600, population: 5, time: 14400 },
+  overseer: { biomass: 600, alloy: 500, ore: 400, population: 5, time: 28800 },
 };
 
 const TROOP_CATEGORIES: Record<string, 'offense' | 'defense'> = {

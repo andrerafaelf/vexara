@@ -19,16 +19,8 @@ const TROOP_POPULATION_COST = {
   overseer: 5,
 };
 
-let hasReconciledOverseerConquests = false;
-
-// Process attacks that have arrived
 async function processArrivedAttacks() {
   try {
-    if (!hasReconciledOverseerConquests) {
-      await reconcileOverseerConquestLosses();
-      hasReconciledOverseerConquests = true;
-    }
-
     const now = new Date();
     const arrivedAttacks = await prisma.attack.findMany({
       where: { status: 'traveling', arrivesAt: { lte: now } },
@@ -43,59 +35,6 @@ async function processArrivedAttacks() {
     }
   } catch (err) {
     console.error('Error processing attacks:', err);
-  }
-}
-
-async function reconcileOverseerConquestLosses() {
-  const completedAttacks = await prisma.attack.findMany({
-    where: { status: 'completed' },
-    orderBy: { id: 'desc' },
-    select: {
-      id: true,
-      attackerNexusId: true,
-      troops: true,
-      result: true,
-    },
-  });
-
-  for (const attack of completedAttacks) {
-    const sentOverseer = Number(attack?.troops?.overseer || 0);
-    const conquered = Boolean(attack?.result?.conquered);
-    const recordedLoss = Number(attack?.result?.attackerLosses?.overseer || 0);
-
-    if (sentOverseer <= 0 || !conquered || recordedLoss >= sentOverseer) {
-      continue;
-    }
-
-    const missingLoss = sentOverseer - recordedLoss;
-    await prisma.$transaction(async (tx) => {
-      const attackerNexus = await tx.nexus.findUnique({
-        where: { id: attack.attackerNexusId },
-        select: { id: true, overseer: true },
-      });
-
-      if (attackerNexus) {
-        await tx.nexus.update({
-          where: { id: attackerNexus.id },
-          data: {
-            overseer: Math.max(0, (attackerNexus.overseer || 0) - missingLoss),
-          },
-        });
-      }
-
-      const correctedResult = {
-        ...(attack.result || {}),
-        attackerLosses: {
-          ...(attack?.result?.attackerLosses || {}),
-          overseer: sentOverseer,
-        },
-      };
-
-      await tx.attack.update({
-        where: { id: attack.id },
-        data: { result: correctedResult },
-      });
-    });
   }
 }
 
@@ -312,7 +251,6 @@ async function resolveCombat(attack) {
           resourcesStolen,
           victory: attackerWins,
           conquered,
-          controlReduced: overseerSurvived,
           remainingControl: newControlLevel,
         },
       },
@@ -326,4 +264,4 @@ async function resolveCombat(attack) {
   }
 }
 
-export { processArrivedAttacks, reconcileOverseerConquestLosses };
+export { processArrivedAttacks };
