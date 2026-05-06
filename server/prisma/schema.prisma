@@ -67,9 +67,10 @@ model Nexus {
   trainingQueue      Json @default("[]")
 
   lastResourceUpdate DateTime @default(now())
-  points             Int      @default(5)
-  controlLevel       Int      @default(100)
-  createdAt          DateTime @default(now())
+  points               Int       @default(5)
+  controlLevel         Int       @default(100)
+  lastControlRecovery  DateTime?
+  createdAt            DateTime  @default(now())
 
   attacksAsAttacker Attack[]         @relation("AttackerNexus")
   attacksAsDefender Attack[]         @relation("DefenderNexus")

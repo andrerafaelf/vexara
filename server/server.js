@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import prisma from './lib/prisma.js';
-import { updateAllResources } from './models/Nexus.js';
+import { recoverControlLevels, updateAllResources } from './models/Nexus.js';
 import attackRoutes from './routes/attack.js';
 import authRoutes from './routes/auth.js';
 import buildingRoutes from './routes/building.js';
@@ -144,6 +144,7 @@ const JOB_LOCKS = {
   updateResources: 9101,
   processCombat: 9102,
   syncNeutralPool: 9103,
+  recoverControl: 9104,
 };
 
 async function runWithPgAdvisoryLock(lockId, jobName, jobHandler) {
@@ -203,6 +204,14 @@ prisma
         await ensureNeutralNexusPool();
       });
     }, 60000);
+
+    // Gradually recover control level for conquered nexuses (+10 every 30 min)
+    setInterval(
+      () => {
+        void runWithPgAdvisoryLock(JOB_LOCKS.recoverControl, 'recover_control', () => recoverControlLevels());
+      },
+      30 * 60 * 1000,
+    );
   })
   .catch((err) => {
     logError('postgres_connection_error', { message: err.message });

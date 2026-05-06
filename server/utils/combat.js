@@ -183,12 +183,18 @@ async function resolveCombat(attack) {
     }
 
     // Handle overseer control reduction and conquest
+    // Overseer is a strategic unit — it doesn't die in combat unless ALL other troops die.
+    // It is always consumed when it successfully triggers a conquest.
     let newControlLevel = defenderNexus.controlLevel ?? 100;
-    let conquestTriggered = false;
     const overseerSent = attackTroops.overseer || 0;
-    const overseerSurvived = overseerSent > 0 && (attackerLosses.overseer || 0) < overseerSent;
+    // Overseer can act if it was sent AND the attacker won AND not all troops were wiped out
+    const allNonOverseerDied =
+      overseerSent > 0 &&
+      TROOP_KEYS.filter((t) => t !== 'overseer').some((t) => (attackTroops[t] || 0) > 0) &&
+      TROOP_KEYS.filter((t) => t !== 'overseer').every((t) => (attackerLosses[t] || 0) >= (attackTroops[t] || 0));
+    const overseerCanAct = attackerWins && overseerSent > 0 && !allNonOverseerDied;
 
-    if (attackerWins && overseerSurvived) {
+    if (overseerCanAct) {
       newControlLevel = Math.max(0, newControlLevel - 50);
 
       if (newControlLevel <= 0) {
@@ -196,7 +202,7 @@ async function resolveCombat(attack) {
         defenderTroopUpdates.ownerId = attackerNexus.ownerId;
         defenderTroopUpdates.name = 'Conquered Nexus';
         conquered = true;
-        conquestTriggered = true;
+        // Overseer is consumed on conquest — remove it from attacker's returns
         attackerLosses.overseer = overseerSent;
       }
     }
@@ -208,7 +214,8 @@ async function resolveCombat(attack) {
         ...defenderTroopUpdates,
         ...defenderResourceUpdates,
         populationCurrent: Math.max(0, defenderNexus.populationCurrent - defenderPopLost),
-        controlLevel: conquered ? 100 : newControlLevel,
+        controlLevel: conquered ? 0 : newControlLevel,
+        lastControlRecovery: conquered ? new Date() : undefined,
       },
     });
 
