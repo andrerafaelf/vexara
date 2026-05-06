@@ -28,9 +28,18 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
   const [loading, setLoading] = useState(true);
   const [showAttackForm, setShowAttackForm] = useState(false);
   const [attackTroops, setAttackTroops] = useState({
-    lancerDrone: 0, assaultTrooper: 0, breakerUnit: 0, reconOperative: 0,
-    skimmerBike: 0, siegeMech: 0, bulwarkGuard: 0, suppressorTeam: 0,
-    disruptorUnit: 0, interceptorBike: 0, annihilatorPlatform: 0, overseer: 0,
+    lancerDrone: 0,
+    assaultTrooper: 0,
+    breakerUnit: 0,
+    reconOperative: 0,
+    skimmerBike: 0,
+    siegeMech: 0,
+    bulwarkGuard: 0,
+    suppressorTeam: 0,
+    disruptorUnit: 0,
+    interceptorBike: 0,
+    annihilatorPlatform: 0,
+    overseer: 0,
   });
   const [viewedReports, setViewedReports] = useState<Set<string>>(() => {
     // Load viewed reports from localStorage
@@ -62,9 +71,18 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
   useEffect(() => {
     setShowAttackForm(false);
     setAttackTroops({
-      lancerDrone: 0, assaultTrooper: 0, breakerUnit: 0, reconOperative: 0,
-      skimmerBike: 0, siegeMech: 0, bulwarkGuard: 0, suppressorTeam: 0,
-      disruptorUnit: 0, interceptorBike: 0, annihilatorPlatform: 0, overseer: 0,
+      lancerDrone: 0,
+      assaultTrooper: 0,
+      breakerUnit: 0,
+      reconOperative: 0,
+      skimmerBike: 0,
+      siegeMech: 0,
+      bulwarkGuard: 0,
+      suppressorTeam: 0,
+      disruptorUnit: 0,
+      interceptorBike: 0,
+      annihilatorPlatform: 0,
+      overseer: 0,
     });
   }, [selectedReport?._id]);
 
@@ -80,9 +98,18 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
       alert('Strike sent!');
       setShowAttackForm(false);
       setAttackTroops({
-        lancerDrone: 0, assaultTrooper: 0, breakerUnit: 0, reconOperative: 0,
-        skimmerBike: 0, siegeMech: 0, bulwarkGuard: 0, suppressorTeam: 0,
-        disruptorUnit: 0, interceptorBike: 0, annihilatorPlatform: 0, overseer: 0,
+        lancerDrone: 0,
+        assaultTrooper: 0,
+        breakerUnit: 0,
+        reconOperative: 0,
+        skimmerBike: 0,
+        siegeMech: 0,
+        bulwarkGuard: 0,
+        suppressorTeam: 0,
+        disruptorUnit: 0,
+        interceptorBike: 0,
+        annihilatorPlatform: 0,
+        overseer: 0,
       });
     } catch (err: any) {
       alert(err.response?.data?.error || 'Error sending strike');
@@ -143,7 +170,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
               selectedReport.result.victory ? (
                 <>
                   <span>🎉 Victory! You won the strike</span>
-                  {selectedReport.result.conquered && <div className="conquest-notice">👑 NODE CONQUERED!</div>}
+                  {selectedReport.result.conquered && <div className="conquest-notice">👑 NEXUS CONQUERED!</div>}
                 </>
               ) : (
                 <span>💀 Defeat! Your strike failed</span>
@@ -167,10 +194,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
                     </span>
                   </span>
                 </div>
-                <button
-                  className="scout-attack-btn"
-                  onClick={() => setShowAttackForm((v) => !v)}
-                >
+                <button className="scout-attack-btn" onClick={() => setShowAttackForm((v) => !v)}>
                   ⚔️ {showAttackForm ? 'Cancel' : 'Attack'}
                 </button>
               </div>
@@ -198,10 +222,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
                     ))}
                   </div>
                   <div className="scout-attack-actions">
-                    <button
-                      className="scout-send-all-btn"
-                      onClick={() => setAttackTroops({ ...nexus.troops })}
-                    >
+                    <button className="scout-send-all-btn" onClick={() => setAttackTroops({ ...nexus.troops })}>
                       Send All
                     </button>
                     <button className="scout-send-btn" onClick={handleSendAttack}>

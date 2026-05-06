@@ -5,9 +5,18 @@ import { buildDetailedScoutIntel } from './scouting.js';
 const TROOP_KEYS = Object.keys(TROOP_STATS);
 
 const TROOP_POPULATION_COST = {
-  lancerDrone: 1, assaultTrooper: 1, breakerUnit: 1, reconOperative: 1,
-  skimmerBike: 3, siegeMech: 4, bulwarkGuard: 2, suppressorTeam: 2,
-  disruptorUnit: 2, interceptorBike: 3, annihilatorPlatform: 5, overseer: 5,
+  lancerDrone: 1,
+  assaultTrooper: 1,
+  breakerUnit: 1,
+  reconOperative: 1,
+  skimmerBike: 3,
+  siegeMech: 4,
+  bulwarkGuard: 2,
+  suppressorTeam: 2,
+  disruptorUnit: 2,
+  interceptorBike: 3,
+  annihilatorPlatform: 5,
+  overseer: 5,
 };
 
 // Process attacks that have arrived
@@ -191,9 +200,6 @@ async function resolveCombat(attack) {
         defenderTroopUpdates.controlLevel = 100;
         defenderTroopUpdates.name = 'Conquered Nexus';
         conquered = true;
-
-        // Overseers are consumed in the act of conquest
-        attackerLosses.overseer = attackTroops.overseer || 0;
       }
     }
 
@@ -216,8 +222,9 @@ async function resolveCombat(attack) {
         attackerTroopReturns[troopType] = Math.max(0, sent - (attackerLosses[troopType] || 0));
       }
     }
-    // Overseers are consumed on conquest — never return them
+    // Enforce overseer consumption on conquest in both return data and report payload.
     if (conquered && (attackTroops.overseer || 0) > 0) {
+      attackerLosses.overseer = attackTroops.overseer || 0;
       attackerTroopReturns.overseer = 0;
     }
     const attackerNexus = await prisma.nexus.findUnique({ where: { id: attack.attackerNexusId } });
@@ -252,7 +259,7 @@ async function resolveCombat(attack) {
     });
 
     console.log(
-      `Combat resolved: Attack ${attack.id} - ${attackerWins ? 'Attacker' : 'Defender'} wins${conquered ? ' - NODE CONQUERED!' : ''}`,
+      `Combat resolved: Attack ${attack.id} - ${attackerWins ? 'Attacker' : 'Defender'} wins${conquered ? ' - NEXUS CONQUERED!' : ''}`,
     );
   } catch (err) {
     console.error('Error resolving combat:', err);
