@@ -282,16 +282,16 @@ async function resolveCombat(attack) {
         attackerTroopReturns[troopType] = Math.max(0, sent - (attackerLosses[troopType] || 0));
       }
     }
-    // Enforce overseer consumption on conquest in both return data and report payload.
-    if (conquered && (attackTroops.overseer || 0) > 0) {
-      attackerLosses.overseer = attackTroops.overseer || 0;
-      attackerTroopReturns.overseer = 0;
-    }
     const attackerNexus = await prisma.nexus.findUnique({ where: { id: attack.attackerNexusId } });
     if (attackerNexus) {
       const returnData = {};
       for (const [troopType, survived] of Object.entries(attackerTroopReturns)) {
         returnData[troopType] = (attackerNexus[troopType] || 0) + survived;
+      }
+      // On conquest, forcibly subtract all sent Overseers from the attacker's nexus
+      if (conquered && (attackTroops.overseer || 0) > 0) {
+        attackerLosses.overseer = attackTroops.overseer || 0;
+        returnData.overseer = Math.max(0, (attackerNexus.overseer || 0) - (attackTroops.overseer || 0));
       }
       let attackerPopFreed = 0;
       for (const [troopType, lost] of Object.entries(attackerLosses)) {
