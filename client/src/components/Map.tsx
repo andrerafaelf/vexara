@@ -522,6 +522,9 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
             </span>
           )}
         </h3>
+        {isNpc && (
+          <p className="nexus-node-type-info">{getNodeTypeInfo(selectedNexus.name)}</p>
+        )}
 
         <div className="detail-line">
           <span>Owner</span>
