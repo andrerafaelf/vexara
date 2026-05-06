@@ -39,65 +39,65 @@ Neon Dominion has 12 troop types. Units are trained in the Recruitment Core and 
 
 - Role: Scout / support unit
 - Stats: Attack 5, Defense 20, Speed 25, Carry 10
-- Cost: Biomass 100, Alloy 30, Ore 60, Population 1, Time 1m 24s
-- Requirements: Recruitment Core Lv3, Command Core Lv2
+- Cost: Biomass 100, Alloy 30, Ore 60, Population 1, Time 5m 0s
+- Requirements: Recruitment Core Lv4, Command Core Lv3
 - Note: This is the scouting unit.
 
 ### Skimmer Bike
 
 - Role: Fast raider
 - Stats: Attack 80, Defense 70, Speed 22, Carry 60
-- Cost: Biomass 125, Alloy 100, Ore 150, Population 3, Time 2m 11s
-- Requirements: Recruitment Core Lv4, Alloy Forge Lv4
-
-### Siege Mech
-
-- Role: Heavy defensive anchor
-- Stats: Attack 150, Defense 200, Speed 10, Carry 80
-- Cost: Biomass 125, Alloy 100, Ore 250, Population 4, Time 10m 0s
-- Requirements: Recruitment Core Lv5, Ore Extractor Lv5
+- Cost: Biomass 125, Alloy 100, Ore 150, Population 3, Time 10m 0s
+- Requirements: Recruitment Core Lv5, Alloy Forge Lv4
 
 ### Bulwark Guard
 
 - Role: Elite defense infantry
 - Stats: Attack 20, Defense 120, Speed 12, Carry 25
-- Cost: Biomass 80, Alloy 120, Ore 100, Population 2, Time 1m 45s
-- Requirements: Recruitment Core Lv4, Life Support Lv6
+- Cost: Biomass 80, Alloy 120, Ore 100, Population 2, Time 8m 0s
+- Requirements: Recruitment Core Lv5, Life Support Lv5
 
 ### Suppressor Team
 
 - Role: Ranged assault support
 - Stats: Attack 60, Defense 50, Speed 15, Carry 20
-- Cost: Biomass 90, Alloy 80, Ore 90, Population 2, Time 1m 54s
-- Requirements: Recruitment Core Lv4, Command Core Lv4
+- Cost: Biomass 90, Alloy 80, Ore 90, Population 2, Time 9m 0s
+- Requirements: Recruitment Core Lv7, Command Core Lv6
 
 ### Disruptor Unit
 
 - Role: Anti-armor assault unit
 - Stats: Attack 70, Defense 60, Speed 17, Carry 25
-- Cost: Biomass 110, Alloy 150, Ore 130, Population 2, Time 2m 3s
-- Requirements: Recruitment Core Lv5, Ore Extractor Lv4
+- Cost: Biomass 110, Alloy 150, Ore 130, Population 2, Time 15m 0s
+- Requirements: Recruitment Core Lv7, Ore Extractor Lv6
 
 ### Interceptor Bike
 
 - Role: Rapid-response cavalry
 - Stats: Attack 90, Defense 80, Speed 28, Carry 50
-- Cost: Biomass 150, Alloy 120, Ore 180, Population 3, Time 2m 20s
-- Requirements: Recruitment Core Lv6, Alloy Forge Lv5
+- Cost: Biomass 150, Alloy 120, Ore 180, Population 3, Time 20m 0s
+- Requirements: Recruitment Core Lv8, Alloy Forge Lv7
+
+### Siege Mech
+
+- Role: Heavy defensive anchor
+- Stats: Attack 150, Defense 200, Speed 10, Carry 80
+- Cost: Biomass 250, Alloy 200, Ore 400, Population 4, Time 1h 0m
+- Requirements: Recruitment Core Lv10, Ore Extractor Lv9, Command Core Lv8
 
 ### Annihilator Platform
 
 - Role: Heavy artillery
 - Stats: Attack 200, Defense 150, Speed 8, Carry 100
-- Cost: Biomass 200, Alloy 180, Ore 300, Population 5, Time 15m 0s
-- Requirements: Recruitment Core Lv7, Command Core Lv6
+- Cost: Biomass 400, Alloy 350, Ore 600, Population 5, Time 4h 0m
+- Requirements: Recruitment Core Lv12, Command Core Lv10, Shield Grid Lv10
 
 ### Overseer
 
 - Role: Conquest / control unit
 - Stats: Attack 0, Defense 30, Speed 15, Carry 0
-- Cost: Biomass 300, Alloy 250, Ore 200, Population 5, Time 30m 0s
-- Requirements: Recruitment Core Lv9, Command Core Lv8, Shield Grid Lv6
+- Cost: Biomass 600, Alloy 500, Ore 400, Population 5, Time 8h 0m
+- Requirements: Recruitment Core Lv14, Command Core Lv14, Shield Grid Lv13
 - Limit: Maximum 3 per nexus, maximum 1 per strike
 - Notes:
   - Does not contribute attack damage
