@@ -1,6 +1,5 @@
 'use client';
 
-import AdBanner from '@/components/AdBanner';
 import { DocsDropdown, DocsMobileLinks } from '@/components/DocsDropdown';
 import Map from '@/components/Map';
 import { useAuth } from '@/context/AuthContext';
@@ -92,8 +91,6 @@ export default function StarfieldPage() {
 
   return (
     <div className="game-container">
-      <AdBanner slot="1234567890" className="ad-banner-top" />
-
       <header className="game-header">
         <div className="header-left">
           <button
@@ -219,7 +216,6 @@ export default function StarfieldPage() {
         </main>
       </div>
 
-      <AdBanner slot="0987654321" className="ad-banner-bottom" />
     </div>
   );
 }

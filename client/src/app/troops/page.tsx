@@ -1,6 +1,5 @@
 'use client';
 
-import AdBanner from '@/components/AdBanner';
 import { DocsDropdown, DocsMobileLinks } from '@/components/DocsDropdown';
 import { useAuth } from '@/context/AuthContext';
 import { TROOPS_DOC } from '@/data/gameDocs';
@@ -88,8 +87,6 @@ export default function TroopsPage() {
 
   return (
     <div className="game-container">
-      <AdBanner slot="1234567890" className="ad-banner-top" />
-
       <header className="game-header">
         <div className="header-left">
           <button
@@ -266,7 +263,6 @@ export default function TroopsPage() {
         </main>
       </div>
 
-      <AdBanner slot="0987654321" className="ad-banner-bottom" />
     </div>
   );
 }

@@ -388,6 +388,10 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   }, [initialTab]);
 
   useEffect(() => {
+    document.querySelector('.main-content')?.scrollTo({ top: 0 });
+  }, [activeTab]);
+
+  useEffect(() => {
     const interval = setInterval(() => {
       checkQueues();
       loadAttacks();

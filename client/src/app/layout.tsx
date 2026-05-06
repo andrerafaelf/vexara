@@ -1,4 +1,5 @@
 import { AuthProvider } from '@/context/AuthContext';
+import ScrollToTop from '@/components/ScrollToTop';
 import type { Metadata } from 'next';
 import './globals.css';
 
@@ -15,7 +16,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <ScrollToTop />
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

@@ -1,6 +1,5 @@
 'use client';
 
-import AdBanner from '@/components/AdBanner';
 import { useAuth } from '@/context/AuthContext';
 import { createNexus, getMyNexuses } from '@/services/api';
 import '@/styles/Game.css';
@@ -70,7 +69,6 @@ export default function Home() {
   if (nexuses.length === 0) {
     return (
       <div className="game-container">
-        <AdBanner slot="1234567890" className="ad-banner-top" />
         <header className="game-header">
           <div className="header-left">
             <h1>Neon Dominion</h1>
@@ -93,7 +91,6 @@ export default function Home() {
           </div>
         </main>
 
-        <AdBanner slot="0987654321" className="ad-banner-bottom" />
       </div>
     );
   }

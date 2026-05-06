@@ -1,9 +1,8 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { createNexus, getMyNexuses } from '../services/api';
 import '../styles/Game.css';
 import { Nexus } from '../types/game';
-import AdBanner from './AdBanner';
 import Admin from './Admin';
 import Dashboard from './Dashboard';
 import Map from './Map';
@@ -16,6 +15,7 @@ const Game: React.FC = () => {
   const [selectedNexus, setSelectedNexus] = useState<Nexus | null>(null);
   const [view, setView] = useState<'dashboard' | 'nexus' | 'map' | 'reports' | 'market' | 'admin'>('dashboard');
   const [loading, setLoading] = useState(true);
+  const mainRef = useRef<HTMLElement>(null);
   const { user, logout } = useAuth();
 
   const loadVillages = useCallback(async () => {
@@ -51,14 +51,15 @@ const Game: React.FC = () => {
   const handleSelectNexus = (nexus: Nexus) => {
     setSelectedNexus(nexus);
     setView('nexus');
+    mainRef.current?.scrollTo({ top: 0 });
   };
 
   const handleViewChange = (newView: 'dashboard' | 'nexus' | 'map' | 'reports' | 'market' | 'admin') => {
-    // Reload nexuses when navigating away from admin
     if (view === 'admin' && newView !== 'admin') {
       loadVillages();
     }
     setView(newView);
+    mainRef.current?.scrollTo({ top: 0 });
   };
 
   const handleCreateNexus = async () => {
@@ -79,7 +80,6 @@ const Game: React.FC = () => {
   if (nexuses.length === 0) {
     return (
       <div className="game-container">
-        <AdBanner slot="1234567890" className="ad-banner-top" />
         <header className="game-header">
           <div className="header-left">
             <h1>Neon Dominion</h1>
@@ -102,15 +102,12 @@ const Game: React.FC = () => {
           </div>
         </main>
 
-        <AdBanner slot="0987654321" className="ad-banner-bottom" />
       </div>
     );
   }
 
   return (
     <div className="game-container">
-      {/* Top Ad Banner */}
-      <AdBanner slot="1234567890" className="ad-banner-top" />
 
       <header className="game-header">
         <div className="header-left">
@@ -182,7 +179,7 @@ const Game: React.FC = () => {
           ))}
         </nav>
 
-        <main className="main-content">
+        <main className="main-content" ref={mainRef}>
           {view === 'dashboard' && <Dashboard nexuses={nexuses} onSelectNexus={handleSelectNexus} />}
           {view === 'nexus' && selectedNexus && <NexusView nexus={selectedNexus} onUpdate={loadVillages} />}
           {view === 'map' && selectedNexus && <Map currentNexus={selectedNexus} onRefresh={loadVillages} />}
@@ -192,8 +189,6 @@ const Game: React.FC = () => {
         </main>
       </div>
 
-      {/* Bottom Ad Banner */}
-      <AdBanner slot="0987654321" className="ad-banner-bottom" />
     </div>
   );
 };
