@@ -287,7 +287,11 @@ async function resolveCombat(attack) {
       }
       // On conquest, forcibly subtract all sent Overseers from the attacker's nexus
       if (conquestTriggered && (attackTroops.overseer || 0) > 0) {
+        // Always set overseer count to current minus sent, never add back any survived
         returnData.overseer = Math.max(0, (attackerNexus.overseer || 0) - (attackTroops.overseer || 0));
+      } else if (typeof returnData.overseer === 'undefined') {
+        // If not conquest, preserve current overseer count
+        returnData.overseer = attackerNexus.overseer || 0;
       }
       let attackerPopFreed = 0;
       for (const [troopType, lost] of Object.entries(attackerLosses)) {
