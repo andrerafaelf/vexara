@@ -1,6 +1,7 @@
 import { AuthProvider } from '@/context/AuthContext';
 import ScrollToTop from '@/components/ScrollToTop';
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -17,7 +18,9 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AuthProvider>
-          <ScrollToTop />
+          <Suspense fallback={null}>
+            <ScrollToTop />
+          </Suspense>
           {children}
         </AuthProvider>
       </body>
