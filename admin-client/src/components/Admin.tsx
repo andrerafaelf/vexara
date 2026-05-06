@@ -159,16 +159,16 @@ const Admin: React.FC = () => {
       const normalizedStats =
         statsData && typeof statsData === 'object'
           ? {
-              userCount:            Number((statsData as any).userCount            ?? 0),
-              villageCount:         Number((statsData as any).villageCount         ?? 0),
+              userCount: Number((statsData as any).userCount ?? 0),
+              villageCount: Number((statsData as any).villageCount ?? 0),
               travelingAttackCount: Number((statsData as any).travelingAttackCount ?? 0),
-              totalAttackCount:     Number((statsData as any).totalAttackCount     ?? 0),
-              newUsersThisWeek:     Number((statsData as any).newUsersThisWeek     ?? 0),
-              zeroNexusCount:       Number((statsData as any).zeroNexusCount       ?? 0),
-              totalTroops:          Number((statsData as any).totalTroops          ?? 0),
-              avgPoints:            Number((statsData as any).avgPoints            ?? 0),
-              marketCount:          Number((statsData as any).marketCount          ?? 0),
-              topUsers:             Array.isArray((statsData as any).topUsers) ? (statsData as any).topUsers : [],
+              totalAttackCount: Number((statsData as any).totalAttackCount ?? 0),
+              newUsersThisWeek: Number((statsData as any).newUsersThisWeek ?? 0),
+              zeroNexusCount: Number((statsData as any).zeroNexusCount ?? 0),
+              totalTroops: Number((statsData as any).totalTroops ?? 0),
+              avgPoints: Number((statsData as any).avgPoints ?? 0),
+              marketCount: Number((statsData as any).marketCount ?? 0),
+              topUsers: Array.isArray((statsData as any).topUsers) ? (statsData as any).topUsers : [],
             }
           : null;
 
@@ -272,7 +272,7 @@ const Admin: React.FC = () => {
     }
   };
 
-  const handleAddResources = async () => {
+  const handleAdjustResources = async () => {
     if (!selectedUser) return;
 
     try {
@@ -283,19 +283,19 @@ const Admin: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        showToast(data.error || 'Failed to add resources', 'error');
+        showToast(data.error || 'Failed to adjust resources', 'error');
         return;
       }
 
-      showToast(`Resources added for ${selectedUser.username}`, 'success');
+      showToast(`Resources updated for ${selectedUser.username}`, 'success');
       closeModal();
       loadData();
     } catch (err) {
-      showToast('Error adding resources', 'error');
+      showToast('Error adjusting resources', 'error');
     }
   };
 
-  const handleAddTroops = async () => {
+  const handleAdjustTroops = async () => {
     if (!selectedUser) return;
 
     try {
@@ -306,15 +306,15 @@ const Admin: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        showToast(data.error || 'Failed to add troops', 'error');
+        showToast(data.error || 'Failed to adjust troops', 'error');
         return;
       }
 
-      showToast(`Troops added for ${selectedUser.username}`, 'success');
+      showToast(`Troops updated for ${selectedUser.username}`, 'success');
       closeModal();
       loadData();
     } catch (err) {
-      showToast('Error adding troops', 'error');
+      showToast('Error adjusting troops', 'error');
     }
   };
 
@@ -420,16 +420,10 @@ const Admin: React.FC = () => {
   };
 
   const handleCompleteUserBuild = async (user: User) => {
-    const targetNexusId = user.nexuses?.[0]?._id;
-    if (!targetNexusId) {
-      showToast('User has no nexus to complete build for', 'error');
-      return;
-    }
-
     try {
       const res = await adminFetch(`${ADMIN_API_URL}/users/${user._id}/complete-build`, {
         method: 'POST',
-        body: JSON.stringify({ nexusId: targetNexusId }),
+        body: JSON.stringify({}),
       });
 
       if (res.ok) {
@@ -445,16 +439,10 @@ const Admin: React.FC = () => {
   };
 
   const handleCompleteUserTraining = async (user: User) => {
-    const targetNexusId = user.nexuses?.[0]?._id;
-    if (!targetNexusId) {
-      showToast('User has no nexus to complete training for', 'error');
-      return;
-    }
-
     try {
       const res = await adminFetch(`${ADMIN_API_URL}/users/${user._id}/complete-training`, {
         method: 'POST',
-        body: JSON.stringify({ nexusId: targetNexusId }),
+        body: JSON.stringify({}),
       });
 
       if (res.ok) {
@@ -590,10 +578,10 @@ const Admin: React.FC = () => {
                 </button>
                 <div className="action-divider" />
                 <button className="btn-action btn-res" onClick={() => openUserModal('resources', user)}>
-                  + Resources
+                  +/- Resources
                 </button>
                 <button className="btn-action btn-troops" onClick={() => openUserModal('troops', user)}>
-                  + Troops
+                  +/- Troops
                 </button>
                 <button className="btn-action btn-bld" onClick={() => openUserModal('buildings', user)}>
                   Set Building
@@ -681,8 +669,8 @@ const Admin: React.FC = () => {
               <h3>
                 {modal === 'addUser' && 'Add User'}
                 {modal === 'editUser' && `Edit Login: ${selectedUser?.username}`}
-                {modal === 'resources' && `Add Resources: ${selectedUser?.username}`}
-                {modal === 'troops' && `Add Troops: ${selectedUser?.username}`}
+                {modal === 'resources' && `Adjust Resources: ${selectedUser?.username}`}
+                {modal === 'troops' && `Adjust Troops: ${selectedUser?.username}`}
                 {modal === 'buildings' && `Set Building Level: ${selectedUser?.username}`}
               </h3>
               <button className="modal-close" onClick={closeModal}>
@@ -741,6 +729,9 @@ const Admin: React.FC = () => {
 
               {modal === 'resources' && selectedUser && (
                 <div className="form-grid">
+                  <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                    <small>Use negative values to remove resources.</small>
+                  </div>
                   <div className="form-group">
                     <label>Nexus</label>
                     <select
@@ -783,6 +774,9 @@ const Admin: React.FC = () => {
 
               {modal === 'troops' && selectedUser && (
                 <div className="form-grid">
+                  <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                    <small>Use a negative amount to remove troops.</small>
+                  </div>
                   <div className="form-group">
                     <label>Nexus</label>
                     <select
@@ -876,13 +870,13 @@ const Admin: React.FC = () => {
                 </button>
               )}
               {modal === 'resources' && (
-                <button className="btn-primary" onClick={handleAddResources}>
-                  Add Resources
+                <button className="btn-primary" onClick={handleAdjustResources}>
+                  Apply Resource Change
                 </button>
               )}
               {modal === 'troops' && (
-                <button className="btn-primary" onClick={handleAddTroops}>
-                  Add Troops
+                <button className="btn-primary" onClick={handleAdjustTroops}>
+                  Apply Troop Change
                 </button>
               )}
               {modal === 'buildings' && (

@@ -62,6 +62,15 @@ async function findTargetNexus(userId, nexusId) {
   });
 }
 
+async function findUserNexusWithQueue(userId, queueKey) {
+  const userNexuses = await prisma.nexus.findMany({
+    where: { ownerId: userId },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  return userNexuses.find((nexus) => Array.isArray(nexus[queueKey]) && nexus[queueKey].length > 0) || null;
+}
+
 // Get all users
 router.get('/users', async (req, res) => {
   try {
@@ -239,16 +248,20 @@ router.post('/users/:userId/resources', async (req, res) => {
       return res.status(404).json({ error: 'No nexus found for this user' });
     }
 
-    const biomass = Math.max(0, Number(req.body.biomass) || 0);
-    const alloy = Math.max(0, Number(req.body.alloy) || 0);
-    const ore = Math.max(0, Number(req.body.ore) || 0);
+    const biomassDelta = toInt(req.body.biomass);
+    const alloyDelta = toInt(req.body.alloy);
+    const oreDelta = toInt(req.body.ore);
+
+    if (biomassDelta === 0 && alloyDelta === 0 && oreDelta === 0) {
+      return res.status(400).json({ error: 'Provide a non-zero resource amount' });
+    }
 
     const updated = await prisma.nexus.update({
       where: { id: nexus.id },
       data: {
-        biomass: nexus.biomass + biomass,
-        alloy: nexus.alloy + alloy,
-        ore: nexus.ore + ore,
+        biomass: Math.max(0, nexus.biomass + biomassDelta),
+        alloy: Math.max(0, nexus.alloy + alloyDelta),
+        ore: Math.max(0, nexus.ore + oreDelta),
       },
     });
 
@@ -269,21 +282,26 @@ router.post('/users/:userId/troops', async (req, res) => {
     }
 
     const troopType = req.body.troopType;
-    const amount = Math.max(0, toInt(req.body.amount));
+    const amount = toInt(req.body.amount);
 
     if (!TROOP_KEYS.includes(troopType)) {
       return res.status(400).json({ error: 'Invalid troop type' });
     }
 
-    if (amount <= 0) {
-      return res.status(400).json({ error: 'Amount must be greater than 0' });
+    if (amount === 0) {
+      return res.status(400).json({ error: 'Amount must be non-zero' });
     }
+
+    const currentTroopCount = nexus[troopType] || 0;
+    const nextTroopCount = Math.max(0, currentTroopCount + amount);
+    const appliedTroopDelta = nextTroopCount - currentTroopCount;
+    const nextPopulationCurrent = Math.max(0, nexus.populationCurrent + appliedTroopDelta);
 
     const updated = await prisma.nexus.update({
       where: { id: nexus.id },
       data: {
-        [troopType]: (nexus[troopType] || 0) + amount,
-        populationCurrent: nexus.populationCurrent + amount,
+        [troopType]: nextTroopCount,
+        populationCurrent: nextPopulationCurrent,
       },
     });
 
@@ -364,7 +382,16 @@ router.post('/users/:userId/complete-strike', async (req, res) => {
 router.post('/users/:userId/complete-build', async (req, res) => {
   try {
     const userId = toInt(req.params.userId);
-    const nexus = await findTargetNexus(userId, req.body.nexusId);
+    let nexus = await findTargetNexus(userId, req.body.nexusId);
+
+    if (nexus) {
+      const requestedQueue = Array.isArray(nexus.buildQueue) ? nexus.buildQueue : [];
+      if (requestedQueue.length === 0) {
+        nexus = await findUserNexusWithQueue(userId, 'buildQueue');
+      }
+    } else {
+      nexus = await findUserNexusWithQueue(userId, 'buildQueue');
+    }
 
     if (!nexus) {
       return res.status(404).json({ error: 'No nexus found for this user' });
@@ -398,7 +425,16 @@ router.post('/users/:userId/complete-build', async (req, res) => {
 router.post('/users/:userId/complete-training', async (req, res) => {
   try {
     const userId = toInt(req.params.userId);
-    const nexus = await findTargetNexus(userId, req.body.nexusId);
+    let nexus = await findTargetNexus(userId, req.body.nexusId);
+
+    if (nexus) {
+      const requestedQueue = Array.isArray(nexus.trainingQueue) ? nexus.trainingQueue : [];
+      if (requestedQueue.length === 0) {
+        nexus = await findUserNexusWithQueue(userId, 'trainingQueue');
+      }
+    } else {
+      nexus = await findUserNexusWithQueue(userId, 'trainingQueue');
+    }
 
     if (!nexus) {
       return res.status(404).json({ error: 'No nexus found for this user' });
