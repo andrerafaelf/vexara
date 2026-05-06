@@ -182,21 +182,23 @@ async function resolveCombat(attack) {
       }
     }
 
-    // Handle nexus conquest via overseer
-    let newControlLevel = defenderNexus.controlLevel;
+    // Handle overseer control reduction and conquest
+    let newControlLevel = defenderNexus.controlLevel ?? 100;
     let conquestTriggered = false;
-    // Check if overseer is present and conquest should occur
-    if (attackerWins && (attackTroops.overseer || 0) > 0 && (defenderNexus.controlLevel || 100) - 50 <= 0) {
-      newControlLevel = 0;
-      const attackerNexus = await prisma.nexus.findUnique({ where: { id: attack.attackerNexusId } });
-      const newOwnerId = attackerNexus.ownerId;
-      defenderTroopUpdates.ownerId = newOwnerId;
-      defenderTroopUpdates.controlLevel = 100;
-      defenderTroopUpdates.name = 'Conquered Nexus';
-      conquered = true;
-      conquestTriggered = true;
-      // Always set overseer loss to all sent
-      attackerLosses.overseer = attackTroops.overseer || 0;
+    const overseerSent = attackTroops.overseer || 0;
+    const overseerSurvived = overseerSent > 0 && (attackerLosses.overseer || 0) < overseerSent;
+
+    if (attackerWins && overseerSurvived) {
+      newControlLevel = Math.max(0, newControlLevel - 50);
+
+      if (newControlLevel <= 0) {
+        const attackerNexus = await prisma.nexus.findUnique({ where: { id: attack.attackerNexusId } });
+        defenderTroopUpdates.ownerId = attackerNexus.ownerId;
+        defenderTroopUpdates.name = 'Conquered Nexus';
+        conquered = true;
+        conquestTriggered = true;
+        attackerLosses.overseer = overseerSent;
+      }
     }
 
     // Save defender nexus
@@ -224,12 +226,7 @@ async function resolveCombat(attack) {
       for (const [troopType, survived] of Object.entries(attackerTroopReturns)) {
         returnData[troopType] = (attackerNexus[troopType] || 0) + survived;
       }
-      // On conquest, forcibly subtract all sent Overseers from the attacker's nexus
-      if (conquestTriggered && (attackTroops.overseer || 0) > 0) {
-        // Always set overseer count to current minus sent, never add back any survived
-        returnData.overseer = Math.max(0, (attackerNexus.overseer || 0) - (attackTroops.overseer || 0));
-      } else if (typeof returnData.overseer === 'undefined') {
-        // If not conquest, preserve current overseer count
+      if (typeof returnData.overseer === 'undefined') {
         returnData.overseer = attackerNexus.overseer || 0;
       }
       let attackerPopFreed = 0;
