@@ -239,6 +239,10 @@
   font-size: 14px;
 }
 
+.nexus-badge + .nexus-badge {
+  right: 26px;
+}
+
 .main-content {
   flex: 1;
   min-height: 0;
