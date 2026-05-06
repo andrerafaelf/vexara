@@ -8,7 +8,7 @@ export function getResourceProduction(nexus) {
 }
 
 export function getMaxStorage(nexus) {
-  return 1000 * Math.pow(1.3, nexus.storageVault);
+  return 1000 * Math.pow(1.5, nexus.storageVault);
 }
 
 export function computeResourceUpdate(nexus) {
