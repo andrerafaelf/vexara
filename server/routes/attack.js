@@ -79,6 +79,10 @@ router.post('/send', auth, async (req, res) => {
       }
     }
 
+    if ((normalizedTroops.overseer || 0) > 1) {
+      return res.status(400).json({ error: 'Maximum 1 Overseer per strike' });
+    }
+
     // Check troop availability
     for (const [troopType, amount] of Object.entries(normalizedTroops)) {
       if ((attackerNexus[troopType] || 0) < amount) {

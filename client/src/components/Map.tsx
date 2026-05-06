@@ -616,34 +616,37 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
               <div className="attack-form">
                 <h4>⚔️ Launch Attack</h4>
                 <div className="troop-selector">
-                  {attackTroopRows.map(([type, available]) => (
-                    <div key={type} className="troop-select-row">
-                      <span className="troop-type">{TROOP_LABELS[type] || type}</span>
-                      <input
-                        type="number"
-                        min={0}
-                        max={Number(available)}
-                        value={attackTroops[type as keyof typeof attackTroops]}
-                        disabled={Number(available) <= 0}
-                        onChange={(e) =>
-                          setAttackTroops((prev) => ({
-                            ...prev,
-                            [type]: Math.min(Number(e.target.value), Number(available)),
-                          }))
-                        }
-                      />
-                      <span
-                        className={`troop-available${Number(available) > 0 ? ' troop-available-clickable' : ''}`}
-                        onClick={() => {
-                          if (Number(available) > 0) {
-                            setAttackTroops((prev) => ({ ...prev, [type]: Number(available) }));
+                  {attackTroopRows.map(([type, available]) => {
+                    const effectiveMax = type === 'overseer' ? Math.min(Number(available), 1) : Number(available);
+                    return (
+                      <div key={type} className="troop-select-row">
+                        <span className="troop-type">{TROOP_LABELS[type] || type}</span>
+                        <input
+                          type="number"
+                          min={0}
+                          max={effectiveMax}
+                          value={attackTroops[type as keyof typeof attackTroops]}
+                          disabled={effectiveMax <= 0}
+                          onChange={(e) =>
+                            setAttackTroops((prev) => ({
+                              ...prev,
+                              [type]: Math.min(Number(e.target.value), effectiveMax),
+                            }))
                           }
-                        }}
-                      >
-                        /{available}
-                      </span>
-                    </div>
-                  ))}
+                        />
+                        <span
+                          className={`troop-available${effectiveMax > 0 ? ' troop-available-clickable' : ''}`}
+                          onClick={() => {
+                            if (effectiveMax > 0) {
+                              setAttackTroops((prev) => ({ ...prev, [type]: effectiveMax }));
+                            }
+                          }}
+                        >
+                          /{available}{type === 'overseer' && Number(available) > 1 ? ' (max 1)' : ''}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
                 <div className="attack-form-actions">
                   <button

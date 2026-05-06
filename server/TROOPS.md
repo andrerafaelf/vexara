@@ -98,7 +98,7 @@ Neon Dominion has 12 troop types. Units are trained in the Recruitment Core and 
 - Stats: Attack 0, Defense 30, Speed 15, Carry 0
 - Cost: Biomass 300, Alloy 250, Ore 200, Population 5, Time 30m 0s
 - Requirements: Recruitment Core Lv9, Command Core Lv8, Shield Grid Lv6
-- Limit: Maximum 3 per nexus
+- Limit: Maximum 3 per nexus, maximum 1 per strike
 - Notes:
   - Does not contribute attack damage
   - If every non-overseer unit dies, the overseer dies too
