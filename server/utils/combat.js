@@ -245,22 +245,19 @@ async function resolveCombat(attack) {
 
     // Handle nexus conquest via overseer
     let newControlLevel = defenderNexus.controlLevel;
-    const overseerSurvived =
-      attackerWins && (attackTroops.overseer || 0) > 0 && (attackerLosses.overseer || 0) < (attackTroops.overseer || 0);
-
-    if (overseerSurvived) {
-      newControlLevel = Math.max(0, (defenderNexus.controlLevel || 100) - 50);
-
-      if (newControlLevel === 0) {
-        const attackerNexus = await prisma.nexus.findUnique({ where: { id: attack.attackerNexusId } });
-        const newOwnerId = attackerNexus.ownerId;
-
-        // Transfer ownership — no nexuses array to update in SQL, just set ownerId
-        defenderTroopUpdates.ownerId = newOwnerId;
-        defenderTroopUpdates.controlLevel = 100;
-        defenderTroopUpdates.name = 'Conquered Nexus';
-        conquered = true;
-      }
+    let conquestTriggered = false;
+    // Check if overseer is present and conquest should occur
+    if (attackerWins && (attackTroops.overseer || 0) > 0 && (defenderNexus.controlLevel || 100) - 50 <= 0) {
+      newControlLevel = 0;
+      const attackerNexus = await prisma.nexus.findUnique({ where: { id: attack.attackerNexusId } });
+      const newOwnerId = attackerNexus.ownerId;
+      defenderTroopUpdates.ownerId = newOwnerId;
+      defenderTroopUpdates.controlLevel = 100;
+      defenderTroopUpdates.name = 'Conquered Nexus';
+      conquered = true;
+      conquestTriggered = true;
+      // Always set overseer loss to all sent
+      attackerLosses.overseer = attackTroops.overseer || 0;
     }
 
     // Save defender nexus
@@ -289,8 +286,7 @@ async function resolveCombat(attack) {
         returnData[troopType] = (attackerNexus[troopType] || 0) + survived;
       }
       // On conquest, forcibly subtract all sent Overseers from the attacker's nexus
-      if (conquered && (attackTroops.overseer || 0) > 0) {
-        attackerLosses.overseer = attackTroops.overseer || 0;
+      if (conquestTriggered && (attackTroops.overseer || 0) > 0) {
         returnData.overseer = Math.max(0, (attackerNexus.overseer || 0) - (attackTroops.overseer || 0));
       }
       let attackerPopFreed = 0;
