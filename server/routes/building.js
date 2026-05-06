@@ -64,7 +64,7 @@ const BUILDING_RULES = {
     ],
   },
   alloyForge: {
-    maxLevel: 15,
+    maxLevel: 20,
     unlock: { building: 'oreExtractor', level: 2 },
     milestones: [
       { level: 6, requires: [{ building: 'commandCore', level: 4 }] },

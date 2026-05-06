@@ -134,7 +134,7 @@ const BUILDING_RULES: {
     ],
   },
   alloyForge: {
-    maxLevel: 15,
+    maxLevel: 20,
     unlock: { building: 'oreExtractor', level: 2 },
     milestones: [
       { level: 6, requires: [{ building: 'commandCore', level: 4 }] },
@@ -1203,7 +1203,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                 {Math.floor(nexus.resources.biomass).toLocaleString()}
                 <span className="resource-max">/{storageCapacity.toLocaleString()}</span>
               </span>
-              <span className="production-rate">+{production.biomass}/h</span>
+              <span className="production-rate">+{Math.floor(production.biomass).toLocaleString()}/h</span>
             </span>
           </div>
           <div className="resource" title="Alloy">
@@ -1213,7 +1213,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                 {Math.floor(nexus.resources.alloy).toLocaleString()}
                 <span className="resource-max">/{storageCapacity.toLocaleString()}</span>
               </span>
-              <span className="production-rate">+{production.alloy}/h</span>
+              <span className="production-rate">+{Math.floor(production.alloy).toLocaleString()}/h</span>
             </span>
           </div>
           <div className="resource" title="Ore">
@@ -1223,7 +1223,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                 {Math.floor(nexus.resources.ore).toLocaleString()}
                 <span className="resource-max">/{storageCapacity.toLocaleString()}</span>
               </span>
-              <span className="production-rate">+{production.ore}/h</span>
+              <span className="production-rate">+{Math.floor(production.ore).toLocaleString()}/h</span>
             </span>
           </div>
           <div className="resource" title="Population">

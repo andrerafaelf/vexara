@@ -240,7 +240,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
     role: 'Alloy production',
     description: 'Generates alloy resource over time.',
     baseCost: { biomass: 65, alloy: 40, ore: 40, timeSeconds: 45 },
-    maxLevel: 15,
+    maxLevel: 20,
     unlock: 'Ore Extractor Lv2',
     milestones: [
       { level: 6, requires: ['Command Core Lv4'] },
