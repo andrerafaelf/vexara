@@ -394,7 +394,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
       const next = { ...prev };
       for (const [type, count] of Object.entries(availableTroops)) {
         if (OFFENSE_TROOPS.has(type)) {
-          (next as Record<string, number>)[type] = Number(count);
+          (next as Record<string, number>)[type] = type === 'overseer' ? Math.min(Number(count), 1) : Number(count);
         }
       }
       return next;

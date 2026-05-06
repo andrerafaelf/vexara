@@ -259,11 +259,29 @@ router.post('/check-queue', auth, async (req, res) => {
     const troopUpdates = {};
     let completed = false;
 
-    while (trainingQueue.length > 0 && new Date(trainingQueue[0].completesAt) <= now) {
-      const training = trainingQueue.shift();
-      troopUpdates[training.troopType] =
-        (troopUpdates[training.troopType] || nexus[training.troopType] || 0) + training.amount;
+    while (trainingQueue.length > 0) {
+      const entry = trainingQueue[0];
+      const cost = TROOP_COSTS[entry.troopType];
+      if (!cost) { trainingQueue.shift(); continue; }
+
+      const completesAtMs = new Date(entry.completesAt).getTime();
+      const perUnitMs = cost.time * 1000;
+      const startedAtMs = completesAtMs - entry.amount * perUnitMs;
+      const elapsedMs = now.getTime() - startedAtMs;
+
+      if (elapsedMs < perUnitMs) break;
+
+      const unitsCompleted = Math.min(entry.amount, Math.floor(elapsedMs / perUnitMs));
+      troopUpdates[entry.troopType] =
+        (troopUpdates[entry.troopType] || nexus[entry.troopType] || 0) + unitsCompleted;
       completed = true;
+
+      if (unitsCompleted >= entry.amount) {
+        trainingQueue.shift();
+      } else {
+        trainingQueue[0] = { ...entry, amount: entry.amount - unitsCompleted };
+        break;
+      }
     }
 
     const resourceUpdate = computeResourceUpdate(nexus);
