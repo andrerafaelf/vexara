@@ -152,6 +152,13 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
     const myRole = isMyAttack ? 'attacker' : 'defender';
     const enemyRole = isMyAttack ? 'defender' : 'attacker';
     const scoutReport = isScoutReport(selectedReport);
+    const attackerLossesForDisplay = {
+      ...(selectedReport.result?.attackerLosses || {}),
+    } as Record<string, number>;
+
+    if (selectedReport.result?.conquered && (selectedReport.troops?.overseer || 0) > 0) {
+      attackerLossesForDisplay.overseer = selectedReport.troops.overseer || 0;
+    }
 
     return (
       <div className="reports-container">
@@ -318,8 +325,8 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
                             <tr key={troopType}>
                               <td>{troopNames[troopType] || troopType}</td>
                               <td>{count}</td>
-                              <td className="losses">{selectedReport.result?.attackerLosses?.[troopType] || 0}</td>
-                              <td>{count - (selectedReport.result?.attackerLosses?.[troopType] || 0)}</td>
+                              <td className="losses">{attackerLossesForDisplay[troopType] || 0}</td>
+                              <td>{count - (attackerLossesForDisplay[troopType] || 0)}</td>
                             </tr>
                           ) : null,
                         )}
@@ -366,8 +373,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
                   )}
                 {enemyRole === 'attacker' &&
                   !scoutReport &&
-                  selectedReport.result?.attackerLosses &&
-                  Object.entries(selectedReport.result.attackerLosses).map(
+                  Object.entries(attackerLossesForDisplay).map(
                     ([troop, lost]) =>
                       Number(lost) > 0 && (
                         <tr key={troop}>

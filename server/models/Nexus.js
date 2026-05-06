@@ -366,6 +366,14 @@ export function serializeNexus(v, opts = {}) {
 }
 
 export function serializeAttack(a) {
+  const normalizedResult = a.result ? { ...a.result } : a.result;
+  if (normalizedResult?.conquered && (a?.troops?.overseer || 0) > 0) {
+    normalizedResult.attackerLosses = {
+      ...(normalizedResult.attackerLosses || {}),
+      overseer: a.troops.overseer || 0,
+    };
+  }
+
   return {
     _id: a.id,
     id: a.id,
@@ -415,7 +423,7 @@ export function serializeAttack(a) {
     arrivesAt: a.arrivesAt,
     type: a.type,
     status: a.status,
-    result: a.result,
+    result: normalizedResult,
     createdAt: a.createdAt,
   };
 }
