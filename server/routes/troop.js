@@ -108,7 +108,12 @@ router.post('/train', auth, async (req, res) => {
       const queuedAmount = (Array.isArray(nexus.trainingQueue) ? nexus.trainingQueue : [])
         .filter((entry) => entry.troopType === troopType)
         .reduce((sum, entry) => sum + (Number(entry.amount) || 0), 0);
-      const currentPlusQueued = (nexus[troopType] || 0) + queuedAmount;
+      const inFlightAttacks = await prisma.attack.findMany({
+        where: { attackerNexusId: nexus.id, status: 'traveling' },
+        select: { troops: true },
+      });
+      const inFlightAmount = inFlightAttacks.reduce((sum, a) => sum + ((a.troops?.[troopType]) || 0), 0);
+      const currentPlusQueued = (nexus[troopType] || 0) + queuedAmount + inFlightAmount;
       if (currentPlusQueued + parsedAmount > requirements.maxPerNexus) {
         return res.status(400).json({
           error: `Maximum ${requirements.maxPerNexus} ${TROOP_NAMES[troopType] || troopType} per nexus`,

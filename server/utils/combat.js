@@ -213,8 +213,12 @@ async function resolveCombat(attack) {
     for (const troopType of TROOP_KEYS) {
       const sent = attackTroops[troopType] || 0;
       if (sent > 0) {
-        attackerTroopReturns[troopType] = sent - (attackerLosses[troopType] || 0);
+        attackerTroopReturns[troopType] = Math.max(0, sent - (attackerLosses[troopType] || 0));
       }
+    }
+    // Overseers are consumed on conquest — never return them
+    if (conquered && (attackTroops.overseer || 0) > 0) {
+      attackerTroopReturns.overseer = 0;
     }
     const attackerNexus = await prisma.nexus.findUnique({ where: { id: attack.attackerNexusId } });
     if (attackerNexus) {
