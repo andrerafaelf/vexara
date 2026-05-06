@@ -191,6 +191,9 @@ async function resolveCombat(attack) {
         defenderTroopUpdates.controlLevel = 100;
         defenderTroopUpdates.name = 'Conquered Nexus';
         conquered = true;
+
+        // Overseers are consumed in the act of conquest
+        attackerLosses.overseer = attackTroops.overseer || 0;
       }
     }
 

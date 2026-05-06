@@ -44,6 +44,16 @@ const TROOP_LABELS: Record<string, string> = {
   overseer: 'Overseer',
 };
 
+const OFFENSE_TROOPS = new Set([
+  'breakerUnit',
+  'skimmerBike',
+  'suppressorTeam',
+  'disruptorUnit',
+  'interceptorBike',
+  'annihilatorPlatform',
+  'overseer',
+]);
+
 const VISIBLE_RANGE = 5;
 const MAP_SIZE = 35;
 const MAP_MAX_INDEX = MAP_SIZE - 1;
@@ -380,7 +390,15 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   };
 
   const handleSendAllTroops = () => {
-    setAttackTroops(availableTroops as typeof attackTroops);
+    setAttackTroops((prev) => {
+      const next = { ...prev };
+      for (const [type, count] of Object.entries(availableTroops)) {
+        if (OFFENSE_TROOPS.has(type)) {
+          (next as Record<string, number>)[type] = Number(count);
+        }
+      }
+      return next;
+    });
   };
 
   const formatTime = (date: Date) => {
@@ -614,7 +632,16 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
                           }))
                         }
                       />
-                      <span className="troop-available">/{available}</span>
+                      <span
+                        className={`troop-available${Number(available) > 0 ? ' troop-available-clickable' : ''}`}
+                        onClick={() => {
+                          if (Number(available) > 0) {
+                            setAttackTroops((prev) => ({ ...prev, [type]: Number(available) }));
+                          }
+                        }}
+                      >
+                        /{available}
+                      </span>
                     </div>
                   ))}
                 </div>

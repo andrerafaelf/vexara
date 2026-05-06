@@ -37,7 +37,7 @@ Neon Dominion has 12 troop types. Units are trained in the Recruitment Core and 
 
 ### Recon Operative
 
-- Role: Scout / intel unit
+- Role: Scout / support unit
 - Stats: Attack 5, Defense 20, Speed 25, Carry 10
 - Cost: Biomass 100, Alloy 30, Ore 60, Population 1, Time 1m 24s
 - Requirements: Recruitment Core Lv3, Command Core Lv2
@@ -103,6 +103,7 @@ Neon Dominion has 12 troop types. Units are trained in the Recruitment Core and 
   - Does not contribute attack damage
   - If every non-overseer unit dies, the overseer dies too
   - Each successful overseer strike reduces enemy control by 50
+  - Overseers are consumed (lost) when they complete a conquest (control reaches 0)
 
 ## Conquest Flow
 
