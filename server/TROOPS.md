@@ -16,7 +16,7 @@ Neon Dominion has 12 troop types. Units are trained in the Recruitment Core and 
 
 ### Assault Trooper
 
-- Role: Standard frontline infantry
+- Role: Defensive frontline infantry
 - Stats: Attack 30, Defense 40, Speed 18, Carry 15
 - Cost: Biomass 30, Alloy 30, Ore 70, Population 1, Time 1m 19s
 - Requirements: Recruitment Core Lv1
@@ -52,7 +52,7 @@ Neon Dominion has 12 troop types. Units are trained in the Recruitment Core and 
 
 ### Siege Mech
 
-- Role: Heavy siege / anchor
+- Role: Heavy defensive anchor
 - Stats: Attack 150, Defense 200, Speed 10, Carry 80
 - Cost: Biomass 125, Alloy 100, Ore 250, Population 4, Time 10m 0s
 - Requirements: Recruitment Core Lv5, Ore Extractor Lv5
@@ -66,14 +66,14 @@ Neon Dominion has 12 troop types. Units are trained in the Recruitment Core and 
 
 ### Suppressor Team
 
-- Role: Ranged support
+- Role: Ranged assault support
 - Stats: Attack 60, Defense 50, Speed 15, Carry 20
 - Cost: Biomass 90, Alloy 80, Ore 90, Population 2, Time 1m 54s
 - Requirements: Recruitment Core Lv4, Command Core Lv4
 
 ### Disruptor Unit
 
-- Role: Anti-armor specialist
+- Role: Anti-armor assault unit
 - Stats: Attack 70, Defense 60, Speed 17, Carry 25
 - Cost: Biomass 110, Alloy 150, Ore 130, Population 2, Time 2m 3s
 - Requirements: Recruitment Core Lv5, Ore Extractor Lv4

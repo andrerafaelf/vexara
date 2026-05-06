@@ -273,18 +273,18 @@ const TROOP_COSTS: { [key: string]: any } = {
 };
 
 const TROOP_CATEGORIES: Record<string, 'offense' | 'defense'> = {
-  assaultTrooper: 'offense',
   breakerUnit: 'offense',
   reconOperative: 'offense',
   skimmerBike: 'offense',
-  siegeMech: 'offense',
+  suppressorTeam: 'offense',
+  disruptorUnit: 'offense',
   interceptorBike: 'offense',
   annihilatorPlatform: 'offense',
-  overseer: 'offense',
+  assaultTrooper: 'defense',
   lancerDrone: 'defense',
+  siegeMech: 'defense',
   bulwarkGuard: 'defense',
-  suppressorTeam: 'defense',
-  disruptorUnit: 'defense',
+  overseer: 'defense',
 };
 
 interface ToastMessage {
