@@ -38,7 +38,9 @@
   border-radius: 6px;
   cursor: pointer;
   font-size: 13px;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 
 .btn-read-all:hover {
@@ -54,12 +56,56 @@
   border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
-  margin-bottom: 20px;
   transition: background 0.3s;
 }
 
 .btn-back:hover {
   background: #1a4d8f;
+}
+
+.reports-detail-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.reports-nav-arrows {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-nav-arrow {
+  background: #0f3460;
+  color: #fff;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-nav-arrow:hover:not(:disabled) {
+  background: #1a4d8f;
+}
+
+.btn-nav-arrow:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.reports-nav-count {
+  color: #b0b0b0;
+  font-size: 13px;
+  min-width: 48px;
+  text-align: center;
 }
 
 .no-reports {

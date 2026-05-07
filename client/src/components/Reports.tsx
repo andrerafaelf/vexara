@@ -46,7 +46,9 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
 
   useEffect(() => {
     loadReports();
-    getReadReportIds().then((r) => setReadIds(new Set(r.data))).catch(() => {});
+    getReadReportIds()
+      .then((r) => setReadIds(new Set(r.data)))
+      .catch(() => {});
   }, [nexus._id]);
 
   useEffect(() => {
@@ -149,6 +151,10 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
   }
 
   if (selectedReport) {
+    const currentIndex = reports.findIndex((r) => r._id === selectedReport._id);
+    const prevReport = currentIndex > 0 ? reports[currentIndex - 1] : null;
+    const nextReport = currentIndex < reports.length - 1 ? reports[currentIndex + 1] : null;
+
     const isMyAttack = isAttacker(selectedReport);
     const myRole = isMyAttack ? 'attacker' : 'defender';
     const enemyRole = isMyAttack ? 'defender' : 'attacker';
@@ -164,9 +170,32 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
     return (
       <div className="reports-container">
         <div className="reports-header">
-          <button onClick={() => setSelectedReport(null)} className="btn-back">
-            ← Back to Combat Logs
-          </button>
+          <div className="reports-detail-nav">
+            <button onClick={() => setSelectedReport(null)} className="btn-back">
+              ← Back
+            </button>
+            <div className="reports-nav-arrows">
+              <button
+                className="btn-nav-arrow"
+                onClick={() => prevReport && setSelectedReport(prevReport)}
+                disabled={!prevReport}
+                title="Previous report"
+              >
+                ‹
+              </button>
+              <span className="reports-nav-count">
+                {currentIndex + 1} / {reports.length}
+              </span>
+              <button
+                className="btn-nav-arrow"
+                onClick={() => nextReport && setSelectedReport(nextReport)}
+                disabled={!nextReport}
+                title="Next report"
+              >
+                ›
+              </button>
+            </div>
+          </div>
           <h2>{scoutReport ? 'Scout Report' : 'Combat Report'}</h2>
         </div>
 
