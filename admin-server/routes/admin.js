@@ -108,10 +108,36 @@ router.get('/users', async (req, res) => {
 // Get database statistics
 router.get('/stats', async (req, res) => {
   try {
-    const [userCount, villageCount, attackCount, topUsers] = await Promise.all([
+    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const troopSumSelect = TROOP_KEYS.reduce((acc, key) => {
+      acc[key] = true;
+      return acc;
+    }, {});
+
+    const [
+      userCount,
+      villageCount,
+      travelingAttackCount,
+      totalAttackCount,
+      newUsersThisWeek,
+      pointsAgg,
+      marketCount,
+      ownedNexuses,
+      usersWithNexusCount,
+      topUsers,
+    ] = await Promise.all([
       prisma.user.count(),
       prisma.nexus.count(),
       prisma.attack.count({ where: { status: 'traveling' } }),
+      prisma.attack.count(),
+      prisma.user.count({ where: { createdAt: { gte: oneWeekAgo } } }),
+      prisma.user.aggregate({ _avg: { points: true } }),
+      prisma.marketListing.count(),
+      prisma.nexus.findMany({
+        where: { ownerId: { not: null } },
+        select: troopSumSelect,
+      }),
+      prisma.user.count({ where: { nexuses: { some: {} } } }),
       prisma.user.findMany({
         select: { id: true, username: true, points: true },
         orderBy: { points: 'desc' },
@@ -119,10 +145,27 @@ router.get('/stats', async (req, res) => {
       }),
     ]);
 
+    const totalTroops = ownedNexuses.reduce((sum, nexus) => {
+      let nexusSum = 0;
+      for (const key of TROOP_KEYS) {
+        nexusSum += nexus[key] || 0;
+      }
+      return sum + nexusSum;
+    }, 0);
+
+    const avgPoints = Math.round(pointsAgg._avg.points || 0);
+    const zeroNexusCount = Math.max(0, userCount - usersWithNexusCount);
+
     res.json({
       userCount,
       villageCount,
-      attackCount,
+      travelingAttackCount,
+      totalAttackCount,
+      newUsersThisWeek,
+      zeroNexusCount,
+      totalTroops,
+      avgPoints,
+      marketCount,
       topUsers: topUsers.map((u) => ({ ...u, _id: u.id })),
     });
   } catch (error) {
