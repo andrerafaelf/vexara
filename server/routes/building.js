@@ -1,7 +1,7 @@
 import express from 'express';
 import prisma from '../lib/prisma.js';
 import auth from '../middleware/auth.js';
-import { applyQuestRewards, computeResourceUpdate, serializeNexus } from '../models/Nexus.js';
+import { applyQuestRewards, computeResourceUpdate, normalizeBuildQueue, serializeNexus } from '../models/Nexus.js';
 import { getPopulationMax } from '../utils/population.js';
 
 const router = express.Router();
@@ -200,7 +200,7 @@ function getPlannedBuildingLevels(nexus) {
     shieldGrid: nexus.shieldGrid,
   };
 
-  const buildQueue = Array.isArray(nexus.buildQueue) ? nexus.buildQueue : [];
+  const buildQueue = normalizeBuildQueue(nexus.buildQueue);
   for (const queued of buildQueue) {
     planned[queued.building] = Math.max(planned[queued.building] || 0, queued.targetLevel);
   }
@@ -297,7 +297,7 @@ router.post('/cancel-queue', auth, async (req, res) => {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
-    const buildQueue = Array.isArray(nexus.buildQueue) ? [...nexus.buildQueue] : [];
+    const buildQueue = normalizeBuildQueue(nexus.buildQueue);
     if (isNaN(parsedIndex) || parsedIndex < 0 || parsedIndex >= buildQueue.length) {
       return res.status(400).json({ error: 'Invalid queue index' });
     }
@@ -361,7 +361,7 @@ router.post('/check-queue', auth, async (req, res) => {
     }
 
     const now = new Date();
-    const buildQueue = Array.isArray(nexus.buildQueue) ? nexus.buildQueue : [];
+    const buildQueue = normalizeBuildQueue(nexus.buildQueue);
     let completed = false;
     const data = {};
 

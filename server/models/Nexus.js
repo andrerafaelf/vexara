@@ -241,9 +241,24 @@ export async function refreshResources(nexus) {
   });
 }
 
+// Legacy building names stored inside in-flight buildQueue entries that need
+// to map onto current schema columns when the queue is processed.
+const LEGACY_BUILDING_ALIASES = {
+  troopFabricator: 'recruitmentCore',
+};
+
+export function canonicalBuildingKey(key) {
+  return LEGACY_BUILDING_ALIASES[key] || key;
+}
+
+export function normalizeBuildQueue(queue) {
+  if (!Array.isArray(queue)) return [];
+  return queue.map((entry) => ({ ...entry, building: canonicalBuildingKey(entry.building) }));
+}
+
 export async function applyCompletedQueues(nexus) {
   const now = new Date();
-  const buildQueue = Array.isArray(nexus.buildQueue) ? [...nexus.buildQueue] : [];
+  const buildQueue = normalizeBuildQueue(nexus.buildQueue);
   const trainingQueue = Array.isArray(nexus.trainingQueue) ? [...nexus.trainingQueue] : [];
   const updates = {};
 

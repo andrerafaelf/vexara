@@ -1,6 +1,6 @@
 import express from 'express';
 import prisma from '../lib/prisma.js';
-import { serializeNexus } from '../models/Nexus.js';
+import { normalizeBuildQueue, serializeNexus } from '../models/Nexus.js';
 import { processArrivedAttacks } from '../utils/combat.js';
 import { getPopulationMax } from '../utils/population.js';
 
@@ -314,7 +314,7 @@ router.post('/nexuses/:nexusId/complete-build', async (req, res) => {
       return res.status(404).json({ error: 'Nexus not found' });
     }
 
-    const buildQueue = Array.isArray(nexus.buildQueue) ? nexus.buildQueue : [];
+    const buildQueue = normalizeBuildQueue(nexus.buildQueue);
     if (buildQueue.length === 0) {
       return res.status(400).json({ error: 'No building in queue' });
     }
