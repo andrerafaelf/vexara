@@ -13,14 +13,14 @@ const TROOP_COSTS = {
   lancerDrone:          { biomass: 50,  alloy: 30,  ore: 10,  population: 1, time: 53   },
   assaultTrooper:       { biomass: 30,  alloy: 30,  ore: 70,  population: 1, time: 79   },
   breakerUnit:          { biomass: 60,  alloy: 30,  ore: 40,  population: 1, time: 74   },
-  reconOperative:       { biomass: 100, alloy: 30,  ore: 60,  population: 1, time: 300  },  // 5 min
+  reconOperative:       { biomass: 100, alloy: 30,  ore: 60,  population: 1, time: 180  },  // 3 min
   skimmerBike:          { biomass: 125, alloy: 100, ore: 150, population: 3, time: 600  },  // 10 min
   bulwarkGuard:         { biomass: 80,  alloy: 120, ore: 100, population: 2, time: 480  },  // 8 min
-  suppressorTeam:       { biomass: 90,  alloy: 80,  ore: 90,  population: 2, time: 540  },  // 9 min
-  disruptorUnit:        { biomass: 110, alloy: 150, ore: 130, population: 2, time: 900  },  // 15 min
-  interceptorBike:      { biomass: 150, alloy: 120, ore: 180, population: 3, time: 1200 },  // 20 min
+  suppressorTeam:       { biomass: 90,  alloy: 80,  ore: 90,  population: 2, time: 480  },  // 8 min
+  disruptorUnit:        { biomass: 110, alloy: 150, ore: 130, population: 2, time: 660  },  // 11 min
+  interceptorBike:      { biomass: 150, alloy: 120, ore: 180, population: 3, time: 900  },  // 15 min
   siegeMech:            { biomass: 250, alloy: 200, ore: 400, population: 4, time: 3600 },  // 1 hour
-  annihilatorPlatform:  { biomass: 400, alloy: 350, ore: 600, population: 5, time: 14400 }, // 4 hours
+  annihilatorPlatform:  { biomass: 400, alloy: 350, ore: 600, population: 5, time: 7200 },  // 2 hours
   overseer:             { biomass: 600, alloy: 500, ore: 400, population: 5, time: 28800 }, // 8 hours
 };
 

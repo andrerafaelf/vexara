@@ -62,7 +62,7 @@ export const TROOPS_DOC: TroopDoc[] = [
     description:
       'Lightly armed intel gatherer that reveals enemy nexus resources, troops, and defenses. Not a frontline fighter.',
     stats: { attack: 5, defense: 20, speed: 25, carry: 10 },
-    cost: { biomass: 100, alloy: 30, ore: 60, population: 1, time: '5m 0s' },
+    cost: { biomass: 100, alloy: 30, ore: 60, population: 1, time: '3m 0s' },
     requirements: ['Recruitment Core Lv4', 'Command Core Lv3'],
     notes: ['This is the unit used for scouting missions.'],
   },
@@ -93,7 +93,7 @@ export const TROOPS_DOC: TroopDoc[] = [
     role: 'Ranged assault support',
     description: 'Flexible fire-support unit that bolsters offensive pushes with sustained ranged pressure.',
     stats: { attack: 60, defense: 50, speed: 15, carry: 20 },
-    cost: { biomass: 90, alloy: 80, ore: 90, population: 2, time: '9m 0s' },
+    cost: { biomass: 90, alloy: 80, ore: 90, population: 2, time: '8m 0s' },
     requirements: ['Recruitment Core Lv7', 'Command Core Lv6'],
   },
   {
@@ -103,7 +103,7 @@ export const TROOPS_DOC: TroopDoc[] = [
     role: 'Anti-armor assault unit',
     description: 'Aggressive specialist built to crack heavy defensive compositions on the offensive.',
     stats: { attack: 70, defense: 60, speed: 17, carry: 25 },
-    cost: { biomass: 110, alloy: 150, ore: 130, population: 2, time: '15m 0s' },
+    cost: { biomass: 110, alloy: 150, ore: 130, population: 2, time: '11m 0s' },
     requirements: ['Recruitment Core Lv7', 'Ore Extractor Lv6'],
     notes: ['No special anti-mech multiplier is currently applied in combat code.'],
   },
@@ -114,7 +114,7 @@ export const TROOPS_DOC: TroopDoc[] = [
     role: 'Rapid-response cavalry',
     description: 'Fastest unit in the game, ideal for rapid redeploy and pressure.',
     stats: { attack: 90, defense: 80, speed: 28, carry: 50 },
-    cost: { biomass: 150, alloy: 120, ore: 180, population: 3, time: '20m 0s' },
+    cost: { biomass: 150, alloy: 120, ore: 180, population: 3, time: '15m 0s' },
     requirements: ['Recruitment Core Lv8', 'Alloy Forge Lv7'],
   },
   {
@@ -135,7 +135,7 @@ export const TROOPS_DOC: TroopDoc[] = [
     role: 'Heavy artillery',
     description: 'Top-end damage platform for heavy assaults and sieges.',
     stats: { attack: 200, defense: 150, speed: 8, carry: 100 },
-    cost: { biomass: 400, alloy: 350, ore: 600, population: 5, time: '4h 0m' },
+    cost: { biomass: 400, alloy: 350, ore: 600, population: 5, time: '2h 0m' },
     requirements: ['Recruitment Core Lv12', 'Command Core Lv10', 'Shield Grid Lv10'],
   },
   {
