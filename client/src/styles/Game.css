@@ -507,8 +507,20 @@
   }
 
   .header-right .logout-btn {
-    padding: 8px 12px;
-    font-size: 14px;
+    display: none;
+  }
+
+  .mobile-drawer-logout {
+    margin-top: 8px;
+    border-top: 1px solid #0f3460;
+    padding-top: 16px;
+    color: #e94560 !important;
+    border-color: transparent !important;
+  }
+
+  .mobile-drawer-logout:hover {
+    background: rgba(233, 69, 96, 0.12) !important;
+    color: #ff6b85 !important;
   }
 }
 

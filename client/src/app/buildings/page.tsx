@@ -194,22 +194,9 @@ export default function BuildingsPage() {
             </span>
           </button>
           <DocsMobileLinks onNavigate={() => setIsMobileMenuOpen(false)} />
-        </div>
-        <div className="mobile-drawer-nexuses">
-          <h3>Your Nexuses</h3>
-          {nexuses.map((nexus) => (
-            <div
-              key={nexus._id}
-              className={`nexus-item ${String(nexus._id) === selectedNexusId ? 'active' : ''}`}
-              onClick={() => handleSelectNexus(nexus)}
-            >
-              <div className="nexus-name">{nexus.name}</div>
-              <div className="nexus-coords">
-                ({nexus.x}|{nexus.y})
-              </div>
-              <div className="nexus-points">{nexus.points} inf</div>
-            </div>
-          ))}
+          <button className="nav-btn mobile-drawer-logout" onClick={logout}>
+            🚪 Logout
+          </button>
         </div>
       </aside>
 
