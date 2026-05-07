@@ -123,6 +123,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  touch-action: none;
+  overscroll-behavior: contain;
 }
 
 .map-crosshair {
@@ -193,7 +195,7 @@
   border-radius: 8px;
   overflow: visible;
   user-select: none;
-  touch-action: manipulation;
+  touch-action: none;
   -webkit-user-drag: none;
   position: relative;
   background: url('/bg.jpg') center/cover no-repeat;

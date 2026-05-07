@@ -127,9 +127,11 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   const [crosshairPosition, setCrosshairPosition] = useState<CrosshairPosition | null>(null);
   const [zoom, setZoom] = useState(1);
   const mapGridWrapperRef = useRef<HTMLDivElement | null>(null);
+  const mapGridRef = useRef<HTMLDivElement | null>(null);
   const touchDraggedRef = useRef(false);
   const touchDistanceRef = useRef(0);
   const prevZoomRef = useRef(1);
+  const zoomRef = useRef(1);
   const visibleRange = VISIBLE_RANGE;
 
   const clampCoordinate = (value: string, fallback: number) => {
@@ -241,44 +243,74 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleWheel = (e: React.WheelEvent) => {
-    if (!e.ctrlKey && !e.metaKey) return;
-    e.preventDefault();
-    e.stopPropagation();
-    const zoomDelta = e.deltaY > 0 ? 0.95 : 1.05;
-    setZoom((prev) => Math.max(0.5, Math.min(3, prev * zoomDelta)));
-  };
+  useEffect(() => {
+    zoomRef.current = zoom;
+  }, [zoom]);
 
-  const getTouchDistance = (touches: React.TouchList) => {
-    if (touches.length !== 2) return 0;
-    const dx = touches[0].clientX - touches[1].clientX;
-    const dy = touches[0].clientY - touches[1].clientY;
-    return Math.sqrt(dx * dx + dy * dy);
-  };
+  useEffect(() => {
+    const el = mapGridRef.current;
+    if (!el) return;
 
-  const handleTouchStartZoom = (e: React.TouchEvent) => {
-    if (e.touches.length === 2) {
-      touchDistanceRef.current = getTouchDistance(e.touches);
-      prevZoomRef.current = zoom;
-    }
-  };
+    const getTouchDistance = (touches: TouchList) => {
+      if (touches.length < 2) return 0;
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    };
 
-  const handleTouchMoveZoom = (e: React.TouchEvent) => {
-    if (e.touches.length !== 2 || touchDistanceRef.current === 0) return;
-    const newDistance = getTouchDistance(e.touches);
-    const zoomDelta = newDistance / touchDistanceRef.current;
-    if (Math.abs(zoomDelta - 1) > 0.01) {
-      const newZoom = Math.max(0.5, Math.min(3, prevZoomRef.current * zoomDelta));
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const zoomDelta = e.deltaY > 0 ? 0.95 : 1.05;
+      const newZoom = Math.max(0.5, Math.min(3, zoomRef.current * zoomDelta));
+      zoomRef.current = newZoom;
       setZoom(newZoom);
-      prevZoomRef.current = newZoom;
-      touchDistanceRef.current = newDistance;
-    }
-  };
+    };
 
-  const handleTouchEndZoom = () => {
-    touchDistanceRef.current = 0;
-    prevZoomRef.current = zoom;
-  };
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        touchDistanceRef.current = getTouchDistance(e.touches);
+        prevZoomRef.current = zoomRef.current;
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2 && touchDistanceRef.current > 0) {
+        e.preventDefault();
+        e.stopPropagation();
+        const newDistance = getTouchDistance(e.touches);
+        const zoomDelta = newDistance / touchDistanceRef.current;
+        if (Math.abs(zoomDelta - 1) > 0.005) {
+          const newZoom = Math.max(0.5, Math.min(3, prevZoomRef.current * zoomDelta));
+          zoomRef.current = newZoom;
+          setZoom(newZoom);
+        }
+      }
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length < 2) {
+        touchDistanceRef.current = 0;
+        prevZoomRef.current = zoomRef.current;
+      }
+    };
+
+    el.addEventListener('wheel', onWheel, { passive: false });
+    el.addEventListener('touchstart', onTouchStart, { passive: false });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', onTouchEnd, { passive: false });
+    el.addEventListener('touchcancel', onTouchEnd, { passive: false });
+
+    return () => {
+      el.removeEventListener('wheel', onWheel);
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('touchend', onTouchEnd);
+      el.removeEventListener('touchcancel', onTouchEnd);
+    };
+  }, []);
 
   const loadMapArea = async () => {
     try {
@@ -397,13 +429,12 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
       setDragStart({ x: touch.clientX, y: touch.clientY });
       setDragOffset({ x: 0, y: 0 });
     } else if (e.touches.length === 2) {
-      handleTouchStartZoom(e);
+      setIsDragging(false);
     }
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (e.touches.length === 2) {
-      handleTouchMoveZoom(e);
       return;
     }
     if (!isDragging || e.touches.length !== 1) return;
@@ -432,7 +463,6 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   const handleTouchEnd = () => {
     setIsDragging(false);
     setDragOffset({ x: 0, y: 0 });
-    handleTouchEndZoom();
   };
 
   const handleVillageClick = async (nexus: MapNexus, e?: React.MouseEvent) => {
@@ -962,13 +992,13 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
       <div className="map-content">
         <div className="map-grid-wrapper" ref={mapGridWrapperRef}>
           <div
+            ref={mapGridRef}
             className="map-grid"
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={(e) => handleMouseUp(e)}
             onMouseLeave={(e) => handleMouseUp(e)}
             onDragStart={(e) => e.preventDefault()}
-            onWheel={handleWheel}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
