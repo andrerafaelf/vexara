@@ -228,10 +228,9 @@ export default function MarketPage() {
         />
 
         <main className="main-content">
-          <Market nexuses={nexuses} onRefresh={loadVillages} />
+          <Market nexuses={nexuses} selectedNexusId={selectedNexusId} onRefresh={loadVillages} />
         </main>
       </div>
-
     </div>
   );
 }

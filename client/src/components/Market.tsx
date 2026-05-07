@@ -5,6 +5,7 @@ import { MarketListing, Nexus } from '../types/game';
 
 interface MarketProps {
   nexuses: Nexus[];
+  selectedNexusId?: string | null;
   onRefresh: () => void;
 }
 
@@ -20,7 +21,7 @@ const RESOURCE_ICONS: Record<string, string> = {
   ore: '💎',
 };
 
-const Market: React.FC<MarketProps> = ({ nexuses, onRefresh }) => {
+const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) => {
   const [listings, setListings] = useState<MarketListing[]>([]);
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,12 +69,13 @@ const Market: React.FC<MarketProps> = ({ nexuses, onRefresh }) => {
 
   useEffect(() => {
     if (nexuses.length > 0 && !formNexusId) {
-      setFormNexusId(String(nexuses[0]._id));
+      const preferred = selectedNexusId ?? String(nexuses[0]._id);
+      setFormNexusId(preferred);
     }
     if (nexuses.length > 0 && !buyNexusId) {
-      setBuyNexusId(String(nexuses[0]._id));
+      setBuyNexusId(selectedNexusId ?? String(nexuses[0]._id));
     }
-  }, [nexuses, formNexusId, buyNexusId]);
+  }, [nexuses, formNexusId, buyNexusId, selectedNexusId]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -223,13 +225,15 @@ const Market: React.FC<MarketProps> = ({ nexuses, onRefresh }) => {
                   <option value="alloy">Alloy</option>
                   <option value="ore">Ore</option>
                 </select>
-                <input
-                  type="number"
-                  min="1"
-                  placeholder="Amount"
-                  value={formWantAmount}
-                  onChange={(e) => setFormWantAmount(e.target.value)}
-                />
+                <div className="market-amount-row">
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder="Amount"
+                    value={formWantAmount}
+                    onChange={(e) => setFormWantAmount(e.target.value)}
+                  />
+                </div>
               </div>
             </div>
             {formError && <div className="market-form-error">{formError}</div>}

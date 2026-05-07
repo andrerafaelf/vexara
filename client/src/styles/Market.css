@@ -105,7 +105,7 @@
 
 .market-form-trade {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 16px;
   margin-bottom: 16px;
 }
@@ -173,7 +173,7 @@
 .market-form-arrow {
   color: #a8dadc;
   font-size: 24px;
-  padding-bottom: 8px;
+  padding-top: 64px;
   flex-shrink: 0;
 }
 
