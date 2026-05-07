@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"c:\\\\projects\\\\Neon-Dominion\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(xargs grep -l \"Praça\\\\|Rally\\\\|assembly\\\\|group\\\\|Group\")",
+      "Bash(xargs grep -l \"Dashboard\\\\|my-nexuses\")",
+      "Bash(npx prisma *)"
+    ]
+  }
+}

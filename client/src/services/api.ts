@@ -65,6 +65,21 @@ export const renameNexus = (nexusId: string, name: string) =>
     body: JSON.stringify({ name }),
   });
 
+// Nexus groups
+export const getNexusGroups = () => apiRequest('/nexus/groups');
+
+export const createNexusGroup = (name: string) =>
+  apiRequest('/nexus/groups', { method: 'POST', body: JSON.stringify({ name }) });
+
+export const renameNexusGroup = (groupId: string, name: string) =>
+  apiRequest(`/nexus/groups/${groupId}`, { method: 'PATCH', body: JSON.stringify({ name }) });
+
+export const deleteNexusGroup = (groupId: string) =>
+  apiRequest(`/nexus/groups/${groupId}`, { method: 'DELETE' });
+
+export const setGroupNexuses = (groupId: string, nexusIds: string[]) =>
+  apiRequest(`/nexus/groups/${groupId}/nexuses`, { method: 'PUT', body: JSON.stringify({ nexusIds }) });
+
 // Buildings
 export const upgradeBuilding = (nexusId: string, building: string) =>
   apiRequest('/building/upgrade', {

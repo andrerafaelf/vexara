@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getOutgoingAttacks } from '../services/api';
 import '../styles/Dashboard.css';
-import { Nexus } from '../types/game';
+import { Nexus, NexusGroup } from '../types/game';
 import NexusMap from './NexusMap';
 
 const TROOP_NAMES: { [key: string]: string } = {
@@ -32,6 +32,7 @@ const BUILDING_NAMES: { [key: string]: string } = {
 
 interface DashboardProps {
   nexuses: Nexus[];
+  groups: NexusGroup[];
   onSelectNexus: (nexus: Nexus) => void;
 }
 
@@ -50,11 +51,12 @@ interface DashboardQuestBatch {
   reward: string;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
+const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [outgoingAttacks, setOutgoingAttacks] = useState<any[]>([]);
   const [selectedAttack, setSelectedAttack] = useState<any | null>(null);
   const [focusedNexusId, setFocusedNexusId] = useState<string | null>(nexuses[0]?._id ?? null);
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
 
   useEffect(() => {
     const timeInterval = setInterval(() => {
@@ -154,6 +156,11 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
   const totalTroopCount = Object.values(totalTroops).reduce((a, b) => a + b, 0);
 
   const focusedNexus = nexuses.find((v) => v._id === focusedNexusId) ?? nexuses[0];
+
+  const visibleNexuses =
+    activeGroupId !== null
+      ? nexuses.filter((n) => groups.find((g) => g.id === activeGroupId)?.nexusIds.includes(n._id))
+      : nexuses;
 
   const activeBuilding = nexuses.filter((v) => v.buildQueue.length > 0);
   const activeTraining = nexuses.filter((v) => v.trainingQueue.length > 0);
@@ -327,10 +334,31 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
               </button>
             </div>
 
+            {/* Group filter (only when groups exist) */}
+            {groups.length > 0 && (
+              <div className="cc-group-tabs">
+                <button
+                  className={`cc-group-tab${activeGroupId === null ? ' active' : ''}`}
+                  onClick={() => setActiveGroupId(null)}
+                >
+                  All
+                </button>
+                {groups.map((g) => (
+                  <button
+                    key={g.id}
+                    className={`cc-group-tab${activeGroupId === g.id ? ' active' : ''}`}
+                    onClick={() => setActiveGroupId(g.id)}
+                  >
+                    {g.name}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* Nexus switcher (only when > 1 nexus) */}
-            {nexuses.length > 1 && (
+            {visibleNexuses.length > 1 && (
               <div className="cc-nexus-tabs">
-                {nexuses.map((n) => (
+                {visibleNexuses.map((n) => (
                   <button
                     key={n._id}
                     className={`cc-nexus-tab${n._id === focusedNexus._id ? ' active' : ''}`}
@@ -461,7 +489,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, onSelectNexus }) => {
         <div className="cc-card cc-quests-panel">
           <h3 className="cc-card-title">🎯 Quest Progress</h3>
           <div className="dashboard-quests-grid">
-            {nexuses.map((nexus) => {
+            {visibleNexuses.map((nexus) => {
               const questBatches = getQuestBatches(nexus);
               return (
                 <div key={`quests-${nexus._id}`} className="dashboard-quest-nexus-block">

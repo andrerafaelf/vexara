@@ -4,6 +4,12 @@ export interface User {
   email: string;
 }
 
+export interface NexusGroup {
+  id: string;
+  name: string;
+  nexusIds: string[];
+}
+
 export interface Nexus {
   _id: string;
   name: string;

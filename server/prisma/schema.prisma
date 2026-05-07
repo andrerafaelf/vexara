@@ -17,6 +17,7 @@ model User {
 
   questRewardClaims Json @default("[]")
   completedQuestIds Json @default("[]")
+  nexusGroups       Json @default("[]")
 }
 
 model Nexus {

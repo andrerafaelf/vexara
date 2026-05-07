@@ -77,6 +77,99 @@ router.get('/my-nexuses', auth, async (req, res) => {
   }
 });
 
+// Get nexus groups
+router.get('/groups', auth, async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.userId } });
+    res.json(user.nexusGroups ?? []);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Create a nexus group
+router.post('/groups', auth, async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name || typeof name !== 'string' || name.trim().length < 1 || name.trim().length > 32) {
+      return res.status(400).json({ error: 'Group name must be between 1 and 32 characters' });
+    }
+    const user = await prisma.user.findUnique({ where: { id: req.userId } });
+    const groups = Array.isArray(user.nexusGroups) ? user.nexusGroups : [];
+    if (groups.length >= 10) {
+      return res.status(400).json({ error: 'Maximum of 10 groups allowed' });
+    }
+    const newGroup = { id: Date.now().toString(), name: name.trim(), nexusIds: [] };
+    const updated = await prisma.user.update({
+      where: { id: req.userId },
+      data: { nexusGroups: [...groups, newGroup] },
+    });
+    res.json(updated.nexusGroups);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Rename a nexus group
+router.patch('/groups/:groupId', auth, async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const { name } = req.body;
+    if (!name || typeof name !== 'string' || name.trim().length < 1 || name.trim().length > 32) {
+      return res.status(400).json({ error: 'Group name must be between 1 and 32 characters' });
+    }
+    const user = await prisma.user.findUnique({ where: { id: req.userId } });
+    const groups = Array.isArray(user.nexusGroups) ? user.nexusGroups : [];
+    const groupIndex = groups.findIndex((g) => g.id === groupId);
+    if (groupIndex === -1) return res.status(404).json({ error: 'Group not found' });
+    groups[groupIndex] = { ...groups[groupIndex], name: name.trim() };
+    const updated = await prisma.user.update({ where: { id: req.userId }, data: { nexusGroups: groups } });
+    res.json(updated.nexusGroups);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete a nexus group
+router.delete('/groups/:groupId', auth, async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const user = await prisma.user.findUnique({ where: { id: req.userId } });
+    const groups = Array.isArray(user.nexusGroups) ? user.nexusGroups : [];
+    const filtered = groups.filter((g) => g.id !== groupId);
+    if (filtered.length === groups.length) return res.status(404).json({ error: 'Group not found' });
+    const updated = await prisma.user.update({ where: { id: req.userId }, data: { nexusGroups: filtered } });
+    res.json(updated.nexusGroups);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Set nexuses assigned to a group
+router.put('/groups/:groupId/nexuses', auth, async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const { nexusIds } = req.body;
+    if (!Array.isArray(nexusIds)) return res.status(400).json({ error: 'nexusIds must be an array' });
+
+    const user = await prisma.user.findUnique({ where: { id: req.userId } });
+    const groups = Array.isArray(user.nexusGroups) ? user.nexusGroups : [];
+    const groupIndex = groups.findIndex((g) => g.id === groupId);
+    if (groupIndex === -1) return res.status(404).json({ error: 'Group not found' });
+
+    // Verify all nexusIds belong to this user
+    const ownedNexuses = await prisma.nexus.findMany({ where: { ownerId: req.userId }, select: { id: true } });
+    const ownedIds = new Set(ownedNexuses.map((n) => String(n.id)));
+    const validIds = nexusIds.filter((id) => ownedIds.has(String(id)));
+
+    groups[groupIndex] = { ...groups[groupIndex], nexusIds: validIds.map(String) };
+    const updated = await prisma.user.update({ where: { id: req.userId }, data: { nexusGroups: groups } });
+    res.json(updated.nexusGroups);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Rename a nexus
 router.patch('/:nexusId/name', auth, async (req, res) => {
   try {

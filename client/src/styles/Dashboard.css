@@ -69,6 +69,38 @@
   background: #c73851;
 }
 
+/* Group filter tabs */
+.cc-group-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #0f3460;
+}
+
+.cc-group-tab {
+  background: transparent;
+  color: #a8dadc;
+  border: 1px solid #0f3460;
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.cc-group-tab:hover {
+  background: #0f3460;
+  color: #fff;
+}
+
+.cc-group-tab.active {
+  background: #e94560;
+  border-color: #e94560;
+  color: #fff;
+}
+
 /* Nexus switcher tabs */
 .cc-nexus-tabs {
   display: flex;
