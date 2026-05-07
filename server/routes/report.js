@@ -20,7 +20,6 @@ router.get('/reports/:nexusId', auth, async (req, res) => {
         status: 'completed',
       },
       orderBy: { createdAt: 'desc' },
-      take: 20,
       include: {
         attackerNexus: { select: { id: true, name: true, x: true, y: true } },
         defenderNexus: { select: { id: true, name: true, x: true, y: true } },
@@ -70,6 +69,42 @@ router.post('/read/:attackId', auth, async (req, res) => {
     });
 
     res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Mark all reports for a nexus as read
+router.post('/read-all/:nexusId', auth, async (req, res) => {
+  try {
+    const nexusId = parseInt(req.params.nexusId);
+    const nexus = await prisma.nexus.findUnique({ where: { id: nexusId } });
+    if (!nexus || nexus.ownerId !== req.userId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    const attacks = await prisma.attack.findMany({
+      where: {
+        OR: [{ attackerNexusId: nexusId }, { defenderNexusId: nexusId }],
+        status: 'completed',
+      },
+      select: { id: true },
+    });
+
+    if (attacks.length === 0) return res.json({ success: true, count: 0 });
+
+    const now = new Date();
+    await prisma.$transaction(
+      attacks.map((a) =>
+        prisma.reportRead.upsert({
+          where: { userId_attackId: { userId: req.userId, attackId: a.id } },
+          create: { userId: req.userId, attackId: a.id },
+          update: { readAt: now },
+        }),
+      ),
+    );
+
+    res.json({ success: true, count: attacks.length, ids: attacks.map((a) => String(a.id)) });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

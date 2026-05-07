@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getReadReportIds, getReports, markReportRead, sendAttack } from '../services/api';
+import { getReadReportIds, getReports, markAllReportsRead, markReportRead, sendAttack } from '../services/api';
 import '../styles/Reports.css';
 import { Attack, Nexus } from '../types/game';
 
@@ -128,6 +128,18 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
   };
 
   const isScoutReport = (report: Attack) => report.type === 'scout' || report.result?.mission === 'scout';
+
+  const unreadCount = reports.reduce((acc, r) => (readIds.has(r._id) ? acc : acc + 1), 0);
+
+  const handleMarkAllRead = async () => {
+    try {
+      const res = await markAllReportsRead(nexus._id);
+      const ids: string[] = res.data?.ids || reports.map((r) => r._id);
+      setReadIds((prev) => new Set([...prev, ...ids]));
+    } catch (err) {
+      console.error('Error marking all reports as read:', err);
+    }
+  };
 
   if (loading) {
     return <div className="reports-container">Loading reports...</div>;
@@ -423,8 +435,15 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
   return (
     <div className="reports-container">
       <div className="reports-header">
-        <h2>📜 Combat Logs</h2>
-        <p>Showing last 20 reports for {nexus.name}</p>
+        <div className="reports-header-row">
+          <h2>📜 Combat Logs</h2>
+          {unreadCount > 0 && (
+            <button className="btn-read-all" onClick={handleMarkAllRead}>
+              Mark all read ({unreadCount})
+            </button>
+          )}
+        </div>
+        <p>All reports for {nexus.name}</p>
       </div>
 
       {reports.length === 0 ? (
