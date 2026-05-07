@@ -168,6 +168,20 @@ const TIME_SCALING = {
   late: 1.45,
 };
 
+// Command Core reduces building time by 5% per level (compounding).
+const COMMAND_BUILD_TIME_FACTOR_PER_LEVEL = 0.95;
+// Recruitment Core reduces training time by 8% per level (compounding). Overseer is exempt.
+const RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL = 0.92;
+
+const getCommandTimeFactor = (commandLevel: number) =>
+  Math.pow(COMMAND_BUILD_TIME_FACTOR_PER_LEVEL, Math.max(0, commandLevel || 0));
+
+const getTroopTrainSeconds = (troopType: string, baseTime: number, recruitmentLevel: number) => {
+  if (troopType === 'overseer') return baseTime;
+  const factor = Math.pow(RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL, Math.max(0, recruitmentLevel || 0));
+  return Math.max(1, Math.floor(baseTime * factor));
+};
+
 const BUILDING_IMAGES: { [key: string]: any } = {
   commandCore: commandcoreImg,
   troopFabricator: recruitmentcoreImg,
@@ -472,7 +486,10 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     if (submittingRef.current.has(key)) return;
     submittingRef.current.add(key);
 
-    if (nexus.trainingQueue.length >= MAX_TRAINING_QUEUE) {
+    const sameChainCount = nexus.trainingQueue.filter((entry: any) =>
+      troopType === 'overseer' ? entry.troopType === 'overseer' : entry.troopType !== 'overseer',
+    ).length;
+    if (sameChainCount >= MAX_TRAINING_QUEUE) {
       showToast(`Training queue is full (${MAX_TRAINING_QUEUE}/${MAX_TRAINING_QUEUE})`, 'error');
       submittingRef.current.delete(key);
       return;
@@ -630,9 +647,20 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     const now = currentTime.getTime();
     const endAt = new Date(item.completesAt).getTime();
 
-    if (index > 0) {
-      const startsAt = new Date(queue[index - 1].completesAt).getTime();
-      // The per-entry duration naturally includes amount > 1 because completesAt is batch-based.
+    // Find the previous entry in the same chain (overseer vs non-overseer).
+    const isOverseerItem = item.troopType === 'overseer';
+    let prevSameChain: any = null;
+    for (let i = index - 1; i >= 0; i -= 1) {
+      const candidate = queue[i];
+      const candidateIsOverseer = candidate.troopType === 'overseer';
+      if (candidateIsOverseer === isOverseerItem) {
+        prevSameChain = candidate;
+        break;
+      }
+    }
+
+    if (prevSameChain) {
+      const startsAt = new Date(prevSameChain.completesAt).getTime();
       const ownDurationSeconds = Math.floor((endAt - startsAt) / 1000);
 
       if (now < startsAt) {
@@ -723,11 +751,13 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
       time *= timeMultiplier;
     }
 
+    const reducedTime = Math.max(1, Math.floor(time * getCommandTimeFactor(nexus.buildings.commandCore)));
+
     return {
       biomass: Math.floor(biomass),
       alloy: Math.floor(alloy),
       ore: Math.floor(ore),
-      time: Math.floor(time),
+      time: reducedTime,
     };
   };
 
@@ -1656,7 +1686,16 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                           {categoryTroops.map(([type, costs]) => {
                             const { canTrain, missingRequirements } = checkTroopRequirements(type);
                             const maxTrainable = getMaxTrainableAmount(type, costs, canTrain);
-                            const isTrainingQueueFull = nexus.trainingQueue.length >= MAX_TRAINING_QUEUE;
+                            const trainSeconds = getTroopTrainSeconds(
+                              type,
+                              costs.time,
+                              nexus.buildings.troopFabricator,
+                            );
+                            const isOverseerTrack = type === 'overseer';
+                            const sameChainQueueLength = nexus.trainingQueue.filter((entry: any) =>
+                              isOverseerTrack ? entry.troopType === 'overseer' : entry.troopType !== 'overseer',
+                            ).length;
+                            const isTrainingQueueFull = sameChainQueueLength >= MAX_TRAINING_QUEUE;
                             const isTrainDisabled = !canTrain || isTrainingQueueFull || maxTrainable <= 0;
                             return (
                               <div key={type} className={`train-card ${isTrainDisabled ? 'disabled' : ''}`}>
@@ -1685,7 +1724,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                                   <span>💎 {costs.ore}</span>
                                   <span>👥 {costs.population}</span>
                                   <p className="train-time">
-                                    ⏱️ {costs.time >= 3600 ? `${Math.floor(costs.time / 3600)}h ${Math.floor((costs.time % 3600) / 60)}m ${costs.time % 60}s` : `${Math.floor(costs.time / 60)}m ${costs.time % 60}s`}
+                                    ⏱️ {trainSeconds >= 3600 ? `${Math.floor(trainSeconds / 3600)}h ${Math.floor((trainSeconds % 3600) / 60)}m ${trainSeconds % 60}s` : `${Math.floor(trainSeconds / 60)}m ${trainSeconds % 60}s`}
                                   </p>
                                 </div>
                                 {isTrainingQueueFull && (

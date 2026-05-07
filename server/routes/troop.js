@@ -7,6 +7,10 @@ import { parsePositiveInt } from '../utils/validation.js';
 const router = express.Router();
 const MAX_TRAINING_QUEUE = 5;
 
+// Recruitment Core reduces training time for non-Overseer troops by 8% per level.
+// Lv0 = 100% (1.0), Lv15 ≈ 28.6%. Overseer is unaffected and stays at base time.
+const RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL = 0.92;
+
 // Training times (seconds per unit).
 // Early troops: ~1 min. Mid-tier: 5–30 min. Heavy: 1 h / 4 h / 8 h.
 const TROOP_COSTS = {
@@ -23,6 +27,13 @@ const TROOP_COSTS = {
   annihilatorPlatform:  { biomass: 400, alloy: 350, ore: 600, population: 5, time: 7200 },  // 2 hours
   overseer:             { biomass: 600, alloy: 500, ore: 400, population: 5, time: 28800 }, // 8 hours
 };
+
+function getTrainTimeSeconds(troopType, recruitmentLevel) {
+  const baseTime = TROOP_COSTS[troopType].time;
+  if (troopType === 'overseer') return baseTime;
+  const factor = Math.pow(RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL, Math.max(0, recruitmentLevel || 0));
+  return Math.max(1, Math.floor(baseTime * factor));
+}
 
 const TROOP_REQUIREMENTS = {
   assaultTrooper:      { buildings: { troopFabricator: 1 } },
@@ -146,14 +157,29 @@ router.post('/train', auth, async (req, res) => {
     }
 
     const trainingQueue = Array.isArray(nexus.trainingQueue) ? nexus.trainingQueue : [];
-    if (trainingQueue.length >= MAX_TRAINING_QUEUE) {
+
+    // Overseer trains in its own independent chain so it doesn't block other troops.
+    const isOverseer = troopType === 'overseer';
+    const sameChainQueue = trainingQueue.filter((entry) =>
+      isOverseer ? entry.troopType === 'overseer' : entry.troopType !== 'overseer',
+    );
+
+    if (sameChainQueue.length >= MAX_TRAINING_QUEUE) {
       return res.status(400).json({ error: `Training queue is full (${MAX_TRAINING_QUEUE}/${MAX_TRAINING_QUEUE})` });
     }
 
+    const perUnitSeconds = getTrainTimeSeconds(troopType, nexus.troopFabricator);
     const queueStart =
-      trainingQueue.length > 0 ? new Date(trainingQueue[trainingQueue.length - 1].completesAt).getTime() : Date.now();
-    const completesAt = new Date(queueStart + cost.time * parsedAmount * 1000);
-    const newQueue = [...trainingQueue, { troopType, amount: parsedAmount, completesAt }];
+      sameChainQueue.length > 0
+        ? new Date(sameChainQueue[sameChainQueue.length - 1].completesAt).getTime()
+        : Date.now();
+    const completesAt = new Date(queueStart + perUnitSeconds * parsedAmount * 1000);
+    const newQueue = [...trainingQueue, {
+      troopType,
+      amount: parsedAmount,
+      completesAt,
+      perUnitSeconds,
+    }];
 
     const updated = await prisma.nexus.update({
       where: { id: nexus.id },
@@ -210,20 +236,34 @@ router.post('/cancel-queue', auth, async (req, res) => {
     };
 
     const itemCompletesAt = new Date(item.completesAt).getTime();
+    const isOverseerItem = item.troopType === 'overseer';
+    const sameChainPredicate = (entry) =>
+      isOverseerItem ? entry.troopType === 'overseer' : entry.troopType !== 'overseer';
     const newQueue = trainingQueue.filter((_, i) => i !== parsedIndex);
 
-    if (parsedIndex === 0 && newQueue.length > 0) {
-      const remaining = Math.max(0, itemCompletesAt - Date.now());
-      for (let i = 0; i < newQueue.length; i++) {
-        const oldAt = new Date(newQueue[i].completesAt).getTime();
-        newQueue[i] = { ...newQueue[i], completesAt: new Date(oldAt - remaining) };
+    // Find the previous same-chain entry (if any) and shift only same-chain
+    // followers — the other chain's timeline is unaffected.
+    const sameChainPrevEntry = (() => {
+      for (let i = parsedIndex - 1; i >= 0; i -= 1) {
+        if (sameChainPredicate(trainingQueue[i])) return trainingQueue[i];
       }
-    } else if (parsedIndex > 0) {
-      const prevAt = new Date(trainingQueue[parsedIndex - 1].completesAt).getTime();
-      const duration = itemCompletesAt - prevAt;
-      for (let i = parsedIndex; i < newQueue.length; i++) {
-        const oldAt = new Date(newQueue[i].completesAt).getTime();
-        newQueue[i] = { ...newQueue[i], completesAt: new Date(oldAt - duration) };
+      return null;
+    })();
+
+    const isHeadOfChain = sameChainPrevEntry === null;
+    const shiftAmount = isHeadOfChain
+      ? Math.max(0, itemCompletesAt - Date.now())
+      : itemCompletesAt - new Date(sameChainPrevEntry.completesAt).getTime();
+
+    if (shiftAmount > 0) {
+      for (let i = 0; i < newQueue.length; i += 1) {
+        const entry = newQueue[i];
+        if (!sameChainPredicate(entry)) continue;
+        const entryOldAt = new Date(entry.completesAt).getTime();
+        // Only shift entries that come after the cancelled item in the same chain.
+        const wasAfter = entryOldAt > itemCompletesAt || (isHeadOfChain && entryOldAt >= itemCompletesAt);
+        if (!wasAfter) continue;
+        newQueue[i] = { ...entry, completesAt: new Date(entryOldAt - shiftAmount) };
       }
     }
 
@@ -263,30 +303,40 @@ router.post('/check-queue', auth, async (req, res) => {
     const troopUpdates = {};
     let completed = false;
 
-    while (trainingQueue.length > 0) {
-      const entry = trainingQueue[0];
-      const cost = TROOP_COSTS[entry.troopType];
-      if (!cost) { trainingQueue.shift(); continue; }
+    // Process the Overseer chain and the non-Overseer chain independently —
+    // they advance in parallel because each has its own completesAt timeline.
+    const advanceChain = (predicate) => {
+      while (true) {
+        const idx = trainingQueue.findIndex(predicate);
+        if (idx === -1) break;
+        const entry = trainingQueue[idx];
+        const cost = TROOP_COSTS[entry.troopType];
+        if (!cost) { trainingQueue.splice(idx, 1); continue; }
 
-      const completesAtMs = new Date(entry.completesAt).getTime();
-      const perUnitMs = cost.time * 1000;
-      const startedAtMs = completesAtMs - entry.amount * perUnitMs;
-      const elapsedMs = now.getTime() - startedAtMs;
+        const completesAtMs = new Date(entry.completesAt).getTime();
+        const perUnitSeconds = entry.perUnitSeconds || getTrainTimeSeconds(entry.troopType, nexus.troopFabricator);
+        const perUnitMs = perUnitSeconds * 1000;
+        const startedAtMs = completesAtMs - entry.amount * perUnitMs;
+        const elapsedMs = now.getTime() - startedAtMs;
 
-      if (elapsedMs < perUnitMs) break;
+        if (elapsedMs < perUnitMs) break;
 
-      const unitsCompleted = Math.min(entry.amount, Math.floor(elapsedMs / perUnitMs));
-      troopUpdates[entry.troopType] =
-        (troopUpdates[entry.troopType] || nexus[entry.troopType] || 0) + unitsCompleted;
-      completed = true;
+        const unitsCompleted = Math.min(entry.amount, Math.floor(elapsedMs / perUnitMs));
+        troopUpdates[entry.troopType] =
+          (troopUpdates[entry.troopType] || nexus[entry.troopType] || 0) + unitsCompleted;
+        completed = true;
 
-      if (unitsCompleted >= entry.amount) {
-        trainingQueue.shift();
-      } else {
-        trainingQueue[0] = { ...entry, amount: entry.amount - unitsCompleted };
-        break;
+        if (unitsCompleted >= entry.amount) {
+          trainingQueue.splice(idx, 1);
+        } else {
+          trainingQueue[idx] = { ...entry, amount: entry.amount - unitsCompleted };
+          break;
+        }
       }
-    }
+    };
+
+    advanceChain((entry) => entry.troopType !== 'overseer');
+    advanceChain((entry) => entry.troopType === 'overseer');
 
     const resourceUpdate = computeResourceUpdate(nexus);
     const updated = await prisma.nexus.update({

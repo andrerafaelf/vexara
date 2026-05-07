@@ -16,6 +16,16 @@ Per-upgrade costs and times are calculated from base values with staged multipli
 - Target levels 6-10: cost x1.65, time x1.35
 - Target levels 11+: cost x1.8, time x1.45
 
+## Command Core Build-Time Reduction
+
+Each level of Command Core multiplies all building upgrade times (including
+Command Core's own next upgrade) by 0.95. The reduction stacks compoundingly:
+
+- Lv0: 100% (base time)
+- Lv5: ~77%
+- Lv10: ~60%
+- Lv20: ~36%
+
 ## Building Catalog
 
 ### Command Core

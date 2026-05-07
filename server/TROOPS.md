@@ -12,6 +12,18 @@ Neon Dominion features 12 troop types. Units are trained in the Recruitment Core
 - Casualties are ratio-based with a random factor
 - Overseers reduce enemy control by 50 on a successful attack if they survive
 
+## Recruitment Core Training-Time Reduction
+
+Each level of Recruitment Core multiplies training time by 0.92 (compounding)
+for every troop **except Overseer**, which always trains in 8h. The Overseer
+also has its own independent training queue, so non-Overseer training does not
+wait behind it (and vice versa).
+
+- Lv1: ~92%
+- Lv5: ~66%
+- Lv10: ~43%
+- Lv15: ~28% (max)
+
 ## Troop Catalog
 
 ### Assault Trooper

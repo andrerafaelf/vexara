@@ -295,13 +295,21 @@ const Admin: React.FC = () => {
     }
   };
 
-  const handleAdjustTroops = async () => {
+  const handleAdjustTroops = async (direction: 'add' | 'remove') => {
     if (!selectedUser) return;
+
+    const magnitude = Math.max(0, Math.floor(Number(troopsForm.amount) || 0));
+    if (magnitude === 0) {
+      showToast('Enter a positive amount', 'error');
+      return;
+    }
+
+    const signedAmount = direction === 'add' ? magnitude : -magnitude;
 
     try {
       const res = await adminFetch(`${ADMIN_API_URL}/users/${selectedUser._id}/troops`, {
         method: 'POST',
-        body: JSON.stringify(troopsForm),
+        body: JSON.stringify({ ...troopsForm, amount: signedAmount }),
       });
 
       if (!res.ok) {
@@ -310,7 +318,7 @@ const Admin: React.FC = () => {
         return;
       }
 
-      showToast(`Troops updated for ${selectedUser.username}`, 'success');
+      showToast(`Troops ${direction === 'add' ? 'added' : 'removed'} for ${selectedUser.username}`, 'success');
       closeModal();
       loadData();
     } catch (err) {
@@ -775,7 +783,7 @@ const Admin: React.FC = () => {
               {modal === 'troops' && selectedUser && (
                 <div className="form-grid">
                   <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                    <small>Use a negative amount to remove troops.</small>
+                    <small>Enter a positive amount, then choose Add or Remove.</small>
                   </div>
                   <div className="form-group">
                     <label>Nexus</label>
@@ -807,8 +815,14 @@ const Admin: React.FC = () => {
                     <label>Amount</label>
                     <input
                       type="number"
+                      min="0"
                       value={troopsForm.amount}
-                      onChange={(e) => setTroopsForm({ ...troopsForm, amount: Number(e.target.value) || 0 })}
+                      onChange={(e) =>
+                        setTroopsForm({
+                          ...troopsForm,
+                          amount: Math.max(0, Math.floor(Number(e.target.value) || 0)),
+                        })
+                      }
                     />
                   </div>
                 </div>
@@ -848,7 +862,12 @@ const Admin: React.FC = () => {
                       type="number"
                       min="0"
                       value={buildingsForm.level}
-                      onChange={(e) => setBuildingsForm({ ...buildingsForm, level: Number(e.target.value) || 0 })}
+                      onChange={(e) =>
+                        setBuildingsForm({
+                          ...buildingsForm,
+                          level: Math.max(0, Math.floor(Number(e.target.value) || 0)),
+                        })
+                      }
                     />
                   </div>
                 </div>
@@ -875,9 +894,14 @@ const Admin: React.FC = () => {
                 </button>
               )}
               {modal === 'troops' && (
-                <button className="btn-primary" onClick={handleAdjustTroops}>
-                  Apply Troop Change
-                </button>
+                <>
+                  <button className="btn-primary" onClick={() => handleAdjustTroops('add')}>
+                    Add Troops
+                  </button>
+                  <button className="btn-secondary" onClick={() => handleAdjustTroops('remove')}>
+                    Remove Troops
+                  </button>
+                </>
               )}
               {modal === 'buildings' && (
                 <button className="btn-primary" onClick={handleSetBuildingLevel}>

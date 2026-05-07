@@ -271,9 +271,17 @@ export async function applyCompletedQueues(nexus) {
 
   updates.buildQueue = buildQueue;
 
-  while (trainingQueue.length > 0 && new Date(trainingQueue[0].completesAt) <= now) {
-    const training = trainingQueue.shift();
-    updates[training.troopType] = (updates[training.troopType] || nexus[training.troopType] || 0) + training.amount;
+  // Overseer trains in an independent chain — scan the whole queue rather than
+  // stopping at the head, so a finished overseer doesn't wait behind a still-
+  // training non-overseer entry (and vice versa).
+  for (let i = 0; i < trainingQueue.length; ) {
+    const entry = trainingQueue[i];
+    if (new Date(entry.completesAt) <= now) {
+      updates[entry.troopType] = (updates[entry.troopType] || nexus[entry.troopType] || 0) + entry.amount;
+      trainingQueue.splice(i, 1);
+    } else {
+      i += 1;
+    }
   }
 
   updates.trainingQueue = trainingQueue;

@@ -98,6 +98,14 @@ const TIME_SCALING = {
   late: 1.45,
 };
 
+// Command Core reduces building time by 5% per level (compounding).
+// Lv0 = 100%, Lv20 ≈ 35.8%. Applies to every building, including itself.
+const COMMAND_BUILD_TIME_FACTOR_PER_LEVEL = 0.95;
+
+function getCommandTimeFactor(commandLevel) {
+  return Math.pow(COMMAND_BUILD_TIME_FACTOR_PER_LEVEL, Math.max(0, commandLevel || 0));
+}
+
 const BUILDING_NAMES = {
   commandCore: 'Command Core',
   troopFabricator: 'Recruitment Core',
@@ -256,7 +264,8 @@ router.post('/upgrade', auth, async (req, res) => {
     // Deduct resources and add to queue
     const queueStart =
       buildQueue.length > 0 ? new Date(buildQueue[buildQueue.length - 1].completesAt).getTime() : Date.now();
-    const completesAt = new Date(queueStart + cost.time * 1000);
+    const buildSeconds = Math.max(1, Math.floor(cost.time * getCommandTimeFactor(nexus.commandCore)));
+    const completesAt = new Date(queueStart + buildSeconds * 1000);
     const newQueue = [...buildQueue, { building, targetLevel: currentLevel + 1, completesAt }];
 
     const updated = await prisma.nexus.update({
