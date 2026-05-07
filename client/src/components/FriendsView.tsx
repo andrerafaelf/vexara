@@ -461,11 +461,13 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
                   ) : (
                     messages.map((m) => {
                       const mine = m.senderId === myId;
+                      const senderName = mine ? (user?.username ?? 'You') : (activeFriend?.username ?? '');
                       return (
                         <div
                           key={m.id}
                           className={`friends-chat-bubble ${mine ? 'mine' : 'theirs'}`}
                         >
+                          <div className="friends-chat-bubble-sender">{senderName}</div>
                           <div className="friends-chat-bubble-content">{m.content}</div>
                           <div className="friends-chat-bubble-time">{formatTime(m.createdAt)}</div>
                         </div>
