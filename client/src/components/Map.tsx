@@ -247,7 +247,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
     setZoom((prev) => Math.max(0.5, Math.min(3, prev * zoomDelta)));
   };
 
-  const getTouchDistance = (touches: TouchList) => {
+  const getTouchDistance = (touches: React.TouchList) => {
     if (touches.length !== 2) return 0;
     const dx = touches[0].clientX - touches[1].clientX;
     const dy = touches[0].clientY - touches[1].clientY;
