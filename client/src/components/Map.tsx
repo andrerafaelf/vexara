@@ -125,8 +125,10 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   const [targetX, setTargetX] = useState(String(currentNexus.x));
   const [targetY, setTargetY] = useState(String(currentNexus.y));
   const [crosshairPosition, setCrosshairPosition] = useState<CrosshairPosition | null>(null);
+  const [zoom, setZoom] = useState(1);
   const mapGridWrapperRef = useRef<HTMLDivElement | null>(null);
   const touchDraggedRef = useRef(false);
+  const touchDistanceRef = useRef(0);
   const visibleRange = VISIBLE_RANGE;
 
   const clampCoordinate = (value: string, fallback: number) => {
@@ -211,7 +213,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
     setTargetY(String(centerY));
   }, [centerX, centerY]);
 
-  // Keyboard navigation
+  // Keyboard navigation and zoom
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const step = 5;
@@ -237,6 +239,40 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  const handleWheel = (e: React.WheelEvent) => {
+    if (!e.ctrlKey) return;
+    e.preventDefault();
+    const zoomDelta = e.deltaY > 0 ? 0.9 : 1.1;
+    setZoom((prev) => Math.max(0.5, Math.min(3, prev * zoomDelta)));
+  };
+
+  const getTouchDistance = (touches: TouchList) => {
+    if (touches.length !== 2) return 0;
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  const handleTouchStartZoom = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      touchDistanceRef.current = getTouchDistance(e.touches);
+    }
+  };
+
+  const handleTouchMoveZoom = (e: React.TouchEvent) => {
+    if (e.touches.length !== 2 || touchDistanceRef.current === 0) return;
+    const newDistance = getTouchDistance(e.touches);
+    const zoomDelta = newDistance / touchDistanceRef.current;
+    if (zoomDelta !== 1) {
+      setZoom((prev) => Math.max(0.5, Math.min(3, prev * zoomDelta)));
+      touchDistanceRef.current = newDistance;
+    }
+  };
+
+  const handleTouchEndZoom = () => {
+    touchDistanceRef.current = 0;
+  };
 
   const loadMapArea = async () => {
     try {
@@ -354,10 +390,16 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
       setIsDragging(true);
       setDragStart({ x: touch.clientX, y: touch.clientY });
       setDragOffset({ x: 0, y: 0 });
+    } else if (e.touches.length === 2) {
+      handleTouchStartZoom(e);
     }
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      handleTouchMoveZoom(e);
+      return;
+    }
     if (!isDragging || e.touches.length !== 1) return;
     const touch = e.touches[0];
     const deltaX = touch.clientX - dragStart.x;
@@ -384,6 +426,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   const handleTouchEnd = () => {
     setIsDragging(false);
     setDragOffset({ x: 0, y: 0 });
+    handleTouchEndZoom();
   };
 
   const handleVillageClick = async (nexus: MapNexus, e?: React.MouseEvent) => {
@@ -880,7 +923,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
           <span>
             Viewing: ({centerX}|{centerY}) | Map Size: {MAP_SIZE}x{MAP_SIZE} ({MAP_SIZE * MAP_SIZE} hexes)
           </span>
-          <span className="map-hint">💡 Drag or swipe to pan • Jump to coordinates</span>
+          <span className="map-hint">💡 Drag or swipe to pan • Ctrl+scroll or pinch to zoom</span>
         </div>
         <div className="map-controls">
           <button onClick={handleResetMap}>🏠 Reset Map</button>
@@ -919,10 +962,11 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
             onMouseUp={(e) => handleMouseUp(e)}
             onMouseLeave={(e) => handleMouseUp(e)}
             onDragStart={(e) => e.preventDefault()}
+            onWheel={handleWheel}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
-            style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+            style={{ cursor: isDragging ? 'grabbing' : 'grab', transform: `scale(${zoom})`, transformOrigin: 'center' }}
           >
             {renderGrid()}
           </div>

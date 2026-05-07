@@ -197,6 +197,7 @@
   -webkit-user-drag: none;
   position: relative;
   background: url('/bg.jpg') center/cover no-repeat;
+  transition: transform 0.1s ease-out;
 }
 
 .map-row {
