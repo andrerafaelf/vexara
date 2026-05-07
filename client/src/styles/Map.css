@@ -260,7 +260,7 @@
 }
 
 .nexus-marker {
-  font-size: 24px;
+  font-size: calc(var(--map-cell-size, 60px) * 0.4);
   line-height: 1;
 }
 
@@ -281,9 +281,10 @@
 }
 
 .cell-coords {
-  font-size: 9px;
+  font-size: calc(var(--map-cell-size, 60px) * 0.15);
   color: #a8dadc;
   margin-top: 2px;
+  line-height: 1;
 }
 
 .map-sidebar {
@@ -600,10 +601,6 @@
   .map-cell {
     width: var(--map-cell-size, 50px);
     height: var(--map-cell-size, 50px);
-  }
-
-  .nexus-marker {
-    font-size: 20px;
   }
 }
 

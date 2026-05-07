@@ -266,7 +266,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
       if (!e.ctrlKey && !e.metaKey) return;
       e.preventDefault();
       e.stopPropagation();
-      const delta = e.deltaY > 0 ? -1 : 1;
+      const delta = e.deltaY > 0 ? 1 : -1;
       const newRange = clampRange(rangeRef.current + delta);
       if (newRange !== rangeRef.current) {
         rangeRef.current = newRange;
@@ -291,7 +291,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
         e.stopPropagation();
         const newDistance = getTouchDistance(e.touches);
         const ratio = newDistance / touchDistanceRef.current;
-        const targetRange = pinchStartRange * ratio;
+        const targetRange = pinchStartRange / ratio;
         const newRange = clampRange(targetRange);
         if (newRange !== rangeRef.current) {
           rangeRef.current = newRange;
