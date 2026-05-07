@@ -1523,6 +1523,60 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
               </div>
             )}
 
+            {ownNexuses.filter((n) => n._id !== nexus._id).length > 0 && (
+              <div className="transfer-section">
+                <button
+                  type="button"
+                  className="transfer-toggle-btn"
+                  onClick={() => setShowTroopSend((v) => !v)}
+                >
+                  🚀 Send Troops {showTroopSend ? '▲' : '▼'}
+                </button>
+                {showTroopSend && (
+                  <div className="transfer-panel">
+                    <div className="transfer-row">
+                      <label>To Nexus</label>
+                      <select value={troopSendTo} onChange={(e) => setTroopSendTo(e.target.value)}>
+                        <option value="">— select —</option>
+                        {ownNexuses.filter((n) => n._id !== nexus._id).map((n) => (
+                          <option key={n._id} value={n._id}>{n.name} ({n.x}|{n.y})</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="transfer-inputs">
+                      {Object.entries(nexus.troops)
+                        .filter(([, count]) => count > 0)
+                        .map(([type, count]) => (
+                          <div key={type} className="transfer-input-row">
+                            <label>{TROOP_NAMES[type] || type}</label>
+                            <input
+                              type="number"
+                              min={0}
+                              max={count}
+                              placeholder="0"
+                              value={troopSendAmounts[type] || ''}
+                              onChange={(e) => setTroopSendAmounts((a) => ({ ...a, [type]: e.target.value }))}
+                            />
+                            <span className="transfer-available">/ {count}</span>
+                          </div>
+                        ))}
+                      {Object.values(nexus.troops).every((c) => c === 0) && (
+                        <p className="empty-state">No troops available to send.</p>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      className="transfer-send-btn"
+                      disabled={!troopSendTo || sendingTroops}
+                      onClick={handleSendTroops}
+                    >
+                      {sendingTroops ? 'Sending…' : 'Send Troops'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
             {nexus.buildQueue.length > 0 && (
               <div className="queue-section">
                 <h4>Building Queue</h4>
@@ -1942,61 +1996,6 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                     );
                   })}
                 </div>
-
-                {/* Send troops panel */}
-                {ownNexuses.filter((n) => n._id !== nexus._id).length > 0 && (
-                  <div className="transfer-section">
-                    <button
-                      type="button"
-                      className="transfer-toggle-btn"
-                      onClick={() => setShowTroopSend((v) => !v)}
-                    >
-                      🚀 Send Troops {showTroopSend ? '▲' : '▼'}
-                    </button>
-                    {showTroopSend && (
-                      <div className="transfer-panel">
-                        <div className="transfer-row">
-                          <label>To Nexus</label>
-                          <select value={troopSendTo} onChange={(e) => setTroopSendTo(e.target.value)}>
-                            <option value="">— select —</option>
-                            {ownNexuses.filter((n) => n._id !== nexus._id).map((n) => (
-                              <option key={n._id} value={n._id}>{n.name} ({n.x}|{n.y})</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="transfer-inputs">
-                          {Object.entries(nexus.troops)
-                            .filter(([, count]) => count > 0)
-                            .map(([type, count]) => (
-                              <div key={type} className="transfer-input-row">
-                                <label>{TROOP_NAMES[type] || type}</label>
-                                <input
-                                  type="number"
-                                  min={0}
-                                  max={count}
-                                  placeholder="0"
-                                  value={troopSendAmounts[type] || ''}
-                                  onChange={(e) => setTroopSendAmounts((a) => ({ ...a, [type]: e.target.value }))}
-                                />
-                                <span className="transfer-available">/ {count}</span>
-                              </div>
-                            ))}
-                          {Object.values(nexus.troops).every((c) => c === 0) && (
-                            <p className="empty-state">No troops available to send.</p>
-                          )}
-                        </div>
-                        <button
-                          type="button"
-                          className="transfer-send-btn"
-                          disabled={!troopSendTo || sendingTroops}
-                          onClick={handleSendTroops}
-                        >
-                          {sendingTroops ? 'Sending…' : 'Send Troops'}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
 
                 {/* Borrowed troops display */}
                 {troopTransfers.length > 0 && (
