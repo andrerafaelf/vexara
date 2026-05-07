@@ -756,6 +756,12 @@
   font-size: 13px;
 }
 
+.transfer-from-label {
+  color: #a8dadc;
+  font-size: 13px;
+  margin: 0;
+}
+
 .transfer-inputs {
   display: flex;
   flex-direction: column;
