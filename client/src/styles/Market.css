@@ -139,6 +139,37 @@
   color: #457b9d;
 }
 
+.market-amount-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.market-amount-row input {
+  flex: 1;
+}
+
+.market-max-btn {
+  background: #1a4971;
+  color: #a8dadc;
+  border: 1px solid #1a4971;
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.market-max-btn:hover {
+  background: #0f3460;
+  color: #f1faee;
+}
+
+.market-amount-hint {
+  font-size: 11px;
+  color: #457b9d;
+}
+
 .market-form-arrow {
   color: #a8dadc;
   font-size: 24px;

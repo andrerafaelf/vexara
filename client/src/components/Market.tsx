@@ -88,6 +88,11 @@ const Market: React.FC<MarketProps> = ({ nexuses, onRefresh }) => {
       setFormError('Offer and want resources must differ');
       return;
     }
+    const available = Math.floor(selectedFormNexus?.resources[formOffer] ?? 0);
+    if (offer > available) {
+      setFormError(`Insufficient ${RESOURCE_LABELS[formOffer]} — ${available.toLocaleString()} available`);
+      return;
+    }
     setSubmitting(true);
     try {
       await createMarketListing(formNexusId, formOffer, offer, formWant, want);
@@ -185,13 +190,30 @@ const Market: React.FC<MarketProps> = ({ nexuses, onRefresh }) => {
                   <option value="alloy">Alloy</option>
                   <option value="ore">Ore</option>
                 </select>
-                <input
-                  type="number"
-                  min="1"
-                  placeholder="Amount"
-                  value={formOfferAmount}
-                  onChange={(e) => setFormOfferAmount(e.target.value)}
-                />
+                <div className="market-amount-row">
+                  <input
+                    type="number"
+                    min="1"
+                    max={selectedFormNexus ? Math.floor(selectedFormNexus.resources[formOffer]) : undefined}
+                    placeholder="Amount"
+                    value={formOfferAmount}
+                    onChange={(e) => setFormOfferAmount(e.target.value)}
+                  />
+                  {selectedFormNexus && (
+                    <button
+                      type="button"
+                      className="market-max-btn"
+                      onClick={() => setFormOfferAmount(String(Math.floor(selectedFormNexus.resources[formOffer])))}
+                    >
+                      Max
+                    </button>
+                  )}
+                </div>
+                {selectedFormNexus && (
+                  <span className="market-amount-hint">
+                    Available: {Math.floor(selectedFormNexus.resources[formOffer]).toLocaleString()}
+                  </span>
+                )}
               </div>
               <div className="market-form-arrow">⇄</div>
               <div className="market-form-side">

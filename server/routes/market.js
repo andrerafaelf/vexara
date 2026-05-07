@@ -1,6 +1,7 @@
 import express from 'express';
 import prisma from '../lib/prisma.js';
 import auth from '../middleware/auth.js';
+import { refreshResources } from '../models/Nexus.js';
 import { parsePositiveInt } from '../utils/validation.js';
 
 const router = express.Router();
@@ -54,10 +55,12 @@ router.post('/list', auth, async (req, res) => {
       return res.status(400).json({ error: 'Offer and want resources must differ' });
     }
 
-    const nexus = await prisma.nexus.findUnique({ where: { id: parsedNexusId } });
-    if (!nexus || nexus.ownerId !== req.userId) {
+    const rawNexus = await prisma.nexus.findUnique({ where: { id: parsedNexusId } });
+    if (!rawNexus || rawNexus.ownerId !== req.userId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
+    // Refresh production so we check against the actual current resource level
+    const nexus = await refreshResources(rawNexus);
     if ((nexus[offerResource] || 0) < parsedOffer) {
       return res.status(400).json({ error: `Insufficient ${offerResource}` });
     }
