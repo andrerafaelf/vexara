@@ -124,6 +124,10 @@ async function resolveCombat(attack) {
     for (const troopType of TROOP_KEYS) {
       const count = defenderNexus[troopType] || 0;
       if (count > 0 && TROOP_STATS[troopType]) {
+        if (troopType === 'overseer') {
+          defenderLosses[troopType] = 0;
+          continue;
+        }
         const baseLossRate = attackerWins ? 0.8 : powerRatio * 0.5;
         const randomFactor = 0.75 + Math.random() * 0.5;
         const defenseFactor = 1 + (50 - TROOP_STATS[troopType].defense) / 100;
@@ -132,6 +136,26 @@ async function resolveCombat(attack) {
         defenderLosses[troopType] = losses;
         defenderTroopUpdates[troopType] = Math.max(0, count - losses);
         defenderPopLost += losses;
+      }
+    }
+
+    // Defender overseer dies only if all other defender troops are wiped out
+    const totalDefenderNonOverseer = TROOP_KEYS.filter((t) => t !== 'overseer').reduce(
+      (sum, t) => sum + (defenderNexus[t] || 0),
+      0,
+    );
+    const totalDefenderNonOverseerLost = TROOP_KEYS.filter((t) => t !== 'overseer').reduce(
+      (sum, t) => sum + (defenderLosses[t] || 0),
+      0,
+    );
+    const defenderOverseerCount = defenderNexus.overseer || 0;
+    if (defenderOverseerCount > 0) {
+      if (totalDefenderNonOverseer > 0 && totalDefenderNonOverseerLost >= totalDefenderNonOverseer) {
+        defenderLosses.overseer = defenderOverseerCount;
+        defenderTroopUpdates.overseer = 0;
+        defenderPopLost += defenderOverseerCount;
+      } else {
+        defenderTroopUpdates.overseer = defenderOverseerCount;
       }
     }
 
