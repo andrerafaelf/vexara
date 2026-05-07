@@ -64,6 +64,8 @@ const OFFENSE_TROOPS = new Set([
 ]);
 
 const VISIBLE_RANGE = 5;
+const MIN_VISIBLE_RANGE = 2;
+const MAX_VISIBLE_RANGE = 10;
 const MAP_SIZE = 35;
 const MAP_MAX_INDEX = MAP_SIZE - 1;
 
@@ -125,14 +127,13 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   const [targetX, setTargetX] = useState(String(currentNexus.x));
   const [targetY, setTargetY] = useState(String(currentNexus.y));
   const [crosshairPosition, setCrosshairPosition] = useState<CrosshairPosition | null>(null);
-  const [zoom, setZoom] = useState(1);
+  const [visibleRange, setVisibleRange] = useState(VISIBLE_RANGE);
   const mapGridWrapperRef = useRef<HTMLDivElement | null>(null);
   const mapGridRef = useRef<HTMLDivElement | null>(null);
   const touchDraggedRef = useRef(false);
   const touchDistanceRef = useRef(0);
-  const prevZoomRef = useRef(1);
-  const zoomRef = useRef(1);
-  const visibleRange = VISIBLE_RANGE;
+  const prevRangeRef = useRef(VISIBLE_RANGE);
+  const rangeRef = useRef(VISIBLE_RANGE);
 
   const clampCoordinate = (value: string, fallback: number) => {
     const parsed = Number.parseInt(value, 10);
@@ -244,12 +245,15 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   }, []);
 
   useEffect(() => {
-    zoomRef.current = zoom;
-  }, [zoom]);
+    rangeRef.current = visibleRange;
+  }, [visibleRange]);
 
   useEffect(() => {
     const el = mapGridRef.current;
     if (!el) return;
+
+    const clampRange = (r: number) =>
+      Math.max(MIN_VISIBLE_RANGE, Math.min(MAX_VISIBLE_RANGE, Math.round(r)));
 
     const getTouchDistance = (touches: TouchList) => {
       if (touches.length < 2) return 0;
@@ -262,17 +266,22 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
       if (!e.ctrlKey && !e.metaKey) return;
       e.preventDefault();
       e.stopPropagation();
-      const zoomDelta = e.deltaY > 0 ? 0.95 : 1.05;
-      const newZoom = Math.max(0.5, Math.min(3, zoomRef.current * zoomDelta));
-      zoomRef.current = newZoom;
-      setZoom(newZoom);
+      const delta = e.deltaY > 0 ? -1 : 1;
+      const newRange = clampRange(rangeRef.current + delta);
+      if (newRange !== rangeRef.current) {
+        rangeRef.current = newRange;
+        setVisibleRange(newRange);
+      }
     };
+
+    let pinchStartRange = rangeRef.current;
 
     const onTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 2) {
         e.preventDefault();
         touchDistanceRef.current = getTouchDistance(e.touches);
-        prevZoomRef.current = zoomRef.current;
+        prevRangeRef.current = rangeRef.current;
+        pinchStartRange = rangeRef.current;
       }
     };
 
@@ -281,11 +290,12 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
         e.preventDefault();
         e.stopPropagation();
         const newDistance = getTouchDistance(e.touches);
-        const zoomDelta = newDistance / touchDistanceRef.current;
-        if (Math.abs(zoomDelta - 1) > 0.005) {
-          const newZoom = Math.max(0.5, Math.min(3, prevZoomRef.current * zoomDelta));
-          zoomRef.current = newZoom;
-          setZoom(newZoom);
+        const ratio = newDistance / touchDistanceRef.current;
+        const targetRange = pinchStartRange * ratio;
+        const newRange = clampRange(targetRange);
+        if (newRange !== rangeRef.current) {
+          rangeRef.current = newRange;
+          setVisibleRange(newRange);
         }
       }
     };
@@ -293,7 +303,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
     const onTouchEnd = (e: TouchEvent) => {
       if (e.touches.length < 2) {
         touchDistanceRef.current = 0;
-        prevZoomRef.current = zoomRef.current;
+        prevRangeRef.current = rangeRef.current;
       }
     };
 
@@ -1002,7 +1012,10 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
-            style={{ cursor: isDragging ? 'grabbing' : 'grab', transform: `scale(${zoom})`, transformOrigin: 'center' }}
+            style={{
+              cursor: isDragging ? 'grabbing' : 'grab',
+              ['--map-cell-size' as any]: `${Math.round((VISIBLE_RANGE / visibleRange) * 60)}px`,
+            }}
           >
             {renderGrid()}
           </div>
