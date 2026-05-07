@@ -94,7 +94,7 @@ const Game: React.FC = () => {
         <main className="game-main">
           <div className="no-nexuses">
             <h2>Welcome to Neon Dominion!</h2>
-            <p>You don't have any nexuses yet. Let's create your first nexus to start your empire!</p>
+            <p>You don&apos;t have any nexuses yet. Let&apos;s create your first nexus to start your empire!</p>
             <button onClick={handleCreateNexus} className="create-nexus-btn">
               Create Your First Nexus
             </button>

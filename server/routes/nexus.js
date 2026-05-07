@@ -170,6 +170,50 @@ router.put('/groups/:groupId/nexuses', auth, async (req, res) => {
   }
 });
 
+// Transfer resources between own nexuses
+router.post('/transfer-resources', auth, async (req, res) => {
+  try {
+    const { fromNexusId, toNexusId, biomass = 0, alloy = 0, ore = 0 } = req.body;
+
+    if (!fromNexusId || !toNexusId || String(fromNexusId) === String(toNexusId)) {
+      return res.status(400).json({ error: 'Invalid nexus selection' });
+    }
+
+    const [from, to] = await Promise.all([
+      prisma.nexus.findUnique({ where: { id: parseInt(fromNexusId) } }),
+      prisma.nexus.findUnique({ where: { id: parseInt(toNexusId) } }),
+    ]);
+
+    if (!from || !to) return res.status(404).json({ error: 'Nexus not found' });
+    if (from.ownerId !== req.userId || to.ownerId !== req.userId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    const sendBiomass = Math.min(Math.max(0, Math.floor(biomass)), Math.floor(from.biomass));
+    const sendAlloy   = Math.min(Math.max(0, Math.floor(alloy)),   Math.floor(from.alloy));
+    const sendOre     = Math.min(Math.max(0, Math.floor(ore)),     Math.floor(from.ore));
+
+    if (sendBiomass === 0 && sendAlloy === 0 && sendOre === 0) {
+      return res.status(400).json({ error: 'Nothing to transfer' });
+    }
+
+    const [updatedFrom, updatedTo] = await prisma.$transaction([
+      prisma.nexus.update({
+        where: { id: from.id },
+        data: { biomass: from.biomass - sendBiomass, alloy: from.alloy - sendAlloy, ore: from.ore - sendOre },
+      }),
+      prisma.nexus.update({
+        where: { id: to.id },
+        data: { biomass: to.biomass + sendBiomass, alloy: to.alloy + sendAlloy, ore: to.ore + sendOre },
+      }),
+    ]);
+
+    res.json({ from: serializeNexus(updatedFrom), to: serializeNexus(updatedTo) });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Rename a nexus
 router.patch('/:nexusId/name', auth, async (req, res) => {
   try {

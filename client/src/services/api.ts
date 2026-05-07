@@ -80,6 +80,12 @@ export const deleteNexusGroup = (groupId: string) =>
 export const setGroupNexuses = (groupId: string, nexusIds: string[]) =>
   apiRequest(`/nexus/groups/${groupId}/nexuses`, { method: 'PUT', body: JSON.stringify({ nexusIds }) });
 
+export const transferResources = (fromNexusId: string, toNexusId: string, biomass: number, alloy: number, ore: number) =>
+  apiRequest('/nexus/transfer-resources', {
+    method: 'POST',
+    body: JSON.stringify({ fromNexusId, toNexusId, biomass, alloy, ore }),
+  });
+
 // Buildings
 export const upgradeBuilding = (nexusId: string, building: string) =>
   apiRequest('/building/upgrade', {
@@ -134,8 +140,24 @@ export const getIncomingAttacks = (nexusId: string) => apiRequest(`/attack/incom
 
 export const getOutgoingAttacks = (nexusId: string) => apiRequest(`/attack/outgoing/${nexusId}`);
 
+// Troop transfers
+export const sendTroops = (fromNexusId: string, toNexusId: string, troops: Record<string, number>) =>
+  apiRequest('/troop-transfer/send', { method: 'POST', body: JSON.stringify({ fromNexusId, toNexusId, troops }) });
+
+export const recallTroops = (transferId: string) =>
+  apiRequest(`/troop-transfer/${transferId}/recall`, { method: 'POST' });
+
+export const sendBackTroops = (transferId: string) =>
+  apiRequest(`/troop-transfer/${transferId}/send-back`, { method: 'POST' });
+
+export const getNexusTroopTransfers = (nexusId: string) =>
+  apiRequest(`/troop-transfer/nexus/${nexusId}`);
+
 // Reports
 export const getReports = (nexusId: string) => apiRequest(`/report/reports/${nexusId}`);
+export const markReportRead = (attackId: string) =>
+  apiRequest(`/report/read/${attackId}`, { method: 'POST' });
+export const getReadReportIds = () => apiRequest('/report/read-ids');
 
 // Market
 export const getMarketListings = () => apiRequest('/market');

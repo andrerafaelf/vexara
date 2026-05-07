@@ -10,7 +10,14 @@
       "Bash(npx eslint *)",
       "Bash(grep -E \"^\\(C:\\\\\\\\\\\\\\\\|/c/|src/|  [0-9]\\)\")",
       "Bash(git stash *)",
-      "Bash(npx next *)"
+      "Bash(npx next *)",
+      "Bash(grep -n \"useEffect.*=>.*{$\" /c/projects/Neon-Dominion/client/src/app/admin/page.tsx)",
+      "Bash(xargs cat)",
+      "Bash(grep -n \"useEffect.*=>.*{$\" /c/projects/Neon-Dominion/client/src/components/Reports.tsx /c/projects/Neon-Dominion/client/src/components/Toast.tsx /c/projects/Neon-Dominion/client/src/components/NexusView.tsx)",
+      "Bash(npx dotenv *)",
+      "Bash(node --env-file=.env node_modules/.bin/prisma migrate deploy)",
+      "PowerShell(cd \"c:\\\\projects\\\\Neon-Dominion\\\\server\"; $env:DATABASE_URL = \\(Get-Content .env | Where-Object { $_ -match '^DATABASE_URL=' } | ForEach-Object { $_ -replace '^DATABASE_URL=', '' }\\); npx prisma migrate deploy 2>&1)",
+      "PowerShell(cd \"c:\\\\projects\\\\Neon-Dominion\\\\server\"; $env:DATABASE_URL = \"postgresql://placeholder:placeholder@localhost:5432/placeholder\"; npx prisma generate 2>&1)"
     ]
   }
 }

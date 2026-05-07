@@ -306,6 +306,22 @@
   background: #5a92b5;
 }
 
+.btn-danger {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #7b2d3a;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #9c3847;
+}
+
 /* Attacks Table */
 .attacks-table {
   overflow-x: auto;

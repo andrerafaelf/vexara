@@ -226,6 +226,26 @@ const Admin: React.FC = () => {
     }
   };
 
+  const handleResetTroops = async () => {
+    if (!modal.nexusId) return;
+    if (!window.confirm('Reset ALL troops to 0?')) return;
+    try {
+      const res = await fetch(`${ADMIN_API_URL}/nexuses/${modal.nexusId}/troops/reset`, { method: 'POST' });
+      if (res.ok) { showToast('Troops reset to 0', 'success'); loadData(); closeModal(); }
+      else showToast('Failed to reset troops', 'error');
+    } catch { showToast('Error resetting troops', 'error'); }
+  };
+
+  const handleResetBuildings = async () => {
+    if (!modal.nexusId) return;
+    if (!window.confirm('Reset ALL buildings to 0?')) return;
+    try {
+      const res = await fetch(`${ADMIN_API_URL}/nexuses/${modal.nexusId}/buildings/reset`, { method: 'POST' });
+      if (res.ok) { showToast('Buildings reset to 0', 'success'); loadData(); closeModal(); }
+      else showToast('Failed to reset buildings', 'error');
+    } catch { showToast('Error resetting buildings', 'error'); }
+  };
+
   const handleCompleteBuild = async (nexusId: string) => {
     try {
       const res = await fetch(`${ADMIN_API_URL}/nexuses/${nexusId}/complete-build`, {
@@ -520,6 +540,14 @@ const Admin: React.FC = () => {
               <button className="btn-secondary" onClick={closeModal}>
                 Cancel
               </button>
+              {(modal.type === 'troops' || modal.type === 'buildings') && (
+                <button
+                  className="btn-danger"
+                  onClick={modal.type === 'troops' ? handleResetTroops : handleResetBuildings}
+                >
+                  Reset to 0
+                </button>
+              )}
               <button
                 className="btn-primary"
                 onClick={

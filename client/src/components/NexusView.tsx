@@ -5,13 +5,19 @@ import {
   checkBuildQueue,
   checkTrainingQueue,
   getIncomingAttacks,
+  getMyNexuses,
+  getNexusTroopTransfers,
   getOutgoingAttacks,
+  recallTroops,
   renameNexus,
+  sendBackTroops,
+  sendTroops,
   trainTroops,
+  transferResources,
   upgradeBuilding,
 } from '../services/api';
 import '../styles/NexusView.css';
-import { Nexus } from '../types/game';
+import { Nexus, TroopTransfer } from '../types/game';
 import StarfieldMap from './Map';
 import NexusMap from './NexusMap';
 import Toast from './Toast';
@@ -339,6 +345,16 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   const [outgoingAttacks, setOutgoingAttacks] = useState<any[]>([]);
   const [selectedAttack, setSelectedAttack] = useState<any | null>(null);
   const [infoModal, setInfoModal] = useState<InfoModalState | null>(null);
+  const [ownNexuses, setOwnNexuses] = useState<Nexus[]>([]);
+  const [showTransfer, setShowTransfer] = useState(false);
+  const [transferTo, setTransferTo] = useState('');
+  const [transferAmounts, setTransferAmounts] = useState({ biomass: '', alloy: '', ore: '' });
+  const [transferring, setTransferring] = useState(false);
+  const [troopTransfers, setTroopTransfers] = useState<TroopTransfer[]>([]);
+  const [showTroopSend, setShowTroopSend] = useState(false);
+  const [troopSendTo, setTroopSendTo] = useState('');
+  const [troopSendAmounts, setTroopSendAmounts] = useState<Record<string, string>>({});
+  const [sendingTroops, setSendingTroops] = useState(false);
   const submittingRef = useRef<Set<string>>(new Set());
 
   const showToast = (message: string, type: 'success' | 'error' | 'info') => {
@@ -419,6 +435,84 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
       setRenameValue(nexus.name);
     }
   }, [isRenamingNexus, nexus.name]);
+
+  useEffect(() => {
+    getMyNexuses().then((r) => setOwnNexuses(r.data)).catch(() => {});
+    getNexusTroopTransfers(nexus._id).then((r) => setTroopTransfers(r.data)).catch(() => {});
+  }, [nexus._id]);
+
+  const refreshTroopTransfers = async () => {
+    try {
+      const r = await getNexusTroopTransfers(nexus._id);
+      setTroopTransfers(r.data);
+    } catch {}
+  };
+
+  const handleSendTroops = async () => {
+    if (!troopSendTo) return;
+    const troops: Record<string, number> = {};
+    for (const [k, v] of Object.entries(troopSendAmounts)) {
+      troops[k] = parseInt(v) || 0;
+    }
+    setSendingTroops(true);
+    try {
+      await sendTroops(nexus._id, troopSendTo, troops);
+      showToast('Troops sent', 'success');
+      setTroopSendAmounts({});
+      setShowTroopSend(false);
+      onUpdate();
+      await refreshTroopTransfers();
+    } catch (err: any) {
+      showToast(err.response?.data?.error || 'Failed to send troops', 'error');
+    } finally {
+      setSendingTroops(false);
+    }
+  };
+
+  const handleRecall = async (transferId: string) => {
+    try {
+      await recallTroops(transferId);
+      showToast('Troops recalled', 'success');
+      onUpdate();
+      await refreshTroopTransfers();
+    } catch (err: any) {
+      showToast(err.response?.data?.error || 'Recall failed', 'error');
+    }
+  };
+
+  const handleSendBack = async (transferId: string) => {
+    try {
+      await sendBackTroops(transferId);
+      showToast('Troops sent back to owner', 'success');
+      onUpdate();
+      await refreshTroopTransfers();
+    } catch (err: any) {
+      showToast(err.response?.data?.error || 'Send back failed', 'error');
+    }
+  };
+
+  const handleTransferResources = async () => {
+    if (!transferTo) return;
+    const biomass = parseInt(transferAmounts.biomass) || 0;
+    const alloy = parseInt(transferAmounts.alloy) || 0;
+    const ore = parseInt(transferAmounts.ore) || 0;
+    if (biomass === 0 && alloy === 0 && ore === 0) {
+      showToast('Enter at least one amount to transfer', 'error');
+      return;
+    }
+    setTransferring(true);
+    try {
+      await transferResources(nexus._id, transferTo, biomass, alloy, ore);
+      showToast('Resources transferred', 'success');
+      setTransferAmounts({ biomass: '', alloy: '', ore: '' });
+      setShowTransfer(false);
+      onUpdate();
+    } catch (err: any) {
+      showToast(err.response?.data?.error || 'Transfer failed', 'error');
+    } finally {
+      setTransferring(false);
+    }
+  };
 
   const checkQueues = async () => {
     try {
@@ -1354,6 +1448,81 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
               </div>
             </div>
 
+            {ownNexuses.filter((n) => n._id !== nexus._id).length > 0 && (
+              <div className="transfer-section">
+                <button
+                  type="button"
+                  className="transfer-toggle-btn"
+                  onClick={() => setShowTransfer((v) => !v)}
+                >
+                  📦 Send Resources {showTransfer ? '▲' : '▼'}
+                </button>
+                {showTransfer && (
+                  <div className="transfer-panel">
+                    <div className="transfer-row">
+                      <label>To Nexus</label>
+                      <select value={transferTo} onChange={(e) => setTransferTo(e.target.value)}>
+                        <option value="">— select —</option>
+                        {ownNexuses
+                          .filter((n) => n._id !== nexus._id)
+                          .map((n) => (
+                            <option key={n._id} value={n._id}>
+                              {n.name} ({n.x}|{n.y})
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+                    <div className="transfer-inputs">
+                      <div className="transfer-input-row">
+                        <label>🌿 Biomass</label>
+                        <input
+                          type="number"
+                          min={0}
+                          max={Math.floor(nexus.resources.biomass)}
+                          placeholder="0"
+                          value={transferAmounts.biomass}
+                          onChange={(e) => setTransferAmounts((a) => ({ ...a, biomass: e.target.value }))}
+                        />
+                        <span className="transfer-available">/ {Math.floor(nexus.resources.biomass)}</span>
+                      </div>
+                      <div className="transfer-input-row">
+                        <label>🔩 Alloy</label>
+                        <input
+                          type="number"
+                          min={0}
+                          max={Math.floor(nexus.resources.alloy)}
+                          placeholder="0"
+                          value={transferAmounts.alloy}
+                          onChange={(e) => setTransferAmounts((a) => ({ ...a, alloy: e.target.value }))}
+                        />
+                        <span className="transfer-available">/ {Math.floor(nexus.resources.alloy)}</span>
+                      </div>
+                      <div className="transfer-input-row">
+                        <label>⛏️ Ore</label>
+                        <input
+                          type="number"
+                          min={0}
+                          max={Math.floor(nexus.resources.ore)}
+                          placeholder="0"
+                          value={transferAmounts.ore}
+                          onChange={(e) => setTransferAmounts((a) => ({ ...a, ore: e.target.value }))}
+                        />
+                        <span className="transfer-available">/ {Math.floor(nexus.resources.ore)}</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="transfer-send-btn"
+                      disabled={!transferTo || transferring}
+                      onClick={handleTransferResources}
+                    >
+                      {transferring ? 'Sending…' : 'Send'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
             {nexus.buildQueue.length > 0 && (
               <div className="queue-section">
                 <h4>Building Queue</h4>
@@ -1773,6 +1942,106 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                     );
                   })}
                 </div>
+
+                {/* Send troops panel */}
+                {ownNexuses.filter((n) => n._id !== nexus._id).length > 0 && (
+                  <div className="transfer-section">
+                    <button
+                      type="button"
+                      className="transfer-toggle-btn"
+                      onClick={() => setShowTroopSend((v) => !v)}
+                    >
+                      🚀 Send Troops {showTroopSend ? '▲' : '▼'}
+                    </button>
+                    {showTroopSend && (
+                      <div className="transfer-panel">
+                        <div className="transfer-row">
+                          <label>To Nexus</label>
+                          <select value={troopSendTo} onChange={(e) => setTroopSendTo(e.target.value)}>
+                            <option value="">— select —</option>
+                            {ownNexuses.filter((n) => n._id !== nexus._id).map((n) => (
+                              <option key={n._id} value={n._id}>{n.name} ({n.x}|{n.y})</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="transfer-inputs">
+                          {Object.entries(nexus.troops)
+                            .filter(([, count]) => count > 0)
+                            .map(([type, count]) => (
+                              <div key={type} className="transfer-input-row">
+                                <label>{TROOP_NAMES[type] || type}</label>
+                                <input
+                                  type="number"
+                                  min={0}
+                                  max={count}
+                                  placeholder="0"
+                                  value={troopSendAmounts[type] || ''}
+                                  onChange={(e) => setTroopSendAmounts((a) => ({ ...a, [type]: e.target.value }))}
+                                />
+                                <span className="transfer-available">/ {count}</span>
+                              </div>
+                            ))}
+                          {Object.values(nexus.troops).every((c) => c === 0) && (
+                            <p className="empty-state">No troops available to send.</p>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          className="transfer-send-btn"
+                          disabled={!troopSendTo || sendingTroops}
+                          onClick={handleSendTroops}
+                        >
+                          {sendingTroops ? 'Sending…' : 'Send Troops'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Borrowed troops display */}
+                {troopTransfers.length > 0 && (
+                  <div className="borrowed-troops-section">
+                    <h4>Borrowed Troops</h4>
+                    {troopTransfers.map((t) => {
+                      const isOwner = t.ownerNexusId === nexus._id;
+                      const label = isOwner
+                        ? `Stationed at ${t.hostNexus?.name ?? '?'}`
+                        : `From ${t.ownerNexus?.name ?? '?'}`;
+                      const troopEntries = Object.entries(t.troops).filter(([, v]) => Number(v) > 0);
+                      return (
+                        <div key={t._id} className="borrowed-entry">
+                          <div className="borrowed-label">{label}</div>
+                          <div className="borrowed-troops">
+                            {troopEntries.map(([type, count]) => (
+                              <span key={type} className="borrowed-troop-chip">
+                                {TROOP_NAMES[type] || type}: {count}
+                              </span>
+                            ))}
+                          </div>
+                          <div className="borrowed-actions">
+                            {isOwner ? (
+                              <button
+                                type="button"
+                                className="borrow-action-btn"
+                                onClick={() => handleRecall(t._id)}
+                              >
+                                Recall
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                className="borrow-action-btn"
+                                onClick={() => handleSendBack(t._id)}
+                              >
+                                Send Back
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </>
             )}
           </div>

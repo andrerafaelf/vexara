@@ -49,4 +49,63 @@ router.get('/reports/:nexusId', auth, async (req, res) => {
   }
 });
 
+// Mark a report as read
+router.post('/read/:attackId', auth, async (req, res) => {
+  try {
+    const attackId = parseInt(req.params.attackId);
+    const attack = await prisma.attack.findUnique({ where: { id: attackId } });
+    if (!attack) return res.status(404).json({ error: 'Report not found' });
+
+    // Only attacker or defender may mark as read
+    const nexuses = await prisma.nexus.findMany({ where: { ownerId: req.userId }, select: { id: true } });
+    const ownedIds = new Set(nexuses.map((n) => n.id));
+    if (!ownedIds.has(attack.attackerNexusId) && !ownedIds.has(attack.defenderNexusId)) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    await prisma.reportRead.upsert({
+      where: { userId_attackId: { userId: req.userId, attackId } },
+      create: { userId: req.userId, attackId },
+      update: { readAt: new Date() },
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get set of read attack IDs for the current user (for a given nexus)
+router.get('/read-ids/:nexusId', auth, async (req, res) => {
+  try {
+    const nexusId = parseInt(req.params.nexusId);
+    const nexus = await prisma.nexus.findUnique({ where: { id: nexusId } });
+    if (!nexus || nexus.ownerId !== req.userId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    const reads = await prisma.reportRead.findMany({
+      where: { userId: req.userId },
+      select: { attackId: true },
+    });
+
+    res.json(reads.map((r) => String(r.attackId)));
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get read IDs across ALL own nexuses (for the dot indicator)
+router.get('/read-ids', auth, async (req, res) => {
+  try {
+    const reads = await prisma.reportRead.findMany({
+      where: { userId: req.userId },
+      select: { attackId: true },
+    });
+    res.json(reads.map((r) => String(r.attackId)));
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;

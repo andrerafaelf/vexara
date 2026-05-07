@@ -72,9 +72,30 @@ model Nexus {
   controlLevel         Int       @default(100)
   createdAt            DateTime  @default(now())
 
-  attacksAsAttacker Attack[]         @relation("AttackerNexus")
-  attacksAsDefender Attack[]         @relation("DefenderNexus")
-  marketListings    MarketListing[]
+  attacksAsAttacker  Attack[]         @relation("AttackerNexus")
+  attacksAsDefender  Attack[]         @relation("DefenderNexus")
+  marketListings     MarketListing[]
+  troopsSent         TroopTransfer[]  @relation("OwnerNexus")
+  troopsHosted       TroopTransfer[]  @relation("HostNexus")
+}
+
+model TroopTransfer {
+  id           Int      @id @default(autoincrement())
+  ownerNexusId Int
+  hostNexusId  Int
+  troops       Json
+  createdAt    DateTime @default(now())
+
+  ownerNexus Nexus @relation("OwnerNexus", fields: [ownerNexusId], references: [id], onDelete: Cascade)
+  hostNexus  Nexus @relation("HostNexus",  fields: [hostNexusId],  references: [id], onDelete: Cascade)
+}
+
+model ReportRead {
+  userId   Int
+  attackId Int
+  readAt   DateTime @default(now())
+
+  @@id([userId, attackId])
 }
 
 model MarketTransaction {

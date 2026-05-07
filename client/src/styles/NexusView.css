@@ -1250,3 +1250,176 @@
     width: 100%;
   }
 }
+
+/* Resource Transfer */
+.transfer-section {
+  margin: 16px 0;
+}
+
+.transfer-toggle-btn {
+  background: #0f3460;
+  color: #a8dadc;
+  border: 1px solid #1a4a7a;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: background 0.2s;
+}
+
+.transfer-toggle-btn:hover {
+  background: #1a4a7a;
+}
+
+.transfer-panel {
+  background: #0d1b2a;
+  border: 1px solid #0f3460;
+  border-radius: 6px;
+  padding: 14px;
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.transfer-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.transfer-row label {
+  color: #a8dadc;
+  font-size: 13px;
+  min-width: 70px;
+}
+
+.transfer-row select {
+  flex: 1;
+  background: #16213e;
+  color: #e0e0e0;
+  border: 1px solid #0f3460;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
+.transfer-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.transfer-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.transfer-input-row label {
+  color: #a8dadc;
+  font-size: 13px;
+  min-width: 90px;
+}
+
+.transfer-input-row input {
+  width: 100px;
+  background: #16213e;
+  color: #e0e0e0;
+  border: 1px solid #0f3460;
+  border-radius: 4px;
+  padding: 5px 8px;
+  font-size: 13px;
+}
+
+.transfer-available {
+  color: #6b8ba4;
+  font-size: 12px;
+}
+
+.transfer-send-btn {
+  background: #e94560;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  align-self: flex-end;
+  transition: background 0.2s;
+}
+
+.transfer-send-btn:hover:not(:disabled) {
+  background: #d63447;
+}
+
+.transfer-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Borrowed Troops */
+.borrowed-troops-section {
+  margin-top: 20px;
+}
+
+.borrowed-troops-section h4 {
+  color: #a8dadc;
+  margin-bottom: 10px;
+}
+
+.borrowed-entry {
+  background: #0d1b2a;
+  border: 1px solid #0f3460;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.borrowed-label {
+  color: #6b8ba4;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.borrowed-troops {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.borrowed-troop-chip {
+  background: #16213e;
+  border: 1px solid #1a4a7a;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 13px;
+  color: #e0e0e0;
+}
+
+.borrowed-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.borrow-action-btn {
+  background: #0f3460;
+  color: #a8dadc;
+  border: 1px solid #1a4a7a;
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.borrow-action-btn:hover {
+  background: #1a4a7a;
+}

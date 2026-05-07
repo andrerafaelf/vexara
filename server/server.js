@@ -13,6 +13,7 @@ import marketRoutes from './routes/market.js';
 import nexusRoutes from './routes/nexus.js';
 import reportRoutes from './routes/report.js';
 import troopRoutes from './routes/troop.js';
+import troopTransferRoutes from './routes/troopTransfer.js';
 import { processArrivedAttacks } from './utils/combat.js';
 import { logError, logInfo, logWarn } from './utils/logger.js';
 import { ensureNeutralNexusPool } from './utils/neutralNexuses.js';
@@ -139,6 +140,7 @@ app.use('/api/map', mapRoutes);
 app.use('/api/attack', attackRoutes);
 app.use('/api/market', marketRoutes);
 app.use('/api/report', reportRoutes);
+app.use('/api/troop-transfer', troopTransferRoutes);
 
 const JOB_LOCKS = {
   updateResources: 9101,

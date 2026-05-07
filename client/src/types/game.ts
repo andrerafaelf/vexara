@@ -10,6 +10,16 @@ export interface NexusGroup {
   nexusIds: string[];
 }
 
+export interface TroopTransfer {
+  _id: string;
+  ownerNexusId: string;
+  hostNexusId: string;
+  troops: Record<string, number>;
+  createdAt: string;
+  ownerNexus?: { _id: string; name: string };
+  hostNexus?: { _id: string; name: string };
+}
+
 export interface Nexus {
   _id: string;
   name: string;

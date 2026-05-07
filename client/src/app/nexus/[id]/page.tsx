@@ -4,7 +4,7 @@ import { DocsDropdown, DocsMobileLinks } from '@/components/DocsDropdown';
 import NexusSidebar from '@/components/NexusSidebar';
 import NexusView from '@/components/NexusView';
 import { useAuth } from '@/context/AuthContext';
-import { getMyNexuses, getNexus, getReports } from '@/services/api';
+import { getMyNexuses, getNexus, getReadReportIds, getReports } from '@/services/api';
 import '@/styles/Game.css';
 import { Nexus } from '@/types/game';
 import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -43,15 +43,15 @@ export default function NexusPage() {
     }
 
     try {
-      const viewedReports = new Set<string>(JSON.parse(localStorage.getItem('viewedReports') || '[]'));
-      const reportResults = await Promise.allSettled(allNexuses.map((nexus) => getReports(nexus._id)));
+      const [readIdsRes, ...reportResults] = await Promise.allSettled([
+        getReadReportIds(),
+        ...allNexuses.map((nexus) => getReports(nexus._id)),
+      ]);
+      const readIds = new Set<string>(readIdsRes.status === 'fulfilled' ? readIdsRes.value.data : []);
       const hasUnread = reportResults.some((result) => {
-        if (result.status !== 'fulfilled') {
-          return false;
-        }
-
+        if (result.status !== 'fulfilled') return false;
         const reports = Array.isArray(result.value.data) ? result.value.data : [];
-        return reports.some((report: { _id: string }) => !viewedReports.has(report._id));
+        return reports.some((report: { _id: string }) => !readIds.has(report._id));
       });
 
       setHasUnreadReports(hasUnread);

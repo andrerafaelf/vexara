@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getReports, sendAttack } from '../services/api';
+import { getReadReportIds, getReports, markReportRead, sendAttack } from '../services/api';
 import '../styles/Reports.css';
 import { Attack, Nexus } from '../types/game';
 
@@ -41,32 +41,18 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
     annihilatorPlatform: 0,
     overseer: 0,
   });
-  const [viewedReports, setViewedReports] = useState<Set<string>>(() => {
-    // Load viewed reports from localStorage
-    const saved = localStorage.getItem('viewedReports');
-    return saved ? new Set(JSON.parse(saved)) : new Set();
-  });
+  const [readIds, setReadIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadReports();
+    getReadReportIds().then((r) => setReadIds(new Set(r.data))).catch(() => {});
   }, [nexus._id]);
 
-  // Save viewed reports to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('viewedReports', JSON.stringify(Array.from(viewedReports)));
-  }, [viewedReports]);
-
-  useEffect(() => {
-    if (!selectedReport || viewedReports.has(selectedReport._id)) {
-      return;
-    }
-
-    setViewedReports((prev) => {
-      const next = new Set(prev);
-      next.add(selectedReport._id);
-      return next;
-    });
-  }, [selectedReport, viewedReports]);
+    if (!selectedReport || readIds.has(selectedReport._id)) return;
+    markReportRead(selectedReport._id).catch(() => {});
+    setReadIds((prev) => new Set([...prev, selectedReport._id]));
+  }, [selectedReport, readIds]);
 
   useEffect(() => {
     setShowAttackForm(false);
@@ -449,7 +435,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
         <div className="reports-list">
           {reports.map((report) => {
             const isMyAttack = isAttacker(report);
-            const hasBeenViewed = viewedReports.has(report._id);
+            const hasBeenViewed = readIds.has(report._id);
             const won = isMyAttack ? report.result.victory : !report.result.victory;
             const scoutReport = isScoutReport(report);
 

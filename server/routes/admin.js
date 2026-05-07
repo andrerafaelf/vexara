@@ -242,6 +242,50 @@ router.post('/nexuses/:nexusId/buildings', async (req, res) => {
   }
 });
 
+// Reset all troops to 0
+router.post('/nexuses/:nexusId/troops/reset', async (req, res) => {
+  try {
+    const nexus = await prisma.nexus.findUnique({ where: { id: parseInt(req.params.nexusId) } });
+    if (!nexus) return res.status(404).json({ error: 'Nexus not found' });
+
+    const updated = await prisma.nexus.update({
+      where: { id: nexus.id },
+      data: {
+        lancerDrone: 0, assaultTrooper: 0, breakerUnit: 0, reconOperative: 0,
+        skimmerBike: 0, siegeMech: 0, bulwarkGuard: 0, suppressorTeam: 0,
+        disruptorUnit: 0, interceptorBike: 0, annihilatorPlatform: 0, overseer: 0,
+        populationCurrent: 0,
+      },
+    });
+
+    res.json({ success: true, nexus: serializeNexus(updated) });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Reset all buildings to 0
+router.post('/nexuses/:nexusId/buildings/reset', async (req, res) => {
+  try {
+    const nexus = await prisma.nexus.findUnique({ where: { id: parseInt(req.params.nexusId) } });
+    if (!nexus) return res.status(404).json({ error: 'Nexus not found' });
+
+    const updated = await prisma.nexus.update({
+      where: { id: nexus.id },
+      data: {
+        commandCore: 0, troopFabricator: 0, lifeSupport: 0,
+        storageVault: 0, biomassFarm: 0, alloyForge: 0,
+        oreExtractor: 0, shieldGrid: 0,
+        populationMax: getPopulationMax(0),
+      },
+    });
+
+    res.json({ success: true, nexus: serializeNexus(updated) });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Complete build queue instantly
 router.post('/nexuses/:nexusId/complete-build', async (req, res) => {
   try {
