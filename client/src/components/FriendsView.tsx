@@ -338,7 +338,7 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
           ) : (
             <ul className="friends-list">
               {friends.map((f) => (
-                <li key={f.id} className="friends-list-item">
+                <li key={f.id} className="friends-list-item" onClick={() => handleOpenChat(f.id)} style={{ cursor: 'pointer' }}>
                   <div className="friends-list-info">
                     <span className="friends-name">{f.username}</span>
                     <span className="friends-meta">
@@ -346,10 +346,10 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
                     </span>
                   </div>
                   <div className="friends-list-actions">
-                    <button className="friends-btn" onClick={() => handleOpenChat(f.id)}>
+                    <button className="friends-btn" onClick={(e) => { e.stopPropagation(); handleOpenChat(f.id); }}>
                       💬 Chat
                     </button>
-                    <button className="friends-btn danger" onClick={() => handleUnfriend(f.id)}>
+                    <button className="friends-btn danger" onClick={(e) => { e.stopPropagation(); handleUnfriend(f.id); }}>
                       Remove
                     </button>
                   </div>

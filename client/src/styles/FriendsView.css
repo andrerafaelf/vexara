@@ -313,7 +313,7 @@
 }
 
 .friends-chat-bubble.theirs {
-  align-self: flex-start;
+  align-self: flex-end;
   background: #0f3460;
   color: #fff;
   border-bottom-left-radius: 4px;
