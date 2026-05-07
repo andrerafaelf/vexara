@@ -1256,6 +1256,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                 📍 ({nexus.x}|{nexus.y})
               </span>
               <span>📊 {nexus.points} inf</span>
+              {nexus.controlLevel !== undefined && (
+                <span>🛡️ {nexus.controlLevel}/100 ctrl</span>
+              )}
             </div>
 
             <div className="overview-shortcuts">
