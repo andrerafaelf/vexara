@@ -15,6 +15,7 @@ export default function StarfieldPage() {
   const [nexuses, setVillages] = useState<Nexus[]>([]);
   const [selectedNexus, setSelectedNexus] = useState<Nexus | null>(null);
   const [hasUnreadReports, setHasUnreadReports] = useState(false);
+  const [unreadNexusIds, setUnreadNexusIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNexusDrawerOpen, setIsNexusDrawerOpen] = useState(false);
@@ -25,6 +26,7 @@ export default function StarfieldPage() {
   const refreshCombatReportNotification = useCallback(async (allNexuses: Nexus[]) => {
     if (allNexuses.length === 0) {
       setHasUnreadReports(false);
+      setUnreadNexusIds(new Set());
       return;
     }
 
@@ -34,15 +36,19 @@ export default function StarfieldPage() {
         ...allNexuses.map((nexus) => getReports(nexus._id)),
       ]);
       const readIds = new Set<string>(readIdsRes.status === 'fulfilled' ? readIdsRes.value.data : []);
-      const hasUnread = reportResults.some((result) => {
-        if (result.status !== 'fulfilled') return false;
+      const unread = new Set<string>();
+      reportResults.forEach((result, idx) => {
+        if (result.status !== 'fulfilled') return;
         const reports = Array.isArray(result.value.data) ? result.value.data : [];
-        return reports.some((report: { _id: string }) => !readIds.has(report._id));
+        if (reports.some((report: { _id: string }) => !readIds.has(report._id))) {
+          unread.add(String(allNexuses[idx]._id));
+        }
       });
-
-      setHasUnreadReports(hasUnread);
+      setUnreadNexusIds(unread);
+      setHasUnreadReports(unread.size > 0);
     } catch {
       setHasUnreadReports(false);
+      setUnreadNexusIds(new Set());
     }
   }, []);
 
@@ -144,6 +150,7 @@ export default function StarfieldPage() {
         onSelectNexus={handleSelectNexus}
         isOpen={isNexusDrawerOpen}
         onClose={() => setIsNexusDrawerOpen(false)}
+        unreadNexusIds={unreadNexusIds}
       />
 
       <button
@@ -200,6 +207,7 @@ export default function StarfieldPage() {
           nexuses={nexuses}
           selectedNexusId={String(selectedNexus._id)}
           onSelectNexus={handleSelectNexus}
+          unreadNexusIds={unreadNexusIds}
         />
 
         <main className="main-content">

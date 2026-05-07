@@ -245,6 +245,15 @@
   right: 26px;
 }
 
+.nexus-badge + .nexus-badge + .nexus-badge {
+  right: 47px;
+}
+
+.nexus-badge-unread {
+  text-shadow: 0 0 6px rgba(255, 45, 85, 0.9);
+  animation: reportDotPulse 1.6s ease-in-out infinite;
+}
+
 .main-content {
   flex: 1;
   min-height: 0;

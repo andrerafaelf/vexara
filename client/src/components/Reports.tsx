@@ -5,6 +5,7 @@ import { Attack, Nexus } from '../types/game';
 
 interface ReportsProps {
   nexus: Nexus;
+  onReadStateChange?: () => void;
 }
 
 const troopNames: Record<string, string> = {
@@ -22,7 +23,7 @@ const troopNames: Record<string, string> = {
   overseer: '👁️ Overseer',
 };
 
-const Reports: React.FC<ReportsProps> = ({ nexus }) => {
+const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
   const [reports, setReports] = useState<Attack[]>([]);
   const [selectedReport, setSelectedReport] = useState<Attack | null>(null);
   const [loading, setLoading] = useState(true);
@@ -52,7 +53,8 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
     if (!selectedReport || readIds.has(selectedReport._id)) return;
     markReportRead(selectedReport._id).catch(() => {});
     setReadIds((prev) => new Set([...prev, selectedReport._id]));
-  }, [selectedReport, readIds]);
+    onReadStateChange?.();
+  }, [selectedReport, readIds, onReadStateChange]);
 
   useEffect(() => {
     setShowAttackForm(false);
@@ -136,6 +138,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus }) => {
       const res = await markAllReportsRead(nexus._id);
       const ids: string[] = res.data?.ids || reports.map((r) => r._id);
       setReadIds((prev) => new Set([...prev, ...ids]));
+      onReadStateChange?.();
     } catch (err) {
       console.error('Error marking all reports as read:', err);
     }

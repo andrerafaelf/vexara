@@ -17,6 +17,7 @@ interface MobileNexusDrawerProps {
   onSelectNexus: (nexus: Nexus) => void;
   isOpen: boolean;
   onClose: () => void;
+  unreadNexusIds?: Set<string>;
 }
 
 const GEAR_THRESHOLD = 2;
@@ -27,6 +28,7 @@ const MobileNexusDrawer: React.FC<MobileNexusDrawerProps> = ({
   onSelectNexus,
   isOpen,
   onClose,
+  unreadNexusIds,
 }) => {
   const [groups, setGroups] = useState<NexusGroup[]>([]);
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
@@ -109,6 +111,9 @@ const MobileNexusDrawer: React.FC<MobileNexusDrawerProps> = ({
               <div className="nexus-points">{nexus.points} inf</div>
               {nexus.buildQueue.length > 0 && <div className="nexus-badge">🏗️</div>}
               {nexus.trainingQueue.length > 0 && <div className="nexus-badge">🎖️</div>}
+              {unreadNexusIds?.has(String(nexus._id)) && (
+                <div className="nexus-badge nexus-badge-unread" title="Unread combat reports">📜</div>
+              )}
             </div>
           ))}
         </div>

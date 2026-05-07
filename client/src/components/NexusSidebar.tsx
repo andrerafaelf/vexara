@@ -13,6 +13,7 @@ interface NexusSidebarProps {
   selectedNexusId: string | null;
   onSelectNexus: (nexus: Nexus) => void;
   onGroupsChange?: (groups: NexusGroup[]) => void;
+  unreadNexusIds?: Set<string>;
 }
 
 const GEAR_THRESHOLD = 2;
@@ -22,6 +23,7 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
   selectedNexusId,
   onSelectNexus,
   onGroupsChange,
+  unreadNexusIds,
 }) => {
   const [groups, setGroups] = useState<NexusGroup[]>([]);
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
@@ -99,6 +101,9 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
             <div className="nexus-points">{nexus.points} inf</div>
             {nexus.buildQueue.length > 0 && <div className="nexus-badge">🏗️</div>}
             {nexus.trainingQueue.length > 0 && <div className="nexus-badge">🎖️</div>}
+            {unreadNexusIds?.has(String(nexus._id)) && (
+              <div className="nexus-badge nexus-badge-unread" title="Unread combat reports">📜</div>
+            )}
           </div>
         ))}
       </nav>
