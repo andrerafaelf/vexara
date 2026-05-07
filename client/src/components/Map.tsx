@@ -1,6 +1,15 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getIncomingAttacks, getMapArea, getNexusInfo, getOutgoingAttacks, sendAttack } from '../services/api';
+import {
+  getIncomingAttacks,
+  getMapArea,
+  getMyNexuses,
+  getNexusInfo,
+  getOutgoingAttacks,
+  sendAttack,
+  sendTroops,
+  transferResources,
+} from '../services/api';
 import '../styles/Map.css';
 import { Nexus } from '../types/game';
 
@@ -86,6 +95,15 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   });
   const [incomingAttacks, setIncomingAttacks] = useState<any[]>([]);
   const [outgoingAttacks, setOutgoingAttacks] = useState<any[]>([]);
+  const [ownNexuses, setOwnNexuses] = useState<Nexus[]>([]);
+  const [showTransfer, setShowTransfer] = useState(false);
+  const [transferTo, setTransferTo] = useState('');
+  const [transferAmounts, setTransferAmounts] = useState({ biomass: '', alloy: '', ore: '' });
+  const [transferring, setTransferring] = useState(false);
+  const [showTroopSend, setShowTroopSend] = useState(false);
+  const [troopSendTo, setTroopSendTo] = useState('');
+  const [troopSendAmounts, setTroopSendAmounts] = useState<Record<string, string>>({});
+  const [sendingTroops, setSendingTroops] = useState(false);
 
   const availableTroops = useMemo(() => {
     const base: Record<string, number> = {};
@@ -244,6 +262,48 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
     }
   };
 
+  useEffect(() => {
+    getMyNexuses().then((r) => setOwnNexuses(r.data)).catch(() => {});
+  }, [currentNexus._id]);
+
+  const handleTransferResources = async () => {
+    if (!transferTo || !selectedNexus) return;
+    const biomass = parseInt(transferAmounts.biomass) || 0;
+    const alloy = parseInt(transferAmounts.alloy) || 0;
+    const ore = parseInt(transferAmounts.ore) || 0;
+    if (biomass === 0 && alloy === 0 && ore === 0) return;
+    setTransferring(true);
+    try {
+      await transferResources(selectedNexus._id, transferTo, biomass, alloy, ore);
+      setTransferAmounts({ biomass: '', alloy: '', ore: '' });
+      setShowTransfer(false);
+      onRefresh();
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Transfer failed');
+    } finally {
+      setTransferring(false);
+    }
+  };
+
+  const handleMapSendTroops = async () => {
+    if (!troopSendTo || !selectedNexus) return;
+    const troops: Record<string, number> = {};
+    for (const [k, v] of Object.entries(troopSendAmounts)) {
+      troops[k] = parseInt(v) || 0;
+    }
+    setSendingTroops(true);
+    try {
+      await sendTroops(selectedNexus._id, troopSendTo, troops);
+      setTroopSendAmounts({});
+      setShowTroopSend(false);
+      onRefresh();
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to send troops');
+    } finally {
+      setSendingTroops(false);
+    }
+  };
+
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button === 0) {
       // Left mouse button
@@ -340,6 +400,12 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
       const response = await getNexusInfo(nexus._id);
       setSelectedNexus(response.data);
       setShowAttackForm(false);
+      setShowTransfer(false);
+      setShowTroopSend(false);
+      setTransferAmounts({ biomass: '', alloy: '', ore: '' });
+      setTroopSendAmounts({});
+      setTransferTo('');
+      setTroopSendTo('');
     } catch (err) {
       console.error('Error loading nexus:', err);
     }
@@ -425,19 +491,20 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
 
         const nexus = !isOutOfBounds ? nexuses.find((v) => v.x === x && v.y === y) : null;
         const isCurrent = nexus?._id === currentNexus._id;
+        const isOwnNexus = nexus ? ownNexuses.some((n) => n._id === nexus._id) : false;
 
         row.push(
           <div
             key={`${x}-${y}`}
             className={`map-cell ${isOutOfBounds ? 'out-of-bounds' : ''} ${nexus ? 'has-nexus' : ''} ${
               isCurrent ? 'current-nexus' : ''
-            } ${selectedNexus?._id === nexus?._id ? 'selected' : ''}`}
+            } ${isOwnNexus && !isCurrent ? 'own-nexus' : ''} ${selectedNexus?._id === nexus?._id ? 'selected' : ''}`}
             onClick={(e) => !isOutOfBounds && nexus && handleVillageClick(nexus, e)}
             title={isOutOfBounds ? 'Out of bounds' : nexus ? `${nexus.name} (${nexus.x}|${nexus.y})` : `(${x}|${y})`}
             data-x={x}
             data-y={y}
           >
-            {nexus && <div className="nexus-marker">{isCurrent ? '🏛️' : '🏘️'}</div>}
+            {nexus && <div className="nexus-marker">{isOwnNexus ? '🏛️' : '🏘️'}</div>}
             <div className="cell-coords">{isOutOfBounds ? '—' : `${x}|${y}`}</div>
           </div>,
         );
@@ -493,7 +560,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
           <p>Select a nexus on the map to view its details</p>
           <div className="legend">
             <div>🏛️ Your Nexus</div>
-            <div>🏘️ Other Nexus</div>
+            <div>🏘️ Enemy / NPC Nexus</div>
           </div>
         </div>
       );
@@ -673,6 +740,115 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {isOwn && ownNexuses.filter((n) => n._id !== selectedNexus._id).length > 0 && (
+          <div className="nexus-own-actions">
+            <div className="transfer-section">
+              <button
+                type="button"
+                className="transfer-toggle-btn"
+                onClick={() => { setShowTransfer((v) => !v); setShowTroopSend(false); }}
+              >
+                📦 Send Resources {showTransfer ? '▲' : '▼'}
+              </button>
+              {showTransfer && (
+                <div className="transfer-panel">
+                  <div className="transfer-row">
+                    <label>To Nexus</label>
+                    <select value={transferTo} onChange={(e) => setTransferTo(e.target.value)}>
+                      <option value="">— select —</option>
+                      {ownNexuses
+                        .filter((n) => n._id !== selectedNexus._id)
+                        .map((n) => (
+                          <option key={n._id} value={n._id}>
+                            {n.name} ({n.x}|{n.y})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                  <div className="transfer-inputs">
+                    {(['biomass', 'alloy', 'ore'] as const).map((res) => (
+                      <div key={res} className="transfer-input-row">
+                        <label>{res === 'biomass' ? '🌿 Biomass' : res === 'alloy' ? '🔩 Alloy' : '⛏️ Ore'}</label>
+                        <input
+                          type="number"
+                          min={0}
+                          placeholder="0"
+                          value={transferAmounts[res]}
+                          onChange={(e) => setTransferAmounts((a) => ({ ...a, [res]: e.target.value }))}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    className="transfer-send-btn"
+                    disabled={!transferTo || transferring}
+                    onClick={handleTransferResources}
+                  >
+                    {transferring ? 'Sending…' : 'Send'}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="transfer-section">
+              <button
+                type="button"
+                className="transfer-toggle-btn"
+                onClick={() => { setShowTroopSend((v) => !v); setShowTransfer(false); }}
+              >
+                🚀 Send Troops {showTroopSend ? '▲' : '▼'}
+              </button>
+              {showTroopSend && (
+                <div className="transfer-panel">
+                  <div className="transfer-row">
+                    <label>To Nexus</label>
+                    <select value={troopSendTo} onChange={(e) => setTroopSendTo(e.target.value)}>
+                      <option value="">— select —</option>
+                      {ownNexuses
+                        .filter((n) => n._id !== selectedNexus._id)
+                        .map((n) => (
+                          <option key={n._id} value={n._id}>
+                            {n.name} ({n.x}|{n.y})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                  <div className="transfer-inputs">
+                    {selectedNexus.troops && Object.entries(selectedNexus.troops)
+                      .filter(([, count]) => count > 0)
+                      .map(([type, count]) => (
+                        <div key={type} className="transfer-input-row">
+                          <label>{TROOP_LABELS[type] || type}</label>
+                          <input
+                            type="number"
+                            min={0}
+                            max={count}
+                            placeholder="0"
+                            value={troopSendAmounts[type] || ''}
+                            onChange={(e) => setTroopSendAmounts((a) => ({ ...a, [type]: e.target.value }))}
+                          />
+                          <span className="transfer-available">/ {count}</span>
+                        </div>
+                      ))}
+                    {(!selectedNexus.troops || Object.values(selectedNexus.troops).every((c) => c === 0)) && (
+                      <p className="map-empty-state">No troops available to send.</p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    className="transfer-send-btn"
+                    disabled={!troopSendTo || sendingTroops}
+                    onClick={handleMapSendTroops}
+                  >
+                    {sendingTroops ? 'Sending…' : 'Send Troops'}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

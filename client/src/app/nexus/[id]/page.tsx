@@ -1,6 +1,7 @@
 'use client';
 
 import { DocsDropdown, DocsMobileLinks } from '@/components/DocsDropdown';
+import MobileNexusDrawer from '@/components/MobileNexusDrawer';
 import NexusSidebar from '@/components/NexusSidebar';
 import NexusView from '@/components/NexusView';
 import { useAuth } from '@/context/AuthContext';
@@ -28,6 +29,7 @@ export default function NexusPage() {
   const [hasUnreadReports, setHasUnreadReports] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isNexusDrawerOpen, setIsNexusDrawerOpen] = useState(false);
   const { user, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -164,11 +166,27 @@ export default function NexusPage() {
           <DocsDropdown />
         </div>
         <div className="header-right">
+          <button
+            className="nexus-drawer-toggle"
+            onClick={() => setIsNexusDrawerOpen((v) => !v)}
+            aria-label="Toggle nexus panel"
+            title="Your Nexuses"
+          >
+            🏛️
+          </button>
           <button onClick={logout} className="logout-btn">
             Logout
           </button>
         </div>
       </header>
+
+      <MobileNexusDrawer
+        nexuses={nexuses}
+        selectedNexusId={String(selectedNexus._id)}
+        onSelectNexus={handleSelectNexus}
+        isOpen={isNexusDrawerOpen}
+        onClose={() => setIsNexusDrawerOpen(false)}
+      />
 
       <button
         type="button"
