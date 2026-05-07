@@ -5,6 +5,7 @@ import MobileNexusDrawer from '@/components/MobileNexusDrawer';
 import NexusSidebar from '@/components/NexusSidebar';
 import NexusView from '@/components/NexusView';
 import { useAuth } from '@/context/AuthContext';
+import { useFriendsUnread } from '@/hooks/useFriendsUnread';
 import { getMyNexuses, getNexus, getReadReportIds, getReports } from '@/services/api';
 import '@/styles/Game.css';
 import { Nexus } from '@/types/game';
@@ -34,6 +35,7 @@ export default function NexusPage() {
   const { user, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const hasUnreadFriends = useFriendsUnread();
   const searchParams = useSearchParams();
   const params = useParams();
   const nexusId = params.id as string;
@@ -176,6 +178,12 @@ export default function NexusPage() {
               {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
             </span>
           </button>
+          <button className="nav-btn" onClick={() => router.push('/friends')}>
+            <span className="nav-btn-content">
+              👥 Friends
+              {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread friend activity" />}
+            </span>
+          </button>
           <DocsDropdown />
         </div>
         <div className="header-right">
@@ -248,6 +256,18 @@ export default function NexusPage() {
             <span className="nav-btn-content">
               📜 Combat Logs
               {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
+            </span>
+          </button>
+          <button
+            className="nav-btn"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              router.push('/friends');
+            }}
+          >
+            <span className="nav-btn-content">
+              👥 Friends
+              {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread friend activity" />}
             </span>
           </button>
           <DocsMobileLinks onNavigate={() => setIsMobileMenuOpen(false)} />

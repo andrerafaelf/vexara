@@ -8,6 +8,8 @@ import { recoverControlLevels, updateAllResources } from './models/Nexus.js';
 import attackRoutes from './routes/attack.js';
 import authRoutes from './routes/auth.js';
 import buildingRoutes from './routes/building.js';
+import chatRoutes from './routes/chat.js';
+import friendsRoutes from './routes/friends.js';
 import mapRoutes from './routes/map.js';
 import marketRoutes from './routes/market.js';
 import nexusRoutes from './routes/nexus.js';
@@ -141,6 +143,8 @@ app.use('/api/attack', attackRoutes);
 app.use('/api/market', marketRoutes);
 app.use('/api/report', reportRoutes);
 app.use('/api/troop-transfer', troopTransferRoutes);
+app.use('/api/friends', friendsRoutes);
+app.use('/api/chat', chatRoutes);
 
 const JOB_LOCKS = {
   updateResources: 9101,

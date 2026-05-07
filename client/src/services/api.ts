@@ -184,3 +184,27 @@ export const buyMarketListing = (listingId: number, buyerNexusId: string) =>
 
 export const cancelMarketListing = (listingId: number) => apiRequest(`/market/${listingId}`, { method: 'DELETE' });
 export const getMarketHistory = () => apiRequest('/market/history');
+
+// Friends
+export const getFriends = () => apiRequest('/friends');
+export const getFriendRequests = () => apiRequest('/friends/requests');
+export const sendFriendRequest = (username: string) =>
+  apiRequest('/friends/request', { method: 'POST', body: JSON.stringify({ username }) });
+export const acceptFriendRequest = (requestId: string) =>
+  apiRequest(`/friends/request/${requestId}/accept`, { method: 'POST' });
+export const declineFriendRequest = (requestId: string) =>
+  apiRequest(`/friends/request/${requestId}/decline`, { method: 'POST' });
+export const cancelFriendRequest = (requestId: string) =>
+  apiRequest(`/friends/request/${requestId}/cancel`, { method: 'POST' });
+export const removeFriend = (friendId: string) =>
+  apiRequest(`/friends/${friendId}`, { method: 'DELETE' });
+
+// Chat
+export const getConversations = () => apiRequest('/chat/conversations');
+export const getChatUnreadCount = () => apiRequest('/chat/unread-count');
+export const getChatMessages = (friendId: string, before?: string) =>
+  apiRequest(`/chat/${friendId}/messages${before ? `?before=${before}` : ''}`);
+export const sendChatMessage = (friendId: string, content: string) =>
+  apiRequest(`/chat/${friendId}/messages`, { method: 'POST', body: JSON.stringify({ content }) });
+export const markChatRead = (friendId: string) =>
+  apiRequest(`/chat/${friendId}/read`, { method: 'POST' });
