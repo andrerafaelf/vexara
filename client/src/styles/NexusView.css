@@ -1389,6 +1389,21 @@
   letter-spacing: 0.5px;
 }
 
+.borrowed-countdown {
+  color: #4fc3f7;
+  font-variant-numeric: tabular-nums;
+}
+
+.borrowed-entry-traveling {
+  border-color: #4fc3f7;
+  opacity: 0.85;
+}
+
+.borrowed-entry-returning {
+  border-color: #ffb74d;
+  opacity: 0.85;
+}
+
 .borrowed-troops {
   display: flex;
   flex-wrap: wrap;

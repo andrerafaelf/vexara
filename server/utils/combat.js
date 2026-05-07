@@ -286,4 +286,58 @@ async function resolveCombat(attack) {
   }
 }
 
-export { processArrivedAttacks };
+const TRANSFER_TROOP_FIELDS = [
+  'lancerDrone', 'assaultTrooper', 'breakerUnit', 'reconOperative',
+  'skimmerBike', 'siegeMech', 'bulwarkGuard', 'suppressorTeam',
+  'disruptorUnit', 'interceptorBike', 'annihilatorPlatform', 'overseer',
+];
+
+async function processArrivedTransfers() {
+  const now = new Date();
+
+  // Transfers that have arrived at the host nexus
+  const arriving = await prisma.troopTransfer.findMany({
+    where: { status: 'traveling', arrivesAt: { lte: now } },
+    include: { hostNexus: true },
+  });
+
+  for (const transfer of arriving) {
+    try {
+      const troops = transfer.troops;
+      const addData = {};
+      for (const field of TRANSFER_TROOP_FIELDS) {
+        if (troops[field] > 0) addData[field] = (transfer.hostNexus[field] ?? 0) + troops[field];
+      }
+      await prisma.$transaction([
+        prisma.nexus.update({ where: { id: transfer.hostNexusId }, data: addData }),
+        prisma.troopTransfer.update({ where: { id: transfer.id }, data: { status: 'stationed', arrivesAt: null } }),
+      ]);
+    } catch (err) {
+      console.error(`Error processing arriving transfer ${transfer.id}:`, err);
+    }
+  }
+
+  // Transfers that have finished returning to the owner nexus
+  const returning = await prisma.troopTransfer.findMany({
+    where: { status: 'returning', returnsAt: { lte: now } },
+    include: { ownerNexus: true },
+  });
+
+  for (const transfer of returning) {
+    try {
+      const troops = transfer.troops;
+      const returnData = {};
+      for (const field of TRANSFER_TROOP_FIELDS) {
+        if (troops[field] > 0) returnData[field] = (transfer.ownerNexus[field] ?? 0) + troops[field];
+      }
+      await prisma.$transaction([
+        prisma.nexus.update({ where: { id: transfer.ownerNexusId }, data: returnData }),
+        prisma.troopTransfer.delete({ where: { id: transfer.id } }),
+      ]);
+    } catch (err) {
+      console.error(`Error processing returning transfer ${transfer.id}:`, err);
+    }
+  }
+}
+
+export { processArrivedAttacks, processArrivedTransfers };

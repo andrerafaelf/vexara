@@ -15,6 +15,9 @@ export interface TroopTransfer {
   ownerNexusId: string;
   hostNexusId: string;
   troops: Record<string, number>;
+  status: 'traveling' | 'stationed' | 'returning';
+  arrivesAt?: string | null;
+  returnsAt?: string | null;
   createdAt: string;
   ownerNexus?: { _id: string; name: string };
   hostNexus?: { _id: string; name: string };

@@ -79,12 +79,21 @@ model Nexus {
   troopsHosted       TroopTransfer[]  @relation("HostNexus")
 }
 
+enum TransferStatus {
+  traveling
+  stationed
+  returning
+}
+
 model TroopTransfer {
-  id           Int      @id @default(autoincrement())
+  id           Int            @id @default(autoincrement())
   ownerNexusId Int
   hostNexusId  Int
   troops       Json
-  createdAt    DateTime @default(now())
+  status       TransferStatus @default(stationed)
+  arrivesAt    DateTime?
+  returnsAt    DateTime?
+  createdAt    DateTime       @default(now())
 
   ownerNexus Nexus @relation("OwnerNexus", fields: [ownerNexusId], references: [id], onDelete: Cascade)
   hostNexus  Nexus @relation("HostNexus",  fields: [hostNexusId],  references: [id], onDelete: Cascade)

@@ -252,8 +252,24 @@
 }
 
 .nexus-marker {
-  font-size: 24px;
+  font-size: 20px;
   line-height: 1;
+  font-style: normal;
+}
+
+.nexus-marker-current {
+  color: #4fc3f7;
+  text-shadow: 0 0 6px rgba(79, 195, 247, 0.8);
+}
+
+.nexus-marker-own {
+  color: #66bb6a;
+  text-shadow: 0 0 6px rgba(102, 187, 106, 0.7);
+}
+
+.nexus-marker-enemy {
+  color: #e0e0e0;
+  opacity: 0.6;
 }
 
 .nexus-own-actions {

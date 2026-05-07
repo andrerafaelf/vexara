@@ -500,7 +500,11 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
             data-x={x}
             data-y={y}
           >
-            {nexus && <div className="nexus-marker">{isCurrent ? '⭐' : isOwnNexus ? '🏛️' : '🏘️'}</div>}
+            {nexus && (
+              <div className={`nexus-marker ${isCurrent ? 'nexus-marker-current' : isOwnNexus ? 'nexus-marker-own' : 'nexus-marker-enemy'}`}>
+                {isCurrent ? '★' : isOwnNexus ? '◆' : '○'}
+              </div>
+            )}
             <div className="cell-coords">{isOutOfBounds ? '—' : `${x}|${y}`}</div>
           </div>,
         );
@@ -555,9 +559,9 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
         <div className="no-selection">
           <p>Select a nexus on the map to view its details</p>
           <div className="legend">
-            <div>⭐ Active Nexus</div>
-            <div>🏛️ Your Other Nexus</div>
-            <div>🏘️ Enemy / NPC Nexus</div>
+            <div><span className="nexus-marker nexus-marker-current">★</span> Active Nexus</div>
+            <div><span className="nexus-marker nexus-marker-own">◆</span> Your Other Nexus</div>
+            <div><span className="nexus-marker nexus-marker-enemy">○</span> Enemy / NPC Nexus</div>
           </div>
         </div>
       );
@@ -754,18 +758,23 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
                 <div className="transfer-panel">
                   <p className="transfer-from-label">From: <strong>{currentNexus.name}</strong> → <strong>{selectedNexus.name}</strong></p>
                   <div className="transfer-inputs">
-                    {(['biomass', 'alloy', 'ore'] as const).map((res) => (
-                      <div key={res} className="transfer-input-row">
-                        <label>{res === 'biomass' ? '🌿 Biomass' : res === 'alloy' ? '🔩 Alloy' : '⛏️ Ore'}</label>
-                        <input
-                          type="number"
-                          min={0}
-                          placeholder="0"
-                          value={transferAmounts[res]}
-                          onChange={(e) => setTransferAmounts((a) => ({ ...a, [res]: e.target.value }))}
-                        />
-                      </div>
-                    ))}
+                    {(['biomass', 'alloy', 'ore'] as const).map((res) => {
+                      const available = Math.floor(currentNexus.resources[res]);
+                      return (
+                        <div key={res} className="transfer-input-row">
+                          <label>{res === 'biomass' ? '🌿 Biomass' : res === 'alloy' ? '🔩 Alloy' : '⛏️ Ore'}</label>
+                          <input
+                            type="number"
+                            min={0}
+                            max={available}
+                            placeholder="0"
+                            value={transferAmounts[res]}
+                            onChange={(e) => setTransferAmounts((a) => ({ ...a, [res]: e.target.value }))}
+                          />
+                          <span className="transfer-available">/ {available.toLocaleString()}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                   <button
                     type="button"

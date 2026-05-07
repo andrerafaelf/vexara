@@ -425,6 +425,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     const interval = setInterval(() => {
       checkQueues();
       loadAttacks();
+      refreshTroopTransfers();
     }, 15000);
     loadAttacks();
     return () => clearInterval(interval);
@@ -1868,19 +1869,40 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                   })}
                 </div>
 
-                {/* Borrowed troops display */}
+                {/* Troop transfers display */}
                 {troopTransfers.length > 0 && (
                   <div className="borrowed-troops-section">
-                    <h4>Borrowed Troops</h4>
+                    <h4>Troop Transfers</h4>
                     {troopTransfers.map((t) => {
                       const isOwner = t.ownerNexusId === nexus._id;
-                      const label = isOwner
-                        ? `Stationed at ${t.hostNexus?.name ?? '?'}`
-                        : `From ${t.ownerNexus?.name ?? '?'}`;
                       const troopEntries = Object.entries(t.troops).filter(([, v]) => Number(v) > 0);
+
+                      let statusLabel: string;
+                      let countdown: string | null = null;
+                      if (t.status === 'traveling' && t.arrivesAt) {
+                        statusLabel = isOwner
+                          ? `→ ${t.hostNexus?.name ?? '?'}`
+                          : `From ${t.ownerNexus?.name ?? '?'} arriving`;
+                        countdown = formatTime(t.arrivesAt);
+                      } else if (t.status === 'returning' && t.returnsAt) {
+                        statusLabel = isOwner
+                          ? `← Returning from ${t.hostNexus?.name ?? '?'}`
+                          : `Returning to ${t.ownerNexus?.name ?? '?'}`;
+                        countdown = formatTime(t.returnsAt);
+                      } else {
+                        statusLabel = isOwner
+                          ? `Stationed at ${t.hostNexus?.name ?? '?'}`
+                          : `From ${t.ownerNexus?.name ?? '?'}`;
+                      }
+
                       return (
-                        <div key={t._id} className="borrowed-entry">
-                          <div className="borrowed-label">{label}</div>
+                        <div key={t._id} className={`borrowed-entry borrowed-entry-${t.status}`}>
+                          <div className="borrowed-label">
+                            {statusLabel}
+                            {countdown && (
+                              <span className="borrowed-countdown"> · {countdown}</span>
+                            )}
+                          </div>
                           <div className="borrowed-troops">
                             {troopEntries.map(([type, count]) => (
                               <span key={type} className="borrowed-troop-chip">
@@ -1889,15 +1911,16 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                             ))}
                           </div>
                           <div className="borrowed-actions">
-                            {isOwner ? (
+                            {isOwner && t.status !== 'returning' && (
                               <button
                                 type="button"
                                 className="borrow-action-btn"
                                 onClick={() => handleRecall(t._id)}
                               >
-                                Recall
+                                {t.status === 'traveling' ? 'Turn Back' : 'Recall'}
                               </button>
-                            ) : (
+                            )}
+                            {!isOwner && t.status === 'stationed' && (
                               <button
                                 type="button"
                                 className="borrow-action-btn"

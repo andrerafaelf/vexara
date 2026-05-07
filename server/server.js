@@ -14,7 +14,7 @@ import nexusRoutes from './routes/nexus.js';
 import reportRoutes from './routes/report.js';
 import troopRoutes from './routes/troop.js';
 import troopTransferRoutes from './routes/troopTransfer.js';
-import { processArrivedAttacks } from './utils/combat.js';
+import { processArrivedAttacks, processArrivedTransfers } from './utils/combat.js';
 import { logError, logInfo, logWarn } from './utils/logger.js';
 import { ensureNeutralNexusPool } from './utils/neutralNexuses.js';
 
@@ -147,6 +147,7 @@ const JOB_LOCKS = {
   processCombat: 9102,
   syncNeutralPool: 9103,
   recoverControl: 9104,
+  processTransfers: 9105,
 };
 
 async function runWithPgAdvisoryLock(lockId, jobName, jobHandler) {
@@ -198,6 +199,11 @@ prisma
     // Start combat resolution interval (every 10 seconds)
     setInterval(() => {
       void runWithPgAdvisoryLock(JOB_LOCKS.processCombat, 'process_combat', () => processArrivedAttacks());
+    }, 10000);
+
+    // Resolve arrived/returning troop transfers (every 10 seconds)
+    setInterval(() => {
+      void runWithPgAdvisoryLock(JOB_LOCKS.processTransfers, 'process_transfers', () => processArrivedTransfers());
     }, 10000);
 
     // Keep neutral nexus pool filled as the world gets conquered
