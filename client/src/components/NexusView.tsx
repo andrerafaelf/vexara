@@ -1604,7 +1604,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                 return (
                   <div
                     key={key}
-                    className={`building-card ${isUpgrading ? 'upgrading' : ''} ${isDisabled ? 'disabled' : ''}`}
+                    className={`building-card ${isUpgrading ? 'upgrading' : ''} ${isAtMax ? 'maxed' : isDisabled ? 'disabled' : ''}`}
                   >
                     {BUILDING_IMAGES[key] && (
                       <img
@@ -1628,7 +1628,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                     <p>
                       Level: {level} / {maxLevel}
                     </p>
-                    <p className="building-benefit">{upgradeBenefit}</p>
+                    {!isAtMax && <p className="building-benefit">{upgradeBenefit}</p>}
                     {isUpgrading && (
                       <div className="upgrading-status">
                         <span className="upgrading-badge">⚙️ Upgrading...</span>
@@ -1660,17 +1660,17 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                         </p>
                       </div>
                     ) : (
-                      <div className="building-cost">
-                        <p className="build-time">🏁 Max level reached</p>
+                      <div className="building-maxed-banner">
+                        <span className="maxed-badge">🏁 MAX LEVEL</span>
                       </div>
                     )}
-                    {isBuildQueueFull && (
+                    {!isAtMax && isBuildQueueFull && (
                       <div className="requirements-missing">
                         <p className="requires-label">🔒 Queue Full:</p>
                         <p className="requirement-item">• Build queue limit reached ({MAX_BUILD_QUEUE})</p>
                       </div>
                     )}
-                    {!canUpgrade && (
+                    {!isAtMax && !canUpgrade && (
                       <div className="requirements-missing">
                         <p className="requires-label">🔒 Requires:</p>
                         {missingRequirements.map((req, idx) => (
@@ -1700,13 +1700,15 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                         )}
                       </div>
                     )}
-                    <button
-                      className="building-upgrade-button"
-                      onClick={() => handleUpgrade(key)}
-                      disabled={isDisabled}
-                    >
-                      Upgrade
-                    </button>
+                    {!isAtMax && (
+                      <button
+                        className="building-upgrade-button"
+                        onClick={() => handleUpgrade(key)}
+                        disabled={isDisabled}
+                      >
+                        Upgrade
+                      </button>
+                    )}
                   </div>
                 );
               })}

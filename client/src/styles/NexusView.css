@@ -653,6 +653,36 @@
   color: #aaa;
 }
 
+.building-card.maxed {
+  border-top-color: #ffd166;
+  background: linear-gradient(160deg, #1a3d6b 0%, #0f3460 60%, #2a1f4a 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 209, 102, 0.35),
+    0 0 24px rgba(255, 209, 102, 0.15);
+}
+
+.building-card.maxed h4 {
+  color: #ffd166;
+  text-shadow: 0 0 8px rgba(255, 209, 102, 0.4);
+}
+
+.building-maxed-banner {
+  margin-top: auto;
+  padding: 10px;
+  text-align: center;
+  background: rgba(255, 209, 102, 0.08);
+  border: 1px solid rgba(255, 209, 102, 0.35);
+  border-radius: 4px;
+}
+
+.maxed-badge {
+  color: #ffd166;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 1.5px;
+  text-shadow: 0 0 10px rgba(255, 209, 102, 0.6);
+}
+
 .building-card-image {
   width: calc(100% + 40px);
   height: 120px;
