@@ -57,7 +57,7 @@ router.post('/register', async (req, res) => {
           x: Math.floor(Math.random() * 35),
           y: Math.floor(Math.random() * 35),
           commandCore: 0,
-          troopFabricator: 0,
+          recruitmentCore: 0,
           lifeSupport: 1,
           storageVault: 1,
           biomassFarm: 1,

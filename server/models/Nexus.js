@@ -31,7 +31,7 @@ const QUEST_REWARD_BATCHES = [
     isUnlocked: () => true,
     quests: [
       { id: 'build_command_core_1', check: ({ nexus }) => nexus.commandCore >= 1 },
-      { id: 'build_troop_fab_1', check: ({ nexus }) => nexus.troopFabricator >= 1 },
+      { id: 'build_troop_fab_1', check: ({ nexus }) => nexus.recruitmentCore >= 1 },
       { id: 'build_storage_vault_2', check: ({ nexus }) => nexus.storageVault >= 2 },
       { id: 'train_assault_trooper_5', check: ({ nexus }) => nexus.assaultTrooper >= 5 },
     ],
@@ -84,7 +84,7 @@ const QUEST_REWARD_BATCHES = [
     isUnlocked: ({ claimedRewards }) => claimedRewards.has('advanced'),
     quests: [
       { id: 'build_command_core_6', check: ({ nexus }) => nexus.commandCore >= 6 },
-      { id: 'build_troop_fab_5', check: ({ nexus }) => nexus.troopFabricator >= 5 },
+      { id: 'build_troop_fab_5', check: ({ nexus }) => nexus.recruitmentCore >= 5 },
       { id: 'build_life_support_4', check: ({ nexus }) => nexus.lifeSupport >= 4 },
       { id: 'train_siege_mech_3', check: ({ nexus }) => nexus.siegeMech >= 3 },
       { id: 'train_disruptor_unit_5', check: ({ nexus }) => nexus.disruptorUnit >= 5 },
@@ -354,7 +354,7 @@ export function serializeNexus(v, opts = {}) {
     },
     buildings: {
       commandCore: v.commandCore,
-      troopFabricator: v.troopFabricator,
+      recruitmentCore: v.recruitmentCore,
       lifeSupport: v.lifeSupport,
       storageVault: v.storageVault,
       biomassFarm: v.biomassFarm,

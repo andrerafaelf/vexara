@@ -71,7 +71,7 @@ const TROOP_OPTIONS: Array<{ key: string; label: string }> = [
 
 const BUILDING_OPTIONS: Array<{ key: string; label: string }> = [
   { key: 'commandCore', label: 'Command Core' },
-  { key: 'troopFabricator', label: 'Recruitment Core' },
+  { key: 'recruitmentCore', label: 'Recruitment Core' },
   { key: 'lifeSupport', label: 'Life Support' },
   { key: 'storageVault', label: 'Storage Vault' },
   { key: 'biomassFarm', label: 'Biomass Farm' },

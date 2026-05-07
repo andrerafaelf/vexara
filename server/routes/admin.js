@@ -54,10 +54,18 @@ router.get('/stats', async (req, res) => {
       }),
       prisma.nexus.aggregate({
         _sum: {
-          lancerDrone: true, assaultTrooper: true, breakerUnit: true,
-          reconOperative: true, skimmerBike: true, siegeMech: true,
-          bulwarkGuard: true, suppressorTeam: true, disruptorUnit: true,
-          interceptorBike: true, annihilatorPlatform: true, overseer: true,
+          lancerDrone: true,
+          assaultTrooper: true,
+          breakerUnit: true,
+          reconOperative: true,
+          skimmerBike: true,
+          siegeMech: true,
+          bulwarkGuard: true,
+          suppressorTeam: true,
+          disruptorUnit: true,
+          interceptorBike: true,
+          annihilatorPlatform: true,
+          overseer: true,
         },
       }),
       prisma.user.aggregate({ _avg: { points: true } }),
@@ -65,9 +73,7 @@ router.get('/stats', async (req, res) => {
     ]);
 
     const troopSum = troopAgg._sum;
-    const totalTroops = Object.values(troopSum).reduce(
-      (acc, v) => acc + (v ?? 0), 0
-    );
+    const totalTroops = Object.values(troopSum).reduce((acc, v) => acc + (v ?? 0), 0);
 
     res.json({
       userCount,
@@ -205,7 +211,7 @@ router.post('/nexuses/:nexusId/buildings', async (req, res) => {
   try {
     const {
       commandCore = 0,
-      troopFabricator = 0,
+      recruitmentCore = 0,
       lifeSupport = 0,
       storageVault = 0,
       biomassFarm = 0,
@@ -225,7 +231,7 @@ router.post('/nexuses/:nexusId/buildings', async (req, res) => {
       where: { id: nexus.id },
       data: {
         commandCore: nexus.commandCore + commandCore,
-        troopFabricator: nexus.troopFabricator + troopFabricator,
+        recruitmentCore: nexus.recruitmentCore + recruitmentCore,
         lifeSupport: newLifeSupport,
         storageVault: nexus.storageVault + storageVault,
         biomassFarm: nexus.biomassFarm + biomassFarm,
@@ -251,9 +257,18 @@ router.post('/nexuses/:nexusId/troops/reset', async (req, res) => {
     const updated = await prisma.nexus.update({
       where: { id: nexus.id },
       data: {
-        lancerDrone: 0, assaultTrooper: 0, breakerUnit: 0, reconOperative: 0,
-        skimmerBike: 0, siegeMech: 0, bulwarkGuard: 0, suppressorTeam: 0,
-        disruptorUnit: 0, interceptorBike: 0, annihilatorPlatform: 0, overseer: 0,
+        lancerDrone: 0,
+        assaultTrooper: 0,
+        breakerUnit: 0,
+        reconOperative: 0,
+        skimmerBike: 0,
+        siegeMech: 0,
+        bulwarkGuard: 0,
+        suppressorTeam: 0,
+        disruptorUnit: 0,
+        interceptorBike: 0,
+        annihilatorPlatform: 0,
+        overseer: 0,
         populationCurrent: 0,
       },
     });
@@ -273,9 +288,14 @@ router.post('/nexuses/:nexusId/buildings/reset', async (req, res) => {
     const updated = await prisma.nexus.update({
       where: { id: nexus.id },
       data: {
-        commandCore: 0, troopFabricator: 0, lifeSupport: 0,
-        storageVault: 0, biomassFarm: 0, alloyForge: 0,
-        oreExtractor: 0, shieldGrid: 0,
+        commandCore: 0,
+        recruitmentCore: 0,
+        lifeSupport: 0,
+        storageVault: 0,
+        biomassFarm: 0,
+        alloyForge: 0,
+        oreExtractor: 0,
+        shieldGrid: 0,
         populationMax: getPopulationMax(0),
       },
     });

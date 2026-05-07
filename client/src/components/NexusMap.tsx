@@ -13,7 +13,7 @@ import { Nexus } from '../types/game';
 
 const BUILDINGS = [
   { key: 'commandCore', img: commandcoreImg, name: 'Command Core', short: 'Command' },
-  { key: 'troopFabricator', img: recruitmentcoreImg, name: 'Recruitment Core', short: 'Recruit.' },
+  { key: 'recruitmentCore', img: recruitmentcoreImg, name: 'Recruitment Core', short: 'Recruit.' },
   { key: 'lifeSupport', img: lifesupportImg, name: 'Life Support', short: 'Life Sup.' },
   { key: 'storageVault', img: storagevaultImg, name: 'Storage Vault', short: 'Storage' },
   { key: 'biomassFarm', img: biomassfarmImg, name: 'Biomass Farm', short: 'Biomass' },
@@ -32,16 +32,12 @@ const NexusMap: React.FC<NexusMapProps> = ({ nexus, compact = false, onClickBuil
   const bgSrc = typeof bgImg === 'string' ? bgImg : (bgImg as any).src;
 
   return (
-    <div
-      className={`nexus-map${compact ? ' nexus-map-compact' : ''}`}
-      style={{ backgroundImage: `url(${bgSrc})` }}
-    >
+    <div className={`nexus-map${compact ? ' nexus-map-compact' : ''}`} style={{ backgroundImage: `url(${bgSrc})` }}>
       <div className="nexus-map-overlay" />
       <div className="nexus-map-grid">
         {BUILDINGS.map(({ key, img, name, short }) => {
           const level = (nexus.buildings as any)[key] || 0;
-          const isUpgrading =
-            Array.isArray(nexus.buildQueue) && nexus.buildQueue.some((q: any) => q.building === key);
+          const isUpgrading = Array.isArray(nexus.buildQueue) && nexus.buildQueue.some((q: any) => q.building === key);
           const imgSrc = typeof img === 'string' ? img : (img as any).src;
 
           return (

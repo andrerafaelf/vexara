@@ -36,7 +36,7 @@ export interface Nexus {
   };
   buildings: {
     commandCore: number;
-    troopFabricator: number;
+    recruitmentCore: number;
     lifeSupport: number;
     storageVault: number;
     biomassFarm: number;
@@ -204,7 +204,7 @@ export interface Attack {
       };
       buildings: {
         commandCore: number;
-        troopFabricator: number;
+        recruitmentCore: number;
         lifeSupport: number;
         storageVault: number;
         biomassFarm: number;

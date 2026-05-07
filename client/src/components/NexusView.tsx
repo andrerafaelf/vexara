@@ -59,7 +59,7 @@ const MAX_TRAINING_QUEUE = 5;
 
 const BUILDING_NAMES: { [key: string]: string } = {
   commandCore: 'Command Core',
-  troopFabricator: 'Recruitment Core',
+  recruitmentCore: 'Recruitment Core',
   lifeSupport: 'Life Support',
   storageVault: 'Storage Vault',
   biomassFarm: 'Biomass Farm',
@@ -70,7 +70,7 @@ const BUILDING_NAMES: { [key: string]: string } = {
 
 const BUILDING_DESCRIPTIONS: { [key: string]: string } = {
   commandCore: 'Unlocks new buildings, units, and progression milestones. Required for nexus expansion.',
-  troopFabricator: 'Allows training of combat units. Higher levels reduce training time.',
+  recruitmentCore: 'Allows training of combat units. Higher levels reduce training time.',
   lifeSupport: 'Increases maximum population capacity for housing more troops and workers.',
   storageVault: 'Increases resource storage capacity. Protects resources from raids.',
   biomassFarm: 'Produces Biomass per hour. Higher levels increase production rate.',
@@ -81,7 +81,7 @@ const BUILDING_DESCRIPTIONS: { [key: string]: string } = {
 
 const BUILDING_COSTS: { [key: string]: any } = {
   commandCore: { biomass: 90, alloy: 80, ore: 70, time: 45 },
-  troopFabricator: { biomass: 200, alloy: 170, ore: 90, time: 75 },
+  recruitmentCore: { biomass: 200, alloy: 170, ore: 90, time: 75 },
   lifeSupport: { biomass: 80, alloy: 100, ore: 70, time: 60 },
   storageVault: { biomass: 60, alloy: 50, ore: 40, time: 45 },
   biomassFarm: { biomass: 50, alloy: 60, ore: 40, time: 45 },
@@ -105,7 +105,7 @@ const BUILDING_RULES: {
       { level: 10, requires: [{ building: 'storageVault', level: 5 }] },
     ],
   },
-  troopFabricator: {
+  recruitmentCore: {
     maxLevel: 15,
     unlock: { building: 'commandCore', level: 2 },
     milestones: [
@@ -135,7 +135,7 @@ const BUILDING_RULES: {
     maxLevel: 20,
     unlock: { building: 'lifeSupport', level: 1 },
     milestones: [
-      { level: 6, requires: [{ building: 'troopFabricator', level: 2 }] },
+      { level: 6, requires: [{ building: 'recruitmentCore', level: 2 }] },
       { level: 10, requires: [{ building: 'lifeSupport', level: 5 }] },
     ],
   },
@@ -190,7 +190,7 @@ const getTroopTrainSeconds = (troopType: string, baseTime: number, recruitmentLe
 
 const BUILDING_IMAGES: { [key: string]: any } = {
   commandCore: commandcoreImg,
-  troopFabricator: recruitmentcoreImg,
+  recruitmentCore: recruitmentcoreImg,
   lifeSupport: lifesupportImg,
   storageVault: storagevaultImg,
   biomassFarm: biomassfarmImg,
@@ -257,18 +257,18 @@ const TROOP_DESCRIPTIONS: { [key: string]: string } = {
 };
 
 const TROOP_REQUIREMENTS: { [key: string]: any } = {
-  assaultTrooper: { buildings: { troopFabricator: 1 } },
-  lancerDrone: { buildings: { troopFabricator: 2 } },
-  breakerUnit: { buildings: { troopFabricator: 3, oreExtractor: 3 } },
-  reconOperative: { buildings: { troopFabricator: 4, commandCore: 3 } },
-  skimmerBike: { buildings: { troopFabricator: 5, alloyForge: 4 } },
-  bulwarkGuard: { buildings: { troopFabricator: 5, lifeSupport: 5 } },
-  suppressorTeam: { buildings: { troopFabricator: 7, commandCore: 6 } },
-  disruptorUnit: { buildings: { troopFabricator: 7, oreExtractor: 6 } },
-  interceptorBike: { buildings: { troopFabricator: 8, alloyForge: 7 } },
-  siegeMech: { buildings: { troopFabricator: 10, oreExtractor: 9, commandCore: 8 } },
-  annihilatorPlatform: { buildings: { troopFabricator: 12, commandCore: 10, shieldGrid: 10 } },
-  overseer: { buildings: { troopFabricator: 14, commandCore: 14, shieldGrid: 13 }, maxPerNexus: 3 },
+  assaultTrooper: { buildings: { recruitmentCore: 1 } },
+  lancerDrone: { buildings: { recruitmentCore: 2 } },
+  breakerUnit: { buildings: { recruitmentCore: 3, oreExtractor: 3 } },
+  reconOperative: { buildings: { recruitmentCore: 4, commandCore: 3 } },
+  skimmerBike: { buildings: { recruitmentCore: 5, alloyForge: 4 } },
+  bulwarkGuard: { buildings: { recruitmentCore: 5, lifeSupport: 5 } },
+  suppressorTeam: { buildings: { recruitmentCore: 7, commandCore: 6 } },
+  disruptorUnit: { buildings: { recruitmentCore: 7, oreExtractor: 6 } },
+  interceptorBike: { buildings: { recruitmentCore: 8, alloyForge: 7 } },
+  siegeMech: { buildings: { recruitmentCore: 10, oreExtractor: 9, commandCore: 8 } },
+  annihilatorPlatform: { buildings: { recruitmentCore: 12, commandCore: 10, shieldGrid: 10 } },
+  overseer: { buildings: { recruitmentCore: 14, commandCore: 14, shieldGrid: 13 }, maxPerNexus: 3 },
 };
 
 const POPULATION_BASE = 100;
@@ -289,7 +289,7 @@ const TROOP_COSTS: { [key: string]: any } = {
   interceptorBike: { biomass: 750, alloy: 600, ore: 900, population: 3, time: 900 },
   siegeMech: { biomass: 1250, alloy: 1000, ore: 2000, population: 4, time: 3600 },
   annihilatorPlatform: { biomass: 2000, alloy: 1750, ore: 3000, population: 5, time: 7200 },
-  overseer: { biomass: 12000, alloy: 10000, ore: 8000, population: 5, time: 14400 },
+  overseer: { biomass: 180000, alloy: 140000, ore: 120000, population: 5, time: 14400 },
 };
 
 const TROOP_CATEGORIES: Record<string, 'offense' | 'defense'> = {
@@ -438,8 +438,12 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   }, [isRenamingNexus, nexus.name]);
 
   useEffect(() => {
-    getMyNexuses().then((r) => setOwnNexuses(r.data)).catch(() => {});
-    getNexusTroopTransfers(nexus._id).then((r) => setTroopTransfers(r.data)).catch(() => {});
+    getMyNexuses()
+      .then((r) => setOwnNexuses(r.data))
+      .catch(() => {});
+    getNexusTroopTransfers(nexus._id)
+      .then((r) => setTroopTransfers(r.data))
+      .catch(() => {});
   }, [nexus._id]);
 
   const refreshTroopTransfers = async () => {
@@ -935,7 +939,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
         return `Defense bonus: ${currentBonus}% -> ${nextBonus}%`;
       }
       case 'commandCore':
-      case 'troopFabricator': {
+      case 'recruitmentCore': {
         const unlockSummary = getUnlockSummary(building, targetLevel);
 
         if (unlockSummary) {
@@ -1033,7 +1037,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
         id: 'start-fabrication',
         title: 'Enable Recruitment',
         description: 'Upgrade Recruitment Core to Lv1.',
-        completed: done('intro', 'build_troop_fab_1', nexus.buildings.troopFabricator >= 1),
+        completed: done('intro', 'build_troop_fab_1', nexus.buildings.recruitmentCore >= 1),
         tab: 'buildings',
       },
       {
@@ -1147,7 +1151,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
         id: 'veteran-recruits',
         title: 'Veteran Recruits',
         description: 'Upgrade Recruitment Core to Lv5.',
-        completed: done('veteran', 'build_troop_fab_5', nexus.buildings.troopFabricator >= 5),
+        completed: done('veteran', 'build_troop_fab_5', nexus.buildings.recruitmentCore >= 5),
         tab: 'buildings',
       },
       {
@@ -1381,9 +1385,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                 📍 ({nexus.x}|{nexus.y})
               </span>
               <span>📊 {nexus.points} inf</span>
-              {nexus.controlLevel !== undefined && (
-                <span>🛡️ {nexus.controlLevel}/100 ctrl</span>
-              )}
+              {nexus.controlLevel !== undefined && <span>🛡️ {nexus.controlLevel}/100 ctrl</span>}
             </div>
 
             <div className="overview-shortcuts">
@@ -1651,7 +1653,10 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                           <span>💎 {cost.ore}</span>
                         </div>
                         <p className="build-time">
-                          ⏱️ {cost.time >= 3600 ? `${Math.floor(cost.time / 3600)}h ${Math.floor((cost.time % 3600) / 60)}m ${cost.time % 60}s` : `${Math.floor(cost.time / 60)}m ${cost.time % 60}s`}
+                          ⏱️{' '}
+                          {cost.time >= 3600
+                            ? `${Math.floor(cost.time / 3600)}h ${Math.floor((cost.time % 3600) / 60)}m ${cost.time % 60}s`
+                            : `${Math.floor(cost.time / 60)}m ${cost.time % 60}s`}
                         </p>
                       </div>
                     ) : (
@@ -1713,7 +1718,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
           <div className="troops-tab">
             <h3>Troops</h3>
 
-            {nexus.buildings.troopFabricator === 0 ? (
+            {nexus.buildings.recruitmentCore === 0 ? (
               <p>Build a Recruitment Core to train troops!</p>
             ) : (
               <>
@@ -1784,7 +1789,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                             const trainSeconds = getTroopTrainSeconds(
                               type,
                               costs.time,
-                              nexus.buildings.troopFabricator,
+                              nexus.buildings.recruitmentCore,
                             );
                             const isOverseerTrack = type === 'overseer';
                             const sameChainQueueLength = nexus.trainingQueue.filter((entry: any) =>
@@ -1819,7 +1824,10 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                                   <span>💎 {costs.ore}</span>
                                   <span>👥 {costs.population}</span>
                                   <p className="train-time">
-                                    ⏱️ {trainSeconds >= 3600 ? `${Math.floor(trainSeconds / 3600)}h ${Math.floor((trainSeconds % 3600) / 60)}m ${trainSeconds % 60}s` : `${Math.floor(trainSeconds / 60)}m ${trainSeconds % 60}s`}
+                                    ⏱️{' '}
+                                    {trainSeconds >= 3600
+                                      ? `${Math.floor(trainSeconds / 3600)}h ${Math.floor((trainSeconds % 3600) / 60)}m ${trainSeconds % 60}s`
+                                      : `${Math.floor(trainSeconds / 60)}m ${trainSeconds % 60}s`}
                                   </p>
                                 </div>
                                 {isTrainingQueueFull && (
@@ -1899,9 +1907,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                         <div key={t._id} className={`borrowed-entry borrowed-entry-${t.status}`}>
                           <div className="borrowed-label">
                             {statusLabel}
-                            {countdown && (
-                              <span className="borrowed-countdown"> · {countdown}</span>
-                            )}
+                            {countdown && <span className="borrowed-countdown"> · {countdown}</span>}
                           </div>
                           <div className="borrowed-troops">
                             {troopEntries.map(([type, count]) => (
@@ -1912,20 +1918,12 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                           </div>
                           <div className="borrowed-actions">
                             {isOwner && t.status !== 'returning' && (
-                              <button
-                                type="button"
-                                className="borrow-action-btn"
-                                onClick={() => handleRecall(t._id)}
-                              >
+                              <button type="button" className="borrow-action-btn" onClick={() => handleRecall(t._id)}>
                                 {t.status === 'traveling' ? 'Turn Back' : 'Recall'}
                               </button>
                             )}
                             {!isOwner && t.status === 'stationed' && (
-                              <button
-                                type="button"
-                                className="borrow-action-btn"
-                                onClick={() => handleSendBack(t._id)}
-                              >
+                              <button type="button" className="borrow-action-btn" onClick={() => handleSendBack(t._id)}>
                                 Send Back
                               </button>
                             )}

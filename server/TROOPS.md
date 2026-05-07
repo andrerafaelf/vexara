@@ -151,7 +151,7 @@ wait behind it (and vice versa).
 
 - Role: Conquest / control unit
 - Stats: Attack 0, Defense 30, Speed 15, Carry 0
-- Cost: Biomass 12000, Alloy 10000, Ore 8000
+- Cost: Biomass 180000, Alloy 140000, Ore 120000
 - Population: 5
 - Training Time: 4h 0m
 - Requirements:

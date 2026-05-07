@@ -25,7 +25,7 @@ test('computeResourceUpdate increases resources over elapsed time', () => {
 test('calculatePoints awards points for buildings and troops', () => {
   const nexus = {
     commandCore: 1,
-    troopFabricator: 1,
+    recruitmentCore: 1,
     lifeSupport: 1,
     storageVault: 1,
     biomassFarm: 1,

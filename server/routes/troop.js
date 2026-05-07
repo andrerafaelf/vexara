@@ -36,23 +36,23 @@ function getTrainTimeSeconds(troopType, recruitmentLevel) {
 }
 
 const TROOP_REQUIREMENTS = {
-  assaultTrooper: { buildings: { troopFabricator: 1 } },
-  lancerDrone: { buildings: { troopFabricator: 2 } },
-  breakerUnit: { buildings: { troopFabricator: 3, oreExtractor: 3 } },
-  reconOperative: { buildings: { troopFabricator: 4, commandCore: 3 } },
-  skimmerBike: { buildings: { troopFabricator: 5, alloyForge: 4 } },
-  bulwarkGuard: { buildings: { troopFabricator: 5, lifeSupport: 5 } },
-  suppressorTeam: { buildings: { troopFabricator: 7, commandCore: 6 } },
-  disruptorUnit: { buildings: { troopFabricator: 7, oreExtractor: 6 } },
-  interceptorBike: { buildings: { troopFabricator: 8, alloyForge: 7 } },
-  siegeMech: { buildings: { troopFabricator: 10, oreExtractor: 9, commandCore: 8 } },
-  annihilatorPlatform: { buildings: { troopFabricator: 12, commandCore: 10, shieldGrid: 10 } },
-  overseer: { buildings: { troopFabricator: 14, commandCore: 14, shieldGrid: 13 }, maxPerNexus: 3 },
+  assaultTrooper: { buildings: { recruitmentCore: 1 } },
+  lancerDrone: { buildings: { recruitmentCore: 2 } },
+  breakerUnit: { buildings: { recruitmentCore: 3, oreExtractor: 3 } },
+  reconOperative: { buildings: { recruitmentCore: 4, commandCore: 3 } },
+  skimmerBike: { buildings: { recruitmentCore: 5, alloyForge: 4 } },
+  bulwarkGuard: { buildings: { recruitmentCore: 5, lifeSupport: 5 } },
+  suppressorTeam: { buildings: { recruitmentCore: 7, commandCore: 6 } },
+  disruptorUnit: { buildings: { recruitmentCore: 7, oreExtractor: 6 } },
+  interceptorBike: { buildings: { recruitmentCore: 8, alloyForge: 7 } },
+  siegeMech: { buildings: { recruitmentCore: 10, oreExtractor: 9, commandCore: 8 } },
+  annihilatorPlatform: { buildings: { recruitmentCore: 12, commandCore: 10, shieldGrid: 10 } },
+  overseer: { buildings: { recruitmentCore: 14, commandCore: 14, shieldGrid: 13 }, maxPerNexus: 3 },
 };
 
 const BUILDING_NAMES = {
   commandCore: 'Command Core',
-  troopFabricator: 'Recruitment Core',
+  recruitmentCore: 'Recruitment Core',
   lifeSupport: 'Life Support',
   storageVault: 'Storage Vault',
   biomassFarm: 'Biomass Farm',
@@ -100,7 +100,7 @@ router.post('/train', auth, async (req, res) => {
       return res.status(400).json({ error: 'Invalid troop type' });
     }
 
-    if (nexus.troopFabricator === 0) {
+    if (nexus.recruitmentCore === 0) {
       return res.status(400).json({ error: 'Recruitment Core required' });
     }
 
@@ -168,7 +168,7 @@ router.post('/train', auth, async (req, res) => {
       return res.status(400).json({ error: `Training queue is full (${MAX_TRAINING_QUEUE}/${MAX_TRAINING_QUEUE})` });
     }
 
-    const perUnitSeconds = getTrainTimeSeconds(troopType, nexus.troopFabricator);
+    const perUnitSeconds = getTrainTimeSeconds(troopType, nexus.recruitmentCore);
     const queueStart =
       sameChainQueue.length > 0
         ? new Date(sameChainQueue[sameChainQueue.length - 1].completesAt).getTime()
@@ -320,7 +320,7 @@ router.post('/check-queue', auth, async (req, res) => {
         }
 
         const completesAtMs = new Date(entry.completesAt).getTime();
-        const perUnitSeconds = entry.perUnitSeconds || getTrainTimeSeconds(entry.troopType, nexus.troopFabricator);
+        const perUnitSeconds = entry.perUnitSeconds || getTrainTimeSeconds(entry.troopType, nexus.recruitmentCore);
         const perUnitMs = perUnitSeconds * 1000;
         const startedAtMs = completesAtMs - entry.amount * perUnitMs;
         const elapsedMs = now.getTime() - startedAtMs;

@@ -21,7 +21,7 @@ const TROOP_NAMES: { [key: string]: string } = {
 
 const BUILDING_NAMES: { [key: string]: string } = {
   commandCore: 'Command Core',
-  troopFabricator: 'Recruitment Core',
+  recruitmentCore: 'Recruitment Core',
   lifeSupport: 'Life Support',
   storageVault: 'Storage Vault',
   biomassFarm: 'Biomass Farm',
@@ -200,7 +200,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
         id: 'start-fabrication',
         title: 'Enable Recruitment',
         description: 'Upgrade Recruitment Core to Lv1.',
-        completed: done('intro', 'build_troop_fab_1', nexus.buildings.troopFabricator >= 1),
+        completed: done('intro', 'build_troop_fab_1', nexus.buildings.recruitmentCore >= 1),
       },
       {
         id: 'increase-capacity',
@@ -577,7 +577,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
             <p className="no-troops">
               {outgoingAttacks.length > 0
                 ? 'All troops on missions!'
-                : nexuses.some((v) => v.buildings.troopFabricator > 0)
+                : nexuses.some((v) => v.buildings.recruitmentCore > 0)
                   ? 'No troops trained yet.'
                   : 'Build a Recruitment Core to train troops.'}
             </p>

@@ -39,7 +39,7 @@ Command Core's own next upgrade) by 0.95. The reduction stacks compoundingly:
   - Lv6 requires Shield Grid Lv2
   - Lv10 requires Storage Vault Lv5
 
-### Recruitment Core (troopFabricator)
+### Recruitment Core (recruitmentCore)
 
 - Role: Troop production and military unlock gate
 - Base cost: Biomass 200, Alloy 170, Ore 90, Time 75s

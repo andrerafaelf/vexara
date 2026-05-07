@@ -10,7 +10,7 @@ const MAX_BUILD_QUEUE = 5;
 // Building costs and requirements
 const BUILDING_COSTS = {
   commandCore: { biomass: 90, alloy: 80, ore: 70, time: 45 },
-  troopFabricator: { biomass: 200, alloy: 170, ore: 90, time: 75 },
+  recruitmentCore: { biomass: 200, alloy: 170, ore: 90, time: 75 },
   lifeSupport: { biomass: 80, alloy: 100, ore: 70, time: 60 },
   storageVault: { biomass: 60, alloy: 50, ore: 40, time: 45 },
   biomassFarm: { biomass: 50, alloy: 60, ore: 40, time: 45 },
@@ -29,7 +29,7 @@ const BUILDING_RULES = {
       { level: 10, requires: [{ building: 'storageVault', level: 5 }] },
     ],
   },
-  troopFabricator: {
+  recruitmentCore: {
     maxLevel: 15,
     unlock: { building: 'commandCore', level: 2 },
     milestones: [
@@ -59,7 +59,7 @@ const BUILDING_RULES = {
     maxLevel: 20,
     unlock: { building: 'lifeSupport', level: 1 },
     milestones: [
-      { level: 6, requires: [{ building: 'troopFabricator', level: 2 }] },
+      { level: 6, requires: [{ building: 'recruitmentCore', level: 2 }] },
       { level: 10, requires: [{ building: 'lifeSupport', level: 5 }] },
     ],
   },
@@ -108,7 +108,7 @@ function getCommandTimeFactor(commandLevel) {
 
 const BUILDING_NAMES = {
   commandCore: 'Command Core',
-  troopFabricator: 'Recruitment Core',
+  recruitmentCore: 'Recruitment Core',
   lifeSupport: 'Life Support',
   storageVault: 'Storage Vault',
   biomassFarm: 'Biomass Farm',
@@ -191,7 +191,7 @@ function getMissingRequirements(nexus, building, targetLevel) {
 function getPlannedBuildingLevels(nexus) {
   const planned = {
     commandCore: nexus.commandCore,
-    troopFabricator: nexus.troopFabricator,
+    recruitmentCore: nexus.recruitmentCore,
     lifeSupport: nexus.lifeSupport,
     storageVault: nexus.storageVault,
     biomassFarm: nexus.biomassFarm,

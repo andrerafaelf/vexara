@@ -29,7 +29,7 @@ export function buildDetailedScoutIntel(nexus) {
     },
     buildings: {
       commandCore: nexus.commandCore,
-      troopFabricator: nexus.troopFabricator,
+      recruitmentCore: nexus.recruitmentCore,
       lifeSupport: nexus.lifeSupport,
       storageVault: nexus.storageVault,
       biomassFarm: nexus.biomassFarm,

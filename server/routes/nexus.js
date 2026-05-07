@@ -25,7 +25,7 @@ router.post('/create', auth, async (req, res) => {
         x: Math.floor(Math.random() * 35),
         y: Math.floor(Math.random() * 35),
         commandCore: 0,
-        troopFabricator: 0,
+        recruitmentCore: 0,
         lifeSupport: 1,
         storageVault: 1,
         biomassFarm: 1,
@@ -190,8 +190,8 @@ router.post('/transfer-resources', auth, async (req, res) => {
     }
 
     const sendBiomass = Math.min(Math.max(0, Math.floor(biomass)), Math.floor(from.biomass));
-    const sendAlloy   = Math.min(Math.max(0, Math.floor(alloy)),   Math.floor(from.alloy));
-    const sendOre     = Math.min(Math.max(0, Math.floor(ore)),     Math.floor(from.ore));
+    const sendAlloy = Math.min(Math.max(0, Math.floor(alloy)), Math.floor(from.alloy));
+    const sendOre = Math.min(Math.max(0, Math.floor(ore)), Math.floor(from.ore));
 
     if (sendBiomass === 0 && sendAlloy === 0 && sendOre === 0) {
       return res.status(400).json({ error: 'Nothing to transfer' });

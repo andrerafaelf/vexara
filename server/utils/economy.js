@@ -28,7 +28,7 @@ export function calculatePoints(nexus) {
   let points = 0;
   const buildingPoints = {
     commandCore: 10,
-    troopFabricator: 16,
+    recruitmentCore: 16,
     lifeSupport: 5,
     storageVault: 6,
     biomassFarm: 6,

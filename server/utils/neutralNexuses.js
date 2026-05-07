@@ -62,7 +62,7 @@ function buildNeutralNexusData(x, y, difficultyScale = BASE_NEUTRAL_DIFFICULTY) 
     alloy: Math.floor(alloy),
     ore: Math.floor(ore),
     commandCore: Math.max(1, Math.floor(Math.random() * 3) + Math.floor(difficultyScale)),
-    troopFabricator: Math.max(0, Math.floor(Math.random() * 2) + Math.floor((difficultyScale - 0.6) * 2)),
+    recruitmentCore: Math.max(0, Math.floor(Math.random() * 2) + Math.floor((difficultyScale - 0.6) * 2)),
     lifeSupport,
     storageVault: Math.max(1, Math.floor(Math.random() * 3) + Math.floor(difficultyScale)),
     biomassFarm: Math.max(1, Math.floor(Math.random() * 3) + Math.floor(difficultyScale)),

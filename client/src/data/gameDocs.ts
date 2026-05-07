@@ -172,7 +172,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
     impact: ['Primary unlock gate for multiple systems and troop tiers.'],
   },
   {
-    key: 'troopFabricator',
+    key: 'recruitmentCore',
     icon: '🏭',
     name: 'Recruitment Core',
     role: 'Military production building',

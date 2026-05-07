@@ -24,7 +24,7 @@ const TROOP_KEYS = [
 
 const BUILDING_KEYS = [
   'commandCore',
-  'troopFabricator',
+  'recruitmentCore',
   'lifeSupport',
   'storageVault',
   'biomassFarm',
@@ -35,7 +35,7 @@ const BUILDING_KEYS = [
 
 const STARTER_NEXUS_DATA = {
   commandCore: 0,
-  troopFabricator: 0,
+  recruitmentCore: 0,
   lifeSupport: 1,
   storageVault: 1,
   biomassFarm: 1,
@@ -654,7 +654,7 @@ router.post('/nexuses/:nexusId/buildings', async (req, res) => {
   try {
     const {
       commandCore = 0,
-      troopFabricator = 0,
+      recruitmentCore = 0,
       lifeSupport = 0,
       storageVault = 0,
       biomassFarm = 0,
@@ -674,7 +674,7 @@ router.post('/nexuses/:nexusId/buildings', async (req, res) => {
       where: { id: nexus.id },
       data: {
         commandCore: nexus.commandCore + commandCore,
-        troopFabricator: nexus.troopFabricator + troopFabricator,
+        recruitmentCore: nexus.recruitmentCore + recruitmentCore,
         lifeSupport: newLifeSupport,
         storageVault: nexus.storageVault + storageVault,
         biomassFarm: nexus.biomassFarm + biomassFarm,

@@ -145,7 +145,7 @@ const Admin: React.FC = () => {
     setModal({ type: 'buildings', nexusId });
     setFormData({
       commandCore: 0,
-      troopFabricator: 0,
+      recruitmentCore: 0,
       lifeSupport: 0,
       storageVault: 0,
       biomassFarm: 0,
@@ -231,9 +231,14 @@ const Admin: React.FC = () => {
     if (!window.confirm('Reset ALL troops to 0?')) return;
     try {
       const res = await fetch(`${ADMIN_API_URL}/nexuses/${modal.nexusId}/troops/reset`, { method: 'POST' });
-      if (res.ok) { showToast('Troops reset to 0', 'success'); loadData(); closeModal(); }
-      else showToast('Failed to reset troops', 'error');
-    } catch { showToast('Error resetting troops', 'error'); }
+      if (res.ok) {
+        showToast('Troops reset to 0', 'success');
+        loadData();
+        closeModal();
+      } else showToast('Failed to reset troops', 'error');
+    } catch {
+      showToast('Error resetting troops', 'error');
+    }
   };
 
   const handleResetBuildings = async () => {
@@ -241,9 +246,14 @@ const Admin: React.FC = () => {
     if (!window.confirm('Reset ALL buildings to 0?')) return;
     try {
       const res = await fetch(`${ADMIN_API_URL}/nexuses/${modal.nexusId}/buildings/reset`, { method: 'POST' });
-      if (res.ok) { showToast('Buildings reset to 0', 'success'); loadData(); closeModal(); }
-      else showToast('Failed to reset buildings', 'error');
-    } catch { showToast('Error resetting buildings', 'error'); }
+      if (res.ok) {
+        showToast('Buildings reset to 0', 'success');
+        loadData();
+        closeModal();
+      } else showToast('Failed to reset buildings', 'error');
+    } catch {
+      showToast('Error resetting buildings', 'error');
+    }
   };
 
   const handleCompleteBuild = async (nexusId: string) => {
@@ -481,8 +491,8 @@ const Admin: React.FC = () => {
                     <label>⚙️ Recruitment Core</label>
                     <input
                       type="number"
-                      value={formData.troopFabricator || 0}
-                      onChange={(e) => setFormData({ ...formData, troopFabricator: parseInt(e.target.value) || 0 })}
+                      value={formData.recruitmentCore || 0}
+                      onChange={(e) => setFormData({ ...formData, recruitmentCore: parseInt(e.target.value) || 0 })}
                     />
                   </div>
                   <div className="form-group">
