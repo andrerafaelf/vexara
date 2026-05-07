@@ -23,13 +23,13 @@ router.get('/area/:x/:y', auth, async (req, res) => {
     });
 
     const result = nexuses.map((v) => ({
-      _id: v.id,
-      id: v.id,
+      _id: String(v.id),
+      id: String(v.id),
       name: v.name,
       x: v.x,
       y: v.y,
       points: v.points,
-      owner: v.owner ? { _id: v.owner.id, id: v.owner.id, username: v.owner.username, points: v.owner.points } : null,
+      owner: v.owner ? { _id: String(v.owner.id), id: String(v.owner.id), username: v.owner.username, points: v.owner.points } : null,
       intelLevel: v.ownerId === req.userId ? 'owned' : 'public',
     }));
 

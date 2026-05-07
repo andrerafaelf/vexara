@@ -9,32 +9,39 @@
 }
 
 .map-header {
-  padding: 20px;
+  padding: 8px 14px;
   background: #0f3460;
   border-bottom: 2px solid #e94560;
   flex-shrink: 0;
   position: relative;
   z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
 }
 
 .map-header h2 {
   color: #e94560;
-  margin-bottom: 15px;
+  margin: 0;
+  font-size: 16px;
+  white-space: nowrap;
 }
 
 .map-info {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
-  padding: 10px;
-  background: #1a4971;
-  border-radius: 6px;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
 }
 
 .map-info span {
   color: #f1faee;
-  font-size: 14px;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .map-hint {
@@ -44,17 +51,16 @@
 
 .map-controls {
   display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: center;
+  gap: 8px;
+  align-items: center;
 }
 
 .map-controls button {
   background: #1a4971;
   color: #f1faee;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 12px;
 }
 
 .map-controls button:hover {
@@ -73,25 +79,25 @@
 .map-coordinate-controls {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  border-radius: 8px;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 6px;
   background: rgba(15, 52, 96, 0.9);
 }
 
 .map-coordinate-controls span {
   color: #f1faee;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .map-coordinate-controls input {
-  width: 72px;
-  padding: 6px 8px;
+  width: 50px;
+  padding: 3px 6px;
   border: 1px solid #457b9d;
-  border-radius: 6px;
+  border-radius: 4px;
   background: #16213e;
   color: #f1faee;
-  font-size: 13px;
+  font-size: 12px;
   text-align: center;
 }
 
