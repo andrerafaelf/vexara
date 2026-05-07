@@ -131,10 +131,10 @@ export default function TroopsPage() {
               {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
             </span>
           </button>
-          <button className="nav-btn" onClick={() => router.push('/friends')}>
+          <button className="nav-btn" onClick={() => router.push('/allies')}>
             <span className="nav-btn-content">
-              👥 Friends
-              {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread friend activity" />}
+              🤝 Allies
+              {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
             </span>
           </button>
           <DocsDropdown />
@@ -215,12 +215,12 @@ export default function TroopsPage() {
             className="nav-btn"
             onClick={() => {
               setIsMobileMenuOpen(false);
-              router.push('/friends');
+              router.push('/allies');
             }}
           >
             <span className="nav-btn-content">
-              👥 Friends
-              {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread friend activity" />}
+              🤝 Allies
+              {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
             </span>
           </button>
           <DocsMobileLinks onNavigate={() => setIsMobileMenuOpen(false)} />

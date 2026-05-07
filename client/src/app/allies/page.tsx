@@ -130,8 +130,8 @@ export default function FriendsPage() {
           </button>
           <button className="nav-btn active">
             <span className="nav-btn-content">
-              👥 Friends
-              {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread friend activity" />}
+              🤝 Allies
+              {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
             </span>
           </button>
           <DocsDropdown />
@@ -210,8 +210,8 @@ export default function FriendsPage() {
           </button>
           <button className="nav-btn active" onClick={() => setIsMobileMenuOpen(false)}>
             <span className="nav-btn-content">
-              👥 Friends
-              {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread friend activity" />}
+              🤝 Allies
+              {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
             </span>
           </button>
           <DocsMobileLinks onNavigate={() => setIsMobileMenuOpen(false)} />

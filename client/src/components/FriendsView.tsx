@@ -192,10 +192,10 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
       const res = await sendFriendRequest(username);
       setRequestUsername('');
       if (res.data?.autoAccepted) {
-        setInfo(`You and ${username} are now friends.`);
+        setInfo(`You and ${username} are now allies.`);
         await loadFriends();
       } else {
-        setInfo(`Friend request sent to ${username}.`);
+        setInfo(`Alliance request sent to ${username}.`);
       }
       await loadRequests();
     } catch (e: unknown) {
@@ -238,7 +238,7 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
   };
 
   const handleUnfriend = async (id: string) => {
-    if (!confirm('Remove this friend?')) return;
+    if (!confirm('Remove this ally?')) return;
     setError('');
     try {
       await removeFriend(id);
@@ -248,7 +248,7 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
         setMessages([]);
       }
     } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : 'Failed to remove friend';
+      const message = e instanceof Error ? e.message : 'Failed to remove ally';
       setError(message);
     }
   };
@@ -298,7 +298,7 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
           className={`friends-tab ${tab === 'friends' ? 'active' : ''}`}
           onClick={() => setTab('friends')}
         >
-          👥 Friends ({friends.length})
+          🤝 Allies ({friends.length})
         </button>
         <button
           className={`friends-tab ${tab === 'requests' ? 'active' : ''}`}
@@ -334,7 +334,7 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
           </form>
 
           {friends.length === 0 ? (
-            <p className="friends-empty">No friends yet. Send a request to get started.</p>
+            <p className="friends-empty">No allies yet. Send a request to get started.</p>
           ) : (
             <ul className="friends-list">
               {friends.map((f) => (
@@ -442,11 +442,18 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
 
           <section className="friends-chat-thread">
             {!activeFriend ? (
-              <p className="friends-empty">Select a friend to start chatting.</p>
+              <p className="friends-empty">Select an ally to start chatting.</p>
             ) : (
               <>
                 <header className="friends-chat-header">
                   <span className="friends-name">{activeFriend.username}</span>
+                  <button
+                    className="friends-btn danger"
+                    onClick={() => activeFriendId && handleUnfriend(activeFriendId)}
+                    title="Remove ally"
+                  >
+                    Remove
+                  </button>
                 </header>
                 <div className="friends-chat-messages">
                   {messages.length === 0 ? (
