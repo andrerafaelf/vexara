@@ -70,22 +70,19 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
         </div>
 
         {groups.length > 0 && (
-          <div className="nexus-group-tabs">
-            <button
-              className={`nexus-group-tab${activeGroupId === null ? ' active' : ''}`}
-              onClick={() => setActiveGroupId(null)}
+          <div className="nexus-group-filter">
+            <select
+              className="nexus-group-select"
+              value={activeGroupId ?? ''}
+              onChange={(e) => setActiveGroupId(e.target.value || null)}
             >
-              All
-            </button>
-            {groups.map((g) => (
-              <button
-                key={g.id}
-                className={`nexus-group-tab${activeGroupId === g.id ? ' active' : ''}`}
-                onClick={() => setActiveGroupId(g.id)}
-              >
-                {g.name}
-              </button>
-            ))}
+              <option value="">All</option>
+              {groups.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name}
+                </option>
+              ))}
+            </select>
           </div>
         )}
 

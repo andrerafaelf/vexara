@@ -547,32 +547,25 @@
   color: #fff;
 }
 
-.nexus-group-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-bottom: 12px;
+.nexus-group-filter {
+  margin-bottom: 10px;
 }
 
-.nexus-group-tab {
+.nexus-group-select {
+  width: 100%;
   background: #0f3460;
   color: #a8dadc;
-  border: 1px solid transparent;
+  border: 1px solid #1a4971;
   border-radius: 4px;
-  padding: 4px 10px;
-  font-size: 12px;
+  padding: 5px 8px;
+  font-size: 13px;
   cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
+  outline: none;
 }
 
-.nexus-group-tab:hover {
-  background: #1a4971;
-  color: #fff;
-}
-
-.nexus-group-tab.active {
-  background: #e94560;
+.nexus-group-select:hover,
+.nexus-group-select:focus {
+  border-color: #e94560;
   color: #fff;
 }
 

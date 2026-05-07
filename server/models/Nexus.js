@@ -341,8 +341,8 @@ export async function updateAllResources() {
 
 export function serializeNexus(v, opts = {}) {
   const base = {
-    _id: v.id,
-    id: v.id,
+    _id: String(v.id),
+    id: String(v.id),
     name: v.name,
     owner: v.ownerId,
     x: v.x,
