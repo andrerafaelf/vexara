@@ -68,7 +68,7 @@ function formatDate(iso: string) {
 
 export default function FriendsView({ initialTab = 'friends', initialFriendId = null }: FriendsViewProps) {
   const { user } = useAuth();
-  const myId = user?.id ?? '';
+  const myId = user?.id != null ? String(user.id) : '';
 
   const [tab, setTab] = useState<TabId>(initialTab);
   const [friends, setFriends] = useState<Friend[]>([]);
