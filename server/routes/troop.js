@@ -14,18 +14,18 @@ const RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL = 0.92;
 // Training times (seconds per unit).
 // Early troops: ~1 min. Mid-tier: 5–30 min. Heavy: 1 h / 4 h / 8 h.
 const TROOP_COSTS = {
-  lancerDrone:          { biomass: 50,  alloy: 30,  ore: 10,  population: 1, time: 53   },
-  assaultTrooper:       { biomass: 30,  alloy: 30,  ore: 70,  population: 1, time: 79   },
-  breakerUnit:          { biomass: 60,  alloy: 30,  ore: 40,  population: 1, time: 74   },
-  reconOperative:       { biomass: 100, alloy: 30,  ore: 60,  population: 1, time: 180  },  // 3 min
-  skimmerBike:          { biomass: 125, alloy: 100, ore: 150, population: 3, time: 600  },  // 10 min
-  bulwarkGuard:         { biomass: 80,  alloy: 120, ore: 100, population: 2, time: 480  },  // 8 min
-  suppressorTeam:       { biomass: 90,  alloy: 80,  ore: 90,  population: 2, time: 480  },  // 8 min
-  disruptorUnit:        { biomass: 110, alloy: 150, ore: 130, population: 2, time: 660  },  // 11 min
-  interceptorBike:      { biomass: 150, alloy: 120, ore: 180, population: 3, time: 900  },  // 15 min
-  siegeMech:            { biomass: 250, alloy: 200, ore: 400, population: 4, time: 3600 },  // 1 hour
-  annihilatorPlatform:  { biomass: 400, alloy: 350, ore: 600, population: 5, time: 7200 },  // 2 hours
-  overseer:             { biomass: 600, alloy: 500, ore: 400, population: 5, time: 28800 }, // 8 hours
+  lancerDrone: { biomass: 250, alloy: 150, ore: 50, population: 1, time: 53 },
+  assaultTrooper: { biomass: 150, alloy: 150, ore: 350, population: 1, time: 79 },
+  breakerUnit: { biomass: 300, alloy: 150, ore: 200, population: 1, time: 74 },
+  reconOperative: { biomass: 500, alloy: 150, ore: 300, population: 1, time: 180 }, // 3 min
+  skimmerBike: { biomass: 625, alloy: 500, ore: 750, population: 3, time: 600 }, // 10 min
+  bulwarkGuard: { biomass: 400, alloy: 600, ore: 500, population: 2, time: 480 }, // 8 min
+  suppressorTeam: { biomass: 450, alloy: 400, ore: 450, population: 2, time: 480 }, // 8 min
+  disruptorUnit: { biomass: 550, alloy: 750, ore: 650, population: 2, time: 660 }, // 11 min
+  interceptorBike: { biomass: 750, alloy: 600, ore: 900, population: 3, time: 900 }, // 15 min
+  siegeMech: { biomass: 1250, alloy: 1000, ore: 2000, population: 4, time: 3600 }, // 1 hour
+  annihilatorPlatform: { biomass: 2000, alloy: 1750, ore: 3000, population: 5, time: 7200 }, // 2 hours
+  overseer: { biomass: 180000, alloy: 140000, ore: 120000, population: 5, time: 14400 }, // 4 hours
 };
 
 function getTrainTimeSeconds(troopType, recruitmentLevel) {
@@ -36,18 +36,18 @@ function getTrainTimeSeconds(troopType, recruitmentLevel) {
 }
 
 const TROOP_REQUIREMENTS = {
-  assaultTrooper:      { buildings: { troopFabricator: 1 } },
-  lancerDrone:         { buildings: { troopFabricator: 2 } },
-  breakerUnit:         { buildings: { troopFabricator: 3, oreExtractor: 3 } },
-  reconOperative:      { buildings: { troopFabricator: 4, commandCore: 3 } },
-  skimmerBike:         { buildings: { troopFabricator: 5, alloyForge: 4 } },
-  bulwarkGuard:        { buildings: { troopFabricator: 5, lifeSupport: 5 } },
-  suppressorTeam:      { buildings: { troopFabricator: 7, commandCore: 6 } },
-  disruptorUnit:       { buildings: { troopFabricator: 7, oreExtractor: 6 } },
-  interceptorBike:     { buildings: { troopFabricator: 8, alloyForge: 7 } },
-  siegeMech:           { buildings: { troopFabricator: 10, oreExtractor: 9, commandCore: 8 } },
+  assaultTrooper: { buildings: { troopFabricator: 1 } },
+  lancerDrone: { buildings: { troopFabricator: 2 } },
+  breakerUnit: { buildings: { troopFabricator: 3, oreExtractor: 3 } },
+  reconOperative: { buildings: { troopFabricator: 4, commandCore: 3 } },
+  skimmerBike: { buildings: { troopFabricator: 5, alloyForge: 4 } },
+  bulwarkGuard: { buildings: { troopFabricator: 5, lifeSupport: 5 } },
+  suppressorTeam: { buildings: { troopFabricator: 7, commandCore: 6 } },
+  disruptorUnit: { buildings: { troopFabricator: 7, oreExtractor: 6 } },
+  interceptorBike: { buildings: { troopFabricator: 8, alloyForge: 7 } },
+  siegeMech: { buildings: { troopFabricator: 10, oreExtractor: 9, commandCore: 8 } },
   annihilatorPlatform: { buildings: { troopFabricator: 12, commandCore: 10, shieldGrid: 10 } },
-  overseer:            { buildings: { troopFabricator: 14, commandCore: 14, shieldGrid: 13 }, maxPerNexus: 3 },
+  overseer: { buildings: { troopFabricator: 14, commandCore: 14, shieldGrid: 13 }, maxPerNexus: 3 },
 };
 
 const BUILDING_NAMES = {
@@ -123,7 +123,7 @@ router.post('/train', auth, async (req, res) => {
         where: { attackerNexusId: nexus.id, status: 'traveling' },
         select: { troops: true },
       });
-      const inFlightAmount = inFlightAttacks.reduce((sum, a) => sum + ((a.troops?.[troopType]) || 0), 0);
+      const inFlightAmount = inFlightAttacks.reduce((sum, a) => sum + (a.troops?.[troopType] || 0), 0);
       const currentPlusQueued = (nexus[troopType] || 0) + queuedAmount + inFlightAmount;
       if (currentPlusQueued + parsedAmount > requirements.maxPerNexus) {
         return res.status(400).json({
@@ -174,12 +174,15 @@ router.post('/train', auth, async (req, res) => {
         ? new Date(sameChainQueue[sameChainQueue.length - 1].completesAt).getTime()
         : Date.now();
     const completesAt = new Date(queueStart + perUnitSeconds * parsedAmount * 1000);
-    const newQueue = [...trainingQueue, {
-      troopType,
-      amount: parsedAmount,
-      completesAt,
-      perUnitSeconds,
-    }];
+    const newQueue = [
+      ...trainingQueue,
+      {
+        troopType,
+        amount: parsedAmount,
+        completesAt,
+        perUnitSeconds,
+      },
+    ];
 
     const updated = await prisma.nexus.update({
       where: { id: nexus.id },
@@ -311,7 +314,10 @@ router.post('/check-queue', auth, async (req, res) => {
         if (idx === -1) break;
         const entry = trainingQueue[idx];
         const cost = TROOP_COSTS[entry.troopType];
-        if (!cost) { trainingQueue.splice(idx, 1); continue; }
+        if (!cost) {
+          trainingQueue.splice(idx, 1);
+          continue;
+        }
 
         const completesAtMs = new Date(entry.completesAt).getTime();
         const perUnitSeconds = entry.perUnitSeconds || getTrainTimeSeconds(entry.troopType, nexus.troopFabricator);
@@ -322,8 +328,7 @@ router.post('/check-queue', auth, async (req, res) => {
         if (elapsedMs < perUnitMs) break;
 
         const unitsCompleted = Math.min(entry.amount, Math.floor(elapsedMs / perUnitMs));
-        troopUpdates[entry.troopType] =
-          (troopUpdates[entry.troopType] || nexus[entry.troopType] || 0) + unitsCompleted;
+        troopUpdates[entry.troopType] = (troopUpdates[entry.troopType] || nexus[entry.troopType] || 0) + unitsCompleted;
         completed = true;
 
         if (unitsCompleted >= entry.amount) {

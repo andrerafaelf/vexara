@@ -278,18 +278,18 @@ const STORAGE_GROWTH = 1.5;
 const SHIELD_BONUS_PER_LEVEL = 0.02;
 
 const TROOP_COSTS: { [key: string]: any } = {
-  assaultTrooper: { biomass: 30, alloy: 30, ore: 70, population: 1, time: 79 },
-  lancerDrone: { biomass: 50, alloy: 30, ore: 10, population: 1, time: 53 },
-  breakerUnit: { biomass: 60, alloy: 30, ore: 40, population: 1, time: 74 },
-  reconOperative: { biomass: 100, alloy: 30, ore: 60, population: 1, time: 180 },
-  skimmerBike: { biomass: 125, alloy: 100, ore: 150, population: 3, time: 600 },
-  bulwarkGuard: { biomass: 80, alloy: 120, ore: 100, population: 2, time: 480 },
-  suppressorTeam: { biomass: 90, alloy: 80, ore: 90, population: 2, time: 480 },
-  disruptorUnit: { biomass: 110, alloy: 150, ore: 130, population: 2, time: 660 },
-  interceptorBike: { biomass: 150, alloy: 120, ore: 180, population: 3, time: 900 },
-  siegeMech: { biomass: 250, alloy: 200, ore: 400, population: 4, time: 3600 },
-  annihilatorPlatform: { biomass: 400, alloy: 350, ore: 600, population: 5, time: 7200 },
-  overseer: { biomass: 600, alloy: 500, ore: 400, population: 5, time: 28800 },
+  assaultTrooper: { biomass: 150, alloy: 150, ore: 350, population: 1, time: 79 },
+  lancerDrone: { biomass: 250, alloy: 150, ore: 50, population: 1, time: 53 },
+  breakerUnit: { biomass: 300, alloy: 150, ore: 200, population: 1, time: 74 },
+  reconOperative: { biomass: 500, alloy: 150, ore: 300, population: 1, time: 180 },
+  skimmerBike: { biomass: 625, alloy: 500, ore: 750, population: 3, time: 600 },
+  bulwarkGuard: { biomass: 400, alloy: 600, ore: 500, population: 2, time: 480 },
+  suppressorTeam: { biomass: 450, alloy: 400, ore: 450, population: 2, time: 480 },
+  disruptorUnit: { biomass: 550, alloy: 750, ore: 650, population: 2, time: 660 },
+  interceptorBike: { biomass: 750, alloy: 600, ore: 900, population: 3, time: 900 },
+  siegeMech: { biomass: 1250, alloy: 1000, ore: 2000, population: 4, time: 3600 },
+  annihilatorPlatform: { biomass: 2000, alloy: 1750, ore: 3000, population: 5, time: 7200 },
+  overseer: { biomass: 12000, alloy: 10000, ore: 8000, population: 5, time: 14400 },
 };
 
 const TROOP_CATEGORIES: Record<string, 'offense' | 'defense'> = {

@@ -15,7 +15,7 @@ Neon Dominion features 12 troop types. Units are trained in the Recruitment Core
 ## Recruitment Core Training-Time Reduction
 
 Each level of Recruitment Core multiplies training time by 0.92 (compounding)
-for every troop **except Overseer**, which always trains in 8h. The Overseer
+for every troop **except Overseer**, which always trains in 4h. The Overseer
 also has its own independent training queue, so non-Overseer training does not
 wait behind it (and vice versa).
 
@@ -30,7 +30,7 @@ wait behind it (and vice versa).
 
 - Role: Defensive frontline infantry
 - Stats: Attack 30, Defense 40, Speed 18, Carry 15
-- Cost: Biomass 30, Alloy 30, Ore 70
+- Cost: Biomass 150, Alloy 150, Ore 350
 - Population: 1
 - Training Time: 1m 19s
 - Requirements: Recruitment Core Lv1
@@ -39,7 +39,7 @@ wait behind it (and vice versa).
 
 - Role: Early defensive interceptor
 - Stats: Attack 15, Defense 25, Speed 20, Carry 20
-- Cost: Biomass 50, Alloy 30, Ore 10
+- Cost: Biomass 250, Alloy 150, Ore 50
 - Population: 1
 - Training Time: 53s
 - Requirements: Recruitment Core Lv2
@@ -48,7 +48,7 @@ wait behind it (and vice versa).
 
 - Role: Heavy breacher
 - Stats: Attack 50, Defense 15, Speed 16, Carry 10
-- Cost: Biomass 60, Alloy 30, Ore 40
+- Cost: Biomass 300, Alloy 150, Ore 200
 - Population: 1
 - Training Time: 1m 14s
 - Requirements:
@@ -59,7 +59,7 @@ wait behind it (and vice versa).
 
 - Role: Scout / support unit
 - Stats: Attack 5, Defense 20, Speed 25, Carry 10
-- Cost: Biomass 100, Alloy 30, Ore 60
+- Cost: Biomass 500, Alloy 150, Ore 300
 - Population: 1
 - Training Time: 3m 0s
 - Requirements:
@@ -72,7 +72,7 @@ wait behind it (and vice versa).
 
 - Role: Fast raider
 - Stats: Attack 80, Defense 70, Speed 22, Carry 60
-- Cost: Biomass 125, Alloy 100, Ore 150
+- Cost: Biomass 625, Alloy 500, Ore 750
 - Population: 3
 - Training Time: 10m 0s
 - Requirements:
@@ -83,7 +83,7 @@ wait behind it (and vice versa).
 
 - Role: Elite defensive infantry
 - Stats: Attack 20, Defense 120, Speed 12, Carry 25
-- Cost: Biomass 80, Alloy 120, Ore 100
+- Cost: Biomass 400, Alloy 600, Ore 500
 - Population: 2
 - Training Time: 8m 0s
 - Requirements:
@@ -94,7 +94,7 @@ wait behind it (and vice versa).
 
 - Role: Ranged assault support
 - Stats: Attack 60, Defense 50, Speed 15, Carry 20
-- Cost: Biomass 90, Alloy 80, Ore 90
+- Cost: Biomass 450, Alloy 400, Ore 450
 - Population: 2
 - Training Time: 8m 0s
 - Requirements:
@@ -105,7 +105,7 @@ wait behind it (and vice versa).
 
 - Role: Anti-armor assault unit
 - Stats: Attack 70, Defense 60, Speed 17, Carry 25
-- Cost: Biomass 110, Alloy 150, Ore 130
+- Cost: Biomass 550, Alloy 750, Ore 650
 - Population: 2
 - Training Time: 11m 0s
 - Requirements:
@@ -116,7 +116,7 @@ wait behind it (and vice versa).
 
 - Role: Rapid-response cavalry
 - Stats: Attack 90, Defense 80, Speed 28, Carry 50
-- Cost: Biomass 150, Alloy 120, Ore 180
+- Cost: Biomass 750, Alloy 600, Ore 900
 - Population: 3
 - Training Time: 15m 0s
 - Requirements:
@@ -127,7 +127,7 @@ wait behind it (and vice versa).
 
 - Role: Heavy defensive anchor
 - Stats: Attack 150, Defense 200, Speed 10, Carry 80
-- Cost: Biomass 250, Alloy 200, Ore 400
+- Cost: Biomass 1250, Alloy 1000, Ore 2000
 - Population: 4
 - Training Time: 1h 0m
 - Requirements:
@@ -139,7 +139,7 @@ wait behind it (and vice versa).
 
 - Role: Heavy artillery
 - Stats: Attack 200, Defense 150, Speed 8, Carry 100
-- Cost: Biomass 400, Alloy 350, Ore 600
+- Cost: Biomass 2000, Alloy 1750, Ore 3000
 - Population: 5
 - Training Time: 2h 0m
 - Requirements:
@@ -151,9 +151,9 @@ wait behind it (and vice versa).
 
 - Role: Conquest / control unit
 - Stats: Attack 0, Defense 30, Speed 15, Carry 0
-- Cost: Biomass 600, Alloy 500, Ore 400
+- Cost: Biomass 12000, Alloy 10000, Ore 8000
 - Population: 5
-- Training Time: 8h 0m
+- Training Time: 4h 0m
 - Requirements:
   - Recruitment Core Lv14
   - Command Core Lv14
