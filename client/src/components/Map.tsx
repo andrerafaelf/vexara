@@ -129,6 +129,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   const mapGridWrapperRef = useRef<HTMLDivElement | null>(null);
   const touchDraggedRef = useRef(false);
   const touchDistanceRef = useRef(0);
+  const prevZoomRef = useRef(1);
   const visibleRange = VISIBLE_RANGE;
 
   const clampCoordinate = (value: string, fallback: number) => {
@@ -241,9 +242,10 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   }, []);
 
   const handleWheel = (e: React.WheelEvent) => {
-    if (!e.ctrlKey) return;
+    if (!e.ctrlKey && !e.metaKey) return;
     e.preventDefault();
-    const zoomDelta = e.deltaY > 0 ? 0.9 : 1.1;
+    e.stopPropagation();
+    const zoomDelta = e.deltaY > 0 ? 0.95 : 1.05;
     setZoom((prev) => Math.max(0.5, Math.min(3, prev * zoomDelta)));
   };
 
@@ -257,6 +259,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   const handleTouchStartZoom = (e: React.TouchEvent) => {
     if (e.touches.length === 2) {
       touchDistanceRef.current = getTouchDistance(e.touches);
+      prevZoomRef.current = zoom;
     }
   };
 
@@ -264,14 +267,17 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
     if (e.touches.length !== 2 || touchDistanceRef.current === 0) return;
     const newDistance = getTouchDistance(e.touches);
     const zoomDelta = newDistance / touchDistanceRef.current;
-    if (zoomDelta !== 1) {
-      setZoom((prev) => Math.max(0.5, Math.min(3, prev * zoomDelta)));
+    if (Math.abs(zoomDelta - 1) > 0.01) {
+      const newZoom = Math.max(0.5, Math.min(3, prevZoomRef.current * zoomDelta));
+      setZoom(newZoom);
+      prevZoomRef.current = newZoom;
       touchDistanceRef.current = newDistance;
     }
   };
 
   const handleTouchEndZoom = () => {
     touchDistanceRef.current = 0;
+    prevZoomRef.current = zoom;
   };
 
   const loadMapArea = async () => {
