@@ -2,6 +2,7 @@
 
 import { DocsDropdown, DocsMobileLinks } from '@/components/DocsDropdown';
 import Market from '@/components/Market';
+import NexusSidebar from '@/components/NexusSidebar';
 import { useAuth } from '@/context/AuthContext';
 import { getMyNexuses, getReports } from '@/services/api';
 import '@/styles/Game.css';
@@ -189,24 +190,11 @@ export default function MarketPage() {
       </aside>
 
       <div className="game-content">
-        <nav className="nexus-nav">
-          <h3>Your Nexuses</h3>
-          {nexuses.map((nexus) => (
-            <div
-              key={nexus._id}
-              className={`nexus-item ${String(nexus._id) === selectedNexusId ? 'active' : ''}`}
-              onClick={() => handleSelectNexus(nexus)}
-            >
-              <div className="nexus-name">{nexus.name}</div>
-              <div className="nexus-coords">
-                ({nexus.x}|{nexus.y})
-              </div>
-              <div className="nexus-points">{nexus.points} inf</div>
-              {nexus.buildQueue.length > 0 && <div className="nexus-badge">🏗️</div>}
-              {nexus.trainingQueue.length > 0 && <div className="nexus-badge">🎖️</div>}
-            </div>
-          ))}
-        </nav>
+        <NexusSidebar
+          nexuses={nexuses}
+          selectedNexusId={selectedNexusId}
+          onSelectNexus={handleSelectNexus}
+        />
 
         <main className="main-content">
           <Market nexuses={nexuses} onRefresh={loadVillages} />

@@ -1,6 +1,7 @@
 'use client';
 
 import { DocsDropdown, DocsMobileLinks } from '@/components/DocsDropdown';
+import NexusSidebar from '@/components/NexusSidebar';
 import NexusView from '@/components/NexusView';
 import { useAuth } from '@/context/AuthContext';
 import { getMyNexuses, getNexus, getReports } from '@/services/api';
@@ -240,24 +241,11 @@ export default function NexusPage() {
       </aside>
 
       <div className="game-content">
-        <nav className="nexus-nav">
-          <h3>Your Nexuses</h3>
-          {nexuses.map((nexus) => (
-            <div
-              key={nexus._id}
-              className={`nexus-item ${selectedNexus._id === nexus._id ? 'active' : ''}`}
-              onClick={() => handleSelectNexus(nexus)}
-            >
-              <div className="nexus-name">{nexus.name}</div>
-              <div className="nexus-coords">
-                ({nexus.x}|{nexus.y})
-              </div>
-              <div className="nexus-points">{nexus.points} inf</div>
-              {nexus.buildQueue.length > 0 && <div className="nexus-badge">🏗️</div>}
-              {nexus.trainingQueue.length > 0 && <div className="nexus-badge">🎖️</div>}
-            </div>
-          ))}
-        </nav>
+        <NexusSidebar
+          nexuses={nexuses}
+          selectedNexusId={String(selectedNexus._id)}
+          onSelectNexus={handleSelectNexus}
+        />
 
         <main className="main-content">
           <NexusView nexus={selectedNexus} onUpdate={loadVillages} initialTab={activeTab} />

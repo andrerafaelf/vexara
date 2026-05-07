@@ -5,7 +5,12 @@
       "Bash(Select-Object Name)",
       "Bash(xargs grep -l \"Praça\\\\|Rally\\\\|assembly\\\\|group\\\\|Group\")",
       "Bash(xargs grep -l \"Dashboard\\\\|my-nexuses\")",
-      "Bash(npx prisma *)"
+      "Bash(npx prisma *)",
+      "Bash(npx tsc *)",
+      "Bash(npx eslint *)",
+      "Bash(grep -E \"^\\(C:\\\\\\\\\\\\\\\\|/c/|src/|  [0-9]\\)\")",
+      "Bash(git stash *)",
+      "Bash(npx next *)"
     ]
   }
 }

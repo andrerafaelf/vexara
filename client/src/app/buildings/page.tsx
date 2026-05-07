@@ -1,6 +1,7 @@
 'use client';
 
 import { DocsDropdown, DocsMobileLinks } from '@/components/DocsDropdown';
+import NexusSidebar from '@/components/NexusSidebar';
 import { useAuth } from '@/context/AuthContext';
 import { BUILDINGS_DOC, BUILDING_SCALING_DOC } from '@/data/gameDocs';
 import { getMyNexuses, getReports } from '@/services/api';
@@ -192,22 +193,11 @@ export default function BuildingsPage() {
       </aside>
 
       <div className="game-content">
-        <nav className="nexus-nav">
-          <h3>Your Nexuses</h3>
-          {nexuses.map((nexus) => (
-            <div
-              key={nexus._id}
-              className={`nexus-item ${String(nexus._id) === selectedNexusId ? 'active' : ''}`}
-              onClick={() => handleSelectNexus(nexus)}
-            >
-              <div className="nexus-name">{nexus.name}</div>
-              <div className="nexus-coords">
-                ({nexus.x}|{nexus.y})
-              </div>
-              <div className="nexus-points">{nexus.points} inf</div>
-            </div>
-          ))}
-        </nav>
+        <NexusSidebar
+          nexuses={nexuses}
+          selectedNexusId={selectedNexusId}
+          onSelectNexus={handleSelectNexus}
+        />
 
         <main className="main-content">
           <section className="docs-page-card">
