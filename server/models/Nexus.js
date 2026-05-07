@@ -407,18 +407,18 @@ export function serializeAttack(a) {
   }
 
   return {
-    _id: a.id,
-    id: a.id,
+    _id: String(a.id),
+    id: String(a.id),
     attacker: {
       user: {
-        _id: a.attackerUserId,
-        id: a.attackerUserId,
+        _id: a.attackerUserId != null ? String(a.attackerUserId) : a.attackerUserId,
+        id: a.attackerUserId != null ? String(a.attackerUserId) : a.attackerUserId,
         username: a.attackerUsername,
       },
       nexus: a.attackerNexus
         ? {
-            _id: a.attackerNexus.id,
-            id: a.attackerNexus.id,
+            _id: String(a.attackerNexus.id),
+            id: String(a.attackerNexus.id),
             name: a.attackerNexus.name,
             x: a.attackerNexus.x,
             y: a.attackerNexus.y,
@@ -426,20 +426,20 @@ export function serializeAttack(a) {
               a.attackerNexus.shieldGrid !== undefined ? { shieldGrid: a.attackerNexus.shieldGrid } : undefined,
           }
         : {
-            _id: a.attackerNexusId,
-            id: a.attackerNexusId,
+            _id: a.attackerNexusId != null ? String(a.attackerNexusId) : a.attackerNexusId,
+            id: a.attackerNexusId != null ? String(a.attackerNexusId) : a.attackerNexusId,
           },
     },
     defender: {
       user: {
-        _id: a.defenderUserId,
-        id: a.defenderUserId,
+        _id: a.defenderUserId != null ? String(a.defenderUserId) : a.defenderUserId,
+        id: a.defenderUserId != null ? String(a.defenderUserId) : a.defenderUserId,
         username: a.defenderUsername,
       },
       nexus: a.defenderNexus
         ? {
-            _id: a.defenderNexus.id,
-            id: a.defenderNexus.id,
+            _id: String(a.defenderNexus.id),
+            id: String(a.defenderNexus.id),
             name: a.defenderNexus.name,
             x: a.defenderNexus.x,
             y: a.defenderNexus.y,
@@ -447,8 +447,8 @@ export function serializeAttack(a) {
               a.defenderNexus.shieldGrid !== undefined ? { shieldGrid: a.defenderNexus.shieldGrid } : undefined,
           }
         : {
-            _id: a.defenderNexusId,
-            id: a.defenderNexusId,
+            _id: a.defenderNexusId != null ? String(a.defenderNexusId) : a.defenderNexusId,
+            id: a.defenderNexusId != null ? String(a.defenderNexusId) : a.defenderNexusId,
           },
     },
     troops: a.troops,
