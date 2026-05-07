@@ -28,7 +28,6 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
   const [error, setError] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
 
-  const [formNexusId, setFormNexusId] = useState('');
   const [formOffer, setFormOffer] = useState<'biomass' | 'alloy' | 'ore'>('biomass');
   const [formOfferAmount, setFormOfferAmount] = useState('');
   const [formWant, setFormWant] = useState<'biomass' | 'alloy' | 'ore'>('alloy');
@@ -68,14 +67,10 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
   }, [loadListings, loadHistory]);
 
   useEffect(() => {
-    if (nexuses.length > 0 && !formNexusId) {
-      const preferred = selectedNexusId ?? String(nexuses[0]._id);
-      setFormNexusId(preferred);
-    }
     if (nexuses.length > 0 && !buyNexusId) {
       setBuyNexusId(selectedNexusId ?? String(nexuses[0]._id));
     }
-  }, [nexuses, formNexusId, buyNexusId, selectedNexusId]);
+  }, [nexuses, buyNexusId, selectedNexusId]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,6 +132,7 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
   const myListings = listings.filter((l) => myNexusIds.has(String(l.sellerNexusId)));
   const otherListings = listings.filter((l) => !myNexusIds.has(String(l.sellerNexusId)));
 
+  const formNexusId = selectedNexusId ?? String(nexuses[0]?._id ?? '');
   const selectedFormNexus = nexuses.find((n) => String(n._id) === formNexusId);
   const selectedBuyNexus = nexuses.find((n) => String(n._id) === buyNexusId);
 
@@ -161,16 +157,6 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
         <div className="market-create-form">
           <h3>Create Listing</h3>
           <form onSubmit={handleCreate}>
-            <div className="market-form-row">
-              <label>From Nexus</label>
-              <select value={formNexusId} onChange={(e) => setFormNexusId(e.target.value)}>
-                {nexuses.map((n) => (
-                  <option key={n._id} value={n._id}>
-                    {n.name}
-                  </option>
-                ))}
-              </select>
-            </div>
             {selectedFormNexus && (
               <div className="market-nexus-resources">
                 <span>
