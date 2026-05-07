@@ -50,6 +50,7 @@ interface NexusViewProps {
   nexus: Nexus;
   onUpdate: () => void;
   initialTab?: NexusTab;
+  onTabChange?: (tab: NexusTab) => void;
 }
 
 type NexusTab = 'overview' | 'buildings' | 'troops' | 'map';
@@ -333,8 +334,12 @@ interface InfoModalState {
   description: string;
 }
 
-const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'overview' }) => {
-  const [activeTab, setActiveTab] = useState<NexusTab>(initialTab);
+const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'overview', onTabChange }) => {
+  const [activeTab, setActiveTabState] = useState<NexusTab>(initialTab);
+  const setActiveTab = (tab: NexusTab) => {
+    setActiveTabState(tab);
+    onTabChange?.(tab);
+  };
   const [isRenamingNexus, setIsRenamingNexus] = useState(false);
   const [renameValue, setRenameValue] = useState(nexus.name);
   const [isSavingNexusName, setIsSavingNexusName] = useState(false);
@@ -414,7 +419,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   }, []);
 
   useEffect(() => {
-    setActiveTab(initialTab);
+    setActiveTabState(initialTab);
   }, [initialTab]);
 
   useEffect(() => {

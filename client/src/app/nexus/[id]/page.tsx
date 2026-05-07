@@ -121,7 +121,14 @@ export default function NexusPage() {
   const handleSelectNexus = (nexus: Nexus) => {
     setIsMobileMenuOpen(false);
     localStorage.setItem(SELECTED_NEXUS_KEY, String(nexus._id));
-    router.push(`/nexus/${nexus._id}`);
+    const tabParam = searchParams.get('tab');
+    const query = tabParam ? `?tab=${tabParam}` : '';
+    router.push(`/nexus/${nexus._id}${query}`);
+  };
+
+  const handleTabChange = (tab: NexusTab) => {
+    const query = tab === 'overview' ? '' : `?tab=${tab}`;
+    router.replace(`/nexus/${nexusId}${query}`);
   };
 
   if (loading) {
@@ -251,7 +258,12 @@ export default function NexusPage() {
         />
 
         <main className="main-content">
-          <NexusView nexus={selectedNexus} onUpdate={loadVillages} initialTab={activeTab} />
+          <NexusView
+            nexus={selectedNexus}
+            onUpdate={loadVillages}
+            initialTab={activeTab}
+            onTabChange={handleTabChange}
+          />
         </main>
       </div>
 
