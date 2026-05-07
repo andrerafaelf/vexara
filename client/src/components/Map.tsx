@@ -577,13 +577,21 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
         const nexus = !isOutOfBounds ? nexuses.find((v) => v.x === x && v.y === y) : null;
         const isCurrent = nexus?._id === currentNexus._id;
         const isOwnNexus = nexus ? ownNexuses.some((n) => n._id === nexus._id) : false;
+        const isNpcNexus = nexus
+          ? nexus.name.includes('Resource Depot') ||
+            nexus.name.includes('Military Outpost') ||
+            nexus.name.includes('Supply Cache') ||
+            nexus.name.includes('Abandoned Base') ||
+            nexus.name.includes('Neutral Settlement')
+          : false;
+        const isEnemyNexus = !!nexus && !isCurrent && !isOwnNexus && !isNpcNexus;
 
         row.push(
           <div
             key={`${x}-${y}`}
             className={`map-cell ${isOutOfBounds ? 'out-of-bounds' : ''} ${nexus ? 'has-nexus' : ''} ${
               isCurrent ? 'current-nexus' : ''
-            } ${isOwnNexus && !isCurrent ? 'own-nexus' : ''} ${selectedNexus?._id === nexus?._id ? 'selected' : ''}`}
+            } ${isOwnNexus && !isCurrent ? 'own-nexus' : ''} ${isEnemyNexus ? 'enemy-nexus' : ''} ${selectedNexus?._id === nexus?._id ? 'selected' : ''}`}
             onClick={(e) => !isOutOfBounds && nexus && handleVillageClick(nexus, e)}
             title={isOutOfBounds ? 'Out of bounds' : nexus ? `${nexus.name} (${nexus.x}|${nexus.y})` : `(${x}|${y})`}
             data-x={x}
