@@ -502,7 +502,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
           >
             {nexus && (
               <div className={`nexus-marker ${isCurrent ? 'nexus-marker-current' : isOwnNexus ? 'nexus-marker-own' : 'nexus-marker-enemy'}`}>
-                {isCurrent ? '★' : isOwnNexus ? '◆' : '○'}
+                {isCurrent ? '⭐' : isOwnNexus ? '🏛️' : '🏘️'}
               </div>
             )}
             <div className="cell-coords">{isOutOfBounds ? '—' : `${x}|${y}`}</div>
@@ -559,9 +559,9 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
         <div className="no-selection">
           <p>Select a nexus on the map to view its details</p>
           <div className="legend">
-            <div><span className="nexus-marker nexus-marker-current">★</span> Active Nexus</div>
-            <div><span className="nexus-marker nexus-marker-own">◆</span> Your Other Nexus</div>
-            <div><span className="nexus-marker nexus-marker-enemy">○</span> Enemy / NPC Nexus</div>
+            <div>⭐ Active Nexus</div>
+            <div>🏛️ Your Other Nexus</div>
+            <div>🏘️ Enemy / NPC Nexus</div>
           </div>
         </div>
       );
