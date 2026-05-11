@@ -1,6 +1,30 @@
 import prisma from '../lib/prisma.js';
 import { getPopulationMax } from './population.js';
 
+// Buildings that NPC nexuses can level up over time, in priority order
+const NPC_LEVELABLE_BUILDINGS = [
+  'commandCore',
+  'lifeSupport',
+  'storageVault',
+  'biomassFarm',
+  'alloyForge',
+  'oreExtractor',
+  'recruitmentCore',
+  'shieldGrid',
+];
+
+// Max level NPC nexuses can reach per building (~75% of player max)
+const NPC_MAX_LEVELS = {
+  commandCore: 15,
+  recruitmentCore: 11,
+  lifeSupport: 15,
+  storageVault: 15,
+  biomassFarm: 15,
+  alloyForge: 15,
+  oreExtractor: 15,
+  shieldGrid: 11,
+};
+
 const MAP_SIZE = 35;
 const MIN_NEUTRALS = 32;
 const NEUTRALS_PER_CAPTURED = 1;
@@ -140,6 +164,66 @@ export async function ensureNeutralNexusPool() {
   }
 
   return { created, neutralCount: neutralCount + created, targetNeutralCount };
+}
+
+/**
+ * Gradually levels up NPC nexus buildings over time so they remain a challenge
+ * as players advance. Each tick bumps one building by 1 level per NPC nexus,
+ * targeting the building furthest below its proportional cap relative to the
+ * current player-driven difficulty. Troop counts are scaled up alongside
+ * building levels so the nexus stays defensible.
+ */
+export async function levelUpNeutralNexuses() {
+  const [userCount, totalNexusCount, neutralNexuses] = await Promise.all([
+    prisma.user.count(),
+    prisma.nexus.count(),
+    prisma.nexus.findMany({ where: { ownerId: null } }),
+  ]);
+
+  if (neutralNexuses.length === 0) return;
+
+  const capturedCount = Math.max(0, totalNexusCount - userCount - neutralNexuses.length);
+  const difficulty = Math.min(
+    MAX_NEUTRAL_DIFFICULTY,
+    BASE_NEUTRAL_DIFFICULTY + userCount * USER_DIFFICULTY_STEP + capturedCount * CAPTURE_DIFFICULTY_STEP,
+  );
+
+  // Target level for each building = difficulty ratio * NPC max level (minimum 1)
+  const difficultyRatio = (difficulty - BASE_NEUTRAL_DIFFICULTY) / (MAX_NEUTRAL_DIFFICULTY - BASE_NEUTRAL_DIFFICULTY);
+
+  for (const nexus of neutralNexuses) {
+    // Find the building that is most behind its target level
+    let bestBuilding = null;
+    let bestGap = 0;
+
+    for (const building of NPC_LEVELABLE_BUILDINGS) {
+      const cap = NPC_MAX_LEVELS[building];
+      const target = Math.max(1, Math.round(1 + difficultyRatio * (cap - 1)));
+      const current = nexus[building] ?? 0;
+      const gap = target - current;
+      if (gap > bestGap) {
+        bestGap = gap;
+        bestBuilding = building;
+      }
+    }
+
+    if (!bestBuilding) continue;
+
+    const updates = { [bestBuilding]: (nexus[bestBuilding] ?? 0) + 1 };
+
+    if (bestBuilding === 'lifeSupport') {
+      updates.populationMax = getPopulationMax(updates.lifeSupport);
+    }
+
+    // Scale up a proportional number of troops when commandCore advances
+    if (bestBuilding === 'commandCore') {
+      updates.assaultTrooper = Math.ceil((nexus.assaultTrooper ?? 0) * 1.15);
+      updates.lancerDrone = Math.ceil((nexus.lancerDrone ?? 0) * 1.1);
+      updates.breakerUnit = Math.ceil((nexus.breakerUnit ?? 0) * 1.08);
+    }
+
+    await prisma.nexus.update({ where: { id: nexus.id }, data: updates });
+  }
 }
 
 export async function seedNeutralNexuses(count) {

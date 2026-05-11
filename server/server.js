@@ -18,7 +18,7 @@ import troopRoutes from './routes/troop.js';
 import troopTransferRoutes from './routes/troopTransfer.js';
 import { processArrivedAttacks, processArrivedTransfers } from './utils/combat.js';
 import { logError, logInfo, logWarn } from './utils/logger.js';
-import { ensureNeutralNexusPool } from './utils/neutralNexuses.js';
+import { ensureNeutralNexusPool, levelUpNeutralNexuses } from './utils/neutralNexuses.js';
 
 dotenv.config();
 
@@ -152,6 +152,7 @@ const JOB_LOCKS = {
   syncNeutralPool: 9103,
   recoverControl: 9104,
   processTransfers: 9105,
+  levelNeutralNexuses: 9106,
 };
 
 async function runWithPgAdvisoryLock(lockId, jobName, jobHandler) {
@@ -223,6 +224,16 @@ prisma
         void runWithPgAdvisoryLock(JOB_LOCKS.recoverControl, 'recover_control', () => recoverControlLevels());
       },
       30 * 60 * 1000,
+    );
+
+    // Level up NPC nexus buildings over time so they stay a challenge (every 6 hours)
+    setInterval(
+      () => {
+        void runWithPgAdvisoryLock(JOB_LOCKS.levelNeutralNexuses, 'level_neutral_nexuses', () =>
+          levelUpNeutralNexuses(),
+        );
+      },
+      6 * 60 * 60 * 1000,
     );
   })
   .catch((err) => {
