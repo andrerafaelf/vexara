@@ -4,6 +4,7 @@ import { getUserStats } from '@/services/api';
 import { UserStats } from '@/types/game';
 import { useEffect, useState } from 'react';
 import '../styles/ProfileStats.css';
+import NotificationSettings from './NotificationSettings';
 import StatsChart from './StatsChart';
 
 function fmt(n: number): string {
@@ -35,6 +36,7 @@ export default function ProfileStats() {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [tab, setTab] = useState<'stats' | 'notifications'>('stats');
 
   useEffect(() => {
     getUserStats()
@@ -76,6 +78,28 @@ export default function ProfileStats() {
 
   return (
     <div className="profile-stats">
+      <div className="ps-tabs">
+        <button
+          className={`ps-tab ${tab === 'stats' ? 'ps-tab--active' : ''}`}
+          onClick={() => setTab('stats')}
+        >
+          👤 Stats
+        </button>
+        <button
+          className={`ps-tab ${tab === 'notifications' ? 'ps-tab--active' : ''}`}
+          onClick={() => setTab('notifications')}
+        >
+          🔔 Notifications
+        </button>
+      </div>
+
+      {tab === 'notifications' && (
+        <div className="ps-notif-panel">
+          <NotificationSettings />
+        </div>
+      )}
+
+      {tab === 'stats' && <>
       <div className="ps-header">
         <div className="ps-avatar">{stats.username.charAt(0).toUpperCase()}</div>
         <div className="ps-header-info">
@@ -160,6 +184,7 @@ export default function ProfileStats() {
           <StatsChart />
         </div>
       </div>
+      </>}
     </div>
   );
 }

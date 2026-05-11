@@ -349,6 +349,20 @@ const Admin: React.FC = () => {
     }
   };
 
+  const handleTestNotification = async (userId: string, username: string) => {
+    try {
+      const res = await adminFetch(`${ADMIN_API_URL}/users/${userId}/test-notification`, { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(`Test notification sent to ${username}`, 'success');
+      } else {
+        showToast(data.error || 'Failed to send notification', 'error');
+      }
+    } catch {
+      showToast('Error sending test notification', 'error');
+    }
+  };
+
   const handleDeleteUser = async (userId: string, username: string) => {
     if (!window.confirm(`Delete user "${username}"?`)) return;
 
@@ -607,6 +621,9 @@ const Admin: React.FC = () => {
                 <div className="action-divider" />
                 <button className="btn-action btn-reset" onClick={() => handleResetUser(user)}>
                   ↺ Reset
+                </button>
+                <button className="btn-action btn-notif" onClick={() => handleTestNotification(user._id, user.username)}>
+                  🔔 Test Notif
                 </button>
                 <button className="btn-action btn-delete" onClick={() => handleDeleteUser(user._id, user.username)}>
                   ✕ Delete

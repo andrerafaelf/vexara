@@ -9,13 +9,12 @@ import Map from './Map';
 import Market from './Market';
 import NexusSidebar from './NexusSidebar';
 import NexusView from './NexusView';
-import NotificationSettings from './NotificationSettings';
 import Reports from './Reports';
 
 const Game: React.FC = () => {
   const [nexuses, setVillages] = useState<Nexus[]>([]);
   const [selectedNexus, setSelectedNexus] = useState<Nexus | null>(null);
-  const [view, setView] = useState<'dashboard' | 'nexus' | 'map' | 'reports' | 'market' | 'admin' | 'settings'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'nexus' | 'map' | 'reports' | 'market' | 'admin'>('dashboard');
   const [loading, setLoading] = useState(true);
   const [groups, setGroups] = useState<NexusGroup[]>([]);
   const mainRef = useRef<HTMLElement>(null);
@@ -55,7 +54,7 @@ const Game: React.FC = () => {
     mainRef.current?.scrollTo({ top: 0 });
   };
 
-  const handleViewChange = (newView: 'dashboard' | 'nexus' | 'map' | 'reports' | 'market' | 'admin' | 'settings') => {
+  const handleViewChange = (newView: 'dashboard' | 'nexus' | 'map' | 'reports' | 'market' | 'admin') => {
     if (view === 'admin' && newView !== 'admin') {
       loadVillages();
     }
@@ -151,13 +150,6 @@ const Game: React.FC = () => {
           </button>
         </div>
         <div className="header-right">
-          <button
-            className={`nav-btn ${view === 'settings' ? 'active' : ''}`}
-            onClick={() => handleViewChange('settings')}
-            title="Notification Settings"
-          >
-            🔔
-          </button>
           <button onClick={logout} className="logout-btn">
             Logout
           </button>
@@ -185,12 +177,6 @@ const Game: React.FC = () => {
           {view === 'reports' && selectedNexus && <Reports nexus={selectedNexus} />}
           {view === 'market' && <Market nexuses={nexuses} onRefresh={loadVillages} />}
           {view === 'admin' && <Admin />}
-          {view === 'settings' && (
-            <div className="settings-view">
-              <h2 className="settings-heading">Settings</h2>
-              <NotificationSettings />
-            </div>
-          )}
         </main>
       </div>
     </div>

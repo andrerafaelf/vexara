@@ -7,6 +7,39 @@
   margin: 0 auto;
 }
 
+.ps-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid #0f3460;
+  padding-bottom: 0;
+}
+
+.ps-tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #7a9bae;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 18px;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.ps-tab:hover {
+  color: #a8dadc;
+}
+
+.ps-tab--active {
+  color: #e94560;
+  border-bottom-color: #e94560;
+}
+
+.ps-notif-panel {
+  padding-top: 4px;
+}
+
 .ps-loading,
 .ps-error {
   padding: 40px;
