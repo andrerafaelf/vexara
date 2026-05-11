@@ -1,8 +1,9 @@
 import express from 'express';
 import prisma from '../lib/prisma.js';
-import { normalizeBuildQueue, serializeNexus } from '../models/Nexus.js';
+import { formatLabel, normalizeBuildQueue, serializeNexus } from '../models/Nexus.js';
 import { processArrivedAttacks } from '../utils/combat.js';
 import { getPopulationMax } from '../utils/population.js';
+import { NOTIF, sendPushToUser } from '../utils/push.js';
 
 const router = express.Router();
 
@@ -329,6 +330,17 @@ router.post('/nexuses/:nexusId/complete-build', async (req, res) => {
     }
 
     const updated = await prisma.nexus.update({ where: { id: nexus.id }, data });
+
+    if (updated.ownerId) {
+      const label = formatLabel(build.building);
+      void sendPushToUser(updated.ownerId, NOTIF.BUILDING_COMPLETE, {
+        title: '🏗️ Construction Complete',
+        body: `✅ ${label} upgraded to level ${build.targetLevel} at ${updated.name}.`,
+        tag: `build-${updated.id}-${build.building}-${build.targetLevel}`,
+        data: { url: '/' },
+      });
+    }
+
     res.json({ success: true, nexus: serializeNexus(updated) });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -357,6 +369,16 @@ router.post('/nexuses/:nexusId/complete-training', async (req, res) => {
         trainingQueue: remainingQueue,
       },
     });
+
+    if (updated.ownerId) {
+      const label = formatLabel(training.troopType);
+      void sendPushToUser(updated.ownerId, NOTIF.TROOP_COMPLETE, {
+        title: '⚔️ Training Complete',
+        body: `🎯 ${training.amount}x ${label} ready at ${updated.name}.`,
+        tag: `troop-${updated.id}-${training.troopType}-${Date.now()}`,
+        data: { url: '/' },
+      });
+    }
 
     res.json({ success: true, nexus: serializeNexus(updated) });
   } catch (error) {

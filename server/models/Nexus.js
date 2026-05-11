@@ -318,7 +318,7 @@ export async function applyCompletedQueues(nexus) {
   return updated;
 }
 
-function formatLabel(key) {
+export function formatLabel(key) {
   return key.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase());
 }
 
