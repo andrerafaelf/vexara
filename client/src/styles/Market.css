@@ -515,14 +515,16 @@
 
 .market-system-form-row {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .market-system-form-row label {
   color: #a8dadc;
-  font-size: 13px;
-  min-width: 120px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .market-system-form-row select,
@@ -531,9 +533,10 @@
   color: #f1faee;
   border: 1px solid #1a4971;
   border-radius: 4px;
-  padding: 7px 10px;
-  font-size: 14px;
-  flex: 1;
+  padding: 10px 12px;
+  font-size: 15px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .market-system-preview {
