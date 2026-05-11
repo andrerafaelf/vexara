@@ -887,6 +887,10 @@ router.post('/attacks/:attackId/complete', async (req, res) => {
 router.post('/users/:userId/test-notification', async (req, res) => {
   const userId = toInt(req.params.userId);
   try {
+    if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+      return res.status(503).json({ error: 'Push notifications not configured (missing VAPID keys)' });
+    }
+
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, username: true } });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
