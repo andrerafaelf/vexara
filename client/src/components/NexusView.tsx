@@ -194,7 +194,12 @@ const NEXUS_TYPE_TRAINING_MULTIPLIERS: Record<string, number> = {
   'Military Outpost': 0.75,
 };
 
-const getTroopTrainSeconds = (troopType: string, baseTime: number, recruitmentLevel: number, nexusType?: string | null) => {
+const getTroopTrainSeconds = (
+  troopType: string,
+  baseTime: number,
+  recruitmentLevel: number,
+  nexusType?: string | null,
+) => {
   if (troopType === 'overseer') return baseTime;
   const recruitFactor = Math.pow(RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL, Math.max(0, recruitmentLevel || 0));
   const nexusFactor = NEXUS_TYPE_TRAINING_MULTIPLIERS[nexusType ?? ''] ?? 1;
@@ -285,7 +290,7 @@ const TROOP_REQUIREMENTS: { [key: string]: any } = {
 };
 
 const POPULATION_BASE = 100;
-const POPULATION_GROWTH = 1.27;
+const POPULATION_GROWTH = 1.28;
 const STORAGE_BASE = 1000;
 const STORAGE_GROWTH = 1.5;
 const SHIELD_BONUS_PER_LEVEL = 0.02;
@@ -918,9 +923,12 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
       time *= timeMultiplier;
     }
 
-    const NEXUS_BUILD_TIME_MULTIPLIERS: Record<string, number> = { 'Reclaimed Outpost': 0.80 };
+    const NEXUS_BUILD_TIME_MULTIPLIERS: Record<string, number> = { 'Reclaimed Outpost': 0.8 };
     const nexusBuildFactor = NEXUS_BUILD_TIME_MULTIPLIERS[nexus.nexusType ?? ''] ?? 1;
-    const reducedTime = Math.max(1, Math.floor(time * getCommandTimeFactor(nexus.buildings.commandCore) * nexusBuildFactor));
+    const reducedTime = Math.max(
+      1,
+      Math.floor(time * getCommandTimeFactor(nexus.buildings.commandCore) * nexusBuildFactor),
+    );
 
     return {
       biomass: Math.floor(biomass),
@@ -1337,7 +1345,8 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   };
 
   const production = calculateProduction();
-  const storageCapacity = getStorageAtLevel(nexus.buildings.storageVault) * (nexus.nexusType === 'Supply Cache' ? 2 : 1);
+  const storageCapacity =
+    getStorageAtLevel(nexus.buildings.storageVault) * (nexus.nexusType === 'Supply Cache' ? 2 : 1);
 
   const getResourceFillClass = (amount: number) => {
     const pct = amount / storageCapacity;
@@ -1526,8 +1535,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
               <div className="newbie-protection-banner">
                 <span className="newbie-protection-icon">🛡️</span>
                 <span className="newbie-protection-text">
-                  Newbie Protection — expires in{' '}
-                  <strong>{formatTime(nexus.newbieProtectionEndsAt)}</strong>
+                  Newbie Protection — expires in <strong>{formatTime(nexus.newbieProtectionEndsAt)}</strong>
                 </span>
               </div>
             )}
@@ -1565,7 +1573,8 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                         {outgoingAttacks.map((a: any) => (
                           <div key={a._id} className="strikes-card-entry">
                             <span className="strikes-card-entry-who">
-                              {a.status === 'returning' ? '↩ ' : ''}{a.defender?.nexus?.name ?? '?'}
+                              {a.status === 'returning' ? '↩ ' : ''}
+                              {a.defender?.nexus?.name ?? '?'}
                             </span>
                             <span className="strikes-card-entry-time">
                               {formatTime(a.status === 'returning' ? a.returnsAt : a.arrivesAt)}
@@ -1605,15 +1614,12 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                   <span className="overview-queue-summary-label">🏗️ Building Queue</span>
                   <span className="overview-queue-summary-detail">
                     {nexus.buildQueue.length} item{nexus.buildQueue.length !== 1 ? 's' : ''} —{' '}
-                    {BUILDING_NAMES[nexus.buildQueue[0].building] || nexus.buildQueue[0].building} → Lv{nexus.buildQueue[0].targetLevel}
+                    {BUILDING_NAMES[nexus.buildQueue[0].building] || nexus.buildQueue[0].building} → Lv
+                    {nexus.buildQueue[0].targetLevel}
                     {activeBuildTimer ? ` · ${activeBuildTimer}` : ''}
                   </span>
                 </div>
-                <button
-                  type="button"
-                  className="overview-queue-manage-btn"
-                  onClick={() => setActiveTab('buildings')}
-                >
+                <button type="button" className="overview-queue-manage-btn" onClick={() => setActiveTab('buildings')}>
                   Manage →
                 </button>
               </div>
@@ -1625,15 +1631,12 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                   <span className="overview-queue-summary-label">🎖️ Training Queue</span>
                   <span className="overview-queue-summary-detail">
                     {nexus.trainingQueue.length} item{nexus.trainingQueue.length !== 1 ? 's' : ''} —{' '}
-                    {nexus.trainingQueue[0].amount}x {TROOP_NAMES[nexus.trainingQueue[0].troopType] || nexus.trainingQueue[0].troopType}
+                    {nexus.trainingQueue[0].amount}x{' '}
+                    {TROOP_NAMES[nexus.trainingQueue[0].troopType] || nexus.trainingQueue[0].troopType}
                     {activeTrainingTimer ? ` · ${activeTrainingTimer}` : ''}
                   </span>
                 </div>
-                <button
-                  type="button"
-                  className="overview-queue-manage-btn"
-                  onClick={() => setActiveTab('troops')}
-                >
+                <button type="button" className="overview-queue-manage-btn" onClick={() => setActiveTab('troops')}>
                   Manage →
                 </button>
               </div>
@@ -1666,7 +1669,8 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                         </div>
                         {!quest.completed && (
                           <span className="intro-quest-arrow">
-                            → {quest.tab === 'buildings' ? 'Buildings' : quest.tab === 'troops' ? 'Troops' : 'Starfield'}
+                            →{' '}
+                            {quest.tab === 'buildings' ? 'Buildings' : quest.tab === 'troops' ? 'Troops' : 'Starfield'}
                           </span>
                         )}
                       </div>
@@ -1688,29 +1692,57 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
               <div className="noob-tip">
                 <span className="noob-tip-icon">💡</span>
                 <span className="noob-tip-text">
-                  <strong>Start here:</strong> Upgrade <em>Command Core</em> to Lv1 to power your Nexus and unlock progression.
+                  <strong>Start here:</strong> Upgrade <em>Command Core</em> to Lv1 to power your Nexus and unlock
+                  progression.
                 </span>
-                <button type="button" className="noob-tip-dismiss" onClick={() => dismissTip('tip-command-core')} aria-label="Dismiss tip">✕</button>
+                <button
+                  type="button"
+                  className="noob-tip-dismiss"
+                  onClick={() => dismissTip('tip-command-core')}
+                  aria-label="Dismiss tip"
+                >
+                  ✕
+                </button>
               </div>
             )}
-            {!allQuestsComplete && nexus.buildings.commandCore >= 1 && nexus.buildings.recruitmentCore < 1 && !dismissedTips.has('tip-recruitment-core') && (
-              <div className="noob-tip">
-                <span className="noob-tip-icon">💡</span>
-                <span className="noob-tip-text">
-                  <strong>Next up:</strong> Upgrade <em>Recruitment Core</em> to Lv1 to unlock troop training.
-                </span>
-                <button type="button" className="noob-tip-dismiss" onClick={() => dismissTip('tip-recruitment-core')} aria-label="Dismiss tip">✕</button>
-              </div>
-            )}
-            {!allQuestsComplete && nexus.buildings.storageVault < 2 && nexus.buildings.commandCore >= 1 && !dismissedTips.has('tip-storage-vault') && (
-              <div className="noob-tip">
-                <span className="noob-tip-icon">💡</span>
-                <span className="noob-tip-text">
-                  <strong>Tip:</strong> Upgrade <em>Storage Vault</em> to Lv2 to secure higher resource capacity.
-                </span>
-                <button type="button" className="noob-tip-dismiss" onClick={() => dismissTip('tip-storage-vault')} aria-label="Dismiss tip">✕</button>
-              </div>
-            )}
+            {!allQuestsComplete &&
+              nexus.buildings.commandCore >= 1 &&
+              nexus.buildings.recruitmentCore < 1 &&
+              !dismissedTips.has('tip-recruitment-core') && (
+                <div className="noob-tip">
+                  <span className="noob-tip-icon">💡</span>
+                  <span className="noob-tip-text">
+                    <strong>Next up:</strong> Upgrade <em>Recruitment Core</em> to Lv1 to unlock troop training.
+                  </span>
+                  <button
+                    type="button"
+                    className="noob-tip-dismiss"
+                    onClick={() => dismissTip('tip-recruitment-core')}
+                    aria-label="Dismiss tip"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+            {!allQuestsComplete &&
+              nexus.buildings.storageVault < 2 &&
+              nexus.buildings.commandCore >= 1 &&
+              !dismissedTips.has('tip-storage-vault') && (
+                <div className="noob-tip">
+                  <span className="noob-tip-icon">💡</span>
+                  <span className="noob-tip-text">
+                    <strong>Tip:</strong> Upgrade <em>Storage Vault</em> to Lv2 to secure higher resource capacity.
+                  </span>
+                  <button
+                    type="button"
+                    className="noob-tip-dismiss"
+                    onClick={() => dismissTip('tip-storage-vault')}
+                    aria-label="Dismiss tip"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
 
             {nexus.buildQueue.length > 0 && (
               <div className="queue-section">
@@ -1840,34 +1872,35 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                         ))}
                       </div>
                     )}
-                    {!hasResources && cost && canUpgrade && (() => {
-                      const eta = getTimeUntilAffordable(cost);
-                      return (
-                        <div className="requirements-missing insuff-resources">
-                          <p className="requires-label">⚠️ Insufficient Resources:</p>
-                          {nexus.resources.biomass < cost.biomass && (
-                            <p className="requirement-item">
-                              • Biomass: {Math.floor(nexus.resources.biomass)}/{cost.biomass}
-                            </p>
-                          )}
-                          {nexus.resources.alloy < cost.alloy && (
-                            <p className="requirement-item">
-                              • Alloy: {Math.floor(nexus.resources.alloy)}/{cost.alloy}
-                            </p>
-                          )}
-                          {nexus.resources.ore < cost.ore && (
-                            <p className="requirement-item">
-                              • Ore: {Math.floor(nexus.resources.ore)}/{cost.ore}
-                            </p>
-                          )}
-                          {eta !== null && (
-                            <p className="requirement-item resource-eta">
-                              ⏱️ Ready in {formatDurationSeconds(eta)}
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })()}
+                    {!hasResources &&
+                      cost &&
+                      canUpgrade &&
+                      (() => {
+                        const eta = getTimeUntilAffordable(cost);
+                        return (
+                          <div className="requirements-missing insuff-resources">
+                            <p className="requires-label">⚠️ Insufficient Resources:</p>
+                            {nexus.resources.biomass < cost.biomass && (
+                              <p className="requirement-item">
+                                • Biomass: {Math.floor(nexus.resources.biomass)}/{cost.biomass}
+                              </p>
+                            )}
+                            {nexus.resources.alloy < cost.alloy && (
+                              <p className="requirement-item">
+                                • Alloy: {Math.floor(nexus.resources.alloy)}/{cost.alloy}
+                              </p>
+                            )}
+                            {nexus.resources.ore < cost.ore && (
+                              <p className="requirement-item">
+                                • Ore: {Math.floor(nexus.resources.ore)}/{cost.ore}
+                              </p>
+                            )}
+                            {eta !== null && (
+                              <p className="requirement-item resource-eta">⏱️ Ready in {formatDurationSeconds(eta)}</p>
+                            )}
+                          </div>
+                        );
+                      })()}
                     {!isAtMax && (
                       <button
                         className="building-upgrade-button"
@@ -1888,15 +1921,26 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
           <div className="troops-tab">
             <h3>Troops</h3>
 
-            {!allQuestsComplete && nexus.buildings.recruitmentCore >= 1 && (nexus.troops.assaultTrooper || 0) < 5 && !dismissedTips.has('tip-assault-troopers') && (
-              <div className="noob-tip">
-                <span className="noob-tip-icon">💡</span>
-                <span className="noob-tip-text">
-                  <strong>Field your first force:</strong> Train at least <em>5 Assault Troopers</em> to complete your intro quest.
-                </span>
-                <button type="button" className="noob-tip-dismiss" onClick={() => dismissTip('tip-assault-troopers')} aria-label="Dismiss tip">✕</button>
-              </div>
-            )}
+            {!allQuestsComplete &&
+              nexus.buildings.recruitmentCore >= 1 &&
+              (nexus.troops.assaultTrooper || 0) < 5 &&
+              !dismissedTips.has('tip-assault-troopers') && (
+                <div className="noob-tip">
+                  <span className="noob-tip-icon">💡</span>
+                  <span className="noob-tip-text">
+                    <strong>Field your first force:</strong> Train at least <em>5 Assault Troopers</em> to complete your
+                    intro quest.
+                  </span>
+                  <button
+                    type="button"
+                    className="noob-tip-dismiss"
+                    onClick={() => dismissTip('tip-assault-troopers')}
+                    aria-label="Dismiss tip"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
 
             {nexus.buildings.recruitmentCore === 0 ? (
               <p>Build a Recruitment Core to train troops!</p>
@@ -1948,12 +1992,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                             const { canTrain, missingRequirements } = checkTroopRequirements(type);
                             const { maxTrainable, shortageReasons } = getMaxTrainableAmount(type, costs, canTrain);
                             const trainSeconds = canTrain
-                              ? getTroopTrainSeconds(
-                                  type,
-                                  costs.time,
-                                  nexus.buildings.recruitmentCore,
-                                  nexus.nexusType,
-                                )
+                              ? getTroopTrainSeconds(type, costs.time, nexus.buildings.recruitmentCore, nexus.nexusType)
                               : costs.time;
                             const isOverseerTrack = type === 'overseer';
                             const sameChainQueueLength = nexus.trainingQueue.filter((entry: any) =>
@@ -2022,24 +2061,27 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                                     ))}
                                   </div>
                                 )}
-                                {canTrain && !isTrainingQueueFull && shortageReasons.length > 0 && (() => {
-                                  const eta = getTimeUntilAffordable(costs);
-                                  return (
-                                    <div className="requirements-missing">
-                                      <p className="requires-label">⚠️ Not enough resources:</p>
-                                      {shortageReasons.map((reason, idx) => (
-                                        <p key={idx} className="requirement-item">
-                                          • {reason}
-                                        </p>
-                                      ))}
-                                      {eta !== null && (
-                                        <p className="requirement-item resource-eta">
-                                          ⏱️ Ready in {formatDurationSeconds(eta)}
-                                        </p>
-                                      )}
-                                    </div>
-                                  );
-                                })()}
+                                {canTrain &&
+                                  !isTrainingQueueFull &&
+                                  shortageReasons.length > 0 &&
+                                  (() => {
+                                    const eta = getTimeUntilAffordable(costs);
+                                    return (
+                                      <div className="requirements-missing">
+                                        <p className="requires-label">⚠️ Not enough resources:</p>
+                                        {shortageReasons.map((reason, idx) => (
+                                          <p key={idx} className="requirement-item">
+                                            • {reason}
+                                          </p>
+                                        ))}
+                                        {eta !== null && (
+                                          <p className="requirement-item resource-eta">
+                                            ⏱️ Ready in {formatDurationSeconds(eta)}
+                                          </p>
+                                        )}
+                                      </div>
+                                    );
+                                  })()}
                                 <div className="train-controls-wrapper">
                                   {canTrain && maxTrainable > 0 && (
                                     <span className="train-max-label">Max trainable: {maxTrainable}</span>
