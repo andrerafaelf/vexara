@@ -12,7 +12,38 @@ import { Nexus } from '@/types/game';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
+import annihilatorplatformImg from '@/assets/troops/annihilatorplatform.png';
+import assaulttrooperImg from '@/assets/troops/assaulttrooper.png';
+import breakerunitImg from '@/assets/troops/breakerunit.png';
+import bulwarkguardImg from '@/assets/troops/bulwarkguard.png';
+import disruptorunitImg from '@/assets/troops/disruptorunit.png';
+import interceptorbikeImg from '@/assets/troops/interceptorbike.png';
+import lancerdroneImg from '@/assets/troops/lancerdrone.png';
+import overseerImg from '@/assets/troops/overseer.png';
+import reconoperativeImg from '@/assets/troops/reconoperative.png';
+import siegemechImg from '@/assets/troops/siegemech.png';
+import skimmerbikeImg from '@/assets/troops/skimmerbike.png';
+import suppressorteamImg from '@/assets/troops/suppressorteam.png';
+
 const STAT_LABELS = ['Attack', 'Defense', 'Speed', 'Carry'] as const;
+
+const TROOP_IMAGES: Record<string, { src?: string } | string> = {
+  assaultTrooper: assaulttrooperImg,
+  lancerDrone: lancerdroneImg,
+  breakerUnit: breakerunitImg,
+  reconOperative: reconoperativeImg,
+  skimmerBike: skimmerbikeImg,
+  siegeMech: siegemechImg,
+  bulwarkGuard: bulwarkguardImg,
+  suppressorTeam: suppressorteamImg,
+  disruptorUnit: disruptorunitImg,
+  interceptorBike: interceptorbikeImg,
+  annihilatorPlatform: annihilatorplatformImg,
+  overseer: overseerImg,
+};
+
+const TROOP_ORDER = TROOPS_DOC.map((t) => t.key);
+const TROOP_NAME_BY_KEY: Record<string, string> = Object.fromEntries(TROOPS_DOC.map((t) => [t.key, t.name]));
 
 export default function TroopsPage() {
   const [nexuses, setNexuses] = useState<Nexus[]>([]);
@@ -251,6 +282,74 @@ export default function TroopsPage() {
         />
 
         <main className="main-content">
+          <section className="docs-page-card my-forces-card">
+            <h2>My Forces</h2>
+            <p className="docs-subtitle">All troops stationed across your nexuses, grouped per nexus.</p>
+
+            {nexuses.length === 0 ? (
+              <p className="my-forces-empty">You have no nexuses yet.</p>
+            ) : (
+              (() => {
+                const nexusesWithTroops = nexuses.filter((n) =>
+                  TROOP_ORDER.some((key) => Number((n.troops as Record<string, number>)?.[key] || 0) > 0),
+                );
+                if (nexusesWithTroops.length === 0) {
+                  return <p className="my-forces-empty">No troops stationed yet. Train some from the nexus Troops tab.</p>;
+                }
+                return (
+                  <div className="my-forces-list">
+                    {nexusesWithTroops.map((nexus) => {
+                      const entries = TROOP_ORDER
+                        .map((key) => ({ key, count: Number((nexus.troops as Record<string, number>)?.[key] || 0) }))
+                        .filter((e) => e.count > 0);
+                      const total = entries.reduce((sum, e) => sum + e.count, 0);
+                      return (
+                        <div key={String(nexus._id)} className="my-forces-nexus">
+                          <button
+                            type="button"
+                            className="my-forces-nexus-header"
+                            onClick={() => router.push(`/nexus/${nexus._id}?tab=troops`)}
+                            aria-label={`Open ${nexus.name} troops tab`}
+                          >
+                            <span className="my-forces-nexus-name">
+                              🏛️ {nexus.name}
+                              <span className="my-forces-nexus-coords"> ({nexus.x}, {nexus.y})</span>
+                            </span>
+                            <span className="my-forces-nexus-total">{total.toLocaleString()} troops</span>
+                          </button>
+                          <div className="my-forces-grid">
+                            {entries.map(({ key, count }) => {
+                              const img = TROOP_IMAGES[key];
+                              const src = typeof img === 'string' ? img : img?.src;
+                              return (
+                                <div key={key} className="my-forces-troop">
+                                  <div className="troop-card-image-wrap">
+                                    {src && (
+                                      <img
+                                        src={src}
+                                        alt={TROOP_NAME_BY_KEY[key] || key}
+                                        className="troop-card-image"
+                                      />
+                                    )}
+                                    <span className="troop-stationed-overlay">
+                                      <span className="troop-stationed-dot" />
+                                      {count} stationed
+                                    </span>
+                                  </div>
+                                  <div className="my-forces-troop-name">{TROOP_NAME_BY_KEY[key] || key}</div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()
+            )}
+          </section>
+
           <section className="docs-page-card">
             <h2>Troop Compendium</h2>
             <p className="docs-subtitle">Full reference for every unit: role, combat profile, costs, and unlock requirements.</p>

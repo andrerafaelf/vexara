@@ -487,6 +487,156 @@
   color: #9ed9ff;
 }
 
+.my-forces-card {
+  margin-bottom: 16px;
+}
+
+.my-forces-empty {
+  color: #a8dadc;
+  font-style: italic;
+}
+
+.my-forces-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.my-forces-nexus {
+  background: #0f3460;
+  border: 1px solid #1a4f83;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.my-forces-nexus-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: none;
+  padding: 0 0 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid rgba(45, 124, 212, 0.35);
+  color: #f1faee;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.my-forces-nexus-header:hover .my-forces-nexus-name {
+  color: #4fc3f7;
+}
+
+.my-forces-nexus-name {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  transition: color 0.15s ease;
+}
+
+.my-forces-nexus-coords {
+  color: #9ed9ff;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.my-forces-nexus-total {
+  background: #1a4f83;
+  border: 1px solid #2d7cd4;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 12px;
+  color: #e4f2ff;
+  white-space: nowrap;
+}
+
+.my-forces-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.my-forces-troop {
+  background: #1a4971;
+  border: 1px solid rgba(168, 218, 220, 0.08);
+  border-top: 3px solid #2a5f8f;
+  border-radius: 8px;
+  padding: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.my-forces-troop .troop-card-image-wrap {
+  position: relative;
+  width: calc(100% + 20px);
+  margin: -10px -10px 8px;
+}
+
+.my-forces-troop .troop-card-image {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+}
+
+.my-forces-troop .troop-stationed-overlay {
+  position: absolute;
+  bottom: 6px;
+  left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #e0f0ff;
+  background: rgba(10, 25, 45, 0.78);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(100, 180, 255, 0.25);
+  border-radius: 4px;
+  padding: 3px 7px 3px 5px;
+  white-space: nowrap;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.my-forces-troop .troop-stationed-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4fc3f7;
+  box-shadow: 0 0 5px rgba(79, 195, 247, 0.8);
+  flex-shrink: 0;
+}
+
+.my-forces-troop-name {
+  color: #f1faee;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .my-forces-nexus-header {
+    font-size: 14px;
+  }
+
+  .my-forces-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+  }
+
+  .my-forces-troop .troop-card-image {
+    height: 85px;
+  }
+}
+
 .mobile-drawer-nexuses h3 {
   color: #e94560;
   margin-bottom: 12px;
