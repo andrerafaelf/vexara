@@ -1,8 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNotifications, NotificationPreferences } from '@/hooks/useNotifications';
+import PwaGuideModal from './PwaGuideModal';
 import '@/styles/NotificationSettings.css';
+
+const PWA_GUIDE_SEEN_KEY = 'pwa_guide_seen';
 
 const PREF_LABELS: { key: keyof NotificationPreferences; label: string; description: string }[] = [
   { key: 'attackIncoming', label: 'Incoming Attacks', description: 'When your nexus is attacked' },
@@ -18,6 +21,14 @@ const PREF_LABELS: { key: keyof NotificationPreferences; label: string; descript
 export default function NotificationSettings() {
   const { permission, isSubscribed, preferences, loading, swReady, subscribe, unsubscribe, updatePreference } =
     useNotifications();
+  const [showGuide, setShowGuide] = useState(false);
+
+  useEffect(() => {
+    if (!isSubscribed && !localStorage.getItem(PWA_GUIDE_SEEN_KEY)) {
+      setShowGuide(true);
+      localStorage.setItem(PWA_GUIDE_SEEN_KEY, '1');
+    }
+  }, [isSubscribed]);
 
   if (permission === 'unsupported') {
     return (
@@ -28,63 +39,76 @@ export default function NotificationSettings() {
   }
 
   return (
-    <div className="notif-settings">
-      <div className="notif-header">
-        <h3 className="notif-title">Push Notifications</h3>
-        <div className="notif-status">
-          <span className={`notif-dot ${isSubscribed ? 'notif-dot--on' : 'notif-dot--off'}`} />
-          <span className="notif-status-text">{isSubscribed ? 'Enabled' : 'Disabled'}</span>
-        </div>
-      </div>
-
-      {permission === 'denied' && (
-        <div className="notif-denied">
-          Notifications are blocked. Enable them in your browser site settings.
-        </div>
-      )}
-
-      {!isSubscribed && permission !== 'denied' && (
-        <button
-          className="notif-enable-btn"
-          onClick={subscribe}
-          disabled={loading || !swReady}
-        >
-          {loading ? 'Enabling...' : 'Enable Notifications'}
-        </button>
-      )}
-
-      {isSubscribed && (
-        <>
-          <div className="notif-prefs-list">
-            {PREF_LABELS.map(({ key, label, description }) => (
-              <label key={key} className="notif-pref-row">
-                <div className="notif-pref-text">
-                  <span className="notif-pref-label">{label}</span>
-                  <span className="notif-pref-desc">{description}</span>
-                </div>
-                <div
-                  className={`notif-toggle ${preferences[key] ? 'notif-toggle--on' : ''}`}
-                  role="switch"
-                  aria-checked={preferences[key]}
-                  tabIndex={0}
-                  onClick={() => updatePreference(key, !preferences[key])}
-                  onKeyDown={(e) => e.key === 'Enter' && updatePreference(key, !preferences[key])}
-                >
-                  <span className="notif-toggle-thumb" />
-                </div>
-              </label>
-            ))}
+    <>
+      {showGuide && <PwaGuideModal onClose={() => setShowGuide(false)} />}
+      <div className="notif-settings">
+        <div className="notif-header">
+          <h3 className="notif-title">Push Notifications</h3>
+          <div className="notif-header-right">
+            <button
+              className="notif-guide-btn"
+              onClick={() => setShowGuide(true)}
+              title="Setup guide for mobile"
+              aria-label="Open mobile setup guide"
+            >
+              ?
+            </button>
+            <div className="notif-status">
+              <span className={`notif-dot ${isSubscribed ? 'notif-dot--on' : 'notif-dot--off'}`} />
+              <span className="notif-status-text">{isSubscribed ? 'Enabled' : 'Disabled'}</span>
+            </div>
           </div>
+        </div>
 
+        {permission === 'denied' && (
+          <div className="notif-denied">
+            Notifications are blocked. Enable them in your browser site settings.
+          </div>
+        )}
+
+        {!isSubscribed && permission !== 'denied' && (
           <button
-            className="notif-disable-btn"
-            onClick={unsubscribe}
-            disabled={loading}
+            className="notif-enable-btn"
+            onClick={subscribe}
+            disabled={loading || !swReady}
           >
-            {loading ? 'Disabling...' : 'Disable All Notifications'}
+            {loading ? 'Enabling...' : 'Enable Notifications'}
           </button>
-        </>
-      )}
-    </div>
+        )}
+
+        {isSubscribed && (
+          <>
+            <div className="notif-prefs-list">
+              {PREF_LABELS.map(({ key, label, description }) => (
+                <label key={key} className="notif-pref-row">
+                  <div className="notif-pref-text">
+                    <span className="notif-pref-label">{label}</span>
+                    <span className="notif-pref-desc">{description}</span>
+                  </div>
+                  <div
+                    className={`notif-toggle ${preferences[key] ? 'notif-toggle--on' : ''}`}
+                    role="switch"
+                    aria-checked={preferences[key]}
+                    tabIndex={0}
+                    onClick={() => updatePreference(key, !preferences[key])}
+                    onKeyDown={(e) => e.key === 'Enter' && updatePreference(key, !preferences[key])}
+                  >
+                    <span className="notif-toggle-thumb" />
+                  </div>
+                </label>
+              ))}
+            </div>
+
+            <button
+              className="notif-disable-btn"
+              onClick={unsubscribe}
+              disabled={loading}
+            >
+              {loading ? 'Disabling...' : 'Disable All Notifications'}
+            </button>
+          </>
+        )}
+      </div>
+    </>
   );
 }

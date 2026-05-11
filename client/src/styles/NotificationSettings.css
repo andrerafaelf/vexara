@@ -22,6 +22,35 @@
   letter-spacing: 0.05em;
 }
 
+.notif-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.notif-guide-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid #1d5b8f;
+  background: #0f3460;
+  color: #7a9bae;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.notif-guide-btn:hover {
+  background: #e94560;
+  border-color: #e94560;
+  color: #fff;
+}
+
 .notif-status {
   display: flex;
   align-items: center;
