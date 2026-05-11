@@ -1939,20 +1939,23 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                             return (
                               <div key={type} className={`train-card ${isTrainDisabled ? 'disabled' : ''}`}>
                                 {TROOP_IMAGES[type] && (
-                                  <img
-                                    src={TROOP_IMAGES[type].src || TROOP_IMAGES[type]}
-                                    alt={TROOP_NAMES[type]}
-                                    className="troop-card-image"
-                                  />
+                                  <div className="troop-card-image-wrap">
+                                    <img
+                                      src={TROOP_IMAGES[type].src || TROOP_IMAGES[type]}
+                                      alt={TROOP_NAMES[type]}
+                                      className="troop-card-image"
+                                    />
+                                    {((nexus.troops as any)[type] || 0) > 0 && (
+                                      <span className="troop-stationed-overlay">
+                                        <span className="troop-stationed-dot" />
+                                        {(nexus.troops as any)[type]} stationed
+                                      </span>
+                                    )}
+                                  </div>
                                 )}
                                 <div className="troop-header">
                                   <h5>{TROOP_NAMES[type]}</h5>
                                   <div className="troop-header-right">
-                                    {((nexus.troops as any)[type] || 0) > 0 && (
-                                      <span className="troop-stationed-chip">
-                                        {(nexus.troops as any)[type]} stationed
-                                      </span>
-                                    )}
                                     <button
                                       type="button"
                                       className="troop-info"
