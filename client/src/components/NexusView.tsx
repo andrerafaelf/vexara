@@ -373,6 +373,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   const [troopSendAmounts, setTroopSendAmounts] = useState<Record<string, string>>({});
   const [sendingTroops, setSendingTroops] = useState(false);
   const submittingRef = useRef<Set<string>>(new Set());
+  const [dismissedTips, setDismissedTips] = useState<Set<string>>(new Set());
+
+  const dismissTip = (id: string) => setDismissedTips((prev) => new Set(prev).add(id));
 
   const showToast = (message: string, type: 'success' | 'error' | 'info') => {
     setToast({ message, type });
@@ -1656,6 +1659,34 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
           <div className="buildings-tab">
             <h3>Buildings</h3>
 
+            {nexus.buildings.commandCore < 1 && !dismissedTips.has('tip-command-core') && (
+              <div className="noob-tip">
+                <span className="noob-tip-icon">💡</span>
+                <span className="noob-tip-text">
+                  <strong>Start here:</strong> Upgrade <em>Command Core</em> to Lv1 to power your Nexus and unlock progression.
+                </span>
+                <button type="button" className="noob-tip-dismiss" onClick={() => dismissTip('tip-command-core')} aria-label="Dismiss tip">✕</button>
+              </div>
+            )}
+            {nexus.buildings.commandCore >= 1 && nexus.buildings.recruitmentCore < 1 && !dismissedTips.has('tip-recruitment-core') && (
+              <div className="noob-tip">
+                <span className="noob-tip-icon">💡</span>
+                <span className="noob-tip-text">
+                  <strong>Next up:</strong> Upgrade <em>Recruitment Core</em> to Lv1 to unlock troop training.
+                </span>
+                <button type="button" className="noob-tip-dismiss" onClick={() => dismissTip('tip-recruitment-core')} aria-label="Dismiss tip">✕</button>
+              </div>
+            )}
+            {nexus.buildings.storageVault < 2 && nexus.buildings.commandCore >= 1 && !dismissedTips.has('tip-storage-vault') && (
+              <div className="noob-tip">
+                <span className="noob-tip-icon">💡</span>
+                <span className="noob-tip-text">
+                  <strong>Tip:</strong> Upgrade <em>Storage Vault</em> to Lv2 to secure higher resource capacity.
+                </span>
+                <button type="button" className="noob-tip-dismiss" onClick={() => dismissTip('tip-storage-vault')} aria-label="Dismiss tip">✕</button>
+              </div>
+            )}
+
             {nexus.buildQueue.length > 0 && (
               <div className="queue-section">
                 <h4>Building Queue</h4>
@@ -1831,6 +1862,16 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
         {activeTab === 'troops' && (
           <div className="troops-tab">
             <h3>Troops</h3>
+
+            {nexus.buildings.recruitmentCore >= 1 && (nexus.troops.assaultTrooper || 0) < 5 && !dismissedTips.has('tip-assault-troopers') && (
+              <div className="noob-tip">
+                <span className="noob-tip-icon">💡</span>
+                <span className="noob-tip-text">
+                  <strong>Field your first force:</strong> Train at least <em>5 Assault Troopers</em> to complete your intro quest.
+                </span>
+                <button type="button" className="noob-tip-dismiss" onClick={() => dismissTip('tip-assault-troopers')} aria-label="Dismiss tip">✕</button>
+              </div>
+            )}
 
             {nexus.buildings.recruitmentCore === 0 ? (
               <p>Build a Recruitment Core to train troops!</p>

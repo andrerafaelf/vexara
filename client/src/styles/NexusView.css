@@ -484,6 +484,74 @@
   font-style: italic;
 }
 
+/* Noob tooltips */
+.noob-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #1a3a2a;
+  border: 1px solid #2e7d4f;
+  border-left: 4px solid #4caf50;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+.noob-tip-icon {
+  flex-shrink: 0;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.noob-tip-text {
+  flex: 1;
+  color: #c8e6c9;
+  line-height: 1.5;
+}
+
+.noob-tip-text strong {
+  color: #81c784;
+}
+
+.noob-tip-text em {
+  font-style: normal;
+  color: #a8dadc;
+  font-weight: 600;
+}
+
+.noob-tip-dismiss {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: #4caf50;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 2px;
+  line-height: 1.4;
+  opacity: 0.6;
+  /* Large touch target for mobile */
+  min-width: 28px;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.noob-tip-dismiss:hover,
+.noob-tip-dismiss:focus {
+  opacity: 1;
+  background: rgba(76, 175, 80, 0.15);
+}
+
+/* Active state for touch devices */
+.noob-tip-dismiss:active {
+  opacity: 1;
+  background: rgba(76, 175, 80, 0.25);
+}
+
 .intro-quests {
   background: #0f3460;
   padding: 15px;
