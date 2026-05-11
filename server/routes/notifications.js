@@ -73,7 +73,6 @@ router.get('/preferences', auth, async (req, res) => {
       buildingComplete: true,
       troopComplete: true,
       resourcesFull: true,
-      report: true,
       troopTransfer: true,
     });
   } catch (err) {
@@ -87,7 +86,7 @@ router.get('/preferences', auth, async (req, res) => {
 router.patch('/preferences', auth, async (req, res) => {
   const allowed = [
     'attackIncoming', 'attackResolved', 'troopsReturned', 'buildingComplete',
-    'troopComplete', 'resourcesFull', 'report', 'troopTransfer',
+    'troopComplete', 'resourcesFull', 'troopTransfer',
   ];
 
   const updates = {};

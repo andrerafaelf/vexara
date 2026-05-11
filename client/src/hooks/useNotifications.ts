@@ -16,7 +16,6 @@ export interface NotificationPreferences {
   buildingComplete: boolean;
   troopComplete: boolean;
   resourcesFull: boolean;
-  report: boolean;
   troopTransfer: boolean;
 }
 
@@ -27,7 +26,6 @@ const DEFAULT_PREFS: NotificationPreferences = {
   buildingComplete: true,
   troopComplete: true,
   resourcesFull: true,
-  report: true,
   troopTransfer: true,
 };
 

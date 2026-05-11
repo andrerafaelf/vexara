@@ -4,6 +4,7 @@ import auth from '../middleware/auth.js';
 import { applyCompletedQueues, applyQuestRewards, computeResourceUpdate, serializeNexus } from '../models/Nexus.js';
 import { NEXUS_TYPE_BONUSES } from '../utils/economy.js';
 import { parsePositiveInt } from '../utils/validation.js';
+import { sendPushToUser, NOTIF } from '../utils/push.js';
 
 const router = express.Router();
 const MAX_TRAINING_QUEUE = 5;
@@ -307,6 +308,7 @@ router.post('/check-queue', auth, async (req, res) => {
     const now = new Date();
     const trainingQueue = Array.isArray(nexus.trainingQueue) ? [...nexus.trainingQueue] : [];
     const troopUpdates = {};
+    const completedCounts = {};
     let completed = false;
 
     // Process the Overseer chain and the non-Overseer chain independently —
@@ -332,6 +334,7 @@ router.post('/check-queue', auth, async (req, res) => {
 
         const unitsCompleted = Math.min(entry.amount, Math.floor(elapsedMs / perUnitMs));
         troopUpdates[entry.troopType] = (troopUpdates[entry.troopType] || nexus[entry.troopType] || 0) + unitsCompleted;
+        completedCounts[entry.troopType] = (completedCounts[entry.troopType] || 0) + unitsCompleted;
         completed = true;
 
         if (unitsCompleted >= entry.amount) {
@@ -352,6 +355,18 @@ router.post('/check-queue', auth, async (req, res) => {
       data: { ...resourceUpdate, ...troopUpdates, trainingQueue },
     });
     const rewardApplied = await applyQuestRewards(updated);
+
+    if (nexus.ownerId) {
+      for (const [troopType, amount] of Object.entries(completedCounts)) {
+        const label = troopType.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase());
+        void sendPushToUser(nexus.ownerId, NOTIF.TROOP_COMPLETE, {
+          title: 'Training Complete',
+          body: `${amount}x ${label} ready at ${nexus.name}.`,
+          tag: `troop-${nexus.id}-${troopType}`,
+          data: { url: '/' },
+        });
+      }
+    }
 
     res.json({ completed, nexus: serializeNexus(rewardApplied) });
   } catch (error) {

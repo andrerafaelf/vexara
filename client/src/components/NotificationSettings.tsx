@@ -13,7 +13,6 @@ const PREF_LABELS: { key: keyof NotificationPreferences; label: string; descript
   { key: 'troopComplete', label: 'Training Complete', description: 'When a troop training batch finishes' },
   { key: 'resourcesFull', label: 'Storage Full', description: 'When all resources hit max capacity' },
   { key: 'troopTransfer', label: 'Troop Transfer', description: 'When transferred troops arrive or return' },
-  { key: 'report', label: 'Combat Reports', description: 'General battle report alerts' },
 ];
 
 export default function NotificationSettings() {

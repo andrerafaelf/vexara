@@ -50,7 +50,6 @@ model NotificationPreferences {
   buildingComplete  Boolean @default(true)
   troopComplete     Boolean @default(true)
   resourcesFull     Boolean @default(true)
-  report            Boolean @default(true)
   troopTransfer     Boolean @default(true)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

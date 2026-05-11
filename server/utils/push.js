@@ -18,7 +18,6 @@ export const NOTIF = {
   BUILDING_COMPLETE: 'buildingComplete',
   TROOP_COMPLETE: 'troopComplete',
   RESOURCES_FULL: 'resourcesFull',
-  REPORT: 'report',
   TROOP_TRANSFER: 'troopTransfer',
 };
 

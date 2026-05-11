@@ -4,6 +4,7 @@ import auth from '../middleware/auth.js';
 import { applyCompletedQueues, applyQuestRewards, computeResourceUpdate, normalizeBuildQueue, serializeNexus } from '../models/Nexus.js';
 import { NEXUS_TYPE_BONUSES } from '../utils/economy.js';
 import { getPopulationMax } from '../utils/population.js';
+import { sendPushToUser, NOTIF } from '../utils/push.js';
 
 const router = express.Router();
 const MAX_BUILD_QUEUE = 5;
@@ -366,11 +367,13 @@ router.post('/check-queue', auth, async (req, res) => {
     const buildQueue = normalizeBuildQueue(nexus.buildQueue);
     let completed = false;
     const data = {};
+    const completedBuildings = [];
 
     while (buildQueue.length > 0 && new Date(buildQueue[0].completesAt) <= now) {
       const build = buildQueue.shift();
       data[build.building] = build.targetLevel;
       completed = true;
+      completedBuildings.push({ building: build.building, level: build.targetLevel });
 
       // Update max population if life support was upgraded
       if (build.building === 'lifeSupport') {
@@ -387,6 +390,18 @@ router.post('/check-queue', auth, async (req, res) => {
       data: { ...resourceUpdate, ...data },
     });
     const rewardApplied = await applyQuestRewards(updated);
+
+    if (nexus.ownerId) {
+      for (const { building, level } of completedBuildings) {
+        const label = building.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase());
+        void sendPushToUser(nexus.ownerId, NOTIF.BUILDING_COMPLETE, {
+          title: 'Construction Complete',
+          body: `${label} upgraded to level ${level} at ${nexus.name}.`,
+          tag: `build-${nexus.id}-${building}`,
+          data: { url: '/' },
+        });
+      }
+    }
 
     res.json({ completed, nexus: serializeNexus(rewardApplied) });
   } catch (error) {
