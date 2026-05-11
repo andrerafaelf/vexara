@@ -4,6 +4,7 @@ import { getUserStats } from '@/services/api';
 import { UserStats } from '@/types/game';
 import { useEffect, useState } from 'react';
 import '../styles/ProfileStats.css';
+import StatsChart from './StatsChart';
 
 function fmt(n: number): string {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
@@ -152,6 +153,13 @@ export default function ProfileStats() {
           <StatCard label="Account Age" value={`${stats.accountAgeDays}d`} />
         </div>
       </Section>
+
+      <div className="ps-section">
+        <h3 className="ps-section-title">Activity Graph</h3>
+        <div style={{ padding: '0' }}>
+          <StatsChart />
+        </div>
+      </div>
     </div>
   );
 }

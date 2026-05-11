@@ -4,6 +4,19 @@ export interface User {
   email: string;
 }
 
+export interface TimelineDay {
+  date: string;
+  attacksLaunched: number;
+  attacksDefended: number;
+  troopsKilled: number;
+  troopsLost: number;
+  resourcesStolen: number;
+  resourcesLost: number;
+  biomassProduced: number;
+  alloyProduced: number;
+  oreProduced: number;
+}
+
 export interface UserStats {
   username: string;
   points: number;

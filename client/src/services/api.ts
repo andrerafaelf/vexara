@@ -223,6 +223,7 @@ export const removeFriend = (friendId: string) =>
 
 // Stats
 export const getUserStats = () => apiRequest('/stats/me');
+export const getStatsTimeline = (days: number) => apiRequest(`/stats/timeline?days=${days}`);
 
 // Chat
 export const getConversations = () => apiRequest('/chat/conversations');

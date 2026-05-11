@@ -1,0 +1,92 @@
+.sc-wrapper {
+  background: #16213e;
+  border: 2px solid #0f3460;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.sc-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #0f3460;
+  padding: 8px 14px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Tab buttons (Combat / Resources) */
+.sc-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.sc-tab {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #6b7c9e;
+  font-size: 13px;
+  font-weight: bold;
+  padding: 5px 14px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.sc-tab:hover {
+  color: #a8dadc;
+}
+
+.sc-tab.active {
+  color: #e94560;
+  border-color: #e94560;
+}
+
+/* Range selector (7d / 30d / 90d) */
+.sc-ranges {
+  display: flex;
+  gap: 4px;
+}
+
+.sc-range {
+  background: transparent;
+  border: 1px solid #1a3a6e;
+  color: #6b7c9e;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.sc-range:hover {
+  color: #a8dadc;
+  border-color: #a8dadc;
+}
+
+.sc-range.active {
+  color: #e2e8f0;
+  border-color: #a8dadc;
+  background: rgba(168, 218, 220, 0.1);
+}
+
+/* Chart area */
+.sc-chart-area {
+  padding: 16px 8px 8px;
+  position: relative;
+  min-height: 296px;
+}
+
+.sc-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a8dadc;
+  font-size: 14px;
+}
+
+.sc-error {
+  color: #e94560;
+}

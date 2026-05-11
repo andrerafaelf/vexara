@@ -147,4 +147,106 @@ router.get('/me', auth, async (req, res) => {
   }
 });
 
+// GET /api/stats/timeline?days=7|30|90
+// Returns one bucket per calendar day within the window.
+// Each bucket aggregates attack events (as attacker or defender) that completed
+// in that day, plus a snapshot of the user's current production rate.
+router.get('/timeline', auth, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const days = Math.min(90, Math.max(7, parseInt(req.query.days, 10) || 30));
+
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    const [nexuses, attacks] = await Promise.all([
+      prisma.nexus.findMany({ where: { ownerId: userId } }),
+      prisma.attack.findMany({
+        where: {
+          status: 'completed',
+          createdAt: { gte: since },
+          OR: [{ attackerUserId: userId }, { defenderUserId: userId }],
+        },
+        select: {
+          attackerUserId: true,
+          defenderUserId: true,
+          result: true,
+          createdAt: true,
+        },
+      }),
+    ]);
+
+    // Current production per hour (used as a flat rate for every day in the window)
+    let prodPerHour = { biomass: 0, alloy: 0, ore: 0 };
+    for (const nexus of nexuses) {
+      const p = getResourceProduction(nexus);
+      prodPerHour.biomass += p.biomass;
+      prodPerHour.alloy += p.alloy;
+      prodPerHour.ore += p.ore;
+    }
+    const prodPerDay = {
+      biomass: Math.round(prodPerHour.biomass * 24),
+      alloy: Math.round(prodPerHour.alloy * 24),
+      ore: Math.round(prodPerHour.ore * 24),
+    };
+
+    // Build a map keyed by YYYY-MM-DD
+    const buckets = {};
+    for (let i = 0; i < days; i++) {
+      const d = new Date(since.getTime() + i * 24 * 60 * 60 * 1000);
+      const key = d.toISOString().slice(0, 10);
+      buckets[key] = {
+        date: key,
+        attacksLaunched: 0,
+        attacksDefended: 0,
+        troopsKilled: 0,
+        troopsLost: 0,
+        resourcesStolen: 0,
+        resourcesLost: 0,
+        biomassProduced: prodPerDay.biomass,
+        alloyProduced: prodPerDay.alloy,
+        oreProduced: prodPerDay.ore,
+      };
+    }
+
+    for (const attack of attacks) {
+      const key = new Date(attack.createdAt).toISOString().slice(0, 10);
+      if (!buckets[key]) continue;
+      const b = buckets[key];
+      const result = attack.result;
+      if (!result) continue;
+
+      const isAttacker = attack.attackerUserId === userId;
+      const isDefender = attack.defenderUserId === userId;
+      const won = result.victory === true;
+
+      if (isAttacker) {
+        b.attacksLaunched++;
+        b.troopsLost += sumTroops(result.attackerLosses);
+        b.troopsKilled += sumTroops(result.defenderLosses);
+        if (won && result.resourcesStolen) {
+          b.resourcesStolen +=
+            (result.resourcesStolen.biomass || 0) +
+            (result.resourcesStolen.alloy || 0) +
+            (result.resourcesStolen.ore || 0);
+        }
+      }
+      if (isDefender) {
+        b.attacksDefended++;
+        b.troopsLost += sumTroops(result.defenderLosses);
+        b.troopsKilled += sumTroops(result.attackerLosses);
+        if (!won && result.resourcesStolen) {
+          b.resourcesLost +=
+            (result.resourcesStolen.biomass || 0) +
+            (result.resourcesStolen.alloy || 0) +
+            (result.resourcesStolen.ore || 0);
+        }
+      }
+    }
+
+    res.json(Object.values(buckets));
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;
