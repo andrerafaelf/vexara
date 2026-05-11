@@ -1072,7 +1072,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     return { canUpgrade: missing.length === 0, missingRequirements: missing, atMax: false };
   };
 
-  const getQuestBatches = (): QuestBatch[] => {
+  const getQuestBatches = (): { batches: QuestBatch[]; allQuestsComplete: boolean } => {
     // A batch that has had its reward claimed is permanently complete — quests inside it
     // should show as done even if live state (e.g. troops lost in combat) no longer meets the condition.
     const claimedBatches = new Set<string>(Array.isArray(nexus.questRewardClaims) ? nexus.questRewardClaims : []);
@@ -1317,8 +1317,11 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
       },
     ];
 
+    const conquerorComplete = claimedBatches.has('conqueror') || conquerorQuests.every((quest) => quest.completed);
+    const allQuestsComplete = conquerorComplete;
+
     // Hide batches that have already been claimed — next tier naturally appears
-    return allBatches.filter((batch) => !claimedBatches.has(batch.id));
+    return { batches: allBatches.filter((batch) => !claimedBatches.has(batch.id)), allQuestsComplete };
   };
 
   const production = calculateProduction();
@@ -1330,7 +1333,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     if (pct >= 0.8) return 'resource-amount resource-near-full';
     return 'resource-amount';
   };
-  const questBatches = getQuestBatches();
+  const { batches: questBatches, allQuestsComplete } = getQuestBatches();
   const activeBuild = nexus.buildQueue[0];
   const activeTraining = nexus.trainingQueue[0];
   const activeBuildTimer = activeBuild ? getBuildQueueTimeDisplay(0).label : null;
@@ -1659,7 +1662,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
           <div className="buildings-tab">
             <h3>Buildings</h3>
 
-            {nexus.buildings.commandCore < 1 && !dismissedTips.has('tip-command-core') && (
+            {!allQuestsComplete && nexus.buildings.commandCore < 1 && !dismissedTips.has('tip-command-core') && (
               <div className="noob-tip">
                 <span className="noob-tip-icon">💡</span>
                 <span className="noob-tip-text">
@@ -1668,7 +1671,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                 <button type="button" className="noob-tip-dismiss" onClick={() => dismissTip('tip-command-core')} aria-label="Dismiss tip">✕</button>
               </div>
             )}
-            {nexus.buildings.commandCore >= 1 && nexus.buildings.recruitmentCore < 1 && !dismissedTips.has('tip-recruitment-core') && (
+            {!allQuestsComplete && nexus.buildings.commandCore >= 1 && nexus.buildings.recruitmentCore < 1 && !dismissedTips.has('tip-recruitment-core') && (
               <div className="noob-tip">
                 <span className="noob-tip-icon">💡</span>
                 <span className="noob-tip-text">
@@ -1677,7 +1680,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                 <button type="button" className="noob-tip-dismiss" onClick={() => dismissTip('tip-recruitment-core')} aria-label="Dismiss tip">✕</button>
               </div>
             )}
-            {nexus.buildings.storageVault < 2 && nexus.buildings.commandCore >= 1 && !dismissedTips.has('tip-storage-vault') && (
+            {!allQuestsComplete && nexus.buildings.storageVault < 2 && nexus.buildings.commandCore >= 1 && !dismissedTips.has('tip-storage-vault') && (
               <div className="noob-tip">
                 <span className="noob-tip-icon">💡</span>
                 <span className="noob-tip-text">
@@ -1863,7 +1866,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
           <div className="troops-tab">
             <h3>Troops</h3>
 
-            {nexus.buildings.recruitmentCore >= 1 && (nexus.troops.assaultTrooper || 0) < 5 && !dismissedTips.has('tip-assault-troopers') && (
+            {!allQuestsComplete && nexus.buildings.recruitmentCore >= 1 && (nexus.troops.assaultTrooper || 0) < 5 && !dismissedTips.has('tip-assault-troopers') && (
               <div className="noob-tip">
                 <span className="noob-tip-icon">💡</span>
                 <span className="noob-tip-text">
