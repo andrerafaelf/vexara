@@ -9,6 +9,10 @@ const router = express.Router();
 const VALID_RESOURCES = new Set(['biomass', 'alloy', 'ore']);
 const MAX_LISTINGS_PER_NEXUS = 5;
 
+// System market: buying costs 25% more, selling yields 25% less (1.25:1 ratio)
+const SYSTEM_BUY_RATE = 1.25;   // pay 125 to receive 100
+const SYSTEM_SELL_RATE = 0.8;   // receive 80 when selling 100
+
 // Get all active listings
 router.get('/', auth, async (req, res) => {
   try {
@@ -208,6 +212,94 @@ router.delete('/:id', auth, async (req, res) => {
     ]);
 
     res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// System market: buy a resource by paying another at a 1.25:1 cost
+router.post('/system/buy', auth, async (req, res) => {
+  try {
+    const { nexusId, receiveResource, receiveAmount, payResource } = req.body;
+    const parsedNexusId = parsePositiveInt(nexusId);
+    const parsedReceive = parsePositiveInt(receiveAmount);
+
+    if (!parsedNexusId || !parsedReceive) {
+      return res.status(400).json({ error: 'Invalid parameters' });
+    }
+    if (!VALID_RESOURCES.has(receiveResource) || !VALID_RESOURCES.has(payResource)) {
+      return res.status(400).json({ error: 'Invalid resource type' });
+    }
+    if (receiveResource === payResource) {
+      return res.status(400).json({ error: 'Resources must differ' });
+    }
+
+    const rawNexus = await prisma.nexus.findUnique({ where: { id: parsedNexusId } });
+    if (!rawNexus || rawNexus.ownerId !== req.userId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+    const nexus = await refreshResources(rawNexus);
+
+    const cost = Math.ceil(parsedReceive * SYSTEM_BUY_RATE);
+    if ((nexus[payResource] || 0) < cost) {
+      return res.status(400).json({ error: `Insufficient ${payResource} — need ${cost}` });
+    }
+
+    await prisma.nexus.update({
+      where: { id: parsedNexusId },
+      data: {
+        [payResource]: nexus[payResource] - cost,
+        [receiveResource]: nexus[receiveResource] + parsedReceive,
+      },
+    });
+
+    res.json({ success: true, paid: cost, received: parsedReceive });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// System market: sell a resource and receive another at a 0.8:1 yield
+router.post('/system/sell', auth, async (req, res) => {
+  try {
+    const { nexusId, sellResource, sellAmount, receiveResource } = req.body;
+    const parsedNexusId = parsePositiveInt(nexusId);
+    const parsedSell = parsePositiveInt(sellAmount);
+
+    if (!parsedNexusId || !parsedSell) {
+      return res.status(400).json({ error: 'Invalid parameters' });
+    }
+    if (!VALID_RESOURCES.has(sellResource) || !VALID_RESOURCES.has(receiveResource)) {
+      return res.status(400).json({ error: 'Invalid resource type' });
+    }
+    if (sellResource === receiveResource) {
+      return res.status(400).json({ error: 'Resources must differ' });
+    }
+
+    const rawNexus = await prisma.nexus.findUnique({ where: { id: parsedNexusId } });
+    if (!rawNexus || rawNexus.ownerId !== req.userId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+    const nexus = await refreshResources(rawNexus);
+
+    if ((nexus[sellResource] || 0) < parsedSell) {
+      return res.status(400).json({ error: `Insufficient ${sellResource}` });
+    }
+
+    const received = Math.floor(parsedSell * SYSTEM_SELL_RATE);
+    if (received < 1) {
+      return res.status(400).json({ error: 'Amount too small' });
+    }
+
+    await prisma.nexus.update({
+      where: { id: parsedNexusId },
+      data: {
+        [sellResource]: nexus[sellResource] - parsedSell,
+        [receiveResource]: nexus[receiveResource] + received,
+      },
+    });
+
+    res.json({ success: true, sold: parsedSell, received });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

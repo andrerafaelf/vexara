@@ -185,6 +185,28 @@ export const buyMarketListing = (listingId: number, buyerNexusId: string) =>
 export const cancelMarketListing = (listingId: number) => apiRequest(`/market/${listingId}`, { method: 'DELETE' });
 export const getMarketHistory = () => apiRequest('/market/history');
 
+export const systemBuyResource = (
+  nexusId: string,
+  receiveResource: string,
+  receiveAmount: number,
+  payResource: string,
+) =>
+  apiRequest('/market/system/buy', {
+    method: 'POST',
+    body: JSON.stringify({ nexusId, receiveResource, receiveAmount, payResource }),
+  });
+
+export const systemSellResource = (
+  nexusId: string,
+  sellResource: string,
+  sellAmount: number,
+  receiveResource: string,
+) =>
+  apiRequest('/market/system/sell', {
+    method: 'POST',
+    body: JSON.stringify({ nexusId, sellResource, sellAmount, receiveResource }),
+  });
+
 // Friends
 export const getFriends = () => apiRequest('/friends');
 export const getFriendRequests = () => apiRequest('/friends/requests');

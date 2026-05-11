@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { buyMarketListing, cancelMarketListing, createMarketListing, getMarketHistory, getMarketListings } from '../services/api';
+import { buyMarketListing, cancelMarketListing, createMarketListing, getMarketHistory, getMarketListings, systemBuyResource, systemSellResource } from '../services/api';
 import '../styles/Market.css';
 import { MarketListing, Nexus } from '../types/game';
 
@@ -38,6 +38,17 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
   const [buyNexusId, setBuyNexusId] = useState('');
   const [buyError, setBuyError] = useState('');
 
+  // System market state
+  const SYSTEM_RESOURCES = ['biomass', 'alloy', 'ore'] as const;
+  const [sysMode, setSysMode] = useState<'buy' | 'sell'>('buy');
+  const [sysFrom, setSysFrom] = useState<'biomass' | 'alloy' | 'ore'>('alloy');
+  const [sysTo, setSysTo] = useState<'biomass' | 'alloy' | 'ore'>('biomass');
+  const [sysAmount, setSysAmount] = useState('');
+  const [sysError, setSysError] = useState('');
+  const [sysSuccess, setSysSuccess] = useState('');
+  const [sysSubmitting, setSysSubmitting] = useState(false);
+  const [sysNexusId, setSysNexusId] = useState('');
+
   const loadListings = useCallback(async () => {
     try {
       const res = await getMarketListings();
@@ -69,7 +80,10 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
     if (nexuses.length > 0 && !buyNexusId) {
       setBuyNexusId(selectedNexusId ?? String(nexuses[0]._id));
     }
-  }, [nexuses, buyNexusId, selectedNexusId]);
+    if (nexuses.length > 0 && !sysNexusId) {
+      setSysNexusId(selectedNexusId ?? String(nexuses[0]._id));
+    }
+  }, [nexuses, buyNexusId, sysNexusId, selectedNexusId]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,6 +135,37 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
       onRefresh();
     } catch (err: any) {
       setError(err.message || 'Failed to cancel listing');
+    }
+  };
+
+  const handleSystemTrade = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSysError('');
+    setSysSuccess('');
+    const amount = parseInt(sysAmount);
+    if (!amount || amount <= 0) {
+      setSysError('Enter a positive amount');
+      return;
+    }
+    if (sysFrom === sysTo) {
+      setSysError('Resources must differ');
+      return;
+    }
+    setSysSubmitting(true);
+    try {
+      if (sysMode === 'buy') {
+        const res = await systemBuyResource(sysNexusId, sysTo, amount, sysFrom);
+        setSysSuccess(`Bought ${res.data.received.toLocaleString()} ${RESOURCE_LABELS[sysTo]} for ${res.data.paid.toLocaleString()} ${RESOURCE_LABELS[sysFrom]}`);
+      } else {
+        const res = await systemSellResource(sysNexusId, sysFrom, amount, sysTo);
+        setSysSuccess(`Sold ${res.data.sold.toLocaleString()} ${RESOURCE_LABELS[sysFrom]}, received ${res.data.received.toLocaleString()} ${RESOURCE_LABELS[sysTo]}`);
+      }
+      setSysAmount('');
+      onRefresh();
+    } catch (err: any) {
+      setSysError(err.message || 'Trade failed');
+    } finally {
+      setSysSubmitting(false);
     }
   };
 
@@ -332,6 +377,127 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
               </div>
             );
           })}
+        </div>
+      </div>
+
+      <div className="market-section">
+        <h3>System Exchange <span className="market-system-rate-note">1.25:1 rate · instant</span></h3>
+        <p className="market-subtitle" style={{ marginBottom: 16 }}>
+          Trade directly with the system at an unfavorable rate. Player listings above offer better deals.
+        </p>
+        <div className="market-system-panel">
+          <div className="market-system-nexus-row">
+            <label>Nexus:</label>
+            <select value={sysNexusId} onChange={(e) => setSysNexusId(e.target.value)}>
+              {nexuses.map((n) => (
+                <option key={n._id} value={n._id}>{n.name}</option>
+              ))}
+            </select>
+            {(() => {
+              const n = nexuses.find((n) => String(n._id) === sysNexusId);
+              return n ? (
+                <span className="market-buy-nexus-resources">
+                  {RESOURCE_ICONS.biomass} {Math.floor(n.resources.biomass).toLocaleString()} &nbsp;
+                  {RESOURCE_ICONS.alloy} {Math.floor(n.resources.alloy).toLocaleString()} &nbsp;
+                  {RESOURCE_ICONS.ore} {Math.floor(n.resources.ore).toLocaleString()}
+                </span>
+              ) : null;
+            })()}
+          </div>
+
+          <div className="market-system-mode-tabs">
+            <button
+              className={`market-system-tab ${sysMode === 'buy' ? 'market-system-tab--active' : ''}`}
+              onClick={() => { setSysMode('buy'); setSysError(''); setSysSuccess(''); }}
+            >
+              Buy
+            </button>
+            <button
+              className={`market-system-tab ${sysMode === 'sell' ? 'market-system-tab--active' : ''}`}
+              onClick={() => { setSysMode('sell'); setSysError(''); setSysSuccess(''); }}
+            >
+              Sell
+            </button>
+          </div>
+
+          <form className="market-system-form" onSubmit={handleSystemTrade}>
+            {sysMode === 'buy' ? (
+              <>
+                <div className="market-system-form-row">
+                  <label>Pay</label>
+                  <select value={sysFrom} onChange={(e) => setSysFrom(e.target.value as any)}>
+                    {SYSTEM_RESOURCES.map((r) => (
+                      <option key={r} value={r}>{RESOURCE_ICONS[r]} {RESOURCE_LABELS[r]}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="market-system-form-row">
+                  <label>Receive</label>
+                  <select value={sysTo} onChange={(e) => setSysTo(e.target.value as any)}>
+                    {SYSTEM_RESOURCES.map((r) => (
+                      <option key={r} value={r}>{RESOURCE_ICONS[r]} {RESOURCE_LABELS[r]}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="market-system-form-row">
+                  <label>Amount to receive</label>
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder="e.g. 100"
+                    value={sysAmount}
+                    onChange={(e) => setSysAmount(e.target.value)}
+                  />
+                </div>
+                {sysAmount && parseInt(sysAmount) > 0 && sysFrom !== sysTo && (
+                  <div className="market-system-preview">
+                    You pay <strong>{Math.ceil(parseInt(sysAmount) * 1.25).toLocaleString()} {RESOURCE_LABELS[sysFrom]}</strong> → receive <strong>{parseInt(sysAmount).toLocaleString()} {RESOURCE_LABELS[sysTo]}</strong>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="market-system-form-row">
+                  <label>Sell</label>
+                  <select value={sysFrom} onChange={(e) => setSysFrom(e.target.value as any)}>
+                    {SYSTEM_RESOURCES.map((r) => (
+                      <option key={r} value={r}>{RESOURCE_ICONS[r]} {RESOURCE_LABELS[r]}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="market-system-form-row">
+                  <label>Receive</label>
+                  <select value={sysTo} onChange={(e) => setSysTo(e.target.value as any)}>
+                    {SYSTEM_RESOURCES.map((r) => (
+                      <option key={r} value={r}>{RESOURCE_ICONS[r]} {RESOURCE_LABELS[r]}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="market-system-form-row">
+                  <label>Amount to sell</label>
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder="e.g. 100"
+                    value={sysAmount}
+                    onChange={(e) => setSysAmount(e.target.value)}
+                  />
+                </div>
+                {sysAmount && parseInt(sysAmount) > 0 && sysFrom !== sysTo && (
+                  <div className="market-system-preview">
+                    You sell <strong>{parseInt(sysAmount).toLocaleString()} {RESOURCE_LABELS[sysFrom]}</strong> → receive <strong>{Math.floor(parseInt(sysAmount) * 0.8).toLocaleString()} {RESOURCE_LABELS[sysTo]}</strong>
+                  </div>
+                )}
+              </>
+            )}
+
+            {sysError && <div className="market-form-error">{sysError}</div>}
+            {sysSuccess && <div className="market-system-success">{sysSuccess}</div>}
+
+            <button type="submit" className="market-system-btn" disabled={sysSubmitting}>
+              {sysSubmitting ? 'Processing...' : sysMode === 'buy' ? 'Buy from System' : 'Sell to System'}
+            </button>
+          </form>
         </div>
       </div>
 
