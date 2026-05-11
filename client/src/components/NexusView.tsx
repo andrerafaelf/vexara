@@ -711,6 +711,12 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     return `${minutes}m ${seconds}s`;
   };
 
+  const fmtNum = (n: number) => {
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
+    if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, '')}k`;
+    return String(n);
+  };
+
   const formatDurationSeconds = (totalSeconds: number) => {
     const safeTotalSeconds = Math.max(0, Math.floor(totalSeconds));
     const hours = Math.floor(safeTotalSeconds / 3600);
@@ -805,7 +811,11 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     if (requirements.buildings) {
       for (const [building, level] of Object.entries(requirements.buildings)) {
         if ((nexus.buildings as any)[building] < (level as number)) {
-          missing.push(`${BUILDING_NAMES[building]} Lv${level}`);
+          const isQueued = (nexus.buildQueue || []).some(
+            (q) => q.building === building && q.targetLevel >= (level as number),
+          );
+          const suffix = isQueued ? ' (under construction)' : '';
+          missing.push(`${BUILDING_NAMES[building]} Lv${level}${suffix}`);
         }
       }
     }
@@ -1727,9 +1737,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                     {cost ? (
                       <div className="building-cost">
                         <div className="cost-details">
-                          <span>🧬 {cost.biomass}</span>
-                          <span>⚙️ {cost.alloy}</span>
-                          <span>💎 {cost.ore}</span>
+                          <span>🧬 {fmtNum(cost.biomass)}</span>
+                          <span>⚙️ {fmtNum(cost.alloy)}</span>
+                          <span>💎 {fmtNum(cost.ore)}</span>
                         </div>
                         <p className="build-time">
                           ⏱️{' '}
@@ -1875,12 +1885,14 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                           {categoryTroops.map(([type, costs]) => {
                             const { canTrain, missingRequirements } = checkTroopRequirements(type);
                             const { maxTrainable, shortageReasons } = getMaxTrainableAmount(type, costs, canTrain);
-                            const trainSeconds = getTroopTrainSeconds(
-                              type,
-                              costs.time,
-                              nexus.buildings.recruitmentCore,
-                              nexus.nexusType,
-                            );
+                            const trainSeconds = canTrain
+                              ? getTroopTrainSeconds(
+                                  type,
+                                  costs.time,
+                                  nexus.buildings.recruitmentCore,
+                                  nexus.nexusType,
+                                )
+                              : costs.time;
                             const isOverseerTrack = type === 'overseer';
                             const sameChainQueueLength = nexus.trainingQueue.filter((entry: any) =>
                               isOverseerTrack ? entry.troopType === 'overseer' : entry.troopType !== 'overseer',

@@ -834,8 +834,8 @@
 
 .cost-details {
   display: flex;
-  gap: 10px;
-  flex-wrap: nowrap;
+  gap: 8px;
+  flex-wrap: wrap;
   align-items: center;
   margin-bottom: 6px;
 }
@@ -843,6 +843,7 @@
 .cost-details span {
   color: #f1faee;
   font-size: 13px;
+  white-space: nowrap;
 }
 
 .build-time {
@@ -1313,6 +1314,14 @@
   .train-controls input {
     max-width: 100%;
     width: 100%;
+  }
+
+  .cost-details span {
+    font-size: 11px;
+  }
+
+  .building-cost {
+    padding: 6px 8px;
   }
 }
 

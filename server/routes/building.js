@@ -1,7 +1,7 @@
 import express from 'express';
 import prisma from '../lib/prisma.js';
 import auth from '../middleware/auth.js';
-import { applyQuestRewards, computeResourceUpdate, normalizeBuildQueue, serializeNexus } from '../models/Nexus.js';
+import { applyCompletedQueues, applyQuestRewards, computeResourceUpdate, normalizeBuildQueue, serializeNexus } from '../models/Nexus.js';
 import { NEXUS_TYPE_BONUSES } from '../utils/economy.js';
 import { getPopulationMax } from '../utils/population.js';
 
@@ -214,10 +214,11 @@ router.post('/upgrade', auth, async (req, res) => {
   try {
     const { nexusId, building } = req.body;
 
-    const nexus = await prisma.nexus.findUnique({ where: { id: parseInt(nexusId) } });
-    if (!nexus || nexus.ownerId !== req.userId) {
+    const rawNexus = await prisma.nexus.findUnique({ where: { id: parseInt(nexusId) } });
+    if (!rawNexus || rawNexus.ownerId !== req.userId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
+    const nexus = await applyCompletedQueues(rawNexus);
 
     if (!BUILDING_COSTS[building]) {
       return res.status(400).json({ error: 'Invalid building' });

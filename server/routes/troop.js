@@ -1,7 +1,7 @@
 import express from 'express';
 import prisma from '../lib/prisma.js';
 import auth from '../middleware/auth.js';
-import { applyQuestRewards, computeResourceUpdate, serializeNexus } from '../models/Nexus.js';
+import { applyCompletedQueues, applyQuestRewards, computeResourceUpdate, serializeNexus } from '../models/Nexus.js';
 import { NEXUS_TYPE_BONUSES } from '../utils/economy.js';
 import { parsePositiveInt } from '../utils/validation.js';
 
@@ -92,10 +92,11 @@ router.post('/train', auth, async (req, res) => {
       return res.status(400).json({ error: 'Amount must be an integer between 1 and 1000' });
     }
 
-    const nexus = await prisma.nexus.findUnique({ where: { id: parsedNexusId } });
-    if (!nexus || nexus.ownerId !== req.userId) {
+    const rawNexus = await prisma.nexus.findUnique({ where: { id: parsedNexusId } });
+    if (!rawNexus || rawNexus.ownerId !== req.userId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
+    const nexus = await applyCompletedQueues(rawNexus);
 
     if (!TROOP_COSTS[troopType]) {
       return res.status(400).json({ error: 'Invalid troop type' });
