@@ -4,6 +4,7 @@ import { DocsDropdown, DocsMobileLinks } from '@/components/DocsDropdown';
 import MobileNexusDrawer from '@/components/MobileNexusDrawer';
 import NexusSidebar from '@/components/NexusSidebar';
 import NexusView from '@/components/NexusView';
+import PwaGuideModal from '@/components/PwaGuideModal';
 import { useAuth } from '@/context/AuthContext';
 import { useFriendsUnread } from '@/hooks/useFriendsUnread';
 import { getMyNexuses, getNexus, getReadReportIds, getReports } from '@/services/api';
@@ -11,6 +12,8 @@ import '@/styles/Game.css';
 import { Nexus } from '@/types/game';
 import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
+
+const PWA_GUIDE_SEEN_KEY = 'pwa_guide_seen';
 
 const SELECTED_NEXUS_KEY = 'selectedNexusId';
 
@@ -32,6 +35,7 @@ export default function NexusPage() {
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNexusDrawerOpen, setIsNexusDrawerOpen] = useState(false);
+  const [showPwaGuide, setShowPwaGuide] = useState(false);
   const { user, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -116,6 +120,13 @@ export default function NexusPage() {
   }, [pathname]);
 
   useEffect(() => {
+    if (!localStorage.getItem(PWA_GUIDE_SEEN_KEY)) {
+      setShowPwaGuide(true);
+      localStorage.setItem(PWA_GUIDE_SEEN_KEY, '1');
+    }
+  }, []);
+
+  useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
       router.push('/auth');
@@ -148,6 +159,8 @@ export default function NexusPage() {
   }
 
   return (
+    <>
+    {showPwaGuide && <PwaGuideModal onClose={() => setShowPwaGuide(false)} />}
     <div className="game-container">
       <header className="game-header">
         <div className="header-left">
@@ -308,5 +321,6 @@ export default function NexusPage() {
       </div>
 
     </div>
+    </>
   );
 }

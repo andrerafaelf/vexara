@@ -1,11 +1,9 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNotifications, NotificationPreferences } from '@/hooks/useNotifications';
 import PwaGuideModal from './PwaGuideModal';
 import '@/styles/NotificationSettings.css';
-
-const PWA_GUIDE_SEEN_KEY = 'pwa_guide_seen';
 
 const PREF_LABELS: { key: keyof NotificationPreferences; label: string; description: string }[] = [
   { key: 'attackIncoming', label: 'Incoming Attacks', description: 'When your nexus is attacked' },
@@ -22,13 +20,6 @@ export default function NotificationSettings() {
   const { permission, isSubscribed, preferences, loading, swReady, subscribe, unsubscribe, updatePreference } =
     useNotifications();
   const [showGuide, setShowGuide] = useState(false);
-
-  useEffect(() => {
-    if (!isSubscribed && !localStorage.getItem(PWA_GUIDE_SEEN_KEY)) {
-      setShowGuide(true);
-      localStorage.setItem(PWA_GUIDE_SEEN_KEY, '1');
-    }
-  }, [isSubscribed]);
 
   if (permission === 'unsupported') {
     return (
