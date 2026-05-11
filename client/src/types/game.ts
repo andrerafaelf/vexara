@@ -4,6 +4,29 @@ export interface User {
   email: string;
 }
 
+export interface UserStats {
+  username: string;
+  points: number;
+  accountAgeDays: number;
+  nexusCount: number;
+  totalTroops: number;
+  combat: {
+    attacksLaunched: number;
+    attacksDefended: number;
+    victories: number;
+    defeats: number;
+    troopsLost: number;
+    troopsKilled: number;
+    resourcesStolen: { biomass: number; alloy: number; ore: number };
+    resourcesLost: { biomass: number; alloy: number; ore: number };
+  };
+  resources: {
+    current: { biomass: number; alloy: number; ore: number };
+    productionPerHour: { biomass: number; alloy: number; ore: number };
+    avgPerDay: { biomass: number; alloy: number; ore: number };
+  };
+}
+
 export interface NexusGroup {
   id: string;
   name: string;

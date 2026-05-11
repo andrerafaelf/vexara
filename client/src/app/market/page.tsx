@@ -132,6 +132,9 @@ export default function MarketPage() {
               {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
             </span>
           </button>
+          <button className="nav-btn" onClick={() => router.push('/profile')}>
+            👤 Profile
+          </button>
           <DocsDropdown />
         </div>
         <div className="header-right">
@@ -211,6 +214,15 @@ export default function MarketPage() {
               🤝 Allies
               {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
             </span>
+          </button>
+          <button
+            className="nav-btn"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              router.push('/profile');
+            }}
+          >
+            👤 Profile
           </button>
           <DocsMobileLinks onNavigate={() => setIsMobileMenuOpen(false)} />
           <button className="nav-btn mobile-drawer-logout" onClick={logout}>

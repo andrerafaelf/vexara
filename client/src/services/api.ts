@@ -221,6 +221,9 @@ export const cancelFriendRequest = (requestId: string) =>
 export const removeFriend = (friendId: string) =>
   apiRequest(`/friends/${friendId}`, { method: 'DELETE' });
 
+// Stats
+export const getUserStats = () => apiRequest('/stats/me');
+
 // Chat
 export const getConversations = () => apiRequest('/chat/conversations');
 export const getChatUnreadCount = () => apiRequest('/chat/unread-count');
