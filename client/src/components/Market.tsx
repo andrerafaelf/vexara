@@ -31,7 +31,6 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
   const [formOffer, setFormOffer] = useState<'biomass' | 'alloy' | 'ore'>('biomass');
   const [formOfferAmount, setFormOfferAmount] = useState('');
   const [formWant, setFormWant] = useState<'biomass' | 'alloy' | 'ore'>('alloy');
-  const [formWantAmount, setFormWantAmount] = useState('');
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -76,9 +75,8 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
     e.preventDefault();
     setFormError('');
     const offer = parseInt(formOfferAmount);
-    const want = parseInt(formWantAmount);
-    if (!offer || offer <= 0 || !want || want <= 0) {
-      setFormError('Amounts must be positive numbers');
+    if (!offer || offer <= 0) {
+      setFormError('Amount must be a positive number');
       return;
     }
     if (formOffer === formWant) {
@@ -92,9 +90,8 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
     }
     setSubmitting(true);
     try {
-      await createMarketListing(formNexusId, formOffer, offer, formWant, want);
+      await createMarketListing(formNexusId, formOffer, offer, formWant, offer);
       setFormOfferAmount('');
-      setFormWantAmount('');
       setShowCreateForm(false);
       await loadListings();
       onRefresh();
@@ -216,8 +213,9 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
                     type="number"
                     min="1"
                     placeholder="Amount"
-                    value={formWantAmount}
-                    onChange={(e) => setFormWantAmount(e.target.value)}
+                    value={formOfferAmount}
+                    readOnly
+                    className="market-amount-readonly"
                   />
                 </div>
               </div>
@@ -298,15 +296,17 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
                 </div>
                 <div className="market-card-trade">
                   <div className="market-card-offer">
-                    <span className="market-resource-icon">{RESOURCE_ICONS[l.offerResource]}</span>
-                    <span className="market-amount">{l.offerAmount.toLocaleString()}</span>
-                    <span className="market-resource-label">{RESOURCE_LABELS[l.offerResource]}</span>
-                  </div>
-                  <div className="market-card-arrow">→</div>
-                  <div className="market-card-want">
+                    <span className="market-trade-role">Give</span>
                     <span className="market-resource-icon">{RESOURCE_ICONS[l.wantResource]}</span>
                     <span className="market-amount">{l.wantAmount.toLocaleString()}</span>
                     <span className="market-resource-label">{RESOURCE_LABELS[l.wantResource]}</span>
+                  </div>
+                  <div className="market-card-arrow">→</div>
+                  <div className="market-card-want">
+                    <span className="market-trade-role">Receive</span>
+                    <span className="market-resource-icon">{RESOURCE_ICONS[l.offerResource]}</span>
+                    <span className="market-amount">{l.offerAmount.toLocaleString()}</span>
+                    <span className="market-resource-label">{RESOURCE_LABELS[l.offerResource]}</span>
                   </div>
                 </div>
                 {buyingId === l.id ? (
@@ -343,15 +343,15 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
               <div key={t.id} className="market-history-row">
                 <div className="market-history-trade">
                   <span className="market-history-resource">
-                    {RESOURCE_ICONS[t.offerResource]} {t.offerAmount.toLocaleString()} {RESOURCE_LABELS[t.offerResource]}
+                    {RESOURCE_ICONS[t.wantResource]} {t.wantAmount.toLocaleString()} {RESOURCE_LABELS[t.wantResource]}
                   </span>
                   <span className="market-history-arrow">→</span>
                   <span className="market-history-resource">
-                    {RESOURCE_ICONS[t.wantResource]} {t.wantAmount.toLocaleString()} {RESOURCE_LABELS[t.wantResource]}
+                    {RESOURCE_ICONS[t.offerResource]} {t.offerAmount.toLocaleString()} {RESOURCE_LABELS[t.offerResource]}
                   </span>
                 </div>
                 <div className="market-history-meta">
-                  <span>{t.sellerUsername} → {t.buyerUsername}</span>
+                  <span>{t.buyerUsername} → {t.sellerUsername}</span>
                   <span className="market-history-time">
                     {new Date(t.completedAt).toLocaleString()}
                   </span>

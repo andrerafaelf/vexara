@@ -300,6 +300,22 @@
   gap: 2px;
 }
 
+.market-trade-role {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #a8dadc;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.market-amount-readonly {
+  background: rgba(168, 218, 220, 0.06);
+  border-color: rgba(168, 218, 220, 0.2);
+  color: rgba(255, 255, 255, 0.5);
+  cursor: not-allowed;
+}
+
 .market-resource-icon {
   font-size: 20px;
   line-height: 1;

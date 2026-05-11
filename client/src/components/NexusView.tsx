@@ -612,7 +612,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     }
 
     const requirementsResult = checkTroopRequirements(troopType);
-    const maxTrainable = getMaxTrainableAmount(troopType, TROOP_COSTS[troopType], requirementsResult.canTrain);
+    const { maxTrainable } = getMaxTrainableAmount(troopType, TROOP_COSTS[troopType], requirementsResult.canTrain);
     const rawAmount = trainAmount[troopType] ?? '';
     const requestedAmount = rawAmount === '' ? 1 : Number.parseInt(rawAmount, 10);
     const amount = Math.min(Number.isFinite(requestedAmount) ? requestedAmount : 0, maxTrainable);
@@ -819,7 +819,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   };
 
   const getMaxTrainableAmount = (troopType: string, costs: (typeof TROOP_COSTS)[string], canTrain: boolean) => {
-    if (!canTrain) return 0;
+    if (!canTrain) return { maxTrainable: 0, shortageReasons: [] };
 
     const byBiomass =
       costs.biomass > 0 ? Math.floor(nexus.resources.biomass / costs.biomass) : Number.POSITIVE_INFINITY;
@@ -837,7 +837,15 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
       maxTrainable = Math.min(maxTrainable, remainingAllowed);
     }
 
-    return maxTrainable;
+    const shortageReasons: string[] = [];
+    if (maxTrainable === 0) {
+      if (byBiomass === 0) shortageReasons.push(`🧬 Biomass (need ${costs.biomass}, have ${Math.floor(nexus.resources.biomass)})`);
+      if (byAlloy === 0) shortageReasons.push(`⚙️ Alloy (need ${costs.alloy}, have ${Math.floor(nexus.resources.alloy)})`);
+      if (byOre === 0) shortageReasons.push(`💎 Ore (need ${costs.ore}, have ${Math.floor(nexus.resources.ore)})`);
+      if (byPopulation === 0) shortageReasons.push(`👥 Population (need ${costs.population}, have ${remainingPopulation} free)`);
+    }
+
+    return { maxTrainable, shortageReasons };
   };
 
   const calculateProduction = () => {
@@ -849,6 +857,22 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
       alloy: Math.floor(baseProduction * Math.pow(1.35, nexus.buildings.alloyForge - 1) * productionMult),
       ore: Math.floor(baseProduction * Math.pow(1.35, nexus.buildings.oreExtractor - 1) * productionMult),
     };
+  };
+
+  const getTimeUntilAffordable = (cost: { biomass?: number; alloy?: number; ore?: number }) => {
+    const prod = calculateProduction();
+    const biomassNeeded = Math.max(0, (cost.biomass ?? 0) - nexus.resources.biomass);
+    const alloyNeeded = Math.max(0, (cost.alloy ?? 0) - nexus.resources.alloy);
+    const oreNeeded = Math.max(0, (cost.ore ?? 0) - nexus.resources.ore);
+
+    // production is per hour; convert shortfalls to seconds
+    const biomassSeconds = prod.biomass > 0 ? (biomassNeeded / prod.biomass) * 3600 : biomassNeeded > 0 ? Infinity : 0;
+    const alloySeconds = prod.alloy > 0 ? (alloyNeeded / prod.alloy) * 3600 : alloyNeeded > 0 ? Infinity : 0;
+    const oreSeconds = prod.ore > 0 ? (oreNeeded / prod.ore) * 3600 : oreNeeded > 0 ? Infinity : 0;
+
+    const maxSeconds = Math.max(biomassSeconds, alloySeconds, oreSeconds);
+    if (!isFinite(maxSeconds)) return null;
+    return maxSeconds;
   };
 
   const getBuildingCost = (building: string, currentLevel: number) => {
@@ -1731,26 +1755,34 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                         ))}
                       </div>
                     )}
-                    {!hasResources && cost && canUpgrade && (
-                      <div className="requirements-missing insuff-resources">
-                        <p className="requires-label">⚠️ Insufficient Resources:</p>
-                        {nexus.resources.biomass < cost.biomass && (
-                          <p className="requirement-item">
-                            • Biomass: {Math.floor(nexus.resources.biomass)}/{cost.biomass}
-                          </p>
-                        )}
-                        {nexus.resources.alloy < cost.alloy && (
-                          <p className="requirement-item">
-                            • Alloy: {Math.floor(nexus.resources.alloy)}/{cost.alloy}
-                          </p>
-                        )}
-                        {nexus.resources.ore < cost.ore && (
-                          <p className="requirement-item">
-                            • Ore: {Math.floor(nexus.resources.ore)}/{cost.ore}
-                          </p>
-                        )}
-                      </div>
-                    )}
+                    {!hasResources && cost && canUpgrade && (() => {
+                      const eta = getTimeUntilAffordable(cost);
+                      return (
+                        <div className="requirements-missing insuff-resources">
+                          <p className="requires-label">⚠️ Insufficient Resources:</p>
+                          {nexus.resources.biomass < cost.biomass && (
+                            <p className="requirement-item">
+                              • Biomass: {Math.floor(nexus.resources.biomass)}/{cost.biomass}
+                            </p>
+                          )}
+                          {nexus.resources.alloy < cost.alloy && (
+                            <p className="requirement-item">
+                              • Alloy: {Math.floor(nexus.resources.alloy)}/{cost.alloy}
+                            </p>
+                          )}
+                          {nexus.resources.ore < cost.ore && (
+                            <p className="requirement-item">
+                              • Ore: {Math.floor(nexus.resources.ore)}/{cost.ore}
+                            </p>
+                          )}
+                          {eta !== null && (
+                            <p className="requirement-item resource-eta">
+                              ⏱️ Ready in {formatDurationSeconds(eta)}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })()}
                     {!isAtMax && (
                       <button
                         className="building-upgrade-button"
@@ -1838,7 +1870,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                         <div className="train-grid">
                           {categoryTroops.map(([type, costs]) => {
                             const { canTrain, missingRequirements } = checkTroopRequirements(type);
-                            const maxTrainable = getMaxTrainableAmount(type, costs, canTrain);
+                            const { maxTrainable, shortageReasons } = getMaxTrainableAmount(type, costs, canTrain);
                             const trainSeconds = getTroopTrainSeconds(
                               type,
                               costs.time,
@@ -1902,6 +1934,24 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                                     ))}
                                   </div>
                                 )}
+                                {canTrain && !isTrainingQueueFull && shortageReasons.length > 0 && (() => {
+                                  const eta = getTimeUntilAffordable(costs);
+                                  return (
+                                    <div className="requirements-missing">
+                                      <p className="requires-label">⚠️ Not enough resources:</p>
+                                      {shortageReasons.map((reason, idx) => (
+                                        <p key={idx} className="requirement-item">
+                                          • {reason}
+                                        </p>
+                                      ))}
+                                      {eta !== null && (
+                                        <p className="requirement-item resource-eta">
+                                          ⏱️ Ready in {formatDurationSeconds(eta)}
+                                        </p>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
                                 <div className="train-controls-wrapper">
                                   {canTrain && maxTrainable > 0 && (
                                     <span className="train-max-label">Max trainable: {maxTrainable}</span>
