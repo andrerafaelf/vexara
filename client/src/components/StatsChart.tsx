@@ -134,7 +134,7 @@ export default function StatsChart() {
               <Tooltip
                 contentStyle={TOOLTIP_STYLE}
                 cursor={CURSOR_STYLE}
-                formatter={(val: number) => [fmtNum(val), active.metricLabel]}
+                formatter={(val) => [fmtNum(Number(val ?? 0)), active.metricLabel]}
               />
               <Area
                 type="monotone"
