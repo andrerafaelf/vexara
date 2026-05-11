@@ -2,9 +2,9 @@ import prisma from '../lib/prisma.js';
 import { getPopulationMax } from './population.js';
 
 const MAP_SIZE = 35;
-const MIN_NEUTRALS = 70;
-const NEUTRALS_PER_CAPTURED = 3;
-const NEUTRALS_PER_PLAYER = 9;
+const MIN_NEUTRALS = 32;
+const NEUTRALS_PER_CAPTURED = 1;
+const NEUTRALS_PER_PLAYER = 4;
 const BASE_NEUTRAL_DIFFICULTY = 0.7;
 const MAX_NEUTRAL_DIFFICULTY = 1.35;
 const USER_DIFFICULTY_STEP = 0.015;
