@@ -11,13 +11,13 @@ model User {
   username  String    @unique @db.VarChar(20)
   email     String    @unique
   password  String
-  points    Int       @default(0)
   createdAt DateTime  @default(now())
   nexuses  Nexus[]
 
-  questRewardClaims Json @default("[]")
-  completedQuestIds Json @default("[]")
-  nexusGroups       Json @default("[]")
+  activeGalaxyId Int?
+  activeGalaxy   Galaxy? @relation("UserActiveGalaxy", fields: [activeGalaxyId], references: [id])
+
+  galaxyPlayers GalaxyPlayer[]
 
   friendshipsA       Friendship[]    @relation("FriendshipUserA")
   friendshipsB       Friendship[]    @relation("FriendshipUserB")
@@ -27,6 +27,49 @@ model User {
   chatMessagesRecv   ChatMessage[]   @relation("ChatMessageReceiver")
   pushSubscriptions  PushSubscription[]
   notificationPrefs  NotificationPreferences?
+}
+
+enum GalaxyStatus {
+  active
+  ended
+}
+
+model Galaxy {
+  id           Int          @id @default(autoincrement())
+  name         String       @unique
+  status       GalaxyStatus @default(active)
+  endedAt      DateTime?
+  winnerUserId Int?
+  createdAt    DateTime     @default(now())
+
+  activeUsers        User[]              @relation("UserActiveGalaxy")
+  players            GalaxyPlayer[]
+  nexuses            Nexus[]
+  attacks            Attack[]
+  troopTransfers     TroopTransfer[]
+  marketListings     MarketListing[]
+  marketTransactions MarketTransaction[]
+  reportReads        ReportRead[]
+}
+
+model GalaxyPlayer {
+  id       Int      @id @default(autoincrement())
+  userId   Int
+  galaxyId Int
+  points   Int      @default(0)
+  joinedAt DateTime @default(now())
+
+  questRewardClaims Json @default("[]")
+  completedQuestIds Json @default("[]")
+  nexusGroups       Json @default("[]")
+
+  dominanceSince DateTime?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  galaxy Galaxy @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, galaxyId])
+  @@index([galaxyId])
 }
 
 model PushSubscription {
@@ -110,6 +153,9 @@ model Nexus {
   id   Int    @id @default(autoincrement())
   name String
 
+  galaxyId Int
+  galaxy   Galaxy @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
+
   ownerId Int?
   owner   User? @relation(fields: [ownerId], references: [id])
 
@@ -166,6 +212,8 @@ model Nexus {
   marketListings     MarketListing[]
   troopsSent         TroopTransfer[]  @relation("OwnerNexus")
   troopsHosted       TroopTransfer[]  @relation("HostNexus")
+
+  @@index([galaxyId])
 }
 
 enum TransferStatus {
@@ -176,6 +224,7 @@ enum TransferStatus {
 
 model TroopTransfer {
   id           Int            @id @default(autoincrement())
+  galaxyId     Int
   ownerNexusId Int
   hostNexusId  Int
   troops       Json
@@ -184,20 +233,28 @@ model TroopTransfer {
   returnsAt    DateTime?
   createdAt    DateTime       @default(now())
 
-  ownerNexus Nexus @relation("OwnerNexus", fields: [ownerNexusId], references: [id], onDelete: Cascade)
-  hostNexus  Nexus @relation("HostNexus",  fields: [hostNexusId],  references: [id], onDelete: Cascade)
+  galaxy     Galaxy @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
+  ownerNexus Nexus  @relation("OwnerNexus", fields: [ownerNexusId], references: [id], onDelete: Cascade)
+  hostNexus  Nexus  @relation("HostNexus",  fields: [hostNexusId],  references: [id], onDelete: Cascade)
+
+  @@index([galaxyId])
 }
 
 model ReportRead {
   userId   Int
   attackId Int
+  galaxyId Int
   readAt   DateTime @default(now())
 
+  galaxy Galaxy @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
+
   @@id([userId, attackId])
+  @@index([galaxyId])
 }
 
 model MarketTransaction {
   id             Int      @id @default(autoincrement())
+  galaxyId       Int
   sellerNexusId  Int
   sellerUsername String
   buyerNexusId   Int
@@ -207,17 +264,25 @@ model MarketTransaction {
   wantResource   String
   wantAmount     Int
   completedAt    DateTime @default(now())
+
+  galaxy Galaxy @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
+
+  @@index([galaxyId])
 }
 
 model MarketListing {
   id            Int      @id @default(autoincrement())
+  galaxyId      Int
   sellerNexusId Int
+  galaxy        Galaxy   @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
   sellerNexus   Nexus    @relation(fields: [sellerNexusId], references: [id], onDelete: Cascade)
   offerResource String
   offerAmount   Int
   wantResource  String
   wantAmount    Int
   createdAt     DateTime @default(now())
+
+  @@index([galaxyId])
 }
 
 enum AttackType {
@@ -236,6 +301,9 @@ enum AttackStatus {
 model Attack {
   id Int @id @default(autoincrement())
 
+  galaxyId Int
+  galaxy   Galaxy @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
+
   attackerUserId    Int
   attackerNexusId Int
   defenderUserId    Int?
@@ -252,4 +320,6 @@ model Attack {
   result    Json?
 
   createdAt DateTime @default(now())
+
+  @@index([galaxyId])
 }

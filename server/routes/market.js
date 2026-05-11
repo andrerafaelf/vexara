@@ -15,6 +15,7 @@ const SYSTEM_BUY_RATE = 1.25;   // pay 125 to receive 100
 router.get('/', auth, async (req, res) => {
   try {
     const listings = await prisma.marketListing.findMany({
+      where: { galaxyId: req.galaxyId },
       include: {
         sellerNexus: { select: { id: true, name: true, x: true, y: true, ownerId: true } },
       },
@@ -58,7 +59,7 @@ router.post('/list', auth, async (req, res) => {
     }
 
     const rawNexus = await prisma.nexus.findUnique({ where: { id: parsedNexusId } });
-    if (!rawNexus || rawNexus.ownerId !== req.userId) {
+    if (!rawNexus || rawNexus.ownerId !== req.userId || rawNexus.galaxyId !== req.galaxyId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
     // Refresh production so we check against the actual current resource level
@@ -67,7 +68,9 @@ router.post('/list', auth, async (req, res) => {
       return res.status(400).json({ error: `Insufficient ${offerResource}` });
     }
 
-    const existingCount = await prisma.marketListing.count({ where: { sellerNexusId: parsedNexusId } });
+    const existingCount = await prisma.marketListing.count({
+      where: { sellerNexusId: parsedNexusId, galaxyId: req.galaxyId },
+    });
     if (existingCount >= MAX_LISTINGS_PER_NEXUS) {
       return res.status(400).json({ error: `Maximum ${MAX_LISTINGS_PER_NEXUS} active listings per nexus` });
     }
@@ -75,6 +78,7 @@ router.post('/list', auth, async (req, res) => {
     const [listing] = await prisma.$transaction([
       prisma.marketListing.create({
         data: {
+          galaxyId: req.galaxyId,
           sellerNexusId: parsedNexusId,
           offerResource,
           offerAmount: parsedOffer,
@@ -116,8 +120,11 @@ router.post('/buy/:id', auth, async (req, res) => {
     if (!listing) {
       return res.status(404).json({ error: 'Listing not found' });
     }
-    if (!buyerNexus || buyerNexus.ownerId !== req.userId) {
+    if (!buyerNexus || buyerNexus.ownerId !== req.userId || buyerNexus.galaxyId !== req.galaxyId) {
       return res.status(403).json({ error: 'Not authorized' });
+    }
+    if (listing.galaxyId !== req.galaxyId) {
+      return res.status(403).json({ error: 'Listing is in a different galaxy' });
     }
     if (listing.sellerNexus.ownerId === req.userId) {
       return res.status(400).json({ error: 'Cannot buy your own listing' });
@@ -152,6 +159,7 @@ router.post('/buy/:id', auth, async (req, res) => {
       prisma.marketListing.delete({ where: { id: listingId } }),
       prisma.marketTransaction.create({
         data: {
+          galaxyId: req.galaxyId,
           sellerNexusId: listing.sellerNexusId,
           sellerUsername: sellerOwner?.username ?? 'Unknown',
           buyerNexusId: parsedBuyerNexusId,
@@ -174,6 +182,7 @@ router.post('/buy/:id', auth, async (req, res) => {
 router.get('/history', auth, async (req, res) => {
   try {
     const transactions = await prisma.marketTransaction.findMany({
+      where: { galaxyId: req.galaxyId },
       orderBy: { completedAt: 'desc' },
       take: 10,
     });
@@ -195,7 +204,7 @@ router.delete('/:id', auth, async (req, res) => {
     });
 
     if (!listing) return res.status(404).json({ error: 'Listing not found' });
-    if (listing.sellerNexus.ownerId !== req.userId) {
+    if (listing.sellerNexus.ownerId !== req.userId || listing.galaxyId !== req.galaxyId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
@@ -233,7 +242,7 @@ router.post('/system/buy', auth, async (req, res) => {
     }
 
     const rawNexus = await prisma.nexus.findUnique({ where: { id: parsedNexusId } });
-    if (!rawNexus || rawNexus.ownerId !== req.userId) {
+    if (!rawNexus || rawNexus.ownerId !== req.userId || rawNexus.galaxyId !== req.galaxyId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
     const nexus = await refreshResources(rawNexus);

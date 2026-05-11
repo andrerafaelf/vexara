@@ -21,11 +21,19 @@ router.get('/me', auth, async (req, res) => {
   try {
     const userId = req.userId;
 
-    const [user, nexuses, completedAttacks] = await Promise.all([
-      prisma.user.findUnique({ where: { id: userId }, select: { id: true, username: true, points: true, createdAt: true } }),
-      prisma.nexus.findMany({ where: { ownerId: userId } }),
+    const [user, player, nexuses, completedAttacks] = await Promise.all([
+      prisma.user.findUnique({ where: { id: userId }, select: { id: true, username: true, createdAt: true } }),
+      prisma.galaxyPlayer.findUnique({
+        where: { userId_galaxyId: { userId, galaxyId: req.galaxyId } },
+        select: { points: true },
+      }),
+      prisma.nexus.findMany({ where: { ownerId: userId, galaxyId: req.galaxyId } }),
       prisma.attack.findMany({
-        where: { status: 'completed', OR: [{ attackerUserId: userId }, { defenderUserId: userId }] },
+        where: {
+          galaxyId: req.galaxyId,
+          status: 'completed',
+          OR: [{ attackerUserId: userId }, { defenderUserId: userId }],
+        },
         select: {
           attackerUserId: true,
           defenderUserId: true,
@@ -118,7 +126,7 @@ router.get('/me', auth, async (req, res) => {
 
     res.json({
       username: user.username,
-      points: user.points,
+      points: player?.points ?? 0,
       accountAgeDays,
       nexusCount,
       totalTroops,
@@ -159,9 +167,10 @@ router.get('/timeline', auth, async (req, res) => {
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
     const [nexuses, attacks] = await Promise.all([
-      prisma.nexus.findMany({ where: { ownerId: userId } }),
+      prisma.nexus.findMany({ where: { ownerId: userId, galaxyId: req.galaxyId } }),
       prisma.attack.findMany({
         where: {
+          galaxyId: req.galaxyId,
           status: 'completed',
           createdAt: { gte: since },
           OR: [{ attackerUserId: userId }, { defenderUserId: userId }],

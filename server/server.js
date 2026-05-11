@@ -10,6 +10,7 @@ import authRoutes from './routes/auth.js';
 import buildingRoutes from './routes/building.js';
 import chatRoutes from './routes/chat.js';
 import friendsRoutes from './routes/friends.js';
+import galaxyRoutes from './routes/galaxy.js';
 import mapRoutes from './routes/map.js';
 import marketRoutes from './routes/market.js';
 import nexusRoutes from './routes/nexus.js';
@@ -19,6 +20,7 @@ import troopTransferRoutes from './routes/troopTransfer.js';
 import statsRoutes from './routes/stats.js';
 import notificationRoutes from './routes/notifications.js';
 import { processArrivedAttacks, processArrivedTransfers } from './utils/combat.js';
+import { processDominanceVictories } from './utils/dominance.js';
 import { logError, logInfo, logWarn } from './utils/logger.js';
 import { ensureNeutralNexusPool, levelUpNeutralNexuses } from './utils/neutralNexuses.js';
 
@@ -146,6 +148,7 @@ app.use('/api/market', marketRoutes);
 app.use('/api/report', reportRoutes);
 app.use('/api/troop-transfer', troopTransferRoutes);
 app.use('/api/friends', friendsRoutes);
+app.use('/api/galaxies', galaxyRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/notifications', notificationRoutes);
@@ -158,6 +161,7 @@ const JOB_LOCKS = {
   processTransfers: 9105,
   levelNeutralNexuses: 9106,
   processQueues: 9107,
+  processDominance: 9108,
 };
 
 async function runWithPgAdvisoryLock(lockId, jobName, jobHandler) {
@@ -244,6 +248,16 @@ prisma
         );
       },
       6 * 60 * 60 * 1000,
+    );
+
+    // Check galaxy dominance victories (every 10 min)
+    setInterval(
+      () => {
+        void runWithPgAdvisoryLock(JOB_LOCKS.processDominance, 'process_dominance', () =>
+          processDominanceVictories(),
+        );
+      },
+      10 * 60 * 1000,
     );
   })
   .catch((err) => {

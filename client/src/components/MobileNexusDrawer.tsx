@@ -10,6 +10,7 @@ import {
 } from '../services/api';
 import '../styles/MobileNexusDrawer.css';
 import { Nexus, NexusGroup } from '../types/game';
+import GalaxyChip from './GalaxyChip';
 
 interface MobileNexusDrawerProps {
   nexuses: Nexus[];
@@ -62,6 +63,9 @@ const MobileNexusDrawer: React.FC<MobileNexusDrawerProps> = ({
         onClick={onClose}
       />
       <aside className={`mobile-nexus-drawer ${isOpen ? 'open' : ''}`}>
+        <div style={{ padding: '12px 16px 0' }}>
+          <GalaxyChip onGalaxyChanged={() => window.location.reload()} />
+        </div>
         <div className="mobile-nexus-drawer-header">
           <h3>Your Nexuses</h3>
           <div className="mobile-nexus-drawer-header-actions">

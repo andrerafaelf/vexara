@@ -93,7 +93,7 @@ router.post('/train', auth, async (req, res) => {
     }
 
     const rawNexus = await prisma.nexus.findUnique({ where: { id: parsedNexusId } });
-    if (!rawNexus || rawNexus.ownerId !== req.userId) {
+    if (!rawNexus || rawNexus.ownerId !== req.userId || rawNexus.galaxyId !== req.galaxyId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
     const nexus = await applyCompletedQueues(rawNexus);
@@ -213,7 +213,7 @@ router.post('/cancel-queue', auth, async (req, res) => {
     const parsedIndex = parseInt(index, 10);
 
     const nexus = await prisma.nexus.findUnique({ where: { id: parseInt(nexusId) } });
-    if (!nexus || nexus.ownerId !== req.userId) {
+    if (!nexus || nexus.ownerId !== req.userId || nexus.galaxyId !== req.galaxyId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
@@ -300,7 +300,7 @@ router.post('/check-queue', auth, async (req, res) => {
     const { nexusId } = req.body;
 
     const nexus = await prisma.nexus.findUnique({ where: { id: parseInt(nexusId) } });
-    if (!nexus || nexus.ownerId !== req.userId) {
+    if (!nexus || nexus.ownerId !== req.userId || nexus.galaxyId !== req.galaxyId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 

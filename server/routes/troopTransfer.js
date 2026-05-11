@@ -55,6 +55,9 @@ router.post('/send', auth, async (req, res) => {
     if (from.ownerId !== req.userId || to.ownerId !== req.userId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
+    if (from.galaxyId !== req.galaxyId || to.galaxyId !== req.galaxyId) {
+      return res.status(403).json({ error: 'Nexus is in a different galaxy' });
+    }
 
     // Validate and clamp troop amounts
     const sending = {};
@@ -81,6 +84,7 @@ router.post('/send', auth, async (req, res) => {
       prisma.nexus.update({ where: { id: from.id }, data: deductData }),
       prisma.troopTransfer.create({
         data: {
+          galaxyId: req.galaxyId,
           ownerNexusId: from.id,
           hostNexusId: to.id,
           troops: sending,
@@ -194,12 +198,15 @@ router.get('/nexus/:nexusId', auth, async (req, res) => {
   try {
     const nexusId = parseInt(req.params.nexusId);
     const nexus = await prisma.nexus.findUnique({ where: { id: nexusId } });
-    if (!nexus || nexus.ownerId !== req.userId) {
+    if (!nexus || nexus.ownerId !== req.userId || nexus.galaxyId !== req.galaxyId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
     const transfers = await prisma.troopTransfer.findMany({
-      where: { OR: [{ ownerNexusId: nexusId }, { hostNexusId: nexusId }] },
+      where: {
+        galaxyId: req.galaxyId,
+        OR: [{ ownerNexusId: nexusId }, { hostNexusId: nexusId }],
+      },
       include: {
         ownerNexus: { select: { id: true, name: true, x: true, y: true } },
         hostNexus:  { select: { id: true, name: true, x: true, y: true } },

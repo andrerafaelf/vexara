@@ -33,8 +33,11 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
       localStorage.removeItem('user');
       window.location.href = '/auth';
     }
+    if (response.status === 409 && data?.code === 'no_active_galaxy' && typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('galaxy:needs-selection'));
+    }
     const error = new Error(data.error || 'Request failed');
-    (error as any).response = { data };
+    (error as any).response = { data, status: response.status };
     throw error;
   }
 
@@ -47,6 +50,12 @@ export const login = (username: string, password: string) =>
     method: 'POST',
     body: JSON.stringify({ username, password }),
   });
+
+// Galaxies
+export const getGalaxies = () => apiRequest('/galaxies');
+export const getMyGalaxy = () => apiRequest('/galaxies/me');
+export const selectGalaxy = (galaxyId: number | string) =>
+  apiRequest(`/galaxies/${galaxyId}/select`, { method: 'POST' });
 
 // Nexuses
 export const createNexus = (name?: string) =>

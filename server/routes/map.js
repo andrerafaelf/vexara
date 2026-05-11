@@ -14,13 +14,24 @@ router.get('/area/:x/:y', auth, async (req, res) => {
 
     const nexuses = await prisma.nexus.findMany({
       where: {
+        galaxyId: req.galaxyId,
         x: { gte: x - range, lte: x + range },
         y: { gte: y - range, lte: y + range },
       },
       include: {
-        owner: { select: { id: true, username: true, points: true } },
+        owner: { select: { id: true, username: true } },
       },
     });
+
+    // Look up per-galaxy points for every owner referenced in the view
+    const ownerIds = [...new Set(nexuses.map((v) => v.ownerId).filter((id) => id != null))];
+    const ownerPlayers = ownerIds.length
+      ? await prisma.galaxyPlayer.findMany({
+          where: { galaxyId: req.galaxyId, userId: { in: ownerIds } },
+          select: { userId: true, points: true },
+        })
+      : [];
+    const pointsByOwnerId = new Map(ownerPlayers.map((p) => [p.userId, p.points]));
 
     const now = new Date();
     const result = nexuses.map((v) => ({
@@ -30,7 +41,14 @@ router.get('/area/:x/:y', auth, async (req, res) => {
       x: v.x,
       y: v.y,
       points: v.points,
-      owner: v.owner ? { _id: String(v.owner.id), id: String(v.owner.id), username: v.owner.username, points: v.owner.points } : null,
+      owner: v.owner
+        ? {
+            _id: String(v.owner.id),
+            id: String(v.owner.id),
+            username: v.owner.username,
+            points: pointsByOwnerId.get(v.owner.id) ?? 0,
+          }
+        : null,
       intelLevel: v.ownerId === req.userId ? 'owned' : 'public',
       newbieProtectionEndsAt: v.newbieProtectionEndsAt && v.newbieProtectionEndsAt > now ? v.newbieProtectionEndsAt : null,
     }));
@@ -44,7 +62,7 @@ router.get('/area/:x/:y', auth, async (req, res) => {
 // Get nexus details (for other players)
 router.get('/nexus/:nexusId', auth, async (req, res) => {
   try {
-    const nexus = await getNexusIntelForUser(req.userId, parseInt(req.params.nexusId));
+    const nexus = await getNexusIntelForUser(req.userId, parseInt(req.params.nexusId), req.galaxyId);
 
     if (!nexus) {
       return res.status(404).json({ error: 'Nexus not found' });

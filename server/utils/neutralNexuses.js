@@ -110,11 +110,11 @@ function buildNeutralNexusData(x, y, difficultyScale = BASE_NEUTRAL_DIFFICULTY) 
   };
 }
 
-async function findOpenCoordinates() {
+async function findOpenCoordinates(galaxyId) {
   for (let attempt = 0; attempt < MAP_SIZE * 2; attempt += 1) {
     const x = Math.floor(Math.random() * MAP_SIZE);
     const y = Math.floor(Math.random() * MAP_SIZE);
-    const existing = await prisma.nexus.findFirst({ where: { x, y }, select: { id: true } });
+    const existing = await prisma.nexus.findFirst({ where: { galaxyId, x, y }, select: { id: true } });
     if (!existing) {
       return { x, y };
     }
@@ -123,47 +123,68 @@ async function findOpenCoordinates() {
   return null;
 }
 
-export async function createNeutralNexus(difficultyScale = BASE_NEUTRAL_DIFFICULTY) {
-  const coordinates = await findOpenCoordinates();
+export async function createNeutralNexus(galaxyId, difficultyScale = BASE_NEUTRAL_DIFFICULTY) {
+  const coordinates = await findOpenCoordinates(galaxyId);
   if (!coordinates) {
     return null;
   }
 
-  return prisma.nexus.create({ data: buildNeutralNexusData(coordinates.x, coordinates.y, difficultyScale) });
+  return prisma.nexus.create({
+    data: { ...buildNeutralNexusData(coordinates.x, coordinates.y, difficultyScale), galaxyId },
+  });
 }
 
-export async function ensureNeutralNexusPool() {
-  const [userCount, totalNexusCount, neutralCount] = await Promise.all([
-    prisma.user.count(),
-    prisma.nexus.count(),
-    prisma.nexus.count({ where: { ownerId: null } }),
+async function ensureNeutralNexusPoolForGalaxy(galaxyId) {
+  const [playerCount, totalNexusCount, neutralCount] = await Promise.all([
+    prisma.galaxyPlayer.count({ where: { galaxyId } }),
+    prisma.nexus.count({ where: { galaxyId } }),
+    prisma.nexus.count({ where: { galaxyId, ownerId: null } }),
   ]);
 
-  const capturedCount = Math.max(0, totalNexusCount - userCount - neutralCount);
+  const capturedCount = Math.max(0, totalNexusCount - playerCount - neutralCount);
   const neutralDifficulty = Math.min(
     MAX_NEUTRAL_DIFFICULTY,
-    BASE_NEUTRAL_DIFFICULTY + userCount * USER_DIFFICULTY_STEP + capturedCount * CAPTURE_DIFFICULTY_STEP,
+    BASE_NEUTRAL_DIFFICULTY + playerCount * USER_DIFFICULTY_STEP + capturedCount * CAPTURE_DIFFICULTY_STEP,
   );
   const targetNeutralCount = Math.max(
     MIN_NEUTRALS,
-    userCount * NEUTRALS_PER_PLAYER + capturedCount * NEUTRALS_PER_CAPTURED,
+    playerCount * NEUTRALS_PER_PLAYER + capturedCount * NEUTRALS_PER_CAPTURED,
   );
   const missingCount = Math.max(0, targetNeutralCount - neutralCount);
 
   if (missingCount === 0) {
-    return { created: 0, neutralCount, targetNeutralCount };
+    return { galaxyId, created: 0, neutralCount, targetNeutralCount };
   }
 
   let created = 0;
   for (let index = 0; index < missingCount; index += 1) {
-    const nexus = await createNeutralNexus(neutralDifficulty);
+    const nexus = await createNeutralNexus(galaxyId, neutralDifficulty);
     if (!nexus) {
       break;
     }
     created += 1;
   }
 
-  return { created, neutralCount: neutralCount + created, targetNeutralCount };
+  return { galaxyId, created, neutralCount: neutralCount + created, targetNeutralCount };
+}
+
+export async function ensureNeutralNexusPool() {
+  const galaxies = await prisma.galaxy.findMany({
+    where: { status: 'active' },
+    select: { id: true },
+  });
+
+  let totalCreated = 0;
+  let totalNeutralCount = 0;
+  let totalTarget = 0;
+  for (const galaxy of galaxies) {
+    const result = await ensureNeutralNexusPoolForGalaxy(galaxy.id);
+    totalCreated += result.created;
+    totalNeutralCount += result.neutralCount;
+    totalTarget += result.targetNeutralCount;
+  }
+
+  return { created: totalCreated, neutralCount: totalNeutralCount, targetNeutralCount: totalTarget };
 }
 
 /**
@@ -174,18 +195,21 @@ export async function ensureNeutralNexusPool() {
  * building levels so the nexus stays defensible.
  */
 export async function levelUpNeutralNexuses() {
-  const [userCount, totalNexusCount, neutralNexuses] = await Promise.all([
-    prisma.user.count(),
-    prisma.nexus.count(),
-    prisma.nexus.findMany({ where: { ownerId: null } }),
+  const activeGalaxies = await prisma.galaxy.findMany({ where: { status: 'active' }, select: { id: true } });
+  const activeGalaxyIds = activeGalaxies.map((g) => g.id);
+
+  const [playerCount, totalNexusCount, neutralNexuses] = await Promise.all([
+    prisma.galaxyPlayer.count({ where: { galaxyId: { in: activeGalaxyIds } } }),
+    prisma.nexus.count({ where: { galaxyId: { in: activeGalaxyIds } } }),
+    prisma.nexus.findMany({ where: { ownerId: null, galaxyId: { in: activeGalaxyIds } } }),
   ]);
 
   if (neutralNexuses.length === 0) return;
 
-  const capturedCount = Math.max(0, totalNexusCount - userCount - neutralNexuses.length);
+  const capturedCount = Math.max(0, totalNexusCount - playerCount - neutralNexuses.length);
   const difficulty = Math.min(
     MAX_NEUTRAL_DIFFICULTY,
-    BASE_NEUTRAL_DIFFICULTY + userCount * USER_DIFFICULTY_STEP + capturedCount * CAPTURE_DIFFICULTY_STEP,
+    BASE_NEUTRAL_DIFFICULTY + playerCount * USER_DIFFICULTY_STEP + capturedCount * CAPTURE_DIFFICULTY_STEP,
   );
 
   // Target level for each building = difficulty ratio * NPC max level (minimum 1)
@@ -226,10 +250,10 @@ export async function levelUpNeutralNexuses() {
   }
 }
 
-export async function seedNeutralNexuses(count) {
+export async function seedNeutralNexuses(galaxyId, count) {
   let created = 0;
   for (let index = 0; index < count; index += 1) {
-    const nexus = await createNeutralNexus();
+    const nexus = await createNeutralNexus(galaxyId);
     if (!nexus) {
       break;
     }

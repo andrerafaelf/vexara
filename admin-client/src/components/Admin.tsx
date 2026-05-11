@@ -47,6 +47,18 @@ interface Attack {
   arrivesAt: string;
 }
 
+interface Galaxy {
+  _id: number;
+  id: number;
+  name: string;
+  status: 'active' | 'ended';
+  endedAt: string | null;
+  winnerUserId: number | null;
+  createdAt: string;
+  playerCount: number;
+  nexusCount: number;
+}
+
 interface ToastMessage {
   message: string;
   type: 'success' | 'error' | 'info';
@@ -91,6 +103,10 @@ const Admin: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [modal, setModal] = useState<AdminModal>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+  const [galaxies, setGalaxies] = useState<Galaxy[]>([]);
+  const [newGalaxyName, setNewGalaxyName] = useState('');
+  const [creatingGalaxy, setCreatingGalaxy] = useState(false);
 
   const [addUserForm, setAddUserForm] = useState({ username: '', email: '', password: '' });
   const [editUserForm, setEditUserForm] = useState({ email: '', password: '' });
@@ -137,17 +153,21 @@ const Admin: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const [usersRes, statsRes, attacksRes] = await Promise.all([
+      const [usersRes, statsRes, attacksRes, galaxiesRes] = await Promise.all([
         adminFetch(`${ADMIN_API_URL}/users`),
         adminFetch(`${ADMIN_API_URL}/stats`),
         adminFetch(`${ADMIN_API_URL}/attacks`),
+        adminFetch(`${ADMIN_API_URL}/galaxies`),
       ]);
 
-      const [usersData, statsData, attacksData] = await Promise.all([
+      const [usersData, statsData, attacksData, galaxiesData] = await Promise.all([
         usersRes.json().catch(() => null),
         statsRes.json().catch(() => null),
         attacksRes.json().catch(() => null),
+        galaxiesRes.json().catch(() => null),
       ]);
+
+      setGalaxies(Array.isArray(galaxiesData) ? galaxiesData : []);
 
       const normalizedUsers = Array.isArray(usersData)
         ? usersData.map((user) => ({
@@ -211,6 +231,33 @@ const Admin: React.FC = () => {
   const closeModal = () => {
     setModal(null);
     setSelectedUser(null);
+  };
+
+  const handleCreateGalaxy = async () => {
+    const name = newGalaxyName.trim();
+    if (name.length < 3 || name.length > 40) {
+      showToast('Galaxy name must be between 3 and 40 characters', 'error');
+      return;
+    }
+    setCreatingGalaxy(true);
+    try {
+      const res = await adminFetch(`${ADMIN_API_URL}/galaxies`, {
+        method: 'POST',
+        body: JSON.stringify({ name }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showToast(data.error || 'Failed to create galaxy', 'error');
+        return;
+      }
+      showToast(`Galaxy "${name}" created`, 'success');
+      setNewGalaxyName('');
+      loadData();
+    } catch {
+      showToast('Error creating galaxy', 'error');
+    } finally {
+      setCreatingGalaxy(false);
+    }
   };
 
   const handleAddUser = async () => {
@@ -578,6 +625,69 @@ const Admin: React.FC = () => {
           )}
         </>
       )}
+
+      <div className="admin-section" style={{ marginBottom: 28 }}>
+        <div className="admin-section-header">
+          <h3>🌌 Galaxies ({galaxies.length})</h3>
+        </div>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+          <input
+            type="text"
+            value={newGalaxyName}
+            onChange={(e) => setNewGalaxyName(e.target.value)}
+            placeholder="New galaxy name"
+            maxLength={40}
+            style={{
+              flex: '1 1 240px',
+              padding: '0.5rem 0.75rem',
+              borderRadius: 4,
+              border: '1px solid #2c3a78',
+              background: '#0c1430',
+              color: '#e0e8ff',
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleCreateGalaxy();
+            }}
+          />
+          <button
+            className="btn-primary"
+            disabled={creatingGalaxy}
+            onClick={handleCreateGalaxy}
+          >
+            {creatingGalaxy ? 'Creating…' : '+ Create Galaxy'}
+          </button>
+        </div>
+        <div style={{ display: 'grid', gap: 8 }}>
+          {galaxies.map((g) => (
+            <div
+              key={g._id}
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '0.6rem 0.8rem',
+                border: '1px solid #2c3a78',
+                borderRadius: 6,
+                background: g.status === 'ended' ? '#1a1430' : '#0e1430',
+              }}
+            >
+              <div>
+                <div style={{ fontWeight: 600 }}>
+                  {g.name}{' '}
+                  <span style={{ fontSize: '0.8em', color: g.status === 'ended' ? '#ffae3a' : '#7df58c' }}>
+                    {g.status}
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.8em', color: '#8a98c2' }}>
+                  {g.playerCount} player{g.playerCount === 1 ? '' : 's'} · {g.nexusCount} nexus{g.nexusCount === 1 ? '' : 'es'}
+                  {g.winnerUserId ? ` · Winner #${g.winnerUserId}` : ''}
+                  {' · Created '}{new Date(g.createdAt).toLocaleDateString()}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
       <div className="admin-section">
         <div className="admin-section-header">

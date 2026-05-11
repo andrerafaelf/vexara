@@ -13,7 +13,9 @@ router.post('/create', auth, async (req, res) => {
   try {
     const user = await prisma.user.findUnique({ where: { id: req.userId } });
 
-    const existingCount = await prisma.nexus.count({ where: { ownerId: user.id } });
+    const existingCount = await prisma.nexus.count({
+      where: { ownerId: user.id, galaxyId: req.galaxyId },
+    });
     if (existingCount >= MAX_NEXUSES_PER_USER) {
       return res.status(400).json({ error: `Maximum of ${MAX_NEXUSES_PER_USER} nexuses allowed per player` });
     }
@@ -23,6 +25,7 @@ router.post('/create', auth, async (req, res) => {
       data: {
         name: req.body.name || `${user.username}'s Nexus`,
         ownerId: user.id,
+        galaxyId: req.galaxyId,
         x: Math.floor(Math.random() * 35),
         y: Math.floor(Math.random() * 35),
         commandCore: 0,
@@ -48,7 +51,7 @@ router.post('/create', auth, async (req, res) => {
 router.get('/my-nexuses', auth, async (req, res) => {
   try {
     const nexuses = await prisma.nexus.findMany({
-      where: { ownerId: req.userId },
+      where: { ownerId: req.userId, galaxyId: req.galaxyId },
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
     });
     const outgoingAttacks = await prisma.attack.findMany({
@@ -69,9 +72,12 @@ router.get('/my-nexuses', auth, async (req, res) => {
       }),
     );
 
-    // Recalculate total user points
+    // Cache total points on the per-galaxy player record
     const totalPoints = updated.reduce((sum, v) => sum + v.points, 0);
-    await prisma.user.update({ where: { id: req.userId }, data: { points: totalPoints } });
+    await prisma.galaxyPlayer.update({
+      where: { userId_galaxyId: { userId: req.userId, galaxyId: req.galaxyId } },
+      data: { points: totalPoints },
+    });
 
     res.json(updated.map((v) => serializeNexus(v)));
   } catch (error) {
@@ -79,11 +85,29 @@ router.get('/my-nexuses', auth, async (req, res) => {
   }
 });
 
+// Helpers for nexus groups (per-galaxy, stored on GalaxyPlayer)
+async function getPlayerGroups(userId, galaxyId) {
+  const player = await prisma.galaxyPlayer.findUnique({
+    where: { userId_galaxyId: { userId, galaxyId } },
+    select: { nexusGroups: true },
+  });
+  return Array.isArray(player?.nexusGroups) ? player.nexusGroups : [];
+}
+
+async function updatePlayerGroups(userId, galaxyId, groups) {
+  const updated = await prisma.galaxyPlayer.update({
+    where: { userId_galaxyId: { userId, galaxyId } },
+    data: { nexusGroups: groups },
+    select: { nexusGroups: true },
+  });
+  return updated.nexusGroups;
+}
+
 // Get nexus groups
 router.get('/groups', auth, async (req, res) => {
   try {
-    const user = await prisma.user.findUnique({ where: { id: req.userId } });
-    res.json(user.nexusGroups ?? []);
+    const groups = await getPlayerGroups(req.userId, req.galaxyId);
+    res.json(groups);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -96,17 +120,13 @@ router.post('/groups', auth, async (req, res) => {
     if (!name || typeof name !== 'string' || name.trim().length < 1 || name.trim().length > 32) {
       return res.status(400).json({ error: 'Group name must be between 1 and 32 characters' });
     }
-    const user = await prisma.user.findUnique({ where: { id: req.userId } });
-    const groups = Array.isArray(user.nexusGroups) ? user.nexusGroups : [];
+    const groups = await getPlayerGroups(req.userId, req.galaxyId);
     if (groups.length >= 10) {
       return res.status(400).json({ error: 'Maximum of 10 groups allowed' });
     }
     const newGroup = { id: Date.now().toString(), name: name.trim(), nexusIds: [] };
-    const updated = await prisma.user.update({
-      where: { id: req.userId },
-      data: { nexusGroups: [...groups, newGroup] },
-    });
-    res.json(updated.nexusGroups);
+    const updated = await updatePlayerGroups(req.userId, req.galaxyId, [...groups, newGroup]);
+    res.json(updated);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -120,13 +140,12 @@ router.patch('/groups/:groupId', auth, async (req, res) => {
     if (!name || typeof name !== 'string' || name.trim().length < 1 || name.trim().length > 32) {
       return res.status(400).json({ error: 'Group name must be between 1 and 32 characters' });
     }
-    const user = await prisma.user.findUnique({ where: { id: req.userId } });
-    const groups = Array.isArray(user.nexusGroups) ? user.nexusGroups : [];
+    const groups = await getPlayerGroups(req.userId, req.galaxyId);
     const groupIndex = groups.findIndex((g) => g.id === groupId);
     if (groupIndex === -1) return res.status(404).json({ error: 'Group not found' });
     groups[groupIndex] = { ...groups[groupIndex], name: name.trim() };
-    const updated = await prisma.user.update({ where: { id: req.userId }, data: { nexusGroups: groups } });
-    res.json(updated.nexusGroups);
+    const updated = await updatePlayerGroups(req.userId, req.galaxyId, groups);
+    res.json(updated);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -136,12 +155,11 @@ router.patch('/groups/:groupId', auth, async (req, res) => {
 router.delete('/groups/:groupId', auth, async (req, res) => {
   try {
     const { groupId } = req.params;
-    const user = await prisma.user.findUnique({ where: { id: req.userId } });
-    const groups = Array.isArray(user.nexusGroups) ? user.nexusGroups : [];
+    const groups = await getPlayerGroups(req.userId, req.galaxyId);
     const filtered = groups.filter((g) => g.id !== groupId);
     if (filtered.length === groups.length) return res.status(404).json({ error: 'Group not found' });
-    const updated = await prisma.user.update({ where: { id: req.userId }, data: { nexusGroups: filtered } });
-    res.json(updated.nexusGroups);
+    const updated = await updatePlayerGroups(req.userId, req.galaxyId, filtered);
+    res.json(updated);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -154,19 +172,21 @@ router.put('/groups/:groupId/nexuses', auth, async (req, res) => {
     const { nexusIds } = req.body;
     if (!Array.isArray(nexusIds)) return res.status(400).json({ error: 'nexusIds must be an array' });
 
-    const user = await prisma.user.findUnique({ where: { id: req.userId } });
-    const groups = Array.isArray(user.nexusGroups) ? user.nexusGroups : [];
+    const groups = await getPlayerGroups(req.userId, req.galaxyId);
     const groupIndex = groups.findIndex((g) => g.id === groupId);
     if (groupIndex === -1) return res.status(404).json({ error: 'Group not found' });
 
-    // Verify all nexusIds belong to this user
-    const ownedNexuses = await prisma.nexus.findMany({ where: { ownerId: req.userId }, select: { id: true } });
+    // Verify all nexusIds belong to this user in this galaxy
+    const ownedNexuses = await prisma.nexus.findMany({
+      where: { ownerId: req.userId, galaxyId: req.galaxyId },
+      select: { id: true },
+    });
     const ownedIds = new Set(ownedNexuses.map((n) => String(n.id)));
     const validIds = nexusIds.filter((id) => ownedIds.has(String(id)));
 
     groups[groupIndex] = { ...groups[groupIndex], nexusIds: validIds.map(String) };
-    const updated = await prisma.user.update({ where: { id: req.userId }, data: { nexusGroups: groups } });
-    res.json(updated.nexusGroups);
+    const updated = await updatePlayerGroups(req.userId, req.galaxyId, groups);
+    res.json(updated);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -189,6 +209,9 @@ router.post('/transfer-resources', auth, async (req, res) => {
     if (!from || !to) return res.status(404).json({ error: 'Nexus not found' });
     if (from.ownerId !== req.userId || to.ownerId !== req.userId) {
       return res.status(403).json({ error: 'Not authorized' });
+    }
+    if (from.galaxyId !== req.galaxyId || to.galaxyId !== req.galaxyId) {
+      return res.status(403).json({ error: 'Nexus is in a different galaxy' });
     }
 
     const sendBiomass = Math.min(Math.max(0, Math.floor(biomass)), Math.floor(from.biomass));
@@ -231,7 +254,7 @@ router.patch('/:nexusId/name', auth, async (req, res) => {
       return res.status(404).json({ error: 'Nexus not found' });
     }
 
-    if (nexus.ownerId !== req.userId) {
+    if (nexus.ownerId !== req.userId || nexus.galaxyId !== req.galaxyId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
@@ -255,7 +278,7 @@ router.get('/:nexusId', auth, async (req, res) => {
       return res.status(404).json({ error: 'Nexus not found' });
     }
 
-    if (nexus.ownerId !== req.userId) {
+    if (nexus.ownerId !== req.userId || nexus.galaxyId !== req.galaxyId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 

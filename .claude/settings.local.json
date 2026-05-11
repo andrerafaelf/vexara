@@ -21,7 +21,19 @@
       "Bash(npm test *)",
       "Bash(node --check routes/friends.js)",
       "Bash(node --check routes/chat.js)",
-      "Bash(node --check server.js)"
+      "Bash(node --check server.js)",
+      "Bash(DATABASE_URL=\"postgresql://x:x@localhost:5432/x\" npx prisma validate)",
+      "Bash(cd /c/projects/Neon-Dominion/client && grep -c \"getMyGalaxy\\\\|GalaxyPicker\\\\|galaxyChip\" src/components/Game.tsx)",
+      "Read(//c/c/projects/Neon-Dominion/client/src/components/**)",
+      "Bash(cd /c/projects/Neon-Dominion/client && ls .next 2>/dev/null | head -5; cd /c/projects/Neon-Dominion/client && cat package.json | grep -E '\"\\(dev|build|start\\)\"')",
+      "Read(//c/c/projects/Neon-Dominion/client/**)",
+      "Bash(cd /c/projects/Neon-Dominion/client && stat -c '%y' src/components/Game.tsx src/components/GalaxyPicker.tsx src/services/api.ts 2>/dev/null)",
+      "Read(//c/projects/Neon-Dominion/**)",
+      "PowerShell(Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue | Select-Object OwningProcess, State | ForEach-Object { $p = Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue; \"PID $\\($_.OwningProcess\\) \\($\\($p.ProcessName\\)\\): $\\($_.State\\)\" })",
+      "Bash(cd /c/projects/Neon-Dominion/client && rm src/components/Game.tsx && echo deleted)"
+    ],
+    "additionalDirectories": [
+      "c:\\c\\projects\\Neon-Dominion\\client\\src\\components"
     ]
   }
 }

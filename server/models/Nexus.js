@@ -121,20 +121,20 @@ const QUEST_REWARD_BATCHES = [
 export { QUEST_REWARD_BATCHES };
 
 export async function applyQuestRewards(nexus, options = {}) {
-  // Quests are tracked per-user, not per-nexus. Skip for neutral nexuses.
+  // Quests are tracked per-user-per-galaxy, not per-nexus. Skip for neutral nexuses.
   if (!nexus.ownerId) return nexus;
 
-  const user = await prisma.user.findUnique({
-    where: { id: nexus.ownerId },
+  const player = await prisma.galaxyPlayer.findUnique({
+    where: { userId_galaxyId: { userId: nexus.ownerId, galaxyId: nexus.galaxyId } },
     select: { id: true, questRewardClaims: true, completedQuestIds: true },
   });
-  if (!user) return nexus;
+  if (!player) return nexus;
 
   const claimedRewards = new Set(
-    Array.isArray(user.questRewardClaims) ? user.questRewardClaims.filter((v) => typeof v === 'string') : [],
+    Array.isArray(player.questRewardClaims) ? player.questRewardClaims.filter((v) => typeof v === 'string') : [],
   );
   const completedQuestIds = new Set(
-    Array.isArray(user.completedQuestIds) ? user.completedQuestIds.filter((v) => typeof v === 'string') : [],
+    Array.isArray(player.completedQuestIds) ? player.completedQuestIds.filter((v) => typeof v === 'string') : [],
   );
 
   const hasOutgoingStrike =
@@ -207,16 +207,16 @@ export async function applyQuestRewards(nexus, options = {}) {
   const updatedCompletedIds = Array.from(completedQuestIds);
   const updatedClaimedRewards = Array.from(claimedRewards);
   const questIdsChanged =
-    updatedCompletedIds.length !== (Array.isArray(user.completedQuestIds) ? user.completedQuestIds.length : 0);
+    updatedCompletedIds.length !== (Array.isArray(player.completedQuestIds) ? player.completedQuestIds.length : 0);
 
   // Attach quest fields as virtual properties so serializeNexus can read them
   if (newlyClaimedRewards.length === 0 && !questIdsChanged) {
     return { ...nexus, questRewardClaims: updatedClaimedRewards, completedQuestIds: updatedCompletedIds };
   }
 
-  // Persist quest progress to user (user-level, not nexus-level)
-  await prisma.user.update({
-    where: { id: user.id },
+  // Persist quest progress to the per-galaxy player record
+  await prisma.galaxyPlayer.update({
+    where: { id: player.id },
     data: { questRewardClaims: updatedClaimedRewards, completedQuestIds: updatedCompletedIds },
   });
 

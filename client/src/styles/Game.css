@@ -193,6 +193,63 @@
   min-height: 0;
 }
 
+/* ── Galaxy chip (sidebar header) ── */
+.galaxy-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 18px;
+  background: linear-gradient(135deg, #1a2350 0%, #0f1a3d 100%);
+  border: 1px solid #2c3a78;
+  border-radius: 8px;
+  color: #c8d4ff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.05s;
+  text-align: left;
+}
+
+.galaxy-chip:hover {
+  border-color: #4a63d8;
+  background: linear-gradient(135deg, #1f2960 0%, #142351 100%);
+}
+
+.galaxy-chip:active {
+  transform: scale(0.98);
+}
+
+.galaxy-chip-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.galaxy-chip-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #e0e8ff;
+}
+
+.galaxy-chip-tag {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #ffae3a;
+  background: rgba(255, 174, 58, 0.12);
+  border: 1px solid rgba(255, 174, 58, 0.4);
+  padding: 1px 6px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.galaxy-chip-ended {
+  opacity: 0.85;
+}
+
 .nexus-nav h3 {
   color: #e94560;
   margin-bottom: 15px;

@@ -7,6 +7,7 @@ import {
   setGroupNexuses,
 } from '../services/api';
 import { Nexus, NexusGroup } from '../types/game';
+import GalaxyChip from './GalaxyChip';
 
 interface NexusSidebarProps {
   nexuses: Nexus[];
@@ -58,6 +59,7 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
   return (
     <>
       <nav className="nexus-nav">
+        <GalaxyChip onGalaxyChanged={() => window.location.reload()} />
         <div className="nexus-nav-header">
           <h3>Your Nexuses</h3>
           {nexuses.length >= GEAR_THRESHOLD && (

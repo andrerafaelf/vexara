@@ -10,7 +10,7 @@ router.get('/reports/:nexusId', auth, async (req, res) => {
   try {
     const nexusId = parseInt(req.params.nexusId);
     const nexus = await prisma.nexus.findUnique({ where: { id: nexusId } });
-    if (!nexus || nexus.ownerId !== req.userId) {
+    if (!nexus || nexus.ownerId !== req.userId || nexus.galaxyId !== req.galaxyId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
@@ -54,9 +54,15 @@ router.post('/read/:attackId', auth, async (req, res) => {
     const attackId = parseInt(req.params.attackId);
     const attack = await prisma.attack.findUnique({ where: { id: attackId } });
     if (!attack) return res.status(404).json({ error: 'Report not found' });
+    if (attack.galaxyId !== req.galaxyId) {
+      return res.status(403).json({ error: 'Report is in a different galaxy' });
+    }
 
     // Only attacker or defender may mark as read
-    const nexuses = await prisma.nexus.findMany({ where: { ownerId: req.userId }, select: { id: true } });
+    const nexuses = await prisma.nexus.findMany({
+      where: { ownerId: req.userId, galaxyId: req.galaxyId },
+      select: { id: true },
+    });
     const ownedIds = new Set(nexuses.map((n) => n.id));
     if (!ownedIds.has(attack.attackerNexusId) && !ownedIds.has(attack.defenderNexusId)) {
       return res.status(403).json({ error: 'Not authorized' });
@@ -64,7 +70,7 @@ router.post('/read/:attackId', auth, async (req, res) => {
 
     await prisma.reportRead.upsert({
       where: { userId_attackId: { userId: req.userId, attackId } },
-      create: { userId: req.userId, attackId },
+      create: { userId: req.userId, attackId, galaxyId: req.galaxyId },
       update: { readAt: new Date() },
     });
 
@@ -79,12 +85,13 @@ router.post('/read-all/:nexusId', auth, async (req, res) => {
   try {
     const nexusId = parseInt(req.params.nexusId);
     const nexus = await prisma.nexus.findUnique({ where: { id: nexusId } });
-    if (!nexus || nexus.ownerId !== req.userId) {
+    if (!nexus || nexus.ownerId !== req.userId || nexus.galaxyId !== req.galaxyId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
     const attacks = await prisma.attack.findMany({
       where: {
+        galaxyId: req.galaxyId,
         OR: [{ attackerNexusId: nexusId }, { defenderNexusId: nexusId }],
         status: 'completed',
       },
@@ -98,7 +105,7 @@ router.post('/read-all/:nexusId', auth, async (req, res) => {
       attacks.map((a) =>
         prisma.reportRead.upsert({
           where: { userId_attackId: { userId: req.userId, attackId: a.id } },
-          create: { userId: req.userId, attackId: a.id },
+          create: { userId: req.userId, attackId: a.id, galaxyId: req.galaxyId },
           update: { readAt: now },
         }),
       ),
@@ -115,12 +122,12 @@ router.get('/read-ids/:nexusId', auth, async (req, res) => {
   try {
     const nexusId = parseInt(req.params.nexusId);
     const nexus = await prisma.nexus.findUnique({ where: { id: nexusId } });
-    if (!nexus || nexus.ownerId !== req.userId) {
+    if (!nexus || nexus.ownerId !== req.userId || nexus.galaxyId !== req.galaxyId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
     const reads = await prisma.reportRead.findMany({
-      where: { userId: req.userId },
+      where: { userId: req.userId, galaxyId: req.galaxyId },
       select: { attackId: true },
     });
 
@@ -134,7 +141,7 @@ router.get('/read-ids/:nexusId', auth, async (req, res) => {
 router.get('/read-ids', auth, async (req, res) => {
   try {
     const reads = await prisma.reportRead.findMany({
-      where: { userId: req.userId },
+      where: { userId: req.userId, galaxyId: req.galaxyId },
       select: { attackId: true },
     });
     res.json(reads.map((r) => String(r.attackId)));

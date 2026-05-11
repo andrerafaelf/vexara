@@ -1,6 +1,6 @@
 import prisma from '../lib/prisma.js';
 
-function buildPublicNexusData(nexus) {
+function buildPublicNexusData(nexus, ownerPoints) {
   return {
     _id: nexus.id,
     id: nexus.id,
@@ -13,7 +13,7 @@ function buildPublicNexusData(nexus) {
           _id: nexus.owner.id,
           id: nexus.owner.id,
           username: nexus.owner.username,
-          points: nexus.owner.points,
+          points: ownerPoints ?? 0,
         }
       : null,
     intelLevel: 'public',
@@ -59,11 +59,11 @@ export function buildDetailedScoutIntel(nexus) {
   };
 }
 
-export async function getNexusIntelForUser(userId, nexusId) {
+export async function getNexusIntelForUser(userId, nexusId, galaxyId) {
   const nexus = await prisma.nexus.findUnique({
     where: { id: nexusId },
     include: {
-      owner: { select: { id: true, username: true, points: true } },
+      owner: { select: { id: true, username: true } },
     },
   });
 
@@ -71,7 +71,17 @@ export async function getNexusIntelForUser(userId, nexusId) {
     return null;
   }
 
-  const publicData = buildPublicNexusData(nexus);
+  if (galaxyId != null && nexus.galaxyId !== galaxyId) {
+    return null;
+  }
+
+  const ownerPlayer = nexus.owner
+    ? await prisma.galaxyPlayer.findUnique({
+        where: { userId_galaxyId: { userId: nexus.owner.id, galaxyId: nexus.galaxyId } },
+        select: { points: true },
+      })
+    : null;
+  const publicData = buildPublicNexusData(nexus, ownerPlayer?.points);
 
   if (nexus.ownerId === userId) {
     return {

@@ -5,6 +5,7 @@ import { hashPassword } from '../../server/models/User.js';
 import { processArrivedAttacks } from '../../server/utils/combat.js';
 import { getPopulationMax } from '../../server/utils/population.js';
 import { sendPushToUser, NOTIF } from '../../server/utils/push.js';
+import { createStarterNexus } from '../../server/utils/starterNexus.js';
 
 const router = express.Router();
 
@@ -72,6 +73,66 @@ async function findUserNexusWithQueue(userId, queueKey) {
   return userNexuses.find((nexus) => Array.isArray(nexus[queueKey]) && nexus[queueKey].length > 0) || null;
 }
 
+// List all galaxies with player counts and nexus counts
+router.get('/galaxies', async (req, res) => {
+  try {
+    const galaxies = await prisma.galaxy.findMany({
+      orderBy: { createdAt: 'asc' },
+      include: {
+        _count: { select: { players: true, nexuses: true } },
+      },
+    });
+    res.json(
+      galaxies.map((g) => ({
+        _id: g.id,
+        id: g.id,
+        name: g.name,
+        status: g.status,
+        endedAt: g.endedAt,
+        winnerUserId: g.winnerUserId,
+        createdAt: g.createdAt,
+        playerCount: g._count.players,
+        nexusCount: g._count.nexuses,
+      })),
+    );
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Create a galaxy
+router.post('/galaxies', async (req, res) => {
+  try {
+    const rawName = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
+    if (rawName.length < 3 || rawName.length > 40) {
+      return res.status(400).json({ error: 'Galaxy name must be between 3 and 40 characters' });
+    }
+
+    const existing = await prisma.galaxy.findUnique({ where: { name: rawName } });
+    if (existing) {
+      return res.status(400).json({ error: 'A galaxy with that name already exists' });
+    }
+
+    const galaxy = await prisma.galaxy.create({ data: { name: rawName } });
+    res.json({
+      success: true,
+      galaxy: {
+        _id: galaxy.id,
+        id: galaxy.id,
+        name: galaxy.name,
+        status: galaxy.status,
+        endedAt: galaxy.endedAt,
+        winnerUserId: galaxy.winnerUserId,
+        createdAt: galaxy.createdAt,
+        playerCount: 0,
+        nexusCount: 0,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get all users
 router.get('/users', async (req, res) => {
   try {
@@ -80,7 +141,6 @@ router.get('/users', async (req, res) => {
         id: true,
         username: true,
         email: true,
-        points: true,
         createdAt: true,
         nexuses: {
           select: {
@@ -88,12 +148,17 @@ router.get('/users', async (req, res) => {
             name: true,
           },
         },
+        galaxyPlayers: {
+          select: { galaxyId: true, points: true },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
     const result = users.map((u) => ({
       ...u,
       _id: u.id,
+      // Admin view: sum points across every galaxy the user plays
+      points: u.galaxyPlayers.reduce((sum, gp) => sum + (gp.points || 0), 0),
       nexuses: u.nexuses.map((v) => ({
         _id: v.id,
         id: v.id,
@@ -132,15 +197,15 @@ router.get('/stats', async (req, res) => {
       prisma.attack.count({ where: { status: 'traveling' } }),
       prisma.attack.count(),
       prisma.user.count({ where: { createdAt: { gte: oneWeekAgo } } }),
-      prisma.user.aggregate({ _avg: { points: true } }),
+      prisma.galaxyPlayer.aggregate({ _avg: { points: true } }),
       prisma.marketListing.count(),
       prisma.nexus.findMany({
         where: { ownerId: { not: null } },
         select: troopSumSelect,
       }),
       prisma.user.count({ where: { nexuses: { some: {} } } }),
-      prisma.user.findMany({
-        select: { id: true, username: true, points: true },
+      prisma.galaxyPlayer.findMany({
+        select: { userId: true, points: true, user: { select: { id: true, username: true } } },
         orderBy: { points: 'desc' },
         take: 10,
       }),
@@ -167,7 +232,12 @@ router.get('/stats', async (req, res) => {
       totalTroops,
       avgPoints,
       marketCount,
-      topUsers: topUsers.map((u) => ({ ...u, _id: u.id })),
+      topUsers: topUsers.map((gp) => ({
+        _id: gp.user.id,
+        id: gp.user.id,
+        username: gp.user.username,
+        points: gp.points,
+      })),
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -193,23 +263,34 @@ router.post('/users', async (req, res) => {
 
     const hashedPassword = await hashPassword(password);
 
+    // Place new users in the first active galaxy. (Cut B will let admin pick.)
+    const targetGalaxy = await prisma.galaxy.findFirst({
+      where: { status: 'active' },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true },
+    });
+    if (!targetGalaxy) {
+      return res.status(500).json({ error: 'No active galaxy available to place the new user' });
+    }
+
     const created = await prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
           username,
           email: String(email).toLowerCase(),
           password: hashedPassword,
+          activeGalaxyId: targetGalaxy.id,
         },
       });
 
-      const nexus = await tx.nexus.create({
-        data: {
-          name: `${username}'s Nexus`,
-          ownerId: user.id,
-          x: Math.floor(Math.random() * 35),
-          y: Math.floor(Math.random() * 35),
-          populationMax: getPopulationMax(1),
-        },
+      await tx.galaxyPlayer.create({
+        data: { userId: user.id, galaxyId: targetGalaxy.id },
+      });
+
+      const nexus = await createStarterNexus(tx, {
+        userId: user.id,
+        username: user.username,
+        galaxyId: targetGalaxy.id,
       });
 
       return { user, nexus };
@@ -526,6 +607,15 @@ router.post('/users/:userId/reset-account', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    const targetGalaxy = await prisma.galaxy.findFirst({
+      where: { status: 'active' },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true },
+    });
+    if (!targetGalaxy) {
+      return res.status(500).json({ error: 'No active galaxy available to place the reset user' });
+    }
+
     const resetResult = await prisma.$transaction(async (tx) => {
       const userNexuses = await tx.nexus.findMany({ where: { ownerId: userId }, select: { id: true } });
       const nexusIds = userNexuses.map((n) => n.id);
@@ -546,15 +636,28 @@ router.post('/users/:userId/reset-account', async (req, res) => {
 
       await tx.nexus.deleteMany({ where: { ownerId: userId } });
 
+      // Reset per-galaxy progress on every galaxy the user has joined
+      await tx.galaxyPlayer.updateMany({
+        where: { userId },
+        data: { points: 0, questRewardClaims: [], completedQuestIds: [], nexusGroups: [] },
+      });
+
+      // Ensure the target galaxy has a GalaxyPlayer row and is the active one
+      await tx.galaxyPlayer.upsert({
+        where: { userId_galaxyId: { userId, galaxyId: targetGalaxy.id } },
+        create: { userId, galaxyId: targetGalaxy.id },
+        update: {},
+      });
       await tx.user.update({
         where: { id: userId },
-        data: { points: 0 },
+        data: { activeGalaxyId: targetGalaxy.id },
       });
 
       const starterNexus = await tx.nexus.create({
         data: {
           name: `${user.username}'s Nexus`,
           ownerId: user.id,
+          galaxyId: targetGalaxy.id,
           x: Math.floor(Math.random() * 25),
           y: Math.floor(Math.random() * 25),
           ...STARTER_NEXUS_DATA,

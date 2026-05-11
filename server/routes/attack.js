@@ -51,12 +51,16 @@ router.post('/send', auth, async (req, res) => {
       prisma.nexus.findUnique({ where: { id: parsedToNexusId } }),
     ]);
 
-    if (!attackerNexus || attackerNexus.ownerId !== req.userId) {
+    if (!attackerNexus || attackerNexus.ownerId !== req.userId || attackerNexus.galaxyId !== req.galaxyId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
     if (!defenderNexus) {
       return res.status(404).json({ error: 'Target nexus not found' });
+    }
+
+    if (defenderNexus.galaxyId !== req.galaxyId) {
+      return res.status(400).json({ error: 'Cannot attack a nexus in a different galaxy' });
     }
 
     if (defenderNexus.ownerId && defenderNexus.ownerId === req.userId) {
@@ -129,6 +133,7 @@ router.post('/send', auth, async (req, res) => {
     const [attack, updatedAttackerNexus] = await prisma.$transaction([
       prisma.attack.create({
         data: {
+          galaxyId: req.galaxyId,
           attackerUserId: req.userId,
           attackerNexusId: parsedFromNexusId,
           defenderUserId: defenderNexus.ownerId ?? null,
@@ -155,7 +160,7 @@ router.post('/send', auth, async (req, res) => {
 router.get('/incoming/:nexusId', auth, async (req, res) => {
   try {
     const nexus = await prisma.nexus.findUnique({ where: { id: parseInt(req.params.nexusId) } });
-    if (!nexus || nexus.ownerId !== req.userId) {
+    if (!nexus || nexus.ownerId !== req.userId || nexus.galaxyId !== req.galaxyId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
@@ -187,7 +192,7 @@ router.get('/incoming/:nexusId', auth, async (req, res) => {
 router.get('/outgoing/:nexusId', auth, async (req, res) => {
   try {
     const nexus = await prisma.nexus.findUnique({ where: { id: parseInt(req.params.nexusId) } });
-    if (!nexus || nexus.ownerId !== req.userId) {
+    if (!nexus || nexus.ownerId !== req.userId || nexus.galaxyId !== req.galaxyId) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 

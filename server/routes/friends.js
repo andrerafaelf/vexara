@@ -9,30 +9,40 @@ function pairKey(a, b) {
   return { userAId, userBId };
 }
 
-function serializeFriend(user, friendshipCreatedAt) {
+function serializeFriend(user, friendshipCreatedAt, points) {
   return {
     id: String(user.id),
     username: user.username,
-    points: user.points,
+    points: points ?? 0,
     friendsSince: friendshipCreatedAt,
   };
 }
 
-// List friends
+// List friends — friendships are global; points shown are the viewer's current galaxy
 router.get('/', auth, async (req, res) => {
   try {
     const friendships = await prisma.friendship.findMany({
       where: { OR: [{ userAId: req.userId }, { userBId: req.userId }] },
       include: {
-        userA: { select: { id: true, username: true, points: true } },
-        userB: { select: { id: true, username: true, points: true } },
+        userA: { select: { id: true, username: true } },
+        userB: { select: { id: true, username: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
 
+    const friendUsers = friendships.map((f) => (f.userAId === req.userId ? f.userB : f.userA));
+    const friendIds = friendUsers.map((u) => u.id);
+    const friendPlayers = friendIds.length
+      ? await prisma.galaxyPlayer.findMany({
+          where: { galaxyId: req.galaxyId, userId: { in: friendIds } },
+          select: { userId: true, points: true },
+        })
+      : [];
+    const pointsByUserId = new Map(friendPlayers.map((p) => [p.userId, p.points]));
+
     const friends = friendships.map((f) => {
       const friend = f.userAId === req.userId ? f.userB : f.userA;
-      return serializeFriend(friend, f.createdAt);
+      return serializeFriend(friend, f.createdAt, pointsByUserId.get(friend.id));
     });
 
     res.json(friends);
