@@ -78,8 +78,10 @@ async function resolveCombat(attack) {
     let attackPower = computeForcePower(attackTroops, 'attack');
     let defensePower = computeForcePower(defenderNexus, 'defense');
 
-    // Shield Grid bonus (2% per level)
-    defensePower *= 1 + defenderNexus.shieldGrid * 0.02;
+    // Shield Grid bonus: base 2% per level, Military Outpost raises efficiency to 2.5%/level
+    const shieldEfficiencyMultiplier = defenderNexus.nexusType === 'Military Outpost' ? 1.25 : 1;
+    const shieldBonusPerLevel = 0.02 * shieldEfficiencyMultiplier;
+    defensePower *= 1 + defenderNexus.shieldGrid * shieldBonusPerLevel;
 
     const attackerWins = attackPower > defensePower;
     const powerRatio = attackerWins ? defensePower / attackPower : attackPower / defensePower;

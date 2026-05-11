@@ -2,6 +2,7 @@ import express from 'express';
 import prisma from '../lib/prisma.js';
 import auth from '../middleware/auth.js';
 import { applyQuestRewards, computeResourceUpdate, normalizeBuildQueue, serializeNexus } from '../models/Nexus.js';
+import { NEXUS_TYPE_BONUSES } from '../utils/economy.js';
 import { getPopulationMax } from '../utils/population.js';
 
 const router = express.Router();
@@ -236,8 +237,7 @@ router.post('/upgrade', auth, async (req, res) => {
       return res.status(400).json({ error: `${BUILDING_NAMES[building]} is already at max level (${rule.maxLevel})` });
     }
 
-    const requirementProxyNexus = { ...nexus, ...plannedLevels };
-    const missingRequirements = getMissingRequirements(requirementProxyNexus, building, targetLevel);
+    const missingRequirements = getMissingRequirements(nexus, building, targetLevel);
     if (missingRequirements.length > 0) {
       const requirementText = missingRequirements
         .map(
@@ -264,7 +264,8 @@ router.post('/upgrade', auth, async (req, res) => {
     // Deduct resources and add to queue
     const queueStart =
       buildQueue.length > 0 ? new Date(buildQueue[buildQueue.length - 1].completesAt).getTime() : Date.now();
-    const buildSeconds = Math.max(1, Math.floor(cost.time * getCommandTimeFactor(nexus.commandCore)));
+    const nexusBuildTimeFactor = NEXUS_TYPE_BONUSES[nexus.nexusType]?.buildTimeMultiplier ?? 1;
+    const buildSeconds = Math.max(1, Math.floor(cost.time * getCommandTimeFactor(nexus.commandCore) * nexusBuildTimeFactor));
     const completesAt = new Date(queueStart + buildSeconds * 1000);
     const newQueue = [...buildQueue, { building, targetLevel: currentLevel + 1, completesAt }];
 

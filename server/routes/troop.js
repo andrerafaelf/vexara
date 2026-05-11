@@ -2,6 +2,7 @@ import express from 'express';
 import prisma from '../lib/prisma.js';
 import auth from '../middleware/auth.js';
 import { applyQuestRewards, computeResourceUpdate, serializeNexus } from '../models/Nexus.js';
+import { NEXUS_TYPE_BONUSES } from '../utils/economy.js';
 import { parsePositiveInt } from '../utils/validation.js';
 
 const router = express.Router();
@@ -168,7 +169,8 @@ router.post('/train', auth, async (req, res) => {
       return res.status(400).json({ error: `Training queue is full (${MAX_TRAINING_QUEUE}/${MAX_TRAINING_QUEUE})` });
     }
 
-    const perUnitSeconds = getTrainTimeSeconds(troopType, nexus.recruitmentCore);
+    const nexusTrainingTimeFactor = troopType === 'overseer' ? 1 : (NEXUS_TYPE_BONUSES[nexus.nexusType]?.trainingTimeMultiplier ?? 1);
+    const perUnitSeconds = Math.max(1, Math.floor(getTrainTimeSeconds(troopType, nexus.recruitmentCore) * nexusTrainingTimeFactor));
     const queueStart =
       sameChainQueue.length > 0
         ? new Date(sameChainQueue[sameChainQueue.length - 1].completesAt).getTime()

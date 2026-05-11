@@ -1,14 +1,30 @@
+export const NEXUS_TYPE_BONUSES = {
+  'Resource Depot': { productionMultiplier: 2, label: '2x Resource Production' },
+  'Supply Cache': { storageMultiplier: 2, label: '2x Storage Capacity' },
+  // shieldEfficiencyMultiplier: per-level shield % becomes 2.5% instead of 2%
+  // trainingTimeMultiplier: applied on top of Recruitment Core reduction
+  'Military Outpost': { shieldEfficiencyMultiplier: 1.25, trainingTimeMultiplier: 0.75, label: '+50% Shield Efficiency, 25% Faster Training' },
+  // buildTimeMultiplier: extra factor stacked on top of Command Core reduction
+  'Reclaimed Outpost': { buildTimeMultiplier: 0.80, label: '20% Faster Construction' },
+};
+
+export function getNexusTypeBonuses(nexusType) {
+  return NEXUS_TYPE_BONUSES[nexusType] || null;
+}
+
 export function getResourceProduction(nexus) {
   const baseProduction = 600;
+  const productionMultiplier = NEXUS_TYPE_BONUSES[nexus.nexusType]?.productionMultiplier ?? 1;
   return {
-    biomass: baseProduction * Math.pow(1.35, nexus.biomassFarm - 1),
-    alloy: baseProduction * Math.pow(1.35, nexus.alloyForge - 1),
-    ore: baseProduction * Math.pow(1.35, nexus.oreExtractor - 1),
+    biomass: baseProduction * Math.pow(1.35, nexus.biomassFarm - 1) * productionMultiplier,
+    alloy: baseProduction * Math.pow(1.35, nexus.alloyForge - 1) * productionMultiplier,
+    ore: baseProduction * Math.pow(1.35, nexus.oreExtractor - 1) * productionMultiplier,
   };
 }
 
 export function getMaxStorage(nexus) {
-  return 1000 * Math.pow(1.5, nexus.storageVault);
+  const storageMultiplier = NEXUS_TYPE_BONUSES[nexus.nexusType]?.storageMultiplier ?? 1;
+  return 1000 * Math.pow(1.5, nexus.storageVault) * storageMultiplier;
 }
 
 export function computeResourceUpdate(nexus) {

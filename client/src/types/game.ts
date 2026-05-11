@@ -70,6 +70,7 @@ export interface Nexus {
   points: number;
   control?: number;
   controlLevel?: number;
+  nexusType?: string | null;
   intelLevel?: 'public' | 'scouted' | 'owned';
   scoutedAt?: string;
 }

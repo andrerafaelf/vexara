@@ -140,6 +140,41 @@
   color: #4caf50;
   font-weight: normal;
   margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.buff-tag {
+  font-size: 9px;
+  font-weight: 700;
+  color: #fff;
+  background: #e67e22;
+  border-radius: 3px;
+  padding: 1px 4px;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+}
+
+.nexus-type-buff-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(230, 126, 34, 0.12);
+  border: 1px solid rgba(230, 126, 34, 0.35);
+  border-radius: 6px;
+  padding: 5px 10px;
+  margin-bottom: 10px;
+  font-size: 12px;
+}
+
+.nexus-type-buff-icon {
+  font-size: 14px;
+}
+
+.nexus-type-buff-label {
+  color: #f0a060;
+  font-weight: 600;
 }
 
 .tab-back-nav {

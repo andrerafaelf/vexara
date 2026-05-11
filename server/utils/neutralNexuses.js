@@ -15,7 +15,7 @@ const NEXUS_TYPES = [
   { name: 'Resource Depot', weight: 20, resourceBonus: true },
   { name: 'Military Outpost', weight: 15, troopBonus: true },
   { name: 'Supply Cache', weight: 15, highResources: true },
-  { name: 'Abandoned Base', weight: 10, lowDefense: true },
+  { name: 'Reclaimed Outpost', weight: 10 },
 ];
 
 function selectNexusType() {
@@ -52,10 +52,10 @@ function buildNeutralNexusData(x, y, difficultyScale = BASE_NEUTRAL_DIFFICULTY) 
 
   let troopMultiplier = 1;
   if (nexusType.troopBonus) troopMultiplier = 1.35;
-  if (nexusType.lowDefense) troopMultiplier = 0.55;
 
   return {
     name: nexusType.name,
+    nexusType: nexusType.name,
     x,
     y,
     biomass: Math.floor(biomass),

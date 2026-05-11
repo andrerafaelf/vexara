@@ -402,6 +402,7 @@ export function serializeNexus(v, opts = {}) {
     lastResourceUpdate: v.lastResourceUpdate,
     points: v.points,
     controlLevel: v.controlLevel,
+    nexusType: v.nexusType ?? null,
     createdAt: v.createdAt,
   };
 

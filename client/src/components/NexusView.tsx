@@ -58,6 +58,13 @@ type NexusTab = 'overview' | 'buildings' | 'troops' | 'map';
 const MAX_BUILD_QUEUE = 5;
 const MAX_TRAINING_QUEUE = 5;
 
+const NEXUS_TYPE_BUFFS: Record<string, { icon: string; label: string }> = {
+  'Resource Depot': { icon: '⚡', label: '2x Resource Production' },
+  'Supply Cache': { icon: '📦', label: '2x Storage Capacity' },
+  'Military Outpost': { icon: '🛡️', label: '+50% Shield Efficiency · 25% Faster Training' },
+  'Reclaimed Outpost': { icon: '🔧', label: '20% Faster Construction' },
+};
+
 const BUILDING_NAMES: { [key: string]: string } = {
   commandCore: 'Command Core',
   recruitmentCore: 'Recruitment Core',
@@ -183,10 +190,15 @@ const RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL = 0.92;
 const getCommandTimeFactor = (commandLevel: number) =>
   Math.pow(COMMAND_BUILD_TIME_FACTOR_PER_LEVEL, Math.max(0, commandLevel || 0));
 
-const getTroopTrainSeconds = (troopType: string, baseTime: number, recruitmentLevel: number) => {
+const NEXUS_TYPE_TRAINING_MULTIPLIERS: Record<string, number> = {
+  'Military Outpost': 0.75,
+};
+
+const getTroopTrainSeconds = (troopType: string, baseTime: number, recruitmentLevel: number, nexusType?: string | null) => {
   if (troopType === 'overseer') return baseTime;
-  const factor = Math.pow(RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL, Math.max(0, recruitmentLevel || 0));
-  return Math.max(1, Math.floor(baseTime * factor));
+  const recruitFactor = Math.pow(RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL, Math.max(0, recruitmentLevel || 0));
+  const nexusFactor = NEXUS_TYPE_TRAINING_MULTIPLIERS[nexusType ?? ''] ?? 1;
+  return Math.max(1, Math.floor(baseTime * recruitFactor * nexusFactor));
 };
 
 const BUILDING_IMAGES: { [key: string]: any } = {
@@ -830,10 +842,12 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
 
   const calculateProduction = () => {
     const baseProduction = 600;
+    const NEXUS_PRODUCTION_MULTIPLIERS: Record<string, number> = { 'Resource Depot': 2 };
+    const productionMult = NEXUS_PRODUCTION_MULTIPLIERS[nexus.nexusType ?? ''] ?? 1;
     return {
-      biomass: Math.floor(baseProduction * Math.pow(1.35, nexus.buildings.biomassFarm - 1)),
-      alloy: Math.floor(baseProduction * Math.pow(1.35, nexus.buildings.alloyForge - 1)),
-      ore: Math.floor(baseProduction * Math.pow(1.35, nexus.buildings.oreExtractor - 1)),
+      biomass: Math.floor(baseProduction * Math.pow(1.35, nexus.buildings.biomassFarm - 1) * productionMult),
+      alloy: Math.floor(baseProduction * Math.pow(1.35, nexus.buildings.alloyForge - 1) * productionMult),
+      ore: Math.floor(baseProduction * Math.pow(1.35, nexus.buildings.oreExtractor - 1) * productionMult),
     };
   };
 
@@ -855,7 +869,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
       time *= timeMultiplier;
     }
 
-    const reducedTime = Math.max(1, Math.floor(time * getCommandTimeFactor(nexus.buildings.commandCore)));
+    const NEXUS_BUILD_TIME_MULTIPLIERS: Record<string, number> = { 'Reclaimed Outpost': 0.80 };
+    const nexusBuildFactor = NEXUS_BUILD_TIME_MULTIPLIERS[nexus.nexusType ?? ''] ?? 1;
+    const reducedTime = Math.max(1, Math.floor(time * getCommandTimeFactor(nexus.buildings.commandCore) * nexusBuildFactor));
 
     return {
       biomass: Math.floor(biomass),
@@ -1007,8 +1023,12 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
 
     const missing: string[] = [];
     for (const requirement of requirements) {
-      if ((plannedBuildings as any)[requirement.building] < requirement.level) {
-        missing.push(`${BUILDING_NAMES[requirement.building]} Lv${requirement.level}`);
+      if ((nexus.buildings as any)[requirement.building] < requirement.level) {
+        const isQueued = (nexus.buildQueue || []).some(
+          (q) => q.building === requirement.building && q.targetLevel >= requirement.level,
+        );
+        const suffix = isQueued ? ' (under construction)' : '';
+        missing.push(`${BUILDING_NAMES[requirement.building]} Lv${requirement.level}${suffix}`);
       }
     }
 
@@ -1265,7 +1285,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   };
 
   const production = calculateProduction();
-  const storageCapacity = getStorageAtLevel(nexus.buildings.storageVault);
+  const storageCapacity = getStorageAtLevel(nexus.buildings.storageVault) * (nexus.nexusType === 'Supply Cache' ? 2 : 1);
   const questBatches = getQuestBatches();
   const currentTroops = Object.entries(nexus.troops).filter(([, count]) => Number(count) > 0);
   const activeBuild = nexus.buildQueue[0];
@@ -1333,15 +1353,29 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
             </>
           )}
         </div>
+        {nexus.nexusType && NEXUS_TYPE_BUFFS[nexus.nexusType] && (
+          <div className="nexus-type-buff-banner">
+            <span className="nexus-type-buff-icon">{NEXUS_TYPE_BUFFS[nexus.nexusType].icon}</span>
+            <span className="nexus-type-buff-label">
+              {nexus.nexusType} — {NEXUS_TYPE_BUFFS[nexus.nexusType].label}
+            </span>
+          </div>
+        )}
         <div className="resources">
           <div className="resource" title="Biomass">
             <span className="resource-icon">🧬</span>
             <span className="resource-amount">
               <span className="resource-main">
                 {Math.floor(nexus.resources.biomass).toLocaleString()}
-                <span className="resource-max">/{storageCapacity.toLocaleString()}</span>
+                <span className="resource-max">
+                  /{storageCapacity.toLocaleString()}
+                  {nexus.nexusType === 'Supply Cache' && <span className="buff-tag">2x</span>}
+                </span>
               </span>
-              <span className="production-rate">+{Math.floor(production.biomass).toLocaleString()}/h</span>
+              <span className="production-rate">
+                +{Math.floor(production.biomass).toLocaleString()}/h
+                {nexus.nexusType === 'Resource Depot' && <span className="buff-tag">2x</span>}
+              </span>
             </span>
           </div>
           <div className="resource" title="Alloy">
@@ -1349,9 +1383,15 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
             <span className="resource-amount">
               <span className="resource-main">
                 {Math.floor(nexus.resources.alloy).toLocaleString()}
-                <span className="resource-max">/{storageCapacity.toLocaleString()}</span>
+                <span className="resource-max">
+                  /{storageCapacity.toLocaleString()}
+                  {nexus.nexusType === 'Supply Cache' && <span className="buff-tag">2x</span>}
+                </span>
               </span>
-              <span className="production-rate">+{Math.floor(production.alloy).toLocaleString()}/h</span>
+              <span className="production-rate">
+                +{Math.floor(production.alloy).toLocaleString()}/h
+                {nexus.nexusType === 'Resource Depot' && <span className="buff-tag">2x</span>}
+              </span>
             </span>
           </div>
           <div className="resource" title="Ore">
@@ -1359,9 +1399,15 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
             <span className="resource-amount">
               <span className="resource-main">
                 {Math.floor(nexus.resources.ore).toLocaleString()}
-                <span className="resource-max">/{storageCapacity.toLocaleString()}</span>
+                <span className="resource-max">
+                  /{storageCapacity.toLocaleString()}
+                  {nexus.nexusType === 'Supply Cache' && <span className="buff-tag">2x</span>}
+                </span>
               </span>
-              <span className="production-rate">+{Math.floor(production.ore).toLocaleString()}/h</span>
+              <span className="production-rate">
+                +{Math.floor(production.ore).toLocaleString()}/h
+                {nexus.nexusType === 'Resource Depot' && <span className="buff-tag">2x</span>}
+              </span>
             </span>
           </div>
           <div className="resource" title="Population">
@@ -1797,6 +1843,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                               type,
                               costs.time,
                               nexus.buildings.recruitmentCore,
+                              nexus.nexusType,
                             );
                             const isOverseerTrack = type === 'overseer';
                             const sameChainQueueLength = nexus.trainingQueue.filter((entry: any) =>
