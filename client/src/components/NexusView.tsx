@@ -1320,8 +1320,14 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
 
   const production = calculateProduction();
   const storageCapacity = getStorageAtLevel(nexus.buildings.storageVault) * (nexus.nexusType === 'Supply Cache' ? 2 : 1);
+
+  const getResourceFillClass = (amount: number) => {
+    const pct = amount / storageCapacity;
+    if (pct >= 1) return 'resource-amount resource-full';
+    if (pct >= 0.8) return 'resource-amount resource-near-full';
+    return 'resource-amount';
+  };
   const questBatches = getQuestBatches();
-  const currentTroops = Object.entries(nexus.troops).filter(([, count]) => Number(count) > 0);
   const activeBuild = nexus.buildQueue[0];
   const activeTraining = nexus.trainingQueue[0];
   const activeBuildTimer = activeBuild ? getBuildQueueTimeDisplay(0).label : null;
@@ -1398,7 +1404,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
         <div className="resources">
           <div className="resource" title="Biomass">
             <span className="resource-icon">🧬</span>
-            <span className="resource-amount">
+            <span className={getResourceFillClass(nexus.resources.biomass)}>
               <span className="resource-main">
                 {Math.floor(nexus.resources.biomass).toLocaleString()}
                 <span className="resource-max">
@@ -1414,7 +1420,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
           </div>
           <div className="resource" title="Alloy">
             <span className="resource-icon">⚙️</span>
-            <span className="resource-amount">
+            <span className={getResourceFillClass(nexus.resources.alloy)}>
               <span className="resource-main">
                 {Math.floor(nexus.resources.alloy).toLocaleString()}
                 <span className="resource-max">
@@ -1430,7 +1436,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
           </div>
           <div className="resource" title="Ore">
             <span className="resource-icon">💎</span>
-            <span className="resource-amount">
+            <span className={getResourceFillClass(nexus.resources.ore)}>
               <span className="resource-main">
                 {Math.floor(nexus.resources.ore).toLocaleString()}
                 <span className="resource-max">
@@ -1453,13 +1459,38 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
         </div>
       </div>
 
-      {activeTab !== 'overview' && (
-        <div className="tab-back-nav">
-          <button type="button" className="tab-back-btn" onClick={() => setActiveTab('overview')}>
-            ← Back to Nexus Overview
-          </button>
-        </div>
-      )}
+      <div className="nexus-tab-bar">
+        <button
+          type="button"
+          className={`nexus-tab-btn${activeTab === 'overview' ? ' active' : ''}`}
+          onClick={() => setActiveTab('overview')}
+        >
+          🏛️ Overview
+        </button>
+        <button
+          type="button"
+          className={`nexus-tab-btn${activeTab === 'buildings' ? ' active' : ''}`}
+          onClick={() => setActiveTab('buildings')}
+        >
+          🏗️ Buildings
+          {activeBuild && <span className="nexus-tab-badge" />}
+        </button>
+        <button
+          type="button"
+          className={`nexus-tab-btn${activeTab === 'troops' ? ' active' : ''}`}
+          onClick={() => setActiveTab('troops')}
+        >
+          🎖️ Troops
+          {activeTraining && <span className="nexus-tab-badge" />}
+        </button>
+        <button
+          type="button"
+          className={`nexus-tab-btn${activeTab === 'map' ? ' active' : ''}`}
+          onClick={() => setActiveTab('map')}
+        >
+          🗺️ Map
+        </button>
+      </div>
 
       <div className="tab-content">
         {activeTab === 'overview' && (
@@ -1541,62 +1572,42 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
             </div>
 
             {nexus.buildQueue.length > 0 && (
-              <div className="queue-section">
-                <h4>Building Queue</h4>
-                {nexus.buildQueue.map((item, idx) => {
-                  const queueTime = getBuildQueueTimeDisplay(idx);
-
-                  return (
-                    <div key={idx} className={`queue-item ${queueTime.isWaiting ? 'queue-item-waiting' : ''}`}>
-                      <span>
-                        {BUILDING_NAMES[item.building]} → Level {item.targetLevel}
-                      </span>
-                      <div className="queue-item-actions">
-                        <span className={queueTime.isWaiting ? 'queue-time-queued' : 'queue-time'}>
-                          {queueTime.label}
-                        </span>
-                        <button
-                          type="button"
-                          className="queue-cancel-btn"
-                          onClick={() => handleCancelBuildQueue(idx)}
-                          title="Cancel (85% refund)"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="overview-queue-summary">
+                <div className="overview-queue-summary-info">
+                  <span className="overview-queue-summary-label">🏗️ Building Queue</span>
+                  <span className="overview-queue-summary-detail">
+                    {nexus.buildQueue.length} item{nexus.buildQueue.length !== 1 ? 's' : ''} —{' '}
+                    {BUILDING_NAMES[nexus.buildQueue[0].building] || nexus.buildQueue[0].building} → Lv{nexus.buildQueue[0].targetLevel}
+                    {activeBuildTimer ? ` · ${activeBuildTimer}` : ''}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="overview-queue-manage-btn"
+                  onClick={() => setActiveTab('buildings')}
+                >
+                  Manage →
+                </button>
               </div>
             )}
 
             {nexus.trainingQueue.length > 0 && (
-              <div className="queue-section">
-                <h4>Training Queue</h4>
-                {nexus.trainingQueue.map((item, idx) => {
-                  const queueTime = getTrainingQueueTimeDisplay(idx);
-
-                  return (
-                    <div key={idx} className={`queue-item ${queueTime.isWaiting ? 'queue-item-waiting' : ''}`}>
-                      <span>
-                        {item.amount}x {TROOP_NAMES[item.troopType] || item.troopType}
-                      </span>
-                      <div className="queue-item-actions">
-                        <span className={queueTime.isWaiting ? 'queue-time-queued' : 'queue-time'}>
-                          {queueTime.label}
-                        </span>
-                        <button
-                          type="button"
-                          className="queue-cancel-btn"
-                          onClick={() => handleCancelTrainingQueue(idx)}
-                          title="Cancel (85% refund)"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="overview-queue-summary">
+                <div className="overview-queue-summary-info">
+                  <span className="overview-queue-summary-label">🎖️ Training Queue</span>
+                  <span className="overview-queue-summary-detail">
+                    {nexus.trainingQueue.length} item{nexus.trainingQueue.length !== 1 ? 's' : ''} —{' '}
+                    {nexus.trainingQueue[0].amount}x {TROOP_NAMES[nexus.trainingQueue[0].troopType] || nexus.trainingQueue[0].troopType}
+                    {activeTrainingTimer ? ` · ${activeTrainingTimer}` : ''}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="overview-queue-manage-btn"
+                  onClick={() => setActiveTab('troops')}
+                >
+                  Manage →
+                </button>
               </div>
             )}
 
@@ -1625,7 +1636,11 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                           <p className="intro-quest-title">{quest.title}</p>
                           <p className="intro-quest-description">{quest.description}</p>
                         </div>
-                        {!quest.completed && <span className="intro-quest-arrow">›</span>}
+                        {!quest.completed && (
+                          <span className="intro-quest-arrow">
+                            → {quest.tab === 'buildings' ? 'Buildings' : quest.tab === 'troops' ? 'Troops' : 'Map'}
+                          </span>
+                        )}
                       </div>
                     ))
                   ) : (
@@ -1851,25 +1866,6 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                   </div>
                 )}
 
-                <div className="troops-current">
-                  <h4>Current Troops</h4>
-                  {currentTroops.length > 0 ? (
-                    <div className="troop-list">
-                      {currentTroops.map(([type, count]) => (
-                        <div key={type} className="troop-item">
-                          {TROOP_IMAGES[type] && (
-                            <img src={TROOP_IMAGES[type].src || TROOP_IMAGES[type]} alt="" className="troop-icon" />
-                          )}
-                          <span className="troop-name">{TROOP_NAMES[type] || type}</span>
-                          <span className="troop-count">{count}</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="empty-state">No troops stationed here yet.</p>
-                  )}
-                </div>
-
                 <div className="troops-train">
                   <h4>Train Troops</h4>
                   {(['offense', 'defense'] as const).map((category) => {
@@ -1910,15 +1906,22 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                                 )}
                                 <div className="troop-header">
                                   <h5>{TROOP_NAMES[type]}</h5>
-                                  <button
-                                    type="button"
-                                    className="troop-info"
-                                    title={TROOP_DESCRIPTIONS[type]}
-                                    aria-label={`${TROOP_NAMES[type]} info`}
-                                    onClick={() => handleInfoTap(TROOP_NAMES[type], TROOP_DESCRIPTIONS[type])}
-                                  >
-                                    ℹ️
-                                  </button>
+                                  <div className="troop-header-right">
+                                    {((nexus.troops as any)[type] || 0) > 0 && (
+                                      <span className="troop-stationed-chip">
+                                        {(nexus.troops as any)[type]} stationed
+                                      </span>
+                                    )}
+                                    <button
+                                      type="button"
+                                      className="troop-info"
+                                      title={TROOP_DESCRIPTIONS[type]}
+                                      aria-label={`${TROOP_NAMES[type]} info`}
+                                      onClick={() => handleInfoTap(TROOP_NAMES[type], TROOP_DESCRIPTIONS[type])}
+                                    >
+                                      ℹ️
+                                    </button>
+                                  </div>
                                 </div>
                                 <div className="train-costs">
                                   <span>🧬 {costs.biomass}</span>

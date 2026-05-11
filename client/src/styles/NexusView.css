@@ -177,27 +177,127 @@
   font-weight: 600;
 }
 
-.tab-back-nav {
-  margin: 0 0 14px;
+.nexus-tab-bar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  border-bottom: 2px solid #1d5b8f;
+  padding-bottom: 0;
 }
 
-.tab-back-btn {
-  background: #0f3460;
+.nexus-tab-btn {
+  position: relative;
+  background: transparent;
   color: #a8dadc;
-  border: 1px solid #1d5b8f;
-  border-radius: 6px;
-  padding: 8px 12px;
-  font-size: 13px;
+  border: none;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: -2px;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
 }
 
-.tab-back-btn:hover {
-  background: #154777;
-  border-color: #4da3d9;
+.nexus-tab-btn:hover {
   color: #fff;
+  border-bottom-color: #4da3d9;
+}
+
+.nexus-tab-btn.active {
+  color: #e94560;
+  border-bottom-color: #e94560;
+}
+
+.nexus-tab-badge {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  background: #e94560;
+  border-radius: 50%;
+  margin-left: 5px;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
 }
 
 .tab-content {
   min-height: 400px;
+}
+
+/* Overview queue summary rows */
+.overview-queue-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #0f3460;
+  border: 1px solid #1d5b8f;
+  border-left: 3px solid #e94560;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+}
+
+.overview-queue-summary-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.overview-queue-summary-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #a8dadc;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.overview-queue-summary-detail {
+  font-size: 13px;
+  color: #f1faee;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.overview-queue-manage-btn {
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid #4da3d9;
+  color: #4da3d9;
+  border-radius: 5px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+
+.overview-queue-manage-btn:hover {
+  background: #4da3d9;
+  color: #0f3460;
+}
+
+/* Resource cap warnings */
+.resource-near-full .resource-main {
+  color: #ffd166;
+}
+
+.resource-full .resource-main {
+  color: #e94560;
+}
+
+.resource-near-full,
+.resource-full {
+  font-weight: bold;
+  font-size: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 /* Overview Tab */
@@ -449,15 +549,15 @@
 
 .intro-quest-item.quest-actionable {
   cursor: pointer;
-  border-left: 3px solid transparent;
+  border-left: 3px solid #2a5f8f;
   transition:
     background 0.15s ease,
     border-color 0.15s ease;
 }
 
 .intro-quest-item.quest-actionable:hover {
-  background: #215a8d;
-  border-left-color: #a8dadc;
+  background: #1a4971;
+  border-left-color: #e94560;
 }
 
 .intro-quest-content {
@@ -466,8 +566,10 @@
 }
 
 .intro-quest-arrow {
-  color: #a8dadc;
-  font-size: 20px;
+  color: #4da3d9;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
   line-height: 1;
   flex-shrink: 0;
   opacity: 0.6;
@@ -478,6 +580,7 @@
 
 .intro-quest-item.quest-actionable:hover .intro-quest-arrow {
   opacity: 1;
+  color: #e94560;
   transform: translateX(2px);
 }
 
@@ -681,11 +784,16 @@
 }
 
 .building-card.disabled {
-  opacity: 0.55;
+  opacity: 0.42;
+  filter: grayscale(30%);
 }
 
 .building-card.disabled h4 {
   color: #aaa;
+}
+
+.building-card.disabled .building-upgrade-button {
+  pointer-events: none;
 }
 
 .building-card.maxed {
@@ -1035,6 +1143,24 @@
   gap: 6px;
 }
 
+.troop-header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.troop-stationed-chip {
+  font-size: 10px;
+  font-weight: 700;
+  color: #4caf50;
+  background: rgba(76, 175, 80, 0.15);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  border-radius: 10px;
+  padding: 2px 7px;
+  white-space: nowrap;
+}
+
 .troop-header h5 {
   color: #f1faee;
   margin: 0;
@@ -1133,11 +1259,16 @@
 }
 
 .train-card.disabled {
-  opacity: 0.5;
+  opacity: 0.42;
+  filter: grayscale(30%);
 }
 
 .train-card.disabled h5 {
   color: #aaa;
+}
+
+.train-card.disabled .train-controls {
+  pointer-events: none;
 }
 
 .requirements-missing {
@@ -1236,6 +1367,21 @@
 
   .overview-shortcuts {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .nexus-tab-bar {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .nexus-tab-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nexus-tab-btn {
+    padding: 8px 12px;
+    font-size: 13px;
   }
 }
 
