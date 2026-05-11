@@ -1491,7 +1491,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
           className={`nexus-tab-btn${activeTab === 'map' ? ' active' : ''}`}
           onClick={() => setActiveTab('map')}
         >
-          🗺️ Map
+          🌌 Starfield
         </button>
       </div>
 
@@ -1641,7 +1641,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                         </div>
                         {!quest.completed && (
                           <span className="intro-quest-arrow">
-                            → {quest.tab === 'buildings' ? 'Buildings' : quest.tab === 'troops' ? 'Troops' : 'Map'}
+                            → {quest.tab === 'buildings' ? 'Buildings' : quest.tab === 'troops' ? 'Troops' : 'Starfield'}
                           </span>
                         )}
                       </div>

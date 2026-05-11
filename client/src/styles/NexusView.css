@@ -183,6 +183,15 @@
   margin-bottom: 16px;
   border-bottom: 2px solid #1d5b8f;
   padding-bottom: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.nexus-tab-bar::-webkit-scrollbar {
+  display: none;
 }
 
 .nexus-tab-btn {
@@ -1435,16 +1444,6 @@
 
   .overview-shortcuts {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .nexus-tab-bar {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-
-  .nexus-tab-bar::-webkit-scrollbar {
-    display: none;
   }
 
   .nexus-tab-btn {
