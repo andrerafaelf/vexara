@@ -872,22 +872,32 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     };
   };
 
-  const getTimeUntilAffordable = (cost: { biomass?: number; alloy?: number; ore?: number }) => {
+  const getLiveResources = () => {
     const prod = calculateProduction();
     const anchorMs = nexus.lastResourceUpdate ? new Date(nexus.lastResourceUpdate).getTime() : currentTime.getTime();
-    const biomassNeeded = Math.max(0, (cost.biomass ?? 0) - nexus.resources.biomass);
-    const alloyNeeded = Math.max(0, (cost.alloy ?? 0) - nexus.resources.alloy);
-    const oreNeeded = Math.max(0, (cost.ore ?? 0) - nexus.resources.ore);
+    const elapsedHours = Math.max(0, (currentTime.getTime() - anchorMs) / 3600000);
+    return {
+      biomass: nexus.resources.biomass + prod.biomass * elapsedHours,
+      alloy: nexus.resources.alloy + prod.alloy * elapsedHours,
+      ore: nexus.resources.ore + prod.ore * elapsedHours,
+    };
+  };
 
-    // production is per hour; convert shortfalls to seconds from the anchor point
+  const getTimeUntilAffordable = (cost: { biomass?: number; alloy?: number; ore?: number }) => {
+    const prod = calculateProduction();
+    const live = getLiveResources();
+    const biomassNeeded = Math.max(0, (cost.biomass ?? 0) - live.biomass);
+    const alloyNeeded = Math.max(0, (cost.alloy ?? 0) - live.alloy);
+    const oreNeeded = Math.max(0, (cost.ore ?? 0) - live.ore);
+
+    // production is per hour; convert remaining shortfalls to seconds
     const biomassSeconds = prod.biomass > 0 ? (biomassNeeded / prod.biomass) * 3600 : biomassNeeded > 0 ? Infinity : 0;
     const alloySeconds = prod.alloy > 0 ? (alloyNeeded / prod.alloy) * 3600 : alloyNeeded > 0 ? Infinity : 0;
     const oreSeconds = prod.ore > 0 ? (oreNeeded / prod.ore) * 3600 : oreNeeded > 0 ? Infinity : 0;
 
-    const maxSecondsFromAnchor = Math.max(biomassSeconds, alloySeconds, oreSeconds);
-    if (!isFinite(maxSecondsFromAnchor)) return null;
-    const elapsedSeconds = Math.max(0, (currentTime.getTime() - anchorMs) / 1000);
-    return Math.max(0, maxSecondsFromAnchor - elapsedSeconds);
+    const maxSeconds = Math.max(biomassSeconds, alloySeconds, oreSeconds);
+    if (!isFinite(maxSeconds)) return null;
+    return maxSeconds;
   };
 
   const getBuildingCost = (building: string, currentLevel: number) => {
