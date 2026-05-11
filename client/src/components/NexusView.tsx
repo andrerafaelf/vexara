@@ -839,10 +839,10 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
 
     const shortageReasons: string[] = [];
     if (maxTrainable === 0) {
-      if (byBiomass === 0) shortageReasons.push(`🧬 Biomass (need ${costs.biomass}, have ${Math.floor(nexus.resources.biomass)})`);
-      if (byAlloy === 0) shortageReasons.push(`⚙️ Alloy (need ${costs.alloy}, have ${Math.floor(nexus.resources.alloy)})`);
-      if (byOre === 0) shortageReasons.push(`💎 Ore (need ${costs.ore}, have ${Math.floor(nexus.resources.ore)})`);
-      if (byPopulation === 0) shortageReasons.push(`👥 Population (need ${costs.population}, have ${remainingPopulation} free)`);
+      if (byBiomass === 0) shortageReasons.push(`🧬 Biomass ${Math.floor(nexus.resources.biomass)}/${costs.biomass}`);
+      if (byAlloy === 0) shortageReasons.push(`⚙️ Alloy ${Math.floor(nexus.resources.alloy)}/${costs.alloy}`);
+      if (byOre === 0) shortageReasons.push(`💎 Ore ${Math.floor(nexus.resources.ore)}/${costs.ore}`);
+      if (byPopulation === 0) shortageReasons.push(`👥 Population ${remainingPopulation}/${costs.population} free`);
     }
 
     return { maxTrainable, shortageReasons };
@@ -1495,8 +1495,12 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                       <div className="strikes-card-list">
                         {outgoingAttacks.map((a: any) => (
                           <div key={a._id} className="strikes-card-entry">
-                            <span className="strikes-card-entry-who">{a.defender?.nexus?.name ?? '?'}</span>
-                            <span className="strikes-card-entry-time">{formatTime(a.arrivesAt)}</span>
+                            <span className="strikes-card-entry-who">
+                              {a.status === 'returning' ? '↩ ' : ''}{a.defender?.nexus?.name ?? '?'}
+                            </span>
+                            <span className="strikes-card-entry-time">
+                              {formatTime(a.status === 'returning' ? a.returnsAt : a.arrivesAt)}
+                            </span>
                           </div>
                         ))}
                       </div>

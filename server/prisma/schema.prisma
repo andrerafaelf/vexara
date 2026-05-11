@@ -199,6 +199,7 @@ enum AttackType {
 
 enum AttackStatus {
   traveling
+  returning
   completed
   cancelled
 }
@@ -216,6 +217,7 @@ model Attack {
 
   troops    Json
   arrivesAt DateTime
+  returnsAt DateTime?
   type      AttackType   @default(attack)
   status    AttackStatus @default(traveling)
   result    Json?

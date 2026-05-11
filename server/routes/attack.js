@@ -3,6 +3,7 @@ import prisma from '../lib/prisma.js';
 import auth from '../middleware/auth.js';
 import { applyQuestRewards, serializeAttack } from '../models/Nexus.js';
 import { normalizeTroopPayload, parsePositiveInt } from '../utils/validation.js';
+import { TROOP_STATS } from '../utils/combatMath.js';
 
 const router = express.Router();
 
@@ -101,7 +102,24 @@ router.post('/send', auth, async (req, res) => {
     const distance = Math.sqrt(
       Math.pow(defenderNexus.x - attackerNexus.x, 2) + Math.pow(defenderNexus.y - attackerNexus.y, 2),
     );
-    const travelTimeMinutes = distance * (isScoutMission ? 4 : 5);
+
+    // Travel time scales with the slowest troop in the group.
+    // Overseer is treated as speed 6 (slower than any combat unit) since it's a command unit.
+    // Multiplier range: interceptorBike (28) → ×4.0 min/dist, overseer (6) → ×6.2 min/dist.
+    let travelTimeMinutes;
+    if (isScoutMission) {
+      travelTimeMinutes = distance * 4;
+    } else {
+      const OVERSEER_EFFECTIVE_SPEED = 6;
+      let minSpeed = Infinity;
+      for (const [troopType, amount] of Object.entries(normalizedTroops)) {
+        if (amount > 0 && TROOP_STATS[troopType]) {
+          const speed = troopType === 'overseer' ? OVERSEER_EFFECTIVE_SPEED : TROOP_STATS[troopType].speed;
+          if (speed < minSpeed) minSpeed = speed;
+        }
+      }
+      travelTimeMinutes = distance * (4 + (28 - minSpeed) / 10);
+    }
     const arrivesAt = new Date(Date.now() + travelTimeMinutes * 60 * 1000);
 
     const [attack, updatedAttackerNexus] = await prisma.$transaction([
@@ -170,7 +188,7 @@ router.get('/outgoing/:nexusId', auth, async (req, res) => {
     }
 
     const attacks = await prisma.attack.findMany({
-      where: { attackerNexusId: nexus.id, status: 'traveling' },
+      where: { attackerNexusId: nexus.id, status: { in: ['traveling', 'returning'] } },
       include: {
         defenderNexus: { select: { id: true, name: true, x: true, y: true } },
       },

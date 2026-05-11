@@ -469,6 +469,7 @@ export function serializeAttack(a) {
     },
     troops: a.troops,
     arrivesAt: a.arrivesAt,
+    returnsAt: a.returnsAt,
     type: a.type,
     status: a.status,
     result: normalizedResult,

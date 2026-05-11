@@ -470,10 +470,13 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
                     {nexuses.find((v) => v._id === attack.attacker.nexus)?.name || 'Unknown'}
                   </div>
                   <div className="activity-details">
-                    → {attack.defender?.nexus?.name || 'Unknown'} ({attack.defender?.nexus?.x || '?'}|
+                    {attack.status === 'returning' ? '↩ returning from' : '→'}{' '}
+                    {attack.defender?.nexus?.name || 'Unknown'} ({attack.defender?.nexus?.x || '?'}|
                     {attack.defender?.nexus?.y || '?'})
                   </div>
-                  <div className="activity-time">{formatTime(attack.arrivesAt)}</div>
+                  <div className="activity-time">
+                    {formatTime(attack.status === 'returning' ? attack.returnsAt : attack.arrivesAt)}
+                  </div>
                 </div>
               ))}
             </div>

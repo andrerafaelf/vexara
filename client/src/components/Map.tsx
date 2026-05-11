@@ -958,9 +958,13 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
             {outgoingAttacks.map((attack: any) => (
               <div key={attack._id} className="attack-item outgoing">
                 <div className="attack-to">
-                  To: <strong>{attack.defenderNexus?.name || 'Unknown'}</strong>
+                  {attack.status === 'returning' ? '↩ Returning from:' : 'To:'}{' '}
+                  <strong>{attack.defenderNexus?.name || 'Unknown'}</strong>
                 </div>
-                <div className="attack-time">Arrives: {formatTime(attack.arrivesAt)}</div>
+                <div className="attack-time">
+                  {attack.status === 'returning' ? 'Returns:' : 'Arrives:'}{' '}
+                  {formatTime(attack.status === 'returning' ? attack.returnsAt : attack.arrivesAt)}
+                </div>
               </div>
             ))}
           </div>
