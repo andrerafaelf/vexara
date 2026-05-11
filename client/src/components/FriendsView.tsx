@@ -15,6 +15,7 @@ import {
   sendFriendRequest,
 } from '@/services/api';
 import '@/styles/FriendsView.css';
+import { formatDate, formatTimeOfDay } from '@/utils/date';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 type TabId = 'friends' | 'requests' | 'chat';
@@ -56,15 +57,7 @@ interface FriendsViewProps {
 
 const POLL_MS = 5000;
 
-function formatTime(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-
-function formatDate(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleDateString();
-}
+const formatTime = formatTimeOfDay;
 
 export default function FriendsView({ initialTab = 'friends', initialFriendId = null }: FriendsViewProps) {
   const { user } = useAuth();

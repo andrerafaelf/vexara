@@ -2,13 +2,12 @@
 
 import { getStatsTimeline } from '@/services/api';
 import { TimelineDay } from '@/types/game';
-import { useEffect, useState } from 'react';
+import { formatShortDate } from '@/utils/date';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  Bar,
+  Area,
+  AreaChart,
   CartesianGrid,
-  ComposedChart,
-  Legend,
-  Line,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -22,18 +21,16 @@ const RANGES = [
   { label: '90d', value: 90 },
 ];
 
-const TABS = ['Combat', 'Resources'] as const;
-type Tab = (typeof TABS)[number];
-
-function fmtDate(dateStr: string, days: number): string {
-  const d = new Date(dateStr);
-  if (days <= 7) return d.toLocaleDateString('en-US', { weekday: 'short', month: 'numeric', day: 'numeric' });
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
+const TABS = [
+  { id: 'combat', label: 'Combat', metricLabel: 'Net troops (killed − lost)', color: '#4ade80' },
+  { id: 'resources', label: 'Resources', metricLabel: 'Resources produced', color: '#a8dadc' },
+] as const;
+type TabId = (typeof TABS)[number]['id'];
 
 function fmtNum(n: number): string {
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
-  if (n >= 1_000) return (n / 1_000).toFixed(1) + 'K';
+  const abs = Math.abs(n);
+  if (abs >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
+  if (abs >= 1_000) return (n / 1_000).toFixed(1) + 'K';
   return String(Math.round(n));
 }
 
@@ -45,11 +42,11 @@ const TOOLTIP_STYLE = {
   fontSize: 12,
 };
 
-const CURSOR_STYLE = { fill: 'rgba(255,255,255,0.04)' };
+const CURSOR_STYLE = { stroke: 'rgba(255,255,255,0.15)', strokeWidth: 1 };
 
 export default function StatsChart() {
   const [days, setDays] = useState(30);
-  const [tab, setTab] = useState<Tab>('Combat');
+  const [tab, setTab] = useState<TabId>('combat');
   const [data, setData] = useState<TimelineDay[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,11 +60,19 @@ export default function StatsChart() {
       .finally(() => setLoading(false));
   }, [days]);
 
-  const chartData = data.map((d) => ({
-    ...d,
-    date: fmtDate(d.date, days),
-    totalProduced: d.biomassProduced + d.alloyProduced + d.oreProduced,
-  }));
+  const active = TABS.find((t) => t.id === tab)!;
+
+  const chartData = useMemo(
+    () =>
+      data.map((d) => ({
+        date: formatShortDate(d.date),
+        value:
+          tab === 'combat'
+            ? d.troopsKilled - d.troopsLost
+            : d.biomassProduced + d.alloyProduced + d.oreProduced,
+      })),
+    [data, tab]
+  );
 
   return (
     <div className="sc-wrapper">
@@ -75,11 +80,11 @@ export default function StatsChart() {
         <div className="sc-tabs">
           {TABS.map((t) => (
             <button
-              key={t}
-              className={`sc-tab ${tab === t ? 'active' : ''}`}
-              onClick={() => setTab(t)}
+              key={t.id}
+              className={`sc-tab ${tab === t.id ? 'active' : ''}`}
+              onClick={() => setTab(t.id)}
             >
-              {t}
+              {t.label}
             </button>
           ))}
         </div>
@@ -96,52 +101,51 @@ export default function StatsChart() {
         </div>
       </div>
 
+      <div className="sc-metric-label">{active.metricLabel}</div>
+
       <div className="sc-chart-area">
         {loading && <div className="sc-overlay">Loading...</div>}
         {error && <div className="sc-overlay sc-error">Failed to load: {error}</div>}
 
-        {!loading && !error && tab === 'Combat' && (
-          <ResponsiveContainer width="100%" height={280}>
-            <ComposedChart data={chartData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#0f3460" />
-              <XAxis dataKey="date" tick={{ fill: '#6b7c9e', fontSize: 11 }} tickLine={false} axisLine={false} />
-              <YAxis yAxisId="attacks" tick={{ fill: '#6b7c9e', fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={fmtNum} width={40} />
-              <YAxis yAxisId="troops" orientation="right" tick={{ fill: '#6b7c9e', fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={fmtNum} width={44} />
+        {!loading && !error && (
+          <ResponsiveContainer width="100%" height={240}>
+            <AreaChart data={chartData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="sc-fill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={active.color} stopOpacity={0.4} />
+                  <stop offset="100%" stopColor={active.color} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#0f3460" vertical={false} />
+              <XAxis
+                dataKey="date"
+                tick={{ fill: '#6b7c9e', fontSize: 11 }}
+                tickLine={false}
+                axisLine={false}
+                minTickGap={24}
+              />
+              <YAxis
+                tick={{ fill: '#6b7c9e', fontSize: 11 }}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={fmtNum}
+                width={44}
+              />
               <Tooltip
                 contentStyle={TOOLTIP_STYLE}
                 cursor={CURSOR_STYLE}
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                formatter={(val: any, name: any) => [typeof val === 'number' ? fmtNum(val) : String(val ?? ''), name ?? '']}
+                formatter={(val: number) => [fmtNum(val), active.metricLabel]}
               />
-              <Legend wrapperStyle={{ fontSize: 12, color: '#a8dadc', paddingTop: 8 }} />
-              <Bar yAxisId="attacks" dataKey="attacksLaunched" name="Attacks Launched" fill="#e94560" opacity={0.85} radius={[2, 2, 0, 0]} maxBarSize={18} />
-              <Bar yAxisId="attacks" dataKey="attacksDefended" name="Attacks Defended" fill="#7b4f2e" opacity={0.85} radius={[2, 2, 0, 0]} maxBarSize={18} />
-              <Line yAxisId="troops" type="monotone" dataKey="troopsKilled" name="Troops Killed" stroke="#4ade80" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
-              <Line yAxisId="troops" type="monotone" dataKey="troopsLost" name="Troops Lost" stroke="#f87171" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
-            </ComposedChart>
-          </ResponsiveContainer>
-        )}
-
-        {!loading && !error && tab === 'Resources' && (
-          <ResponsiveContainer width="100%" height={280}>
-            <ComposedChart data={chartData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#0f3460" />
-              <XAxis dataKey="date" tick={{ fill: '#6b7c9e', fontSize: 11 }} tickLine={false} axisLine={false} />
-              <YAxis yAxisId="prod" tick={{ fill: '#6b7c9e', fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={fmtNum} width={40} />
-              <YAxis yAxisId="combat" orientation="right" tick={{ fill: '#6b7c9e', fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={fmtNum} width={44} />
-              <Tooltip
-                contentStyle={TOOLTIP_STYLE}
-                cursor={CURSOR_STYLE}
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                formatter={(val: any, name: any) => [typeof val === 'number' ? fmtNum(val) : String(val ?? ''), name ?? '']}
+              <Area
+                type="monotone"
+                dataKey="value"
+                stroke={active.color}
+                strokeWidth={2}
+                fill="url(#sc-fill)"
+                dot={false}
+                activeDot={{ r: 4 }}
               />
-              <Legend wrapperStyle={{ fontSize: 12, color: '#a8dadc', paddingTop: 8 }} />
-              <Line yAxisId="prod" type="monotone" dataKey="biomassProduced" name="Biomass/day" stroke="#4caf50" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
-              <Line yAxisId="prod" type="monotone" dataKey="alloyProduced" name="Alloy/day" stroke="#2196f3" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
-              <Line yAxisId="prod" type="monotone" dataKey="oreProduced" name="Ore/day" stroke="#ff9800" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
-              <Bar yAxisId="combat" dataKey="resourcesStolen" name="Stolen" fill="#4ade80" opacity={0.75} radius={[2, 2, 0, 0]} maxBarSize={18} />
-              <Bar yAxisId="combat" dataKey="resourcesLost" name="Lost" fill="#f87171" opacity={0.75} radius={[2, 2, 0, 0]} maxBarSize={18} />
-            </ComposedChart>
+            </AreaChart>
           </ResponsiveContainer>
         )}
       </div>

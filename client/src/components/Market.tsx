@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { buyMarketListing, cancelMarketListing, createMarketListing, getMarketHistory, getMarketListings, systemBuyResource } from '../services/api';
 import '../styles/Market.css';
 import { MarketListing, Nexus } from '../types/game';
+import { formatDateTime } from '../utils/date';
 
 interface MarketProps {
   nexuses: Nexus[];
@@ -460,7 +461,7 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
                 <div className="market-history-meta">
                   <span>{t.buyerUsername} → {t.sellerUsername}</span>
                   <span className="market-history-time">
-                    {new Date(t.completedAt).toLocaleString()}
+                    {formatDateTime(t.completedAt)}
                   </span>
                 </div>
               </div>

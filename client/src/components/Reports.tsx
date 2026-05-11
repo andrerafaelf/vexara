@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getReadReportIds, getReports, markAllReportsRead, markReportRead, sendAttack } from '../services/api';
 import '../styles/Reports.css';
 import { Attack, Nexus } from '../types/game';
+import { formatDateTime } from '../utils/date';
 
 interface ReportsProps {
   nexus: Nexus;
@@ -118,10 +119,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
     }
   };
 
-  const formatDate = (date: string | Date) => {
-    const d = new Date(date);
-    return d.toLocaleString();
-  };
+  const formatDate = (date: string | Date) => formatDateTime(date);
 
   const getTroopTotal = (troops: any) => {
     return Object.values(troops).reduce((a: any, b: any) => a + b, 0);

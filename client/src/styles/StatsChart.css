@@ -70,11 +70,21 @@
   background: rgba(168, 218, 220, 0.1);
 }
 
+/* Metric label between toolbar and chart */
+.sc-metric-label {
+  color: #a8dadc;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 10px 14px 0;
+}
+
 /* Chart area */
 .sc-chart-area {
-  padding: 16px 8px 8px;
+  padding: 8px 8px 8px;
   position: relative;
-  min-height: 296px;
+  min-height: 256px;
 }
 
 .sc-overlay {

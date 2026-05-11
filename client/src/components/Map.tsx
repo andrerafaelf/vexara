@@ -12,6 +12,7 @@ import {
 } from '../services/api';
 import '../styles/Map.css';
 import { Nexus } from '../types/game';
+import { formatDateTime } from '../utils/date';
 
 interface MapProps {
   currentNexus: Nexus;
@@ -780,7 +781,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
         {selectedNexus.intelLevel === 'scouted' && selectedNexus.scoutedAt && (
           <div className="intel-warning intel-timestamp">
             <span>🔍 Scouted: </span>
-            <span>{new Date(selectedNexus.scoutedAt).toLocaleString()}</span>
+            <span>{formatDateTime(selectedNexus.scoutedAt)}</span>
           </div>
         )}
 

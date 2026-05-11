@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import '../styles/Admin.css';
 import Toast from './Toast';
+import { formatDate } from '../utils/date';
 
 interface User {
   _id: string;
@@ -658,7 +659,7 @@ const Admin: React.FC = () => {
                       </div>
                     )}
                   </td>
-                  <td>{new Date(user.createdAt).toLocaleDateString()}</td>
+                  <td>{formatDate(user.createdAt)}</td>
                   <td>
                     <button className="btn-small" onClick={() => handleTestNotification(user._id, user.username)}>
                       🔔 Test Notif
