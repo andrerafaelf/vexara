@@ -1,6 +1,13 @@
 {
-  "short_name": "Neon Dominion",
   "name": "Neon Dominion - Sci-Fi Strategy Game",
+  "short_name": "Neon Dominion",
+  "description": "Strategic conquest game in a neon-lit cyberpunk universe",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#0f1923",
+  "background_color": "#0f1923",
+  "categories": ["games", "strategy"],
   "icons": [
     {
       "src": "favicon.ico",
@@ -10,16 +17,14 @@
     {
       "src": "logo192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
       "src": "logo512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
-  ],
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  ]
 }

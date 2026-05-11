@@ -25,6 +25,35 @@ model User {
   friendRequestsRecv FriendRequest[] @relation("FriendRequestReceiver")
   chatMessagesSent   ChatMessage[]   @relation("ChatMessageSender")
   chatMessagesRecv   ChatMessage[]   @relation("ChatMessageReceiver")
+  pushSubscriptions  PushSubscription[]
+  notificationPrefs  NotificationPreferences?
+}
+
+model PushSubscription {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model NotificationPreferences {
+  userId            Int     @id
+  attackIncoming    Boolean @default(true)
+  attackResolved    Boolean @default(true)
+  troopsReturned    Boolean @default(true)
+  buildingComplete  Boolean @default(true)
+  troopComplete     Boolean @default(true)
+  resourcesFull     Boolean @default(true)
+  report            Boolean @default(true)
+  troopTransfer     Boolean @default(true)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Friendship {

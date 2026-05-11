@@ -224,3 +224,29 @@ export const sendChatMessage = (friendId: string, content: string) =>
   apiRequest(`/chat/${friendId}/messages`, { method: 'POST', body: JSON.stringify({ content }) });
 export const markChatRead = (friendId: string) =>
   apiRequest(`/chat/${friendId}/read`, { method: 'POST' });
+
+// Push Notifications
+export const getVapidPublicKey = () => apiRequest('/notifications/vapid-public-key');
+
+export const subscribePush = (subscription: PushSubscriptionJSON) =>
+  apiRequest('/notifications/subscribe', {
+    method: 'POST',
+    body: JSON.stringify({
+      endpoint: subscription.endpoint,
+      keys: subscription.keys,
+    }),
+  });
+
+export const unsubscribePush = (endpoint: string) =>
+  apiRequest('/notifications/subscribe', {
+    method: 'DELETE',
+    body: JSON.stringify({ endpoint }),
+  });
+
+export const getNotificationPreferences = () => apiRequest('/notifications/preferences');
+
+export const updateNotificationPreferences = (prefs: Partial<Record<string, boolean>>) =>
+  apiRequest('/notifications/preferences', {
+    method: 'PATCH',
+    body: JSON.stringify(prefs),
+  });

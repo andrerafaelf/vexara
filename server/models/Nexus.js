@@ -6,6 +6,7 @@ import {
   getResourceProduction as getResourceProductionBase,
 } from '../utils/economy.js';
 import { getPopulationMax } from '../utils/population.js';
+import { sendPushToUser, NOTIF } from '../utils/push.js';
 
 // --- Pure computation helpers ---
 
@@ -262,9 +263,11 @@ export async function applyCompletedQueues(nexus) {
   const trainingQueue = Array.isArray(nexus.trainingQueue) ? [...nexus.trainingQueue] : [];
   const updates = {};
 
+  const completedBuildings = [];
   while (buildQueue.length > 0 && new Date(buildQueue[0].completesAt) <= now) {
     const build = buildQueue.shift();
     updates[build.building] = build.targetLevel;
+    completedBuildings.push({ building: build.building, level: build.targetLevel });
 
     if (build.building === 'lifeSupport') {
       updates.populationMax = getPopulationMax(build.targetLevel);
@@ -289,10 +292,12 @@ export async function applyCompletedQueues(nexus) {
   // Overseer trains in an independent chain — scan the whole queue rather than
   // stopping at the head, so a finished overseer doesn't wait behind a still-
   // training non-overseer entry (and vice versa).
+  const completedTroops = [];
   for (let i = 0; i < trainingQueue.length; ) {
     const entry = trainingQueue[i];
     if (new Date(entry.completesAt) <= now) {
       updates[entry.troopType] = (updates[entry.troopType] || nexus[entry.troopType] || 0) + entry.amount;
+      completedTroops.push({ troopType: entry.troopType, amount: entry.amount });
       trainingQueue.splice(i, 1);
     } else {
       i += 1;
@@ -305,10 +310,35 @@ export async function applyCompletedQueues(nexus) {
     return nexus;
   }
 
-  return prisma.nexus.update({
+  const updated = await prisma.nexus.update({
     where: { id: nexus.id },
     data: updates,
   });
+
+  // Fire push notifications for the nexus owner (skip neutral nexuses)
+  if (nexus.ownerId) {
+    for (const { building, level } of completedBuildings) {
+      const label = building.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase());
+      void sendPushToUser(nexus.ownerId, NOTIF.BUILDING_COMPLETE, {
+        title: 'Construction Complete',
+        body: `${label} upgraded to level ${level} at ${nexus.name}.`,
+        tag: `build-${nexus.id}-${building}`,
+        data: { url: '/' },
+      });
+    }
+
+    for (const { troopType, amount } of completedTroops) {
+      const label = troopType.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase());
+      void sendPushToUser(nexus.ownerId, NOTIF.TROOP_COMPLETE, {
+        title: 'Training Complete',
+        body: `${amount}x ${label} ready at ${nexus.name}.`,
+        tag: `troop-${nexus.id}-${troopType}`,
+        data: { url: '/' },
+      });
+    }
+  }
+
+  return updated;
 }
 
 const CONTROL_RECOVERY_AMOUNT = 10;
@@ -342,10 +372,29 @@ export async function updateAllResources() {
     for (const nexus of nexuses) {
       const resourceUpdate = computeResourceUpdate(nexus);
       const points = calculatePoints({ ...nexus, ...resourceUpdate });
+
+      // Check if any resource just hit max storage (crossed from not-full to full)
+      const maxStorage = getMaxStorage(nexus);
+      const wasAlreadyFull =
+        nexus.biomass >= maxStorage && nexus.alloy >= maxStorage && nexus.ore >= maxStorage;
+      const isNowFull =
+        resourceUpdate.biomass >= maxStorage &&
+        resourceUpdate.alloy >= maxStorage &&
+        resourceUpdate.ore >= maxStorage;
+
       await prisma.nexus.update({
         where: { id: nexus.id },
         data: { ...resourceUpdate, points },
       });
+
+      if (!wasAlreadyFull && isNowFull && nexus.ownerId) {
+        void sendPushToUser(nexus.ownerId, NOTIF.RESOURCES_FULL, {
+          title: 'Storage Full',
+          body: `Resources at ${nexus.name} are at full capacity. Spend or transfer them!`,
+          tag: `resources-full-${nexus.id}`,
+          data: { url: '/' },
+        });
+      }
     }
   } catch (err) {
     console.error('Error updating resources:', err);

@@ -4,6 +4,7 @@ import { serializeNexus } from '../../server/models/Nexus.js';
 import { hashPassword } from '../../server/models/User.js';
 import { processArrivedAttacks } from '../../server/utils/combat.js';
 import { getPopulationMax } from '../../server/utils/population.js';
+import { sendPushToUser, NOTIF } from '../../server/utils/push.js';
 
 const router = express.Router();
 
@@ -877,6 +878,29 @@ router.post('/attacks/:attackId/complete', async (req, res) => {
     await processArrivedAttacks();
 
     res.json({ success: true, message: 'Attack completed' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/admin/users/:userId/test-notification
+router.post('/users/:userId/test-notification', async (req, res) => {
+  const userId = toInt(req.params.userId);
+  try {
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, username: true } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const subCount = await prisma.pushSubscription.count({ where: { userId } });
+    if (subCount === 0) return res.status(400).json({ error: 'User has no push subscriptions' });
+
+    await sendPushToUser(userId, NOTIF.ATTACK_INCOMING, {
+      title: 'Test Notification',
+      body: `This is a test push notification for ${user.username}.`,
+      tag: `admin-test-${Date.now()}`,
+      data: { url: '/' },
+    });
+
+    res.json({ success: true, message: `Test notification sent to ${user.username}` });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

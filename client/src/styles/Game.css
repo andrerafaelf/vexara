@@ -860,3 +860,13 @@
   text-align: center;
   margin-top: 40px;
 }
+
+.settings-view {
+  padding: 20px;
+}
+
+.settings-heading {
+  color: #e94560;
+  font-size: 22px;
+  margin: 0 0 20px 0;
+}

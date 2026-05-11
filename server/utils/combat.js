@@ -1,6 +1,7 @@
 import prisma from '../lib/prisma.js';
 import { computeForcePower, TROOP_STATS } from './combatMath.js';
 import { buildDetailedScoutIntel } from './scouting.js';
+import { sendPushToUser, NOTIF } from './push.js';
 
 const TROOP_KEYS = Object.keys(TROOP_STATS);
 
@@ -73,6 +74,14 @@ async function resolveCombat(attack) {
             resourcesStolen: { biomass: 0, alloy: 0, ore: 0 },
           },
         },
+      });
+
+      // Notify attacker their scout is returning
+      void sendPushToUser(attack.attackerUserId, NOTIF.ATTACK_RESOLVED, {
+        title: 'Scout Returning',
+        body: `Your scout mission is complete. Report incoming.`,
+        tag: `scout-${attack.id}`,
+        data: { url: '/reports' },
       });
 
       return;
@@ -272,6 +281,41 @@ async function resolveCombat(attack) {
       },
     });
 
+    // Notify attacker that combat has been resolved
+    const attackerNexusForNotif = await prisma.nexus.findUnique({
+      where: { id: attack.attackerNexusId },
+      select: { name: true },
+    });
+    const defenderNexusForNotif = await prisma.nexus.findUnique({
+      where: { id: attack.defenderNexusId },
+      select: { name: true, ownerId: true },
+    });
+
+    void sendPushToUser(attack.attackerUserId, NOTIF.ATTACK_RESOLVED, {
+      title: attackerWins ? (conquered ? 'Nexus Conquered!' : 'Attack Victorious') : 'Attack Repelled',
+      body: attackerWins
+        ? conquered
+          ? `Your forces conquered ${defenderNexusForNotif?.name || 'a nexus'}!`
+          : `You won the battle at ${defenderNexusForNotif?.name || 'a nexus'}. Troops returning.`
+        : `Your attack on ${defenderNexusForNotif?.name || 'a nexus'} was repelled.`,
+      tag: `attack-resolved-${attack.id}`,
+      data: { url: '/reports' },
+    });
+
+    // Notify defender they were attacked
+    if (attack.defenderUserId) {
+      void sendPushToUser(attack.defenderUserId, NOTIF.ATTACK_INCOMING, {
+        title: attackerWins ? (conquered ? 'Nexus Lost!' : 'Your Nexus Was Attacked!') : 'Attack Repelled',
+        body: attackerWins
+          ? conquered
+            ? `${attackerNexusForNotif?.name || 'An enemy'} conquered your nexus!`
+            : `${attackerNexusForNotif?.name || 'An enemy'} raided your nexus and stole resources.`
+          : `You successfully defended against an attack on ${defenderNexusForNotif?.name || 'your nexus'}.`,
+        tag: `defended-${attack.id}`,
+        data: { url: '/reports' },
+      });
+    }
+
     console.log(
       `Combat resolved: Attack ${attack.id} - ${attackerWins ? 'Attacker' : 'Defender'} wins${conquered ? ' - NEXUS CONQUERED!' : ''}`,
     );
@@ -305,6 +349,19 @@ async function processReturnedTroops(attack) {
       prisma.attack.update({ where: { id: attack.id }, data: { status: 'completed' } }),
     ]);
 
+    const totalReturned = Object.values(survivingTroops).reduce((a, b) => a + b, 0);
+    const loot = resourcesStolen;
+    const hasLoot = (loot.biomass || 0) + (loot.alloy || 0) + (loot.ore || 0) > 0;
+
+    void sendPushToUser(attack.attackerUserId, NOTIF.TROOPS_RETURNED, {
+      title: 'Troops Returned',
+      body: totalReturned > 0
+        ? `${totalReturned} troop${totalReturned !== 1 ? 's' : ''} returned${hasLoot ? ` with loot` : ''}.`
+        : `Your troops have returned (no survivors).`,
+      tag: `returned-${attack.id}`,
+      data: { url: '/' },
+    });
+
     console.log(`Attack ${attack.id} troops returned to nexus ${attack.attackerNexusId}`);
   } catch (err) {
     console.error(`Error processing returned troops for attack ${attack.id}:`, err);
@@ -323,7 +380,7 @@ async function processArrivedTransfers() {
   // Transfers that have arrived at the host nexus
   const arriving = await prisma.troopTransfer.findMany({
     where: { status: 'traveling', arrivesAt: { lte: now } },
-    include: { hostNexus: true },
+    include: { hostNexus: true, ownerNexus: { include: { owner: true } } },
   });
 
   for (const transfer of arriving) {
@@ -337,6 +394,16 @@ async function processArrivedTransfers() {
         prisma.nexus.update({ where: { id: transfer.hostNexusId }, data: addData }),
         prisma.troopTransfer.update({ where: { id: transfer.id }, data: { status: 'stationed', arrivesAt: null } }),
       ]);
+
+      if (transfer.ownerNexus?.owner?.id) {
+        const total = TRANSFER_TROOP_FIELDS.reduce((s, f) => s + (troops[f] || 0), 0);
+        void sendPushToUser(transfer.ownerNexus.owner.id, NOTIF.TROOP_TRANSFER, {
+          title: 'Troops Arrived',
+          body: `${total} troop${total !== 1 ? 's' : ''} arrived at ${transfer.hostNexus.name}.`,
+          tag: `transfer-arrived-${transfer.id}`,
+          data: { url: '/' },
+        });
+      }
     } catch (err) {
       console.error(`Error processing arriving transfer ${transfer.id}:`, err);
     }
@@ -345,7 +412,7 @@ async function processArrivedTransfers() {
   // Transfers that have finished returning to the owner nexus
   const returning = await prisma.troopTransfer.findMany({
     where: { status: 'returning', returnsAt: { lte: now } },
-    include: { ownerNexus: true },
+    include: { ownerNexus: { include: { owner: true } } },
   });
 
   for (const transfer of returning) {
@@ -359,6 +426,16 @@ async function processArrivedTransfers() {
         prisma.nexus.update({ where: { id: transfer.ownerNexusId }, data: returnData }),
         prisma.troopTransfer.delete({ where: { id: transfer.id } }),
       ]);
+
+      if (transfer.ownerNexus?.owner?.id) {
+        const total = TRANSFER_TROOP_FIELDS.reduce((s, f) => s + (troops[f] || 0), 0);
+        void sendPushToUser(transfer.ownerNexus.owner.id, NOTIF.TROOP_TRANSFER, {
+          title: 'Troops Returned Home',
+          body: `${total} troop${total !== 1 ? 's' : ''} returned to ${transfer.ownerNexus.name}.`,
+          tag: `transfer-returned-${transfer.id}`,
+          data: { url: '/' },
+        });
+      }
     } catch (err) {
       console.error(`Error processing returning transfer ${transfer.id}:`, err);
     }

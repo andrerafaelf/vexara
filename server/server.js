@@ -17,6 +17,7 @@ import reportRoutes from './routes/report.js';
 import troopRoutes from './routes/troop.js';
 import troopTransferRoutes from './routes/troopTransfer.js';
 import statsRoutes from './routes/stats.js';
+import notificationRoutes from './routes/notifications.js';
 import { processArrivedAttacks, processArrivedTransfers } from './utils/combat.js';
 import { logError, logInfo, logWarn } from './utils/logger.js';
 import { ensureNeutralNexusPool, levelUpNeutralNexuses } from './utils/neutralNexuses.js';
@@ -147,6 +148,7 @@ app.use('/api/troop-transfer', troopTransferRoutes);
 app.use('/api/friends', friendsRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 const JOB_LOCKS = {
   updateResources: 9101,

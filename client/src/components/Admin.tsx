@@ -292,6 +292,22 @@ const Admin: React.FC = () => {
     }
   };
 
+  const handleTestNotification = async (userId: string, username: string) => {
+    try {
+      const res = await fetch(`${ADMIN_API_URL}/users/${userId}/test-notification`, {
+        method: 'POST',
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(`Test notification sent to ${username}`, 'success');
+      } else {
+        showToast(data.error || 'Failed to send notification', 'error');
+      }
+    } catch {
+      showToast('Error sending test notification', 'error');
+    }
+  };
+
   const handleCompleteAttack = async (attackId: string) => {
     try {
       const res = await fetch(`${ADMIN_API_URL}/attacks/${attackId}/complete`, {
@@ -644,6 +660,9 @@ const Admin: React.FC = () => {
                   </td>
                   <td>{new Date(user.createdAt).toLocaleDateString()}</td>
                   <td>
+                    <button className="btn-small" onClick={() => handleTestNotification(user._id, user.username)}>
+                      🔔 Test Notif
+                    </button>
                     <button className="btn-danger" onClick={() => handleDeleteUser(user._id, user.username)}>
                       🗑️ Delete
                     </button>
