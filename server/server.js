@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import prisma from './lib/prisma.js';
-import { recoverControlLevels, updateAllResources } from './models/Nexus.js';
+import { processCompletedQueuesAndNotify, recoverControlLevels, updateAllResources } from './models/Nexus.js';
 import attackRoutes from './routes/attack.js';
 import authRoutes from './routes/auth.js';
 import buildingRoutes from './routes/building.js';
@@ -157,6 +157,7 @@ const JOB_LOCKS = {
   recoverControl: 9104,
   processTransfers: 9105,
   levelNeutralNexuses: 9106,
+  processQueues: 9107,
 };
 
 async function runWithPgAdvisoryLock(lockId, jobName, jobHandler) {
@@ -214,6 +215,11 @@ prisma
     setInterval(() => {
       void runWithPgAdvisoryLock(JOB_LOCKS.processTransfers, 'process_transfers', () => processArrivedTransfers());
     }, 10000);
+
+    // Apply finished building/training queue entries and fire push notifications
+    setInterval(() => {
+      void runWithPgAdvisoryLock(JOB_LOCKS.processQueues, 'process_queues', () => processCompletedQueuesAndNotify());
+    }, 15000);
 
     // Keep neutral nexus pool filled as the world gets conquered
     setInterval(() => {

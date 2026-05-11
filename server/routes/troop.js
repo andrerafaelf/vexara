@@ -4,7 +4,6 @@ import auth from '../middleware/auth.js';
 import { applyCompletedQueues, applyQuestRewards, computeResourceUpdate, serializeNexus } from '../models/Nexus.js';
 import { NEXUS_TYPE_BONUSES } from '../utils/economy.js';
 import { parsePositiveInt } from '../utils/validation.js';
-import { sendPushToUser, NOTIF } from '../utils/push.js';
 
 const router = express.Router();
 const MAX_TRAINING_QUEUE = 5;
@@ -356,17 +355,9 @@ router.post('/check-queue', auth, async (req, res) => {
     });
     const rewardApplied = await applyQuestRewards(updated);
 
-    if (nexus.ownerId) {
-      for (const [troopType, amount] of Object.entries(completedCounts)) {
-        const label = troopType.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase());
-        void sendPushToUser(nexus.ownerId, NOTIF.TROOP_COMPLETE, {
-          title: 'Training Complete',
-          body: `${amount}x ${label} ready at ${nexus.name}.`,
-          tag: `troop-${nexus.id}-${troopType}`,
-          data: { url: '/' },
-        });
-      }
-    }
+    // Push notifications for troop completion are fired by the background
+    // job in models/Nexus.js (processCompletedQueuesAndNotify) — keeping it
+    // here would double-notify users on the next poll.
 
     res.json({ completed, nexus: serializeNexus(rewardApplied) });
   } catch (error) {

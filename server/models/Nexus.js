@@ -315,30 +315,81 @@ export async function applyCompletedQueues(nexus) {
     data: updates,
   });
 
-  // Fire push notifications for the nexus owner (skip neutral nexuses)
-  if (nexus.ownerId) {
-    for (const { building, level } of completedBuildings) {
-      const label = building.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase());
-      void sendPushToUser(nexus.ownerId, NOTIF.BUILDING_COMPLETE, {
-        title: 'Construction Complete',
-        body: `${label} upgraded to level ${level} at ${nexus.name}.`,
-        tag: `build-${nexus.id}-${building}`,
-        data: { url: '/' },
-      });
-    }
+  return updated;
+}
 
-    for (const { troopType, amount } of completedTroops) {
-      const label = troopType.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase());
-      void sendPushToUser(nexus.ownerId, NOTIF.TROOP_COMPLETE, {
-        title: 'Training Complete',
-        body: `${amount}x ${label} ready at ${nexus.name}.`,
-        tag: `troop-${nexus.id}-${troopType}`,
-        data: { url: '/' },
-      });
+function formatLabel(key) {
+  return key.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase());
+}
+
+/**
+ * Background job: process all completed build/training queue entries across
+ * every owned nexus and fire a push notification per completion.
+ *
+ * This is the single source of truth for build/troop completion notifications,
+ * so users get one push per completion regardless of when (or whether) they
+ * open the app — the API routes that touch the same queues no longer notify.
+ */
+export async function processCompletedQueuesAndNotify() {
+  const now = new Date();
+  const nexuses = await prisma.nexus.findMany({
+    where: {
+      ownerId: { not: null },
+      OR: [
+        { buildQueue: { not: { equals: [] } } },
+        { trainingQueue: { not: { equals: [] } } },
+      ],
+    },
+  });
+
+  for (const nexus of nexuses) {
+    try {
+      const buildQueueBefore = normalizeBuildQueue(nexus.buildQueue);
+      const trainingQueueBefore = Array.isArray(nexus.trainingQueue) ? nexus.trainingQueue : [];
+
+      const buildReady = buildQueueBefore.length > 0 && new Date(buildQueueBefore[0].completesAt) <= now;
+      const trainReady = trainingQueueBefore.some((e) => new Date(e.completesAt) <= now);
+      if (!buildReady && !trainReady) continue;
+
+      const updated = await applyCompletedQueues(nexus);
+
+      const buildQueueAfter = normalizeBuildQueue(updated.buildQueue);
+      const drainedBuildCount = buildQueueBefore.length - buildQueueAfter.length;
+      for (let i = 0; i < drainedBuildCount; i++) {
+        const drained = buildQueueBefore[i];
+        const label = formatLabel(drained.building);
+        void sendPushToUser(nexus.ownerId, NOTIF.BUILDING_COMPLETE, {
+          title: '🏗️ Construction Complete',
+          body: `✅ ${label} upgraded to level ${drained.targetLevel} at ${nexus.name}.`,
+          tag: `build-${nexus.id}-${drained.building}-${drained.targetLevel}`,
+          data: { url: '/' },
+        });
+      }
+
+      const trainingQueueAfter = Array.isArray(updated.trainingQueue) ? updated.trainingQueue : [];
+      const afterKeys = new Set(
+        trainingQueueAfter.map((e) => `${e.troopType}|${e.completesAt}|${e.amount}`),
+      );
+      const drainedTraining = trainingQueueBefore.filter(
+        (e) => !afterKeys.has(`${e.troopType}|${e.completesAt}|${e.amount}`),
+      );
+      const trainTotals = drainedTraining.reduce((acc, e) => {
+        acc[e.troopType] = (acc[e.troopType] || 0) + e.amount;
+        return acc;
+      }, {});
+      for (const [troopType, amount] of Object.entries(trainTotals)) {
+        const label = formatLabel(troopType);
+        void sendPushToUser(nexus.ownerId, NOTIF.TROOP_COMPLETE, {
+          title: '⚔️ Training Complete',
+          body: `🎯 ${amount}x ${label} ready at ${nexus.name}.`,
+          tag: `troop-${nexus.id}-${troopType}-${new Date(drainedTraining[0].completesAt).getTime()}`,
+          data: { url: '/' },
+        });
+      }
+    } catch (err) {
+      console.error(`processCompletedQueuesAndNotify failed for nexus ${nexus.id}:`, err);
     }
   }
-
-  return updated;
 }
 
 const CONTROL_RECOVERY_AMOUNT = 10;
@@ -389,8 +440,8 @@ export async function updateAllResources() {
 
       if (!wasAlreadyFull && isNowFull && nexus.ownerId) {
         void sendPushToUser(nexus.ownerId, NOTIF.RESOURCES_FULL, {
-          title: 'Storage Full',
-          body: `Resources at ${nexus.name} are at full capacity. Spend or transfer them!`,
+          title: '📦 Storage Full',
+          body: `⚠️ Resources at ${nexus.name} are at full capacity. Spend or transfer them!`,
           tag: `resources-full-${nexus.id}`,
           data: { url: '/' },
         });

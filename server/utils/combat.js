@@ -78,10 +78,10 @@ async function resolveCombat(attack) {
 
       // Notify attacker their scout is returning
       void sendPushToUser(attack.attackerUserId, NOTIF.ATTACK_RESOLVED, {
-        title: 'Scout Returning',
-        body: `Your scout mission is complete. Report incoming.`,
+        title: '🛰️ Scout Returning',
+        body: `🔭 Your scout mission is complete. Combat report ready!`,
         tag: `scout-${attack.id}`,
-        data: { url: '/reports' },
+        data: { url: '/combat-logs' },
       });
 
       return;
@@ -292,27 +292,35 @@ async function resolveCombat(attack) {
     });
 
     void sendPushToUser(attack.attackerUserId, NOTIF.ATTACK_RESOLVED, {
-      title: attackerWins ? (conquered ? 'Nexus Conquered!' : 'Attack Victorious') : 'Attack Repelled',
+      title: attackerWins
+        ? conquered
+          ? '👑 Nexus Conquered!'
+          : '⚔️ Attack Victorious'
+        : '🛡️ Attack Repelled',
       body: attackerWins
         ? conquered
-          ? `Your forces conquered ${defenderNexusForNotif?.name || 'a nexus'}!`
-          : `You won the battle at ${defenderNexusForNotif?.name || 'a nexus'}. Troops returning.`
-        : `Your attack on ${defenderNexusForNotif?.name || 'a nexus'} was repelled.`,
+          ? `🏆 Your forces conquered ${defenderNexusForNotif?.name || 'a nexus'}! Combat report ready.`
+          : `💥 You won the battle at ${defenderNexusForNotif?.name || 'a nexus'}. Troops returning — combat report ready!`
+        : `😞 Your attack on ${defenderNexusForNotif?.name || 'a nexus'} was repelled. Combat report ready.`,
       tag: `attack-resolved-${attack.id}`,
-      data: { url: '/reports' },
+      data: { url: '/combat-logs' },
     });
 
     // Notify defender they were attacked
     if (attack.defenderUserId) {
       void sendPushToUser(attack.defenderUserId, NOTIF.ATTACK_INCOMING, {
-        title: attackerWins ? (conquered ? 'Nexus Lost!' : 'Your Nexus Was Attacked!') : 'Attack Repelled',
+        title: attackerWins
+          ? conquered
+            ? '💀 Nexus Lost!'
+            : '🚨 Your Nexus Was Attacked!'
+          : '🛡️ Attack Repelled',
         body: attackerWins
           ? conquered
-            ? `${attackerNexusForNotif?.name || 'An enemy'} conquered your nexus!`
-            : `${attackerNexusForNotif?.name || 'An enemy'} raided your nexus and stole resources.`
-          : `You successfully defended against an attack on ${defenderNexusForNotif?.name || 'your nexus'}.`,
+            ? `⚠️ ${attackerNexusForNotif?.name || 'An enemy'} conquered your nexus! Combat report ready.`
+            : `💥 ${attackerNexusForNotif?.name || 'An enemy'} raided your nexus and stole resources. Combat report ready.`
+          : `✅ You successfully defended against an attack on ${defenderNexusForNotif?.name || 'your nexus'}. Combat report ready.`,
         tag: `defended-${attack.id}`,
-        data: { url: '/reports' },
+        data: { url: '/combat-logs' },
       });
     }
 
@@ -354,12 +362,12 @@ async function processReturnedTroops(attack) {
     const hasLoot = (loot.biomass || 0) + (loot.alloy || 0) + (loot.ore || 0) > 0;
 
     void sendPushToUser(attack.attackerUserId, NOTIF.TROOPS_RETURNED, {
-      title: 'Troops Returned',
+      title: '🪖 Troops Returned',
       body: totalReturned > 0
-        ? `${totalReturned} troop${totalReturned !== 1 ? 's' : ''} returned${hasLoot ? ` with loot` : ''}.`
-        : `Your troops have returned (no survivors).`,
+        ? `🎖️ ${totalReturned} troop${totalReturned !== 1 ? 's' : ''} returned${hasLoot ? ` with loot 💰` : ''}. Combat report ready!`
+        : `💔 Your troops have returned (no survivors). Combat report ready.`,
       tag: `returned-${attack.id}`,
-      data: { url: '/' },
+      data: { url: '/combat-logs' },
     });
 
     console.log(`Attack ${attack.id} troops returned to nexus ${attack.attackerNexusId}`);
@@ -398,8 +406,8 @@ async function processArrivedTransfers() {
       if (transfer.ownerNexus?.owner?.id) {
         const total = TRANSFER_TROOP_FIELDS.reduce((s, f) => s + (troops[f] || 0), 0);
         void sendPushToUser(transfer.ownerNexus.owner.id, NOTIF.TROOP_TRANSFER, {
-          title: 'Troops Arrived',
-          body: `${total} troop${total !== 1 ? 's' : ''} arrived at ${transfer.hostNexus.name}.`,
+          title: '🚀 Troops Arrived',
+          body: `📦 ${total} troop${total !== 1 ? 's' : ''} arrived at ${transfer.hostNexus.name}.`,
           tag: `transfer-arrived-${transfer.id}`,
           data: { url: '/' },
         });
@@ -430,8 +438,8 @@ async function processArrivedTransfers() {
       if (transfer.ownerNexus?.owner?.id) {
         const total = TRANSFER_TROOP_FIELDS.reduce((s, f) => s + (troops[f] || 0), 0);
         void sendPushToUser(transfer.ownerNexus.owner.id, NOTIF.TROOP_TRANSFER, {
-          title: 'Troops Returned Home',
-          body: `${total} troop${total !== 1 ? 's' : ''} returned to ${transfer.ownerNexus.name}.`,
+          title: '🏠 Troops Returned Home',
+          body: `🪖 ${total} troop${total !== 1 ? 's' : ''} returned to ${transfer.ownerNexus.name}.`,
           tag: `transfer-returned-${transfer.id}`,
           data: { url: '/' },
         });
