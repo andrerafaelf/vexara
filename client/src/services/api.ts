@@ -196,16 +196,6 @@ export const systemBuyResource = (
     body: JSON.stringify({ nexusId, receiveResource, receiveAmount, payResource }),
   });
 
-export const systemSellResource = (
-  nexusId: string,
-  sellResource: string,
-  sellAmount: number,
-  receiveResource: string,
-) =>
-  apiRequest('/market/system/sell', {
-    method: 'POST',
-    body: JSON.stringify({ nexusId, sellResource, sellAmount, receiveResource }),
-  });
 
 // Friends
 export const getFriends = () => apiRequest('/friends');
