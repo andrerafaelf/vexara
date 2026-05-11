@@ -15,10 +15,10 @@ const RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL = 0.92;
 // Training times (seconds per unit).
 // Early troops: ~1 min. Mid-tier: 5–30 min. Heavy: 1 h / 4 h / 8 h.
 const TROOP_COSTS = {
-  lancerDrone: { biomass: 250, alloy: 150, ore: 50, population: 1, time: 53 },
+  lancerDrone: { biomass: 150, alloy: 150, ore: 200, population: 1, time: 53 },
   assaultTrooper: { biomass: 150, alloy: 150, ore: 350, population: 1, time: 79 },
-  breakerUnit: { biomass: 300, alloy: 150, ore: 200, population: 1, time: 74 },
-  reconOperative: { biomass: 500, alloy: 150, ore: 300, population: 1, time: 180 }, // 3 min
+  breakerUnit: { biomass: 250, alloy: 150, ore: 300, population: 1, time: 74 },
+  reconOperative: { biomass: 400, alloy: 150, ore: 400, population: 1, time: 180 }, // 3 min
   skimmerBike: { biomass: 625, alloy: 500, ore: 750, population: 3, time: 600 }, // 10 min
   bulwarkGuard: { biomass: 400, alloy: 600, ore: 500, population: 2, time: 480 }, // 8 min
   suppressorTeam: { biomass: 450, alloy: 400, ore: 450, population: 2, time: 480 }, // 8 min

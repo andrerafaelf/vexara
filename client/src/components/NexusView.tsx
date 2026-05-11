@@ -91,11 +91,11 @@ const BUILDING_COSTS: { [key: string]: any } = {
   commandCore: { biomass: 90, alloy: 80, ore: 70, time: 45 },
   recruitmentCore: { biomass: 200, alloy: 170, ore: 90, time: 75 },
   lifeSupport: { biomass: 80, alloy: 100, ore: 70, time: 60 },
-  storageVault: { biomass: 60, alloy: 50, ore: 40, time: 45 },
-  biomassFarm: { biomass: 50, alloy: 60, ore: 40, time: 45 },
-  alloyForge: { biomass: 65, alloy: 40, ore: 40, time: 45 },
+  storageVault: { biomass: 60, alloy: 50, ore: 70, time: 45 },
+  biomassFarm: { biomass: 50, alloy: 60, ore: 60, time: 45 },
+  alloyForge: { biomass: 65, alloy: 40, ore: 60, time: 45 },
   oreExtractor: { biomass: 75, alloy: 65, ore: 70, time: 60 },
-  shieldGrid: { biomass: 50, alloy: 100, ore: 20, time: 75 },
+  shieldGrid: { biomass: 50, alloy: 100, ore: 60, time: 75 },
 };
 
 const BUILDING_RULES: {
@@ -292,9 +292,9 @@ const SHIELD_BONUS_PER_LEVEL = 0.02;
 
 const TROOP_COSTS: { [key: string]: any } = {
   assaultTrooper: { biomass: 150, alloy: 150, ore: 350, population: 1, time: 79 },
-  lancerDrone: { biomass: 250, alloy: 150, ore: 50, population: 1, time: 53 },
-  breakerUnit: { biomass: 300, alloy: 150, ore: 200, population: 1, time: 74 },
-  reconOperative: { biomass: 500, alloy: 150, ore: 300, population: 1, time: 180 },
+  lancerDrone: { biomass: 150, alloy: 150, ore: 200, population: 1, time: 53 },
+  breakerUnit: { biomass: 250, alloy: 150, ore: 300, population: 1, time: 74 },
+  reconOperative: { biomass: 400, alloy: 150, ore: 400, population: 1, time: 180 },
   skimmerBike: { biomass: 625, alloy: 500, ore: 750, population: 3, time: 600 },
   bulwarkGuard: { biomass: 400, alloy: 600, ore: 500, population: 2, time: 480 },
   suppressorTeam: { biomass: 450, alloy: 400, ore: 450, population: 2, time: 480 },

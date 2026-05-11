@@ -41,7 +41,7 @@ export const TROOPS_DOC: TroopDoc[] = [
     role: 'Early defensive interceptor',
     description: 'Cheap anti-vehicle style defender used to absorb early pressure.',
     stats: { attack: 15, defense: 25, speed: 20, carry: 20 },
-    cost: { biomass: 250, alloy: 150, ore: 50, population: 1, time: '53s' },
+    cost: { biomass: 150, alloy: 150, ore: 200, population: 1, time: '53s' },
     requirements: ['Recruitment Core Lv2'],
   },
   {
@@ -51,7 +51,7 @@ export const TROOPS_DOC: TroopDoc[] = [
     role: 'Heavy breacher',
     description: 'Higher attack unit meant to crack weaker defensive lines quickly.',
     stats: { attack: 50, defense: 15, speed: 16, carry: 10 },
-    cost: { biomass: 300, alloy: 150, ore: 200, population: 1, time: '1m 14s' },
+    cost: { biomass: 250, alloy: 150, ore: 300, population: 1, time: '1m 14s' },
     requirements: ['Recruitment Core Lv3', 'Ore Extractor Lv3'],
   },
   {
@@ -62,7 +62,7 @@ export const TROOPS_DOC: TroopDoc[] = [
     description:
       'Lightly armed intel gatherer that reveals enemy nexus resources, troops, and defenses. Not a frontline fighter.',
     stats: { attack: 5, defense: 20, speed: 25, carry: 10 },
-    cost: { biomass: 500, alloy: 150, ore: 300, population: 1, time: '3m 0s' },
+    cost: { biomass: 400, alloy: 150, ore: 400, population: 1, time: '3m 0s' },
     requirements: ['Recruitment Core Lv4', 'Command Core Lv3'],
     notes: ['This is the unit used for scouting missions.'],
   },
@@ -208,7 +208,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
     name: 'Storage Vault',
     role: 'Resource cap building',
     description: 'Raises resource storage to reduce overflow waste.',
-    baseCost: { biomass: 60, alloy: 50, ore: 40, timeSeconds: 45 },
+    baseCost: { biomass: 60, alloy: 50, ore: 70, timeSeconds: 45 },
     maxLevel: 20,
     unlock: 'Command Core Lv2',
     milestones: [
@@ -224,7 +224,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
     name: 'Biomass Farm',
     role: 'Biomass production',
     description: 'Generates biomass resource over time.',
-    baseCost: { biomass: 50, alloy: 60, ore: 40, timeSeconds: 45 },
+    baseCost: { biomass: 50, alloy: 60, ore: 60, timeSeconds: 45 },
     maxLevel: 20,
     unlock: 'Life Support Lv1',
     milestones: [
@@ -239,7 +239,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
     name: 'Alloy Forge',
     role: 'Alloy production',
     description: 'Generates alloy resource over time.',
-    baseCost: { biomass: 65, alloy: 40, ore: 40, timeSeconds: 45 },
+    baseCost: { biomass: 65, alloy: 40, ore: 60, timeSeconds: 45 },
     maxLevel: 20,
     unlock: 'Ore Extractor Lv2',
     milestones: [
@@ -266,7 +266,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
     name: 'Shield Grid',
     role: 'Defensive multiplier',
     description: 'Boosts total defending force power during combat.',
-    baseCost: { biomass: 50, alloy: 100, ore: 20, timeSeconds: 75 },
+    baseCost: { biomass: 50, alloy: 100, ore: 60, timeSeconds: 75 },
     maxLevel: 15,
     unlock: 'Command Core Lv3',
     milestones: [
