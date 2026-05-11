@@ -18,6 +18,7 @@ router.post('/create', auth, async (req, res) => {
       return res.status(400).json({ error: `Maximum of ${MAX_NEXUSES_PER_USER} nexuses allowed per player` });
     }
 
+    const protectionEndsAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
     const nexus = await prisma.nexus.create({
       data: {
         name: req.body.name || `${user.username}'s Nexus`,
@@ -33,6 +34,7 @@ router.post('/create', auth, async (req, res) => {
         oreExtractor: 1,
         shieldGrid: 0,
         populationMax: getPopulationMax(1),
+        newbieProtectionEndsAt: protectionEndsAt,
       },
     });
 

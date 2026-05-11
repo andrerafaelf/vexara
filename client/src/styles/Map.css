@@ -364,6 +364,26 @@
   gap: 10px;
 }
 
+.newbie-protection-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 200, 150, 0.1);
+  border: 1px solid rgba(0, 200, 150, 0.35);
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin: 8px 0;
+  font-size: 12px;
+}
+
+.newbie-protection-icon {
+  font-size: 14px;
+}
+
+.newbie-protection-text {
+  color: #00c896;
+}
+
 .intel-warning {
   margin-top: 12px;
   padding: 12px;

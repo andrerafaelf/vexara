@@ -1510,6 +1510,16 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
               {nexus.controlLevel !== undefined && <span>🛡️ {nexus.controlLevel}/100 ctrl</span>}
             </div>
 
+            {nexus.newbieProtectionEndsAt && new Date(nexus.newbieProtectionEndsAt) > currentTime && (
+              <div className="newbie-protection-banner">
+                <span className="newbie-protection-icon">🛡️</span>
+                <span className="newbie-protection-text">
+                  Newbie Protection — expires in{' '}
+                  <strong>{formatTime(nexus.newbieProtectionEndsAt)}</strong>
+                </span>
+              </div>
+            )}
+
             <div className="overview-shortcuts">
               <button type="button" className="overview-shortcut-card" onClick={() => setActiveTab('buildings')}>
                 <span className="overview-shortcut-title">🏗️ Construction</span>

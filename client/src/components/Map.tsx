@@ -36,6 +36,7 @@ interface MapNexus {
   controlLevel?: number;
   intelLevel?: 'public' | 'scouted' | 'owned';
   scoutedAt?: string;
+  newbieProtectionEndsAt?: string | null;
 }
 
 const TROOP_LABELS: Record<string, string> = {
@@ -593,7 +594,15 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
               isCurrent ? 'current-nexus' : ''
             } ${isOwnNexus && !isCurrent ? 'own-nexus' : ''} ${isEnemyNexus ? 'enemy-nexus' : ''} ${selectedNexus?._id === nexus?._id ? 'selected' : ''}`}
             onClick={(e) => !isOutOfBounds && nexus && handleVillageClick(nexus, e)}
-            title={isOutOfBounds ? 'Out of bounds' : nexus ? `${nexus.name} (${nexus.x}|${nexus.y})` : `(${x}|${y})`}
+            title={
+              isOutOfBounds
+                ? 'Out of bounds'
+                : nexus
+                  ? nexus.newbieProtectionEndsAt && new Date(nexus.newbieProtectionEndsAt) > currentTime
+                    ? `${nexus.name} (${nexus.x}|${nexus.y}) — 🛡️ Protected`
+                    : `${nexus.name} (${nexus.x}|${nexus.y})`
+                  : `(${x}|${y})`
+            }
             data-x={x}
             data-y={y}
           >
@@ -667,6 +676,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
     const isOwn = selectedNexus.owner?.username === user?.username;
     const isConquered = selectedNexus.control !== undefined && selectedNexus.control <= 0;
     const hasIntel = selectedNexus.intelLevel === 'scouted' || selectedNexus.intelLevel === 'owned';
+    const isNewbieProtected = !!selectedNexus.newbieProtectionEndsAt && new Date(selectedNexus.newbieProtectionEndsAt) > currentTime;
     const isNpc =
       selectedNexus.name.includes('Resource Depot') ||
       selectedNexus.name.includes('Military Outpost') ||
@@ -689,6 +699,15 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
         </h3>
         {isNpc && (
           <p className="nexus-node-type-info">{getNodeTypeInfo(selectedNexus.name)}</p>
+        )}
+
+        {isNewbieProtected && (
+          <div className="newbie-protection-banner">
+            <span className="newbie-protection-icon">🛡️</span>
+            <span className="newbie-protection-text">
+              Protected — {formatTime(new Date(selectedNexus.newbieProtectionEndsAt!))} remaining
+            </span>
+          </div>
         )}
 
         <div className="detail-line">
@@ -775,8 +794,8 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
               <button
                 className="attack-btn"
                 onClick={() => setShowAttackForm(true)}
-                disabled={isConquered}
-                title={isConquered ? 'Nexus already conquered' : 'Launch attack'}
+                disabled={isConquered || isNewbieProtected}
+                title={isConquered ? 'Nexus already conquered' : isNewbieProtected ? 'Nexus is under newbie protection' : 'Launch attack'}
               >
                 ⚔️ {isConquered ? 'Conquered' : 'Attack'}
               </button>

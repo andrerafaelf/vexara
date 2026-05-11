@@ -107,6 +107,7 @@ export interface Nexus {
   control?: number;
   controlLevel?: number;
   nexusType?: string | null;
+  newbieProtectionEndsAt?: string | null;
   intelLevel?: 'public' | 'scouted' | 'owned';
   scoutedAt?: string;
 }

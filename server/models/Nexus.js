@@ -452,6 +452,7 @@ export function serializeNexus(v, opts = {}) {
     points: v.points,
     controlLevel: v.controlLevel,
     nexusType: v.nexusType ?? null,
+    newbieProtectionEndsAt: v.newbieProtectionEndsAt ?? null,
     createdAt: v.createdAt,
   };
 

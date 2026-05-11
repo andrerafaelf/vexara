@@ -156,6 +156,26 @@
   letter-spacing: 0.02em;
 }
 
+.newbie-protection-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 200, 150, 0.1);
+  border: 1px solid rgba(0, 200, 150, 0.35);
+  border-radius: 6px;
+  padding: 5px 10px;
+  margin-bottom: 10px;
+  font-size: 12px;
+}
+
+.newbie-protection-icon {
+  font-size: 14px;
+}
+
+.newbie-protection-text {
+  color: #00c896;
+}
+
 .nexus-type-buff-banner {
   display: flex;
   align-items: center;

@@ -63,6 +63,10 @@ router.post('/send', auth, async (req, res) => {
       return res.status(400).json({ error: 'Cannot attack your own nexus' });
     }
 
+    if (defenderNexus.newbieProtectionEndsAt && new Date(defenderNexus.newbieProtectionEndsAt) > new Date()) {
+      return res.status(403).json({ error: 'This nexus is under newbie protection and cannot be attacked yet', protectedUntil: defenderNexus.newbieProtectionEndsAt });
+    }
+
     const totalTroopsRequested = Object.values(normalizedTroops).reduce((sum, amount) => sum + amount, 0);
     if (totalTroopsRequested <= 0) {
       return res.status(400).json({ error: 'Select at least one troop' });
