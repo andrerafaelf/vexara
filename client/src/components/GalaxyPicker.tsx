@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { getGalaxies, selectGalaxy } from '../services/api';
+import { getGalaxies, leaveGalaxy, selectGalaxy } from '../services/api';
 
 export interface Galaxy {
   id: number;
@@ -26,6 +26,10 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
   const [selecting, setSelecting] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmingJoin, setConfirmingJoin] = useState<Galaxy | null>(null);
+  // Two-step leave confirmation. step 1 = generic "are you sure", step 2 = final destructive warning.
+  const [leaveTarget, setLeaveTarget] = useState<Galaxy | null>(null);
+  const [leaveStep, setLeaveStep] = useState<1 | 2>(1);
+  const [leaving, setLeaving] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -64,6 +68,26 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
     } catch (err: any) {
       setError(err?.message || 'Failed to select galaxy');
       setSelecting(null);
+    }
+  };
+
+  const requestLeave = (galaxy: Galaxy) => {
+    setLeaveTarget(galaxy);
+    setLeaveStep(1);
+  };
+
+  const doLeave = async () => {
+    if (!leaveTarget) return;
+    setLeaving(true);
+    setError(null);
+    try {
+      await leaveGalaxy(leaveTarget.id);
+      // Easiest way to reset every cached bit of galaxy-scoped state.
+      window.location.reload();
+    } catch (err: any) {
+      setError(err?.message || 'Failed to leave galaxy');
+      setLeaving(false);
+      setLeaveTarget(null);
     }
   };
 
@@ -157,21 +181,39 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
                     Created {new Date(g.createdAt).toLocaleDateString()}
                   </div>
                 </div>
-                <button
-                  disabled={isEnded || selecting !== null}
-                  onClick={() => requestSelect(g)}
-                  style={{
-                    background: isEnded ? '#2a3050' : '#3a55c4',
-                    color: '#fff',
-                    border: 'none',
-                    padding: '0.45rem 0.9rem',
-                    borderRadius: 4,
-                    cursor: isEnded ? 'not-allowed' : 'pointer',
-                    minWidth: 92,
-                  }}
-                >
-                  {selecting === g.id ? '…' : g.isJoined ? 'Enter' : 'Join'}
-                </button>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button
+                    disabled={isEnded || selecting !== null}
+                    onClick={() => requestSelect(g)}
+                    style={{
+                      background: isEnded ? '#2a3050' : '#3a55c4',
+                      color: '#fff',
+                      border: 'none',
+                      padding: '0.45rem 0.9rem',
+                      borderRadius: 4,
+                      cursor: isEnded ? 'not-allowed' : 'pointer',
+                      minWidth: 92,
+                    }}
+                  >
+                    {selecting === g.id ? '…' : g.isJoined ? 'Enter' : 'Join'}
+                  </button>
+                  {g.isJoined && !isEnded && (
+                    <button
+                      disabled={selecting !== null}
+                      onClick={() => requestLeave(g)}
+                      style={{
+                        background: 'transparent',
+                        color: '#ff8a8a',
+                        border: '1px solid #6a2030',
+                        padding: '0.45rem 0.9rem',
+                        borderRadius: 4,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Leave
+                    </button>
+                  )}
+                </div>
               </li>
             );
           })}
@@ -206,8 +248,7 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
           >
             <h3 style={{ margin: '0 0 0.5rem 0' }}>Join {confirmingJoin.name}?</h3>
             <p style={{ color: '#9ab', marginTop: 0 }}>
-              You'll be placed in this galaxy with a fresh starter nexus. Your progress in other galaxies is unaffected,
-              but you cannot leave a galaxy once joined.
+              You'll be placed in this galaxy with a fresh starter nexus. Your progress in other galaxies is unaffected.
             </p>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: '1rem' }}>
               <button
@@ -237,6 +278,122 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
                 Join
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {leaveTarget && (
+        <div
+          onClick={() => {
+            if (!leaving) {
+              setLeaveTarget(null);
+              setLeaveStep(1);
+            }
+          }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10000,
+            padding: '1rem',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#0e1430',
+              border: '1px solid #6a2030',
+              borderRadius: 8,
+              padding: '1.25rem',
+              width: '100%',
+              maxWidth: 440,
+              color: '#e0e8ff',
+            }}
+          >
+            {leaveStep === 1 ? (
+              <>
+                <h3 style={{ margin: '0 0 0.5rem 0' }}>Leave {leaveTarget.name}?</h3>
+                <p style={{ color: '#9ab', marginTop: 0 }}>
+                  Your nexuses will be abandoned and turn into neutral NPC outposts that other players can conquer.
+                  Your resources, buildings, and troops stay in those nexuses for whoever takes them.
+                </p>
+                <p style={{ color: '#ff8a8a', marginTop: 0 }}>
+                  Quest progress, dominance, nexus groups, and any in-flight attacks or transfers in this galaxy will
+                  be lost.
+                </p>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: '1rem' }}>
+                  <button
+                    onClick={() => {
+                      setLeaveTarget(null);
+                      setLeaveStep(1);
+                    }}
+                    style={{
+                      background: 'transparent',
+                      color: '#e0e8ff',
+                      border: '1px solid #2c3a78',
+                      padding: '0.45rem 0.9rem',
+                      borderRadius: 4,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => setLeaveStep(2)}
+                    style={{
+                      background: '#6a2030',
+                      color: '#fff',
+                      border: 'none',
+                      padding: '0.45rem 0.9rem',
+                      borderRadius: 4,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Continue
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 style={{ margin: '0 0 0.5rem 0' }}>Are you sure?</h3>
+                <p style={{ color: '#ff8a8a', marginTop: 0 }}>
+                  This cannot be undone. {leaveTarget.name} progress will be permanently abandoned.
+                </p>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: '1rem' }}>
+                  <button
+                    disabled={leaving}
+                    onClick={() => setLeaveStep(1)}
+                    style={{
+                      background: 'transparent',
+                      color: '#e0e8ff',
+                      border: '1px solid #2c3a78',
+                      padding: '0.45rem 0.9rem',
+                      borderRadius: 4,
+                      cursor: leaving ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    Back
+                  </button>
+                  <button
+                    disabled={leaving}
+                    onClick={doLeave}
+                    style={{
+                      background: '#a02030',
+                      color: '#fff',
+                      border: 'none',
+                      padding: '0.45rem 0.9rem',
+                      borderRadius: 4,
+                      cursor: leaving ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {leaving ? 'Leaving…' : 'Leave galaxy'}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
