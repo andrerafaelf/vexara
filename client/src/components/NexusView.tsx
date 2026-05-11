@@ -88,14 +88,14 @@ const BUILDING_DESCRIPTIONS: { [key: string]: string } = {
 };
 
 const BUILDING_COSTS: { [key: string]: any } = {
-  commandCore: { biomass: 90, alloy: 80, ore: 70, time: 45 },
-  recruitmentCore: { biomass: 200, alloy: 170, ore: 90, time: 75 },
-  lifeSupport: { biomass: 80, alloy: 100, ore: 70, time: 60 },
-  storageVault: { biomass: 60, alloy: 50, ore: 70, time: 45 },
-  biomassFarm: { biomass: 50, alloy: 60, ore: 60, time: 45 },
-  alloyForge: { biomass: 65, alloy: 40, ore: 60, time: 45 },
-  oreExtractor: { biomass: 75, alloy: 65, ore: 70, time: 60 },
-  shieldGrid: { biomass: 50, alloy: 100, ore: 60, time: 75 },
+  commandCore: { biomass: 90, alloy: 80, ore: 70, time: 70 },
+  recruitmentCore: { biomass: 200, alloy: 170, ore: 90, time: 115 },
+  lifeSupport: { biomass: 80, alloy: 100, ore: 70, time: 90 },
+  storageVault: { biomass: 60, alloy: 50, ore: 70, time: 70 },
+  biomassFarm: { biomass: 50, alloy: 60, ore: 60, time: 70 },
+  alloyForge: { biomass: 65, alloy: 40, ore: 60, time: 70 },
+  oreExtractor: { biomass: 75, alloy: 65, ore: 70, time: 90 },
+  shieldGrid: { biomass: 50, alloy: 100, ore: 60, time: 115 },
 };
 
 const BUILDING_RULES: {
