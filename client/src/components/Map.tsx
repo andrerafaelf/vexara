@@ -222,6 +222,8 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   // Keyboard navigation and zoom
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       const step = 5;
       switch (e.key) {
         case 'ArrowUp':

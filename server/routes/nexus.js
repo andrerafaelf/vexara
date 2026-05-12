@@ -50,10 +50,15 @@ router.post('/create', auth, async (req, res) => {
 // Get user's nexuses
 router.get('/my-nexuses', auth, async (req, res) => {
   try {
-    const nexuses = await prisma.nexus.findMany({
+    const nexusesRaw = await prisma.nexus.findMany({
       where: { ownerId: req.userId, galaxyId: req.galaxyId },
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
     });
+    // Player-created nexuses (nexusType null) come first; conquered NPC nexuses go last
+    const nexuses = [
+      ...nexusesRaw.filter((n) => n.nexusType === null),
+      ...nexusesRaw.filter((n) => n.nexusType !== null),
+    ];
     const outgoingAttacks = await prisma.attack.findMany({
       where: {
         attackerNexusId: { in: nexuses.map((nexus) => nexus.id) },

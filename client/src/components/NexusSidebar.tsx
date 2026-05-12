@@ -96,7 +96,13 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
             className={`nexus-item ${String(nexus._id) === selectedNexusId ? 'active' : ''}`}
             onClick={() => onSelectNexus(nexus)}
           >
-            <div className="nexus-name">{nexus.name}</div>
+            <div className="nexus-name">
+              {nexus.name}
+              {nexus.nexusType === 'Resource Depot' && <span title="Resource Depot — 2x Production"> ⚡</span>}
+              {nexus.nexusType === 'Supply Cache' && <span title="Supply Cache — 2x Storage"> 📦</span>}
+              {nexus.nexusType === 'Military Outpost' && <span title="Military Outpost — +50% Shield, 25% Faster Training"> 🛡️</span>}
+              {nexus.nexusType === 'Reclaimed Outpost' && <span title="Reclaimed Outpost — 20% Faster Construction"> 🔧</span>}
+            </div>
             <div className="nexus-coords">
               ({nexus.x}|{nexus.y})
             </div>
