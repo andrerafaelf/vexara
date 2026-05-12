@@ -225,6 +225,7 @@ async function resolveCombat(attack) {
         defenderTroopUpdates.name = 'Conquered Nexus';
         // Preserve nexusType when conquered so UI shows what bonus the nexus provides
         defenderTroopUpdates.nexusType = defenderNexus.nexusType;
+        defenderTroopUpdates.conqueredAt = new Date();
         conquered = true;
         // Overseer is consumed on conquest
         attackerLosses.overseer = overseerSent;

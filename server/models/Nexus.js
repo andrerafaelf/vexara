@@ -505,6 +505,7 @@ export function serializeNexus(v, opts = {}) {
     nexusType: v.nexusType ?? null,
     newbieProtectionEndsAt: v.newbieProtectionEndsAt ?? null,
     createdAt: v.createdAt,
+    conqueredAt: v.conqueredAt ?? null,
   };
 
   if (opts.ownerData) {

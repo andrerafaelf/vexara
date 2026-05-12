@@ -206,6 +206,7 @@ model Nexus {
   controlLevel             Int       @default(100)
   newbieProtectionEndsAt   DateTime?
   createdAt                DateTime  @default(now())
+  conqueredAt              DateTime?
 
   attacksAsAttacker  Attack[]         @relation("AttackerNexus")
   attacksAsDefender  Attack[]         @relation("DefenderNexus")
