@@ -103,7 +103,7 @@ export default function ProfilePage() {
             ☰
           </button>
           <h1>Neon Dominion</h1>
-          <span className="username">Welcome, {user?.username}</span>
+          <span className="username">NOTwelcome, {user?.username}</span>
         </div>
         <div className="header-center">
           <button className="nav-btn" onClick={() => router.push('/')}>
@@ -127,9 +127,7 @@ export default function ProfilePage() {
               {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
             </span>
           </button>
-          <button className="nav-btn active">
-            👤 Profile
-          </button>
+          <button className="nav-btn active">👤 Profile</button>
           <DocsDropdown />
         </div>
         <div className="header-right">
@@ -167,22 +165,52 @@ export default function ProfilePage() {
 
       <aside className={`mobile-drawer ${isMobileMenuOpen ? 'open' : ''}`}>
         <div className="mobile-drawer-links">
-          <button className="nav-btn" onClick={() => { setIsMobileMenuOpen(false); router.push('/'); }}>
+          <button
+            className="nav-btn"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              router.push('/');
+            }}
+          >
             📊 Dashboard
           </button>
-          <button className="nav-btn" onClick={() => { setIsMobileMenuOpen(false); router.push('/starfield'); }}>
+          <button
+            className="nav-btn"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              router.push('/starfield');
+            }}
+          >
             🗺️ Starfield
           </button>
-          <button className="nav-btn" onClick={() => { setIsMobileMenuOpen(false); router.push('/market'); }}>
+          <button
+            className="nav-btn"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              router.push('/market');
+            }}
+          >
             🏪 Market
           </button>
-          <button className="nav-btn" onClick={() => { setIsMobileMenuOpen(false); router.push('/combat-logs'); }}>
+          <button
+            className="nav-btn"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              router.push('/combat-logs');
+            }}
+          >
             <span className="nav-btn-content">
               📜 Combat Logs
               {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
             </span>
           </button>
-          <button className="nav-btn" onClick={() => { setIsMobileMenuOpen(false); router.push('/allies'); }}>
+          <button
+            className="nav-btn"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              router.push('/allies');
+            }}
+          >
             <span className="nav-btn-content">
               🤝 Allies
               {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}

@@ -72,7 +72,7 @@ export default function Home() {
         <header className="game-header">
           <div className="header-left">
             <h1>Neon Dominion</h1>
-            <span className="username">Welcome, {user?.username}</span>
+            <span className="username">NOTwelcome, {user?.username}</span>
           </div>
           <div className="header-right">
             <button onClick={logout} className="logout-btn">

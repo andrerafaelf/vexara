@@ -110,7 +110,7 @@ export default function MarketPage() {
             ☰
           </button>
           <h1>Neon Dominion</h1>
-          <span className="username">Welcome, {user?.username}</span>
+          <span className="username">NOTwelcome, {user?.username}</span>
         </div>
         <div className="header-center">
           <button className="nav-btn" onClick={() => router.push('/')}>

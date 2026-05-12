@@ -111,7 +111,7 @@ export default function BuildingsPage() {
             ☰
           </button>
           <h1>Neon Dominion</h1>
-          <span className="username">Welcome, {user?.username}</span>
+          <span className="username">NOTwelcome, {user?.username}</span>
         </div>
         <div className="header-center">
           <button className="nav-btn" onClick={() => router.push('/')}>
@@ -316,7 +316,6 @@ export default function BuildingsPage() {
           </section>
         </main>
       </div>
-
     </div>
   );
 }

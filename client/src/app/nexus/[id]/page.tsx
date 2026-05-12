@@ -160,167 +160,166 @@ export default function NexusPage() {
 
   return (
     <>
-    {showPwaGuide && <PwaGuideModal onClose={() => setShowPwaGuide(false)} />}
-    <div className="game-container">
-      <header className="game-header">
-        <div className="header-left">
-          <button
-            className="menu-toggle"
-            onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-            aria-label="Toggle navigation menu"
-            aria-expanded={isMobileMenuOpen}
-          >
-            ☰
-          </button>
-          <h1>Neon Dominion</h1>
-          <span className="username">Welcome, {user?.username}</span>
-        </div>
-        <div className="header-center">
-          <button className="nav-btn active" onClick={() => router.push(`/nexus/${selectedNexus._id}`)}>
-            📊 Dashboard
-          </button>
-          <button className="nav-btn" onClick={() => router.push('/starfield')}>
-            🗺️ Starfield
-          </button>
-          <button className="nav-btn" onClick={() => router.push('/market')}>
-            🏪 Market
-          </button>
-          <button className="nav-btn" onClick={() => router.push('/combat-logs')}>
-            <span className="nav-btn-content">
-              📜 Combat Logs
-              {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
-            </span>
-          </button>
-          <button className="nav-btn" onClick={() => router.push('/allies')}>
-            <span className="nav-btn-content">
-              🤝 Allies
-              {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
-            </span>
-          </button>
-          <button className="nav-btn" onClick={() => router.push('/profile')}>
-            👤 Profile
-          </button>
-          <DocsDropdown />
-        </div>
-        <div className="header-right">
-          <button
-            className="nexus-drawer-toggle"
-            onClick={() => setIsNexusDrawerOpen((v) => !v)}
-            aria-label="Toggle nexus panel"
-            title="Your Nexuses"
-          >
-            🏛️
-          </button>
-          <button onClick={logout} className="logout-btn">
-            Logout
-          </button>
-        </div>
-      </header>
+      {showPwaGuide && <PwaGuideModal onClose={() => setShowPwaGuide(false)} />}
+      <div className="game-container">
+        <header className="game-header">
+          <div className="header-left">
+            <button
+              className="menu-toggle"
+              onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+              aria-label="Toggle navigation menu"
+              aria-expanded={isMobileMenuOpen}
+            >
+              ☰
+            </button>
+            <h1>Neon Dominion</h1>
+            <span className="username">NOTwelcome, {user?.username}</span>
+          </div>
+          <div className="header-center">
+            <button className="nav-btn active" onClick={() => router.push(`/nexus/${selectedNexus._id}`)}>
+              📊 Dashboard
+            </button>
+            <button className="nav-btn" onClick={() => router.push('/starfield')}>
+              🗺️ Starfield
+            </button>
+            <button className="nav-btn" onClick={() => router.push('/market')}>
+              🏪 Market
+            </button>
+            <button className="nav-btn" onClick={() => router.push('/combat-logs')}>
+              <span className="nav-btn-content">
+                📜 Combat Logs
+                {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
+              </span>
+            </button>
+            <button className="nav-btn" onClick={() => router.push('/allies')}>
+              <span className="nav-btn-content">
+                🤝 Allies
+                {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
+              </span>
+            </button>
+            <button className="nav-btn" onClick={() => router.push('/profile')}>
+              👤 Profile
+            </button>
+            <DocsDropdown />
+          </div>
+          <div className="header-right">
+            <button
+              className="nexus-drawer-toggle"
+              onClick={() => setIsNexusDrawerOpen((v) => !v)}
+              aria-label="Toggle nexus panel"
+              title="Your Nexuses"
+            >
+              🏛️
+            </button>
+            <button onClick={logout} className="logout-btn">
+              Logout
+            </button>
+          </div>
+        </header>
 
-      <MobileNexusDrawer
-        nexuses={nexuses}
-        selectedNexusId={String(selectedNexus._id)}
-        onSelectNexus={handleSelectNexus}
-        isOpen={isNexusDrawerOpen}
-        onClose={() => setIsNexusDrawerOpen(false)}
-        unreadNexusIds={unreadNexusIds}
-      />
-
-      <button
-        type="button"
-        className={`mobile-drawer-backdrop ${isMobileMenuOpen ? 'open' : ''}`}
-        aria-label="Close navigation menu"
-        onClick={() => setIsMobileMenuOpen(false)}
-      />
-
-      <aside className={`mobile-drawer ${isMobileMenuOpen ? 'open' : ''}`}>
-        <div className="mobile-drawer-links">
-          <button
-            className="nav-btn"
-            onClick={() => {
-              setIsMobileMenuOpen(false);
-              router.push(`/nexus/${selectedNexus._id}`);
-            }}
-          >
-            📊 Dashboard
-          </button>
-          <button
-            className="nav-btn"
-            onClick={() => {
-              setIsMobileMenuOpen(false);
-              router.push('/starfield');
-            }}
-          >
-            🗺️ Starfield
-          </button>
-          <button
-            className="nav-btn"
-            onClick={() => {
-              setIsMobileMenuOpen(false);
-              router.push('/market');
-            }}
-          >
-            🏪 Market
-          </button>
-          <button
-            className="nav-btn"
-            onClick={() => {
-              setIsMobileMenuOpen(false);
-              router.push('/combat-logs');
-            }}
-          >
-            <span className="nav-btn-content">
-              📜 Combat Logs
-              {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
-            </span>
-          </button>
-          <button
-            className="nav-btn"
-            onClick={() => {
-              setIsMobileMenuOpen(false);
-              router.push('/allies');
-            }}
-          >
-            <span className="nav-btn-content">
-              🤝 Allies
-              {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
-            </span>
-          </button>
-          <button
-            className="nav-btn"
-            onClick={() => {
-              setIsMobileMenuOpen(false);
-              router.push('/profile');
-            }}
-          >
-            👤 Profile
-          </button>
-          <DocsMobileLinks onNavigate={() => setIsMobileMenuOpen(false)} />
-          <button className="nav-btn mobile-drawer-logout" onClick={logout}>
-            🚪 Logout
-          </button>
-        </div>
-      </aside>
-
-      <div className="game-content">
-        <NexusSidebar
+        <MobileNexusDrawer
           nexuses={nexuses}
           selectedNexusId={String(selectedNexus._id)}
           onSelectNexus={handleSelectNexus}
+          isOpen={isNexusDrawerOpen}
+          onClose={() => setIsNexusDrawerOpen(false)}
           unreadNexusIds={unreadNexusIds}
         />
 
-        <main className="main-content">
-          <NexusView
-            nexus={selectedNexus}
-            onUpdate={loadVillages}
-            initialTab={activeTab}
-            onTabChange={handleTabChange}
-          />
-        </main>
-      </div>
+        <button
+          type="button"
+          className={`mobile-drawer-backdrop ${isMobileMenuOpen ? 'open' : ''}`}
+          aria-label="Close navigation menu"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
 
-    </div>
+        <aside className={`mobile-drawer ${isMobileMenuOpen ? 'open' : ''}`}>
+          <div className="mobile-drawer-links">
+            <button
+              className="nav-btn"
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                router.push(`/nexus/${selectedNexus._id}`);
+              }}
+            >
+              📊 Dashboard
+            </button>
+            <button
+              className="nav-btn"
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                router.push('/starfield');
+              }}
+            >
+              🗺️ Starfield
+            </button>
+            <button
+              className="nav-btn"
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                router.push('/market');
+              }}
+            >
+              🏪 Market
+            </button>
+            <button
+              className="nav-btn"
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                router.push('/combat-logs');
+              }}
+            >
+              <span className="nav-btn-content">
+                📜 Combat Logs
+                {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
+              </span>
+            </button>
+            <button
+              className="nav-btn"
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                router.push('/allies');
+              }}
+            >
+              <span className="nav-btn-content">
+                🤝 Allies
+                {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
+              </span>
+            </button>
+            <button
+              className="nav-btn"
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                router.push('/profile');
+              }}
+            >
+              👤 Profile
+            </button>
+            <DocsMobileLinks onNavigate={() => setIsMobileMenuOpen(false)} />
+            <button className="nav-btn mobile-drawer-logout" onClick={logout}>
+              🚪 Logout
+            </button>
+          </div>
+        </aside>
+
+        <div className="game-content">
+          <NexusSidebar
+            nexuses={nexuses}
+            selectedNexusId={String(selectedNexus._id)}
+            onSelectNexus={handleSelectNexus}
+            unreadNexusIds={unreadNexusIds}
+          />
+
+          <main className="main-content">
+            <NexusView
+              nexus={selectedNexus}
+              onUpdate={loadVillages}
+              initialTab={activeTab}
+              onTabChange={handleTabChange}
+            />
+          </main>
+        </div>
+      </div>
     </>
   );
 }

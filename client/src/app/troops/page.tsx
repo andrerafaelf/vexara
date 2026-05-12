@@ -144,7 +144,7 @@ export default function TroopsPage() {
             ☰
           </button>
           <h1>Neon Dominion</h1>
-          <span className="username">Welcome, {user?.username}</span>
+          <span className="username">NOTwelcome, {user?.username}</span>
         </div>
         <div className="header-center">
           <button className="nav-btn" onClick={() => router.push('/')}>
@@ -294,14 +294,17 @@ export default function TroopsPage() {
                   TROOP_ORDER.some((key) => Number((n.troops as Record<string, number>)?.[key] || 0) > 0),
                 );
                 if (nexusesWithTroops.length === 0) {
-                  return <p className="my-forces-empty">No troops stationed yet. Train some from the nexus Troops tab.</p>;
+                  return (
+                    <p className="my-forces-empty">No troops stationed yet. Train some from the nexus Troops tab.</p>
+                  );
                 }
                 return (
                   <div className="my-forces-list">
                     {nexusesWithTroops.map((nexus) => {
-                      const entries = TROOP_ORDER
-                        .map((key) => ({ key, count: Number((nexus.troops as Record<string, number>)?.[key] || 0) }))
-                        .filter((e) => e.count > 0);
+                      const entries = TROOP_ORDER.map((key) => ({
+                        key,
+                        count: Number((nexus.troops as Record<string, number>)?.[key] || 0),
+                      })).filter((e) => e.count > 0);
                       const total = entries.reduce((sum, e) => sum + e.count, 0);
                       return (
                         <div key={String(nexus._id)} className="my-forces-nexus">
@@ -313,7 +316,10 @@ export default function TroopsPage() {
                           >
                             <span className="my-forces-nexus-name">
                               🏛️ {nexus.name}
-                              <span className="my-forces-nexus-coords"> ({nexus.x}, {nexus.y})</span>
+                              <span className="my-forces-nexus-coords">
+                                {' '}
+                                ({nexus.x}, {nexus.y})
+                              </span>
                             </span>
                             <span className="my-forces-nexus-total">{total.toLocaleString()} troops</span>
                           </button>
@@ -325,11 +331,7 @@ export default function TroopsPage() {
                                 <div key={key} className="my-forces-troop">
                                   <div className="troop-card-image-wrap">
                                     {src && (
-                                      <img
-                                        src={src}
-                                        alt={TROOP_NAME_BY_KEY[key] || key}
-                                        className="troop-card-image"
-                                      />
+                                      <img src={src} alt={TROOP_NAME_BY_KEY[key] || key} className="troop-card-image" />
                                     )}
                                     <span className="troop-stationed-overlay">
                                       <span className="troop-stationed-dot" />
@@ -352,7 +354,9 @@ export default function TroopsPage() {
 
           <section className="docs-page-card">
             <h2>Troop Compendium</h2>
-            <p className="docs-subtitle">Full reference for every unit: role, combat profile, costs, and unlock requirements.</p>
+            <p className="docs-subtitle">
+              Full reference for every unit: role, combat profile, costs, and unlock requirements.
+            </p>
 
             <div className="docs-grid">
               {TROOPS_DOC.map((troop) => (
@@ -404,7 +408,6 @@ export default function TroopsPage() {
           </section>
         </main>
       </div>
-
     </div>
   );
 }
