@@ -1,0 +1,30 @@
+import { Router } from 'express';
+import * as adminController from '../controllers/adminController.js';
+
+const router = Router();
+
+router.get('/galaxies', adminController.listGalaxies);
+router.post('/galaxies', adminController.createGalaxy);
+router.get('/users', adminController.listUsers);
+router.get('/stats', adminController.getStats);
+router.post('/users', adminController.createUser);
+router.patch('/users/:userId', adminController.updateUser);
+router.post('/users/:userId/resources', adminController.addResourcesToUser);
+router.post('/users/:userId/troops', adminController.addTroopsToUser);
+router.post('/users/:userId/buildings', adminController.setBuildingForUser);
+router.post('/users/:userId/complete-strike', adminController.completeStrikeForUser);
+router.post('/users/:userId/complete-build', adminController.completeBuildForUser);
+router.post('/users/:userId/complete-training', adminController.completeTrainingForUser);
+router.post('/users/:userId/reset-account', adminController.resetAccount);
+router.delete('/users/:userId', adminController.deleteUser);
+router.post('/users/:userId/test-notification', adminController.testNotification);
+router.post('/nexuses/:nexusId/resources', adminController.giveResourcesToNexus);
+router.post('/nexuses/:nexusId/troops', adminController.addTroopsToNexus);
+router.post('/nexuses/:nexusId/buildings', adminController.addBuildingsToNexus);
+router.post('/nexuses/:nexusId/complete-build', adminController.completeBuildForNexus);
+router.post('/nexuses/:nexusId/complete-training', adminController.completeTrainingForNexus);
+router.delete('/nexuses/:nexusId', adminController.deleteNexus);
+router.get('/attacks', adminController.listAttacks);
+router.post('/attacks/:attackId/complete', adminController.completeAttack);
+
+export default router;

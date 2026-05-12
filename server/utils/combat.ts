@@ -1,0 +1,365 @@
+import type { Attack, Nexus } from '@prisma/client';
+import prisma from '../lib/prisma.js';
+import { computeForcePower, TROOP_STATS } from './combatMath.js';
+import { buildDetailedScoutIntel } from './scouting.js';
+import { NOTIF, sendPushToUser } from './push.js';
+import type { TroopKey } from '../types/index.js';
+
+const TROOP_KEYS = Object.keys(TROOP_STATS) as TroopKey[];
+
+const TROOP_POPULATION_COST: Record<TroopKey, number> = {
+  lancerDrone: 1, assaultTrooper: 1, breakerUnit: 1, reconOperative: 1,
+  skimmerBike: 3, siegeMech: 4, bulwarkGuard: 2, suppressorTeam: 2,
+  disruptorUnit: 2, interceptorBike: 3, annihilatorPlatform: 5, overseer: 5,
+};
+
+type AttackWithNexuses = Attack & { attackerNexus: Nexus | null; defenderNexus: Nexus | null };
+
+export async function processArrivedAttacks(): Promise<void> {
+  try {
+    const now = new Date();
+
+    const arrivedAttacks = await prisma.attack.findMany({
+      where: { status: 'traveling', arrivesAt: { lte: now } },
+      include: { attackerNexus: true, defenderNexus: true },
+    });
+    for (const attack of arrivedAttacks) {
+      await resolveCombat(attack as AttackWithNexuses);
+    }
+
+    const returningAttacks = await prisma.attack.findMany({
+      where: { status: 'returning', returnsAt: { lte: now } },
+    });
+    for (const attack of returningAttacks) {
+      await processReturnedTroops(attack);
+    }
+  } catch (err) {
+    console.error('Error processing attacks:', err);
+  }
+}
+
+async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
+  try {
+    const defenderNexus = await prisma.nexus.findUnique({ where: { id: attack.defenderNexusId! } });
+    const attackTroops = attack.troops as Record<TroopKey, number>;
+
+    if (attack.type === 'scout') {
+      const travelMs = attack.arrivesAt!.getTime() - attack.createdAt.getTime();
+      const returnsAt = new Date(Date.now() + travelMs);
+
+      await prisma.attack.update({
+        where: { id: attack.id },
+        data: {
+          status: 'returning',
+          returnsAt,
+          result: {
+            mission: 'scout', victory: true,
+            intel: defenderNexus ? buildDetailedScoutIntel(defenderNexus) : null,
+            survivingTroops: { reconOperative: attackTroops.reconOperative || 0 },
+            attackerLosses: {}, defenderLosses: {},
+            resourcesStolen: { biomass: 0, alloy: 0, ore: 0 },
+          },
+        },
+      });
+
+      void sendPushToUser(attack.attackerUserId!, NOTIF.ATTACK_RESOLVED, {
+        title: '🛰️ Scout Returning',
+        body: '🔭 Your scout mission is complete. Combat report ready!',
+        tag: `scout-${attack.id}`, data: { url: '/combat-logs' },
+      });
+      return;
+    }
+
+    if (!defenderNexus) return;
+
+    let attackPower = computeForcePower(attackTroops, 'attack');
+    let defensePower = computeForcePower(defenderNexus as unknown as Record<string, unknown>, 'defense');
+
+    const shieldEfficiencyMultiplier = defenderNexus.nexusType === 'Military Outpost' ? 1.25 : 1;
+    defensePower *= 1 + defenderNexus.shieldGrid * 0.02 * shieldEfficiencyMultiplier;
+
+    const attackerWins = attackPower > defensePower;
+    const powerRatio = attackerWins ? defensePower / attackPower : attackPower / defensePower;
+
+    const attackerLosses: Partial<Record<TroopKey, number>> = {};
+    const defenderLosses: Partial<Record<TroopKey, number>> = {};
+    const defenderTroopUpdates: Record<string, unknown> = {};
+
+    for (const troopType of TROOP_KEYS) {
+      const count = attackTroops[troopType] || 0;
+      if (count > 0 && TROOP_STATS[troopType]) {
+        if (troopType === 'overseer') { attackerLosses[troopType] = 0; continue; }
+        const baseLossRate = attackerWins ? powerRatio * 0.5 : 0.8;
+        const randomFactor = 0.75 + Math.random() * 0.5;
+        const defenseFactor = 1 + (50 - TROOP_STATS[troopType].defense) / 100;
+        attackerLosses[troopType] = Math.max(0, Math.ceil(count * Math.min(baseLossRate * randomFactor * defenseFactor, 1)));
+      }
+    }
+
+    const totalNonOverseerSent = TROOP_KEYS.filter((t) => t !== 'overseer').reduce((sum, t) => sum + (attackTroops[t] || 0), 0);
+    const totalNonOverseerLost = TROOP_KEYS.filter((t) => t !== 'overseer').reduce((sum, t) => sum + (attackerLosses[t] || 0), 0);
+    if ((attackTroops.overseer || 0) > 0 && totalNonOverseerSent > 0 && totalNonOverseerLost >= totalNonOverseerSent) {
+      attackerLosses.overseer = attackTroops.overseer;
+    }
+
+    let defenderPopLost = 0;
+    for (const troopType of TROOP_KEYS) {
+      const count = (defenderNexus as unknown as Record<TroopKey, number>)[troopType] || 0;
+      if (count > 0 && TROOP_STATS[troopType]) {
+        if (troopType === 'overseer') { defenderLosses[troopType] = 0; continue; }
+        const baseLossRate = attackerWins ? 0.8 : powerRatio * 0.5;
+        const randomFactor = 0.75 + Math.random() * 0.5;
+        const defenseFactor = 1 + (50 - TROOP_STATS[troopType].defense) / 100;
+        const losses = Math.min(Math.ceil(count * Math.min(baseLossRate * randomFactor * defenseFactor, 1)), count);
+        defenderLosses[troopType] = losses;
+        defenderTroopUpdates[troopType] = Math.max(0, count - losses);
+        defenderPopLost += losses;
+      }
+    }
+
+    const totalDefenderNonOverseer = TROOP_KEYS.filter((t) => t !== 'overseer').reduce(
+      (sum, t) => sum + ((defenderNexus as unknown as Record<TroopKey, number>)[t] || 0), 0);
+    const totalDefenderNonOverseerLost = TROOP_KEYS.filter((t) => t !== 'overseer').reduce(
+      (sum, t) => sum + (defenderLosses[t] || 0), 0);
+    const defenderOverseerCount = (defenderNexus as unknown as Record<TroopKey, number>).overseer || 0;
+    if (defenderOverseerCount > 0) {
+      if (totalDefenderNonOverseer > 0 && totalDefenderNonOverseerLost >= totalDefenderNonOverseer) {
+        defenderLosses.overseer = defenderOverseerCount;
+        defenderTroopUpdates['overseer'] = 0;
+        defenderPopLost += defenderOverseerCount;
+      } else {
+        defenderTroopUpdates['overseer'] = defenderOverseerCount;
+      }
+    }
+
+    let resourcesStolen = { biomass: 0, alloy: 0, ore: 0 };
+    let conquered = false;
+    const defenderResourceUpdates: Record<string, number> = {};
+
+    if (attackerWins) {
+      let lootCapacity = 0;
+      for (const troopType of TROOP_KEYS) {
+        const count = attackTroops[troopType] || 0;
+        if (count > 0) lootCapacity += TROOP_STATS[troopType].carry * count;
+      }
+      const totalTroopsSent = Object.values(attackTroops).reduce((a, b) => a + b, 0);
+      const totalLost = Object.values(attackerLosses).reduce((a: number, b) => a + (b || 0), 0 as number);
+      const surviveRatio = totalTroopsSent > 0 ? 1 - totalLost / totalTroopsSent : 0;
+      const survivingCarry = lootCapacity * surviveRatio;
+
+      const totalAvailable = defenderNexus.biomass + defenderNexus.alloy + defenderNexus.ore;
+      if (totalAvailable > 0 && survivingCarry > 0) {
+        const lootRatio = Math.min(survivingCarry / totalAvailable, 1);
+        resourcesStolen = {
+          biomass: Math.floor(defenderNexus.biomass * lootRatio),
+          alloy:   Math.floor(defenderNexus.alloy   * lootRatio),
+          ore:     Math.floor(defenderNexus.ore     * lootRatio),
+        };
+      }
+      defenderResourceUpdates.biomass = defenderNexus.biomass - resourcesStolen.biomass;
+      defenderResourceUpdates.alloy   = defenderNexus.alloy   - resourcesStolen.alloy;
+      defenderResourceUpdates.ore     = defenderNexus.ore     - resourcesStolen.ore;
+    }
+
+    let newControlLevel = defenderNexus.controlLevel ?? 100;
+    const overseerSent = attackTroops.overseer || 0;
+    const overseerCanAct = attackerWins && overseerSent > 0 && attackerLosses.overseer === 0;
+
+    if (overseerCanAct) {
+      newControlLevel = Math.max(0, newControlLevel - 50);
+      if (newControlLevel <= 0) {
+        const attackerNexus = await prisma.nexus.findUnique({ where: { id: attack.attackerNexusId! } });
+        defenderTroopUpdates['ownerId'] = attackerNexus!.ownerId;
+        defenderTroopUpdates['name'] = 'Conquered Nexus';
+        const NPC_TYPE_NAMES = ['Resource Depot', 'Military Outpost', 'Supply Cache', 'Neutral Settlement', 'Reclaimed Outpost'];
+        defenderTroopUpdates['nexusType'] = defenderNexus.nexusType ?? (NPC_TYPE_NAMES.includes(defenderNexus.name) ? defenderNexus.name : null);
+        defenderTroopUpdates['conqueredAt'] = new Date();
+        conquered = true;
+        attackerLosses.overseer = overseerSent;
+      }
+    }
+
+    await prisma.nexus.update({
+      where: { id: defenderNexus.id },
+      data: {
+        ...defenderTroopUpdates,
+        ...defenderResourceUpdates,
+        populationCurrent: Math.max(0, defenderNexus.populationCurrent - defenderPopLost),
+        controlLevel: conquered ? 0 : newControlLevel,
+      },
+    });
+
+    const survivingTroops: Partial<Record<TroopKey, number>> = {};
+    let attackerPopFreed = 0;
+    for (const troopType of TROOP_KEYS) {
+      const sent = attackTroops[troopType] || 0;
+      const lost = attackerLosses[troopType] || 0;
+      const survived = Math.max(0, sent - lost);
+      if (survived > 0) survivingTroops[troopType] = survived;
+      attackerPopFreed += lost * (TROOP_POPULATION_COST[troopType] || 1);
+    }
+
+    const attackerNexus = await prisma.nexus.findUnique({ where: { id: attack.attackerNexusId! } });
+    if (attackerNexus && attackerPopFreed > 0) {
+      await prisma.nexus.update({
+        where: { id: attack.attackerNexusId! },
+        data: { populationCurrent: Math.max(0, attackerNexus.populationCurrent - attackerPopFreed) },
+      });
+    }
+
+    const travelMs = attack.arrivesAt!.getTime() - attack.createdAt.getTime();
+    const returnsAt = new Date(Date.now() + travelMs);
+
+    await prisma.attack.update({
+      where: { id: attack.id },
+      data: {
+        status: 'returning', returnsAt,
+        result: { attackerLosses, defenderLosses, resourcesStolen, survivingTroops, victory: attackerWins, conquered, remainingControl: newControlLevel },
+      },
+    });
+
+    const [attackerNexusForNotif, defenderNexusForNotif] = await Promise.all([
+      prisma.nexus.findUnique({ where: { id: attack.attackerNexusId! }, select: { name: true } }),
+      prisma.nexus.findUnique({ where: { id: attack.defenderNexusId! }, select: { name: true, ownerId: true } }),
+    ]);
+
+    void sendPushToUser(attack.attackerUserId!, NOTIF.ATTACK_RESOLVED, {
+      title: attackerWins ? (conquered ? '👑 Nexus Conquered!' : '⚔️ Attack Victorious') : '🛡️ Attack Repelled',
+      body: attackerWins
+        ? conquered
+          ? `🏆 Your forces conquered ${defenderNexusForNotif?.name || 'a nexus'}! Combat report ready.`
+          : `💥 You won the battle at ${defenderNexusForNotif?.name || 'a nexus'}. Troops returning — combat report ready!`
+        : `😞 Your attack on ${defenderNexusForNotif?.name || 'a nexus'} was repelled. Combat report ready.`,
+      tag: `attack-resolved-${attack.id}`, data: { url: '/combat-logs' },
+    });
+
+    if (attack.defenderUserId) {
+      void sendPushToUser(attack.defenderUserId, NOTIF.ATTACK_INCOMING, {
+        title: attackerWins ? (conquered ? '💀 Nexus Lost!' : '🚨 Your Nexus Was Attacked!') : '🛡️ Attack Repelled',
+        body: attackerWins
+          ? conquered
+            ? `⚠️ ${attackerNexusForNotif?.name || 'An enemy'} conquered your nexus! Combat report ready.`
+            : `💥 ${attackerNexusForNotif?.name || 'An enemy'} raided your nexus and stole resources. Combat report ready.`
+          : `✅ You successfully defended against an attack on ${defenderNexusForNotif?.name || 'your nexus'}. Combat report ready.`,
+        tag: `defended-${attack.id}`, data: { url: '/combat-logs' },
+      });
+    }
+
+    console.log(`Combat resolved: Attack ${attack.id} - ${attackerWins ? 'Attacker' : 'Defender'} wins${conquered ? ' - NEXUS CONQUERED!' : ''}`);
+  } catch (err) {
+    console.error('Error resolving combat:', err);
+  }
+}
+
+async function processReturnedTroops(attack: Attack): Promise<void> {
+  try {
+    const result = attack.result as { survivingTroops?: Partial<Record<TroopKey, number>>; resourcesStolen?: { biomass: number; alloy: number; ore: number } } | null;
+    const survivingTroops = result?.survivingTroops || {};
+    const resourcesStolen = result?.resourcesStolen || { biomass: 0, alloy: 0, ore: 0 };
+
+    const attackerNexus = await prisma.nexus.findUnique({ where: { id: attack.attackerNexusId! } });
+    if (!attackerNexus) {
+      await prisma.attack.update({ where: { id: attack.id }, data: { status: 'completed' } });
+      return;
+    }
+
+    const returnData: Record<string, unknown> = {};
+    for (const [troopType, count] of Object.entries(survivingTroops)) {
+      if ((count ?? 0) > 0) returnData[troopType] = ((attackerNexus as unknown as Record<string, number>)[troopType] || 0) + count!;
+    }
+    returnData['biomass'] = attackerNexus.biomass + (resourcesStolen.biomass || 0);
+    returnData['alloy']   = attackerNexus.alloy   + (resourcesStolen.alloy   || 0);
+    returnData['ore']     = attackerNexus.ore      + (resourcesStolen.ore     || 0);
+
+    await prisma.$transaction([
+      prisma.nexus.update({ where: { id: attack.attackerNexusId! }, data: returnData }),
+      prisma.attack.update({ where: { id: attack.id }, data: { status: 'completed' } }),
+    ]);
+
+    const totalReturned = Object.values(survivingTroops).reduce((a, b) => a + (b || 0), 0);
+    const loot = resourcesStolen;
+    const hasLoot = (loot.biomass || 0) + (loot.alloy || 0) + (loot.ore || 0) > 0;
+
+    void sendPushToUser(attack.attackerUserId!, NOTIF.TROOPS_RETURNED, {
+      title: '🪖 Troops Returned',
+      body: totalReturned > 0
+        ? `🎖️ ${totalReturned} troop${totalReturned !== 1 ? 's' : ''} returned${hasLoot ? ' with loot 💰' : ''}. Combat report ready!`
+        : '💔 Your troops have returned (no survivors). Combat report ready.',
+      tag: `returned-${attack.id}`, data: { url: '/combat-logs' },
+    });
+  } catch (err) {
+    console.error(`Error processing returned troops for attack ${attack.id}:`, err);
+  }
+}
+
+const TRANSFER_TROOP_FIELDS: TroopKey[] = [
+  'lancerDrone', 'assaultTrooper', 'breakerUnit', 'reconOperative',
+  'skimmerBike', 'siegeMech', 'bulwarkGuard', 'suppressorTeam',
+  'disruptorUnit', 'interceptorBike', 'annihilatorPlatform', 'overseer',
+];
+
+export async function processArrivedTransfers(): Promise<void> {
+  const now = new Date();
+
+  const arriving = await prisma.troopTransfer.findMany({
+    where: { status: 'traveling', arrivesAt: { lte: now } },
+    include: { hostNexus: true, ownerNexus: { include: { owner: true } } },
+  });
+
+  for (const transfer of arriving) {
+    try {
+      const troops = transfer.troops as Record<TroopKey, number>;
+      const addData: Record<string, number> = {};
+      for (const field of TRANSFER_TROOP_FIELDS) {
+        if (troops[field] > 0) addData[field] = ((transfer.hostNexus as unknown as Record<TroopKey, number>)[field] ?? 0) + troops[field];
+      }
+      await prisma.$transaction([
+        prisma.nexus.update({ where: { id: transfer.hostNexusId }, data: addData }),
+        prisma.troopTransfer.update({ where: { id: transfer.id }, data: { status: 'stationed', arrivesAt: null } }),
+      ]);
+
+      const ownerId = (transfer.ownerNexus as unknown as { owner?: { id: number } })?.owner?.id;
+      if (ownerId) {
+        const total = TRANSFER_TROOP_FIELDS.reduce((s, f) => s + (troops[f] || 0), 0);
+        void sendPushToUser(ownerId, NOTIF.TROOP_TRANSFER, {
+          title: '🚀 Troops Arrived',
+          body: `📦 ${total} troop${total !== 1 ? 's' : ''} arrived at ${transfer.hostNexus.name}.`,
+          tag: `transfer-arrived-${transfer.id}`, data: { url: '/' },
+        });
+      }
+    } catch (err) {
+      console.error(`Error processing arriving transfer ${transfer.id}:`, err);
+    }
+  }
+
+  const returning = await prisma.troopTransfer.findMany({
+    where: { status: 'returning', returnsAt: { lte: now } },
+    include: { ownerNexus: { include: { owner: true } } },
+  });
+
+  for (const transfer of returning) {
+    try {
+      const troops = transfer.troops as Record<TroopKey, number>;
+      const returnData: Record<string, number> = {};
+      for (const field of TRANSFER_TROOP_FIELDS) {
+        if (troops[field] > 0) returnData[field] = ((transfer.ownerNexus as unknown as Record<TroopKey, number>)[field] ?? 0) + troops[field];
+      }
+      await prisma.$transaction([
+        prisma.nexus.update({ where: { id: transfer.ownerNexusId }, data: returnData }),
+        prisma.troopTransfer.delete({ where: { id: transfer.id } }),
+      ]);
+
+      const ownerId = (transfer.ownerNexus as unknown as { owner?: { id: number } })?.owner?.id;
+      if (ownerId) {
+        const total = TRANSFER_TROOP_FIELDS.reduce((s, f) => s + (troops[f] || 0), 0);
+        void sendPushToUser(ownerId, NOTIF.TROOP_TRANSFER, {
+          title: '🏠 Troops Returned Home',
+          body: `🪖 ${total} troop${total !== 1 ? 's' : ''} returned to ${transfer.ownerNexus.name}.`,
+          tag: `transfer-returned-${transfer.id}`, data: { url: '/' },
+        });
+      }
+    } catch (err) {
+      console.error(`Error processing returning transfer ${transfer.id}:`, err);
+    }
+  }
+}
