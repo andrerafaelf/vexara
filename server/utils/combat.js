@@ -223,6 +223,8 @@ async function resolveCombat(attack) {
         const attackerNexus = await prisma.nexus.findUnique({ where: { id: attack.attackerNexusId } });
         defenderTroopUpdates.ownerId = attackerNexus.ownerId;
         defenderTroopUpdates.name = 'Conquered Nexus';
+        // Preserve nexusType when conquered so UI shows what bonus the nexus provides
+        defenderTroopUpdates.nexusType = defenderNexus.nexusType;
         conquered = true;
         // Overseer is consumed on conquest
         attackerLosses.overseer = overseerSent;

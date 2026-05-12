@@ -51,10 +51,19 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
     loadGroups();
   }, [loadGroups]);
 
-  const visibleNexuses =
-    activeGroupId !== null
-      ? nexuses.filter((n) => groups.find((g) => g.id === activeGroupId)?.nexusIds.includes(n._id))
-      : nexuses;
+  const visibleNexuses = (() => {
+    const filtered =
+      activeGroupId !== null
+        ? nexuses.filter((n) => groups.find((g) => g.id === activeGroupId)?.nexusIds.includes(n._id))
+        : nexuses;
+    // User-created nexuses (nexusType null) appear first, then conquered ones
+    return [...filtered].sort((a, b) => {
+      const aIsUserCreated = a.nexusType === null;
+      const bIsUserCreated = b.nexusType === null;
+      if (aIsUserCreated !== bIsUserCreated) return aIsUserCreated ? -1 : 1;
+      return 0;
+    });
+  })();
 
   return (
     <>
