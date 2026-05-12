@@ -56,12 +56,14 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
       activeGroupId !== null
         ? nexuses.filter((n) => groups.find((g) => g.id === activeGroupId)?.nexusIds.includes(n._id))
         : nexuses;
-    // User-created nexuses (nexusType null) appear first, then conquered ones
+    // User-created nexus (nexusType null) is always first, conquered ones sorted by createdAt ascending
     return [...filtered].sort((a, b) => {
       const aIsUserCreated = a.nexusType === null;
       const bIsUserCreated = b.nexusType === null;
       if (aIsUserCreated !== bIsUserCreated) return aIsUserCreated ? -1 : 1;
-      return 0;
+      const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return aDate - bDate;
     });
   })();
 
