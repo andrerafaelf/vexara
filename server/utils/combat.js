@@ -223,8 +223,9 @@ async function resolveCombat(attack) {
         const attackerNexus = await prisma.nexus.findUnique({ where: { id: attack.attackerNexusId } });
         defenderTroopUpdates.ownerId = attackerNexus.ownerId;
         defenderTroopUpdates.name = 'Conquered Nexus';
-        // Preserve nexusType when conquered so UI shows what bonus the nexus provides
-        defenderTroopUpdates.nexusType = defenderNexus.nexusType;
+        // Preserve nexusType; fall back to name for pre-migration NPC nexuses that have nexusType=null
+        const NPC_TYPE_NAMES = ['Resource Depot', 'Military Outpost', 'Supply Cache', 'Neutral Settlement', 'Reclaimed Outpost'];
+        defenderTroopUpdates.nexusType = defenderNexus.nexusType ?? (NPC_TYPE_NAMES.includes(defenderNexus.name) ? defenderNexus.name : null);
         defenderTroopUpdates.conqueredAt = new Date();
         conquered = true;
         // Overseer is consumed on conquest
