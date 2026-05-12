@@ -1,6 +1,5 @@
 'use client';
 
-import { DocsDropdown, DocsMobileLinks } from '@/components/DocsDropdown';
 import Market from '@/components/Market';
 import MobileNexusDrawer from '@/components/MobileNexusDrawer';
 import NexusSidebar from '@/components/NexusSidebar';
@@ -9,6 +8,7 @@ import { useFriendsUnread } from '@/hooks/useFriendsUnread';
 import { getMyNexuses, getReadReportIds, getReports } from '@/services/api';
 import '@/styles/Game.css';
 import { Nexus } from '@/types/game';
+import { Building2, LayoutDashboard, LogOut, Map as MapIcon, Menu, ScrollText, ShoppingCart, User, Users } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -107,35 +107,34 @@ export default function MarketPage() {
             aria-label="Toggle navigation menu"
             aria-expanded={isMobileMenuOpen}
           >
-            ☰
+            <Menu size={18} />
           </button>
           <h1>Neon Dominion</h1>
           <span className="username">welcome, {user?.username}</span>
         </div>
         <div className="header-center">
           <button className="nav-btn" onClick={() => router.push('/')}>
-            📊 Dashboard
+            <LayoutDashboard size={14} /> Dashboard
           </button>
           <button className="nav-btn" onClick={() => router.push('/starfield')}>
-            🗺️ Starfield
+            <MapIcon size={14} /> Starfield
           </button>
-          <button className="nav-btn active">🏪 Market</button>
+          <button className="nav-btn active"><ShoppingCart size={14} /> Market</button>
           <button className="nav-btn" onClick={() => router.push('/combat-logs')}>
             <span className="nav-btn-content">
-              📜 Combat Logs
+              <ScrollText size={14} /> Combat Logs
               {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
             </span>
           </button>
           <button className="nav-btn" onClick={() => router.push('/allies')}>
             <span className="nav-btn-content">
-              🤝 Allies
+              <Users size={14} /> Allies
               {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
             </span>
           </button>
           <button className="nav-btn" onClick={() => router.push('/profile')}>
-            👤 Profile
+            <User size={14} /> Profile
           </button>
-          <DocsDropdown />
         </div>
         <div className="header-right">
           <button
@@ -144,7 +143,7 @@ export default function MarketPage() {
             aria-label="Toggle nexus panel"
             title="Your Nexuses"
           >
-            🏛️
+            <Building2 size={18} />
           </button>
           <button onClick={logout} className="logout-btn">
             Logout
@@ -177,7 +176,7 @@ export default function MarketPage() {
               router.push('/');
             }}
           >
-            📊 Dashboard
+            <LayoutDashboard size={14} /> Dashboard
           </button>
           <button
             className="nav-btn"
@@ -186,10 +185,10 @@ export default function MarketPage() {
               router.push('/starfield');
             }}
           >
-            🗺️ Starfield
+            <MapIcon size={14} /> Starfield
           </button>
           <button className="nav-btn active" onClick={() => setIsMobileMenuOpen(false)}>
-            🏪 Market
+            <ShoppingCart size={14} /> Market
           </button>
           <button
             className="nav-btn"
@@ -199,7 +198,7 @@ export default function MarketPage() {
             }}
           >
             <span className="nav-btn-content">
-              📜 Combat Logs
+              <ScrollText size={14} /> Combat Logs
               {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
             </span>
           </button>
@@ -211,7 +210,7 @@ export default function MarketPage() {
             }}
           >
             <span className="nav-btn-content">
-              🤝 Allies
+              <Users size={14} /> Allies
               {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
             </span>
           </button>
@@ -222,11 +221,10 @@ export default function MarketPage() {
               router.push('/profile');
             }}
           >
-            👤 Profile
+            <User size={14} /> Profile
           </button>
-          <DocsMobileLinks onNavigate={() => setIsMobileMenuOpen(false)} />
           <button className="nav-btn mobile-drawer-logout" onClick={logout}>
-            🚪 Logout
+            <LogOut size={14} /> Logout
           </button>
         </div>
       </aside>

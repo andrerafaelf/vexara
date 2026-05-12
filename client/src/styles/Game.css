@@ -61,18 +61,22 @@
 .nav-btn {
   background: transparent;
   color: #a8dadc;
-  padding: 10px 20px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  font-size: 16px;
-  transition: all 0.3s ease;
+  padding: 4px 2px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  font-size: 13px;
+  transition: color 0.2s ease, border-color 0.2s ease;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .nav-btn-content {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .combat-report-dot {
@@ -98,13 +102,15 @@
 }
 
 .nav-btn:hover:not(:disabled) {
-  background: #0f3460;
+  background: transparent;
   color: #fff;
+  border-bottom-color: #a8dadc;
 }
 
 .nav-btn.active {
-  background: #e94560;
+  background: transparent;
   color: #fff;
+  border-bottom-color: #e94560;
 }
 
 .nav-btn:disabled {
