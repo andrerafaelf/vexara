@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Admin server for Neon Dominion",
   "main": "dist/server.js",
-  "type": "module",
   "engines": {
     "node": "22.x"
   },
