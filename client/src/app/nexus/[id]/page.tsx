@@ -173,7 +173,7 @@ export default function NexusPage() {
               ☰
             </button>
             <h1>Neon Dominion</h1>
-            <span className="username">NOTwelcome, {user?.username}</span>
+            <span className="username">welcome, {user?.username}</span>
           </div>
           <div className="header-center">
             <button className="nav-btn active" onClick={() => router.push(`/nexus/${selectedNexus._id}`)}>

@@ -144,7 +144,7 @@ export default function TroopsPage() {
             ☰
           </button>
           <h1>Neon Dominion</h1>
-          <span className="username">NOTwelcome, {user?.username}</span>
+          <span className="username">welcome, {user?.username}</span>
         </div>
         <div className="header-center">
           <button className="nav-btn" onClick={() => router.push('/')}>
