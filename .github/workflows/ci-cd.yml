@@ -70,7 +70,8 @@ jobs:
             context: ./server
             image_suffix: server
           - service: admin-server
-            context: ./admin-server
+            context: .
+            file: ./admin-server/Dockerfile
             image_suffix: admin-server
           - service: client
             context: ./client
@@ -110,6 +111,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ${{ matrix.context }}
+          file: ${{ matrix.file || 'Dockerfile' }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

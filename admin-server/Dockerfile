@@ -1,24 +1,40 @@
 FROM node:22-alpine AS base
 WORKDIR /app
+RUN apk add --no-cache openssl
 
-FROM base AS deps
-COPY package.json package-lock.json* ./
-# Skip the postinstall that tries to npm install ../server
+FROM base AS server-deps
+WORKDIR /app/server
+COPY server/package.json server/package-lock.json* ./
+RUN npm ci --include=dev --ignore-scripts
+
+FROM base AS admin-deps
+WORKDIR /app/admin-server
+COPY admin-server/package.json admin-server/package-lock.json* ./
 RUN npm ci --ignore-scripts
 
-FROM deps AS builder
-COPY . .
+FROM base AS builder
+WORKDIR /app
+COPY --from=server-deps /app/server/node_modules ./server/node_modules
+COPY --from=admin-deps /app/admin-server/node_modules ./admin-server/node_modules
+COPY server ./server
+COPY admin-server ./admin-server
+WORKDIR /app/server
+RUN npx prisma generate
+WORKDIR /app/admin-server
 RUN npm run build
 
 FROM base AS runner
 ENV NODE_ENV=production
+ENV NODE_PATH=/app/server/node_modules
 
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nodeuser
 
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
+WORKDIR /app/admin-server
+COPY --from=builder /app/admin-server/dist ./dist
+COPY --from=builder /app/admin-server/node_modules ./node_modules
+COPY --from=builder /app/admin-server/package.json ./package.json
+COPY --from=builder /app/server/node_modules /app/server/node_modules
 
 USER nodeuser
 
