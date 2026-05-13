@@ -1,21 +1,21 @@
 groups:
-  - name: neon-dominion
+  - name: vexara
     rules:
       # Server unreachable
       - alert: ServerDown
-        expr: up{job="nd-server"} == 0
+        expr: up{job="vx-server"} == 0
         for: 1m
         labels:
           severity: critical
         annotations:
           summary: "Game server is down"
-          description: "nd-server has been down for more than 1 minute."
+          description: "vx-server has been down for more than 1 minute."
 
       # High error rate (requires /metrics endpoint with http_requests_total counter)
       - alert: HighErrorRate
         expr: |
-          rate(http_requests_total{job="nd-server", status=~"5.."}[5m]) /
-          rate(http_requests_total{job="nd-server"}[5m]) > 0.05
+          rate(http_requests_total{job="vx-server", status=~"5.."}[5m]) /
+          rate(http_requests_total{job="vx-server"}[5m]) > 0.05
         for: 5m
         labels:
           severity: warning

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Zero-downtime rolling deploy for Neon Dominion
+# Zero-downtime rolling deploy for Vexara
 # Usage: bash deploy.sh <image-tag>
 # Called by GitHub Actions; can also be run manually on the VPS.
 
 set -euo pipefail
 
 IMAGE_TAG="${1:-latest}"
-APP_DIR="/opt/neon-dominion"
+APP_DIR="/opt/vexara"
 COMPOSE="docker compose -f $APP_DIR/docker-compose.prod.yml"
 TIMEOUT=120  # seconds to wait for each service to become healthy
 

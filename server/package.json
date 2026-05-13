@@ -1,7 +1,7 @@
 {
-  "name": "Neon-Dominion-Server",
+  "name": "Vexara-Server",
   "version": "1.0.0",
-  "description": "Backend server for Neon Dominion game",
+  "description": "Backend server for Vexara game",
   "main": "dist/server.js",
   "type": "module",
   "engines": {

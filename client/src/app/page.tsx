@@ -71,7 +71,7 @@ export default function Home() {
       <div className="game-container">
         <header className="game-header">
           <div className="header-left">
-            <h1>Neon Dominion</h1>
+            <h1>Vexara</h1>
             <span className="username">welcome, {user?.username}</span>
           </div>
           <div className="header-right">
@@ -83,7 +83,7 @@ export default function Home() {
 
         <main className="game-main">
           <div className="no-nexuses">
-            <h2>Welcome to Neon Dominion!</h2>
+            <h2>Welcome to Vexara!</h2>
             <p>You don&apos;t have any nexuses yet. Let&apos;s create your first nexus to start your empire!</p>
             <button onClick={handleCreateNexus} className="create-nexus-btn" disabled={creating}>
               {creating ? 'Creating...' : 'Create Your First Nexus'}

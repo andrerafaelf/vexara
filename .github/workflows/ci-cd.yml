@@ -8,8 +8,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  # e.g. ghcr.io/andrerafaelf/neon-dominion
-  IMAGE_BASE: ghcr.io/${{ github.repository_owner }}/neon-dominion
+  # e.g. ghcr.io/andrerafaelf/vexara
+  IMAGE_BASE: ghcr.io/${{ github.repository_owner }}/vexara
 
 jobs:
   # ─── Lint & Test ─────────────────────────────────────────────────────────────
@@ -137,7 +137,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           source: "docker-compose.prod.yml,deploy/"
-          target: "/opt/neon-dominion"
+          target: "/opt/vexara"
 
       - name: Deploy on VPS
         uses: appleboy/ssh-action@v1.0.3
@@ -147,7 +147,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             set -e
-            cd /opt/neon-dominion
+            cd /opt/vexara
 
             # Write .env from GitHub secrets (never stored in git)
             cat > .env <<'ENVEOF'
@@ -172,7 +172,7 @@ jobs:
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             # Zero-downtime rolling update
-            bash /opt/neon-dominion/deploy/deploy.sh ${{ steps.tag.outputs.IMAGE_TAG }}
+            bash /opt/vexara/deploy/deploy.sh ${{ steps.tag.outputs.IMAGE_TAG }}
 
       - name: Smoke test
         uses: appleboy/ssh-action@v1.0.3

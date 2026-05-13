@@ -4,7 +4,7 @@ import { logError, logInfo } from './logger.js';
 
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(
-    `mailto:${process.env.VAPID_EMAIL || 'admin@neon-dominion.com'}`,
+    `mailto:${process.env.VAPID_EMAIL || 'admin@vexara.com'}`,
     process.env.VAPID_PUBLIC_KEY,
     process.env.VAPID_PRIVATE_KEY,
   );

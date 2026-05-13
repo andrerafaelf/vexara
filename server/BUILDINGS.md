@@ -1,8 +1,8 @@
-# Neon Dominion - Buildings Guide
+# Vexara - Buildings Guide
 
 ## Overview
 
-Neon Dominion has 8 core buildings. Buildings control economy, population, defense, and unlock progression.
+Vexara has 8 core buildings. Buildings control economy, population, defense, and unlock progression.
 
 - Build queue cap: 5 upgrades per nexus
 - Costs are paid when queued

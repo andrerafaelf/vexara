@@ -2,7 +2,7 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
   external_labels:
-    app: neon-dominion
+    app: vexara
 
 # ── Scrape configs ────────────────────────────────────────────────────────────
 scrape_configs:
@@ -12,7 +12,7 @@ scrape_configs:
       - targets: [localhost:9090]
 
   # Game server health & metrics
-  - job_name: nd-server
+  - job_name: vx-server
     metrics_path: /metrics
     static_configs:
       - targets: [server:3001]
@@ -22,7 +22,7 @@ scrape_configs:
         target_label: instance
 
   # Admin server
-  - job_name: nd-admin-server
+  - job_name: vx-admin-server
     metrics_path: /metrics
     static_configs:
       - targets: [admin-server:3002]

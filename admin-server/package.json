@@ -1,7 +1,7 @@
 {
-  "name": "neon-dominion-admin",
+  "name": "vexara-admin",
   "version": "1.0.0",
-  "description": "Admin server for Neon Dominion",
+  "description": "Admin server for Vexara",
   "main": "dist/server.js",
   "engines": {
     "node": "22.x"

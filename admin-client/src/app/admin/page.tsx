@@ -23,7 +23,7 @@ export default function AdminPage() {
   return (
     <main style={{ minHeight: '100vh', background: '#0a1228', color: '#eaf0ff' }}>
       <header className="admin-page-header">
-        <h1 className="admin-page-title">⚡ Neon Dominion Admin</h1>
+        <h1 className="admin-page-title">⚡ Vexara Admin</h1>
         <button className="admin-logout-btn" onClick={handleLogout}>
           Logout
         </button>

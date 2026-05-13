@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Bootstrap a fresh Hetzner VPS (Ubuntu 22.04/24.04) for Neon Dominion
+# Bootstrap a fresh Hetzner VPS (Ubuntu 22.04/24.04) for Vexara
 # Run as root: bash bootstrap-vps.sh yourdomain.com
 # The script is idempotent — safe to re-run.
 
@@ -12,7 +12,7 @@ if [ -z "$DOMAIN" ]; then
 fi
 
 DEPLOY_USER="deploy"
-APP_DIR="/opt/neon-dominion"
+APP_DIR="/opt/vexara"
 
 echo "==> Updating system packages..."
 apt-get update -q
@@ -97,7 +97,7 @@ chown "$DEPLOY_USER":"$DEPLOY_USER" "$APP_DIR"
 
 # ─── Nginx — initial HTTP-only config to get SSL cert ────────────────────────
 echo "==> Writing temporary HTTP Nginx config for ACME challenge..."
-cat > /etc/nginx/sites-available/neon-dominion <<NGINXEOF
+cat > /etc/nginx/sites-available/vexara <<NGINXEOF
 server {
     listen 80;
     server_name ${DOMAIN} admin.${DOMAIN};
@@ -107,14 +107,14 @@ server {
     }
 
     location / {
-        return 200 'Neon Dominion - bootstrapping';
+        return 200 'Vexara - bootstrapping';
         add_header Content-Type text/plain;
     }
 }
 NGINXEOF
 
 mkdir -p /var/www/certbot
-ln -sf /etc/nginx/sites-available/neon-dominion /etc/nginx/sites-enabled/neon-dominion
+ln -sf /etc/nginx/sites-available/vexara /etc/nginx/sites-enabled/vexara
 rm -f /etc/nginx/sites-enabled/default
 nginx -t && nginx -s reload
 

@@ -1,4 +1,4 @@
-# Neon Dominion — Production Runbook
+# Vexara — Production Runbook
 
 ## Architecture
 
@@ -10,15 +10,15 @@ Internet
    │
 [ Nginx (host) ]  ← TLS termination, rate limiting, static asset caching
    │
-   ├──► nd-client        (Next.js, port 3000)  — player UI
-   ├──► nd-server        (Express, port 3001)  — game API + background jobs
-   ├──► nd-admin-client  (Next.js, port 3003)  — admin UI
-   ├──► nd-admin-server  (Express, port 3002)  — admin API
-   ├──► nd-postgres      (PostgreSQL 16)       — single database (internal only)
-   ├──► nd-prometheus    (metrics collection)
-   ├──► nd-loki          (log aggregation)
-   ├──► nd-promtail      (log shipping)
-   └──► nd-grafana       (dashboards — admin.domain/grafana/)
+   ├──► vx-client        (Next.js, port 3000)  — player UI
+   ├──► vx-server        (Express, port 3001)  — game API + background jobs
+   ├──► vx-admin-client  (Next.js, port 3003)  — admin UI
+   ├──► vx-admin-server  (Express, port 3002)  — admin API
+   ├──► vx-postgres      (PostgreSQL 16)       — single database (internal only)
+   ├──► vx-prometheus    (metrics collection)
+   ├──► vx-loki          (log aggregation)
+   ├──► vx-promtail      (log shipping)
+   └──► vx-grafana       (dashboards — admin.domain/grafana/)
 ```
 
 All services communicate on the internal Docker `app_net` network.  
@@ -33,8 +33,8 @@ PostgreSQL is never exposed to the host — only reachable by other containers.
 ssh root@YOUR_VPS_IP
 
 # 2. Clone the repo (or scp bootstrap script)
-git clone https://github.com/YOUR_USERNAME/Neon-Dominion.git /opt/neon-dominion
-cd /opt/neon-dominion
+git clone https://github.com/YOUR_USERNAME/Vexara.git /opt/vexara
+cd /opt/vexara
 
 # 3. Run bootstrap (installs Docker, Nginx, Certbot, UFW, creates deploy user)
 bash deploy/bootstrap-vps.sh yourdomain.com
@@ -66,7 +66,7 @@ Set these in your repo → Settings → Secrets and variables → Actions.
 | `VPS_SSH_KEY` | Private SSH key (the deploy user's key) |
 | `POSTGRES_USER` | DB username |
 | `POSTGRES_PASSWORD` | DB password (strong random) |
-| `POSTGRES_DB` | Database name (e.g. `neon_dominion`) |
+| `POSTGRES_DB` | Database name (e.g. `vexara`) |
 | `JWT_SECRET` | 64-byte hex string |
 | `ADMIN_USER` | Admin panel username |
 | `ADMIN_PASS` | Admin panel password |
@@ -77,10 +77,10 @@ Set these in your repo → Settings → Secrets and variables → Actions.
 ### Variables (non-secret)
 | Name | Description |
 |------|-------------|
-| `DOMAIN` | e.g. `neondominion.com` |
-| `CORS_ORIGINS` | e.g. `https://neondominion.com` |
-| `ADMIN_CORS_ORIGINS` | e.g. `https://admin.neondominion.com` |
-| `VAPID_SUBJECT` | e.g. `mailto:admin@neondominion.com` |
+| `DOMAIN` | e.g. `vexara.com` |
+| `CORS_ORIGINS` | e.g. `https://vexara.com` |
+| `ADMIN_CORS_ORIGINS` | e.g. `https://admin.vexara.com` |
+| `VAPID_SUBJECT` | e.g. `mailto:admin@vexara.com` |
 
 ---
 
@@ -106,40 +106,40 @@ Push to `main` = deploy. Use PRs to develop safely before merging.
 ### View live logs
 ```bash
 # All services
-docker compose -f /opt/neon-dominion/docker-compose.prod.yml logs -f
+docker compose -f /opt/vexara/docker-compose.prod.yml logs -f
 
 # Single service
-docker compose -f /opt/neon-dominion/docker-compose.prod.yml logs -f server
+docker compose -f /opt/vexara/docker-compose.prod.yml logs -f server
 ```
 
 ### Manual deploy (without CI)
 ```bash
-cd /opt/neon-dominion
+cd /opt/vexara
 IMAGE_TAG=sha-abc1234 bash deploy/deploy.sh sha-abc1234
 ```
 
 ### Rollback to previous image
 ```bash
-cd /opt/neon-dominion
+cd /opt/vexara
 # List available tags in GHCR, then:
 IMAGE_TAG=sha-<previous-commit> bash deploy/deploy.sh sha-<previous-commit>
 ```
 
 ### Database backup (manual)
 ```bash
-bash /opt/neon-dominion/deploy/backup.sh
-ls /opt/neon-dominion/backups/
+bash /opt/vexara/deploy/backup.sh
+ls /opt/vexara/backups/
 ```
 
 ### Restore a backup
 ```bash
-gunzip -c /opt/neon-dominion/backups/neon_dominion_YYYY-MM-DDTHH-MM-SS.sql.gz \
-  | docker exec -i nd-postgres psql -U neon -d neon_dominion
+gunzip -c /opt/vexara/backups/vexara_YYYY-MM-DDTHH-MM-SS.sql.gz \
+  | docker exec -i vx-postgres psql -U neon -d vexara
 ```
 
 ### Run Prisma migrations manually
 ```bash
-docker exec nd-server npx prisma migrate deploy
+docker exec vx-server npx prisma migrate deploy
 ```
 
 ### Reload Nginx config
@@ -172,14 +172,14 @@ Add your domain to an external uptime monitor (UptimeRobot free tier, Better Sta
 
 ### Service won't start
 ```bash
-docker compose -f /opt/neon-dominion/docker-compose.prod.yml logs --tail=100 <service>
-docker compose -f /opt/neon-dominion/docker-compose.prod.yml ps
+docker compose -f /opt/vexara/docker-compose.prod.yml logs --tail=100 <service>
+docker compose -f /opt/vexara/docker-compose.prod.yml ps
 ```
 
 ### Database connection errors
 ```bash
-docker exec nd-postgres pg_isready -U neon -d neon_dominion
-docker compose -f /opt/neon-dominion/docker-compose.prod.yml restart postgres
+docker exec vx-postgres pg_isready -U neon -d vexara
+docker compose -f /opt/vexara/docker-compose.prod.yml restart postgres
 ```
 
 ### Disk full
@@ -201,9 +201,9 @@ docker stats --no-stream        # per-container memory
 
 Cron on VPS runs daily at 02:00:
 ```
-0 2 * * * /opt/neon-dominion/deploy/backup.sh >> /var/log/nd-backup.log 2>&1
+0 2 * * * /opt/vexara/deploy/backup.sh >> /var/log/vx-backup.log 2>&1
 ```
-14 days of backups are kept in `/opt/neon-dominion/backups/`.  
+14 days of backups are kept in `/opt/vexara/backups/`.  
 For off-site backup, configure an S3-compatible object store (Hetzner Object Storage) and `aws s3 cp` from the backup script.
 
 ---

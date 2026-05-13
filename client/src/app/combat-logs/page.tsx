@@ -112,7 +112,7 @@ export default function CombatLogsPage() {
           >
             <Menu size={18} />
           </button>
-          <h1>Neon Dominion</h1>
+          <h1>Vexara</h1>
           <span className="username">welcome, {user?.username}</span>
         </div>
         <div className="header-center">

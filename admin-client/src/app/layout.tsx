@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Neon Dominion Admin',
-  description: 'Administrative controls for Neon Dominion',
+  title: 'Vexara Admin',
+  description: 'Administrative controls for Vexara',
 };
 
 export default function RootLayout({

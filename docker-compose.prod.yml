@@ -21,7 +21,7 @@ services:
   # ── Database ─────────────────────────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
-    container_name: nd-postgres
+    container_name: vx-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -41,7 +41,7 @@ services:
   # ── Game Server ───────────────────────────────────────────────────────────────
   server:
     image: ghcr.io/${GITHUB_REPOSITORY}/server:${IMAGE_TAG:-latest}
-    container_name: nd-server
+    container_name: vx-server
     restart: unless-stopped
     depends_on:
       postgres:
@@ -74,7 +74,7 @@ services:
   # ── Admin Server ──────────────────────────────────────────────────────────────
   admin-server:
     image: ghcr.io/${GITHUB_REPOSITORY}/admin-server:${IMAGE_TAG:-latest}
-    container_name: nd-admin-server
+    container_name: vx-admin-server
     restart: unless-stopped
     depends_on:
       - server
@@ -103,7 +103,7 @@ services:
   # ── Player Client (Next.js) ───────────────────────────────────────────────────
   client:
     image: ghcr.io/${GITHUB_REPOSITORY}/client:${IMAGE_TAG:-latest}
-    container_name: nd-client
+    container_name: vx-client
     restart: unless-stopped
     depends_on:
       - server
@@ -130,7 +130,7 @@ services:
   # ── Admin Client (Next.js) ────────────────────────────────────────────────────
   admin-client:
     image: ghcr.io/${GITHUB_REPOSITORY}/admin-client:${IMAGE_TAG:-latest}
-    container_name: nd-admin-client
+    container_name: vx-admin-client
     restart: unless-stopped
     depends_on:
       - admin-server
@@ -156,7 +156,7 @@ services:
   # ── Prometheus ────────────────────────────────────────────────────────────────
   prometheus:
     image: prom/prometheus:latest
-    container_name: nd-prometheus
+    container_name: vx-prometheus
     restart: unless-stopped
     volumes:
       - ./deploy/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
@@ -178,7 +178,7 @@ services:
   # ── Loki (log aggregation) ────────────────────────────────────────────────────
   loki:
     image: grafana/loki:latest
-    container_name: nd-loki
+    container_name: vx-loki
     restart: unless-stopped
     volumes:
       - loki_data:/loki
@@ -195,7 +195,7 @@ services:
   # ── Promtail (ships container logs → Loki) ─────────────────────────────────────
   promtail:
     image: grafana/promtail:latest
-    container_name: nd-promtail
+    container_name: vx-promtail
     restart: unless-stopped
     volumes:
       - /var/log:/var/log:ro
@@ -213,7 +213,7 @@ services:
   # ── Grafana ───────────────────────────────────────────────────────────────────
   grafana:
     image: grafana/grafana:latest
-    container_name: nd-grafana
+    container_name: vx-grafana
     restart: unless-stopped
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}

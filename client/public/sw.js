@@ -1,4 +1,4 @@
-const CACHE_NAME = 'neon-dominion-v1';
+const CACHE_NAME = 'vexara-v1';
 
 // Install: cache critical shell assets
 self.addEventListener('install', (event) => {
@@ -58,15 +58,15 @@ self.addEventListener('push', (event) => {
   try {
     data = event.data ? event.data.json() : {};
   } catch {
-    data = { title: 'Neon Dominion', body: event.data ? event.data.text() : '' };
+    data = { title: 'Vexara', body: event.data ? event.data.text() : '' };
   }
 
-  const title = data.title || 'Neon Dominion';
+  const title = data.title || 'Vexara';
   const options = {
     body: data.body || '',
     icon: data.icon || '/logo192.png',
     badge: '/logo192.png',
-    tag: data.tag || 'neon-dominion',
+    tag: data.tag || 'vexara',
     data: data.data || { url: '/' },
     requireInteraction: false,
     vibrate: [100, 50, 100],

@@ -3,20 +3,20 @@ version: "3.8"
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: neon-dominion-postgres
+    container_name: vexara-postgres
     ports:
       - "5432:5432"
     environment:
       POSTGRES_USER: neon
       POSTGRES_PASSWORD: neon
-      POSTGRES_DB: neon_dominion
+      POSTGRES_DB: vexara
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
 
   pgadmin:
     image: dpage/pgadmin4:latest
-    container_name: neon-dominion-pgadmin
+    container_name: vexara-pgadmin
     ports:
       - "8081:80"
     environment:

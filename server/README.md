@@ -1,6 +1,6 @@
 # Server Project
 
-Express API for Neon Dominion.
+Express API for Vexara.
 
 ## Stack
 

@@ -16,7 +16,7 @@ const STEPS: Record<Platform, { pwa?: string[]; notif: string[] }> = {
   },
   ios: {
     pwa: [
-      'Open Neon Dominion in Safari (not Chrome or Firefox).',
+      'Open Vexara in Safari (not Chrome or Firefox).',
       'Tap the Share button at the bottom of the screen.',
       'Scroll down and tap "Add to Home Screen".',
       'Tap "Add" in the top-right corner.',
@@ -30,7 +30,7 @@ const STEPS: Record<Platform, { pwa?: string[]; notif: string[] }> = {
   },
   android: {
     pwa: [
-      'Open Neon Dominion in Chrome.',
+      'Open Vexara in Chrome.',
       'Tap the three-dot menu in the top-right corner.',
       'Tap "Add to Home screen" or "Install app".',
       'Tap "Install" to confirm.',

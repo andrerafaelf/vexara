@@ -1,8 +1,8 @@
-# Neon Dominion - Troops Guide
+# Vexara - Troops Guide
 
 ## Overview
 
-Neon Dominion features 12 troop types. Units are trained in the Recruitment Core and consume population capacity.
+Vexara features 12 troop types. Units are trained in the Recruitment Core and consume population capacity.
 
 ## Core Combat Notes
 

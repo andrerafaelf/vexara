@@ -5,13 +5,13 @@ import { Suspense } from 'react';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Neon Dominion',
+  title: 'Vexara',
   description: 'Strategic conquest game in a neon-lit cyberpunk universe',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Neon Dominion',
+    title: 'Vexara',
   },
 };
 
