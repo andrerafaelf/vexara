@@ -68,6 +68,7 @@ jobs:
         include:
           - service: server
             context: ./server
+            file: ./server/Dockerfile
             image_suffix: server
           - service: admin-server
             context: .
@@ -75,12 +76,14 @@ jobs:
             image_suffix: admin-server
           - service: client
             context: ./client
+            file: ./client/Dockerfile
             image_suffix: client
             build_args: |
               NEXT_PUBLIC_API_URL=https://${{ vars.DOMAIN }}/api
               NEXT_PUBLIC_APP_URL=https://${{ vars.DOMAIN }}
           - service: admin-client
             context: ./admin-client
+            file: ./admin-client/Dockerfile
             image_suffix: admin-client
             build_args: |
               NEXT_PUBLIC_ADMIN_API_URL=https://admin.${{ vars.DOMAIN }}/api
@@ -111,7 +114,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ${{ matrix.context }}
-          file: ${{ matrix.file || 'Dockerfile' }}
+          file: ${{ matrix.file }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

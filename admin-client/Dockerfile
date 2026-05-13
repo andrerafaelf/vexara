@@ -7,6 +7,7 @@ RUN npm ci
 
 FROM deps AS builder
 COPY . .
+RUN mkdir -p public
 ARG NEXT_PUBLIC_ADMIN_API_URL
 ENV NEXT_PUBLIC_ADMIN_API_URL=$NEXT_PUBLIC_ADMIN_API_URL
 RUN npm run build
@@ -19,7 +20,7 @@ RUN addgroup --system --gid 1001 nodejs && \
 
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public 2>/dev/null || true
+COPY --from=builder /app/public ./public
 
 USER nodeuser
 
