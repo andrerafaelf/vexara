@@ -1,16 +1,17 @@
+import type { AttackType } from '@prisma/client';
 import type { Response } from 'express';
 import { applyQuestRewards, serializeAttack } from '../models/Nexus.js';
 import * as attackService from '../services/attackService.js';
-import type { AuthRequest } from '../types/index.js';
+import type { AuthRequest, TroopKey } from '../types/index.js';
 import { TROOP_STATS } from '../utils/combatMath.js';
 import { normalizeTroopPayload, parsePositiveInt } from '../utils/validation.js';
 
-const TROOP_KEYS = [
+const TROOP_KEYS: TroopKey[] = [
   'lancerDrone', 'assaultTrooper', 'breakerUnit', 'reconOperative', 'skimmerBike',
   'siegeMech', 'bulwarkGuard', 'suppressorTeam', 'disruptorUnit', 'interceptorBike',
   'annihilatorPlatform', 'overseer',
 ];
-const SUPPORTED_ATTACK_TYPES = new Set(['attack', 'scout']);
+const SUPPORTED_ATTACK_TYPES = new Set<AttackType>(['attack', 'scout']);
 
 export async function sendAttack(req: AuthRequest, res: Response): Promise<void> {
   try {
@@ -20,7 +21,8 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
     const parsedFromNexusId = parsePositiveInt(fromNexusId);
     const parsedToNexusId = parsePositiveInt(toNexusId);
     if (!parsedFromNexusId || !parsedToNexusId) { res.status(400).json({ error: 'Invalid nexus IDs' }); return; }
-    if (!SUPPORTED_ATTACK_TYPES.has(type!)) { res.status(400).json({ error: 'Unsupported mission type' }); return; }
+    if (!SUPPORTED_ATTACK_TYPES.has(type as AttackType)) { res.status(400).json({ error: 'Unsupported mission type' }); return; }
+    const attackType = type as AttackType;
 
     const normalizedPayload = normalizeTroopPayload(troops, TROOP_KEYS);
     if ('error' in normalizedPayload && normalizedPayload.error) { res.status(400).json({ error: normalizedPayload.error }); return; }
@@ -43,7 +45,7 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
     const totalTroopsRequested = Object.values(normalizedTroops).reduce((sum, a) => sum + a, 0);
     if (totalTroopsRequested <= 0) { res.status(400).json({ error: 'Select at least one troop' }); return; }
 
-    if (type === 'scout') {
+    if (attackType === 'scout') {
       const reconOperatives = normalizedTroops.reconOperative || 0;
       const nonScout = TROOP_KEYS.filter((t) => t !== 'reconOperative').some((t) => normalizedTroops[t] > 0);
       if (reconOperatives <= 0 || nonScout) { res.status(400).json({ error: 'Scout missions require Recon Operatives only' }); return; }
@@ -62,7 +64,7 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
 
     const distance = Math.sqrt(Math.pow(defenderNexus.x - attackerNexus.x, 2) + Math.pow(defenderNexus.y - attackerNexus.y, 2));
     let travelTimeMinutes: number;
-    if (type === 'scout') {
+    if (attackType === 'scout') {
       travelTimeMinutes = distance * 4;
     } else {
       const OVERSEER_EFFECTIVE_SPEED = 6;
@@ -81,7 +83,7 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
       {
         galaxyId: req.galaxyId, attackerUserId: req.userId, attackerNexusId: parsedFromNexusId,
         defenderUserId: defenderNexus.ownerId ?? null, defenderNexusId: parsedToNexusId,
-        troops: normalizedTroops, arrivesAt, type: type!,
+        troops: normalizedTroops, arrivesAt, type: attackType,
       },
       attackerNexus.id,
       troopDeductions,

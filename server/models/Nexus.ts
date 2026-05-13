@@ -1,4 +1,4 @@
-import type { Nexus } from '@prisma/client';
+import type { Nexus, Prisma } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 import {
   calculatePoints as calculatePointsBase,
@@ -12,9 +12,11 @@ import type { SerializedNexus, TroopKey } from '../types/index.js';
 
 // --- Re-exports of pure computation helpers ---
 
-export function getResourceProduction(nexus: Nexus) { return getResourceProductionBase(nexus); }
-export function getMaxStorage(nexus: Nexus) { return getMaxStorageBase(nexus); }
-export function computeResourceUpdate(nexus: Nexus) { return computeResourceUpdateBase(nexus); }
+type EconomyNexus = Parameters<typeof computeResourceUpdateBase>[0];
+
+export function getResourceProduction(nexus: EconomyNexus) { return getResourceProductionBase(nexus); }
+export function getMaxStorage(nexus: EconomyNexus) { return getMaxStorageBase(nexus); }
+export function computeResourceUpdate(nexus: EconomyNexus) { return computeResourceUpdateBase(nexus); }
 export function calculatePoints(nexus: Nexus & Record<string, unknown>) { return calculatePointsBase(nexus); }
 
 // --- Quest system ---
@@ -197,20 +199,30 @@ export function canonicalBuildingKey(key: string): string {
   return LEGACY_BUILDING_ALIASES[key] || key;
 }
 
-interface BuildQueueEntry { building: string; targetLevel: number; completesAt: string | Date }
-interface TrainingQueueEntry { troopType: string; amount: number; completesAt: string | Date }
+export interface BuildQueueEntry { building: string; targetLevel: number; completesAt: string | Date }
+export interface TrainingQueueEntry { troopType: string; amount: number; completesAt: string | Date; perUnitSeconds?: number }
+
+export function queueToJson(queue: Array<BuildQueueEntry | TrainingQueueEntry>): Prisma.InputJsonValue[] {
+  return queue.map((entry) => ({
+    ...entry,
+    completesAt: entry.completesAt instanceof Date ? entry.completesAt.toISOString() : entry.completesAt,
+  }));
+}
 
 export function normalizeBuildQueue(queue: unknown): BuildQueueEntry[] {
   if (!Array.isArray(queue)) return [];
-  return (queue as BuildQueueEntry[]).map((entry) => ({ ...entry, building: canonicalBuildingKey(entry.building) }));
+  return (queue as unknown as BuildQueueEntry[]).map((entry) => ({ ...entry, building: canonicalBuildingKey(entry.building) }));
+}
+
+export function normalizeTrainingQueue(queue: unknown): TrainingQueueEntry[] {
+  if (!Array.isArray(queue)) return [];
+  return queue as unknown as TrainingQueueEntry[];
 }
 
 export async function applyCompletedQueues(nexus: Nexus): Promise<Nexus> {
   const now = new Date();
   const buildQueue = normalizeBuildQueue(nexus.buildQueue);
-  const trainingQueue: TrainingQueueEntry[] = Array.isArray(nexus.trainingQueue)
-    ? [...(nexus.trainingQueue as TrainingQueueEntry[])]
-    : [];
+  const trainingQueue = normalizeTrainingQueue(nexus.trainingQueue);
   const updates: Record<string, unknown> = {};
 
   while (buildQueue.length > 0 && new Date(buildQueue[0].completesAt) <= now) {
@@ -227,7 +239,7 @@ export async function applyCompletedQueues(nexus: Nexus): Promise<Nexus> {
   if (effectivePopulationMax !== recalculatedPopulationMax) updates['populationMax'] = recalculatedPopulationMax;
   if (effectivePopulationCurrent > recalculatedPopulationMax) updates['populationCurrent'] = recalculatedPopulationMax;
 
-  updates['buildQueue'] = buildQueue;
+  updates['buildQueue'] = queueToJson(buildQueue);
 
   for (let i = 0; i < trainingQueue.length; ) {
     const entry = trainingQueue[i];
@@ -240,7 +252,7 @@ export async function applyCompletedQueues(nexus: Nexus): Promise<Nexus> {
     }
   }
 
-  updates['trainingQueue'] = trainingQueue;
+  updates['trainingQueue'] = queueToJson(trainingQueue);
 
   if (Object.keys(updates).length === 2 && 'buildQueue' in updates && 'trainingQueue' in updates) return nexus;
 
@@ -263,9 +275,7 @@ export async function processCompletedQueuesAndNotify(): Promise<void> {
   for (const nexus of nexuses) {
     try {
       const buildQueueBefore = normalizeBuildQueue(nexus.buildQueue);
-      const trainingQueueBefore: TrainingQueueEntry[] = Array.isArray(nexus.trainingQueue)
-        ? (nexus.trainingQueue as TrainingQueueEntry[])
-        : [];
+      const trainingQueueBefore = normalizeTrainingQueue(nexus.trainingQueue);
 
       const buildReady = buildQueueBefore.length > 0 && new Date(buildQueueBefore[0].completesAt) <= now;
       const trainReady = trainingQueueBefore.some((e) => new Date(e.completesAt) <= now);
@@ -286,9 +296,7 @@ export async function processCompletedQueuesAndNotify(): Promise<void> {
         });
       }
 
-      const trainingQueueAfter: TrainingQueueEntry[] = Array.isArray(updated.trainingQueue)
-        ? (updated.trainingQueue as TrainingQueueEntry[])
-        : [];
+      const trainingQueueAfter = normalizeTrainingQueue(updated.trainingQueue);
       const afterKeys = new Set(trainingQueueAfter.map((e) => `${e.troopType}|${e.completesAt}|${e.amount}`));
       const drainedTraining = trainingQueueBefore.filter(
         (e) => !afterKeys.has(`${e.troopType}|${e.completesAt}|${e.amount}`),
@@ -347,7 +355,7 @@ export async function updateAllResources(): Promise<void> {
 
     for (const nexus of nexuses) {
       const resourceUpdate = computeResourceUpdate(nexus);
-      const points = calculatePoints({ ...nexus, ...resourceUpdate });
+      const points = calculatePoints({ ...nexus, ...resourceUpdate } as Nexus & Record<string, unknown>);
       const maxStorage = getMaxStorage(nexus);
       const wasAlreadyFull = nexus.biomass >= maxStorage && nexus.alloy >= maxStorage && nexus.ore >= maxStorage;
       const isNowFull = resourceUpdate.biomass >= maxStorage && resourceUpdate.alloy >= maxStorage && resourceUpdate.ore >= maxStorage;

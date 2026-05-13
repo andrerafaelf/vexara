@@ -8,7 +8,12 @@ import { NOTIF, sendPushToUser } from '../utils/push.js';
 export async function getUsers(req: Request, res: Response): Promise<void> {
   try {
     const users = await adminService.getAllUsers();
-    res.json(users.map((u) => ({ ...u, _id: u.id, nexuses: u.nexuses.map((v) => serializeNexus(v)) })));
+    res.json(users.map((u) => ({
+      ...u,
+      _id: u.id,
+      points: u.galaxyPlayers.reduce((sum, player) => sum + player.points, 0),
+      nexuses: u.nexuses.map((v) => serializeNexus(v)),
+    })));
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }
@@ -18,8 +23,19 @@ export async function getStats(req: Request, res: Response): Promise<void> {
   try {
     const [userCount, villageCount, travelingAttackCount, totalAttackCount, newUsersThisWeek, zeroNexusCount, topUsers, troopAgg, pointsAgg, marketCount] = await adminService.getAdminStats();
     const troopSum = (troopAgg as { _sum: Record<string, number | null> })._sum;
-    const totalTroops = Object.values(troopSum).reduce((acc, v) => acc + (v ?? 0), 0);
-    res.json({ userCount, villageCount, travelingAttackCount, totalAttackCount, newUsersThisWeek, zeroNexusCount, totalTroops, avgPoints: Math.round((pointsAgg as { _avg: { points: number | null } })._avg.points ?? 0), marketCount, topUsers: (topUsers as Array<{ id: number; username: string; points: number }>).map((u) => ({ ...u, _id: u.id })) });
+    const totalTroops = Object.values(troopSum).reduce<number>((acc, v) => acc + (v ?? 0), 0);
+    res.json({
+      userCount,
+      villageCount,
+      travelingAttackCount,
+      totalAttackCount,
+      newUsersThisWeek,
+      zeroNexusCount,
+      totalTroops,
+      avgPoints: Math.round(pointsAgg._avg.points ?? 0),
+      marketCount,
+      topUsers: topUsers.map((player) => ({ id: player.user.id, _id: player.user.id, username: player.user.username, points: player.points })),
+    });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }

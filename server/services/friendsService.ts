@@ -1,3 +1,4 @@
+import type { FriendRequestStatus } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 
 export function pairKey(a: number, b: number) {
@@ -62,7 +63,7 @@ export async function acceptRequest(id: number, userAId: number, userBId: number
   ]);
 }
 
-export function updateRequestStatus(id: number, status: string) {
+export function updateRequestStatus(id: number, status: FriendRequestStatus) {
   return prisma.friendRequest.update({ where: { id }, data: { status, respondedAt: new Date() } });
 }
 

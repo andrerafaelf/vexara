@@ -1,4 +1,4 @@
-import type { Attack, Nexus } from '@prisma/client';
+import type { Attack, Nexus, Prisma } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 import { computeForcePower, TROOP_STATS } from './combatMath.js';
 import { buildDetailedScoutIntel } from './scouting.js';
@@ -58,7 +58,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
             survivingTroops: { reconOperative: attackTroops.reconOperative || 0 },
             attackerLosses: {}, defenderLosses: {},
             resourcesStolen: { biomass: 0, alloy: 0, ore: 0 },
-          },
+          } as Prisma.InputJsonObject,
         },
       });
 

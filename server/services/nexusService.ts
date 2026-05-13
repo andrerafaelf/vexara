@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 
 export function getNexusByOwner(userId: number, galaxyId: number) {
@@ -47,7 +48,7 @@ export function getPlayerGroups(userId: number, galaxyId: number) {
 export async function updatePlayerGroups(userId: number, galaxyId: number, groups: unknown[]) {
   const updated = await prisma.galaxyPlayer.update({
     where: { userId_galaxyId: { userId, galaxyId } },
-    data: { nexusGroups: groups },
+    data: { nexusGroups: groups as Prisma.InputJsonValue[] },
     select: { nexusGroups: true },
   });
   return updated.nexusGroups;

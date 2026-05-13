@@ -1,5 +1,5 @@
 import type { Response } from 'express';
-import { applyCompletedQueues, applyQuestRewards, computeResourceUpdate, serializeNexus } from '../models/Nexus.js';
+import { applyCompletedQueues, applyQuestRewards, computeResourceUpdate, normalizeTrainingQueue, queueToJson, serializeNexus } from '../models/Nexus.js';
 import * as troopService from '../services/troopService.js';
 import type { AuthRequest } from '../types/index.js';
 import { NEXUS_TYPE_BONUSES } from '../utils/economy.js';
@@ -85,7 +85,7 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
     }
 
     if (requirements.maxPerNexus) {
-      const queuedAmount = (Array.isArray(nexus.trainingQueue) ? nexus.trainingQueue : [])
+      const queuedAmount = normalizeTrainingQueue(nexus.trainingQueue)
         .filter((e: { troopType: string }) => e.troopType === troopType)
         .reduce((sum: number, e: { amount: number }) => sum + (Number(e.amount) || 0), 0);
       const inFlight = await troopService.getInFlightTroops(nexus.id);
@@ -108,7 +108,7 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
       res.status(400).json({ error: 'Insufficient population capacity' }); return;
     }
 
-    const trainingQueue = Array.isArray(nexus.trainingQueue) ? nexus.trainingQueue : [];
+    const trainingQueue = normalizeTrainingQueue(nexus.trainingQueue);
     const isOverseer = troopType === 'overseer';
     const sameChainQueue = trainingQueue.filter((e: { troopType: string }) =>
       isOverseer ? e.troopType === 'overseer' : e.troopType !== 'overseer',
@@ -131,7 +131,7 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
       alloy: current.alloy - totalCost.alloy,
       ore: current.ore - totalCost.ore,
       populationCurrent: nexus.populationCurrent + totalCost.population,
-      trainingQueue: newQueue,
+      trainingQueue: queueToJson(newQueue),
     });
     const rewardApplied = await applyQuestRewards(updated);
     res.json({ success: true, completesAt, nexus: serializeNexus(rewardApplied) });
@@ -148,7 +148,7 @@ export async function cancelTrainingQueue(req: AuthRequest, res: Response): Prom
     if (!nexus || nexus.ownerId !== req.userId || nexus.galaxyId !== req.galaxyId) {
       res.status(403).json({ error: 'Not authorized' }); return;
     }
-    const trainingQueue = Array.isArray(nexus.trainingQueue) ? [...nexus.trainingQueue] : [];
+    const trainingQueue = normalizeTrainingQueue(nexus.trainingQueue);
     if (isNaN(parsedIndex) || parsedIndex < 0 || parsedIndex >= trainingQueue.length) {
       res.status(400).json({ error: 'Invalid queue index' }); return;
     }
@@ -190,7 +190,7 @@ export async function cancelTrainingQueue(req: AuthRequest, res: Response): Prom
       alloy: current.alloy + refund.alloy,
       ore: current.ore + refund.ore,
       populationCurrent: Math.max(0, nexus.populationCurrent - totalCost.population),
-      trainingQueue: newQueue,
+      trainingQueue: queueToJson(newQueue),
     });
     res.json({ success: true, refund, nexus: serializeNexus(updated) });
   } catch (error) {
@@ -206,7 +206,7 @@ export async function checkTrainingQueue(req: AuthRequest, res: Response): Promi
       res.status(403).json({ error: 'Not authorized' }); return;
     }
     const now = new Date();
-    const trainingQueue = Array.isArray(nexus.trainingQueue) ? [...nexus.trainingQueue] : [];
+    const trainingQueue = normalizeTrainingQueue(nexus.trainingQueue);
     const troopUpdates: Record<string, number> = {};
     let completed = false;
     const nexusRecord = nexus as unknown as Record<string, number>;
@@ -237,7 +237,7 @@ export async function checkTrainingQueue(req: AuthRequest, res: Response): Promi
     advanceChain((e: { troopType: string }) => e.troopType !== 'overseer');
     advanceChain((e: { troopType: string }) => e.troopType === 'overseer');
     const resourceUpdate = computeResourceUpdate(nexus);
-    const updated = await troopService.updateNexus(nexus.id, { ...resourceUpdate, ...troopUpdates, trainingQueue });
+    const updated = await troopService.updateNexus(nexus.id, { ...resourceUpdate, ...troopUpdates, trainingQueue: queueToJson(trainingQueue) });
     const rewardApplied = await applyQuestRewards(updated);
     res.json({ completed, nexus: serializeNexus(rewardApplied) });
   } catch (error) {

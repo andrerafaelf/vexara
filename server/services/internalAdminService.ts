@@ -2,7 +2,14 @@ import prisma from '../lib/prisma.js';
 
 export function getAllUsers() {
   return prisma.user.findMany({
-    select: { id: true, username: true, email: true, points: true, createdAt: true, nexuses: true },
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      createdAt: true,
+      nexuses: true,
+      galaxyPlayers: { select: { points: true } },
+    },
     orderBy: { createdAt: 'desc' },
   });
 }
@@ -16,9 +23,9 @@ export function getAdminStats() {
     prisma.attack.count(),
     prisma.user.count({ where: { createdAt: { gte: oneWeekAgo } } }),
     prisma.user.count({ where: { nexuses: { none: {} } } }),
-    prisma.user.findMany({ select: { id: true, username: true, points: true }, orderBy: { points: 'desc' }, take: 10 }),
+    prisma.galaxyPlayer.findMany({ select: { points: true, user: { select: { id: true, username: true } } }, orderBy: { points: 'desc' }, take: 10 }),
     prisma.nexus.aggregate({ _sum: { lancerDrone: true, assaultTrooper: true, breakerUnit: true, reconOperative: true, skimmerBike: true, siegeMech: true, bulwarkGuard: true, suppressorTeam: true, disruptorUnit: true, interceptorBike: true, annihilatorPlatform: true, overseer: true } }),
-    prisma.user.aggregate({ _avg: { points: true } }),
+    prisma.galaxyPlayer.aggregate({ _avg: { points: true } }),
     prisma.marketListing.count(),
   ]);
 }

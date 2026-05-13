@@ -1,5 +1,5 @@
 import type { Response } from 'express';
-import { applyCompletedQueues, applyQuestRewards, computeResourceUpdate, normalizeBuildQueue, serializeNexus } from '../models/Nexus.js';
+import { applyCompletedQueues, applyQuestRewards, computeResourceUpdate, normalizeBuildQueue, queueToJson, serializeNexus } from '../models/Nexus.js';
 import * as buildingService from '../services/buildingService.js';
 import type { AuthRequest } from '../types/index.js';
 import { NEXUS_TYPE_BONUSES } from '../utils/economy.js';
@@ -168,7 +168,7 @@ export async function upgradeBuilding(req: AuthRequest, res: Response): Promise<
       res.status(400).json({ error: 'Invalid building' });
       return;
     }
-    const buildQueue = Array.isArray(nexus.buildQueue) ? nexus.buildQueue : [];
+    const buildQueue = normalizeBuildQueue(nexus.buildQueue);
     if (buildQueue.length >= MAX_BUILD_QUEUE) {
       res.status(400).json({ error: `Build queue is full (${MAX_BUILD_QUEUE}/${MAX_BUILD_QUEUE})` });
       return;
@@ -208,7 +208,7 @@ export async function upgradeBuilding(req: AuthRequest, res: Response): Promise<
       biomass: (current as unknown as Record<string, number>).biomass - cost.biomass,
       alloy: (current as unknown as Record<string, number>).alloy - cost.alloy,
       ore: (current as unknown as Record<string, number>).ore - cost.ore,
-      buildQueue: newQueue,
+      buildQueue: queueToJson(newQueue),
     });
     const rewardApplied = await applyQuestRewards(updated);
     res.json({ success: true, completesAt, nexus: serializeNexus(rewardApplied) });
@@ -255,13 +255,13 @@ export async function cancelBuildQueue(req: AuthRequest, res: Response): Promise
       }
     }
     const resourceUpdate = computeResourceUpdate(nexus);
-    const current = { ...nexus, ...resourceUpdate } as Record<string, number>;
+    const current = { ...nexus, ...resourceUpdate } as unknown as Record<string, number>;
     const updated = await buildingService.updateNexus(nexus.id, {
       ...resourceUpdate,
       biomass: current.biomass + refund.biomass,
       alloy: current.alloy + refund.alloy,
       ore: current.ore + refund.ore,
-      buildQueue: newQueue,
+      buildQueue: queueToJson(newQueue),
     });
     res.json({ success: true, refund, nexus: serializeNexus(updated) });
   } catch (error) {
@@ -289,7 +289,7 @@ export async function checkBuildQueue(req: AuthRequest, res: Response): Promise<
         data.populationMax = getPopulationMax(build.targetLevel);
       }
     }
-    data.buildQueue = buildQueue;
+    data.buildQueue = queueToJson(buildQueue);
     const resourceUpdate = computeResourceUpdate(nexus);
     const updated = await buildingService.updateNexus(nexus.id, { ...resourceUpdate, ...data });
     const rewardApplied = await applyQuestRewards(updated);
