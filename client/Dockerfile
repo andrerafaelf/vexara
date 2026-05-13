@@ -28,4 +28,4 @@ USER nodeuser
 
 EXPOSE 3000
 
-CMD ["node", "app.js"]
+CMD ["sh", "-c", "if [ -f server.js ]; then exec node server.js; elif [ -f app.js ]; then exec node app.js; else echo 'No Next standalone entrypoint found (expected server.js or app.js)'; ls -la; exit 1; fi"]
