@@ -4,13 +4,12 @@ RUN apk add --no-cache openssl
 
 FROM base AS deps
 COPY package.json package-lock.json* ./
+COPY prisma ./prisma
 RUN npm ci --include=dev
 
 FROM deps AS builder
 COPY . .
 RUN npm run build
-# Generate prisma client for production (without running migrations)
-RUN npx prisma generate
 
 FROM base AS runner
 ENV NODE_ENV=production
