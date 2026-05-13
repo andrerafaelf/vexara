@@ -1,5 +1,3 @@
-version: "3.9"
-
 # Production docker-compose
 # All secrets come from the host .env file (never commit .env to git)
 # Run: docker compose -f docker-compose.prod.yml up -d
@@ -17,7 +15,6 @@ volumes:
   loki_data:
 
 services:
-
   # ── Database ─────────────────────────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
@@ -162,10 +159,10 @@ services:
       - ./deploy/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=30d'
-      - '--web.enable-lifecycle'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=30d"
+      - "--web.enable-lifecycle"
     networks:
       - app_net
       - monitor_net
