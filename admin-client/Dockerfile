@@ -26,4 +26,4 @@ USER nodeuser
 
 EXPOSE 3003
 
-CMD ["node", "server.js"]
+CMD ["node", "app.js"]
