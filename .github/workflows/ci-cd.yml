@@ -137,6 +137,17 @@ jobs:
         id: tag
         run: echo "IMAGE_TAG=sha-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
+      - name: Clean deploy files on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+            mkdir -p /opt/vexara
+            rm -rf /opt/vexara/docker-compose.prod.yml /opt/vexara/deploy
+
       - name: Copy deploy files to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
