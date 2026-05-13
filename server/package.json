@@ -12,7 +12,7 @@
     "build": "tsup",
     "start": "prisma generate && prisma migrate deploy && node dist/server.js",
     "dev": "tsx watch server.ts",
-    "test": "node --test",
+    "test": "node --import tsx/esm --test",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:generate": "prisma generate",
