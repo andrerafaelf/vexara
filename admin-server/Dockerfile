@@ -19,7 +19,7 @@ COPY --from=admin-deps /app/admin-server/node_modules ./admin-server/node_module
 COPY server ./server
 COPY admin-server ./admin-server
 WORKDIR /app/server
-RUN npx prisma generate
+RUN DATABASE_URL="postgresql://prisma:prisma@localhost:5432/prisma" npx prisma generate
 WORKDIR /app/admin-server
 RUN npm run build
 
