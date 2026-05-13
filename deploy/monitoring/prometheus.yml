@@ -1,0 +1,49 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    app: neon-dominion
+
+# ── Scrape configs ────────────────────────────────────────────────────────────
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: prometheus
+    static_configs:
+      - targets: [localhost:9090]
+
+  # Game server health & metrics
+  - job_name: nd-server
+    metrics_path: /metrics
+    static_configs:
+      - targets: [server:3001]
+    # Falls back gracefully if /metrics isn't implemented yet
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+
+  # Admin server
+  - job_name: nd-admin-server
+    metrics_path: /metrics
+    static_configs:
+      - targets: [admin-server:3002]
+
+  # Node exporter (host metrics — CPU, RAM, disk)
+  # Add node-exporter to docker-compose if you want host metrics
+  # - job_name: node-exporter
+  #   static_configs:
+  #     - targets: [node-exporter:9100]
+
+  # PostgreSQL exporter (optional)
+  # - job_name: postgres
+  #   static_configs:
+  #     - targets: [postgres-exporter:9187]
+
+# ── Alert rules ───────────────────────────────────────────────────────────────
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+        # Add alertmanager here if you want email/Slack alerts

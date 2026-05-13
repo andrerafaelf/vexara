@@ -1,4 +1,5 @@
 import type { Response } from 'express';
+import { invalidateAuthCache } from '../middleware/auth.js';
 import * as galaxyService from '../services/galaxyService.js';
 import type { AuthRequest } from '../types/index.js';
 
@@ -37,6 +38,7 @@ export async function leaveGalaxy(req: AuthRequest, res: Response): Promise<void
     if (!galaxy) { res.status(404).json({ error: 'Galaxy not found' }); return; }
     if (galaxy.status !== 'active') { res.status(400).json({ error: 'Cannot leave an ended galaxy' }); return; }
     await galaxyService.leaveGalaxy(req.userId, galaxyId);
+    invalidateAuthCache(req.userId);
     res.json({ success: true });
   } catch (error) {
     res.status((error as { status?: number }).status || 500).json({ error: (error as Error).message });
@@ -53,6 +55,7 @@ export async function selectGalaxy(req: AuthRequest, res: Response): Promise<voi
     const user = await galaxyService.getUserById(req.userId);
     if (!user) { res.status(404).json({ error: 'User not found' }); return; }
     const result = await galaxyService.selectGalaxy(req.userId, user.username, galaxyId);
+    invalidateAuthCache(req.userId);
     res.json({ success: true, joined: result.joined, activeGalaxy: serializeGalaxy(galaxy, { isJoined: true }) });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });

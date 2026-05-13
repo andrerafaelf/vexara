@@ -215,6 +215,8 @@ model Nexus {
   troopsHosted       TroopTransfer[]  @relation("HostNexus")
 
   @@index([galaxyId])
+  @@index([ownerId, galaxyId])
+  @@index([controlLevel])
 }
 
 enum TransferStatus {
@@ -239,6 +241,8 @@ model TroopTransfer {
   hostNexus  Nexus  @relation("HostNexus",  fields: [hostNexusId],  references: [id], onDelete: Cascade)
 
   @@index([galaxyId])
+  @@index([status, arrivesAt])
+  @@index([ownerNexusId, status])
 }
 
 model ReportRead {
@@ -284,6 +288,7 @@ model MarketListing {
   createdAt     DateTime @default(now())
 
   @@index([galaxyId])
+  @@index([sellerNexusId])
 }
 
 enum AttackType {
@@ -323,4 +328,7 @@ model Attack {
   createdAt DateTime @default(now())
 
   @@index([galaxyId])
+  @@index([status, arrivesAt])
+  @@index([attackerNexusId, status])
+  @@index([defenderNexusId, status])
 }

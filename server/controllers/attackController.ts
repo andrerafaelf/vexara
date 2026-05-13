@@ -100,13 +100,9 @@ export async function getIncomingAttacks(req: AuthRequest, res: Response): Promi
       res.status(403).json({ error: 'Not authorized' }); return;
     }
     const attacks = await attackService.getIncomingAttacks(nexus.id);
-    const enriched = await Promise.all(
-      attacks.map(async (a) => {
-        const user = await attackService.getUserById(a.attackerUserId);
-        return serializeAttack({ ...a, attackerUsername: user?.username });
-      }),
-    );
-    res.json(enriched);
+    const attackerIds = [...new Set(attacks.map((a) => a.attackerUserId).filter((id): id is number => id != null))];
+    const userMap = await attackService.getUsersByIds(attackerIds);
+    res.json(attacks.map((a) => serializeAttack({ ...a, attackerUsername: a.attackerUserId != null ? userMap.get(a.attackerUserId) : undefined })));
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }
@@ -119,13 +115,9 @@ export async function getOutgoingAttacks(req: AuthRequest, res: Response): Promi
       res.status(403).json({ error: 'Not authorized' }); return;
     }
     const attacks = await attackService.getOutgoingAttacks(nexus.id);
-    const enriched = await Promise.all(
-      attacks.map(async (a) => {
-        const user = a.defenderUserId ? await attackService.getUserById(a.defenderUserId) : null;
-        return serializeAttack({ ...a, defenderUsername: user?.username });
-      }),
-    );
-    res.json(enriched);
+    const defenderIds = [...new Set(attacks.map((a) => a.defenderUserId).filter((id): id is number => id != null))];
+    const userMap = await attackService.getUsersByIds(defenderIds);
+    res.json(attacks.map((a) => serializeAttack({ ...a, defenderUsername: a.defenderUserId != null ? userMap.get(a.defenderUserId) : undefined })));
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }

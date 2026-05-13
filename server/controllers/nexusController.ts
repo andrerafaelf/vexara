@@ -1,5 +1,6 @@
 import type { Response } from 'express';
 import { applyCompletedQueues, applyQuestRewards, refreshResources, serializeNexus } from '../models/Nexus.js';
+import prisma from '../lib/prisma.js';
 import * as nexusService from '../services/nexusService.js';
 import type { AuthRequest } from '../types/index.js';
 import { getPopulationMax } from '../utils/population.js';
@@ -8,20 +9,34 @@ const MAX_NEXUSES_PER_USER = 10;
 
 export async function getMyNexuses(req: AuthRequest, res: Response): Promise<void> {
   try {
-    const nexusesRaw = await nexusService.getNexusByOwner(req.userId, req.galaxyId);
+    // Fetch nexuses and the galaxy player record in parallel — two DB calls total
+    const [nexusesRaw, player] = await Promise.all([
+      nexusService.getNexusByOwner(req.userId, req.galaxyId),
+      prisma.galaxyPlayer.findUnique({
+        where: { userId_galaxyId: { userId: req.userId, galaxyId: req.galaxyId } },
+        select: { id: true, questRewardClaims: true, completedQuestIds: true },
+      }),
+    ]);
+
     const nexuses = [
       ...nexusesRaw.filter((n) => n.nexusType === null),
       ...nexusesRaw.filter((n) => n.nexusType !== null),
     ];
 
-    const outgoingAttacks = await nexusService.getOutgoingAttacks(nexuses.map((n) => n.id));
-    const nexusesWithOutgoingAttacks = new Set(outgoingAttacks.map((a) => a.attackerNexusId));
+    const attacks = await nexusService.getOutgoingAttacks(nexuses.map((n) => n.id));
+    const nexusesWithOutgoingAttacks = new Set(attacks.map((a) => a.attackerNexusId));
 
+    // applyCompletedQueues and refreshResources still need individual updates
+    // (each nexus has different state), but applyQuestRewards now reuses the
+    // single pre-fetched player record instead of querying once per nexus.
     const updated = await Promise.all(
       nexuses.map(async (v) => {
         const queueApplied = await applyCompletedQueues(v);
         const refreshed = await refreshResources(queueApplied);
-        return applyQuestRewards(refreshed, { hasOutgoingStrike: nexusesWithOutgoingAttacks.has(v.id) });
+        return applyQuestRewards(refreshed, {
+          hasOutgoingStrike: nexusesWithOutgoingAttacks.has(v.id),
+          player: player ?? undefined,
+        });
       }),
     );
 

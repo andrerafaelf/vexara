@@ -13,16 +13,19 @@ function serializeMessage(m: { id: number; senderId: number; receiverId: number;
 export async function listConversations(req: AuthRequest, res: Response): Promise<void> {
   try {
     const friendships = await chatService.getFriendships(req.userId);
-    const conversations = await Promise.all(
-      friendships.map(async (f) => {
-        const friend = f.userAId === req.userId ? f.userB : f.userA;
-        const [lastMessage, unreadCount] = await Promise.all([
-          chatService.getLastMessage(req.userId, friend.id),
-          chatService.getUnreadCount(friend.id, req.userId),
-        ]);
-        return { friendId: String(friend.id), username: friend.username, lastMessage: lastMessage ? serializeMessage(lastMessage) : null, unreadCount };
-      }),
-    );
+    const friends = friendships.map((f) => (f.userAId === req.userId ? f.userB : f.userA));
+    const summaries = await chatService.getConversationSummaries(req.userId, friends.map((f) => f.id));
+
+    const conversations = friends.map((friend) => {
+      const s = summaries.get(friend.id);
+      return {
+        friendId: String(friend.id),
+        username: friend.username,
+        lastMessage: s?.lastMessage ? serializeMessage(s.lastMessage) : null,
+        unreadCount: s?.unreadCount ?? 0,
+      };
+    });
+
     conversations.sort((a, b) => {
       const ta = a.lastMessage ? new Date(a.lastMessage.createdAt).getTime() : 0;
       const tb = b.lastMessage ? new Date(b.lastMessage.createdAt).getTime() : 0;

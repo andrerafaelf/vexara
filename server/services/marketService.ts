@@ -3,7 +3,14 @@ import prisma from '../lib/prisma.js';
 export function getAllListings(galaxyId: number) {
   return prisma.marketListing.findMany({
     where: { galaxyId },
-    include: { sellerNexus: { select: { id: true, name: true, x: true, y: true, ownerId: true } } },
+    include: {
+      sellerNexus: {
+        select: {
+          id: true, name: true, x: true, y: true, ownerId: true,
+          owner: { select: { username: true } },
+        },
+      },
+    },
     orderBy: { createdAt: 'desc' },
   });
 }

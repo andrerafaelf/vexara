@@ -11,15 +11,7 @@ const SYSTEM_BUY_RATE = 1.25;
 export async function getListings(req: AuthRequest, res: Response): Promise<void> {
   try {
     const listings = await marketService.getAllListings(req.galaxyId);
-    const enriched = await Promise.all(
-      listings.map(async (l) => {
-        const owner = l.sellerNexus.ownerId
-          ? await marketService.getUserById(l.sellerNexus.ownerId)
-          : null;
-        return { ...l, sellerUsername: owner?.username };
-      }),
-    );
-    res.json(enriched);
+    res.json(listings.map((l) => ({ ...l, sellerUsername: l.sellerNexus.owner?.username ?? null })));
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }

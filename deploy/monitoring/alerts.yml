@@ -1,0 +1,44 @@
+groups:
+  - name: neon-dominion
+    rules:
+      # Server unreachable
+      - alert: ServerDown
+        expr: up{job="nd-server"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Game server is down"
+          description: "nd-server has been down for more than 1 minute."
+
+      # High error rate (requires /metrics endpoint with http_requests_total counter)
+      - alert: HighErrorRate
+        expr: |
+          rate(http_requests_total{job="nd-server", status=~"5.."}[5m]) /
+          rate(http_requests_total{job="nd-server"}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High 5xx error rate on game server"
+          description: "More than 5% of requests are failing."
+
+      # Postgres connection issues
+      - alert: PostgresDown
+        expr: up{job="postgres"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL is unreachable"
+
+      # Disk filling up (needs node-exporter)
+      - alert: DiskSpaceLow
+        expr: |
+          (node_filesystem_avail_bytes{mountpoint="/"} /
+           node_filesystem_size_bytes{mountpoint="/"}) < 0.15
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disk space below 15%"

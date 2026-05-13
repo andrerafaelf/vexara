@@ -8,6 +8,15 @@ export function getUserById(id: number) {
   return prisma.user.findUnique({ where: { id }, select: { id: true, username: true } });
 }
 
+export async function getUsersByIds(ids: number[]): Promise<Map<number, string>> {
+  if (ids.length === 0) return new Map();
+  const users = await prisma.user.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, username: true },
+  });
+  return new Map(users.map((u) => [u.id, u.username]));
+}
+
 export function createAttackAndDeductTroops(
   attackData: Parameters<typeof prisma.attack.create>[0]['data'],
   nexusId: number,

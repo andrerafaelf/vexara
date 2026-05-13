@@ -102,14 +102,15 @@ export const QUEST_REWARD_BATCHES: QuestBatch[] = [
 ];
 
 type NexusWithQuests = Nexus & { questRewardClaims?: string[] | null; completedQuestIds?: string[] | null };
+type GalaxyPlayerForQuests = { id: number; questRewardClaims: unknown; completedQuestIds: unknown };
 
 export async function applyQuestRewards(
   nexus: NexusWithQuests,
-  options: { hasOutgoingStrike?: boolean; hasCompletedAttack?: boolean } = {},
+  options: { hasOutgoingStrike?: boolean; hasCompletedAttack?: boolean; player?: GalaxyPlayerForQuests } = {},
 ): Promise<NexusWithQuests> {
   if (!nexus.ownerId) return nexus;
 
-  const player = await prisma.galaxyPlayer.findUnique({
+  const player = options.player ?? await prisma.galaxyPlayer.findUnique({
     where: { userId_galaxyId: { userId: nexus.ownerId, galaxyId: nexus.galaxyId } },
     select: { id: true, questRewardClaims: true, completedQuestIds: true },
   });
@@ -313,13 +314,13 @@ export async function processCompletedQueuesAndNotify(): Promise<void> {
 
 export async function recoverControlLevels(): Promise<void> {
   try {
-    const nexuses = await prisma.nexus.findMany({ where: { ownerId: { not: null }, controlLevel: { lt: 100 } } });
-    for (const nexus of nexuses) {
-      await prisma.nexus.update({
-        where: { id: nexus.id },
-        data: { controlLevel: Math.min(nexus.controlLevel + 10, 100) },
-      });
-    }
+    // Single SQL expression — no per-row round-trips
+    await prisma.$executeRaw`
+      UPDATE "Nexus"
+      SET "controlLevel" = LEAST("controlLevel" + 10, 100)
+      WHERE "ownerId" IS NOT NULL
+        AND "controlLevel" < 100
+    `;
   } catch (err) {
     console.error('Error recovering control levels:', err);
   }
@@ -327,21 +328,58 @@ export async function recoverControlLevels(): Promise<void> {
 
 export async function updateAllResources(): Promise<void> {
   try {
-    const nexuses = await prisma.nexus.findMany();
+    // Select only columns needed for computation — avoids loading queues/troops/etc.
+    const nexuses = await prisma.nexus.findMany({
+      select: {
+        id: true, ownerId: true, name: true, nexusType: true,
+        biomassFarm: true, alloyForge: true, oreExtractor: true, storageVault: true,
+        biomass: true, alloy: true, ore: true, lastResourceUpdate: true,
+        commandCore: true, recruitmentCore: true, lifeSupport: true, shieldGrid: true,
+        lancerDrone: true, assaultTrooper: true, breakerUnit: true, reconOperative: true,
+        skimmerBike: true, siegeMech: true,
+      },
+    });
+
+    if (nexuses.length === 0) return;
+
+    // Compute all updates in memory — pure JS, no DB round-trips
+    const rows: Array<{ id: number; biomass: number; alloy: number; ore: number; points: number; lastResourceUpdate: Date; notifyOwner: number | null }> = [];
+
     for (const nexus of nexuses) {
       const resourceUpdate = computeResourceUpdate(nexus);
       const points = calculatePoints({ ...nexus, ...resourceUpdate });
       const maxStorage = getMaxStorage(nexus);
       const wasAlreadyFull = nexus.biomass >= maxStorage && nexus.alloy >= maxStorage && nexus.ore >= maxStorage;
       const isNowFull = resourceUpdate.biomass >= maxStorage && resourceUpdate.alloy >= maxStorage && resourceUpdate.ore >= maxStorage;
+      const notifyOwner = !wasAlreadyFull && isNowFull && nexus.ownerId ? nexus.ownerId : null;
+      rows.push({ id: nexus.id, ...resourceUpdate, points, notifyOwner });
+    }
 
-      await prisma.nexus.update({ where: { id: nexus.id }, data: { ...resourceUpdate, points } });
+    // Single bulk UPDATE via VALUES list — O(1) round-trips regardless of nexus count
+    const values = rows
+      .map((r) => `(${r.id}, ${r.biomass}, ${r.alloy}, ${r.ore}, ${r.points}, '${r.lastResourceUpdate.toISOString()}'::timestamptz)`)
+      .join(',');
 
-      if (!wasAlreadyFull && isNowFull && nexus.ownerId) {
-        void sendPushToUser(nexus.ownerId, NOTIF.RESOURCES_FULL, {
+    await prisma.$executeRawUnsafe(`
+      UPDATE "Nexus" AS n
+      SET
+        biomass             = v.biomass,
+        alloy               = v.alloy,
+        ore                 = v.ore,
+        points              = v.points,
+        "lastResourceUpdate" = v.ts
+      FROM (VALUES ${values}) AS v(id, biomass, alloy, ore, points, ts)
+      WHERE n.id = v.id
+    `);
+
+    // Fire push notifications after the bulk write (non-blocking)
+    for (const row of rows) {
+      if (row.notifyOwner) {
+        const nexus = nexuses.find((n) => n.id === row.id)!;
+        void sendPushToUser(row.notifyOwner, NOTIF.RESOURCES_FULL, {
           title: '📦 Storage Full',
           body: `⚠️ Resources at ${nexus.name} are at full capacity. Spend or transfer them!`,
-          tag: `resources-full-${nexus.id}`,
+          tag: `resources-full-${row.id}`,
           data: { url: '/' },
         });
       }
