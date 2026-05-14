@@ -102,7 +102,7 @@ if [ -f "$ADMIN_CERT" ]; then
   sed "s/DOMAIN_PLACEHOLDER/${DOMAIN}/g" \
     "$APP_DIR/deploy/nginx/admin.conf.template" \
     | awk -v block="$PGADMIN_ALLOW_BLOCK" '
-        /PGADMIN_ALLOW_PLACEHOLDER/ { print block; next }
+        /^PGADMIN_ALLOW_PLACEHOLDER$/ { print block; next }
         { print }
       ' \
     > "$APP_DIR/deploy/nginx/admin.conf"
