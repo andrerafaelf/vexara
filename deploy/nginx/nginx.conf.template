@@ -71,6 +71,14 @@ http {
             root /var/www/certbot;
         }
 
+        # Container healthcheck — no upstream dependency, no redirect.
+        # Confirms nginx itself is alive and serving config.
+        location = /nginx-health {
+            access_log off;
+            add_header Content-Type text/plain;
+            return 200 "ok\n";
+        }
+
         location / {
             return 301 https://$host$request_uri;
         }

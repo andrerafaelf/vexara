@@ -177,7 +177,7 @@ services:
       - app_net
       - monitor_net
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost/healthz || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost/nginx-health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3
