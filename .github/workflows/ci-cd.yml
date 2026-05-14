@@ -184,6 +184,9 @@ jobs:
             VAPID_PRIVATE_KEY=${{ secrets.VAPID_PRIVATE_KEY }}
             VAPID_SUBJECT=${{ vars.VAPID_SUBJECT }}
             GRAFANA_PASSWORD=${{ secrets.GRAFANA_PASSWORD }}
+            PGADMIN_EMAIL=${{ secrets.PGADMIN_EMAIL }}
+            PGADMIN_PASSWORD=${{ secrets.PGADMIN_PASSWORD }}
+            PGADMIN_ALLOW_IPS=${{ vars.PGADMIN_ALLOW_IPS }}
             ENVEOF
 
             # Log in to GHCR on the VPS

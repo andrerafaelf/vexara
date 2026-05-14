@@ -1,6 +1,8 @@
 # Generated at deploy time from *.template — never commit
 deploy/nginx/nginx.conf
 deploy/nginx/admin.conf
+deploy/pgadmin/servers.json
+deploy/pgadmin/pgpass
 
 **/node_modules/
 **/.next/

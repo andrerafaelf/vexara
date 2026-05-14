@@ -55,17 +55,55 @@ fi
 
 echo "[deploy] Rendered nginx.conf ($(wc -l < "$RENDERED") lines)"
 
+# ─── pgAdmin auto-registered server ──────────────────────────────────────────
+# Renders servers.json with postgres host/db/user, plus a libpq-format pgpass
+# file so pgAdmin connects with zero clicks. pgpass MUST be mode 0600.
+mkdir -p "$APP_DIR/deploy/pgadmin"
+sed -e "s/POSTGRES_DB_PLACEHOLDER/${POSTGRES_DB}/g" \
+    -e "s/POSTGRES_USER_PLACEHOLDER/${POSTGRES_USER}/g" \
+    "$APP_DIR/deploy/pgadmin/servers.json.template" \
+    > "$APP_DIR/deploy/pgadmin/servers.json"
+
+# pgpass format: hostname:port:database:username:password
+# Use * for database so the password matches any DB on this host.
+printf 'postgres:5432:*:%s:%s\n' "$POSTGRES_USER" "$POSTGRES_PASSWORD" \
+    > "$APP_DIR/deploy/pgadmin/pgpass"
+chmod 0600 "$APP_DIR/deploy/pgadmin/pgpass"
+
+# pgAdmin runs as UID 5050 inside the container — make sure it can read the files
+chown 5050:5050 "$APP_DIR/deploy/pgadmin/pgpass" "$APP_DIR/deploy/pgadmin/servers.json" 2>/dev/null || true
+
 # Render the admin server block from its own template, but only if the cert exists.
-# Otherwise replace the include line with a comment so nginx still starts.
+# Otherwise leave admin.conf empty so the main include is a no-op.
 if [ -f "$ADMIN_CERT" ]; then
+  # Build the pgAdmin IP allowlist from PGADMIN_ALLOW_IPS (comma-separated).
+  # If unset, deny all so pgAdmin stays inaccessible until you set it.
+  PGADMIN_ALLOW_BLOCK=""
+  if [ -n "${PGADMIN_ALLOW_IPS:-}" ]; then
+    IFS=',' read -ra IPS <<< "$PGADMIN_ALLOW_IPS"
+    for IP in "${IPS[@]}"; do
+      IP="${IP// /}"  # strip spaces
+      [ -n "$IP" ] && PGADMIN_ALLOW_BLOCK+="        allow ${IP};"$'\n'
+    done
+    PGADMIN_ALLOW_BLOCK+="        deny all;"
+  else
+    echo "[deploy] WARN: PGADMIN_ALLOW_IPS unset — pgAdmin will reject all requests"
+    PGADMIN_ALLOW_BLOCK="        deny all;"
+  fi
+
+  # First do DOMAIN substitution, then inject the allowlist block.
+  # Use awk for the multi-line replacement (sed escaping is fragile here).
   sed "s/DOMAIN_PLACEHOLDER/${DOMAIN}/g" \
     "$APP_DIR/deploy/nginx/admin.conf.template" \
+    | awk -v block="$PGADMIN_ALLOW_BLOCK" '
+        /PGADMIN_ALLOW_PLACEHOLDER/ { print block; next }
+        { print }
+      ' \
     > "$APP_DIR/deploy/nginx/admin.conf"
 else
   echo "[deploy] WARN: admin cert missing at $ADMIN_CERT — admin panel will be unreachable"
   echo "[deploy] To issue it, on the VPS run:"
   echo "  sudo docker stop vx-nginx && sudo certbot certonly --standalone -d admin.${DOMAIN} --non-interactive --agree-tos -m admin@${DOMAIN} && sudo docker start vx-nginx"
-  # Empty file so the nginx include is a no-op
   : > "$APP_DIR/deploy/nginx/admin.conf"
 fi
 
@@ -75,7 +113,7 @@ $COMPOSE pull --quiet
 
 # Rolling restart: database first, then backends, then frontends
 # Each service is restarted individually so the others stay up.
-SERVICES_ORDER="postgres server admin-server client admin-client grafana nginx"
+SERVICES_ORDER="postgres server admin-server client admin-client grafana pgadmin nginx"
 
 for SERVICE in $SERVICES_ORDER; do
   echo "[deploy] Updating $SERVICE..."

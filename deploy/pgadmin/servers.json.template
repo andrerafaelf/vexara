@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Vexara Production",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "POSTGRES_DB_PLACEHOLDER",
+      "Username": "POSTGRES_USER_PLACEHOLDER",
+      "PassFile": "/pgadmin4/pgpass",
+      "SSLMode": "prefer"
+    }
+  }
+}
