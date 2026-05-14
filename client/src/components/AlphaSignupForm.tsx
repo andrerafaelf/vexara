@@ -125,42 +125,58 @@ const AlphaSignupForm: React.FC = () => {
                   <h3>The galaxy is shared</h3>
                   <p>
                     Every player drops into the same living galaxy. Coordinates are real. Travel times
-                    are real. Your neighbors might be allies, rivals, or future tribute — your call.
+                    are real. Your neighbors might be allies, rivals, or future tribute. Your call.
                   </p>
                 </div>
 
                 <div className="about-section">
                   <h3>Your nexus</h3>
+                  <Image
+                    src="/vexara-overview.png"
+                    alt="Vexara nexus overview showing the dashboard, resources, and eight core buildings"
+                    width={1280}
+                    height={720}
+                    className="about-shot"
+                    sizes="(max-width: 640px) 100vw, 600px"
+                  />
                   <p>
                     A nexus is your foothold. You start with one and can capture more. Eight core
                     buildings drive your economy and military:
                   </p>
                   <ul className="about-list">
                     <li>
-                      <strong>Command Core</strong> — main progression gate, speeds up every upgrade
+                      <strong>Command Core</strong> - main progression gate, speeds up every upgrade
                     </li>
                     <li>
-                      <strong>Recruitment Core</strong> — trains troops, faster at higher levels
+                      <strong>Recruitment Core</strong> - trains troops, faster at higher levels
                     </li>
                     <li>
-                      <strong>Biomass Farm · Alloy Forge · Ore Extractor</strong> — the three resources
+                      <strong>Biomass Farm, Alloy Forge, Ore Extractor</strong> - the three resources
                       that run your war
                     </li>
                     <li>
-                      <strong>Storage Vault · Life Support</strong> — caps your stockpile and population
+                      <strong>Storage Vault, Life Support</strong> - caps your stockpile and population
                     </li>
                     <li>
-                      <strong>Shield Grid</strong> — +2% defense per level when raiders come knocking
+                      <strong>Shield Grid</strong> - +2% defense per level when raiders come knocking
                     </li>
                   </ul>
                 </div>
 
                 <div className="about-section">
                   <h3>Twelve troops, twelve roles</h3>
+                  <Image
+                    src="/vexara-troops.png"
+                    alt="Vexara troops screen listing offensive and defensive units"
+                    width={1280}
+                    height={720}
+                    className="about-shot"
+                    sizes="(max-width: 640px) 100vw, 600px"
+                  />
                   <p>
                     From cheap Lancer Drones and Assault Troopers to elite Bulwark Guards, Skimmer Bikes,
                     Siege Mechs, and the brutal Annihilator Platform. Each unit has its own attack,
-                    defense, speed, and carry capacity — composition wins fights, not raw numbers.
+                    defense, speed, and carry capacity. Composition wins fights, not raw numbers.
                   </p>
                 </div>
 
@@ -170,7 +186,7 @@ const AlphaSignupForm: React.FC = () => {
                     Send <strong>Recon Operatives</strong> to scout an enemy nexus before you commit.
                     Launch <strong>raids</strong> to steal resources. When you&apos;re ready for the
                     endgame, train an <strong>Overseer</strong> and chip away at an enemy&apos;s
-                    control — drop it to zero and the nexus is yours.
+                    control. Drop it to zero and the nexus is yours.
                   </p>
                 </div>
 
@@ -178,7 +194,7 @@ const AlphaSignupForm: React.FC = () => {
                   <h3>Always on, but not always grinding</h3>
                   <p>
                     Your economy ticks 24/7. Queue up builds and training before bed, plan your strikes
-                    around real-world travel times, and check in from your phone — Vexara runs in the
+                    around real-world travel times, and check in from your phone. Vexara runs in the
                     browser and installs as a PWA.
                   </p>
                 </div>

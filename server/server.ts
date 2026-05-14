@@ -87,7 +87,7 @@ if (process.env.NODE_ENV === 'production') {
   const alphaSignupLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: Number(process.env.ALPHA_SIGNUP_RATE_LIMIT_MAX || 5), standardHeaders: true, legacyHeaders: false, skip: (req) => req.method === 'OPTIONS', message: { error: 'Too many sign-up attempts from this address. Please try again later.' } });
   const apiLimiter = rateLimit({
     windowMs: 60 * 1000,
-    max: Number(process.env.API_RATE_LIMIT_MAX || 600),
+    max: Number(process.env.API_RATE_LIMIT_MAX || 1200),
     standardHeaders: true,
     legacyHeaders: false,
     skip: (req) => req.method === 'OPTIONS',

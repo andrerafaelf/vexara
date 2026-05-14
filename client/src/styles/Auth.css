@@ -249,28 +249,36 @@
 
 .about-toggle {
   margin-top: var(--space-5);
-  background: transparent;
-  border: 1px solid var(--border-default);
-  color: var(--text-default);
-  padding: 10px 14px;
+  background: linear-gradient(180deg, rgba(103, 255, 242, 0.08) 0%, rgba(103, 255, 242, 0.03) 100%);
+  border: 1px solid rgba(103, 255, 242, 0.35);
+  color: var(--text-strong);
+  padding: 14px 18px;
   border-radius: var(--radius-sm);
-  font-size: var(--text-sm);
-  font-weight: 600;
+  font-size: var(--text-md);
+  font-weight: 700;
   letter-spacing: 0.02em;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
   cursor: pointer;
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.04);
   transition: border-color var(--duration-fast) var(--ease-out),
               background var(--duration-fast) var(--ease-out),
-              color var(--duration-fast) var(--ease-out);
+              color var(--duration-fast) var(--ease-out),
+              transform var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out);
 }
 
 .about-toggle:hover {
   border-color: var(--accent);
-  color: var(--text-strong);
-  background: rgba(103, 255, 242, 0.04);
+  background: linear-gradient(180deg, rgba(103, 255, 242, 0.14) 0%, rgba(103, 255, 242, 0.06) 100%);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md), var(--glow-accent-soft);
+}
+
+.about-toggle:active {
+  transform: translateY(0);
 }
 
 .about-toggle:focus-visible {
@@ -281,7 +289,7 @@
 
 .about-toggle-chevron {
   display: inline-block;
-  font-size: var(--text-md);
+  font-size: var(--text-lg);
   color: var(--accent);
   transition: transform var(--duration-fast) var(--ease-out);
 }
@@ -340,6 +348,16 @@
 .about-section p {
   margin: 0;
   color: var(--text-muted);
+}
+
+.about-shot {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: var(--space-3) 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default);
+  box-shadow: var(--shadow-md), 0 0 0 1px rgba(103, 255, 242, 0.05);
 }
 
 .about-section strong {
