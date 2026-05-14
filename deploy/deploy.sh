@@ -8,7 +8,8 @@ set -euo pipefail
 IMAGE_TAG="${1:-latest}"
 APP_DIR="/opt/vexara"
 COMPOSE="docker compose -f $APP_DIR/docker-compose.prod.yml"
-TIMEOUT=120  # seconds to wait for each service to become healthy
+TIMEOUT=120       # seconds to wait for each service to become healthy
+GRAFANA_TIMEOUT=300  # grafana downloads plugins on first start
 
 cd "$APP_DIR"
 
@@ -29,13 +30,27 @@ for SERVICE in $SERVICES_ORDER; do
   echo "[deploy] Updating $SERVICE..."
   $COMPOSE up -d --no-deps "$SERVICE"
 
-  # Wait for healthy state
+  SERVICE_TIMEOUT=$TIMEOUT
+  [ "$SERVICE" = "grafana" ] && SERVICE_TIMEOUT=$GRAFANA_TIMEOUT
+
   ELAPSED=0
-  until [ "$($COMPOSE ps -q "$SERVICE" | xargs docker inspect --format='{{.State.Health.Status}}' 2>/dev/null || echo 'none')" = "healthy" ] || \
-        [ "$($COMPOSE ps -q "$SERVICE" | xargs docker inspect --format='{{.State.Health.Status}}' 2>/dev/null || echo 'none')" = "none" ]; do
-    if [ $ELAPSED -ge $TIMEOUT ]; then
-      echo "[deploy] ERROR: $SERVICE did not become healthy within ${TIMEOUT}s"
-      echo "[deploy] Logs:"
+  while true; do
+    HEALTH=$($COMPOSE ps -q "$SERVICE" | xargs docker inspect --format='{{.State.Health.Status}}' 2>/dev/null || echo '')
+    case "$HEALTH" in
+      healthy) break ;;
+      unhealthy)
+        echo "[deploy] ERROR: $SERVICE is unhealthy."
+        $COMPOSE logs --tail=50 "$SERVICE"
+        exit 1
+        ;;
+      # empty string = no healthcheck defined, container is running
+      '')
+        RUNNING=$($COMPOSE ps -q "$SERVICE" | xargs docker inspect --format='{{.State.Running}}' 2>/dev/null || echo 'false')
+        [ "$RUNNING" = "true" ] && break
+        ;;
+    esac
+    if [ $ELAPSED -ge $SERVICE_TIMEOUT ]; then
+      echo "[deploy] ERROR: $SERVICE did not become healthy within ${SERVICE_TIMEOUT}s"
       $COMPOSE logs --tail=50 "$SERVICE"
       exit 1
     fi
@@ -43,15 +58,7 @@ for SERVICE in $SERVICES_ORDER; do
     ELAPSED=$((ELAPSED + 5))
   done
 
-  # For services with defined healthchecks, confirm healthy
-  HEALTH=$($COMPOSE ps -q "$SERVICE" | xargs docker inspect --format='{{.State.Health.Status}}' 2>/dev/null || echo 'none')
-  if [ "$HEALTH" = "unhealthy" ]; then
-    echo "[deploy] ERROR: $SERVICE is unhealthy. Rolling back..."
-    $COMPOSE logs --tail=50 "$SERVICE"
-    exit 1
-  fi
-
-  echo "[deploy] $SERVICE is up (health: $HEALTH)"
+  echo "[deploy] $SERVICE is up (health: ${HEALTH:-none})"
 done
 
 # Remove dangling images to recover disk space
