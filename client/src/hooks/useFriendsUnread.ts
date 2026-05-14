@@ -1,9 +1,9 @@
 'use client';
 
-import { getChatUnreadCount, getFriendRequests } from '@/services/api';
+import { getFriendsBadges } from '@/services/api';
 import { useEffect, useState } from 'react';
 
-const POLL_MS = 15000;
+const POLL_MS = 30000;
 
 export function useFriendsUnread() {
   const [hasUnreadFriends, setHasUnreadFriends] = useState(false);
@@ -13,11 +13,10 @@ export function useFriendsUnread() {
 
     const refresh = async () => {
       try {
-        const [chatRes, reqRes] = await Promise.allSettled([getChatUnreadCount(), getFriendRequests()]);
+        const res = await getFriendsBadges();
         if (cancelled) return;
-        const unreadChat = chatRes.status === 'fulfilled' ? chatRes.value.data?.count || 0 : 0;
-        const incomingReq = reqRes.status === 'fulfilled' ? reqRes.value.data?.incoming?.length || 0 : 0;
-        setHasUnreadFriends(unreadChat > 0 || incomingReq > 0);
+        const { unreadChat = 0, incomingRequests = 0 } = res.data || {};
+        setHasUnreadFriends(unreadChat > 0 || incomingRequests > 0);
       } catch {
         if (!cancelled) setHasUnreadFriends(false);
       }

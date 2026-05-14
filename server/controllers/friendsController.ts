@@ -1,4 +1,5 @@
 import type { Response } from 'express';
+import * as chatService from '../services/chatService.js';
 import * as friendsService from '../services/friendsService.js';
 import type { AuthRequest } from '../types/index.js';
 
@@ -41,6 +42,18 @@ export async function sendFriendRequest(req: AuthRequest, res: Response): Promis
     if (mine) { res.status(400).json({ error: 'Friend request already pending' }); return; }
     await friendsService.createFriendRequest(req.userId, target.id);
     res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
+export async function getBadges(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const [incoming, unreadChat] = await Promise.all([
+      friendsService.countIncomingRequests(req.userId),
+      chatService.getTotalUnreadCount(req.userId),
+    ]);
+    res.json({ incomingRequests: incoming, unreadChat });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }

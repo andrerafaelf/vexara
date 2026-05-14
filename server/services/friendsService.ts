@@ -52,6 +52,10 @@ export function getPendingRequests(userId: number) {
   ]);
 }
 
+export function countIncomingRequests(userId: number) {
+  return prisma.friendRequest.count({ where: { receiverId: userId, status: 'pending' } });
+}
+
 export function getFriendRequestById(id: number) {
   return prisma.friendRequest.findUnique({ where: { id } });
 }

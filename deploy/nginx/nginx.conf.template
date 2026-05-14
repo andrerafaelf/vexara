@@ -38,7 +38,7 @@ http {
     add_header X-XSS-Protection "1; mode=block" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 
-    limit_req_zone $binary_remote_addr zone=api:10m rate=300r/m;
+    limit_req_zone $binary_remote_addr zone=api:10m rate=20r/s;
     limit_req_zone $binary_remote_addr zone=auth:10m rate=10r/m;
 
     # Docker's embedded DNS — lazy upstream resolution so nginx starts
@@ -108,7 +108,7 @@ http {
         }
 
         location /api/ {
-            limit_req zone=api burst=50 nodelay;
+            limit_req zone=api burst=100 nodelay;
             proxy_pass http://server_upstream;
             proxy_http_version 1.1;
             proxy_set_header Upgrade $http_upgrade;

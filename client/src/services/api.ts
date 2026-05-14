@@ -221,6 +221,7 @@ export const systemBuyResource = (
 
 // Friends
 export const getFriends = () => apiRequest('/friends');
+export const getFriendsBadges = () => apiRequest('/friends/badges');
 export const getFriendRequests = () => apiRequest('/friends/requests');
 export const sendFriendRequest = (username: string) =>
   apiRequest('/friends/request', { method: 'POST', body: JSON.stringify({ username }) });
