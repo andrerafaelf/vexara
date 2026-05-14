@@ -40,16 +40,7 @@ else
   echo "==> Docker Compose already installed, skipping."
 fi
 
-# ─── Nginx ────────────────────────────────────────────────────────────────────
-if ! command -v nginx &>/dev/null; then
-  echo "==> Installing Nginx..."
-  apt-get install -yq nginx
-  systemctl enable --now nginx
-else
-  echo "==> Nginx already installed, skipping."
-fi
-
-# ─── Certbot ─────────────────────────────────────────────────────────────────
+# ─── Certbot (standalone — issues certs before the stack starts) ──────────────
 if ! command -v certbot &>/dev/null; then
   echo "==> Installing Certbot..."
   apt-get install -yq snapd
@@ -79,7 +70,6 @@ if ! id "$DEPLOY_USER" &>/dev/null; then
   adduser --disabled-password --gecos "" "$DEPLOY_USER"
   usermod -aG docker "$DEPLOY_USER"
   mkdir -p /home/"$DEPLOY_USER"/.ssh
-  # Copy root's authorized_keys so same SSH key works
   if [ -f /root/.ssh/authorized_keys ]; then
     cp /root/.ssh/authorized_keys /home/"$DEPLOY_USER"/.ssh/authorized_keys
     chown -R "$DEPLOY_USER":"$DEPLOY_USER" /home/"$DEPLOY_USER"/.ssh
@@ -95,47 +85,18 @@ echo "==> Setting up app directory $APP_DIR..."
 mkdir -p "$APP_DIR"
 chown "$DEPLOY_USER":"$DEPLOY_USER" "$APP_DIR"
 
-# ─── Nginx — initial HTTP-only config to get SSL cert ────────────────────────
-echo "==> Writing temporary HTTP Nginx config for ACME challenge..."
-cat > /etc/nginx/sites-available/vexara <<NGINXEOF
-server {
-    listen 80;
-    server_name ${DOMAIN} admin.${DOMAIN};
-
-    location /.well-known/acme-challenge/ {
-        root /var/www/certbot;
-    }
-
-    location / {
-        return 200 'Vexara - bootstrapping';
-        add_header Content-Type text/plain;
-    }
-}
-NGINXEOF
-
-mkdir -p /var/www/certbot
-ln -sf /etc/nginx/sites-available/vexara /etc/nginx/sites-enabled/vexara
-rm -f /etc/nginx/sites-enabled/default
-nginx -t && nginx -s reload
-
-# ─── SSL certificates ────────────────────────────────────────────────────────
+# ─── SSL certificates (certbot standalone — no Nginx needed on host) ──────────
+# Port 80 must be free at this point (no container stack running yet).
 echo "==> Obtaining SSL certificates..."
-certbot certonly --webroot -w /var/www/certbot \
+certbot certonly --standalone \
   -d "${DOMAIN}" \
   -d "admin.${DOMAIN}" \
   --non-interactive --agree-tos -m "admin@${DOMAIN}" \
   --keep-until-expiring
 
-# ─── Install production Nginx config ─────────────────────────────────────────
-echo "==> Installing production Nginx config..."
-cp "$APP_DIR/deploy/nginx/nginx.conf" /etc/nginx/nginx.conf
-# Replace domain placeholder
-sed -i "s/DOMAIN_PLACEHOLDER/${DOMAIN}/g" /etc/nginx/nginx.conf
-nginx -t && systemctl reload nginx
-
-# ─── Auto-renew certbot ───────────────────────────────────────────────────────
+# ─── Auto-renew: stop nginx container, renew, restart ────────────────────────
 echo "==> Adding certbot renewal cron..."
-(crontab -l 2>/dev/null; echo "0 3 * * * certbot renew --quiet && nginx -s reload") \
+(crontab -l 2>/dev/null; echo "0 3 * * * docker stop vx-nginx && certbot renew --quiet && docker start vx-nginx") \
   | sort -u | crontab -
 
 # ─── Log rotation for docker json-file logs ──────────────────────────────────
