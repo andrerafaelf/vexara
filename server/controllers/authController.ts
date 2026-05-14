@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma.js';
 import { comparePassword } from '../models/User.js';
 import * as authService from '../services/authService.js';
+import { sendAlphaWelcome } from '../services/emailService.js';
 import { validateEmail, validateUsername } from '../utils/validation.js';
 
 export async function register(_req: Request, res: Response): Promise<void> {
@@ -21,11 +22,20 @@ export async function alphaSignup(req: Request, res: Response): Promise<void> {
     const rawSource = (req.body as { source?: string })?.source;
     const source = typeof rawSource === 'string' && rawSource.length <= 64 ? rawSource : 'register';
 
-    await prisma.alphaSignup.upsert({
+    const record = await prisma.alphaSignup.upsert({
       where: { email },
       create: { email, source },
       update: {},
+      select: { createdAt: true },
     });
+
+    // Only send welcome email on first signup (createdAt within last 5s means just created)
+    const isNew = Date.now() - record.createdAt.getTime() < 5_000;
+    if (isNew) {
+      sendAlphaWelcome(email).catch((err) =>
+        console.error('[emailService] alphaWelcome failed:', err)
+      );
+    }
 
     res.status(202).json({ ok: true });
   } catch (error) {

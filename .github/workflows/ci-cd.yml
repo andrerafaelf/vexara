@@ -321,32 +321,3 @@ jobs:
             echo "Smoke test FAILED after 60s"
             exit 1
 
-      - name: Copy mailgun test script to VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          source: "server/scripts/mailgun-send.ts"
-          target: "/opt/vexara"
-
-      - name: Mailgun one-shot test
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            set -e
-            SENTINEL=/opt/vexara/.mailgun-test-done
-            if [ -f "$SENTINEL" ]; then
-              echo "Mailgun test already ran — skipping."
-              exit 0
-            fi
-            MAILGUN_API_KEY=$(grep '^MAILGUN_API_KEY=' /opt/vexara/.env | cut -d= -f2-)
-            SERVER_CONTAINER=$(docker ps --filter name=server --format '{{.Names}}' | head -1)
-            docker cp /opt/vexara/server/scripts/mailgun-send.ts "$SERVER_CONTAINER":/app/mailgun-send.ts
-            docker exec -e MAILGUN_API_KEY="$MAILGUN_API_KEY" "$SERVER_CONTAINER" \
-              node --import tsx/esm /app/mailgun-send.ts
-            touch "$SENTINEL"
-            echo "Mailgun test complete — sentinel written."
