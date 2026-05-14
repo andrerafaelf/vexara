@@ -13,11 +13,17 @@ GRAFANA_TIMEOUT=300  # grafana downloads plugins on first start
 
 cd "$APP_DIR"
 
-# Load .env so DOMAIN and other vars are available in this script
-set -o allexport
-# shellcheck disable=SC1091
-source "$APP_DIR/.env"
-set +o allexport
+# Load .env so DOMAIN and other vars are available in this script.
+# We can't `source` it: secret values may contain shell metacharacters
+# (spaces, $, backticks, etc.) which bash would parse and execute.
+# Compose itself reads .env literally (not via the shell) so it stays fine;
+# this loop replicates that literal KEY=VALUE behavior for this script.
+while IFS='=' read -r key value; do
+  case "$key" in
+    ''|\#*) continue ;;
+  esac
+  export "$key=$value"
+done < "$APP_DIR/.env"
 
 echo "[deploy] Starting deploy with IMAGE_TAG=$IMAGE_TAG"
 
