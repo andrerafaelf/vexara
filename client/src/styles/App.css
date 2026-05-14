@@ -6,8 +6,8 @@
 
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #2c3e50;
-  color: #ecf0f1;
+  background: #1A1F38;
+  color: #F5F8FF;
 }
 
 .App {
@@ -30,16 +30,16 @@ button:disabled {
 
 input {
   padding: 10px;
-  border: 1px solid #34495e;
+  border: 1px solid #2A3056;
   border-radius: 4px;
   font-size: 14px;
-  background: #34495e;
-  color: #ecf0f1;
+  background: #2A3056;
+  color: #F5F8FF;
 }
 
 input:focus {
   outline: none;
-  border-color: #3498db;
+  border-color: #67FFF2;
 }
 
 .loading {

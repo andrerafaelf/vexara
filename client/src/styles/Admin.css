@@ -5,7 +5,7 @@
 }
 
 .admin-panel h2 {
-  color: #e94560;
+  color: #67FFF2;
   font-size: 32px;
   margin-bottom: 30px;
 }
@@ -18,35 +18,35 @@
 }
 
 .stat-card {
-  background: #16213e;
+  background: #141937;
   padding: 30px;
   border-radius: 10px;
   text-align: center;
-  border: 2px solid #0f3460;
+  border: 2px solid #1A1F38;
 }
 
 .stat-card h3 {
-  color: #e94560;
+  color: #67FFF2;
   font-size: 36px;
   margin: 0 0 10px 0;
 }
 
 .stat-card p {
-  color: #a8dadc;
+  color: #97A0BE;
   margin: 0;
   font-size: 14px;
 }
 
 .admin-section {
-  background: #16213e;
+  background: #141937;
   padding: 20px;
   border-radius: 10px;
   margin-bottom: 30px;
-  border: 2px solid #0f3460;
+  border: 2px solid #1A1F38;
 }
 
 .admin-section h3 {
-  color: #e94560;
+  color: #67FFF2;
   margin-top: 0;
   margin-bottom: 20px;
 }
@@ -64,22 +64,22 @@
 .users-table td {
   padding: 12px;
   text-align: left;
-  border-bottom: 1px solid #0f3460;
-  color: #f1faee;
+  border-bottom: 1px solid #1A1F38;
+  color: #F5F8FF;
 }
 
 .users-table th {
-  background: #0f3460;
-  color: #e94560;
+  background: #1A1F38;
+  color: #67FFF2;
   font-weight: bold;
 }
 
 .users-table tr:hover {
-  background: #1a2a4e;
+  background: #1A1F38;
 }
 
 .btn-small {
-  background: #457b9d;
+  background: #43B0AF;
   color: white;
   border: none;
   padding: 5px 10px;
@@ -90,15 +90,15 @@
 }
 
 .btn-small:hover {
-  background: #5a92b5;
+  background: #97A0BE;
 }
 
 .btn-small.btn-warning {
-  background: #f77f00;
+  background: #FFD166;
 }
 
 .btn-small.btn-warning:hover {
-  background: #d66d00;
+  background: #FFD166;
 }
 
 .nexus-actions {
@@ -109,7 +109,7 @@
 }
 
 .btn-danger {
-  background: #e63946;
+  background: #FF6B81;
   color: white;
   border: none;
   padding: 8px 15px;
@@ -119,7 +119,7 @@
 }
 
 .btn-danger:hover {
-  background: #d62828;
+  background: #FF6B81;
 }
 
 .top-players {
@@ -133,15 +133,15 @@
   align-items: center;
   gap: 15px;
   padding: 12px;
-  background: #0f3460;
+  background: #1A1F38;
   margin-bottom: 10px;
   border-radius: 5px;
-  color: #f1faee;
+  color: #F5F8FF;
 }
 
 .top-players .rank {
   font-weight: bold;
-  color: #e94560;
+  color: #67FFF2;
   min-width: 40px;
 }
 
@@ -150,7 +150,7 @@
 }
 
 .top-players .points {
-  color: #a8dadc;
+  color: #97A0BE;
   font-weight: bold;
 }
 
@@ -179,9 +179,9 @@
 }
 
 .modal-content {
-  background: #16213e;
+  background: #141937;
   border-radius: 10px;
-  border: 2px solid #0f3460;
+  border: 2px solid #1A1F38;
   max-width: 500px;
   width: 90%;
   max-height: 80vh;
@@ -202,21 +202,21 @@
 
 .modal-header {
   padding: 20px;
-  border-bottom: 2px solid #0f3460;
+  border-bottom: 2px solid #1A1F38;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
 .modal-header h3 {
-  color: #e94560;
+  color: #67FFF2;
   margin: 0;
 }
 
 .modal-close {
   background: transparent;
   border: none;
-  color: #f1faee;
+  color: #F5F8FF;
   font-size: 32px;
   cursor: pointer;
   padding: 0;
@@ -249,15 +249,15 @@
 }
 
 .form-group label {
-  color: #a8dadc;
+  color: #97A0BE;
   font-size: 14px;
   font-weight: bold;
 }
 
 .form-group input {
-  background: #0f3460;
-  border: 1px solid #457b9d;
-  color: #f1faee;
+  background: #1A1F38;
+  border: 1px solid #43B0AF;
+  color: #F5F8FF;
   padding: 10px;
   border-radius: 5px;
   font-size: 16px;
@@ -265,12 +265,12 @@
 
 .form-group input:focus {
   outline: none;
-  border-color: #e94560;
+  border-color: #67FFF2;
 }
 
 .modal-footer {
   padding: 20px;
-  border-top: 2px solid #0f3460;
+  border-top: 2px solid #1A1F38;
   display: flex;
   justify-content: flex-end;
   gap: 10px;
@@ -288,22 +288,22 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #e94560 0%, #d63447 100%);
-  color: white;
+  background: linear-gradient(135deg, #67FFF2 0%, #FF6B81 100%);
+  color: #0B0F1F;
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(233, 69, 96, 0.4);
+  box-shadow: 0 4px 8px rgba(103,255,242, 0.4);
 }
 
 .btn-secondary {
-  background: #457b9d;
+  background: #43B0AF;
   color: white;
 }
 
 .btn-secondary:hover {
-  background: #5a92b5;
+  background: #97A0BE;
 }
 
 .btn-danger {
@@ -314,12 +314,12 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  background: #7b2d3a;
+  background: #E14E66;
   color: white;
 }
 
 .btn-danger:hover {
-  background: #9c3847;
+  background: #E14E66;
 }
 
 /* Attacks Table */
@@ -336,27 +336,27 @@
 .attacks-table td {
   padding: 12px;
   text-align: left;
-  border-bottom: 1px solid #0f3460;
-  color: #f1faee;
+  border-bottom: 1px solid #1A1F38;
+  color: #F5F8FF;
 }
 
 .attacks-table th {
-  background: #0f3460;
-  color: #e94560;
+  background: #1A1F38;
+  color: #67FFF2;
   font-weight: bold;
 }
 
 .attacks-table tr:hover {
-  background: #1a2a4e;
+  background: #1A1F38;
 }
 
 .attacks-table small {
-  color: #a8dadc;
+  color: #97A0BE;
   font-size: 11px;
 }
 
 .time-urgent {
-  color: #e63946;
+  color: #FF6B81;
   font-weight: bold;
   animation: pulse 1s infinite;
 }

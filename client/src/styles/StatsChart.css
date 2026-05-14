@@ -1,6 +1,6 @@
 .sc-wrapper {
-  background: #16213e;
-  border: 2px solid #0f3460;
+  background: #141937;
+  border: 2px solid #1A1F38;
   border-radius: 10px;
   overflow: hidden;
 }
@@ -9,7 +9,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #0f3460;
+  background: #1A1F38;
   padding: 8px 14px;
   gap: 12px;
   flex-wrap: wrap;
@@ -24,7 +24,7 @@
 .sc-tab {
   background: transparent;
   border: 1px solid transparent;
-  color: #6b7c9e;
+  color: #97A0BE;
   font-size: 13px;
   font-weight: bold;
   padding: 5px 14px;
@@ -34,12 +34,12 @@
 }
 
 .sc-tab:hover {
-  color: #a8dadc;
+  color: #97A0BE;
 }
 
 .sc-tab.active {
-  color: #e94560;
-  border-color: #e94560;
+  color: #67FFF2;
+  border-color: #67FFF2;
 }
 
 /* Range selector (7d / 30d / 90d) */
@@ -50,8 +50,8 @@
 
 .sc-range {
   background: transparent;
-  border: 1px solid #1a3a6e;
-  color: #6b7c9e;
+  border: 1px solid #2A3056;
+  color: #97A0BE;
   font-size: 12px;
   padding: 4px 10px;
   border-radius: 4px;
@@ -60,19 +60,19 @@
 }
 
 .sc-range:hover {
-  color: #a8dadc;
-  border-color: #a8dadc;
+  color: #97A0BE;
+  border-color: #97A0BE;
 }
 
 .sc-range.active {
-  color: #e2e8f0;
-  border-color: #a8dadc;
-  background: rgba(168, 218, 220, 0.1);
+  color: #DDE4F2;
+  border-color: #97A0BE;
+  background: rgba(103,255,242, 0.1);
 }
 
 /* Metric label between toolbar and chart */
 .sc-metric-label {
-  color: #a8dadc;
+  color: #97A0BE;
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
@@ -93,10 +93,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #a8dadc;
+  color: #97A0BE;
   font-size: 14px;
 }
 
 .sc-error {
-  color: #e94560;
+  color: #67FFF2;
 }

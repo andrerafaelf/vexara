@@ -25,8 +25,8 @@
 
 /* ── Tile ── */
 .nexus-map-tile {
-  background: rgba(15, 52, 96, 0.6);
-  border: 1px solid rgba(168, 218, 220, 0.15);
+  background: rgba(26,31,56, 0.6);
+  border: 1px solid rgba(103,255,242, 0.15);
   border-radius: 6px;
   overflow: hidden;
   display: flex;
@@ -37,14 +37,14 @@
 }
 
 .nexus-map-tile:hover {
-  border-color: rgba(168, 218, 220, 0.55);
-  background: rgba(15, 52, 96, 0.88);
+  border-color: rgba(103,255,242, 0.55);
+  background: rgba(26,31,56, 0.88);
   transform: translateY(-2px);
 }
 
 .nexus-map-tile.is-upgrading {
-  border-color: #e94560;
-  box-shadow: 0 0 10px rgba(233, 69, 96, 0.35);
+  border-color: #67FFF2;
+  box-shadow: 0 0 10px rgba(103,255,242, 0.35);
 }
 
 .nexus-map-tile.is-unbuilt {
@@ -70,7 +70,7 @@
 .nexus-map-upgrading-ring {
   position: absolute;
   inset: 0;
-  border: 2px solid #e94560;
+  border: 2px solid #67FFF2;
   border-radius: 5px;
   pointer-events: none;
   animation: nexusUpgradePulse 1.4s ease-in-out infinite;
@@ -93,7 +93,7 @@
 
 .nexus-map-tile-name {
   font-size: 10px;
-  color: #a8dadc;
+  color: #97A0BE;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -107,7 +107,7 @@
 .nexus-map-tile-level {
   font-size: 11px;
   font-weight: bold;
-  color: #4caf50;
+  color: #81EC86;
   flex-shrink: 0;
 }
 
@@ -122,7 +122,7 @@
   right: 4px;
   font-size: 10px;
   font-weight: bold;
-  color: #4caf50;
+  color: #81EC86;
   background: rgba(0, 0, 0, 0.6);
   border-radius: 3px;
   padding: 1px 4px;
@@ -146,12 +146,12 @@
 
 .nexus-map-compact .nexus-map-tile:hover {
   transform: none;
-  border-color: rgba(168, 218, 220, 0.15);
-  background: rgba(15, 52, 96, 0.6);
+  border-color: rgba(103,255,242, 0.15);
+  background: rgba(26,31,56, 0.6);
 }
 
 .nexus-map-compact.nexus-map-tile.is-upgrading:hover {
-  border-color: #e94560;
+  border-color: #67FFF2;
 }
 
 /* ── Responsive ── */

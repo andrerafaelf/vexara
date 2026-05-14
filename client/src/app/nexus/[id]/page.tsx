@@ -1,5 +1,6 @@
 'use client';
 
+import HeaderResourceStrip from '@/components/HeaderResourceStrip';
 import MobileNexusDrawer from '@/components/MobileNexusDrawer';
 import NexusSidebar from '@/components/NexusSidebar';
 import NexusView from '@/components/NexusView';
@@ -202,6 +203,7 @@ export default function NexusPage() {
             </button>
           </div>
           <div className="header-right">
+            <HeaderResourceStrip nexus={selectedNexus} />
             <button
               className="nexus-drawer-toggle"
               onClick={() => setIsNexusDrawerOpen((v) => !v)}
@@ -233,6 +235,19 @@ export default function NexusPage() {
         />
 
         <aside className={`mobile-drawer ${isMobileMenuOpen ? 'open' : ''}`}>
+          {user && (
+            <div className="commander-card commander-card-mobile">
+              <div className="commander-avatar" aria-hidden="true">
+                {(user.username ?? '?').slice(0, 1).toUpperCase()}
+              </div>
+              <div className="commander-info">
+                <div className="commander-name">{user.username}</div>
+                <div className="commander-meta">
+                  Commander · {nexuses.reduce((s, n) => s + (n.points ?? 0), 0).toLocaleString()} inf
+                </div>
+              </div>
+            </div>
+          )}
           <div className="mobile-drawer-links">
             <button
               className="nav-btn"
@@ -306,6 +321,7 @@ export default function NexusPage() {
             selectedNexusId={String(selectedNexus._id)}
             onSelectNexus={handleSelectNexus}
             unreadNexusIds={unreadNexusIds}
+            user={user}
           />
 
           <main className="main-content">

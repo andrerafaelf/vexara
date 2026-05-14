@@ -10,7 +10,7 @@
 .ps-tabs {
   display: flex;
   gap: 4px;
-  border-bottom: 2px solid #0f3460;
+  border-bottom: 2px solid #1A1F38;
   padding-bottom: 0;
 }
 
@@ -18,7 +18,7 @@
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
-  color: #7a9bae;
+  color: #97A0BE;
   font-size: 14px;
   font-weight: 600;
   padding: 8px 18px;
@@ -28,12 +28,12 @@
 }
 
 .ps-tab:hover {
-  color: #a8dadc;
+  color: #97A0BE;
 }
 
 .ps-tab--active {
-  color: #e94560;
-  border-bottom-color: #e94560;
+  color: #67FFF2;
+  border-bottom-color: #67FFF2;
 }
 
 .ps-notif-panel {
@@ -44,11 +44,11 @@
 .ps-error {
   padding: 40px;
   text-align: center;
-  color: #a8dadc;
+  color: #97A0BE;
 }
 
 .ps-error {
-  color: #e94560;
+  color: #67FFF2;
 }
 
 /* Header */
@@ -56,8 +56,8 @@
   display: flex;
   align-items: center;
   gap: 20px;
-  background: #16213e;
-  border: 2px solid #0f3460;
+  background: #141937;
+  border: 2px solid #1A1F38;
   border-radius: 10px;
   padding: 20px 24px;
 }
@@ -66,8 +66,8 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: #e94560;
-  color: #fff;
+  background: #67FFF2;
+  color: #0B0F1F;
   font-size: 26px;
   font-weight: bold;
   display: flex;
@@ -83,27 +83,27 @@
 }
 
 .ps-username {
-  color: #e94560;
+  color: #67FFF2;
   font-size: 22px;
   margin: 0;
 }
 
 .ps-meta {
-  color: #a8dadc;
+  color: #97A0BE;
   font-size: 13px;
 }
 
 /* Sections */
 .ps-section {
-  background: #16213e;
-  border: 2px solid #0f3460;
+  background: #141937;
+  border: 2px solid #1A1F38;
   border-radius: 10px;
   overflow: hidden;
 }
 
 .ps-section-title {
-  background: #0f3460;
-  color: #e94560;
+  background: #1A1F38;
+  color: #67FFF2;
   font-size: 14px;
   font-weight: bold;
   letter-spacing: 0.05em;
@@ -127,8 +127,8 @@
 }
 
 .ps-card {
-  background: #1a1a2e;
-  border: 1px solid #0f3460;
+  background: #0F1326;
+  border: 1px solid #1A1F38;
   border-radius: 8px;
   padding: 12px 14px;
   display: flex;
@@ -144,14 +144,14 @@
 }
 
 .ps-card-label {
-  color: #a8dadc;
+  color: #97A0BE;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
 .ps-card-sub {
-  color: #6b7c9e;
+  color: #97A0BE;
   font-size: 11px;
   margin-top: 2px;
 }
@@ -179,7 +179,7 @@
 .ps-bar-track {
   flex: 1;
   height: 8px;
-  background: #0f3460;
+  background: #1A1F38;
   border-radius: 4px;
   overflow: hidden;
 }
@@ -191,7 +191,7 @@
 }
 
 .ps-bar-pct {
-  color: #a8dadc;
+  color: #97A0BE;
   font-size: 11px;
   width: 32px;
   text-align: right;

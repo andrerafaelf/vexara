@@ -6,7 +6,7 @@ import {
   renameNexusGroup,
   setGroupNexuses,
 } from '../services/api';
-import { Nexus, NexusGroup } from '../types/game';
+import { Nexus, NexusGroup, User } from '../types/game';
 import GalaxyChip from './GalaxyChip';
 
 interface NexusSidebarProps {
@@ -15,6 +15,7 @@ interface NexusSidebarProps {
   onSelectNexus: (nexus: Nexus) => void;
   onGroupsChange?: (groups: NexusGroup[]) => void;
   unreadNexusIds?: Set<string>;
+  user?: User | null;
 }
 
 const GEAR_THRESHOLD = 2;
@@ -25,6 +26,7 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
   onSelectNexus,
   onGroupsChange,
   unreadNexusIds,
+  user,
 }) => {
   const [groups, setGroups] = useState<NexusGroup[]>([]);
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
@@ -67,64 +69,83 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
     });
   })();
 
+  const commanderInitial = (user?.username ?? '?').slice(0, 1).toUpperCase();
+  const totalPoints = nexuses.reduce((sum, n) => sum + (n.points ?? 0), 0);
+
   return (
     <>
       <nav className="nexus-nav">
-        <GalaxyChip onGalaxyChanged={() => window.location.reload()} />
-        <div className="nexus-nav-header">
-          <h3>Your Nexuses</h3>
-          {nexuses.length >= GEAR_THRESHOLD && (
-            <button
-              className="group-manage-btn"
-              onClick={() => setShowGroupManager(true)}
-              title="Manage groups"
-            >
-              ⚙
-            </button>
-          )}
-        </div>
-
-        {groups.length > 0 && (
-          <div className="nexus-group-filter">
-            <select
-              className="nexus-group-select"
-              value={activeGroupId ?? ''}
-              onChange={(e) => setActiveGroupId(e.target.value || null)}
-            >
-              <option value="">All</option>
-              {groups.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {visibleNexuses.map((nexus) => (
-          <div
-            key={nexus._id}
-            className={`nexus-item ${String(nexus._id) === selectedNexusId ? 'active' : ''}`}
-            onClick={() => onSelectNexus(nexus)}
-          >
-            <div className="nexus-name">
-              {nexus.name}
-              {nexus.nexusType === 'Resource Depot' && <span title="Resource Depot — 2x Production"> ⚡</span>}
-              {nexus.nexusType === 'Supply Cache' && <span title="Supply Cache — 2x Storage"> 📦</span>}
-              {nexus.nexusType === 'Military Outpost' && <span title="Military Outpost — +50% Shield, 25% Faster Training"> 🛡️</span>}
-              {nexus.nexusType === 'Reclaimed Outpost' && <span title="Reclaimed Outpost — 20% Faster Construction"> 🔧</span>}
-            </div>
-            <div className="nexus-coords">
-              ({nexus.x}|{nexus.y})
-            </div>
-            <div className="nexus-points">{nexus.points} inf</div>
-            {nexus.buildQueue.length > 0 && <div className="nexus-badge">🏗️</div>}
-            {nexus.trainingQueue.length > 0 && <div className="nexus-badge">🎖️</div>}
-            {unreadNexusIds?.has(String(nexus._id)) && (
-              <div className="nexus-badge nexus-badge-unread" title="Unread combat reports">📜</div>
+        <div className="nexus-nav-scroll">
+          <GalaxyChip onGalaxyChanged={() => window.location.reload()} />
+          <div className="nexus-nav-header">
+            <h3>Your Nexuses</h3>
+            {nexuses.length >= GEAR_THRESHOLD && (
+              <button
+                className="group-manage-btn"
+                onClick={() => setShowGroupManager(true)}
+                title="Manage groups"
+              >
+                ⚙
+              </button>
             )}
           </div>
-        ))}
+
+          {groups.length > 0 && (
+            <div className="nexus-group-filter">
+              <select
+                className="nexus-group-select"
+                value={activeGroupId ?? ''}
+                onChange={(e) => setActiveGroupId(e.target.value || null)}
+              >
+                <option value="">All</option>
+                {groups.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {visibleNexuses.map((nexus) => (
+            <div
+              key={nexus._id}
+              className={`nexus-item ${String(nexus._id) === selectedNexusId ? 'active' : ''}`}
+              onClick={() => onSelectNexus(nexus)}
+            >
+              <div className="nexus-name">
+                {nexus.name}
+                {nexus.nexusType === 'Resource Depot' && <span title="Resource Depot — 2x Production"> ⚡</span>}
+                {nexus.nexusType === 'Supply Cache' && <span title="Supply Cache — 2x Storage"> 📦</span>}
+                {nexus.nexusType === 'Military Outpost' && <span title="Military Outpost — +50% Shield, 25% Faster Training"> 🛡️</span>}
+                {nexus.nexusType === 'Reclaimed Outpost' && <span title="Reclaimed Outpost — 20% Faster Construction"> 🔧</span>}
+              </div>
+              <div className="nexus-coords">
+                ({nexus.x}|{nexus.y})
+              </div>
+              <div className="nexus-points">{nexus.points} inf</div>
+              {nexus.buildQueue.length > 0 && <div className="nexus-badge">🏗️</div>}
+              {nexus.trainingQueue.length > 0 && <div className="nexus-badge">🎖️</div>}
+              {unreadNexusIds?.has(String(nexus._id)) && (
+                <div className="nexus-badge nexus-badge-unread" title="Unread combat reports">📜</div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {user && (
+          <div className="commander-card" aria-label="Commander summary">
+            <div className="commander-avatar" aria-hidden="true">
+              {commanderInitial}
+            </div>
+            <div className="commander-info">
+              <div className="commander-name">{user.username}</div>
+              <div className="commander-meta">
+                Commander · {totalPoints.toLocaleString()} inf
+              </div>
+            </div>
+          </div>
+        )}
       </nav>
 
       {showGroupManager && (

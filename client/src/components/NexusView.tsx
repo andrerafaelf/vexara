@@ -1523,12 +1523,65 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
         {activeTab === 'overview' && (
           <div className="overview-tab">
             <NexusMap nexus={nexus} onClickBuilding={() => setActiveTab('buildings')} />
-            <div className="nexus-overview-meta">
-              <span>
-                📍 ({nexus.x}|{nexus.y})
-              </span>
-              <span>📊 {nexus.points} inf</span>
-              {nexus.controlLevel !== undefined && <span>🛡️ {nexus.controlLevel}/100 ctrl</span>}
+
+            <div className="nexus-stats-row" aria-label="Nexus key stats">
+              <div className="nexus-stat">
+                <div className="nexus-stat-label">SHIELD</div>
+                <div className="nexus-stat-value-row">
+                  <span className="nexus-stat-value">{nexus.buildings.shieldGrid}</span>
+                  <span className="nexus-stat-max">/ 20</span>
+                </div>
+                <div className="nexus-stat-bar-track">
+                  <div
+                    className="nexus-stat-bar-fill nexus-stat-bar-fill-cyan"
+                    style={{ width: `${Math.min(100, (nexus.buildings.shieldGrid / 20) * 100)}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="nexus-stat">
+                <div className="nexus-stat-label">CONTROL</div>
+                <div className="nexus-stat-value-row">
+                  <span className="nexus-stat-value">{nexus.controlLevel ?? 0}</span>
+                  <span className="nexus-stat-max">/ 100</span>
+                </div>
+                <div className="nexus-stat-bar-track">
+                  <div
+                    className="nexus-stat-bar-fill nexus-stat-bar-fill-cyan"
+                    style={{ width: `${Math.min(100, nexus.controlLevel ?? 0)}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="nexus-stat">
+                <div className="nexus-stat-label">POPULATION</div>
+                <div className="nexus-stat-value-row">
+                  <span className="nexus-stat-value">{nexus.population.current}</span>
+                  <span className="nexus-stat-max">/ {nexus.population.max}</span>
+                </div>
+                <div className="nexus-stat-bar-track">
+                  <div
+                    className="nexus-stat-bar-fill nexus-stat-bar-fill-cyan"
+                    style={{
+                      width: `${
+                        nexus.population.max > 0
+                          ? Math.min(100, (nexus.population.current / nexus.population.max) * 100)
+                          : 0
+                      }%`,
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="nexus-stat">
+                <div className="nexus-stat-label">POINTS</div>
+                <div className="nexus-stat-value-row">
+                  <span className="nexus-stat-value">{nexus.points.toLocaleString()}</span>
+                </div>
+                <div className="nexus-stat-coords">
+                  ({nexus.x}|{nexus.y})
+                </div>
+              </div>
             </div>
 
             {nexus.newbieProtectionEndsAt && new Date(nexus.newbieProtectionEndsAt) > currentTime && (

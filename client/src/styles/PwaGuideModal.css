@@ -10,8 +10,8 @@
 }
 
 .pwa-modal {
-  background: #0a2040;
-  border: 1px solid #1d5b8f;
+  background: #141937;
+  border: 1px solid #2A3056;
   border-radius: 12px;
   padding: 28px 24px 24px;
   max-width: 480px;
@@ -28,7 +28,7 @@
   right: 16px;
   background: none;
   border: none;
-  color: #7a9bae;
+  color: #97A0BE;
   font-size: 22px;
   line-height: 1;
   cursor: pointer;
@@ -38,7 +38,7 @@
 }
 
 .pwa-modal-close:hover {
-  color: #f1faee;
+  color: #F5F8FF;
 }
 
 .pwa-modal-header {
@@ -52,7 +52,7 @@
 }
 
 .pwa-modal-title {
-  color: #e94560;
+  color: #67FFF2;
   font-size: 18px;
   font-weight: 700;
   text-transform: uppercase;
@@ -61,7 +61,7 @@
 }
 
 .pwa-modal-subtitle {
-  color: #a8dadc;
+  color: #97A0BE;
   font-size: 13px;
   margin: 0;
   line-height: 1.5;
@@ -76,10 +76,10 @@
 .pwa-tab {
   flex: 1;
   padding: 9px 12px;
-  background: #0f3460;
-  border: 1px solid #1d5b8f;
+  background: #1A1F38;
+  border: 1px solid #2A3056;
   border-radius: 6px;
-  color: #7a9bae;
+  color: #97A0BE;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -87,14 +87,14 @@
 }
 
 .pwa-tab--active {
-  background: #e94560;
-  border-color: #e94560;
-  color: #fff;
+  background: #67FFF2;
+  border-color: #67FFF2;
+  color: #0B0F1F;
 }
 
 .pwa-tab:not(.pwa-tab--active):hover {
-  background: #1a3f6f;
-  color: #f1faee;
+  background: #2A3056;
+  color: #F5F8FF;
 }
 
 .pwa-modal-section {
@@ -102,7 +102,7 @@
 }
 
 .pwa-modal-section-title {
-  color: #f1faee;
+  color: #F5F8FF;
   font-size: 14px;
   font-weight: 600;
   margin: 0 0 10px;
@@ -117,11 +117,11 @@
   justify-content: center;
   width: 22px;
   height: 22px;
-  background: #e94560;
+  background: #67FFF2;
   border-radius: 50%;
   font-size: 12px;
   font-weight: 700;
-  color: #fff;
+  color: #0B0F1F;
   flex-shrink: 0;
 }
 
@@ -140,13 +140,13 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  color: #a8dadc;
+  color: #97A0BE;
   font-size: 13px;
   line-height: 1.5;
   padding: 8px 12px;
   background: rgba(255, 255, 255, 0.03);
   border-radius: 6px;
-  border-left: 2px solid #1d5b8f;
+  border-left: 2px solid #2A3056;
 }
 
 .pwa-modal-step::before {
@@ -156,20 +156,20 @@
   justify-content: center;
   min-width: 20px;
   height: 20px;
-  background: #1d5b8f;
+  background: #2A3056;
   border-radius: 50%;
   font-size: 11px;
   font-weight: 700;
-  color: #a8dadc;
+  color: #97A0BE;
   flex-shrink: 0;
   margin-top: 1px;
 }
 
 .pwa-modal-note {
-  background: rgba(233, 69, 96, 0.1);
-  border: 1px solid rgba(233, 69, 96, 0.3);
+  background: rgba(103,255,242, 0.1);
+  border: 1px solid rgba(103,255,242, 0.3);
   border-radius: 6px;
-  color: #f1a0b0;
+  color: #FF8FA3;
   font-size: 12px;
   padding: 10px 12px;
   margin-bottom: 20px;
@@ -178,8 +178,8 @@
 
 .pwa-modal-done {
   width: 100%;
-  background: #e94560;
-  color: #fff;
+  background: #67FFF2;
+  color: #0B0F1F;
   border: none;
   border-radius: 6px;
   padding: 11px 16px;
@@ -190,5 +190,5 @@
 }
 
 .pwa-modal-done:hover {
-  background: #c73552;
+  background: #E14E66;
 }
