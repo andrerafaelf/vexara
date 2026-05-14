@@ -327,7 +327,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: "server/scripts/mailgun-test.ts"
+          source: "server/scripts/mailgun-send.ts"
           target: "/opt/vexara"
 
       - name: Mailgun one-shot test
@@ -345,8 +345,8 @@ jobs:
             fi
             MAILGUN_API_KEY=$(grep '^MAILGUN_API_KEY=' /opt/vexara/.env | cut -d= -f2-)
             SERVER_CONTAINER=$(docker ps --filter name=server --format '{{.Names}}' | head -1)
-            docker cp /opt/vexara/server/scripts/mailgun-test.ts "$SERVER_CONTAINER":/app/mailgun-test.ts
+            docker cp /opt/vexara/server/scripts/mailgun-send.ts "$SERVER_CONTAINER":/app/mailgun-send.ts
             docker exec -e MAILGUN_API_KEY="$MAILGUN_API_KEY" "$SERVER_CONTAINER" \
-              node --import tsx/esm /app/mailgun-test.ts
+              node --import tsx/esm /app/mailgun-send.ts
             touch "$SENTINEL"
             echo "Mailgun test complete — sentinel written."
