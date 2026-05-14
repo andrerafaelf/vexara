@@ -21,10 +21,34 @@ set +o allexport
 
 echo "[deploy] Starting deploy with IMAGE_TAG=$IMAGE_TAG"
 
-# Substitute domain placeholder in nginx.conf before the container mounts it
+# Verify SSL certs exist before generating nginx.conf — a missing cert
+# would crash the entire proxy, taking the player-facing site down.
+MAIN_CERT="/etc/letsencrypt/live/${DOMAIN}/fullchain.pem"
+ADMIN_CERT="/etc/letsencrypt/live/admin.${DOMAIN}/fullchain.pem"
+
+if [ ! -f "$MAIN_CERT" ]; then
+  echo "[deploy] FATAL: main cert missing at $MAIN_CERT — run bootstrap-vps.sh first" >&2
+  exit 1
+fi
+
+# Render the main config from template
 sed "s/DOMAIN_PLACEHOLDER/${DOMAIN}/g" \
   "$APP_DIR/deploy/nginx/nginx.conf.template" \
   > "$APP_DIR/deploy/nginx/nginx.conf"
+
+# Render the admin server block from its own template, but only if the cert exists.
+# Otherwise replace the include line with a comment so nginx still starts.
+if [ -f "$ADMIN_CERT" ]; then
+  sed "s/DOMAIN_PLACEHOLDER/${DOMAIN}/g" \
+    "$APP_DIR/deploy/nginx/admin.conf.template" \
+    > "$APP_DIR/deploy/nginx/admin.conf"
+else
+  echo "[deploy] WARN: admin cert missing at $ADMIN_CERT — admin panel will be unreachable"
+  echo "[deploy] To issue it, on the VPS run:"
+  echo "  sudo docker stop vx-nginx && sudo certbot certonly --standalone -d admin.${DOMAIN} --non-interactive --agree-tos -m admin@${DOMAIN} && sudo docker start vx-nginx"
+  # Empty file so the nginx include is a no-op
+  : > "$APP_DIR/deploy/nginx/admin.conf"
+fi
 
 # Pull all new images (fast, parallel)
 echo "[deploy] Pulling images..."

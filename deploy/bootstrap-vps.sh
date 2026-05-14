@@ -103,10 +103,13 @@ certbot certonly --standalone \
 # Disable host nginx so it never races the container for port 80
 systemctl disable --now nginx 2>/dev/null || true
 
-# Pre-generate nginx.conf from template so it exists before first deploy
+# Pre-generate nginx configs from templates so they exist before first deploy
 sed "s/DOMAIN_PLACEHOLDER/${DOMAIN}/g" \
   "$APP_DIR/deploy/nginx/nginx.conf.template" \
   > "$APP_DIR/deploy/nginx/nginx.conf"
+sed "s/DOMAIN_PLACEHOLDER/${DOMAIN}/g" \
+  "$APP_DIR/deploy/nginx/admin.conf.template" \
+  > "$APP_DIR/deploy/nginx/admin.conf"
 
 # ─── Auto-renew: webroot mode — nginx container serves the challenge ──────────
 # No port conflicts; certbot writes to /var/www/certbot, nginx serves it.

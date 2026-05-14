@@ -1,5 +1,6 @@
-# Generated at deploy time from nginx.conf.template — never commit
+# Generated at deploy time from *.template — never commit
 deploy/nginx/nginx.conf
+deploy/nginx/admin.conf
 
 **/node_modules/
 **/.next/

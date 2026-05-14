@@ -168,7 +168,9 @@ services:
       - "443:443"
     volumes:
       - ./deploy/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      # nginx.conf is generated from nginx.conf.template by deploy.sh (DOMAIN substituted)
+      - ./deploy/nginx/admin.conf:/etc/nginx/admin.conf:ro
+      # nginx.conf and admin.conf are generated from *.template by deploy.sh
+      # admin.conf is empty if the admin SSL cert is missing
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - /var/www/certbot:/var/www/certbot
     networks:
