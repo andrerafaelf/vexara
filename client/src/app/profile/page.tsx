@@ -80,7 +80,8 @@ export default function ProfilePage() {
       return;
     }
     loadNexuses();
-  }, [loadNexuses, router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadNexuses]);
 
   const handleSelectNexus = (nexus: Nexus) => {
     localStorage.setItem('selectedNexusId', String(nexus._id));

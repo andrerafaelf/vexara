@@ -84,7 +84,8 @@ export default function MarketPage() {
     loadVillages();
     const interval = setInterval(loadVillages, 30000);
     return () => clearInterval(interval);
-  }, [loadVillages, router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadVillages]);
 
   const handleSelectNexus = (nexus: Nexus) => {
     localStorage.setItem('selectedNexusId', String(nexus._id));

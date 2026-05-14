@@ -114,7 +114,9 @@ export default function NexusPage() {
       console.error('Error loading nexuses:', err);
       setLoading(false);
     }
-  }, [nexusId, refreshCombatReportNotification, router]);
+  // router is intentionally omitted — it's stable and including it causes a fetch loop
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nexusId, refreshCombatReportNotification]);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -136,7 +138,9 @@ export default function NexusPage() {
     loadVillages();
     const interval = setInterval(loadVillages, 30000);
     return () => clearInterval(interval);
-  }, [loadVillages, router]);
+  // router is intentionally omitted — stable ref, including it restarts the interval on every render
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadVillages]);
 
   const handleSelectNexus = (nexus: Nexus) => {
     setIsMobileMenuOpen(false);

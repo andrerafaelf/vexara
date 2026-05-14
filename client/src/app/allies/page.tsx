@@ -84,7 +84,8 @@ export default function FriendsPage() {
     loadData();
     const interval = setInterval(loadData, 30000);
     return () => clearInterval(interval);
-  }, [loadData, router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadData]);
 
   const handleSelectNexus = (nexus: Nexus) => {
     localStorage.setItem('selectedNexusId', String(nexus._id));
