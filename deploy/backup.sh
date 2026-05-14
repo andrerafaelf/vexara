@@ -10,8 +10,11 @@ RETENTION_DAYS=14
 TIMESTAMP=$(date +"%Y-%m-%dT%H-%M-%S")
 BACKUP_FILE="$BACKUP_DIR/vexara_${TIMESTAMP}.sql.gz"
 
-# Load env
-source "$APP_DIR/.env"
+# Load env (literal parse — avoids bash executing special chars in secret values)
+while IFS='=' read -r key value; do
+  case "$key" in ''|\#*) continue ;; esac
+  export "$key=$value"
+done < "$APP_DIR/.env"
 
 mkdir -p "$BACKUP_DIR"
 
