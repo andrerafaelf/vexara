@@ -202,7 +202,7 @@ jobs:
             set -e
             # Wait up to 60s for healthcheck
             for i in $(seq 1 12); do
-              STATUS=$(curl -sf -o /dev/null -w "%{http_code}" https://${{ vars.DOMAIN }}/healthz || echo "000")
+              STATUS=$(curl -sf -o /dev/null -w "%{http_code}" https://${{ vars.DOMAIN }}/healthz)
               if [ "$STATUS" = "200" ]; then
                 echo "Smoke test passed (HTTP 200)"
                 exit 0
