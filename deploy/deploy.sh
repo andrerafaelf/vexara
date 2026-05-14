@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 # Zero-downtime rolling deploy for Vexara
-# Usage: bash deploy.sh <image-tag>
 # Called by GitHub Actions; can also be run manually on the VPS.
 
 set -euo pipefail
 
-IMAGE_TAG="${1:-latest}"
 APP_DIR="/opt/vexara"
 COMPOSE="docker compose -f $APP_DIR/docker-compose.prod.yml"
 TIMEOUT=120       # seconds to wait for each service to become healthy
@@ -25,7 +23,7 @@ while IFS='=' read -r key value; do
   export "$key=$value"
 done < "$APP_DIR/.env"
 
-echo "[deploy] Starting deploy with IMAGE_TAG=$IMAGE_TAG"
+echo "[deploy] Starting deploy (server=${SERVER_TAG:-latest} admin-server=${ADMIN_SERVER_TAG:-latest} client=${CLIENT_TAG:-latest} admin-client=${ADMIN_CLIENT_TAG:-latest})"
 
 # Verify SSL certs exist before generating nginx.conf — a missing cert
 # would crash the entire proxy, taking the player-facing site down.
@@ -166,6 +164,6 @@ done
 # Remove dangling images to recover disk space
 docker image prune -f --filter "until=72h"
 
-echo "[deploy] Deploy complete. IMAGE_TAG=$IMAGE_TAG"
+echo "[deploy] Deploy complete."
 echo ""
 $COMPOSE ps

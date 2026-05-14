@@ -37,7 +37,7 @@ services:
 
   # ── Game Server ───────────────────────────────────────────────────────────────
   server:
-    image: ghcr.io/${GITHUB_REPOSITORY}/server:${IMAGE_TAG:-latest}
+    image: ghcr.io/${GITHUB_REPOSITORY}/server:${SERVER_TAG:-latest}
     container_name: vx-server
     restart: unless-stopped
     depends_on:
@@ -70,7 +70,7 @@ services:
 
   # ── Admin Server ──────────────────────────────────────────────────────────────
   admin-server:
-    image: ghcr.io/${GITHUB_REPOSITORY}/admin-server:${IMAGE_TAG:-latest}
+    image: ghcr.io/${GITHUB_REPOSITORY}/admin-server:${ADMIN_SERVER_TAG:-latest}
     container_name: vx-admin-server
     restart: unless-stopped
     depends_on:
@@ -98,7 +98,7 @@ services:
 
   # ── Player Client (Next.js) ───────────────────────────────────────────────────
   client:
-    image: ghcr.io/${GITHUB_REPOSITORY}/client:${IMAGE_TAG:-latest}
+    image: ghcr.io/${GITHUB_REPOSITORY}/client:${CLIENT_TAG:-latest}
     container_name: vx-client
     restart: unless-stopped
     depends_on:
@@ -124,7 +124,7 @@ services:
 
   # ── Admin Client (Next.js) ────────────────────────────────────────────────────
   admin-client:
-    image: ghcr.io/${GITHUB_REPOSITORY}/admin-client:${IMAGE_TAG:-latest}
+    image: ghcr.io/${GITHUB_REPOSITORY}/admin-client:${ADMIN_CLIENT_TAG:-latest}
     container_name: vx-admin-client
     restart: unless-stopped
     depends_on:

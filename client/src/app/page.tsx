@@ -21,21 +21,14 @@ export default function Home() {
       const response = await getMyNexuses();
       const allNexuses = response.data;
       setNexuses(allNexuses);
-
-      if (allNexuses.length > 0) {
-        const storedNexusId = localStorage.getItem(SELECTED_NEXUS_KEY);
-        const preferredNexus =
-          allNexuses.find((nexus: { _id: string | null }) => nexus._id === storedNexusId) ?? allNexuses[0];
-        localStorage.setItem(SELECTED_NEXUS_KEY, preferredNexus._id);
-        router.replace(`/nexus/${preferredNexus._id}`);
-      }
-
       setLoading(false);
+      return allNexuses as Nexus[];
     } catch (err) {
       console.error('Error loading nexuses:', err);
       setLoading(false);
+      return [];
     }
-  }, [router]);
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -43,10 +36,18 @@ export default function Home() {
       router.push('/auth');
       return;
     }
-    loadNexuses();
+    loadNexuses().then((allNexuses) => {
+      if (allNexuses.length > 0) {
+        const storedNexusId = localStorage.getItem(SELECTED_NEXUS_KEY);
+        const preferredNexus = allNexuses.find((n) => n._id === storedNexusId) ?? allNexuses[0];
+        localStorage.setItem(SELECTED_NEXUS_KEY, preferredNexus._id);
+        router.replace(`/nexus/${preferredNexus._id}`);
+      }
+    });
     const interval = setInterval(loadNexuses, 30000);
     return () => clearInterval(interval);
-  }, [loadNexuses, router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleCreateNexus = async () => {
     if (creating) return;

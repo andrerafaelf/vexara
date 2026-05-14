@@ -53,72 +53,166 @@ jobs:
         working-directory: client
         run: npx tsc --noEmit
 
-  # ─── Build & Push Docker Images ──────────────────────────────────────────────
-  build:
-    name: Build images
+  # ─── Detect changed services ─────────────────────────────────────────────────
+  changes:
+    name: Detect changes
     runs-on: ubuntu-latest
-    needs: test
     if: github.ref == 'refs/heads/main'
+    outputs:
+      server: ${{ steps.filter.outputs.server }}
+      admin-server: ${{ steps.filter.outputs.admin-server }}
+      client: ${{ steps.filter.outputs.client }}
+      admin-client: ${{ steps.filter.outputs.admin-client }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            server:
+              - 'server/**'
+            admin-server:
+              - 'admin-server/**'
+            client:
+              - 'client/**'
+            admin-client:
+              - 'admin-client/**'
+
+  # ─── Build & Push Docker Images ──────────────────────────────────────────────
+  build-server:
+    name: Build server
+    runs-on: ubuntu-latest
+    needs: [test, changes]
+    if: github.ref == 'refs/heads/main' && needs.changes.outputs.server == 'true'
     permissions:
       contents: read
       packages: write
-
-    strategy:
-      matrix:
-        include:
-          - service: server
-            context: ./server
-            file: ./server/Dockerfile
-            image_suffix: server
-          - service: admin-server
-            context: .
-            file: ./admin-server/Dockerfile
-            image_suffix: admin-server
-          - service: client
-            context: ./client
-            file: ./client/Dockerfile
-            image_suffix: client
-            build_args: |
-              NEXT_PUBLIC_API_URL=https://${{ vars.DOMAIN }}/api
-              NEXT_PUBLIC_APP_URL=https://${{ vars.DOMAIN }}
-          - service: admin-client
-            context: ./admin-client
-            file: ./admin-client/Dockerfile
-            image_suffix: admin-client
-            build_args: |
-              NEXT_PUBLIC_ADMIN_API_URL=https://admin.${{ vars.DOMAIN }}/api/admin
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
+      - uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Extract metadata
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/metadata-action@v5
         id: meta
-        uses: docker/metadata-action@v5
         with:
-          images: ${{ env.IMAGE_BASE }}/${{ matrix.image_suffix }}
+          images: ${{ env.IMAGE_BASE }}/server
           tags: |
             type=sha,prefix=sha-
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v5
+            type=raw,value=latest
+      - uses: docker/build-push-action@v5
         with:
-          context: ${{ matrix.context }}
-          file: ${{ matrix.file }}
+          context: ./server
+          file: ./server/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: ${{ matrix.build_args || '' }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-admin-server:
+    name: Build admin-server
+    runs-on: ubuntu-latest
+    needs: [test, changes]
+    if: github.ref == 'refs/heads/main' && needs.changes.outputs.admin-server == 'true'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.IMAGE_BASE }}/admin-server
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest
+      - uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./admin-server/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-client:
+    name: Build client
+    runs-on: ubuntu-latest
+    needs: [test, changes]
+    if: github.ref == 'refs/heads/main' && needs.changes.outputs.client == 'true'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.IMAGE_BASE }}/client
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest
+      - uses: docker/build-push-action@v5
+        with:
+          context: ./client
+          file: ./client/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            NEXT_PUBLIC_API_URL=https://${{ vars.DOMAIN }}/api
+            NEXT_PUBLIC_APP_URL=https://${{ vars.DOMAIN }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-admin-client:
+    name: Build admin-client
+    runs-on: ubuntu-latest
+    needs: [test, changes]
+    if: github.ref == 'refs/heads/main' && needs.changes.outputs.admin-client == 'true'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.IMAGE_BASE }}/admin-client
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest
+      - uses: docker/build-push-action@v5
+        with:
+          context: ./admin-client
+          file: ./admin-client/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            NEXT_PUBLIC_ADMIN_API_URL=https://admin.${{ vars.DOMAIN }}/api/admin
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -126,16 +220,24 @@ jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    needs: build
-    if: github.ref == 'refs/heads/main'
+    needs: [changes, build-server, build-admin-server, build-client, build-admin-client]
+    # Run if all builds either succeeded or were skipped (not if any failed)
+    if: |
+      github.ref == 'refs/heads/main' &&
+      !failure() && !cancelled()
     environment: production
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Derive image tag
+      - name: Derive image tags
         id: tag
-        run: echo "IMAGE_TAG=sha-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        run: |
+          SHA_TAG="sha-$(git rev-parse --short HEAD)"
+          [[ '${{ needs.changes.outputs.server }}'       == 'true' ]] && echo "SERVER_TAG=${SHA_TAG}"       >> $GITHUB_OUTPUT || echo "SERVER_TAG=latest"       >> $GITHUB_OUTPUT
+          [[ '${{ needs.changes.outputs.admin-server }}' == 'true' ]] && echo "ADMIN_SERVER_TAG=${SHA_TAG}" >> $GITHUB_OUTPUT || echo "ADMIN_SERVER_TAG=latest" >> $GITHUB_OUTPUT
+          [[ '${{ needs.changes.outputs.client }}'       == 'true' ]] && echo "CLIENT_TAG=${SHA_TAG}"       >> $GITHUB_OUTPUT || echo "CLIENT_TAG=latest"       >> $GITHUB_OUTPUT
+          [[ '${{ needs.changes.outputs.admin-client }}' == 'true' ]] && echo "ADMIN_CLIENT_TAG=${SHA_TAG}" >> $GITHUB_OUTPUT || echo "ADMIN_CLIENT_TAG=latest" >> $GITHUB_OUTPUT
 
       - name: Clean deploy files on VPS
         uses: appleboy/ssh-action@v1.0.3
@@ -170,7 +272,10 @@ jobs:
             # Write .env from GitHub secrets (never stored in git)
             cat > .env <<'ENVEOF'
             GITHUB_REPOSITORY=${{ github.repository }}
-            IMAGE_TAG=${{ steps.tag.outputs.IMAGE_TAG }}
+            SERVER_TAG=${{ steps.tag.outputs.SERVER_TAG }}
+            ADMIN_SERVER_TAG=${{ steps.tag.outputs.ADMIN_SERVER_TAG }}
+            CLIENT_TAG=${{ steps.tag.outputs.CLIENT_TAG }}
+            ADMIN_CLIENT_TAG=${{ steps.tag.outputs.ADMIN_CLIENT_TAG }}
             DOMAIN=${{ vars.DOMAIN }}
             POSTGRES_USER=${{ secrets.POSTGRES_USER }}
             POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
@@ -193,7 +298,7 @@ jobs:
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             # Zero-downtime rolling update
-            bash /opt/vexara/deploy/deploy.sh ${{ steps.tag.outputs.IMAGE_TAG }}
+            bash /opt/vexara/deploy/deploy.sh
 
       - name: Smoke test
         uses: appleboy/ssh-action@v1.0.3
@@ -203,7 +308,6 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             set -e
-            # Wait up to 60s for healthcheck
             for i in $(seq 1 12); do
               STATUS=$(curl -sf -o /dev/null -w "%{http_code}" https://${{ vars.DOMAIN }}/healthz)
               if [ "$STATUS" = "200" ]; then
