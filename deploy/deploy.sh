@@ -32,9 +32,28 @@ if [ ! -f "$MAIN_CERT" ]; then
 fi
 
 # Render the main config from template
-sed "s/DOMAIN_PLACEHOLDER/${DOMAIN}/g" \
-  "$APP_DIR/deploy/nginx/nginx.conf.template" \
-  > "$APP_DIR/deploy/nginx/nginx.conf"
+TEMPLATE="$APP_DIR/deploy/nginx/nginx.conf.template"
+RENDERED="$APP_DIR/deploy/nginx/nginx.conf"
+
+if [ ! -f "$TEMPLATE" ]; then
+  echo "[deploy] FATAL: template not found at $TEMPLATE" >&2
+  exit 1
+fi
+
+sed "s/DOMAIN_PLACEHOLDER/${DOMAIN}/g" "$TEMPLATE" > "$RENDERED"
+
+if [ ! -s "$RENDERED" ]; then
+  echo "[deploy] FATAL: rendered nginx.conf is empty at $RENDERED" >&2
+  exit 1
+fi
+
+# Sanity check: ensure substitution actually happened
+if grep -q DOMAIN_PLACEHOLDER "$RENDERED"; then
+  echo "[deploy] FATAL: DOMAIN_PLACEHOLDER still present in rendered config" >&2
+  exit 1
+fi
+
+echo "[deploy] Rendered nginx.conf ($(wc -l < "$RENDERED") lines)"
 
 # Render the admin server block from its own template, but only if the cert exists.
 # Otherwise replace the include line with a comment so nginx still starts.
@@ -60,7 +79,14 @@ SERVICES_ORDER="postgres server admin-server client admin-client grafana nginx"
 
 for SERVICE in $SERVICES_ORDER; do
   echo "[deploy] Updating $SERVICE..."
-  $COMPOSE up -d --no-deps "$SERVICE"
+
+  # For nginx, force recreate so config file changes are picked up and
+  # any stale mount from a previous (broken) deploy is discarded.
+  if [ "$SERVICE" = "nginx" ]; then
+    $COMPOSE up -d --no-deps --force-recreate "$SERVICE"
+  else
+    $COMPOSE up -d --no-deps "$SERVICE"
+  fi
 
   SERVICE_TIMEOUT=$TIMEOUT
   [ "$SERVICE" = "grafana" ] && SERVICE_TIMEOUT=$GRAFANA_TIMEOUT
