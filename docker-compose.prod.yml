@@ -161,6 +161,8 @@ services:
         condition: service_healthy
       admin-client:
         condition: service_healthy
+      grafana:
+        condition: service_started
     ports:
       - "80:80"
       - "443:443"
