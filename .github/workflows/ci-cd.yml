@@ -292,6 +292,7 @@ jobs:
             PGADMIN_EMAIL=${{ secrets.PGADMIN_EMAIL }}
             PGADMIN_PASSWORD=${{ secrets.PGADMIN_PASSWORD }}
             PGADMIN_ALLOW_IPS=${{ vars.PGADMIN_ALLOW_IPS }}
+            MAILGUN_API_KEY=${{ secrets.MAILGUN_API_KEY }}
             ENVEOF
 
             # Log in to GHCR on the VPS
@@ -319,3 +320,33 @@ jobs:
             done
             echo "Smoke test FAILED after 60s"
             exit 1
+
+      - name: Copy mailgun test script to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "server/scripts/mailgun-test.ts"
+          target: "/opt/vexara"
+
+      - name: Mailgun one-shot test
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+            SENTINEL=/opt/vexara/.mailgun-test-done
+            if [ -f "$SENTINEL" ]; then
+              echo "Mailgun test already ran — skipping."
+              exit 0
+            fi
+            MAILGUN_API_KEY=$(grep '^MAILGUN_API_KEY=' /opt/vexara/.env | cut -d= -f2-)
+            SERVER_CONTAINER=$(docker ps --filter name=server --format '{{.Names}}' | head -1)
+            docker cp /opt/vexara/server/scripts/mailgun-test.ts "$SERVER_CONTAINER":/app/mailgun-test.ts
+            docker exec -e MAILGUN_API_KEY="$MAILGUN_API_KEY" "$SERVER_CONTAINER" \
+              node --import tsx/esm /app/mailgun-test.ts
+            touch "$SENTINEL"
+            echo "Mailgun test complete — sentinel written."
