@@ -100,6 +100,10 @@ certbot certonly --standalone \
   --non-interactive --agree-tos -m "admin@${DOMAIN}" \
   --keep-until-expiring
 
+# Let non-root processes (deploy user, nginx container running as nginx UID)
+# traverse the letsencrypt dirs. Private key files inside archive/ stay 0600.
+chmod 0755 /etc/letsencrypt/live /etc/letsencrypt/archive 2>/dev/null || true
+
 # Disable host nginx so it never races the container for port 80
 systemctl disable --now nginx 2>/dev/null || true
 
