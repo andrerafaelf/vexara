@@ -85,8 +85,14 @@ echo "==> Setting up app directory $APP_DIR..."
 mkdir -p "$APP_DIR"
 chown "$DEPLOY_USER":"$DEPLOY_USER" "$APP_DIR"
 
-# ─── SSL certificates (certbot standalone — no Nginx needed on host) ──────────
-# Port 80 must be free at this point (no container stack running yet).
+# ─── SSL certificates ────────────────────────────────────────────────────────
+# Ensure nothing holds port 80 (old nginx binary, prior certbot run, etc.)
+echo "==> Freeing port 80 before ACME challenge..."
+systemctl stop nginx 2>/dev/null || true
+fuser -k 80/tcp 2>/dev/null || true
+
+mkdir -p /var/www/certbot
+
 echo "==> Obtaining SSL certificates..."
 certbot certonly --standalone \
   -d "${DOMAIN}" \
@@ -94,9 +100,14 @@ certbot certonly --standalone \
   --non-interactive --agree-tos -m "admin@${DOMAIN}" \
   --keep-until-expiring
 
-# ─── Auto-renew: stop nginx container, renew, restart ────────────────────────
+# Disable host nginx so it never races the container for port 80
+systemctl disable --now nginx 2>/dev/null || true
+
+# ─── Auto-renew: webroot mode — nginx container serves the challenge ──────────
+# No port conflicts; certbot writes to /var/www/certbot, nginx serves it.
+# After renewal, send nginx a reload signal (no restart = zero downtime).
 echo "==> Adding certbot renewal cron..."
-(crontab -l 2>/dev/null; echo "0 3 * * * docker stop vx-nginx && certbot renew --quiet && docker start vx-nginx") \
+(crontab -l 2>/dev/null; echo "0 3 * * * certbot renew --quiet --webroot -w /var/www/certbot && docker kill --signal=HUP vx-nginx") \
   | sort -u | crontab -
 
 # ─── Log rotation for docker json-file logs ──────────────────────────────────
