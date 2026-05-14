@@ -86,7 +86,7 @@ jobs:
             file: ./admin-client/Dockerfile
             image_suffix: admin-client
             build_args: |
-              NEXT_PUBLIC_ADMIN_API_URL=https://admin.${{ vars.DOMAIN }}/api
+              NEXT_PUBLIC_ADMIN_API_URL=https://admin.${{ vars.DOMAIN }}/api/admin
 
     steps:
       - uses: actions/checkout@v4
