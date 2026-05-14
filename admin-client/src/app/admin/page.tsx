@@ -21,15 +21,23 @@ export default function AdminPage() {
   };
 
   return (
-    <main style={{ minHeight: '100vh', background: '#0a1228', color: '#eaf0ff' }}>
+    <main className="admin-page">
       <header className="admin-page-header">
-        <h1 className="admin-page-title">⚡ Vexara Admin</h1>
+        <div className="admin-page-brand">
+          <span className="admin-page-mark" aria-hidden="true">
+            VX
+          </span>
+          <span>
+            <span className="admin-page-title">Vexara Admin</span>
+            <span className="admin-page-subtitle">Operations console</span>
+          </span>
+        </div>
         <button className="admin-logout-btn" onClick={handleLogout}>
-          Logout
+          Sign out
         </button>
       </header>
 
-      <section style={{ padding: '1.5rem 1rem' }}>
+      <section className="admin-page-body">
         <Admin />
       </section>
     </main>

@@ -34,8 +34,9 @@
 }
 
 .friends-tab.active {
-  background: #67FFF2;
-  color: #0B0F1F;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--border-accent);
 }
 
 .friends-badge {

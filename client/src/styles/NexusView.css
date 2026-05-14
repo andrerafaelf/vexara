@@ -245,6 +245,13 @@
   transition: color var(--duration-fast) var(--ease-out),
               border-color var(--duration-fast) var(--ease-out);
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nexus-tab-btn svg {
+  flex-shrink: 0;
 }
 
 .nexus-tab-btn:hover {
@@ -312,6 +319,13 @@
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.10em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.overview-queue-summary-label svg {
+  color: var(--accent);
 }
 
 .overview-queue-summary-detail {
@@ -527,6 +541,13 @@
   font-size: var(--text-md);
   letter-spacing: -0.005em;
   color: var(--text-strong);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.overview-shortcut-title svg {
+  color: var(--accent);
 }
 
 .overview-shortcut-status {
@@ -1200,9 +1221,21 @@
 }
 
 .cost-details span {
-  color: #F5F8FF;
-  font-size: 13px;
+  color: var(--text-default);
+  font-size: var(--text-sm);
   white-space: nowrap;
+}
+
+.cost-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-default);
+  font-variant-numeric: tabular-nums;
+}
+
+.cost-pill svg {
+  color: var(--text-muted);
 }
 
 .build-time {

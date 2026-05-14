@@ -18,22 +18,29 @@
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
-  color: #97A0BE;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 8px 18px;
-  margin-bottom: -2px;
+  color: var(--text-muted);
+  font-size: var(--text-base);
+  font-weight: 500;
+  padding: 10px 16px;
+  margin-bottom: -1px;
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: color var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out);
 }
 
 .ps-tab:hover {
-  color: #97A0BE;
+  color: var(--text-strong);
+  border-bottom-color: var(--border-strong);
 }
 
-.ps-tab--active {
-  color: #67FFF2;
-  border-bottom-color: #67FFF2;
+.ps-tab--active,
+.ps-tab--active:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
 }
 
 .ps-notif-panel {

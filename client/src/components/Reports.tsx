@@ -1,8 +1,10 @@
+import { Coins, Skull, Swords, Trophy } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { getReadReportIds, getReports, markAllReportsRead, markReportRead, sendAttack } from '../services/api';
 import '../styles/Reports.css';
 import { Attack, Nexus } from '../types/game';
 import { formatDateTime } from '../utils/date';
+import ResourceIcon from './ResourceIcon';
 
 interface ReportsProps {
   nexus: Nexus;
@@ -10,18 +12,18 @@ interface ReportsProps {
 }
 
 const troopNames: Record<string, string> = {
-  lancerDrone: '🛡️ Lancer Drone',
-  assaultTrooper: '⚔️ Assault Trooper',
-  breakerUnit: '🔨 Breaker Unit',
-  reconOperative: '🔍 Recon Operative',
-  skimmerBike: '🏍️ Skimmer Bike',
-  siegeMech: '🤖 Siege Mech',
-  bulwarkGuard: '🛡️ Bulwark Guard',
-  suppressorTeam: '🎯 Suppressor Team',
-  disruptorUnit: '⚡ Disruptor Unit',
-  interceptorBike: '🏍️ Interceptor Bike',
-  annihilatorPlatform: '💀 Annihilator Platform',
-  overseer: '👁️ Overseer',
+  lancerDrone: 'Lancer Drone',
+  assaultTrooper: 'Assault Trooper',
+  breakerUnit: 'Breaker Unit',
+  reconOperative: 'Recon Operative',
+  skimmerBike: 'Skimmer Bike',
+  siegeMech: 'Siege Mech',
+  bulwarkGuard: 'Bulwark Guard',
+  suppressorTeam: 'Suppressor Team',
+  disruptorUnit: 'Disruptor Unit',
+  interceptorBike: 'Interceptor Bike',
+  annihilatorPlatform: 'Annihilator Platform',
+  overseer: 'Overseer',
 };
 
 const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
@@ -200,20 +202,20 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
         <div className="report-detail">
           <div className={`report-result ${selectedReport.result.victory ? 'victory' : 'defeat'}`}>
             {scoutReport ? (
-              <span>🔍 Recon complete. Intelligence updated.</span>
+              <span>Recon complete. Intelligence updated.</span>
             ) : isMyAttack ? (
               selectedReport.result.victory ? (
                 <>
-                  <span>🎉 Victory! You won the strike</span>
-                  {selectedReport.result.conquered && <div className="conquest-notice">👑 NEXUS CONQUERED!</div>}
+                  <span>Victory! You won the strike</span>
+                  {selectedReport.result.conquered && <div className="conquest-notice">NEXUS CONQUERED!</div>}
                 </>
               ) : (
-                <span>💀 Defeat! Your strike failed</span>
+                <span>Defeat! Your strike failed</span>
               )
             ) : selectedReport.result.victory ? (
-              <span>💀 Defeat! Your nexus was raided</span>
+              <span>Defeat! Your nexus was raided</span>
             ) : (
-              <span>🛡️ Victory! You defended successfully</span>
+              <span>Victory! You defended successfully</span>
             )}
           </div>
 
@@ -230,7 +232,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
                   </span>
                 </div>
                 <button className="scout-attack-btn" onClick={() => setShowAttackForm((v) => !v)}>
-                  ⚔️ {showAttackForm ? 'Cancel' : 'Attack'}
+                  <Swords size={14} aria-hidden="true" /> {showAttackForm ? 'Cancel' : 'Attack'}
                 </button>
               </div>
               {showAttackForm && (
@@ -273,8 +275,12 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
             <div className="report-section">
               <h3>Scouted Intelligence</h3>
               <p>
-                <strong>Resources:</strong> 🧬 {selectedReport.result.intel.resources.biomass} | ⚙️{' '}
-                {selectedReport.result.intel.resources.alloy} | 💎 {selectedReport.result.intel.resources.ore}
+                <strong>Resources:</strong>{' '}
+                <ResourceIcon kind="biomass" size={12} /> {selectedReport.result.intel.resources.biomass}{' '}
+                {' · '}
+                <ResourceIcon kind="alloy" size={12} /> {selectedReport.result.intel.resources.alloy}{' '}
+                {' · '}
+                <ResourceIcon kind="ore" size={12} /> {selectedReport.result.intel.resources.ore}
               </p>
               <p>
                 <strong>Population:</strong> {selectedReport.result.intel.population.current}/
@@ -292,14 +298,12 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
           {!scoutReport && (
             <>
               {selectedReport.result.controlReduced && !selectedReport.result.conquered && (
-                <div className="control-notice">
-                  🎯 Control reduced! Remaining: {selectedReport.result.remainingControl}/100
+                <div className="control-notice">Control reduced! Remaining: {selectedReport.result.remainingControl}/100
                 </div>
               )}
 
               {selectedReport.result.nexusLifeReduced && (
-                <div className="control-notice">
-                  ⚡ Nexus life reduced! Remaining: {selectedReport.result.remainingNexusLife || 0}/
+                <div className="control-notice">Nexus life reduced! Remaining: {selectedReport.result.remainingNexusLife || 0}/
                   {selectedReport.defender.nexus?.buildings?.shieldGrid ? 100 : 0}
                 </div>
               )}
@@ -441,17 +445,17 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
                 <div className="resources-stolen">
                   {selectedReport.result.resourcesStolen.biomass > 0 && (
                     <div className="resource-item">
-                      <span>🧬 Biomass:</span> {selectedReport.result.resourcesStolen.biomass}
+                      <span>Biomass:</span> {selectedReport.result.resourcesStolen.biomass}
                     </div>
                   )}
                   {selectedReport.result.resourcesStolen.alloy > 0 && (
                     <div className="resource-item">
-                      <span>⚙️ Alloy:</span> {selectedReport.result.resourcesStolen.alloy}
+                      <span>Alloy:</span> {selectedReport.result.resourcesStolen.alloy}
                     </div>
                   )}
                   {selectedReport.result.resourcesStolen.ore > 0 && (
                     <div className="resource-item">
-                      <span>💎 Ore:</span> {selectedReport.result.resourcesStolen.ore}
+                      <span>Ore:</span> {selectedReport.result.resourcesStolen.ore}
                     </div>
                   )}
                 </div>
@@ -466,7 +470,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
     <div className="reports-container">
       <div className="reports-header">
         <div className="reports-header-row">
-          <h2>📜 Combat Logs</h2>
+          <h2>Combat Logs</h2>
           {unreadCount > 0 && (
             <button className="btn-read-all" onClick={handleMarkAllRead}>
               Mark all read ({unreadCount})
@@ -494,7 +498,13 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
                 className={`report-item ${hasBeenViewed ? (won ? 'won' : 'lost') : ''}`}
                 onClick={() => setSelectedReport(report)}
               >
-                <div className="report-icon">{hasBeenViewed ? (won ? '🎉' : '💀') : '⚔️'}</div>
+                <div className="report-icon" aria-hidden="true">
+                  {hasBeenViewed ? (
+                    won ? <Trophy size={18} /> : <Skull size={18} />
+                  ) : (
+                    <Swords size={18} />
+                  )}
+                </div>
                 <div className="report-info">
                   <div className="report-title">
                     {hasBeenViewed ? (
@@ -527,7 +537,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
                     <span className="report-date">{formatDate(report.arrivesAt)}</span>
                     {hasBeenViewed && !scoutReport && isMyAttack && report.result.resourcesStolen && (
                       <span className="loot">
-                        💰{' '}
+                        <Coins size={12} aria-hidden="true" />{' '}
                         {report.result.resourcesStolen.biomass +
                           report.result.resourcesStolen.alloy +
                           report.result.resourcesStolen.ore}

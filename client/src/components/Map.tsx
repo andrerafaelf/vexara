@@ -1,3 +1,4 @@
+import { Building, Home, Info, Shield, Star, Swords } from 'lucide-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -602,7 +603,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
                 ? 'Out of bounds'
                 : nexus
                   ? nexus.newbieProtectionEndsAt && new Date(nexus.newbieProtectionEndsAt) > currentTime
-                    ? `${nexus.name} (${nexus.x}|${nexus.y}) — 🛡️ Protected`
+                    ? `${nexus.name} (${nexus.x}|${nexus.y}) — Protected`
                     : `${nexus.name} (${nexus.x}|${nexus.y})`
                   : `(${x}|${y})`
             }
@@ -610,8 +611,13 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
             data-y={y}
           >
             {nexus && (
-              <div className={`nexus-marker ${isCurrent ? 'nexus-marker-current' : isOwnNexus ? 'nexus-marker-own' : 'nexus-marker-enemy'}`}>
-                {isCurrent ? '⭐' : isOwnNexus ? '🏛️' : '🏘️'}
+              <div
+                className={`nexus-marker ${
+                  isCurrent ? 'nexus-marker-current' : isOwnNexus ? 'nexus-marker-own' : 'nexus-marker-enemy'
+                }`}
+                aria-hidden="true"
+              >
+                {isCurrent ? <Star size={14} /> : isOwnNexus ? <Building size={14} /> : <Home size={14} />}
               </div>
             )}
             <div className="cell-coords">{isOutOfBounds ? '—' : `${x}|${y}`}</div>
@@ -668,9 +674,9 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
         <div className="no-selection">
           <p>Select a nexus on the map to view its details</p>
           <div className="legend">
-            <div>⭐ Active Nexus</div>
-            <div>🏛️ Your Other Nexus</div>
-            <div>🏘️ Enemy / NPC Nexus</div>
+            <div>Active Nexus</div>
+            <div>Your Other Nexus</div>
+            <div>Enemy / NPC Nexus</div>
           </div>
         </div>
       );
@@ -695,8 +701,12 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
         <h3>
           {selectedNexus.name}
           {isNpc && (
-            <span className="nexus-info-icon" title={getNodeTypeInfo(selectedNexus.name)}>
-              ℹ️
+            <span
+              className="nexus-info-icon"
+              title={getNodeTypeInfo(selectedNexus.name)}
+              aria-label={getNodeTypeInfo(selectedNexus.name)}
+            >
+              <Info size={14} />
             </span>
           )}
         </h3>
@@ -706,7 +716,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
 
         {isNewbieProtected && (
           <div className="newbie-protection-banner">
-            <span className="newbie-protection-icon">🛡️</span>
+            <Shield size={14} className="newbie-protection-icon" aria-hidden="true" />
             <span className="newbie-protection-text">
               Protected — {formatTime(new Date(selectedNexus.newbieProtectionEndsAt!))} remaining
             </span>
@@ -782,7 +792,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
 
         {selectedNexus.intelLevel === 'scouted' && selectedNexus.scoutedAt && (
           <div className="intel-warning intel-timestamp">
-            <span>🔍 Scouted: </span>
+            <span>Scouted: </span>
             <span>{formatDateTime(selectedNexus.scoutedAt)}</span>
           </div>
         )}
@@ -800,11 +810,11 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
                 disabled={isConquered || isNewbieProtected}
                 title={isConquered ? 'Nexus already conquered' : isNewbieProtected ? 'Nexus is under newbie protection' : 'Launch attack'}
               >
-                ⚔️ {isConquered ? 'Conquered' : 'Attack'}
+                <Swords size={14} aria-hidden="true" /> {isConquered ? 'Conquered' : 'Attack'}
               </button>
             ) : (
               <div className="attack-form">
-                <h4>⚔️ Launch Attack</h4>
+                <h4>Launch Attack</h4>
                 <div className="troop-selector">
                   {attackTroopRows.map(([type, available]) => {
                     const effectiveMax = type === 'overseer' ? Math.min(Number(available), 1) : Number(available);
@@ -870,8 +880,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
                 type="button"
                 className="transfer-toggle-btn"
                 onClick={() => { setShowTransfer((v) => !v); setShowTroopSend(false); }}
-              >
-                📦 Send Resources {showTransfer ? '▲' : '▼'}
+              >Send Resources {showTransfer ? '▲' : '▼'}
               </button>
               {showTransfer && (
                 <div className="transfer-panel">
@@ -881,7 +890,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
                       const available = Math.floor(currentNexus.resources[res]);
                       return (
                         <div key={res} className="transfer-input-row">
-                          <label>{res === 'biomass' ? '🌿 Biomass' : res === 'alloy' ? '🔩 Alloy' : '⛏️ Ore'}</label>
+                          <label>{res === 'biomass' ? 'Biomass' : res === 'alloy' ? 'Alloy' : 'Ore'}</label>
                           <input
                             type="number"
                             min={0}
@@ -912,8 +921,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
                 type="button"
                 className="transfer-toggle-btn"
                 onClick={() => { setShowTroopSend((v) => !v); setShowTransfer(false); }}
-              >
-                🚀 Send Troops {showTroopSend ? '▲' : '▼'}
+              >Send Troops {showTroopSend ? '▲' : '▼'}
               </button>
               {showTroopSend && (
                 <div className="transfer-panel">
@@ -963,7 +971,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
       <div className="attacks-panel">
         {incomingAttacks.length > 0 && (
           <div className="attacks-section">
-            <h4>⚠️ Incoming ({incomingAttacks.length})</h4>
+            <h4>Incoming ({incomingAttacks.length})</h4>
             {incomingAttacks.map((attack: any) => (
               <div key={attack._id} className="attack-item incoming">
                 <div className="attack-from">
@@ -976,11 +984,11 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
         )}
         {outgoingAttacks.length > 0 && (
           <div className="attacks-section">
-            <h4>🚀 Outgoing ({outgoingAttacks.length})</h4>
+            <h4>Outgoing ({outgoingAttacks.length})</h4>
             {outgoingAttacks.map((attack: any) => (
               <div key={attack._id} className="attack-item outgoing">
                 <div className="attack-to">
-                  {attack.status === 'returning' ? '↩ Returning from:' : 'To:'}{' '}
+                  {attack.status === 'returning' ? 'Returning from:' : 'To:'}{' '}
                   <strong>{attack.defenderNexus?.name || 'Unknown'}</strong>
                 </div>
                 <div className="attack-time">
@@ -1003,10 +1011,10 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
           <span>
             Viewing: ({centerX}|{centerY}) | Map Size: {MAP_SIZE}x{MAP_SIZE} ({MAP_SIZE * MAP_SIZE} hexes)
           </span>
-          <span className="map-hint">💡 Drag or swipe to pan • Ctrl+scroll or pinch to zoom</span>
+          <span className="map-hint">Drag or swipe to pan • Ctrl+scroll or pinch to zoom</span>
         </div>
         <div className="map-controls">
-          <button onClick={handleResetMap}>🏠 Reset Map</button>
+          <button onClick={handleResetMap}>Reset Map</button>
           <div className="map-coordinate-controls">
             <span>Go to</span>
             <input

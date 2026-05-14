@@ -72,6 +72,16 @@ model GalaxyPlayer {
   @@index([galaxyId])
 }
 
+model AlphaSignup {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique @db.VarChar(254)
+  createdAt DateTime @default(now())
+  invitedAt DateTime?
+  source    String?  @db.VarChar(64)
+
+  @@index([createdAt])
+}
+
 model PushSubscription {
   id        Int      @id @default(autoincrement())
   userId    Int

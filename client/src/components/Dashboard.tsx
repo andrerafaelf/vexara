@@ -1,8 +1,10 @@
+import { Check, Users } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { getOutgoingAttacks } from '../services/api';
 import '../styles/Dashboard.css';
 import { Nexus, NexusGroup } from '../types/game';
 import NexusMap from './NexusMap';
+import ResourceIcon from './ResourceIcon';
 
 const TROOP_NAMES: { [key: string]: string } = {
   lancerDrone: 'Lancer Drone',
@@ -325,7 +327,8 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
               <div>
                 <h2 className="cc-nexus-name">{focusedNexus.name}</h2>
                 <span className="cc-nexus-meta">
-                  ({focusedNexus.x}|{focusedNexus.y}) &nbsp;·&nbsp; {focusedNexus.points} inf &nbsp;·&nbsp; 👥{' '}
+                  ({focusedNexus.x}|{focusedNexus.y}) &nbsp;·&nbsp; {focusedNexus.points} inf &nbsp;·&nbsp;{' '}
+                  <Users size={12} aria-hidden="true" style={{ verticalAlign: -2 }} />{' '}
                   {focusedNexus.population.current}/{focusedNexus.population.max}
                 </span>
               </div>
@@ -372,31 +375,33 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 
             {/* Resources */}
             <div className="cc-resources">
-              {[
+              {([
                 {
-                  icon: '🧬',
+                  kind: 'biomass' as const,
                   label: 'Biomass',
                   val: Math.floor(focusedNexus.resources.biomass),
                   cap: getStorageCapacity(focusedNexus),
                   rate: calculateProduction(focusedNexus).biomass,
                 },
                 {
-                  icon: '⚙️',
+                  kind: 'alloy' as const,
                   label: 'Alloy',
                   val: Math.floor(focusedNexus.resources.alloy),
                   cap: getStorageCapacity(focusedNexus),
                   rate: calculateProduction(focusedNexus).alloy,
                 },
                 {
-                  icon: '💎',
+                  kind: 'ore' as const,
                   label: 'Ore',
                   val: Math.floor(focusedNexus.resources.ore),
                   cap: getStorageCapacity(focusedNexus),
                   rate: calculateProduction(focusedNexus).ore,
                 },
-              ].map(({ icon, label, val, cap, rate }) => (
+              ]).map(({ kind, label, val, cap, rate }) => (
                 <div key={label} className="cc-resource-block">
-                  <span className="cc-resource-icon">{icon}</span>
+                  <span className="cc-resource-icon">
+                    <ResourceIcon kind={kind} size={16} />
+                  </span>
                   <div className="cc-resource-text">
                     <span className="cc-resource-label">{label}</span>
                     <span className="cc-resource-value">
@@ -419,7 +424,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
       <div className="cc-activity-row">
         {/* Construction */}
         <div className="cc-card">
-          <h3 className="cc-card-title">🏗️ Construction</h3>
+          <h3 className="cc-card-title">Construction</h3>
           {activeBuilding.length > 0 ? (
             <div className="activity-list">
               {activeBuilding.map((nexus) => (
@@ -440,7 +445,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 
         {/* Training */}
         <div className="cc-card">
-          <h3 className="cc-card-title">🎖️ Training</h3>
+          <h3 className="cc-card-title">Training</h3>
           {activeTraining.length > 0 ? (
             <div className="activity-list">
               {activeTraining.map((nexus) => (
@@ -461,7 +466,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 
         {/* Outgoing Strikes */}
         <div className="cc-card">
-          <h3 className="cc-card-title">⚔️ Outgoing Strikes</h3>
+          <h3 className="cc-card-title">Outgoing Strikes</h3>
           {outgoingAttacks.length > 0 ? (
             <div className="activity-list">
               {outgoingAttacks.map((attack) => (
@@ -470,7 +475,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
                     {nexuses.find((v) => v._id === attack.attacker.nexus)?.name || 'Unknown'}
                   </div>
                   <div className="activity-details">
-                    {attack.status === 'returning' ? '↩ returning from' : '→'}{' '}
+                    {attack.status === 'returning' ? 'returning from' : '→'}{' '}
                     {attack.defender?.nexus?.name || 'Unknown'} ({attack.defender?.nexus?.x || '?'}|
                     {attack.defender?.nexus?.y || '?'})
                   </div>
@@ -490,7 +495,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
       <div className="cc-bottom-row">
         {/* Quest progress */}
         <div className="cc-card cc-quests-panel">
-          <h3 className="cc-card-title">🎯 Quest Progress</h3>
+          <h3 className="cc-card-title">Quest Progress</h3>
           <div className="dashboard-quests-grid">
             {visibleNexuses.map((nexus) => {
               const questBatches = getQuestBatches(nexus);
@@ -524,7 +529,9 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
                               key={`${nexus._id}-${batch.id}-${quest.id}`}
                               className={`intro-quest-item ${quest.completed ? 'completed' : ''}`}
                             >
-                              <span className="intro-quest-icon">{quest.completed ? '✅' : '⬜'}</span>
+                              <span className="intro-quest-icon" aria-hidden="true">
+                              {quest.completed ? <Check size={14} /> : null}
+                            </span>
                               <div>
                                 <p className="intro-quest-title">{quest.title}</p>
                                 <p className="intro-quest-description">{quest.description}</p>
@@ -545,7 +552,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 
         {/* Empire summary */}
         <div className="cc-card cc-empire-panel">
-          <h3 className="cc-card-title">🌐 Empire</h3>
+          <h3 className="cc-card-title">Empire</h3>
           <div className="cc-empire-stats">
             <div className="cc-empire-stat">
               <span className="cc-empire-stat-value">{nexuses.length}</span>
@@ -593,7 +600,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
         <div className="attack-modal-overlay" onClick={() => setSelectedAttack(null)}>
           <div className="attack-modal" onClick={(e) => e.stopPropagation()}>
             <div className="attack-modal-header">
-              <h3>⚔️ Strike Details</h3>
+              <h3>Strike Details</h3>
               <button className="close-btn" onClick={() => setSelectedAttack(null)}>
                 ✕
               </button>
@@ -613,12 +620,12 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
               </div>
 
               <div className="attack-info-section">
-                <h4>⏱️ Arrival Time</h4>
+                <h4>Arrival Time</h4>
                 <p className="arrival-countdown">{formatTime(selectedAttack.arrivesAt)}</p>
               </div>
 
               <div className="attack-info-section">
-                <h4>🎖️ Troops Sent</h4>
+                <h4>Troops Sent</h4>
                 <div className="troops-breakdown">
                   {Object.entries(selectedAttack.troops || {}).map(
                     ([troopType, count]) =>
@@ -633,13 +640,13 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
               </div>
 
               <div className="attack-info-section">
-                <h4>📋 Mission Type</h4>
+                <h4>Mission Type</h4>
                 <p>
                   {selectedAttack.type === 'attack'
-                    ? '⚔️ Attack'
+                    ? 'Attack'
                     : selectedAttack.type === 'support'
-                      ? '🛡️ Support'
-                      : '🔍 Scout'}
+                      ? 'Support'
+                      : 'Scout'}
                 </p>
               </div>
             </div>

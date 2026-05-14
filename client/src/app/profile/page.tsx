@@ -76,7 +76,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      router.push('/auth');
+      router.push('/login');
       return;
     }
     loadNexuses();

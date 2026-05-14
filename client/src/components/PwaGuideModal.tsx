@@ -1,5 +1,6 @@
 'use client';
 
+import { Bell } from 'lucide-react';
 import React, { useState } from 'react';
 import '@/styles/PwaGuideModal.css';
 
@@ -67,7 +68,9 @@ export default function PwaGuideModal({ onClose }: Props) {
         <button className="pwa-modal-close" onClick={onClose} aria-label="Close">×</button>
 
         <div className="pwa-modal-header">
-          <div className="pwa-modal-icon">🔔</div>
+          <div className="pwa-modal-icon" aria-hidden="true">
+            <Bell size={28} />
+          </div>
           <h2 className="pwa-modal-title">Enable Notifications</h2>
           <p className="pwa-modal-subtitle">
             Follow the steps for your device to receive push notifications.

@@ -8,9 +8,11 @@ import {
   renameNexusGroup,
   setGroupNexuses,
 } from '../services/api';
+import { Check, Hammer, Pencil, ScrollText, Settings, Swords, Trash2, X } from 'lucide-react';
 import '../styles/MobileNexusDrawer.css';
 import { Nexus, NexusGroup } from '../types/game';
 import GalaxyChip from './GalaxyChip';
+import NexusTypeBadge from './NexusTypeBadge';
 
 interface MobileNexusDrawerProps {
   nexuses: Nexus[];
@@ -74,12 +76,17 @@ const MobileNexusDrawer: React.FC<MobileNexusDrawerProps> = ({
                 className="group-manage-btn"
                 onClick={() => setShowGroupManager(true)}
                 title="Manage groups"
+                aria-label="Manage groups"
               >
-                ⚙
+                <Settings size={14} />
               </button>
             )}
-            <button className="mobile-nexus-drawer-close" onClick={onClose} aria-label="Close nexus panel">
-              ✕
+            <button
+              className="mobile-nexus-drawer-close"
+              onClick={onClose}
+              aria-label="Close nexus panel"
+            >
+              <X size={18} />
             </button>
           </div>
         </div>
@@ -109,21 +116,30 @@ const MobileNexusDrawer: React.FC<MobileNexusDrawerProps> = ({
               onClick={() => handleSelect(nexus)}
             >
               <div className="nexus-name">
-                {nexus.name}
-                {nexus.nexusType === 'Resource Depot' && <span title="Resource Depot — 2x Production"> ⚡</span>}
-                {nexus.nexusType === 'Supply Cache' && <span title="Supply Cache — 2x Storage"> 📦</span>}
-                {nexus.nexusType === 'Military Outpost' && <span title="Military Outpost — +50% Shield, 25% Faster Training"> 🛡️</span>}
-                {nexus.nexusType === 'Reclaimed Outpost' && <span title="Reclaimed Outpost — 20% Faster Construction"> 🔧</span>}
+                <span className="nexus-name-text">{nexus.name}</span>
+                <NexusTypeBadge type={nexus.nexusType} />
               </div>
               <div className="nexus-coords">
                 ({nexus.x}|{nexus.y})
               </div>
               <div className="nexus-points">{nexus.points} inf</div>
-              {nexus.buildQueue.length > 0 && <div className="nexus-badge">🏗️</div>}
-              {nexus.trainingQueue.length > 0 && <div className="nexus-badge">🎖️</div>}
-              {unreadNexusIds?.has(String(nexus._id)) && (
-                <div className="nexus-badge nexus-badge-unread" title="Unread combat reports">📜</div>
-              )}
+              <div className="nexus-badges">
+                {nexus.buildQueue.length > 0 && (
+                  <span className="nexus-badge" title="Construction in progress">
+                    <Hammer size={12} />
+                  </span>
+                )}
+                {nexus.trainingQueue.length > 0 && (
+                  <span className="nexus-badge" title="Training in progress">
+                    <Swords size={12} />
+                  </span>
+                )}
+                {unreadNexusIds?.has(String(nexus._id)) && (
+                  <span className="nexus-badge nexus-badge-unread" title="Unread combat reports">
+                    <ScrollText size={12} />
+                  </span>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -227,7 +243,9 @@ const GroupManagerModal: React.FC<GroupManagerModalProps> = ({
       <div className="group-modal" onClick={(e) => e.stopPropagation()}>
         <div className="group-modal-header">
           <h2>Manage Nexus Groups</h2>
-          <button className="group-modal-close" onClick={onClose}>✕</button>
+          <button className="group-modal-close" onClick={onClose} aria-label="Close">
+            <X size={18} />
+          </button>
         </div>
 
         <div className="group-modal-body">
@@ -252,8 +270,21 @@ const GroupManagerModal: React.FC<GroupManagerModalProps> = ({
                         autoFocus
                         maxLength={32}
                       />
-                      <button className="group-save-btn" disabled={saving} onClick={() => handleRename(g.id)}>✓</button>
-                      <button className="group-cancel-btn" onClick={() => setEditingId(null)}>✕</button>
+                      <button
+                        className="group-save-btn"
+                        disabled={saving}
+                        onClick={() => handleRename(g.id)}
+                        aria-label="Save name"
+                      >
+                        <Check size={14} />
+                      </button>
+                      <button
+                        className="group-cancel-btn"
+                        onClick={() => setEditingId(null)}
+                        aria-label="Cancel"
+                      >
+                        <X size={14} />
+                      </button>
                     </div>
                   ) : (
                     <>
@@ -261,13 +292,26 @@ const GroupManagerModal: React.FC<GroupManagerModalProps> = ({
                       <span className="group-list-count">{g.nexusIds.length}</span>
                       <button
                         className="group-edit-btn"
-                        onClick={(e) => { e.stopPropagation(); setEditingId(g.id); setEditName(g.name); }}
-                      >✏</button>
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingId(g.id);
+                          setEditName(g.name);
+                        }}
+                        aria-label="Rename group"
+                      >
+                        <Pencil size={13} />
+                      </button>
                       <button
                         className="group-delete-btn"
                         disabled={saving}
-                        onClick={(e) => { e.stopPropagation(); handleDelete(g.id); }}
-                      >🗑</button>
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(g.id);
+                        }}
+                        aria-label="Delete group"
+                      >
+                        <Trash2 size={13} />
+                      </button>
                     </>
                   )}
                 </div>

@@ -2,6 +2,7 @@
 
 import { getUserStats } from '@/services/api';
 import { UserStats } from '@/types/game';
+import { Bell, User as UserIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import '../styles/ProfileStats.css';
 import NotificationSettings from './NotificationSettings';
@@ -83,13 +84,15 @@ export default function ProfileStats() {
           className={`ps-tab ${tab === 'stats' ? 'ps-tab--active' : ''}`}
           onClick={() => setTab('stats')}
         >
-          👤 Stats
+          <UserIcon size={14} aria-hidden="true" />
+          <span>Stats</span>
         </button>
         <button
           className={`ps-tab ${tab === 'notifications' ? 'ps-tab--active' : ''}`}
           onClick={() => setTab('notifications')}
         >
-          🔔 Notifications
+          <Bell size={14} aria-hidden="true" />
+          <span>Notifications</span>
         </button>
       </div>
 

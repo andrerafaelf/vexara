@@ -1,11 +1,36 @@
 import type { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import prisma from '../lib/prisma.js';
 import { comparePassword } from '../models/User.js';
 import * as authService from '../services/authService.js';
-import { validateUsername } from '../utils/validation.js';
+import { validateEmail, validateUsername } from '../utils/validation.js';
 
 export async function register(_req: Request, res: Response): Promise<void> {
   res.status(403).json({ error: 'Registration is disabled' });
+}
+
+export async function alphaSignup(req: Request, res: Response): Promise<void> {
+  try {
+    const rawEmail = (req.body as { email?: string })?.email;
+    if (!validateEmail(rawEmail)) {
+      res.status(400).json({ error: 'Please enter a valid email address.' });
+      return;
+    }
+
+    const email = String(rawEmail).trim().toLowerCase();
+    const rawSource = (req.body as { source?: string })?.source;
+    const source = typeof rawSource === 'string' && rawSource.length <= 64 ? rawSource : 'register';
+
+    await prisma.alphaSignup.upsert({
+      where: { email },
+      create: { email, source },
+      update: {},
+    });
+
+    res.status(202).json({ ok: true });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
 }
 
 export async function login(req: Request, res: Response): Promise<void> {

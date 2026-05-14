@@ -16,6 +16,7 @@ import {
 } from '@/services/api';
 import '@/styles/FriendsView.css';
 import { formatDate, formatTimeOfDay } from '@/utils/date';
+import { MessageSquare, Users, UserPlus } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 type TabId = 'friends' | 'requests' | 'chat';
@@ -291,20 +292,23 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
           className={`friends-tab ${tab === 'friends' ? 'active' : ''}`}
           onClick={() => setTab('friends')}
         >
-          🤝 Allies ({friends.length})
+          <Users size={14} aria-hidden="true" />
+          <span>Allies ({friends.length})</span>
         </button>
         <button
           className={`friends-tab ${tab === 'requests' ? 'active' : ''}`}
           onClick={() => setTab('requests')}
         >
-          ✉️ Requests
+          <UserPlus size={14} aria-hidden="true" />
+          <span>Requests</span>
           {incomingCount > 0 && <span className="friends-badge">{incomingCount}</span>}
         </button>
         <button
           className={`friends-tab ${tab === 'chat' ? 'active' : ''}`}
           onClick={() => setTab('chat')}
         >
-          💬 Chat
+          <MessageSquare size={14} aria-hidden="true" />
+          <span>Chat</span>
         </button>
       </div>
 
@@ -339,8 +343,14 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
                     </span>
                   </div>
                   <div className="friends-list-actions">
-                    <button className="friends-btn" onClick={(e) => { e.stopPropagation(); handleOpenChat(f.id); }}>
-                      💬 Chat
+                    <button
+                      className="friends-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenChat(f.id);
+                      }}
+                    >
+                      <MessageSquare size={13} aria-hidden="true" /> Chat
                     </button>
                     <button className="friends-btn danger" onClick={(e) => { e.stopPropagation(); handleUnfriend(f.id); }}>
                       Remove
@@ -450,7 +460,7 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
                 </header>
                 <div className="friends-chat-messages">
                   {messages.length === 0 ? (
-                    <p className="friends-empty">Say hi 👋</p>
+                    <p className="friends-empty">Say hi.</p>
                   ) : (
                     messages.map((m) => {
                       const mine = m.senderId === myId;

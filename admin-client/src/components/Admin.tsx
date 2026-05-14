@@ -1,3 +1,14 @@
+import {
+  AlertTriangle,
+  Building2,
+  ScrollText,
+  ShoppingCart,
+  Sparkles,
+  Swords,
+  TrendingUp,
+  Trophy,
+  Users,
+} from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import '../styles/Admin.css';
 import Toast from './Toast';
@@ -543,63 +554,63 @@ const Admin: React.FC = () => {
         <>
           <div className="admin-stats">
             <div className="stat-card">
-              <div className="stat-card-icon">👥</div>
+              <div className="stat-card-icon" aria-hidden="true"><Users size={18} /></div>
               <div className="stat-card-body">
                 <h3>{stats.userCount}</h3>
                 <p>Total Players</p>
               </div>
             </div>
             <div className="stat-card">
-              <div className="stat-card-icon">🏛️</div>
+              <div className="stat-card-icon" aria-hidden="true"><Building2 size={18} /></div>
               <div className="stat-card-body">
                 <h3>{stats.villageCount}</h3>
                 <p>Total Nexuses</p>
               </div>
             </div>
             <div className="stat-card">
-              <div className="stat-card-icon">⚔️</div>
+              <div className="stat-card-icon" aria-hidden="true"><Swords size={18} /></div>
               <div className="stat-card-body">
                 <h3>{stats.travelingAttackCount}</h3>
                 <p>Active Strikes</p>
               </div>
             </div>
             <div className="stat-card">
-              <div className="stat-card-icon">🪖</div>
+              <div className="stat-card-icon" aria-hidden="true"><Swords size={18} /></div>
               <div className="stat-card-body">
                 <h3>{stats.totalTroops.toLocaleString()}</h3>
                 <p>World Troops</p>
               </div>
             </div>
             <div className="stat-card">
-              <div className="stat-card-icon">📈</div>
+              <div className="stat-card-icon" aria-hidden="true"><TrendingUp size={18} /></div>
               <div className="stat-card-body">
                 <h3>{stats.avgPoints.toLocaleString()}</h3>
                 <p>Avg Influence</p>
               </div>
             </div>
             <div className="stat-card">
-              <div className="stat-card-icon">🆕</div>
+              <div className="stat-card-icon" aria-hidden="true"><Sparkles size={18} /></div>
               <div className="stat-card-body">
                 <h3>{stats.newUsersThisWeek}</h3>
                 <p>New This Week</p>
               </div>
             </div>
             <div className="stat-card stat-card-warn">
-              <div className="stat-card-icon">⚠️</div>
+              <div className="stat-card-icon" aria-hidden="true"><AlertTriangle size={18} /></div>
               <div className="stat-card-body">
                 <h3>{stats.zeroNexusCount}</h3>
                 <p>No Nexus</p>
               </div>
             </div>
             <div className="stat-card">
-              <div className="stat-card-icon">🛒</div>
+              <div className="stat-card-icon" aria-hidden="true"><ShoppingCart size={18} /></div>
               <div className="stat-card-body">
                 <h3>{stats.marketCount}</h3>
                 <p>Market Listings</p>
               </div>
             </div>
             <div className="stat-card">
-              <div className="stat-card-icon">📜</div>
+              <div className="stat-card-icon" aria-hidden="true"><ScrollText size={18} /></div>
               <div className="stat-card-body">
                 <h3>{stats.totalAttackCount.toLocaleString()}</h3>
                 <p>All-time Strikes</p>
@@ -610,7 +621,9 @@ const Admin: React.FC = () => {
           {stats.topUsers.length > 0 && (
             <div className="admin-section" style={{ marginBottom: 28 }}>
               <div className="admin-section-header">
-                <h3>🏆 Top Players by Influence</h3>
+                <h3>
+                  <Trophy size={16} aria-hidden="true" /> Top Players by Influence
+                </h3>
               </div>
               <div className="leaderboard">
                 {stats.topUsers.map((u, i) => (
@@ -628,7 +641,7 @@ const Admin: React.FC = () => {
 
       <div className="admin-section" style={{ marginBottom: 28 }}>
         <div className="admin-section-header">
-          <h3>🌌 Galaxies ({galaxies.length})</h3>
+          <h3>Galaxies ({galaxies.length})</h3>
         </div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
           <input
@@ -706,7 +719,7 @@ const Admin: React.FC = () => {
               </div>
               <div className="user-actions">
                 <button className="btn-action btn-edit" onClick={() => openUserModal('editUser', user)}>
-                  ✏️ Login
+                  Login as
                 </button>
                 <div className="action-divider" />
                 <button className="btn-action btn-res" onClick={() => openUserModal('resources', user)}>
@@ -720,23 +733,23 @@ const Admin: React.FC = () => {
                 </button>
                 <div className="action-divider" />
                 <button className="btn-action btn-cmpl" onClick={() => handleCompleteUserStrike(user)}>
-                  ⚡ Strike
+                  Finish strike
                 </button>
                 <button className="btn-action btn-cmpl" onClick={() => handleCompleteUserBuild(user)}>
-                  ⚡ Build
+                  Finish build
                 </button>
                 <button className="btn-action btn-cmpl" onClick={() => handleCompleteUserTraining(user)}>
-                  ⚡ Train
+                  Finish training
                 </button>
                 <div className="action-divider" />
                 <button className="btn-action btn-reset" onClick={() => handleResetUser(user)}>
-                  ↺ Reset
+                  Reset
                 </button>
                 <button className="btn-action btn-notif" onClick={() => handleTestNotification(user._id, user.username)}>
-                  🔔 Test Notif
+                  Test notification
                 </button>
                 <button className="btn-action btn-delete" onClick={() => handleDeleteUser(user._id, user.username)}>
-                  ✕ Delete
+                  Delete
                 </button>
               </div>
             </div>
@@ -747,7 +760,9 @@ const Admin: React.FC = () => {
       {attacks.length > 0 && (
         <div className="admin-section">
           <div className="admin-section-header">
-            <h3>⚔️ Traveling Strikes ({attacks.length})</h3>
+            <h3>
+              <Swords size={16} aria-hidden="true" /> Traveling Strikes ({attacks.length})
+            </h3>
           </div>
           <div className="attacks-table">
             <table>
@@ -785,7 +800,7 @@ const Admin: React.FC = () => {
                       </td>
                       <td>
                         <button className="btn-action btn-cmpl" onClick={() => handleCompleteAttack(attack._id)}>
-                          ⚡ Complete
+                          Complete
                         </button>
                       </td>
                     </tr>

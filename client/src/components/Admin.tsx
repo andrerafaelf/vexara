@@ -316,7 +316,7 @@ const Admin: React.FC = () => {
       });
 
       if (res.ok) {
-        showToast('⚡ Strike completed instantly!', 'success');
+        showToast('Strike completed instantly!', 'success');
         loadData();
       } else {
         const data = await res.json();
@@ -358,10 +358,10 @@ const Admin: React.FC = () => {
             <div className="modal-header">
               <h3>
                 {modal.type === 'resources'
-                  ? '💰 Add Resources'
+                  ? 'Add Resources'
                   : modal.type === 'troops'
-                    ? '⚔️ Add Troops'
-                    : '🏗️ Add Building Levels'}
+                    ? 'Add Troops'
+                    : 'Add Building Levels'}
               </h3>
               <button className="modal-close" onClick={closeModal}>
                 ×
@@ -371,7 +371,7 @@ const Admin: React.FC = () => {
               {modal.type === 'resources' ? (
                 <div className="form-grid">
                   <div className="form-group">
-                    <label>🌿 Biomass</label>
+                    <label>Biomass</label>
                     <input
                       type="number"
                       value={formData.biomass || 0}
@@ -379,7 +379,7 @@ const Admin: React.FC = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label>🔩 Alloy</label>
+                    <label>Alloy</label>
                     <input
                       type="number"
                       value={formData.alloy || 0}
@@ -387,7 +387,7 @@ const Admin: React.FC = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label>⛏️ Ore</label>
+                    <label>Ore</label>
                     <input
                       type="number"
                       value={formData.ore || 0}
@@ -398,7 +398,7 @@ const Admin: React.FC = () => {
               ) : modal.type === 'troops' ? (
                 <div className="form-grid">
                   <div className="form-group">
-                    <label>⚔️ Assault Trooper</label>
+                    <label>Assault Trooper</label>
                     <input
                       type="number"
                       value={formData.assaultTrooper || 0}
@@ -406,7 +406,7 @@ const Admin: React.FC = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label>🛡️ Lancer Drone</label>
+                    <label>Lancer Drone</label>
                     <input
                       type="number"
                       value={formData.lancerDrone || 0}
@@ -414,7 +414,7 @@ const Admin: React.FC = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label>🔨 Breaker Unit</label>
+                    <label>Breaker Unit</label>
                     <input
                       type="number"
                       value={formData.breakerUnit || 0}
@@ -422,7 +422,7 @@ const Admin: React.FC = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label>🔍 Recon Operative</label>
+                    <label>Recon Operative</label>
                     <input
                       type="number"
                       value={formData.reconOperative || 0}
@@ -430,7 +430,7 @@ const Admin: React.FC = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label>🏍️ Skimmer Bike</label>
+                    <label>Skimmer Bike</label>
                     <input
                       type="number"
                       value={formData.skimmerBike || 0}
@@ -438,7 +438,7 @@ const Admin: React.FC = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label>🤖 Siege Mech</label>
+                    <label>Siege Mech</label>
                     <input
                       type="number"
                       value={formData.siegeMech || 0}
@@ -446,7 +446,7 @@ const Admin: React.FC = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label>🛡️ Bulwark Guard</label>
+                    <label>Bulwark Guard</label>
                     <input
                       type="number"
                       value={formData.bulwarkGuard || 0}
@@ -454,7 +454,7 @@ const Admin: React.FC = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label>🎯 Suppressor Team</label>
+                    <label>Suppressor Team</label>
                     <input
                       type="number"
                       value={formData.suppressorTeam || 0}
@@ -462,7 +462,7 @@ const Admin: React.FC = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label>⚡ Disruptor Unit</label>
+                    <label>Disruptor Unit</label>
                     <input
                       type="number"
                       value={formData.disruptorUnit || 0}
@@ -470,7 +470,7 @@ const Admin: React.FC = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label>🏍️ Interceptor Bike</label>
+                    <label>Interceptor Bike</label>
                     <input
                       type="number"
                       value={formData.interceptorBike || 0}
@@ -478,7 +478,7 @@ const Admin: React.FC = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label>💀 Annihilator Platform</label>
+                    <label>Annihilator Platform</label>
                     <input
                       type="number"
                       value={formData.annihilatorPlatform || 0}
@@ -486,7 +486,7 @@ const Admin: React.FC = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label>👁️ Overseer</label>
+                    <label>Overseer</label>
                     <input
                       type="number"
                       value={formData.overseer || 0}
@@ -497,7 +497,7 @@ const Admin: React.FC = () => {
               ) : (
                 <div className="form-grid">
                   <div className="form-group">
-                    <label>🏛️ Command Core</label>
+                    <label>Command Core</label>
                     <input
                       type="number"
                       value={formData.commandCore || 0}
@@ -505,7 +505,7 @@ const Admin: React.FC = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label>⚙️ Recruitment Core</label>
+                    <label>Recruitment Core</label>
                     <input
                       type="number"
                       value={formData.recruitmentCore || 0}
@@ -513,7 +513,7 @@ const Admin: React.FC = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label>💊 Life Support</label>
+                    <label>Life Support</label>
                     <input
                       type="number"
                       value={formData.lifeSupport || 0}
@@ -521,7 +521,7 @@ const Admin: React.FC = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label>📦 Storage Vault</label>
+                    <label>Storage Vault</label>
                     <input
                       type="number"
                       value={formData.storageVault || 0}
@@ -529,7 +529,7 @@ const Admin: React.FC = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label>🌿 Biomass Farm</label>
+                    <label>Biomass Farm</label>
                     <input
                       type="number"
                       value={formData.biomassFarm || 0}
@@ -537,7 +537,7 @@ const Admin: React.FC = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label>🔩 Alloy Forge</label>
+                    <label>Alloy Forge</label>
                     <input
                       type="number"
                       value={formData.alloyForge || 0}
@@ -545,7 +545,7 @@ const Admin: React.FC = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label>⛏️ Ore Extractor</label>
+                    <label>Ore Extractor</label>
                     <input
                       type="number"
                       value={formData.oreExtractor || 0}
@@ -553,7 +553,7 @@ const Admin: React.FC = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label>🛡️ Shield Grid</label>
+                    <label>Shield Grid</label>
                     <input
                       type="number"
                       value={formData.shieldGrid || 0}
@@ -592,27 +592,27 @@ const Admin: React.FC = () => {
         </div>
       )}
 
-      <h2>🛠️ Admin Panel</h2>
+      <h2>Admin Panel</h2>
 
       {stats && (
         <div className="admin-stats">
           <div className="stat-card">
-            <h3>👥 {stats.userCount}</h3>
+            <h3>{stats.userCount}</h3>
             <p>Total Commanders</p>
           </div>
           <div className="stat-card">
-            <h3>🏘️ {stats.villageCount}</h3>
+            <h3>{stats.villageCount}</h3>
             <p>Total Nexuses</p>
           </div>
           <div className="stat-card">
-            <h3>⚔️ {stats.attackCount}</h3>
+            <h3>{stats.attackCount}</h3>
             <p>Total Strikes</p>
           </div>
         </div>
       )}
 
       <div className="admin-section">
-        <h3>👥 All Commanders ({users.length})</h3>
+        <h3>All Commanders ({users.length})</h3>
         <div className="users-table">
           <table>
             <thead>
@@ -635,37 +635,29 @@ const Admin: React.FC = () => {
                     {user.nexuses.length}
                     {user.nexuses.length > 0 && (
                       <div className="nexus-actions">
-                        <button className="btn-small" onClick={() => openResourceModal(user.nexuses[0]._id)}>
-                          💰 Resources
+                        <button className="btn-small" onClick={() => openResourceModal(user.nexuses[0]._id)}>Resources
                         </button>
-                        <button className="btn-small" onClick={() => openTroopModal(user.nexuses[0]._id)}>
-                          ⚔️ Troops
+                        <button className="btn-small" onClick={() => openTroopModal(user.nexuses[0]._id)}>Troops
                         </button>
-                        <button className="btn-small" onClick={() => openBuildingModal(user.nexuses[0]._id)}>
-                          🏗️ Buildings
+                        <button className="btn-small" onClick={() => openBuildingModal(user.nexuses[0]._id)}>Buildings
                         </button>
-                        <button className="btn-small" onClick={() => handleCompleteBuild(user.nexuses[0]._id)}>
-                          ⚡ Build
+                        <button className="btn-small" onClick={() => handleCompleteBuild(user.nexuses[0]._id)}>Build
                         </button>
-                        <button className="btn-small" onClick={() => handleCompleteTraining(user.nexuses[0]._id)}>
-                          🎖️ Train
+                        <button className="btn-small" onClick={() => handleCompleteTraining(user.nexuses[0]._id)}>Train
                         </button>
                         <button
                           className="btn-small btn-warning"
                           onClick={() => handleDeleteNexus(user.nexuses[0]._id, user.nexuses[0].name)}
-                        >
-                          🗑️ Nexus
+                        >Nexus
                         </button>
                       </div>
                     )}
                   </td>
                   <td>{formatDate(user.createdAt)}</td>
                   <td>
-                    <button className="btn-small" onClick={() => handleTestNotification(user._id, user.username)}>
-                      🔔 Test Notif
+                    <button className="btn-small" onClick={() => handleTestNotification(user._id, user.username)}>Test Notif
                     </button>
-                    <button className="btn-danger" onClick={() => handleDeleteUser(user._id, user.username)}>
-                      🗑️ Delete
+                    <button className="btn-danger" onClick={() => handleDeleteUser(user._id, user.username)}>Delete
                     </button>
                   </td>
                 </tr>
@@ -676,7 +668,7 @@ const Admin: React.FC = () => {
       </div>
       {attacks.length > 0 && (
         <div className="admin-section">
-          <h3>⚔️ Traveling Strikes ({attacks.length})</h3>
+          <h3>Traveling Strikes ({attacks.length})</h3>
           <div className="attacks-table">
             <table>
               <thead>
@@ -728,8 +720,7 @@ const Admin: React.FC = () => {
                         <span className={diff <= 10000 ? 'time-urgent' : ''}>{timeStr}</span>
                       </td>
                       <td>
-                        <button className="btn-small btn-primary" onClick={() => handleCompleteAttack(attack._id)}>
-                          ⚡ Complete
+                        <button className="btn-small btn-primary" onClick={() => handleCompleteAttack(attack._id)}>Complete
                         </button>
                       </td>
                     </tr>
@@ -742,7 +733,7 @@ const Admin: React.FC = () => {
       )}
       {stats && stats.topUsers && stats.topUsers.length > 0 && (
         <div className="admin-section">
-          <h3>🏆 Top Players</h3>
+          <h3>Top Players</h3>
           <ol className="top-players">
             {stats.topUsers.map((user, idx) => (
               <li key={idx}>

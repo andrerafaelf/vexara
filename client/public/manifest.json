@@ -5,8 +5,8 @@
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "theme_color": "#0f1923",
-  "background_color": "#0f1923",
+  "theme_color": "#0F1326",
+  "background_color": "#0F1326",
   "categories": ["games", "strategy"],
   "icons": [
     {

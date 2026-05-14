@@ -1,6 +1,5 @@
 export type TroopDoc = {
   key: string;
-  icon: string;
   name: string;
   role: string;
   description: string;
@@ -12,7 +11,6 @@ export type TroopDoc = {
 
 export type BuildingDoc = {
   key: string;
-  icon: string;
   name: string;
   role: string;
   description: string;
@@ -26,7 +24,6 @@ export type BuildingDoc = {
 export const TROOPS_DOC: TroopDoc[] = [
   {
     key: 'assaultTrooper',
-    icon: '⚔️',
     name: 'Assault Trooper',
     role: 'Defensive frontline infantry',
     description: 'Solid all-rounder that holds the line and absorbs sustained pressure from attackers.',
@@ -36,7 +33,6 @@ export const TROOPS_DOC: TroopDoc[] = [
   },
   {
     key: 'lancerDrone',
-    icon: '🛡️',
     name: 'Lancer Drone',
     role: 'Early defensive interceptor',
     description: 'Cheap anti-vehicle style defender used to absorb early pressure.',
@@ -46,7 +42,6 @@ export const TROOPS_DOC: TroopDoc[] = [
   },
   {
     key: 'breakerUnit',
-    icon: '🔨',
     name: 'Breaker Unit',
     role: 'Heavy breacher',
     description: 'Higher attack unit meant to crack weaker defensive lines quickly.',
@@ -56,7 +51,6 @@ export const TROOPS_DOC: TroopDoc[] = [
   },
   {
     key: 'reconOperative',
-    icon: '🔍',
     name: 'Recon Operative',
     role: 'Scout / support unit',
     description:
@@ -68,7 +62,6 @@ export const TROOPS_DOC: TroopDoc[] = [
   },
   {
     key: 'skimmerBike',
-    icon: '🏍️',
     name: 'Skimmer Bike',
     role: 'Fast raider',
     description: 'High mobility raider with strong carry for quick hit-and-run farming.',
@@ -78,7 +71,6 @@ export const TROOPS_DOC: TroopDoc[] = [
   },
   {
     key: 'bulwarkGuard',
-    icon: '🛡️',
     name: 'Bulwark Guard',
     role: 'Elite defensive infantry',
     description: 'One of the strongest dedicated defensive units in midgame.',
@@ -88,7 +80,6 @@ export const TROOPS_DOC: TroopDoc[] = [
   },
   {
     key: 'suppressorTeam',
-    icon: '🎯',
     name: 'Suppressor Team',
     role: 'Ranged assault support',
     description: 'Flexible fire-support unit that bolsters offensive pushes with sustained ranged pressure.',
@@ -98,7 +89,6 @@ export const TROOPS_DOC: TroopDoc[] = [
   },
   {
     key: 'disruptorUnit',
-    icon: '⚡',
     name: 'Disruptor Unit',
     role: 'Anti-armor assault unit',
     description: 'Aggressive specialist built to crack heavy defensive compositions on the offensive.',
@@ -109,7 +99,6 @@ export const TROOPS_DOC: TroopDoc[] = [
   },
   {
     key: 'interceptorBike',
-    icon: '🏍️',
     name: 'Interceptor Bike',
     role: 'Rapid-response cavalry',
     description: 'Fastest unit in the game, ideal for rapid redeploy and pressure.',
@@ -119,7 +108,6 @@ export const TROOPS_DOC: TroopDoc[] = [
   },
   {
     key: 'siegeMech',
-    icon: '🤖',
     name: 'Siege Mech',
     role: 'Heavy defensive anchor',
     description:
@@ -130,7 +118,6 @@ export const TROOPS_DOC: TroopDoc[] = [
   },
   {
     key: 'annihilatorPlatform',
-    icon: '💥',
     name: 'Annihilator Platform',
     role: 'Heavy artillery',
     description: 'Top-end damage platform for heavy assaults and sieges.',
@@ -140,7 +127,6 @@ export const TROOPS_DOC: TroopDoc[] = [
   },
   {
     key: 'overseer',
-    icon: '👁️',
     name: 'Overseer',
     role: 'Conquest / control unit',
     description: 'Conquest enabler used to reduce control and capture nexuses.',
@@ -158,7 +144,6 @@ export const TROOPS_DOC: TroopDoc[] = [
 export const BUILDINGS_DOC: BuildingDoc[] = [
   {
     key: 'commandCore',
-    icon: '🧠',
     name: 'Command Core',
     role: 'Strategic progression building',
     description: 'Central control structure for unlocking progression milestones.',
@@ -173,7 +158,6 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
   },
   {
     key: 'recruitmentCore',
-    icon: '🏭',
     name: 'Recruitment Core',
     role: 'Military production building',
     description: 'Enables troop training and unlocks higher combat tiers.',
@@ -189,7 +173,6 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
   },
   {
     key: 'lifeSupport',
-    icon: '🌐',
     name: 'Life Support',
     role: 'Population capacity building',
     description: 'Increases maximum population to support larger armies.',
@@ -204,7 +187,6 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
   },
   {
     key: 'storageVault',
-    icon: '📦',
     name: 'Storage Vault',
     role: 'Resource cap building',
     description: 'Raises resource storage to reduce overflow waste.',
@@ -220,7 +202,6 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
   },
   {
     key: 'biomassFarm',
-    icon: '🧬',
     name: 'Biomass Farm',
     role: 'Biomass production',
     description: 'Generates biomass resource over time.',
@@ -235,7 +216,6 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
   },
   {
     key: 'alloyForge',
-    icon: '⚙️',
     name: 'Alloy Forge',
     role: 'Alloy production',
     description: 'Generates alloy resource over time.',
@@ -250,7 +230,6 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
   },
   {
     key: 'oreExtractor',
-    icon: '💎',
     name: 'Ore Extractor',
     role: 'Ore production',
     description: 'Generates ore resource over time.',
@@ -262,7 +241,6 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
   },
   {
     key: 'shieldGrid',
-    icon: '🛡️',
     name: 'Shield Grid',
     role: 'Defensive multiplier',
     description: 'Boosts total defending force power during combat.',

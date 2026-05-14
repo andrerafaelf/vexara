@@ -23,50 +23,47 @@ export default function AuthPage() {
   };
 
   return (
-    <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: '1rem' }}>
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          width: '100%',
-          maxWidth: '360px',
-          background: '#0b1733',
-          border: '1px solid #1e315f',
-          borderRadius: '12px',
-          padding: '1.25rem',
-          color: '#eaf0ff',
-        }}
-      >
-        <h1 style={{ margin: '0 0 1rem', fontSize: '1.4rem' }}>Admin Login</h1>
-        <label style={{ display: 'block', marginBottom: '0.5rem' }}>Username</label>
-        <input
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          style={{ width: '100%', marginBottom: '0.9rem', padding: '0.6rem', borderRadius: '8px' }}
-          autoComplete="username"
-        />
-        <label style={{ display: 'block', marginBottom: '0.5rem' }}>Password</label>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={{ width: '100%', marginBottom: '0.9rem', padding: '0.6rem', borderRadius: '8px' }}
-          autoComplete="current-password"
-        />
-        {error && <p style={{ color: '#ff5e7e', margin: '0 0 0.8rem' }}>{error}</p>}
-        <button
-          type="submit"
-          style={{
-            width: '100%',
-            padding: '0.65rem',
-            borderRadius: '8px',
-            border: 'none',
-            background: '#ff4f72',
-            color: '#fff',
-            fontWeight: 700,
-            cursor: 'pointer',
-          }}
-        >
-          Login
+    <main className="admin-auth">
+      <form className="admin-auth-box" onSubmit={handleSubmit} noValidate>
+        <div className="admin-auth-brand">
+          <span className="admin-auth-mark" aria-hidden="true">
+            VX
+          </span>
+          <div>
+            <h1 className="admin-auth-title">Vexara Admin</h1>
+            <p className="admin-auth-subtitle">Operations console</p>
+          </div>
+        </div>
+
+        <label className="admin-auth-field">
+          <span className="admin-auth-label">Username</span>
+          <input
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
+          />
+        </label>
+
+        <label className="admin-auth-field">
+          <span className="admin-auth-label">Password</span>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+          />
+        </label>
+
+        {error && (
+          <div className="admin-auth-error" role="alert">
+            {error}
+          </div>
+        )}
+
+        <button type="submit" className="admin-auth-submit">
+          Sign in
         </button>
       </form>
     </main>

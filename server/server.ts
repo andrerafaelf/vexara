@@ -83,8 +83,10 @@ app.get('/readyz', async (_req, res) => {
 
 if (process.env.NODE_ENV === 'production') {
   const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: Number(process.env.AUTH_RATE_LIMIT_MAX || 30), standardHeaders: true, legacyHeaders: false, skip: (req) => req.method === 'OPTIONS', message: { error: 'Too many login attempts, please try again in a few minutes.' } });
+  const alphaSignupLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: Number(process.env.ALPHA_SIGNUP_RATE_LIMIT_MAX || 5), standardHeaders: true, legacyHeaders: false, skip: (req) => req.method === 'OPTIONS', message: { error: 'Too many sign-up attempts from this address. Please try again later.' } });
   const apiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: Number(process.env.API_RATE_LIMIT_MAX || 4800), standardHeaders: true, legacyHeaders: false, skip: (req) => req.method === 'OPTIONS' });
   app.use('/api/auth/login', loginLimiter);
+  app.use('/api/auth/alpha-signup', alphaSignupLimiter);
   app.use('/api/', apiLimiter);
 }
 

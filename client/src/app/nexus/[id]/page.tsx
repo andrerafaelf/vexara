@@ -132,7 +132,7 @@ export default function NexusPage() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      router.push('/auth');
+      router.push('/login');
       return;
     }
     loadVillages();

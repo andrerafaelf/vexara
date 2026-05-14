@@ -16,10 +16,25 @@ import {
   transferResources,
   upgradeBuilding,
 } from '../services/api';
+import {
+  ArrowDownLeft,
+  Building2,
+  Check,
+  Globe2,
+  Hammer,
+  Info,
+  LayoutGrid,
+  Pencil,
+  ShieldCheck,
+  Swords,
+  X,
+} from 'lucide-react';
 import '../styles/NexusView.css';
 import { Nexus, TroopTransfer } from '../types/game';
 import StarfieldMap from './Map';
 import NexusMap from './NexusMap';
+import NexusTypeBadge from './NexusTypeBadge';
+import ResourceIcon from './ResourceIcon';
 import Toast from './Toast';
 
 // Import troop images
@@ -58,11 +73,11 @@ type NexusTab = 'overview' | 'buildings' | 'troops' | 'map';
 const MAX_BUILD_QUEUE = 5;
 const MAX_TRAINING_QUEUE = 5;
 
-const NEXUS_TYPE_BUFFS: Record<string, { icon: string; label: string }> = {
-  'Resource Depot': { icon: '⚡', label: '2x Resource Production' },
-  'Supply Cache': { icon: '📦', label: '2x Storage Capacity' },
-  'Military Outpost': { icon: '🛡️', label: '+50% Shield Efficiency · 25% Faster Training' },
-  'Reclaimed Outpost': { icon: '🔧', label: '20% Faster Construction' },
+const NEXUS_TYPE_BUFFS: Record<string, { label: string }> = {
+  'Resource Depot': { label: '2x Resource Production' },
+  'Supply Cache': { label: '2x Storage Capacity' },
+  'Military Outpost': { label: '+50% Shield Efficiency · 25% Faster Training' },
+  'Reclaimed Outpost': { label: '20% Faster Construction' },
 };
 
 const BUILDING_NAMES: { [key: string]: string } = {
@@ -857,10 +872,10 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
 
     const shortageReasons: string[] = [];
     if (maxTrainable === 0) {
-      if (byBiomass === 0) shortageReasons.push(`🧬 Biomass ${Math.floor(nexus.resources.biomass)}/${costs.biomass}`);
-      if (byAlloy === 0) shortageReasons.push(`⚙️ Alloy ${Math.floor(nexus.resources.alloy)}/${costs.alloy}`);
-      if (byOre === 0) shortageReasons.push(`💎 Ore ${Math.floor(nexus.resources.ore)}/${costs.ore}`);
-      if (byPopulation === 0) shortageReasons.push(`👥 Population ${remainingPopulation}/${costs.population} free`);
+      if (byBiomass === 0) shortageReasons.push(`Biomass ${Math.floor(nexus.resources.biomass)}/${costs.biomass}`);
+      if (byAlloy === 0) shortageReasons.push(`Alloy ${Math.floor(nexus.resources.alloy)}/${costs.alloy}`);
+      if (byOre === 0) shortageReasons.push(`Ore ${Math.floor(nexus.resources.ore)}/${costs.ore}`);
+      if (byPopulation === 0) shortageReasons.push(`Population ${remainingPopulation}/${costs.population} free`);
     }
 
     return { maxTrainable, shortageReasons };
@@ -1392,7 +1407,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                 title="Save Nexus Name"
                 aria-label="Save Nexus Name"
               >
-                {isSavingNexusName ? '...' : '✓'}
+                {isSavingNexusName ? '…' : <Check size={14} />}
               </button>
               <button
                 type="button"
@@ -1402,7 +1417,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                 title="Cancel Rename"
                 aria-label="Cancel Rename"
               >
-                ✕
+                <X size={14} />
               </button>
             </>
           ) : (
@@ -1415,14 +1430,14 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                 title="Rename Nexus"
                 aria-label="Rename Nexus"
               >
-                ✎
+                <Pencil size={14} />
               </button>
             </>
           )}
         </div>
         {nexus.nexusType && NEXUS_TYPE_BUFFS[nexus.nexusType] && (
           <div className="nexus-type-buff-banner">
-            <span className="nexus-type-buff-icon">{NEXUS_TYPE_BUFFS[nexus.nexusType].icon}</span>
+            <NexusTypeBadge type={nexus.nexusType} size={14} />
             <span className="nexus-type-buff-label">
               {nexus.nexusType} — {NEXUS_TYPE_BUFFS[nexus.nexusType].label}
             </span>
@@ -1430,7 +1445,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
         )}
         <div className="resources">
           <div className="resource" title="Biomass">
-            <span className="resource-icon">🧬</span>
+            <span className="resource-icon">
+              <ResourceIcon kind="biomass" size={18} />
+            </span>
             <span className={getResourceFillClass(nexus.resources.biomass)}>
               <span className="resource-main">
                 {Math.floor(nexus.resources.biomass).toLocaleString()}
@@ -1446,7 +1463,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
             </span>
           </div>
           <div className="resource" title="Alloy">
-            <span className="resource-icon">⚙️</span>
+            <span className="resource-icon">
+              <ResourceIcon kind="alloy" size={18} />
+            </span>
             <span className={getResourceFillClass(nexus.resources.alloy)}>
               <span className="resource-main">
                 {Math.floor(nexus.resources.alloy).toLocaleString()}
@@ -1462,7 +1481,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
             </span>
           </div>
           <div className="resource" title="Ore">
-            <span className="resource-icon">💎</span>
+            <span className="resource-icon">
+              <ResourceIcon kind="ore" size={18} />
+            </span>
             <span className={getResourceFillClass(nexus.resources.ore)}>
               <span className="resource-main">
                 {Math.floor(nexus.resources.ore).toLocaleString()}
@@ -1478,7 +1499,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
             </span>
           </div>
           <div className="resource" title="Population">
-            <span className="resource-icon">👥</span>
+            <span className="resource-icon">
+              <ResourceIcon kind="population" size={18} />
+            </span>
             <span className="resource-amount">
               {nexus.population.current}/{nexus.population.max}
             </span>
@@ -1492,14 +1515,16 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
           className={`nexus-tab-btn${activeTab === 'overview' ? ' active' : ''}`}
           onClick={() => setActiveTab('overview')}
         >
-          🏛️ Overview
+          <LayoutGrid size={14} aria-hidden="true" />
+          <span>Overview</span>
         </button>
         <button
           type="button"
           className={`nexus-tab-btn${activeTab === 'buildings' ? ' active' : ''}`}
           onClick={() => setActiveTab('buildings')}
         >
-          🏗️ Buildings
+          <Building2 size={14} aria-hidden="true" />
+          <span>Buildings</span>
           {activeBuild && <span className="nexus-tab-badge" />}
         </button>
         <button
@@ -1507,7 +1532,8 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
           className={`nexus-tab-btn${activeTab === 'troops' ? ' active' : ''}`}
           onClick={() => setActiveTab('troops')}
         >
-          🎖️ Troops
+          <Swords size={14} aria-hidden="true" />
+          <span>Troops</span>
           {activeTraining && <span className="nexus-tab-badge" />}
         </button>
         <button
@@ -1515,7 +1541,8 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
           className={`nexus-tab-btn${activeTab === 'map' ? ' active' : ''}`}
           onClick={() => setActiveTab('map')}
         >
-          🌌 Starfield
+          <Globe2 size={14} aria-hidden="true" />
+          <span>Starfield</span>
         </button>
       </div>
 
@@ -1586,7 +1613,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
 
             {nexus.newbieProtectionEndsAt && new Date(nexus.newbieProtectionEndsAt) > currentTime && (
               <div className="newbie-protection-banner">
-                <span className="newbie-protection-icon">🛡️</span>
+                <ShieldCheck size={14} className="newbie-protection-icon" aria-hidden="true" />
                 <span className="newbie-protection-text">
                   Newbie Protection — expires in <strong>{formatTime(nexus.newbieProtectionEndsAt)}</strong>
                 </span>
@@ -1595,7 +1622,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
 
             <div className="overview-shortcuts">
               <button type="button" className="overview-shortcut-card" onClick={() => setActiveTab('buildings')}>
-                <span className="overview-shortcut-title">🏗️ Construction</span>
+                <span className="overview-shortcut-title">
+                  <Hammer size={14} aria-hidden="true" /> Construction
+                </span>
                 <span className="overview-shortcut-status">
                   {activeBuild ? 'Active upgrade in progress' : 'No active construction'}
                 </span>
@@ -1606,7 +1635,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                 </span>
               </button>
               <button type="button" className="overview-shortcut-card" onClick={() => setActiveTab('troops')}>
-                <span className="overview-shortcut-title">🎖️ Training</span>
+                <span className="overview-shortcut-title">
+                  <Swords size={14} aria-hidden="true" /> Training
+                </span>
                 <span className="overview-shortcut-status">
                   {activeTraining ? 'Troops are being trained' : 'No active training'}
                 </span>
@@ -1617,7 +1648,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                 </span>
               </button>
               <div className="overview-shortcut-card overview-strikes-card">
-                <span className="overview-shortcut-title">⚔️ Strikes</span>
+                <span className="overview-shortcut-title">
+                  <Swords size={14} aria-hidden="true" /> Strikes
+                </span>
                 <div className="strikes-card-split">
                   <div className="strikes-card-half">
                     <span className="strikes-card-label">Outgoing</span>
@@ -1626,7 +1659,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                         {outgoingAttacks.map((a: any) => (
                           <div key={a._id} className="strikes-card-entry">
                             <span className="strikes-card-entry-who">
-                              {a.status === 'returning' ? '↩ ' : ''}
+                              {a.status === 'returning' && (
+                                <ArrowDownLeft size={11} aria-hidden="true" style={{ marginRight: 4 }} />
+                              )}
                               {a.defender?.nexus?.name ?? '?'}
                             </span>
                             <span className="strikes-card-entry-time">
@@ -1664,7 +1699,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
             {nexus.buildQueue.length > 0 && (
               <div className="overview-queue-summary">
                 <div className="overview-queue-summary-info">
-                  <span className="overview-queue-summary-label">🏗️ Building Queue</span>
+                  <span className="overview-queue-summary-label">
+                    <Hammer size={12} aria-hidden="true" /> Building Queue
+                  </span>
                   <span className="overview-queue-summary-detail">
                     {nexus.buildQueue.length} item{nexus.buildQueue.length !== 1 ? 's' : ''} —{' '}
                     {BUILDING_NAMES[nexus.buildQueue[0].building] || nexus.buildQueue[0].building} → Lv
@@ -1681,7 +1718,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
             {nexus.trainingQueue.length > 0 && (
               <div className="overview-queue-summary">
                 <div className="overview-queue-summary-info">
-                  <span className="overview-queue-summary-label">🎖️ Training Queue</span>
+                  <span className="overview-queue-summary-label">
+                    <Swords size={12} aria-hidden="true" /> Training Queue
+                  </span>
                   <span className="overview-queue-summary-detail">
                     {nexus.trainingQueue.length} item{nexus.trainingQueue.length !== 1 ? 's' : ''} —{' '}
                     {nexus.trainingQueue[0].amount}x{' '}
@@ -1715,7 +1754,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                         className={`intro-quest-item ${quest.completed ? 'completed' : 'quest-actionable'}`}
                         onClick={() => !quest.completed && setActiveTab(quest.tab)}
                       >
-                        <span className="intro-quest-icon">{quest.completed ? '✅' : '⬜'}</span>
+                        <span className="intro-quest-icon" aria-hidden="true">
+                          {quest.completed ? <Check size={14} /> : null}
+                        </span>
                         <div className="intro-quest-content">
                           <p className="intro-quest-title">{quest.title}</p>
                           <p className="intro-quest-description">{quest.description}</p>
@@ -1743,7 +1784,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
 
             {!allQuestsComplete && nexus.buildings.commandCore < 1 && !dismissedTips.has('tip-command-core') && (
               <div className="noob-tip">
-                <span className="noob-tip-icon">💡</span>
+                <span className="noob-tip-icon" aria-hidden="true">
+                  <Info size={14} />
+                </span>
                 <span className="noob-tip-text">
                   <strong>Start here:</strong> Upgrade <em>Command Core</em> to Lv1 to power your Nexus and unlock
                   progression.
@@ -1754,7 +1797,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                   onClick={() => dismissTip('tip-command-core')}
                   aria-label="Dismiss tip"
                 >
-                  ✕
+                  <X size={12} aria-hidden="true" />
                 </button>
               </div>
             )}
@@ -1763,7 +1806,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
               nexus.buildings.recruitmentCore < 1 &&
               !dismissedTips.has('tip-recruitment-core') && (
                 <div className="noob-tip">
-                  <span className="noob-tip-icon">💡</span>
+                  <span className="noob-tip-icon" aria-hidden="true">
+                  <Info size={14} />
+                </span>
                   <span className="noob-tip-text">
                     <strong>Next up:</strong> Upgrade <em>Recruitment Core</em> to Lv1 to unlock troop training.
                   </span>
@@ -1773,7 +1818,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                     onClick={() => dismissTip('tip-recruitment-core')}
                     aria-label="Dismiss tip"
                   >
-                    ✕
+                    <X size={12} aria-hidden="true" />
                   </button>
                 </div>
               )}
@@ -1782,7 +1827,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
               nexus.buildings.commandCore >= 1 &&
               !dismissedTips.has('tip-storage-vault') && (
                 <div className="noob-tip">
-                  <span className="noob-tip-icon">💡</span>
+                  <span className="noob-tip-icon" aria-hidden="true">
+                  <Info size={14} />
+                </span>
                   <span className="noob-tip-text">
                     <strong>Tip:</strong> Upgrade <em>Storage Vault</em> to Lv2 to secure higher resource capacity.
                   </span>
@@ -1792,7 +1839,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                     onClick={() => dismissTip('tip-storage-vault')}
                     aria-label="Dismiss tip"
                   >
-                    ✕
+                    <X size={12} aria-hidden="true" />
                   </button>
                 </div>
               )}
@@ -1818,7 +1865,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                           onClick={() => handleCancelBuildQueue(idx)}
                           title="Cancel (85% refund)"
                         >
-                          ✕
+                          <X size={12} aria-hidden="true" />
                         </button>
                       </div>
                     </div>
@@ -1867,7 +1914,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                         aria-label={`${BUILDING_NAMES[key]} info`}
                         onClick={() => handleInfoTap(BUILDING_NAMES[key], BUILDING_DESCRIPTIONS[key])}
                       >
-                        ℹ️
+                        <Info size={14} />
                       </button>
                     </div>
                     <p>
@@ -1876,7 +1923,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                     {!isAtMax && <p className="building-benefit">{upgradeBenefit}</p>}
                     {isUpgrading && (
                       <div className="upgrading-status">
-                        <span className="upgrading-badge">⚙️ Upgrading...</span>
+                        <span className="upgrading-badge">
+                          <Hammer size={12} aria-hidden="true" /> Upgrading…
+                        </span>
                         {firstQueuedForBuilding && (
                           <span
                             className={
@@ -1893,12 +1942,17 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                     {cost ? (
                       <div className="building-cost">
                         <div className="cost-details">
-                          <span>🧬 {fmtNum(cost.biomass)}</span>
-                          <span>⚙️ {fmtNum(cost.alloy)}</span>
-                          <span>💎 {fmtNum(cost.ore)}</span>
+                          <span className="cost-pill">
+                            <ResourceIcon kind="biomass" size={12} /> {fmtNum(cost.biomass)}
+                          </span>
+                          <span className="cost-pill">
+                            <ResourceIcon kind="alloy" size={12} /> {fmtNum(cost.alloy)}
+                          </span>
+                          <span className="cost-pill">
+                            <ResourceIcon kind="ore" size={12} /> {fmtNum(cost.ore)}
+                          </span>
                         </div>
                         <p className="build-time">
-                          ⏱️{' '}
                           {cost.time >= 3600
                             ? `${Math.floor(cost.time / 3600)}h ${Math.floor((cost.time % 3600) / 60)}m ${cost.time % 60}s`
                             : `${Math.floor(cost.time / 60)}m ${cost.time % 60}s`}
@@ -1906,18 +1960,18 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                       </div>
                     ) : (
                       <div className="building-maxed-banner">
-                        <span className="maxed-badge">🏁 MAX LEVEL</span>
+                        <span className="maxed-badge">MAX LEVEL</span>
                       </div>
                     )}
                     {!isAtMax && isBuildQueueFull && (
                       <div className="requirements-missing">
-                        <p className="requires-label">🔒 Queue Full:</p>
-                        <p className="requirement-item">• Build queue limit reached ({MAX_BUILD_QUEUE})</p>
+                        <p className="requires-label">Queue full</p>
+                        <p className="requirement-item">Build queue limit reached ({MAX_BUILD_QUEUE})</p>
                       </div>
                     )}
                     {!isAtMax && !canUpgrade && (
                       <div className="requirements-missing">
-                        <p className="requires-label">🔒 Requires:</p>
+                        <p className="requires-label">Requires</p>
                         {missingRequirements.map((req, idx) => (
                           <p key={idx} className="requirement-item">
                             • {req}
@@ -1932,7 +1986,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                         const eta = getTimeUntilAffordable(cost);
                         return (
                           <div className="requirements-missing insuff-resources">
-                            <p className="requires-label">⚠️ Insufficient Resources:</p>
+                            <p className="requires-label">Insufficient resources</p>
                             {nexus.resources.biomass < cost.biomass && (
                               <p className="requirement-item">
                                 • Biomass: {Math.floor(nexus.resources.biomass)}/{cost.biomass}
@@ -1949,7 +2003,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                               </p>
                             )}
                             {eta !== null && (
-                              <p className="requirement-item resource-eta">⏱️ Ready in {formatDurationSeconds(eta)}</p>
+                              <p className="requirement-item resource-eta">Ready in {formatDurationSeconds(eta)}</p>
                             )}
                           </div>
                         );
@@ -1979,7 +2033,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
               (nexus.troops.assaultTrooper || 0) < 5 &&
               !dismissedTips.has('tip-assault-troopers') && (
                 <div className="noob-tip">
-                  <span className="noob-tip-icon">💡</span>
+                  <span className="noob-tip-icon" aria-hidden="true">
+                  <Info size={14} />
+                </span>
                   <span className="noob-tip-text">
                     <strong>Field your first force:</strong> Train at least <em>5 Assault Troopers</em> to complete your
                     intro quest.
@@ -1990,7 +2046,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                     onClick={() => dismissTip('tip-assault-troopers')}
                     aria-label="Dismiss tip"
                   >
-                    ✕
+                    <X size={12} aria-hidden="true" />
                   </button>
                 </div>
               )}
@@ -2001,7 +2057,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
               <>
                 {nexus.trainingQueue.length > 0 && (
                   <div className="queue-section">
-                    <h4>🔨 Training Queue</h4>
+                    <h4>Training queue</h4>
                     {nexus.trainingQueue.map((item, idx) => {
                       const queueTime = getTrainingQueueTimeDisplay(idx);
 
@@ -2020,7 +2076,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                               onClick={() => handleCancelTrainingQueue(idx)}
                               title="Cancel (85% refund)"
                             >
-                              ✕
+                              <X size={12} aria-hidden="true" />
                             </button>
                           </div>
                         </div>
@@ -2038,7 +2094,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                     return (
                       <div key={category} className="troop-category-section">
                         <h4 className={`troop-category-heading troop-category-${category}`}>
-                          {category === 'offense' ? '⚔️ Offense' : '🛡️ Defense'}
+                          {category === 'offense' ? 'Offense' : 'Defense'}
                         </h4>
                         <div className="train-grid">
                           {categoryTroops.map(([type, costs]) => {
@@ -2080,17 +2136,24 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                                       aria-label={`${TROOP_NAMES[type]} info`}
                                       onClick={() => handleInfoTap(TROOP_NAMES[type], TROOP_DESCRIPTIONS[type])}
                                     >
-                                      ℹ️
+                                      <Info size={14} />
                                     </button>
                                   </div>
                                 </div>
                                 <div className="train-costs">
-                                  <span>🧬 {costs.biomass}</span>
-                                  <span>⚙️ {costs.alloy}</span>
-                                  <span>💎 {costs.ore}</span>
-                                  <span>👥 {costs.population}</span>
+                                  <span className="cost-pill">
+                                    <ResourceIcon kind="biomass" size={12} /> {costs.biomass}
+                                  </span>
+                                  <span className="cost-pill">
+                                    <ResourceIcon kind="alloy" size={12} /> {costs.alloy}
+                                  </span>
+                                  <span className="cost-pill">
+                                    <ResourceIcon kind="ore" size={12} /> {costs.ore}
+                                  </span>
+                                  <span className="cost-pill">
+                                    <ResourceIcon kind="population" size={12} /> {costs.population}
+                                  </span>
                                   <p className="train-time">
-                                    ⏱️{' '}
                                     {trainSeconds >= 3600
                                       ? `${Math.floor(trainSeconds / 3600)}h ${Math.floor((trainSeconds % 3600) / 60)}m ${trainSeconds % 60}s`
                                       : `${Math.floor(trainSeconds / 60)}m ${trainSeconds % 60}s`}
@@ -2098,7 +2161,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                                 </div>
                                 {isTrainingQueueFull && (
                                   <div className="requirements-missing">
-                                    <p className="requires-label">🔒 Queue Full:</p>
+                                    <p className="requires-label">Queue full</p>
                                     <p className="requirement-item">
                                       • Training queue limit reached ({MAX_TRAINING_QUEUE})
                                     </p>
@@ -2106,7 +2169,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                                 )}
                                 {!canTrain && (
                                   <div className="requirements-missing">
-                                    <p className="requires-label">🔒 Requires:</p>
+                                    <p className="requires-label">Requires</p>
                                     {missingRequirements.map((req, idx) => (
                                       <p key={idx} className="requirement-item">
                                         • {req}
@@ -2121,7 +2184,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                                     const eta = getTimeUntilAffordable(costs);
                                     return (
                                       <div className="requirements-missing">
-                                        <p className="requires-label">⚠️ Not enough resources:</p>
+                                        <p className="requires-label">Not enough resources</p>
                                         {shortageReasons.map((reason, idx) => (
                                           <p key={idx} className="requirement-item">
                                             • {reason}
@@ -2129,7 +2192,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                                         ))}
                                         {eta !== null && (
                                           <p className="requirement-item resource-eta">
-                                            ⏱️ Ready in {formatDurationSeconds(eta)}
+                                            Ready in {formatDurationSeconds(eta)}
                                           </p>
                                         )}
                                       </div>
@@ -2239,7 +2302,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
             <div className="attack-modal-header">
               <h3>{infoModal.title}</h3>
               <button className="close-btn" onClick={() => setInfoModal(null)}>
-                ✕
+                <X size={12} aria-hidden="true" />
               </button>
             </div>
             <div className="attack-modal-content">
@@ -2255,9 +2318,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
         <div className="attack-modal-overlay" onClick={() => setSelectedAttack(null)}>
           <div className="attack-modal" onClick={(e) => e.stopPropagation()}>
             <div className="attack-modal-header">
-              <h3>⚔️ Strike Details</h3>
+              <h3>Strike details</h3>
               <button className="close-btn" onClick={() => setSelectedAttack(null)}>
-                ✕
+                <X size={12} aria-hidden="true" />
               </button>
             </div>
             <div className="attack-modal-content">
@@ -2270,12 +2333,12 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
               </div>
 
               <div className="attack-info-section">
-                <h4>⏱️ Arrival Time</h4>
+                <h4>Arrival time</h4>
                 <p className="arrival-countdown">{formatTime(selectedAttack.arrivesAt)}</p>
               </div>
 
               <div className="attack-info-section">
-                <h4>🎖️ Troops Sent</h4>
+                <h4>Troops sent</h4>
                 <div className="troops-breakdown">
                   {Object.entries(selectedAttack.troops || {}).map(
                     ([troopType, count]) =>
@@ -2290,13 +2353,13 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
               </div>
 
               <div className="attack-info-section">
-                <h4>📋 Mission Type</h4>
+                <h4>Mission type</h4>
                 <p>
                   {selectedAttack.type === 'attack'
-                    ? '⚔️ Attack'
+                    ? 'Attack'
                     : selectedAttack.type === 'support'
-                      ? '🛡️ Support'
-                      : '🔍 Scout'}
+                      ? 'Support'
+                      : 'Scout'}
                 </p>
               </div>
             </div>

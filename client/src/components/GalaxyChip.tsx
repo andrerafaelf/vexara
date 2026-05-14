@@ -1,5 +1,6 @@
 'use client';
 
+import { Globe2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { getMyGalaxy } from '../services/api';
 import GalaxyPicker, { Galaxy } from './GalaxyPicker';
@@ -55,7 +56,9 @@ const GalaxyChip: React.FC<Props> = ({ onGalaxyChanged }) => {
         }}
         title="Switch galaxy"
       >
-        <span className="galaxy-chip-icon">🌌</span>
+        <span className="galaxy-chip-icon" aria-hidden="true">
+          <Globe2 size={14} />
+        </span>
         <span className="galaxy-chip-name">{activeGalaxy?.name ?? 'Select galaxy'}</span>
         {activeGalaxy?.status === 'ended' && <span className="galaxy-chip-tag">ended</span>}
       </button>

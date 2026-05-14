@@ -501,10 +501,32 @@
   color: var(--text-strong);
   font-size: var(--text-base);
   line-height: 1.25;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .nexus-item.active .nexus-name {
   color: var(--accent);
+}
+
+.nexus-name-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nexus-type-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-xs);
+  background: var(--accent-soft);
+  color: var(--accent);
+  flex-shrink: 0;
 }
 
 .nexus-coords {
@@ -518,23 +540,33 @@
   color: #F5F8FF;
 }
 
-.nexus-badge {
+.nexus-badges {
   position: absolute;
-  top: 5px;
-  right: 5px;
-  font-size: 14px;
+  top: 8px;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.nexus-badge + .nexus-badge {
-  right: 26px;
+.nexus-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-xs);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
 }
 
-.nexus-badge + .nexus-badge + .nexus-badge {
-  right: 47px;
+.nexus-item.active .nexus-badge {
+  color: var(--accent);
 }
 
 .nexus-badge-unread {
-  text-shadow: 0 0 6px rgba(255,107,129, 0.9);
+  background: var(--danger-soft);
+  color: var(--danger);
   animation: reportDotPulse 1.6s ease-in-out infinite;
 }
 

@@ -3,6 +3,7 @@ import { buyMarketListing, cancelMarketListing, createMarketListing, getMarketHi
 import '../styles/Market.css';
 import { MarketListing, Nexus } from '../types/game';
 import { formatDateTime } from '../utils/date';
+import ResourceIcon from './ResourceIcon';
 
 interface MarketProps {
   nexuses: Nexus[];
@@ -16,10 +17,10 @@ const RESOURCE_LABELS: Record<string, string> = {
   ore: 'Ore',
 };
 
-const RESOURCE_ICONS: Record<string, string> = {
-  biomass: '🧬',
-  alloy: '⚙️',
-  ore: '💎',
+const RESOURCE_ICONS: Record<string, React.ReactNode> = {
+  biomass: <ResourceIcon kind="biomass" size={14} />,
+  alloy: <ResourceIcon kind="alloy" size={14} />,
+  ore: <ResourceIcon kind="ore" size={14} />,
 };
 
 const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) => {

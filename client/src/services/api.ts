@@ -31,7 +31,12 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
     if (response.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/auth';
+      if (typeof window !== 'undefined') {
+        const here = window.location.pathname;
+        if (here !== '/login' && here !== '/register') {
+          window.location.href = '/login';
+        }
+      }
     }
     if (response.status === 409 && data?.code === 'no_active_galaxy' && typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('galaxy:needs-selection'));
@@ -49,6 +54,12 @@ export const login = (username: string, password: string) =>
   apiRequest('/auth/login', {
     method: 'POST',
     body: JSON.stringify({ username, password }),
+  });
+
+export const requestAlphaAccess = (email: string) =>
+  apiRequest('/auth/alpha-signup', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
   });
 
 // Galaxies

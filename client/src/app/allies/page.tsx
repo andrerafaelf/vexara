@@ -78,7 +78,7 @@ export default function FriendsPage() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      router.push('/auth');
+      router.push('/login');
       return;
     }
     loadData();

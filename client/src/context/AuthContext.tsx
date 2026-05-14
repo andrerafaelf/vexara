@@ -40,8 +40,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setToken(null);
     setUser(null);
 
-    if (window.location.pathname !== '/auth') {
-      window.location.href = '/auth';
+    if (window.location.pathname !== '/login') {
+      window.location.href = '/login';
     }
   };
 
