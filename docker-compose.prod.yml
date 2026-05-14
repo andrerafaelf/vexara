@@ -54,6 +54,7 @@ services:
       VAPID_SUBJECT: ${VAPID_SUBJECT}
       AUTH_RATE_LIMIT_MAX: ${AUTH_RATE_LIMIT_MAX:-10}
       API_RATE_LIMIT_MAX: ${API_RATE_LIMIT_MAX:-100}
+      MAILGUN_API_KEY: ${MAILGUN_API_KEY}
     networks:
       - app_net
     healthcheck:
