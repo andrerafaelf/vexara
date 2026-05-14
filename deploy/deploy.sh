@@ -13,10 +13,18 @@ GRAFANA_TIMEOUT=300  # grafana downloads plugins on first start
 
 cd "$APP_DIR"
 
+# Load .env so DOMAIN and other vars are available in this script
+set -o allexport
+# shellcheck disable=SC1091
+source "$APP_DIR/.env"
+set +o allexport
+
 echo "[deploy] Starting deploy with IMAGE_TAG=$IMAGE_TAG"
 
-# Export so docker compose picks it up from the environment too
-export IMAGE_TAG
+# Substitute domain placeholder in nginx.conf before the container mounts it
+sed "s/DOMAIN_PLACEHOLDER/${DOMAIN}/g" \
+  "$APP_DIR/deploy/nginx/nginx.conf.template" \
+  > "$APP_DIR/deploy/nginx/nginx.conf"
 
 # Pull all new images (fast, parallel)
 echo "[deploy] Pulling images..."

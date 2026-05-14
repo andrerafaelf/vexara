@@ -168,6 +168,7 @@ services:
       - "443:443"
     volumes:
       - ./deploy/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      # nginx.conf is generated from nginx.conf.template by deploy.sh (DOMAIN substituted)
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - /var/www/certbot:/var/www/certbot
     networks:
