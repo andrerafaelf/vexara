@@ -68,7 +68,7 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
             return !!(m1 && m2 && m1.factionId === (m2 as any)?.factionId);
           }),
           prisma.friendship.findFirst({
-            where: { OR: [{ userId: req.userId!, friendId: defenderNexus.ownerId }, { userId: defenderNexus.ownerId, friendId: req.userId! }] },
+            where: { OR: [{ userAId: req.userId!, userBId: defenderNexus.ownerId! }, { userAId: defenderNexus.ownerId!, userBId: req.userId! }] },
           }).then(Boolean),
         ]);
         if (!sameFaction && !areFriends) { res.status(403).json({ error: 'Support missions can only be sent to faction members or friends' }); return; }
