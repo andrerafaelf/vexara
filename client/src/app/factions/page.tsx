@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 
 export default function FactionsPage() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, logout } = useAuth();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -15,12 +15,12 @@ export default function FactionsPage() {
   }, []);
 
   useEffect(() => {
-    if (!loading && !user && mounted) {
+    if (mounted && !user) {
       router.push('/login');
     }
-  }, [user, loading, mounted, router]);
+  }, [user, mounted, router]);
 
-  if (!mounted || loading || !user) {
+  if (!mounted || !user) {
     return <div className="game-container">Loading...</div>;
   }
 
@@ -44,7 +44,7 @@ export default function FactionsPage() {
           <a href="/profile" className="nav-link">Profile</a>
         </nav>
         <div className="header-right">
-          <button onClick={() => { localStorage.removeItem('token'); router.push('/login'); }}>Logout</button>
+          <button onClick={logout}>Logout</button>
         </div>
       </header>
 
