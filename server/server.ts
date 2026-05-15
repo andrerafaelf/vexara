@@ -10,6 +10,7 @@ import attackRoutes from './routes/attack.js';
 import authRoutes from './routes/auth.js';
 import buildingRoutes from './routes/building.js';
 import chatRoutes from './routes/chat.js';
+import factionRoutes from './routes/faction.js';
 import friendsRoutes from './routes/friends.js';
 import galaxyRoutes from './routes/galaxy.js';
 import mapRoutes from './routes/map.js';
@@ -121,6 +122,7 @@ app.use('/api/galaxies', galaxyRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/faction', factionRoutes);
 
 const JOB_LOCKS = { updateResources: 9101, processCombat: 9102, syncNeutralPool: 9103, recoverControl: 9104, processTransfers: 9105, levelNeutralNexuses: 9106, processQueues: 9107, processDominance: 9108 };
 

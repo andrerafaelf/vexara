@@ -20,77 +20,132 @@ export async function processDominanceVictories(): Promise<void> {
 }
 
 async function processGalaxy(galaxy: { id: number; name: string }): Promise<void> {
-  const ownerships = await prisma.nexus.groupBy({
-    by: ['ownerId'],
+  // Get all nexuses with owners
+  const nexuses = await prisma.nexus.findMany({
     where: { galaxyId: galaxy.id, ownerId: { not: null } },
-    _count: { _all: true },
+    select: { id: true, ownerId: true },
   });
 
-  const totalOwned = ownerships.reduce((sum, row) => sum + row._count._all, 0);
-  if (totalOwned === 0) return;
-
-  let leader: (typeof ownerships)[0] | null = null;
-  for (const row of ownerships) {
-    if (!leader || row._count._all > leader._count._all) leader = row;
-  }
-  if (!leader || leader.ownerId == null) return;
-
-  const leaderShare = leader._count._all / totalOwned;
-
-  if (leaderShare < DOMINANCE_THRESHOLD) {
-    await prisma.galaxyPlayer.updateMany({
+  if (nexuses.length === 0) {
+    await prisma.faction.updateMany({
       where: { galaxyId: galaxy.id, dominanceSince: { not: null } },
       data: { dominanceSince: null },
     });
     return;
   }
 
-  await prisma.galaxyPlayer.updateMany({
-    where: { galaxyId: galaxy.id, userId: { not: leader.ownerId }, dominanceSince: { not: null } },
-    data: { dominanceSince: null },
+  // Get faction membership for all owned nexuses
+  const members = await prisma.factionMember.findMany({
+    where: { galaxyId: galaxy.id },
+    select: { userId: true, factionId: true },
   });
+  const userToFaction = new Map(members.map((m) => [m.userId, m.factionId]));
 
-  const leaderPlayer = await prisma.galaxyPlayer.findUnique({
-    where: { userId_galaxyId: { userId: leader.ownerId, galaxyId: galaxy.id } },
-    select: { id: true, dominanceSince: true },
-  });
-  if (!leaderPlayer) return;
+  // Count nexuses per faction
+  const factionCounts = new Map<number, number>();
+  for (const nexus of nexuses) {
+    const factionId = userToFaction.get(nexus.ownerId!);
+    if (factionId) {
+      factionCounts.set(factionId, (factionCounts.get(factionId) || 0) + 1);
+    }
+  }
 
-  const now = new Date();
-  if (!leaderPlayer.dominanceSince) {
-    await prisma.galaxyPlayer.update({ where: { id: leaderPlayer.id }, data: { dominanceSince: now } });
+  // Find leader faction
+  let leaderFactionId: number | null = null;
+  let maxCount = 0;
+  for (const [factionId, count] of factionCounts) {
+    if (count > maxCount) {
+      maxCount = count;
+      leaderFactionId = factionId;
+    }
+  }
+
+  if (!leaderFactionId) {
+    await prisma.faction.updateMany({
+      where: { galaxyId: galaxy.id, dominanceSince: { not: null } },
+      data: { dominanceSince: null },
+    });
     return;
   }
 
-  const heldFor = now.getTime() - new Date(leaderPlayer.dominanceSince).getTime();
-  if (heldFor < DOMINANCE_SUSTAIN_MS) return;
+  const leaderShare = maxCount / nexuses.length;
 
-  await endGalaxy(galaxy, leader.ownerId);
-}
+  // Below threshold: reset all dominance timers
+  if (leaderShare < DOMINANCE_THRESHOLD) {
+    await prisma.faction.updateMany({
+      where: { galaxyId: galaxy.id, dominanceSince: { not: null } },
+      data: { dominanceSince: null },
+    });
+    return;
+  }
 
-async function endGalaxy(galaxy: { id: number; name: string }, winnerUserId: number): Promise<void> {
-  await prisma.galaxy.update({
-    where: { id: galaxy.id },
-    data: { status: 'ended', endedAt: new Date(), winnerUserId },
+  // Reset non-leader factions
+  await prisma.faction.updateMany({
+    where: { galaxyId: galaxy.id, id: { not: leaderFactionId }, dominanceSince: { not: null } },
+    data: { dominanceSince: null },
   });
 
-  const players = await prisma.galaxyPlayer.findMany({
+  // Check leader faction dominanceSince
+  const leaderFaction = await prisma.faction.findUnique({
+    where: { id: leaderFactionId },
+    select: { dominanceSince: true },
+  });
+  if (!leaderFaction) return;
+
+  const now = new Date();
+  if (!leaderFaction.dominanceSince) {
+    await prisma.faction.update({
+      where: { id: leaderFactionId },
+      data: { dominanceSince: now },
+    });
+    return;
+  }
+
+  const heldFor = now.getTime() - new Date(leaderFaction.dominanceSince).getTime();
+  if (heldFor < DOMINANCE_SUSTAIN_MS) return;
+
+  await endGalaxy(galaxy, leaderFactionId);
+}
+
+async function endGalaxy(galaxy: { id: number; name: string }, winnerFactionId: number): Promise<void> {
+  // Get the faction leader to set as winnerUserId for legacy compat
+  const faction = await prisma.faction.findUnique({
+    where: { id: winnerFactionId },
+    select: { name: true, members: { where: { role: 'leader' }, select: { userId: true } } },
+  });
+
+  const factionLeader = faction?.members[0]?.userId || null;
+
+  await prisma.galaxy.update({
+    where: { id: galaxy.id },
+    data: { status: 'ended', endedAt: new Date(), winnerFactionId, winnerUserId: factionLeader },
+  });
+
+  // Notify all players
+  const allPlayers = await prisma.galaxyPlayer.findMany({
     where: { galaxyId: galaxy.id },
     select: { userId: true },
   });
 
-  for (const p of players) {
-    const isWinner = p.userId === winnerUserId;
+  const factionMembers = await prisma.factionMember.findMany({
+    where: { factionId: winnerFactionId, galaxyId: galaxy.id },
+    select: { userId: true },
+  });
+  const winnerIds = new Set(factionMembers.map((m) => m.userId));
+
+  for (const p of allPlayers) {
+    const isWinner = winnerIds.has(p.userId);
     void sendPushToUser(p.userId, isWinner ? NOTIF.ATTACK_RESOLVED : NOTIF.ATTACK_INCOMING, {
-      title: isWinner ? '👑 Galaxy Conquered' : '🏁 Galaxy Ended',
+      title: isWinner ? '👑 Faction Victory' : '🏁 Galaxy Ended',
       body: isWinner
-        ? `You achieved dominance in ${galaxy.name}.`
-        : `${galaxy.name} has ended. A dominant player has won.`,
+        ? `Your faction conquered ${galaxy.name}!`
+        : `${galaxy.name} has ended. A faction has achieved victory.`,
       tag: `galaxy-ended-${galaxy.id}`,
       data: { url: '/' },
     });
   }
 
+  // Clear active galaxy for all users in this galaxy
   await prisma.user.updateMany({
     where: { activeGalaxyId: galaxy.id },
     data: { activeGalaxyId: null },

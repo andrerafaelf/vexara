@@ -207,6 +207,31 @@ export const buyMarketListing = (listingId: number, buyerNexusId: string) =>
 export const cancelMarketListing = (listingId: number) => apiRequest(`/market/${listingId}`, { method: 'DELETE' });
 export const getMarketHistory = () => apiRequest('/market/history');
 
+// Factions
+export const getMyFaction = () => apiRequest('/faction/my');
+export const getFaction = (id: number) => apiRequest(`/faction/${id}`);
+export const listFactionsInGalaxy = () => apiRequest('/faction/galaxy/list');
+export const createFaction = (data: { name: string; tag: string; description?: string }) =>
+  apiRequest('/faction', { method: 'POST', body: JSON.stringify(data) });
+export const inviteToFaction = (factionId: number, username: string) =>
+  apiRequest(`/faction/${factionId}/invite`, {
+    method: 'POST',
+    body: JSON.stringify({ username }),
+  });
+export const getMyFactionInvites = () => apiRequest('/faction/invites/list');
+export const acceptFactionInvite = (inviteId: number) =>
+  apiRequest(`/faction/invites/${inviteId}/accept`, { method: 'POST' });
+export const declineFactionInvite = (inviteId: number) => apiRequest(`/faction/invites/${inviteId}`, { method: 'DELETE' });
+export const kickFactionMember = (factionId: number, userId: number) =>
+  apiRequest(`/faction/${factionId}/members/${userId}`, { method: 'DELETE' });
+export const setFactionMemberRole = (factionId: number, userId: number, role: string) =>
+  apiRequest(`/faction/${factionId}/members/${userId}/role`, {
+    method: 'PATCH',
+    body: JSON.stringify({ role }),
+  });
+export const leaveFaction = (factionId: number) => apiRequest(`/faction/${factionId}/leave`, { method: 'POST' });
+export const disbandFaction = (factionId: number) => apiRequest(`/faction/${factionId}`, { method: 'DELETE' });
+
 export const systemBuyResource = (
   nexusId: string,
   receiveResource: string,

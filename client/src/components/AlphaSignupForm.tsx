@@ -68,6 +68,32 @@ const AlphaSignupForm: React.FC = () => {
           </div>
         ) : (
           <>
+            <div className="founder-perks">
+              <h3 className="founder-perks-title">Alpha Founder Benefits</h3>
+              <div className="founder-perks-grid">
+                <div className="founder-perk-item">
+                  <span className="founder-badge">👑</span>
+                  <strong>Founder&apos;s Badge</strong>
+                  <p>Permanent account badge, never earnable again after alpha.</p>
+                </div>
+                <div className="founder-perk-item">
+                  <span className="founder-badge">⭐</span>
+                  <strong>Leaderboard Distinction</strong>
+                  <p>Special highlight on all rankings showing your founding status.</p>
+                </div>
+                <div className="founder-perk-item">
+                  <span className="founder-badge">📜</span>
+                  <strong>Hall of Fame</strong>
+                  <p>Permanently listed as a founder with your join date and rank.</p>
+                </div>
+                <div className="founder-perk-item">
+                  <span className="founder-badge">🏛️</span>
+                  <strong>Naming Rights</strong>
+                  <p>If your faction wins, name a building in the galaxy forever.</p>
+                </div>
+              </div>
+            </div>
+
             <p className="auth-description">
               Vexara is a browser-based sci-fi strategy game. Build your nexus, train an army, and
               conquer the galaxy with players around the world.

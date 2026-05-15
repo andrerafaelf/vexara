@@ -128,6 +128,9 @@ export default function ProfilePage() {
               {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
             </span>
           </button>
+          <button className="nav-btn" onClick={() => router.push('/factions')}>
+            <Users size={14} /> Factions
+          </button>
           <button className="nav-btn active"><User size={14} /> Profile</button>
         </div>
         <div className="header-right">
@@ -215,6 +218,15 @@ export default function ProfilePage() {
               <Users size={14} /> Allies
               {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
             </span>
+          </button>
+          <button
+            className="nav-btn"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              router.push('/factions');
+            }}
+          >
+            <Users size={14} /> Factions
           </button>
           <button className="nav-btn active" onClick={() => setIsMobileMenuOpen(false)}>
             <User size={14} /> Profile

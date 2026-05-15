@@ -202,6 +202,9 @@ export default function NexusPage() {
                 {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
               </span>
             </button>
+            <button className="nav-btn" onClick={() => router.push('/factions')}>
+              <Users size={14} /> Factions
+            </button>
             <button className="nav-btn" onClick={() => router.push('/profile')}>
               <User size={14} /> Profile
             </button>
@@ -303,6 +306,15 @@ export default function NexusPage() {
                 <Users size={14} /> Allies
                 {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
               </span>
+            </button>
+            <button
+              className="nav-btn"
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                router.push('/factions');
+              }}
+            >
+              <Users size={14} /> Factions
             </button>
             <button
               className="nav-btn"

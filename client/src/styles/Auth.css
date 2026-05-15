@@ -401,3 +401,66 @@
   font-size: var(--text-sm);
   font-weight: 500;
 }
+
+.founder-perks {
+  margin-bottom: var(--space-6);
+  padding: var(--space-4) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgba(103, 255, 242, 0.08), rgba(129, 236, 134, 0.04));
+  border: 1px solid rgba(103, 255, 242, 0.15);
+}
+
+.founder-perks-title {
+  text-align: center;
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--text-strong);
+  margin: 0 0 var(--space-4) 0;
+  background: linear-gradient(90deg, #67fff2, #81ec86);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.founder-perks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-3);
+}
+
+.founder-perk-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(103, 255, 242, 0.1);
+  text-align: center;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+}
+
+.founder-perk-item:hover {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(103, 255, 242, 0.25);
+  box-shadow: 0 0 12px rgba(103, 255, 242, 0.1);
+}
+
+.founder-perk-item strong {
+  color: var(--text-strong);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.founder-badge {
+  font-size: var(--text-2xl);
+  display: block;
+  height: 36px;
+  width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

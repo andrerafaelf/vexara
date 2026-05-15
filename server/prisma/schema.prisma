@@ -27,11 +27,18 @@ model User {
   chatMessagesRecv   ChatMessage[]   @relation("ChatMessageReceiver")
   pushSubscriptions  PushSubscription[]
   notificationPrefs  NotificationPreferences?
+  factionMembers     FactionMember[]
 }
 
 enum GalaxyStatus {
   active
   ended
+}
+
+enum FactionRole {
+  leader
+  officer
+  member
 }
 
 model Galaxy {
@@ -40,6 +47,7 @@ model Galaxy {
   status       GalaxyStatus @default(active)
   endedAt      DateTime?
   winnerUserId Int?
+  winnerFactionId Int?
   createdAt    DateTime     @default(now())
 
   activeUsers        User[]              @relation("UserActiveGalaxy")
@@ -50,6 +58,7 @@ model Galaxy {
   marketListings     MarketListing[]
   marketTransactions MarketTransaction[]
   reportReads        ReportRead[]
+  factions           Faction[]
 }
 
 model GalaxyPlayer {
@@ -341,4 +350,53 @@ model Attack {
   @@index([status, arrivesAt])
   @@index([attackerNexusId, status])
   @@index([defenderNexusId, status])
+}
+
+model Faction {
+  id              Int       @id @default(autoincrement())
+  galaxyId        Int
+  name            String    @db.VarChar(32)
+  tag             String    @db.VarChar(6)
+  description     String?   @db.VarChar(256)
+  createdAt       DateTime  @default(now())
+  dominanceSince  DateTime?
+
+  galaxy  Galaxy          @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
+  members FactionMember[]
+  invites FactionInvite[]
+
+  @@unique([galaxyId, name])
+  @@unique([galaxyId, tag])
+  @@index([galaxyId])
+}
+
+model FactionMember {
+  id        Int         @id @default(autoincrement())
+  factionId Int
+  userId    Int
+  galaxyId  Int
+  role      FactionRole @default(member)
+  joinedAt  DateTime    @default(now())
+
+  faction Faction @relation(fields: [factionId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, galaxyId])
+  @@index([factionId])
+  @@index([galaxyId])
+}
+
+model FactionInvite {
+  id              Int      @id @default(autoincrement())
+  factionId       Int
+  invitedUserId   Int
+  invitedByUserId Int
+  galaxyId        Int
+  createdAt       DateTime @default(now())
+  expiresAt       DateTime
+
+  faction Faction @relation(fields: [factionId], references: [id], onDelete: Cascade)
+
+  @@unique([factionId, invitedUserId])
+  @@index([invitedUserId, galaxyId])
 }
