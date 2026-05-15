@@ -11,13 +11,13 @@ import {
   inviteToFaction,
   kickFactionMember,
   leaveFaction,
-  listFactionsInGalaxy,
   setFactionMemberRole,
   updateFactionMotd,
 } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import FactionChat from './FactionChat';
 import FactionActivity from './FactionActivity';
+import FactionLeaderboard from './FactionLeaderboard';
 import '../styles/Factions.css';
 
 interface Faction {
@@ -41,22 +41,12 @@ interface FactionInvite {
   expiresAt: string;
 }
 
-interface GalaxyFaction {
-  id: number;
-  name: string;
-  tag: string;
-  description?: string;
-  createdAt: string;
-  memberCount: number;
-}
-
 type Tab = 'overview' | 'chat' | 'members' | 'activity';
 
 const ROLE_ORDER: Record<string, number> = { leader: 0, officer: 1, member: 2 };
 
 export default function FactionsView() {
   const [myFaction, setMyFaction] = useState<(Faction & { myRole: string }) | null>(null);
-  const [allFactions, setAllFactions] = useState<GalaxyFaction[]>([]);
   const [invites, setInvites] = useState<FactionInvite[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -84,13 +74,11 @@ export default function FactionsView() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [myFactionRes, allFactionsRes, invitesRes] = await Promise.all([
+        const [myFactionRes, invitesRes] = await Promise.all([
           getMyFaction(),
-          listFactionsInGalaxy(),
           getMyFactionInvites(),
         ]);
         setMyFaction(myFactionRes.data.faction);
-        setAllFactions(allFactionsRes.data);
         setInvites(invitesRes.data);
         if (myFactionRes.data.faction?.motd) {
           setMotdDraft(myFactionRes.data.faction.motd);
@@ -205,8 +193,6 @@ export default function FactionsView() {
     try {
       await disbandFaction(myFaction.id);
       setMyFaction(null);
-      const newAll = await listFactionsInGalaxy();
-      setAllFactions(newAll.data);
     } catch (err) {
       setError((err as Error).message);
     }
@@ -293,25 +279,8 @@ export default function FactionsView() {
         )}
 
         <section className="factions-panel factions-all">
-          <h2>All Factions in Galaxy ({allFactions.length})</h2>
-          {allFactions.length === 0 ? (
-            <p className="factions-empty">No factions yet. Be the first to create one!</p>
-          ) : (
-            <div className="factions-list">
-              {allFactions.map((faction) => (
-                <div key={faction.id} className="factions-item">
-                  <div className="factions-item-header">
-                    <h3>{faction.name}</h3>
-                    <span className="factions-tag">{faction.tag}</span>
-                  </div>
-                  {faction.description && <p className="factions-item-desc">{faction.description}</p>}
-                  <div className="factions-item-meta">
-                    <span>{faction.memberCount} member{faction.memberCount !== 1 ? 's' : ''}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <h2>Galaxy Standings</h2>
+          <FactionLeaderboard />
         </section>
       </div>
     );
@@ -437,6 +406,11 @@ export default function FactionsView() {
               </span>
               <span className="factions-stat-label">Founded</span>
             </div>
+          </div>
+
+          <div className="factions-overview-section">
+            <h3>Galaxy Standings</h3>
+            <FactionLeaderboard myFactionId={myFaction.id} />
           </div>
 
           <div className="factions-actions">

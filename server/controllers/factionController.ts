@@ -585,6 +585,94 @@ export async function disbandFaction(req: AuthRequest, res: Response): Promise<v
   }
 }
 
+// ── LEADERBOARD ───────────────────────────────────────────────────────────────
+
+export async function getLeaderboard(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+      select: { activeGalaxyId: true },
+    });
+    if (!user?.activeGalaxyId) {
+      res.status(409).json({ error: 'No active galaxy' });
+      return;
+    }
+
+    const galaxyId = user.activeGalaxyId;
+
+    // Total owned nexuses in galaxy
+    const totalOwnedNexuses = await prisma.nexus.count({
+      where: { galaxyId, ownerId: { not: null } },
+    });
+
+    // Faction memberships (userId → factionId)
+    const members = await prisma.factionMember.findMany({
+      where: { galaxyId },
+      select: { userId: true, factionId: true },
+    });
+    const userToFaction = new Map(members.map((m: any) => [m.userId, m.factionId]));
+
+    // Nexuses per owner
+    const nexuses = await prisma.nexus.findMany({
+      where: { galaxyId, ownerId: { not: null } },
+      select: { ownerId: true },
+    });
+
+    const factionNexusCounts = new Map<number, number>();
+    for (const n of nexuses) {
+      const fid = userToFaction.get(n.ownerId!);
+      if (fid) factionNexusCounts.set(fid, (factionNexusCounts.get(fid) ?? 0) + 1);
+    }
+
+    // All factions with member count + dominance
+    const factions = await prisma.faction.findMany({
+      where: { galaxyId },
+      select: {
+        id: true,
+        name: true,
+        tag: true,
+        dominanceSince: true,
+        _count: { select: { members: true } },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    const DOMINANCE_THRESHOLD = 0.65;
+    const DOMINANCE_SUSTAIN_MS = 36 * 60 * 60 * 1000;
+    const now = Date.now();
+
+    const rows = factions.map((f: any) => {
+      const nexusCount = factionNexusCounts.get(f.id) ?? 0;
+      const pct = totalOwnedNexuses > 0 ? nexusCount / totalOwnedNexuses : 0;
+      const isDominating = pct >= DOMINANCE_THRESHOLD;
+      let dominanceMs: number | null = null;
+      let dominancePct = 0;
+      if (isDominating && f.dominanceSince) {
+        dominanceMs = now - new Date(f.dominanceSince).getTime();
+        dominancePct = Math.min(dominanceMs / DOMINANCE_SUSTAIN_MS, 1);
+      }
+      return {
+        id: f.id,
+        name: f.name,
+        tag: f.tag,
+        memberCount: f._count.members,
+        nexusCount,
+        totalOwnedNexuses,
+        pct: Math.round(pct * 1000) / 10,    // e.g. 42.3
+        isDominating,
+        dominanceSince: f.dominanceSince,
+        dominancePct: Math.round(dominancePct * 1000) / 10,
+      };
+    });
+
+    rows.sort((a: any, b: any) => b.nexusCount - a.nexusCount);
+
+    res.json({ rows, totalOwnedNexuses, dominanceThresholdPct: DOMINANCE_THRESHOLD * 100 });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
 // ── MOTD ──────────────────────────────────────────────────────────────────────
 
 export async function updateMotd(req: AuthRequest, res: Response): Promise<void> {

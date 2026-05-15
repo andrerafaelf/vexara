@@ -233,6 +233,7 @@ export const setFactionMemberRole = (factionId: number, userId: number, role: st
   });
 export const leaveFaction = (factionId: number) => apiRequest(`/faction/${factionId}/leave`, { method: 'POST' });
 export const disbandFaction = (factionId: number) => apiRequest(`/faction/${factionId}`, { method: 'DELETE' });
+export const getFactionLeaderboard = () => apiRequest('/faction/leaderboard');
 export const updateFactionMotd = (factionId: number, motd: string) =>
   apiRequest(`/faction/${factionId}/motd`, { method: 'PATCH', body: JSON.stringify({ motd }) });
 export const getFactionChat = (factionId: number, before?: number) =>

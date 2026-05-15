@@ -23,6 +23,7 @@ const EVENT_LABELS: Record<string, (e: FactionEvent) => string> = {
   member_kicked:   (e) => `${e.targetName ?? 'Someone'} was kicked by ${e.actorName ?? 'an officer'}`,
   member_promoted: (e) => `${e.targetName ?? 'Someone'} was promoted to Officer by ${e.actorName ?? 'the leader'}`,
   member_demoted:  (e) => `${e.targetName ?? 'Someone'} was demoted to Member by ${e.actorName ?? 'the leader'}`,
+  nexus_captured:  (e) => `${e.actorName ?? 'Someone'} captured ${e.meta ?? 'a nexus'}`,
 };
 
 const EVENT_ICONS: Record<string, string> = {
@@ -32,6 +33,7 @@ const EVENT_ICONS: Record<string, string> = {
   member_kicked:   '✕',
   member_promoted: '▲',
   member_demoted:  '▼',
+  nexus_captured:  '⚔',
 };
 
 const EVENT_COLORS: Record<string, string> = {
@@ -41,6 +43,7 @@ const EVENT_COLORS: Record<string, string> = {
   member_kicked:   'event-icon--red',
   member_promoted: 'event-icon--cyan',
   member_demoted:  'event-icon--orange',
+  nexus_captured:  'event-icon--gold',
 };
 
 function formatRelative(iso: string): string {

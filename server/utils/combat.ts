@@ -5,6 +5,15 @@ import { buildDetailedScoutIntel } from './scouting.js';
 import { NOTIF, sendPushToUser } from './push.js';
 import type { TroopKey } from '../types/index.js';
 
+async function logFactionEvent(userId: number, galaxyId: number, type: string, actorName?: string, targetName?: string, meta?: string) {
+  const membership = await prisma.factionMember.findUnique({
+    where: { userId_galaxyId: { userId, galaxyId } },
+    select: { factionId: true },
+  });
+  if (!membership) return;
+  await prisma.factionEvent.create({ data: { factionId: membership.factionId, type, actorName, targetName, meta } });
+}
+
 const TROOP_KEYS = Object.keys(TROOP_STATS) as TroopKey[];
 
 const TROOP_POPULATION_COST: Record<TroopKey, number> = {
@@ -188,6 +197,15 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
         controlLevel: conquered ? 0 : newControlLevel,
       },
     });
+
+    if (conquered && attack.attackerUserId) {
+      const attackerNexusInfo = await prisma.nexus.findUnique({ where: { id: attack.attackerNexusId! }, select: { galaxyId: true, owner: { select: { username: true } } } });
+      const attackerUsername = (attackerNexusInfo?.owner as { username?: string } | null)?.username;
+      const nexusName = defenderNexus.name;
+      if (attackerNexusInfo?.galaxyId && attackerUsername) {
+        void logFactionEvent(attack.attackerUserId, attackerNexusInfo.galaxyId, 'nexus_captured', attackerUsername, undefined, nexusName);
+      }
+    }
 
     const survivingTroops: Partial<Record<TroopKey, number>> = {};
     let attackerPopFreed = 0;
