@@ -11,12 +11,13 @@ import '@/styles/Game.css';
 import { Nexus } from '@/types/game';
 import { Building2, LayoutDashboard, LogOut, Map as MapIcon, Menu, ScrollText, ShoppingCart, User, Users } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export default function StarfieldPage() {
   const [nexuses, setVillages] = useState<Nexus[]>([]);
   const [selectedNexus, setSelectedNexus] = useState<Nexus | null>(null);
   const { hasUnreadReports, unreadNexusIds, refresh: refreshUnreadReports } = useUnreadReports();
+  const selectedInitialized = useRef(false);
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNexusDrawerOpen, setIsNexusDrawerOpen] = useState(false);
@@ -29,7 +30,8 @@ export default function StarfieldPage() {
     try {
       const response = await getMyNexuses();
       setVillages(response.data);
-      if (!selectedNexus && response.data.length > 0) {
+      if (!selectedInitialized.current && response.data.length > 0) {
+        selectedInitialized.current = true;
         const storedId = localStorage.getItem('selectedNexusId');
         const nexus = (storedId && response.data.find((n: Nexus) => String(n._id) === storedId)) || response.data[0];
         setSelectedNexus(nexus);
@@ -39,7 +41,7 @@ export default function StarfieldPage() {
       console.error('Error loading nexuses:', err);
       setLoading(false);
     }
-  }, [selectedNexus]);
+  }, []);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);

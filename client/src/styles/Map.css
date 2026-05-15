@@ -217,15 +217,28 @@
 
 .map-grid {
   display: inline-block;
-  border: 1px solid rgba(103,255,242,0.08);
+  border: 1px solid rgba(103,255,242,0.12);
   border-radius: 8px;
   overflow: visible;
   user-select: none;
   touch-action: none;
   -webkit-user-drag: none;
   position: relative;
-  background: transparent;
   z-index: 1;
+  background:
+    /* cyan nebula bloom — top-left quadrant */
+    radial-gradient(ellipse 55% 40% at 18% 22%, rgba(103,255,242,0.07) 0%, transparent 100%),
+    /* green bloom — bottom-right */
+    radial-gradient(ellipse 50% 35% at 82% 78%, rgba(129,236,134,0.055) 0%, transparent 100%),
+    /* warm magenta rift — mid-right */
+    radial-gradient(ellipse 30% 50% at 88% 35%, rgba(255,107,129,0.04) 0%, transparent 100%),
+    /* deep core glow — centre */
+    radial-gradient(ellipse 60% 60% at 50% 50%, rgba(42,48,86,0.55) 0%, transparent 100%),
+    /* base — deep navy sweep */
+    linear-gradient(135deg, #080c1c 0%, #0c1022 30%, #0f1428 55%, #0a0e1e 100%);
+  box-shadow:
+    inset 0 0 60px rgba(103,255,242,0.025),
+    inset 0 0 120px rgba(0,0,0,0.4);
 }
 
 .map-row {
@@ -236,27 +249,27 @@
 .map-cell {
   width: var(--map-cell-size, 60px);
   height: var(--map-cell-size, 60px);
-  border: 1px solid rgba(255,255,255,0.07);
+  border: 1px solid rgba(103,255,242,0.06);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   position: relative;
-  background: rgba(20,25,55,0.45);
+  background: rgba(12,16,36,0.35);
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .map-cell:hover {
-  background: rgba(42,48,86,0.7);
-  border-color: rgba(255,255,255,0.18);
+  background: rgba(42,48,86,0.55);
+  border-color: rgba(103,255,242,0.18);
   z-index: 10;
 }
 
 .map-cell.out-of-bounds {
-  background: rgba(10,13,30,0.6);
+  background: rgba(5,7,18,0.5);
   cursor: default;
-  opacity: 0.25;
+  opacity: 0.15;
 }
 
 .map-cell.out-of-bounds:hover {

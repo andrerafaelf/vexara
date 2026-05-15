@@ -11,12 +11,13 @@ import '@/styles/Game.css';
 import { Nexus } from '@/types/game';
 import { Building2, LayoutDashboard, LogOut, Map as MapIcon, Menu, ScrollText, ShoppingCart, User, Users } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export default function FriendsPage() {
   const [nexuses, setNexuses] = useState<Nexus[]>([]);
   const [selectedNexusId, setSelectedNexusId] = useState<string | null>(null);
   const { hasUnreadReports, unreadNexusIds } = useUnreadReports();
+  const selectedInitialized = useRef(false);
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNexusDrawerOpen, setIsNexusDrawerOpen] = useState(false);
@@ -29,17 +30,18 @@ export default function FriendsPage() {
     try {
       const response = await getMyNexuses();
       setNexuses(response.data);
-      if (!selectedNexusId) {
+      if (!selectedInitialized.current && response.data.length > 0) {
+        selectedInitialized.current = true;
         const storedId = localStorage.getItem('selectedNexusId');
         if (storedId) setSelectedNexusId(storedId);
-        else if (response.data.length > 0) setSelectedNexusId(String(response.data[0]._id));
+        else setSelectedNexusId(String(response.data[0]._id));
       }
       setLoading(false);
     } catch (err) {
       console.error('Error loading data:', err);
       setLoading(false);
     }
-  }, [selectedNexusId]);
+  }, []);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
