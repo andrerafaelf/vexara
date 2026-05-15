@@ -1,4 +1,5 @@
 import { AuthProvider } from '@/context/AuthContext';
+import { ToastProvider } from '@/context/ToastContext';
 import ScrollToTop from '@/components/ScrollToTop';
 import type { Metadata, Viewport } from 'next';
 import { Suspense } from 'react';
@@ -34,10 +35,12 @@ export default function RootLayout({
       </head>
       <body>
         <AuthProvider>
-          <Suspense fallback={null}>
-            <ScrollToTop />
-          </Suspense>
-          {children}
+          <ToastProvider>
+            <Suspense fallback={null}>
+              <ScrollToTop />
+            </Suspense>
+            {children}
+          </ToastProvider>
         </AuthProvider>
       </body>
     </html>

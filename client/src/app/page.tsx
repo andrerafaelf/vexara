@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/context/ToastContext';
 import { createNexus, getMyNexuses } from '@/services/api';
 import '@/styles/Game.css';
 import { Nexus } from '@/types/game';
@@ -14,6 +15,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const { user, logout } = useAuth();
+  const toast = useToast();
   const router = useRouter();
 
   const loadNexuses = useCallback(async () => {
@@ -57,7 +59,7 @@ export default function Home() {
       await loadNexuses();
     } catch (err) {
       console.error('Error creating nexus:', err);
-      alert('Failed to create nexus');
+      toast('Failed to create nexus', 'error');
     } finally {
       setCreating(false);
     }

@@ -2,8 +2,11 @@ import { Coins, Skull, Swords, Trophy } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { getReadReportIds, getReports, markAllReportsRead, markReportRead, sendAttack } from '../services/api';
 import '../styles/Reports.css';
+import { useToast } from '../context/ToastContext';
 import { Attack, Nexus } from '../types/game';
 import { formatDateTime } from '../utils/date';
+import BattleReplay from './BattleReplay';
+import ScoutIntelCard from './ScoutIntelCard';
 import ResourceIcon from './ResourceIcon';
 
 interface ReportsProps {
@@ -27,6 +30,7 @@ const troopNames: Record<string, string> = {
 };
 
 const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
+  const toast = useToast();
   const [reports, setReports] = useState<Attack[]>([]);
   const [selectedReport, setSelectedReport] = useState<Attack | null>(null);
   const [loading, setLoading] = useState(true);
@@ -83,12 +87,12 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
     if (!selectedReport) return;
     const total = Object.values(attackTroops).reduce((a, b) => a + b, 0);
     if (total === 0) {
-      alert('Select at least one troop!');
+      toast('Select at least one troop', 'error');
       return;
     }
     try {
       await sendAttack(nexus._id, selectedReport.defender.nexus._id, attackTroops, 'attack');
-      alert('Strike sent!');
+      toast('Strike sent', 'success');
       setShowAttackForm(false);
       setAttackTroops({
         lancerDrone: 0,
@@ -105,7 +109,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
         overseer: 0,
       });
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Error sending strike');
+      toast(err.response?.data?.error || 'Error sending strike', 'error');
     }
   };
 
@@ -219,6 +223,10 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
             )}
           </div>
 
+          {!scoutReport && (
+            <BattleReplay report={selectedReport} isMyAttack={isMyAttack} />
+          )}
+
           {scoutReport && isMyAttack && (
             <div className="report-section scout-attack-section">
               <div className="scout-target-bar">
@@ -272,27 +280,11 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
           )}
 
           {scoutReport && selectedReport.result?.intel && (
-            <div className="report-section">
-              <h3>Scouted Intelligence</h3>
-              <p>
-                <strong>Resources:</strong>{' '}
-                <ResourceIcon kind="biomass" size={12} /> {selectedReport.result.intel.resources.biomass}{' '}
-                {' · '}
-                <ResourceIcon kind="alloy" size={12} /> {selectedReport.result.intel.resources.alloy}{' '}
-                {' · '}
-                <ResourceIcon kind="ore" size={12} /> {selectedReport.result.intel.resources.ore}
-              </p>
-              <p>
-                <strong>Population:</strong> {selectedReport.result.intel.population.current}/
-                {selectedReport.result.intel.population.max}
-              </p>
-              <p>
-                <strong>Control Level:</strong> {selectedReport.result.intel.controlLevel}/100
-              </p>
-              <p>
-                <strong>Shield Grid:</strong> {selectedReport.result.intel.buildings.shieldGrid}
-              </p>
-            </div>
+            <ScoutIntelCard
+              intel={selectedReport.result.intel as any}
+              targetName={selectedReport.defender.nexus?.name ?? 'Unknown'}
+              targetCoords={{ x: selectedReport.defender.nexus?.x ?? 0, y: selectedReport.defender.nexus?.y ?? 0 }}
+            />
           )}
 
           {!scoutReport && (

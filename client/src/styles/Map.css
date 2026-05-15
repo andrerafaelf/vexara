@@ -492,18 +492,59 @@
   background: #353C66;
 }
 
-.attack-btn {
+.nexus-action-buttons {
+  display: flex;
+  gap: 8px;
   width: 100%;
-  background: #67FFF2;
-  color: #0B0F1F;
-  padding: 15px;
-  font-size: 16px;
-  font-weight: bold;
-  border-radius: 6px;
 }
 
-.attack-btn:hover {
+.attack-btn {
+  flex: 1;
+  background: #67FFF2;
+  color: #0B0F1F;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: bold;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.attack-btn:hover:not(:disabled) {
   background: #3FE5D8;
+}
+
+.attack-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.wave-planner-btn {
+  background: #1A1F38;
+  color: #97A0BE;
+  border: 1px solid #2A3056;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.wave-planner-btn:hover {
+  background: #2A3056;
+  color: #F5F8FF;
+  border-color: #67FFF2;
 }
 
 .attack-form {

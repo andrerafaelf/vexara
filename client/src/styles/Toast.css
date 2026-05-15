@@ -1,7 +1,22 @@
-.toast {
+.toast-stack {
   position: fixed;
   top: 20px;
   right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: var(--z-toast);
+  pointer-events: none;
+}
+
+.toast-stack > * {
+  pointer-events: all;
+}
+
+.toast {
+  position: relative;
+  top: unset;
+  right: unset;
   padding: 14px 18px;
   border-radius: var(--radius-md);
   display: flex;

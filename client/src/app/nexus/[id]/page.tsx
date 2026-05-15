@@ -1,5 +1,6 @@
 'use client';
 
+import DominanceBar from '@/components/DominanceBar';
 import MobileNexusDrawer from '@/components/MobileNexusDrawer';
 import NexusSidebar from '@/components/NexusSidebar';
 import NexusView from '@/components/NexusView';
@@ -192,6 +193,8 @@ export default function NexusPage() {
             </button>
           </div>
         </header>
+
+        <DominanceBar />
 
         <MobileNexusDrawer
           nexuses={nexuses}

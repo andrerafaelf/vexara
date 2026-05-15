@@ -1,6 +1,8 @@
-import { Building, Home, Info, Shield, Star, Swords } from 'lucide-react';
+import { Building, Home, Info, Shield, Star, Swords, Waves } from 'lucide-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import WavePlanner from './WavePlanner';
 import {
   getIncomingAttacks,
   getMapArea,
@@ -79,6 +81,7 @@ interface CrosshairPosition {
 
 const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   const { user } = useAuth();
+  const toast = useToast();
   const [nexuses, setVillages] = useState<MapNexus[]>([]);
   const [selectedNexus, setSelectedNexus] = useState<MapNexus | null>(null);
   const [centerX, setCenterX] = useState(currentNexus.x);
@@ -107,6 +110,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   const [showTroopSend, setShowTroopSend] = useState(false);
   const [troopSendAmounts, setTroopSendAmounts] = useState<Record<string, string>>({});
   const [sendingTroops, setSendingTroops] = useState(false);
+  const [showWavePlanner, setShowWavePlanner] = useState(false);
 
   const availableTroops = useMemo(() => {
     const base: Record<string, number> = {};
@@ -376,7 +380,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
       setShowTransfer(false);
       onRefresh();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Transfer failed');
+      toast(err.response?.data?.error || 'Transfer failed', 'error');
     } finally {
       setTransferring(false);
     }
@@ -395,7 +399,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
       setShowTroopSend(false);
       onRefresh();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to send troops');
+      toast(err.response?.data?.error || 'Failed to send troops', 'error');
     } finally {
       setSendingTroops(false);
     }
@@ -504,6 +508,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
       setShowAttackForm(false);
       setShowTransfer(false);
       setShowTroopSend(false);
+      setShowWavePlanner(false);
       setTransferAmounts({ biomass: '', alloy: '', ore: '' });
       setTroopSendAmounts({});
     } catch (err) {
@@ -515,13 +520,13 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
     if (!selectedNexus) return;
 
     if (selectedNexus.control !== undefined && selectedNexus.control <= 0) {
-      alert('Cannot attack a conquered nexus!');
+      toast('Cannot attack a conquered nexus', 'error');
       return;
     }
 
     const totalTroops = Object.values(attackTroops).reduce((a, b) => a + b, 0);
     if (totalTroops === 0) {
-      alert('Select at least one troop!');
+      toast('Select at least one troop', 'error');
       return;
     }
 
@@ -532,7 +537,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
 
     try {
       await sendAttack(currentNexus._id, selectedNexus._id, attackTroops, resolvedType);
-      alert(resolvedType === 'scout' ? 'Recon mission sent!' : 'Strike sent!');
+      toast(resolvedType === 'scout' ? 'Recon mission sent' : 'Strike sent', 'success');
       setShowAttackForm(false);
       setAttackTroops({
         lancerDrone: 0,
@@ -551,7 +556,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
       onRefresh();
       loadAttacks();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Error sending strike');
+      toast(err.response?.data?.error || 'Error sending strike', 'error');
     }
   };
 
@@ -814,14 +819,25 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
         {!isOwn && (
           <div className="nexus-actions">
             {!showAttackForm ? (
-              <button
-                className="attack-btn"
-                onClick={() => setShowAttackForm(true)}
-                disabled={isConquered || isNewbieProtected}
-                title={isConquered ? 'Nexus already conquered' : isNewbieProtected ? 'Nexus is under newbie protection' : 'Launch attack'}
-              >
-                <Swords size={14} aria-hidden="true" /> {isConquered ? 'Conquered' : 'Attack'}
-              </button>
+              <div className="nexus-action-buttons">
+                <button
+                  className="attack-btn"
+                  onClick={() => setShowAttackForm(true)}
+                  disabled={isConquered || isNewbieProtected}
+                  title={isConquered ? 'Nexus already conquered' : isNewbieProtected ? 'Nexus is under newbie protection' : 'Launch attack'}
+                >
+                  <Swords size={14} aria-hidden="true" /> {isConquered ? 'Conquered' : 'Attack'}
+                </button>
+                {!isConquered && !isNewbieProtected && (
+                  <button
+                    className="wave-planner-btn"
+                    onClick={() => setShowWavePlanner(true)}
+                    title="Open Wave Planner — coordinate multiple attacks to arrive simultaneously"
+                  >
+                    <Waves size={14} aria-hidden="true" /> Wave Planner
+                  </button>
+                )}
+              </div>
             ) : (
               <div className="attack-form">
                 <h4>Launch Attack</h4>
@@ -1092,6 +1108,13 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
           {renderNexusContent()}
           {renderAttacksPanel()}
         </div>
+
+        {showWavePlanner && selectedNexus && (
+          <WavePlanner
+            target={{ _id: selectedNexus._id, name: selectedNexus.name, x: selectedNexus.x, y: selectedNexus.y }}
+            onClose={() => setShowWavePlanner(false)}
+          />
+        )}
 
         {selectedNexus && (
           <div
