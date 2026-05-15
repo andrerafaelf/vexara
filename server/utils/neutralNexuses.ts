@@ -13,10 +13,12 @@ const NPC_MAX_LEVELS: Record<LevelableBuilding, number> = {
   biomassFarm: 15, alloyForge: 15, oreExtractor: 15, shieldGrid: 11,
 };
 
-const MAP_SIZE = 35;
+const MAP_SIZE = 50;
+const MAX_NEUTRALS = Math.floor(MAP_SIZE * MAP_SIZE * 0.65);
 const MIN_NEUTRALS = 32;
 const NEUTRALS_PER_CAPTURED = 1;
 const NEUTRALS_PER_PLAYER = 4;
+const DAILY_NEXUS_GROWTH = 6;
 const BASE_NEUTRAL_DIFFICULTY = 0.7;
 const MAX_NEUTRAL_DIFFICULTY = 1.35;
 const USER_DIFFICULTY_STEP = 0.015;
@@ -196,6 +198,26 @@ export async function levelUpNeutralNexuses() {
 
     await prisma.nexus.update({ where: { id: nexus.id }, data: updates });
   }
+}
+
+export async function dailyNexusGrowth() {
+  const galaxies = await prisma.galaxy.findMany({ where: { status: 'active' }, select: { id: true } });
+
+  let totalCreated = 0;
+  for (const galaxy of galaxies) {
+    const totalCount = await prisma.nexus.count({ where: { galaxyId: galaxy.id } });
+    const remaining = MAX_NEUTRALS - totalCount;
+    if (remaining <= 0) continue;
+
+    const toCreate = Math.min(DAILY_NEXUS_GROWTH, remaining);
+    for (let i = 0; i < toCreate; i++) {
+      const nexus = await createNeutralNexus(galaxy.id);
+      if (!nexus) break;
+      totalCreated++;
+    }
+  }
+
+  return { created: totalCreated };
 }
 
 export async function seedNeutralNexuses(galaxyId: number, count: number) {
