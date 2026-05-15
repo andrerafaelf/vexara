@@ -6,7 +6,25 @@ import React, { useState } from 'react';
 import { requestAlphaAccess } from '../services/api';
 import '../styles/Auth.css';
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+
+const DOMAIN_TYPOS: Record<string, string> = {
+  'gmail.cm': 'gmail.com', 'gmail.con': 'gmail.com', 'gmail.cpm': 'gmail.com',
+  'gmail.ocm': 'gmail.com', 'gamil.com': 'gmail.com', 'gmai.com': 'gmail.com',
+  'gmial.com': 'gmail.com', 'hotmail.cm': 'hotmail.com', 'hotmail.con': 'hotmail.com',
+  'hotmial.com': 'hotmail.com', 'yahoo.cm': 'yahoo.com', 'yahoo.con': 'yahoo.com',
+  'yaho.com': 'yahoo.com', 'outlook.cm': 'outlook.com', 'outlook.con': 'outlook.com',
+};
+
+function getEmailError(email: string): string | null {
+  const normalized = email.trim().toLowerCase();
+  if (!EMAIL_RE.test(normalized)) return 'Please enter a valid email address.';
+  const atIdx = normalized.lastIndexOf('@');
+  const domain = normalized.slice(atIdx + 1);
+  const correction = DOMAIN_TYPOS[domain];
+  if (correction) return `Did you mean ${normalized.slice(0, atIdx + 1)}${correction}?`;
+  return null;
+}
 
 const AlphaSignupForm: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -21,8 +39,9 @@ const AlphaSignupForm: React.FC = () => {
     setError('');
 
     const normalized = email.trim().toLowerCase();
-    if (!EMAIL_RE.test(normalized)) {
-      setError('Please enter a valid email address.');
+    const emailError = getEmailError(normalized);
+    if (emailError) {
+      setError(emailError);
       return;
     }
 

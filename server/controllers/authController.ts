@@ -4,7 +4,7 @@ import prisma from '../lib/prisma.js';
 import { comparePassword } from '../models/User.js';
 import * as authService from '../services/authService.js';
 import { sendAlphaWelcome } from '../services/emailService.js';
-import { validateEmail, validateUsername } from '../utils/validation.js';
+import { detectEmailTypo, validateEmail, validateUsername } from '../utils/validation.js';
 
 export async function register(_req: Request, res: Response): Promise<void> {
   res.status(403).json({ error: 'Registration is disabled' });
@@ -14,7 +14,8 @@ export async function alphaSignup(req: Request, res: Response): Promise<void> {
   try {
     const rawEmail = (req.body as { email?: string })?.email;
     if (!validateEmail(rawEmail)) {
-      res.status(400).json({ error: 'Please enter a valid email address.' });
+      const typoHint = typeof rawEmail === 'string' ? detectEmailTypo(rawEmail) : null;
+      res.status(400).json({ error: typoHint ?? 'Please enter a valid email address.' });
       return;
     }
 
