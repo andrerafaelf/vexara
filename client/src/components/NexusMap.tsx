@@ -1,5 +1,4 @@
 import React from 'react';
-import bgImg from '../assets/bg.jpg';
 import alloyforgeImg from '../assets/buildings/alloyforge.png';
 import biomassfarmImg from '../assets/buildings/biomassfarm.png';
 import commandcoreImg from '../assets/buildings/commandcore.png';
@@ -29,10 +28,8 @@ interface NexusMapProps {
 }
 
 const NexusMap: React.FC<NexusMapProps> = ({ nexus, compact = false, onClickBuilding }) => {
-  const bgSrc = typeof bgImg === 'string' ? bgImg : (bgImg as any).src;
-
   return (
-    <div className={`nexus-map${compact ? ' nexus-map-compact' : ''}`} style={{ backgroundImage: `url(${bgSrc})` }}>
+    <div className={`nexus-map${compact ? ' nexus-map-compact' : ''}`}>
       <div className="nexus-map-overlay" />
       <div className="nexus-map-grid">
         {BUILDINGS.map(({ key, img, name, short }) => {
