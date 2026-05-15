@@ -60,6 +60,15 @@ export async function markAllRead(req: AuthRequest, res: Response): Promise<void
   }
 }
 
+export async function getUnreadNexusIds(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const nexusIds = await reportService.getUnreadNexusIds(req.userId, req.galaxyId);
+    res.json(nexusIds);
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
 export async function getReadIds(req: AuthRequest, res: Response): Promise<void> {
   try {
     const nexusId = req.params.nexusId ? parseInt(req.params.nexusId) : null;

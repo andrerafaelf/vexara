@@ -11,5 +11,6 @@ router.post('/read/:attackId', auth, (req, res) => reportController.markRead(req
 router.post('/read-all/:nexusId', auth, (req, res) => reportController.markAllRead(req as AuthRequest, res as Response));
 router.get('/read-ids/:nexusId', auth, (req, res) => reportController.getReadIds(req as AuthRequest, res as Response));
 router.get('/read-ids', auth, (req, res) => reportController.getReadIds(req as AuthRequest, res as Response));
+router.get('/unread-nexus-ids', auth, (req, res) => reportController.getUnreadNexusIds(req as AuthRequest, res as Response));
 
 export default router;

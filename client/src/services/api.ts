@@ -184,6 +184,7 @@ export const markReportRead = (attackId: string) =>
 export const markAllReportsRead = (nexusId: string) =>
   apiRequest(`/report/read-all/${nexusId}`, { method: 'POST' });
 export const getReadReportIds = () => apiRequest('/report/read-ids');
+export const getUnreadNexusIds = () => apiRequest('/report/unread-nexus-ids');
 
 // Market
 export const getMarketListings = () => apiRequest('/market');

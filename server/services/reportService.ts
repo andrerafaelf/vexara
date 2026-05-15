@@ -58,3 +58,40 @@ export async function markAllRead(userId: number, attacks: { id: number }[], gal
 export function getReadIds(userId: number, galaxyId: number) {
   return prisma.reportRead.findMany({ where: { userId, galaxyId }, select: { attackId: true } });
 }
+
+export async function getUnreadNexusIds(userId: number, galaxyId: number): Promise<string[]> {
+  const ownedNexuses = await prisma.nexus.findMany({
+    where: { ownerId: userId, galaxyId },
+    select: { id: true },
+  });
+  if (ownedNexuses.length === 0) return [];
+
+  const nexusIds = ownedNexuses.map((n) => n.id);
+
+  const [completedAttacks, readAttacks] = await Promise.all([
+    prisma.attack.findMany({
+      where: {
+        galaxyId,
+        status: 'completed',
+        OR: [{ attackerNexusId: { in: nexusIds } }, { defenderNexusId: { in: nexusIds } }],
+      },
+      select: { id: true, attackerNexusId: true, defenderNexusId: true },
+    }),
+    prisma.reportRead.findMany({
+      where: { userId, galaxyId },
+      select: { attackId: true },
+    }),
+  ]);
+
+  const readSet = new Set(readAttacks.map((r) => r.attackId));
+  const unreadNexusIds = new Set<number>();
+
+  for (const attack of completedAttacks) {
+    if (!readSet.has(attack.id)) {
+      if (nexusIds.includes(attack.attackerNexusId)) unreadNexusIds.add(attack.attackerNexusId);
+      if (attack.defenderNexusId && nexusIds.includes(attack.defenderNexusId)) unreadNexusIds.add(attack.defenderNexusId);
+    }
+  }
+
+  return [...unreadNexusIds].map(String);
+}

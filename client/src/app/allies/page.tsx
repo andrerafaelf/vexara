@@ -5,7 +5,8 @@ import MobileNexusDrawer from '@/components/MobileNexusDrawer';
 import NexusSidebar from '@/components/NexusSidebar';
 import { useAuth } from '@/context/AuthContext';
 import { useFriendsUnread } from '@/hooks/useFriendsUnread';
-import { getMyNexuses, getReadReportIds, getReports } from '@/services/api';
+import { useUnreadReports } from '@/hooks/useUnreadReports';
+import { getMyNexuses } from '@/services/api';
 import '@/styles/Game.css';
 import { Nexus } from '@/types/game';
 import { Building2, LayoutDashboard, LogOut, Map as MapIcon, Menu, ScrollText, ShoppingCart, User, Users } from 'lucide-react';
@@ -15,8 +16,7 @@ import { useCallback, useEffect, useState } from 'react';
 export default function FriendsPage() {
   const [nexuses, setNexuses] = useState<Nexus[]>([]);
   const [selectedNexusId, setSelectedNexusId] = useState<string | null>(null);
-  const [hasUnreadReports, setHasUnreadReports] = useState(false);
-  const [unreadNexusIds, setUnreadNexusIds] = useState<Set<string>>(new Set());
+  const { hasUnreadReports, unreadNexusIds } = useUnreadReports();
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNexusDrawerOpen, setIsNexusDrawerOpen] = useState(false);
@@ -25,40 +25,10 @@ export default function FriendsPage() {
   const pathname = usePathname();
   const hasUnreadFriends = useFriendsUnread();
 
-  const refreshCombatReportNotification = useCallback(async (allNexuses: Nexus[]) => {
-    if (allNexuses.length === 0) {
-      setHasUnreadReports(false);
-      setUnreadNexusIds(new Set());
-      return;
-    }
-
-    try {
-      const [readIdsRes, ...reportResults] = await Promise.allSettled([
-        getReadReportIds(),
-        ...allNexuses.map((nexus) => getReports(nexus._id)),
-      ]);
-      const readIds = new Set<string>(readIdsRes.status === 'fulfilled' ? readIdsRes.value.data : []);
-      const unread = new Set<string>();
-      reportResults.forEach((result, idx) => {
-        if (result.status !== 'fulfilled') return;
-        const reports = Array.isArray(result.value.data) ? result.value.data : [];
-        if (reports.some((report: { _id: string }) => !readIds.has(report._id))) {
-          unread.add(String(allNexuses[idx]._id));
-        }
-      });
-      setUnreadNexusIds(unread);
-      setHasUnreadReports(unread.size > 0);
-    } catch {
-      setHasUnreadReports(false);
-      setUnreadNexusIds(new Set());
-    }
-  }, []);
-
   const loadData = useCallback(async () => {
     try {
       const response = await getMyNexuses();
       setNexuses(response.data);
-      await refreshCombatReportNotification(response.data);
       if (!selectedNexusId) {
         const storedId = localStorage.getItem('selectedNexusId');
         if (storedId) setSelectedNexusId(storedId);
@@ -69,7 +39,7 @@ export default function FriendsPage() {
       console.error('Error loading data:', err);
       setLoading(false);
     }
-  }, [refreshCombatReportNotification, selectedNexusId]);
+  }, [selectedNexusId]);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);

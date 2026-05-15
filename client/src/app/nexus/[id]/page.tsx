@@ -7,7 +7,8 @@ import NexusView from '@/components/NexusView';
 import PwaGuideModal from '@/components/PwaGuideModal';
 import { useAuth } from '@/context/AuthContext';
 import { useFriendsUnread } from '@/hooks/useFriendsUnread';
-import { getMyNexuses, getNexus, getReadReportIds, getReports } from '@/services/api';
+import { useUnreadReports } from '@/hooks/useUnreadReports';
+import { getMyNexuses, getNexus } from '@/services/api';
 import '@/styles/Game.css';
 import { Nexus } from '@/types/game';
 import { Building2, LayoutDashboard, LogOut, Map as MapIcon, Menu, ScrollText, ShoppingCart, User, Users } from 'lucide-react';
@@ -31,8 +32,7 @@ function parseTab(value: string | null): NexusTab {
 export default function NexusPage() {
   const [nexuses, setVillages] = useState<Nexus[]>([]);
   const [selectedNexus, setSelectedNexus] = useState<Nexus | null>(null);
-  const [hasUnreadReports, setHasUnreadReports] = useState(false);
-  const [unreadNexusIds, setUnreadNexusIds] = useState<Set<string>>(new Set());
+  const { hasUnreadReports, unreadNexusIds } = useUnreadReports();
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNexusDrawerOpen, setIsNexusDrawerOpen] = useState(false);
@@ -46,35 +46,6 @@ export default function NexusPage() {
   const nexusId = params.id as string;
   const activeTab = parseTab(searchParams.get('tab'));
 
-  const refreshCombatReportNotification = useCallback(async (allNexuses: Nexus[]) => {
-    if (allNexuses.length === 0) {
-      setHasUnreadReports(false);
-      setUnreadNexusIds(new Set());
-      return;
-    }
-
-    try {
-      const [readIdsRes, ...reportResults] = await Promise.allSettled([
-        getReadReportIds(),
-        ...allNexuses.map((nexus) => getReports(nexus._id)),
-      ]);
-      const readIds = new Set<string>(readIdsRes.status === 'fulfilled' ? readIdsRes.value.data : []);
-      const unread = new Set<string>();
-      reportResults.forEach((result, idx) => {
-        if (result.status !== 'fulfilled') return;
-        const reports = Array.isArray(result.value.data) ? result.value.data : [];
-        if (reports.some((report: { _id: string }) => !readIds.has(report._id))) {
-          unread.add(String(allNexuses[idx]._id));
-        }
-      });
-      setUnreadNexusIds(unread);
-      setHasUnreadReports(unread.size > 0);
-    } catch {
-      setHasUnreadReports(false);
-      setUnreadNexusIds(new Set());
-    }
-  }, []);
-
   const loadVillages = useCallback(async () => {
     try {
       const [nexusesResponse, nexusResponse] = await Promise.allSettled([getMyNexuses(), getNexus(nexusId)]);
@@ -82,7 +53,6 @@ export default function NexusPage() {
       if (nexusesResponse.status === 'fulfilled') {
         const allNexuses: Nexus[] = Array.isArray(nexusesResponse.value.data) ? nexusesResponse.value.data : [];
         setVillages(allNexuses);
-        await refreshCombatReportNotification(allNexuses);
 
         if (allNexuses.length > 0) {
           const routeNexusId = allNexuses.find((nexus: Nexus) => String(nexus._id) === nexusId)?._id;
@@ -116,7 +86,7 @@ export default function NexusPage() {
     }
   // router is intentionally omitted — it's stable and including it causes a fetch loop
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nexusId, refreshCombatReportNotification]);
+  }, [nexusId]);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);

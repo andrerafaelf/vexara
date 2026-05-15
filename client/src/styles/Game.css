@@ -577,6 +577,13 @@
   overflow-y: auto;
 }
 
+.main-content--map {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
 .no-nexuses {
   max-width: 560px;
   margin: 100px auto;
