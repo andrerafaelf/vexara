@@ -1440,70 +1440,46 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
             </span>
           </div>
         )}
-        <div className="resources">
-          <div className="resource" title="Biomass">
-            <span className="resource-icon">
-              <ResourceIcon kind="biomass" size={18} />
-            </span>
-            <span className={getResourceFillClass(nexus.resources.biomass)}>
-              <span className="resource-main">
-                {Math.floor(nexus.resources.biomass).toLocaleString()}
-                <span className="resource-max">
-                  /{storageCapacity.toLocaleString()}
-                  {nexus.nexusType === 'Supply Cache' && <span className="buff-tag">2x</span>}
-                </span>
-              </span>
-              <span className="production-rate">
-                +{Math.floor(production.biomass).toLocaleString()}/h
-                {nexus.nexusType === 'Resource Depot' && <span className="buff-tag">2x</span>}
-              </span>
-            </span>
-          </div>
-          <div className="resource" title="Alloy">
-            <span className="resource-icon">
-              <ResourceIcon kind="alloy" size={18} />
-            </span>
-            <span className={getResourceFillClass(nexus.resources.alloy)}>
-              <span className="resource-main">
-                {Math.floor(nexus.resources.alloy).toLocaleString()}
-                <span className="resource-max">
-                  /{storageCapacity.toLocaleString()}
-                  {nexus.nexusType === 'Supply Cache' && <span className="buff-tag">2x</span>}
-                </span>
-              </span>
-              <span className="production-rate">
-                +{Math.floor(production.alloy).toLocaleString()}/h
-                {nexus.nexusType === 'Resource Depot' && <span className="buff-tag">2x</span>}
-              </span>
-            </span>
-          </div>
-          <div className="resource" title="Ore">
-            <span className="resource-icon">
-              <ResourceIcon kind="ore" size={18} />
-            </span>
-            <span className={getResourceFillClass(nexus.resources.ore)}>
-              <span className="resource-main">
-                {Math.floor(nexus.resources.ore).toLocaleString()}
-                <span className="resource-max">
-                  /{storageCapacity.toLocaleString()}
-                  {nexus.nexusType === 'Supply Cache' && <span className="buff-tag">2x</span>}
-                </span>
-              </span>
-              <span className="production-rate">
-                +{Math.floor(production.ore).toLocaleString()}/h
-                {nexus.nexusType === 'Resource Depot' && <span className="buff-tag">2x</span>}
-              </span>
-            </span>
-          </div>
-          <div className="resource" title="Population">
-            <span className="resource-icon">
-              <ResourceIcon kind="population" size={18} />
-            </span>
-            <span className="resource-amount">
-              {nexus.population.current}/{nexus.population.max}
-            </span>
-          </div>
-        </div>
+        {(() => {
+          const live = getLiveResources();
+          const cap = storageCapacity;
+          const prod = production;
+          const fmt = (v: number) => {
+            if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
+            if (v >= 10_000) return `${(v / 1000).toFixed(1)}k`;
+            if (v >= 1000) return `${(v / 1000).toFixed(2)}k`;
+            return Math.floor(v).toString();
+          };
+          const fmtRate = (v: number) => {
+            if (v >= 10_000) return `+${(v / 1000).toFixed(1)}k/h`;
+            if (v >= 1000) return `+${(v / 1000).toFixed(2)}k/h`;
+            return `+${v}/h`;
+          };
+          const entries = [
+            { key: 'biomass', label: 'BIOMASS', val: Math.min(cap, live.biomass), rate: prod.biomass },
+            { key: 'alloy',   label: 'ALLOY',   val: Math.min(cap, live.alloy),   rate: prod.alloy   },
+            { key: 'ore',     label: 'ORE',      val: Math.min(cap, live.ore),     rate: prod.ore     },
+          ] as const;
+          return (
+            <div className="header-resource-strip">
+              {entries.map(({ key, label, val, rate }) => {
+                const ratio = val / cap;
+                const fullCls = ratio >= 0.98 ? 'header-res-full' : ratio >= 0.85 ? 'header-res-near' : '';
+                return (
+                  <div key={key} className={`header-res header-res-${key} ${fullCls}`}>
+                    <span className="header-res-label">{label}</span>
+                    <span className="header-res-value">{fmt(val)}<span style={{ fontSize: '0.65em', opacity: 0.6, fontWeight: 400 }}>/{fmt(cap)}</span></span>
+                    <span className="header-res-rate">{fmtRate(rate)}</span>
+                  </div>
+                );
+              })}
+              <div className="header-res header-res-population">
+                <span className="header-res-label">POP</span>
+                <span className="header-res-value">{nexus.population.current}<span style={{ fontSize: '0.65em', opacity: 0.6, fontWeight: 400 }}>/{nexus.population.max}</span></span>
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       <div className="nexus-tab-bar">
@@ -1547,43 +1523,6 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
         {activeTab === 'overview' && (
           <div className="overview-tab">
             <NexusMap nexus={nexus} onClickBuilding={() => setActiveTab('buildings')} />
-
-            {(() => {
-              const live = getLiveResources();
-              const cap = storageCapacity;
-              const prod = production;
-              const fmt = (v: number) => {
-                if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-                if (v >= 10_000) return `${(v / 1000).toFixed(1)}k`;
-                if (v >= 1000) return `${(v / 1000).toFixed(2)}k`;
-                return Math.floor(v).toString();
-              };
-              const fmtRate = (v: number) => {
-                if (v >= 10_000) return `+${(v / 1000).toFixed(1)}k/h`;
-                if (v >= 1000) return `+${(v / 1000).toFixed(2)}k/h`;
-                return `+${v}/h`;
-              };
-              const entries = [
-                { key: 'biomass', label: 'BIOMASS', val: Math.min(cap, live.biomass), rate: prod.biomass },
-                { key: 'alloy',   label: 'ALLOY',   val: Math.min(cap, live.alloy),   rate: prod.alloy   },
-                { key: 'ore',     label: 'ORE',      val: Math.min(cap, live.ore),     rate: prod.ore     },
-              ] as const;
-              return (
-                <div className="header-resource-strip overview-resource-strip">
-                  {entries.map(({ key, label, val, rate }) => {
-                    const ratio = val / cap;
-                    const fullCls = ratio >= 0.98 ? 'header-res-full' : ratio >= 0.85 ? 'header-res-near' : '';
-                    return (
-                      <div key={key} className={`header-res header-res-${key} ${fullCls}`}>
-                        <span className="header-res-label">{label}</span>
-                        <span className="header-res-value">{fmt(val)}<span style={{ fontSize: '0.65em', opacity: 0.6, fontWeight: 400 }}>/{fmt(cap)}</span></span>
-                        <span className="header-res-rate">{fmtRate(rate)}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })()}
 
             <div className="nexus-stats-row" aria-label="Nexus key stats">
               <div className="nexus-stat">
