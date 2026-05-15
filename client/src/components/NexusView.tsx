@@ -1551,6 +1551,46 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
           <div className="overview-tab">
             <NexusMap nexus={nexus} onClickBuilding={() => setActiveTab('buildings')} />
 
+            {(() => {
+              const live = getLiveResources();
+              const cap = storageCapacity;
+              const prod = production;
+              const fmtA = (v: number) => {
+                if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
+                if (v >= 10_000) return `${(v / 1000).toFixed(1)}k`;
+                if (v >= 1000) return `${(v / 1000).toFixed(2)}k`;
+                return Math.floor(v).toString();
+              };
+              const fmtR = (v: number) => {
+                if (v >= 10_000) return `+${(v / 1000).toFixed(1)}k/h`;
+                if (v >= 1000) return `+${(v / 1000).toFixed(2)}k/h`;
+                return `+${v}/h`;
+              };
+              const entries: { kind: 'biomass' | 'alloy' | 'ore'; label: string; val: number; rate: number }[] = [
+                { kind: 'biomass', label: 'BIOMASS', val: Math.min(cap, live.biomass), rate: prod.biomass },
+                { kind: 'alloy',   label: 'ALLOY',   val: Math.min(cap, live.alloy),   rate: prod.alloy   },
+                { kind: 'ore',     label: 'ORE',      val: Math.min(cap, live.ore),     rate: prod.ore     },
+              ];
+              return (
+                <div className="overview-resource-strip">
+                  {entries.map(({ kind, label, val, rate }) => {
+                    const ratio = val / cap;
+                    const fillCls = ratio >= 0.98 ? 'ors-full' : ratio >= 0.85 ? 'ors-near' : '';
+                    return (
+                      <div key={kind} className={`ors-item ors-${kind} ${fillCls}`}>
+                        <span className="ors-label">{label}</span>
+                        <span className="ors-value">{fmtA(val)}<span className="ors-cap">/{fmtA(cap)}</span></span>
+                        <div className="ors-bar-track">
+                          <div className="ors-bar-fill" style={{ width: `${Math.min(100, ratio * 100)}%` }} />
+                        </div>
+                        <span className="ors-rate">{fmtR(rate)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
             <div className="nexus-stats-row" aria-label="Nexus key stats">
               <div className="nexus-stat">
                 <div className="nexus-stat-label">SHIELD</div>
