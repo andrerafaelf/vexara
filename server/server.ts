@@ -1,3 +1,4 @@
+// Faction system fully integrated with database migrations and API routes
 import cors from 'cors';
 import { randomUUID } from 'crypto';
 import dotenv from 'dotenv';
