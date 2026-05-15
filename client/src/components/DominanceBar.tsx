@@ -37,9 +37,9 @@ const DominanceBar: React.FC = () => {
       try {
         const res = await getMyFaction();
         if (!alive) return;
-        if (res.data?.id) {
+        if (res.data?.faction?.id) {
           setInFaction(true);
-          setMyFactionId(res.data.id);
+          setMyFactionId(res.data.faction.id);
         } else {
           setInFaction(false);
         }
