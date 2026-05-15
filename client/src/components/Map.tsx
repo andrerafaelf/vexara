@@ -193,14 +193,24 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
     return () => clearInterval(timeInterval);
   }, []);
 
+  const mapDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
-    loadMapArea();
-    loadAttacks();
-    const interval = setInterval(() => {
-      loadAttacks();
-    }, 10000);
-    return () => clearInterval(interval);
+    if (mapDebounceRef.current) clearTimeout(mapDebounceRef.current);
+    mapDebounceRef.current = setTimeout(() => {
+      loadMapArea();
+    }, 450);
+    return () => {
+      if (mapDebounceRef.current) clearTimeout(mapDebounceRef.current);
+    };
   }, [centerX, centerY]);
+
+  useEffect(() => {
+    loadAttacks();
+    const interval = setInterval(loadAttacks, 15000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentNexus._id]);
 
   // Pre-select current nexus on mount
   useEffect(() => {
