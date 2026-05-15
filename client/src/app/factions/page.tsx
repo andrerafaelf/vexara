@@ -9,7 +9,7 @@ import { useUnreadReports } from '@/hooks/useUnreadReports';
 import { getMyNexuses } from '@/services/api';
 import '@/styles/Game.css';
 import { Nexus } from '@/types/game';
-import { Building2, LayoutDashboard, LogOut, Map as MapIcon, Menu, ScrollText, ShoppingCart, User, Users } from 'lucide-react';
+import { Building2, Flag, Handshake, LayoutDashboard, LogOut, Map as MapIcon, Menu, ScrollText, ShoppingCart, User } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -103,12 +103,12 @@ export default function FactionsPage() {
           </button>
           <button className="nav-btn" onClick={() => router.push('/allies')}>
             <span className="nav-btn-content">
-              <Users size={14} /> Allies
+              <Handshake size={14} /> Allies
               {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
             </span>
           </button>
           <button className="nav-btn active">
-            <Users size={14} /> Factions
+            <Flag size={14} /> Factions
           </button>
           <button className="nav-btn" onClick={() => router.push('/profile')}>
             <User size={14} /> Profile
@@ -194,12 +194,12 @@ export default function FactionsPage() {
             }}
           >
             <span className="nav-btn-content">
-              <Users size={14} /> Allies
+              <Handshake size={14} /> Allies
               {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
             </span>
           </button>
           <button className="nav-btn active" onClick={() => setIsMobileMenuOpen(false)}>
-            <Users size={14} /> Factions
+            <Flag size={14} /> Factions
           </button>
           <button
             className="nav-btn"

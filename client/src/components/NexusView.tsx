@@ -1473,10 +1473,6 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                   </div>
                 );
               })}
-              <div className="header-res header-res-population">
-                <span className="header-res-label">POP</span>
-                <span className="header-res-value">{nexus.population.current}<span style={{ fontSize: '0.65em', opacity: 0.6, fontWeight: 400 }}>/{nexus.population.max}</span></span>
-              </div>
             </div>
           );
         })()}

@@ -23,6 +23,7 @@ interface LeaderboardData {
 
 const POLL_INTERVAL = 60_000;
 const TOP_N = 4;
+const VISIBILITY_THRESHOLD_PCT = 55;
 
 const DominanceBar: React.FC = () => {
   const [data, setData] = useState<LeaderboardData | null>(null);
@@ -68,6 +69,9 @@ const DominanceBar: React.FC = () => {
   }, []);
 
   if (!inFaction || !data || data.rows.length === 0) return null;
+
+  const leaderPct = data.rows[0]?.pct ?? 0;
+  if (leaderPct < VISIBILITY_THRESHOLD_PCT) return null;
 
   const top = data.rows.slice(0, TOP_N);
   const threshold = data.dominanceThresholdPct;

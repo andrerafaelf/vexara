@@ -1,7 +1,6 @@
 'use client';
 
 import DominanceBar from '@/components/DominanceBar';
-import HeaderResourceStrip from '@/components/HeaderResourceStrip';
 import MobileNexusDrawer from '@/components/MobileNexusDrawer';
 import NexusSidebar from '@/components/NexusSidebar';
 import NexusView from '@/components/NexusView';
@@ -12,7 +11,7 @@ import { useUnreadReports } from '@/hooks/useUnreadReports';
 import { getMyNexuses, getNexus } from '@/services/api';
 import '@/styles/Game.css';
 import { Nexus } from '@/types/game';
-import { Building2, LayoutDashboard, LogOut, Map as MapIcon, Menu, ScrollText, ShoppingCart, User, Users } from 'lucide-react';
+import { Building2, Flag, Handshake, LayoutDashboard, LogOut, Map as MapIcon, Menu, ScrollText, ShoppingCart, User } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -161,20 +160,17 @@ export default function NexusPage() {
               </button>
               <button className="nav-btn" onClick={() => router.push('/allies')}>
                 <span className="nav-btn-content">
-                  <Users size={14} /> Allies
+                  <Handshake size={14} /> Allies
                   {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
                 </span>
               </button>
               <button className="nav-btn" onClick={() => router.push('/factions')}>
-                <Users size={14} /> Factions
+                <Flag size={14} /> Factions
               </button>
               <button className="nav-btn" onClick={() => router.push('/profile')}>
                 <User size={14} /> Profile
               </button>
             </div>
-          </div>
-          <div className="header-center">
-            <HeaderResourceStrip nexus={selectedNexus} />
           </div>
           <div className="header-right">
             <button
@@ -268,7 +264,7 @@ export default function NexusPage() {
               }}
             >
               <span className="nav-btn-content">
-                <Users size={14} /> Allies
+                <Handshake size={14} /> Allies
                 {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
               </span>
             </button>
@@ -279,7 +275,7 @@ export default function NexusPage() {
                 router.push('/factions');
               }}
             >
-              <Users size={14} /> Factions
+              <Flag size={14} /> Factions
             </button>
             <button
               className="nav-btn"

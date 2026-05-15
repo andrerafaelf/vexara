@@ -26,31 +26,33 @@
 
 .game-header {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0) 100%),
-    var(--color-navy-800);
-  padding: 14px 28px;
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0%, rgba(255, 255, 255, 0) 100%),
+    rgba(11, 15, 35, 0.85);
+  padding: 10px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
   border-bottom: 1px solid var(--border-default);
   box-shadow: var(--shadow-xs);
   position: sticky;
   top: 0;
   z-index: var(--z-sticky);
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  height: 56px;
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: 16px;
-  flex: 1;
+  gap: 14px;
   min-width: 0;
 }
 
 .header-left h1 {
   color: var(--text-strong);
-  font-size: var(--text-2xl);
+  font-size: var(--text-xl);
   font-weight: 700;
   letter-spacing: -0.02em;
   margin: 0;
@@ -75,35 +77,39 @@
 }
 
 .username {
-  color: #97A0BE;
-  font-size: 16px;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
 }
 
-/* header-center: holds the resource strip, centered with auto margins */
+/* header-center: holds nav buttons on most pages */
 .header-center {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  padding: 0 12px;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .nav-btn {
   background: transparent;
   color: var(--text-muted);
-  padding: 8px 4px;
-  border: none;
-  border-bottom: 2px solid transparent;
-  border-radius: 0;
+  padding: 7px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
   font-size: var(--text-sm);
   font-weight: 500;
   letter-spacing: 0.01em;
-  transition: color var(--duration-fast) var(--ease-out),
+  transition: background var(--duration-fast) var(--ease-out),
+              color var(--duration-fast) var(--ease-out),
               border-color var(--duration-fast) var(--ease-out);
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  cursor: pointer;
 }
 
 .nav-btn-content {
@@ -135,15 +141,14 @@
 }
 
 .nav-btn:hover:not(:disabled) {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.04);
   color: var(--text-strong);
-  border-bottom-color: var(--border-strong);
 }
 
 .nav-btn.active {
-  background: transparent;
+  background: var(--accent-soft);
   color: var(--accent);
-  border-bottom-color: var(--accent);
+  border-color: var(--border-accent);
 }
 
 .nav-btn:disabled {
@@ -208,94 +213,9 @@
   margin-left: auto;
 }
 
-/* ── Header resource strip ── */
-.hrs-strip {
-  display: none;
-  align-items: stretch;
-  gap: 1px;
-  background: var(--border-default);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  font-variant-numeric: tabular-nums;
-  flex-shrink: 0;
-}
-
-.hrs-tile {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background: var(--color-navy-700);
-  min-width: 0;
-}
-
-.hrs-icon {
-  color: var(--text-muted);
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-}
-
-.hrs-tile-biomass .hrs-icon { color: var(--success); }
-.hrs-tile-alloy   .hrs-icon { color: var(--accent); }
-.hrs-tile-ore     .hrs-icon { color: var(--warning); }
-
-.hrs-body {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  min-width: 0;
-}
-
-.hrs-value {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-default);
-  letter-spacing: -0.01em;
-  line-height: 1.2;
-  white-space: nowrap;
-}
-
-.hrs-tile-biomass .hrs-value { color: var(--success); }
-.hrs-tile-alloy   .hrs-value { color: var(--accent); }
-.hrs-tile-ore     .hrs-value { color: var(--warning); }
-
-.hrs-tile.hrs-near .hrs-value { color: var(--warning) !important; }
-.hrs-tile.hrs-full .hrs-value {
-  color: var(--danger) !important;
-  animation: hrs-pulse 1.4s ease-in-out infinite;
-}
-
-@keyframes hrs-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.hrs-cap {
-  font-size: 0.7em;
-  opacity: 0.55;
-  font-weight: 400;
-}
-
-.hrs-rate {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--text-faint);
-  line-height: 1.2;
-  white-space: nowrap;
-}
-
-/* Shown at md+ where there's room beside the nav */
-@media (min-width: 900px) {
-  .hrs-strip {
-    display: flex;
-  }
-}
-
-/* Keep old class working for the NexusView overview strip */
+/* NexusView overview strip */
 .header-resource-strip {
-  display: flex;
+  display: inline-flex;
   align-items: stretch;
   gap: 0;
   background: var(--color-navy-700);
@@ -303,6 +223,7 @@
   border-radius: var(--radius-md);
   overflow: hidden;
   font-variant-numeric: tabular-nums;
+  max-width: 100%;
 }
 
 .header-res {
@@ -361,11 +282,12 @@
 .logout-btn {
   background: transparent;
   color: var(--text-muted);
-  padding: 8px 14px;
-  border: 1px solid var(--border-default);
+  padding: 7px 12px;
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
   font-weight: 500;
   font-size: var(--text-sm);
+  cursor: pointer;
   transition: background var(--duration-fast) var(--ease-out),
               color var(--duration-fast) var(--ease-out),
               border-color var(--duration-fast) var(--ease-out);
