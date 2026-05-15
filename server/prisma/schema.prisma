@@ -27,7 +27,8 @@ model User {
   chatMessagesRecv   ChatMessage[]   @relation("ChatMessageReceiver")
   pushSubscriptions  PushSubscription[]
   notificationPrefs  NotificationPreferences?
-  factionMembers     FactionMember[]
+  factionMembers   FactionMember[]
+  factionMessages  FactionMessage[]
 }
 
 enum GalaxyStatus {
@@ -358,16 +359,46 @@ model Faction {
   name            String    @db.VarChar(32)
   tag             String    @db.VarChar(6)
   description     String?   @db.VarChar(256)
+  motd            String?   @db.VarChar(512)
   createdAt       DateTime  @default(now())
   dominanceSince  DateTime?
 
-  galaxy  Galaxy          @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
-  members FactionMember[]
-  invites FactionInvite[]
+  galaxy   Galaxy           @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
+  members  FactionMember[]
+  invites  FactionInvite[]
+  messages FactionMessage[]
+  events   FactionEvent[]
 
   @@unique([galaxyId, name])
   @@unique([galaxyId, tag])
   @@index([galaxyId])
+}
+
+model FactionMessage {
+  id        Int      @id @default(autoincrement())
+  factionId Int
+  userId    Int
+  content   String   @db.VarChar(1000)
+  createdAt DateTime @default(now())
+
+  faction Faction @relation(fields: [factionId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([factionId, createdAt])
+}
+
+model FactionEvent {
+  id        Int      @id @default(autoincrement())
+  factionId Int
+  type      String   @db.VarChar(64)
+  actorName String?  @db.VarChar(64)
+  targetName String? @db.VarChar(64)
+  meta      String?  @db.VarChar(256)
+  createdAt DateTime @default(now())
+
+  faction Faction @relation(fields: [factionId], references: [id], onDelete: Cascade)
+
+  @@index([factionId, createdAt])
 }
 
 model FactionMember {

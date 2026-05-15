@@ -7,7 +7,15 @@ const FACTION_NAME_MAX = 32;
 const FACTION_TAG_MIN = 2;
 const FACTION_TAG_MAX = 6;
 const FACTION_DESC_MAX = 256;
+const FACTION_MOTD_MAX = 512;
+const FACTION_MSG_MAX = 1000;
+const CHAT_PAGE_SIZE = 50;
+const EVENTS_PAGE_SIZE = 50;
 const INVITE_EXPIRY_HOURS = 48;
+
+async function logEvent(factionId: number, type: string, actorName?: string, targetName?: string, meta?: string) {
+  await prisma.factionEvent.create({ data: { factionId, type, actorName, targetName, meta } });
+}
 
 function validateFactionName(name?: string): boolean {
   if (!name || typeof name !== 'string') return false;
@@ -43,6 +51,7 @@ export async function getMyFaction(req: AuthRequest, res: Response): Promise<voi
             name: true,
             tag: true,
             description: true,
+            motd: true,
             createdAt: true,
             members: {
               select: { id: true, userId: true, role: true, user: { select: { username: true } } },
@@ -175,6 +184,8 @@ export async function createFaction(req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
+    const callerUser = await prisma.user.findUnique({ where: { id: req.userId }, select: { username: true } });
+
     const faction = await prisma.faction.create({
       data: {
         galaxyId: user.activeGalaxyId,
@@ -191,6 +202,8 @@ export async function createFaction(req: AuthRequest, res: Response): Promise<vo
       },
       select: { id: true, name: true, tag: true, description: true, createdAt: true },
     });
+
+    await logEvent(faction.id, 'faction_created', callerUser?.username);
 
     res.status(201).json(faction);
   } catch (error) {
@@ -344,6 +357,8 @@ export async function acceptInvite(req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
+    const joiner = await prisma.user.findUnique({ where: { id: req.userId }, select: { username: true } });
+
     await Promise.all([
       prisma.factionMember.create({
         data: {
@@ -354,6 +369,8 @@ export async function acceptInvite(req: AuthRequest, res: Response): Promise<voi
       }),
       prisma.factionInvite.delete({ where: { id: inviteId } }),
     ]);
+
+    await logEvent(invite.factionId, 'member_joined', joiner?.username);
 
     res.json({ success: true });
   } catch (error) {
@@ -425,10 +442,18 @@ export async function setMemberRole(req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
+    const [callerUser, targetUser] = await Promise.all([
+      prisma.user.findUnique({ where: { id: req.userId }, select: { username: true } }),
+      prisma.user.findUnique({ where: { id: targetUserId }, select: { username: true } }),
+    ]);
+
     await prisma.factionMember.updateMany({
       where: { factionId, userId: targetUserId },
       data: { role: role as any },
     });
+
+    const eventType = role === 'officer' ? 'member_promoted' : 'member_demoted';
+    await logEvent(factionId, eventType, callerUser?.username, targetUser?.username);
 
     res.json({ success: true });
   } catch (error) {
@@ -477,9 +502,16 @@ export async function kickMember(req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
+    const [callerUser, targetUser] = await Promise.all([
+      prisma.user.findUnique({ where: { id: req.userId }, select: { username: true } }),
+      prisma.user.findUnique({ where: { id: targetUserId }, select: { username: true } }),
+    ]);
+
     await prisma.factionMember.deleteMany({
       where: { factionId, userId: targetUserId },
     });
+
+    await logEvent(factionId, 'member_kicked', callerUser?.username, targetUser?.username);
 
     res.json({ success: true });
   } catch (error) {
@@ -509,9 +541,13 @@ export async function leaveFaction(req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
+    const leaver = await prisma.user.findUnique({ where: { id: req.userId }, select: { username: true } });
+
     await prisma.factionMember.deleteMany({
       where: { factionId, userId: req.userId },
     });
+
+    await logEvent(factionId, 'member_left', leaver?.username);
 
     res.json({ success: true });
   } catch (error) {
@@ -544,6 +580,168 @@ export async function disbandFaction(req: AuthRequest, res: Response): Promise<v
 
     await prisma.faction.delete({ where: { id: factionId } });
     res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
+// ── MOTD ──────────────────────────────────────────────────────────────────────
+
+export async function updateMotd(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const factionId = parseInt(req.params.id, 10);
+    const { motd } = req.body as { motd?: string };
+
+    if (!Number.isFinite(factionId)) {
+      res.status(400).json({ error: 'Invalid faction id' });
+      return;
+    }
+    if (motd !== undefined && motd !== null && typeof motd === 'string' && motd.length > FACTION_MOTD_MAX) {
+      res.status(400).json({ error: `MOTD must be ${FACTION_MOTD_MAX} characters or less` });
+      return;
+    }
+
+    const faction = await prisma.faction.findUnique({
+      where: { id: factionId },
+      select: { members: { select: { userId: true, role: true } } },
+    });
+    if (!faction) {
+      res.status(404).json({ error: 'Faction not found' });
+      return;
+    }
+
+    const member = faction.members.find((m: any) => m.userId === req.userId);
+    if (!member || (member.role !== 'leader' && member.role !== 'officer')) {
+      res.status(403).json({ error: 'Only leaders and officers can update the MOTD' });
+      return;
+    }
+
+    const updated = await prisma.faction.update({
+      where: { id: factionId },
+      data: { motd: motd?.trim() || null },
+      select: { motd: true },
+    });
+
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
+// ── CHAT ──────────────────────────────────────────────────────────────────────
+
+export async function getChatMessages(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const factionId = parseInt(req.params.id, 10);
+    if (!Number.isFinite(factionId)) {
+      res.status(400).json({ error: 'Invalid faction id' });
+      return;
+    }
+
+    const before = req.query.before ? parseInt(req.query.before as string, 10) : undefined;
+
+    const member = await prisma.factionMember.findFirst({
+      where: { factionId, userId: req.userId },
+    });
+    if (!member) {
+      res.status(403).json({ error: 'You are not a member of this faction' });
+      return;
+    }
+
+    const messages = await prisma.factionMessage.findMany({
+      where: {
+        factionId,
+        ...(before ? { id: { lt: before } } : {}),
+      },
+      select: {
+        id: true,
+        content: true,
+        createdAt: true,
+        user: { select: { id: true, username: true } },
+      },
+      orderBy: { id: 'desc' },
+      take: CHAT_PAGE_SIZE,
+    });
+
+    res.json(messages.reverse());
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
+export async function sendChatMessage(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const factionId = parseInt(req.params.id, 10);
+    const { content } = req.body as { content?: string };
+
+    if (!Number.isFinite(factionId)) {
+      res.status(400).json({ error: 'Invalid faction id' });
+      return;
+    }
+    if (!content || typeof content !== 'string' || content.trim().length === 0) {
+      res.status(400).json({ error: 'Message cannot be empty' });
+      return;
+    }
+    if (content.trim().length > FACTION_MSG_MAX) {
+      res.status(400).json({ error: `Message must be ${FACTION_MSG_MAX} characters or less` });
+      return;
+    }
+
+    const member = await prisma.factionMember.findFirst({
+      where: { factionId, userId: req.userId },
+    });
+    if (!member) {
+      res.status(403).json({ error: 'You are not a member of this faction' });
+      return;
+    }
+
+    const message = await prisma.factionMessage.create({
+      data: { factionId, userId: req.userId, content: content.trim() },
+      select: {
+        id: true,
+        content: true,
+        createdAt: true,
+        user: { select: { id: true, username: true } },
+      },
+    });
+
+    res.status(201).json(message);
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
+// ── EVENTS ────────────────────────────────────────────────────────────────────
+
+export async function getEvents(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const factionId = parseInt(req.params.id, 10);
+    if (!Number.isFinite(factionId)) {
+      res.status(400).json({ error: 'Invalid faction id' });
+      return;
+    }
+
+    const before = req.query.before ? parseInt(req.query.before as string, 10) : undefined;
+
+    const member = await prisma.factionMember.findFirst({
+      where: { factionId, userId: req.userId },
+    });
+    if (!member) {
+      res.status(403).json({ error: 'You are not a member of this faction' });
+      return;
+    }
+
+    const events = await prisma.factionEvent.findMany({
+      where: {
+        factionId,
+        ...(before ? { id: { lt: before } } : {}),
+      },
+      select: { id: true, type: true, actorName: true, targetName: true, meta: true, createdAt: true },
+      orderBy: { id: 'desc' },
+      take: EVENTS_PAGE_SIZE,
+    });
+
+    res.json(events.reverse());
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }

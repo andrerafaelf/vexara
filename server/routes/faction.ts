@@ -19,4 +19,9 @@ router.delete('/:id/members/:userId', auth, (req, res) => factionController.kick
 router.post('/:id/leave', auth, (req, res) => factionController.leaveFaction(req as AuthRequest, res as Response));
 router.delete('/:id', auth, (req, res) => factionController.disbandFaction(req as AuthRequest, res as Response));
 
+router.patch('/:id/motd', auth, (req, res) => factionController.updateMotd(req as AuthRequest, res as Response));
+router.get('/:id/chat', auth, (req, res) => factionController.getChatMessages(req as AuthRequest, res as Response));
+router.post('/:id/chat', auth, (req, res) => factionController.sendChatMessage(req as AuthRequest, res as Response));
+router.get('/:id/events', auth, (req, res) => factionController.getEvents(req as AuthRequest, res as Response));
+
 export default router;

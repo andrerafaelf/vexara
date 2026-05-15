@@ -231,6 +231,14 @@ export const setFactionMemberRole = (factionId: number, userId: number, role: st
   });
 export const leaveFaction = (factionId: number) => apiRequest(`/faction/${factionId}/leave`, { method: 'POST' });
 export const disbandFaction = (factionId: number) => apiRequest(`/faction/${factionId}`, { method: 'DELETE' });
+export const updateFactionMotd = (factionId: number, motd: string) =>
+  apiRequest(`/faction/${factionId}/motd`, { method: 'PATCH', body: JSON.stringify({ motd }) });
+export const getFactionChat = (factionId: number, before?: number) =>
+  apiRequest(`/faction/${factionId}/chat${before ? `?before=${before}` : ''}`);
+export const sendFactionMessage = (factionId: number, content: string) =>
+  apiRequest(`/faction/${factionId}/chat`, { method: 'POST', body: JSON.stringify({ content }) });
+export const getFactionEvents = (factionId: number, before?: number) =>
+  apiRequest(`/faction/${factionId}/events${before ? `?before=${before}` : ''}`);
 
 export const systemBuyResource = (
   nexusId: string,
