@@ -243,6 +243,12 @@ export const sendFactionMessage = (factionId: number, content: string) =>
   apiRequest(`/faction/${factionId}/chat`, { method: 'POST', body: JSON.stringify({ content }) });
 export const getFactionEvents = (factionId: number, before?: number) =>
   apiRequest(`/faction/${factionId}/events${before ? `?before=${before}` : ''}`);
+export const getFactionWars = (factionId: number) => apiRequest(`/faction/${factionId}/wars`);
+export const declareWar = (factionId: number, targetFactionId: number) =>
+  apiRequest(`/faction/${factionId}/wars/declare/${targetFactionId}`, { method: 'POST' });
+export const acceptWar = (warId: number) => apiRequest(`/faction/wars/${warId}/accept`, { method: 'POST' });
+export const declineWar = (warId: number) => apiRequest(`/faction/wars/${warId}/decline`, { method: 'POST' });
+export const endWar = (warId: number) => apiRequest(`/faction/wars/${warId}/end`, { method: 'POST' });
 
 export const systemBuyResource = (
   nexusId: string,

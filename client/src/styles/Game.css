@@ -43,8 +43,9 @@
 .header-left {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
   flex: 1;
+  min-width: 0;
 }
 
 .header-left h1 {
@@ -57,6 +58,20 @@
   -webkit-background-clip: text;
           background-clip: text;
   -webkit-text-fill-color: transparent;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.header-nav-btns {
+  display: none;
+  align-items: center;
+  gap: 2px;
+}
+
+@media (min-width: 900px) {
+  .header-nav-btns {
+    display: flex;
+  }
 }
 
 .username {
@@ -64,11 +79,13 @@
   font-size: 16px;
 }
 
+/* header-center: holds the resource strip, centered with auto margins */
 .header-center {
   display: flex;
-  gap: 10px;
-  flex: 1;
+  align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  padding: 0 12px;
 }
 
 .nav-btn {
@@ -183,24 +200,107 @@
 }
 
 .header-right {
-  flex: 1;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: var(--space-3);
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
-/* ── Top-right resource strip (Quantar-style global resource readout)
-   Mobile-first: hidden by default; revealed on wider desktops where the
-   header can comfortably fit it alongside the nav + drawer + logout. ── */
-.header-resource-strip {
+/* ── Header resource strip ── */
+.hrs-strip {
   display: none;
+  align-items: stretch;
+  gap: 1px;
+  background: var(--border-default);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.hrs-tile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--color-navy-700);
+  min-width: 0;
+}
+
+.hrs-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.hrs-tile-biomass .hrs-icon { color: var(--success); }
+.hrs-tile-alloy   .hrs-icon { color: var(--accent); }
+.hrs-tile-ore     .hrs-icon { color: var(--warning); }
+
+.hrs-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.hrs-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-default);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.hrs-tile-biomass .hrs-value { color: var(--success); }
+.hrs-tile-alloy   .hrs-value { color: var(--accent); }
+.hrs-tile-ore     .hrs-value { color: var(--warning); }
+
+.hrs-tile.hrs-near .hrs-value { color: var(--warning) !important; }
+.hrs-tile.hrs-full .hrs-value {
+  color: var(--danger) !important;
+  animation: hrs-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes hrs-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.hrs-cap {
+  font-size: 0.7em;
+  opacity: 0.55;
+  font-weight: 400;
+}
+
+.hrs-rate {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-faint);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* Shown at md+ where there's room beside the nav */
+@media (min-width: 900px) {
+  .hrs-strip {
+    display: flex;
+  }
+}
+
+/* Keep old class working for the NexusView overview strip */
+.header-resource-strip {
+  display: flex;
   align-items: stretch;
   gap: 0;
   background: var(--color-navy-700);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
-  padding: 0;
   overflow: hidden;
   font-variant-numeric: tabular-nums;
 }
@@ -210,15 +310,11 @@
   grid-template-columns: auto 1fr;
   grid-template-rows: auto auto;
   column-gap: 10px;
-  row-gap: 0;
   padding: 6px 14px;
   min-width: 96px;
-  position: relative;
 }
 
-.header-res + .header-res {
-  border-left: 1px solid var(--border-default);
-}
+.header-res + .header-res { border-left: 1px solid var(--border-default); }
 
 .header-res-label {
   grid-column: 1 / -1;
@@ -251,11 +347,7 @@
 .header-res-biomass .header-res-value { color: var(--success); }
 .header-res-alloy   .header-res-value { color: var(--accent); }
 .header-res-ore     .header-res-value { color: var(--warning); }
-
-.header-res.header-res-near .header-res-value {
-  color: var(--warning);
-}
-
+.header-res.header-res-near .header-res-value { color: var(--warning); }
 .header-res.header-res-full .header-res-value {
   color: var(--danger);
   animation: header-res-pulse 1.4s ease-in-out infinite;
@@ -264,13 +356,6 @@
 @keyframes header-res-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.55; }
-}
-
-/* xl: enough room to surface resources globally in the header */
-@media (min-width: 1240px) {
-  .header-resource-strip {
-    display: flex;
-  }
 }
 
 .logout-btn {
@@ -1006,10 +1091,6 @@
 
   .main-content {
     padding: 14px;
-  }
-
-  .header-right .logout-btn {
-    display: none;
   }
 
   .mobile-drawer-logout {

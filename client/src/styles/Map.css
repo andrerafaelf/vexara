@@ -524,6 +524,29 @@
   cursor: default;
 }
 
+.support-btn {
+  background: #1A1F38;
+  color: #81EC86;
+  border: 1px solid rgba(129, 236, 134, 0.35);
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.support-btn:hover {
+  background: rgba(129, 236, 134, 0.1);
+  border-color: #81EC86;
+  color: #a8f0ab;
+}
+
 .wave-planner-btn {
   background: #1A1F38;
   color: #97A0BE;
@@ -716,6 +739,26 @@
 
 .attack-item.outgoing {
   border-left-color: #81EC86;
+}
+
+.attack-item.support-mission {
+  border-left-color: #67FFF2;
+  background: rgba(103, 255, 242, 0.04);
+}
+
+.support-mission-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #67FFF2;
+  background: rgba(103, 255, 242, 0.1);
+  border: 1px solid rgba(103, 255, 242, 0.3);
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-right: 6px;
+  vertical-align: middle;
 }
 
 .attack-from,

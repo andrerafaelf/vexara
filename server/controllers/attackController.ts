@@ -1,5 +1,6 @@
 import type { AttackType } from '@prisma/client';
 import type { Response } from 'express';
+import prisma from '../lib/prisma.js';
 import { applyQuestRewards, serializeAttack } from '../models/Nexus.js';
 import * as attackService from '../services/attackService.js';
 import type { AuthRequest, TroopKey } from '../types/index.js';
@@ -11,7 +12,7 @@ const TROOP_KEYS: TroopKey[] = [
   'siegeMech', 'bulwarkGuard', 'suppressorTeam', 'disruptorUnit', 'interceptorBike',
   'annihilatorPlatform', 'overseer',
 ];
-const SUPPORTED_ATTACK_TYPES = new Set<AttackType>(['attack', 'scout']);
+const SUPPORTED_ATTACK_TYPES = new Set<AttackType>(['attack', 'scout', 'support']);
 
 export async function sendAttack(req: AuthRequest, res: Response): Promise<void> {
   try {
@@ -50,7 +51,34 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
       const nonScout = TROOP_KEYS.filter((t) => t !== 'reconOperative').some((t) => normalizedTroops[t] > 0);
       if (reconOperatives <= 0 || nonScout) { res.status(400).json({ error: 'Scout missions require Recon Operatives only' }); return; }
     }
-    if ((normalizedTroops.overseer || 0) > 1) { res.status(400).json({ error: 'Maximum 1 Overseer per strike' }); return; }
+    if (attackType === 'support') {
+      // Cannot send support to your own nexus (use troop transfer instead)
+      if (defenderNexus.ownerId === req.userId) { res.status(400).json({ error: 'Use troop transfer to move troops between your own nexuses' }); return; }
+      // Target must be a friendly player (same faction or friend)
+      if (defenderNexus.ownerId) {
+        const [sameFaction, areFriends] = await Promise.all([
+          prisma.factionMember.findFirst({
+            where: {
+              galaxyId: req.galaxyId!,
+              userId: { in: [req.userId!, defenderNexus.ownerId] },
+            },
+          }).then(async (m1) => {
+            if (!m1) return false;
+            const m2 = await prisma.factionMember.findFirst({ where: { galaxyId: req.galaxyId!, userId: m1.userId === req.userId ? defenderNexus.ownerId! : req.userId! } });
+            return !!(m1 && m2 && m1.factionId === (m2 as any)?.factionId);
+          }),
+          prisma.friendship.findFirst({
+            where: { OR: [{ userId: req.userId!, friendId: defenderNexus.ownerId }, { userId: defenderNexus.ownerId, friendId: req.userId! }] },
+          }).then(Boolean),
+        ]);
+        if (!sameFaction && !areFriends) { res.status(403).json({ error: 'Support missions can only be sent to faction members or friends' }); return; }
+      } else {
+        res.status(400).json({ error: 'Cannot send support to an unowned nexus' }); return;
+      }
+      // No overseer in support missions
+      if ((normalizedTroops.overseer || 0) > 0) { res.status(400).json({ error: 'Overseers cannot be sent on support missions' }); return; }
+    }
+    if (attackType !== 'support' && (normalizedTroops.overseer || 0) > 1) { res.status(400).json({ error: 'Maximum 1 Overseer per strike' }); return; }
 
     const attackerRecord = attackerNexus as unknown as Record<string, number>;
     for (const [troopType, amount] of Object.entries(normalizedTroops)) {

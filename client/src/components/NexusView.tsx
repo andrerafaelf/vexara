@@ -1,3 +1,4 @@
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   cancelBuildQueueItem,
@@ -378,16 +379,34 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   const [trainAmount, setTrainAmount] = useState<{ [key: string]: string }>({});
   const [currentTime, setCurrentTime] = useState(new Date());
   const [toast, setToast] = useState<ToastMessage | null>(null);
-  const [incomingAttacks, setIncomingAttacks] = useState<any[]>([]);
-  const [outgoingAttacks, setOutgoingAttacks] = useState<any[]>([]);
+  const queryClient = useQueryClient();
+  const { data: incomingAttacks = [] } = useQuery({
+    queryKey: ['incomingAttacks', nexus._id],
+    queryFn: () => getIncomingAttacks(nexus._id).then((r) => r.data),
+    refetchInterval: 15000,
+  });
+  const { data: outgoingAttacks = [] } = useQuery({
+    queryKey: ['outgoingAttacks', nexus._id],
+    queryFn: () => getOutgoingAttacks(nexus._id).then((r) => r.data),
+    refetchInterval: 15000,
+  });
+  const { data: ownNexusesData = [] } = useQuery({
+    queryKey: ['myNexuses'],
+    queryFn: () => getMyNexuses().then((r) => r.data),
+  });
+  const { data: troopTransfersData = [], refetch: refetchTransfers } = useQuery({
+    queryKey: ['troopTransfers', nexus._id],
+    queryFn: () => getNexusTroopTransfers(nexus._id).then((r) => r.data),
+    refetchInterval: 15000,
+  });
   const [selectedAttack, setSelectedAttack] = useState<any | null>(null);
   const [infoModal, setInfoModal] = useState<InfoModalState | null>(null);
-  const [ownNexuses, setOwnNexuses] = useState<Nexus[]>([]);
+  const ownNexuses: Nexus[] = ownNexusesData;
+  const troopTransfers: TroopTransfer[] = troopTransfersData;
   const [showTransfer, setShowTransfer] = useState(false);
   const [transferTo, setTransferTo] = useState('');
   const [transferAmounts, setTransferAmounts] = useState({ biomass: '', alloy: '', ore: '' });
   const [transferring, setTransferring] = useState(false);
-  const [troopTransfers, setTroopTransfers] = useState<TroopTransfer[]>([]);
   const [showTroopSend, setShowTroopSend] = useState(false);
   const [troopSendTo, setTroopSendTo] = useState('');
   const [troopSendAmounts, setTroopSendAmounts] = useState<Record<string, string>>({});
@@ -464,12 +483,10 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   useEffect(() => {
     const interval = setInterval(() => {
       checkQueues();
-      loadAttacks();
-      refreshTroopTransfers();
     }, 15000);
-    loadAttacks();
     return () => clearInterval(interval);
-  }, [nexus]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nexus._id]);
 
   useEffect(() => {
     if (!isRenamingNexus) {
@@ -477,20 +494,8 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     }
   }, [isRenamingNexus, nexus.name]);
 
-  useEffect(() => {
-    getMyNexuses()
-      .then((r) => setOwnNexuses(r.data))
-      .catch(() => {});
-    getNexusTroopTransfers(nexus._id)
-      .then((r) => setTroopTransfers(r.data))
-      .catch(() => {});
-  }, [nexus._id]);
-
-  const refreshTroopTransfers = async () => {
-    try {
-      const r = await getNexusTroopTransfers(nexus._id);
-      setTroopTransfers(r.data);
-    } catch {}
+  const refreshTroopTransfers = () => {
+    refetchTransfers();
   };
 
   const handleSendTroops = async () => {
@@ -581,17 +586,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     }
   };
 
-  const loadAttacks = async () => {
-    try {
-      const [incomingResponse, outgoingResponse] = await Promise.all([
-        getIncomingAttacks(nexus._id),
-        getOutgoingAttacks(nexus._id),
-      ]);
-      setIncomingAttacks(incomingResponse.data);
-      setOutgoingAttacks(outgoingResponse.data);
-    } catch (err) {
-      console.error('Error loading strikes:', err);
-    }
+  const loadAttacks = () => {
+    queryClient.invalidateQueries({ queryKey: ['incomingAttacks', nexus._id] });
+    queryClient.invalidateQueries({ queryKey: ['outgoingAttacks', nexus._id] });
   };
 
   const handleUpgrade = async (building: string) => {

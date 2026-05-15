@@ -13,6 +13,12 @@ import {
   leaveFaction,
   setFactionMemberRole,
   updateFactionMotd,
+  getFactionWars,
+  declareWar,
+  acceptWar,
+  declineWar,
+  endWar,
+  listFactionsInGalaxy,
 } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import FactionChat from './FactionChat';
@@ -41,7 +47,24 @@ interface FactionInvite {
   expiresAt: string;
 }
 
-type Tab = 'overview' | 'chat' | 'members' | 'activity';
+interface FactionWar {
+  id: number;
+  status: 'pending' | 'active' | 'ended';
+  declarerFactionId: number;
+  targetFactionId: number;
+  declarerFaction: { name: string; tag: string };
+  targetFaction: { name: string; tag: string };
+  declaredAt: string;
+  acceptedAt: string | null;
+}
+
+interface GalaxyFaction {
+  id: number;
+  name: string;
+  tag: string;
+}
+
+type Tab = 'overview' | 'chat' | 'members' | 'activity' | 'wars';
 
 const ROLE_ORDER: Record<string, number> = { leader: 0, officer: 1, member: 2 };
 
@@ -68,6 +91,12 @@ export default function FactionsView() {
   const [motdSubmitting, setMotdSubmitting] = useState(false);
   const [motdError, setMotdError] = useState('');
 
+  const [wars, setWars] = useState<FactionWar[]>([]);
+  const [galaxyFactions, setGalaxyFactions] = useState<GalaxyFaction[]>([]);
+  const [selectedDeclareTarget, setSelectedDeclareTarget] = useState('');
+  const [warError, setWarError] = useState('');
+  const [warSubmitting, setWarSubmitting] = useState(false);
+
   const { user: authUser } = useAuth();
   const currentUserId = authUser ? parseInt(authUser.id, 10) : undefined;
 
@@ -78,10 +107,17 @@ export default function FactionsView() {
           getMyFaction(),
           getMyFactionInvites(),
         ]);
-        setMyFaction(myFactionRes.data.faction);
+        const faction = myFactionRes.data.faction;
+        setMyFaction(faction);
         setInvites(invitesRes.data);
-        if (myFactionRes.data.faction?.motd) {
-          setMotdDraft(myFactionRes.data.faction.motd);
+        if (faction?.motd) setMotdDraft(faction.motd);
+        if (faction) {
+          const [warsRes, factionsRes] = await Promise.all([
+            getFactionWars(faction.id),
+            listFactionsInGalaxy(),
+          ]);
+          setWars(warsRes.data);
+          setGalaxyFactions(factionsRes.data.filter((f: GalaxyFaction) => f.id !== faction.id));
         }
       } catch (err) {
         setError((err as Error).message);
@@ -91,6 +127,11 @@ export default function FactionsView() {
     };
     fetchData();
   }, []);
+
+  const refreshWars = async (factionId: number) => {
+    const res = await getFactionWars(factionId);
+    setWars(res.data);
+  };
 
   const refreshFaction = async () => {
     const res = await getMyFaction();
@@ -210,6 +251,52 @@ export default function FactionsView() {
       setMotdError((err as { response?: { data?: { error?: string } } }).response?.data?.error || 'Failed to save');
     } finally {
       setMotdSubmitting(false);
+    }
+  };
+
+  const handleDeclareWar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!myFaction || !selectedDeclareTarget) return;
+    setWarError('');
+    setWarSubmitting(true);
+    try {
+      await declareWar(myFaction.id, parseInt(selectedDeclareTarget));
+      setSelectedDeclareTarget('');
+      await refreshWars(myFaction.id);
+    } catch (err) {
+      setWarError((err as { response?: { data?: { error?: string } } }).response?.data?.error || (err as Error).message);
+    } finally {
+      setWarSubmitting(false);
+    }
+  };
+
+  const handleAcceptWar = async (warId: number) => {
+    if (!myFaction) return;
+    try {
+      await acceptWar(warId);
+      await refreshWars(myFaction.id);
+    } catch (err) {
+      setWarError((err as { response?: { data?: { error?: string } } }).response?.data?.error || (err as Error).message);
+    }
+  };
+
+  const handleDeclineWar = async (warId: number) => {
+    if (!myFaction) return;
+    try {
+      await declineWar(warId);
+      await refreshWars(myFaction.id);
+    } catch (err) {
+      setWarError((err as { response?: { data?: { error?: string } } }).response?.data?.error || (err as Error).message);
+    }
+  };
+
+  const handleEndWar = async (warId: number) => {
+    if (!myFaction || !confirm('Propose a ceasefire and end this war?')) return;
+    try {
+      await endWar(warId);
+      await refreshWars(myFaction.id);
+    } catch (err) {
+      setWarError((err as { response?: { data?: { error?: string } } }).response?.data?.error || (err as Error).message);
     }
   };
 
@@ -346,7 +433,7 @@ export default function FactionsView() {
 
       {/* Tabs */}
       <div className="factions-tabs">
-        {(['overview', 'chat', 'members', 'activity'] as Tab[]).map((tab) => (
+        {(['overview', 'chat', 'members', 'activity', 'wars'] as Tab[]).map((tab) => (
           <button
             key={tab}
             className={`factions-tab${activeTab === tab ? ' factions-tab--active' : ''}`}
@@ -356,6 +443,17 @@ export default function FactionsView() {
             {tab === 'chat' && 'Chat'}
             {tab === 'members' && `Members (${myFaction.members?.length ?? 0})`}
             {tab === 'activity' && 'Activity'}
+            {tab === 'wars' && (
+              <>
+                Wars
+                {wars.filter((w) => w.status === 'active').length > 0 && (
+                  <span className="factions-tab-badge">{wars.filter((w) => w.status === 'active').length}</span>
+                )}
+                {wars.some((w) => w.status === 'pending' && w.targetFactionId === myFaction.id) && (
+                  <span className="factions-tab-badge factions-tab-badge--alert">!</span>
+                )}
+              </>
+            )}
           </button>
         ))}
       </div>
@@ -492,6 +590,113 @@ export default function FactionsView() {
       {activeTab === 'activity' && (
         <section className="factions-panel factions-tab-content">
           <FactionActivity factionId={myFaction.id} />
+        </section>
+      )}
+
+      {/* Tab: Wars */}
+      {activeTab === 'wars' && (
+        <section className="factions-panel factions-tab-content">
+          {warError && <div className="factions-field-error factions-war-error">{warError}</div>}
+
+          {/* Pending incoming declarations */}
+          {wars.filter((w) => w.status === 'pending' && w.targetFactionId === myFaction.id).length > 0 && (
+            <div className="factions-war-section">
+              <h3 className="factions-war-section-title factions-war-section-title--alert">Incoming War Declarations</h3>
+              {wars
+                .filter((w) => w.status === 'pending' && w.targetFactionId === myFaction.id)
+                .map((w) => (
+                  <div key={w.id} className="factions-war-card factions-war-card--pending-incoming">
+                    <div className="factions-war-info">
+                      <span className="factions-war-faction">[{w.declarerFaction.tag}] {w.declarerFaction.name}</span>
+                      <span className="factions-war-meta">declared war on you</span>
+                    </div>
+                    {canManage && (
+                      <div className="factions-war-actions">
+                        <button className="factions-btn-danger" onClick={() => handleAcceptWar(w.id)}>Accept</button>
+                        <button className="factions-btn-small" onClick={() => handleDeclineWar(w.id)}>Decline</button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+            </div>
+          )}
+
+          {/* Pending outgoing declarations */}
+          {wars.filter((w) => w.status === 'pending' && w.declarerFactionId === myFaction.id).length > 0 && (
+            <div className="factions-war-section">
+              <h3 className="factions-war-section-title">Pending Declarations</h3>
+              {wars
+                .filter((w) => w.status === 'pending' && w.declarerFactionId === myFaction.id)
+                .map((w) => (
+                  <div key={w.id} className="factions-war-card factions-war-card--pending-outgoing">
+                    <div className="factions-war-info">
+                      <span className="factions-war-faction">[{w.targetFaction.tag}] {w.targetFaction.name}</span>
+                      <span className="factions-war-meta">awaiting response</span>
+                    </div>
+                    <span className="factions-war-status-badge factions-war-status-badge--pending">Pending</span>
+                  </div>
+                ))}
+            </div>
+          )}
+
+          {/* Active wars */}
+          {wars.filter((w) => w.status === 'active').length > 0 && (
+            <div className="factions-war-section">
+              <h3 className="factions-war-section-title factions-war-section-title--active">Active Wars</h3>
+              {wars
+                .filter((w) => w.status === 'active')
+                .map((w) => {
+                  const enemy = w.declarerFactionId === myFaction.id ? w.targetFaction : w.declarerFaction;
+                  return (
+                    <div key={w.id} className="factions-war-card factions-war-card--active">
+                      <div className="factions-war-info">
+                        <span className="factions-war-vs">WAR</span>
+                        <span className="factions-war-faction">[{enemy.tag}] {enemy.name}</span>
+                        {w.acceptedAt && (
+                          <span className="factions-war-meta">
+                            since {new Date(w.acceptedAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                          </span>
+                        )}
+                      </div>
+                      {canManage && (
+                        <button className="factions-btn-small" onClick={() => handleEndWar(w.id)}>Propose Ceasefire</button>
+                      )}
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+
+          {wars.length === 0 && (
+            <p className="factions-war-empty">No active wars or pending declarations.</p>
+          )}
+
+          {/* Declare war */}
+          {canManage && galaxyFactions.length > 0 && (
+            <div className="factions-war-section">
+              <h3 className="factions-war-section-title">Declare War</h3>
+              <form onSubmit={handleDeclareWar} className="factions-war-declare-form">
+                <select
+                  value={selectedDeclareTarget}
+                  onChange={(e) => setSelectedDeclareTarget(e.target.value)}
+                  className="factions-war-select"
+                  disabled={warSubmitting}
+                >
+                  <option value="">Select a faction...</option>
+                  {galaxyFactions
+                    .filter((f) => !wars.some((w) => (w.status === 'pending' || w.status === 'active') &&
+                      ((w.declarerFactionId === myFaction.id && w.targetFactionId === f.id) ||
+                       (w.targetFactionId === myFaction.id && w.declarerFactionId === f.id))))
+                    .map((f) => (
+                      <option key={f.id} value={f.id}>[{f.tag}] {f.name}</option>
+                    ))}
+                </select>
+                <button type="submit" className="factions-btn-danger" disabled={!selectedDeclareTarget || warSubmitting}>
+                  {warSubmitting ? 'Declaring...' : 'Declare War'}
+                </button>
+              </form>
+            </div>
+          )}
         </section>
       )}
     </div>

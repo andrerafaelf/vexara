@@ -365,10 +365,12 @@ model Faction {
   dominanceSince  DateTime?
 
   galaxy   Galaxy           @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
-  members  FactionMember[]
-  invites  FactionInvite[]
-  messages FactionMessage[]
-  events   FactionEvent[]
+  members      FactionMember[]
+  invites      FactionInvite[]
+  messages     FactionMessage[]
+  events       FactionEvent[]
+  warsInitiated FactionWar[] @relation("FactionWarDeclarer")
+  warsReceived  FactionWar[] @relation("FactionWarTarget")
 
   @@unique([galaxyId, name])
   @@unique([galaxyId, tag])
@@ -431,4 +433,29 @@ model FactionInvite {
 
   @@unique([factionId, invitedUserId])
   @@index([invitedUserId, galaxyId])
+}
+
+enum FactionWarStatus {
+  pending
+  active
+  ended
+}
+
+model FactionWar {
+  id               Int              @id @default(autoincrement())
+  galaxyId         Int
+  declarerFactionId Int
+  targetFactionId   Int
+  status           FactionWarStatus @default(pending)
+  declaredAt       DateTime         @default(now())
+  acceptedAt       DateTime?
+  endedAt          DateTime?
+
+  declarerFaction Faction @relation("FactionWarDeclarer", fields: [declarerFactionId], references: [id], onDelete: Cascade)
+  targetFaction   Faction @relation("FactionWarTarget",   fields: [targetFactionId],   references: [id], onDelete: Cascade)
+
+  @@unique([declarerFactionId, targetFactionId, galaxyId])
+  @@index([galaxyId])
+  @@index([declarerFactionId])
+  @@index([targetFactionId])
 }

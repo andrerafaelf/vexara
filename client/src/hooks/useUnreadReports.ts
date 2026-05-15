@@ -1,29 +1,22 @@
 'use client';
 
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getUnreadNexusIds } from '@/services/api';
-import { useCallback, useEffect, useState } from 'react';
 
 export function useUnreadReports() {
-  const [hasUnreadReports, setHasUnreadReports] = useState(false);
-  const [unreadNexusIds, setUnreadNexusIds] = useState<Set<string>>(new Set());
+  const queryClient = useQueryClient();
 
-  const refresh = useCallback(async () => {
-    try {
-      const res = await getUnreadNexusIds();
-      const ids: string[] = Array.isArray(res.data) ? res.data : [];
-      setUnreadNexusIds(new Set(ids));
-      setHasUnreadReports(ids.length > 0);
-    } catch {
-      setUnreadNexusIds(new Set());
-      setHasUnreadReports(false);
-    }
-  }, []);
+  const { data = [] } = useQuery<string[]>({
+    queryKey: ['unreadNexusIds'],
+    queryFn: () => getUnreadNexusIds().then((r) => (Array.isArray(r.data) ? r.data : [])),
+    refetchInterval: 60000,
+  });
 
-  useEffect(() => {
-    refresh();
-    const id = setInterval(refresh, 60000);
-    return () => clearInterval(id);
-  }, [refresh]);
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['unreadNexusIds'] });
 
-  return { hasUnreadReports, unreadNexusIds, refresh };
+  return {
+    hasUnreadReports: data.length > 0,
+    unreadNexusIds: new Set(data),
+    refresh,
+  };
 }

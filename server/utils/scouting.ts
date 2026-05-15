@@ -78,11 +78,26 @@ export function buildDetailedScoutIntel(nexus: Nexus): ScoutIntel {
   };
 }
 
+async function isFriendlyNexus(userId: number, galaxyId: number, ownerUserId: number): Promise<boolean> {
+  const [sameFaction, areFriends] = await Promise.all([
+    prisma.factionMember.findFirst({ where: { galaxyId, userId } })
+      .then(async (m1) => {
+        if (!m1) return false;
+        const m2 = await prisma.factionMember.findFirst({ where: { galaxyId, userId: ownerUserId } });
+        return !!(m2 && m1.factionId === m2.factionId);
+      }),
+    prisma.friendship.findFirst({
+      where: { OR: [{ userAId: userId, userBId: ownerUserId }, { userAId: ownerUserId, userBId: userId }] },
+    }).then(Boolean),
+  ]);
+  return sameFaction || areFriends;
+}
+
 export async function getNexusIntelForUser(
   userId: number,
   nexusId: number,
   galaxyId: number | null,
-): Promise<(PublicNexusData & Partial<ScoutIntel> & { intelLevel: string; scoutedAt?: unknown }) | null> {
+): Promise<(PublicNexusData & Partial<ScoutIntel> & { intelLevel: string; scoutedAt?: unknown; isFriendly?: boolean; newbieProtectionEndsAt?: string | null }) | null> {
   const nexus = await prisma.nexus.findUnique({
     where: { id: nexusId },
     include: { owner: { select: { id: true, username: true } } },
@@ -99,10 +114,15 @@ export async function getNexusIntelForUser(
     : null;
 
   const publicData = buildPublicNexusData(nexus, ownerPlayer?.points);
+  const newbieProtectionEndsAt = nexus.newbieProtectionEndsAt ? nexus.newbieProtectionEndsAt.toISOString() : null;
 
   if (nexus.ownerId === userId) {
-    return { ...publicData, ...buildDetailedScoutIntel(nexus), intelLevel: 'owned', scoutedAt: new Date().toISOString() };
+    return { ...publicData, ...buildDetailedScoutIntel(nexus), intelLevel: 'owned', scoutedAt: new Date().toISOString(), newbieProtectionEndsAt };
   }
+
+  const friendly = nexus.ownerId && galaxyId != null
+    ? await isFriendlyNexus(userId, galaxyId, nexus.ownerId)
+    : false;
 
   const scoutReport = await prisma.attack.findFirst({
     where: { attackerUserId: userId, defenderNexusId: nexusId, type: 'scout', status: 'completed' },
@@ -110,7 +130,7 @@ export async function getNexusIntelForUser(
   });
 
   const intel = (scoutReport?.result as { intel?: ScoutIntel } | null)?.intel;
-  if (!intel) return publicData;
+  if (!intel) return { ...publicData, isFriendly: friendly, newbieProtectionEndsAt };
 
-  return { ...publicData, ...intel, intelLevel: 'scouted', scoutedAt: scoutReport!.arrivesAt };
+  return { ...publicData, ...intel, intelLevel: 'scouted', scoutedAt: scoutReport!.arrivesAt, isFriendly: friendly, newbieProtectionEndsAt };
 }

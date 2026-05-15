@@ -41,6 +41,7 @@ interface MapNexus {
   intelLevel?: 'public' | 'scouted' | 'owned';
   scoutedAt?: string;
   newbieProtectionEndsAt?: string | null;
+  isFriendly?: boolean;
 }
 
 const TROOP_LABELS: Record<string, string> = {
@@ -111,6 +112,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   const [troopSendAmounts, setTroopSendAmounts] = useState<Record<string, string>>({});
   const [sendingTroops, setSendingTroops] = useState(false);
   const [showWavePlanner, setShowWavePlanner] = useState(false);
+  const [attackMissionType, setAttackMissionType] = useState<'attack' | 'support'>('attack');
 
   const availableTroops = useMemo(() => {
     const base: Record<string, number> = {};
@@ -509,6 +511,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
       setShowTransfer(false);
       setShowTroopSend(false);
       setShowWavePlanner(false);
+      setAttackMissionType('attack');
       setTransferAmounts({ biomass: '', alloy: '', ore: '' });
       setTroopSendAmounts({});
     } catch (err) {
@@ -531,14 +534,17 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
     }
 
     const onlyRecon =
+      attackMissionType === 'attack' &&
       attackTroops.reconOperative > 0 &&
       Object.entries(attackTroops).every(([type, amount]) => type === 'reconOperative' || Number(amount) === 0);
-    const resolvedType = onlyRecon ? 'scout' : 'attack';
+    const resolvedType = onlyRecon ? 'scout' : attackMissionType;
 
     try {
       await sendAttack(currentNexus._id, selectedNexus._id, attackTroops, resolvedType);
-      toast(resolvedType === 'scout' ? 'Recon mission sent' : 'Strike sent', 'success');
+      const missionLabel = resolvedType === 'scout' ? 'Recon mission sent' : resolvedType === 'support' ? 'Support mission sent' : 'Strike sent';
+      toast(missionLabel, 'success');
       setShowAttackForm(false);
+      setAttackMissionType('attack');
       setAttackTroops({
         lancerDrone: 0,
         assaultTrooper: 0,
@@ -564,7 +570,12 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
     setAttackTroops((prev) => {
       const next = { ...prev };
       for (const [type, count] of Object.entries(availableTroops)) {
-        if (OFFENSE_TROOPS.has(type)) {
+        if (attackMissionType === 'support') {
+          // Support: send all non-overseer troops
+          if (type !== 'overseer') {
+            (next as Record<string, number>)[type] = Number(count);
+          }
+        } else if (OFFENSE_TROOPS.has(type)) {
           (next as Record<string, number>)[type] = type === 'overseer' ? Math.min(Number(count), 1) : Number(count);
         }
       }
@@ -822,12 +833,21 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
               <div className="nexus-action-buttons">
                 <button
                   className="attack-btn"
-                  onClick={() => setShowAttackForm(true)}
+                  onClick={() => { setAttackMissionType('attack'); setShowAttackForm(true); }}
                   disabled={isConquered || isNewbieProtected}
                   title={isConquered ? 'Nexus already conquered' : isNewbieProtected ? 'Nexus is under newbie protection' : 'Launch attack'}
                 >
                   <Swords size={14} aria-hidden="true" /> {isConquered ? 'Conquered' : 'Attack'}
                 </button>
+                {selectedNexus.isFriendly && selectedNexus.owner && (
+                  <button
+                    className="support-btn"
+                    onClick={() => { setAttackMissionType('support'); setShowAttackForm(true); }}
+                    title="Send troops to reinforce this ally's nexus"
+                  >
+                    <Shield size={14} aria-hidden="true" /> Support
+                  </button>
+                )}
                 {!isConquered && !isNewbieProtected && (
                   <button
                     className="wave-planner-btn"
@@ -840,7 +860,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
               </div>
             ) : (
               <div className="attack-form">
-                <h4>Launch Attack</h4>
+                <h4>{attackMissionType === 'support' ? 'Send Support' : 'Launch Attack'}</h4>
                 <div className="troop-selector">
                   {attackTroopRows.map(([type, available]) => {
                     const effectiveMax = type === 'overseer' ? Math.min(Number(available), 1) : Number(available);
@@ -888,7 +908,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
                     onClick={handleSendAttack}
                     disabled={attackAvailableTroopTotal <= 0}
                   >
-                    Send Attack
+                    {attackMissionType === 'support' ? 'Send Support' : 'Send Attack'}
                   </button>
                   <button className="cancel-btn" onClick={() => setShowAttackForm(false)}>
                     Cancel
@@ -998,31 +1018,41 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
         {incomingAttacks.length > 0 && (
           <div className="attacks-section">
             <h4>Incoming ({incomingAttacks.length})</h4>
-            {incomingAttacks.map((attack: any) => (
-              <div key={attack._id} className="attack-item incoming">
-                <div className="attack-from">
-                  From: <strong>{attack.attackerNexus?.name || 'Unknown'}</strong>
+            {incomingAttacks.map((attack: any) => {
+              const isSupport = attack.type === 'support';
+              return (
+                <div key={attack._id} className={`attack-item incoming${isSupport ? ' support-mission' : ''}`}>
+                  <div className="attack-from">
+                    {isSupport && <span className="support-mission-badge">Support</span>}
+                    From: <strong>{attack.attackerNexus?.name || 'Unknown'}</strong>
+                  </div>
+                  <div className="attack-time">Arrives: {formatTime(attack.arrivesAt)}</div>
                 </div>
-                <div className="attack-time">Arrives: {formatTime(attack.arrivesAt)}</div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
         {outgoingAttacks.length > 0 && (
           <div className="attacks-section">
             <h4>Outgoing ({outgoingAttacks.length})</h4>
-            {outgoingAttacks.map((attack: any) => (
-              <div key={attack._id} className="attack-item outgoing">
-                <div className="attack-to">
-                  {attack.status === 'returning' ? 'Returning from:' : 'To:'}{' '}
-                  <strong>{attack.defenderNexus?.name || 'Unknown'}</strong>
+            {outgoingAttacks.map((attack: any) => {
+              const isSupport = attack.type === 'support';
+              const isReturning = attack.status === 'returning';
+              const label = isSupport ? 'Supporting:' : isReturning ? 'Returning from:' : 'To:';
+              const timeLabel = isReturning ? 'Returns:' : 'Arrives:';
+              return (
+                <div key={attack._id} className={`attack-item outgoing${isSupport ? ' support-mission' : ''}`}>
+                  <div className="attack-to">
+                    {isSupport && <span className="support-mission-badge">Support</span>}
+                    {label} <strong>{attack.defenderNexus?.name || 'Unknown'}</strong>
+                  </div>
+                  <div className="attack-time">
+                    {timeLabel}{' '}
+                    {formatTime(isReturning ? attack.returnsAt : attack.arrivesAt)}
+                  </div>
                 </div>
-                <div className="attack-time">
-                  {attack.status === 'returning' ? 'Returns:' : 'Arrives:'}{' '}
-                  {formatTime(attack.status === 'returning' ? attack.returnsAt : attack.arrivesAt)}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

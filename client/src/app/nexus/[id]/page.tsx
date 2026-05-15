@@ -1,6 +1,7 @@
 'use client';
 
 import DominanceBar from '@/components/DominanceBar';
+import HeaderResourceStrip from '@/components/HeaderResourceStrip';
 import MobileNexusDrawer from '@/components/MobileNexusDrawer';
 import NexusSidebar from '@/components/NexusSidebar';
 import NexusView from '@/components/NexusView';
@@ -12,8 +13,9 @@ import { getMyNexuses, getNexus } from '@/services/api';
 import '@/styles/Game.css';
 import { Nexus } from '@/types/game';
 import { Building2, LayoutDashboard, LogOut, Map as MapIcon, Menu, ScrollText, ShoppingCart, User, Users } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const PWA_GUIDE_SEEN_KEY = 'pwa_guide_seen';
 
@@ -30,10 +32,7 @@ function parseTab(value: string | null): NexusTab {
 }
 
 export default function NexusPage() {
-  const [nexuses, setVillages] = useState<Nexus[]>([]);
-  const [selectedNexus, setSelectedNexus] = useState<Nexus | null>(null);
   const { hasUnreadReports, unreadNexusIds } = useUnreadReports();
-  const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNexusDrawerOpen, setIsNexusDrawerOpen] = useState(false);
   const [showPwaGuide, setShowPwaGuide] = useState(false);
@@ -46,47 +45,28 @@ export default function NexusPage() {
   const nexusId = params.id as string;
   const activeTab = parseTab(searchParams.get('tab'));
 
-  const loadVillages = useCallback(async () => {
-    try {
-      const [nexusesResponse, nexusResponse] = await Promise.allSettled([getMyNexuses(), getNexus(nexusId)]);
+  const { data: nexusesData, refetch: refetchNexuses } = useQuery({
+    queryKey: ['myNexuses'],
+    queryFn: () => getMyNexuses().then((r) => r.data as Nexus[]),
+    refetchInterval: 30000,
+    enabled: typeof window !== 'undefined' && !!localStorage.getItem('token'),
+  });
 
-      if (nexusesResponse.status === 'fulfilled') {
-        const allNexuses: Nexus[] = Array.isArray(nexusesResponse.value.data) ? nexusesResponse.value.data : [];
-        setVillages(allNexuses);
+  const { data: selectedNexusData, refetch: refetchSelectedNexus } = useQuery({
+    queryKey: ['nexus', nexusId],
+    queryFn: () => getNexus(nexusId).then((r) => r.data as Nexus),
+    refetchInterval: 30000,
+    enabled: !!nexusId && typeof window !== 'undefined' && !!localStorage.getItem('token'),
+  });
 
-        if (allNexuses.length > 0) {
-          const routeNexusId = allNexuses.find((nexus: Nexus) => String(nexus._id) === nexusId)?._id;
-          const storedNexusId = localStorage.getItem(SELECTED_NEXUS_KEY);
-          const storedValidNexusId = allNexuses.find((nexus: Nexus) => nexus._id === storedNexusId)?._id;
-          const fallbackNexusId = routeNexusId ?? storedValidNexusId ?? allNexuses[0]._id;
+  const nexuses: Nexus[] = nexusesData ?? [];
+  const selectedNexus: Nexus | null = selectedNexusData ?? null;
+  const loading = !nexusesData && !selectedNexusData;
 
-          localStorage.setItem(SELECTED_NEXUS_KEY, fallbackNexusId);
-
-          if (!routeNexusId) {
-            router.replace(`/nexus/${fallbackNexusId}`);
-          }
-        }
-      } else {
-        console.error('Error loading nexuses:', nexusesResponse.reason);
-        setVillages([]);
-      }
-
-      if (nexusResponse.status === 'fulfilled') {
-        setSelectedNexus(nexusResponse.value.data);
-        localStorage.setItem(SELECTED_NEXUS_KEY, String(nexusResponse.value.data._id));
-      } else {
-        console.error('Error loading selected nexus:', nexusResponse.reason);
-        setSelectedNexus(null);
-      }
-
-      setLoading(false);
-    } catch (err) {
-      console.error('Error loading nexuses:', err);
-      setLoading(false);
-    }
-  // router is intentionally omitted — it's stable and including it causes a fetch loop
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nexusId]);
+  const loadVillages = () => {
+    refetchNexuses();
+    refetchSelectedNexus();
+  };
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -103,14 +83,29 @@ export default function NexusPage() {
     const token = localStorage.getItem('token');
     if (!token) {
       router.push('/login');
-      return;
     }
-    loadVillages();
-    const interval = setInterval(loadVillages, 30000);
-    return () => clearInterval(interval);
-  // router is intentionally omitted — stable ref, including it restarts the interval on every render
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadVillages]);
+  }, []);
+
+  useEffect(() => {
+    if (nexuses.length > 0) {
+      const routeNexusId = nexuses.find((nexus: Nexus) => String(nexus._id) === nexusId)?._id;
+      const storedNexusId = localStorage.getItem(SELECTED_NEXUS_KEY);
+      const storedValidNexusId = nexuses.find((nexus: Nexus) => nexus._id === storedNexusId)?._id;
+      const fallbackNexusId = routeNexusId ?? storedValidNexusId ?? nexuses[0]._id;
+      localStorage.setItem(SELECTED_NEXUS_KEY, fallbackNexusId);
+      if (!routeNexusId) {
+        router.replace(`/nexus/${fallbackNexusId}`);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nexuses.length, nexusId]);
+
+  useEffect(() => {
+    if (selectedNexusData) {
+      localStorage.setItem(SELECTED_NEXUS_KEY, String(selectedNexusData._id));
+    }
+  }, [selectedNexusData]);
 
   const handleSelectNexus = (nexus: Nexus) => {
     setIsMobileMenuOpen(false);
@@ -148,36 +143,38 @@ export default function NexusPage() {
               <Menu size={18} />
             </button>
             <h1>Vexara</h1>
-            <span className="username">welcome, {user?.username}</span>
+            <div className="header-nav-btns">
+              <button className="nav-btn active" onClick={() => router.push(`/nexus/${selectedNexus._id}`)}>
+                <LayoutDashboard size={14} /> Dashboard
+              </button>
+              <button className="nav-btn" onClick={() => router.push('/starfield')}>
+                <MapIcon size={14} /> Starfield
+              </button>
+              <button className="nav-btn" onClick={() => router.push('/market')}>
+                <ShoppingCart size={14} /> Market
+              </button>
+              <button className="nav-btn" onClick={() => router.push('/combat-logs')}>
+                <span className="nav-btn-content">
+                  <ScrollText size={14} /> Combat Logs
+                  {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
+                </span>
+              </button>
+              <button className="nav-btn" onClick={() => router.push('/allies')}>
+                <span className="nav-btn-content">
+                  <Users size={14} /> Allies
+                  {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
+                </span>
+              </button>
+              <button className="nav-btn" onClick={() => router.push('/factions')}>
+                <Users size={14} /> Factions
+              </button>
+              <button className="nav-btn" onClick={() => router.push('/profile')}>
+                <User size={14} /> Profile
+              </button>
+            </div>
           </div>
           <div className="header-center">
-            <button className="nav-btn active" onClick={() => router.push(`/nexus/${selectedNexus._id}`)}>
-              <LayoutDashboard size={14} /> Dashboard
-            </button>
-            <button className="nav-btn" onClick={() => router.push('/starfield')}>
-              <MapIcon size={14} /> Starfield
-            </button>
-            <button className="nav-btn" onClick={() => router.push('/market')}>
-              <ShoppingCart size={14} /> Market
-            </button>
-            <button className="nav-btn" onClick={() => router.push('/combat-logs')}>
-              <span className="nav-btn-content">
-                <ScrollText size={14} /> Combat Logs
-                {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
-              </span>
-            </button>
-            <button className="nav-btn" onClick={() => router.push('/allies')}>
-              <span className="nav-btn-content">
-                <Users size={14} /> Allies
-                {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
-              </span>
-            </button>
-            <button className="nav-btn" onClick={() => router.push('/factions')}>
-              <Users size={14} /> Factions
-            </button>
-            <button className="nav-btn" onClick={() => router.push('/profile')}>
-              <User size={14} /> Profile
-            </button>
+            <HeaderResourceStrip nexus={selectedNexus} />
           </div>
           <div className="header-right">
             <button
@@ -187,9 +184,6 @@ export default function NexusPage() {
               title="Your Nexuses"
             >
               <Building2 size={18} />
-            </button>
-            <button onClick={logout} className="logout-btn">
-              Logout
             </button>
           </div>
         </header>
