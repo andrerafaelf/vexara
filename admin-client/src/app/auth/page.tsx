@@ -18,6 +18,7 @@ export default function AuthPage() {
       return;
     }
 
+    // Store the credentials in sessionStorage for later use in API requests
     sessionStorage.setItem('admin_basic_auth', btoa(`${normalizedUsername}:${password}`));
     router.replace('/admin');
   };
