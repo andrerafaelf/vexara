@@ -236,6 +236,21 @@
   font-weight: 600;
 }
 
+.auth-success-note {
+  margin-top: 10px;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  background: rgba(255, 209, 102, 0.08);
+  border: 1px solid rgba(255, 209, 102, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+}
+
+.auth-success-note strong {
+  color: var(--warning);
+  font-weight: 600;
+}
+
 /* sm: a touch more breathing room on real screens */
 @media (min-width: 480px) {
   .auth-box {

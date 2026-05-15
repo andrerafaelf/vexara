@@ -298,6 +298,11 @@
 @media (max-width: 600px) {
   .header-resource-strip {
     flex-direction: column;
+    display: flex;
+    width: 100%;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
   }
   .header-res + .header-res {
     border-left: none;

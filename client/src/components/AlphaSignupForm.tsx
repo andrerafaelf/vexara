@@ -26,6 +26,13 @@ function getEmailError(email: string): string | null {
   return null;
 }
 
+const SPAM_DOMAINS = new Set(['hotmail.com', 'hotmail.co.uk', 'outlook.com', 'outlook.co.uk', 'live.com', 'msn.com']);
+
+function isSpamRiskDomain(email: string): boolean {
+  const domain = email.trim().toLowerCase().split('@')[1] ?? '';
+  return SPAM_DOMAINS.has(domain);
+}
+
 const ALPHA_FOUNDER_LIMIT = 150;
 
 const AlphaSignupForm: React.FC = () => {
@@ -114,6 +121,11 @@ const AlphaSignupForm: React.FC = () => {
               You&apos;re on the list. We&apos;ll email <strong>{email.trim()}</strong> as soon as alpha
               access opens.
             </p>
+            {isSpamRiskDomain(email) && (
+              <p className="auth-success-note">
+                Hotmail and Outlook sometimes filter automated emails — if you don&apos;t see it, check your <strong>Junk</strong> folder.
+              </p>
+            )}
             <Link href="/login" className="auth-link auth-link-block">
               Back to sign in
             </Link>
