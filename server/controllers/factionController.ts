@@ -61,7 +61,7 @@ export async function getMyFaction(req: AuthRequest, res: Response): Promise<voi
       faction: {
         ...member.faction,
         myRole: member.role,
-        members: member.faction.members.map((m) => ({
+        members: member.faction.members.map((m: any) => ({
           id: m.id,
           userId: m.userId,
           username: m.user.username,
@@ -104,7 +104,7 @@ export async function getFaction(req: AuthRequest, res: Response): Promise<void>
 
     res.json({
       ...faction,
-      members: faction.members.map((m) => ({ id: m.id, userId: m.userId, username: m.user.username, role: m.role })),
+      members: faction.members.map((m: any) => ({ id: m.id, userId: m.userId, username: m.user.username, role: m.role })),
     });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
@@ -135,7 +135,7 @@ export async function listFactionsInGalaxy(req: AuthRequest, res: Response): Pro
       orderBy: { createdAt: 'asc' },
     });
 
-    res.json(factions.map((f) => ({ ...f, memberCount: f._count.members })));
+    res.json(factions.map((f: any) => ({ ...f, memberCount: f._count.members })));
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }
@@ -227,7 +227,7 @@ export async function inviteToFaction(req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    const member = faction.members.find((m) => m.userId === req.userId);
+    const member = faction.members.find((m: any) => m.userId === req.userId);
     if (!member || (member.role !== 'leader' && member.role !== 'officer')) {
       res.status(403).json({ error: 'Only leader and officers can invite' });
       return;
@@ -281,28 +281,31 @@ export async function getMyInvites(req: AuthRequest, res: Response): Promise<voi
         invitedUserId: req.userId,
         expiresAt: { gt: new Date() },
       },
-      select: {
-        id: true,
-        factionId: true,
-        galaxyId: true,
-        expiresAt: true,
+      include: {
         faction: { select: { name: true, tag: true } },
-        invitedByUser: { select: { username: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    res.json(
-      invites.map((i) => ({
-        id: i.id,
-        factionId: i.factionId,
-        galaxyId: i.galaxyId,
-        factionName: i.faction.name,
-        factionTag: i.faction.tag,
-        invitedByUsername: i.invitedByUser?.username || 'unknown',
-        expiresAt: i.expiresAt,
-      }))
+    const invitesWithUsers = await Promise.all(
+      invites.map(async (i: any) => {
+        const invitedBy = await prisma.user.findUnique({
+          where: { id: i.invitedByUserId },
+          select: { username: true },
+        });
+        return {
+          id: i.id,
+          factionId: i.factionId,
+          galaxyId: i.galaxyId,
+          factionName: i.faction.name,
+          factionTag: i.faction.tag,
+          invitedByUsername: invitedBy?.username || 'unknown',
+          expiresAt: i.expiresAt,
+        };
+      })
     );
+
+    res.json(invitesWithUsers);
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }
@@ -410,13 +413,13 @@ export async function setMemberRole(req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
-    const caller = faction.members.find((m) => m.userId === req.userId);
+    const caller = faction.members.find((m: any) => m.userId === req.userId);
     if (!caller || caller.role !== 'leader') {
       res.status(403).json({ error: 'Only leaders can change roles' });
       return;
     }
 
-    const target = faction.members.find((m) => m.userId === targetUserId);
+    const target = faction.members.find((m: any) => m.userId === targetUserId);
     if (!target) {
       res.status(404).json({ error: 'Member not found' });
       return;
@@ -452,13 +455,13 @@ export async function kickMember(req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
-    const caller = faction.members.find((m) => m.userId === req.userId);
+    const caller = faction.members.find((m: any) => m.userId === req.userId);
     if (!caller || (caller.role !== 'leader' && caller.role !== 'officer')) {
       res.status(403).json({ error: 'Only leaders and officers can kick' });
       return;
     }
 
-    const target = faction.members.find((m) => m.userId === targetUserId);
+    const target = faction.members.find((m: any) => m.userId === targetUserId);
     if (!target) {
       res.status(404).json({ error: 'Member not found' });
       return;
@@ -533,7 +536,7 @@ export async function disbandFaction(req: AuthRequest, res: Response): Promise<v
       return;
     }
 
-    const member = faction.members.find((m) => m.userId === req.userId);
+    const member = faction.members.find((m: any) => m.userId === req.userId);
     if (!member || member.role !== 'leader') {
       res.status(403).json({ error: 'Only the leader can disband the faction' });
       return;
