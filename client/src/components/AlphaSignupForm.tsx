@@ -2,8 +2,8 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useState } from 'react';
-import { requestAlphaAccess } from '../services/api';
+import React, { useEffect, useState } from 'react';
+import { getAlphaSignupCount, requestAlphaAccess } from '../services/api';
 import '../styles/Auth.css';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
@@ -26,12 +26,21 @@ function getEmailError(email: string): string | null {
   return null;
 }
 
+const ALPHA_FOUNDER_LIMIT = 150;
+
 const AlphaSignupForm: React.FC = () => {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+  const [signupCount, setSignupCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    getAlphaSignupCount()
+      .then(({ data }) => setSignupCount((data as { total: number }).total))
+      .catch(() => {});
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,6 +83,30 @@ const AlphaSignupForm: React.FC = () => {
         </Link>
         <h1>Join the alpha</h1>
         <p className="tagline">Be among the first commanders.</p>
+
+        {signupCount !== null && signupCount < ALPHA_FOUNDER_LIMIT && (
+          <div className="alpha-founder-slots">
+            <span className="alpha-founder-slots-bar">
+              <span
+                className="alpha-founder-slots-fill"
+                style={{ width: `${Math.min(100, (signupCount / ALPHA_FOUNDER_LIMIT) * 100)}%` }}
+              />
+            </span>
+            <span className="alpha-founder-slots-label">
+              <strong>{signupCount}</strong> of {ALPHA_FOUNDER_LIMIT} Alpha Founder slots claimed
+              {ALPHA_FOUNDER_LIMIT - signupCount <= 20 && (
+                <span className="alpha-founder-slots-urgent"> — only {ALPHA_FOUNDER_LIMIT - signupCount} left!</span>
+              )}
+            </span>
+          </div>
+        )}
+        {signupCount !== null && signupCount >= ALPHA_FOUNDER_LIMIT && (
+          <div className="alpha-founder-slots alpha-founder-slots-full">
+            <span className="alpha-founder-slots-label">
+              All {ALPHA_FOUNDER_LIMIT} Alpha Founder slots have been claimed.
+            </span>
+          </div>
+        )}
 
         {success ? (
           <div className="auth-success" role="status">

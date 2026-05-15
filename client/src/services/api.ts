@@ -62,6 +62,8 @@ export const requestAlphaAccess = (email: string) =>
     body: JSON.stringify({ email }),
   });
 
+export const getAlphaSignupCount = () => apiRequest('/auth/alpha-signup/count');
+
 // Galaxies
 export const getGalaxies = () => apiRequest('/galaxies');
 export const getMyGalaxy = () => apiRequest('/galaxies/me');

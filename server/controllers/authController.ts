@@ -10,6 +10,15 @@ export async function register(_req: Request, res: Response): Promise<void> {
   res.status(403).json({ error: 'Registration is disabled' });
 }
 
+export async function alphaSignupCount(_req: Request, res: Response): Promise<void> {
+  try {
+    const total = await prisma.alphaSignup.count();
+    res.json({ total, limit: 150, remaining: Math.max(0, 150 - total) });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
 export async function alphaSignup(req: Request, res: Response): Promise<void> {
   try {
     const rawEmail = (req.body as { email?: string })?.email;

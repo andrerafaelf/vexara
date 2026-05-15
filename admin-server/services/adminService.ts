@@ -45,12 +45,16 @@ export function getAdminStats() {
   ]);
 }
 
+const ALPHA_FOUNDER_LIMIT = 150;
+
 export function createUser(username: string, email: string, password: string) {
   return hashPassword(password).then(async (hashedPassword) => {
     const targetGalaxy = await prisma.galaxy.findFirst({ where: { status: 'active' }, orderBy: { createdAt: 'asc' }, select: { id: true } });
     if (!targetGalaxy) throw new Error('No active galaxy available to place the new user');
+    const userCount = await prisma.user.count();
+    const isAlphaFounder = userCount < ALPHA_FOUNDER_LIMIT;
     return prisma.$transaction(async (tx) => {
-      const user = await tx.user.create({ data: { username, email: email.toLowerCase(), password: hashedPassword, activeGalaxyId: targetGalaxy.id } });
+      const user = await tx.user.create({ data: { username, email: email.toLowerCase(), password: hashedPassword, activeGalaxyId: targetGalaxy.id, isAlphaFounder } });
       await tx.galaxyPlayer.create({ data: { userId: user.id, galaxyId: targetGalaxy.id } });
       const { createStarterNexus } = await import('../../server/utils/starterNexus.js');
       const nexus = await createStarterNexus(tx, { userId: user.id, username: user.username, galaxyId: targetGalaxy.id });
