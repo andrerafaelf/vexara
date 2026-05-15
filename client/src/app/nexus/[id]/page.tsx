@@ -1,6 +1,5 @@
 'use client';
 
-import HeaderResourceStrip from '@/components/HeaderResourceStrip';
 import MobileNexusDrawer from '@/components/MobileNexusDrawer';
 import NexusSidebar from '@/components/NexusSidebar';
 import NexusView from '@/components/NexusView';
@@ -180,7 +179,6 @@ export default function NexusPage() {
             </button>
           </div>
           <div className="header-right">
-            <HeaderResourceStrip nexus={selectedNexus} />
             <button
               className="nexus-drawer-toggle"
               onClick={() => setIsNexusDrawerOpen((v) => !v)}

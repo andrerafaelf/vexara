@@ -1,8 +1,9 @@
 'use client';
 
+import { useAuth } from '@/context/AuthContext';
 import { getUserStats } from '@/services/api';
 import { UserStats } from '@/types/game';
-import { Bell, User as UserIcon } from 'lucide-react';
+import { Bell, LogOut, User as UserIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import '../styles/ProfileStats.css';
 import NotificationSettings from './NotificationSettings';
@@ -34,6 +35,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 export default function ProfileStats() {
+  const { logout } = useAuth();
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -93,6 +95,10 @@ export default function ProfileStats() {
         >
           <Bell size={14} aria-hidden="true" />
           <span>Notifications</span>
+        </button>
+        <button className="ps-tab ps-tab--logout" onClick={logout}>
+          <LogOut size={14} aria-hidden="true" />
+          <span>Logout</span>
         </button>
       </div>
 

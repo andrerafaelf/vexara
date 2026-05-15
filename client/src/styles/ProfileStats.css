@@ -10,7 +10,7 @@
 .ps-tabs {
   display: flex;
   gap: 4px;
-  border-bottom: 2px solid #1A1F38;
+  border-bottom: 2px solid var(--border-default);
   padding-bottom: 0;
 }
 
@@ -43,6 +43,16 @@
   font-weight: 600;
 }
 
+.ps-tab--logout {
+  margin-left: auto;
+  color: var(--text-faint);
+}
+
+.ps-tab--logout:hover {
+  color: var(--danger);
+  border-bottom-color: var(--danger);
+}
+
 .ps-notif-panel {
   padding-top: 4px;
 }
@@ -63,9 +73,9 @@
   display: flex;
   align-items: center;
   gap: 20px;
-  background: #141937;
-  border: 2px solid #1A1F38;
-  border-radius: 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
   padding: 20px 24px;
 }
 
@@ -102,21 +112,22 @@
 
 /* Sections */
 .ps-section {
-  background: #141937;
-  border: 2px solid #1A1F38;
-  border-radius: 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
   overflow: hidden;
 }
 
 .ps-section-title {
-  background: #1A1F38;
-  color: #67FFF2;
-  font-size: 14px;
-  font-weight: bold;
-  letter-spacing: 0.05em;
+  background: var(--bg-surface-3);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
   margin: 0;
   padding: 10px 16px;
+  border-bottom: 1px solid var(--border-default);
 }
 
 .ps-section-body {
@@ -130,35 +141,42 @@
 .ps-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 12px;
+  gap: 10px;
 }
 
 .ps-card {
-  background: #0F1326;
-  border: 1px solid #1A1F38;
-  border-radius: 8px;
-  padding: 12px 14px;
+  background: var(--bg-surface-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
+  transition: border-color var(--duration-fast) var(--ease-out),
+              background var(--duration-fast) var(--ease-out);
+}
+
+.ps-card:hover {
+  border-color: var(--border-accent);
+  background: var(--bg-elevated);
 }
 
 .ps-card-value {
-  color: #fff;
+  color: var(--text-strong);
   font-size: 22px;
-  font-weight: bold;
+  font-weight: 700;
   line-height: 1.2;
 }
 
 .ps-card-label {
-  color: #97A0BE;
+  color: var(--text-muted);
   font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
 }
 
 .ps-card-sub {
-  color: #97A0BE;
+  color: var(--text-faint);
   font-size: 11px;
   margin-top: 2px;
 }

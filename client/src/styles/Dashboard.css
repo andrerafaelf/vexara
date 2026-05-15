@@ -231,6 +231,24 @@
   grid-column: 1 / -1;
 }
 
+.cc-resource-block.cc-res-near .cc-resource-value {
+  color: var(--warning);
+}
+
+.cc-resource-block.cc-res-full .cc-resource-value {
+  color: var(--danger);
+  animation: cc-res-pulse 1.4s ease-in-out infinite;
+}
+
+.cc-resource-block.cc-res-full .cc-resource-bar {
+  background: linear-gradient(90deg, var(--danger), #ff9a3c);
+}
+
+@keyframes cc-res-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
 /* ════════════════════════════════════════
    Shared card base
 ════════════════════════════════════════ */

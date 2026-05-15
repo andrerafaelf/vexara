@@ -53,8 +53,53 @@ interface DashboardQuestBatch {
   reward: string;
 }
 
+const PRODUCTION_GROWTH = 1.35;
+const BASE_PRODUCTION = 600;
+const STORAGE_BASE = 1000;
+const STORAGE_GROWTH = 1.5;
+
+function calcNexusProduction(nexus: Nexus) {
+  return {
+    biomass: Math.floor(BASE_PRODUCTION * Math.pow(PRODUCTION_GROWTH, nexus.buildings.biomassFarm - 1)),
+    alloy: Math.floor(BASE_PRODUCTION * Math.pow(PRODUCTION_GROWTH, nexus.buildings.alloyForge - 1)),
+    ore: Math.floor(BASE_PRODUCTION * Math.pow(PRODUCTION_GROWTH, nexus.buildings.oreExtractor - 1)),
+  };
+}
+
+function calcNexusStorage(nexus: Nexus) {
+  return Math.floor(STORAGE_BASE * Math.pow(STORAGE_GROWTH, nexus.buildings.storageVault));
+}
+
+function liveResources(nexus: Nexus, now: number) {
+  const prod = calcNexusProduction(nexus);
+  const cap = calcNexusStorage(nexus);
+  const anchor = nexus.lastResourceUpdate ? new Date(nexus.lastResourceUpdate).getTime() : now;
+  const elapsed = Math.max(0, (now - anchor) / 3600000);
+  return {
+    biomass: Math.min(cap, nexus.resources.biomass + prod.biomass * elapsed),
+    alloy: Math.min(cap, nexus.resources.alloy + prod.alloy * elapsed),
+    ore: Math.min(cap, nexus.resources.ore + prod.ore * elapsed),
+    cap,
+    prod,
+  };
+}
+
+function fmtAmount(v: number) {
+  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
+  if (v >= 10_000) return `${(v / 1000).toFixed(1)}k`;
+  if (v >= 1000) return `${(v / 1000).toFixed(2)}k`;
+  return Math.floor(v).toString();
+}
+
+function fmtRate(v: number) {
+  if (v >= 10_000) return `+${(v / 1000).toFixed(1)}k/h`;
+  if (v >= 1000) return `+${(v / 1000).toFixed(2)}k/h`;
+  return `+${v}/h`;
+}
+
 const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [now, setNow] = useState(() => Date.now());
   const [outgoingAttacks, setOutgoingAttacks] = useState<any[]>([]);
   const [selectedAttack, setSelectedAttack] = useState<any | null>(null);
   const [focusedNexusId, setFocusedNexusId] = useState<string | null>(nexuses[0]?._id ?? null);
@@ -63,6 +108,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
   useEffect(() => {
     const timeInterval = setInterval(() => {
       setCurrentTime(new Date());
+      setNow(Date.now());
     }, 1000);
     return () => clearInterval(timeInterval);
   }, []);
@@ -84,46 +130,6 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
   };
   const totalPoints = nexuses.reduce((sum, v) => sum + v.points, 0);
 
-  const calculateProduction = (nexus: Nexus) => {
-    const baseProduction = 600;
-    return {
-      biomass: Math.floor(baseProduction * Math.pow(1.35, nexus.buildings.biomassFarm - 1)),
-      alloy: Math.floor(baseProduction * Math.pow(1.35, nexus.buildings.alloyForge - 1)),
-      ore: Math.floor(baseProduction * Math.pow(1.35, nexus.buildings.oreExtractor - 1)),
-    };
-  };
-
-  const getStorageCapacity = (nexus: Nexus) => Math.floor(1000 * Math.pow(1.5, nexus.buildings.storageVault));
-
-  const totalProduction = nexuses.reduce(
-    (sum, v) => {
-      const prod = calculateProduction(v);
-      return {
-        biomass: sum.biomass + prod.biomass,
-        alloy: sum.alloy + prod.alloy,
-        ore: sum.ore + prod.ore,
-      };
-    },
-    { biomass: 0, alloy: 0, ore: 0 },
-  );
-
-  const totalResources = nexuses.reduce(
-    (sum, v) => ({
-      biomass: sum.biomass + Math.floor(v.resources.biomass),
-      alloy: sum.alloy + Math.floor(v.resources.alloy),
-      ore: sum.ore + Math.floor(v.resources.ore),
-    }),
-    { biomass: 0, alloy: 0, ore: 0 },
-  );
-
-  const totalResourceCapacity = nexuses.reduce(
-    (sum, v) => ({
-      biomass: sum.biomass + getStorageCapacity(v),
-      alloy: sum.alloy + getStorageCapacity(v),
-      ore: sum.ore + getStorageCapacity(v),
-    }),
-    { biomass: 0, alloy: 0, ore: 0 },
-  );
   const totalTroops = nexuses.reduce(
     (sum, v) => ({
       lancerDrone: sum.lancerDrone + v.troops.lancerDrone,
@@ -374,48 +380,40 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
             )}
 
             {/* Resources */}
-            <div className="cc-resources">
-              {([
-                {
-                  kind: 'biomass' as const,
-                  label: 'Biomass',
-                  val: Math.floor(focusedNexus.resources.biomass),
-                  cap: getStorageCapacity(focusedNexus),
-                  rate: calculateProduction(focusedNexus).biomass,
-                },
-                {
-                  kind: 'alloy' as const,
-                  label: 'Alloy',
-                  val: Math.floor(focusedNexus.resources.alloy),
-                  cap: getStorageCapacity(focusedNexus),
-                  rate: calculateProduction(focusedNexus).alloy,
-                },
-                {
-                  kind: 'ore' as const,
-                  label: 'Ore',
-                  val: Math.floor(focusedNexus.resources.ore),
-                  cap: getStorageCapacity(focusedNexus),
-                  rate: calculateProduction(focusedNexus).ore,
-                },
-              ]).map(({ kind, label, val, cap, rate }) => (
-                <div key={label} className="cc-resource-block">
-                  <span className="cc-resource-icon">
-                    <ResourceIcon kind={kind} size={16} />
-                  </span>
-                  <div className="cc-resource-text">
-                    <span className="cc-resource-label">{label}</span>
-                    <span className="cc-resource-value">
-                      {val.toLocaleString()}
-                      <span className="cc-resource-cap">/{cap.toLocaleString()}</span>
-                    </span>
-                    <div className="cc-resource-bar-wrap">
-                      <div className="cc-resource-bar" style={{ width: `${Math.min(100, (val / cap) * 100)}%` }} />
-                    </div>
-                    <span className="cc-resource-rate">+{rate.toLocaleString()}/h</span>
-                  </div>
+            {(() => {
+              const live = liveResources(focusedNexus, now);
+              const resEntries: { kind: 'biomass' | 'alloy' | 'ore'; label: string; val: number; rate: number }[] = [
+                { kind: 'biomass', label: 'Biomass', val: live.biomass, rate: live.prod.biomass },
+                { kind: 'alloy',   label: 'Alloy',   val: live.alloy,   rate: live.prod.alloy   },
+                { kind: 'ore',     label: 'Ore',      val: live.ore,     rate: live.prod.ore     },
+              ];
+              return (
+                <div className="cc-resources">
+                  {resEntries.map(({ kind, label, val, rate }) => {
+                    const ratio = val / live.cap;
+                    const fillCls = ratio >= 0.98 ? 'cc-res-full' : ratio >= 0.85 ? 'cc-res-near' : '';
+                    return (
+                      <div key={label} className={`cc-resource-block ${fillCls}`}>
+                        <span className="cc-resource-icon">
+                          <ResourceIcon kind={kind} size={16} />
+                        </span>
+                        <div className="cc-resource-text">
+                          <span className="cc-resource-label">{label}</span>
+                          <span className="cc-resource-value">
+                            {fmtAmount(val)}
+                            <span className="cc-resource-cap">/{fmtAmount(live.cap)}</span>
+                          </span>
+                          <div className="cc-resource-bar-wrap">
+                            <div className="cc-resource-bar" style={{ width: `${Math.min(100, ratio * 100)}%` }} />
+                          </div>
+                          <span className="cc-resource-rate">{fmtRate(rate)}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
+              );
+            })()}
           </div>
         </div>
       )}
