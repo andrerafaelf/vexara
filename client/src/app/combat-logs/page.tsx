@@ -1,5 +1,6 @@
 'use client';
 
+import DominanceBar from '@/components/DominanceBar';
 import MobileNexusDrawer from '@/components/MobileNexusDrawer';
 import NexusSidebar from '@/components/NexusSidebar';
 import Reports from '@/components/Reports';
@@ -9,7 +10,18 @@ import { useUnreadReports } from '@/hooks/useUnreadReports';
 import { getMyNexuses } from '@/services/api';
 import '@/styles/Game.css';
 import { Nexus } from '@/types/game';
-import { Building2, Flag, Handshake, LayoutDashboard, LogOut, Map as MapIcon, Menu, ScrollText, ShoppingCart, User } from 'lucide-react';
+import {
+  Building2,
+  Flag,
+  Handshake,
+  LayoutDashboard,
+  LogOut,
+  Map as MapIcon,
+  Menu,
+  ScrollText,
+  ShoppingCart,
+  User,
+} from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -21,7 +33,7 @@ export default function CombatLogsPage() {
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNexusDrawerOpen, setIsNexusDrawerOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const hasUnreadFriends = useFriendsUnread();
@@ -56,7 +68,7 @@ export default function CombatLogsPage() {
     loadVillages();
     const interval = setInterval(loadVillages, 30000);
     return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadVillages]);
 
   const handleSelectNexus = (nexus: Nexus) => {
@@ -86,7 +98,6 @@ export default function CombatLogsPage() {
             <Menu size={18} />
           </button>
           <h1>Vexara</h1>
-          <span className="username">welcome, {user?.username}</span>
         </div>
         <div className="header-center">
           <button className="nav-btn" onClick={() => router.push('/')}>
@@ -131,6 +142,8 @@ export default function CombatLogsPage() {
           </button>
         </div>
       </header>
+
+      <DominanceBar />
 
       <MobileNexusDrawer
         nexuses={nexuses}

@@ -142,35 +142,35 @@ export default function NexusPage() {
               <Menu size={18} />
             </button>
             <h1>Vexara</h1>
-            <div className="header-nav-btns">
-              <button className="nav-btn active" onClick={() => router.push(`/nexus/${selectedNexus._id}`)}>
-                <LayoutDashboard size={14} /> Dashboard
-              </button>
-              <button className="nav-btn" onClick={() => router.push('/starfield')}>
-                <MapIcon size={14} /> Starfield
-              </button>
-              <button className="nav-btn" onClick={() => router.push('/market')}>
-                <ShoppingCart size={14} /> Market
-              </button>
-              <button className="nav-btn" onClick={() => router.push('/combat-logs')}>
-                <span className="nav-btn-content">
-                  <ScrollText size={14} /> Combat Logs
-                  {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
-                </span>
-              </button>
-              <button className="nav-btn" onClick={() => router.push('/allies')}>
-                <span className="nav-btn-content">
-                  <Handshake size={14} /> Allies
-                  {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
-                </span>
-              </button>
-              <button className="nav-btn" onClick={() => router.push('/factions')}>
-                <Flag size={14} /> Factions
-              </button>
-              <button className="nav-btn" onClick={() => router.push('/profile')}>
-                <User size={14} /> Profile
-              </button>
-            </div>
+          </div>
+          <div className="header-center">
+            <button className="nav-btn active" onClick={() => router.push(`/nexus/${selectedNexus._id}`)}>
+              <LayoutDashboard size={14} /> Dashboard
+            </button>
+            <button className="nav-btn" onClick={() => router.push('/starfield')}>
+              <MapIcon size={14} /> Starfield
+            </button>
+            <button className="nav-btn" onClick={() => router.push('/market')}>
+              <ShoppingCart size={14} /> Market
+            </button>
+            <button className="nav-btn" onClick={() => router.push('/combat-logs')}>
+              <span className="nav-btn-content">
+                <ScrollText size={14} /> Combat Logs
+                {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
+              </span>
+            </button>
+            <button className="nav-btn" onClick={() => router.push('/allies')}>
+              <span className="nav-btn-content">
+                <Handshake size={14} /> Allies
+                {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
+              </span>
+            </button>
+            <button className="nav-btn" onClick={() => router.push('/factions')}>
+              <Flag size={14} /> Factions
+            </button>
+            <button className="nav-btn" onClick={() => router.push('/profile')}>
+              <User size={14} /> Profile
+            </button>
           </div>
           <div className="header-right">
             <button

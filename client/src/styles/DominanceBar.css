@@ -17,14 +17,16 @@
   scrollbar-width: none;
 }
 
-.dom-bar-inner::-webkit-scrollbar { display: none; }
+.dom-bar-inner::-webkit-scrollbar {
+  display: none;
+}
 
 .dom-bar-label {
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #97A0BE;
+  color: #97a0be;
   flex-shrink: 0;
   white-space: nowrap;
 }
@@ -49,17 +51,17 @@
 .dom-faction-tag {
   font-size: 11px;
   font-weight: 700;
-  color: #97A0BE;
+  color: #97a0be;
   white-space: nowrap;
   min-width: 44px;
 }
 
 .dom-faction--mine .dom-faction-tag {
-  color: #67FFF2;
+  color: #67fff2;
 }
 
 .dom-faction--dominating .dom-faction-tag {
-  color: #FFD166;
+  color: #ffd166;
 }
 
 /* Bar */
@@ -67,7 +69,7 @@
   position: relative;
   flex: 1;
   height: 6px;
-  background: #1A1F38;
+  background: #1a1f38;
   border-radius: 3px;
   overflow: visible;
   min-width: 60px;
@@ -78,24 +80,28 @@
   left: 0;
   top: 0;
   height: 100%;
-  background: #2A3056;
+  background: #2a3056;
   border-radius: 3px;
   transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dom-faction--mine .dom-faction-bar-fill {
-  background: linear-gradient(90deg, #67FFF2, #3bc9c0);
+  background: linear-gradient(90deg, #67fff2, #3bc9c0);
 }
 
 .dom-faction-bar-fill--dominating {
-  background: linear-gradient(90deg, #FFD166, #FFA500) !important;
+  background: linear-gradient(90deg, #ffd166, #ffa500) !important;
   box-shadow: 0 0 8px rgba(255, 209, 102, 0.45);
   animation: dom-bar-pulse 1.8s ease-in-out infinite alternate;
 }
 
 @keyframes dom-bar-pulse {
-  from { box-shadow: 0 0 4px rgba(255,209,102,0.3); }
-  to   { box-shadow: 0 0 12px rgba(255,209,102,0.6); }
+  from {
+    box-shadow: 0 0 4px rgba(255, 209, 102, 0.3);
+  }
+  to {
+    box-shadow: 0 0 12px rgba(255, 209, 102, 0.6);
+  }
 }
 
 /* Threshold marker */
@@ -114,7 +120,7 @@
 .dom-faction-pct {
   font-size: 11px;
   font-weight: 700;
-  color: #97A0BE;
+  color: #97a0be;
   white-space: nowrap;
   min-width: 36px;
   text-align: right;
@@ -122,11 +128,11 @@
 }
 
 .dom-faction--mine .dom-faction-pct {
-  color: #67FFF2;
+  color: #67fff2;
 }
 
 .dom-faction--dominating .dom-faction-pct {
-  color: #FFD166;
+  color: #ffd166;
 }
 
 /* Sustain track — thin bar below the main bar showing time progress */
@@ -143,7 +149,7 @@
 
 .dom-sustain-fill {
   height: 100%;
-  background: #FFD166;
+  background: #ffd166;
   border-radius: 2px;
   transition: width 1s ease;
   opacity: 0.75;
@@ -156,7 +162,7 @@
   gap: 5px;
   font-size: 11px;
   font-weight: 700;
-  color: #FFD166;
+  color: #ffd166;
   white-space: nowrap;
   padding: 3px 8px;
   background: rgba(255, 209, 102, 0.1);
@@ -167,25 +173,49 @@
 }
 
 @keyframes dom-alert-appear {
-  from { opacity: 0; transform: scale(0.9); }
-  to   { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .dom-bar-alert-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #FFD166;
+  background: #ffd166;
   flex-shrink: 0;
   animation: dom-dot-blink 1s step-start infinite;
 }
 
 @keyframes dom-dot-blink {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
 }
 
 @media (max-width: 600px) {
-  .dom-bar { padding: 5px 12px; }
-  .dom-faction { min-width: 130px; }
+  .dom-bar {
+    padding: 5px 12px;
+  }
+  .dom-bar-label {
+    display: none;
+  }
+  .dom-faction {
+    min-width: 110px;
+  }
+  .dom-faction-pct {
+    min-width: 28px;
+  }
+  .dom-faction:nth-child(n + 4) {
+    display: none;
+  }
 }
