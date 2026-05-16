@@ -88,8 +88,11 @@ const AlphaSignupForm: React.FC = () => {
             priority
           />
         </Link>
-        <h1>Join the alpha</h1>
-        <p className="tagline">Be among the first commanders.</p>
+        <h1>A persistent galaxy at war.</h1>
+        <p className="tagline">
+          Browser-based 4X strategy. Build a nexus, train twelve unit types,
+          and conquer real players one Overseer at a time.
+        </p>
 
         {signupCount !== null && signupCount < ALPHA_FOUNDER_LIMIT && (
           <div className="alpha-founder-slots">
@@ -100,9 +103,9 @@ const AlphaSignupForm: React.FC = () => {
               />
             </span>
             <span className="alpha-founder-slots-label">
-              <strong>{signupCount}</strong> of {ALPHA_FOUNDER_LIMIT} Alpha Founder slots claimed
+              <strong>{signupCount}</strong> of {ALPHA_FOUNDER_LIMIT} alpha slots claimed
               {ALPHA_FOUNDER_LIMIT - signupCount <= 20 && (
-                <span className="alpha-founder-slots-urgent"> — only {ALPHA_FOUNDER_LIMIT - signupCount} left!</span>
+                <span className="alpha-founder-slots-urgent"> — {ALPHA_FOUNDER_LIMIT - signupCount} left</span>
               )}
             </span>
           </div>
@@ -110,7 +113,7 @@ const AlphaSignupForm: React.FC = () => {
         {signupCount !== null && signupCount >= ALPHA_FOUNDER_LIMIT && (
           <div className="alpha-founder-slots alpha-founder-slots-full">
             <span className="alpha-founder-slots-label">
-              All {ALPHA_FOUNDER_LIMIT} Alpha Founder slots have been claimed.
+              All {ALPHA_FOUNDER_LIMIT} alpha slots have been claimed.
             </span>
           </div>
         )}
@@ -132,36 +135,59 @@ const AlphaSignupForm: React.FC = () => {
           </div>
         ) : (
           <>
-            <div className="founder-perks">
-              <h3 className="founder-perks-title">Alpha Founder Benefits</h3>
-              <div className="founder-perks-grid">
-                <div className="founder-perk-item">
-                  <span className="founder-badge">👑</span>
-                  <strong>Founder&apos;s Badge</strong>
-                  <p>Permanent account badge, never earnable again after alpha.</p>
-                </div>
-                <div className="founder-perk-item">
-                  <span className="founder-badge">⭐</span>
-                  <strong>Leaderboard Distinction</strong>
-                  <p>Special highlight on all rankings showing your founding status.</p>
-                </div>
-                <div className="founder-perk-item">
-                  <span className="founder-badge">📜</span>
-                  <strong>Hall of Fame</strong>
-                  <p>Permanently listed as a founder with your join date and rank.</p>
-                </div>
-                <div className="founder-perk-item">
-                  <span className="founder-badge">🏛️</span>
-                  <strong>Naming Rights</strong>
-                  <p>If your faction wins, name a building in the galaxy forever.</p>
-                </div>
-              </div>
-            </div>
+            <figure className="hero-shot">
+              <Image
+                src="/vexara-overview.png"
+                alt="Vexara nexus dashboard showing resources, buildings, and queues"
+                width={1280}
+                height={720}
+                className="hero-shot-img"
+                sizes="(max-width: 640px) 100vw, 600px"
+                priority
+              />
+              <figcaption className="hero-shot-caption">Your nexus — economy, queues, and military in one view.</figcaption>
+            </figure>
 
-            <p className="auth-description">
-              Vexara is a browser-based sci-fi strategy game. Build your nexus, train an army, and
-              conquer the galaxy with players around the world.
-            </p>
+            <section className="core-systems" aria-label="Core systems">
+              <h2 className="core-systems-title">What you actually do</h2>
+              <ul className="core-systems-list">
+                <li>
+                  <SystemIcon name="economy" />
+                  <div>
+                    <strong>Run a three-resource economy</strong>
+                    <p>Biomass, alloy, and ore tick 24/7. Storage and production scale per building level — Lv10 Biomass Farm yields ~10,500/hr.</p>
+                  </div>
+                </li>
+                <li>
+                  <SystemIcon name="army" />
+                  <div>
+                    <strong>Train twelve unit types</strong>
+                    <p>From 53s Lancer Drones to 2h Annihilator Platforms. Each unit has attack, defense, speed, and carry — composition wins fights.</p>
+                  </div>
+                </li>
+                <li>
+                  <SystemIcon name="strike" />
+                  <div>
+                    <strong>Scout, raid, and intercept in real time</strong>
+                    <p>Travel times are real. Send Recon Operatives to map a target, then commit a raid fleet — or catch one mid-flight.</p>
+                  </div>
+                </li>
+                <li>
+                  <SystemIcon name="conquest" />
+                  <div>
+                    <strong>Conquer with Overseers</strong>
+                    <p>Train an Overseer (4h, max 3 per nexus). Each surviving strike drops enemy control by 50. Hit zero and the nexus is yours.</p>
+                  </div>
+                </li>
+                <li>
+                  <SystemIcon name="defense" />
+                  <div>
+                    <strong>Defend with units + Shield Grid</strong>
+                    <p>Shield Grid adds +2% defense per level. Casualties are ratio-based with a random factor — there&apos;s no auto-win button.</p>
+                  </div>
+                </li>
+              </ul>
+            </section>
 
             <form onSubmit={handleSubmit} noValidate>
               <label className="auth-field">
@@ -187,7 +213,7 @@ const AlphaSignupForm: React.FC = () => {
               )}
 
               <button type="submit" disabled={submitting}>
-                {submitting ? 'Submitting…' : 'Request access'}
+                {submitting ? 'Submitting…' : 'Request alpha access'}
               </button>
             </form>
 
@@ -198,7 +224,7 @@ const AlphaSignupForm: React.FC = () => {
               aria-expanded={showAbout}
               aria-controls="about-vexara"
             >
-              <span>What is Vexara?</span>
+              <span>Deep dive: buildings, troops, conquest</span>
               <span className={`about-toggle-chevron ${showAbout ? 'is-open' : ''}`} aria-hidden="true">
                 ▾
               </span>
@@ -235,20 +261,20 @@ const AlphaSignupForm: React.FC = () => {
                   </p>
                   <ul className="about-list">
                     <li>
-                      <strong>Command Core</strong> - main progression gate, speeds up every upgrade
+                      <strong>Command Core</strong> — main progression gate, speeds up every upgrade (×0.95 per level)
                     </li>
                     <li>
-                      <strong>Recruitment Core</strong> - trains troops, faster at higher levels
+                      <strong>Recruitment Core</strong> — trains troops, ×0.92 training time per level
                     </li>
                     <li>
-                      <strong>Biomass Farm, Alloy Forge, Ore Extractor</strong> - the three resources
+                      <strong>Biomass Farm, Alloy Forge, Ore Extractor</strong> — the three resources
                       that run your war
                     </li>
                     <li>
-                      <strong>Storage Vault, Life Support</strong> - caps your stockpile and population
+                      <strong>Storage Vault, Life Support</strong> — caps your stockpile and population
                     </li>
                     <li>
-                      <strong>Shield Grid</strong> - +2% defense per level when raiders come knocking
+                      <strong>Shield Grid</strong> — +2% defense per level when raiders come knocking
                     </li>
                   </ul>
                 </div>
@@ -288,12 +314,36 @@ const AlphaSignupForm: React.FC = () => {
                     browser and installs as a PWA.
                   </p>
                 </div>
-
-                <p className="about-cta">
-                  Sounds like your kind of game? Drop your email above. Invites go out in waves.
-                </p>
               </section>
             )}
+
+            <section className="founder-perks" aria-label="Alpha founder benefits">
+              <h3 className="founder-perks-title">Alpha founders also get</h3>
+              <ul className="founder-perks-list">
+                <li><SystemIcon name="badge" /><span><strong>Founder&apos;s badge</strong> — permanent, never re-issued.</span></li>
+                <li><SystemIcon name="rank" /><span><strong>Leaderboard mark</strong> on all rankings.</span></li>
+                <li><SystemIcon name="scroll" /><span><strong>Hall of fame</strong> entry with join date.</span></li>
+                <li><SystemIcon name="pillar" /><span><strong>Naming rights</strong> if your faction wins.</span></li>
+              </ul>
+            </section>
+
+            <section className="built-by" aria-label="About the developer">
+              <h3 className="built-by-title">Built by one developer</h3>
+              <p>
+                Vexara is a solo project — no publisher, no investors, no roadmap dictated by quarterly
+                targets. Just a strategy-game player building the kind of persistent MMO that
+                doesn&apos;t sell wins.
+              </p>
+              <a
+                /* TODO: replace with real Discord/community URL */
+                href="#"
+                className="built-by-link"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Join the Discord →
+              </a>
+            </section>
 
             <p className="auth-secondary">
               Already have an account?{' '}
@@ -306,6 +356,86 @@ const AlphaSignupForm: React.FC = () => {
       </div>
     </div>
   );
+};
+
+type SystemIconName = 'economy' | 'army' | 'strike' | 'conquest' | 'defense' | 'badge' | 'rank' | 'scroll' | 'pillar';
+
+const SystemIcon: React.FC<{ name: SystemIconName }> = ({ name }) => {
+  const common = {
+    width: 20,
+    height: 20,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.6,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+    'aria-hidden': true,
+    className: 'system-icon',
+  };
+  switch (name) {
+    case 'economy':
+      return (
+        <svg {...common}>
+          <path d="M3 20h18" />
+          <path d="M6 20V10" /><path d="M12 20V4" /><path d="M18 20v-7" />
+        </svg>
+      );
+    case 'army':
+      return (
+        <svg {...common}>
+          <path d="M12 3l8 4-8 4-8-4 8-4z" />
+          <path d="M4 11l8 4 8-4" /><path d="M4 15l8 4 8-4" />
+        </svg>
+      );
+    case 'strike':
+      return (
+        <svg {...common}>
+          <path d="M3 21L21 3" />
+          <path d="M15 3h6v6" /><path d="M9 14l-3 3 3 3" />
+        </svg>
+      );
+    case 'conquest':
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="12" r="9" />
+          <path d="M3 12h18" /><path d="M12 3a14 14 0 010 18" /><path d="M12 3a14 14 0 000 18" />
+        </svg>
+      );
+    case 'defense':
+      return (
+        <svg {...common}>
+          <path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6l8-3z" />
+        </svg>
+      );
+    case 'badge':
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="9" r="5" />
+          <path d="M8 13l-2 8 6-3 6 3-2-8" />
+        </svg>
+      );
+    case 'rank':
+      return (
+        <svg {...common}>
+          <path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5L12 3z" />
+        </svg>
+      );
+    case 'scroll':
+      return (
+        <svg {...common}>
+          <path d="M6 3h11a2 2 0 012 2v3H8" />
+          <path d="M4 8h4v11a2 2 0 002 2h9a2 2 0 002-2V8" />
+        </svg>
+      );
+    case 'pillar':
+      return (
+        <svg {...common}>
+          <path d="M3 8h18L12 3 3 8z" />
+          <path d="M6 10v8M12 10v8M18 10v8" /><path d="M4 20h16" />
+        </svg>
+      );
+  }
 };
 
 export default AlphaSignupForm;
