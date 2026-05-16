@@ -61,11 +61,11 @@
 .ps-error {
   padding: 40px;
   text-align: center;
-  color: #97A0BE;
+  color: var(--text-muted);
 }
 
 .ps-error {
-  color: #FF9E3D;
+  color: var(--accent);
 }
 
 /* Header */
@@ -83,8 +83,8 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: #FF9E3D;
-  color: #0B0F1F;
+  background: var(--accent);
+  color: var(--text-on-accent);
   font-size: 26px;
   font-weight: bold;
   display: flex;
@@ -100,13 +100,13 @@
 }
 
 .ps-username {
-  color: #FF9E3D;
+  color: var(--accent);
   font-size: 22px;
   margin: 0;
 }
 
 .ps-meta {
-  color: #97A0BE;
+  color: var(--text-muted);
   font-size: 13px;
 }
 
@@ -204,7 +204,7 @@
 .ps-bar-track {
   flex: 1;
   height: 8px;
-  background: #1A1F38;
+  background: var(--color-navy-700);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -216,7 +216,7 @@
 }
 
 .ps-bar-pct {
-  color: #97A0BE;
+  color: var(--text-muted);
   font-size: 11px;
   width: 32px;
   text-align: right;

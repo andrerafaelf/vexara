@@ -334,15 +334,9 @@ const AlphaSignupForm: React.FC = () => {
                 targets. Just a strategy-game player building the kind of persistent MMO that
                 doesn&apos;t sell wins.
               </p>
-              <a
-                /* TODO: replace with real Discord/community URL */
-                href="#"
-                className="built-by-link"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Join the Discord →
-              </a>
+              <span className="built-by-link built-by-link-disabled" aria-disabled="true">
+                Join the Discord — coming soon
+              </span>
             </section>
 
             <p className="auth-secondary">

@@ -10,8 +10,8 @@
 }
 
 .pwa-modal {
-  background: #141937;
-  border: 1px solid #2A3056;
+  background: var(--color-navy-800);
+  border: 1px solid var(--color-navy-500);
   border-radius: 12px;
   padding: 28px 24px 24px;
   max-width: 480px;
@@ -28,7 +28,7 @@
   right: 16px;
   background: none;
   border: none;
-  color: #97A0BE;
+  color: var(--text-muted);
   font-size: 22px;
   line-height: 1;
   cursor: pointer;
@@ -38,7 +38,7 @@
 }
 
 .pwa-modal-close:hover {
-  color: #F5F8FF;
+  color: var(--text-strong);
 }
 
 .pwa-modal-header {
@@ -52,7 +52,7 @@
 }
 
 .pwa-modal-title {
-  color: #FF9E3D;
+  color: var(--accent);
   font-size: 18px;
   font-weight: 700;
   text-transform: uppercase;
@@ -61,7 +61,7 @@
 }
 
 .pwa-modal-subtitle {
-  color: #97A0BE;
+  color: var(--text-muted);
   font-size: 13px;
   margin: 0;
   line-height: 1.5;
@@ -76,10 +76,10 @@
 .pwa-tab {
   flex: 1;
   padding: 9px 12px;
-  background: #1A1F38;
-  border: 1px solid #2A3056;
+  background: var(--color-navy-700);
+  border: 1px solid var(--color-navy-500);
   border-radius: 6px;
-  color: #97A0BE;
+  color: var(--text-muted);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -87,14 +87,14 @@
 }
 
 .pwa-tab--active {
-  background: #FF9E3D;
-  border-color: #FF9E3D;
-  color: #0B0F1F;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--text-on-accent);
 }
 
 .pwa-tab:not(.pwa-tab--active):hover {
-  background: #2A3056;
-  color: #F5F8FF;
+  background: var(--color-navy-500);
+  color: var(--text-strong);
 }
 
 .pwa-modal-section {
@@ -102,7 +102,7 @@
 }
 
 .pwa-modal-section-title {
-  color: #F5F8FF;
+  color: var(--text-strong);
   font-size: 14px;
   font-weight: 600;
   margin: 0 0 10px;
@@ -117,11 +117,11 @@
   justify-content: center;
   width: 22px;
   height: 22px;
-  background: #FF9E3D;
+  background: var(--accent);
   border-radius: 50%;
   font-size: 12px;
   font-weight: 700;
-  color: #0B0F1F;
+  color: var(--text-on-accent);
   flex-shrink: 0;
 }
 
@@ -140,13 +140,13 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  color: #97A0BE;
+  color: var(--text-muted);
   font-size: 13px;
   line-height: 1.5;
   padding: 8px 12px;
   background: rgba(255, 255, 255, 0.03);
   border-radius: 6px;
-  border-left: 2px solid #2A3056;
+  border-left: 2px solid var(--color-navy-500);
 }
 
 .pwa-modal-step::before {
@@ -156,11 +156,11 @@
   justify-content: center;
   min-width: 20px;
   height: 20px;
-  background: #2A3056;
+  background: var(--color-navy-500);
   border-radius: 50%;
   font-size: 11px;
   font-weight: 700;
-  color: #97A0BE;
+  color: var(--text-muted);
   flex-shrink: 0;
   margin-top: 1px;
 }
@@ -169,7 +169,7 @@
   background: rgba(255, 158, 61, 0.1);
   border: 1px solid rgba(255, 158, 61, 0.3);
   border-radius: 6px;
-  color: #FF8FA3;
+  color: var(--danger);
   font-size: 12px;
   padding: 10px 12px;
   margin-bottom: 20px;
@@ -178,8 +178,8 @@
 
 .pwa-modal-done {
   width: 100%;
-  background: #FF9E3D;
-  color: #0B0F1F;
+  background: var(--accent);
+  color: var(--text-on-accent);
   border: none;
   border-radius: 6px;
   padding: 11px 16px;
@@ -190,5 +190,5 @@
 }
 
 .pwa-modal-done:hover {
-  background: #DA3E37;
+  background: var(--color-rose-600);
 }

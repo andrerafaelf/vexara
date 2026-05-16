@@ -1,5 +1,5 @@
 .intel-card {
-  background: #0f1429;
+  background: var(--color-navy-900);
   border: 1px solid rgba(255, 158, 61, 0.18);
   border-radius: 10px;
   overflow: hidden;
@@ -27,7 +27,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #FF9E3D;
+  color: var(--accent);
   opacity: 0.7;
 }
 
@@ -38,13 +38,13 @@
 }
 
 .intel-target-name {
-  color: #F5F8FF;
+  color: var(--text-strong);
   font-size: 16px;
   font-weight: 700;
 }
 
 .intel-target-coords {
-  color: #97A0BE;
+  color: var(--text-muted);
   font-size: 13px;
 }
 
@@ -61,11 +61,11 @@
   letter-spacing: 0.05em;
 }
 
-.threat-none     { background: rgba(97, 115, 149, 0.18); color: #97A0BE; border: 1px solid rgba(97,115,149,0.25); }
-.threat-minimal  { background: rgba(86, 211, 100, 0.12); color: #56D364; border: 1px solid rgba(86, 211, 100,0.25); }
-.threat-moderate { background: rgba(210, 153, 34, 0.12); color: #D29922; border: 1px solid rgba(210, 153, 34,0.25); }
-.threat-high     { background: rgba(248, 81, 73, 0.12); color: #F85149; border: 1px solid rgba(248, 81, 73,0.25); }
-.threat-extreme  { background: rgba(248, 81, 73, 0.20); color: #F85149; border: 1px solid rgba(248, 81, 73,0.45);
+.threat-none     { background: rgba(97, 115, 149, 0.18); color: var(--text-muted); border: 1px solid rgba(97,115,149,0.25); }
+.threat-minimal  { background: rgba(86, 211, 100, 0.12); color: var(--success); border: 1px solid rgba(86, 211, 100,0.25); }
+.threat-moderate { background: rgba(210, 153, 34, 0.12); color: var(--warning); border: 1px solid rgba(210, 153, 34,0.25); }
+.threat-high     { background: rgba(248, 81, 73, 0.12); color: var(--danger); border: 1px solid rgba(248, 81, 73,0.25); }
+.threat-extreme  { background: rgba(248, 81, 73, 0.20); color: var(--danger); border: 1px solid rgba(248, 81, 73,0.45);
                    box-shadow: 0 0 12px rgba(248, 81, 73,0.2); animation: intel-threat-pulse 2s ease-in-out infinite alternate; }
 
 @keyframes intel-threat-pulse {
@@ -91,13 +91,13 @@
 .intel-summary-cell:last-child { border-right: none; }
 
 .intel-summary-icon { flex-shrink: 0; }
-.intel-summary-icon--atk    { color: #F85149; }
-.intel-summary-icon--pop    { color: #FF9E3D; }
-.intel-summary-icon--shield { color: #D29922; }
+.intel-summary-icon--atk    { color: var(--danger); }
+.intel-summary-icon--pop    { color: var(--accent); }
+.intel-summary-icon--shield { color: var(--warning); }
 
 .intel-summary-label {
   font-size: 10px;
-  color: #97A0BE;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -105,7 +105,7 @@
 .intel-summary-value {
   font-size: 14px;
   font-weight: 700;
-  color: #F5F8FF;
+  color: var(--text-strong);
   font-variant-numeric: tabular-nums;
 }
 
@@ -121,7 +121,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: #97A0BE;
+  color: var(--text-muted);
   margin-bottom: 10px;
   display: flex;
   align-items: center;
@@ -130,7 +130,7 @@
 
 .intel-troop-total {
   font-size: 11px;
-  color: #FF9E3D;
+  color: var(--accent);
   font-weight: 600;
   margin-left: auto;
 }
@@ -149,13 +149,13 @@
 }
 
 .intel-resource-label {
-  color: #97A0BE;
+  color: var(--text-muted);
   font-size: 13px;
   flex: 1;
 }
 
 .intel-resource-value {
-  color: #D29922;
+  color: var(--warning);
   font-size: 13px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -163,19 +163,19 @@
 
 .intel-resource-total {
   font-size: 12px;
-  color: #97A0BE;
+  color: var(--text-muted);
   margin-top: 4px;
   padding-top: 6px;
   border-top: 1px solid rgba(255,255,255,0.05);
 }
 
 .intel-resource-total strong {
-  color: #D29922;
+  color: var(--warning);
 }
 
 /* Troops */
 .intel-no-troops {
-  color: #3a4068;
+  color: var(--color-navy-400);
   font-size: 13px;
   font-style: italic;
 }
@@ -190,19 +190,19 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #141937;
+  background: var(--color-navy-800);
   padding: 6px 10px;
   border-radius: 6px;
 }
 
 .intel-troop-name {
   flex: 1;
-  color: #DDE4F2;
+  color: var(--text-default);
   font-size: 13px;
 }
 
 .intel-troop-count {
-  color: #F85149;
+  color: var(--danger);
   font-size: 13px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -211,7 +211,7 @@
 }
 
 .intel-troop-def {
-  color: #3a4068;
+  color: var(--color-navy-400);
   font-size: 11px;
   min-width: 64px;
   text-align: right;
@@ -228,14 +228,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #141937;
+  background: var(--color-navy-800);
   padding: 5px 10px;
   border-radius: 5px;
   gap: 8px;
 }
 
 .intel-building-name {
-  color: #97A0BE;
+  color: var(--text-muted);
   font-size: 12px;
   white-space: nowrap;
   overflow: hidden;
@@ -243,7 +243,7 @@
 }
 
 .intel-building-level {
-  color: #FF9E3D;
+  color: var(--accent);
   font-size: 12px;
   font-weight: 700;
   flex-shrink: 0;
@@ -260,7 +260,7 @@
 
 .intel-pop-bar-label {
   font-size: 11px;
-  color: #97A0BE;
+  color: var(--text-muted);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -268,26 +268,26 @@
 .intel-pop-bar-track {
   flex: 1;
   height: 5px;
-  background: #1A1F38;
+  background: var(--color-navy-700);
   border-radius: 3px;
   overflow: hidden;
 }
 
 .intel-pop-bar-fill {
   height: 100%;
-  background: #FF9E3D;
+  background: var(--accent);
   border-radius: 3px;
   transition: width 0.4s var(--ease-out, ease);
 }
 
 .intel-pop-bar-fill--high {
-  background: #F85149;
+  background: var(--danger);
 }
 
 .intel-pop-bar-pct {
   font-size: 11px;
   font-weight: 700;
-  color: #97A0BE;
+  color: var(--text-muted);
   min-width: 32px;
   text-align: right;
   font-variant-numeric: tabular-nums;

@@ -15,8 +15,8 @@
 
 .map-header {
   padding: 8px 14px;
-  background: #1A1F38;
-  border-bottom: 2px solid #FF9E3D;
+  background: var(--color-navy-700);
+  border-bottom: 2px solid var(--accent);
   flex-shrink: 0;
   position: relative;
   z-index: 10;
@@ -27,7 +27,7 @@
 }
 
 .map-header h2 {
-  color: #FF9E3D;
+  color: var(--accent);
   margin: 0;
   font-size: 16px;
   white-space: nowrap;
@@ -42,7 +42,7 @@
 }
 
 .map-info span {
-  color: #F5F8FF;
+  color: var(--text-strong);
   font-size: 12px;
   white-space: nowrap;
   overflow: hidden;
@@ -50,7 +50,7 @@
 }
 
 .map-hint {
-  color: #97A0BE !important;
+  color: var(--text-muted) !important;
   font-style: italic;
 }
 
@@ -61,15 +61,15 @@
 }
 
 .map-controls button {
-  background: #2A3056;
-  color: #F5F8FF;
+  background: var(--color-navy-500);
+  color: var(--text-strong);
   padding: 5px 10px;
   border-radius: 5px;
   font-size: 12px;
 }
 
 .map-controls button:hover {
-  background: #FF9E3D;
+  background: var(--accent);
 }
 
 .map-controls button:disabled {
@@ -78,7 +78,7 @@
 }
 
 .map-controls button:disabled:hover {
-  background: #2A3056;
+  background: var(--color-navy-500);
 }
 
 .map-coordinate-controls {
@@ -91,24 +91,24 @@
 }
 
 .map-coordinate-controls span {
-  color: #F5F8FF;
+  color: var(--text-strong);
   font-size: 12px;
 }
 
 .map-coordinate-controls input {
   width: 50px;
   padding: 3px 6px;
-  border: 1px solid #4A9EB0;
+  border: 1px solid var(--accent-2);
   border-radius: 4px;
-  background: #141937;
-  color: #F5F8FF;
+  background: var(--color-navy-800);
+  color: var(--text-strong);
   font-size: 12px;
   text-align: center;
 }
 
 .map-coordinate-controls input:focus {
   outline: none;
-  border-color: #FF9E3D;
+  border-color: var(--accent);
 }
 
 .map-content {
@@ -163,7 +163,7 @@
 .crosshair-center {
   width: 12px;
   height: 12px;
-  border: 2px solid #F85149;
+  border: 2px solid var(--danger);
   border-radius: 50%;
   background: rgba(248, 81, 73, 0.6);
   box-shadow:
@@ -175,7 +175,7 @@
 
 .crosshair-line {
   position: absolute;
-  background: #F85149;
+  background: var(--danger);
   box-shadow: 0 0 8px rgba(248, 81, 73, 0.8);
 }
 
@@ -286,7 +286,7 @@
 /* Active/selected nexus — bright cyan, prominent */
 .map-cell.current-nexus {
   background: rgba(255, 158, 61,0.22);
-  border: 2px solid #FF9E3D;
+  border: 2px solid var(--accent);
   box-shadow:
     inset 0 0 16px rgba(255, 158, 61,0.35),
     0 0 14px rgba(255, 158, 61,0.45),
@@ -296,7 +296,7 @@
 /* Player's other nexuses — green, clearly distinct */
 .map-cell.own-nexus {
   background: rgba(86, 211, 100,0.20);
-  border: 2px solid #56D364;
+  border: 2px solid var(--success);
   box-shadow:
     inset 0 0 14px rgba(86, 211, 100,0.30),
     0 0 12px rgba(86, 211, 100,0.35),
@@ -306,7 +306,7 @@
 /* Enemy nexuses — warm red/orange, immediately hostile feel */
 .map-cell.enemy-nexus {
   background: rgba(248, 81, 73,0.18);
-  border: 2px solid #F85149;
+  border: 2px solid var(--danger);
   box-shadow:
     inset 0 0 14px rgba(248, 81, 73,0.22),
     0 0 12px rgba(248, 81, 73,0.35),
@@ -330,20 +330,20 @@
 }
 
 .nexus-marker-current {
-  color: #FF9E3D;
+  color: var(--accent);
 }
 
 .nexus-marker-own {
-  color: #56D364;
+  color: var(--success);
 }
 
 .nexus-marker-enemy {
-  color: #F85149;
+  color: var(--danger);
 }
 
 .nexus-own-actions {
   margin-top: 16px;
-  border-top: 1px solid #1A1F38;
+  border-top: 1px solid var(--color-navy-700);
   padding-top: 12px;
   display: flex;
   flex-direction: column;
@@ -351,7 +351,7 @@
 }
 
 .map-empty-state {
-  color: #97A0BE;
+  color: var(--text-muted);
   font-size: 13px;
   margin: 6px 0;
   font-style: italic;
@@ -359,7 +359,7 @@
 
 .cell-coords {
   font-size: calc(var(--map-cell-size, 60px) * 0.15);
-  color: #97A0BE;
+  color: var(--text-muted);
   margin-top: 2px;
   line-height: 1;
 }
@@ -367,15 +367,15 @@
 .map-sidebar {
   width: 350px;
   height: 100%;
-  background: #141937;
-  border-left: 2px solid #1A1F38;
+  background: var(--color-navy-800);
+  border-left: 2px solid var(--color-navy-700);
   overflow-y: auto;
   padding: 20px;
   box-sizing: border-box;
 }
 
 .nexus-details h3 {
-  color: #FF9E3D;
+  color: var(--accent);
   margin-bottom: 15px;
   font-size: 20px;
 }
@@ -383,20 +383,20 @@
 .nexus-info-icon {
   display: inline-block;
   margin-left: 8px;
-  color: #97A0BE;
+  color: var(--text-muted);
   cursor: help;
   font-size: 16px;
   transition: color 0.2s;
 }
 
 .nexus-info-icon:hover {
-  color: #FF9E3D;
+  color: var(--accent);
 }
 
 .nexus-node-type-info {
   margin: -10px 0 12px;
   font-size: 12px;
-  color: #97A0BE;
+  color: var(--text-muted);
   font-style: italic;
   line-height: 1.4;
 }
@@ -405,17 +405,17 @@
   display: flex;
   justify-content: space-between;
   padding: 10px;
-  background: #1A1F38;
+  background: var(--color-navy-700);
   margin-bottom: 8px;
   border-radius: 4px;
 }
 
 .detail-line span:first-child {
-  color: #97A0BE;
+  color: var(--text-muted);
 }
 
 .detail-line span:last-child {
-  color: #F5F8FF;
+  color: var(--text-strong);
   font-weight: bold;
 }
 
@@ -452,15 +452,15 @@
 }
 
 .newbie-protection-text {
-  color: #56D364;
+  color: var(--success);
 }
 
 .intel-warning {
   margin-top: 12px;
   padding: 12px;
   border-radius: 6px;
-  background: #1A1F38;
-  color: #97A0BE;
+  background: var(--color-navy-700);
+  color: var(--text-muted);
   font-size: 13px;
   line-height: 1.5;
 }
@@ -470,26 +470,26 @@
 }
 
 .scout-btn {
-  background: #2A3056;
-  color: #F5F8FF;
+  background: var(--color-navy-500);
+  color: var(--text-strong);
   padding: 12px 16px;
   border-radius: 6px;
   font-weight: bold;
 }
 
 .scout-btn:hover {
-  background: #353C66;
+  background: var(--color-navy-400);
 }
 
 .scout-btn:disabled {
-  background: #353C66;
-  color: #97A0BE;
+  background: var(--color-navy-400);
+  color: var(--text-muted);
   cursor: not-allowed;
   opacity: 0.8;
 }
 
 .scout-btn:disabled:hover {
-  background: #353C66;
+  background: var(--color-navy-400);
 }
 
 .nexus-action-buttons {
@@ -500,8 +500,8 @@
 
 .attack-btn {
   flex: 1;
-  background: #FF9E3D;
-  color: #0B0F1F;
+  background: var(--accent);
+  color: var(--text-on-accent);
   padding: 12px;
   font-size: 15px;
   font-weight: bold;
@@ -516,7 +516,7 @@
 }
 
 .attack-btn:hover:not(:disabled) {
-  background: #F58A1F;
+  background: var(--accent-hover);
 }
 
 .attack-btn:disabled {
@@ -525,8 +525,8 @@
 }
 
 .support-btn {
-  background: #1A1F38;
-  color: #56D364;
+  background: var(--color-navy-700);
+  color: var(--success);
   border: 1px solid rgba(86, 211, 100, 0.35);
   padding: 10px 14px;
   border-radius: 6px;
@@ -543,14 +543,14 @@
 
 .support-btn:hover {
   background: rgba(86, 211, 100, 0.1);
-  border-color: #56D364;
+  border-color: var(--success);
   color: #a8f0ab;
 }
 
 .wave-planner-btn {
-  background: #1A1F38;
-  color: #97A0BE;
-  border: 1px solid #2A3056;
+  background: var(--color-navy-700);
+  color: var(--text-muted);
+  border: 1px solid var(--color-navy-500);
   padding: 10px 14px;
   border-radius: 6px;
   font-size: 13px;
@@ -565,19 +565,19 @@
 }
 
 .wave-planner-btn:hover {
-  background: #2A3056;
-  color: #F5F8FF;
-  border-color: #FF9E3D;
+  background: var(--color-navy-500);
+  color: var(--text-strong);
+  border-color: var(--accent);
 }
 
 .attack-form {
-  background: #1A1F38;
+  background: var(--color-navy-700);
   padding: 15px;
   border-radius: 8px;
 }
 
 .attack-form h4 {
-  color: #FF9E3D;
+  color: var(--accent);
   margin-bottom: 15px;
 }
 
@@ -592,31 +592,31 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #2A3056;
+  background: var(--color-navy-500);
   padding: 10px;
   border-radius: 4px;
 }
 
 .troop-type {
   flex: 1;
-  color: #F5F8FF;
+  color: var(--text-strong);
   text-transform: capitalize;
 }
 
 .troop-select-row input {
   width: 60px;
   padding: 6px 8px;
-  border: 1px solid #4A9EB0;
+  border: 1px solid var(--accent-2);
   border-radius: 6px;
-  background: #141937;
-  color: #F5F8FF;
+  background: var(--color-navy-800);
+  color: var(--text-strong);
   font-size: 14px;
   text-align: center;
 }
 
 .troop-select-row input:focus {
   outline: none;
-  border-color: #FF9E3D;
+  border-color: var(--accent);
 }
 
 .troop-select-row input:disabled {
@@ -625,7 +625,7 @@
 }
 
 .troop-available {
-  color: #97A0BE;
+  color: var(--text-muted);
   font-size: 14px;
   min-width: 32px;
 }
@@ -636,7 +636,7 @@
 }
 
 .troop-available-clickable:hover {
-  color: #FF9E3D;
+  color: var(--accent);
 }
 
 .attack-form-actions {
@@ -646,15 +646,15 @@
 
 .send-all-btn {
   flex: 1;
-  background: #2A3056;
-  color: #F5F8FF;
+  background: var(--color-navy-500);
+  color: var(--text-strong);
   padding: 12px;
   border-radius: 6px;
   font-weight: bold;
 }
 
 .send-all-btn:hover {
-  background: #353C66;
+  background: var(--color-navy-400);
 }
 
 .send-all-btn:disabled {
@@ -663,38 +663,38 @@
 }
 
 .send-all-btn:disabled:hover {
-  background: #2A3056;
+  background: var(--color-navy-500);
 }
 
 .send-btn {
   flex: 1;
-  background: #FF9E3D;
-  color: #0B0F1F;
+  background: var(--accent);
+  color: var(--text-on-accent);
   padding: 12px;
   border-radius: 6px;
   font-weight: bold;
 }
 
 .send-btn:hover {
-  background: #F58A1F;
+  background: var(--accent-hover);
 }
 
 .cancel-btn {
   flex: 1;
-  background: #1A1F38;
-  color: #97A0BE;
+  background: var(--color-navy-700);
+  color: var(--text-muted);
   padding: 12px;
   border-radius: 6px;
 }
 
 .cancel-btn:hover {
-  background: #2A3056;
+  background: var(--color-navy-500);
 }
 
 .no-selection {
   text-align: center;
   padding: 40px 20px;
-  color: #97A0BE;
+  color: var(--text-muted);
 }
 
 .no-selection p {
@@ -702,7 +702,7 @@
 }
 
 .legend {
-  background: #1A1F38;
+  background: var(--color-navy-700);
   padding: 15px;
   border-radius: 6px;
   font-size: 14px;
@@ -711,7 +711,7 @@
 
 .attacks-panel {
   margin-top: 30px;
-  border-top: 2px solid #1A1F38;
+  border-top: 2px solid var(--color-navy-700);
   padding-top: 20px;
 }
 
@@ -720,13 +720,13 @@
 }
 
 .attacks-section h4 {
-  color: #FF9E3D;
+  color: var(--accent);
   margin-bottom: 10px;
   font-size: 16px;
 }
 
 .attack-item {
-  background: #1A1F38;
+  background: var(--color-navy-700);
   padding: 12px;
   border-radius: 6px;
   margin-bottom: 8px;
@@ -734,15 +734,15 @@
 }
 
 .attack-item.incoming {
-  border-left-color: #F85149;
+  border-left-color: var(--danger);
 }
 
 .attack-item.outgoing {
-  border-left-color: #56D364;
+  border-left-color: var(--success);
 }
 
 .attack-item.support-mission {
-  border-left-color: #FF9E3D;
+  border-left-color: var(--accent);
   background: rgba(255, 158, 61, 0.04);
 }
 
@@ -752,7 +752,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #FF9E3D;
+  color: var(--accent);
   background: rgba(255, 158, 61, 0.1);
   border: 1px solid rgba(255, 158, 61, 0.3);
   border-radius: 4px;
@@ -763,13 +763,13 @@
 
 .attack-from,
 .attack-to {
-  color: #F5F8FF;
+  color: var(--text-strong);
   font-size: 14px;
   margin-bottom: 5px;
 }
 
 .attack-time {
-  color: #FF9E3D;
+  color: var(--accent);
   font-weight: bold;
   font-size: 13px;
 }
@@ -811,14 +811,14 @@
   }
 
   .map-mobile-modal {
-    background: #141937;
+    background: var(--color-navy-800);
     border-radius: 16px 16px 0 0;
     width: 100%;
     max-height: 75vh;
     display: flex;
     flex-direction: column;
     animation: slideUp 0.25s ease;
-    border-top: 2px solid #1A1F38;
+    border-top: 2px solid var(--color-navy-700);
   }
 
   .map-mobile-modal-header {
@@ -826,12 +826,12 @@
     align-items: center;
     justify-content: space-between;
     padding: 14px 20px 10px;
-    border-bottom: 1px solid #1A1F38;
+    border-bottom: 1px solid var(--color-navy-700);
     flex-shrink: 0;
   }
 
   .map-mobile-modal-header h3 {
-    color: #FF9E3D;
+    color: var(--accent);
     margin: 0;
     font-size: 18px;
     white-space: nowrap;
@@ -842,7 +842,7 @@
   .map-mobile-modal-close {
     background: none;
     border: none;
-    color: #97A0BE;
+    color: var(--text-muted);
     font-size: 20px;
     cursor: pointer;
     padding: 4px 8px;
@@ -852,7 +852,7 @@
   }
 
   .map-mobile-modal-close:hover {
-    color: #FF9E3D;
+    color: var(--accent);
   }
 
   .map-mobile-modal-body {
@@ -893,9 +893,9 @@
 }
 
 .transfer-toggle-btn {
-  background: #1A1F38;
-  color: #97A0BE;
-  border: 1px solid #2A3056;
+  background: var(--color-navy-700);
+  color: var(--text-muted);
+  border: 1px solid var(--color-navy-500);
   border-radius: 6px;
   padding: 8px 16px;
   font-size: 14px;
@@ -906,12 +906,12 @@
 }
 
 .transfer-toggle-btn:hover {
-  background: #2A3056;
+  background: var(--color-navy-500);
 }
 
 .transfer-panel {
-  background: #0F1326;
-  border: 1px solid #1A1F38;
+  background: var(--color-navy-900);
+  border: 1px solid var(--color-navy-700);
   border-radius: 6px;
   padding: 14px;
   margin-top: 6px;
@@ -927,23 +927,23 @@
 }
 
 .transfer-row label {
-  color: #97A0BE;
+  color: var(--text-muted);
   font-size: 13px;
   min-width: 70px;
 }
 
 .transfer-row select {
   flex: 1;
-  background: #141937;
-  color: #DDE4F2;
-  border: 1px solid #1A1F38;
+  background: var(--color-navy-800);
+  color: var(--text-default);
+  border: 1px solid var(--color-navy-700);
   border-radius: 4px;
   padding: 6px 8px;
   font-size: 13px;
 }
 
 .transfer-from-label {
-  color: #97A0BE;
+  color: var(--text-muted);
   font-size: 13px;
   margin: 0;
 }
@@ -961,29 +961,29 @@
 }
 
 .transfer-input-row label {
-  color: #97A0BE;
+  color: var(--text-muted);
   font-size: 13px;
   min-width: 90px;
 }
 
 .transfer-input-row input {
   width: 90px;
-  background: #141937;
-  color: #DDE4F2;
-  border: 1px solid #1A1F38;
+  background: var(--color-navy-800);
+  color: var(--text-default);
+  border: 1px solid var(--color-navy-700);
   border-radius: 4px;
   padding: 5px 8px;
   font-size: 13px;
 }
 
 .transfer-available {
-  color: #97A0BE;
+  color: var(--text-muted);
   font-size: 12px;
 }
 
 .transfer-send-btn {
-  background: #FF9E3D;
-  color: #0B0F1F;
+  background: var(--accent);
+  color: var(--text-on-accent);
   border: none;
   border-radius: 6px;
   padding: 8px 20px;
@@ -995,7 +995,7 @@
 }
 
 .transfer-send-btn:hover:not(:disabled) {
-  background: #F85149;
+  background: var(--danger);
 }
 
 .transfer-send-btn:disabled {

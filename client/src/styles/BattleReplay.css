@@ -1,6 +1,6 @@
 .replay-root {
-  background: #0f1429;
-  border: 1px solid #2A3056;
+  background: var(--color-navy-900);
+  border: 1px solid var(--color-navy-500);
   border-radius: 10px;
   padding: 20px;
   display: flex;
@@ -16,7 +16,7 @@
 }
 
 .replay-title {
-  color: #FF9E3D;
+  color: var(--accent);
   font-size: 15px;
   font-weight: 700;
   text-transform: uppercase;
@@ -24,7 +24,7 @@
 }
 
 .replay-subtitle {
-  color: #97A0BE;
+  color: var(--text-muted);
   font-size: 13px;
 }
 
@@ -47,7 +47,7 @@
 }
 
 .replay-power-label {
-  color: #97A0BE;
+  color: var(--text-muted);
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
@@ -57,7 +57,7 @@
 .replay-power-bar-track {
   width: 100%;
   height: 8px;
-  background: #1A1F38;
+  background: var(--color-navy-700);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -69,7 +69,7 @@
 }
 
 .replay-power-bar-fill--attacker {
-  background: linear-gradient(90deg, #FF9E3D, #3bc9c0);
+  background: linear-gradient(90deg, var(--accent), #3bc9c0);
 }
 
 .replay-power-side--defender .replay-power-bar-track {
@@ -77,18 +77,18 @@
 }
 
 .replay-power-bar-fill--defender {
-  background: linear-gradient(90deg, #F85149, #e63950);
+  background: linear-gradient(90deg, var(--danger), #e63950);
 }
 
 .replay-power-value {
-  color: #F5F8FF;
+  color: var(--text-strong);
   font-size: 13px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
 .replay-power-vs {
-  color: #2A3056;
+  color: var(--color-navy-500);
   font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.1em;
@@ -112,7 +112,7 @@
 .replay-event-banner--visible {
   background: rgba(255, 158, 61, 0.08);
   border: 1px solid rgba(255, 158, 61, 0.25);
-  color: #FF9E3D;
+  color: var(--accent);
 }
 
 .replay-event-banner--conquest {
@@ -135,18 +135,18 @@
 }
 
 .replay-force-col {
-  background: #141937;
+  background: var(--color-navy-800);
   border-radius: 8px;
   padding: 14px;
-  border: 1px solid #1e2540;
+  border: 1px solid var(--color-navy-700);
 }
 
 .replay-force-col--attacker {
-  border-top: 2px solid #FF9E3D;
+  border-top: 2px solid var(--accent);
 }
 
 .replay-force-col--defender {
-  border-top: 2px solid #F85149;
+  border-top: 2px solid var(--danger);
 }
 
 .replay-force-heading {
@@ -157,7 +157,7 @@
 }
 
 .replay-force-name {
-  color: #F5F8FF;
+  color: var(--text-strong);
   font-size: 13px;
   font-weight: 700;
   white-space: nowrap;
@@ -167,7 +167,7 @@
 }
 
 .replay-force-role {
-  color: #97A0BE;
+  color: var(--text-muted);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -175,7 +175,7 @@
 }
 
 .replay-force-empty {
-  color: #3a4068;
+  color: var(--color-navy-400);
   font-size: 13px;
 }
 
@@ -199,7 +199,7 @@
 }
 
 .replay-troop-name {
-  color: #97A0BE;
+  color: var(--text-muted);
   font-size: 11px;
   white-space: nowrap;
   overflow: hidden;
@@ -208,7 +208,7 @@
 
 .replay-troop-bar-wrap {
   height: 6px;
-  background: #1A1F38;
+  background: var(--color-navy-700);
   border-radius: 3px;
   overflow: hidden;
 }
@@ -220,15 +220,15 @@
 }
 
 .replay-troop-bar-fill--attacker {
-  background: #FF9E3D;
+  background: var(--accent);
 }
 
 .replay-troop-bar-fill--defender {
-  background: #F85149;
+  background: var(--danger);
 }
 
 .replay-troop-count {
-  color: #F5F8FF;
+  color: var(--text-strong);
   font-size: 12px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -240,12 +240,12 @@
 }
 
 .replay-troop-count--losing {
-  color: #F85149;
+  color: var(--danger);
 }
 
 .replay-troop-loss {
   font-size: 10px;
-  color: #F85149;
+  color: var(--danger);
   font-weight: 600;
   animation: replay-loss-pop 0.35s ease-out;
 }
@@ -257,8 +257,8 @@
 
 /* Round log */
 .replay-log {
-  background: #0b0f1f;
-  border: 1px solid #1e2540;
+  background: var(--text-on-accent);
+  border: 1px solid var(--color-navy-700);
   border-radius: 8px;
   padding: 10px 12px;
   max-height: 110px;
@@ -267,7 +267,7 @@
   flex-direction: column;
   gap: 4px;
   scrollbar-width: thin;
-  scrollbar-color: #2A3056 transparent;
+  scrollbar-color: var(--color-navy-500) transparent;
 }
 
 .replay-log-entry {
@@ -277,7 +277,7 @@
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 12px;
-  color: #3a4068;
+  color: var(--color-navy-400);
   transition: all 0.25s ease;
 }
 
@@ -287,7 +287,7 @@
 
 .replay-log-entry--active {
   background: rgba(255, 158, 61, 0.06);
-  color: #F5F8FF;
+  color: var(--text-strong);
 }
 
 .replay-log-round {
@@ -303,12 +303,12 @@
 }
 
 .replay-log-losses--attacker {
-  color: #FF9E3D;
+  color: var(--accent);
   opacity: 0.8;
 }
 
 .replay-log-losses--defender {
-  color: #F85149;
+  color: var(--danger);
   opacity: 0.8;
 }
 
@@ -318,7 +318,7 @@
 }
 
 .replay-log-event {
-  color: #D29922;
+  color: var(--warning);
   font-size: 11px;
   font-weight: 600;
   margin-left: auto;
@@ -335,9 +335,9 @@
 }
 
 .replay-btn {
-  background: #1A1F38;
-  color: #97A0BE;
-  border: 1px solid #2A3056;
+  background: var(--color-navy-700);
+  color: var(--text-muted);
+  border: 1px solid var(--color-navy-500);
   width: 36px;
   height: 36px;
   border-radius: 6px;
@@ -350,9 +350,9 @@
 }
 
 .replay-btn:hover:not(:disabled) {
-  background: #2A3056;
-  color: #F5F8FF;
-  border-color: #FF9E3D;
+  background: var(--color-navy-500);
+  color: var(--text-strong);
+  border-color: var(--accent);
 }
 
 .replay-btn:disabled {
@@ -361,17 +361,17 @@
 }
 
 .replay-btn--primary {
-  background: #FF9E3D;
-  color: #0B0F1F;
-  border-color: #FF9E3D;
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border-color: var(--accent);
   width: 44px;
   height: 44px;
 }
 
 .replay-btn--primary:hover:not(:disabled) {
-  background: #F58A1F;
-  border-color: #F58A1F;
-  color: #0B0F1F;
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: var(--text-on-accent);
 }
 
 /* Outcome strip */
@@ -390,13 +390,13 @@
 .replay-outcome--victory {
   background: rgba(86, 211, 100, 0.1);
   border: 1px solid rgba(86, 211, 100, 0.35);
-  color: #56D364;
+  color: var(--success);
 }
 
 .replay-outcome--defeat {
   background: rgba(248, 81, 73, 0.1);
   border: 1px solid rgba(248, 81, 73, 0.35);
-  color: #F85149;
+  color: var(--danger);
 }
 
 .replay-outcome-loot {
@@ -404,12 +404,12 @@
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  color: #D29922;
+  color: var(--warning);
   font-weight: 600;
 }
 
 .replay-outcome-loot-label {
-  color: #97A0BE;
+  color: var(--text-muted);
   font-weight: 400;
   font-size: 12px;
   margin-left: 2px;

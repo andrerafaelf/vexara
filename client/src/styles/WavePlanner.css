@@ -11,7 +11,7 @@
 }
 
 .wplanner-modal {
-  background: #141937;
+  background: var(--color-navy-800);
   border: 1px solid rgba(255, 158, 61, 0.18);
   border-radius: 12px;
   width: 100%;
@@ -39,16 +39,16 @@
   gap: 8px;
 }
 
-.wplanner-header-icon { color: #FF9E3D; flex-shrink: 0; }
+.wplanner-header-icon { color: var(--accent); flex-shrink: 0; }
 
 .wplanner-title {
-  color: #F5F8FF;
+  color: var(--text-strong);
   font-size: 15px;
   font-weight: 700;
 }
 
 .wplanner-target {
-  color: #F85149;
+  color: var(--danger);
   font-size: 13px;
   font-weight: 600;
 }
@@ -56,7 +56,7 @@
 .wplanner-close {
   background: transparent;
   border: none;
-  color: #97A0BE;
+  color: var(--text-muted);
   cursor: pointer;
   width: 32px;
   height: 32px;
@@ -66,7 +66,7 @@
   border-radius: 6px;
   transition: background 0.15s, color 0.15s;
 }
-.wplanner-close:hover { background: #1A1F38; color: #F5F8FF; }
+.wplanner-close:hover { background: var(--color-navy-700); color: var(--text-strong); }
 
 /* Arrival row */
 .wplanner-arrival-row {
@@ -82,16 +82,16 @@
 .wplanner-arrival-label {
   font-size: 12px;
   font-weight: 700;
-  color: #97A0BE;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   white-space: nowrap;
 }
 
 .wplanner-arrival-input {
-  background: #0f1429;
-  border: 1px solid #2A3056;
-  color: #F5F8FF;
+  background: var(--color-navy-900);
+  border: 1px solid var(--color-navy-500);
+  color: var(--text-strong);
   padding: 7px 10px;
   border-radius: 6px;
   font-size: 13px;
@@ -101,7 +101,7 @@
 }
 .wplanner-arrival-input:focus {
   outline: none;
-  border-color: #FF9E3D;
+  border-color: var(--accent);
 }
 .wplanner-arrival-input::-webkit-calendar-picker-indicator {
   filter: invert(0.7);
@@ -110,7 +110,7 @@
 
 .wplanner-arrival-hint {
   font-size: 11px;
-  color: #3a4068;
+  color: var(--color-navy-400);
   flex-shrink: 0;
 }
 
@@ -123,11 +123,11 @@
   flex-direction: column;
   gap: 12px;
   scrollbar-width: thin;
-  scrollbar-color: #2A3056 transparent;
+  scrollbar-color: var(--color-navy-500) transparent;
 }
 
 .wplanner-empty {
-  color: #3a4068;
+  color: var(--color-navy-400);
   font-size: 13px;
   text-align: center;
   padding: 24px 0;
@@ -135,8 +135,8 @@
 
 /* Individual wave card */
 .wplanner-wave {
-  background: #0f1429;
-  border: 1px solid #1e2540;
+  background: var(--color-navy-900);
+  border: 1px solid var(--color-navy-700);
   border-radius: 8px;
   padding: 14px;
   display: flex;
@@ -166,14 +166,14 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: #FF9E3D;
+  color: var(--accent);
   flex-shrink: 0;
 }
 
 .wplanner-nexus-select {
-  background: #141937;
-  border: 1px solid #2A3056;
-  color: #F5F8FF;
+  background: var(--color-navy-800);
+  border: 1px solid var(--color-navy-500);
+  color: var(--text-strong);
   padding: 5px 8px;
   border-radius: 6px;
   font-size: 13px;
@@ -182,28 +182,28 @@
   flex: 1;
   min-width: 0;
 }
-.wplanner-nexus-select:focus { outline: none; border-color: #FF9E3D; }
+.wplanner-nexus-select:focus { outline: none; border-color: var(--accent); }
 .wplanner-nexus-select:disabled { opacity: 0.5; cursor: default; }
 
 .wplanner-travel-time {
   font-size: 11px;
-  color: #97A0BE;
+  color: var(--text-muted);
   white-space: nowrap;
-  background: #1A1F38;
+  background: var(--color-navy-700);
   padding: 3px 7px;
   border-radius: 4px;
   flex-shrink: 0;
 }
 
 .wplanner-travel-time--past {
-  color: #F85149;
+  color: var(--danger);
   background: rgba(248, 81, 73,0.1);
 }
 
 .wplanner-remove-btn {
   background: transparent;
   border: none;
-  color: #3a4068;
+  color: var(--color-navy-400);
   cursor: pointer;
   width: 28px;
   height: 28px;
@@ -214,12 +214,12 @@
   transition: color 0.15s, background 0.15s;
   flex-shrink: 0;
 }
-.wplanner-remove-btn:hover { color: #F85149; background: rgba(248, 81, 73,0.08); }
+.wplanner-remove-btn:hover { color: var(--danger); background: rgba(248, 81, 73,0.08); }
 
 .wplanner-sent-badge {
   font-size: 11px;
   font-weight: 700;
-  color: #56D364;
+  color: var(--success);
   background: rgba(86, 211, 100,0.1);
   border: 1px solid rgba(86, 211, 100,0.25);
   padding: 3px 7px;
@@ -230,7 +230,7 @@
 .wplanner-countdown {
   font-size: 12px;
   font-weight: 600;
-  color: #FF9E3D;
+  color: var(--accent);
   background: rgba(255, 158, 61,0.06);
   padding: 5px 10px;
   border-radius: 5px;
@@ -238,13 +238,13 @@
 }
 
 .wplanner-countdown--past {
-  color: #F85149;
+  color: var(--danger);
   background: rgba(248, 81, 73,0.06);
 }
 
 .wplanner-wave-error {
   font-size: 12px;
-  color: #F85149;
+  color: var(--danger);
   background: rgba(248, 81, 73,0.08);
   padding: 6px 10px;
   border-radius: 5px;
@@ -261,7 +261,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #141937;
+  background: var(--color-navy-800);
   padding: 5px 8px;
   border-radius: 5px;
 }
@@ -269,7 +269,7 @@
 .wplanner-troop-label {
   flex: 1;
   font-size: 12px;
-  color: #97A0BE;
+  color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -278,27 +278,27 @@
 .wplanner-troop-input {
   width: 48px;
   padding: 4px 5px;
-  background: #0f1429;
-  border: 1px solid #2A3056;
-  color: #F5F8FF;
+  background: var(--color-navy-900);
+  border: 1px solid var(--color-navy-500);
+  color: var(--text-strong);
   font-size: 12px;
   border-radius: 4px;
   text-align: center;
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
-.wplanner-troop-input:focus { outline: none; border-color: #FF9E3D; }
+.wplanner-troop-input:focus { outline: none; border-color: var(--accent); }
 
 .wplanner-troop-avail {
   font-size: 11px;
-  color: #3a4068;
+  color: var(--color-navy-400);
   min-width: 24px;
   flex-shrink: 0;
 }
 
 .wplanner-no-troops {
   font-size: 12px;
-  color: #3a4068;
+  color: var(--color-navy-400);
   grid-column: 1 / -1;
 }
 
@@ -312,8 +312,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #1A1F38;
-  color: #FF9E3D;
+  background: var(--color-navy-700);
+  color: var(--accent);
   border: 1px solid rgba(255, 158, 61,0.3);
   padding: 7px 14px;
   border-radius: 6px;
@@ -340,9 +340,9 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #1A1F38;
-  color: #97A0BE;
-  border: 1px solid #2A3056;
+  background: var(--color-navy-700);
+  color: var(--text-muted);
+  border: 1px solid var(--color-navy-500);
   padding: 8px 16px;
   border-radius: 7px;
   font-size: 13px;
@@ -350,15 +350,15 @@
   cursor: pointer;
   transition: all 0.15s;
 }
-.wplanner-add-btn:hover:not(:disabled) { background: #2A3056; color: #F5F8FF; }
+.wplanner-add-btn:hover:not(:disabled) { background: var(--color-navy-500); color: var(--text-strong); }
 .wplanner-add-btn:disabled { opacity: 0.4; cursor: default; }
 
 .wplanner-send-all-btn {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #FF9E3D;
-  color: #0B0F1F;
+  background: var(--accent);
+  color: var(--text-on-accent);
   border: none;
   padding: 8px 18px;
   border-radius: 7px;
@@ -367,7 +367,7 @@
   cursor: pointer;
   transition: background 0.15s;
 }
-.wplanner-send-all-btn:hover:not(:disabled) { background: #F58A1F; }
+.wplanner-send-all-btn:hover:not(:disabled) { background: var(--accent-hover); }
 .wplanner-send-all-btn:disabled { opacity: 0.5; cursor: default; }
 
 @media (max-width: 560px) {

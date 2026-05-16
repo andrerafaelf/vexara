@@ -7,10 +7,10 @@
 
 .factions-error {
   padding: var(--space-4);
-  background-color: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background-color: rgba(248, 81, 73, 0.1);
+  border: 1px solid rgba(248, 81, 73, 0.3);
   border-radius: var(--radius-lg);
-  color: #fca5a5;
+  color: var(--danger);
   font-size: var(--text-sm);
 }
 
@@ -66,14 +66,14 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--space-3);
-  background: rgba(15, 23, 42, 0.3);
+  background: rgba(13, 17, 23, 0.3);
   border-radius: var(--radius-md);
   border: 1px solid var(--border-default);
   transition: all 0.2s ease;
 }
 
 .factions-member-row:hover {
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(13, 17, 23, 0.5);
   border-color: rgba(255, 158, 61, 0.2);
 }
 
@@ -94,7 +94,7 @@
   padding: 2px 8px;
   background: rgba(255, 158, 61, 0.1);
   border-radius: var(--radius-sm);
-  color: #FF9E3D;
+  color: var(--accent);
   font-weight: 500;
 }
 
@@ -107,7 +107,7 @@
 .factions-invite-form {
   margin: var(--space-5) 0;
   padding: var(--space-4);
-  background: rgba(15, 23, 42, 0.3);
+  background: rgba(13, 17, 23, 0.3);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-default);
 }
@@ -130,7 +130,7 @@
 .factions-field input,
 .factions-field textarea {
   padding: var(--space-2) var(--space-3);
-  background: rgba(30, 41, 59, 0.8);
+  background: rgba(22, 27, 34, 0.8);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
   color: var(--text-default);
@@ -142,9 +142,9 @@
 .factions-field input:focus,
 .factions-field textarea:focus {
   outline: none;
-  border-color: #FF9E3D;
+  border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(255, 158, 61, 0.1);
-  background: rgba(30, 41, 59, 1);
+  background: rgba(22, 27, 34, 1);
 }
 
 .factions-field input:disabled,
@@ -155,10 +155,10 @@
 
 .factions-field-error {
   padding: var(--space-2) var(--space-3);
-  background-color: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background-color: rgba(248, 81, 73, 0.1);
+  border: 1px solid rgba(248, 81, 73, 0.3);
   border-radius: var(--radius-md);
-  color: #fca5a5;
+  color: var(--danger);
   font-size: var(--text-xs);
 }
 
@@ -177,7 +177,7 @@
 }
 
 .factions-btn-primary {
-  background: linear-gradient(90deg, #FF9E3D, #56D364);
+  background: linear-gradient(90deg, var(--accent), var(--success));
   color: var(--color-navy-900);
 }
 
@@ -192,14 +192,14 @@
 }
 
 .factions-btn-danger {
-  background: rgba(239, 68, 68, 0.1);
-  color: #fca5a5;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(248, 81, 73, 0.1);
+  color: var(--danger);
+  border: 1px solid rgba(248, 81, 73, 0.3);
 }
 
 .factions-btn-danger:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.2);
-  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(248, 81, 73, 0.2);
+  border-color: rgba(248, 81, 73, 0.5);
 }
 
 .factions-btn-danger:disabled {
@@ -211,7 +211,7 @@
   padding: var(--space-1) var(--space-3);
   font-size: var(--text-xs);
   background: rgba(255, 158, 61, 0.1);
-  color: #FF9E3D;
+  color: var(--accent);
   border: 1px solid rgba(255, 158, 61, 0.2);
 }
 
@@ -245,7 +245,7 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--space-4);
-  background: rgba(15, 23, 42, 0.3);
+  background: rgba(13, 17, 23, 0.3);
   border-radius: var(--radius-lg);
   border: 1px solid rgba(255, 158, 61, 0.1);
 }
@@ -272,7 +272,7 @@
   padding: 2px 8px;
   background: rgba(255, 158, 61, 0.1);
   border-radius: var(--radius-sm);
-  color: #FF9E3D;
+  color: var(--accent);
   font-weight: 600;
   width: fit-content;
 }
@@ -291,14 +291,14 @@
 
 .factions-item {
   padding: var(--space-4);
-  background: rgba(15, 23, 42, 0.3);
+  background: rgba(13, 17, 23, 0.3);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-default);
   transition: all 0.2s ease;
 }
 
 .factions-item:hover {
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(13, 17, 23, 0.5);
   border-color: rgba(255, 158, 61, 0.2);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
@@ -321,7 +321,7 @@
   background: linear-gradient(90deg, rgba(255, 158, 61, 0.15), rgba(86, 211, 100, 0.1));
   border: 1px solid rgba(255, 158, 61, 0.2);
   border-radius: var(--radius-sm);
-  color: #56D364;
+  color: var(--success);
   font-weight: 700;
   white-space: nowrap;
 }
@@ -423,15 +423,15 @@
 }
 
 .factions-role-badge--leader {
-  background: linear-gradient(90deg, rgba(255, 196, 0, 0.2), rgba(255, 196, 0, 0.1));
-  border: 1px solid rgba(255, 196, 0, 0.4);
-  color: #ffd700;
+  background: linear-gradient(90deg, rgba(210, 153, 34, 0.2), rgba(210, 153, 34, 0.1));
+  border: 1px solid rgba(210, 153, 34, 0.4);
+  color: var(--warning);
 }
 
 .factions-role-badge--officer {
   background: rgba(255, 158, 61, 0.1);
   border: 1px solid rgba(255, 158, 61, 0.3);
-  color: #FF9E3D;
+  color: var(--accent);
 }
 
 .factions-role-badge--member {
@@ -485,7 +485,7 @@
 .factions-motd-input {
   width: 100%;
   padding: var(--space-3);
-  background: rgba(30, 41, 59, 0.8);
+  background: rgba(22, 27, 34, 0.8);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
   color: var(--text-default);
@@ -498,7 +498,7 @@
 
 .factions-motd-input:focus {
   outline: none;
-  border-color: #FF9E3D;
+  border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(255, 158, 61, 0.1);
 }
 
@@ -513,7 +513,7 @@
 .factions-tabs {
   display: flex;
   gap: 2px;
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(13, 17, 23, 0.5);
   border-radius: var(--radius-lg);
   padding: 4px;
   border: 1px solid var(--border-default);
@@ -540,7 +540,7 @@
 
 .factions-tab--active {
   background: linear-gradient(90deg, rgba(255, 158, 61, 0.15), rgba(86, 211, 100, 0.1));
-  color: #FF9E3D;
+  color: var(--accent);
   border: 1px solid rgba(255, 158, 61, 0.2);
 }
 
@@ -571,7 +571,7 @@
   display: flex;
   gap: var(--space-4);
   padding: var(--space-4);
-  background: rgba(15, 23, 42, 0.3);
+  background: rgba(13, 17, 23, 0.3);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-default);
   margin-bottom: var(--space-5);
@@ -601,7 +601,7 @@
 .factions-see-all {
   background: none;
   border: none;
-  color: #FF9E3D;
+  color: var(--accent);
   font-size: var(--text-xs);
   cursor: pointer;
   padding: var(--space-2) var(--space-3);
@@ -614,14 +614,14 @@
 
 /* Member role colour variants */
 .factions-member-role--leader {
-  background: rgba(255, 196, 0, 0.15);
-  border: 1px solid rgba(255, 196, 0, 0.3);
-  color: #ffd700;
+  background: rgba(210, 153, 34, 0.15);
+  border: 1px solid rgba(210, 153, 34, 0.3);
+  color: var(--warning);
 }
 
 .factions-member-role--officer {
   background: rgba(255, 158, 61, 0.1);
-  color: #FF9E3D;
+  color: var(--accent);
 }
 
 .factions-member-role--member {
@@ -639,7 +639,7 @@
 .factions-invite-inline input {
   flex: 1;
   padding: var(--space-2) var(--space-3);
-  background: rgba(30, 41, 59, 0.8);
+  background: rgba(22, 27, 34, 0.8);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
   color: var(--text-default);
@@ -650,7 +650,7 @@
 
 .factions-invite-inline input:focus {
   outline: none;
-  border-color: #FF9E3D;
+  border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(255, 158, 61, 0.1);
 }
 
@@ -691,7 +691,7 @@
 
 .faction-chat-load-older:hover:not(:disabled) {
   border-color: rgba(255, 158, 61, 0.3);
-  color: #FF9E3D;
+  color: var(--accent);
 }
 
 .faction-chat-empty {
@@ -746,11 +746,11 @@
 .faction-chat-username {
   font-size: var(--text-sm);
   font-weight: 700;
-  color: #FF9E3D;
+  color: var(--accent);
 }
 
 .faction-chat-msg--mine .faction-chat-username {
-  color: #56D364;
+  color: var(--success);
 }
 
 .faction-chat-time {
@@ -769,9 +769,9 @@
 
 .faction-chat-error {
   padding: var(--space-2) var(--space-4);
-  background: rgba(239, 68, 68, 0.1);
-  border-top: 1px solid rgba(239, 68, 68, 0.2);
-  color: #fca5a5;
+  background: rgba(248, 81, 73, 0.1);
+  border-top: 1px solid rgba(248, 81, 73, 0.2);
+  color: var(--danger);
   font-size: var(--text-xs);
 }
 
@@ -780,13 +780,13 @@
   gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
   border-top: 1px solid var(--border-default);
-  background: rgba(15, 23, 42, 0.4);
+  background: rgba(13, 17, 23, 0.4);
 }
 
 .faction-chat-input {
   flex: 1;
   padding: var(--space-2) var(--space-3);
-  background: rgba(30, 41, 59, 0.8);
+  background: rgba(22, 27, 34, 0.8);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
   color: var(--text-default);
@@ -799,7 +799,7 @@
 
 .faction-chat-input:focus {
   outline: none;
-  border-color: #FF9E3D;
+  border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(255, 158, 61, 0.1);
 }
 
@@ -808,7 +808,7 @@
 .faction-chat-send {
   align-self: flex-end;
   padding: var(--space-2) var(--space-5);
-  background: linear-gradient(90deg, #FF9E3D, #56D364);
+  background: linear-gradient(90deg, var(--accent), var(--success));
   color: var(--color-navy-900);
   border: none;
   border-radius: var(--radius-md);
@@ -847,10 +847,10 @@
 
 .faction-activity-error {
   padding: var(--space-2) var(--space-3);
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: rgba(248, 81, 73, 0.1);
+  border: 1px solid rgba(248, 81, 73, 0.2);
   border-radius: var(--radius-md);
-  color: #fca5a5;
+  color: var(--danger);
   font-size: var(--text-xs);
 }
 
@@ -886,10 +886,10 @@
   margin-top: 1px;
 }
 
-.event-icon--gold   { background: rgba(255, 196, 0, 0.15); color: #ffd700; border: 1px solid rgba(255, 196, 0, 0.3); }
-.event-icon--green  { background: rgba(86, 211, 100, 0.15); color: #56D364; border: 1px solid rgba(86, 211, 100, 0.3); }
-.event-icon--cyan   { background: rgba(255, 158, 61, 0.15); color: #FF9E3D; border: 1px solid rgba(255, 158, 61, 0.3); }
-.event-icon--red    { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); }
+.event-icon--gold   { background: rgba(210, 153, 34, 0.15); color: var(--warning); border: 1px solid rgba(210, 153, 34, 0.3); }
+.event-icon--green  { background: rgba(86, 211, 100, 0.15); color: var(--success); border: 1px solid rgba(86, 211, 100, 0.3); }
+.event-icon--cyan   { background: rgba(255, 158, 61, 0.15); color: var(--accent); border: 1px solid rgba(255, 158, 61, 0.3); }
+.event-icon--red    { background: rgba(248, 81, 73, 0.15); color: var(--danger); border: 1px solid rgba(248, 81, 73, 0.3); }
 .event-icon--orange { background: rgba(251, 146, 60, 0.15); color: #fb923c; border: 1px solid rgba(251, 146, 60, 0.3); }
 .event-icon--muted  { background: rgba(255, 255, 255, 0.05); color: var(--text-muted); border: 1px solid var(--border-default); }
 
@@ -931,7 +931,7 @@
 
 .faction-activity-load-more:hover:not(:disabled) {
   border-color: rgba(255, 158, 61, 0.3);
-  color: #FF9E3D;
+  color: var(--accent);
 }
 
 /* Responsive */
@@ -952,7 +952,7 @@
 }
 
 .flb-error {
-  color: #fca5a5;
+  color: var(--danger);
   font-size: var(--text-sm);
   padding: var(--space-3);
 }
@@ -960,8 +960,8 @@
 /* Dominance alert */
 .flb-dominance-alert {
   padding: var(--space-4) var(--space-5);
-  background: linear-gradient(135deg, rgba(255, 196, 0, 0.12), rgba(255, 196, 0, 0.04));
-  border: 1px solid rgba(255, 196, 0, 0.3);
+  background: linear-gradient(135deg, rgba(210, 153, 34, 0.12), rgba(210, 153, 34, 0.04));
+  border: 1px solid rgba(210, 153, 34, 0.3);
   border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
@@ -982,7 +982,7 @@
 .flb-dominance-name {
   font-size: var(--text-base);
   font-weight: 700;
-  color: #ffd700;
+  color: var(--warning);
 }
 
 .flb-dominance-tag {
@@ -1005,7 +1005,7 @@
 
 .flb-dominance-bar {
   height: 100%;
-  background: linear-gradient(90deg, #ffd700, #ffed4e);
+  background: linear-gradient(90deg, var(--warning), #ffed4e);
   border-radius: 3px;
   transition: width 1s ease;
 }
@@ -1070,8 +1070,8 @@
 }
 
 .flb-row--dominating {
-  background: rgba(255, 196, 0, 0.05);
-  border-color: rgba(255, 196, 0, 0.2);
+  background: rgba(210, 153, 34, 0.05);
+  border-color: rgba(210, 153, 34, 0.2);
 }
 
 .flb-td {
@@ -1109,7 +1109,7 @@
 
 .flb-faction-tag {
   font-size: var(--text-xs);
-  color: #FF9E3D;
+  color: var(--accent);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -1120,7 +1120,7 @@
   background: rgba(86, 211, 100, 0.15);
   border: 1px solid rgba(86, 211, 100, 0.3);
   border-radius: var(--radius-sm);
-  color: #56D364;
+  color: var(--success);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -1165,12 +1165,12 @@
 }
 
 .flb-bar-fill--over {
-  background: linear-gradient(90deg, #ffd700, #ffed4e);
+  background: linear-gradient(90deg, var(--warning), #ffed4e);
 }
 
 .flb-hold-time {
   font-size: 10px;
-  color: #ffd700;
+  color: var(--warning);
   font-weight: 600;
 }
 
@@ -1280,14 +1280,14 @@
   font-size: 11px;
   font-weight: 700;
   background: rgba(255, 158, 61, 0.2);
-  color: #FF9E3D;
+  color: var(--accent);
   margin-left: 5px;
   vertical-align: middle;
 }
 
 .factions-tab-badge--alert {
   background: rgba(248, 81, 73, 0.25);
-  color: #F85149;
+  color: var(--danger);
 }
 
 .factions-war-error {
@@ -1308,11 +1308,11 @@
 }
 
 .factions-war-section-title--active {
-  color: #F85149;
+  color: var(--danger);
 }
 
 .factions-war-section-title--alert {
-  color: #F85149;
+  color: var(--danger);
   animation: war-alert-pulse 2s ease-in-out infinite;
 }
 
@@ -1359,7 +1359,7 @@
   font-size: 10px;
   font-weight: 900;
   letter-spacing: 0.1em;
-  color: #F85149;
+  color: var(--danger);
   background: rgba(248, 81, 73, 0.12);
   border: 1px solid rgba(248, 81, 73, 0.3);
   border-radius: 4px;
@@ -1395,7 +1395,7 @@
 }
 
 .factions-war-status-badge--pending {
-  color: #97A0BE;
+  color: var(--text-muted);
   background: rgba(151, 160, 190, 0.1);
   border: 1px solid rgba(151, 160, 190, 0.25);
 }
@@ -1417,7 +1417,7 @@
 .factions-war-select {
   flex: 1;
   min-width: 0;
-  background: var(--bg-input, #0f1429);
+  background: var(--bg-input, var(--color-navy-900));
   border: 1px solid var(--border-default);
   color: var(--text-default);
   padding: 8px 10px;
@@ -1428,5 +1428,5 @@
 }
 .factions-war-select:focus {
   outline: none;
-  border-color: #FF9E3D;
+  border-color: var(--accent);
 }
