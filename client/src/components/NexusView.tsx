@@ -1436,7 +1436,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
           <div className="nexus-type-buff-banner">
             <NexusTypeBadge type={nexus.nexusType} size={14} />
             <span className="nexus-type-buff-label">
-              {nexus.nexusType} — {NEXUS_TYPE_BUFFS[nexus.nexusType].label}
+              {nexus.nexusType} · {NEXUS_TYPE_BUFFS[nexus.nexusType].label}
             </span>
           </div>
         )}
@@ -1584,7 +1584,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
               <div className="newbie-protection-banner">
                 <ShieldCheck size={14} className="newbie-protection-icon" aria-hidden="true" />
                 <span className="newbie-protection-text">
-                  Newbie Protection — expires in <strong>{formatTime(nexus.newbieProtectionEndsAt)}</strong>
+                  Newbie Protection. Expires in <strong>{formatTime(nexus.newbieProtectionEndsAt)}</strong>
                 </span>
               </div>
             )}
@@ -1672,7 +1672,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                     <Hammer size={12} aria-hidden="true" /> Building Queue
                   </span>
                   <span className="overview-queue-summary-detail">
-                    {nexus.buildQueue.length} item{nexus.buildQueue.length !== 1 ? 's' : ''} —{' '}
+                    {nexus.buildQueue.length} item{nexus.buildQueue.length !== 1 ? 's' : ''} ·{' '}
                     {BUILDING_NAMES[nexus.buildQueue[0].building] || nexus.buildQueue[0].building} → Lv
                     {nexus.buildQueue[0].targetLevel}
                     {activeBuildTimer ? ` · ${activeBuildTimer}` : ''}
@@ -1691,7 +1691,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                     <Swords size={12} aria-hidden="true" /> Training Queue
                   </span>
                   <span className="overview-queue-summary-detail">
-                    {nexus.trainingQueue.length} item{nexus.trainingQueue.length !== 1 ? 's' : ''} —{' '}
+                    {nexus.trainingQueue.length} item{nexus.trainingQueue.length !== 1 ? 's' : ''} ·{' '}
                     {nexus.trainingQueue[0].amount}x{' '}
                     {TROOP_NAMES[nexus.trainingQueue[0].troopType] || nexus.trainingQueue[0].troopType}
                     {activeTrainingTimer ? ` · ${activeTrainingTimer}` : ''}

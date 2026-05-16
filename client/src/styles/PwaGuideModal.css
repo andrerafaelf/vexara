@@ -52,7 +52,7 @@
 }
 
 .pwa-modal-title {
-  color: #67FFF2;
+  color: #FF9E3D;
   font-size: 18px;
   font-weight: 700;
   text-transform: uppercase;
@@ -87,8 +87,8 @@
 }
 
 .pwa-tab--active {
-  background: #67FFF2;
-  border-color: #67FFF2;
+  background: #FF9E3D;
+  border-color: #FF9E3D;
   color: #0B0F1F;
 }
 
@@ -117,7 +117,7 @@
   justify-content: center;
   width: 22px;
   height: 22px;
-  background: #67FFF2;
+  background: #FF9E3D;
   border-radius: 50%;
   font-size: 12px;
   font-weight: 700;
@@ -166,8 +166,8 @@
 }
 
 .pwa-modal-note {
-  background: rgba(103,255,242, 0.1);
-  border: 1px solid rgba(103,255,242, 0.3);
+  background: rgba(255, 158, 61, 0.1);
+  border: 1px solid rgba(255, 158, 61, 0.3);
   border-radius: 6px;
   color: #FF8FA3;
   font-size: 12px;
@@ -178,7 +178,7 @@
 
 .pwa-modal-done {
   width: 100%;
-  background: #67FFF2;
+  background: #FF9E3D;
   color: #0B0F1F;
   border: none;
   border-radius: 6px;
@@ -190,5 +190,5 @@
 }
 
 .pwa-modal-done:hover {
-  background: #E14E66;
+  background: #DA3E37;
 }

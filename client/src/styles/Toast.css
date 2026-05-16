@@ -61,9 +61,9 @@
 
 .toast-success {
   background:
-    linear-gradient(90deg, rgba(129, 236, 134, 0.10), rgba(129, 236, 134, 0)),
+    linear-gradient(90deg, rgba(86, 211, 100, 0.10), rgba(86, 211, 100, 0)),
     var(--bg-surface);
-  border-color: rgba(129, 236, 134, 0.35);
+  border-color: rgba(86, 211, 100, 0.35);
   color: var(--text-strong);
   box-shadow: var(--shadow-lg), var(--glow-success);
 }
@@ -72,9 +72,9 @@
 
 .toast-error {
   background:
-    linear-gradient(90deg, rgba(255, 107, 129, 0.10), rgba(255, 107, 129, 0)),
+    linear-gradient(90deg, rgba(248, 81, 73, 0.10), rgba(248, 81, 73, 0)),
     var(--bg-surface);
-  border-color: rgba(255, 107, 129, 0.35);
+  border-color: rgba(248, 81, 73, 0.35);
   color: var(--text-strong);
   box-shadow: var(--shadow-lg), var(--glow-danger);
 }
@@ -83,9 +83,9 @@
 
 .toast-info {
   background:
-    linear-gradient(90deg, rgba(103, 255, 242, 0.10), rgba(103, 255, 242, 0)),
+    linear-gradient(90deg, rgba(255, 158, 61, 0.10), rgba(255, 158, 61, 0)),
     var(--bg-surface);
-  border-color: rgba(103, 255, 242, 0.30);
+  border-color: rgba(255, 158, 61, 0.30);
   color: var(--text-strong);
   box-shadow: var(--shadow-lg), var(--glow-accent-soft);
 }

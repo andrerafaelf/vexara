@@ -1,7 +1,7 @@
 .dom-bar {
   width: 100%;
   background: rgba(11, 15, 31, 0.85);
-  border-bottom: 1px solid rgba(103, 255, 242, 0.1);
+  border-bottom: 1px solid rgba(255, 158, 61, 0.1);
   backdrop-filter: blur(8px);
   padding: 6px 20px;
   flex-shrink: 0;
@@ -57,11 +57,11 @@
 }
 
 .dom-faction--mine .dom-faction-tag {
-  color: #67fff2;
+  color: #FF9E3D;
 }
 
 .dom-faction--dominating .dom-faction-tag {
-  color: #ffd166;
+  color: #D29922;
 }
 
 /* Bar */
@@ -86,21 +86,21 @@
 }
 
 .dom-faction--mine .dom-faction-bar-fill {
-  background: linear-gradient(90deg, #67fff2, #3bc9c0);
+  background: linear-gradient(90deg, #FF9E3D, #3bc9c0);
 }
 
 .dom-faction-bar-fill--dominating {
-  background: linear-gradient(90deg, #ffd166, #ffa500) !important;
-  box-shadow: 0 0 8px rgba(255, 209, 102, 0.45);
+  background: linear-gradient(90deg, #D29922, #ffa500) !important;
+  box-shadow: 0 0 8px rgba(210, 153, 34, 0.45);
   animation: dom-bar-pulse 1.8s ease-in-out infinite alternate;
 }
 
 @keyframes dom-bar-pulse {
   from {
-    box-shadow: 0 0 4px rgba(255, 209, 102, 0.3);
+    box-shadow: 0 0 4px rgba(210, 153, 34, 0.3);
   }
   to {
-    box-shadow: 0 0 12px rgba(255, 209, 102, 0.6);
+    box-shadow: 0 0 12px rgba(210, 153, 34, 0.6);
   }
 }
 
@@ -110,7 +110,7 @@
   top: -3px;
   bottom: -3px;
   width: 2px;
-  background: rgba(255, 107, 129, 0.6);
+  background: rgba(248, 81, 73, 0.6);
   border-radius: 1px;
   z-index: 2;
   pointer-events: none;
@@ -128,11 +128,11 @@
 }
 
 .dom-faction--mine .dom-faction-pct {
-  color: #67fff2;
+  color: #FF9E3D;
 }
 
 .dom-faction--dominating .dom-faction-pct {
-  color: #ffd166;
+  color: #D29922;
 }
 
 /* Sustain track — thin bar below the main bar showing time progress */
@@ -142,14 +142,14 @@
   bottom: -5px;
   width: 100%;
   height: 3px;
-  background: rgba(255, 209, 102, 0.15);
+  background: rgba(210, 153, 34, 0.15);
   border-radius: 2px;
   overflow: hidden;
 }
 
 .dom-sustain-fill {
   height: 100%;
-  background: #ffd166;
+  background: #D29922;
   border-radius: 2px;
   transition: width 1s ease;
   opacity: 0.75;
@@ -162,11 +162,11 @@
   gap: 5px;
   font-size: 11px;
   font-weight: 700;
-  color: #ffd166;
+  color: #D29922;
   white-space: nowrap;
   padding: 3px 8px;
-  background: rgba(255, 209, 102, 0.1);
-  border: 1px solid rgba(255, 209, 102, 0.3);
+  background: rgba(210, 153, 34, 0.1);
+  border: 1px solid rgba(210, 153, 34, 0.3);
   border-radius: 999px;
   flex-shrink: 0;
   animation: dom-alert-appear 0.3s ease;
@@ -187,7 +187,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #ffd166;
+  background: #D29922;
   flex-shrink: 0;
   animation: dom-dot-blink 1s step-start infinite;
 }

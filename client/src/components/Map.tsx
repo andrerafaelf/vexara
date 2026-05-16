@@ -629,7 +629,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
                 ? 'Out of bounds'
                 : nexus
                   ? nexus.newbieProtectionEndsAt && new Date(nexus.newbieProtectionEndsAt) > currentTime
-                    ? `${nexus.name} (${nexus.x}|${nexus.y}) — Protected`
+                    ? `${nexus.name} (${nexus.x}|${nexus.y}) · Protected`
                     : `${nexus.name} (${nexus.x}|${nexus.y})`
                   : `(${x}|${y})`
             }
@@ -744,7 +744,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
           <div className="newbie-protection-banner">
             <Shield size={14} className="newbie-protection-icon" aria-hidden="true" />
             <span className="newbie-protection-text">
-              Protected — {formatTime(new Date(selectedNexus.newbieProtectionEndsAt!))} remaining
+              Protected · {formatTime(new Date(selectedNexus.newbieProtectionEndsAt!))} remaining
             </span>
           </div>
         )}
@@ -824,7 +824,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
         )}
 
         {selectedNexus.intelLevel === 'public' && !isOwn && (
-          <div className="intel-warning">No intel — send a scout to reveal resources and troops.</div>
+          <div className="intel-warning">No intel. Send a scout to reveal resources and troops.</div>
         )}
 
         {!isOwn && (
@@ -852,7 +852,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
                   <button
                     className="wave-planner-btn"
                     onClick={() => setShowWavePlanner(true)}
-                    title="Open Wave Planner — coordinate multiple attacks to arrive simultaneously"
+                    title="Open Wave Planner. Coordinate multiple attacks to arrive simultaneously"
                   >
                     <Waves size={14} aria-hidden="true" /> Wave Planner
                   </button>

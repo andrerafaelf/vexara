@@ -100,7 +100,7 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
     }
     const available = Math.floor(selectedFormNexus?.resources[formOffer] ?? 0);
     if (offer > available) {
-      setFormError(`Insufficient ${RESOURCE_LABELS[formOffer]} — ${available.toLocaleString()} available`);
+      setFormError(`Insufficient ${RESOURCE_LABELS[formOffer]}. ${available.toLocaleString()} available.`);
       return;
     }
     setSubmitting(true);
@@ -299,7 +299,7 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
       )}
 
       <div className="market-section">
-        <h3>Available Offers {otherListings.length === 0 && <span className="market-empty-note">— none yet</span>}</h3>
+        <h3>Available Offers {otherListings.length === 0 && <span className="market-empty-note">(none yet)</span>}</h3>
 
         {nexuses.length > 0 && otherListings.length > 0 && (
           <div className="market-buy-nexus-row">
@@ -445,7 +445,7 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
       </div>
 
       <div className="market-section">
-        <h3>Recent Transactions {history.length === 0 && <span className="market-empty-note">— none yet</span>}</h3>
+        <h3>Recent Transactions {history.length === 0 && <span className="market-empty-note">(none yet)</span>}</h3>
         {history.length > 0 && (
           <div className="market-history">
             {history.map((t: any) => (

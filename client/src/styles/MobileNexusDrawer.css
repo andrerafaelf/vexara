@@ -55,7 +55,7 @@
   }
 
   .mobile-nexus-drawer-header h3 {
-    color: #67FFF2;
+    color: #FF9E3D;
     margin: 0;
     font-size: 17px;
   }
@@ -79,7 +79,7 @@
   }
 
   .mobile-nexus-drawer-close:hover {
-    color: #67FFF2;
+    color: #FF9E3D;
   }
 
   .mobile-nexus-drawer .nexus-group-filter {
@@ -116,7 +116,7 @@
 
   .nexus-drawer-toggle:hover {
     background: #1A1F38;
-    color: #67FFF2;
+    color: #FF9E3D;
   }
 }
 

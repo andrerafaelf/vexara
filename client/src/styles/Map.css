@@ -4,8 +4,8 @@
   display: flex;
   flex-direction: column;
   background:
-    radial-gradient(ellipse at 25% 15%, rgba(103,255,242,0.055) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 85%, rgba(129,236,134,0.04) 0%, transparent 45%),
+    radial-gradient(ellipse at 25% 15%, rgba(255, 158, 61,0.055) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 85%, rgba(86, 211, 100,0.04) 0%, transparent 45%),
     radial-gradient(ellipse at 55% 50%, rgba(42,48,86,0.5) 0%, transparent 65%),
     linear-gradient(160deg, #080c1a 0%, #0e1225 35%, #111629 65%, #0b0f1e 100%);
   border-radius: 0;
@@ -16,7 +16,7 @@
 .map-header {
   padding: 8px 14px;
   background: #1A1F38;
-  border-bottom: 2px solid #67FFF2;
+  border-bottom: 2px solid #FF9E3D;
   flex-shrink: 0;
   position: relative;
   z-index: 10;
@@ -27,7 +27,7 @@
 }
 
 .map-header h2 {
-  color: #67FFF2;
+  color: #FF9E3D;
   margin: 0;
   font-size: 16px;
   white-space: nowrap;
@@ -69,7 +69,7 @@
 }
 
 .map-controls button:hover {
-  background: #67FFF2;
+  background: #FF9E3D;
 }
 
 .map-controls button:disabled {
@@ -98,7 +98,7 @@
 .map-coordinate-controls input {
   width: 50px;
   padding: 3px 6px;
-  border: 1px solid #43B0AF;
+  border: 1px solid #4A9EB0;
   border-radius: 4px;
   background: #141937;
   color: #F5F8FF;
@@ -108,7 +108,7 @@
 
 .map-coordinate-controls input:focus {
   outline: none;
-  border-color: #67FFF2;
+  border-color: #FF9E3D;
 }
 
 .map-content {
@@ -147,8 +147,8 @@
     radial-gradient(1px 1px at 35% 92%, rgba(255,255,255,0.35) 0%, transparent 100%),
     radial-gradient(1px 1px at 93% 30%, rgba(255,255,255,0.5) 0%, transparent 100%),
     radial-gradient(1px 1px at 55% 5%, rgba(255,255,255,0.4) 0%, transparent 100%),
-    radial-gradient(1px 1px at 18% 44%, rgba(103,255,242,0.3) 0%, transparent 100%),
-    radial-gradient(1px 1px at 72% 68%, rgba(129,236,134,0.25) 0%, transparent 100%);
+    radial-gradient(1px 1px at 18% 44%, rgba(255, 158, 61,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 72% 68%, rgba(86, 211, 100,0.25) 0%, transparent 100%);
   pointer-events: none;
   z-index: 0;
 }
@@ -163,20 +163,20 @@
 .crosshair-center {
   width: 12px;
   height: 12px;
-  border: 2px solid #FF6B81;
+  border: 2px solid #F85149;
   border-radius: 50%;
-  background: rgba(255,107,129, 0.6);
+  background: rgba(248, 81, 73, 0.6);
   box-shadow:
-    0 0 10px rgba(255,107,129, 1),
-    0 0 20px rgba(255,107,129, 0.8);
+    0 0 10px rgba(248, 81, 73, 1),
+    0 0 20px rgba(248, 81, 73, 0.8);
   position: relative;
   z-index: 2;
 }
 
 .crosshair-line {
   position: absolute;
-  background: #FF6B81;
-  box-shadow: 0 0 8px rgba(255,107,129, 0.8);
+  background: #F85149;
+  box-shadow: 0 0 8px rgba(248, 81, 73, 0.8);
 }
 
 .crosshair-top {
@@ -217,7 +217,7 @@
 
 .map-grid {
   display: inline-block;
-  border: 1px solid rgba(103,255,242,0.12);
+  border: 1px solid rgba(255, 158, 61,0.12);
   border-radius: 8px;
   overflow: visible;
   user-select: none;
@@ -227,17 +227,17 @@
   z-index: 1;
   background:
     /* cyan nebula bloom — top-left quadrant */
-    radial-gradient(ellipse 55% 40% at 18% 22%, rgba(103,255,242,0.18) 0%, transparent 100%),
+    radial-gradient(ellipse 55% 40% at 18% 22%, rgba(255, 158, 61,0.18) 0%, transparent 100%),
     /* green bloom — bottom-right */
-    radial-gradient(ellipse 50% 35% at 82% 78%, rgba(129,236,134,0.13) 0%, transparent 100%),
+    radial-gradient(ellipse 50% 35% at 82% 78%, rgba(86, 211, 100,0.13) 0%, transparent 100%),
     /* warm magenta rift — mid-right */
-    radial-gradient(ellipse 30% 50% at 88% 35%, rgba(255,107,129,0.10) 0%, transparent 100%),
+    radial-gradient(ellipse 30% 50% at 88% 35%, rgba(248, 81, 73,0.10) 0%, transparent 100%),
     /* deep core glow — centre */
     radial-gradient(ellipse 60% 60% at 50% 50%, rgba(20,25,60,0.7) 0%, transparent 100%),
     /* base — near-black deep space */
     linear-gradient(135deg, #020408 0%, #060a14 30%, #08101e 55%, #030608 100%);
   box-shadow:
-    inset 0 0 80px rgba(103,255,242,0.06),
+    inset 0 0 80px rgba(255, 158, 61,0.06),
     inset 0 0 160px rgba(0,0,0,0.6);
 }
 
@@ -249,7 +249,7 @@
 .map-cell {
   width: var(--map-cell-size, 60px);
   height: var(--map-cell-size, 60px);
-  border: 1px solid rgba(103,255,242,0.10);
+  border: 1px solid rgba(255, 158, 61,0.10);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -262,7 +262,7 @@
 
 .map-cell:hover {
   background: rgba(42,48,86,0.65);
-  border-color: rgba(103,255,242,0.28);
+  border-color: rgba(255, 158, 61,0.28);
   z-index: 10;
 }
 
@@ -285,32 +285,32 @@
 
 /* Active/selected nexus — bright cyan, prominent */
 .map-cell.current-nexus {
-  background: rgba(103,255,242,0.22);
-  border: 2px solid #67FFF2;
+  background: rgba(255, 158, 61,0.22);
+  border: 2px solid #FF9E3D;
   box-shadow:
-    inset 0 0 16px rgba(103,255,242,0.35),
-    0 0 14px rgba(103,255,242,0.45),
-    0 0 28px rgba(103,255,242,0.18);
+    inset 0 0 16px rgba(255, 158, 61,0.35),
+    0 0 14px rgba(255, 158, 61,0.45),
+    0 0 28px rgba(255, 158, 61,0.18);
 }
 
 /* Player's other nexuses — green, clearly distinct */
 .map-cell.own-nexus {
-  background: rgba(129,236,134,0.20);
-  border: 2px solid #81EC86;
+  background: rgba(86, 211, 100,0.20);
+  border: 2px solid #56D364;
   box-shadow:
-    inset 0 0 14px rgba(129,236,134,0.30),
-    0 0 12px rgba(129,236,134,0.35),
-    0 0 24px rgba(129,236,134,0.15);
+    inset 0 0 14px rgba(86, 211, 100,0.30),
+    0 0 12px rgba(86, 211, 100,0.35),
+    0 0 24px rgba(86, 211, 100,0.15);
 }
 
 /* Enemy nexuses — warm red/orange, immediately hostile feel */
 .map-cell.enemy-nexus {
-  background: rgba(255,107,129,0.18);
-  border: 2px solid #FF6B81;
+  background: rgba(248, 81, 73,0.18);
+  border: 2px solid #F85149;
   box-shadow:
-    inset 0 0 14px rgba(255,107,129,0.22),
-    0 0 12px rgba(255,107,129,0.35),
-    0 0 24px rgba(255,107,129,0.14);
+    inset 0 0 14px rgba(248, 81, 73,0.22),
+    0 0 12px rgba(248, 81, 73,0.35),
+    0 0 24px rgba(248, 81, 73,0.14);
 }
 
 /* Selected cell — white outline on top of any state */
@@ -330,15 +330,15 @@
 }
 
 .nexus-marker-current {
-  color: #67FFF2;
+  color: #FF9E3D;
 }
 
 .nexus-marker-own {
-  color: #81EC86;
+  color: #56D364;
 }
 
 .nexus-marker-enemy {
-  color: #FF6B81;
+  color: #F85149;
 }
 
 .nexus-own-actions {
@@ -375,7 +375,7 @@
 }
 
 .nexus-details h3 {
-  color: #67FFF2;
+  color: #FF9E3D;
   margin-bottom: 15px;
   font-size: 20px;
 }
@@ -390,7 +390,7 @@
 }
 
 .nexus-info-icon:hover {
-  color: #67FFF2;
+  color: #FF9E3D;
 }
 
 .nexus-node-type-info {
@@ -452,7 +452,7 @@
 }
 
 .newbie-protection-text {
-  color: #81EC86;
+  color: #56D364;
 }
 
 .intel-warning {
@@ -500,7 +500,7 @@
 
 .attack-btn {
   flex: 1;
-  background: #67FFF2;
+  background: #FF9E3D;
   color: #0B0F1F;
   padding: 12px;
   font-size: 15px;
@@ -516,7 +516,7 @@
 }
 
 .attack-btn:hover:not(:disabled) {
-  background: #3FE5D8;
+  background: #F58A1F;
 }
 
 .attack-btn:disabled {
@@ -526,8 +526,8 @@
 
 .support-btn {
   background: #1A1F38;
-  color: #81EC86;
-  border: 1px solid rgba(129, 236, 134, 0.35);
+  color: #56D364;
+  border: 1px solid rgba(86, 211, 100, 0.35);
   padding: 10px 14px;
   border-radius: 6px;
   font-size: 13px;
@@ -542,8 +542,8 @@
 }
 
 .support-btn:hover {
-  background: rgba(129, 236, 134, 0.1);
-  border-color: #81EC86;
+  background: rgba(86, 211, 100, 0.1);
+  border-color: #56D364;
   color: #a8f0ab;
 }
 
@@ -567,7 +567,7 @@
 .wave-planner-btn:hover {
   background: #2A3056;
   color: #F5F8FF;
-  border-color: #67FFF2;
+  border-color: #FF9E3D;
 }
 
 .attack-form {
@@ -577,7 +577,7 @@
 }
 
 .attack-form h4 {
-  color: #67FFF2;
+  color: #FF9E3D;
   margin-bottom: 15px;
 }
 
@@ -606,7 +606,7 @@
 .troop-select-row input {
   width: 60px;
   padding: 6px 8px;
-  border: 1px solid #43B0AF;
+  border: 1px solid #4A9EB0;
   border-radius: 6px;
   background: #141937;
   color: #F5F8FF;
@@ -616,7 +616,7 @@
 
 .troop-select-row input:focus {
   outline: none;
-  border-color: #67FFF2;
+  border-color: #FF9E3D;
 }
 
 .troop-select-row input:disabled {
@@ -636,7 +636,7 @@
 }
 
 .troop-available-clickable:hover {
-  color: #67FFF2;
+  color: #FF9E3D;
 }
 
 .attack-form-actions {
@@ -668,7 +668,7 @@
 
 .send-btn {
   flex: 1;
-  background: #67FFF2;
+  background: #FF9E3D;
   color: #0B0F1F;
   padding: 12px;
   border-radius: 6px;
@@ -676,7 +676,7 @@
 }
 
 .send-btn:hover {
-  background: #3FE5D8;
+  background: #F58A1F;
 }
 
 .cancel-btn {
@@ -720,7 +720,7 @@
 }
 
 .attacks-section h4 {
-  color: #67FFF2;
+  color: #FF9E3D;
   margin-bottom: 10px;
   font-size: 16px;
 }
@@ -734,16 +734,16 @@
 }
 
 .attack-item.incoming {
-  border-left-color: #FF6B81;
+  border-left-color: #F85149;
 }
 
 .attack-item.outgoing {
-  border-left-color: #81EC86;
+  border-left-color: #56D364;
 }
 
 .attack-item.support-mission {
-  border-left-color: #67FFF2;
-  background: rgba(103, 255, 242, 0.04);
+  border-left-color: #FF9E3D;
+  background: rgba(255, 158, 61, 0.04);
 }
 
 .support-mission-badge {
@@ -752,9 +752,9 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #67FFF2;
-  background: rgba(103, 255, 242, 0.1);
-  border: 1px solid rgba(103, 255, 242, 0.3);
+  color: #FF9E3D;
+  background: rgba(255, 158, 61, 0.1);
+  border: 1px solid rgba(255, 158, 61, 0.3);
   border-radius: 4px;
   padding: 1px 5px;
   margin-right: 6px;
@@ -769,7 +769,7 @@
 }
 
 .attack-time {
-  color: #67FFF2;
+  color: #FF9E3D;
   font-weight: bold;
   font-size: 13px;
 }
@@ -831,7 +831,7 @@
   }
 
   .map-mobile-modal-header h3 {
-    color: #67FFF2;
+    color: #FF9E3D;
     margin: 0;
     font-size: 18px;
     white-space: nowrap;
@@ -852,7 +852,7 @@
   }
 
   .map-mobile-modal-close:hover {
-    color: #67FFF2;
+    color: #FF9E3D;
   }
 
   .map-mobile-modal-body {
@@ -982,7 +982,7 @@
 }
 
 .transfer-send-btn {
-  background: #67FFF2;
+  background: #FF9E3D;
   color: #0B0F1F;
   border: none;
   border-radius: 6px;
@@ -995,7 +995,7 @@
 }
 
 .transfer-send-btn:hover:not(:disabled) {
-  background: #FF6B81;
+  background: #F85149;
 }
 
 .transfer-send-btn:disabled {

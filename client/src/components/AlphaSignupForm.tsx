@@ -105,7 +105,7 @@ const AlphaSignupForm: React.FC = () => {
             <span className="alpha-founder-slots-label">
               <strong>{signupCount}</strong> of {ALPHA_FOUNDER_LIMIT} alpha slots claimed
               {ALPHA_FOUNDER_LIMIT - signupCount <= 20 && (
-                <span className="alpha-founder-slots-urgent"> — {ALPHA_FOUNDER_LIMIT - signupCount} left</span>
+                <span className="alpha-founder-slots-urgent"> · {ALPHA_FOUNDER_LIMIT - signupCount} left</span>
               )}
             </span>
           </div>
@@ -126,7 +126,7 @@ const AlphaSignupForm: React.FC = () => {
             </p>
             {isSpamRiskDomain(email) && (
               <p className="auth-success-note">
-                Hotmail and Outlook sometimes filter automated emails — if you don&apos;t see it, check your <strong>Junk</strong> folder.
+                Hotmail and Outlook sometimes filter automated emails. If you don&apos;t see it, check your <strong>Junk</strong> folder.
               </p>
             )}
             <Link href="/login" className="auth-link auth-link-block">
@@ -145,7 +145,7 @@ const AlphaSignupForm: React.FC = () => {
                 sizes="(max-width: 640px) 100vw, 600px"
                 priority
               />
-              <figcaption className="hero-shot-caption">Your nexus — economy, queues, and military in one view.</figcaption>
+              <figcaption className="hero-shot-caption">Your nexus. Economy, queues, and military in one view.</figcaption>
             </figure>
 
             <section className="core-systems" aria-label="Core systems">
@@ -155,21 +155,21 @@ const AlphaSignupForm: React.FC = () => {
                   <SystemIcon name="economy" />
                   <div>
                     <strong>Run a three-resource economy</strong>
-                    <p>Biomass, alloy, and ore tick 24/7. Storage and production scale per building level — Lv10 Biomass Farm yields ~10,500/hr.</p>
+                    <p>Biomass, alloy, and ore tick 24/7. Storage and production scale per building level. A Lv10 Biomass Farm yields ~10,500/hr.</p>
                   </div>
                 </li>
                 <li>
                   <SystemIcon name="army" />
                   <div>
                     <strong>Train twelve unit types</strong>
-                    <p>From 53s Lancer Drones to 2h Annihilator Platforms. Each unit has attack, defense, speed, and carry — composition wins fights.</p>
+                    <p>From 53s Lancer Drones to 2h Annihilator Platforms. Each unit has attack, defense, speed, and carry. Composition wins fights, not raw numbers.</p>
                   </div>
                 </li>
                 <li>
                   <SystemIcon name="strike" />
                   <div>
                     <strong>Scout, raid, and intercept in real time</strong>
-                    <p>Travel times are real. Send Recon Operatives to map a target, then commit a raid fleet — or catch one mid-flight.</p>
+                    <p>Travel times are real. Send Recon Operatives to map a target, then commit a raid fleet. Or catch one mid-flight.</p>
                   </div>
                 </li>
                 <li>
@@ -183,7 +183,7 @@ const AlphaSignupForm: React.FC = () => {
                   <SystemIcon name="defense" />
                   <div>
                     <strong>Defend with units + Shield Grid</strong>
-                    <p>Shield Grid adds +2% defense per level. Casualties are ratio-based with a random factor — there&apos;s no auto-win button.</p>
+                    <p>Shield Grid adds +2% defense per level. Casualties are ratio-based with a random factor. There&apos;s no auto-win button.</p>
                   </div>
                 </li>
               </ul>
@@ -261,20 +261,20 @@ const AlphaSignupForm: React.FC = () => {
                   </p>
                   <ul className="about-list">
                     <li>
-                      <strong>Command Core</strong> — main progression gate, speeds up every upgrade (×0.95 per level)
+                      <strong>Command Core:</strong> main progression gate, speeds up every upgrade (×0.95 per level)
                     </li>
                     <li>
-                      <strong>Recruitment Core</strong> — trains troops, ×0.92 training time per level
+                      <strong>Recruitment Core:</strong> trains troops, ×0.92 training time per level
                     </li>
                     <li>
-                      <strong>Biomass Farm, Alloy Forge, Ore Extractor</strong> — the three resources
+                      <strong>Biomass Farm, Alloy Forge, Ore Extractor:</strong> the three resources
                       that run your war
                     </li>
                     <li>
-                      <strong>Storage Vault, Life Support</strong> — caps your stockpile and population
+                      <strong>Storage Vault, Life Support:</strong> caps your stockpile and population
                     </li>
                     <li>
-                      <strong>Shield Grid</strong> — +2% defense per level when raiders come knocking
+                      <strong>Shield Grid:</strong> +2% defense per level when raiders come knocking
                     </li>
                   </ul>
                 </div>
@@ -320,7 +320,7 @@ const AlphaSignupForm: React.FC = () => {
             <section className="founder-perks" aria-label="Alpha founder benefits">
               <h3 className="founder-perks-title">Alpha founders also get</h3>
               <ul className="founder-perks-list">
-                <li><SystemIcon name="badge" /><span><strong>Founder&apos;s badge</strong> — permanent, never re-issued.</span></li>
+                <li><SystemIcon name="badge" /><span><strong>Founder&apos;s badge.</strong> Permanent, never re-issued.</span></li>
                 <li><SystemIcon name="rank" /><span><strong>Leaderboard mark</strong> on all rankings.</span></li>
                 <li><SystemIcon name="scroll" /><span><strong>Hall of fame</strong> entry with join date.</span></li>
                 <li><SystemIcon name="pillar" /><span><strong>Naming rights</strong> if your faction wins.</span></li>
@@ -330,7 +330,7 @@ const AlphaSignupForm: React.FC = () => {
             <section className="built-by" aria-label="About the developer">
               <h3 className="built-by-title">Built by one developer</h3>
               <p>
-                Vexara is a solo project — no publisher, no investors, no roadmap dictated by quarterly
+                Vexara is a solo project. No publisher, no investors, no roadmap dictated by quarterly
                 targets. Just a strategy-game player building the kind of persistent MMO that
                 doesn&apos;t sell wins.
               </p>

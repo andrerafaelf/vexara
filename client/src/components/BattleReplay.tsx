@@ -322,11 +322,11 @@ const BattleReplay: React.FC<BattleReplayProps> = ({ report, isMyAttack }) => {
       {currentRound === replay.totalRounds - 1 && (
         <div className={`replay-outcome ${replay.victory ? 'replay-outcome--victory' : 'replay-outcome--defeat'}`}>
           {replay.conquered ? (
-            <span>Nexus conquered — control transferred</span>
+            <span>Nexus conquered. Control transferred.</span>
           ) : replay.victory ? (
             <span>Attacker wins the engagement</span>
           ) : (
-            <span>Defense holds — raid repelled</span>
+            <span>Defense holds. Raid repelled.</span>
           )}
           {totalResourcesStolen > 0 && (
             <div className="replay-outcome-loot">

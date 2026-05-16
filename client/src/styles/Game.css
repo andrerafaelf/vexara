@@ -55,10 +55,6 @@
   font-weight: 700;
   letter-spacing: -0.02em;
   margin: 0;
-  background: linear-gradient(135deg, var(--color-cyan-500) 0%, var(--color-teal-500) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -122,21 +118,21 @@
   width: 12px;
   height: 12px;
   border-radius: 999px;
-  background: #ff6b81;
+  background: #F85149;
   border: 2px solid #fff;
-  box-shadow: 0 0 0 4px rgba(255, 107, 129, 0.32);
+  box-shadow: 0 0 0 4px rgba(248, 81, 73, 0.32);
   animation: reportDotPulse 1.6s ease-in-out infinite;
 }
 
 @keyframes reportDotPulse {
   0% {
-    box-shadow: 0 0 0 3px rgba(255, 107, 129, 0.32);
+    box-shadow: 0 0 0 3px rgba(248, 81, 73, 0.32);
   }
   70% {
-    box-shadow: 0 0 0 8px rgba(255, 107, 129, 0);
+    box-shadow: 0 0 0 8px rgba(248, 81, 73, 0);
   }
   100% {
-    box-shadow: 0 0 0 3px rgba(255, 107, 129, 0);
+    box-shadow: 0 0 0 3px rgba(248, 81, 73, 0);
   }
 }
 
@@ -330,9 +326,9 @@
 }
 
 .logout-btn:hover {
-  background: rgba(255, 107, 129, 0.1);
+  background: rgba(248, 81, 73, 0.1);
   color: var(--danger);
-  border-color: rgba(255, 107, 129, 0.45);
+  border-color: rgba(248, 81, 73, 0.45);
 }
 
 .game-content {
@@ -378,8 +374,8 @@
 .commander-avatar {
   width: 36px;
   height: 36px;
-  border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--color-cyan-500) 0%, var(--color-teal-500) 100%);
+  border-radius: var(--radius-sm);
+  background: var(--color-cyan-500);
   color: var(--text-on-accent);
   display: flex;
   align-items: center;
@@ -473,7 +469,7 @@
   letter-spacing: 0.05em;
   color: var(--warning);
   background: var(--warning-soft);
-  border: 1px solid rgba(255, 209, 102, 0.4);
+  border: 1px solid rgba(210, 153, 34, 0.4);
   padding: 1px 6px;
   border-radius: var(--radius-pill);
   flex-shrink: 0;
@@ -536,7 +532,7 @@
 
 .nexus-item.active::before {
   background: var(--accent);
-  box-shadow: 0 0 8px rgba(103, 255, 242, 0.6);
+  box-shadow: 0 0 8px rgba(255, 158, 61, 0.6);
 }
 
 .nexus-name {
@@ -645,10 +641,6 @@
   font-weight: 700;
   letter-spacing: -0.02em;
   margin-bottom: var(--space-3);
-  background: linear-gradient(135deg, var(--color-cyan-500) 0%, var(--color-teal-500) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 .no-nexuses p {
@@ -801,7 +793,7 @@
 
 .docs-tag {
   background: #2a3056;
-  border: 1px solid #43b0af;
+  border: 1px solid #4A9EB0;
   border-radius: 6px;
   padding: 4px 8px;
   color: #dde4f2;
@@ -855,7 +847,7 @@
 }
 
 .my-forces-nexus-header:hover .my-forces-nexus-name {
-  color: #67fff2;
+  color: #FF9E3D;
 }
 
 .my-forces-nexus-name {
@@ -873,7 +865,7 @@
 
 .my-forces-nexus-total {
   background: #2a3056;
-  border: 1px solid #43b0af;
+  border: 1px solid #4A9EB0;
   border-radius: 6px;
   padding: 3px 8px;
   font-size: 12px;
@@ -889,7 +881,7 @@
 
 .my-forces-troop {
   background: #2a3056;
-  border: 1px solid rgba(103, 255, 242, 0.08);
+  border: 1px solid rgba(255, 158, 61, 0.08);
   border-top: 3px solid #353c66;
   border-radius: 8px;
   padding: 10px;
@@ -937,8 +929,8 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #67fff2;
-  box-shadow: 0 0 5px rgba(103, 255, 242, 0.8);
+  background: #FF9E3D;
+  box-shadow: 0 0 5px rgba(255, 158, 61, 0.8);
   flex-shrink: 0;
 }
 
@@ -965,7 +957,7 @@
 }
 
 .mobile-drawer-nexuses h3 {
-  color: #67fff2;
+  color: #FF9E3D;
   margin-bottom: 12px;
   font-size: 17px;
 }
@@ -1057,13 +1049,13 @@
     margin-top: 8px;
     border-top: 1px solid #1a1f38;
     padding-top: 16px;
-    color: #67fff2 !important;
+    color: #FF9E3D !important;
     border-color: transparent !important;
   }
 
   .mobile-drawer-logout:hover {
-    background: rgba(103, 255, 242, 0.12) !important;
-    color: #ff6b81 !important;
+    background: rgba(255, 158, 61, 0.12) !important;
+    color: #F85149 !important;
   }
 }
 
@@ -1076,7 +1068,7 @@
 }
 
 .nexus-nav-header h3 {
-  color: #67fff2;
+  color: #FF9E3D;
   font-size: 18px;
   margin: 0;
 }
@@ -1122,7 +1114,7 @@
 
 .nexus-group-select:hover,
 .nexus-group-select:focus {
-  border-color: #67fff2;
+  border-color: #FF9E3D;
   color: #fff;
 }
 
@@ -1157,7 +1149,7 @@
 }
 
 .group-modal-header h2 {
-  color: #67fff2;
+  color: #FF9E3D;
   margin: 0;
   font-size: 20px;
 }
@@ -1218,7 +1210,7 @@
 }
 
 .group-list-item.active {
-  background: #67fff2;
+  background: #FF9E3D;
 }
 
 .group-list-name {
@@ -1257,25 +1249,25 @@
   color: #97a0be;
 }
 .group-edit-btn:hover {
-  background: rgba(103, 255, 242, 0.15);
+  background: rgba(255, 158, 61, 0.15);
 }
 .group-delete-btn {
-  color: #67fff2;
+  color: #FF9E3D;
 }
 .group-delete-btn:hover {
-  background: rgba(103, 255, 242, 0.15);
+  background: rgba(255, 158, 61, 0.15);
 }
 .group-save-btn {
-  color: #81ec86;
+  color: #56D364;
 }
 .group-save-btn:hover {
-  background: rgba(129, 236, 134, 0.15);
+  background: rgba(86, 211, 100, 0.15);
 }
 .group-cancel-btn {
   color: #97a0be;
 }
 .group-cancel-btn:hover {
-  background: rgba(103, 255, 242, 0.15);
+  background: rgba(255, 158, 61, 0.15);
 }
 
 .group-edit-row {
@@ -1298,7 +1290,7 @@
 }
 
 .group-name-input:focus {
-  border-color: #67fff2;
+  border-color: #FF9E3D;
 }
 
 .group-create-row {
@@ -1309,7 +1301,7 @@
 }
 
 .group-create-btn {
-  background: #67fff2;
+  background: #FF9E3D;
   color: #0b0f1f;
   border: none;
   border-radius: 4px;
@@ -1321,7 +1313,7 @@
 }
 
 .group-create-btn:hover:not(:disabled) {
-  background: #3fe5d8;
+  background: #F58A1F;
 }
 
 .group-create-btn:disabled {
@@ -1365,11 +1357,11 @@
 }
 
 .group-nexus-item.in-group {
-  border-left: 3px solid #67fff2;
+  border-left: 3px solid #FF9E3D;
 }
 
 .group-nexus-item input[type='checkbox'] {
-  accent-color: #67fff2;
+  accent-color: #FF9E3D;
   width: 16px;
   height: 16px;
   flex-shrink: 0;
@@ -1397,7 +1389,7 @@
 }
 
 .settings-heading {
-  color: #67fff2;
+  color: #FF9E3D;
   font-size: 22px;
   margin: 0 0 20px 0;
 }

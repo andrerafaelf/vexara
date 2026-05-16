@@ -38,8 +38,8 @@
 }
 
 .sc-tab.active {
-  color: #67FFF2;
-  border-color: #67FFF2;
+  color: #FF9E3D;
+  border-color: #FF9E3D;
 }
 
 /* Range selector (7d / 30d / 90d) */
@@ -67,7 +67,7 @@
 .sc-range.active {
   color: #DDE4F2;
   border-color: #97A0BE;
-  background: rgba(103,255,242, 0.1);
+  background: rgba(255, 158, 61, 0.1);
 }
 
 /* Metric label between toolbar and chart */
@@ -98,5 +98,5 @@
 }
 
 .sc-error {
-  color: #67FFF2;
+  color: #FF9E3D;
 }

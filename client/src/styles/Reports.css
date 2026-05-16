@@ -12,7 +12,7 @@
 }
 
 .reports-header h2 {
-  color: #67FFF2;
+  color: #FF9E3D;
   margin-bottom: 10px;
   font-size: 28px;
 }
@@ -33,7 +33,7 @@
 .btn-read-all {
   background: #1A1F38;
   color: #fff;
-  border: 1px solid #67FFF2;
+  border: 1px solid #FF9E3D;
   padding: 8px 14px;
   border-radius: 6px;
   cursor: pointer;
@@ -44,7 +44,7 @@
 }
 
 .btn-read-all:hover {
-  background: #67FFF2;
+  background: #FF9E3D;
   color: #0B0F1F;
 }
 
@@ -136,15 +136,15 @@
 
 .report-item:hover {
   transform: translateX(5px);
-  border-color: #67FFF2;
+  border-color: #FF9E3D;
 }
 
 .report-item.won {
-  border-left: 4px solid #81EC86;
+  border-left: 4px solid #56D364;
 }
 
 .report-item.lost {
-  border-left: 4px solid #FF6B81;
+  border-left: 4px solid #F85149;
 }
 
 .report-icon {
@@ -173,21 +173,21 @@
 }
 
 .report-meta .victory {
-  color: #81EC86;
+  color: #56D364;
   font-weight: 600;
 }
 
 .report-meta .defeat {
-  color: #FF6B81;
+  color: #F85149;
   font-weight: 600;
 }
 
 .report-meta .loot {
-  color: #FFD166;
+  color: #D29922;
 }
 
 .report-arrow {
-  color: #67FFF2;
+  color: #FF9E3D;
   font-size: 24px;
   flex-shrink: 0;
 }
@@ -208,15 +208,15 @@
 }
 
 .report-result.victory {
-  background: rgba(129,236,134, 0.2);
-  border: 2px solid #81EC86;
-  color: #81EC86;
+  background: rgba(86, 211, 100, 0.2);
+  border: 2px solid #56D364;
+  color: #56D364;
 }
 
 .report-result.defeat {
   background: rgba(244, 67, 54, 0.2);
-  border: 2px solid #FF6B81;
-  color: #FF6B81;
+  border: 2px solid #F85149;
+  color: #F85149;
 }
 
 .report-section {
@@ -226,7 +226,7 @@
 }
 
 .report-section h3 {
-  color: #67FFF2;
+  color: #FF9E3D;
   margin-bottom: 16px;
   font-size: 18px;
   border-bottom: 2px solid #2A3056;
@@ -256,7 +256,7 @@
   padding: 12px;
   text-align: left;
   font-weight: 600;
-  border-bottom: 2px solid #67FFF2;
+  border-bottom: 2px solid #FF9E3D;
 }
 
 .report-table tbody td {
@@ -270,11 +270,11 @@
 }
 
 .report-table tbody tr:hover {
-  background: rgba(103,255,242, 0.1);
+  background: rgba(255, 158, 61, 0.1);
 }
 
 .report-table .losses {
-  color: #FF6B81;
+  color: #F85149;
   font-weight: 600;
 }
 
@@ -296,7 +296,7 @@
 .resource-item span {
   font-weight: 600;
   margin-right: 8px;
-  color: #FFD166;
+  color: #D29922;
 }
 
 /* Scout attack section */
@@ -337,7 +337,7 @@
 }
 
 .scout-attack-btn {
-  background: #67FFF2;
+  background: #FF9E3D;
   color: #0B0F1F;
   border: none;
   padding: 9px 18px;
@@ -351,7 +351,7 @@
 }
 
 .scout-attack-btn:hover {
-  background: #3FE5D8;
+  background: #F58A1F;
 }
 
 .scout-attack-form {
@@ -385,7 +385,7 @@
 .scout-troop-row input {
   width: 56px;
   padding: 5px 6px;
-  border: 1px solid #43B0AF;
+  border: 1px solid #4A9EB0;
   border-radius: 6px;
   background: #1A1F38;
   color: #F5F8FF;
@@ -395,7 +395,7 @@
 
 .scout-troop-row input:focus {
   outline: none;
-  border-color: #67FFF2;
+  border-color: #FF9E3D;
 }
 
 .scout-troop-row input:disabled {
@@ -434,7 +434,7 @@
 
 .scout-send-btn {
   flex: 1;
-  background: #67FFF2;
+  background: #FF9E3D;
   color: #0B0F1F;
   border: none;
   padding: 10px;
@@ -446,7 +446,7 @@
 }
 
 .scout-send-btn:hover {
-  background: #3FE5D8;
+  background: #F58A1F;
 }
 
 /* Responsive */

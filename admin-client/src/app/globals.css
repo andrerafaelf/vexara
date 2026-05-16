@@ -1,40 +1,41 @@
 /* ============================================================
-   Vexara — Design Tokens
-   Modern SaaS / game-platform aesthetic. Dark, layered, premium.
+   Vexara - Design Tokens
+   Industrial military sci-fi. Gunmetal base, amber primary.
    ============================================================ */
 
 :root {
-  /* ── Brand palette ───────────────────────────────────────── */
-  --color-navy-900: #0F1326;       /* app background, deepest layer */
-  --color-navy-800: #141937;       /* page background */
-  --color-navy-700: #1A1F38;       /* primary navy (surface base) */
-  --color-navy-600: #232A49;       /* elevated surface */
-  --color-navy-500: #2A3056;       /* secondary panel */
-  --color-navy-400: #353C66;       /* hover panel */
-  --color-navy-300: #4A5288;       /* borders, dividers when prominent */
+  /* ── Brand palette (under legacy --color-navy-* / --color-cyan-*
+        names so consumers across the codebase keep resolving) ── */
+  --color-navy-900: #08090C;
+  --color-navy-800: #0D1117;
+  --color-navy-700: #161B22;
+  --color-navy-600: #1C232C;
+  --color-navy-500: #222831;
+  --color-navy-400: #2A323C;
+  --color-navy-300: #3D4651;
 
-  --color-cyan-500: #67FFF2;       /* cyan accent (primary action) */
-  --color-cyan-600: #3FE5D8;       /* cyan hover */
-  --color-cyan-700: #2BC7BB;       /* cyan pressed */
+  --color-cyan-500: #FF9E3D;
+  --color-cyan-600: #F58A1F;
+  --color-cyan-700: #D87718;
 
-  --color-teal-500: #43B0AF;       /* teal accent (secondary action) */
-  --color-teal-600: #348B8A;
-  --color-teal-700: #2A6F6E;
+  --color-teal-500: #4A9EB0;
+  --color-teal-600: #3B8090;
+  --color-teal-700: #2E6571;
 
-  --color-lime-500: #81EC86;       /* lime accent (success / gain) */
-  --color-lime-600: #5FD466;
-  --color-lime-700: #4BB052;
+  --color-lime-500: #56D364;
+  --color-lime-600: #3FB14C;
+  --color-lime-700: #2F8A39;
 
-  --color-amber-500: #FFD166;      /* warning / resources */
-  --color-rose-500: #FF6B81;       /* danger / loss */
-  --color-rose-600: #E14E66;
+  --color-amber-500: #D29922;
+  --color-rose-500: #F85149;
+  --color-rose-600: #DA3E37;
 
   /* ── Text ─────────────────────────────────────────────────── */
-  --text-strong: #F5F8FF;          /* primary text */
-  --text-default: #DDE4F2;
-  --text-muted: #97A0BE;           /* secondary text — WCAG AA on navy */
-  --text-faint: #6A7395;
-  --text-on-accent: #0B0F1F;       /* text on cyan/lime buttons */
+  --text-strong: #F0F6FC;
+  --text-default: #C9D1D9;
+  --text-muted: #8B949E;
+  --text-faint: #6E7681;
+  --text-on-accent: #0D1117;
 
   /* ── Semantic surfaces ────────────────────────────────────── */
   --bg-app: var(--color-navy-800);
@@ -44,35 +45,35 @@
   --bg-elevated: var(--color-navy-400);
   --bg-overlay: rgba(8, 11, 26, 0.72);
 
-  /* ── Borders ──────────────────────────────────────────────── */
-  --border-subtle: rgba(103, 255, 242, 0.08);
-  --border-default: rgba(154, 168, 214, 0.12);
-  --border-strong: rgba(154, 168, 214, 0.22);
-  --border-accent: rgba(103, 255, 242, 0.45);
+  /* ── Borders (flat steel) ────────────────────────────────── */
+  --border-subtle: rgba(255, 255, 255, 0.04);
+  --border-default: #30363D;
+  --border-strong: #444C56;
+  --border-accent: rgba(255, 158, 61, 0.45);
 
   /* ── Accents (semantic aliases) ───────────────────────────── */
   --accent: var(--color-cyan-500);
   --accent-hover: var(--color-cyan-600);
   --accent-pressed: var(--color-cyan-700);
-  --accent-soft: rgba(103, 255, 242, 0.14);
-  --accent-soft-hover: rgba(103, 255, 242, 0.22);
+  --accent-soft: rgba(255, 158, 61, 0.12);
+  --accent-soft-hover: rgba(255, 158, 61, 0.20);
 
   --accent-2: var(--color-teal-500);
-  --accent-2-soft: rgba(67, 176, 175, 0.16);
+  --accent-2-soft: rgba(74, 158, 176, 0.14);
 
   --success: var(--color-lime-500);
-  --success-soft: rgba(129, 236, 134, 0.16);
+  --success-soft: rgba(86, 211, 100, 0.14);
   --warning: var(--color-amber-500);
-  --warning-soft: rgba(255, 209, 102, 0.16);
+  --warning-soft: rgba(210, 153, 34, 0.14);
   --danger: var(--color-rose-500);
-  --danger-soft: rgba(255, 107, 129, 0.16);
+  --danger-soft: rgba(248, 81, 73, 0.14);
 
-  /* ── Radii ────────────────────────────────────────────────── */
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
+  /* ── Radii (sharpened) ───────────────────────────────────── */
+  --radius-xs: 1px;
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+  --radius-xl: 6px;
   --radius-pill: 999px;
 
   /* ── Spacing scale (4px grid) ─────────────────────────────── */
@@ -108,15 +109,14 @@
   --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.50);
   --shadow-xl: 0 28px 60px rgba(0, 0, 0, 0.55);
 
-  --glow-accent: 0 0 0 1px rgba(103, 255, 242, 0.35),
-                 0 0 18px rgba(103, 255, 242, 0.25);
-  --glow-accent-soft: 0 0 18px rgba(103, 255, 242, 0.18);
-  --glow-success: 0 0 18px rgba(129, 236, 134, 0.22);
-  --glow-danger: 0 0 18px rgba(255, 107, 129, 0.22);
+  --glow-accent: 0 0 0 1px rgba(255, 158, 61, 0.45);
+  --glow-accent-soft: 0 0 0 1px rgba(255, 158, 61, 0.25);
+  --glow-success: 0 0 0 1px rgba(86, 211, 100, 0.40);
+  --glow-danger: 0 0 0 1px rgba(248, 81, 73, 0.40);
 
   /* ── Focus ring ───────────────────────────────────────────── */
   --ring: 0 0 0 2px var(--color-navy-800),
-          0 0 0 4px rgba(103, 255, 242, 0.65);
+          0 0 0 4px rgba(255, 158, 61, 0.65);
 
   /* ── Motion ───────────────────────────────────────────────── */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -155,10 +155,7 @@ body {
   font-family: var(--font-sans);
   font-size: var(--text-base);
   line-height: 1.5;
-  background:
-    radial-gradient(1200px 600px at 80% -10%, rgba(67, 176, 175, 0.12), transparent 60%),
-    radial-gradient(900px 500px at -10% 100%, rgba(103, 255, 242, 0.08), transparent 60%),
-    var(--bg-app);
+  background: var(--bg-app);
   color: var(--text-default);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -192,7 +189,7 @@ a:hover {
 }
 
 ::selection {
-  background: rgba(103, 255, 242, 0.30);
+  background: rgba(255, 158, 61, 0.30);
   color: var(--text-strong);
 }
 
@@ -279,7 +276,7 @@ input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(103, 255, 242, 0.18);
+  box-shadow: 0 0 0 2px rgba(255, 158, 61, 0.25);
   background: var(--color-navy-700);
 }
 
@@ -365,14 +362,14 @@ a:focus-visible,
 }
 
 .vx-btn-primary {
-  background: linear-gradient(180deg, var(--color-cyan-500) 0%, var(--color-cyan-600) 100%);
+  background: var(--color-cyan-500);
   color: var(--text-on-accent);
-  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .vx-btn-primary:hover:not(:disabled) {
-  background: linear-gradient(180deg, var(--color-cyan-600) 0%, var(--color-cyan-700) 100%);
-  box-shadow: var(--shadow-md), var(--glow-accent-soft);
+  background: var(--color-cyan-600);
+  box-shadow: var(--shadow-sm);
   transform: translateY(-1px);
 }
 

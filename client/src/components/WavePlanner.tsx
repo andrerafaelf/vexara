@@ -177,7 +177,7 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
       await doSend();
     } else {
       setTimeout(doSend, delay);
-      toast(`Wave from ${nexus.name} scheduled — launches in ${formatDuration(travelMin)}`, 'info');
+      toast(`Wave from ${nexus.name} scheduled. Launches in ${formatDuration(travelMin)}`, 'info');
       setWaves((prev) => prev.map((w) => w.id !== wave.id ? w : { ...w, sending: false }));
     }
   };
@@ -278,7 +278,7 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
                 {launchCountdown && !wave.sent && (
                   <div className={`wplanner-countdown ${isPast ? 'wplanner-countdown--past' : ''}`}>
                     {launchCountdown}
-                    {isPast && ' — adjust arrival time'}
+                    {isPast && ' · adjust arrival time'}
                   </div>
                 )}
 

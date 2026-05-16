@@ -8,7 +8,7 @@
 }
 
 .market-header h2 {
-  color: #67FFF2;
+  color: #FF9E3D;
   font-size: 32px;
   margin-bottom: 6px;
 }
@@ -26,9 +26,9 @@
 
 .market-error,
 .market-form-error {
-  color: #67FFF2;
-  background: rgba(103,255,242, 0.1);
-  border: 1px solid #67FFF2;
+  color: #FF9E3D;
+  background: rgba(255, 158, 61, 0.1);
+  border: 1px solid #FF9E3D;
   border-radius: 6px;
   padding: 10px 14px;
   margin-bottom: 16px;
@@ -40,7 +40,7 @@
 }
 
 .market-create-btn {
-  background: #67FFF2;
+  background: #FF9E3D;
   color: #0B0F1F;
   padding: 10px 20px;
   border-radius: 6px;
@@ -50,7 +50,7 @@
 }
 
 .market-create-btn:hover {
-  background: #3FE5D8;
+  background: #F58A1F;
 }
 
 /* Create form */
@@ -63,7 +63,7 @@
 }
 
 .market-create-form h3 {
-  color: #67FFF2;
+  color: #FF9E3D;
   margin-bottom: 16px;
   font-size: 18px;
 }
@@ -136,7 +136,7 @@
 }
 
 .market-form-side input::placeholder {
-  color: #43B0AF;
+  color: #4A9EB0;
 }
 
 .market-amount-row {
@@ -167,7 +167,7 @@
 
 .market-amount-hint {
   font-size: 11px;
-  color: #43B0AF;
+  color: #4A9EB0;
 }
 
 .market-form-arrow {
@@ -178,7 +178,7 @@
 }
 
 .market-submit-btn {
-  background: #67FFF2;
+  background: #FF9E3D;
   color: #0B0F1F;
   padding: 10px 24px;
   border-radius: 6px;
@@ -188,7 +188,7 @@
 }
 
 .market-submit-btn:hover:not(:disabled) {
-  background: #3FE5D8;
+  background: #F58A1F;
 }
 
 .market-submit-btn:disabled {
@@ -211,7 +211,7 @@
 }
 
 .market-empty-note {
-  color: #43B0AF;
+  color: #4A9EB0;
   font-size: 14px;
   font-weight: normal;
   text-transform: none;
@@ -310,8 +310,8 @@
 }
 
 .market-amount-readonly {
-  background: rgba(103,255,242, 0.06);
-  border-color: rgba(103,255,242, 0.2);
+  background: rgba(255, 158, 61, 0.06);
+  border-color: rgba(255, 158, 61, 0.2);
   color: rgba(255, 255, 255, 0.5);
   cursor: not-allowed;
 }
@@ -342,7 +342,7 @@
 }
 
 .market-buy-btn {
-  background: #81EC86;
+  background: #56D364;
   color: #0B0F1F;
   padding: 8px 14px;
   border-radius: 5px;
@@ -420,7 +420,7 @@
 }
 
 .market-history-arrow {
-  color: #67FFF2;
+  color: #FF9E3D;
 }
 
 .market-history-meta {
@@ -439,7 +439,7 @@
 
 /* System Exchange */
 .market-system-rate-note {
-  color: #FFD166;
+  color: #D29922;
   font-size: 12px;
   font-weight: normal;
   text-transform: none;
@@ -502,9 +502,9 @@
 }
 
 .market-system-tab--active {
-  background: #FFD166;
+  background: #D29922;
   color: #0F1326;
-  border-color: #FFD166;
+  border-color: #D29922;
 }
 
 .market-system-form {
@@ -549,20 +549,20 @@
 }
 
 .market-system-preview strong {
-  color: #FFD166;
+  color: #D29922;
 }
 
 .market-system-success {
-  background: rgba(129,236,134, 0.1);
-  border: 1px solid #81EC86;
+  background: rgba(86, 211, 100, 0.1);
+  border: 1px solid #56D364;
   border-radius: 6px;
   padding: 8px 12px;
   font-size: 13px;
-  color: #81EC86;
+  color: #56D364;
 }
 
 .market-system-btn {
-  background: #FFD166;
+  background: #D29922;
   color: #0F1326;
   padding: 9px 20px;
   border-radius: 6px;
@@ -573,7 +573,7 @@
 }
 
 .market-system-btn:hover:not(:disabled) {
-  background: #FFD166;
+  background: #D29922;
 }
 
 .market-system-btn:disabled {

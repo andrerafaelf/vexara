@@ -12,7 +12,7 @@
 
 .wplanner-modal {
   background: #141937;
-  border: 1px solid rgba(103, 255, 242, 0.18);
+  border: 1px solid rgba(255, 158, 61, 0.18);
   border-radius: 12px;
   width: 100%;
   max-width: 560px;
@@ -20,7 +20,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(103,255,242,0.06);
+  box-shadow: 0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(255, 158, 61,0.06);
 }
 
 /* Header */
@@ -39,7 +39,7 @@
   gap: 8px;
 }
 
-.wplanner-header-icon { color: #67FFF2; flex-shrink: 0; }
+.wplanner-header-icon { color: #FF9E3D; flex-shrink: 0; }
 
 .wplanner-title {
   color: #F5F8FF;
@@ -48,7 +48,7 @@
 }
 
 .wplanner-target {
-  color: #FF6B81;
+  color: #F85149;
   font-size: 13px;
   font-weight: 600;
 }
@@ -101,7 +101,7 @@
 }
 .wplanner-arrival-input:focus {
   outline: none;
-  border-color: #67FFF2;
+  border-color: #FF9E3D;
 }
 .wplanner-arrival-input::-webkit-calendar-picker-indicator {
   filter: invert(0.7);
@@ -147,11 +147,11 @@
 
 .wplanner-wave--sent {
   opacity: 0.5;
-  border-color: rgba(129,236,134,0.3);
+  border-color: rgba(86, 211, 100,0.3);
 }
 
 .wplanner-wave--error {
-  border-color: rgba(255,107,129,0.4);
+  border-color: rgba(248, 81, 73,0.4);
 }
 
 .wplanner-wave-header {
@@ -166,7 +166,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: #67FFF2;
+  color: #FF9E3D;
   flex-shrink: 0;
 }
 
@@ -182,7 +182,7 @@
   flex: 1;
   min-width: 0;
 }
-.wplanner-nexus-select:focus { outline: none; border-color: #67FFF2; }
+.wplanner-nexus-select:focus { outline: none; border-color: #FF9E3D; }
 .wplanner-nexus-select:disabled { opacity: 0.5; cursor: default; }
 
 .wplanner-travel-time {
@@ -196,8 +196,8 @@
 }
 
 .wplanner-travel-time--past {
-  color: #FF6B81;
-  background: rgba(255,107,129,0.1);
+  color: #F85149;
+  background: rgba(248, 81, 73,0.1);
 }
 
 .wplanner-remove-btn {
@@ -214,14 +214,14 @@
   transition: color 0.15s, background 0.15s;
   flex-shrink: 0;
 }
-.wplanner-remove-btn:hover { color: #FF6B81; background: rgba(255,107,129,0.08); }
+.wplanner-remove-btn:hover { color: #F85149; background: rgba(248, 81, 73,0.08); }
 
 .wplanner-sent-badge {
   font-size: 11px;
   font-weight: 700;
-  color: #81EC86;
-  background: rgba(129,236,134,0.1);
-  border: 1px solid rgba(129,236,134,0.25);
+  color: #56D364;
+  background: rgba(86, 211, 100,0.1);
+  border: 1px solid rgba(86, 211, 100,0.25);
   padding: 3px 7px;
   border-radius: 999px;
   flex-shrink: 0;
@@ -230,22 +230,22 @@
 .wplanner-countdown {
   font-size: 12px;
   font-weight: 600;
-  color: #67FFF2;
-  background: rgba(103,255,242,0.06);
+  color: #FF9E3D;
+  background: rgba(255, 158, 61,0.06);
   padding: 5px 10px;
   border-radius: 5px;
   font-variant-numeric: tabular-nums;
 }
 
 .wplanner-countdown--past {
-  color: #FF6B81;
-  background: rgba(255,107,129,0.06);
+  color: #F85149;
+  background: rgba(248, 81, 73,0.06);
 }
 
 .wplanner-wave-error {
   font-size: 12px;
-  color: #FF6B81;
-  background: rgba(255,107,129,0.08);
+  color: #F85149;
+  background: rgba(248, 81, 73,0.08);
   padding: 6px 10px;
   border-radius: 5px;
 }
@@ -287,7 +287,7 @@
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
-.wplanner-troop-input:focus { outline: none; border-color: #67FFF2; }
+.wplanner-troop-input:focus { outline: none; border-color: #FF9E3D; }
 
 .wplanner-troop-avail {
   font-size: 11px;
@@ -313,8 +313,8 @@
   align-items: center;
   gap: 6px;
   background: #1A1F38;
-  color: #67FFF2;
-  border: 1px solid rgba(103,255,242,0.3);
+  color: #FF9E3D;
+  border: 1px solid rgba(255, 158, 61,0.3);
   padding: 7px 14px;
   border-radius: 6px;
   font-size: 13px;
@@ -322,7 +322,7 @@
   cursor: pointer;
   transition: all 0.15s;
 }
-.wplanner-send-wave-btn:hover:not(:disabled) { background: rgba(103,255,242,0.1); }
+.wplanner-send-wave-btn:hover:not(:disabled) { background: rgba(255, 158, 61,0.1); }
 .wplanner-send-wave-btn:disabled { opacity: 0.4; cursor: default; }
 
 /* Footer */
@@ -357,7 +357,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #67FFF2;
+  background: #FF9E3D;
   color: #0B0F1F;
   border: none;
   padding: 8px 18px;
@@ -367,7 +367,7 @@
   cursor: pointer;
   transition: background 0.15s;
 }
-.wplanner-send-all-btn:hover:not(:disabled) { background: #3FE5D8; }
+.wplanner-send-all-btn:hover:not(:disabled) { background: #F58A1F; }
 .wplanner-send-all-btn:disabled { opacity: 0.5; cursor: default; }
 
 @media (max-width: 560px) {

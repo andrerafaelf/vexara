@@ -14,7 +14,7 @@
 }
 
 .notif-title {
-  color: #67FFF2;
+  color: #FF9E3D;
   font-size: 16px;
   font-weight: 700;
   margin: 0;
@@ -46,8 +46,8 @@
 }
 
 .notif-guide-btn:hover {
-  background: #67FFF2;
-  border-color: #67FFF2;
+  background: #FF9E3D;
+  border-color: #FF9E3D;
   color: #0B0F1F;
 }
 
@@ -65,8 +65,8 @@
 }
 
 .notif-dot--on {
-  background: #81EC86;
-  box-shadow: 0 0 6px #81EC86;
+  background: #56D364;
+  box-shadow: 0 0 6px #56D364;
 }
 
 .notif-dot--off {
@@ -79,8 +79,8 @@
 }
 
 .notif-denied {
-  background: rgba(103,255,242, 0.15);
-  border: 1px solid rgba(103,255,242, 0.4);
+  background: rgba(255, 158, 61, 0.15);
+  border: 1px solid rgba(255, 158, 61, 0.4);
   border-radius: 6px;
   color: #FF8FA3;
   font-size: 13px;
@@ -96,7 +96,7 @@
 
 .notif-enable-btn {
   width: 100%;
-  background: #67FFF2;
+  background: #FF9E3D;
   color: #0B0F1F;
   border: none;
   border-radius: 6px;
@@ -108,7 +108,7 @@
 }
 
 .notif-enable-btn:hover:not(:disabled) {
-  background: #E14E66;
+  background: #DA3E37;
 }
 
 .notif-enable-btn:disabled {
@@ -171,11 +171,11 @@
 }
 
 .notif-toggle:focus-visible {
-  box-shadow: 0 0 0 2px #67FFF2;
+  box-shadow: 0 0 0 2px #FF9E3D;
 }
 
 .notif-toggle--on {
-  background: #67FFF2;
+  background: #FF9E3D;
 }
 
 .notif-toggle-thumb {
@@ -207,8 +207,8 @@
 }
 
 .notif-disable-btn:hover:not(:disabled) {
-  border-color: #67FFF2;
-  color: #67FFF2;
+  border-color: #FF9E3D;
+  color: #FF9E3D;
 }
 
 .notif-disable-btn:disabled {

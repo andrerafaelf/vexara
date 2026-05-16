@@ -218,10 +218,9 @@
 
 .cc-resource-bar {
   height: 100%;
-  background: linear-gradient(90deg, var(--color-teal-500), var(--color-cyan-500));
-  border-radius: var(--radius-pill);
+  background: var(--color-cyan-500);
+  border-radius: 0;
   transition: width 0.6s var(--ease-out);
-  box-shadow: 0 0 8px rgba(103, 255, 242, 0.25);
 }
 
 .cc-resource-rate {
@@ -325,7 +324,7 @@
 
 .cc-empire-stat-value {
   display: block;
-  color: #67FFF2;
+  color: #FF9E3D;
   font-size: 22px;
   font-weight: bold;
   line-height: 1;
@@ -369,7 +368,7 @@
 }
 
 .activity-nexus {
-  color: #67FFF2;
+  color: #FF9E3D;
   font-weight: bold;
   margin-bottom: 4px;
   font-size: 13px;
@@ -429,7 +428,7 @@
 }
 
 .battle-troop-count {
-  color: #67FFF2;
+  color: #FF9E3D;
   font-weight: bold;
   flex-shrink: 0;
 }
@@ -496,7 +495,7 @@
 
 .quest-batch-locked {
   opacity: 0.7;
-  border: 2px dashed #43B0AF;
+  border: 2px dashed #4A9EB0;
 }
 
 .intro-quests-header {
@@ -512,7 +511,7 @@
 }
 
 .intro-quests-header span {
-  color: #81EC86;
+  color: #56D364;
   font-weight: bold;
 }
 
@@ -527,7 +526,7 @@
 
 .quest-batch-earned {
   margin: 0 0 10px 0;
-  color: #81EC86;
+  color: #56D364;
   font-size: 12px;
   font-weight: bold;
 }
@@ -547,7 +546,7 @@
 }
 
 .intro-quest-item.completed {
-  border-left: 3px solid #81EC86;
+  border-left: 3px solid #56D364;
 }
 
 .intro-quest-icon {
@@ -657,7 +656,7 @@
 }
 
 .attack-modal-header h3 {
-  color: #67FFF2;
+  color: #FF9E3D;
   margin: 0;
   font-size: 22px;
 }
@@ -665,7 +664,7 @@
 .close-btn {
   background: none;
   border: none;
-  color: #67FFF2;
+  color: #FF9E3D;
   font-size: 24px;
   cursor: pointer;
   padding: 0;
@@ -709,7 +708,7 @@
 }
 
 .arrival-countdown {
-  color: #67FFF2 !important;
+  color: #FF9E3D !important;
   font-size: 24px !important;
   font-weight: bold;
 }
@@ -730,7 +729,7 @@
 }
 
 .troop-count {
-  color: #67FFF2;
+  color: #FF9E3D;
   font-weight: bold;
 }
 
@@ -746,7 +745,7 @@
 }
 
 .dashboard-header h2 {
-  color: #67FFF2;
+  color: #FF9E3D;
   font-size: 32px;
   margin-bottom: 10px;
 }
@@ -771,12 +770,12 @@
 }
 
 .dashboard-card:hover {
-  border-color: #67FFF2;
+  border-color: #FF9E3D;
   transform: translateY(-2px);
 }
 
 .dashboard-card h3 {
-  color: #67FFF2;
+  color: #FF9E3D;
   margin-bottom: 15px;
   font-size: 18px;
   display: flex;
@@ -833,7 +832,7 @@
 
 .production-rate {
   font-size: 11px;
-  color: #81EC86;
+  color: #56D364;
   font-weight: normal;
   margin-top: 2px;
 }
@@ -856,7 +855,7 @@
   display: block;
   font-size: 32px;
   font-weight: bold;
-  color: #67FFF2;
+  color: #FF9E3D;
   line-height: 1;
 }
 
@@ -892,7 +891,7 @@
 }
 
 .battle-troop-count {
-  color: #67FFF2;
+  color: #FF9E3D;
   font-weight: bold;
 }
 
@@ -925,7 +924,7 @@
 }
 
 .activity-nexus {
-  color: #67FFF2;
+  color: #FF9E3D;
   font-weight: bold;
   margin-bottom: 5px;
 }
@@ -996,7 +995,7 @@
 
 .nexus-summary:hover {
   background: #2A3056;
-  border-color: #67FFF2;
+  border-color: #FF9E3D;
   transform: translateY(-2px);
 }
 
@@ -1084,7 +1083,7 @@
 
 .quest-batch-locked {
   opacity: 0.7;
-  border: 2px dashed #43B0AF;
+  border: 2px dashed #4A9EB0;
 }
 
 .intro-quests-header {
@@ -1100,7 +1099,7 @@
 }
 
 .intro-quests-header span {
-  color: #81EC86;
+  color: #56D364;
   font-weight: bold;
 }
 
@@ -1115,7 +1114,7 @@
 
 .quest-batch-earned {
   margin: 0 0 10px 0;
-  color: #81EC86;
+  color: #56D364;
   font-size: 12px;
   font-weight: bold;
 }
@@ -1135,7 +1134,7 @@
 }
 
 .intro-quest-item.completed {
-  border-left: 3px solid #81EC86;
+  border-left: 3px solid #56D364;
 }
 
 .intro-quest-icon {
@@ -1223,7 +1222,7 @@
 }
 
 .attack-modal-header h3 {
-  color: #67FFF2;
+  color: #FF9E3D;
   margin: 0;
   font-size: 22px;
 }
@@ -1231,7 +1230,7 @@
 .close-btn {
   background: none;
   border: none;
-  color: #67FFF2;
+  color: #FF9E3D;
   font-size: 24px;
   cursor: pointer;
   padding: 0;
@@ -1261,7 +1260,7 @@
 }
 
 .attack-info-section h4 {
-  color: #81EC86;
+  color: #56D364;
   margin: 0 0 10px 0;
   font-size: 14px;
   text-transform: uppercase;
@@ -1275,7 +1274,7 @@
 }
 
 .arrival-countdown {
-  color: #67FFF2 !important;
+  color: #FF9E3D !important;
   font-weight: bold;
   font-size: 20px !important;
 }
@@ -1301,6 +1300,6 @@
 }
 
 .troop-count {
-  color: #81EC86 !important;
+  color: #56D364 !important;
   font-weight: bold;
 }

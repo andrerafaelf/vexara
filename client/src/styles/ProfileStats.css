@@ -65,7 +65,7 @@
 }
 
 .ps-error {
-  color: #67FFF2;
+  color: #FF9E3D;
 }
 
 /* Header */
@@ -83,7 +83,7 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: #67FFF2;
+  background: #FF9E3D;
   color: #0B0F1F;
   font-size: 26px;
   font-weight: bold;
@@ -100,7 +100,7 @@
 }
 
 .ps-username {
-  color: #67FFF2;
+  color: #FF9E3D;
   font-size: 22px;
   margin: 0;
 }

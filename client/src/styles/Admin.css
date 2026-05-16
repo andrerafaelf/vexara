@@ -5,7 +5,7 @@
 }
 
 .admin-panel h2 {
-  color: #67FFF2;
+  color: #FF9E3D;
   font-size: 32px;
   margin-bottom: 30px;
 }
@@ -26,7 +26,7 @@
 }
 
 .stat-card h3 {
-  color: #67FFF2;
+  color: #FF9E3D;
   font-size: 36px;
   margin: 0 0 10px 0;
 }
@@ -46,7 +46,7 @@
 }
 
 .admin-section h3 {
-  color: #67FFF2;
+  color: #FF9E3D;
   margin-top: 0;
   margin-bottom: 20px;
 }
@@ -70,7 +70,7 @@
 
 .users-table th {
   background: #1A1F38;
-  color: #67FFF2;
+  color: #FF9E3D;
   font-weight: bold;
 }
 
@@ -79,7 +79,7 @@
 }
 
 .btn-small {
-  background: #43B0AF;
+  background: #4A9EB0;
   color: white;
   border: none;
   padding: 5px 10px;
@@ -94,11 +94,11 @@
 }
 
 .btn-small.btn-warning {
-  background: #FFD166;
+  background: #D29922;
 }
 
 .btn-small.btn-warning:hover {
-  background: #FFD166;
+  background: #D29922;
 }
 
 .nexus-actions {
@@ -109,7 +109,7 @@
 }
 
 .btn-danger {
-  background: #FF6B81;
+  background: #F85149;
   color: white;
   border: none;
   padding: 8px 15px;
@@ -119,7 +119,7 @@
 }
 
 .btn-danger:hover {
-  background: #FF6B81;
+  background: #F85149;
 }
 
 .top-players {
@@ -141,7 +141,7 @@
 
 .top-players .rank {
   font-weight: bold;
-  color: #67FFF2;
+  color: #FF9E3D;
   min-width: 40px;
 }
 
@@ -209,7 +209,7 @@
 }
 
 .modal-header h3 {
-  color: #67FFF2;
+  color: #FF9E3D;
   margin: 0;
 }
 
@@ -256,7 +256,7 @@
 
 .form-group input {
   background: #1A1F38;
-  border: 1px solid #43B0AF;
+  border: 1px solid #4A9EB0;
   color: #F5F8FF;
   padding: 10px;
   border-radius: 5px;
@@ -265,7 +265,7 @@
 
 .form-group input:focus {
   outline: none;
-  border-color: #67FFF2;
+  border-color: #FF9E3D;
 }
 
 .modal-footer {
@@ -288,17 +288,17 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #67FFF2 0%, #FF6B81 100%);
+  background: linear-gradient(135deg, #FF9E3D 0%, #F85149 100%);
   color: #0B0F1F;
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(103,255,242, 0.4);
+  box-shadow: 0 4px 8px rgba(255, 158, 61, 0.4);
 }
 
 .btn-secondary {
-  background: #43B0AF;
+  background: #4A9EB0;
   color: white;
 }
 
@@ -314,12 +314,12 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  background: #E14E66;
+  background: #DA3E37;
   color: white;
 }
 
 .btn-danger:hover {
-  background: #E14E66;
+  background: #DA3E37;
 }
 
 /* Attacks Table */
@@ -342,7 +342,7 @@
 
 .attacks-table th {
   background: #1A1F38;
-  color: #67FFF2;
+  color: #FF9E3D;
   font-weight: bold;
 }
 
@@ -356,7 +356,7 @@
 }
 
 .time-urgent {
-  color: #FF6B81;
+  color: #F85149;
   font-weight: bold;
   animation: pulse 1s infinite;
 }

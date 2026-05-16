@@ -42,7 +42,7 @@ const NexusMap: React.FC<NexusMapProps> = ({ nexus, compact = false, onClickBuil
               key={key}
               className={`nexus-map-tile${isUpgrading ? ' is-upgrading' : ''}${level === 0 ? ' is-unbuilt' : ''}`}
               onClick={onClickBuilding}
-              title={`${name} — Level ${level}`}
+              title={`${name} · Level ${level}`}
             >
               <div className="nexus-map-tile-img-wrap">
                 <img src={imgSrc} alt={name} className="nexus-map-tile-img" loading="lazy" />

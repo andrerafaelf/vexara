@@ -1,0 +1,470 @@
+/* ============================================================
+   Palette preview — scoped, doesn't touch global tokens.
+   Each .pp-theme-* sets local CSS vars consumed by .pp-* parts.
+   ============================================================ */
+
+.pp-page {
+  min-height: 100vh;
+  padding: 32px 24px 80px;
+  background: #0a0d18;
+  color: #e6ebf5;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.pp-header {
+  max-width: 960px;
+  margin: 0 auto 28px;
+}
+
+.pp-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+  color: #f5f8ff;
+}
+
+.pp-header p {
+  color: #97a0be;
+  font-size: 14px;
+  line-height: 1.55;
+  margin: 0;
+  max-width: 60ch;
+}
+
+.pp-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+@media (min-width: 1100px) {
+  .pp-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ============================================================
+   Theme wrapper — defines tokens consumed below
+   Defaults match the CURRENT palette so anything that forgets
+   to override still renders sensibly.
+   ============================================================ */
+.pp-theme {
+  --pp-bg: #141937;
+  --pp-surface: #1A1F38;
+  --pp-surface-2: #232A49;
+  --pp-border: rgba(154, 168, 214, 0.18);
+  --pp-border-strong: rgba(154, 168, 214, 0.32);
+  --pp-text: #DDE4F2;
+  --pp-text-strong: #F5F8FF;
+  --pp-text-muted: #97A0BE;
+  --pp-accent: #67FFF2;
+  --pp-accent-hover: #3FE5D8;
+  --pp-on-accent: #0B0F1F;
+  --pp-success: #81EC86;
+  --pp-danger: #FF6B81;
+  --pp-warning: #FFD166;
+  --pp-info: #67FFF2;
+  --pp-radius: 10px;
+  --pp-radius-sm: 6px;
+  --pp-h-font: 'Inter', sans-serif;
+  --pp-num-font: 'JetBrains Mono', monospace;
+  --pp-hero-h: var(--pp-text-strong); /* fallback non-gradient */
+  --pp-hero-h-bg: none;
+  --pp-btn-primary-bg: linear-gradient(180deg, #67FFF2 0%, #3FE5D8 100%);
+  --pp-btn-primary-shadow: 0 6px 16px rgba(0, 0, 0, 0.40), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  --pp-card-bg: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0)), var(--pp-surface);
+  --pp-glow: 0 0 18px rgba(103, 255, 242, 0.18);
+
+  background: var(--pp-bg);
+  border: 1px solid var(--pp-border);
+  border-radius: var(--pp-radius);
+  padding: 20px;
+  color: var(--pp-text);
+}
+
+.pp-theme-header {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--pp-border);
+}
+
+.pp-theme-header h2 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--pp-text-strong);
+  letter-spacing: 0.02em;
+}
+
+.pp-theme-header p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--pp-text-muted);
+  line-height: 1.5;
+}
+
+/* ============================================================
+   THEME — Current (cyan gradient hero, glow on primary)
+   ============================================================ */
+.pp-theme-current {
+  --pp-hero-h-bg: linear-gradient(135deg, #67FFF2 0%, #43B0AF 100%);
+  --pp-hero-h-clip: text;
+}
+
+.pp-theme-current .pp-hero-h {
+  background: var(--pp-hero-h-bg);
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ============================================================
+   THEME — Industrial military sci-fi
+   Gunmetal base, amber primary, mono everywhere, sharp corners.
+   ============================================================ */
+.pp-theme-industrial {
+  --pp-bg: #0d1117;
+  --pp-surface: #161b22;
+  --pp-surface-2: #1c232c;
+  --pp-border: #30363d;
+  --pp-border-strong: #444c56;
+  --pp-text: #c9d1d9;
+  --pp-text-strong: #f0f6fc;
+  --pp-text-muted: #8b949e;
+  --pp-accent: #ff9e3d;
+  --pp-accent-hover: #ffb05c;
+  --pp-on-accent: #0d1117;
+  --pp-success: #56d364;
+  --pp-danger: #f85149;
+  --pp-warning: #d29922;
+  --pp-info: #4a9eb0;
+  --pp-radius: 2px;
+  --pp-radius-sm: 2px;
+  --pp-h-font: 'Inter', sans-serif;
+  --pp-btn-primary-bg: #ff9e3d;
+  --pp-btn-primary-shadow: 0 1px 0 rgba(0,0,0,0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  --pp-card-bg: var(--pp-surface);
+  --pp-glow: none;
+}
+
+.pp-theme-industrial .pp-hero-h {
+  font-family: var(--pp-h-font);
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+
+.pp-theme-industrial .pp-card-label {
+  font-family: var(--pp-num-font);
+}
+
+.pp-theme-industrial .pp-card,
+.pp-theme-industrial .pp-alert,
+.pp-theme-industrial .pp-btn,
+.pp-theme-industrial .pp-badge,
+.pp-theme-industrial .pp-form input {
+  border-radius: 2px;
+}
+
+/* ============================================================
+   THEME — Cold deep-space, desaturated
+   Same family, no gradients, no glows.
+   ============================================================ */
+.pp-theme-cold {
+  --pp-bg: #0a0f1c;
+  --pp-surface: #111827;
+  --pp-surface-2: #1f2937;
+  --pp-border: #1f2937;
+  --pp-border-strong: #374151;
+  --pp-text: #d1d5db;
+  --pp-text-strong: #f9fafb;
+  --pp-text-muted: #9ca3af;
+  --pp-accent: #5eead4;
+  --pp-accent-hover: #2dd4bf;
+  --pp-on-accent: #042f2e;
+  --pp-success: #22c55e;
+  --pp-danger: #ef4444;
+  --pp-warning: #f59e0b;
+  --pp-info: #60a5fa;
+  --pp-radius: 6px;
+  --pp-radius-sm: 4px;
+  --pp-btn-primary-bg: #14b8a6;
+  --pp-btn-primary-shadow: 0 1px 0 rgba(0,0,0,0.3);
+  --pp-card-bg: var(--pp-surface);
+  --pp-glow: none;
+}
+
+/* ============================================================
+   THEME — Imperial / faction-coded
+   ============================================================ */
+.pp-theme-imperial {
+  --pp-bg: #0a0a0a;
+  --pp-surface: #141414;
+  --pp-surface-2: #1c1818;
+  --pp-border: #2a2424;
+  --pp-border-strong: #3d3434;
+  --pp-text: #d4cfc0;
+  --pp-text-strong: #e8e2d4;
+  --pp-text-muted: #8a8478;
+  --pp-accent: #c1272d;
+  --pp-accent-hover: #d63a40;
+  --pp-on-accent: #f5ecdc;
+  --pp-success: #8fbc8f;
+  --pp-danger: #ff4444;
+  --pp-warning: #d4af37;
+  --pp-info: #6b7280;
+  --pp-radius: 1px;
+  --pp-radius-sm: 1px;
+  --pp-btn-primary-bg: #c1272d;
+  --pp-btn-primary-shadow: 0 1px 0 rgba(0,0,0,0.5);
+  --pp-card-bg: var(--pp-surface);
+  --pp-glow: none;
+}
+
+.pp-theme-imperial .pp-card,
+.pp-theme-imperial .pp-alert,
+.pp-theme-imperial .pp-btn,
+.pp-theme-imperial .pp-badge,
+.pp-theme-imperial .pp-form input {
+  border-radius: 1px;
+}
+
+.pp-theme-imperial .pp-hero-h {
+  font-family: 'Georgia', serif;
+  letter-spacing: 0.01em;
+}
+
+/* ============================================================
+   Sample components — consume the theme variables
+   ============================================================ */
+.pp-sample {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pp-sample-hero {
+  padding: 20px;
+  background: var(--pp-surface);
+  border: 1px solid var(--pp-border);
+  border-radius: var(--pp-radius);
+}
+
+.pp-hero-h {
+  font-family: var(--pp-h-font);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+  color: var(--pp-hero-h);
+}
+
+.pp-hero-sub {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--pp-text-muted);
+}
+
+.pp-hero-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  border-radius: var(--pp-radius-sm);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+
+.pp-btn-primary {
+  background: var(--pp-btn-primary-bg);
+  color: var(--pp-on-accent);
+  box-shadow: var(--pp-btn-primary-shadow);
+}
+
+.pp-btn-primary:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+.pp-btn-ghost {
+  background: transparent;
+  color: var(--pp-text);
+  border-color: var(--pp-border-strong);
+}
+
+.pp-btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--pp-text-strong);
+}
+
+/* Card / table */
+.pp-card {
+  background: var(--pp-card-bg);
+  border: 1px solid var(--pp-border);
+  border-radius: var(--pp-radius);
+  overflow: hidden;
+}
+
+.pp-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--pp-border);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.pp-card-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--pp-accent);
+  font-family: var(--pp-num-font);
+}
+
+.pp-card-meta {
+  font-size: 11px;
+  color: var(--pp-text-muted);
+  font-family: var(--pp-num-font);
+}
+
+.pp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.pp-table td {
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--pp-border);
+  color: var(--pp-text);
+}
+
+.pp-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.pp-num {
+  font-family: var(--pp-num-font);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--pp-text-strong);
+}
+
+.pp-pos { color: var(--pp-success); }
+.pp-neg { color: var(--pp-danger); }
+
+.pp-card-actions {
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--pp-border);
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.pp-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--pp-radius-sm);
+  border: 1px solid;
+}
+
+.pp-badge-info {
+  color: var(--pp-info);
+  border-color: var(--pp-info);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.pp-badge-warn {
+  color: var(--pp-warning);
+  border-color: var(--pp-warning);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Alerts */
+.pp-alerts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pp-alert {
+  padding: 10px 14px;
+  font-size: 13px;
+  border-radius: var(--pp-radius-sm);
+  border: 1px solid;
+}
+
+.pp-alert strong {
+  color: var(--pp-text-strong);
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+.pp-alert-danger {
+  color: var(--pp-danger);
+  border-color: var(--pp-danger);
+  background: rgba(255, 0, 0, 0.06);
+}
+
+.pp-alert-success {
+  color: var(--pp-success);
+  border-color: var(--pp-success);
+  background: rgba(0, 255, 0, 0.04);
+}
+
+/* Form */
+.pp-form {
+  background: var(--pp-surface);
+  padding: 14px;
+  border: 1px solid var(--pp-border);
+  border-radius: var(--pp-radius);
+}
+
+.pp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pp-field-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.10em;
+  color: var(--pp-text-muted);
+}
+
+.pp-form input {
+  padding: 10px 12px;
+  font-size: 14px;
+  background: var(--pp-bg);
+  color: var(--pp-text-strong);
+  border: 1px solid var(--pp-border);
+  border-radius: var(--pp-radius-sm);
+  outline: none;
+  font-family: inherit;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.pp-form input:focus {
+  border-color: var(--pp-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pp-accent) 20%, transparent);
+}
