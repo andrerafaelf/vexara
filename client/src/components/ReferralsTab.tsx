@@ -6,12 +6,14 @@ import {
   getMyPendingTokens,
   getMyReferrals,
   getMyReferrer,
+  redeemMilestoneToken,
   redeemReferralToken,
   setReferrer,
 } from '../services/api';
 import '../styles/ReferralsTab.css';
 
-const THRESHOLD = 500;
+const REFERRAL_THRESHOLD = 1000;
+const MILESTONE_THRESHOLD = 500;
 
 const TROOP_LABELS: Record<string, string> = {
   lancerDrone: 'Lancer Drone', assaultTrooper: 'Assault Trooper', breakerUnit: 'Breaker Unit',
@@ -30,7 +32,6 @@ const BUILDING_LABELS: Record<string, string> = {
 
 const BUILDING_KEYS = Object.keys(BUILDING_LABELS);
 
-// Grant table matches server constants
 const TROOP_GRANTS: Record<string, [number, number, number, number]> = {
   lancerDrone:          [35,  75,  120, 180],
   breakerUnit:          [35,  75,  120, 180],
@@ -64,16 +65,13 @@ interface ReferralRow {
   rewardMeta: Record<string, unknown> | null;
 }
 
-interface PendingToken {
-  id: number;
-  refereeId: number;
-}
+interface PendingToken { id: number; refereeId?: number; userId?: number; milestone?: number; }
 
 interface ReferrerInfo {
   username: string;
   thresholdMet: boolean;
-  redeemed: boolean;
   referrerPoints: number;
+  myPoints: number;
 }
 
 interface NexusSummary {
@@ -85,9 +83,11 @@ interface NexusSummary {
 }
 
 type RewardType = 'building_instant' | 'troop_grant';
+type TokenKind = 'referral' | 'milestone';
 
 interface RedeemState {
   tokenId: number;
+  kind: TokenKind;
   rewardType: RewardType;
   nexusId: string;
   building: string;
@@ -96,7 +96,8 @@ interface RedeemState {
 
 export default function ReferralsTab() {
   const [referrals, setReferrals] = useState<ReferralRow[]>([]);
-  const [pendingTokens, setPendingTokens] = useState<PendingToken[]>([]);
+  const [pendingReferralTokens, setPendingReferralTokens] = useState<PendingToken[]>([]);
+  const [pendingMilestoneTokens, setPendingMilestoneTokens] = useState<PendingToken[]>([]);
   const [referrer, setReferrer_] = useState<ReferrerInfo | null>(null);
   const [nexuses, setNexuses] = useState<NexusSummary[]>([]);
   const [referrerInput, setReferrerInput] = useState('');
@@ -118,9 +119,11 @@ export default function ReferralsTab() {
         getMyReferrer(),
         getMyNexuses(),
       ]);
-      setReferrals(referralsRes.data);
-      setPendingTokens(pendingRes.data);
-      setReferrer_(referrerRes.data.referrer);
+      setReferrals(referralsRes.data as ReferralRow[]);
+      const pending = pendingRes.data as { referral: PendingToken[]; milestone: PendingToken[] };
+      setPendingReferralTokens(pending.referral ?? []);
+      setPendingMilestoneTokens(pending.milestone ?? []);
+      setReferrer_((referrerRes.data as { referrer: ReferrerInfo | null }).referrer);
       const mappedNexuses: NexusSummary[] = (nexusRes.data as any[]).map((n: any) => ({
         id: String(n.id),
         name: n.name,
@@ -155,11 +158,12 @@ export default function ReferralsTab() {
     }
   };
 
-  const openRedeem = (tokenId: number) => {
+  const openRedeem = (tokenId: number, kind: TokenKind) => {
     setRedeemError('');
     setRedeemSuccess('');
     setRedeemState({
       tokenId,
+      kind,
       rewardType: 'troop_grant',
       nexusId: nexuses[0]?.id ?? '',
       building: BUILDING_KEYS[0],
@@ -173,7 +177,8 @@ export default function ReferralsTab() {
     setRedeemError('');
     setRedeemSubmitting(true);
     try {
-      const res = await redeemReferralToken(
+      const redeemFn = redeemState.kind === 'milestone' ? redeemMilestoneToken : redeemReferralToken;
+      const res = await redeemFn(
         redeemState.tokenId,
         redeemState.rewardType,
         parseInt(redeemState.nexusId, 10),
@@ -198,12 +203,124 @@ export default function ReferralsTab() {
   const tier = ccTier(ccLevel);
   const troopGrantPreview = redeemState ? (TROOP_GRANTS[redeemState.troopType]?.[tier] ?? 0) : 0;
 
-  const pendingCount = pendingTokens.length;
+  const totalPendingCount = pendingReferralTokens.length + pendingMilestoneTokens.length;
 
   if (loading) return <div className="referrals-loading">Loading...</div>;
 
+  const redeemForm = (
+    <form className="referrals-redeem-form" onSubmit={handleRedeem}>
+      <label className="referrals-field">
+        <span className="referrals-label">Nexus</span>
+        <select
+          value={redeemState?.nexusId}
+          onChange={(e) => setRedeemState(s => s ? { ...s, nexusId: e.target.value } : s)}
+          disabled={redeemSubmitting}
+        >
+          {nexuses.map((n) => (
+            <option key={n.id} value={n.id}>{n.name} (CC {n.commandCore})</option>
+          ))}
+        </select>
+      </label>
+
+      <div className="referrals-reward-type-row">
+        <label className={`referrals-reward-option ${redeemState?.rewardType === 'troop_grant' ? 'selected' : ''}`}>
+          <input
+            type="radio" name="rewardType" value="troop_grant"
+            checked={redeemState?.rewardType === 'troop_grant'}
+            onChange={() => setRedeemState(s => s ? { ...s, rewardType: 'troop_grant' } : s)}
+          />
+          Troop Grant
+        </label>
+        <label className={`referrals-reward-option ${redeemState?.rewardType === 'building_instant' ? 'selected' : ''}`}>
+          <input
+            type="radio" name="rewardType" value="building_instant"
+            checked={redeemState?.rewardType === 'building_instant'}
+            onChange={() => setRedeemState(s => s ? { ...s, rewardType: 'building_instant' } : s)}
+          />
+          Instant Building Level
+        </label>
+      </div>
+
+      {redeemState?.rewardType === 'troop_grant' && (
+        <label className="referrals-field">
+          <span className="referrals-label">Troop Type</span>
+          <select
+            value={redeemState.troopType}
+            onChange={(e) => setRedeemState(s => s ? { ...s, troopType: e.target.value } : s)}
+            disabled={redeemSubmitting}
+          >
+            {TROOP_KEYS.map((t) => (
+              <option key={t} value={t}>{TROOP_LABELS[t]}</option>
+            ))}
+          </select>
+          {selectedNexus && (
+            <span className="referrals-preview">
+              ~{troopGrantPreview} units (CC {ccLevel}, tier {tier + 1}/4)
+            </span>
+          )}
+        </label>
+      )}
+
+      {redeemState?.rewardType === 'building_instant' && (
+        <label className="referrals-field">
+          <span className="referrals-label">Building to Level Up</span>
+          <select
+            value={redeemState.building}
+            onChange={(e) => setRedeemState(s => s ? { ...s, building: e.target.value } : s)}
+            disabled={redeemSubmitting}
+          >
+            {BUILDING_KEYS.map((b) => (
+              <option key={b} value={b}>{BUILDING_LABELS[b]}</option>
+            ))}
+          </select>
+          <span className="referrals-preview">2 instant levels, no resource cost, no queue.</span>
+        </label>
+      )}
+
+      {redeemError && <div className="referrals-error">{redeemError}</div>}
+
+      <div className="referrals-redeem-actions">
+        <button type="button" className="referrals-btn" onClick={() => setRedeemState(null)} disabled={redeemSubmitting}>
+          Cancel
+        </button>
+        <button type="submit" className="referrals-btn primary" disabled={redeemSubmitting || !redeemState?.nexusId}>
+          {redeemSubmitting ? 'Redeeming...' : 'Redeem Token'}
+        </button>
+      </div>
+    </form>
+  );
+
   return (
     <div className="referrals-tab">
+
+      {/* Milestone token — everyone gets 1 at 500 pts */}
+      {pendingMilestoneTokens.length > 0 && (
+        <section className="referrals-section">
+          <h3 className="referrals-section-title">
+            Milestone Reward
+            <span className="referrals-count-badge">{pendingMilestoneTokens.length}</span>
+          </h3>
+          <p className="referrals-hint">
+            You reached {MILESTONE_THRESHOLD} influence points. Claim your reward token.
+          </p>
+          {redeemSuccess && !redeemState && <div className="referrals-success">{redeemSuccess}</div>}
+          {redeemState?.kind === 'milestone' ? redeemForm : (
+            <div className="referrals-token-list">
+              {pendingMilestoneTokens.map((t) => (
+                <div key={t.id} className="referrals-token-card">
+                  <div className="referrals-token-info">
+                    <span className="referrals-token-label">500 Influence Milestone</span>
+                    <span className="referrals-token-meta">One-time reward for reaching {MILESTONE_THRESHOLD} pts</span>
+                  </div>
+                  <button className="referrals-btn primary" onClick={() => openRedeem(t.id, 'milestone')}>
+                    Claim
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Referrer section — who referred you */}
       <section className="referrals-section">
@@ -212,17 +329,17 @@ export default function ReferralsTab() {
           <div className="referrals-referrer-card">
             <span className="referrals-referrer-name">{referrer.username}</span>
             {referrer.thresholdMet ? (
-              <span className="referrals-badge referrals-badge--done">Reward unlocked</span>
+              <span className="referrals-badge referrals-badge--done">Their reward unlocked</span>
             ) : (
               <span className="referrals-badge referrals-badge--progress">
-                Your progress: {THRESHOLD} pts needed to unlock their reward
+                In progress
               </span>
             )}
           </div>
         ) : (
           <form className="referrals-referrer-form" onSubmit={handleSetReferrer}>
             <p className="referrals-hint">
-              Enter the username of the player who invited you. Once you reach {THRESHOLD} influence points, they receive a reward token. This can only be set once.
+              Did someone invite you? Enter their username. Once you reach {REFERRAL_THRESHOLD} influence points, they earn 2 reward tokens. This can only be set once.
             </p>
             <div className="referrals-referrer-inline">
               <input
@@ -243,115 +360,43 @@ export default function ReferralsTab() {
             {referrerError && <div className="referrals-error">{referrerError}</div>}
           </form>
         )}
+
+        {/* Show the referee's own progress toward unlocking the referral reward */}
+        {referrer && !referrer.thresholdMet && (
+          <div>
+            <div className="referrals-progress-bar-wrap" style={{ marginTop: 10 }}>
+              <div
+                className="referrals-progress-bar"
+                style={{ width: `${Math.min(100, ((referrer.myPoints ?? 0) / REFERRAL_THRESHOLD) * 100)}%` }}
+              />
+            </div>
+            <span className="referrals-progress-label">
+              Your progress: {Math.min(referrer.myPoints ?? 0, REFERRAL_THRESHOLD)} / {REFERRAL_THRESHOLD} pts to unlock their reward
+            </span>
+          </div>
+        )}
       </section>
 
-      {/* Pending redemptions */}
-      {pendingCount > 0 && (
+      {/* Pending referral redemptions (earned by inviting others) */}
+      {pendingReferralTokens.length > 0 && (
         <section className="referrals-section">
           <h3 className="referrals-section-title">
-            Unclaimed Tokens
-            <span className="referrals-count-badge">{pendingCount}</span>
+            Referral Tokens
+            <span className="referrals-count-badge">{pendingReferralTokens.length}</span>
           </h3>
-          <p className="referrals-hint">Each token is a one-time reward. Choose a nexus and reward type below.</p>
-          {redeemSuccess && <div className="referrals-success">{redeemSuccess}</div>}
-          {redeemState ? (
-            <form className="referrals-redeem-form" onSubmit={handleRedeem}>
-              <label className="referrals-field">
-                <span className="referrals-label">Nexus</span>
-                <select
-                  value={redeemState.nexusId}
-                  onChange={(e) => setRedeemState({ ...redeemState, nexusId: e.target.value })}
-                  disabled={redeemSubmitting}
-                >
-                  {nexuses.map((n) => (
-                    <option key={n.id} value={n.id}>
-                      {n.name} (CC {n.commandCore})
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <div className="referrals-reward-type-row">
-                <label className={`referrals-reward-option ${redeemState.rewardType === 'troop_grant' ? 'selected' : ''}`}>
-                  <input
-                    type="radio"
-                    name="rewardType"
-                    value="troop_grant"
-                    checked={redeemState.rewardType === 'troop_grant'}
-                    onChange={() => setRedeemState({ ...redeemState, rewardType: 'troop_grant' })}
-                  />
-                  Troop Grant
-                </label>
-                <label className={`referrals-reward-option ${redeemState.rewardType === 'building_instant' ? 'selected' : ''}`}>
-                  <input
-                    type="radio"
-                    name="rewardType"
-                    value="building_instant"
-                    checked={redeemState.rewardType === 'building_instant'}
-                    onChange={() => setRedeemState({ ...redeemState, rewardType: 'building_instant' })}
-                  />
-                  Instant Building Level
-                </label>
-              </div>
-
-              {redeemState.rewardType === 'troop_grant' && (
-                <label className="referrals-field">
-                  <span className="referrals-label">Troop Type</span>
-                  <select
-                    value={redeemState.troopType}
-                    onChange={(e) => setRedeemState({ ...redeemState, troopType: e.target.value })}
-                    disabled={redeemSubmitting}
-                  >
-                    {TROOP_KEYS.map((t) => (
-                      <option key={t} value={t}>{TROOP_LABELS[t]}</option>
-                    ))}
-                  </select>
-                  {selectedNexus && (
-                    <span className="referrals-preview">
-                      ~{troopGrantPreview} units (CC {ccLevel}, tier {tier + 1}/4)
-                    </span>
-                  )}
-                </label>
-              )}
-
-              {redeemState.rewardType === 'building_instant' && (
-                <label className="referrals-field">
-                  <span className="referrals-label">Building to Level Up</span>
-                  <select
-                    value={redeemState.building}
-                    onChange={(e) => setRedeemState({ ...redeemState, building: e.target.value })}
-                    disabled={redeemSubmitting}
-                  >
-                    {BUILDING_KEYS.map((b) => (
-                      <option key={b} value={b}>{BUILDING_LABELS[b]}</option>
-                    ))}
-                  </select>
-                  <span className="referrals-preview">2 instant levels, no resource cost, no queue.</span>
-                </label>
-              )}
-
-              {redeemError && <div className="referrals-error">{redeemError}</div>}
-
-              <div className="referrals-redeem-actions">
-                <button type="button" className="referrals-btn" onClick={() => setRedeemState(null)} disabled={redeemSubmitting}>
-                  Cancel
-                </button>
-                <button type="submit" className="referrals-btn primary" disabled={redeemSubmitting || !redeemState.nexusId}>
-                  {redeemSubmitting ? 'Redeeming...' : 'Redeem Token'}
-                </button>
-              </div>
-            </form>
-          ) : (
+          <p className="referrals-hint">Someone you referred reached {REFERRAL_THRESHOLD} influence points. Each token is a one-time reward.</p>
+          {redeemSuccess && !redeemState && <div className="referrals-success">{redeemSuccess}</div>}
+          {redeemState?.kind === 'referral' ? redeemForm : (
             <div className="referrals-token-list">
-              {pendingTokens.map((t) => {
+              {pendingReferralTokens.map((t) => {
                 const row = referrals.find((r) => r.tokenId === t.id);
                 return (
                   <div key={t.id} className="referrals-token-card">
                     <div className="referrals-token-info">
-                      <span className="referrals-token-label">Token from referral</span>
-                      {row && <span className="referrals-token-meta">{row.refereeUsername} reached {THRESHOLD} pts</span>}
+                      <span className="referrals-token-label">Referral token</span>
+                      {row && <span className="referrals-token-meta">{row.refereeUsername} reached {REFERRAL_THRESHOLD} pts</span>}
                     </div>
-                    <button className="referrals-btn primary" onClick={() => openRedeem(t.id)}>
+                    <button className="referrals-btn primary" onClick={() => openRedeem(t.id, 'referral')}>
                       Claim
                     </button>
                   </div>
@@ -367,7 +412,7 @@ export default function ReferralsTab() {
         <h3 className="referrals-section-title">Your Referrals</h3>
         {referrals.length === 0 ? (
           <p className="referrals-hint">
-            No referrals yet. Tell players to enter your username in their Referrals tab when they sign up.
+            No referrals yet. Tell players to enter your username in the Referred By field when they join.
           </p>
         ) : (
           <ul className="referrals-list">
@@ -378,20 +423,20 @@ export default function ReferralsTab() {
                   <div className="referrals-list-meta">
                     <span>{r.refereePoints} pts</span>
                     {r.redeemed ? (
-                      <span className="referrals-badge referrals-badge--done">Reward claimed</span>
-                    ) : (
+                      <span className="referrals-badge referrals-badge--done">Claimed</span>
+                    ) : r.thresholdMet ? (
                       <span className="referrals-badge referrals-badge--ready">Token ready</span>
-                    )}
+                    ) : null}
                   </div>
                 </div>
                 <div className="referrals-progress-bar-wrap">
                   <div
                     className="referrals-progress-bar"
-                    style={{ width: `${Math.min(100, (r.refereePoints / THRESHOLD) * 100)}%` }}
+                    style={{ width: `${Math.min(100, (r.refereePoints / REFERRAL_THRESHOLD) * 100)}%` }}
                   />
                 </div>
                 <span className="referrals-progress-label">
-                  {Math.min(r.refereePoints, THRESHOLD)} / {THRESHOLD} pts
+                  {Math.min(r.refereePoints, REFERRAL_THRESHOLD)} / {REFERRAL_THRESHOLD} pts
                 </span>
               </li>
             ))}

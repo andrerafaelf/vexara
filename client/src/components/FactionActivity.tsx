@@ -31,6 +31,7 @@ const EVENT_LABELS: Record<string, (e: FactionEvent) => string> = {
   ceasefire_proposed:    (e) => `Ceasefire proposed to ${e.targetName ?? 'enemy faction'}`,
   ceasefire_received:    (e) => `${e.actorName ?? 'Enemy faction'} proposed a ceasefire`,
   ceasefire_declined:    (e) => `Ceasefire with ${e.targetName ?? e.actorName ?? 'a faction'} was declined`,
+  leader_transferred:    (e) => `${e.actorName ?? 'The leader'} transferred leadership to ${e.targetName ?? 'a member'}`,
 };
 
 const EVENT_ICONS: Record<string, string> = {
@@ -48,6 +49,7 @@ const EVENT_ICONS: Record<string, string> = {
   ceasefire_proposed:    'C',
   ceasefire_received:    'C',
   ceasefire_declined:    'C',
+  leader_transferred:    '>',
 };
 
 const EVENT_COLORS: Record<string, string> = {
@@ -65,6 +67,7 @@ const EVENT_COLORS: Record<string, string> = {
   ceasefire_proposed:    'event-icon--cyan',
   ceasefire_received:    'event-icon--cyan',
   ceasefire_declined:    'event-icon--orange',
+  leader_transferred:    'event-icon--gold',
 };
 
 function formatRelative(iso: string): string {

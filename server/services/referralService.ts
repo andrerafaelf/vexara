@@ -1,18 +1,14 @@
 import prisma from '../lib/prisma.js';
 
-export const REFERRAL_THRESHOLD = 500;
+export const REFERRAL_THRESHOLD = 1000;
+export const MILESTONE_THRESHOLD = 500;
+
+// --- Referral tokens (earned by the referrer when referee hits REFERRAL_THRESHOLD) ---
 
 export function getReferralsByReferrer(referrerId: number) {
   return prisma.referralToken.findMany({
     where: { referrerId },
     include: { referrer: { select: { username: true } } },
-    orderBy: { id: 'asc' },
-  });
-}
-
-export function getReferralTokensByReferrer(referrerId: number) {
-  return prisma.referralToken.findMany({
-    where: { referrerId },
     orderBy: { id: 'asc' },
   });
 }
@@ -43,12 +39,16 @@ export async function checkAndGrantToken(refereeId: number, currentPoints: numbe
   });
   if (!referee?.referredById) return;
 
-  // Token is unique per referee — if one already exists, the reward was already granted.
-  const existing = await prisma.referralToken.findUnique({ where: { refereeId } });
-  if (existing) return;
+  // Idempotent: only grant once per referee (check existing count)
+  const existingCount = await prisma.referralToken.count({ where: { refereeId } });
+  if (existingCount > 0) return;
 
-  await prisma.referralToken.create({
-    data: { referrerId: referee.referredById, refereeId },
+  // Referrer earns 2 tokens
+  await prisma.referralToken.createMany({
+    data: [
+      { referrerId: referee.referredById, refereeId },
+      { referrerId: referee.referredById, refereeId },
+    ],
   });
 }
 
@@ -58,7 +58,8 @@ export async function getReferralStatus(referrerId: number) {
     orderBy: { id: 'asc' },
   });
 
-  const refereeIds = tokens.map((t) => t.refereeId);
+  // Deduplicate referees for display — show unique referees with their best-points status
+  const refereeIds = [...new Set(tokens.map((t) => t.refereeId))];
   const referees = await prisma.user.findMany({
     where: { id: { in: refereeIds } },
     select: { id: true, username: true },
@@ -66,11 +67,10 @@ export async function getReferralStatus(referrerId: number) {
 
   const playerRecords = await prisma.galaxyPlayer.findMany({
     where: { userId: { in: refereeIds } },
-    select: { userId: true, points: true, galaxyId: true },
+    select: { userId: true, points: true },
     orderBy: { points: 'desc' },
   });
 
-  // Pick highest points per user across all galaxies
   const bestPoints = new Map<number, number>();
   for (const p of playerRecords) {
     const current = bestPoints.get(p.userId) ?? 0;
@@ -90,4 +90,36 @@ export async function getReferralStatus(referrerId: number) {
     rewardType: t.rewardType,
     rewardMeta: t.rewardMeta,
   }));
+}
+
+// --- Milestone tokens (everyone earns 1 at MILESTONE_THRESHOLD points, no referral needed) ---
+
+export async function checkAndGrantMilestoneToken(userId: number, currentPoints: number): Promise<void> {
+  if (currentPoints < MILESTONE_THRESHOLD) return;
+
+  const existing = await prisma.milestoneToken.findUnique({
+    where: { userId_milestone: { userId, milestone: MILESTONE_THRESHOLD } },
+  });
+  if (existing) return;
+
+  await prisma.milestoneToken.create({
+    data: { userId, milestone: MILESTONE_THRESHOLD },
+  });
+}
+
+export function getPendingMilestoneTokens(userId: number) {
+  return prisma.milestoneToken.findMany({
+    where: { userId, redeemedAt: null },
+  });
+}
+
+export function getMilestoneTokenById(tokenId: number) {
+  return prisma.milestoneToken.findUnique({ where: { id: tokenId } });
+}
+
+export function markMilestoneTokenRedeemed(tokenId: number, rewardType: string, rewardMeta: object) {
+  return prisma.milestoneToken.update({
+    where: { id: tokenId },
+    data: { redeemedAt: new Date(), rewardType, rewardMeta },
+  });
 }

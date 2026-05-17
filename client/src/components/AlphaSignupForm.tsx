@@ -91,7 +91,7 @@ const AlphaSignupForm: React.FC = () => {
         <h1>A persistent galaxy at war.</h1>
         <p className="tagline">
           Browser-based 4X strategy. Build a nexus, train twelve unit types,
-          and conquer real players one Overseer at a time.
+          and conquer real players one Overseer at a time. Invite friends and earn reward tokens when they grow.
         </p>
 
         {signupCount !== null && signupCount < ALPHA_FOUNDER_LIMIT && (
@@ -188,6 +188,10 @@ const AlphaSignupForm: React.FC = () => {
                 </li>
               </ul>
             </section>
+
+            <div className="referral-callout">
+              <strong>Referral system:</strong> Enter your inviter&apos;s username in-game after joining. Reach 500 pts and you get a free reward token. Your inviter earns 2 tokens when you hit 1000 pts.
+            </div>
 
             <form onSubmit={handleSubmit} noValidate>
               <label className="auth-field">
@@ -324,7 +328,7 @@ const AlphaSignupForm: React.FC = () => {
                 <li><SystemIcon name="rank" /><span><strong>Leaderboard mark</strong> on all rankings.</span></li>
                 <li><SystemIcon name="scroll" /><span><strong>Hall of fame</strong> entry with join date.</span></li>
                 <li><SystemIcon name="pillar" /><span><strong>Naming rights</strong> if your faction wins.</span></li>
-                <li><SystemIcon name="referral" /><span><strong>Referral rewards.</strong> Invite players — when they reach 500 influence points you earn a token redeemable for instant building levels or a troop grant.</span></li>
+                <li><SystemIcon name="referral" /><span><strong>Referral rewards.</strong> Invite players. When they reach 1000 influence points, you earn 2 tokens redeemable for instant building levels or troop grants. They earn 1 token at 500 pts just for playing.</span></li>
               </ul>
             </section>
 
@@ -336,7 +340,7 @@ const AlphaSignupForm: React.FC = () => {
                 doesn&apos;t sell wins.
               </p>
               <span className="built-by-link built-by-link-disabled" aria-disabled="true">
-                Join the Discord — coming soon
+                Join the Discord (coming soon)
               </span>
             </section>
 

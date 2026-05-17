@@ -234,6 +234,8 @@ export const setFactionMemberRole = (factionId: number, userId: number, role: st
     method: 'PATCH',
     body: JSON.stringify({ role }),
   });
+export const transferFactionLeader = (factionId: number, userId: number) =>
+  apiRequest(`/faction/${factionId}/members/${userId}/transfer-leader`, { method: 'POST' });
 export const leaveFaction = (factionId: number) => apiRequest(`/faction/${factionId}/leave`, { method: 'POST' });
 export const disbandFaction = (factionId: number) => apiRequest(`/faction/${factionId}`, { method: 'DELETE' });
 export const getFactionLeaderboard = () => apiRequest('/faction/leaderboard');
@@ -334,6 +336,16 @@ export const redeemReferralToken = (
   opts: { building?: string; troopType?: string },
 ) =>
   apiRequest(`/referral/tokens/${tokenId}/redeem`, {
+    method: 'POST',
+    body: JSON.stringify({ rewardType, nexusId, ...opts }),
+  });
+export const redeemMilestoneToken = (
+  tokenId: number,
+  rewardType: 'building_instant' | 'troop_grant',
+  nexusId: number,
+  opts: { building?: string; troopType?: string },
+) =>
+  apiRequest(`/referral/milestone-tokens/${tokenId}/redeem`, {
     method: 'POST',
     body: JSON.stringify({ rewardType, nexusId, ...opts }),
   });

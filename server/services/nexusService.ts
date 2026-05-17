@@ -1,6 +1,6 @@
 import type { Prisma } from '@prisma/client';
 import prisma from '../lib/prisma.js';
-import { checkAndGrantToken } from './referralService.js';
+import { checkAndGrantMilestoneToken, checkAndGrantToken } from './referralService.js';
 
 export function getNexusByOwner(userId: number, galaxyId: number) {
   return prisma.nexus.findMany({
@@ -30,6 +30,7 @@ export async function updateGalaxyPlayerPoints(userId: number, galaxyId: number,
     data: { points },
   });
   void checkAndGrantToken(userId, points);
+  void checkAndGrantMilestoneToken(userId, points);
   return updated;
 }
 

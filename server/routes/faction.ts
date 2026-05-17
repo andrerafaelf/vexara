@@ -28,6 +28,7 @@ router.post('/wars/:warId/ceasefire/decline', auth, (req, res) => warController.
 router.get('/:id', auth, (req, res) => factionController.getFaction(req as AuthRequest, res as Response));
 router.post('/:id/invite', auth, (req, res) => factionController.inviteToFaction(req as AuthRequest, res as Response));
 router.patch('/:id/members/:userId/role', auth, (req, res) => factionController.setMemberRole(req as AuthRequest, res as Response));
+router.post('/:id/members/:userId/transfer-leader', auth, (req, res) => factionController.transferLeader(req as AuthRequest, res as Response));
 router.delete('/:id/members/:userId', auth, (req, res) => factionController.kickMember(req as AuthRequest, res as Response));
 router.post('/:id/leave', auth, (req, res) => factionController.leaveFaction(req as AuthRequest, res as Response));
 router.delete('/:id', auth, (req, res) => factionController.disbandFaction(req as AuthRequest, res as Response));

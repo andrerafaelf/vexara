@@ -31,10 +31,12 @@ model User {
   factionMembers   FactionMember[]
   factionMessages  FactionMessage[]
 
-  referredById    Int?
-  referredBy      User?     @relation("UserReferrals", fields: [referredById], references: [id], onDelete: SetNull)
-  referrals       User[]    @relation("UserReferrals")
-  referralTokens  ReferralToken[]
+  referredById     Int?
+  registrationIp   String?   @db.VarChar(45)
+  referredBy       User?     @relation("UserReferrals", fields: [referredById], references: [id], onDelete: SetNull)
+  referrals        User[]    @relation("UserReferrals")
+  referralTokens   ReferralToken[]
+  milestoneTokens  MilestoneToken[]
 }
 
 enum GalaxyStatus {
@@ -477,6 +479,20 @@ model ReferralToken {
 
   referrer    User      @relation(fields: [referrerId], references: [id], onDelete: Cascade)
 
-  @@unique([refereeId])
+  @@index([refereeId])
   @@index([referrerId])
+}
+
+model MilestoneToken {
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  milestone  Int
+  redeemedAt DateTime?
+  rewardType String?   @db.VarChar(32)
+  rewardMeta Json?
+
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, milestone])
+  @@index([userId])
 }

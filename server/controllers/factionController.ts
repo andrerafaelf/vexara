@@ -576,6 +576,48 @@ export async function leaveFaction(req: AuthRequest, res: Response): Promise<voi
   }
 }
 
+export async function transferLeader(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const factionId = parseInt(req.params.id, 10);
+    const targetUserId = parseInt(req.params.userId, 10);
+
+    if (!Number.isFinite(factionId) || !Number.isFinite(targetUserId)) {
+      res.status(400).json({ error: 'Invalid faction or user id' }); return;
+    }
+
+    const faction = await prisma.faction.findUnique({
+      where: { id: factionId },
+      select: { members: { select: { userId: true, role: true } } },
+    });
+    if (!faction) { res.status(404).json({ error: 'Faction not found' }); return; }
+
+    const caller = faction.members.find((m: any) => m.userId === req.userId);
+    if (!caller || caller.role !== 'leader') {
+      res.status(403).json({ error: 'Only the leader can transfer leadership' }); return;
+    }
+
+    const target = faction.members.find((m: any) => m.userId === targetUserId);
+    if (!target) { res.status(404).json({ error: 'Member not found' }); return; }
+    if (target.role === 'leader') { res.status(400).json({ error: 'That member is already the leader' }); return; }
+
+    const [callerUser, targetUser] = await Promise.all([
+      prisma.user.findUnique({ where: { id: req.userId }, select: { username: true } }),
+      prisma.user.findUnique({ where: { id: targetUserId }, select: { username: true } }),
+    ]);
+
+    await prisma.$transaction([
+      prisma.factionMember.updateMany({ where: { factionId, userId: req.userId }, data: { role: 'member' } }),
+      prisma.factionMember.updateMany({ where: { factionId, userId: targetUserId }, data: { role: 'leader' } }),
+    ]);
+
+    await logEvent(factionId, 'leader_transferred', callerUser?.username, targetUser?.username);
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
 export async function disbandFaction(req: AuthRequest, res: Response): Promise<void> {
   try {
     const factionId = parseInt(req.params.id, 10);

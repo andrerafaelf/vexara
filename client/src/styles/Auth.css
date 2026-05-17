@@ -458,6 +458,21 @@
 }
 
 /* Toned-down founder benefits. Small section, not the pitch. */
+.referral-callout {
+  margin: var(--space-4) 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.referral-callout strong {
+  color: var(--accent);
+}
+
 .founder-perks {
   margin: var(--space-5) 0 0;
   padding: var(--space-3) var(--space-4);

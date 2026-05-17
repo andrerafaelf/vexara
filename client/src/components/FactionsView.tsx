@@ -12,6 +12,7 @@ import {
   kickFactionMember,
   leaveFaction,
   setFactionMemberRole,
+  transferFactionLeader,
   updateFactionMotd,
   getFactionWars,
   declareWar,
@@ -196,6 +197,16 @@ export default function FactionsView() {
     if (!myFaction || !confirm(`Kick ${username} from the faction?`)) return;
     try {
       await kickFactionMember(myFaction.id, userId);
+      await refreshFaction();
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  };
+
+  const handleTransferLeader = async (userId: number, username: string) => {
+    if (!myFaction || !confirm(`Transfer leadership to ${username}? You will become a regular member. This cannot be undone.`)) return;
+    try {
+      await transferFactionLeader(myFaction.id, userId);
       await refreshFaction();
     } catch (err) {
       setError((err as Error).message);
@@ -597,6 +608,9 @@ export default function FactionsView() {
                         Demote
                       </button>
                     )}
+                    <button className="factions-btn-small" onClick={() => handleTransferLeader(member.userId, member.username)}>
+                      Make Leader
+                    </button>
                     <button className="factions-btn-small factions-btn-danger" onClick={() => handleKickMember(member.userId, member.username)}>
                       Kick
                     </button>

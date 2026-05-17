@@ -1,5 +1,5 @@
 import type { Response } from 'express';
-import { applyCompletedQueues, normalizeBuildQueue, queueToJson, serializeNexus } from '../models/Nexus.js';
+import { applyCompletedQueues, serializeNexus } from '../models/Nexus.js';
 import prisma from '../lib/prisma.js';
 import * as referralService from '../services/referralService.js';
 import type { AuthRequest } from '../types/index.js';
@@ -71,8 +71,14 @@ export async function getMyReferrals(req: AuthRequest, res: Response): Promise<v
 
 export async function getMyPendingTokens(req: AuthRequest, res: Response): Promise<void> {
   try {
-    const tokens = await referralService.getPendingTokens(req.userId!);
-    res.json(tokens);
+    const [referralTokens, milestoneTokens] = await Promise.all([
+      referralService.getPendingTokens(req.userId!),
+      referralService.getPendingMilestoneTokens(req.userId!),
+    ]);
+    res.json({
+      referral: referralTokens,
+      milestone: milestoneTokens,
+    });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }
@@ -179,6 +185,86 @@ export async function redeemToken(req: AuthRequest, res: Response): Promise<void
   }
 }
 
+export async function redeemMilestoneToken(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const tokenId = parseInt(req.params.tokenId, 10);
+    const { rewardType, nexusId, building, troopType } = req.body as {
+      rewardType?: string; nexusId?: number; building?: string; troopType?: string;
+    };
+
+    if (!rewardType || !nexusId) {
+      res.status(400).json({ error: 'rewardType and nexusId are required' }); return;
+    }
+
+    const token = await referralService.getMilestoneTokenById(tokenId);
+    if (!token) { res.status(404).json({ error: 'Token not found' }); return; }
+    if (token.userId !== req.userId!) { res.status(403).json({ error: 'Not your token' }); return; }
+    if (token.redeemedAt) { res.status(400).json({ error: 'Token already redeemed' }); return; }
+
+    const rawNexus = await prisma.nexus.findUnique({ where: { id: nexusId } });
+    if (!rawNexus || rawNexus.ownerId !== req.userId! || rawNexus.galaxyId !== req.galaxyId!) {
+      res.status(403).json({ error: 'Nexus not found or not yours' }); return;
+    }
+
+    const nexus = await applyCompletedQueues(rawNexus);
+
+    if (rewardType === 'building_instant') {
+      if (!building || !BUILDINGS.includes(building as typeof BUILDINGS[number])) {
+        res.status(400).json({ error: 'Invalid building' }); return;
+      }
+      const currentLevel = (nexus as unknown as Record<string, number>)[building] ?? 0;
+      const maxLevel = BUILDING_MAX[building];
+      if (currentLevel >= maxLevel) {
+        res.status(400).json({ error: `${BUILDING_NAMES[building]} is already at max level (${maxLevel})` }); return;
+      }
+      const targetLevel = Math.min(currentLevel + 2, maxLevel);
+      const updated = await prisma.nexus.update({ where: { id: nexus.id }, data: { [building]: targetLevel } });
+      await referralService.markMilestoneTokenRedeemed(tokenId, 'building_instant', {
+        building, fromLevel: currentLevel, toLevel: targetLevel, nexusId: nexus.id,
+      });
+      const levelsGained = targetLevel - currentLevel;
+      res.json({
+        success: true,
+        message: `${BUILDING_NAMES[building]} instantly upgraded by ${levelsGained} level${levelsGained > 1 ? 's' : ''} to level ${targetLevel} at ${nexus.name}.`,
+        nexus: serializeNexus(updated),
+      });
+      return;
+    }
+
+    if (rewardType === 'troop_grant') {
+      if (!troopType || !TROOP_NAMES[troopType]) {
+        res.status(400).json({ error: 'Invalid troop type' }); return;
+      }
+      const commandLevel = (nexus as unknown as Record<string, number>).commandCore ?? 0;
+      const grantAmount = grantAmountForTroop(troopType, commandLevel);
+      if (grantAmount === 0) { res.status(400).json({ error: 'Cannot determine grant amount' }); return; }
+      const popPerUnit = TROOP_POPULATION[troopType] ?? 1;
+      const popMax = (nexus as unknown as Record<string, number>).populationMax ?? 24;
+      const popCurrent = (nexus as unknown as Record<string, number>).populationCurrent ?? 0;
+      const actualGrant = Math.min(grantAmount, Math.floor(Math.max(0, popMax - popCurrent) / popPerUnit));
+      if (actualGrant <= 0) { res.status(400).json({ error: 'Not enough population capacity for any troops' }); return; }
+      const currentTroops = (nexus as unknown as Record<string, number>)[troopType] ?? 0;
+      const updated = await prisma.nexus.update({
+        where: { id: nexus.id },
+        data: { [troopType]: currentTroops + actualGrant, populationCurrent: popCurrent + actualGrant * popPerUnit },
+      });
+      await referralService.markMilestoneTokenRedeemed(tokenId, 'troop_grant', {
+        troopType, amount: actualGrant, nexusId: nexus.id, commandLevel,
+      });
+      res.json({
+        success: true,
+        message: `${actualGrant}x ${TROOP_NAMES[troopType]} granted at ${nexus.name}.`,
+        nexus: serializeNexus(updated),
+      });
+      return;
+    }
+
+    res.status(400).json({ error: 'Unknown rewardType' });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
 export async function setReferrer(req: AuthRequest, res: Response): Promise<void> {
   try {
     const { referrerUsername } = req.body as { referrerUsername?: string };
@@ -186,17 +272,25 @@ export async function setReferrer(req: AuthRequest, res: Response): Promise<void
       res.status(400).json({ error: 'referrerUsername required' }); return;
     }
 
-    const me = await prisma.user.findUnique({ where: { id: req.userId! }, select: { referredById: true } });
+    const me = await prisma.user.findUnique({
+      where: { id: req.userId! },
+      select: { referredById: true, registrationIp: true },
+    });
     if (me?.referredById) {
       res.status(400).json({ error: 'You already have a referrer set' }); return;
     }
 
     const referrer = await prisma.user.findFirst({
       where: { username: { equals: referrerUsername.trim(), mode: 'insensitive' } },
-      select: { id: true, username: true },
+      select: { id: true, username: true, registrationIp: true },
     });
     if (!referrer) { res.status(404).json({ error: 'Player not found' }); return; }
     if (referrer.id === req.userId!) { res.status(400).json({ error: 'Cannot refer yourself' }); return; }
+
+    // Block same-IP referrals to prevent multi-account abuse
+    if (me?.registrationIp && referrer.registrationIp && me.registrationIp === referrer.registrationIp) {
+      res.status(400).json({ error: 'Cannot set referrer from the same network' }); return;
+    }
 
     await prisma.user.update({ where: { id: req.userId! }, data: { referredById: referrer.id } });
     res.json({ success: true, referrerUsername: referrer.username });
@@ -224,15 +318,24 @@ export async function getMyReferrer(req: AuthRequest, res: Response): Promise<vo
     });
     const referrerPoints = playerRecords[0]?.points ?? 0;
 
-    // Check if our token was already issued (i.e., we hit threshold)
-    const token = await prisma.referralToken.findUnique({ where: { refereeId: req.userId! } });
+    // Check if the referral tokens (for the referrer) were already issued
+    const tokenCount = await prisma.referralToken.count({ where: { refereeId: req.userId! } });
+
+    // Get our own best points to show progress toward the referral threshold
+    const myRecords = await prisma.galaxyPlayer.findMany({
+      where: { userId: req.userId! },
+      select: { points: true },
+      orderBy: { points: 'desc' },
+      take: 1,
+    });
+    const myPoints = myRecords[0]?.points ?? 0;
 
     res.json({
       referrer: {
         username: me.referredBy?.username,
-        thresholdMet: token !== null,
-        redeemed: token?.redeemedAt !== null,
+        thresholdMet: tokenCount > 0,
         referrerPoints,
+        myPoints,
       },
     });
   } catch (error) {
@@ -240,4 +343,4 @@ export async function getMyReferrer(req: AuthRequest, res: Response): Promise<vo
   }
 }
 
-export { grantAmountForTroop, TROOP_GRANTS, TROOP_NAMES, BUILDING_NAMES, BUILDING_MAX };
+export { grantAmountForTroop, TROOP_GRANTS, TROOP_NAMES, BUILDING_NAMES, BUILDING_MAX, TROOP_POPULATION };
