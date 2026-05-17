@@ -320,3 +320,20 @@ export const updateNotificationPreferences = (prefs: Partial<Record<string, bool
     method: 'PATCH',
     body: JSON.stringify(prefs),
   });
+
+// Referrals
+export const getMyReferrals = () => apiRequest('/referral');
+export const getMyPendingTokens = () => apiRequest('/referral/pending');
+export const getMyReferrer = () => apiRequest('/referral/my-referrer');
+export const setReferrer = (referrerUsername: string) =>
+  apiRequest('/referral/set-referrer', { method: 'POST', body: JSON.stringify({ referrerUsername }) });
+export const redeemReferralToken = (
+  tokenId: number,
+  rewardType: 'building_instant' | 'troop_grant',
+  nexusId: number,
+  opts: { building?: string; troopType?: string },
+) =>
+  apiRequest(`/referral/tokens/${tokenId}/redeem`, {
+    method: 'POST',
+    body: JSON.stringify({ rewardType, nexusId, ...opts }),
+  });

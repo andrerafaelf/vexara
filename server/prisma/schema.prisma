@@ -30,6 +30,11 @@ model User {
   notificationPrefs  NotificationPreferences?
   factionMembers   FactionMember[]
   factionMessages  FactionMessage[]
+
+  referredById    Int?
+  referredBy      User?     @relation("UserReferrals", fields: [referredById], references: [id], onDelete: SetNull)
+  referrals       User[]    @relation("UserReferrals")
+  referralTokens  ReferralToken[]
 }
 
 enum GalaxyStatus {
@@ -460,4 +465,18 @@ model FactionWar {
   @@index([galaxyId])
   @@index([declarerFactionId])
   @@index([targetFactionId])
+}
+
+model ReferralToken {
+  id          Int       @id @default(autoincrement())
+  referrerId  Int
+  refereeId   Int
+  redeemedAt  DateTime?
+  rewardType  String?   @db.VarChar(32)
+  rewardMeta  Json?
+
+  referrer    User      @relation(fields: [referrerId], references: [id], onDelete: Cascade)
+
+  @@unique([refereeId])
+  @@index([referrerId])
 }

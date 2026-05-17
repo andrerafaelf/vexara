@@ -324,6 +324,7 @@ const AlphaSignupForm: React.FC = () => {
                 <li><SystemIcon name="rank" /><span><strong>Leaderboard mark</strong> on all rankings.</span></li>
                 <li><SystemIcon name="scroll" /><span><strong>Hall of fame</strong> entry with join date.</span></li>
                 <li><SystemIcon name="pillar" /><span><strong>Naming rights</strong> if your faction wins.</span></li>
+                <li><SystemIcon name="referral" /><span><strong>Referral rewards.</strong> Invite players — when they reach 500 influence points you earn a token redeemable for instant building levels or a troop grant.</span></li>
               </ul>
             </section>
 
@@ -352,7 +353,7 @@ const AlphaSignupForm: React.FC = () => {
   );
 };
 
-type SystemIconName = 'economy' | 'army' | 'strike' | 'conquest' | 'defense' | 'badge' | 'rank' | 'scroll' | 'pillar';
+type SystemIconName = 'economy' | 'army' | 'strike' | 'conquest' | 'defense' | 'badge' | 'rank' | 'scroll' | 'pillar' | 'referral';
 
 const SystemIcon: React.FC<{ name: SystemIconName }> = ({ name }) => {
   const common = {
@@ -427,6 +428,16 @@ const SystemIcon: React.FC<{ name: SystemIconName }> = ({ name }) => {
         <svg {...common}>
           <path d="M3 8h18L12 3 3 8z" />
           <path d="M6 10v8M12 10v8M18 10v8" /><path d="M4 20h16" />
+        </svg>
+      );
+    case 'referral':
+      return (
+        <svg {...common}>
+          <circle cx="9" cy="7" r="3" />
+          <circle cx="18" cy="5" r="2" />
+          <circle cx="18" cy="19" r="2" />
+          <path d="M9 10c-3 0-5 1.5-5 4v2h10v-2c0-2.5-2-4-5-4z" />
+          <path d="M16 7l2-2M16 17l2 2" />
         </svg>
       );
   }

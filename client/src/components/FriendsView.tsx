@@ -16,10 +16,11 @@ import {
 } from '@/services/api';
 import '@/styles/FriendsView.css';
 import { formatDate, formatTimeOfDay } from '@/utils/date';
-import { MessageSquare, Users, UserPlus } from 'lucide-react';
+import { MessageSquare, Users, UserPlus, GitBranch } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import ReferralsTab from './ReferralsTab';
 
-type TabId = 'friends' | 'requests' | 'chat';
+type TabId = 'friends' | 'requests' | 'chat' | 'referrals';
 
 interface Friend {
   id: string;
@@ -310,6 +311,13 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
           <MessageSquare size={14} aria-hidden="true" />
           <span>Chat</span>
         </button>
+        <button
+          className={`friends-tab ${tab === 'referrals' ? 'active' : ''}`}
+          onClick={() => setTab('referrals')}
+        >
+          <GitBranch size={14} aria-hidden="true" />
+          <span>Referrals</span>
+        </button>
       </div>
 
       {error && <div className="friends-banner error">{error}</div>}
@@ -494,6 +502,12 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
               </>
             )}
           </section>
+        </div>
+      )}
+
+      {tab === 'referrals' && (
+        <div className="friends-panel">
+          <ReferralsTab />
         </div>
       )}
     </div>
