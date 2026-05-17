@@ -438,6 +438,7 @@ model FactionInvite {
 enum FactionWarStatus {
   pending
   active
+  ceasefire_pending
   ended
 }
 
@@ -450,6 +451,7 @@ model FactionWar {
   declaredAt       DateTime         @default(now())
   acceptedAt       DateTime?
   endedAt          DateTime?
+  ceasefireProposerFactionId Int?
 
   declarerFaction Faction @relation("FactionWarDeclarer", fields: [declarerFactionId], references: [id], onDelete: Cascade)
   targetFaction   Faction @relation("FactionWarTarget",   fields: [targetFactionId],   references: [id], onDelete: Cascade)

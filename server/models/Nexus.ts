@@ -289,8 +289,8 @@ export async function processCompletedQueuesAndNotify(): Promise<void> {
         const drained = buildQueueBefore[i];
         const label = formatLabel(drained.building);
         void sendPushToUser(nexus.ownerId!, NOTIF.BUILDING_COMPLETE, {
-          title: '🏗️ Construction Complete',
-          body: `✅ ${label} upgraded to level ${drained.targetLevel} at ${nexus.name}.`,
+          title: 'Construction Complete',
+          body: `${label} upgraded to level ${drained.targetLevel} at ${nexus.name}.`,
           tag: `build-${nexus.id}-${drained.building}-${drained.targetLevel}`,
           data: { url: '/' },
         });
@@ -308,8 +308,8 @@ export async function processCompletedQueuesAndNotify(): Promise<void> {
       for (const [troopType, amount] of Object.entries(trainTotals)) {
         const label = formatLabel(troopType);
         void sendPushToUser(nexus.ownerId!, NOTIF.TROOP_COMPLETE, {
-          title: '⚔️ Training Complete',
-          body: `🎯 ${amount}x ${label} ready at ${nexus.name}.`,
+          title: 'Training Complete',
+          body: `${amount}x ${label} ready at ${nexus.name}.`,
           tag: `troop-${nexus.id}-${troopType}-${new Date(drainedTraining[0].completesAt).getTime()}`,
           data: { url: '/' },
         });
@@ -385,8 +385,8 @@ export async function updateAllResources(): Promise<void> {
       if (row.notifyOwner) {
         const nexus = nexuses.find((n) => n.id === row.id)!;
         void sendPushToUser(row.notifyOwner, NOTIF.RESOURCES_FULL, {
-          title: '📦 Storage Full',
-          body: `⚠️ Resources at ${nexus.name} are at full capacity. Spend or transfer them!`,
+          title: 'Storage Full',
+          body: `Resources at ${nexus.name} are at full capacity. Spend or transfer them!`,
           tag: `resources-full-${row.id}`,
           data: { url: '/' },
         });

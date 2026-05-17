@@ -250,7 +250,9 @@ export const declareWar = (factionId: number, targetFactionId: number) =>
   apiRequest(`/faction/${factionId}/wars/declare/${targetFactionId}`, { method: 'POST' });
 export const acceptWar = (warId: number) => apiRequest(`/faction/wars/${warId}/accept`, { method: 'POST' });
 export const declineWar = (warId: number) => apiRequest(`/faction/wars/${warId}/decline`, { method: 'POST' });
-export const endWar = (warId: number) => apiRequest(`/faction/wars/${warId}/end`, { method: 'POST' });
+export const proposeCeasefire = (warId: number) => apiRequest(`/faction/wars/${warId}/ceasefire`, { method: 'POST' });
+export const acceptCeasefire = (warId: number) => apiRequest(`/faction/wars/${warId}/ceasefire/accept`, { method: 'POST' });
+export const declineCeasefire = (warId: number) => apiRequest(`/faction/wars/${warId}/ceasefire/decline`, { method: 'POST' });
 
 export const systemBuyResource = (
   nexusId: string,

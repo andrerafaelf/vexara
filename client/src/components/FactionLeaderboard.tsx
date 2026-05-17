@@ -67,7 +67,6 @@ export default function FactionLeaderboard({ myFactionId }: { myFactionId?: numb
       {dominating && (
         <div className="flb-dominance-alert">
           <div className="flb-dominance-alert-header">
-            <span className="flb-dominance-icon">👑</span>
             <span className="flb-dominance-name">{dominating.name} <span className="flb-dominance-tag">[{dominating.tag}]</span></span>
             <span className="flb-dominance-label">is dominating</span>
           </div>
@@ -106,7 +105,7 @@ export default function FactionLeaderboard({ myFactionId }: { myFactionId?: numb
           return (
             <div key={row.id} className={`flb-row${isMe ? ' flb-row--mine' : ''}${overThreshold ? ' flb-row--dominating' : ''}`}>
               <span className="flb-td flb-td--rank">
-                {i === 0 ? <span className="flb-rank-crown">👑</span> : i + 1}
+                {i + 1}
               </span>
 
               <span className="flb-td flb-td--name">

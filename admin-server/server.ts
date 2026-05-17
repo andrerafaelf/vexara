@@ -30,7 +30,6 @@ function safeEqual(a: string, b: string): boolean {
 const requireAdminAuth = (req: express.Request, res: express.Response, next: express.NextFunction): void => {
   const authHeader = req.headers.authorization || '';
   if (!authHeader.startsWith('Basic ')) {
-    res.setHeader('WWW-Authenticate', 'Basic realm="Admin Console"');
     res.status(401).json({ error: 'Unauthorized' }); return;
   }
   const decoded = Buffer.from(authHeader.slice(6), 'base64').toString('utf8');
@@ -38,7 +37,6 @@ const requireAdminAuth = (req: express.Request, res: express.Response, next: exp
   const username = sep >= 0 ? decoded.slice(0, sep) : '';
   const password = sep >= 0 ? decoded.slice(sep + 1) : '';
   if (!safeEqual(username, ADMIN_USER!) || !safeEqual(password, ADMIN_PASS!)) {
-    res.setHeader('WWW-Authenticate', 'Basic realm="Admin Console"');
     res.status(401).json({ error: 'Unauthorized' }); return;
   }
   next();

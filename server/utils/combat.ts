@@ -84,13 +84,13 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
       ]);
 
       void sendPushToUser(attack.attackerUserId!, NOTIF.TROOP_TRANSFER, {
-        title: '🛡️ Support Arrived',
+        title: 'Support Arrived',
         body: `Your support troops have arrived at the destination nexus.`,
         tag: `support-arrived-${attack.id}`, data: { url: '/' },
       });
       if (attack.defenderUserId) {
         void sendPushToUser(attack.defenderUserId, NOTIF.TROOP_TRANSFER, {
-          title: '🛡️ Reinforcements Arrived',
+          title: 'Reinforcements Arrived',
           body: `Allied support troops have arrived to defend your nexus.`,
           tag: `support-received-${attack.id}`, data: { url: '/' },
         });
@@ -334,23 +334,23 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
     ]);
 
     void sendPushToUser(attack.attackerUserId!, NOTIF.ATTACK_RESOLVED, {
-      title: attackerWins ? (conquered ? '👑 Nexus Conquered!' : '⚔️ Attack Victorious') : '🛡️ Attack Repelled',
+      title: attackerWins ? (conquered ? 'Nexus Conquered!' : 'Attack Victorious') : 'Attack Repelled',
       body: attackerWins
         ? conquered
-          ? `🏆 Your forces conquered ${defenderNexusForNotif?.name || 'a nexus'}! Combat report ready.`
-          : `💥 You won the battle at ${defenderNexusForNotif?.name || 'a nexus'}. Troops returning — combat report ready!`
-        : `😞 Your attack on ${defenderNexusForNotif?.name || 'a nexus'} was repelled. Combat report ready.`,
+          ? `Your forces conquered ${defenderNexusForNotif?.name || 'a nexus'}! Combat report ready.`
+          : `You won the battle at ${defenderNexusForNotif?.name || 'a nexus'}. Troops returning — combat report ready!`
+        : `Your attack on ${defenderNexusForNotif?.name || 'a nexus'} was repelled. Combat report ready.`,
       tag: `attack-resolved-${attack.id}`, data: { url: '/combat-logs' },
     });
 
     if (attack.defenderUserId) {
       void sendPushToUser(attack.defenderUserId, NOTIF.ATTACK_INCOMING, {
-        title: attackerWins ? (conquered ? '💀 Nexus Lost!' : '🚨 Your Nexus Was Attacked!') : '🛡️ Attack Repelled',
+        title: attackerWins ? (conquered ? 'Nexus Lost!' : 'Your Nexus Was Attacked!') : 'Attack Repelled',
         body: attackerWins
           ? conquered
-            ? `⚠️ ${attackerNexusForNotif?.name || 'An enemy'} conquered your nexus! Combat report ready.`
-            : `💥 ${attackerNexusForNotif?.name || 'An enemy'} raided your nexus and stole resources. Combat report ready.`
-          : `✅ You successfully defended against an attack on ${defenderNexusForNotif?.name || 'your nexus'}. Combat report ready.`,
+            ? `${attackerNexusForNotif?.name || 'An enemy'} conquered your nexus! Combat report ready.`
+            : `${attackerNexusForNotif?.name || 'An enemy'} raided your nexus and stole resources. Combat report ready.`
+          : `You successfully defended against an attack on ${defenderNexusForNotif?.name || 'your nexus'}. Combat report ready.`,
         tag: `defended-${attack.id}`, data: { url: '/combat-logs' },
       });
     }

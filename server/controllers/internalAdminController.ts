@@ -126,7 +126,7 @@ export async function completeBuild(req: Request, res: Response): Promise<void> 
     const updated = await adminService.updateNexus(nexus.id, data);
     if (updated.ownerId) {
       const label = formatLabel(build.building);
-      void sendPushToUser(updated.ownerId, NOTIF.BUILDING_COMPLETE, { title: '🏗️ Construction Complete', body: `✅ ${label} upgraded to level ${build.targetLevel} at ${updated.name}.`, tag: `build-${updated.id}-${build.building}-${build.targetLevel}`, data: { url: '/' } });
+      void sendPushToUser(updated.ownerId, NOTIF.BUILDING_COMPLETE, { title: 'Construction Complete', body: `${label} upgraded to level ${build.targetLevel} at ${updated.name}.`, tag: `build-${updated.id}-${build.building}-${build.targetLevel}`, data: { url: '/' } });
     }
     res.json({ success: true, nexus: serializeNexus(updated) });
   } catch (error) {
@@ -145,7 +145,7 @@ export async function completeTraining(req: Request, res: Response): Promise<voi
     const updated = await adminService.updateNexus(nexus.id, { [training.troopType]: (nexusRecord[training.troopType] || 0) + training.amount, populationCurrent: nexus.populationCurrent + training.amount, trainingQueue: remainingQueue });
     if (updated.ownerId) {
       const label = formatLabel(training.troopType);
-      void sendPushToUser(updated.ownerId, NOTIF.TROOP_COMPLETE, { title: '⚔️ Training Complete', body: `🎯 ${training.amount}x ${label} ready at ${updated.name}.`, tag: `troop-${updated.id}-${training.troopType}-${Date.now()}`, data: { url: '/' } });
+      void sendPushToUser(updated.ownerId, NOTIF.TROOP_COMPLETE, { title: 'Training Complete', body: `${training.amount}x ${label} ready at ${updated.name}.`, tag: `troop-${updated.id}-${training.troopType}-${Date.now()}`, data: { url: '/' } });
     }
     res.json({ success: true, nexus: serializeNexus(updated) });
   } catch (error) {

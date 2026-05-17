@@ -213,7 +213,7 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
                 <div>
                   <div style={{ fontWeight: 600 }}>
                     {g.name}{' '}
-                    {isRecentlyEnded && <span style={{ color: '#ffd700', fontSize: '0.85em' }}>👑 Ended</span>}
+                    {isRecentlyEnded && <span style={{ color: '#ffd700', fontSize: '0.85em' }}>Ended</span>}
                     {isEnded && !isRecentlyEnded && <span style={{ color: '#ffae3a', fontSize: '0.85em' }}>(Ended)</span>}
                     {g.isJoined && !isEnded && (
                       <span style={{ color: '#7df58c', fontSize: '0.85em', marginLeft: 6 }}>(Joined)</span>
@@ -243,7 +243,7 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
                         fontWeight: 700,
                       }}
                     >
-                      {loadingWin ? '…' : '👑 Results'}
+                      {loadingWin ? '...' : 'Results'}
                     </button>
                   )}
                   {!isEnded && (
@@ -378,7 +378,6 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
           >
             {/* Header */}
             <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
-              <div style={{ fontSize: '2rem' }}>👑</div>
               <h2 style={{ margin: '0.25rem 0 0.1rem', color: '#ffd700', fontSize: '1.4rem' }}>
                 {winScreen.galaxy.name} — Galaxy Ended
               </h2>
@@ -389,7 +388,7 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
               )}
               {winScreen.factionLeaderboard[0]?.isWinner && (
                 <div style={{ marginTop: '0.5rem', color: '#ffd700', fontWeight: 700, fontSize: '1.05rem' }}>
-                  🏆 {winScreen.factionLeaderboard[0].name} [{winScreen.factionLeaderboard[0].tag}] achieved dominance!
+                  {winScreen.factionLeaderboard[0].name} [{winScreen.factionLeaderboard[0].tag}] achieved dominance!
                 </div>
               )}
             </div>
@@ -416,7 +415,7 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
                       borderLeft: f.isWinner ? '3px solid #ffd700' : '3px solid transparent',
                     }}
                   >
-                    <td style={{ padding: '0.4rem 0.5rem', color: f.isWinner ? '#ffd700' : '#8a98c2' }}>{f.isWinner ? '👑' : i + 1}</td>
+                    <td style={{ padding: '0.4rem 0.5rem', color: f.isWinner ? '#ffd700' : '#8a98c2' }}>{i + 1}</td>
                     <td style={{ padding: '0.4rem 0.5rem', fontWeight: f.isWinner ? 700 : 400, color: f.isWinner ? '#ffd700' : '#e0e8ff' }}>
                       [{f.tag}] {f.name}
                     </td>

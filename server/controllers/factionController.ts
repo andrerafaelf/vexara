@@ -184,13 +184,34 @@ export async function createFaction(req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
+    const normalizedName = name!.trim();
+    const normalizedTag = tag!.trim().toUpperCase();
+
+    const nameConflict = await prisma.faction.findFirst({
+      where: { galaxyId: user.activeGalaxyId, name: { equals: normalizedName, mode: 'insensitive' } },
+      select: { id: true },
+    });
+    if (nameConflict) {
+      res.status(400).json({ error: 'A faction with that name already exists in this galaxy' });
+      return;
+    }
+
+    const tagConflict = await prisma.faction.findFirst({
+      where: { galaxyId: user.activeGalaxyId, tag: { equals: normalizedTag, mode: 'insensitive' } },
+      select: { id: true },
+    });
+    if (tagConflict) {
+      res.status(400).json({ error: 'A faction with that tag already exists in this galaxy' });
+      return;
+    }
+
     const callerUser = await prisma.user.findUnique({ where: { id: req.userId }, select: { username: true } });
 
     const faction = await prisma.faction.create({
       data: {
         galaxyId: user.activeGalaxyId,
-        name: name!.trim(),
-        tag: tag!.trim().toUpperCase(),
+        name: normalizedName,
+        tag: normalizedTag,
         description: description?.trim() || null,
         members: {
           create: {
@@ -246,8 +267,8 @@ export async function inviteToFaction(req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    const invitedUser = await prisma.user.findUnique({
-      where: { username: username.trim() },
+    const invitedUser = await prisma.user.findFirst({
+      where: { username: { equals: username.trim(), mode: 'insensitive' } },
       select: { id: true },
     });
     if (!invitedUser) {

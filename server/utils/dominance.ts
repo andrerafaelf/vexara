@@ -157,7 +157,7 @@ async function endGalaxy(galaxy: { id: number; name: string }, winnerFactionId: 
   for (const p of allPlayers) {
     const isWinner = winnerIds.has(p.userId);
     void sendPushToUser(p.userId, isWinner ? NOTIF.ATTACK_RESOLVED : NOTIF.ATTACK_INCOMING, {
-      title: isWinner ? '👑 Faction Victory' : '🏁 Galaxy Ended',
+      title: isWinner ? 'Faction Victory' : 'Galaxy Ended',
       body: isWinner
         ? `Your faction conquered ${galaxy.name}!`
         : `${galaxy.name} has ended. A faction has achieved victory.`,

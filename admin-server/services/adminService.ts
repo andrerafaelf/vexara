@@ -153,7 +153,14 @@ export async function getAttackUsernames(attackerUserId: number | null, defender
 }
 
 export function getUserByField(field: string, value: string) {
-  return prisma.user.findFirst({ where: { OR: [{ username: value }, { email: value.toLowerCase() }] } });
+  return prisma.user.findFirst({
+    where: {
+      OR: [
+        { username: { equals: value, mode: 'insensitive' } },
+        { email: value.toLowerCase() },
+      ],
+    },
+  });
 }
 
 export function sendTestNotification(userId: number) {

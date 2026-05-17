@@ -20,7 +20,9 @@ router.post('/', auth, (req, res) => factionController.createFaction(req as Auth
 // War action routes (must precede /:id to prevent 'wars' being captured as an id)
 router.post('/wars/:warId/accept', auth, (req, res) => warController.acceptWar(req as AuthRequest, res as Response));
 router.post('/wars/:warId/decline', auth, (req, res) => warController.declineWar(req as AuthRequest, res as Response));
-router.post('/wars/:warId/end', auth, (req, res) => warController.endWar(req as AuthRequest, res as Response));
+router.post('/wars/:warId/ceasefire', auth, (req, res) => warController.proposeCeasefire(req as AuthRequest, res as Response));
+router.post('/wars/:warId/ceasefire/accept', auth, (req, res) => warController.acceptCeasefire(req as AuthRequest, res as Response));
+router.post('/wars/:warId/ceasefire/decline', auth, (req, res) => warController.declineCeasefire(req as AuthRequest, res as Response));
 
 // Parametric routes
 router.get('/:id', auth, (req, res) => factionController.getFaction(req as AuthRequest, res as Response));

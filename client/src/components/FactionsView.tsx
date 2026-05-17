@@ -17,7 +17,9 @@ import {
   declareWar,
   acceptWar,
   declineWar,
-  endWar,
+  proposeCeasefire,
+  acceptCeasefire,
+  declineCeasefire,
   listFactionsInGalaxy,
 } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -49,13 +51,14 @@ interface FactionInvite {
 
 interface FactionWar {
   id: number;
-  status: 'pending' | 'active' | 'ended';
+  status: 'pending' | 'active' | 'ceasefire_pending' | 'ended';
   declarerFactionId: number;
   targetFactionId: number;
   declarerFaction: { name: string; tag: string };
   targetFaction: { name: string; tag: string };
   declaredAt: string;
   acceptedAt: string | null;
+  ceasefireProposerFactionId: number | null;
 }
 
 interface GalaxyFaction {
@@ -290,10 +293,30 @@ export default function FactionsView() {
     }
   };
 
-  const handleEndWar = async (warId: number) => {
-    if (!myFaction || !confirm('Propose a ceasefire and end this war?')) return;
+  const handleProposeCeasefire = async (warId: number) => {
+    if (!myFaction) return;
     try {
-      await endWar(warId);
+      await proposeCeasefire(warId);
+      await refreshWars(myFaction.id);
+    } catch (err) {
+      setWarError((err as { response?: { data?: { error?: string } } }).response?.data?.error || (err as Error).message);
+    }
+  };
+
+  const handleAcceptCeasefire = async (warId: number) => {
+    if (!myFaction) return;
+    try {
+      await acceptCeasefire(warId);
+      await refreshWars(myFaction.id);
+    } catch (err) {
+      setWarError((err as { response?: { data?: { error?: string } } }).response?.data?.error || (err as Error).message);
+    }
+  };
+
+  const handleDeclineCeasefire = async (warId: number) => {
+    if (!myFaction) return;
+    try {
+      await declineCeasefire(warId);
       await refreshWars(myFaction.id);
     } catch (err) {
       setWarError((err as { response?: { data?: { error?: string } } }).response?.data?.error || (err as Error).message);
@@ -345,12 +368,14 @@ export default function FactionsView() {
               <label className="factions-field">
                 <span className="factions-label">Faction Name</span>
                 <input type="text" value={formName} onChange={(e) => setFormName(e.target.value)}
-                  placeholder="e.g. Vexara Collective" disabled={formSubmitting} required />
+                  placeholder="e.g. Vexara Collective" disabled={formSubmitting} required
+                  autoCorrect="off" spellCheck={false} />
               </label>
               <label className="factions-field">
                 <span className="factions-label">Tag (2–6 characters)</span>
                 <input type="text" value={formTag} onChange={(e) => setFormTag(e.target.value.toUpperCase())}
-                  placeholder="e.g. VEX" maxLength={6} disabled={formSubmitting} required />
+                  placeholder="e.g. VEX" maxLength={6} disabled={formSubmitting} required
+                  autoCapitalize="characters" autoCorrect="off" spellCheck={false} />
               </label>
               <label className="factions-field">
                 <span className="factions-label">Description (optional)</span>
@@ -449,7 +474,8 @@ export default function FactionsView() {
                 {wars.filter((w) => w.status === 'active').length > 0 && (
                   <span className="factions-tab-badge">{wars.filter((w) => w.status === 'active').length}</span>
                 )}
-                {wars.some((w) => w.status === 'pending' && w.targetFactionId === myFaction.id) && (
+                {(wars.some((w) => w.status === 'pending' && w.targetFactionId === myFaction.id) ||
+                  wars.some((w) => w.status === 'ceasefire_pending' && w.ceasefireProposerFactionId !== myFaction.id)) && (
                   <span className="factions-tab-badge factions-tab-badge--alert">!</span>
                 )}
               </>
@@ -541,6 +567,9 @@ export default function FactionsView() {
                   onChange={(e) => setInviteUsername(e.target.value)}
                   placeholder="Enter username"
                   disabled={inviteSubmitting}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                 />
                 <button type="submit" disabled={inviteSubmitting} className="factions-btn-primary">
                   {inviteSubmitting ? 'Inviting...' : 'Send Invite'}
@@ -659,8 +688,55 @@ export default function FactionsView() {
                         )}
                       </div>
                       {canManage && (
-                        <button className="factions-btn-small" onClick={() => handleEndWar(w.id)}>Propose Ceasefire</button>
+                        <button className="factions-btn-small" onClick={() => handleProposeCeasefire(w.id)}>Propose Ceasefire</button>
                       )}
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+
+          {/* Ceasefire pending — incoming (other faction proposed) */}
+          {wars.filter((w) => w.status === 'ceasefire_pending' && w.ceasefireProposerFactionId !== myFaction.id).length > 0 && (
+            <div className="factions-war-section">
+              <h3 className="factions-war-section-title factions-war-section-title--alert">Ceasefire Proposals</h3>
+              {wars
+                .filter((w) => w.status === 'ceasefire_pending' && w.ceasefireProposerFactionId !== myFaction.id)
+                .map((w) => {
+                  const enemy = w.declarerFactionId === myFaction.id ? w.targetFaction : w.declarerFaction;
+                  return (
+                    <div key={w.id} className="factions-war-card factions-war-card--ceasefire-incoming">
+                      <div className="factions-war-info">
+                        <span className="factions-war-faction">[{enemy.tag}] {enemy.name}</span>
+                        <span className="factions-war-meta">proposed a ceasefire</span>
+                      </div>
+                      {canManage && (
+                        <div className="factions-war-actions">
+                          <button className="factions-btn-primary" onClick={() => handleAcceptCeasefire(w.id)}>Accept</button>
+                          <button className="factions-btn-small factions-btn-danger" onClick={() => handleDeclineCeasefire(w.id)}>Decline</button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+
+          {/* Ceasefire pending — outgoing (we proposed) */}
+          {wars.filter((w) => w.status === 'ceasefire_pending' && w.ceasefireProposerFactionId === myFaction.id).length > 0 && (
+            <div className="factions-war-section">
+              <h3 className="factions-war-section-title">Ceasefire Awaiting Response</h3>
+              {wars
+                .filter((w) => w.status === 'ceasefire_pending' && w.ceasefireProposerFactionId === myFaction.id)
+                .map((w) => {
+                  const enemy = w.declarerFactionId === myFaction.id ? w.targetFaction : w.declarerFaction;
+                  return (
+                    <div key={w.id} className="factions-war-card factions-war-card--ceasefire-outgoing">
+                      <div className="factions-war-info">
+                        <span className="factions-war-faction">[{enemy.tag}] {enemy.name}</span>
+                        <span className="factions-war-meta">considering your ceasefire proposal</span>
+                      </div>
+                      <span className="factions-war-status-badge factions-war-status-badge--pending">Pending</span>
                     </div>
                   );
                 })}

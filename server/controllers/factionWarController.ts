@@ -29,7 +29,7 @@ export async function declareWar(req: AuthRequest, res: Response): Promise<void>
     const existing = await prisma.factionWar.findFirst({
       where: {
         galaxyId: req.galaxyId!,
-        status: { in: ['pending', 'active'] },
+        status: { in: ['pending', 'active', 'ceasefire_pending'] },
         OR: [
           { declarerFactionId: membership.factionId, targetFactionId },
           { declarerFactionId: targetFactionId, targetFactionId: membership.factionId },
@@ -112,12 +112,12 @@ export async function declineWar(req: AuthRequest, res: Response): Promise<void>
   }
 }
 
-export async function endWar(req: AuthRequest, res: Response): Promise<void> {
+export async function proposeCeasefire(req: AuthRequest, res: Response): Promise<void> {
   try {
     const warId = parseInt(req.params.warId);
     const membership = await getMembership(req.userId!, req.galaxyId!);
     if (!membership) { res.status(403).json({ error: 'Not in a faction' }); return; }
-    if (!canManageWars(membership.role)) { res.status(403).json({ error: 'Only leaders and officers can end wars' }); return; }
+    if (!canManageWars(membership.role)) { res.status(403).json({ error: 'Only leaders and officers can propose a ceasefire' }); return; }
 
     const war = await prisma.factionWar.findFirst({
       where: {
@@ -132,16 +132,106 @@ export async function endWar(req: AuthRequest, res: Response): Promise<void> {
 
     const updated = await prisma.factionWar.update({
       where: { id: warId },
-      data: { status: 'ended', endedAt: new Date() },
+      data: { status: 'ceasefire_pending', ceasefireProposerFactionId: membership.factionId },
       include: { declarerFaction: { select: { name: true, tag: true } }, targetFaction: { select: { name: true, tag: true } } },
     });
 
     const otherFactionId = war.declarerFactionId === membership.factionId ? war.targetFactionId : war.declarerFactionId;
+    const myName = war.declarerFactionId === membership.factionId ? war.declarerFaction.name : war.targetFaction.name;
     const otherName = war.declarerFactionId === membership.factionId ? war.targetFaction.name : war.declarerFaction.name;
+
+    await prisma.factionEvent.createMany({
+      data: [
+        { factionId: membership.factionId, type: 'ceasefire_proposed', targetName: otherName, meta: String(warId) },
+        { factionId: otherFactionId, type: 'ceasefire_received', actorName: myName, meta: String(warId) },
+      ],
+    });
+
+    res.json({ war: serializeWar(updated) });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
+export async function acceptCeasefire(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const warId = parseInt(req.params.warId);
+    const membership = await getMembership(req.userId!, req.galaxyId!);
+    if (!membership) { res.status(403).json({ error: 'Not in a faction' }); return; }
+    if (!canManageWars(membership.role)) { res.status(403).json({ error: 'Only leaders and officers can accept a ceasefire' }); return; }
+
+    const war = await prisma.factionWar.findFirst({
+      where: {
+        id: warId,
+        galaxyId: req.galaxyId!,
+        status: 'ceasefire_pending',
+        OR: [{ declarerFactionId: membership.factionId }, { targetFactionId: membership.factionId }],
+      },
+      include: { declarerFaction: { select: { name: true } }, targetFaction: { select: { name: true } } },
+    });
+    if (!war) { res.status(404).json({ error: 'Pending ceasefire not found' }); return; }
+    if (war.ceasefireProposerFactionId === membership.factionId) {
+      res.status(400).json({ error: 'You proposed this ceasefire — wait for the other faction to respond' }); return;
+    }
+
+    const updated = await prisma.factionWar.update({
+      where: { id: warId },
+      data: { status: 'ended', endedAt: new Date(), ceasefireProposerFactionId: null },
+      include: { declarerFaction: { select: { name: true, tag: true } }, targetFaction: { select: { name: true, tag: true } } },
+    });
+
+    const otherFactionId = war.declarerFactionId === membership.factionId ? war.targetFactionId : war.declarerFactionId;
+    const myName = war.declarerFactionId === membership.factionId ? war.declarerFaction.name : war.targetFaction.name;
+    const otherName = war.declarerFactionId === membership.factionId ? war.targetFaction.name : war.declarerFaction.name;
+
     await prisma.factionEvent.createMany({
       data: [
         { factionId: membership.factionId, type: 'war_ended', targetName: otherName, meta: String(warId) },
-        { factionId: otherFactionId, type: 'war_ended', actorName: membership.factionId === war.declarerFactionId ? war.declarerFaction.name : war.targetFaction.name, meta: String(warId) },
+        { factionId: otherFactionId, type: 'war_ended', actorName: myName, meta: String(warId) },
+      ],
+    });
+
+    res.json({ war: serializeWar(updated) });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
+export async function declineCeasefire(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const warId = parseInt(req.params.warId);
+    const membership = await getMembership(req.userId!, req.galaxyId!);
+    if (!membership) { res.status(403).json({ error: 'Not in a faction' }); return; }
+    if (!canManageWars(membership.role)) { res.status(403).json({ error: 'Only leaders and officers can decline a ceasefire' }); return; }
+
+    const war = await prisma.factionWar.findFirst({
+      where: {
+        id: warId,
+        galaxyId: req.galaxyId!,
+        status: 'ceasefire_pending',
+        OR: [{ declarerFactionId: membership.factionId }, { targetFactionId: membership.factionId }],
+      },
+      include: { declarerFaction: { select: { name: true } }, targetFaction: { select: { name: true } } },
+    });
+    if (!war) { res.status(404).json({ error: 'Pending ceasefire not found' }); return; }
+    if (war.ceasefireProposerFactionId === membership.factionId) {
+      res.status(400).json({ error: 'You proposed this ceasefire — wait for the other faction to respond' }); return;
+    }
+
+    const updated = await prisma.factionWar.update({
+      where: { id: warId },
+      data: { status: 'active', ceasefireProposerFactionId: null },
+      include: { declarerFaction: { select: { name: true, tag: true } }, targetFaction: { select: { name: true, tag: true } } },
+    });
+
+    const otherFactionId = war.declarerFactionId === membership.factionId ? war.targetFactionId : war.declarerFactionId;
+    const myName = war.declarerFactionId === membership.factionId ? war.declarerFaction.name : war.targetFaction.name;
+    const otherName = war.declarerFactionId === membership.factionId ? war.targetFaction.name : war.declarerFaction.name;
+
+    await prisma.factionEvent.createMany({
+      data: [
+        { factionId: membership.factionId, type: 'ceasefire_declined', targetName: otherName, meta: String(warId) },
+        { factionId: otherFactionId, type: 'ceasefire_declined', actorName: myName, meta: String(warId) },
       ],
     });
 
@@ -158,7 +248,7 @@ export async function getWars(req: AuthRequest, res: Response): Promise<void> {
       where: {
         galaxyId: req.galaxyId!,
         OR: [{ declarerFactionId: factionId }, { targetFactionId: factionId }],
-        status: { in: ['pending', 'active'] },
+        status: { in: ['pending', 'active', 'ceasefire_pending'] },
       },
       include: { declarerFaction: { select: { name: true, tag: true } }, targetFaction: { select: { name: true, tag: true } } },
       orderBy: { declaredAt: 'desc' },
@@ -180,5 +270,6 @@ function serializeWar(war: any) {
     declaredAt: war.declaredAt,
     acceptedAt: war.acceptedAt,
     endedAt: war.endedAt,
+    ceasefireProposerFactionId: war.ceasefireProposerFactionId,
   };
 }
