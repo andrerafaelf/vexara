@@ -2,7 +2,8 @@
 
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
-import { createNexus, getMyNexuses } from '@/services/api';
+import { createNexus, getMyGalaxy, getMyNexuses } from '@/services/api';
+import GalaxyPicker, { Galaxy } from '@/components/GalaxyPicker';
 import '@/styles/Game.css';
 import { Nexus } from '@/types/game';
 import { useRouter } from 'next/navigation';
@@ -14,6 +15,8 @@ export default function Home() {
   const [nexuses, setNexuses] = useState<Nexus[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [activeGalaxy, setActiveGalaxy] = useState<Galaxy | null>(null);
+  const [showGalaxyPicker, setShowGalaxyPicker] = useState(false);
   const { user, logout } = useAuth();
   const toast = useToast();
   const router = useRouter();
@@ -44,6 +47,14 @@ export default function Home() {
         const preferredNexus = allNexuses.find((n) => n._id === storedNexusId) ?? allNexuses[0];
         localStorage.setItem(SELECTED_NEXUS_KEY, preferredNexus._id);
         router.replace(`/nexus/${preferredNexus._id}`);
+      } else {
+        getMyGalaxy()
+          .then((res) => {
+            const g = res.data?.activeGalaxy ?? null;
+            setActiveGalaxy(g);
+            if (!g) setShowGalaxyPicker(true);
+          })
+          .catch(() => setShowGalaxyPicker(true));
       }
     });
     const interval = setInterval(loadNexuses, 30000);
@@ -87,12 +98,43 @@ export default function Home() {
         <main className="game-main">
           <div className="no-nexuses">
             <h2>Welcome to Vexara!</h2>
-            <p>You don&apos;t have any nexuses yet. Let&apos;s create your first nexus to start your empire!</p>
-            <button onClick={handleCreateNexus} className="create-nexus-btn" disabled={creating}>
-              {creating ? 'Creating...' : 'Create Your First Nexus'}
-            </button>
+            {activeGalaxy ? (
+              <>
+                <p>
+                  Galaxy: <strong>{activeGalaxy.name}</strong> —{' '}
+                  <button
+                    className="link-btn"
+                    onClick={() => setShowGalaxyPicker(true)}
+                  >
+                    change
+                  </button>
+                </p>
+                <p>Ready to start your empire? Create your first nexus!</p>
+                <button onClick={handleCreateNexus} className="create-nexus-btn" disabled={creating}>
+                  {creating ? 'Creating...' : 'Create Your First Nexus'}
+                </button>
+              </>
+            ) : (
+              <>
+                <p>Select a galaxy to begin, then create your first nexus.</p>
+                <button className="create-nexus-btn" onClick={() => setShowGalaxyPicker(true)}>
+                  Select a Galaxy
+                </button>
+              </>
+            )}
           </div>
         </main>
+
+        {showGalaxyPicker && (
+          <GalaxyPicker
+            forced={!activeGalaxy}
+            onClose={() => setShowGalaxyPicker(false)}
+            onSelected={(g) => {
+              setActiveGalaxy(g);
+              setShowGalaxyPicker(false);
+            }}
+          />
+        )}
       </div>
     );
   }

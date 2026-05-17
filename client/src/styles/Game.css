@@ -680,6 +680,21 @@
   filter: brightness(0.97);
 }
 
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--color-cyan-400);
+  cursor: pointer;
+  font-size: inherit;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.link-btn:hover {
+  color: var(--color-cyan-300);
+}
+
 .menu-toggle {
   display: none;
   background: transparent;
