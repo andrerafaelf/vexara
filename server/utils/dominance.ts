@@ -3,6 +3,8 @@ import { NOTIF, sendPushToUser } from './push.js';
 
 const DOMINANCE_THRESHOLD = 0.65;
 const DOMINANCE_SUSTAIN_MS = 36 * 60 * 60 * 1000;
+const DOMINANCE_MIN_PLAYERS = 15;
+const DOMINANCE_MIN_FACTIONS = 3;
 
 export async function processDominanceVictories(): Promise<void> {
   const activeGalaxies = await prisma.galaxy.findMany({
@@ -34,6 +36,16 @@ async function processGalaxy(galaxy: { id: number; name: string }): Promise<void
     return;
   }
 
+  // Require minimum player count in this galaxy
+  const playerCount = await prisma.galaxyPlayer.count({ where: { galaxyId: galaxy.id } });
+  if (playerCount < DOMINANCE_MIN_PLAYERS) {
+    await prisma.faction.updateMany({
+      where: { galaxyId: galaxy.id, dominanceSince: { not: null } },
+      data: { dominanceSince: null },
+    });
+    return;
+  }
+
   // Get faction membership for all owned nexuses
   const members = await prisma.factionMember.findMany({
     where: { galaxyId: galaxy.id },
@@ -48,6 +60,15 @@ async function processGalaxy(galaxy: { id: number; name: string }): Promise<void
     if (factionId) {
       factionCounts.set(factionId, (factionCounts.get(factionId) || 0) + 1);
     }
+  }
+
+  // Require minimum distinct faction count
+  if (factionCounts.size < DOMINANCE_MIN_FACTIONS) {
+    await prisma.faction.updateMany({
+      where: { galaxyId: galaxy.id, dominanceSince: { not: null } },
+      data: { dominanceSince: null },
+    });
+    return;
   }
 
   // Find leader faction

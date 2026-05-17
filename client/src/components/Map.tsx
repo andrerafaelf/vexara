@@ -848,7 +848,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
                     <Shield size={14} aria-hidden="true" /> Support
                   </button>
                 )}
-                {!isConquered && !isNewbieProtected && (
+                {!isConquered && !isNewbieProtected && ownNexuses.length > 1 && (
                   <button
                     className="wave-planner-btn"
                     onClick={() => setShowWavePlanner(true)}

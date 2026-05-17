@@ -71,6 +71,8 @@ export const selectGalaxy = (galaxyId: number | string) =>
   apiRequest(`/galaxies/${galaxyId}/select`, { method: 'POST' });
 export const leaveGalaxy = (galaxyId: number | string) =>
   apiRequest(`/galaxies/${galaxyId}/leave`, { method: 'POST' });
+export const getGalaxyWinResults = (galaxyId: number | string) =>
+  apiRequest(`/galaxies/${galaxyId}/win-results`);
 
 // Nexuses
 export const createNexus = (name?: string) =>

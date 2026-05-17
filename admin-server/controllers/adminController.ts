@@ -61,8 +61,8 @@ export async function createUser(req: Request, res: Response): Promise<void> {
     if (!username || !email || !password) { res.status(400).json({ error: 'username, email, and password are required' }); return; }
     const existing = await adminService.getUserByField('username', username);
     if (existing) { res.status(400).json({ error: 'User already exists with that username or email' }); return; }
-    const { user, nexus } = await adminService.createUser(username, email, password) as { user: { id: number; username: string; email: string }; nexus: unknown };
-    res.json({ success: true, user: { _id: user.id, id: user.id, username: user.username, email: user.email }, nexus: serializeNexus(nexus as Parameters<typeof serializeNexus>[0]) });
+    const { user } = await adminService.createUser(username, email, password) as { user: { id: number; username: string; email: string } };
+    res.json({ success: true, user: { _id: user.id, id: user.id, username: user.username, email: user.email } });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }

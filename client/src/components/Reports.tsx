@@ -50,6 +50,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
     overseer: 0,
   });
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
+  const [replayComplete, setReplayComplete] = useState(false);
 
   useEffect(() => {
     loadReports();
@@ -67,6 +68,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
 
   useEffect(() => {
     setShowAttackForm(false);
+    setReplayComplete(false);
     setAttackTroops({
       lancerDrone: 0,
       assaultTrooper: 0,
@@ -204,6 +206,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
         </div>
 
         <div className="report-detail">
+          {(scoutReport || replayComplete) && (
           <div className={`report-result ${selectedReport.result.victory ? 'victory' : 'defeat'}`}>
             {scoutReport ? (
               <span>Recon complete. Intelligence updated.</span>
@@ -222,9 +225,10 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
               <span>Victory! You defended successfully</span>
             )}
           </div>
+        )}
 
           {!scoutReport && (
-            <BattleReplay report={selectedReport} isMyAttack={isMyAttack} />
+            <BattleReplay report={selectedReport} isMyAttack={isMyAttack} onComplete={() => setReplayComplete(true)} />
           )}
 
           {scoutReport && isMyAttack && (

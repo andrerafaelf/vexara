@@ -14,6 +14,7 @@ function authNoGalaxy(req: Request, res: Response, next: NextFunction) {
 
 router.get('/', authNoGalaxy, (req, res) => galaxyController.listGalaxies(req as AuthRequest, res as Response));
 router.get('/me', authNoGalaxy, (req, res) => galaxyController.getMyGalaxy(req as AuthRequest, res as Response));
+router.get('/:id/win-results', authNoGalaxy, (req, res) => galaxyController.getGalaxyWinResults(req as AuthRequest, res as Response));
 router.post('/:id/leave', authNoGalaxy, (req, res) => galaxyController.leaveGalaxy(req as AuthRequest, res as Response));
 router.post('/:id/select', authNoGalaxy, (req, res) => galaxyController.selectGalaxy(req as AuthRequest, res as Response));
 

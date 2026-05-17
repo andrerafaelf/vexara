@@ -8,6 +8,7 @@ import ResourceIcon from './ResourceIcon';
 interface BattleReplayProps {
   report: Attack;
   isMyAttack: boolean;
+  onComplete?: () => void;
 }
 
 const TROOP_NAMES: Record<string, string> = {
@@ -119,7 +120,7 @@ function RoundLog({ rounds, currentRound }: { rounds: CombatRound[]; currentRoun
   );
 }
 
-const BattleReplay: React.FC<BattleReplayProps> = ({ report, isMyAttack }) => {
+const BattleReplay: React.FC<BattleReplayProps> = ({ report, isMyAttack, onComplete }) => {
   const replay = React.useMemo<CombatReplay | null>(() => deriveReplay(report), [report]);
 
   const [currentRound, setCurrentRound] = useState(0);
@@ -174,6 +175,15 @@ const BattleReplay: React.FC<BattleReplayProps> = ({ report, isMyAttack }) => {
     stop();
     setCurrentRound(0);
   }, [report._id, stop]);
+
+  // Notify parent when the last round is reached
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+  useEffect(() => {
+    if (replay && currentRound === replay.totalRounds - 1) {
+      onCompleteRef.current?.();
+    }
+  }, [currentRound, replay]);
 
   if (!replay) return null;
 
