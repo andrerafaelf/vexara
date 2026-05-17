@@ -30,6 +30,7 @@ model User {
   notificationPrefs  NotificationPreferences?
   factionMembers   FactionMember[]
   factionMessages  FactionMessage[]
+  factionJoinRequests FactionJoinRequest[]
 
   referredById     Int?
   registrationIp   String?   @db.VarChar(45)
@@ -378,6 +379,7 @@ model Faction {
   events       FactionEvent[]
   warsInitiated FactionWar[] @relation("FactionWarDeclarer")
   warsReceived  FactionWar[] @relation("FactionWarTarget")
+  joinRequests  FactionJoinRequest[]
 
   @@unique([galaxyId, name])
   @@unique([galaxyId, tag])
@@ -440,6 +442,22 @@ model FactionInvite {
 
   @@unique([factionId, invitedUserId])
   @@index([invitedUserId, galaxyId])
+}
+
+model FactionJoinRequest {
+  id        Int      @id @default(autoincrement())
+  factionId Int
+  userId    Int
+  galaxyId  Int
+  message   String?  @db.VarChar(256)
+  createdAt DateTime @default(now())
+
+  faction Faction @relation(fields: [factionId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([factionId, userId])
+  @@index([factionId])
+  @@index([userId, galaxyId])
 }
 
 enum FactionWarStatus {

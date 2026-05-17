@@ -650,6 +650,11 @@ export async function disbandFaction(req: AuthRequest, res: Response): Promise<v
 
 // ── LEADERBOARD ───────────────────────────────────────────────────────────────
 
+const DOMINANCE_THRESHOLD = 0.65;
+const DOMINANCE_SUSTAIN_MS = 36 * 60 * 60 * 1000;
+const DOMINANCE_MIN_PLAYERS = 10;
+const DOMINANCE_MIN_FACTIONS = 3;
+
 export async function getLeaderboard(req: AuthRequest, res: Response): Promise<void> {
   try {
     const user = await prisma.user.findUnique({
@@ -663,23 +668,26 @@ export async function getLeaderboard(req: AuthRequest, res: Response): Promise<v
 
     const galaxyId = user.activeGalaxyId;
 
-    // Total owned nexuses in galaxy
-    const totalOwnedNexuses = await prisma.nexus.count({
-      where: { galaxyId, ownerId: { not: null } },
-    });
+    const [totalOwnedNexuses, galaxyPlayerCount, allFactions, memberRows, nexuses] = await Promise.all([
+      prisma.nexus.count({ where: { galaxyId, ownerId: { not: null } } }),
+      prisma.galaxyPlayer.count({ where: { galaxyId } }),
+      prisma.faction.findMany({
+        where: { galaxyId },
+        select: {
+          id: true,
+          name: true,
+          tag: true,
+          description: true,
+          dominanceSince: true,
+          _count: { select: { members: true } },
+        },
+        orderBy: { createdAt: 'asc' },
+      }),
+      prisma.factionMember.findMany({ where: { galaxyId }, select: { userId: true, factionId: true } }),
+      prisma.nexus.findMany({ where: { galaxyId, ownerId: { not: null } }, select: { ownerId: true } }),
+    ]);
 
-    // Faction memberships (userId → factionId)
-    const members = await prisma.factionMember.findMany({
-      where: { galaxyId },
-      select: { userId: true, factionId: true },
-    });
-    const userToFaction = new Map(members.map((m: any) => [m.userId, m.factionId]));
-
-    // Nexuses per owner
-    const nexuses = await prisma.nexus.findMany({
-      where: { galaxyId, ownerId: { not: null } },
-      select: { ownerId: true },
-    });
+    const userToFaction = new Map(memberRows.map((m: any) => [m.userId, m.factionId]));
 
     const factionNexusCounts = new Map<number, number>();
     for (const n of nexuses) {
@@ -687,41 +695,28 @@ export async function getLeaderboard(req: AuthRequest, res: Response): Promise<v
       if (fid) factionNexusCounts.set(fid, (factionNexusCounts.get(fid) ?? 0) + 1);
     }
 
-    // All factions with member count + dominance
-    const factions = await prisma.faction.findMany({
-      where: { galaxyId },
-      select: {
-        id: true,
-        name: true,
-        tag: true,
-        dominanceSince: true,
-        _count: { select: { members: true } },
-      },
-      orderBy: { createdAt: 'asc' },
-    });
-
-    const DOMINANCE_THRESHOLD = 0.65;
-    const DOMINANCE_SUSTAIN_MS = 36 * 60 * 60 * 1000;
+    const factionCount = allFactions.length;
+    const dominanceLocked = galaxyPlayerCount < DOMINANCE_MIN_PLAYERS || factionCount < DOMINANCE_MIN_FACTIONS;
     const now = Date.now();
 
-    const rows = factions.map((f: any) => {
+    const rows = allFactions.map((f: any) => {
       const nexusCount = factionNexusCounts.get(f.id) ?? 0;
       const pct = totalOwnedNexuses > 0 ? nexusCount / totalOwnedNexuses : 0;
-      const isDominating = pct >= DOMINANCE_THRESHOLD;
-      let dominanceMs: number | null = null;
+      const isDominating = !dominanceLocked && pct >= DOMINANCE_THRESHOLD;
       let dominancePct = 0;
       if (isDominating && f.dominanceSince) {
-        dominanceMs = now - new Date(f.dominanceSince).getTime();
+        const dominanceMs = now - new Date(f.dominanceSince).getTime();
         dominancePct = Math.min(dominanceMs / DOMINANCE_SUSTAIN_MS, 1);
       }
       return {
         id: f.id,
         name: f.name,
         tag: f.tag,
+        description: f.description ?? null,
         memberCount: f._count.members,
         nexusCount,
         totalOwnedNexuses,
-        pct: Math.round(pct * 1000) / 10,    // e.g. 42.3
+        pct: Math.round(pct * 1000) / 10,
         isDominating,
         dominanceSince: f.dominanceSince,
         dominancePct: Math.round(dominancePct * 1000) / 10,
@@ -730,7 +725,271 @@ export async function getLeaderboard(req: AuthRequest, res: Response): Promise<v
 
     rows.sort((a: any, b: any) => b.nexusCount - a.nexusCount);
 
-    res.json({ rows, totalOwnedNexuses, dominanceThresholdPct: DOMINANCE_THRESHOLD * 100 });
+    res.json({
+      rows,
+      totalOwnedNexuses,
+      dominanceThresholdPct: DOMINANCE_THRESHOLD * 100,
+      dominanceLocked,
+      galaxyPlayerCount,
+      factionCount,
+      dominanceMinPlayers: DOMINANCE_MIN_PLAYERS,
+      dominanceMinFactions: DOMINANCE_MIN_FACTIONS,
+    });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
+// ── JOIN REQUESTS ─────────────────────────────────────────────────────────────
+
+export async function requestToJoin(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const factionId = parseInt(req.params.id, 10);
+    if (!Number.isFinite(factionId)) {
+      res.status(400).json({ error: 'Invalid faction id' });
+      return;
+    }
+
+    const { message } = req.body as { message?: string };
+    if (message && typeof message === 'string' && message.length > 256) {
+      res.status(400).json({ error: 'Message must be 256 characters or less' });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+      select: { activeGalaxyId: true },
+    });
+    if (!user?.activeGalaxyId) {
+      res.status(409).json({ error: 'No active galaxy' });
+      return;
+    }
+
+    const faction = await prisma.faction.findUnique({
+      where: { id: factionId },
+      select: { galaxyId: true },
+    });
+    if (!faction) {
+      res.status(404).json({ error: 'Faction not found' });
+      return;
+    }
+    if (faction.galaxyId !== user.activeGalaxyId) {
+      res.status(400).json({ error: 'Faction is not in your active galaxy' });
+      return;
+    }
+
+    const alreadyMember = await prisma.factionMember.findUnique({
+      where: { userId_galaxyId: { userId: req.userId, galaxyId: user.activeGalaxyId } },
+    });
+    if (alreadyMember) {
+      res.status(400).json({ error: 'You are already in a faction' });
+      return;
+    }
+
+    const joinRequest = await prisma.factionJoinRequest.create({
+      data: {
+        factionId,
+        userId: req.userId,
+        galaxyId: user.activeGalaxyId,
+        message: message?.trim() || null,
+      },
+    });
+
+    res.status(201).json({ id: joinRequest.id });
+  } catch (error) {
+    const err = error as any;
+    if (err?.code === 'P2002') {
+      res.status(400).json({ error: 'You already have a pending request to join this faction' });
+      return;
+    }
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
+export async function cancelJoinRequest(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const factionId = parseInt(req.params.id, 10);
+    if (!Number.isFinite(factionId)) {
+      res.status(400).json({ error: 'Invalid faction id' });
+      return;
+    }
+
+    const deleted = await prisma.factionJoinRequest.deleteMany({
+      where: { factionId, userId: req.userId },
+    });
+    if (deleted.count === 0) {
+      res.status(404).json({ error: 'No pending join request found' });
+      return;
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
+export async function getJoinRequests(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const factionId = parseInt(req.params.id, 10);
+    if (!Number.isFinite(factionId)) {
+      res.status(400).json({ error: 'Invalid faction id' });
+      return;
+    }
+
+    const member = await prisma.factionMember.findFirst({
+      where: { factionId, userId: req.userId },
+      select: { role: true },
+    });
+    if (!member || (member.role !== 'leader' && member.role !== 'officer')) {
+      res.status(403).json({ error: 'Only leaders and officers can view join requests' });
+      return;
+    }
+
+    const requests = await prisma.factionJoinRequest.findMany({
+      where: { factionId },
+      select: {
+        id: true,
+        message: true,
+        createdAt: true,
+        user: { select: { id: true, username: true } },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    res.json(requests.map((r: any) => ({
+      id: r.id,
+      userId: r.user.id,
+      username: r.user.username,
+      message: r.message,
+      createdAt: r.createdAt,
+    })));
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
+export async function approveJoinRequest(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const factionId = parseInt(req.params.id, 10);
+    const requestId = parseInt(req.params.requestId, 10);
+    if (!Number.isFinite(factionId) || !Number.isFinite(requestId)) {
+      res.status(400).json({ error: 'Invalid faction or request id' });
+      return;
+    }
+
+    const faction = await prisma.faction.findUnique({
+      where: { id: factionId },
+      select: { galaxyId: true, members: { select: { userId: true, role: true } } },
+    });
+    if (!faction) {
+      res.status(404).json({ error: 'Faction not found' });
+      return;
+    }
+
+    const caller = faction.members.find((m: any) => m.userId === req.userId);
+    if (!caller || (caller.role !== 'leader' && caller.role !== 'officer')) {
+      res.status(403).json({ error: 'Only leaders and officers can approve join requests' });
+      return;
+    }
+
+    const joinRequest = await prisma.factionJoinRequest.findUnique({
+      where: { id: requestId },
+      select: { userId: true, galaxyId: true },
+    });
+    if (!joinRequest || joinRequest.galaxyId !== faction.galaxyId) {
+      res.status(404).json({ error: 'Join request not found' });
+      return;
+    }
+
+    const alreadyMember = await prisma.factionMember.findUnique({
+      where: { userId_galaxyId: { userId: joinRequest.userId, galaxyId: faction.galaxyId } },
+    });
+    if (alreadyMember) {
+      await prisma.factionJoinRequest.delete({ where: { id: requestId } });
+      res.status(400).json({ error: 'User is already in a faction' });
+      return;
+    }
+
+    const joiner = await prisma.user.findUnique({ where: { id: joinRequest.userId }, select: { username: true } });
+
+    await prisma.$transaction([
+      prisma.factionMember.create({
+        data: { factionId, userId: joinRequest.userId, galaxyId: faction.galaxyId },
+      }),
+      prisma.factionJoinRequest.deleteMany({ where: { userId: joinRequest.userId, galaxyId: faction.galaxyId } }),
+    ]);
+
+    await logEvent(factionId, 'member_joined', joiner?.username);
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
+export async function declineJoinRequest(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const factionId = parseInt(req.params.id, 10);
+    const requestId = parseInt(req.params.requestId, 10);
+    if (!Number.isFinite(factionId) || !Number.isFinite(requestId)) {
+      res.status(400).json({ error: 'Invalid faction or request id' });
+      return;
+    }
+
+    const member = await prisma.factionMember.findFirst({
+      where: { factionId, userId: req.userId },
+      select: { role: true },
+    });
+    if (!member || (member.role !== 'leader' && member.role !== 'officer')) {
+      res.status(403).json({ error: 'Only leaders and officers can decline join requests' });
+      return;
+    }
+
+    const deleted = await prisma.factionJoinRequest.deleteMany({
+      where: { id: requestId, factionId },
+    });
+    if (deleted.count === 0) {
+      res.status(404).json({ error: 'Join request not found' });
+      return;
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
+export async function getMyJoinRequests(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+      select: { activeGalaxyId: true },
+    });
+    if (!user?.activeGalaxyId) {
+      res.json([]);
+      return;
+    }
+
+    const requests = await prisma.factionJoinRequest.findMany({
+      where: { userId: req.userId, galaxyId: user.activeGalaxyId },
+      select: {
+        id: true,
+        factionId: true,
+        message: true,
+        createdAt: true,
+        faction: { select: { name: true, tag: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.json(requests.map((r: any) => ({
+      id: r.id,
+      factionId: r.factionId,
+      factionName: r.faction.name,
+      factionTag: r.faction.tag,
+      message: r.message,
+      createdAt: r.createdAt,
+    })));
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }

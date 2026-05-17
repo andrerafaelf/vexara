@@ -19,6 +19,7 @@ interface LeaderboardData {
   rows: FactionRow[];
   totalOwnedNexuses: number;
   dominanceThresholdPct: number;
+  dominanceLocked: boolean;
 }
 
 const POLL_INTERVAL = 60_000;
@@ -69,6 +70,7 @@ const DominanceBar: React.FC = () => {
   }, []);
 
   if (!inFaction || !data || data.rows.length === 0) return null;
+  if (data.dominanceLocked) return null;
 
   const leaderPct = data.rows[0]?.pct ?? 0;
   if (leaderPct < VISIBILITY_THRESHOLD_PCT) return null;

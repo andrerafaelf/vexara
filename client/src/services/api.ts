@@ -255,6 +255,16 @@ export const declineWar = (warId: number) => apiRequest(`/faction/wars/${warId}/
 export const proposeCeasefire = (warId: number) => apiRequest(`/faction/wars/${warId}/ceasefire`, { method: 'POST' });
 export const acceptCeasefire = (warId: number) => apiRequest(`/faction/wars/${warId}/ceasefire/accept`, { method: 'POST' });
 export const declineCeasefire = (warId: number) => apiRequest(`/faction/wars/${warId}/ceasefire/decline`, { method: 'POST' });
+export const requestToJoinFaction = (factionId: number, message?: string) =>
+  apiRequest(`/faction/${factionId}/join-request`, { method: 'POST', body: JSON.stringify({ message }) });
+export const cancelFactionJoinRequest = (factionId: number) =>
+  apiRequest(`/faction/${factionId}/join-request`, { method: 'DELETE' });
+export const getMyFactionJoinRequests = () => apiRequest('/faction/join-requests/my');
+export const getFactionJoinRequests = (factionId: number) => apiRequest(`/faction/${factionId}/join-requests`);
+export const approveJoinRequest = (factionId: number, requestId: number) =>
+  apiRequest(`/faction/${factionId}/join-requests/${requestId}/approve`, { method: 'POST' });
+export const declineJoinRequest = (factionId: number, requestId: number) =>
+  apiRequest(`/faction/${factionId}/join-requests/${requestId}`, { method: 'DELETE' });
 
 export const systemBuyResource = (
   nexusId: string,

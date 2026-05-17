@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   acceptFactionInvite,
   createFaction,
@@ -22,6 +22,12 @@ import {
   acceptCeasefire,
   declineCeasefire,
   listFactionsInGalaxy,
+  requestToJoinFaction,
+  cancelFactionJoinRequest,
+  getMyFactionJoinRequests,
+  getFactionJoinRequests,
+  approveJoinRequest,
+  declineJoinRequest,
 } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import FactionChat from './FactionChat';
@@ -66,6 +72,25 @@ interface GalaxyFaction {
   id: number;
   name: string;
   tag: string;
+  description?: string;
+  memberCount: number;
+}
+
+interface JoinRequest {
+  id: number;
+  userId: number;
+  username: string;
+  message: string | null;
+  createdAt: string;
+}
+
+interface MyJoinRequest {
+  id: number;
+  factionId: number;
+  factionName: string;
+  factionTag: string;
+  message: string | null;
+  createdAt: string;
 }
 
 type Tab = 'overview' | 'chat' | 'members' | 'activity' | 'wars';
@@ -101,8 +126,29 @@ export default function FactionsView() {
   const [warError, setWarError] = useState('');
   const [warSubmitting, setWarSubmitting] = useState(false);
 
+  // Join requests (for leader/officer view inside a faction)
+  const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
+  const [joinRequestsError, setJoinRequestsError] = useState('');
+
+  // My pending join requests (for players without a faction)
+  const [myJoinRequests, setMyJoinRequests] = useState<MyJoinRequest[]>([]);
+  // All factions in galaxy (for the browser when player has no faction)
+  const [allGalaxyFactions, setAllGalaxyFactions] = useState<GalaxyFaction[]>([]);
+  const [joinRequestMsg, setJoinRequestMsg] = useState<Record<number, string>>({});
+  const [joinRequestSubmitting, setJoinRequestSubmitting] = useState<Record<number, boolean>>({});
+  const [joinRequestError, setJoinRequestError] = useState<Record<number, string>>({});
+
   const { user: authUser } = useAuth();
   const currentUserId = authUser ? parseInt(authUser.id, 10) : undefined;
+
+  const refreshJoinRequests = useCallback(async (factionId: number) => {
+    try {
+      const res = await getFactionJoinRequests(factionId);
+      setJoinRequests(res.data);
+    } catch {
+      setJoinRequestsError('Failed to load join requests');
+    }
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -122,6 +168,16 @@ export default function FactionsView() {
           ]);
           setWars(warsRes.data);
           setGalaxyFactions(factionsRes.data.filter((f: GalaxyFaction) => f.id !== faction.id));
+          if (faction.myRole === 'leader' || faction.myRole === 'officer') {
+            await refreshJoinRequests(faction.id);
+          }
+        } else {
+          const [factionsRes, myReqRes] = await Promise.all([
+            listFactionsInGalaxy(),
+            getMyFactionJoinRequests(),
+          ]);
+          setAllGalaxyFactions(factionsRes.data);
+          setMyJoinRequests(myReqRes.data);
         }
       } catch (err) {
         setError((err as Error).message);
@@ -130,7 +186,7 @@ export default function FactionsView() {
       }
     };
     fetchData();
-  }, []);
+  }, [refreshJoinRequests]);
 
   const refreshWars = async (factionId: number) => {
     const res = await getFactionWars(factionId);
@@ -334,15 +390,73 @@ export default function FactionsView() {
     }
   };
 
+  // ── Join-request handlers (player without faction) ──────────────────────────
+
+  const handleRequestToJoin = async (factionId: number) => {
+    setJoinRequestSubmitting((prev) => ({ ...prev, [factionId]: true }));
+    setJoinRequestError((prev) => ({ ...prev, [factionId]: '' }));
+    try {
+      await requestToJoinFaction(factionId, joinRequestMsg[factionId]);
+      const res = await getMyFactionJoinRequests();
+      setMyJoinRequests(res.data);
+      setJoinRequestMsg((prev) => ({ ...prev, [factionId]: '' }));
+    } catch (err) {
+      setJoinRequestError((prev) => ({
+        ...prev,
+        [factionId]: (err as { response?: { data?: { error?: string } } }).response?.data?.error || (err as Error).message,
+      }));
+    } finally {
+      setJoinRequestSubmitting((prev) => ({ ...prev, [factionId]: false }));
+    }
+  };
+
+  const handleCancelJoinRequest = async (factionId: number) => {
+    try {
+      await cancelFactionJoinRequest(factionId);
+      setMyJoinRequests((prev) => prev.filter((r) => r.factionId !== factionId));
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  };
+
+  // ── Join-request handlers (leader/officer inside faction) ───────────────────
+
+  const handleApproveJoinRequest = async (requestId: number) => {
+    if (!myFaction) return;
+    try {
+      await approveJoinRequest(myFaction.id, requestId);
+      await Promise.all([refreshFaction(), refreshJoinRequests(myFaction.id)]);
+    } catch (err) {
+      setJoinRequestsError((err as { response?: { data?: { error?: string } } }).response?.data?.error || (err as Error).message);
+    }
+  };
+
+  const handleDeclineJoinRequest = async (requestId: number) => {
+    if (!myFaction) return;
+    try {
+      await declineJoinRequest(myFaction.id, requestId);
+      setJoinRequests((prev) => prev.filter((r) => r.id !== requestId));
+    } catch (err) {
+      setJoinRequestsError((err as { response?: { data?: { error?: string } } }).response?.data?.error || (err as Error).message);
+    }
+  };
+
+  // ── Loading / error ─────────────────────────────────────────────────────────
+
   if (loading) {
     return <div className="factions-container"><div className="factions-loading">Loading factions...</div></div>;
   }
 
+  // ── No faction: browser + create ────────────────────────────────────────────
+
   if (!myFaction) {
+    const pendingFactionIds = new Set(myJoinRequests.map((r) => r.factionId));
+
     return (
       <div className="factions-container">
         {error && <div className="factions-error" role="alert">{error}</div>}
 
+        {/* Pending invites */}
         {invites.length > 0 && (
           <section className="factions-panel factions-invites">
             <h2>Pending Invites ({invites.length})</h2>
@@ -364,9 +478,33 @@ export default function FactionsView() {
           </section>
         )}
 
+        {/* My pending join requests */}
+        {myJoinRequests.length > 0 && (
+          <section className="factions-panel factions-join-requests-sent">
+            <h2>Pending Join Requests</h2>
+            <div className="factions-invite-list">
+              {myJoinRequests.map((req) => (
+                <div key={req.id} className="factions-invite-item">
+                  <div className="factions-invite-info">
+                    <strong>{req.factionName}</strong>
+                    <span className="factions-invite-tag">[{req.factionTag}]</span>
+                    <p className="factions-join-req-status">Awaiting leader approval</p>
+                  </div>
+                  <div className="factions-invite-actions">
+                    <button className="factions-btn-small factions-btn-danger" onClick={() => handleCancelJoinRequest(req.factionId)}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Create faction */}
         <section className="factions-panel factions-no-faction">
           <h2>You are not in a faction</h2>
-          <p>Create a new faction or ask someone to invite you.</p>
+          <p>Browse factions below and request to join, or create your own.</p>
           <button className="factions-btn-primary" onClick={() => setShowCreateForm(!showCreateForm)}>
             {showCreateForm ? 'Cancel' : 'Create Faction'}
           </button>
@@ -401,6 +539,64 @@ export default function FactionsView() {
           </section>
         )}
 
+        {/* All factions browser */}
+        <section className="factions-panel factions-browser">
+          <h2>All Factions ({allGalaxyFactions.length})</h2>
+          {allGalaxyFactions.length === 0 ? (
+            <p className="factions-browser-empty">No factions exist in this galaxy yet. Be the first!</p>
+          ) : (
+            <div className="factions-browser-list">
+              {allGalaxyFactions.map((f) => {
+                const hasPending = pendingFactionIds.has(f.id);
+                const submitting = joinRequestSubmitting[f.id] ?? false;
+                const reqError = joinRequestError[f.id] ?? '';
+                return (
+                  <div key={f.id} className="factions-browser-card">
+                    <div className="factions-browser-card-header">
+                      <div className="factions-browser-card-identity">
+                        <span className="factions-browser-card-name">{f.name}</span>
+                        <span className="factions-browser-card-tag">[{f.tag}]</span>
+                      </div>
+                      <span className="factions-browser-card-members">{f.memberCount} member{f.memberCount !== 1 ? 's' : ''}</span>
+                    </div>
+                    {f.description && (
+                      <p className="factions-browser-card-desc">{f.description}</p>
+                    )}
+                    {hasPending ? (
+                      <div className="factions-browser-card-pending">
+                        <span className="factions-join-req-status">Request pending</span>
+                        <button className="factions-btn-small factions-btn-danger" onClick={() => handleCancelJoinRequest(f.id)}>
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="factions-browser-card-join">
+                        <input
+                          className="factions-join-req-msg"
+                          type="text"
+                          placeholder="Optional message to leader..."
+                          value={joinRequestMsg[f.id] ?? ''}
+                          onChange={(e) => setJoinRequestMsg((prev) => ({ ...prev, [f.id]: e.target.value }))}
+                          maxLength={256}
+                          disabled={submitting}
+                        />
+                        <button
+                          className="factions-btn-primary factions-btn-join"
+                          disabled={submitting}
+                          onClick={() => handleRequestToJoin(f.id)}
+                        >
+                          {submitting ? 'Requesting...' : 'Request to Join'}
+                        </button>
+                      </div>
+                    )}
+                    {reqError && <div className="factions-field-error">{reqError}</div>}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
         <section className="factions-panel factions-all">
           <h2>Galaxy Standings</h2>
           <FactionLeaderboard />
@@ -408,6 +604,8 @@ export default function FactionsView() {
       </div>
     );
   }
+
+  // ── In a faction ─────────────────────────────────────────────────────────────
 
   const canManage = myFaction.myRole === 'leader' || myFaction.myRole === 'officer';
   const sortedMembers = [...(myFaction.members ?? [])].sort(
@@ -477,7 +675,14 @@ export default function FactionsView() {
           >
             {tab === 'overview' && 'Overview'}
             {tab === 'chat' && 'Chat'}
-            {tab === 'members' && `Members (${myFaction.members?.length ?? 0})`}
+            {tab === 'members' && (
+              <>
+                Members ({myFaction.members?.length ?? 0})
+                {canManage && joinRequests.length > 0 && (
+                  <span className="factions-tab-badge factions-tab-badge--alert">{joinRequests.length}</span>
+                )}
+              </>
+            )}
             {tab === 'activity' && 'Activity'}
             {tab === 'wars' && (
               <>
@@ -568,6 +773,36 @@ export default function FactionsView() {
       {/* Tab: Members */}
       {activeTab === 'members' && (
         <section className="factions-panel factions-tab-content">
+          {/* Join requests (leader/officer only) */}
+          {canManage && (
+            <div className="factions-join-requests-section">
+              <h3>
+                Join Requests
+                {joinRequests.length > 0 && <span className="factions-tab-badge factions-tab-badge--alert" style={{ marginLeft: 8 }}>{joinRequests.length}</span>}
+              </h3>
+              {joinRequestsError && <div className="factions-field-error">{joinRequestsError}</div>}
+              {joinRequests.length === 0 ? (
+                <p className="factions-join-requests-empty">No pending join requests.</p>
+              ) : (
+                <div className="factions-member-list">
+                  {joinRequests.map((req) => (
+                    <div key={req.id} className="factions-member-row factions-join-req-row">
+                      <div className="factions-member-info">
+                        <span className="factions-member-name">{req.username}</span>
+                        {req.message && <span className="factions-join-req-msg-display">"{req.message}"</span>}
+                      </div>
+                      <div className="factions-member-actions">
+                        <button className="factions-btn-primary" onClick={() => handleApproveJoinRequest(req.id)}>Approve</button>
+                        <button className="factions-btn-small factions-btn-danger" onClick={() => handleDeclineJoinRequest(req.id)}>Decline</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Invite member */}
           {canManage && (
             <form onSubmit={handleInvite} className="factions-invite-form">
               <h3>Invite Member</h3>
@@ -641,7 +876,6 @@ export default function FactionsView() {
         <section className="factions-panel factions-tab-content">
           {warError && <div className="factions-field-error factions-war-error">{warError}</div>}
 
-          {/* Pending incoming declarations */}
           {wars.filter((w) => w.status === 'pending' && w.targetFactionId === myFaction.id).length > 0 && (
             <div className="factions-war-section">
               <h3 className="factions-war-section-title factions-war-section-title--alert">Incoming War Declarations</h3>
@@ -664,7 +898,6 @@ export default function FactionsView() {
             </div>
           )}
 
-          {/* Pending outgoing declarations */}
           {wars.filter((w) => w.status === 'pending' && w.declarerFactionId === myFaction.id).length > 0 && (
             <div className="factions-war-section">
               <h3 className="factions-war-section-title">Pending Declarations</h3>
@@ -682,7 +915,6 @@ export default function FactionsView() {
             </div>
           )}
 
-          {/* Active wars */}
           {wars.filter((w) => w.status === 'active').length > 0 && (
             <div className="factions-war-section">
               <h3 className="factions-war-section-title factions-war-section-title--active">Active Wars</h3>
@@ -710,7 +942,6 @@ export default function FactionsView() {
             </div>
           )}
 
-          {/* Ceasefire pending — incoming (other faction proposed) */}
           {wars.filter((w) => w.status === 'ceasefire_pending' && w.ceasefireProposerFactionId !== myFaction.id).length > 0 && (
             <div className="factions-war-section">
               <h3 className="factions-war-section-title factions-war-section-title--alert">Ceasefire Proposals</h3>
@@ -736,7 +967,6 @@ export default function FactionsView() {
             </div>
           )}
 
-          {/* Ceasefire pending — outgoing (we proposed) */}
           {wars.filter((w) => w.status === 'ceasefire_pending' && w.ceasefireProposerFactionId === myFaction.id).length > 0 && (
             <div className="factions-war-section">
               <h3 className="factions-war-section-title">Ceasefire Awaiting Response</h3>
@@ -761,7 +991,6 @@ export default function FactionsView() {
             <p className="factions-war-empty">No active wars or pending declarations.</p>
           )}
 
-          {/* Declare war */}
           {canManage && galaxyFactions.length > 0 && (
             <div className="factions-war-section">
               <h3 className="factions-war-section-title">Declare War</h3>

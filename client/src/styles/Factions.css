@@ -1430,3 +1430,181 @@
   outline: none;
   border-color: var(--accent);
 }
+
+/* ── Faction Browser (no-faction state) ──────────────────────────────────── */
+.factions-browser-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.factions-browser-empty {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-style: italic;
+}
+
+.factions-browser-card {
+  background: rgba(13, 17, 23, 0.4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  transition: border-color 0.2s;
+}
+
+.factions-browser-card:hover {
+  border-color: rgba(255, 158, 61, 0.25);
+}
+
+.factions-browser-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.factions-browser-card-identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.factions-browser-card-name {
+  font-weight: 700;
+  color: var(--text-strong);
+  font-size: var(--text-base);
+}
+
+.factions-browser-card-tag {
+  font-size: var(--text-xs);
+  color: var(--accent);
+  font-weight: 600;
+  background: rgba(255, 158, 61, 0.08);
+  border: 1px solid rgba(255, 158, 61, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 2px 6px;
+}
+
+.factions-browser-card-members {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.factions-browser-card-desc {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 0;
+}
+
+.factions-browser-card-join {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.factions-join-req-msg {
+  flex: 1;
+  min-width: 160px;
+  background: var(--bg-input, var(--color-navy-900));
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  color: var(--text-default);
+  font-size: var(--text-sm);
+  padding: 7px 10px;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.factions-join-req-msg:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(255, 158, 61, 0.1);
+}
+
+.factions-btn-join {
+  white-space: nowrap;
+}
+
+.factions-browser-card-pending {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.factions-join-req-status {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ── Join Requests (leader view in Members tab) ───────────────────────────── */
+.factions-join-requests-section {
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-5);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.factions-join-requests-empty {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.factions-join-req-row {
+  background: rgba(255, 158, 61, 0.03);
+  border-color: rgba(255, 158, 61, 0.15);
+}
+
+.factions-join-req-msg-display {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-style: italic;
+  margin-left: var(--space-2);
+}
+
+/* ── FactionLeaderboard locked notice ────────────────────────────────────── */
+.flb-locked-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  background: rgba(210, 153, 34, 0.06);
+  border: 1px solid rgba(210, 153, 34, 0.2);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-4);
+}
+
+.flb-locked-icon {
+  font-size: 1.1rem;
+  line-height: 1.4;
+}
+
+.flb-locked-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.flb-locked-text strong {
+  font-size: var(--text-sm);
+  color: var(--warning);
+  font-weight: 600;
+}
+
+.flb-locked-text span {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+/* ── Pending join requests sent panel ────────────────────────────────────── */
+.factions-join-requests-sent .factions-invite-item {
+  border-color: rgba(255, 158, 61, 0.15);
+  background: rgba(255, 158, 61, 0.03);
+}

@@ -20,6 +20,11 @@ interface LeaderboardData {
   rows: LeaderboardRow[];
   totalOwnedNexuses: number;
   dominanceThresholdPct: number;
+  dominanceLocked: boolean;
+  galaxyPlayerCount: number;
+  factionCount: number;
+  dominanceMinPlayers: number;
+  dominanceMinFactions: number;
 }
 
 const DOMINANCE_SUSTAIN_MS = 36 * 60 * 60 * 1000;
@@ -58,12 +63,25 @@ export default function FactionLeaderboard({ myFactionId }: { myFactionId?: numb
   if (error) return <div className="flb-error">{error}</div>;
   if (!data || data.rows.length === 0) return <div className="flb-empty">No factions in this galaxy yet.</div>;
 
-  const { rows, totalOwnedNexuses, dominanceThresholdPct } = data;
-  const dominating = rows.find((r) => r.isDominating && r.dominanceSince);
+  const { rows, totalOwnedNexuses, dominanceThresholdPct, dominanceLocked, galaxyPlayerCount, factionCount, dominanceMinPlayers, dominanceMinFactions } = data;
+  const dominating = !dominanceLocked ? rows.find((r) => r.isDominating && r.dominanceSince) : undefined;
 
   return (
     <div className="flb">
-      {/* Dominance alert */}
+      {/* Dominance locked notice */}
+      {dominanceLocked && (
+        <div className="flb-locked-notice">
+          <span className="flb-locked-icon">🔒</span>
+          <div className="flb-locked-text">
+            <strong>Dominance tracking inactive</strong>
+            <span>
+              Requires {dominanceMinPlayers} players ({galaxyPlayerCount}/{dominanceMinPlayers}) and {dominanceMinFactions} factions ({factionCount}/{dominanceMinFactions})
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Dominance alert — only when unlocked */}
       {dominating && (
         <div className="flb-dominance-alert">
           <div className="flb-dominance-alert-header">
@@ -83,7 +101,7 @@ export default function FactionLeaderboard({ myFactionId }: { myFactionId?: numb
       {/* Stats row */}
       <div className="flb-meta">
         <span>{totalOwnedNexuses} nexuses contested</span>
-        <span>Threshold: {dominanceThresholdPct}% to dominate</span>
+        {!dominanceLocked && <span>Threshold: {dominanceThresholdPct}% to dominate</span>}
       </div>
 
       {/* Table */}
@@ -92,21 +110,18 @@ export default function FactionLeaderboard({ myFactionId }: { myFactionId?: numb
           <span className="flb-th flb-th--rank">#</span>
           <span className="flb-th flb-th--name">Faction</span>
           <span className="flb-th flb-th--nexus">Nexuses</span>
-          <span className="flb-th flb-th--bar">Progress to 65%</span>
+          {!dominanceLocked && <span className="flb-th flb-th--bar">Progress to {dominanceThresholdPct}%</span>}
           <span className="flb-th flb-th--members">Members</span>
         </div>
 
         {rows.map((row, i) => {
           const isMe = row.id === myFactionId;
-          // bar fills toward 65% — at exactly 65% the bar is full, beyond is capped + coloured differently
           const barPct = Math.min((row.pct / dominanceThresholdPct) * 100, 100);
-          const overThreshold = row.pct >= dominanceThresholdPct;
+          const overThreshold = !dominanceLocked && row.pct >= dominanceThresholdPct;
 
           return (
             <div key={row.id} className={`flb-row${isMe ? ' flb-row--mine' : ''}${overThreshold ? ' flb-row--dominating' : ''}`}>
-              <span className="flb-td flb-td--rank">
-                {i + 1}
-              </span>
+              <span className="flb-td flb-td--rank">{i + 1}</span>
 
               <span className="flb-td flb-td--name">
                 <span className="flb-faction-name">{row.name}</span>
@@ -119,18 +134,20 @@ export default function FactionLeaderboard({ myFactionId }: { myFactionId?: numb
                 <span className="flb-nexus-pct">{row.pct.toFixed(1)}%</span>
               </span>
 
-              <span className="flb-td flb-td--bar">
-                <div className="flb-bar-track">
-                  <div
-                    className={`flb-bar-fill${overThreshold ? ' flb-bar-fill--over' : ''}`}
-                    style={{ width: `${barPct}%` }}
-                  />
-                  <div className="flb-bar-threshold-line" style={{ left: '100%' }} />
-                </div>
-                {overThreshold && row.dominanceSince && (
-                  <span className="flb-hold-time">{formatDominanceCountdown(row.dominanceSince)} left</span>
-                )}
-              </span>
+              {!dominanceLocked && (
+                <span className="flb-td flb-td--bar">
+                  <div className="flb-bar-track">
+                    <div
+                      className={`flb-bar-fill${overThreshold ? ' flb-bar-fill--over' : ''}`}
+                      style={{ width: `${barPct}%` }}
+                    />
+                    <div className="flb-bar-threshold-line" style={{ left: '100%' }} />
+                  </div>
+                  {overThreshold && row.dominanceSince && (
+                    <span className="flb-hold-time">{formatDominanceCountdown(row.dominanceSince)} left</span>
+                  )}
+                </span>
+              )}
 
               <span className="flb-td flb-td--members">{row.memberCount}</span>
             </div>

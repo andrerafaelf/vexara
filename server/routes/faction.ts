@@ -14,6 +14,7 @@ router.get('/leaderboard', auth, (req, res) => factionController.getLeaderboard(
 router.get('/invites/list', auth, (req, res) => factionController.getMyInvites(req as AuthRequest, res as Response));
 router.post('/invites/:inviteId/accept', auth, (req, res) => factionController.acceptInvite(req as AuthRequest, res as Response));
 router.delete('/invites/:inviteId', auth, (req, res) => factionController.declineInvite(req as AuthRequest, res as Response));
+router.get('/join-requests/my', auth, (req, res) => factionController.getMyJoinRequests(req as AuthRequest, res as Response));
 
 router.post('/', auth, (req, res) => factionController.createFaction(req as AuthRequest, res as Response));
 
@@ -27,6 +28,11 @@ router.post('/wars/:warId/ceasefire/decline', auth, (req, res) => warController.
 // Parametric routes
 router.get('/:id', auth, (req, res) => factionController.getFaction(req as AuthRequest, res as Response));
 router.post('/:id/invite', auth, (req, res) => factionController.inviteToFaction(req as AuthRequest, res as Response));
+router.post('/:id/join-request', auth, (req, res) => factionController.requestToJoin(req as AuthRequest, res as Response));
+router.delete('/:id/join-request', auth, (req, res) => factionController.cancelJoinRequest(req as AuthRequest, res as Response));
+router.get('/:id/join-requests', auth, (req, res) => factionController.getJoinRequests(req as AuthRequest, res as Response));
+router.post('/:id/join-requests/:requestId/approve', auth, (req, res) => factionController.approveJoinRequest(req as AuthRequest, res as Response));
+router.delete('/:id/join-requests/:requestId', auth, (req, res) => factionController.declineJoinRequest(req as AuthRequest, res as Response));
 router.patch('/:id/members/:userId/role', auth, (req, res) => factionController.setMemberRole(req as AuthRequest, res as Response));
 router.post('/:id/members/:userId/transfer-leader', auth, (req, res) => factionController.transferLeader(req as AuthRequest, res as Response));
 router.delete('/:id/members/:userId', auth, (req, res) => factionController.kickMember(req as AuthRequest, res as Response));
