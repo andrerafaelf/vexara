@@ -2,7 +2,9 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { getAlphaSignupCount, requestAlphaAccess } from '../services/api';
 import '../styles/Auth.css';
 
@@ -43,6 +45,14 @@ const AlphaSignupForm: React.FC = () => {
   const [success, setSuccess] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [signupCount, setSignupCount] = useState<number | null>(null);
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace('/');
+    }
+  }, [isAuthenticated, router]);
 
   useEffect(() => {
     getAlphaSignupCount()

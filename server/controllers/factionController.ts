@@ -227,6 +227,9 @@ export async function createFaction(req: AuthRequest, res: Response): Promise<vo
       prisma.factionJoinRequest.deleteMany({
         where: { userId: req.userId, galaxyId: user.activeGalaxyId },
       }),
+      prisma.factionInvite.deleteMany({
+        where: { invitedUserId: req.userId, galaxyId: user.activeGalaxyId },
+      }),
     ]);
 
     await logEvent(faction.id, 'faction_created', callerUser?.username);
@@ -385,7 +388,7 @@ export async function acceptInvite(req: AuthRequest, res: Response): Promise<voi
 
     const joiner = await prisma.user.findUnique({ where: { id: req.userId }, select: { username: true } });
 
-    await Promise.all([
+    await prisma.$transaction([
       prisma.factionMember.create({
         data: {
           factionId: invite.factionId,
@@ -393,7 +396,8 @@ export async function acceptInvite(req: AuthRequest, res: Response): Promise<voi
           galaxyId: invite.galaxyId,
         },
       }),
-      prisma.factionInvite.delete({ where: { id: inviteId } }),
+      prisma.factionInvite.deleteMany({ where: { invitedUserId: req.userId, galaxyId: invite.galaxyId } }),
+      prisma.factionJoinRequest.deleteMany({ where: { userId: req.userId, galaxyId: invite.galaxyId } }),
     ]);
 
     await logEvent(invite.factionId, 'member_joined', joiner?.username);
@@ -922,6 +926,7 @@ export async function approveJoinRequest(req: AuthRequest, res: Response): Promi
         data: { factionId, userId: joinRequest.userId, galaxyId: faction.galaxyId },
       }),
       prisma.factionJoinRequest.deleteMany({ where: { userId: joinRequest.userId, galaxyId: faction.galaxyId } }),
+      prisma.factionInvite.deleteMany({ where: { invitedUserId: joinRequest.userId, galaxyId: faction.galaxyId } }),
     ]);
 
     await logEvent(factionId, 'member_joined', joiner?.username);
