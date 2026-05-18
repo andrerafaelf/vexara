@@ -2593,7 +2593,7 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
       {result && (
         <div className={`espionage-result${result.success ? ' espionage-result--success' : ' espionage-result--fail'}`}>
           <strong>{result.success ? 'Mission Successful' : 'Mission Failed — Detected'}</strong>
-          {result.success && result.report && ((): React.ReactNode => {
+          {Boolean(result.success) && Boolean(result.report) && ((): React.ReactNode => {
             const r = result.report as Record<string, unknown>;
             if (r.intel) {
               const intel = r.intel as Record<string, unknown>;
