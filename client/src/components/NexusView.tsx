@@ -2608,12 +2608,25 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
   const [missions, setMissions] = useState<Array<Record<string, unknown>>>([]);
   const [completedMissions, setCompletedMissions] = useState<Array<Record<string, unknown>>>([]);
   const [now, setNow] = useState(Date.now());
+  const dispatchRef = useRef<HTMLDivElement | null>(null);
+  const targetBarRef = useRef<HTMLDivElement | null>(null);
 
   // Tick for countdowns
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
+
+  // When a spy target is selected, scroll the dispatch section into view.
+  useEffect(() => {
+    if (!spyTarget) return;
+    const el = dispatchRef.current ?? targetBarRef.current;
+    if (!el) return;
+    const id = window.requestAnimationFrame(() => {
+      el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [spyTarget]);
 
   const loadAll = () => {
     import('../services/api').then(({ getSpyAssets, getSpyMissions, getCompletedSpyMissions }) => {
@@ -2770,7 +2783,7 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
 
       {/* Target bar */}
       {spyTarget ? (
-        <div className="espionage-target-bar">
+        <div className="espionage-target-bar" ref={targetBarRef}>
           <Eye size={13} />
           <span>Target: <strong>{spyTarget.name}</strong> <span className="espionage-target-coords">({spyTarget.x}|{spyTarget.y})</span></span>
           <button className="espionage-target-clear" onClick={() => setSpyTarget(null)}>✕</button>
@@ -2783,7 +2796,7 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
 
       {/* Mission config form */}
       {spyTarget && (
-        <div className="espionage-form">
+        <div className="espionage-form" ref={dispatchRef}>
           {mode === 'sabotage' && (
             <div className="espionage-form-section">
               <label className="espionage-label">Sabotage Target</label>

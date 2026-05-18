@@ -495,6 +495,10 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 1) {
+      // In espionage mode, don't start a drag on single-finger touch — let
+      // the browser scroll the page vertically. Tapping a cell still selects
+      // a spy target (see handleGridClick).
+      if (mode === 'espionage') return;
       touchDraggedRef.current = false;
       const touch = e.touches[0];
       setIsDragging(true);
@@ -509,6 +513,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
     if (e.touches.length === 2) {
       return;
     }
+    if (mode === 'espionage') return;
     if (!isDragging || e.touches.length !== 1) return;
     const touch = e.touches[0];
     const deltaX = touch.clientX - dragStart.x;
