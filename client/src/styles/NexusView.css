@@ -2595,6 +2595,22 @@
   flex-wrap: wrap;
 }
 
+.espionage-intel-section--full {
+  width: 100%;
+}
+
+.espionage-intel-qty {
+  color: var(--text-muted);
+  font-size: 11px;
+  margin-left: 4px;
+}
+
+.espionage-intel-timer {
+  color: var(--accent);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
 /* not-enough-operatives warning */
 .espionage-warn {
   font-size: 12px;
@@ -2632,4 +2648,75 @@
   color: var(--text-muted);
   font-style: italic;
   padding: 6px 0;
+}
+
+/* in-flight missions */
+.espionage-missions {
+  background: var(--color-navy-800);
+  border: 1px solid var(--color-navy-600);
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.espionage-mission-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.espionage-mission-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.espionage-mission-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.espionage-mission-status {
+  font-size: 11px;
+  color: var(--accent);
+}
+
+.espionage-mission-ops {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* completed mission results */
+.espionage-completed {
+  background: var(--color-navy-800);
+  border: 1px solid var(--color-navy-600);
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.espionage-completed-row {
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: rgba(74, 222, 128, 0.05);
+  border: 1px solid rgba(74, 222, 128, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.espionage-completed-row--fail {
+  background: rgba(248, 113, 113, 0.05);
+  border-color: rgba(248, 113, 113, 0.2);
+}
+
+.espionage-completed-row .espionage-mission-status {
+  color: var(--text-muted);
 }

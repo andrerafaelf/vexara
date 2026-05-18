@@ -2433,11 +2433,8 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
 type SpyMissionMode = 'embed' | 'sabotage';
 
 const SABOTAGE_TARGETS: { key: string; label: string; desc: string }[] = [
-  { key: 'troops',   label: 'Sabotage Troops',      desc: 'Eliminate a portion of the target\'s deployed forces' },
-  { key: 'biomass',  label: 'Destroy Biomass',       desc: 'Burn stored biomass reserves' },
-  { key: 'alloy',    label: 'Destroy Alloy',         desc: 'Destroy alloy stockpiles' },
-  { key: 'ore',      label: 'Destroy Ore',           desc: 'Detonate ore deposits' },
-  { key: 'building', label: 'Delay Construction',    desc: 'Sabotage the active build queue' },
+  { key: 'troops',   label: 'Sabotage Troops',   desc: 'Eliminate the largest troop group at the target. Send more operatives than the defender has garrisoned to succeed.' },
+  { key: 'building', label: 'Delay Construction', desc: 'Push back the active build queue. Each operative beyond the defender\'s garrison adds 30 minutes of delay.' },
 ];
 
 const TROOP_DISPLAY_NAME: Record<string, string> = {
@@ -2467,16 +2464,24 @@ function humanizeTroopKey(key: string): string {
 
 function capitalize(s: string) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
+function fmtTimeLeft(completesAt: string): string {
+  const ms = new Date(completesAt).getTime() - Date.now();
+  if (ms <= 0) return 'Done';
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  const h = Math.floor(m / 60);
+  if (h > 0) return `${h}h ${m % 60}m`;
+  if (m > 0) return `${m}m ${s % 60}s`;
+  return `${s}s`;
+}
+
 function EspionageIntelPanel({ report }: { report: Record<string, unknown> }) {
   // Sabotage outcome
   if (report.type === 'sabotage') {
     if (report.message) return <span className="espionage-result-msg">{report.message as string}</span>;
     const target = report.target as string;
     if (target === 'troops' && report.field) {
-      return <span className="espionage-result-msg">Eliminated ~{(report.loss as number).toLocaleString()} {humanizeTroopKey(report.field as string)}.</span>;
-    }
-    if (target === 'biomass' || target === 'alloy' || target === 'ore') {
-      return <span className="espionage-result-msg">Destroyed ~{(report.loss as number).toLocaleString()} {capitalize(target)}.</span>;
+      return <span className="espionage-result-msg">Eliminated {(report.loss as number).toLocaleString()} {humanizeTroopKey(report.field as string)}.</span>;
     }
     if (target === 'building') {
       return <span className="espionage-result-msg">Build queue delayed by {report.delayMinutes as number} minutes.</span>;
@@ -2484,23 +2489,23 @@ function EspionageIntelPanel({ report }: { report: Record<string, unknown> }) {
     return null;
   }
 
-  // Embed refreshed (re-embed on existing asset)
+  // Embed refreshed (re-embed on existing asset) with no intel returned
   if (report.refreshed && !report.intel) {
     return <span className="espionage-result-msg">Operative already in place. Asset timestamp updated.</span>;
   }
 
-  // No intel in response
   if (!report.intel) {
     if (report.message) return <span className="espionage-result-msg">{report.message as string}</span>;
     return null;
   }
 
   const intel = report.intel as Record<string, unknown>;
-  const troops = (intel.troops ?? {}) as Record<string, number>;
+  const troops    = (intel.troops    ?? {}) as Record<string, number>;
   const resources = (intel.resources ?? {}) as Record<string, number>;
   const buildings = (intel.buildings ?? {}) as Record<string, number>;
-  const nexusType = intel.nexusType as string | null;
-  const buildQueueLength = intel.buildQueueLength as number | undefined;
+  const nexusType    = intel.nexusType as string | null;
+  const buildQueue   = (intel.buildQueue   ?? []) as Array<{ building: string; targetLevel: number; completesAt: string }>;
+  const trainingQueue = (intel.trainingQueue ?? []) as Array<{ troopType: string; amount: number; completesAt: string; perUnitSeconds?: number }>;
   const troopEntries = Object.entries(troops).filter(([, v]) => v > 0);
 
   return (
@@ -2508,16 +2513,15 @@ function EspionageIntelPanel({ report }: { report: Record<string, unknown> }) {
       {nexusType && (
         <div className="espionage-intel-nexustype">
           Nexus type: <strong>{capitalize(nexusType)}</strong>
-          {buildQueueLength != null && buildQueueLength > 0 && (
-            <span className="espionage-intel-buildqueue"> &middot; {buildQueueLength} build{buildQueueLength !== 1 ? 's' : ''} queued</span>
-          )}
         </div>
       )}
+
       <div className="espionage-intel-cols">
+        {/* Troops */}
         <div className="espionage-intel-section">
-          <span className="espionage-intel-heading">Troops (approx.)</span>
+          <span className="espionage-intel-heading">Garrison</span>
           {troopEntries.length === 0
-            ? <span className="espionage-intel-empty">None detected</span>
+            ? <span className="espionage-intel-empty">No troops</span>
             : troopEntries.map(([k, v]) => (
                 <div key={k} className="espionage-intel-row">
                   <span>{humanizeTroopKey(k)}</span>
@@ -2526,14 +2530,17 @@ function EspionageIntelPanel({ report }: { report: Record<string, unknown> }) {
               ))
           }
         </div>
+
+        {/* Resources + Buildings */}
         <div className="espionage-intel-section">
-          <span className="espionage-intel-heading">Resources (approx.)</span>
+          <span className="espionage-intel-heading">Resources</span>
           {Object.entries(resources).map(([k, v]) => (
             <div key={k} className="espionage-intel-row">
               <span>{capitalize(k)}</span>
               <span>{v.toLocaleString()}</span>
             </div>
           ))}
+
           {Object.keys(buildings).length > 0 && (
             <>
               <span className="espionage-intel-heading" style={{ marginTop: 8 }}>Buildings</span>
@@ -2547,8 +2554,46 @@ function EspionageIntelPanel({ report }: { report: Record<string, unknown> }) {
           )}
         </div>
       </div>
+
+      {/* Training queue */}
+      <div className="espionage-intel-section espionage-intel-section--full">
+        <span className="espionage-intel-heading">Training Queue</span>
+        {trainingQueue.length === 0
+          ? <span className="espionage-intel-empty">Nothing training</span>
+          : trainingQueue.map((entry, i) => (
+              <div key={i} className="espionage-intel-row">
+                <span>{humanizeTroopKey(entry.troopType)} <span className="espionage-intel-qty">×{entry.amount.toLocaleString()}</span></span>
+                <span className="espionage-intel-timer">{fmtTimeLeft(entry.completesAt)}</span>
+              </div>
+            ))
+        }
+      </div>
+
+      {/* Build queue */}
+      <div className="espionage-intel-section espionage-intel-section--full">
+        <span className="espionage-intel-heading">Build Queue</span>
+        {buildQueue.length === 0
+          ? <span className="espionage-intel-empty">Nothing building</span>
+          : buildQueue.map((entry, i) => (
+              <div key={i} className="espionage-intel-row">
+                <span>{BUILDING_DISPLAY_NAME[entry.building] ?? humanizeTroopKey(entry.building)} <span className="espionage-intel-qty">Lv {entry.targetLevel}</span></span>
+                <span className="espionage-intel-timer">{fmtTimeLeft(entry.completesAt)}</span>
+              </div>
+            ))
+        }
+      </div>
     </div>
   );
+}
+
+function formatCountdown(ms: number): string {
+  if (ms <= 0) return 'Arriving...';
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  const h = Math.floor(m / 60);
+  if (h > 0) return `${h}h ${m % 60}m`;
+  if (m > 0) return `${m}m ${s % 60}s`;
+  return `${s}s`;
 }
 
 function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string, t: 'success' | 'error' | 'info') => void }) {
@@ -2557,38 +2602,47 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
   const [operatives, setOperatives] = useState(1);
   const [sabotageTarget, setSabotageTarget] = useState<string>(SABOTAGE_TARGETS[0].key);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<Record<string, unknown> | null>(null);
+  const [intelResult, setIntelResult] = useState<Record<string, unknown> | null>(null);
   const [assets, setAssets] = useState<Array<Record<string, unknown>>>([]);
   const [assetsLoading, setAssetsLoading] = useState(true);
+  const [missions, setMissions] = useState<Array<Record<string, unknown>>>([]);
+  const [completedMissions, setCompletedMissions] = useState<Array<Record<string, unknown>>>([]);
+  const [now, setNow] = useState(Date.now());
+
+  // Tick for countdowns
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const loadAll = () => {
+    import('../services/api').then(({ getSpyAssets, getSpyMissions, getCompletedSpyMissions }) => {
+      getSpyAssets(nexus._id).then((r: any) => setAssets(r.data ?? [])).catch(() => {});
+      getSpyMissions(nexus._id).then((r: any) => setMissions(r.data ?? [])).catch(() => {});
+      getCompletedSpyMissions(nexus._id).then((r: any) => setCompletedMissions(r.data ?? [])).catch(() => {});
+    });
+  };
 
   useEffect(() => {
     setAssetsLoading(true);
-    import('../services/api').then(({ getSpyAssets }) =>
-      getSpyAssets(nexus._id).then((r: any) => setAssets(r.data ?? [])).catch(() => setAssets([]))
-    ).finally(() => setAssetsLoading(false));
+    loadAll();
+    setAssetsLoading(false);
+    const interval = setInterval(loadAll, 10000);
+    return () => clearInterval(interval);
   }, [nexus._id]);
-
-  const refreshAssets = () => {
-    import('../services/api').then(({ getSpyAssets }) =>
-      getSpyAssets(nexus._id).then((r: any) => setAssets(r.data ?? [])).catch(() => {})
-    );
-  };
 
   const handleSelectTarget = (target: MapNexus) => {
     setSpyTarget(target);
-    setResult(null);
   };
 
   const handleModeSwitch = (next: SpyMissionMode) => {
     setMode(next);
     setSpyTarget(null);
-    setResult(null);
   };
 
   const handleSend = async () => {
     if (!spyTarget) { onToast('Select a target nexus on the map', 'error'); return; }
     setLoading(true);
-    setResult(null);
     try {
       const { sendSpyMission } = await import('../services/api');
       const r: any = await sendSpyMission(
@@ -2598,12 +2652,10 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
         operatives,
         mode === 'sabotage' ? sabotageTarget : undefined,
       );
-      setResult(r.data);
-      if (r.data?.success) {
-        onToast(mode === 'embed' ? 'Operative embedded successfully' : 'Sabotage mission succeeded', 'success');
-        if (mode === 'embed') refreshAssets();
-      } else {
-        onToast('Mission failed: operative intercepted and eliminated', 'error');
+      if (r.data?.queued) {
+        onToast(`Operative${mode === 'sabotage' ? 's' : ''} dispatched — arrives in ${formatCountdown(new Date(r.data.arrivesAt).getTime() - Date.now())}`, 'info');
+        setSpyTarget(null);
+        loadAll();
       }
     } catch (e: any) {
       onToast(e?.response?.data?.error ?? 'Mission failed', 'error');
@@ -2617,7 +2669,7 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
       const { recallSpyAsset } = await import('../services/api');
       await recallSpyAsset(assetId);
       onToast('Operative recalled', 'info');
-      refreshAssets();
+      loadAll();
     } catch {
       onToast('Recall failed', 'error');
     }
@@ -2629,9 +2681,9 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
       const r: any = await getEmbedIntel(assetId);
       if (r.data?.discovered) {
         onToast('Operative was discovered and captured', 'error');
-        refreshAssets();
+        loadAll();
       } else {
-        setResult({ intelRefresh: true, type: 'embed', ...r.data });
+        setIntelResult({ intelRefresh: true, type: 'embed', ...r.data });
         onToast('Intel refreshed', 'success');
       }
     } catch {
@@ -2640,7 +2692,7 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
   };
 
   const reconCount = nexus.troops?.reconOperative ?? 0;
-  const embedCost = { biomass: 400 * operatives, secondary: 200 * operatives, secondaryLabel: 'Alloy' };
+  const embedCost = { biomass: 400, secondary: 200, secondaryLabel: 'Alloy' };
   const sabotCost = { biomass: 300 * operatives, secondary: 300 * operatives, secondaryLabel: 'Ore' };
   const cost = mode === 'embed' ? embedCost : sabotCost;
   const maxOps = Math.min(20, reconCount);
@@ -2675,9 +2727,36 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
         >
           <span className="espionage-mode-icon">💥</span>
           Sabotage
-          <span className="espionage-mode-desc">Destroy troops, resources, or buildings</span>
+          <span className="espionage-mode-desc">Destroy troops or delay construction</span>
         </button>
       </div>
+
+      {/* In-flight missions */}
+      {missions.length > 0 && (
+        <div className="espionage-missions">
+          <div className="espionage-assets-heading">Missions in Transit</div>
+          {missions.map((m) => {
+            const isReturning = m.status === 'returning';
+            const targetTime = isReturning
+              ? new Date(m.returnsAt as string).getTime()
+              : new Date(m.arrivesAt as string).getTime();
+            const msLeft = targetTime - now;
+            return (
+              <div key={String(m.id)} className="espionage-mission-row">
+                <div className="espionage-mission-info">
+                  <span className="espionage-mission-label">
+                    {m.type === 'embed' ? 'Embed' : 'Sabotage'} &rarr; {(m.targetName as string) ?? `Nexus #${m.toNexusId}`}
+                  </span>
+                  <span className="espionage-mission-status">
+                    {isReturning ? 'Returning' : 'Traveling'} &middot; {formatCountdown(msLeft)}
+                  </span>
+                </div>
+                <span className="espionage-mission-ops">{m.operatives as number} op{(m.operatives as number) !== 1 ? 's' : ''}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Map */}
       <div className="espionage-map-wrapper">
@@ -2694,7 +2773,7 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
         <div className="espionage-target-bar">
           <Eye size={13} />
           <span>Target: <strong>{spyTarget.name}</strong> <span className="espionage-target-coords">({spyTarget.x}|{spyTarget.y})</span></span>
-          <button className="espionage-target-clear" onClick={() => { setSpyTarget(null); setResult(null); }}>✕</button>
+          <button className="espionage-target-clear" onClick={() => setSpyTarget(null)}>✕</button>
         </div>
       ) : (
         <div className="espionage-target-hint">
@@ -2705,7 +2784,6 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
       {/* Mission config form */}
       {spyTarget && (
         <div className="espionage-form">
-          {/* Sabotage target selector */}
           {mode === 'sabotage' && (
             <div className="espionage-form-section">
               <label className="espionage-label">Sabotage Target</label>
@@ -2724,32 +2802,21 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
             </div>
           )}
 
-          {/* Operative count */}
-          <div className="espionage-form-row">
-            <label className="espionage-label">Recon Operatives</label>
-            <div className="espionage-ops-controls">
-              <button
-                className="espionage-ops-step"
-                onClick={() => setOperatives(o => Math.max(1, o - 1))}
-                disabled={operatives <= 1}
-              >−</button>
-              <input
-                className="espionage-input espionage-input--narrow"
-                type="number"
-                min={1}
-                max={maxOps}
-                value={operatives}
-                onChange={(e) => setOperatives(Math.max(1, Math.min(maxOps, parseInt(e.target.value) || 1)))}
-              />
-              <button
-                className="espionage-ops-step"
-                onClick={() => setOperatives(o => Math.min(maxOps, o + 1))}
-                disabled={operatives >= maxOps}
-              >+</button>
+          {mode === 'sabotage' && (
+            <div className="espionage-form-row">
+              <label className="espionage-label">Recon Operatives</label>
+              <div className="espionage-ops-controls">
+                <button className="espionage-ops-step" onClick={() => setOperatives(o => Math.max(1, o - 1))} disabled={operatives <= 1}>−</button>
+                <input
+                  className="espionage-input espionage-input--narrow"
+                  type="number" min={1} max={maxOps} value={operatives}
+                  onChange={(e) => setOperatives(Math.max(1, Math.min(maxOps, parseInt(e.target.value) || 1)))}
+                />
+                <button className="espionage-ops-step" onClick={() => setOperatives(o => Math.min(maxOps, o + 1))} disabled={operatives >= maxOps}>+</button>
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Cost breakdown */}
           <div className="espionage-cost-row">
             <span className="espionage-cost-item">
               <span className="espionage-cost-dot espionage-cost-dot--biomass" />
@@ -2762,37 +2829,52 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
             </span>
           </div>
 
-          {reconCount < operatives && (
+          {mode === 'embed' && reconCount < 1 && (
+            <div className="espionage-warn">No Recon Operatives available. Train some at your Recruitment Core.</div>
+          )}
+          {mode === 'sabotage' && reconCount < operatives && (
             <div className="espionage-warn">Not enough Recon Operatives. Train more at your Recruitment Core.</div>
           )}
 
           <button
             className="espionage-send-btn"
             onClick={handleSend}
-            disabled={loading || reconCount < operatives}
+            disabled={loading || (mode === 'embed' ? reconCount < 1 : reconCount < operatives)}
           >
-            {loading ? 'Sending...' : mode === 'embed' ? 'Embed Operative' : 'Launch Sabotage'}
+            {loading ? 'Dispatching...' : mode === 'embed' ? 'Dispatch Operative' : 'Launch Sabotage'}
           </button>
         </div>
       )}
 
-      {/* Result panel */}
-      {result && (
-        <div className={`espionage-result${(result.success !== false) ? ' espionage-result--success' : ' espionage-result--fail'}`}>
-          <strong className="espionage-result-title">
-            {result.intelRefresh
-              ? 'Intel Updated'
-              : result.success
-                ? (result.report as any)?.type === 'sabotage' ? 'Sabotage Succeeded' : 'Operative Embedded'
-                : 'Mission Failed'}
-          </strong>
-          {result.intelRefresh
-            ? <EspionageIntelPanel report={result as Record<string, unknown>} />
-            : Boolean(result.report) && <EspionageIntelPanel report={result.report as Record<string, unknown>} />
-          }
-          {!result.success && result.success !== undefined && (
-            <span className="espionage-result-msg">Your operative was intercepted before reaching the target and eliminated. Send more operatives to improve infiltration odds.</span>
-          )}
+      {/* Completed mission results (last 10, newest first) */}
+      {completedMissions.length > 0 && (
+        <div className="espionage-completed">
+          <div className="espionage-assets-heading">Recent Mission Results</div>
+          {completedMissions.map((m) => {
+            const r = m.result as Record<string, unknown> | null;
+            const success = r?.success as boolean | undefined;
+            return (
+              <div key={String(m.id)} className={`espionage-completed-row${success === false ? ' espionage-completed-row--fail' : ''}`}>
+                <div className="espionage-mission-info">
+                  <span className="espionage-mission-label">
+                    {m.type === 'embed' ? 'Embed' : 'Sabotage'} &rarr; {(m.targetName as string) ?? `Nexus #${m.toNexusId}`}
+                  </span>
+                  <span className="espionage-mission-status">
+                    {success === false ? 'Failed' : 'Succeeded'}
+                  </span>
+                </div>
+                {r && <EspionageIntelPanel report={r} />}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Intel refresh result */}
+      {intelResult && (
+        <div className="espionage-result espionage-result--success">
+          <strong className="espionage-result-title">Intel Updated</strong>
+          <EspionageIntelPanel report={intelResult} />
         </div>
       )}
 

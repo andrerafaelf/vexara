@@ -373,6 +373,12 @@ export const sendSpyMission = (fromNexusId: string, toNexusId: string, type: 'sa
     body: JSON.stringify({ fromNexusId, toNexusId, type, operatives, sabotageTarget }),
   });
 
+export const getSpyMissions = (nexusId: string) =>
+  apiRequest(`/attack/spy/missions/${nexusId}`);
+
+export const getCompletedSpyMissions = (nexusId: string) =>
+  apiRequest(`/attack/spy/missions/${nexusId}/completed`);
+
 export const getSpyAssets = (nexusId: string) =>
   apiRequest(`/attack/spy/assets/${nexusId}`);
 

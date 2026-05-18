@@ -24,6 +24,7 @@ import statsRoutes from './routes/stats.js';
 import troopRoutes from './routes/troop.js';
 import troopTransferRoutes from './routes/troopTransfer.js';
 import { processArrivedAttacks, processArrivedTransfers } from './utils/combat.js';
+import { processArrivedSpyMissions } from './controllers/spyController.js';
 import { processDominanceVictories } from './utils/dominance.js';
 import { logError, logInfo, logWarn } from './utils/logger.js';
 import { ensureNeutralNexusPool, levelUpNeutralNexuses, dailyNexusGrowth } from './utils/neutralNexuses.js';
@@ -128,7 +129,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/faction', factionRoutes);
 app.use('/api/referral', referralRoutes);
 
-const JOB_LOCKS = { updateResources: 9101, processCombat: 9102, syncNeutralPool: 9103, recoverControl: 9104, processTransfers: 9105, levelNeutralNexuses: 9106, processQueues: 9107, processDominance: 9108, dailyNexusGrowth: 9109, galaxyEvents: 9110 };
+const JOB_LOCKS = { updateResources: 9101, processCombat: 9102, syncNeutralPool: 9103, recoverControl: 9104, processTransfers: 9105, levelNeutralNexuses: 9106, processQueues: 9107, processDominance: 9108, dailyNexusGrowth: 9109, galaxyEvents: 9110, processSpyMissions: 9111 };
 
 async function runWithPgAdvisoryLock(lockId: number, jobName: string, jobHandler: () => Promise<void>) {
   try {
@@ -158,6 +159,7 @@ prisma.$connect()
     }
     setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.updateResources, 'update_resources', () => updateAllResources()); }, 60000);
     setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.processCombat, 'process_combat', () => processArrivedAttacks()); }, 10000);
+    setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.processSpyMissions, 'process_spy_missions', () => processArrivedSpyMissions()); }, 10000);
     setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.processTransfers, 'process_transfers', () => processArrivedTransfers()); }, 10000);
     setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.processQueues, 'process_queues', () => processCompletedQueuesAndNotify()); }, 15000);
     setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.syncNeutralPool, 'sync_neutral_pool', async () => { await ensureNeutralNexusPool(); }); }, 60000);

@@ -72,6 +72,7 @@ model Galaxy {
   factions           Faction[]
   galaxyEvents       GalaxyEvent[]
   spyAssets          SpyAsset[]
+  spyMissions        SpyMission[]
   factionTreaties    FactionTreaty[]
 }
 
@@ -571,6 +572,28 @@ model SpyAsset {
   @@index([galaxyId])
   @@index([targetNexusId])
   @@index([ownerUserId])
+}
+
+model SpyMission {
+  id              Int       @id @default(autoincrement())
+  galaxyId        Int
+  ownerUserId     Int
+  fromNexusId     Int
+  toNexusId       Int
+  type            String    @db.VarChar(16)   // 'embed' | 'sabotage'
+  operatives      Int
+  sabotageTarget  String?   @db.VarChar(32)
+  status          String    @default("traveling") @db.VarChar(16) // 'traveling' | 'returning' | 'completed'
+  arrivesAt       DateTime
+  returnsAt       DateTime?
+  result          Json?
+  createdAt       DateTime  @default(now())
+
+  galaxy Galaxy @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
+
+  @@index([galaxyId])
+  @@index([status, arrivesAt])
+  @@index([fromNexusId, status])
 }
 
 model ReferralToken {
