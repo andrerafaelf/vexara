@@ -18,7 +18,7 @@ export function useMyNexuses() {
     queryFn: () => getMyNexuses().then((r) => r.data as Nexus[]),
     staleTime: 20 * 1000,
     refetchInterval: 30 * 1000,
-    enabled: typeof window !== 'undefined' && !!localStorage.getItem('token'),
+    enabled: typeof window !== 'undefined' && typeof localStorage !== 'undefined' && !!localStorage.getItem('token'),
   });
 
   const nexuses: Nexus[] = data ?? [];

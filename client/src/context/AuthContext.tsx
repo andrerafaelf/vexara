@@ -14,7 +14,9 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 function readStoredAuth(): { token: string | null; user: User | null } {
-  if (typeof window === 'undefined') return { token: null, user: null };
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+    return { token: null, user: null };
+  }
   const token = localStorage.getItem('token');
   const raw = localStorage.getItem('user');
   try {
