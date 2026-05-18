@@ -35,6 +35,9 @@ model User {
   referredById     Int?
   registrationIp   String?   @db.VarChar(45)
   referralCode     String    @unique @db.VarChar(12)
+  utmSource        String?   @db.VarChar(64)
+  utmMedium        String?   @db.VarChar(64)
+  utmCampaign      String?   @db.VarChar(64)
   referredBy       User?     @relation("UserReferrals", fields: [referredById], references: [id], onDelete: SetNull)
   referrals        User[]    @relation("UserReferrals")
   referralTokens   ReferralToken[]
@@ -97,11 +100,14 @@ model GalaxyPlayer {
 }
 
 model AlphaSignup {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique @db.VarChar(254)
-  createdAt DateTime @default(now())
-  invitedAt DateTime?
-  source    String?  @db.VarChar(64)
+  id          Int       @id @default(autoincrement())
+  email       String    @unique @db.VarChar(254)
+  createdAt   DateTime  @default(now())
+  invitedAt   DateTime?
+  source      String?   @db.VarChar(64)
+  utmSource   String?   @db.VarChar(64)
+  utmMedium   String?   @db.VarChar(64)
+  utmCampaign String?   @db.VarChar(64)
 
   @@index([createdAt])
 }

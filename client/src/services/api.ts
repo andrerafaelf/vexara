@@ -56,10 +56,12 @@ export const login = (username: string, password: string) =>
     body: JSON.stringify({ username, password }),
   });
 
-export const requestAlphaAccess = (email: string) =>
+export type Utm = { utm_source?: string; utm_medium?: string; utm_campaign?: string };
+
+export const requestAlphaAccess = (email: string, utm?: Utm) =>
   apiRequest('/auth/alpha-signup', {
     method: 'POST',
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({ email, ...(utm ?? {}) }),
   });
 
 export const getAlphaSignupCount = () => apiRequest('/auth/alpha-signup/count');

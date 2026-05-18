@@ -38,6 +38,32 @@ function isSpamRiskDomain(email: string): boolean {
 
 const ALPHA_FOUNDER_LIMIT = 150;
 
+const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign'] as const;
+type UtmKey = (typeof UTM_KEYS)[number];
+type Utm = Partial<Record<UtmKey, string>>;
+const UTM_STORAGE_KEY = 'vexara_utm';
+
+// Read UTMs from URL on each landing, persist to sessionStorage so they survive the
+// hop from / -> /register, and fall back to the stored values when no params are present.
+function captureUtm(): Utm {
+  if (typeof window === 'undefined') return {};
+  const params = new URLSearchParams(window.location.search);
+  const fromUrl: Utm = {};
+  for (const key of UTM_KEYS) {
+    const v = params.get(key);
+    if (v) fromUrl[key] = v.slice(0, 64);
+  }
+  if (Object.keys(fromUrl).length > 0) {
+    try { sessionStorage.setItem(UTM_STORAGE_KEY, JSON.stringify(fromUrl)); } catch {}
+    return fromUrl;
+  }
+  try {
+    const raw = sessionStorage.getItem(UTM_STORAGE_KEY);
+    if (raw) return JSON.parse(raw) as Utm;
+  } catch {}
+  return {};
+}
+
 const AlphaSignupForm: React.FC = () => {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
@@ -74,7 +100,7 @@ const AlphaSignupForm: React.FC = () => {
 
     setSubmitting(true);
     try {
-      await requestAlphaAccess(normalized);
+      await requestAlphaAccess(normalized, captureUtm());
       setSuccess(true);
     } catch (err) {
       const message =

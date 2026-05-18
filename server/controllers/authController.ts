@@ -8,14 +8,15 @@ import { detectEmailTypo, validateEmail, validateUsername } from '../utils/valid
 
 export async function register(_req: Request, res: Response): Promise<void> {
   // TODO(release): enable public registration. Required body fields:
-  //   { username, email, password, referralCode }
+  //   { username, email, password, referralCode, utm_source?, utm_medium?, utm_campaign? }
   // - referralCode is MANDATORY (the only way to be referred is at signup)
   // - Look up the referrer via prisma.user.findUnique({ where: { referralCode } })
   // - Reject if: code is missing/invalid, referrer.id === self (cannot happen pre-create, but guard
   //   anyway), or req.ip matches referrer.registrationIp (same-network multi-account abuse)
   // - In a single transaction: hash password, generate the new user's own referralCode via
   //   referralService.generateUniqueReferralCode(), then prisma.user.create with
-  //   { username, email, password, referredById, registrationIp: req.ip, referralCode }
+  //   { username, email, password, referredById, registrationIp: req.ip, referralCode,
+  //     utmSource, utmMedium, utmCampaign } (truncate utm_* to 64 chars; ignore non-strings).
   res.status(403).json({ error: 'Registration is disabled' });
 }
 
@@ -39,12 +40,25 @@ export async function alphaSignup(req: Request, res: Response): Promise<void> {
     }
 
     const email = String(rawEmail).trim().toLowerCase();
-    const rawSource = (req.body as { source?: string })?.source;
-    const source = typeof rawSource === 'string' && rawSource.length <= 64 ? rawSource : 'register';
+    const body = req.body as {
+      source?: string;
+      utm_source?: string;
+      utm_medium?: string;
+      utm_campaign?: string;
+    };
+    const source = typeof body?.source === 'string' && body.source.length <= 64 ? body.source : 'register';
+    const pickUtm = (v: unknown): string | undefined =>
+      typeof v === 'string' && v.length > 0 ? v.slice(0, 64) : undefined;
 
     const record = await prisma.alphaSignup.upsert({
       where: { email },
-      create: { email, source },
+      create: {
+        email,
+        source,
+        utmSource: pickUtm(body?.utm_source),
+        utmMedium: pickUtm(body?.utm_medium),
+        utmCampaign: pickUtm(body?.utm_campaign),
+      },
       update: {},
       select: { createdAt: true },
     });
