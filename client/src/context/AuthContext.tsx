@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { User } from '../types/game';
 
 interface AuthContextType {
@@ -13,19 +13,20 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function readStoredAuth(): { token: string | null; user: User | null } {
+  if (typeof window === 'undefined') return { token: null, user: null };
+  const token = localStorage.getItem('token');
+  const raw = localStorage.getItem('user');
+  try {
+    return { token, user: raw ? (JSON.parse(raw) as User) : null };
+  } catch {
+    return { token, user: null };
+  }
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-
-  useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-    }
-  }, []);
+  const [user, setUser] = useState<User | null>(() => readStoredAuth().user);
+  const [token, setToken] = useState<string | null>(() => readStoredAuth().token);
 
   const login = (newToken: string, newUser: User) => {
     localStorage.setItem('token', newToken);

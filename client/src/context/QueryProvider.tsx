@@ -9,8 +9,14 @@ export default function QueryProvider({ children }: { children: React.ReactNode 
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 30 * 1000,
+            staleTime: 20 * 1000,
+            // Keep cached data in memory for 5 min after last subscriber unmounts.
+            // This means navigating back to a page shows data instantly.
+            gcTime: 5 * 60 * 1000,
             retry: 1,
+            // Don't refetch just because the window regained focus in a game app —
+            // the 30s polling intervals handle freshness.
+            refetchOnWindowFocus: false,
           },
         },
       }),
