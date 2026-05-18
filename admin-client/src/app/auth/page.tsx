@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
+import '@/styles/Admin.css';
 
 export default function AuthPage() {
   const router = useRouter();
