@@ -33,9 +33,11 @@ interface GalaxyEvent {
 interface MapProps {
   currentNexus: Nexus;
   onRefresh: () => void;
+  mode?: 'normal' | 'espionage';
+  onSelectSpyTarget?: (nexus: MapNexus) => void;
 }
 
-interface MapNexus {
+export interface MapNexus {
   _id: string;
   name: string;
   x: number;
@@ -93,7 +95,7 @@ interface CrosshairPosition {
   top: number;
 }
 
-const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
+const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onSelectSpyTarget }) => {
   const { user } = useAuth();
   const toast = useToast();
   const [nexuses, setVillages] = useState<MapNexus[]>([]);
@@ -144,7 +146,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
     }
     return base;
   }, [currentNexus.troops, outgoingAttacks]);
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const currentTimeRef = useRef(new Date());
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -209,7 +211,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
 
   useEffect(() => {
     const timeInterval = setInterval(() => {
-      setCurrentTime(new Date());
+      currentTimeRef.current = new Date();
     }, 1000);
     return () => clearInterval(timeInterval);
   }, []);
@@ -556,15 +558,9 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
       return;
     }
 
-    const onlyRecon =
-      attackMissionType === 'attack' &&
-      attackTroops.reconOperative > 0 &&
-      Object.entries(attackTroops).every(([type, amount]) => type === 'reconOperative' || Number(amount) === 0);
-    const resolvedType = onlyRecon ? 'scout' : attackMissionType;
-
     try {
-      await sendAttack(currentNexus._id, selectedNexus._id, attackTroops, resolvedType);
-      const missionLabel = resolvedType === 'scout' ? 'Recon mission sent' : resolvedType === 'support' ? 'Support mission sent' : 'Strike sent';
+      await sendAttack(currentNexus._id, selectedNexus._id, attackTroops, attackMissionType);
+      const missionLabel = attackMissionType === 'support' ? 'Support mission sent' : 'Strike sent';
       toast(missionLabel, 'success');
       setShowAttackForm(false);
       setAttackMissionType('attack');
@@ -607,7 +603,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   };
 
   const formatTime = (date: Date) => {
-    const diff = new Date(date).getTime() - currentTime.getTime();
+    const diff = new Date(date).getTime() - currentTimeRef.current.getTime();
     if (diff <= 0) return 'Arriving...';
 
     const hours = Math.floor(diff / 3600000);
@@ -619,18 +615,25 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
     return `${seconds}s`;
   };
 
-  const renderGrid = () => {
+  const nexusLookup = useMemo(() => {
+    const m: Record<string, MapNexus> = {};
+    for (const n of nexuses) m[`${n.x},${n.y}`] = n;
+    return m;
+  }, [nexuses]);
+
+  const ownNexusIds = useMemo(() => new Set(ownNexuses.map((n) => n._id)), [ownNexuses]);
+
+  const gridCells = useMemo(() => {
     const grid = [];
 
     for (let y = centerY + visibleRange; y >= centerY - visibleRange; y--) {
       const row = [];
       for (let x = centerX - visibleRange; x <= centerX + visibleRange; x++) {
-        // Check if coordinates are outside the valid map range.
         const isOutOfBounds = x < 0 || x > MAP_MAX_INDEX || y < 0 || y > MAP_MAX_INDEX;
 
-        const nexus = !isOutOfBounds ? nexuses.find((v) => v.x === x && v.y === y) : null;
+        const nexus = !isOutOfBounds ? nexusLookup[`${x},${y}`] ?? null : null;
         const isCurrent = nexus?._id === currentNexus._id;
-        const isOwnNexus = nexus ? ownNexuses.some((n) => n._id === nexus._id) : false;
+        const isOwnNexus = nexus ? ownNexusIds.has(nexus._id) : false;
         const isNpcNexus = nexus
           ? nexus.name.includes('Resource Depot') ||
             nexus.name.includes('Military Outpost') ||
@@ -646,18 +649,26 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
             className={`map-cell ${isOutOfBounds ? 'out-of-bounds' : ''} ${nexus ? 'has-nexus' : ''} ${
               isCurrent ? 'current-nexus' : ''
             } ${isOwnNexus && !isCurrent ? 'own-nexus' : ''} ${isEnemyNexus ? 'enemy-nexus' : ''} ${selectedNexus?._id === nexus?._id ? 'selected' : ''}`}
-            onClick={(e) => !isOutOfBounds && nexus && handleVillageClick(nexus, e)}
+            onClick={(e) => {
+              if (isOutOfBounds || !nexus) return;
+              if (mode === 'espionage' && nexus._id !== currentNexus._id) {
+                onSelectSpyTarget?.(nexus);
+              } else {
+                handleVillageClick(nexus, e);
+              }
+            }}
             title={
               isOutOfBounds
                 ? 'Out of bounds'
                 : nexus
-                  ? nexus.newbieProtectionEndsAt && new Date(nexus.newbieProtectionEndsAt) > currentTime
+                  ? nexus.newbieProtectionEndsAt && new Date(nexus.newbieProtectionEndsAt) > currentTimeRef.current
                     ? `${nexus.name} (${nexus.x}|${nexus.y}) · Protected`
                     : `${nexus.name} (${nexus.x}|${nexus.y})`
                   : `(${x}|${y})`
             }
             data-x={x}
             data-y={y}
+            style={mode === 'espionage' && nexus && nexus._id !== currentNexus._id ? { cursor: 'crosshair' } : undefined}
           >
             {nexus && (
               <div
@@ -681,7 +692,8 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
     }
 
     return grid;
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nexusLookup, ownNexusIds, centerX, centerY, visibleRange, selectedNexus, currentNexus._id, mode, onSelectSpyTarget]);
 
   useEffect(() => {
     const updateCrosshairPosition = () => {
@@ -734,7 +746,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
     const isOwn = selectedNexus.owner?.username === user?.username;
     const isConquered = selectedNexus.control !== undefined && selectedNexus.control <= 0;
     const hasIntel = selectedNexus.intelLevel === 'scouted' || selectedNexus.intelLevel === 'owned';
-    const isNewbieProtected = !!selectedNexus.newbieProtectionEndsAt && new Date(selectedNexus.newbieProtectionEndsAt) > currentTime;
+    const isNewbieProtected = !!selectedNexus.newbieProtectionEndsAt && new Date(selectedNexus.newbieProtectionEndsAt) > currentTimeRef.current;
     const isNpc =
       selectedNexus.name.includes('Resource Depot') ||
       selectedNexus.name.includes('Military Outpost') ||
@@ -742,7 +754,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
       selectedNexus.name.includes('Abandoned Base') ||
       selectedNexus.name.includes('Neutral Settlement');
 
-    const attackTroopRows = Object.entries(availableTroops);
+    const attackTroopRows = Object.entries(availableTroops).filter(([type]) => type !== 'reconOperative');
     const attackAvailableTroopTotal = attackTroopRows.reduce((sum, [, count]) => sum + Number(count || 0), 0);
 
     return (
@@ -1084,7 +1096,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
 
   return (
     <div className="map-container">
-      {galaxyEvents.length > 0 && (
+      {mode === 'normal' && galaxyEvents.length > 0 && (
         <div className="galaxy-events-bar">
           <button
             className="galaxy-events-toggle"
@@ -1132,7 +1144,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
           )}
         </div>
       )}
-      <div className="map-header">
+      {mode === 'normal' && <div className="map-header">
         <h2>World Map</h2>
         <div className="map-info">
           <span>
@@ -1166,7 +1178,12 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
             <button onClick={handleJumpToCoordinates}>Jump</button>
           </div>
         </div>
-      </div>
+      </div>}
+      {mode === 'espionage' && (
+        <div className="map-header map-header--espionage">
+          <span className="map-hint">Click a nexus to select it as your spy target</span>
+        </div>
+      )}
 
       <div className="map-content">
         <div className="map-grid-wrapper" ref={mapGridWrapperRef}>
@@ -1186,7 +1203,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
               ['--map-cell-size' as any]: `${Math.round((VISIBLE_RANGE / visibleRange) * 60)}px`,
             }}
           >
-            {renderGrid()}
+            {gridCells}
           </div>
           {selectedNexus && crosshairPosition && (
             <div
@@ -1205,19 +1222,21 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
           )}
         </div>
 
-        <div className="map-sidebar">
-          {renderNexusContent()}
-          {renderAttacksPanel()}
-        </div>
+        {mode === 'normal' && (
+          <div className="map-sidebar">
+            {renderNexusContent()}
+            {renderAttacksPanel()}
+          </div>
+        )}
 
-        {showWavePlanner && selectedNexus && (
+        {mode === 'normal' && showWavePlanner && selectedNexus && (
           <WavePlanner
             target={{ _id: selectedNexus._id, name: selectedNexus.name, x: selectedNexus.x, y: selectedNexus.y }}
             onClose={() => setShowWavePlanner(false)}
           />
         )}
 
-        {selectedNexus && (
+        {mode === 'normal' && selectedNexus && (
           <div
             className="map-mobile-modal-overlay"
             onClick={() => {

@@ -31,6 +31,7 @@ export async function alphaSignupCount(_req: Request, res: Response): Promise<vo
 export async function alphaSignup(req: Request, res: Response): Promise<void> {
   try {
     const rawEmail = (req.body as { email?: string })?.email;
+    // Validate email format first to provide better feedback and avoid unnecessary DB operations
     if (!validateEmail(rawEmail)) {
       const typoHint = typeof rawEmail === 'string' ? detectEmailTypo(rawEmail) : null;
       res.status(400).json({ error: typoHint ?? 'Please enter a valid email address.' });
@@ -51,9 +52,7 @@ export async function alphaSignup(req: Request, res: Response): Promise<void> {
     // Only send welcome email on first signup (createdAt within last 5s means just created)
     const isNew = Date.now() - record.createdAt.getTime() < 5_000;
     if (isNew) {
-      sendAlphaWelcome(email).catch((err) =>
-        console.error('[emailService] alphaWelcome failed:', err)
-      );
+      sendAlphaWelcome(email).catch((err) => console.error('[emailService] alphaWelcome failed:', err));
     }
 
     res.status(202).json({ ok: true });

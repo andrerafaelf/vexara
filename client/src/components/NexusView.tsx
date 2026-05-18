@@ -34,7 +34,7 @@ import {
 } from 'lucide-react';
 import '../styles/NexusView.css';
 import { Nexus, TroopTransfer } from '../types/game';
-import StarfieldMap from './Map';
+import StarfieldMap, { MapNexus } from './Map';
 import NexusMap from './NexusMap';
 import NexusTypeBadge from './NexusTypeBadge';
 import ResourceIcon from './ResourceIcon';
@@ -2439,10 +2439,8 @@ const SABOTAGE_LABEL: Record<string, string> = {
 };
 
 function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string, t: 'success' | 'error' | 'info') => void }) {
-  const [mode, setMode] = useState<'sabotage' | 'embed'>('sabotage');
-  const [toNexusId, setToNexusId] = useState('');
+  const [spyTarget, setSpyTarget] = useState<MapNexus | null>(null);
   const [operatives, setOperatives] = useState(1);
-  const [sabotageTarget, setSabotageTarget] = useState('troops');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [assets, setAssets] = useState<Array<Record<string, unknown>>>([]);
@@ -2461,21 +2459,25 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
     );
   };
 
+  const handleSelectTarget = (target: MapNexus) => {
+    setSpyTarget(target);
+    setResult(null);
+  };
+
   const handleSend = async () => {
-    const id = parseInt(toNexusId);
-    if (!id || id <= 0) { onToast('Enter a valid target nexus ID', 'error'); return; }
+    if (!spyTarget) { onToast('Select a target nexus on the map', 'error'); return; }
     setLoading(true);
     setResult(null);
     try {
       const { sendSpyMission } = await import('../services/api');
-      const r: any = await sendSpyMission(String(nexus._id), toNexusId, mode, operatives, mode === 'sabotage' ? sabotageTarget : undefined);
+      const r: any = await sendSpyMission(String(nexus._id), spyTarget._id, 'embed', operatives, undefined);
       setResult(r.data);
       if (r.data?.success) {
-        onToast(mode === 'embed' ? 'Operative embedded successfully' : 'Sabotage mission succeeded', 'success');
+        onToast('Operative embedded successfully', 'success');
+        refreshAssets();
       } else {
         onToast('Mission failed — operative detected and eliminated', 'error');
       }
-      if (mode === 'embed') refreshAssets();
     } catch (e: any) {
       onToast(e?.response?.data?.error ?? 'Mission failed', 'error');
     } finally {
@@ -2519,76 +2521,53 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
         <div>
           <strong>Espionage Operations</strong>
           <span className="espionage-intro-sub">
-            Send Recon Operatives on covert missions. You have <strong>{reconCount}</strong> available.
+            Click a nexus on the map to embed a Recon Operative. You have <strong>{reconCount}</strong> available.
           </span>
         </div>
       </div>
 
-      <div className="espionage-mode-row">
-        <button
-          className={`espionage-mode-btn${mode === 'sabotage' ? ' active' : ''}`}
-          onClick={() => setMode('sabotage')}
-        >
-          Sabotage
-        </button>
-        <button
-          className={`espionage-mode-btn${mode === 'embed' ? ' active' : ''}`}
-          onClick={() => setMode('embed')}
-        >
-          Embed Operative
-        </button>
+      <div className="espionage-map-wrapper">
+        <StarfieldMap
+          currentNexus={nexus}
+          onRefresh={() => {}}
+          mode="espionage"
+          onSelectSpyTarget={handleSelectTarget}
+        />
       </div>
 
-      <div className="espionage-form">
-        <div className="espionage-form-row">
-          <label className="espionage-label">Target Nexus ID</label>
-          <input
-            className="espionage-input"
-            type="number"
-            min={1}
-            placeholder="Nexus ID"
-            value={toNexusId}
-            onChange={(e) => setToNexusId(e.target.value)}
-          />
+      {spyTarget && (
+        <div className="espionage-target-bar">
+          <Eye size={13} />
+          <span>Target: <strong>{spyTarget.name}</strong> ({spyTarget.x}|{spyTarget.y})</span>
+          <button className="espionage-target-clear" onClick={() => setSpyTarget(null)}>✕</button>
         </div>
-        <div className="espionage-form-row">
-          <label className="espionage-label">Recon Operatives</label>
-          <input
-            className="espionage-input espionage-input--narrow"
-            type="number"
-            min={1}
-            max={Math.min(20, reconCount)}
-            value={operatives}
-            onChange={(e) => setOperatives(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
-          />
-        </div>
-        {mode === 'sabotage' && (
+      )}
+
+      {spyTarget && (
+        <div className="espionage-form">
           <div className="espionage-form-row">
-            <label className="espionage-label">Sabotage Target</label>
-            <select
-              className="espionage-input"
-              value={sabotageTarget}
-              onChange={(e) => setSabotageTarget(e.target.value)}
-            >
-              {Object.entries(SABOTAGE_LABEL).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
-              ))}
-            </select>
+            <label className="espionage-label">Recon Operatives</label>
+            <input
+              className="espionage-input espionage-input--narrow"
+              type="number"
+              min={1}
+              max={Math.min(20, reconCount)}
+              value={operatives}
+              onChange={(e) => setOperatives(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
+            />
           </div>
-        )}
-        <div className="espionage-cost-note">
-          {mode === 'sabotage'
-            ? `Cost: ${300 * operatives} Biomass + ${300 * operatives} Ore`
-            : `Cost: ${400 * operatives} Biomass + ${200 * operatives} Alloy`}
+          <div className="espionage-cost-note">
+            Cost: {400 * operatives} Biomass + {200 * operatives} Alloy
+          </div>
+          <button
+            className="espionage-send-btn"
+            onClick={handleSend}
+            disabled={loading || reconCount < operatives}
+          >
+            {loading ? 'Sending...' : 'Embed Operative'}
+          </button>
         </div>
-        <button
-          className="espionage-send-btn"
-          onClick={handleSend}
-          disabled={loading || reconCount < operatives}
-        >
-          {loading ? 'Sending...' : mode === 'sabotage' ? 'Launch Sabotage' : 'Embed Operative'}
-        </button>
-      </div>
+      )}
 
       {result && (
         <div className={`espionage-result${result.success ? ' espionage-result--success' : ' espionage-result--fail'}`}>
@@ -2616,8 +2595,6 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
                 </div>
               );
             }
-            if (r.loss != null) return <span>Destroyed {r.loss as number} units of {r.target as string}</span>;
-            if (r.delayMinutes) return <span>Build queue delayed by {r.delayMinutes as number} minutes</span>;
             if (r.message) return <span>{r.message as string}</span>;
             return null;
           })()}
