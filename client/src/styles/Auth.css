@@ -43,6 +43,11 @@
   background-size: cover;
   background-position: center top;
   filter: brightness(0.35) saturate(0.8);
+  transition: background-image 0s, opacity 0.8s ease;
+}
+
+.auth-panel-left-bg.fading {
+  opacity: 0;
 }
 
 .auth-panel-left-overlay {

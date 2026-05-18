@@ -8,13 +8,28 @@ import { useAuth } from '../context/AuthContext';
 import { login as loginApi } from '../services/api';
 import '../styles/Auth.css';
 
+const SCREENSHOTS = ['/vexara-overview.png', '/vexara-troops.png', '/vexara-buildings.png'];
+
 const LoginForm: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [bgIndex, setBgIndex] = useState(0);
+  const [fading, setFading] = useState(false);
   const { login, isAuthenticated } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFading(true);
+      setTimeout(() => {
+        setBgIndex(i => (i + 1) % SCREENSHOTS.length);
+        setFading(false);
+      }, 800);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -46,14 +61,14 @@ const LoginForm: React.FC = () => {
     <div className="auth-container">
       <div className="auth-panel-left">
         <div
-          className="auth-panel-left-bg"
-          style={{ backgroundImage: 'url(/vexara-overview.png)' }}
+          className={`auth-panel-left-bg${fading ? ' fading' : ''}`}
+          style={{ backgroundImage: `url(${SCREENSHOTS[bgIndex]})` }}
         />
         <div className="auth-panel-left-overlay" />
         <div className="auth-panel-left-copy">
           <p className="auth-panel-eyebrow">Live galaxy</p>
           <h2 className="auth-panel-headline">
-            A persistent world.<br />Real opponents.<br />No resets.
+            A persistent world.<br />Real opponents.<br />Every galaxy ends.
           </h2>
           <p className="auth-panel-sub">
             Build a nexus, control three resources, train twelve unit types,

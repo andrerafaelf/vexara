@@ -61,6 +61,8 @@ function captureUtm(): Utm {
   return {};
 }
 
+const SCREENSHOTS = ['/vexara-overview.png', '/vexara-troops.png', '/vexara-buildings.png'];
+
 const AlphaSignupForm: React.FC = () => {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
@@ -68,6 +70,8 @@ const AlphaSignupForm: React.FC = () => {
   const [success, setSuccess] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [signupCount, setSignupCount] = useState<number | null>(null);
+  const [bgIndex, setBgIndex] = useState(0);
+  const [fading, setFading] = useState(false);
   const { isAuthenticated } = useAuth();
   const router = useRouter();
 
@@ -81,6 +85,17 @@ const AlphaSignupForm: React.FC = () => {
     getAlphaSignupCount()
       .then(({ data }) => setSignupCount((data as { total: number }).total))
       .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFading(true);
+      setTimeout(() => {
+        setBgIndex(i => (i + 1) % SCREENSHOTS.length);
+        setFading(false);
+      }, 800);
+    }, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -113,8 +128,8 @@ const AlphaSignupForm: React.FC = () => {
     <div className="auth-container">
       <div className="auth-panel-left">
         <div
-          className="auth-panel-left-bg"
-          style={{ backgroundImage: 'url(/vexara-overview.png)' }}
+          className={`auth-panel-left-bg${fading ? ' fading' : ''}`}
+          style={{ backgroundImage: `url(${SCREENSHOTS[bgIndex]})` }}
         />
         <div className="auth-panel-left-overlay" />
         <div className="auth-panel-left-copy">
