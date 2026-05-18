@@ -2593,7 +2593,7 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
       {result && (
         <div className={`espionage-result${result.success ? ' espionage-result--success' : ' espionage-result--fail'}`}>
           <strong>{result.success ? 'Mission Successful' : 'Mission Failed — Detected'}</strong>
-          {result.success && result.report && (() => {
+          {result.success && result.report && ((): React.ReactNode => {
             const r = result.report as Record<string, unknown>;
             if (r.intel) {
               const intel = r.intel as Record<string, unknown>;
@@ -2631,7 +2631,7 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
             <div key={String(a.id)} className="espionage-asset-row">
               <div className="espionage-asset-info">
                 <span className="espionage-asset-target">{(a.targetName as string) ?? `Nexus #${a.targetNexusId}`}</span>
-                {a.lastReportAt && (
+                {a.lastReportAt != null && (
                   <span className="espionage-asset-last">
                     Last report: {new Date(a.lastReportAt as string).toLocaleTimeString()}
                   </span>
