@@ -1,4 +1,5 @@
 import type { Response } from 'express';
+import type { Prisma } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 import type { AuthRequest } from '../types/index.js';
 import { parsePositiveInt } from '../utils/validation.js';
@@ -293,7 +294,7 @@ export async function processArrivedSpyMissions(): Promise<void> {
       // Mark as returning — operatives come back after another travel leg
       await prisma.spyMission.update({
         where: { id: mission.id },
-        data: { status: 'returning', returnsAt, result },
+        data: { status: 'returning', returnsAt, result: result as Prisma.InputJsonValue },
       });
 
       // Surviving operatives are held in the mission until returnsAt

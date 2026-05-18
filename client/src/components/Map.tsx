@@ -89,6 +89,21 @@ const MIN_VISIBLE_RANGE = 2;
 const MAX_VISIBLE_RANGE = 10;
 const MAP_SIZE = 35;
 const MAP_MAX_INDEX = MAP_SIZE - 1;
+const MOBILE_BREAKPOINT = 768;
+
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`).matches : false,
+  );
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+  return isMobile;
+};
 
 interface CrosshairPosition {
   left: number;
@@ -98,6 +113,7 @@ interface CrosshairPosition {
 const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onSelectSpyTarget }) => {
   const { user } = useAuth();
   const toast = useToast();
+  const isMobile = useIsMobile();
   const [nexuses, setVillages] = useState<MapNexus[]>([]);
   const [selectedNexus, setSelectedNexus] = useState<MapNexus | null>(null);
   const [centerX, setCenterX] = useState(currentNexus.x);
@@ -521,6 +537,26 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
     setDragOffset({ x: 0, y: 0 });
   };
 
+  const handleGridClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (touchDraggedRef.current || isDragging || Math.abs(dragOffset.x) > 5 || Math.abs(dragOffset.y) > 5) {
+      return;
+    }
+    const cellEl = (e.target as HTMLElement).closest<HTMLElement>('.map-cell');
+    if (!cellEl) return;
+    const xAttr = cellEl.getAttribute('data-x');
+    const yAttr = cellEl.getAttribute('data-y');
+    if (xAttr == null || yAttr == null) return;
+    const cx = Number(xAttr);
+    const cy = Number(yAttr);
+    const nexus = nexusLookup[`${cx},${cy}`];
+    if (!nexus) return;
+    if (mode === 'espionage' && nexus._id !== currentNexus._id) {
+      onSelectSpyTarget?.(nexus);
+      return;
+    }
+    handleVillageClick(nexus, e);
+  };
+
   const handleVillageClick = async (nexus: MapNexus, e?: React.MouseEvent) => {
     if (e) {
       e.stopPropagation();
@@ -623,6 +659,8 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
 
   const ownNexusIds = useMemo(() => new Set(ownNexuses.map((n) => n._id)), [ownNexuses]);
 
+  const isEspionage = mode === 'espionage';
+
   const gridCells = useMemo(() => {
     const grid = [];
 
@@ -643,32 +681,29 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
           : false;
         const isEnemyNexus = !!nexus && !isCurrent && !isOwnNexus && !isNpcNexus;
 
+        const cellClasses = ['map-cell'];
+        if (isOutOfBounds) cellClasses.push('out-of-bounds');
+        if (nexus) cellClasses.push('has-nexus');
+        if (isCurrent) cellClasses.push('current-nexus');
+        if (isOwnNexus && !isCurrent) cellClasses.push('own-nexus');
+        if (isEnemyNexus) cellClasses.push('enemy-nexus');
+        if (isEspionage && nexus && !isCurrent) cellClasses.push('spy-target');
+
+        const titleText = isOutOfBounds
+          ? 'Out of bounds'
+          : nexus
+            ? nexus.newbieProtectionEndsAt && new Date(nexus.newbieProtectionEndsAt) > currentTimeRef.current
+              ? `${nexus.name} (${nexus.x}|${nexus.y}) · Protected`
+              : `${nexus.name} (${nexus.x}|${nexus.y})`
+            : `(${x}|${y})`;
+
         row.push(
           <div
             key={`${x}-${y}`}
-            className={`map-cell ${isOutOfBounds ? 'out-of-bounds' : ''} ${nexus ? 'has-nexus' : ''} ${
-              isCurrent ? 'current-nexus' : ''
-            } ${isOwnNexus && !isCurrent ? 'own-nexus' : ''} ${isEnemyNexus ? 'enemy-nexus' : ''} ${selectedNexus?._id === nexus?._id ? 'selected' : ''}`}
-            onClick={(e) => {
-              if (isOutOfBounds || !nexus) return;
-              if (mode === 'espionage' && nexus._id !== currentNexus._id) {
-                onSelectSpyTarget?.(nexus);
-              } else {
-                handleVillageClick(nexus, e);
-              }
-            }}
-            title={
-              isOutOfBounds
-                ? 'Out of bounds'
-                : nexus
-                  ? nexus.newbieProtectionEndsAt && new Date(nexus.newbieProtectionEndsAt) > currentTimeRef.current
-                    ? `${nexus.name} (${nexus.x}|${nexus.y}) · Protected`
-                    : `${nexus.name} (${nexus.x}|${nexus.y})`
-                  : `(${x}|${y})`
-            }
+            className={cellClasses.join(' ')}
+            title={titleText}
             data-x={x}
             data-y={y}
-            style={mode === 'espionage' && nexus && nexus._id !== currentNexus._id ? { cursor: 'crosshair' } : undefined}
           >
             {nexus && (
               <div
@@ -692,42 +727,40 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
     }
 
     return grid;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nexusLookup, ownNexusIds, centerX, centerY, visibleRange, selectedNexus, currentNexus._id, mode, onSelectSpyTarget]);
+  }, [nexusLookup, ownNexusIds, centerX, centerY, visibleRange, currentNexus._id, isEspionage]);
 
   useEffect(() => {
-    const updateCrosshairPosition = () => {
-      if (!selectedNexus || !mapGridWrapperRef.current) {
+    if (!selectedNexus) {
+      setCrosshairPosition(null);
+      return;
+    }
+    const dx = selectedNexus.x - centerX;
+    const dy = centerY - selectedNexus.y;
+    if (Math.abs(dx) > visibleRange || Math.abs(dy) > visibleRange) {
+      setCrosshairPosition(null);
+      return;
+    }
+    const update = () => {
+      const wrapper = mapGridWrapperRef.current;
+      const grid = mapGridRef.current;
+      if (!wrapper || !grid) {
         setCrosshairPosition(null);
         return;
       }
-
-      const selectedCell = mapGridWrapperRef.current.querySelector<HTMLElement>(
-        `[data-x="${selectedNexus.x}"][data-y="${selectedNexus.y}"]`,
-      );
-
-      if (!selectedCell) {
-        setCrosshairPosition(null);
-        return;
-      }
-
-      const wrapperRect = mapGridWrapperRef.current.getBoundingClientRect();
-      const cellRect = selectedCell.getBoundingClientRect();
-
-      setCrosshairPosition({
-        left: cellRect.left - wrapperRect.left + cellRect.width / 2,
-        top: cellRect.top - wrapperRect.top + cellRect.height / 2,
-      });
+      const wrapperRect = wrapper.getBoundingClientRect();
+      const gridRect = grid.getBoundingClientRect();
+      const cellSize = gridRect.width / (visibleRange * 2 + 1);
+      const left = gridRect.left - wrapperRect.left + (dx + visibleRange + 0.5) * cellSize;
+      const top = gridRect.top - wrapperRect.top + (dy + visibleRange + 0.5) * cellSize;
+      setCrosshairPosition({ left, top });
     };
-
-    const frameId = window.requestAnimationFrame(updateCrosshairPosition);
-    window.addEventListener('resize', updateCrosshairPosition);
-
+    const frameId = window.requestAnimationFrame(update);
+    window.addEventListener('resize', update);
     return () => {
       window.cancelAnimationFrame(frameId);
-      window.removeEventListener('resize', updateCrosshairPosition);
+      window.removeEventListener('resize', update);
     };
-  }, [selectedNexus, centerX, centerY, nexuses]);
+  }, [selectedNexus, centerX, centerY, visibleRange]);
 
   const renderNexusContent = () => {
     if (!selectedNexus) {
@@ -1189,18 +1222,19 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
         <div className="map-grid-wrapper" ref={mapGridWrapperRef}>
           <div
             ref={mapGridRef}
-            className="map-grid"
+            className={`map-grid${isEspionage ? ' map-grid--espionage' : ''}`}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={(e) => handleMouseUp(e)}
             onMouseLeave={(e) => handleMouseUp(e)}
+            onClick={handleGridClick}
             onDragStart={(e) => e.preventDefault()}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
             style={{
               cursor: isDragging ? 'grabbing' : 'grab',
-              ['--map-cell-size' as any]: `${Math.round((VISIBLE_RANGE / visibleRange) * 60)}px`,
+              ['--map-visible-range' as any]: visibleRange * 2 + 1,
             }}
           >
             {gridCells}
@@ -1236,7 +1270,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
           />
         )}
 
-        {mode === 'normal' && selectedNexus && (
+        {mode === 'normal' && isMobile && selectedNexus && (
           <div
             className="map-mobile-modal-overlay"
             onClick={() => {
