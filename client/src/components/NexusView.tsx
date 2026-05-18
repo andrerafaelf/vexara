@@ -409,7 +409,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   const [renameValue, setRenameValue] = useState(nexus.name);
   const [isSavingNexusName, setIsSavingNexusName] = useState(false);
   const [trainAmount, setTrainAmount] = useState<{ [key: string]: string }>({});
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState(() => new Date());
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const queryClient = useQueryClient();
   const { data: incomingAttacks = [] } = useQuery({
@@ -2637,7 +2637,7 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
   const [assetsLoading, setAssetsLoading] = useState(true);
   const [missions, setMissions] = useState<Array<Record<string, unknown>>>([]);
   const [completedMissions, setCompletedMissions] = useState<Array<Record<string, unknown>>>([]);
-  const [now, setNow] = useState(Date.now());
+  const [now, setNow] = useState(() => Date.now());
   const dispatchRef = useRef<HTMLDivElement | null>(null);
   const targetBarRef = useRef<HTMLDivElement | null>(null);
 

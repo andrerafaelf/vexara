@@ -1,5 +1,6 @@
 import React from 'react';
 import alloyforgeImg from '../assets/buildings/alloyforge.png';
+import armoryImg from '../assets/buildings/armory.png';
 import biomassfarmImg from '../assets/buildings/biomassfarm.png';
 import commandcoreImg from '../assets/buildings/commandcore.png';
 import lifesupportImg from '../assets/buildings/lifesupport.png';
@@ -19,6 +20,7 @@ const BUILDINGS = [
   { key: 'alloyForge', img: alloyforgeImg, name: 'Alloy Forge', short: 'Alloy' },
   { key: 'oreExtractor', img: oreextractorImg, name: 'Ore Extractor', short: 'Ore Ext.' },
   { key: 'shieldGrid', img: shieldgridImg, name: 'Shield Grid', short: 'Shield' },
+  { key: 'armory', img: armoryImg, name: 'Armory', short: 'Armory' },
 ];
 
 interface NexusMapProps {
