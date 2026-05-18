@@ -109,8 +109,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=server
+          cache-to: type=gha,mode=max,scope=server
 
   build-admin-server:
     name: Build admin-server
@@ -142,8 +142,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=admin-server
+          cache-to: type=gha,mode=max,scope=admin-server
 
   build-client:
     name: Build client
@@ -178,8 +178,8 @@ jobs:
           build-args: |
             NEXT_PUBLIC_API_URL=https://${{ vars.DOMAIN }}/api
             NEXT_PUBLIC_APP_URL=https://${{ vars.DOMAIN }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=client
+          cache-to: type=gha,mode=max,scope=client
 
   build-admin-client:
     name: Build admin-client
@@ -213,8 +213,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             NEXT_PUBLIC_ADMIN_API_URL=https://admin.${{ vars.DOMAIN }}/api/admin
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=admin-client
+          cache-to: type=gha,mode=max,scope=admin-client
 
   # ─── Deploy to VPS ───────────────────────────────────────────────────────────
   deploy:
@@ -301,23 +301,5 @@ jobs:
             # Zero-downtime rolling update
             bash /opt/vexara/deploy/deploy.sh
 
-      - name: Smoke test
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            set -e
-            for i in $(seq 1 12); do
-              STATUS=$(curl -sf -o /dev/null -w "%{http_code}" https://${{ vars.DOMAIN }}/healthz)
-              if [ "$STATUS" = "200" ]; then
-                echo "Smoke test passed (HTTP 200)"
-                exit 0
-              fi
-              echo "Attempt $i: got $STATUS, retrying in 5s..."
-              sleep 5
-            done
-            echo "Smoke test FAILED after 60s"
-            exit 1
+      # Smoke test runs inside deploy.sh (probes server directly, no SSL dependency)
 
