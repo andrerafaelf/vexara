@@ -146,15 +146,22 @@ export async function getActivitySummary(req: AuthRequest, res: Response): Promi
       }
     }
 
-    const attacks = completedAttacks.map((a) => ({
-      id: a.id,
-      type: a.type,
-      isMyAttack: a.attackerUserId === req.userId,
-      attackerNexus: a.attackerNexus?.name,
-      defenderNexus: a.defenderNexus?.name,
-      result: a.result,
-      completedAt: a.returnsAt,
-    }));
+    const attacks = completedAttacks.map((a) => {
+      const r = a.result as { victory?: boolean } | null;
+      const isMyAttack = a.attackerUserId === req.userId;
+      const result = r == null ? undefined : r.victory
+        ? (isMyAttack ? 'victory' : 'defeat')
+        : (isMyAttack ? 'defeat' : 'victory');
+      return {
+        id: a.id,
+        type: a.type,
+        isMyAttack,
+        attackerNexus: a.attackerNexus?.name,
+        defenderNexus: a.defenderNexus?.name,
+        result,
+        completedAt: a.returnsAt,
+      };
+    });
 
     res.json({ attacks, buildings: buildingsDone, troops: troopsDone, since: since.toISOString() });
   } catch (error) {

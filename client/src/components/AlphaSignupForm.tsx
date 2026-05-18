@@ -366,6 +366,23 @@ const AlphaSignupForm: React.FC = () => {
                   </div>
 
                   <div className="about-section">
+                    <h3>Build your economy</h3>
+                    <Image
+                      src="/vexara-buildings.png"
+                      alt="Vexara buildings screen showing upgrade costs, timers, and construction queue"
+                      width={1280}
+                      height={720}
+                      className="about-shot"
+                      sizes="(max-width: 640px) 100vw, 600px"
+                    />
+                    <p>
+                      Every building has a purpose and a cost. Upgrade your Command Core to unlock higher
+                      tiers faster, stack your resource extractors to feed a standing army, and keep your
+                      Storage Vault ahead of your production or you&apos;ll hit the cap mid-war.
+                    </p>
+                  </div>
+
+                  <div className="about-section">
                     <h3>Scout, raid, conquer</h3>
                     <p>
                       Send <strong>Recon Operatives</strong> to scout an enemy nexus before you commit.

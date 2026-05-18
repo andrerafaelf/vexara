@@ -13,7 +13,11 @@ export default function QueryProvider({ children }: { children: React.ReactNode 
             // Keep cached data in memory for 5 min after last subscriber unmounts.
             // This means navigating back to a page shows data instantly.
             gcTime: 5 * 60 * 1000,
-            retry: 1,
+            retry: (failureCount, error) => {
+              const status = (error as any)?.response?.status;
+              if (status === 429 || status === 401 || status === 403) return false;
+              return failureCount < 1;
+            },
             // Don't refetch just because the window regained focus in a game app —
             // the 30s polling intervals handle freshness.
             refetchOnWindowFocus: false,
