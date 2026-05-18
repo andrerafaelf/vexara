@@ -38,7 +38,7 @@ export default function NexusPage() {
     queryFn: () => getNexus(nexusId).then((r) => r.data as Nexus),
     staleTime: 20 * 1000,
     refetchInterval: 30 * 1000,
-    enabled: !!nexusId && typeof window !== 'undefined' && typeof localStorage !== 'undefined' && !!localStorage.getItem('token'),
+    enabled: !!nexusId && typeof window !== 'undefined' && !!localStorage.getItem('token'),
   });
 
   const selectedNexus: Nexus | null = selectedNexusData ?? null;

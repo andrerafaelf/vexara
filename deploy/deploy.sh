@@ -167,3 +167,26 @@ docker image prune -f --filter "until=72h"
 echo "[deploy] Deploy complete."
 echo ""
 $COMPOSE ps
+
+# ─── Smoke test ───────────────────────────────────────────────────────────────
+# Probe the Express healthcheck directly through the internal Docker network,
+# bypassing nginx and SSL entirely. This avoids curl exit-35 (SSL handshake
+# failures) when Cloudflare is pending or certs are being renewed, while still
+# confirming the server container is alive and responding.
+echo "[deploy] Running smoke test..."
+for i in $(seq 1 12); do
+  STATUS=$(docker exec vx-server \
+    wget -qO- --server-response http://localhost:3001/healthz 2>&1 \
+    | awk '/HTTP\//{print $2}' | tail -1)
+  if [ "$STATUS" = "200" ]; then
+    echo "[deploy] Smoke test passed (HTTP 200)"
+    break
+  fi
+  echo "[deploy] Smoke attempt $i: got '${STATUS:-no response}', retrying in 5s..."
+  sleep 5
+  if [ "$i" -eq 12 ]; then
+    echo "[deploy] Smoke test FAILED after 60s"
+    $COMPOSE logs --tail=30 server
+    exit 1
+  fi
+done
