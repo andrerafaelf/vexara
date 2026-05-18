@@ -79,6 +79,7 @@ export interface Nexus {
     alloyForge: number;
     oreExtractor: number;
     shieldGrid: number;
+    armory: number;
   };
   troops: {
     lancerDrone: number;
@@ -92,6 +93,8 @@ export interface Nexus {
     disruptorUnit: number;
     interceptorBike: number;
     annihilatorPlatform: number;
+    voidStalker: number;
+    plasmaTurret: number;
     overseer: number;
   };
   population: {
@@ -189,6 +192,8 @@ export interface Attack {
     disruptorUnit: number;
     interceptorBike: number;
     annihilatorPlatform: number;
+    voidStalker: number;
+    plasmaTurret: number;
     overseer: number;
     [key: string]: number;
   };
@@ -253,6 +258,7 @@ export interface Attack {
         alloyForge: number;
         oreExtractor: number;
         shieldGrid: number;
+        armory: number;
       };
       troops: {
         [key: string]: number;

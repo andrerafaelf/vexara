@@ -1,6 +1,12 @@
 import type { Attack, Nexus, Prisma } from '@prisma/client';
 import prisma from '../lib/prisma.js';
-import { computeForcePower, TROOP_STATS } from './combatMath.js';
+import {
+  computeForcePower,
+  computeClassWeightedAttack,
+  computeLossesForLoser,
+  computeLossesForWinner,
+  TROOP_STATS,
+} from './combatMath.js';
 import { buildDetailedScoutIntel } from './scouting.js';
 import { NOTIF, sendPushToUser } from './push.js';
 import { resolveEventForNexus } from './galaxyEvents.js';
@@ -20,7 +26,9 @@ const TROOP_KEYS = Object.keys(TROOP_STATS) as TroopKey[];
 const TROOP_POPULATION_COST: Record<TroopKey, number> = {
   lancerDrone: 1, assaultTrooper: 1, breakerUnit: 1, reconOperative: 1,
   skimmerBike: 3, siegeMech: 4, bulwarkGuard: 2, suppressorTeam: 2,
-  disruptorUnit: 2, interceptorBike: 3, annihilatorPlatform: 5, overseer: 5,
+  disruptorUnit: 2, interceptorBike: 3, annihilatorPlatform: 5,
+  voidStalker: 3, plasmaTurret: 4,
+  overseer: 5,
 };
 
 type AttackWithNexuses = Attack & { attackerNexus: Nexus | null; defenderNexus: Nexus | null };
@@ -51,7 +59,7 @@ export async function processArrivedAttacks(): Promise<void> {
 async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
   try {
     const defenderNexus = await prisma.nexus.findUnique({ where: { id: attack.defenderNexusId! } });
-    const attackTroops = attack.troops as Record<TroopKey, number>;
+    let attackTroops = attack.troops as Record<TroopKey, number>;
 
     if (attack.type === 'support') {
       // Station the troops at the defender nexus via TroopTransfer
@@ -128,6 +136,13 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 
     if (!defenderNexus) return;
 
+    // Plasma Turrets cannot leave their nexus — strip them from the attacking force.
+    // They remain on the nexus and contribute to defense when under attack.
+    const plasmaTurretsKept = attackTroops.plasmaTurret || 0;
+    if (plasmaTurretsKept > 0) {
+      attackTroops = { ...attackTroops, plasmaTurret: 0 };
+    }
+
     // Aggregate support troops stationed at the defending nexus
     const supportTransfers = await prisma.troopTransfer.findMany({
       where: { hostNexusId: defenderNexus.id, status: 'stationed' },
@@ -146,7 +161,12 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
       mergedDefenderForce[key] = ((defenderNexus as unknown as Record<TroopKey, number>)[key] || 0) + (supportTroops[key] || 0);
     }
 
-    let attackPower = computeForcePower(attackTroops, 'attack');
+    // Attacker armory level amplifies class-counter bonuses
+    const attackerNexusForArmory = await prisma.nexus.findUnique({ where: { id: attack.attackerNexusId! }, select: { armory: true } });
+    const attackerArmoryLevel = (attackerNexusForArmory as unknown as { armory?: number } | null)?.armory ?? 0;
+
+    // Class-weighted attack power vs raw defense power
+    let attackPower = computeClassWeightedAttack(attackTroops, mergedDefenderForce, attackerArmoryLevel);
     let defensePower = computeForcePower(mergedDefenderForce, 'defense');
 
     const baseShieldEff = defenderNexus.nexusType === 'Military Outpost' ? 1.25 : 1;
@@ -155,58 +175,56 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
     defensePower *= 1 + defenderNexus.shieldGrid * 0.02 * shieldEfficiencyMultiplier;
 
     const attackerWins = attackPower > defensePower;
-    const powerRatio = attackerWins ? defensePower / attackPower : attackPower / defensePower;
+    // powerRatio is always loser/winner (0..1]; used to calibrate losses
+    const powerRatio = attackerWins
+      ? Math.min(1, defensePower / Math.max(1, attackPower))
+      : Math.min(1, attackPower / Math.max(1, defensePower));
 
-    const attackerLosses: Partial<Record<TroopKey, number>> = {};
+    // Deterministic seed from attack id so replays are reproducible
+    const seed = attack.id * 2654435761;
+
+    const attackerLosses: Partial<Record<TroopKey, number>> = attackerWins
+      ? computeLossesForWinner(attackTroops, powerRatio, seed)
+      : computeLossesForLoser(attackTroops, Math.max(1, 1 / Math.max(0.001, powerRatio)), seed);
+
+    const rawDefenderLosses = attackerWins
+      ? computeLossesForLoser(mergedDefenderForce, Math.max(1, 1 / Math.max(0.001, powerRatio)), seed ^ 0xabcd1234)
+      : computeLossesForWinner(mergedDefenderForce, powerRatio, seed ^ 0xabcd1234);
+
     const defenderLosses: Partial<Record<TroopKey, number>> = {};
     const defenderTroopUpdates: Record<string, unknown> = {};
 
+    // Clamp losses to actual troops present; split between garrison and support
+    let defenderPopLost = 0;
     for (const troopType of TROOP_KEYS) {
-      const count = attackTroops[troopType] || 0;
-      if (count > 0 && TROOP_STATS[troopType]) {
-        if (troopType === 'overseer') { attackerLosses[troopType] = 0; continue; }
-        const baseLossRate = attackerWins ? powerRatio * 0.5 : 0.8;
-        const randomFactor = 0.75 + Math.random() * 0.5;
-        const defenseFactor = 1 + (50 - TROOP_STATS[troopType].defense) / 100;
-        attackerLosses[troopType] = Math.max(0, Math.ceil(count * Math.min(baseLossRate * randomFactor * defenseFactor, 1)));
-      }
+      if (troopType === 'overseer') continue;
+      const totalInForce = mergedDefenderForce[troopType] || 0;
+      if (totalInForce <= 0) continue;
+      const rawLoss = Math.min(rawDefenderLosses[troopType] ?? 0, totalInForce);
+      defenderLosses[troopType] = rawLoss;
+      const garrisonCount = (defenderNexus as unknown as Record<TroopKey, number>)[troopType] || 0;
+      const garrisonLoss = Math.min(rawLoss, garrisonCount);
+      defenderTroopUpdates[troopType] = Math.max(0, garrisonCount - garrisonLoss);
+      defenderPopLost += garrisonLoss * (TROOP_POPULATION_COST[troopType] ?? 1);
     }
 
+    // Overseer: destroyed only if all escort is wiped
     const totalNonOverseerSent = TROOP_KEYS.filter((t) => t !== 'overseer').reduce((sum, t) => sum + (attackTroops[t] || 0), 0);
     const totalNonOverseerLost = TROOP_KEYS.filter((t) => t !== 'overseer').reduce((sum, t) => sum + (attackerLosses[t] || 0), 0);
+    attackerLosses.overseer = 0;
     if ((attackTroops.overseer || 0) > 0 && totalNonOverseerSent > 0 && totalNonOverseerLost >= totalNonOverseerSent) {
       attackerLosses.overseer = attackTroops.overseer;
     }
 
-    let defenderPopLost = 0;
-    for (const troopType of TROOP_KEYS) {
-      const count = mergedDefenderForce[troopType] || 0;
-      if (count > 0 && TROOP_STATS[troopType]) {
-        if (troopType === 'overseer') { defenderLosses[troopType] = 0; continue; }
-        const baseLossRate = attackerWins ? 0.8 : powerRatio * 0.5;
-        const randomFactor = 0.75 + Math.random() * 0.5;
-        const defenseFactor = 1 + (50 - TROOP_STATS[troopType].defense) / 100;
-        const losses = Math.min(Math.ceil(count * Math.min(baseLossRate * randomFactor * defenseFactor, 1)), count);
-        defenderLosses[troopType] = losses;
-        // Split losses proportionally between garrison and support
-        const garrisonCount = (defenderNexus as unknown as Record<TroopKey, number>)[troopType] || 0;
-        const garrisonLoss = Math.min(losses, garrisonCount);
-        defenderTroopUpdates[troopType] = Math.max(0, garrisonCount - garrisonLoss);
-        defenderPopLost += garrisonLoss;
-      }
-    }
-
-    const totalDefenderNonOverseer = TROOP_KEYS.filter((t) => t !== 'overseer').reduce(
-      (sum, t) => sum + (mergedDefenderForce[t] || 0), 0);
-    const totalDefenderNonOverseerLost = TROOP_KEYS.filter((t) => t !== 'overseer').reduce(
-      (sum, t) => sum + (defenderLosses[t] || 0), 0);
+    const totalDefenderNonOverseer = TROOP_KEYS.filter((t) => t !== 'overseer').reduce((sum, t) => sum + (mergedDefenderForce[t] || 0), 0);
+    const totalDefenderNonOverseerLost = TROOP_KEYS.filter((t) => t !== 'overseer').reduce((sum, t) => sum + (defenderLosses[t] || 0), 0);
     const defenderOverseerCount = mergedDefenderForce.overseer || 0;
     const garrisonOverseerCount = (defenderNexus as unknown as Record<TroopKey, number>).overseer || 0;
     if (defenderOverseerCount > 0) {
       if (totalDefenderNonOverseer > 0 && totalDefenderNonOverseerLost >= totalDefenderNonOverseer) {
         defenderLosses.overseer = defenderOverseerCount;
         defenderTroopUpdates['overseer'] = 0;
-        defenderPopLost += garrisonOverseerCount;
+        defenderPopLost += garrisonOverseerCount * (TROOP_POPULATION_COST.overseer ?? 5);
       } else {
         defenderTroopUpdates['overseer'] = garrisonOverseerCount;
       }
@@ -222,7 +240,6 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
           const inTransfer = t[key] || 0;
           const totalLost = defenderLosses[key] || 0;
           const garrisonCount = (defenderNexus as unknown as Record<TroopKey, number>)[key] || 0;
-          // Losses beyond garrison come from support
           const supportLost = Math.max(0, totalLost - garrisonCount);
           const remaining = Math.max(0, inTransfer - supportLost);
           updatedTroops[key] = remaining;
@@ -336,7 +353,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
       where: { id: attack.id },
       data: {
         status: 'returning', returnsAt,
-        result: { attackerLosses, defenderLosses, resourcesStolen, survivingTroops, victory: attackerWins, conquered, remainingControl: newControlLevel },
+        result: { attackerLosses, defenderLosses, resourcesStolen, survivingTroops, victory: attackerWins, conquered, remainingControl: newControlLevel, combatSeed: seed },
       },
     });
 
@@ -417,7 +434,9 @@ async function processReturnedTroops(attack: Attack): Promise<void> {
 const TRANSFER_TROOP_FIELDS: TroopKey[] = [
   'lancerDrone', 'assaultTrooper', 'breakerUnit', 'reconOperative',
   'skimmerBike', 'siegeMech', 'bulwarkGuard', 'suppressorTeam',
-  'disruptorUnit', 'interceptorBike', 'annihilatorPlatform', 'overseer',
+  'disruptorUnit', 'interceptorBike', 'annihilatorPlatform',
+  'voidStalker', 'plasmaTurret',
+  'overseer',
 ];
 
 export async function processArrivedTransfers(): Promise<void> {

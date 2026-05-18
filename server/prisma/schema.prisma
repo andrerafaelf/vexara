@@ -216,6 +216,7 @@ model Nexus {
   alloyForge      Int @default(1)
   oreExtractor    Int @default(1)
   shieldGrid      Int @default(0)
+  armory          Int @default(0)
 
   // Troops
   lancerDrone         Int @default(0)
@@ -229,6 +230,8 @@ model Nexus {
   disruptorUnit       Int @default(0)
   interceptorBike     Int @default(0)
   annihilatorPlatform Int @default(0)
+  voidStalker         Int @default(0)
+  plasmaTurret        Int @default(0)
   overseer            Int @default(0)
 
   // Population

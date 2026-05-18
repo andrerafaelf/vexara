@@ -20,6 +20,10 @@ const TROOP_COSTS: Record<string, { biomass: number; alloy: number; ore: number;
   interceptorBike:      { biomass: 750,    alloy: 600,    ore: 900,    population: 3, time: 900   },
   siegeMech:            { biomass: 1250,   alloy: 1000,   ore: 2000,   population: 4, time: 3600  },
   annihilatorPlatform:  { biomass: 2000,   alloy: 1750,   ore: 3000,   population: 5, time: 7200  },
+  // Void Stalker: fast light cavalry that hard-counters ranged units
+  voidStalker:          { biomass: 900,    alloy: 700,    ore: 1100,   population: 3, time: 1200  },
+  // Plasma Turret: immobile ranged emplacement — can train but cannot be sent on attacks
+  plasmaTurret:         { biomass: 1500,   alloy: 1200,   ore: 2500,   population: 4, time: 5400  },
   overseer:             { biomass: 180000, alloy: 140000, ore: 120000, population: 5, time: 14400 },
 };
 
@@ -35,20 +39,24 @@ const TROOP_REQUIREMENTS: Record<string, { buildings: Record<string, number>; ma
   interceptorBike:     { buildings: { recruitmentCore: 8, alloyForge: 7 } },
   siegeMech:           { buildings: { recruitmentCore: 10, oreExtractor: 9, commandCore: 8 } },
   annihilatorPlatform: { buildings: { recruitmentCore: 12, commandCore: 10, shieldGrid: 10 } },
+  voidStalker:         { buildings: { recruitmentCore: 9, alloyForge: 8, armory: 3 } },
+  plasmaTurret:        { buildings: { recruitmentCore: 11, commandCore: 9, armory: 5 } },
   overseer:            { buildings: { recruitmentCore: 14, commandCore: 14, shieldGrid: 13 }, maxPerNexus: 3 },
 };
 
 const BUILDING_NAMES: Record<string, string> = {
   commandCore: 'Command Core', recruitmentCore: 'Recruitment Core', lifeSupport: 'Life Support',
   storageVault: 'Storage Vault', biomassFarm: 'Biomass Farm', alloyForge: 'Alloy Forge',
-  oreExtractor: 'Ore Extractor', shieldGrid: 'Shield Grid',
+  oreExtractor: 'Ore Extractor', shieldGrid: 'Shield Grid', armory: 'Armory',
 };
 
 const TROOP_NAMES: Record<string, string> = {
   lancerDrone: 'Lancer Drone', assaultTrooper: 'Assault Trooper', breakerUnit: 'Breaker Unit',
   reconOperative: 'Recon Operative', skimmerBike: 'Skimmer Bike', siegeMech: 'Siege Mech',
   bulwarkGuard: 'Bulwark Guard', suppressorTeam: 'Suppressor Team', disruptorUnit: 'Disruptor Unit',
-  interceptorBike: 'Interceptor Bike', annihilatorPlatform: 'Annihilator Platform', overseer: 'Overseer',
+  interceptorBike: 'Interceptor Bike', annihilatorPlatform: 'Annihilator Platform',
+  voidStalker: 'Void Stalker', plasmaTurret: 'Plasma Turret',
+  overseer: 'Overseer',
 };
 
 function getTrainTimeSeconds(troopType: string, recruitmentLevel: number) {

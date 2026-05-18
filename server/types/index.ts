@@ -20,6 +20,8 @@ export interface TroopCounts {
   disruptorUnit: number;
   interceptorBike: number;
   annihilatorPlatform: number;
+  voidStalker: number;
+  plasmaTurret: number;
   overseer: number;
 }
 
@@ -34,6 +36,7 @@ export interface BuildingLevels {
   alloyForge: number;
   oreExtractor: number;
   shieldGrid: number;
+  armory: number;
 }
 
 export type BuildingKey = keyof BuildingLevels;

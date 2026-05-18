@@ -36,6 +36,7 @@ interface NexusForEconomy {
   recruitmentCore?: number;
   lifeSupport?: number;
   shieldGrid?: number;
+  armory?: number;
   [key: string]: unknown;
 }
 
@@ -108,14 +109,14 @@ export function calculatePoints(nexus: NexusForEconomy & Partial<Record<string, 
   let points = 0;
   const buildingPoints: Record<string, number> = {
     commandCore: 10, recruitmentCore: 16, lifeSupport: 5,
-    storageVault: 6, biomassFarm: 6, alloyForge: 6, oreExtractor: 6, shieldGrid: 8,
+    storageVault: 6, biomassFarm: 6, alloyForge: 6, oreExtractor: 6, shieldGrid: 8, armory: 12,
   };
   for (const [building, pts] of Object.entries(buildingPoints)) {
     points += pts * (Number(nexus[building]) || 0);
   }
   const troopPoints: Record<string, number> = {
     lancerDrone: 1, assaultTrooper: 2, breakerUnit: 1, reconOperative: 2,
-    skimmerBike: 3, siegeMech: 4,
+    skimmerBike: 3, siegeMech: 4, voidStalker: 4, plasmaTurret: 5,
   };
   for (const [troopType, pts] of Object.entries(troopPoints)) {
     points += pts * (Number(nexus[troopType]) || 0);

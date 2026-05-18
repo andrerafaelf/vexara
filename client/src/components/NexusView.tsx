@@ -49,10 +49,12 @@ import disruptorunitImg from '../assets/troops/disruptorunit.png';
 import interceptorbikeImg from '../assets/troops/interceptorbike.png';
 import lancerdroneImg from '../assets/troops/lancerdrone.png';
 import overseerImg from '../assets/troops/overseer.png';
+import plasmaturretImg from '../assets/troops/plasmaturret.png';
 import reconoperativeImg from '../assets/troops/reconoperative.png';
 import siegemechImg from '../assets/troops/siegemech.png';
 import skimmerbikeImg from '../assets/troops/skimmerbike.png';
 import suppressorteamImg from '../assets/troops/suppressorteam.png';
+import voidstalkerImg from '../assets/troops/voidstalker.png';
 
 // Import building images
 import alloyforgeImg from '../assets/buildings/alloyforge.png';
@@ -61,6 +63,7 @@ import commandcoreImg from '../assets/buildings/commandcore.png';
 import lifesupportImg from '../assets/buildings/lifesupport.png';
 import oreextractorImg from '../assets/buildings/oreextractor.png';
 import recruitmentcoreImg from '../assets/buildings/recruitmentcore.png';
+import armoryImg from '../assets/buildings/armory.png';
 import shieldgridImg from '../assets/buildings/shieldgrid.png';
 import storagevaultImg from '../assets/buildings/storagevault.png';
 
@@ -92,6 +95,7 @@ const BUILDING_NAMES: { [key: string]: string } = {
   alloyForge: 'Alloy Forge',
   oreExtractor: 'Ore Extractor',
   shieldGrid: 'Shield Grid',
+  armory: 'Armory',
 };
 
 const BUILDING_DESCRIPTIONS: { [key: string]: string } = {
@@ -103,6 +107,7 @@ const BUILDING_DESCRIPTIONS: { [key: string]: string } = {
   alloyForge: 'Produces Alloy per hour. Higher levels increase production rate.',
   oreExtractor: 'Produces Ore per hour. Higher levels increase production rate.',
   shieldGrid: 'Increases defensive bonus. Protects your nexus from enemy attacks.',
+  armory: 'Amplifies unit class-counter bonuses in combat (+1.5% per level). Unlocks Void Stalker (Lv3) and Plasma Turret (Lv5).',
 };
 
 const BUILDING_COSTS: { [key: string]: any } = {
@@ -114,6 +119,7 @@ const BUILDING_COSTS: { [key: string]: any } = {
   alloyForge: { biomass: 65, alloy: 40, ore: 60, time: 70 },
   oreExtractor: { biomass: 75, alloy: 65, ore: 70, time: 90 },
   shieldGrid: { biomass: 50, alloy: 100, ore: 60, time: 115 },
+  armory: { biomass: 120, alloy: 180, ore: 140, time: 130 },
 };
 
 const BUILDING_RULES: {
@@ -186,6 +192,15 @@ const BUILDING_RULES: {
       { level: 8, requires: [{ building: 'alloyForge', level: 5 }] },
     ],
   },
+  armory: {
+    maxLevel: 20,
+    unlock: { building: 'commandCore', level: 5 },
+    milestones: [
+      { level: 3,  requires: [{ building: 'recruitmentCore', level: 5 }] },
+      { level: 5,  requires: [{ building: 'recruitmentCore', level: 7 }, { building: 'shieldGrid', level: 3 }] },
+      { level: 10, requires: [{ building: 'commandCore', level: 10 }, { building: 'recruitmentCore', level: 10 }] },
+    ],
+  },
 };
 
 const COST_SCALING = {
@@ -233,6 +248,7 @@ const BUILDING_IMAGES: { [key: string]: any } = {
   alloyForge: alloyforgeImg,
   oreExtractor: oreextractorImg,
   shieldGrid: shieldgridImg,
+  armory: armoryImg,
 };
 
 const TROOP_NAMES: { [key: string]: string } = {
@@ -247,6 +263,8 @@ const TROOP_NAMES: { [key: string]: string } = {
   disruptorUnit: 'Disruptor Unit',
   interceptorBike: 'Interceptor Bike',
   annihilatorPlatform: 'Annihilator Platform',
+  voidStalker: 'Void Stalker',
+  plasmaTurret: 'Plasma Turret',
   overseer: 'Overseer',
 };
 
@@ -262,34 +280,40 @@ const TROOP_IMAGES: { [key: string]: any } = {
   disruptorUnit: disruptorunitImg,
   interceptorBike: interceptorbikeImg,
   annihilatorPlatform: annihilatorplatformImg,
+  voidStalker: voidstalkerImg,
+  plasmaTurret: plasmaturretImg,
   overseer: overseerImg,
 };
 
 const TROOP_DESCRIPTIONS: { [key: string]: string } = {
   assaultTrooper:
-    'Standard offensive infantry. Versatile frontline soldier used for sustained attacks and general combat operations. Requires Lv1 Recruitment Core.',
+    'Standard heavy infantry. Frontline soldier optimized for sustained combat. Counters special units. Requires Lv1 Recruitment Core.',
   lancerDrone:
-    'Anti-vehicle defensive unit. Autonomous unit equipped with precision lances, optimized to intercept fast attackers and hold defensive lines. Requires Lv2 Recruitment Core.',
+    'Ranged interceptor drone. Suppresses fast-moving light units effectively. Requires Lv2 Recruitment Core.',
   breakerUnit:
-    'Heavy assault unit. Armored shock unit designed to breach defenses and deal high structural and troop damage. Requires Lv3 Recruitment Core, Lv3 Ore Extractor.',
+    'Light assault breacher. Exploits armor gaps to devastate heavy units. Requires Lv3 Recruitment Core, Lv3 Ore Extractor.',
   reconOperative:
-    'Scout & intelligence unit. Fast, lightly equipped operative used to gather intelligence, scan enemy nexuses, and detect incoming forces. Requires Lv4 Recruitment Core, Lv3 Command Core.',
+    'Scout & intelligence operative. Gathers intel on enemy nexuses. Requires Lv4 Recruitment Core, Lv3 Command Core.',
   skimmerBike:
-    'Fast raid unit. High-speed hover bike used for quick strikes, resource extraction, and rapid retreats. Requires Lv5 Recruitment Core, Lv4 Alloy Forge.',
+    'Fast light raider. High-speed bike that counters heavy armor with mobility. Requires Lv5 Recruitment Core, Lv4 Alloy Forge.',
   siegeMech:
-    'Heavy siege unit. Massive mechanized unit specialized in destroying fortifications and shield grids. Requires Lv10 Recruitment Core, Lv9 Ore Extractor, Lv8 Command Core.',
+    'Heavy siege unit. Massive mech that crushes special command units. Requires Lv10 Recruitment Core, Lv9 Ore Extractor, Lv8 Command Core.',
   bulwarkGuard:
-    'Elite defensive infantry. Heavily shielded unit deployed to significantly strengthen nexus defenses. Requires Lv5 Recruitment Core, Lv5 Life Support.',
+    'Elite heavy defender. Heavily shielded infantry. Requires Lv5 Recruitment Core, Lv5 Life Support.',
   suppressorTeam:
-    'Ranged support unit. Long-range fireteam that weakens enemy forces before direct engagement. Requires Lv7 Recruitment Core, Lv6 Command Core.',
+    'Ranged suppressor. Long-range team specialized in pinning down light cavalry. Requires Lv7 Recruitment Core, Lv6 Command Core.',
   disruptorUnit:
-    'Anti-armor & anti-mech unit. Specialized unit using EMP weapons to counter heavy units and machinery. Requires Lv7 Recruitment Core, Lv6 Ore Extractor.',
+    'Ranged anti-armor. EMP weapons suppress heavy units. Requires Lv7 Recruitment Core, Lv6 Ore Extractor.',
   interceptorBike:
-    'Rapid response unit. Extremely fast unit used to chase scouts, reinforce nearby nexuses, or intercept raids. Requires Lv8 Recruitment Core, Lv7 Alloy Forge.',
+    'Light rapid-response cavalry. Extremely fast — counters heavy armor. Requires Lv8 Recruitment Core, Lv7 Alloy Forge.',
   annihilatorPlatform:
-    'Heavy artillery unit. Slow but devastating artillery platform capable of inflicting massive damage. Requires Lv12 Recruitment Core, Lv10 Command Core, Lv10 Shield Grid.',
+    'Heavy artillery. Slow but devastating ranged platform that suppresses light units. Requires Lv12 Recruitment Core, Lv10 Command Core, Lv10 Shield Grid.',
+  voidStalker:
+    'Light stealth cavalry. Ultra-fast raider that hard-counters ranged emplacements. Requires Lv9 Recruitment Core, Lv8 Alloy Forge, Lv3 Armory.',
+  plasmaTurret:
+    'Ranged static emplacement. Cannot be sent on attacks — defends from the nexus. Decimates light cavalry. Requires Lv11 Recruitment Core, Lv9 Command Core, Lv5 Armory.',
   overseer:
-    'Conquest & control unit. Non-combat command unit required to reduce Control Level and permanently capture enemy nexuses. Requires Lv14 Recruitment Core, Lv14 Command Core, Lv13 Shield Grid. Up to 3 per nexus.',
+    'Conquest unit. Reduces enemy Control by 50 per successful strike. Requires Lv14 Recruitment Core, Lv14 Command Core, Lv13 Shield Grid. Up to 3 per nexus.',
 };
 
 const TROOP_REQUIREMENTS: { [key: string]: any } = {
@@ -304,6 +328,8 @@ const TROOP_REQUIREMENTS: { [key: string]: any } = {
   interceptorBike: { buildings: { recruitmentCore: 8, alloyForge: 7 } },
   siegeMech: { buildings: { recruitmentCore: 10, oreExtractor: 9, commandCore: 8 } },
   annihilatorPlatform: { buildings: { recruitmentCore: 12, commandCore: 10, shieldGrid: 10 } },
+  voidStalker: { buildings: { recruitmentCore: 9, alloyForge: 8, armory: 3 } },
+  plasmaTurret: { buildings: { recruitmentCore: 11, commandCore: 9, armory: 5 } },
   overseer: { buildings: { recruitmentCore: 14, commandCore: 14, shieldGrid: 13 }, maxPerNexus: 3 },
 };
 
@@ -325,6 +351,8 @@ const TROOP_COSTS: { [key: string]: any } = {
   interceptorBike: { biomass: 750, alloy: 600, ore: 900, population: 3, time: 900 },
   siegeMech: { biomass: 1250, alloy: 1000, ore: 2000, population: 4, time: 3600 },
   annihilatorPlatform: { biomass: 2000, alloy: 1750, ore: 3000, population: 5, time: 7200 },
+  voidStalker: { biomass: 900, alloy: 700, ore: 1100, population: 3, time: 1200 },
+  plasmaTurret: { biomass: 1500, alloy: 1200, ore: 2500, population: 4, time: 5400 },
   overseer: { biomass: 180000, alloy: 140000, ore: 120000, population: 5, time: 14400 },
 };
 
@@ -335,12 +363,14 @@ const TROOP_CATEGORIES: Record<string, 'offense' | 'defense'> = {
   disruptorUnit: 'offense',
   interceptorBike: 'offense',
   annihilatorPlatform: 'offense',
+  voidStalker: 'offense',
   overseer: 'offense',
   assaultTrooper: 'defense',
   lancerDrone: 'defense',
   reconOperative: 'defense',
   siegeMech: 'defense',
   bulwarkGuard: 'defense',
+  plasmaTurret: 'defense',
 };
 
 interface ToastMessage {

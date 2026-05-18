@@ -1,6 +1,7 @@
 import type { Nexus } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 import type { BuildingLevels, ResourceAmounts, TroopCounts } from '../types/index.js';
+// BuildingLevels and TroopCounts are extended via their interfaces to include armory/voidStalker/plasmaTurret
 
 interface PublicNexusData {
   _id: number;
@@ -40,6 +41,7 @@ function buildPublicNexusData(
 }
 
 export function buildDetailedScoutIntel(nexus: Nexus): ScoutIntel {
+  const n = nexus as unknown as Record<string, number>;
   return {
     resources: {
       biomass: Math.floor(nexus.biomass),
@@ -55,6 +57,7 @@ export function buildDetailedScoutIntel(nexus: Nexus): ScoutIntel {
       alloyForge:     nexus.alloyForge,
       oreExtractor:   nexus.oreExtractor,
       shieldGrid:     nexus.shieldGrid,
+      armory:         n['armory'] ?? 0,
     },
     troops: {
       lancerDrone:         nexus.lancerDrone,
@@ -68,6 +71,8 @@ export function buildDetailedScoutIntel(nexus: Nexus): ScoutIntel {
       disruptorUnit:       nexus.disruptorUnit,
       interceptorBike:     nexus.interceptorBike,
       annihilatorPlatform: nexus.annihilatorPlatform,
+      voidStalker:         n['voidStalker'] ?? 0,
+      plasmaTurret:        n['plasmaTurret'] ?? 0,
       overseer:            nexus.overseer,
     },
     population: {

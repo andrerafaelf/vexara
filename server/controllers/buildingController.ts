@@ -16,6 +16,8 @@ const BUILDING_COSTS: Record<string, { biomass: number; alloy: number; ore: numb
   alloyForge: { biomass: 65, alloy: 40, ore: 60, time: 70 },
   oreExtractor: { biomass: 75, alloy: 65, ore: 70, time: 90 },
   shieldGrid: { biomass: 50, alloy: 100, ore: 60, time: 115 },
+  // Armory: amplifies unit class-counter bonuses and unlocks Void Stalker / Plasma Turret
+  armory: { biomass: 120, alloy: 180, ore: 140, time: 130 },
 };
 
 const BUILDING_RULES: Record<string, {
@@ -79,6 +81,14 @@ const BUILDING_RULES: Record<string, {
       { level: 8, requires: [{ building: 'alloyForge', level: 5 }] },
     ],
   },
+  armory: {
+    maxLevel: 20, unlock: { building: 'commandCore', level: 5 },
+    milestones: [
+      { level: 3,  requires: [{ building: 'recruitmentCore', level: 5 }] },
+      { level: 5,  requires: [{ building: 'recruitmentCore', level: 7 }, { building: 'shieldGrid', level: 3 }] },
+      { level: 10, requires: [{ building: 'commandCore', level: 10 }, { building: 'recruitmentCore', level: 10 }] },
+    ],
+  },
 };
 
 const COST_SCALING = { early: 1.5, mid: 1.65, late: 1.8 };
@@ -88,7 +98,7 @@ const COMMAND_BUILD_TIME_FACTOR_PER_LEVEL = 0.95;
 const BUILDING_NAMES: Record<string, string> = {
   commandCore: 'Command Core', recruitmentCore: 'Recruitment Core', lifeSupport: 'Life Support',
   storageVault: 'Storage Vault', biomassFarm: 'Biomass Farm', alloyForge: 'Alloy Forge',
-  oreExtractor: 'Ore Extractor', shieldGrid: 'Shield Grid',
+  oreExtractor: 'Ore Extractor', shieldGrid: 'Shield Grid', armory: 'Armory',
 };
 
 function getCommandTimeFactor(commandLevel: number) {
@@ -147,6 +157,7 @@ function getPlannedBuildingLevels(nexus: Record<string, unknown>) {
     lifeSupport: nexus.lifeSupport as number, storageVault: nexus.storageVault as number,
     biomassFarm: nexus.biomassFarm as number, alloyForge: nexus.alloyForge as number,
     oreExtractor: nexus.oreExtractor as number, shieldGrid: nexus.shieldGrid as number,
+    armory: (nexus.armory as number) || 0,
   };
   const buildQueue = normalizeBuildQueue(nexus.buildQueue);
   for (const queued of buildQueue) {

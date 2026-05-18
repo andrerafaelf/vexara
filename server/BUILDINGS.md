@@ -122,6 +122,21 @@ Command Core's own next upgrade) by 0.95. The reduction stacks compoundingly:
 - Impact:
   - Grants +2% total defense per level during combat
 
+### Armory
+
+- Role: Combat class-counter amplifier; unlocks advanced units
+- Base cost: Biomass 120, Alloy 180, Ore 140, Time 130s
+- Max level: 20
+- Unlock: Command Core Lv5
+- Milestones:
+  - Lv3 requires Recruitment Core Lv5
+  - Lv5 requires Recruitment Core Lv7, Shield Grid Lv3
+  - Lv10 requires Command Core Lv10, Recruitment Core Lv10
+- Impact:
+  - Each level adds +1.5% amplification to unit class-counter bonuses (cap +30% at Lv20)
+  - Lv3: Unlocks Void Stalker training
+  - Lv5: Unlocks Plasma Turret training
+
 ## Starting Levels
 
 New nexuses start with:
@@ -134,5 +149,6 @@ New nexuses start with:
 - Alloy Forge: 1
 - Ore Extractor: 1
 - Shield Grid: 0
+- Armory: 0
 
 _Last Updated: May 2026_

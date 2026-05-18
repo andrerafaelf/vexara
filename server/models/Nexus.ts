@@ -188,9 +188,19 @@ export async function applyQuestRewards(
 
 // --- DB helpers ---
 
+// Lazily computes current resources without always writing to the DB.
+// Only persists when the staleness exceeds 5 minutes — reduces write pressure while
+// keeping displayed values accurate on every read.
+const LAZY_WRITE_THRESHOLD_MS = 5 * 60 * 1000;
+
 export async function refreshResources(nexus: Nexus): Promise<Nexus> {
   const resourceUpdate = computeResourceUpdate(nexus);
   const points = calculatePoints({ ...nexus, ...resourceUpdate });
+  const staleMs = resourceUpdate.lastResourceUpdate.getTime() - nexus.lastResourceUpdate.getTime();
+  if (staleMs < LAZY_WRITE_THRESHOLD_MS) {
+    // Return computed values without hitting the DB
+    return { ...nexus, ...resourceUpdate, points };
+  }
   return prisma.nexus.update({ where: { id: nexus.id }, data: { ...resourceUpdate, points } });
 }
 
@@ -387,9 +397,9 @@ export async function updateAllResources(): Promise<void> {
           galaxyId: true, x: true, y: true,
           biomassFarm: true, alloyForge: true, oreExtractor: true, storageVault: true,
           biomass: true, alloy: true, ore: true, lastResourceUpdate: true,
-          commandCore: true, recruitmentCore: true, lifeSupport: true, shieldGrid: true,
+          commandCore: true, recruitmentCore: true, lifeSupport: true, shieldGrid: true, armory: true,
           lancerDrone: true, assaultTrooper: true, breakerUnit: true, reconOperative: true,
-          skimmerBike: true, siegeMech: true,
+          skimmerBike: true, siegeMech: true, voidStalker: true, plasmaTurret: true,
         },
       }),
       loadActiveStorms(),
@@ -457,12 +467,16 @@ export function serializeNexus(v: NexusWithQuests, opts: { ownerData?: unknown }
       commandCore: v.commandCore, recruitmentCore: v.recruitmentCore, lifeSupport: v.lifeSupport,
       storageVault: v.storageVault, biomassFarm: v.biomassFarm, alloyForge: v.alloyForge,
       oreExtractor: v.oreExtractor, shieldGrid: v.shieldGrid,
+      armory: (v as unknown as { armory?: number }).armory ?? 0,
     },
     troops: {
       lancerDrone: v.lancerDrone, assaultTrooper: v.assaultTrooper, breakerUnit: v.breakerUnit,
       reconOperative: v.reconOperative, skimmerBike: v.skimmerBike, siegeMech: v.siegeMech,
       bulwarkGuard: v.bulwarkGuard, suppressorTeam: v.suppressorTeam, disruptorUnit: v.disruptorUnit,
-      interceptorBike: v.interceptorBike, annihilatorPlatform: v.annihilatorPlatform, overseer: v.overseer,
+      interceptorBike: v.interceptorBike, annihilatorPlatform: v.annihilatorPlatform,
+      voidStalker: (v as unknown as { voidStalker?: number }).voidStalker ?? 0,
+      plasmaTurret: (v as unknown as { plasmaTurret?: number }).plasmaTurret ?? 0,
+      overseer: v.overseer,
     },
     population: { current: v.populationCurrent, max: v.populationMax },
     buildQueue: (v.buildQueue as unknown[]) ?? [],

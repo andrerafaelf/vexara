@@ -2,14 +2,28 @@
 
 ## Overview
 
-Vexara features 12 troop types. Units are trained in the Recruitment Core and consume population capacity.
+Vexara features 14 troop types across 4 unit classes. Units are trained in the Recruitment Core and consume population capacity.
+
+## Unit Classes & Counter System
+
+Every unit belongs to a class. Classes form a counter triangle:
+
+| Attacker Class | Counters | Multiplier |
+|---------------|----------|------------|
+| Light         | Heavy    | ×1.35 dmg  |
+| Heavy         | Special  | ×1.35 dmg  |
+| Ranged        | Light    | ×1.35 dmg  |
+| (any)         | Countered-by class | ×0.70–0.80 dmg |
+
+The **Armory** building amplifies counter bonuses by +1.5% per level (max +30% at Lv20). Mixed compositions that match your counters against the enemy's class split are optimal.
 
 ## Core Combat Notes
 
-- Attack Power = sum of (unit attack × unit count)
-- Defense Power = sum of (unit defense × unit count)
+- Attack Power = class-weighted sum of (unit attack × unit count × counter multiplier vs defender composition)
+- Defense Power = sum of (unit defense × unit count), boosted by Shield Grid
 - Shield Grid provides +2% total defense per level
-- Casualties are ratio-based with a random factor
+- Casualties scale with power ratio; variance is smaller for large stacks (±4%) than small (<20 units, ±15%)
+- All losses are seeded deterministically per battle — replays are reproducible
 - Overseers reduce enemy control by 50 on a successful attack if they survive
 
 ## Recruitment Core Training-Time Reduction
@@ -28,8 +42,9 @@ wait behind it (and vice versa).
 
 ### Assault Trooper
 
-- Role: Defensive frontline infantry
-- Stats: Attack 30, Defense 40, Speed 18, Carry 15
+- Role: Heavy frontline infantry — counters Special units
+- Class: Heavy
+- Stats: Attack 30, Defense 45, Speed 18, Carry 15
 - Cost: Biomass 150, Alloy 150, Ore 350
 - Population: 1
 - Training Time: 1m 19s
@@ -37,18 +52,20 @@ wait behind it (and vice versa).
 
 ### Lancer Drone
 
-- Role: Early defensive interceptor
-- Stats: Attack 15, Defense 25, Speed 20, Carry 20
-- Cost: Biomass 250, Alloy 150, Ore 50
+- Role: Ranged interceptor — counters Light units
+- Class: Ranged
+- Stats: Attack 15, Defense 28, Speed 20, Carry 20
+- Cost: Biomass 150, Alloy 150, Ore 200
 - Population: 1
 - Training Time: 53s
 - Requirements: Recruitment Core Lv2
 
 ### Breaker Unit
 
-- Role: Heavy breacher
-- Stats: Attack 50, Defense 15, Speed 16, Carry 10
-- Cost: Biomass 300, Alloy 150, Ore 200
+- Role: Light assault breacher — counters Heavy units
+- Class: Light
+- Stats: Attack 55, Defense 15, Speed 16, Carry 10
+- Cost: Biomass 250, Alloy 150, Ore 300
 - Population: 1
 - Training Time: 1m 14s
 - Requirements:
@@ -57,9 +74,10 @@ wait behind it (and vice versa).
 
 ### Recon Operative
 
-- Role: Scout / support unit
+- Role: Scout / support unit (Special class — no counter bonus)
+- Class: Special
 - Stats: Attack 5, Defense 20, Speed 25, Carry 10
-- Cost: Biomass 500, Alloy 150, Ore 300
+- Cost: Biomass 400, Alloy 150, Ore 400
 - Population: 1
 - Training Time: 3m 0s
 - Requirements:
@@ -70,8 +88,9 @@ wait behind it (and vice versa).
 
 ### Skimmer Bike
 
-- Role: Fast raider
-- Stats: Attack 80, Defense 70, Speed 22, Carry 60
+- Role: Fast light raider — counters Heavy units
+- Class: Light
+- Stats: Attack 80, Defense 65, Speed 22, Carry 60
 - Cost: Biomass 625, Alloy 500, Ore 750
 - Population: 3
 - Training Time: 10m 0s
@@ -81,8 +100,9 @@ wait behind it (and vice versa).
 
 ### Bulwark Guard
 
-- Role: Elite defensive infantry
-- Stats: Attack 20, Defense 120, Speed 12, Carry 25
+- Role: Elite heavy defender — counters Special units
+- Class: Heavy
+- Stats: Attack 20, Defense 130, Speed 12, Carry 25
 - Cost: Biomass 400, Alloy 600, Ore 500
 - Population: 2
 - Training Time: 8m 0s
@@ -92,8 +112,9 @@ wait behind it (and vice versa).
 
 ### Suppressor Team
 
-- Role: Ranged assault support
-- Stats: Attack 60, Defense 50, Speed 15, Carry 20
+- Role: Ranged suppressor — counters Light units
+- Class: Ranged
+- Stats: Attack 65, Defense 45, Speed 15, Carry 20
 - Cost: Biomass 450, Alloy 400, Ore 450
 - Population: 2
 - Training Time: 8m 0s
@@ -103,8 +124,9 @@ wait behind it (and vice versa).
 
 ### Disruptor Unit
 
-- Role: Anti-armor assault unit
-- Stats: Attack 70, Defense 60, Speed 17, Carry 25
+- Role: Ranged anti-armor — counters Light units
+- Class: Ranged
+- Stats: Attack 75, Defense 55, Speed 17, Carry 25
 - Cost: Biomass 550, Alloy 750, Ore 650
 - Population: 2
 - Training Time: 11m 0s
@@ -114,8 +136,9 @@ wait behind it (and vice versa).
 
 ### Interceptor Bike
 
-- Role: Rapid-response cavalry
-- Stats: Attack 90, Defense 80, Speed 28, Carry 50
+- Role: Light rapid-response cavalry — counters Heavy units
+- Class: Light
+- Stats: Attack 95, Defense 75, Speed 28, Carry 50
 - Cost: Biomass 750, Alloy 600, Ore 900
 - Population: 3
 - Training Time: 15m 0s
@@ -125,8 +148,9 @@ wait behind it (and vice versa).
 
 ### Siege Mech
 
-- Role: Heavy defensive anchor
-- Stats: Attack 150, Defense 200, Speed 10, Carry 80
+- Role: Heavy siege anchor — counters Special units
+- Class: Heavy
+- Stats: Attack 150, Defense 210, Speed 10, Carry 80
 - Cost: Biomass 1250, Alloy 1000, Ore 2000
 - Population: 4
 - Training Time: 1h 0m
@@ -137,8 +161,9 @@ wait behind it (and vice versa).
 
 ### Annihilator Platform
 
-- Role: Heavy artillery
-- Stats: Attack 200, Defense 150, Speed 8, Carry 100
+- Role: Heavy ranged artillery — counters light units
+- Class: Ranged
+- Stats: Attack 210, Defense 140, Speed 8, Carry 100
 - Cost: Biomass 2000, Alloy 1750, Ore 3000
 - Population: 5
 - Training Time: 2h 0m
@@ -146,6 +171,39 @@ wait behind it (and vice versa).
   - Recruitment Core Lv12
   - Command Core Lv10
   - Shield Grid Lv10
+
+### Void Stalker
+
+- Role: Ultra-fast light cavalry — hard-counters ranged emplacements
+- Class: Light
+- Stats: Attack 110, Defense 50, Speed 32, Carry 40
+- Cost: Biomass 900, Alloy 700, Ore 1100
+- Population: 3
+- Training Time: 20m 0s
+- Requirements:
+  - Recruitment Core Lv9
+  - Alloy Forge Lv8
+  - Armory Lv3
+- Notes:
+  - Fastest unit in the game (speed 32)
+  - Excellent counter vs Suppressor Team, Lancer Drone, Disruptor Unit, Annihilator Platform
+
+### Plasma Turret
+
+- Role: Immobile ranged emplacement — cannot attack, defends nexus only
+- Class: Ranged
+- Stats: Attack 180, Defense 90, Speed 0, Carry 0
+- Cost: Biomass 1500, Alloy 1200, Ore 2500
+- Population: 4
+- Training Time: 1h 30m
+- Requirements:
+  - Recruitment Core Lv11
+  - Command Core Lv9
+  - Armory Lv5
+- Notes:
+  - Speed 0 — cannot be sent on attacks or transfers; stripped from raiding armies
+  - Remains on nexus and participates in defense when attacked
+  - Counters light cavalry (Void Stalker, Skimmer Bike, Interceptor Bike, Breaker Unit)
 
 ### Overseer
 

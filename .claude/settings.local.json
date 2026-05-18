@@ -23,7 +23,8 @@
       "PowerShell(node client/node_modules/typescript/bin/tsc --noEmit -p client/tsconfig.json 2>&1)",
       "Bash(node -e ' *)",
       "Bash(Get-ChildItem -Path \"c:\\\\projects\\\\vexara\" -Recurse -Include \"tailwind.config.*\", \"globals.css\", \"*.css\", \"*.config.*\" -File)",
-      "Bash(Select-Object -ExpandProperty FullName)"
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(dir \"c:\\\\projects\\\\vexara\\\\client\\\\src\\\\assets\\\\buildings\")"
     ],
     "additionalDirectories": [
       "c:\\projects\\vexara"

@@ -23,6 +23,8 @@ const TROOP_NAMES: Record<string, string> = {
   disruptorUnit: 'Disruptor Unit',
   interceptorBike: 'Interceptor Bike',
   annihilatorPlatform: 'Annihilator Platform',
+  voidStalker: 'Void Stalker',
+  plasmaTurret: 'Plasma Turret',
   overseer: 'Overseer',
 };
 
@@ -38,6 +40,8 @@ const TROOP_SHORT: Record<string, string> = {
   disruptorUnit: 'Disruptor',
   interceptorBike: 'Interceptor',
   annihilatorPlatform: 'Annihilator',
+  voidStalker: 'Void Stalker',
+  plasmaTurret: 'Plasma Turret',
   overseer: 'Overseer',
 };
 
