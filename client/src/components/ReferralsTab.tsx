@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import {
   getMyNexuses,
   getMyPendingTokens,
+  getMyReferralCode,
   getMyReferrals,
   getMyReferrer,
   redeemMilestoneToken,
@@ -103,6 +104,8 @@ export default function ReferralsTab() {
   const [referrerInput, setReferrerInput] = useState('');
   const [referrerError, setReferrerError] = useState('');
   const [referrerSubmitting, setReferrerSubmitting] = useState(false);
+  const [myReferralCode, setMyReferralCode] = useState('');
+  const [codeCopied, setCodeCopied] = useState(false);
 
   const [redeemState, setRedeemState] = useState<RedeemState | null>(null);
   const [redeemError, setRedeemError] = useState('');
@@ -113,10 +116,11 @@ export default function ReferralsTab() {
 
   const load = async () => {
     try {
-      const [referralsRes, pendingRes, referrerRes, nexusRes] = await Promise.all([
+      const [referralsRes, pendingRes, referrerRes, codeRes, nexusRes] = await Promise.all([
         getMyReferrals(),
         getMyPendingTokens(),
         getMyReferrer(),
+        getMyReferralCode(),
         getMyNexuses(),
       ]);
       setReferrals(referralsRes.data as ReferralRow[]);
@@ -124,6 +128,7 @@ export default function ReferralsTab() {
       setPendingReferralTokens(pending.referral ?? []);
       setPendingMilestoneTokens(pending.milestone ?? []);
       setReferrer_((referrerRes.data as { referrer: ReferrerInfo | null }).referrer);
+      setMyReferralCode((codeRes.data as { referralCode: string }).referralCode ?? '');
       const mappedNexuses: NexusSummary[] = (nexusRes.data as any[]).map((n: any) => ({
         id: String(n.id),
         name: n.name,
@@ -319,6 +324,36 @@ export default function ReferralsTab() {
               ))}
             </div>
           )}
+        </section>
+      )}
+
+      {/* Your referral code — account-bound, unique across galaxies */}
+      {myReferralCode && (
+        <section className="referrals-section">
+          <h3 className="referrals-section-title">Your Referral Code</h3>
+          <p className="referrals-hint">
+            Share this code with friends. It is tied to your account across every galaxy.
+          </p>
+          <div className="referrals-referrer-card">
+            <span className="referrals-referrer-name" style={{ fontFamily: 'monospace', letterSpacing: '0.1em' }}>
+              {myReferralCode}
+            </span>
+            <button
+              type="button"
+              className="referrals-btn primary"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(myReferralCode);
+                  setCodeCopied(true);
+                  setTimeout(() => setCodeCopied(false), 1500);
+                } catch {
+                  // clipboard unavailable
+                }
+              }}
+            >
+              {codeCopied ? 'Copied!' : 'Copy'}
+            </button>
+          </div>
         </section>
       )}
 

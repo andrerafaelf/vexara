@@ -299,6 +299,19 @@ export async function setReferrer(req: AuthRequest, res: Response): Promise<void
   }
 }
 
+export async function getMyReferralCode(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const me = await prisma.user.findUnique({
+      where: { id: req.userId! },
+      select: { referralCode: true },
+    });
+    if (!me) { res.status(404).json({ error: 'User not found' }); return; }
+    res.json({ referralCode: me.referralCode });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
 export async function getMyReferrer(req: AuthRequest, res: Response): Promise<void> {
   try {
     const me = await prisma.user.findUnique({

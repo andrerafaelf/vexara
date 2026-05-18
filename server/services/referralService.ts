@@ -1,7 +1,29 @@
+import { randomInt } from 'crypto';
 import prisma from '../lib/prisma.js';
 
 export const REFERRAL_THRESHOLD = 1000;
 export const MILESTONE_THRESHOLD = 500;
+
+// Unambiguous alphabet: no 0/O/1/I/L. 8 chars → ~1.1e12 combinations.
+const REFERRAL_CODE_ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+const REFERRAL_CODE_LENGTH = 8;
+
+function randomReferralCode(): string {
+  let out = '';
+  for (let i = 0; i < REFERRAL_CODE_LENGTH; i++) {
+    out += REFERRAL_CODE_ALPHABET[randomInt(REFERRAL_CODE_ALPHABET.length)];
+  }
+  return out;
+}
+
+export async function generateUniqueReferralCode(): Promise<string> {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const code = randomReferralCode();
+    const clash = await prisma.user.findUnique({ where: { referralCode: code }, select: { id: true } });
+    if (!clash) return code;
+  }
+  throw new Error('Failed to generate unique referral code after 5 attempts');
+}
 
 // --- Referral tokens (earned by the referrer when referee hits REFERRAL_THRESHOLD) ---
 

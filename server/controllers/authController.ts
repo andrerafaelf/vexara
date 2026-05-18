@@ -7,6 +7,17 @@ import { sendAlphaWelcome } from '../services/emailService.js';
 import { detectEmailTypo, validateEmail, validateUsername } from '../utils/validation.js';
 
 export async function register(_req: Request, res: Response): Promise<void> {
+  // TODO(release): enable public registration. Required body fields:
+  //   { username, email, password, referralCode }
+  // - referralCode is MANDATORY at release (no post-login set-referrer fallback for new accounts)
+  // - Look up the referrer via prisma.user.findUnique({ where: { referralCode } })
+  // - Reject if: code is missing/invalid, referrer.id === self (cannot happen pre-create, but guard
+  //   anyway), or req.ip matches referrer.registrationIp (same-network multi-account abuse)
+  // - In a single transaction: hash password, generate the new user's own referralCode via
+  //   referralService.generateUniqueReferralCode(), then prisma.user.create with
+  //   { username, email, password, referredById, registrationIp: req.ip, referralCode }
+  // - Once this is live, the alpha-only POST /referral/set-referrer endpoint should be removed
+  //   (it allows linking a referrer post-hoc by username, which won't be needed at release).
   res.status(403).json({ error: 'Registration is disabled' });
 }
 

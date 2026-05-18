@@ -1,5 +1,6 @@
 import prisma from '../../server/lib/prisma.js';
 import { hashPassword } from '../../server/models/User.js';
+import { generateUniqueReferralCode } from '../../server/services/referralService.js';
 import { getPopulationMax } from '../../server/utils/population.js';
 
 const TROOP_KEYS = ['lancerDrone', 'assaultTrooper', 'breakerUnit', 'reconOperative', 'skimmerBike', 'siegeMech', 'bulwarkGuard', 'suppressorTeam', 'disruptorUnit', 'interceptorBike', 'annihilatorPlatform', 'overseer'] as const;
@@ -51,8 +52,9 @@ export function createUser(username: string, email: string, password: string) {
   return hashPassword(password).then(async (hashedPassword) => {
     const userCount = await prisma.user.count();
     const isAlphaFounder = userCount < ALPHA_FOUNDER_LIMIT;
+    const referralCode = await generateUniqueReferralCode();
     // Do NOT auto-join a galaxy or create a nexus — the user picks a galaxy themselves on first login.
-    const user = await prisma.user.create({ data: { username, email: email.toLowerCase(), password: hashedPassword, isAlphaFounder } });
+    const user = await prisma.user.create({ data: { username, email: email.toLowerCase(), password: hashedPassword, isAlphaFounder, referralCode } });
     return { user };
   });
 }

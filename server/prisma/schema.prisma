@@ -34,6 +34,7 @@ model User {
 
   referredById     Int?
   registrationIp   String?   @db.VarChar(45)
+  referralCode     String    @unique @db.VarChar(12)
   referredBy       User?     @relation("UserReferrals", fields: [referredById], references: [id], onDelete: SetNull)
   referrals        User[]    @relation("UserReferrals")
   referralTokens   ReferralToken[]
