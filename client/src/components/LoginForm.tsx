@@ -44,70 +44,106 @@ const LoginForm: React.FC = () => {
 
   return (
     <div className="auth-container">
-      <div className="auth-box">
-        <Link href="/" className="auth-logo-link" aria-label="Vexara home">
-          <Image
-            src="/vexara-logo.png"
-            alt="Vexara"
-            width={96}
-            height={96}
-            className="auth-logo"
-            priority
-          />
-        </Link>
-        <h1>Vexara</h1>
-        <p className="tagline">Build. Conquer. Dominate.</p>
-
-        <form onSubmit={handleSubmit} noValidate>
-          <label className="auth-field">
-            <span className="auth-label">Username</span>
-            <input
-              type="text"
-              placeholder="commander"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              autoCapitalize="none"
-              autoCorrect="off"
-              autoComplete="username"
-              spellCheck={false}
-              required
-              aria-invalid={Boolean(error)}
-            />
-          </label>
-
-          <label className="auth-field">
-            <span className="auth-label">Password</span>
-            <input
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoCapitalize="none"
-              autoCorrect="off"
-              autoComplete="current-password"
-              spellCheck={false}
-              required
-              aria-invalid={Boolean(error)}
-            />
-          </label>
-
-          {error && (
-            <div className="auth-error" role="alert">
-              {error}
+      <div className="auth-panel-left">
+        <div
+          className="auth-panel-left-bg"
+          style={{ backgroundImage: 'url(/vexara-overview.png)' }}
+        />
+        <div className="auth-panel-left-overlay" />
+        <div className="auth-panel-left-copy">
+          <p className="auth-panel-eyebrow">Live galaxy</p>
+          <h2 className="auth-panel-headline">
+            A persistent world.<br />Real opponents.<br />No resets.
+          </h2>
+          <p className="auth-panel-sub">
+            Build a nexus, control three resources, train twelve unit types,
+            and conquer real players in a galaxy that never stops running.
+          </p>
+          <div className="auth-panel-stats">
+            <div className="auth-panel-stat">
+              <span className="auth-panel-stat-value">12</span>
+              <span className="auth-panel-stat-label">Unit types</span>
             </div>
-          )}
+            <div className="auth-panel-stat">
+              <span className="auth-panel-stat-value">8</span>
+              <span className="auth-panel-stat-label">Buildings</span>
+            </div>
+            <div className="auth-panel-stat">
+              <span className="auth-panel-stat-value">24/7</span>
+              <span className="auth-panel-stat-label">Live economy</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
-          <button type="submit" disabled={submitting}>
-            {submitting ? 'Signing in…' : 'Sign in'}
-          </button>
-        </form>
-
-        <p className="auth-secondary">
-          Don&apos;t have an account?{' '}
-          <Link href="/register" className="auth-link">
-            Request alpha access
+      <div className="auth-panel-right">
+        <div className="auth-form-wrap">
+          <Link href="/" className="auth-wordmark" aria-label="Vexara home">
+            <Image
+              src="/vexara-logo.png"
+              alt=""
+              width={32}
+              height={32}
+              className="auth-wordmark-logo"
+              priority
+            />
+            <span className="auth-wordmark-name">Vexara</span>
           </Link>
-        </p>
+
+          <h1 className="auth-form-heading">Sign in</h1>
+          <p className="auth-form-subheading">Continue to your nexus.</p>
+
+          <form className="auth-form" onSubmit={handleSubmit} noValidate>
+            <label className="auth-field">
+              <span className="auth-label">Username</span>
+              <input
+                type="text"
+                placeholder="commander"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                autoCapitalize="none"
+                autoCorrect="off"
+                autoComplete="username"
+                spellCheck={false}
+                required
+                aria-invalid={Boolean(error)}
+              />
+            </label>
+
+            <label className="auth-field">
+              <span className="auth-label">Password</span>
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoCapitalize="none"
+                autoCorrect="off"
+                autoComplete="current-password"
+                spellCheck={false}
+                required
+                aria-invalid={Boolean(error)}
+              />
+            </label>
+
+            {error && (
+              <div className="auth-error" role="alert">
+                {error}
+              </div>
+            )}
+
+            <button type="submit" className="auth-submit" disabled={submitting}>
+              {submitting ? 'Signing in…' : 'Sign in'}
+            </button>
+          </form>
+
+          <p className="auth-secondary">
+            Don&apos;t have an account?{' '}
+            <Link href="/register" className="auth-link">
+              Request alpha access
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

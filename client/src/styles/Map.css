@@ -65,8 +65,8 @@
   background: var(--color-navy-500);
   color: var(--text-strong);
   padding: 5px 10px;
-  border-radius: 5px;
-  font-size: 12px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
 }
 
 .map-controls button:hover {
@@ -87,8 +87,9 @@
   align-items: center;
   gap: 6px;
   padding: 4px 8px;
-  border-radius: 6px;
-  background: rgba(26,31,56, 0.9);
+  border-radius: var(--radius-sm);
+  background: var(--color-navy-800);
+  border: 1px solid var(--border-default);
 }
 
 .map-coordinate-controls span {
@@ -99,11 +100,11 @@
 .map-coordinate-controls input {
   width: 50px;
   padding: 3px 6px;
-  border: 1px solid var(--accent-2);
-  border-radius: 4px;
-  background: var(--color-navy-800);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--color-navy-900);
   color: var(--text-strong);
-  font-size: 12px;
+  font-size: var(--text-sm);
   text-align: center;
 }
 
@@ -232,7 +233,7 @@
 .map-grid {
   display: inline-block;
   border: 1px solid rgba(255, 158, 61,0.12);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   overflow: visible;
   user-select: none;
   touch-action: none;
@@ -402,9 +403,9 @@
   width: 350px;
   height: 100%;
   background: var(--color-navy-800);
-  border-left: 2px solid var(--color-navy-700);
+  border-left: 1px solid var(--border-default);
   overflow-y: auto;
-  padding: 20px;
+  padding: var(--space-5);
   box-sizing: border-box;
 }
 
@@ -438,10 +439,11 @@
 .detail-line {
   display: flex;
   justify-content: space-between;
-  padding: 10px;
-  background: var(--color-navy-700);
-  margin-bottom: 8px;
-  border-radius: 4px;
+  padding: 9px 12px;
+  background: var(--color-navy-900);
+  border: 1px solid var(--border-default);
+  margin-bottom: var(--space-2);
+  border-radius: var(--radius-sm);
 }
 
 .detail-line span:first-child {
@@ -473,12 +475,12 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(0, 200, 150, 0.1);
-  border: 1px solid rgba(0, 200, 150, 0.35);
-  border-radius: 6px;
+  background: var(--success-soft);
+  border: 1px solid rgba(86, 211, 100, 0.35);
+  border-radius: var(--radius-sm);
   padding: 6px 10px;
-  margin: 8px 0;
-  font-size: 12px;
+  margin: var(--space-2) 0;
+  font-size: var(--text-sm);
 }
 
 .newbie-protection-icon {
@@ -490,12 +492,13 @@
 }
 
 .intel-warning {
-  margin-top: 12px;
-  padding: 12px;
-  border-radius: 6px;
-  background: var(--color-navy-700);
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-navy-900);
+  border: 1px solid var(--border-default);
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: var(--text-sm);
   line-height: 1.5;
 }
 
@@ -504,26 +507,32 @@
 }
 
 .scout-btn {
-  background: var(--color-navy-500);
-  color: var(--text-strong);
-  padding: 12px 16px;
-  border-radius: 6px;
-  font-weight: bold;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-default);
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  transition: background var(--duration-fast) var(--ease-out),
+              color var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out);
 }
 
 .scout-btn:hover {
-  background: var(--color-navy-400);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-strong);
+  border-color: var(--border-strong);
 }
 
 .scout-btn:disabled {
-  background: var(--color-navy-400);
-  color: var(--text-muted);
+  opacity: 0.45;
   cursor: not-allowed;
-  opacity: 0.8;
 }
 
 .scout-btn:disabled:hover {
-  background: var(--color-navy-400);
+  background: transparent;
+  border-color: var(--border-default);
+  color: var(--text-muted);
 }
 
 .nexus-action-buttons {
@@ -537,9 +546,9 @@
   background: var(--accent);
   color: var(--text-on-accent);
   padding: 12px;
-  font-size: 15px;
-  font-weight: bold;
-  border-radius: 6px;
+  font-size: var(--text-md);
+  font-weight: 700;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -559,11 +568,11 @@
 }
 
 .support-btn {
-  background: var(--color-navy-700);
+  background: var(--success-soft);
   color: var(--success);
   border: 1px solid rgba(86, 211, 100, 0.35);
   padding: 10px 14px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -582,11 +591,11 @@
 }
 
 .wave-planner-btn {
-  background: var(--color-navy-700);
+  background: transparent;
   color: var(--text-muted);
-  border: 1px solid var(--color-navy-500);
+  border: 1px solid var(--border-default);
   padding: 10px 14px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -605,9 +614,10 @@
 }
 
 .attack-form {
-  background: var(--color-navy-700);
-  padding: 15px;
-  border-radius: 8px;
+  background: var(--color-navy-900);
+  border: 1px solid var(--border-default);
+  padding: var(--space-4);
+  border-radius: var(--radius-sm);
   max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
@@ -632,9 +642,10 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: var(--color-navy-500);
+  background: var(--color-navy-900);
+  border: 1px solid var(--border-default);
   padding: 8px 10px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   min-width: 0;
 }
 
@@ -653,8 +664,8 @@
   width: 56px;
   flex-shrink: 0;
   padding: 5px 6px;
-  border: 1px solid var(--accent-2);
-  border-radius: 6px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
   background: var(--color-navy-800);
   color: var(--text-strong);
   font-size: 13px;
@@ -705,15 +716,21 @@
 
 .send-all-btn {
   flex: 1;
-  background: var(--color-navy-500);
-  color: var(--text-strong);
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-default);
   padding: 12px;
-  border-radius: 6px;
-  font-weight: bold;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  transition: background var(--duration-fast) var(--ease-out),
+              color var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out);
 }
 
 .send-all-btn:hover {
-  background: var(--color-navy-400);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-strong);
+  border-color: var(--border-strong);
 }
 
 .send-all-btn:disabled {
@@ -722,7 +739,9 @@
 }
 
 .send-all-btn:disabled:hover {
-  background: var(--color-navy-500);
+  background: transparent;
+  border-color: var(--border-default);
+  color: var(--text-muted);
 }
 
 .send-btn {
@@ -730,8 +749,9 @@
   background: var(--accent);
   color: var(--text-on-accent);
   padding: 12px;
-  border-radius: 6px;
-  font-weight: bold;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  box-shadow: var(--shadow-xs), inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .send-btn:hover {
@@ -740,14 +760,20 @@
 
 .cancel-btn {
   flex: 1;
-  background: var(--color-navy-700);
+  background: transparent;
   color: var(--text-muted);
+  border: 1px solid var(--border-default);
   padding: 12px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
+  transition: background var(--duration-fast) var(--ease-out),
+              color var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out);
 }
 
 .cancel-btn:hover {
-  background: var(--color-navy-500);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-strong);
+  border-color: var(--border-strong);
 }
 
 .no-selection {
@@ -761,17 +787,18 @@
 }
 
 .legend {
-  background: var(--color-navy-700);
-  padding: 15px;
-  border-radius: 6px;
-  font-size: 14px;
+  background: var(--color-navy-900);
+  border: 1px solid var(--border-default);
+  padding: var(--space-4);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-base);
   line-height: 1.8;
 }
 
 .attacks-panel {
-  margin-top: 30px;
-  border-top: 2px solid var(--color-navy-700);
-  padding-top: 20px;
+  margin-top: var(--space-6);
+  border-top: 1px solid var(--border-default);
+  padding-top: var(--space-5);
 }
 
 .attacks-section {
@@ -785,11 +812,12 @@
 }
 
 .attack-item {
-  background: var(--color-navy-700);
-  padding: 12px;
-  border-radius: 6px;
-  margin-bottom: 8px;
-  border-left: 4px solid transparent;
+  background: var(--color-navy-900);
+  border: 1px solid var(--border-default);
+  padding: 11px 12px;
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-2);
+  border-left: 3px solid transparent;
 }
 
 .attack-item.incoming {

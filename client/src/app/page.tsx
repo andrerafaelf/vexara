@@ -13,6 +13,7 @@ const SELECTED_NEXUS_KEY = 'selectedNexusId';
 export default function Home() {
   const router = useRouter();
   const toast = useToast();
+  const isAuthed = typeof window !== 'undefined' && !!localStorage.getItem('token');
   const { nexuses, isLoading } = useMyNexuses();
   const [creating, setCreating] = useState(false);
   const [activeGalaxy, setActiveGalaxy] = useState<Galaxy | null>(null);
@@ -71,7 +72,7 @@ export default function Home() {
 
   // While we're determining where to go, render nothing (no "Loading..." text)
   const hasStoredNexus = typeof window !== 'undefined' && !!localStorage.getItem(SELECTED_NEXUS_KEY);
-  if (isLoading || nexuses.length > 0 || hasStoredNexus) {
+  if (!isAuthed || isLoading || nexuses.length > 0 || hasStoredNexus) {
     return null;
   }
 
