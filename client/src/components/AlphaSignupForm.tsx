@@ -72,6 +72,7 @@ const AlphaSignupForm: React.FC = () => {
   const [signupCount, setSignupCount] = useState<number | null>(null);
   const [bgIndex, setBgIndex] = useState(0);
   const [fading, setFading] = useState(false);
+  const [zooming, setZooming] = useState(true);
   const { isAuthenticated } = useAuth();
   const router = useRouter();
 
@@ -90,9 +91,11 @@ const AlphaSignupForm: React.FC = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       setFading(true);
+      setZooming(false);
       setTimeout(() => {
         setBgIndex(i => (i + 1) % SCREENSHOTS.length);
         setFading(false);
+        setZooming(true);
       }, 800);
     }, 5000);
     return () => clearInterval(interval);
@@ -128,7 +131,7 @@ const AlphaSignupForm: React.FC = () => {
     <div className="auth-container">
       <div className="auth-panel-left">
         <div
-          className={`auth-panel-left-bg${fading ? ' fading' : ''}`}
+          className={`auth-panel-left-bg${fading ? ' fading' : ''}${zooming ? ' zooming' : ''}`}
           style={{ backgroundImage: `url(${SCREENSHOTS[bgIndex]})` }}
         />
         <div className="auth-panel-left-overlay" />

@@ -17,15 +17,18 @@ const LoginForm: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [bgIndex, setBgIndex] = useState(0);
   const [fading, setFading] = useState(false);
+  const [zooming, setZooming] = useState(true);
   const { login, isAuthenticated } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     const interval = setInterval(() => {
       setFading(true);
+      setZooming(false);
       setTimeout(() => {
         setBgIndex(i => (i + 1) % SCREENSHOTS.length);
         setFading(false);
+        setZooming(true);
       }, 800);
     }, 5000);
     return () => clearInterval(interval);
@@ -61,7 +64,7 @@ const LoginForm: React.FC = () => {
     <div className="auth-container">
       <div className="auth-panel-left">
         <div
-          className={`auth-panel-left-bg${fading ? ' fading' : ''}`}
+          className={`auth-panel-left-bg${fading ? ' fading' : ''}${zooming ? ' zooming' : ''}`}
           style={{ backgroundImage: `url(${SCREENSHOTS[bgIndex]})` }}
         />
         <div className="auth-panel-left-overlay" />
