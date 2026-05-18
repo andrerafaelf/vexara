@@ -30,7 +30,7 @@ const nextConfig: NextConfig = {
       {
         source: '/:path*.(png|jpg|jpeg|gif|webp|avif|ico|svg)',
         headers: [
-          { key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=86400' },
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
       },
       // Fonts

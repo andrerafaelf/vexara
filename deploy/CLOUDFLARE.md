@@ -73,12 +73,14 @@ Go to **Caching → Cache Rules → Create rule**.
 
 ## 5. Speed settings
 
-Go to **Speed → Optimization**:
+Go to **Speed → Optimization → Protocol Optimization**:
 
-- ✅ **Auto Minify** — JavaScript, CSS, HTML
-- ✅ **Brotli** — Cloudflare re-encodes responses with Brotli for supporting browsers
-- ✅ **HTTP/2** (enabled by default)
-- ✅ **HTTP/3 / QUIC** — enable for mobile perf gains
+- ✅ **HTTP/3 (QUIC)** — enable for mobile perf gains
+
+**Brotli** is always-on in Cloudflare — the toggle was removed in 2024. Nothing to do.
+
+**Auto Minify** was deprecated by Cloudflare in 2024 and removed from the UI.
+Not needed — Next.js already outputs minified JS/CSS at build time.
 
 ---
 
@@ -98,10 +100,9 @@ Go to **Security → Settings**:
 - Security Level: **Medium**
 - Bot Fight Mode: ✅ (free, blocks known bad bots)
 
-Go to **Security → WAF**:
-
-- Managed rules are on paid plans, but **Rate Limiting** rules are available:
-  - Create a rule: path `/api/auth/*`, 10 requests per minute per IP → Block
+**Rate Limiting** on `/api/auth/*` is a paid feature — skip it.
+Origin-level rate limiting is already handled by nginx (`limit_req zone=auth burst=5 nodelay`)
+so auth endpoints are protected regardless.
 
 ---
 
