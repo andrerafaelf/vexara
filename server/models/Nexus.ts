@@ -473,7 +473,7 @@ export function serializeNexus(v: NexusWithQuests, opts: { ownerData?: unknown }
     points: v.points,
     controlLevel: v.controlLevel,
     nexusType: v.nexusType ?? null,
-    nexusTypeDoubled: (v as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled ?? false,
+    nexusTypeDoubled: (v as unknown as { nexusTypeDoubled?: boolean | null }).nexusTypeDoubled ?? false,
     nexusTypeLockedAt: (v as unknown as { nexusTypeLockedAt?: Date | null }).nexusTypeLockedAt ?? null,
     newbieProtectionEndsAt: v.newbieProtectionEndsAt ?? null,
     createdAt: v.createdAt,

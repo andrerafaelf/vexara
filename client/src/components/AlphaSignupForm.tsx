@@ -28,6 +28,7 @@ function getEmailError(email: string): string | null {
 
 const SPAM_DOMAINS = new Set(['hotmail.com', 'hotmail.co.uk', 'outlook.com', 'outlook.co.uk', 'live.com', 'msn.com']);
 
+// These domains are known to aggressively filter automated emails. Warn users to check their spam folders if they sign up with one.
 function isSpamRiskDomain(email: string): boolean {
   const domain = email.trim().toLowerCase().split('@')[1] ?? '';
   return SPAM_DOMAINS.has(domain);

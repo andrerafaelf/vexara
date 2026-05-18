@@ -65,6 +65,8 @@ export interface SerializedNexus {
   points: number;
   controlLevel: number;
   nexusType: string | null;
+  nexusTypeDoubled: boolean;
+  nexusTypeLockedAt: Date | null;
   newbieProtectionEndsAt: Date | null;
   createdAt: Date;
   conqueredAt: Date | null;

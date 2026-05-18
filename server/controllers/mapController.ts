@@ -1,4 +1,5 @@
 import type { Response } from 'express';
+import prisma from '../lib/prisma.js';
 import * as mapService from '../services/mapService.js';
 import type { AuthRequest } from '../types/index.js';
 import { getNexusIntelForUser } from '../utils/scouting.js';
