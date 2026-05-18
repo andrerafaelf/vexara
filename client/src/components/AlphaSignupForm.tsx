@@ -88,10 +88,10 @@ const AlphaSignupForm: React.FC = () => {
             priority
           />
         </Link>
-        <h1>A persistent galaxy at war.</h1>
+        <h1>A living galaxy. Real opponents. No resets.</h1>
         <p className="tagline">
-          Browser-based 4X strategy. Build a nexus, train twelve unit types,
-          and conquer real players one Overseer at a time. Invite friends and earn reward tokens when they grow.
+          Browser-based 4X strategy. Build a nexus, train twelve unit types, and conquer real players.
+          Run covert ops, forge faction treaties, and claim world events before anyone else does.
         </p>
 
         {signupCount !== null && signupCount < ALPHA_FOUNDER_LIMIT && (
@@ -155,7 +155,7 @@ const AlphaSignupForm: React.FC = () => {
                   <SystemIcon name="economy" />
                   <div>
                     <strong>Run a three-resource economy</strong>
-                    <p>Biomass, alloy, and ore tick 24/7. Storage and production scale per building level. A Lv10 Biomass Farm yields ~10,500/hr.</p>
+                    <p>Biomass, alloy, and ore tick 24/7. Storage and production scale per building level. Capture a Resource Depot and double your output overnight.</p>
                   </div>
                 </li>
                 <li>
@@ -169,21 +169,28 @@ const AlphaSignupForm: React.FC = () => {
                   <SystemIcon name="strike" />
                   <div>
                     <strong>Scout, raid, and intercept in real time</strong>
-                    <p>Travel times are real. Send Recon Operatives to map a target, then commit a raid fleet. Or catch one mid-flight.</p>
+                    <p>Travel times are real. Send Recon Operatives to map a target, then commit a strike fleet. Or embed an operative to watch enemy movements from inside their walls.</p>
                   </div>
                 </li>
                 <li>
                   <SystemIcon name="conquest" />
                   <div>
                     <strong>Conquer with Overseers</strong>
-                    <p>Train an Overseer (4h, max 3 per nexus). Each surviving strike drops enemy control by 50. Hit zero and the nexus is yours.</p>
+                    <p>Train an Overseer (4h, max 3 per nexus). Each surviving strike drops enemy control by 50. Hit zero and the nexus is yours. Unlock its permanent specialization bonus when you do.</p>
+                  </div>
+                </li>
+                <li>
+                  <SystemIcon name="espionage" />
+                  <div>
+                    <strong>Run covert operations</strong>
+                    <p>Sabotage enemy troops and build queues. Embed operatives for live intel reports. Counter enemy spies with a fortified Shield Grid. Every move carries risk.</p>
                   </div>
                 </li>
                 <li>
                   <SystemIcon name="defense" />
                   <div>
-                    <strong>Defend with units + Shield Grid</strong>
-                    <p>Shield Grid adds +2% defense per level. Casualties are ratio-based with a random factor. There&apos;s no auto-win button.</p>
+                    <strong>Faction diplomacy and wars</strong>
+                    <p>Declare war on rivals or sign non-aggression pacts, trade agreements, and vassal treaties. A public diplomacy board shows every alliance in the galaxy.</p>
                   </div>
                 </li>
               </ul>
@@ -306,7 +313,29 @@ const AlphaSignupForm: React.FC = () => {
                     Send <strong>Recon Operatives</strong> to scout an enemy nexus before you commit.
                     Launch <strong>raids</strong> to steal resources. When you&apos;re ready for the
                     endgame, train an <strong>Overseer</strong> and chip away at an enemy&apos;s
-                    control. Drop it to zero and the nexus is yours.
+                    control. Drop it to zero and the nexus is yours. Conquered nexuses with special
+                    types hand you permanent doubled bonuses on capture.
+                  </p>
+                </div>
+
+                <div className="about-section">
+                  <h3>Espionage</h3>
+                  <p>
+                    Deploy Recon Operatives as embedded spies inside enemy nexuses for live intel reports.
+                    Or run sabotage missions to destroy their stockpiles, eliminate troops, or delay active
+                    build queues. A high-level Shield Grid reduces enemy success rates and can expose
+                    operatives hiding in your walls.
+                  </p>
+                </div>
+
+                <div className="about-section">
+                  <h3>World events</h3>
+                  <p>
+                    The galaxy fires random events every few hours: a <strong>Derelict Ship</strong>
+                    drifts in with a lightly guarded Resource Depot ready to claim, a <strong>Resource
+                    Storm</strong> doubles production across an entire quadrant, or a <strong>Rogue AI
+                    Core</strong> activates and starts raiding nearby nexuses. Events are shown on the
+                    live map so every player can race to respond.
                   </p>
                 </div>
 
@@ -315,7 +344,8 @@ const AlphaSignupForm: React.FC = () => {
                   <p>
                     Your economy ticks 24/7. Queue up builds and training before bed, plan your strikes
                     around real-world travel times, and check in from your phone. Vexara runs in the
-                    browser and installs as a PWA.
+                    browser and installs as a PWA. A summary screen on login catches you up on
+                    everything that happened while you were away.
                   </p>
                 </div>
               </section>
@@ -357,7 +387,7 @@ const AlphaSignupForm: React.FC = () => {
   );
 };
 
-type SystemIconName = 'economy' | 'army' | 'strike' | 'conquest' | 'defense' | 'badge' | 'rank' | 'scroll' | 'pillar' | 'referral';
+type SystemIconName = 'economy' | 'army' | 'strike' | 'conquest' | 'defense' | 'espionage' | 'badge' | 'rank' | 'scroll' | 'pillar' | 'referral';
 
 const SystemIcon: React.FC<{ name: SystemIconName }> = ({ name }) => {
   const common = {
@@ -405,6 +435,13 @@ const SystemIcon: React.FC<{ name: SystemIconName }> = ({ name }) => {
       return (
         <svg {...common}>
           <path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6l8-3z" />
+        </svg>
+      );
+    case 'espionage':
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="12" r="3" />
+          <path d="M2 12c2-5 5.5-8 10-8s8 3 10 8c-2 5-5.5 8-10 8s-8-3-10-8z" />
         </svg>
       );
     case 'badge':

@@ -1,7 +1,5 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
 import { useToast } from '@/context/ToastContext';
 import { createNexus, getMyGalaxy } from '@/services/api';
 import GalaxyPicker, { Galaxy } from '@/components/GalaxyPicker';
@@ -72,7 +70,8 @@ export default function Home() {
   };
 
   // While we're determining where to go, render nothing (no "Loading..." text)
-  if (isLoading || nexuses.length > 0 || !!localStorage.getItem(SELECTED_NEXUS_KEY)) {
+  const hasStoredNexus = typeof window !== 'undefined' && !!localStorage.getItem(SELECTED_NEXUS_KEY);
+  if (isLoading || nexuses.length > 0 || hasStoredNexus) {
     return null;
   }
 

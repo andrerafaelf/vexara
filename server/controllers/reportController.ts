@@ -1,5 +1,6 @@
 import type { Response } from 'express';
 import { serializeAttack } from '../models/Nexus.js';
+import prisma from '../lib/prisma.js';
 import * as reportService from '../services/reportService.js';
 import type { AuthRequest } from '../types/index.js';
 
@@ -80,6 +81,82 @@ export async function getReadIds(req: AuthRequest, res: Response): Promise<void>
     }
     const reads = await reportService.getReadIds(req.userId, req.galaxyId);
     res.json(reads.map((r) => String(r.attackId)));
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
+export async function getActivitySummary(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const sinceRaw = req.query.since as string | undefined;
+    const since = sinceRaw ? new Date(sinceRaw) : new Date(Date.now() - 24 * 60 * 60 * 1000);
+    if (isNaN(since.getTime())) {
+      res.status(400).json({ error: 'Invalid since parameter' }); return;
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: req.userId }, select: { activeGalaxyId: true } });
+    if (!user?.activeGalaxyId) { res.json({ attacks: [], buildings: [], troops: [], events: [] }); return; }
+    const galaxyId = user.activeGalaxyId;
+
+    const [ownNexuses, completedAttacks] = await Promise.all([
+      prisma.nexus.findMany({
+        where: { ownerId: req.userId, galaxyId },
+        select: { id: true, name: true, buildQueue: true, trainingQueue: true },
+      }),
+      prisma.attack.findMany({
+        where: {
+          galaxyId,
+          status: 'completed',
+          returnsAt: { gte: since },
+          OR: [{ attackerUserId: req.userId }, { defenderUserId: req.userId }],
+        },
+        select: {
+          id: true, type: true, result: true, returnsAt: true,
+          attackerUserId: true, defenderUserId: true,
+          attackerNexus: { select: { name: true } },
+          defenderNexus: { select: { name: true } },
+        },
+        orderBy: { returnsAt: 'desc' },
+        take: 20,
+      }),
+    ]);
+
+    const nexusIds = ownNexuses.map((n) => n.id);
+
+    // Completed building upgrades: items in trainingQueue/buildQueue that finished since last visit
+    // We proxy this via the attack/report data — buildings that finished show up in nexus state.
+    // Instead surface a simple count of buildings/troops that likely completed based on queue timestamps.
+    const buildingsDone: Array<{ nexusName: string; building: string; level: number }> = [];
+    const troopsDone: Array<{ nexusName: string; type: string; count: number }> = [];
+
+    for (const nexus of ownNexuses) {
+      const bq = (nexus.buildQueue as Array<{ building: string; targetLevel: number; completesAt: string }> | null) ?? [];
+      for (const item of bq) {
+        const at = new Date(item.completesAt);
+        if (at >= since && at <= new Date()) {
+          buildingsDone.push({ nexusName: nexus.name, building: item.building, level: item.targetLevel });
+        }
+      }
+      const tq = (nexus.trainingQueue as Array<{ troopType: string; amount: number; completesAt: string }> | null) ?? [];
+      for (const item of tq) {
+        const at = new Date(item.completesAt);
+        if (at >= since && at <= new Date()) {
+          troopsDone.push({ nexusName: nexus.name, type: item.troopType, count: item.amount });
+        }
+      }
+    }
+
+    const attacks = completedAttacks.map((a) => ({
+      id: a.id,
+      type: a.type,
+      isMyAttack: a.attackerUserId === req.userId,
+      attackerNexus: a.attackerNexus?.name,
+      defenderNexus: a.defenderNexus?.name,
+      result: a.result,
+      completedAt: a.returnsAt,
+    }));
+
+    res.json({ attacks, buildings: buildingsDone, troops: troopsDone, since: since.toISOString() });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }

@@ -36,3 +36,15 @@ export async function getNexusIntel(req: AuthRequest, res: Response): Promise<vo
     res.status(500).json({ error: (error as Error).message });
   }
 }
+
+export async function getGalaxyEvents(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const { getActiveGalaxyEvents } = await import('../utils/galaxyEvents.js');
+    const user = await prisma.user.findUnique({ where: { id: req.userId }, select: { activeGalaxyId: true } });
+    if (!user?.activeGalaxyId) { res.status(409).json({ error: 'No active galaxy' }); return; }
+    const events = await getActiveGalaxyEvents(user.activeGalaxyId);
+    res.json(events);
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}

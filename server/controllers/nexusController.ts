@@ -285,3 +285,40 @@ export async function transferResources(req: AuthRequest, res: Response): Promis
     res.status(500).json({ error: (error as Error).message });
   }
 }
+
+const VALID_SPEC_TYPES = ['Resource Depot', 'Supply Cache', 'Military Outpost', 'Reclaimed Outpost'] as const;
+const COMMAND_CORE_MAX = 20;
+
+export async function specializeNexus(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const nexusId = parseInt(req.params.nexusId, 10);
+    const { nexusType } = req.body as { nexusType?: string };
+
+    if (!Number.isFinite(nexusId)) {
+      res.status(400).json({ error: 'Invalid nexus id' }); return;
+    }
+    if (!nexusType || !(VALID_SPEC_TYPES as readonly string[]).includes(nexusType)) {
+      res.status(400).json({ error: 'Invalid specialization type' }); return;
+    }
+
+    const nexus = await prisma.nexus.findUnique({ where: { id: nexusId } });
+    if (!nexus || nexus.ownerId !== req.userId || nexus.galaxyId !== req.galaxyId) {
+      res.status(403).json({ error: 'Not authorized' }); return;
+    }
+    if (nexus.commandCore < COMMAND_CORE_MAX) {
+      res.status(400).json({ error: `Command Core must be at max level (${COMMAND_CORE_MAX}) to specialize` }); return;
+    }
+    if (nexus.nexusType || (nexus as unknown as { nexusTypeLockedAt?: Date | null }).nexusTypeLockedAt) {
+      res.status(400).json({ error: 'This nexus is already specialized' }); return;
+    }
+
+    const updated = await prisma.nexus.update({
+      where: { id: nexusId },
+      data: { nexusType, nexusTypeLockedAt: new Date() },
+    });
+
+    res.json({ success: true, nexus: serializeNexus(updated as Parameters<typeof serializeNexus>[0]) });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}

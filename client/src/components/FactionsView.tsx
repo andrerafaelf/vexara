@@ -28,6 +28,11 @@ import {
   getFactionJoinRequests,
   approveJoinRequest,
   declineJoinRequest,
+  getActiveTreaties,
+  proposeTreaty,
+  acceptTreaty,
+  cancelTreaty,
+  getGalaxyDiplomacy,
 } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import FactionChat from './FactionChat';
@@ -93,7 +98,21 @@ interface MyJoinRequest {
   createdAt: string;
 }
 
-type Tab = 'overview' | 'chat' | 'members' | 'activity' | 'wars';
+type Tab = 'overview' | 'chat' | 'members' | 'activity' | 'wars' | 'diplomacy';
+
+interface FactionTreaty {
+  id: number;
+  type: 'nap' | 'trade' | 'vassal';
+  status: 'pending' | 'active' | 'expired' | 'cancelled';
+  proposerFactionId: number;
+  targetFactionId: number;
+  proposerFaction?: { id: number; name: string; tag: string };
+  targetFaction?: { id: number; name: string; tag: string };
+  durationDays?: number | null;
+  startsAt?: string | null;
+  expiresAt?: string | null;
+  createdAt: string;
+}
 
 const ROLE_ORDER: Record<string, number> = { leader: 0, officer: 1, member: 2 };
 
@@ -125,6 +144,14 @@ export default function FactionsView() {
   const [selectedDeclareTarget, setSelectedDeclareTarget] = useState('');
   const [warError, setWarError] = useState('');
   const [warSubmitting, setWarSubmitting] = useState(false);
+
+  const [treaties, setTreaties] = useState<FactionTreaty[]>([]);
+  const [treatyTarget, setTreatyTarget] = useState('');
+  const [treatyType, setTreatyType] = useState<'nap' | 'trade' | 'vassal'>('nap');
+  const [treatyDuration, setTreatyDuration] = useState(30);
+  const [treatyError, setTreatyError] = useState('');
+  const [treatySubmitting, setTreatySubmitting] = useState(false);
+  const [galaxyTreaties, setGalaxyTreaties] = useState<FactionTreaty[]>([]);
 
   // Join requests (for leader/officer view inside a faction)
   const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
@@ -162,12 +189,16 @@ export default function FactionsView() {
         setInvites(invitesRes.data);
         if (faction?.motd) setMotdDraft(faction.motd);
         if (faction) {
-          const [warsRes, factionsRes] = await Promise.all([
+          const [warsRes, factionsRes, treatiesRes, galaxyDipRes] = await Promise.all([
             getFactionWars(faction.id),
             listFactionsInGalaxy(),
+            getActiveTreaties(faction.id),
+            getGalaxyDiplomacy(),
           ]);
           setWars(warsRes.data);
           setGalaxyFactions(factionsRes.data.filter((f: GalaxyFaction) => f.id !== faction.id));
+          setTreaties(treatiesRes.data ?? []);
+          setGalaxyTreaties(galaxyDipRes.data ?? []);
           if (faction.myRole === 'leader' || faction.myRole === 'officer') {
             await refreshJoinRequests(faction.id);
           }
@@ -387,6 +418,55 @@ export default function FactionsView() {
       await refreshWars(myFaction.id);
     } catch (err) {
       setWarError((err as { response?: { data?: { error?: string } } }).response?.data?.error || (err as Error).message);
+    }
+  };
+
+  // ── Treaty handlers ──────────────────────────────────────────────────────────
+
+  const refreshTreaties = async (factionId: number) => {
+    try {
+      const [treatiesRes, galaxyDipRes] = await Promise.all([
+        getActiveTreaties(factionId),
+        getGalaxyDiplomacy(),
+      ]);
+      setTreaties(treatiesRes.data ?? []);
+      setGalaxyTreaties(galaxyDipRes.data ?? []);
+    } catch {}
+  };
+
+  const handleProposeTreaty = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!myFaction || !treatyTarget) return;
+    setTreatySubmitting(true);
+    setTreatyError('');
+    try {
+      await proposeTreaty(myFaction.id, parseInt(treatyTarget), treatyType, treatyDuration);
+      setTreatyTarget('');
+      await refreshTreaties(myFaction.id);
+    } catch (err) {
+      setTreatyError((err as { response?: { data?: { error?: string } } }).response?.data?.error || (err as Error).message);
+    } finally {
+      setTreatySubmitting(false);
+    }
+  };
+
+  const handleAcceptTreaty = async (treatyId: number) => {
+    if (!myFaction) return;
+    try {
+      await acceptTreaty(treatyId);
+      await refreshTreaties(myFaction.id);
+    } catch (err) {
+      setTreatyError((err as { response?: { data?: { error?: string } } }).response?.data?.error || (err as Error).message);
+    }
+  };
+
+  const handleCancelTreaty = async (treatyId: number) => {
+    if (!myFaction) return;
+    try {
+      await cancelTreaty(treatyId);
+      await refreshTreaties(myFaction.id);
+    } catch (err) {
+      setTreatyError((err as { response?: { data?: { error?: string } } }).response?.data?.error || (err as Error).message);
     }
   };
 
@@ -667,7 +747,7 @@ export default function FactionsView() {
 
       {/* Tabs */}
       <div className="factions-tabs">
-        {(['overview', 'chat', 'members', 'activity', 'wars'] as Tab[]).map((tab) => (
+        {(['overview', 'chat', 'members', 'activity', 'wars', 'diplomacy'] as Tab[]).map((tab) => (
           <button
             key={tab}
             className={`factions-tab${activeTab === tab ? ' factions-tab--active' : ''}`}
@@ -692,6 +772,14 @@ export default function FactionsView() {
                 )}
                 {(wars.some((w) => w.status === 'pending' && w.targetFactionId === myFaction.id) ||
                   wars.some((w) => w.status === 'ceasefire_pending' && w.ceasefireProposerFactionId !== myFaction.id)) && (
+                  <span className="factions-tab-badge factions-tab-badge--alert">!</span>
+                )}
+              </>
+            )}
+            {tab === 'diplomacy' && (
+              <>
+                Diplomacy
+                {treaties.some((t) => t.status === 'pending' && t.targetFactionId === myFaction.id) && (
                   <span className="factions-tab-badge factions-tab-badge--alert">!</span>
                 )}
               </>
@@ -1018,6 +1106,151 @@ export default function FactionsView() {
           )}
         </section>
       )}
+
+      {/* Tab: Diplomacy */}
+      {activeTab === 'diplomacy' && (
+        <section className="factions-panel factions-tab-content">
+          {treatyError && <div className="factions-field-error factions-war-error">{treatyError}</div>}
+
+          {treaties.filter((t) => t.status === 'pending' && t.targetFactionId === myFaction.id).length > 0 && (
+            <div className="factions-war-section">
+              <h3 className="factions-war-section-title factions-war-section-title--alert">Incoming Treaty Proposals</h3>
+              {treaties
+                .filter((t) => t.status === 'pending' && t.targetFactionId === myFaction.id)
+                .map((t) => (
+                  <div key={t.id} className="factions-war-card factions-war-card--pending-incoming">
+                    <div className="factions-war-info">
+                      <span className="factions-war-faction">[{t.proposerFaction?.tag}] {t.proposerFaction?.name}</span>
+                      <span className="factions-war-meta">
+                        proposes a <strong>{TREATY_LABELS[t.type]}</strong>
+                        {t.durationDays ? ` (${t.durationDays} days)` : ''}
+                      </span>
+                    </div>
+                    {canManage && (
+                      <div className="factions-war-actions">
+                        <button className="factions-btn-small" onClick={() => handleAcceptTreaty(t.id)}>Accept</button>
+                        <button className="factions-btn-small factions-btn-danger" onClick={() => handleCancelTreaty(t.id)}>Decline</button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+            </div>
+          )}
+
+          {treaties.filter((t) => t.status === 'active').length > 0 && (
+            <div className="factions-war-section">
+              <h3 className="factions-war-section-title factions-war-section-title--active">Active Agreements</h3>
+              {treaties.filter((t) => t.status === 'active').map((t) => {
+                const other = t.proposerFactionId === myFaction.id ? t.targetFaction : t.proposerFaction;
+                return (
+                  <div key={t.id} className="factions-war-card factions-war-card--active">
+                    <div className="factions-war-info">
+                      <span className="factions-treaty-type factions-treaty-type--active">{TREATY_LABELS[t.type]}</span>
+                      <span className="factions-war-faction">[{other?.tag}] {other?.name}</span>
+                      {t.expiresAt && (
+                        <span className="factions-war-meta">
+                          expires {new Date(t.expiresAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </span>
+                      )}
+                    </div>
+                    {canManage && (
+                      <button className="factions-btn-small factions-btn-danger" onClick={() => handleCancelTreaty(t.id)}>Cancel</button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {treaties.filter((t) => t.status === 'pending' && t.proposerFactionId === myFaction.id).length > 0 && (
+            <div className="factions-war-section">
+              <h3 className="factions-war-section-title">Pending Proposals</h3>
+              {treaties.filter((t) => t.status === 'pending' && t.proposerFactionId === myFaction.id).map((t) => (
+                <div key={t.id} className="factions-war-card factions-war-card--pending-outgoing">
+                  <div className="factions-war-info">
+                    <span className="factions-treaty-type">{TREATY_LABELS[t.type]}</span>
+                    <span className="factions-war-faction">[{t.targetFaction?.tag}] {t.targetFaction?.name}</span>
+                    <span className="factions-war-meta">awaiting response</span>
+                  </div>
+                  <button className="factions-btn-small factions-btn-danger" onClick={() => handleCancelTreaty(t.id)}>Withdraw</button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {canManage && galaxyFactions.length > 0 && (
+            <div className="factions-war-section">
+              <h3 className="factions-war-section-title">Propose Treaty</h3>
+              <form onSubmit={handleProposeTreaty} className="factions-war-declare-form factions-treaty-form">
+                <select
+                  value={treatyTarget}
+                  onChange={(e) => setTreatyTarget(e.target.value)}
+                  className="factions-war-select"
+                  disabled={treatySubmitting}
+                >
+                  <option value="">Select faction...</option>
+                  {galaxyFactions.map((f) => (
+                    <option key={f.id} value={f.id}>[{f.tag}] {f.name}</option>
+                  ))}
+                </select>
+                <select
+                  value={treatyType}
+                  onChange={(e) => setTreatyType(e.target.value as 'nap' | 'trade' | 'vassal')}
+                  className="factions-war-select"
+                  disabled={treatySubmitting}
+                >
+                  <option value="nap">Non-Aggression Pact</option>
+                  <option value="trade">Trade Agreement</option>
+                  <option value="vassal">Vassal Treaty</option>
+                </select>
+                <input
+                  type="number"
+                  min={1} max={90}
+                  value={treatyDuration}
+                  onChange={(e) => setTreatyDuration(Math.max(1, Math.min(90, parseInt(e.target.value) || 1)))}
+                  className="factions-treaty-duration-input"
+                  title="Duration in days"
+                  placeholder="Days"
+                  disabled={treatySubmitting}
+                />
+                <button type="submit" className="factions-btn-small" disabled={!treatyTarget || treatySubmitting}>
+                  {treatySubmitting ? 'Sending...' : 'Propose'}
+                </button>
+              </form>
+              <p className="factions-treaty-hint">
+                NAP: no-attack agreement. Trade: shared market bonuses. Vassal: protective relationship (vassal agrees to support liege in wars).
+              </p>
+            </div>
+          )}
+
+          <div className="factions-war-section">
+            <h3 className="factions-war-section-title">Galaxy Diplomacy Board</h3>
+            {galaxyTreaties.length === 0 ? (
+              <p className="factions-war-empty">No public agreements in this galaxy.</p>
+            ) : (
+              <div className="factions-diplomacy-board">
+                {galaxyTreaties.map((t) => (
+                  <div key={t.id} className={`factions-diplomacy-row${t.status === 'pending' ? ' factions-diplomacy-row--pending' : ''}`}>
+                    <span className={`factions-treaty-type factions-treaty-type--${t.status === 'active' ? 'active' : 'pending'}`}>{TREATY_LABELS[t.type]}</span>
+                    <span className="factions-diplomacy-parties">
+                      [{t.proposerFaction?.tag}] {t.proposerFaction?.name}
+                      <span className="factions-diplomacy-sep">{t.status === 'pending' ? 'proposed to' : 'and'}</span>
+                      [{t.targetFaction?.tag}] {t.targetFaction?.name}
+                    </span>
+                    <span className="factions-diplomacy-status">{t.status === 'pending' ? 'Pending' : 'Active'}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
+
+const TREATY_LABELS: Record<string, string> = {
+  nap: 'Non-Aggression Pact',
+  trade: 'Trade Agreement',
+  vassal: 'Vassal Treaty',
+};

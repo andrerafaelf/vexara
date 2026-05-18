@@ -1,9 +1,10 @@
-import { Building, Home, Info, Shield, Star, Swords, Waves } from 'lucide-react';
+import { AlertTriangle, Building, Home, Info, Shield, Sparkles, Star, Swords, Waves, Zap } from 'lucide-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import WavePlanner from './WavePlanner';
 import {
+  getGalaxyEvents,
   getIncomingAttacks,
   getMapArea,
   getMyNexuses,
@@ -16,6 +17,18 @@ import {
 import '../styles/Map.css';
 import { Nexus } from '../types/game';
 import { formatDateTime } from '../utils/date';
+
+interface GalaxyEvent {
+  id: number;
+  type: string;
+  title: string;
+  description: string;
+  x?: number | null;
+  y?: number | null;
+  nexusId?: number | null;
+  expiresAt?: string | null;
+  createdAt: string;
+}
 
 interface MapProps {
   currentNexus: Nexus;
@@ -113,6 +126,8 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   const [sendingTroops, setSendingTroops] = useState(false);
   const [showWavePlanner, setShowWavePlanner] = useState(false);
   const [attackMissionType, setAttackMissionType] = useState<'attack' | 'support'>('attack');
+  const [galaxyEvents, setGalaxyEvents] = useState<GalaxyEvent[]>([]);
+  const [showEventsPanel, setShowEventsPanel] = useState(false);
 
   const availableTroops = useMemo(() => {
     const base: Record<string, number> = {};
@@ -368,6 +383,14 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
   useEffect(() => {
     getMyNexuses().then((r) => setOwnNexuses(r.data)).catch(() => {});
   }, [currentNexus._id]);
+
+  useEffect(() => {
+    getGalaxyEvents().then((r) => setGalaxyEvents(r.data)).catch(() => {});
+    const interval = setInterval(() => {
+      getGalaxyEvents().then((r) => setGalaxyEvents(r.data)).catch(() => {});
+    }, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleTransferResources = async () => {
     if (!selectedNexus) return;
@@ -1061,6 +1084,54 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh }) => {
 
   return (
     <div className="map-container">
+      {galaxyEvents.length > 0 && (
+        <div className="galaxy-events-bar">
+          <button
+            className="galaxy-events-toggle"
+            onClick={() => setShowEventsPanel((v) => !v)}
+            aria-expanded={showEventsPanel}
+          >
+            <Sparkles size={14} aria-hidden="true" />
+            <span>{galaxyEvents.length} active galaxy event{galaxyEvents.length !== 1 ? 's' : ''}</span>
+            <span className="galaxy-events-chevron">{showEventsPanel ? '▲' : '▼'}</span>
+          </button>
+          {showEventsPanel && (
+            <div className="galaxy-events-panel">
+              {galaxyEvents.map((ev) => {
+                const EventIcon = ev.type === 'resource_storm' ? Zap
+                  : ev.type === 'rogue_ai' ? AlertTriangle
+                  : Star;
+                return (
+                  <div key={ev.id} className={`galaxy-event-card galaxy-event-card--${ev.type}`}>
+                    <div className="galaxy-event-card-header">
+                      <EventIcon size={14} aria-hidden="true" />
+                      <strong>{ev.title}</strong>
+                      {ev.x != null && ev.y != null && (
+                        <button
+                          className="galaxy-event-goto"
+                          onClick={() => {
+                            setCenterX(ev.x!);
+                            setCenterY(ev.y!);
+                            setShowEventsPanel(false);
+                          }}
+                        >
+                          Go to ({ev.x}|{ev.y})
+                        </button>
+                      )}
+                    </div>
+                    <p className="galaxy-event-desc">{ev.description}</p>
+                    {ev.expiresAt && (
+                      <span className="galaxy-event-expires">
+                        Expires: {new Date(ev.expiresAt).toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
       <div className="map-header">
         <h2>World Map</h2>
         <div className="map-info">

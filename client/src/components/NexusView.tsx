@@ -21,6 +21,7 @@ import {
   ArrowDownLeft,
   Building2,
   Check,
+  Eye,
   Globe2,
   Hammer,
   Info,
@@ -29,6 +30,7 @@ import {
   ShieldCheck,
   Swords,
   X,
+  Zap,
 } from 'lucide-react';
 import '../styles/NexusView.css';
 import { Nexus, TroopTransfer } from '../types/game';
@@ -69,16 +71,16 @@ interface NexusViewProps {
   onTabChange?: (tab: NexusTab) => void;
 }
 
-type NexusTab = 'overview' | 'buildings' | 'troops' | 'map';
+type NexusTab = 'overview' | 'buildings' | 'troops' | 'map' | 'espionage';
 
 const MAX_BUILD_QUEUE = 5;
 const MAX_TRAINING_QUEUE = 5;
 
-const NEXUS_TYPE_BUFFS: Record<string, { label: string }> = {
-  'Resource Depot': { label: '2x Resource Production' },
-  'Supply Cache': { label: '2x Storage Capacity' },
-  'Military Outpost': { label: '+50% Shield Efficiency · 25% Faster Training' },
-  'Reclaimed Outpost': { label: '20% Faster Construction' },
+const NEXUS_TYPE_BUFFS: Record<string, { label: string; doubledLabel: string }> = {
+  'Resource Depot': { label: '2x Resource Production', doubledLabel: '4x Resource Production' },
+  'Supply Cache': { label: '2x Storage Capacity', doubledLabel: '4x Storage Capacity' },
+  'Military Outpost': { label: '+50% Shield Efficiency · 25% Faster Training', doubledLabel: '+100% Shield Efficiency · 50% Faster Training' },
+  'Reclaimed Outpost': { label: '20% Faster Construction', doubledLabel: '36% Faster Construction' },
 };
 
 const BUILDING_NAMES: { [key: string]: string } = {
@@ -413,6 +415,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   const [sendingTroops, setSendingTroops] = useState(false);
   const submittingRef = useRef<Set<string>>(new Set());
   const [dismissedTips, setDismissedTips] = useState<Set<string>>(new Set());
+  const [showSpecModal, setShowSpecModal] = useState(false);
 
   const dismissTip = (id: string) => setDismissedTips((prev) => new Set(prev).add(id));
 
@@ -1433,11 +1436,18 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
           )}
         </div>
         {nexus.nexusType && NEXUS_TYPE_BUFFS[nexus.nexusType] && (
-          <div className="nexus-type-buff-banner">
+          <div className={`nexus-type-buff-banner${nexus.nexusTypeDoubled ? ' nexus-type-buff-banner--doubled' : ''}`}>
             <NexusTypeBadge type={nexus.nexusType} size={14} />
             <span className="nexus-type-buff-label">
-              {nexus.nexusType} · {NEXUS_TYPE_BUFFS[nexus.nexusType].label}
+              {nexus.nexusType} · {nexus.nexusTypeDoubled
+                ? NEXUS_TYPE_BUFFS[nexus.nexusType].doubledLabel
+                : NEXUS_TYPE_BUFFS[nexus.nexusType].label}
             </span>
+            {nexus.nexusTypeDoubled && (
+              <span className="nexus-type-buff-doubled-badge" title="Conquest bonus: bonuses doubled from original NPC nexus">
+                2x
+              </span>
+            )}
           </div>
         )}
         {(() => {
@@ -1512,6 +1522,14 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
         >
           <Globe2 size={14} aria-hidden="true" />
           <span>Starfield</span>
+        </button>
+        <button
+          type="button"
+          className={`nexus-tab-btn${activeTab === 'espionage' ? ' active' : ''}`}
+          onClick={() => setActiveTab('espionage')}
+        >
+          <Eye size={14} aria-hidden="true" />
+          <span>Espionage</span>
         </button>
       </div>
 
@@ -1750,6 +1768,24 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
         {activeTab === 'buildings' && (
           <div className="buildings-tab">
             <h3>Buildings</h3>
+
+            {nexus.buildings.commandCore >= 20 && !nexus.nexusTypeLockedAt && !nexus.nexusType && (
+              <div className="nexus-spec-prompt" role="alert">
+                <span className="nexus-spec-prompt-icon" aria-hidden="true">
+                  <Zap size={16} />
+                </span>
+                <div className="nexus-spec-prompt-body">
+                  <strong>Command Core maxed.</strong> This nexus is ready to specialize. Choose a permanent role to unlock a powerful bonus that cannot be changed.
+                </div>
+                <button
+                  type="button"
+                  className="nexus-spec-prompt-btn"
+                  onClick={() => setShowSpecModal(true)}
+                >
+                  Specialize
+                </button>
+              </div>
+            )}
 
             {!allQuestsComplete && nexus.buildings.commandCore < 1 && !dismissedTips.has('tip-command-core') && (
               <div className="noob-tip">
@@ -2262,8 +2298,61 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
             <StarfieldMap currentNexus={nexus} onRefresh={onUpdate} />
           </div>
         )}
+
+        {activeTab === 'espionage' && (
+          <EspionageTab nexus={nexus} onToast={showToast} />
+        )}
       </div>
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+      {showSpecModal && (
+        <div className="attack-modal-overlay" onClick={() => setShowSpecModal(false)}>
+          <div className="attack-modal spec-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="attack-modal-header">
+              <h3>Choose Nexus Specialization</h3>
+              <button className="close-btn" onClick={() => setShowSpecModal(false)}>
+                <X size={12} aria-hidden="true" />
+              </button>
+            </div>
+            <div className="attack-modal-content">
+              <p className="spec-modal-warning">
+                This choice is permanent. Once set, the specialization cannot be changed.
+              </p>
+              <div className="spec-options">
+                {[
+                  { type: 'Resource Depot', label: '2x Resource Production', desc: 'Double the output of all three resource buildings. Best for a dedicated economic nexus.' },
+                  { type: 'Supply Cache', label: '2x Storage Capacity', desc: 'Double your storage cap across all resources. Protects stockpiles and supports large armies.' },
+                  { type: 'Military Outpost', label: '+100% Shield Efficiency, 50% Faster Training', desc: 'Doubled shield defense and half training time. The strongest frontline base.' },
+                  { type: 'Reclaimed Outpost', label: '36% Faster Construction', desc: 'All build times cut significantly. Fastest expansion and rebuilding of any nexus type.' },
+                ].map(({ type, label, desc }) => (
+                  <button
+                    key={type}
+                    className="spec-option-card"
+                    onClick={async () => {
+                      try {
+                        const { specializeNexus } = await import('../services/api');
+                        await specializeNexus(nexus._id, type);
+                        setShowSpecModal(false);
+                        onUpdate();
+                        showToast(`Nexus specialized as ${type}`, 'success');
+                      } catch {
+                        showToast('Failed to specialize nexus', 'error');
+                      }
+                    }}
+                  >
+                    <div className="spec-option-header">
+                      <NexusTypeBadge type={type} size={16} />
+                      <strong>{type}</strong>
+                    </div>
+                    <div className="spec-option-bonus">{label}</div>
+                    <div className="spec-option-desc">{desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {infoModal && (
         <div className="attack-modal-overlay" onClick={() => setInfoModal(null)}>
@@ -2338,5 +2427,230 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     </div>
   );
 };
+
+// ---- Espionage Tab ----
+
+const SABOTAGE_LABEL: Record<string, string> = {
+  troops: 'Sabotage Troops',
+  biomass: 'Destroy Biomass',
+  alloy: 'Destroy Alloy',
+  ore: 'Destroy Ore',
+  building: 'Delay Construction',
+};
+
+function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string, t: 'success' | 'error' | 'info') => void }) {
+  const [mode, setMode] = useState<'sabotage' | 'embed'>('sabotage');
+  const [toNexusId, setToNexusId] = useState('');
+  const [operatives, setOperatives] = useState(1);
+  const [sabotageTarget, setSabotageTarget] = useState('troops');
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<Record<string, unknown> | null>(null);
+  const [assets, setAssets] = useState<Array<Record<string, unknown>>>([]);
+  const [assetsLoading, setAssetsLoading] = useState(true);
+
+  useEffect(() => {
+    setAssetsLoading(true);
+    import('../services/api').then(({ getSpyAssets }) =>
+      getSpyAssets(nexus._id).then((r: any) => setAssets(r.data ?? [])).catch(() => setAssets([]))
+    ).finally(() => setAssetsLoading(false));
+  }, [nexus._id]);
+
+  const refreshAssets = () => {
+    import('../services/api').then(({ getSpyAssets }) =>
+      getSpyAssets(nexus._id).then((r: any) => setAssets(r.data ?? [])).catch(() => {})
+    );
+  };
+
+  const handleSend = async () => {
+    const id = parseInt(toNexusId);
+    if (!id || id <= 0) { onToast('Enter a valid target nexus ID', 'error'); return; }
+    setLoading(true);
+    setResult(null);
+    try {
+      const { sendSpyMission } = await import('../services/api');
+      const r: any = await sendSpyMission(String(nexus._id), toNexusId, mode, operatives, mode === 'sabotage' ? sabotageTarget : undefined);
+      setResult(r.data);
+      if (r.data?.success) {
+        onToast(mode === 'embed' ? 'Operative embedded successfully' : 'Sabotage mission succeeded', 'success');
+      } else {
+        onToast('Mission failed — operative detected and eliminated', 'error');
+      }
+      if (mode === 'embed') refreshAssets();
+    } catch (e: any) {
+      onToast(e?.response?.data?.error ?? 'Mission failed', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRecall = async (assetId: number) => {
+    try {
+      const { recallSpyAsset } = await import('../services/api');
+      await recallSpyAsset(assetId);
+      onToast('Operative recalled', 'info');
+      refreshAssets();
+    } catch {
+      onToast('Recall failed', 'error');
+    }
+  };
+
+  const handleRefreshIntel = async (assetId: number) => {
+    try {
+      const { getEmbedIntel } = await import('../services/api');
+      const r: any = await getEmbedIntel(assetId);
+      if (r.data?.discovered) {
+        onToast('Operative was discovered and captured', 'error');
+        refreshAssets();
+      } else {
+        setResult({ intelRefresh: true, ...r.data });
+        onToast('Intel refreshed', 'success');
+      }
+    } catch {
+      onToast('Intel refresh failed', 'error');
+    }
+  };
+
+  const reconCount = nexus.troops?.reconOperative ?? 0;
+
+  return (
+    <div className="espionage-tab">
+      <div className="espionage-intro">
+        <Eye size={16} />
+        <div>
+          <strong>Espionage Operations</strong>
+          <span className="espionage-intro-sub">
+            Send Recon Operatives on covert missions. You have <strong>{reconCount}</strong> available.
+          </span>
+        </div>
+      </div>
+
+      <div className="espionage-mode-row">
+        <button
+          className={`espionage-mode-btn${mode === 'sabotage' ? ' active' : ''}`}
+          onClick={() => setMode('sabotage')}
+        >
+          Sabotage
+        </button>
+        <button
+          className={`espionage-mode-btn${mode === 'embed' ? ' active' : ''}`}
+          onClick={() => setMode('embed')}
+        >
+          Embed Operative
+        </button>
+      </div>
+
+      <div className="espionage-form">
+        <div className="espionage-form-row">
+          <label className="espionage-label">Target Nexus ID</label>
+          <input
+            className="espionage-input"
+            type="number"
+            min={1}
+            placeholder="Nexus ID"
+            value={toNexusId}
+            onChange={(e) => setToNexusId(e.target.value)}
+          />
+        </div>
+        <div className="espionage-form-row">
+          <label className="espionage-label">Recon Operatives</label>
+          <input
+            className="espionage-input espionage-input--narrow"
+            type="number"
+            min={1}
+            max={Math.min(20, reconCount)}
+            value={operatives}
+            onChange={(e) => setOperatives(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
+          />
+        </div>
+        {mode === 'sabotage' && (
+          <div className="espionage-form-row">
+            <label className="espionage-label">Sabotage Target</label>
+            <select
+              className="espionage-input"
+              value={sabotageTarget}
+              onChange={(e) => setSabotageTarget(e.target.value)}
+            >
+              {Object.entries(SABOTAGE_LABEL).map(([k, v]) => (
+                <option key={k} value={k}>{v}</option>
+              ))}
+            </select>
+          </div>
+        )}
+        <div className="espionage-cost-note">
+          {mode === 'sabotage'
+            ? `Cost: ${300 * operatives} Biomass + ${300 * operatives} Ore`
+            : `Cost: ${400 * operatives} Biomass + ${200 * operatives} Alloy`}
+        </div>
+        <button
+          className="espionage-send-btn"
+          onClick={handleSend}
+          disabled={loading || reconCount < operatives}
+        >
+          {loading ? 'Sending...' : mode === 'sabotage' ? 'Launch Sabotage' : 'Embed Operative'}
+        </button>
+      </div>
+
+      {result && (
+        <div className={`espionage-result${result.success ? ' espionage-result--success' : ' espionage-result--fail'}`}>
+          <strong>{result.success ? 'Mission Successful' : 'Mission Failed — Detected'}</strong>
+          {result.success && result.report && (() => {
+            const r = result.report as Record<string, unknown>;
+            if (r.intel) {
+              const intel = r.intel as Record<string, unknown>;
+              const troops = intel.troops as Record<string, number>;
+              const resources = intel.resources as Record<string, number>;
+              return (
+                <div className="espionage-intel">
+                  <div className="espionage-intel-section">
+                    <span className="espionage-intel-heading">Troops (approx.)</span>
+                    {Object.entries(troops).filter(([, v]) => v > 0).map(([k, v]) => (
+                      <div key={k} className="espionage-intel-row"><span>{k}</span><span>{v}</span></div>
+                    ))}
+                  </div>
+                  <div className="espionage-intel-section">
+                    <span className="espionage-intel-heading">Resources (approx.)</span>
+                    {Object.entries(resources).map(([k, v]) => (
+                      <div key={k} className="espionage-intel-row"><span>{k}</span><span>{v.toLocaleString()}</span></div>
+                    ))}
+                  </div>
+                </div>
+              );
+            }
+            if (r.loss != null) return <span>Destroyed {r.loss as number} units of {r.target as string}</span>;
+            if (r.delayMinutes) return <span>Build queue delayed by {r.delayMinutes as number} minutes</span>;
+            if (r.message) return <span>{r.message as string}</span>;
+            return null;
+          })()}
+        </div>
+      )}
+
+      {!assetsLoading && assets.length > 0 && (
+        <div className="espionage-assets">
+          <div className="espionage-assets-heading">Active Embedded Operatives</div>
+          {assets.map((a) => (
+            <div key={String(a.id)} className="espionage-asset-row">
+              <div className="espionage-asset-info">
+                <span className="espionage-asset-target">{(a.targetName as string) ?? `Nexus #${a.targetNexusId}`}</span>
+                {a.lastReportAt && (
+                  <span className="espionage-asset-last">
+                    Last report: {new Date(a.lastReportAt as string).toLocaleTimeString()}
+                  </span>
+                )}
+              </div>
+              <div className="espionage-asset-actions">
+                <button className="espionage-asset-btn" onClick={() => handleRefreshIntel(a.id as number)}>
+                  Refresh Intel
+                </button>
+                <button className="espionage-asset-btn espionage-asset-btn--recall" onClick={() => handleRecall(a.id as number)}>
+                  Recall
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default NexusView;

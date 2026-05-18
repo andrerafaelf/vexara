@@ -70,6 +70,9 @@ model Galaxy {
   marketTransactions MarketTransaction[]
   reportReads        ReportRead[]
   factions           Faction[]
+  galaxyEvents       GalaxyEvent[]
+  spyAssets          SpyAsset[]
+  factionTreaties    FactionTreaty[]
 }
 
 model GalaxyPlayer {
@@ -230,6 +233,8 @@ model Nexus {
   trainingQueue      Json @default("[]")
 
   nexusType            String?
+  nexusTypeLockedAt    DateTime?
+  nexusTypeDoubled     Boolean   @default(false)
 
   lastResourceUpdate       DateTime  @default(now())
   points                   Int       @default(5)
@@ -378,9 +383,11 @@ model Faction {
   invites      FactionInvite[]
   messages     FactionMessage[]
   events       FactionEvent[]
-  warsInitiated FactionWar[] @relation("FactionWarDeclarer")
-  warsReceived  FactionWar[] @relation("FactionWarTarget")
-  joinRequests  FactionJoinRequest[]
+  warsInitiated    FactionWar[]    @relation("FactionWarDeclarer")
+  warsReceived     FactionWar[]    @relation("FactionWarTarget")
+  joinRequests     FactionJoinRequest[]
+  treatiesProposed FactionTreaty[] @relation("TreatyProposer")
+  treatiesReceived FactionTreaty[] @relation("TreatyTarget")
 
   @@unique([galaxyId, name])
   @@unique([galaxyId, tag])
@@ -486,6 +493,84 @@ model FactionWar {
   @@index([galaxyId])
   @@index([declarerFactionId])
   @@index([targetFactionId])
+}
+
+enum FactionTreatyType {
+  nap
+  trade
+  vassal
+}
+
+enum FactionTreatyStatus {
+  pending
+  active
+  expired
+  cancelled
+}
+
+model FactionTreaty {
+  id                 Int                 @id @default(autoincrement())
+  galaxyId           Int
+  type               FactionTreatyType
+  status             FactionTreatyStatus @default(pending)
+  proposerFactionId  Int
+  targetFactionId    Int
+  proposedByUserId   Int
+  acceptedByUserId   Int?
+  durationDays       Int?
+  startsAt           DateTime?
+  expiresAt          DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @default(now())
+  meta               Json?
+
+  galaxy           Galaxy  @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
+  proposerFaction  Faction @relation("TreatyProposer", fields: [proposerFactionId], references: [id], onDelete: Cascade)
+  targetFaction    Faction @relation("TreatyTarget",   fields: [targetFactionId],   references: [id], onDelete: Cascade)
+
+  @@index([galaxyId])
+  @@index([proposerFactionId])
+  @@index([targetFactionId])
+  @@index([status])
+}
+
+model GalaxyEvent {
+  id          Int       @id @default(autoincrement())
+  galaxyId    Int
+  type        String    @db.VarChar(64)
+  title       String    @db.VarChar(128)
+  description String    @db.VarChar(512)
+  nexusId     Int?
+  x           Int?
+  y           Int?
+  expiresAt   DateTime?
+  resolvedAt  DateTime?
+  meta        Json?
+  createdAt   DateTime  @default(now())
+
+  galaxy Galaxy @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
+
+  @@index([galaxyId])
+  @@index([type])
+  @@index([expiresAt])
+}
+
+model SpyAsset {
+  id             Int       @id @default(autoincrement())
+  galaxyId       Int
+  ownerUserId    Int
+  ownerNexusId   Int
+  targetNexusId  Int
+  status         String    @default("active") @db.VarChar(32)
+  discoveredAt   DateTime?
+  lastReportAt   DateTime?
+  createdAt      DateTime  @default(now())
+
+  galaxy Galaxy @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
+
+  @@index([galaxyId])
+  @@index([targetNexusId])
+  @@index([ownerUserId])
 }
 
 model ReferralToken {

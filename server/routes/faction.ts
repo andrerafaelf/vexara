@@ -2,6 +2,7 @@ import { Router } from 'express';
 import type { Response } from 'express';
 import * as factionController from '../controllers/factionController.js';
 import * as warController from '../controllers/factionWarController.js';
+import * as treatyController from '../controllers/factionTreatyController.js';
 import auth from '../middleware/auth.js';
 import type { AuthRequest } from '../types/index.js';
 
@@ -11,6 +12,11 @@ const router = Router();
 router.get('/my', auth, (req, res) => factionController.getMyFaction(req as AuthRequest, res as Response));
 router.get('/galaxy/list', auth, (req, res) => factionController.listFactionsInGalaxy(req as AuthRequest, res as Response));
 router.get('/leaderboard', auth, (req, res) => factionController.getLeaderboard(req as AuthRequest, res as Response));
+router.get('/diplomacy/galaxy', auth, (req, res) => treatyController.getGalaxyDiplomacy(req as AuthRequest, res as Response));
+
+// Treaty action routes (must precede /:id)
+router.post('/treaties/:treatyId/accept', auth, (req, res) => treatyController.acceptTreaty(req as AuthRequest, res as Response));
+router.post('/treaties/:treatyId/cancel', auth, (req, res) => treatyController.cancelTreaty(req as AuthRequest, res as Response));
 router.get('/invites/list', auth, (req, res) => factionController.getMyInvites(req as AuthRequest, res as Response));
 router.post('/invites/:inviteId/accept', auth, (req, res) => factionController.acceptInvite(req as AuthRequest, res as Response));
 router.delete('/invites/:inviteId', auth, (req, res) => factionController.declineInvite(req as AuthRequest, res as Response));
@@ -46,5 +52,9 @@ router.get('/:id/events', auth, (req, res) => factionController.getEvents(req as
 // War list + declare
 router.get('/:factionId/wars', auth, (req, res) => warController.getWars(req as AuthRequest, res as Response));
 router.post('/:id/wars/declare/:targetFactionId', auth, (req, res) => warController.declareWar(req as AuthRequest, res as Response));
+
+// Treaty list + propose
+router.get('/:factionId/treaties', auth, (req, res) => treatyController.getActiveTreaties(req as AuthRequest, res as Response));
+router.post('/:factionId/treaties/propose', auth, (req, res) => treatyController.proposeTreaty(req as AuthRequest, res as Response));
 
 export default router;

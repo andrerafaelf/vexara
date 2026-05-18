@@ -3,6 +3,7 @@ import prisma from '../lib/prisma.js';
 import { computeForcePower, TROOP_STATS } from './combatMath.js';
 import { buildDetailedScoutIntel } from './scouting.js';
 import { NOTIF, sendPushToUser } from './push.js';
+import { resolveEventForNexus } from './galaxyEvents.js';
 import type { TroopKey } from '../types/index.js';
 
 async function logFactionEvent(userId: number, galaxyId: number, type: string, actorName?: string, targetName?: string, meta?: string) {
@@ -148,7 +149,9 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
     let attackPower = computeForcePower(attackTroops, 'attack');
     let defensePower = computeForcePower(mergedDefenderForce, 'defense');
 
-    const shieldEfficiencyMultiplier = defenderNexus.nexusType === 'Military Outpost' ? 1.25 : 1;
+    const baseShieldEff = defenderNexus.nexusType === 'Military Outpost' ? 1.25 : 1;
+    const nexusDoubled = (defenderNexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled ?? false;
+    const shieldEfficiencyMultiplier = baseShieldEff === 1 ? 1 : 1 + (baseShieldEff - 1) * (nexusDoubled ? 2 : 1);
     defensePower *= 1 + defenderNexus.shieldGrid * 0.02 * shieldEfficiencyMultiplier;
 
     const attackerWins = attackPower > defensePower;
@@ -273,7 +276,14 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
         defenderTroopUpdates['ownerId'] = attackerNexus!.ownerId;
         defenderTroopUpdates['name'] = 'Conquered Nexus';
         const NPC_TYPE_NAMES = ['Resource Depot', 'Military Outpost', 'Supply Cache', 'Neutral Settlement', 'Reclaimed Outpost'];
-        defenderTroopUpdates['nexusType'] = defenderNexus.nexusType ?? (NPC_TYPE_NAMES.includes(defenderNexus.name) ? defenderNexus.name : null);
+        const wasNpc = defenderNexus.ownerId === null || NPC_TYPE_NAMES.includes(defenderNexus.name);
+        const preservedType = defenderNexus.nexusType ?? (NPC_TYPE_NAMES.includes(defenderNexus.name) ? defenderNexus.name : null);
+        defenderTroopUpdates['nexusType'] = preservedType;
+        // Double bonuses when conquering an NPC nexus that has a special type (not Neutral Settlement)
+        if (wasNpc && preservedType && preservedType !== 'Neutral Settlement') {
+          defenderTroopUpdates['nexusTypeDoubled'] = true;
+          defenderTroopUpdates['nexusTypeLockedAt'] = new Date();
+        }
         defenderTroopUpdates['conqueredAt'] = new Date();
         conquered = true;
         attackerLosses.overseer = overseerSent;
@@ -297,6 +307,8 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
       if (attackerNexusInfo?.galaxyId && attackerUsername) {
         void logFactionEvent(attack.attackerUserId, attackerNexusInfo.galaxyId, 'nexus_captured', attackerUsername, undefined, nexusName);
       }
+      // Resolve any galaxy events tied to this nexus (derelict ship / rogue AI captured)
+      void resolveEventForNexus(defenderNexus.id);
     }
 
     const survivingTroops: Partial<Record<TroopKey, number>> = {};

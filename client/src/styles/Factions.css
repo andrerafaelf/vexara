@@ -1608,3 +1608,89 @@
   border-color: rgba(255, 158, 61, 0.15);
   background: rgba(255, 158, 61, 0.03);
 }
+
+/* ---- Diplomacy Tab ---- */
+.factions-treaty-form {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.factions-treaty-duration-input {
+  width: 70px;
+  background: var(--color-navy-900, #0d1b2a);
+  border: 1px solid var(--color-navy-500, #2a4060);
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: var(--text-primary, #e8edf2);
+  font-size: 13px;
+}
+
+.factions-treaty-hint {
+  font-size: 12px;
+  color: var(--text-muted, #7a8fa8);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+.factions-treaty-type {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(122, 143, 168, 0.15);
+  color: var(--text-muted, #7a8fa8);
+  flex-shrink: 0;
+}
+
+.factions-treaty-type--active {
+  background: rgba(74, 222, 128, 0.12);
+  color: #4ade80;
+}
+
+.factions-treaty-type--pending {
+  background: rgba(250, 204, 21, 0.1);
+  color: #facc15;
+}
+
+.factions-diplomacy-board {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.factions-diplomacy-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--color-navy-800, #0d1f35);
+  border-radius: 6px;
+  padding: 9px 12px;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+
+.factions-diplomacy-row--pending {
+  opacity: 0.7;
+}
+
+.factions-diplomacy-parties {
+  color: var(--text-primary, #e8edf2);
+  flex: 1;
+  min-width: 0;
+}
+
+.factions-diplomacy-sep {
+  color: var(--text-muted, #7a8fa8);
+  margin: 0 6px;
+  font-size: 11px;
+}
+
+.factions-diplomacy-status {
+  font-size: 11px;
+  color: var(--text-muted, #7a8fa8);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}

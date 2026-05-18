@@ -1002,3 +1002,105 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* ── Galaxy events bar ─────────────────── */
+.galaxy-events-bar {
+  border-bottom: 1px solid var(--border-default);
+  background: var(--color-navy-900);
+}
+
+.galaxy-events-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 8px 14px;
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.galaxy-events-toggle:hover {
+  background: var(--color-navy-800);
+}
+
+.galaxy-events-chevron {
+  margin-left: auto;
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+.galaxy-events-panel {
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.galaxy-event-card {
+  padding: var(--space-3) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default);
+  background: var(--color-navy-800);
+}
+
+.galaxy-event-card--rogue_ai {
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 6%, var(--color-navy-800));
+}
+
+.galaxy-event-card--derelict_ship {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--color-navy-800));
+}
+
+.galaxy-event-card--resource_storm {
+  border-color: var(--success);
+  background: color-mix(in srgb, var(--success) 6%, var(--color-navy-800));
+}
+
+.galaxy-event-card-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  color: var(--text-strong);
+}
+
+.galaxy-event-card--rogue_ai .galaxy-event-card-header { color: var(--danger); }
+.galaxy-event-card--derelict_ship .galaxy-event-card-header { color: var(--accent); }
+.galaxy-event-card--resource_storm .galaxy-event-card-header { color: var(--success); }
+
+.galaxy-event-goto {
+  margin-left: auto;
+  background: var(--color-navy-700);
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  color: var(--text-default);
+  font-size: 11px;
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.galaxy-event-goto:hover { background: var(--color-navy-600); }
+
+.galaxy-event-desc {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  line-height: 1.45;
+  margin: 0 0 4px;
+}
+
+.galaxy-event-expires {
+  font-size: 10px;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+}

@@ -358,3 +358,54 @@ export const redeemMilestoneToken = (
     method: 'POST',
     body: JSON.stringify({ rewardType, nexusId, ...opts }),
   });
+
+// Nexus specialization
+export const specializeNexus = (nexusId: string, nexusType: string) =>
+  apiRequest(`/nexus/${nexusId}/specialize`, {
+    method: 'POST',
+    body: JSON.stringify({ nexusType }),
+  });
+
+// Espionage
+export const sendSpyMission = (fromNexusId: string, toNexusId: string, type: 'sabotage' | 'embed', operatives: number, sabotageTarget?: string) =>
+  apiRequest('/attack/spy', {
+    method: 'POST',
+    body: JSON.stringify({ fromNexusId, toNexusId, type, operatives, sabotageTarget }),
+  });
+
+export const getSpyAssets = (nexusId: string) =>
+  apiRequest(`/attack/spy/assets/${nexusId}`);
+
+export const recallSpyAsset = (assetId: number) =>
+  apiRequest(`/attack/spy/assets/${assetId}/recall`, { method: 'POST' });
+
+export const getEmbedIntel = (assetId: number) =>
+  apiRequest(`/attack/spy/assets/${assetId}/intel`);
+
+// Galaxy events
+export const getGalaxyEvents = () =>
+  apiRequest('/map/events');
+
+// Activity summary (While You Were Away)
+export const getActivitySummary = (since?: string) =>
+  apiRequest(`/report/summary${since ? `?since=${encodeURIComponent(since)}` : ''}`);
+
+// Faction diplomacy
+export const proposeTreaty = (factionId: number, targetFactionId: number, type: string, durationDays?: number) =>
+  apiRequest(`/faction/${factionId}/treaties/propose`, {
+    method: 'POST',
+    body: JSON.stringify({ targetFactionId, type, durationDays }),
+  });
+
+export const acceptTreaty = (treatyId: number) =>
+  apiRequest(`/faction/treaties/${treatyId}/accept`, { method: 'POST' });
+
+export const cancelTreaty = (treatyId: number) =>
+  apiRequest(`/faction/treaties/${treatyId}/cancel`, { method: 'POST' });
+
+export const getActiveTreaties = (factionId: number) =>
+  apiRequest(`/faction/${factionId}/treaties`);
+
+export const getGalaxyDiplomacy = () =>
+  apiRequest('/faction/diplomacy/galaxy');
+

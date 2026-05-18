@@ -107,6 +107,8 @@ export interface Nexus {
   control?: number;
   controlLevel?: number;
   nexusType?: string | null;
+  nexusTypeDoubled?: boolean;
+  nexusTypeLockedAt?: string | null;
   newbieProtectionEndsAt?: string | null;
   createdAt?: string;
   conqueredAt?: string | null;

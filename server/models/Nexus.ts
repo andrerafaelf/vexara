@@ -5,6 +5,7 @@ import {
   computeResourceUpdate as computeResourceUpdateBase,
   getMaxStorage as getMaxStorageBase,
   getResourceProduction as getResourceProductionBase,
+  type StormBonus,
 } from '../utils/economy.js';
 import { getPopulationMax } from '../utils/population.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
@@ -16,7 +17,7 @@ type EconomyNexus = Parameters<typeof computeResourceUpdateBase>[0];
 
 export function getResourceProduction(nexus: EconomyNexus) { return getResourceProductionBase(nexus); }
 export function getMaxStorage(nexus: EconomyNexus) { return getMaxStorageBase(nexus); }
-export function computeResourceUpdate(nexus: EconomyNexus) { return computeResourceUpdateBase(nexus); }
+export function computeResourceUpdate(nexus: EconomyNexus, storm?: StormBonus) { return computeResourceUpdateBase(nexus, storm); }
 export function calculatePoints(nexus: Nexus & Record<string, unknown>) { return calculatePointsBase(nexus); }
 
 // --- Quest system ---
@@ -334,19 +335,65 @@ export async function recoverControlLevels(): Promise<void> {
   }
 }
 
+interface ActiveStorm {
+  galaxyId: number;
+  resource: string;
+  xMin: number; xMax: number; yMin: number; yMax: number;
+}
+
+async function loadActiveStorms(): Promise<ActiveStorm[]> {
+  const now = new Date();
+  const events = await prisma.galaxyEvent.findMany({
+    where: { type: 'resource_storm', resolvedAt: null, expiresAt: { gt: now } },
+    select: { galaxyId: true, meta: true },
+  });
+  const storms: ActiveStorm[] = [];
+  for (const ev of events) {
+    const meta = ev.meta as Record<string, unknown> | null;
+    if (!meta) continue;
+    storms.push({
+      galaxyId: ev.galaxyId,
+      resource: meta.resource as string,
+      xMin: meta.xMin as number, xMax: meta.xMax as number,
+      yMin: meta.yMin as number, yMax: meta.yMax as number,
+    });
+  }
+  return storms;
+}
+
+function getStormBonus(nexus: { galaxyId: number; x: number; y: number }, storms: ActiveStorm[]): StormBonus | undefined {
+  const active = storms.filter(
+    (s) => s.galaxyId === nexus.galaxyId &&
+      nexus.x >= s.xMin && nexus.x <= s.xMax &&
+      nexus.y >= s.yMin && nexus.y <= s.yMax,
+  );
+  if (active.length === 0) return undefined;
+  const bonus: StormBonus = {};
+  for (const s of active) {
+    if (s.resource === 'biomass') bonus.biomass = (bonus.biomass ?? 1) * 2;
+    else if (s.resource === 'alloy') bonus.alloy = (bonus.alloy ?? 1) * 2;
+    else if (s.resource === 'ore') bonus.ore = (bonus.ore ?? 1) * 2;
+  }
+  return bonus;
+}
+
 export async function updateAllResources(): Promise<void> {
   try {
     // Select only columns needed for computation — avoids loading queues/troops/etc.
-    const nexuses = await prisma.nexus.findMany({
-      select: {
-        id: true, ownerId: true, name: true, nexusType: true,
-        biomassFarm: true, alloyForge: true, oreExtractor: true, storageVault: true,
-        biomass: true, alloy: true, ore: true, lastResourceUpdate: true,
-        commandCore: true, recruitmentCore: true, lifeSupport: true, shieldGrid: true,
-        lancerDrone: true, assaultTrooper: true, breakerUnit: true, reconOperative: true,
-        skimmerBike: true, siegeMech: true,
-      },
-    });
+    const [nexuses, activeStorms] = await Promise.all([
+      prisma.nexus.findMany({
+        select: {
+          id: true, ownerId: true, name: true, nexusType: true, nexusTypeDoubled: true,
+          galaxyId: true, x: true, y: true,
+          biomassFarm: true, alloyForge: true, oreExtractor: true, storageVault: true,
+          biomass: true, alloy: true, ore: true, lastResourceUpdate: true,
+          commandCore: true, recruitmentCore: true, lifeSupport: true, shieldGrid: true,
+          lancerDrone: true, assaultTrooper: true, breakerUnit: true, reconOperative: true,
+          skimmerBike: true, siegeMech: true,
+        },
+      }),
+      loadActiveStorms(),
+    ]);
 
     if (nexuses.length === 0) return;
 
@@ -354,7 +401,8 @@ export async function updateAllResources(): Promise<void> {
     const rows: Array<{ id: number; biomass: number; alloy: number; ore: number; points: number; lastResourceUpdate: Date; notifyOwner: number | null }> = [];
 
     for (const nexus of nexuses) {
-      const resourceUpdate = computeResourceUpdate(nexus);
+      const storm = getStormBonus(nexus, activeStorms);
+      const resourceUpdate = computeResourceUpdate(nexus, storm);
       const points = calculatePoints({ ...nexus, ...resourceUpdate } as Nexus & Record<string, unknown>);
       const maxStorage = getMaxStorage(nexus);
       const wasAlreadyFull = nexus.biomass >= maxStorage && nexus.alloy >= maxStorage && nexus.ore >= maxStorage;
@@ -425,6 +473,8 @@ export function serializeNexus(v: NexusWithQuests, opts: { ownerData?: unknown }
     points: v.points,
     controlLevel: v.controlLevel,
     nexusType: v.nexusType ?? null,
+    nexusTypeDoubled: (v as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled ?? false,
+    nexusTypeLockedAt: (v as unknown as { nexusTypeLockedAt?: Date | null }).nexusTypeLockedAt ?? null,
     newbieProtectionEndsAt: v.newbieProtectionEndsAt ?? null,
     createdAt: v.createdAt,
     conqueredAt: v.conqueredAt ?? null,

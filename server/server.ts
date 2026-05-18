@@ -27,6 +27,7 @@ import { processArrivedAttacks, processArrivedTransfers } from './utils/combat.j
 import { processDominanceVictories } from './utils/dominance.js';
 import { logError, logInfo, logWarn } from './utils/logger.js';
 import { ensureNeutralNexusPool, levelUpNeutralNexuses, dailyNexusGrowth } from './utils/neutralNexuses.js';
+import { processGalaxyEvents } from './utils/galaxyEvents.js';
 
 dotenv.config();
 
@@ -127,7 +128,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/faction', factionRoutes);
 app.use('/api/referral', referralRoutes);
 
-const JOB_LOCKS = { updateResources: 9101, processCombat: 9102, syncNeutralPool: 9103, recoverControl: 9104, processTransfers: 9105, levelNeutralNexuses: 9106, processQueues: 9107, processDominance: 9108, dailyNexusGrowth: 9109 };
+const JOB_LOCKS = { updateResources: 9101, processCombat: 9102, syncNeutralPool: 9103, recoverControl: 9104, processTransfers: 9105, levelNeutralNexuses: 9106, processQueues: 9107, processDominance: 9108, dailyNexusGrowth: 9109, galaxyEvents: 9110 };
 
 async function runWithPgAdvisoryLock(lockId: number, jobName: string, jobHandler: () => Promise<void>) {
   try {
@@ -164,6 +165,7 @@ prisma.$connect()
     setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.levelNeutralNexuses, 'level_neutral_nexuses', () => levelUpNeutralNexuses()); }, 6 * 60 * 60 * 1000);
     setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.dailyNexusGrowth, 'daily_nexus_growth', async () => { const r = await dailyNexusGrowth(); if (r.created > 0) logInfo('daily_nexus_growth', { created: r.created }); }); }, 24 * 60 * 60 * 1000);
     setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.processDominance, 'process_dominance', () => processDominanceVictories()); }, 10 * 60 * 1000);
+    setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.galaxyEvents, 'galaxy_events', () => processGalaxyEvents()); }, 4 * 60 * 60 * 1000);
   })
   .catch((err: Error) => logError('postgres_connection_error', { message: err.message }));
 
