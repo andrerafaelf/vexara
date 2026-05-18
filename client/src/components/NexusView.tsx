@@ -2441,50 +2441,111 @@ const SABOTAGE_TARGETS: { key: string; label: string; desc: string }[] = [
 ];
 
 const TROOP_DISPLAY_NAME: Record<string, string> = {
-  reconOperative:     'Recon Operative',
-  assaultTrooper:     'Assault Trooper',
-  bulwarkGuard:       'Bulwark Guard',
-  interceptorBike:    'Interceptor Bike',
-  breakerUnit:        'Breaker Unit',
-  disruptorUnit:      'Disruptor Unit',
-  annihilatorPlatform:'Annihilator Platform',
+  reconOperative:      'Recon Operative',
+  assaultTrooper:      'Assault Trooper',
+  bulwarkGuard:        'Bulwark Guard',
+  interceptorBike:     'Interceptor Bike',
+  breakerUnit:         'Breaker Unit',
+  disruptorUnit:       'Disruptor Unit',
+  annihilatorPlatform: 'Annihilator Platform',
+  lancerDrone:         'Lancer Drone',
+  suppressorTeam:      'Suppressor Team',
+  skimmerBike:         'Skimmer Bike',
+  siegeMech:           'Siege Mech',
+  overseer:            'Overseer',
+};
+
+const BUILDING_DISPLAY_NAME: Record<string, string> = {
+  commandCore:      'Command Core',
+  shieldGrid:       'Shield Grid',
+  recruitmentCore:  'Recruitment Core',
 };
 
 function humanizeTroopKey(key: string): string {
   return TROOP_DISPLAY_NAME[key] ?? key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
 }
 
+function capitalize(s: string) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
 function EspionageIntelPanel({ report }: { report: Record<string, unknown> }) {
+  // Sabotage outcome
+  if (report.type === 'sabotage') {
+    if (report.message) return <span className="espionage-result-msg">{report.message as string}</span>;
+    const target = report.target as string;
+    if (target === 'troops' && report.field) {
+      return <span className="espionage-result-msg">Eliminated ~{(report.loss as number).toLocaleString()} {humanizeTroopKey(report.field as string)}.</span>;
+    }
+    if (target === 'biomass' || target === 'alloy' || target === 'ore') {
+      return <span className="espionage-result-msg">Destroyed ~{(report.loss as number).toLocaleString()} {capitalize(target)}.</span>;
+    }
+    if (target === 'building') {
+      return <span className="espionage-result-msg">Build queue delayed by {report.delayMinutes as number} minutes.</span>;
+    }
+    return null;
+  }
+
+  // Embed refreshed (re-embed on existing asset)
+  if (report.refreshed && !report.intel) {
+    return <span className="espionage-result-msg">Operative already in place. Asset timestamp updated.</span>;
+  }
+
+  // No intel in response
   if (!report.intel) {
     if (report.message) return <span className="espionage-result-msg">{report.message as string}</span>;
     return null;
   }
+
   const intel = report.intel as Record<string, unknown>;
   const troops = (intel.troops ?? {}) as Record<string, number>;
   const resources = (intel.resources ?? {}) as Record<string, number>;
+  const buildings = (intel.buildings ?? {}) as Record<string, number>;
+  const nexusType = intel.nexusType as string | null;
+  const buildQueueLength = intel.buildQueueLength as number | undefined;
   const troopEntries = Object.entries(troops).filter(([, v]) => v > 0);
+
   return (
     <div className="espionage-intel">
-      <div className="espionage-intel-section">
-        <span className="espionage-intel-heading">Troops (approx.)</span>
-        {troopEntries.length === 0
-          ? <span className="espionage-intel-empty">No troops detected</span>
-          : troopEntries.map(([k, v]) => (
-              <div key={k} className="espionage-intel-row">
-                <span>{humanizeTroopKey(k)}</span>
-                <span>{v.toLocaleString()}</span>
-              </div>
-            ))
-        }
-      </div>
-      <div className="espionage-intel-section">
-        <span className="espionage-intel-heading">Resources (approx.)</span>
-        {Object.entries(resources).map(([k, v]) => (
-          <div key={k} className="espionage-intel-row">
-            <span>{k.charAt(0).toUpperCase() + k.slice(1)}</span>
-            <span>{v.toLocaleString()}</span>
-          </div>
-        ))}
+      {nexusType && (
+        <div className="espionage-intel-nexustype">
+          Nexus type: <strong>{capitalize(nexusType)}</strong>
+          {buildQueueLength != null && buildQueueLength > 0 && (
+            <span className="espionage-intel-buildqueue"> &middot; {buildQueueLength} build{buildQueueLength !== 1 ? 's' : ''} queued</span>
+          )}
+        </div>
+      )}
+      <div className="espionage-intel-cols">
+        <div className="espionage-intel-section">
+          <span className="espionage-intel-heading">Troops (approx.)</span>
+          {troopEntries.length === 0
+            ? <span className="espionage-intel-empty">None detected</span>
+            : troopEntries.map(([k, v]) => (
+                <div key={k} className="espionage-intel-row">
+                  <span>{humanizeTroopKey(k)}</span>
+                  <span>{v.toLocaleString()}</span>
+                </div>
+              ))
+          }
+        </div>
+        <div className="espionage-intel-section">
+          <span className="espionage-intel-heading">Resources (approx.)</span>
+          {Object.entries(resources).map(([k, v]) => (
+            <div key={k} className="espionage-intel-row">
+              <span>{capitalize(k)}</span>
+              <span>{v.toLocaleString()}</span>
+            </div>
+          ))}
+          {Object.keys(buildings).length > 0 && (
+            <>
+              <span className="espionage-intel-heading" style={{ marginTop: 8 }}>Buildings</span>
+              {Object.entries(buildings).map(([k, v]) => (
+                <div key={k} className="espionage-intel-row">
+                  <span>{BUILDING_DISPLAY_NAME[k] ?? humanizeTroopKey(k)}</span>
+                  <span>Lv {v}</span>
+                </div>
+              ))}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -2542,7 +2603,7 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
         onToast(mode === 'embed' ? 'Operative embedded successfully' : 'Sabotage mission succeeded', 'success');
         if (mode === 'embed') refreshAssets();
       } else {
-        onToast('Mission failed — operative detected and eliminated', 'error');
+        onToast('Mission failed: operative intercepted and eliminated', 'error');
       }
     } catch (e: any) {
       onToast(e?.response?.data?.error ?? 'Mission failed', 'error');
@@ -2570,7 +2631,7 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
         onToast('Operative was discovered and captured', 'error');
         refreshAssets();
       } else {
-        setResult({ intelRefresh: true, ...r.data });
+        setResult({ intelRefresh: true, type: 'embed', ...r.data });
         onToast('Intel refreshed', 'success');
       }
     } catch {
@@ -2579,8 +2640,8 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
   };
 
   const reconCount = nexus.troops?.reconOperative ?? 0;
-  const embedCost = { biomass: 400 * operatives, alloy: 200 * operatives };
-  const sabotCost = { biomass: 600 * operatives, alloy: 300 * operatives };
+  const embedCost = { biomass: 400 * operatives, secondary: 200 * operatives, secondaryLabel: 'Alloy' };
+  const sabotCost = { biomass: 300 * operatives, secondary: 300 * operatives, secondaryLabel: 'Ore' };
   const cost = mode === 'embed' ? embedCost : sabotCost;
   const maxOps = Math.min(20, reconCount);
   const selectedSabTarget = SABOTAGE_TARGETS.find(t => t.key === sabotageTarget)!;
@@ -2696,13 +2757,13 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
             </span>
             <span className="espionage-cost-sep">+</span>
             <span className="espionage-cost-item">
-              <span className="espionage-cost-dot espionage-cost-dot--alloy" />
-              {cost.alloy.toLocaleString()} Alloy
+              <span className={`espionage-cost-dot espionage-cost-dot--${cost.secondaryLabel.toLowerCase()}`} />
+              {cost.secondary.toLocaleString()} {cost.secondaryLabel}
             </span>
           </div>
 
           {reconCount < operatives && (
-            <div className="espionage-warn">Not enough Recon Operatives — train more at your Recruitment Core.</div>
+            <div className="espionage-warn">Not enough Recon Operatives. Train more at your Recruitment Core.</div>
           )}
 
           <button
@@ -2717,18 +2778,20 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
 
       {/* Result panel */}
       {result && (
-        <div className={`espionage-result${result.success ? ' espionage-result--success' : ' espionage-result--fail'}`}>
+        <div className={`espionage-result${(result.success !== false) ? ' espionage-result--success' : ' espionage-result--fail'}`}>
           <strong className="espionage-result-title">
-            {result.success ? (mode === 'embed' ? 'Operative Embedded' : 'Sabotage Succeeded') : 'Mission Failed — Detected'}
+            {result.intelRefresh
+              ? 'Intel Updated'
+              : result.success
+                ? (result.report as any)?.type === 'sabotage' ? 'Sabotage Succeeded' : 'Operative Embedded'
+                : 'Mission Failed'}
           </strong>
-          {Boolean(result.success) && Boolean(result.report) && (
-            <EspionageIntelPanel report={result.report as Record<string, unknown>} />
-          )}
-          {Boolean(result.success) && mode === 'sabotage' && !result.report && (
-            <span className="espionage-result-msg">Target successfully sabotaged. Operative extracted.</span>
-          )}
-          {!result.success && (
-            <span className="espionage-result-msg">Your operative was identified and eliminated. Increase operative count to improve success odds.</span>
+          {result.intelRefresh
+            ? <EspionageIntelPanel report={result as Record<string, unknown>} />
+            : Boolean(result.report) && <EspionageIntelPanel report={result.report as Record<string, unknown>} />
+          }
+          {!result.success && result.success !== undefined && (
+            <span className="espionage-result-msg">Your operative was intercepted before reaching the target and eliminated. Send more operatives to improve infiltration odds.</span>
           )}
         </div>
       )}

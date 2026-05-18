@@ -2256,8 +2256,7 @@
 
 .espionage-intel {
   display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
+  flex-direction: column;
   margin-top: 4px;
 }
 
@@ -2573,6 +2572,28 @@
 
 .espionage-cost-dot--biomass { background: #4ade80; }
 .espionage-cost-dot--alloy   { background: #60a5fa; }
+.espionage-cost-dot--ore     { background: #f97316; }
+
+/* intel panel layout */
+.espionage-intel-nexustype {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.espionage-intel-nexustype strong {
+  color: var(--text-primary);
+}
+
+.espionage-intel-buildqueue {
+  color: var(--text-muted);
+}
+
+.espionage-intel-cols {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
 
 /* not-enough-operatives warning */
 .espionage-warn {
