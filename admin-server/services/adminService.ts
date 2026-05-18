@@ -22,27 +22,32 @@ export function getGalaxyByName(name: string) {
   return prisma.galaxy.findUnique({ where: { name } });
 }
 
-export function getAllUsers() {
+export function getUsersInGalaxy(galaxyId: number) {
   return prisma.user.findMany({
-    select: { id: true, username: true, email: true, createdAt: true, nexuses: { select: { id: true, name: true } }, galaxyPlayers: { select: { galaxyId: true, points: true } } },
+    where: { galaxyPlayers: { some: { galaxyId } } },
+    select: {
+      id: true, username: true, email: true, createdAt: true,
+      nexuses: { where: { galaxyId }, select: { id: true, name: true } },
+      galaxyPlayers: { where: { galaxyId }, select: { galaxyId: true, points: true } },
+    },
     orderBy: { createdAt: 'desc' },
   });
 }
 
-export function getAdminStats() {
+export function getAdminStatsForGalaxy(galaxyId: number) {
   const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const troopSumSelect = TROOP_KEYS.reduce<Record<string, boolean>>((acc, key) => { acc[key] = true; return acc; }, {});
   return Promise.all([
-    prisma.user.count(),
-    prisma.nexus.count(),
-    prisma.attack.count({ where: { status: 'traveling' } }),
-    prisma.attack.count(),
-    prisma.user.count({ where: { createdAt: { gte: oneWeekAgo } } }),
-    prisma.galaxyPlayer.aggregate({ _avg: { points: true } }),
-    prisma.marketListing.count(),
-    prisma.nexus.findMany({ where: { ownerId: { not: null } }, select: troopSumSelect }),
-    prisma.user.count({ where: { nexuses: { some: {} } } }),
-    prisma.galaxyPlayer.findMany({ select: { userId: true, points: true, user: { select: { id: true, username: true } } }, orderBy: { points: 'desc' }, take: 10 }),
+    prisma.galaxyPlayer.count({ where: { galaxyId } }),
+    prisma.nexus.count({ where: { galaxyId } }),
+    prisma.attack.count({ where: { galaxyId, status: 'traveling' } }),
+    prisma.attack.count({ where: { galaxyId } }),
+    prisma.galaxyPlayer.count({ where: { galaxyId, user: { createdAt: { gte: oneWeekAgo } } } }),
+    prisma.galaxyPlayer.aggregate({ where: { galaxyId }, _avg: { points: true } }),
+    prisma.marketListing.count({ where: { galaxyId } }),
+    prisma.nexus.findMany({ where: { galaxyId, ownerId: { not: null } }, select: troopSumSelect }),
+    prisma.user.count({ where: { galaxyPlayers: { some: { galaxyId } }, nexuses: { some: { galaxyId } } } }),
+    prisma.galaxyPlayer.findMany({ where: { galaxyId }, select: { userId: true, points: true, user: { select: { id: true, username: true } } }, orderBy: { points: 'desc' }, take: 10 }),
   ]);
 }
 
@@ -76,13 +81,13 @@ export async function updateUserCredentials(userId: number, email?: string, pass
   return prisma.user.update({ where: { id: userId }, data });
 }
 
-export function findTargetNexus(userId: number, nexusId?: unknown) {
-  if (nexusId) return prisma.nexus.findFirst({ where: { id: toInt(nexusId), ownerId: userId } });
-  return prisma.nexus.findFirst({ where: { ownerId: userId }, orderBy: { createdAt: 'asc' } });
+export function findTargetNexus(userId: number, galaxyId: number, nexusId?: unknown) {
+  if (nexusId) return prisma.nexus.findFirst({ where: { id: toInt(nexusId), ownerId: userId, galaxyId } });
+  return prisma.nexus.findFirst({ where: { ownerId: userId, galaxyId }, orderBy: { createdAt: 'asc' } });
 }
 
-export async function findUserNexusWithQueue(userId: number, queueKey: string) {
-  const nexuses = await prisma.nexus.findMany({ where: { ownerId: userId }, orderBy: { createdAt: 'asc' } });
+export async function findUserNexusWithQueue(userId: number, galaxyId: number, queueKey: string) {
+  const nexuses = await prisma.nexus.findMany({ where: { ownerId: userId, galaxyId }, orderBy: { createdAt: 'asc' } });
   return nexuses.find((n) => Array.isArray((n as unknown as Record<string, unknown>)[queueKey]) && ((n as unknown as Record<string, unknown>)[queueKey] as unknown[]).length > 0) || null;
 }
 
@@ -90,8 +95,8 @@ export function updateNexus(id: number, data: Parameters<typeof prisma.nexus.upd
   return prisma.nexus.update({ where: { id }, data });
 }
 
-export function getAttack(id: number) {
-  return prisma.attack.findFirst({ where: { attackerUserId: id, status: 'traveling' }, orderBy: { arrivesAt: 'asc' } });
+export function getAttack(attackerUserId: number, galaxyId: number) {
+  return prisma.attack.findFirst({ where: { attackerUserId, galaxyId, status: 'traveling' }, orderBy: { arrivesAt: 'asc' } });
 }
 
 export function updateAttack(id: number, data: Parameters<typeof prisma.attack.update>[0]['data']) {
@@ -108,21 +113,22 @@ export function deleteUser(userId: number) {
   })();
 }
 
-export function resetUserAccount(userId: number, username: string) {
+export function resetUserAccount(userId: number, username: string, galaxyId: number) {
   return (async () => {
-    const targetGalaxy = await prisma.galaxy.findFirst({ where: { status: 'active' }, orderBy: { createdAt: 'asc' }, select: { id: true } });
-    if (!targetGalaxy) throw new Error('No active galaxy available to place the reset user');
+    const targetGalaxy = await prisma.galaxy.findUnique({ where: { id: galaxyId }, select: { id: true, status: true } });
+    if (!targetGalaxy) throw new Error('Galaxy not found');
+    if (targetGalaxy.status !== 'active') throw new Error('Cannot reset into a non-active galaxy');
     const STARTER_NEXUS_DATA = { commandCore: 0, recruitmentCore: 0, lifeSupport: 1, storageVault: 1, biomassFarm: 1, alloyForge: 1, oreExtractor: 1, shieldGrid: 0 };
     return prisma.$transaction(async (tx) => {
-      const userNexuses = await tx.nexus.findMany({ where: { ownerId: userId }, select: { id: true } });
+      const userNexuses = await tx.nexus.findMany({ where: { ownerId: userId, galaxyId }, select: { id: true } });
       const nexusIds = userNexuses.map((n) => n.id);
       if (nexusIds.length > 0) await tx.attack.deleteMany({ where: { OR: [{ attackerNexusId: { in: nexusIds } }, { defenderNexusId: { in: nexusIds } }] } });
-      await tx.attack.deleteMany({ where: { OR: [{ attackerUserId: userId }, { defenderUserId: userId }] } });
-      await tx.nexus.deleteMany({ where: { ownerId: userId } });
-      await tx.galaxyPlayer.updateMany({ where: { userId }, data: { points: 0, questRewardClaims: [], completedQuestIds: [], nexusGroups: [] } });
-      await tx.galaxyPlayer.upsert({ where: { userId_galaxyId: { userId, galaxyId: targetGalaxy.id } }, create: { userId, galaxyId: targetGalaxy.id }, update: {} });
-      await tx.user.update({ where: { id: userId }, data: { activeGalaxyId: targetGalaxy.id } });
-      return tx.nexus.create({ data: { name: `${username}'s Nexus`, ownerId: userId, galaxyId: targetGalaxy.id, x: Math.floor(Math.random() * 25), y: Math.floor(Math.random() * 25), ...STARTER_NEXUS_DATA, buildQueue: [], trainingQueue: [], populationCurrent: 5, populationMax: getPopulationMax(STARTER_NEXUS_DATA.lifeSupport), biomass: 500, alloy: 500, ore: 500, controlLevel: 100, points: 5, lastResourceUpdate: new Date() } });
+      await tx.attack.deleteMany({ where: { galaxyId, OR: [{ attackerUserId: userId }, { defenderUserId: userId }] } });
+      await tx.nexus.deleteMany({ where: { ownerId: userId, galaxyId } });
+      await tx.galaxyPlayer.updateMany({ where: { userId, galaxyId }, data: { points: 0, questRewardClaims: [], completedQuestIds: [], nexusGroups: [] } });
+      await tx.galaxyPlayer.upsert({ where: { userId_galaxyId: { userId, galaxyId } }, create: { userId, galaxyId }, update: {} });
+      await tx.user.update({ where: { id: userId }, data: { activeGalaxyId: galaxyId } });
+      return tx.nexus.create({ data: { name: `${username}'s Nexus`, ownerId: userId, galaxyId, x: Math.floor(Math.random() * 25), y: Math.floor(Math.random() * 25), ...STARTER_NEXUS_DATA, buildQueue: [], trainingQueue: [], populationCurrent: 5, populationMax: getPopulationMax(STARTER_NEXUS_DATA.lifeSupport), biomass: 500, alloy: 500, ore: 500, controlLevel: 100, points: 5, lastResourceUpdate: new Date() } });
     });
   })();
 }
@@ -135,9 +141,9 @@ export function deleteNexus(nexusId: number) {
   })();
 }
 
-export function getAdminAttacks() {
+export function getAdminAttacks(galaxyId: number) {
   return prisma.attack.findMany({
-    where: { status: 'traveling' },
+    where: { galaxyId, status: 'traveling' },
     include: { attackerNexus: { select: { id: true, name: true, x: true, y: true } }, defenderNexus: { select: { id: true, name: true, x: true, y: true } } },
     orderBy: { arrivesAt: 'asc' },
   });

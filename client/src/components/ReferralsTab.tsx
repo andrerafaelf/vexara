@@ -9,7 +9,6 @@ import {
   getMyReferrer,
   redeemMilestoneToken,
   redeemReferralToken,
-  setReferrer,
 } from '../services/api';
 import '../styles/ReferralsTab.css';
 
@@ -101,9 +100,6 @@ export default function ReferralsTab() {
   const [pendingMilestoneTokens, setPendingMilestoneTokens] = useState<PendingToken[]>([]);
   const [referrer, setReferrer_] = useState<ReferrerInfo | null>(null);
   const [nexuses, setNexuses] = useState<NexusSummary[]>([]);
-  const [referrerInput, setReferrerInput] = useState('');
-  const [referrerError, setReferrerError] = useState('');
-  const [referrerSubmitting, setReferrerSubmitting] = useState(false);
   const [myReferralCode, setMyReferralCode] = useState('');
   const [codeCopied, setCodeCopied] = useState(false);
 
@@ -145,23 +141,6 @@ export default function ReferralsTab() {
   };
 
   useEffect(() => { void load(); }, []);
-
-  const handleSetReferrer = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setReferrerError('');
-    setReferrerSubmitting(true);
-    try {
-      await setReferrer(referrerInput.trim());
-      setReferrerInput('');
-      await load();
-    } catch (err) {
-      setReferrerError(
-        (err as { response?: { data?: { error?: string } } }).response?.data?.error || 'Failed to set referrer',
-      );
-    } finally {
-      setReferrerSubmitting(false);
-    }
-  };
 
   const openRedeem = (tokenId: number, kind: TokenKind) => {
     setRedeemError('');
@@ -357,10 +336,10 @@ export default function ReferralsTab() {
         </section>
       )}
 
-      {/* Referrer section — who referred you */}
-      <section className="referrals-section">
-        <h3 className="referrals-section-title">Referred By</h3>
-        {referrer ? (
+      {/* Referrer section — read-only display of who referred you at signup */}
+      {referrer && (
+        <section className="referrals-section">
+          <h3 className="referrals-section-title">Referred By</h3>
           <div className="referrals-referrer-card">
             <span className="referrals-referrer-name">{referrer.username}</span>
             {referrer.thresholdMet ? (
@@ -371,46 +350,22 @@ export default function ReferralsTab() {
               </span>
             )}
           </div>
-        ) : (
-          <form className="referrals-referrer-form" onSubmit={handleSetReferrer}>
-            <p className="referrals-hint">
-              Did someone invite you? Enter their username. Once you reach {REFERRAL_THRESHOLD} influence points, they earn 2 reward tokens. This can only be set once.
-            </p>
-            <div className="referrals-referrer-inline">
-              <input
-                type="text"
-                value={referrerInput}
-                onChange={(e) => setReferrerInput(e.target.value)}
-                placeholder="Their username"
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck={false}
-                disabled={referrerSubmitting}
-                maxLength={20}
-              />
-              <button type="submit" className="referrals-btn primary" disabled={referrerSubmitting || !referrerInput.trim()}>
-                {referrerSubmitting ? 'Saving...' : 'Set'}
-              </button>
-            </div>
-            {referrerError && <div className="referrals-error">{referrerError}</div>}
-          </form>
-        )}
 
-        {/* Show the referee's own progress toward unlocking the referral reward */}
-        {referrer && !referrer.thresholdMet && (
-          <div>
-            <div className="referrals-progress-bar-wrap" style={{ marginTop: 10 }}>
-              <div
-                className="referrals-progress-bar"
-                style={{ width: `${Math.min(100, ((referrer.myPoints ?? 0) / REFERRAL_THRESHOLD) * 100)}%` }}
-              />
+          {!referrer.thresholdMet && (
+            <div>
+              <div className="referrals-progress-bar-wrap" style={{ marginTop: 10 }}>
+                <div
+                  className="referrals-progress-bar"
+                  style={{ width: `${Math.min(100, ((referrer.myPoints ?? 0) / REFERRAL_THRESHOLD) * 100)}%` }}
+                />
+              </div>
+              <span className="referrals-progress-label">
+                Your progress: {Math.min(referrer.myPoints ?? 0, REFERRAL_THRESHOLD)} / {REFERRAL_THRESHOLD} pts to unlock their reward
+              </span>
             </div>
-            <span className="referrals-progress-label">
-              Your progress: {Math.min(referrer.myPoints ?? 0, REFERRAL_THRESHOLD)} / {REFERRAL_THRESHOLD} pts to unlock their reward
-            </span>
-          </div>
-        )}
-      </section>
+          )}
+        </section>
+      )}
 
       {/* Pending referral redemptions (earned by inviting others) */}
       {pendingReferralTokens.length > 0 && (
@@ -447,7 +402,7 @@ export default function ReferralsTab() {
         <h3 className="referrals-section-title">Your Referrals</h3>
         {referrals.length === 0 ? (
           <p className="referrals-hint">
-            No referrals yet. Tell players to enter your username in the Referred By field when they join.
+            No referrals yet. Share your referral code so new players can enter it when they sign up.
           </p>
         ) : (
           <ul className="referrals-list">

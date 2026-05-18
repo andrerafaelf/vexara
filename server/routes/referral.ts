@@ -10,7 +10,6 @@ router.get('/', auth, (req, res) => referralController.getMyReferrals(req as Aut
 router.get('/pending', auth, (req, res) => referralController.getMyPendingTokens(req as AuthRequest, res as Response));
 router.get('/my-code', auth, (req, res) => referralController.getMyReferralCode(req as AuthRequest, res as Response));
 router.get('/my-referrer', auth, (req, res) => referralController.getMyReferrer(req as AuthRequest, res as Response));
-router.post('/set-referrer', auth, (req, res) => referralController.setReferrer(req as AuthRequest, res as Response));
 router.post('/tokens/:tokenId/redeem', auth, (req, res) => referralController.redeemToken(req as AuthRequest, res as Response));
 router.post('/milestone-tokens/:tokenId/redeem', auth, (req, res) => referralController.redeemMilestoneToken(req as AuthRequest, res as Response));
 

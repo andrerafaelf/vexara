@@ -338,8 +338,6 @@ export const getMyReferrals = () => apiRequest('/referral');
 export const getMyPendingTokens = () => apiRequest('/referral/pending');
 export const getMyReferralCode = () => apiRequest('/referral/my-code');
 export const getMyReferrer = () => apiRequest('/referral/my-referrer');
-export const setReferrer = (referrerUsername: string) =>
-  apiRequest('/referral/set-referrer', { method: 'POST', body: JSON.stringify({ referrerUsername }) });
 export const redeemReferralToken = (
   tokenId: number,
   rewardType: 'building_instant' | 'troop_grant',

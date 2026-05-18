@@ -265,40 +265,6 @@ export async function redeemMilestoneToken(req: AuthRequest, res: Response): Pro
   }
 }
 
-export async function setReferrer(req: AuthRequest, res: Response): Promise<void> {
-  try {
-    const { referrerUsername } = req.body as { referrerUsername?: string };
-    if (!referrerUsername || typeof referrerUsername !== 'string') {
-      res.status(400).json({ error: 'referrerUsername required' }); return;
-    }
-
-    const me = await prisma.user.findUnique({
-      where: { id: req.userId! },
-      select: { referredById: true, registrationIp: true },
-    });
-    if (me?.referredById) {
-      res.status(400).json({ error: 'You already have a referrer set' }); return;
-    }
-
-    const referrer = await prisma.user.findFirst({
-      where: { username: { equals: referrerUsername.trim(), mode: 'insensitive' } },
-      select: { id: true, username: true, registrationIp: true },
-    });
-    if (!referrer) { res.status(404).json({ error: 'Player not found' }); return; }
-    if (referrer.id === req.userId!) { res.status(400).json({ error: 'Cannot refer yourself' }); return; }
-
-    // Block same-IP referrals to prevent multi-account abuse
-    if (me?.registrationIp && referrer.registrationIp && me.registrationIp === referrer.registrationIp) {
-      res.status(400).json({ error: 'Cannot set referrer from the same network' }); return;
-    }
-
-    await prisma.user.update({ where: { id: req.userId! }, data: { referredById: referrer.id } });
-    res.json({ success: true, referrerUsername: referrer.username });
-  } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
-  }
-}
-
 export async function getMyReferralCode(req: AuthRequest, res: Response): Promise<void> {
   try {
     const me = await prisma.user.findUnique({

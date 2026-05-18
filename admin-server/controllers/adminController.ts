@@ -8,6 +8,18 @@ import * as adminService from '../services/adminService.js';
 const TROOP_KEYS = ['lancerDrone', 'assaultTrooper', 'breakerUnit', 'reconOperative', 'skimmerBike', 'siegeMech', 'bulwarkGuard', 'suppressorTeam', 'disruptorUnit', 'interceptorBike', 'annihilatorPlatform', 'overseer'] as const;
 const BUILDING_KEYS = ['commandCore', 'recruitmentCore', 'lifeSupport', 'storageVault', 'biomassFarm', 'alloyForge', 'oreExtractor', 'shieldGrid'] as const;
 
+function getGalaxyId(req: Request): number | null {
+  const raw = (req.query.galaxyId ?? req.body?.galaxyId) as unknown;
+  const parsed = Number.parseInt(String(raw ?? ''), 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function requireGalaxyId(req: Request, res: Response): number | null {
+  const id = getGalaxyId(req);
+  if (id == null) { res.status(400).json({ error: 'galaxyId is required' }); return null; }
+  return id;
+}
+
 export async function listGalaxies(req: Request, res: Response): Promise<void> {
   try {
     const galaxies = await adminService.getAllGalaxies();
@@ -32,7 +44,9 @@ export async function createGalaxy(req: Request, res: Response): Promise<void> {
 
 export async function listUsers(req: Request, res: Response): Promise<void> {
   try {
-    const users = await adminService.getAllUsers();
+    const galaxyId = requireGalaxyId(req, res);
+    if (galaxyId == null) return;
+    const users = await adminService.getUsersInGalaxy(galaxyId);
     res.json(users.map((u) => ({ ...u, _id: u.id, points: u.galaxyPlayers.reduce((sum, gp) => sum + (gp.points || 0), 0), nexuses: u.nexuses.map((v) => ({ _id: v.id, id: v.id, name: v.name })) })));
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
@@ -41,14 +55,16 @@ export async function listUsers(req: Request, res: Response): Promise<void> {
 
 export async function getStats(req: Request, res: Response): Promise<void> {
   try {
-    const [userCount, villageCount, travelingAttackCount, totalAttackCount, newUsersThisWeek, pointsAgg, marketCount, ownedNexuses, usersWithNexusCount, topUsers] = await adminService.getAdminStats();
-    const totalTroops = (ownedNexuses as Array<Record<string, number>>).reduce((sum, nexus) => {
+    const galaxyId = requireGalaxyId(req, res);
+    if (galaxyId == null) return;
+    const [userCount, villageCount, travelingAttackCount, totalAttackCount, newUsersThisWeek, pointsAgg, marketCount, ownedNexuses, usersWithNexusCount, topUsers] = await adminService.getAdminStatsForGalaxy(galaxyId);
+    const totalTroops = (ownedNexuses as unknown as Array<Record<string, number>>).reduce((sum, nexus) => {
       let nexusSum = 0;
       for (const key of TROOP_KEYS) nexusSum += nexus[key] || 0;
       return sum + nexusSum;
     }, 0);
     const avgPoints = Math.round((pointsAgg as { _avg: { points: number | null } })._avg.points || 0);
-    const zeroNexusCount = Math.max(0, userCount - (usersWithNexusCount as number));
+    const zeroNexusCount = Math.max(0, (userCount as number) - (usersWithNexusCount as number));
     res.json({ userCount, villageCount, travelingAttackCount, totalAttackCount, newUsersThisWeek, zeroNexusCount, totalTroops, avgPoints, marketCount, topUsers: (topUsers as Array<{ userId: number; points: number; user: { id: number; username: string } }>).map((gp) => ({ _id: gp.user.id, id: gp.user.id, username: gp.user.username, points: gp.points })) });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
@@ -83,9 +99,11 @@ export async function updateUser(req: Request, res: Response): Promise<void> {
 
 export async function addResourcesToUser(req: Request, res: Response): Promise<void> {
   try {
+    const galaxyId = requireGalaxyId(req, res);
+    if (galaxyId == null) return;
     const userId = adminService.toInt(req.params.userId);
-    const nexus = await adminService.findTargetNexus(userId, req.body.nexusId);
-    if (!nexus) { res.status(404).json({ error: 'No nexus found for this user' }); return; }
+    const nexus = await adminService.findTargetNexus(userId, galaxyId, req.body.nexusId);
+    if (!nexus) { res.status(404).json({ error: 'No nexus found for this user in this galaxy' }); return; }
     const biomassDelta = adminService.toInt(req.body.biomass);
     const alloyDelta = adminService.toInt(req.body.alloy);
     const oreDelta = adminService.toInt(req.body.ore);
@@ -99,9 +117,11 @@ export async function addResourcesToUser(req: Request, res: Response): Promise<v
 
 export async function addTroopsToUser(req: Request, res: Response): Promise<void> {
   try {
+    const galaxyId = requireGalaxyId(req, res);
+    if (galaxyId == null) return;
     const userId = adminService.toInt(req.params.userId);
-    const nexus = await adminService.findTargetNexus(userId, req.body.nexusId);
-    if (!nexus) { res.status(404).json({ error: 'No nexus found for this user' }); return; }
+    const nexus = await adminService.findTargetNexus(userId, galaxyId, req.body.nexusId);
+    if (!nexus) { res.status(404).json({ error: 'No nexus found for this user in this galaxy' }); return; }
     const troopType = req.body.troopType as string;
     const amount = adminService.toInt(req.body.amount);
     if (!TROOP_KEYS.includes(troopType as typeof TROOP_KEYS[number])) { res.status(400).json({ error: 'Invalid troop type' }); return; }
@@ -119,9 +139,11 @@ export async function addTroopsToUser(req: Request, res: Response): Promise<void
 
 export async function setBuildingForUser(req: Request, res: Response): Promise<void> {
   try {
+    const galaxyId = requireGalaxyId(req, res);
+    if (galaxyId == null) return;
     const userId = adminService.toInt(req.params.userId);
-    const nexus = await adminService.findTargetNexus(userId, req.body.nexusId);
-    if (!nexus) { res.status(404).json({ error: 'No nexus found for this user' }); return; }
+    const nexus = await adminService.findTargetNexus(userId, galaxyId, req.body.nexusId);
+    if (!nexus) { res.status(404).json({ error: 'No nexus found for this user in this galaxy' }); return; }
     const building = req.body.building as string;
     const level = Math.max(0, adminService.toInt(req.body.level));
     if (!BUILDING_KEYS.includes(building as typeof BUILDING_KEYS[number])) { res.status(400).json({ error: 'Invalid building' }); return; }
@@ -136,9 +158,11 @@ export async function setBuildingForUser(req: Request, res: Response): Promise<v
 
 export async function completeStrikeForUser(req: Request, res: Response): Promise<void> {
   try {
+    const galaxyId = requireGalaxyId(req, res);
+    if (galaxyId == null) return;
     const userId = adminService.toInt(req.params.userId);
-    const attack = await adminService.getAttack(userId);
-    if (!attack) { res.status(404).json({ error: 'No active outgoing strike for this user' }); return; }
+    const attack = await adminService.getAttack(userId, galaxyId);
+    if (!attack) { res.status(404).json({ error: 'No active outgoing strike for this user in this galaxy' }); return; }
     await adminService.updateAttack(attack.id, { arrivesAt: new Date() });
     await processArrivedAttacks();
     res.json({ success: true, message: 'User active strike completed' });
@@ -149,15 +173,17 @@ export async function completeStrikeForUser(req: Request, res: Response): Promis
 
 export async function completeBuildForUser(req: Request, res: Response): Promise<void> {
   try {
+    const galaxyId = requireGalaxyId(req, res);
+    if (galaxyId == null) return;
     const userId = adminService.toInt(req.params.userId);
-    let nexus = await adminService.findTargetNexus(userId, req.body.nexusId);
+    let nexus = await adminService.findTargetNexus(userId, galaxyId, req.body.nexusId);
     if (nexus) {
       const queue = Array.isArray(nexus.buildQueue) ? nexus.buildQueue : [];
-      if (queue.length === 0) nexus = await adminService.findUserNexusWithQueue(userId, 'buildQueue');
+      if (queue.length === 0) nexus = await adminService.findUserNexusWithQueue(userId, galaxyId, 'buildQueue');
     } else {
-      nexus = await adminService.findUserNexusWithQueue(userId, 'buildQueue');
+      nexus = await adminService.findUserNexusWithQueue(userId, galaxyId, 'buildQueue');
     }
-    if (!nexus) { res.status(404).json({ error: 'No nexus found for this user' }); return; }
+    if (!nexus) { res.status(404).json({ error: 'No nexus found for this user in this galaxy' }); return; }
     const buildQueue = Array.isArray(nexus.buildQueue) ? nexus.buildQueue : [];
     if (buildQueue.length === 0) { res.status(400).json({ error: 'No building in queue' }); return; }
     const [build, ...remainingQueue] = buildQueue as Array<{ building: string; targetLevel: number }>;
@@ -172,15 +198,17 @@ export async function completeBuildForUser(req: Request, res: Response): Promise
 
 export async function completeTrainingForUser(req: Request, res: Response): Promise<void> {
   try {
+    const galaxyId = requireGalaxyId(req, res);
+    if (galaxyId == null) return;
     const userId = adminService.toInt(req.params.userId);
-    let nexus = await adminService.findTargetNexus(userId, req.body.nexusId);
+    let nexus = await adminService.findTargetNexus(userId, galaxyId, req.body.nexusId);
     if (nexus) {
       const queue = Array.isArray(nexus.trainingQueue) ? nexus.trainingQueue : [];
-      if (queue.length === 0) nexus = await adminService.findUserNexusWithQueue(userId, 'trainingQueue');
+      if (queue.length === 0) nexus = await adminService.findUserNexusWithQueue(userId, galaxyId, 'trainingQueue');
     } else {
-      nexus = await adminService.findUserNexusWithQueue(userId, 'trainingQueue');
+      nexus = await adminService.findUserNexusWithQueue(userId, galaxyId, 'trainingQueue');
     }
-    if (!nexus) { res.status(404).json({ error: 'No nexus found for this user' }); return; }
+    if (!nexus) { res.status(404).json({ error: 'No nexus found for this user in this galaxy' }); return; }
     const queue = Array.isArray(nexus.trainingQueue) ? nexus.trainingQueue as Array<{ troopType: string; amount: number }> : [];
     if (queue.length === 0) { res.status(400).json({ error: 'No troops in training' }); return; }
     const nexusRecord = nexus as unknown as Record<string, number>;
@@ -201,10 +229,12 @@ export async function completeTrainingForUser(req: Request, res: Response): Prom
 
 export async function resetAccount(req: Request, res: Response): Promise<void> {
   try {
+    const galaxyId = requireGalaxyId(req, res);
+    if (galaxyId == null) return;
     const userId = adminService.toInt(req.params.userId);
     const user = await adminService.getUserById(userId);
     if (!user) { res.status(404).json({ error: 'User not found' }); return; }
-    const nexus = await adminService.resetUserAccount(userId, user.username);
+    const nexus = await adminService.resetUserAccount(userId, user.username, galaxyId);
     res.json({ success: true, message: 'Account reset to starter state', nexus: serializeNexus(nexus) });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
@@ -319,7 +349,9 @@ export async function deleteNexus(req: Request, res: Response): Promise<void> {
 
 export async function listAttacks(req: Request, res: Response): Promise<void> {
   try {
-    const attacks = await adminService.getAdminAttacks();
+    const galaxyId = requireGalaxyId(req, res);
+    if (galaxyId == null) return;
+    const attacks = await adminService.getAdminAttacks(galaxyId);
     const userById = await adminService.getAttackUsernames(null, null);
     const allIds = [...new Set(attacks.flatMap((a) => [a.attackerUserId, a.defenderUserId].filter((id): id is number => id != null)))];
     const users = await (await import('../../server/lib/prisma.js')).default.user.findMany({ where: { id: { in: allIds } }, select: { id: true, username: true } });

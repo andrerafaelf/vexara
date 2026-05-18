@@ -1,4 +1,4 @@
-import {
+﻿import {
   AlertTriangle,
   Building2,
   ScrollText,
@@ -116,6 +116,7 @@ const Admin: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   const [galaxies, setGalaxies] = useState<Galaxy[]>([]);
+  const [selectedGalaxyId, setSelectedGalaxyId] = useState<number | null>(null);
   const [newGalaxyName, setNewGalaxyName] = useState('');
   const [creatingGalaxy, setCreatingGalaxy] = useState(false);
 
@@ -133,8 +134,12 @@ const Admin: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    loadData();
+    loadGalaxies();
   }, []);
+
+  useEffect(() => {
+    if (selectedGalaxyId != null) loadGalaxyData(selectedGalaxyId);
+  }, [selectedGalaxyId]);
 
   const showToast = (message: string, type: 'success' | 'error' | 'info') => {
     setToast({ message, type });
@@ -162,23 +167,43 @@ const Admin: React.FC = () => {
     return response;
   };
 
-  const loadData = async () => {
+  const loadGalaxies = async () => {
     try {
-      const [usersRes, statsRes, attacksRes, galaxiesRes] = await Promise.all([
-        adminFetch(`${ADMIN_API_URL}/users`),
-        adminFetch(`${ADMIN_API_URL}/stats`),
-        adminFetch(`${ADMIN_API_URL}/attacks`),
-        adminFetch(`${ADMIN_API_URL}/galaxies`),
+      const galaxiesRes = await adminFetch(`${ADMIN_API_URL}/galaxies`);
+      const galaxiesData = await galaxiesRes.json().catch(() => null);
+      const list: Galaxy[] = Array.isArray(galaxiesData) ? galaxiesData : [];
+      setGalaxies(list);
+
+      // Pick the most recent active galaxy by default, falling back to most recent overall.
+      if (selectedGalaxyId == null && list.length > 0) {
+        const sorted = [...list].sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        );
+        const preferred = sorted.find((g) => g.status === 'active') ?? sorted[0];
+        setSelectedGalaxyId(preferred.id);
+      } else {
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error('Error loading galaxies:', err);
+      setLoading(false);
+    }
+  };
+
+  const loadGalaxyData = async (galaxyId: number) => {
+    try {
+      const query = `?galaxyId=${galaxyId}`;
+      const [usersRes, statsRes, attacksRes] = await Promise.all([
+        adminFetch(`${ADMIN_API_URL}/users${query}`),
+        adminFetch(`${ADMIN_API_URL}/stats${query}`),
+        adminFetch(`${ADMIN_API_URL}/attacks${query}`),
       ]);
 
-      const [usersData, statsData, attacksData, galaxiesData] = await Promise.all([
+      const [usersData, statsData, attacksData] = await Promise.all([
         usersRes.json().catch(() => null),
         statsRes.json().catch(() => null),
         attacksRes.json().catch(() => null),
-        galaxiesRes.json().catch(() => null),
       ]);
-
-      setGalaxies(Array.isArray(galaxiesData) ? galaxiesData : []);
 
       const normalizedUsers = Array.isArray(usersData)
         ? usersData.map((user) => ({
@@ -214,6 +239,24 @@ const Admin: React.FC = () => {
       setAttacks([]);
       setLoading(false);
     }
+  };
+
+  const reloadAll = async () => {
+    await loadGalaxies();
+    if (selectedGalaxyId != null) await loadGalaxyData(selectedGalaxyId);
+  };
+
+  const requireGalaxy = (): number | null => {
+    if (selectedGalaxyId == null) {
+      showToast('Select a galaxy first', 'error');
+      return null;
+    }
+    return selectedGalaxyId;
+  };
+
+  const withGalaxy = (path: string): string => {
+    const sep = path.includes('?') ? '&' : '?';
+    return `${path}${sep}galaxyId=${selectedGalaxyId}`;
   };
 
   const openUserModal = (type: Exclude<AdminModal, 'addUser' | null>, user: User) => {
@@ -263,7 +306,7 @@ const Admin: React.FC = () => {
       }
       showToast(`Galaxy "${name}" created`, 'success');
       setNewGalaxyName('');
-      loadData();
+      reloadAll();
     } catch {
       showToast('Error creating galaxy', 'error');
     } finally {
@@ -292,7 +335,7 @@ const Admin: React.FC = () => {
       showToast(`User "${addUserForm.username}" created`, 'success');
       setAddUserForm({ username: '', email: '', password: '' });
       closeModal();
-      loadData();
+      reloadAll();
     } catch (err) {
       showToast('Error adding user', 'error');
     }
@@ -324,7 +367,7 @@ const Admin: React.FC = () => {
 
       showToast(`Updated credentials for ${selectedUser.username}`, 'success');
       closeModal();
-      loadData();
+      reloadAll();
     } catch (err) {
       showToast('Error updating user', 'error');
     }
@@ -332,9 +375,10 @@ const Admin: React.FC = () => {
 
   const handleAdjustResources = async () => {
     if (!selectedUser) return;
+    if (requireGalaxy() == null) return;
 
     try {
-      const res = await adminFetch(`${ADMIN_API_URL}/users/${selectedUser._id}/resources`, {
+      const res = await adminFetch(withGalaxy(`${ADMIN_API_URL}/users/${selectedUser._id}/resources`), {
         method: 'POST',
         body: JSON.stringify(resourcesForm),
       });
@@ -347,7 +391,7 @@ const Admin: React.FC = () => {
 
       showToast(`Resources updated for ${selectedUser.username}`, 'success');
       closeModal();
-      loadData();
+      reloadAll();
     } catch (err) {
       showToast('Error adjusting resources', 'error');
     }
@@ -363,9 +407,10 @@ const Admin: React.FC = () => {
     }
 
     const signedAmount = direction === 'add' ? magnitude : -magnitude;
+    if (requireGalaxy() == null) return;
 
     try {
-      const res = await adminFetch(`${ADMIN_API_URL}/users/${selectedUser._id}/troops`, {
+      const res = await adminFetch(withGalaxy(`${ADMIN_API_URL}/users/${selectedUser._id}/troops`), {
         method: 'POST',
         body: JSON.stringify({ ...troopsForm, amount: signedAmount }),
       });
@@ -378,7 +423,7 @@ const Admin: React.FC = () => {
 
       showToast(`Troops ${direction === 'add' ? 'added' : 'removed'} for ${selectedUser.username}`, 'success');
       closeModal();
-      loadData();
+      reloadAll();
     } catch (err) {
       showToast('Error adjusting troops', 'error');
     }
@@ -386,9 +431,10 @@ const Admin: React.FC = () => {
 
   const handleSetBuildingLevel = async () => {
     if (!selectedUser) return;
+    if (requireGalaxy() == null) return;
 
     try {
-      const res = await adminFetch(`${ADMIN_API_URL}/users/${selectedUser._id}/buildings`, {
+      const res = await adminFetch(withGalaxy(`${ADMIN_API_URL}/users/${selectedUser._id}/buildings`), {
         method: 'POST',
         body: JSON.stringify(buildingsForm),
       });
@@ -401,7 +447,7 @@ const Admin: React.FC = () => {
 
       showToast(`Building updated for ${selectedUser.username}`, 'success');
       closeModal();
-      loadData();
+      reloadAll();
     } catch (err) {
       showToast('Error updating building', 'error');
     }
@@ -431,7 +477,7 @@ const Admin: React.FC = () => {
 
       if (res.ok) {
         showToast(`User "${username}" deleted`, 'success');
-        loadData();
+        reloadAll();
       } else {
         showToast('Failed to delete user', 'error');
       }
@@ -441,19 +487,21 @@ const Admin: React.FC = () => {
   };
 
   const handleResetUser = async (user: User) => {
+    if (requireGalaxy() == null) return;
+    const galaxyName = galaxies.find((g) => g.id === selectedGalaxyId)?.name ?? 'this galaxy';
     const confirmed = window.confirm(
-      `Reset account "${user.username}" to starter state? This will remove all nexuses, attacks, queues, troops, and resources progress.`,
+      `Reset account "${user.username}" inside galaxy "${galaxyName}"? This will remove their nexuses, attacks, queues, troops, and resources in this galaxy.`,
     );
     if (!confirmed) return;
 
     try {
-      const res = await adminFetch(`${ADMIN_API_URL}/users/${user._id}/reset-account`, {
+      const res = await adminFetch(withGalaxy(`${ADMIN_API_URL}/users/${user._id}/reset-account`), {
         method: 'POST',
       });
 
       if (res.ok) {
         showToast(`Account reset for ${user.username}`, 'success');
-        loadData();
+        reloadAll();
       } else {
         const data = await res.json();
         showToast(data.error || 'Failed to reset account', 'error');
@@ -471,7 +519,7 @@ const Admin: React.FC = () => {
 
       if (res.ok) {
         showToast('Strike completed instantly', 'success');
-        loadData();
+        reloadAll();
       } else {
         const data = await res.json();
         showToast(data.error || 'Failed to complete strike', 'error');
@@ -482,14 +530,15 @@ const Admin: React.FC = () => {
   };
 
   const handleCompleteUserStrike = async (user: User) => {
+    if (requireGalaxy() == null) return;
     try {
-      const res = await adminFetch(`${ADMIN_API_URL}/users/${user._id}/complete-strike`, {
+      const res = await adminFetch(withGalaxy(`${ADMIN_API_URL}/users/${user._id}/complete-strike`), {
         method: 'POST',
       });
 
       if (res.ok) {
         showToast(`Completed active strike for ${user.username}`, 'success');
-        loadData();
+        reloadAll();
       } else {
         const data = await res.json();
         showToast(data.error || 'Failed to complete active strike', 'error');
@@ -500,15 +549,16 @@ const Admin: React.FC = () => {
   };
 
   const handleCompleteUserBuild = async (user: User) => {
+    if (requireGalaxy() == null) return;
     try {
-      const res = await adminFetch(`${ADMIN_API_URL}/users/${user._id}/complete-build`, {
+      const res = await adminFetch(withGalaxy(`${ADMIN_API_URL}/users/${user._id}/complete-build`), {
         method: 'POST',
         body: JSON.stringify({}),
       });
 
       if (res.ok) {
         showToast(`Completed current build for ${user.username}`, 'success');
-        loadData();
+        reloadAll();
       } else {
         const data = await res.json();
         showToast(data.error || 'Failed to complete build', 'error');
@@ -519,15 +569,16 @@ const Admin: React.FC = () => {
   };
 
   const handleCompleteUserTraining = async (user: User) => {
+    if (requireGalaxy() == null) return;
     try {
-      const res = await adminFetch(`${ADMIN_API_URL}/users/${user._id}/complete-training`, {
+      const res = await adminFetch(withGalaxy(`${ADMIN_API_URL}/users/${user._id}/complete-training`), {
         method: 'POST',
         body: JSON.stringify({}),
       });
 
       if (res.ok) {
         showToast(`Completed all queued training for ${user.username}`, 'success');
-        loadData();
+        reloadAll();
       } else {
         const data = await res.json();
         showToast(data.error || 'Failed to complete troop queue', 'error');
@@ -545,9 +596,36 @@ const Admin: React.FC = () => {
 
       <div className="admin-top-bar">
         <h2 className="admin-title">Admin Controls</h2>
-        <button className="btn-primary" onClick={() => setModal('addUser')}>
-          + Add User
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.85em', color: '#8a98c2' }}>
+            <span>Galaxy</span>
+            <select
+              value={selectedGalaxyId ?? ''}
+              onChange={(e) => {
+                const val = parseInt(e.target.value, 10);
+                setSelectedGalaxyId(Number.isFinite(val) ? val : null);
+              }}
+              style={{
+                padding: '0.45rem 0.6rem',
+                borderRadius: 4,
+                border: '1px solid #2c3a78',
+                background: '#0c1430',
+                color: '#e0e8ff',
+                minWidth: 220,
+              }}
+            >
+              {galaxies.length === 0 && <option value="">No galaxies</option>}
+              {galaxies.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name} ({g.status})
+                </option>
+              ))}
+            </select>
+          </label>
+          <button className="btn-primary" onClick={() => setModal('addUser')}>
+            + Add User
+          </button>
+        </div>
       </div>
 
       {stats && (
@@ -674,14 +752,20 @@ const Admin: React.FC = () => {
           {galaxies.map((g) => (
             <div
               key={g._id}
+              onClick={() => setSelectedGalaxyId(g.id)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedGalaxyId(g.id); }}
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 padding: '0.6rem 0.8rem',
-                border: '1px solid #2c3a78',
+                border: `1px solid ${g.id === selectedGalaxyId ? '#ff9e3d' : '#2c3a78'}`,
                 borderRadius: 6,
                 background: g.status === 'ended' ? '#1a1430' : '#0e1430',
+                cursor: 'pointer',
+                boxShadow: g.id === selectedGalaxyId ? '0 0 0 1px rgba(255,158,61,0.4)' : undefined,
               }}
             >
               <div>
@@ -704,7 +788,9 @@ const Admin: React.FC = () => {
 
       <div className="admin-section">
         <div className="admin-section-header">
-          <h3>All Users ({users.length})</h3>
+          <h3>
+            Players in {galaxies.find((g) => g.id === selectedGalaxyId)?.name ?? 'galaxy'} ({users.length})
+          </h3>
         </div>
         <div className="user-cards">
           {users.map((user) => (
@@ -824,7 +910,7 @@ const Admin: React.FC = () => {
                 {modal === 'buildings' && `Set Building Level: ${selectedUser?.username}`}
               </h3>
               <button className="modal-close" onClick={closeModal}>
-                ×
+                Ã—
               </button>
             </div>
 
