@@ -207,22 +207,27 @@ export async function createFaction(req: AuthRequest, res: Response): Promise<vo
 
     const callerUser = await prisma.user.findUnique({ where: { id: req.userId }, select: { username: true } });
 
-    const faction = await prisma.faction.create({
-      data: {
-        galaxyId: user.activeGalaxyId,
-        name: normalizedName,
-        tag: normalizedTag,
-        description: description?.trim() || null,
-        members: {
-          create: {
-            userId: req.userId,
-            galaxyId: user.activeGalaxyId,
-            role: 'leader',
+    const [faction] = await prisma.$transaction([
+      prisma.faction.create({
+        data: {
+          galaxyId: user.activeGalaxyId,
+          name: normalizedName,
+          tag: normalizedTag,
+          description: description?.trim() || null,
+          members: {
+            create: {
+              userId: req.userId,
+              galaxyId: user.activeGalaxyId,
+              role: 'leader',
+            },
           },
         },
-      },
-      select: { id: true, name: true, tag: true, description: true, createdAt: true },
-    });
+        select: { id: true, name: true, tag: true, description: true, createdAt: true },
+      }),
+      prisma.factionJoinRequest.deleteMany({
+        where: { userId: req.userId, galaxyId: user.activeGalaxyId },
+      }),
+    ]);
 
     await logEvent(faction.id, 'faction_created', callerUser?.username);
 

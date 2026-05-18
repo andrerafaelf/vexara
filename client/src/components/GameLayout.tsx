@@ -9,18 +9,7 @@ import { useMyNexuses } from '@/hooks/useMyNexuses';
 import { useUnreadReports } from '@/hooks/useUnreadReports';
 import '@/styles/Game.css';
 import { Nexus } from '@/types/game';
-import {
-  Building2,
-  Flag,
-  Handshake,
-  LayoutDashboard,
-  LogOut,
-  Map as MapIcon,
-  Menu,
-  ScrollText,
-  ShoppingCart,
-  User,
-} from 'lucide-react';
+import { Building2, Menu } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -103,31 +92,31 @@ export default function GameLayout({
 
         <div className="header-center">
           <button className={`nav-btn${is('dashboard') ? ' active' : ''}`} onClick={nav(`/nexus/${resolvedSelectedId ?? ''}`)}>
-            <LayoutDashboard size={14} /> Dashboard
+            Dashboard
           </button>
           <button className={`nav-btn${is('starfield') ? ' active' : ''}`} onClick={nav('/starfield')}>
-            <MapIcon size={14} /> Starfield
+            Starfield
           </button>
           <button className={`nav-btn${is('market') ? ' active' : ''}`} onClick={nav('/market')}>
-            <ShoppingCart size={14} /> Market
+            Market
           </button>
           <button className={`nav-btn${is('combat-logs') ? ' active' : ''}`} onClick={nav('/combat-logs')}>
             <span className="nav-btn-content">
-              <ScrollText size={14} /> Combat Logs
+              Combat Logs
               {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
             </span>
           </button>
           <button className={`nav-btn${is('allies') ? ' active' : ''}`} onClick={nav('/allies')}>
             <span className="nav-btn-content">
-              <Handshake size={14} /> Allies
+              Allies
               {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
             </span>
           </button>
           <button className={`nav-btn${is('factions') ? ' active' : ''}`} onClick={nav('/factions')}>
-            <Flag size={14} /> Factions
+            Factions
           </button>
           <button className={`nav-btn${is('profile') ? ' active' : ''}`} onClick={nav('/profile')}>
-            <User size={14} /> Profile
+            Profile
           </button>
         </div>
 
@@ -182,34 +171,34 @@ export default function GameLayout({
         )}
         <div className="mobile-drawer-links">
           <button className={`nav-btn${is('dashboard') ? ' active' : ''}`} onClick={nav(`/nexus/${resolvedSelectedId ?? ''}`)}>
-            <LayoutDashboard size={14} /> Dashboard
+            Dashboard
           </button>
           <button className={`nav-btn${is('starfield') ? ' active' : ''}`} onClick={nav('/starfield')}>
-            <MapIcon size={14} /> Starfield
+            Starfield
           </button>
           <button className={`nav-btn${is('market') ? ' active' : ''}`} onClick={nav('/market')}>
-            <ShoppingCart size={14} /> Market
+            Market
           </button>
           <button className={`nav-btn${is('combat-logs') ? ' active' : ''}`} onClick={nav('/combat-logs')}>
             <span className="nav-btn-content">
-              <ScrollText size={14} /> Combat Logs
+              Combat Logs
               {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
             </span>
           </button>
           <button className={`nav-btn${is('allies') ? ' active' : ''}`} onClick={nav('/allies')}>
             <span className="nav-btn-content">
-              <Handshake size={14} /> Allies
+              Allies
               {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
             </span>
           </button>
           <button className={`nav-btn${is('factions') ? ' active' : ''}`} onClick={nav('/factions')}>
-            <Flag size={14} /> Factions
+            Factions
           </button>
           <button className={`nav-btn${is('profile') ? ' active' : ''}`} onClick={nav('/profile')}>
-            <User size={14} /> Profile
+            Profile
           </button>
           <button className="nav-btn mobile-drawer-logout" onClick={logout}>
-            <LogOut size={14} /> Logout
+            Logout
           </button>
         </div>
       </aside>

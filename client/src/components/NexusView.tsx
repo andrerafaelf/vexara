@@ -2730,7 +2730,6 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
           className={`espionage-mode-btn${mode === 'embed' ? ' active' : ''}`}
           onClick={() => handleModeSwitch('embed')}
         >
-          <span className="espionage-mode-icon">👁</span>
           Embed Operative
           <span className="espionage-mode-desc">Gather intel on troops &amp; resources</span>
         </button>
@@ -2738,7 +2737,6 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
           className={`espionage-mode-btn${mode === 'sabotage' ? ' active' : ''}`}
           onClick={() => handleModeSwitch('sabotage')}
         >
-          <span className="espionage-mode-icon">💥</span>
           Sabotage
           <span className="espionage-mode-desc">Destroy troops or delay construction</span>
         </button>

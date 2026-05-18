@@ -2391,12 +2391,16 @@
 /* In espionage mode, allow vertical page scroll on touch when swiping
    over the map. Users select targets by tapping, so we don't need
    single-finger pan to drive map movement — pinch-zoom (2 fingers)
-   still works for zooming. */
-.espionage-map-wrapper .map-grid--espionage {
-  touch-action: pan-y pinch-zoom;
-}
-
-.espionage-map-wrapper .map-grid-wrapper {
+   still works for zooming. Apply touch-action on the full chain so
+   the browser knows scroll is permitted regardless of which element
+   the touch lands on. */
+.espionage-map-wrapper,
+.espionage-map-wrapper .map-container,
+.espionage-map-wrapper .map-content,
+.espionage-map-wrapper .map-grid-wrapper,
+.espionage-map-wrapper .map-grid--espionage,
+.espionage-map-wrapper .map-grid--espionage .map-row,
+.espionage-map-wrapper .map-grid--espionage .map-cell {
   touch-action: pan-y pinch-zoom;
 }
 
@@ -2448,12 +2452,6 @@
   align-items: flex-start;
   gap: 2px;
   text-align: left;
-}
-
-.espionage-mode-icon {
-  font-size: 16px;
-  line-height: 1;
-  margin-bottom: 2px;
 }
 
 .espionage-mode-desc {
