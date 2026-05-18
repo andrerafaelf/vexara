@@ -332,7 +332,7 @@ const AlphaSignupForm: React.FC = () => {
                 <div className="about-section">
                   <h3>World events</h3>
                   <p>
-                    The galaxy fires random events every few hours: a <strong>Derelict Ship</strong>
+                    The galaxy fires random events every few hours: a <strong>Derelict Ship </strong>
                     drifts in with a lightly guarded Resource Depot ready to claim, a <strong>Resource
                     Storm</strong> doubles production across an entire quadrant, or a <strong>Rogue AI
                     Core</strong> activates and starts raiding nearby nexuses. Events are shown on the

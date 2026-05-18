@@ -2423,3 +2423,192 @@
 .espionage-target-clear:hover {
   color: #f87171;
 }
+
+/* mode switcher — richer layout */
+.espionage-mode-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  text-align: left;
+}
+
+.espionage-mode-icon {
+  font-size: 16px;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.espionage-mode-desc {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-muted);
+  display: block;
+}
+
+.espionage-mode-btn.active .espionage-mode-desc {
+  color: rgba(var(--accent-rgb), 0.7);
+}
+
+/* target hint when nothing selected */
+.espionage-target-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 8px 0;
+  border: 1px dashed var(--color-navy-600);
+  border-radius: 6px;
+  margin-top: 4px;
+}
+
+.espionage-target-coords {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+/* form section wrapper */
+.espionage-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-navy-600);
+  margin-bottom: 2px;
+}
+
+/* sabotage target buttons */
+.espionage-sab-targets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.espionage-sab-btn {
+  padding: 5px 11px;
+  border-radius: 5px;
+  border: 1px solid var(--color-navy-600);
+  background: var(--color-navy-800);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.espionage-sab-btn:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.espionage-sab-btn.active {
+  background: rgba(var(--accent-rgb), 0.12);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.espionage-sab-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* operatives stepper */
+.espionage-ops-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.espionage-ops-step {
+  width: 26px;
+  height: 26px;
+  border-radius: 5px;
+  border: 1px solid var(--color-navy-600);
+  background: var(--color-navy-800);
+  color: var(--text-primary);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s;
+}
+
+.espionage-ops-step:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.espionage-ops-step:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* cost breakdown row */
+.espionage-cost-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.espionage-cost-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.espionage-cost-sep {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.espionage-cost-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.espionage-cost-dot--biomass { background: #4ade80; }
+.espionage-cost-dot--alloy   { background: #60a5fa; }
+
+/* not-enough-operatives warning */
+.espionage-warn {
+  font-size: 12px;
+  color: #fbbf24;
+  padding: 6px 10px;
+  background: rgba(251, 191, 36, 0.07);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  border-radius: 5px;
+}
+
+/* result panel */
+.espionage-result-title {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.espionage-result-msg {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 4px;
+}
+
+/* intel empty state */
+.espionage-intel-empty {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* assets empty / loading */
+.espionage-assets-empty {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 6px 0;
+}

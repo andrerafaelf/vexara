@@ -2430,17 +2430,71 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
 
 // ---- Espionage Tab ----
 
-const SABOTAGE_LABEL: Record<string, string> = {
-  troops: 'Sabotage Troops',
-  biomass: 'Destroy Biomass',
-  alloy: 'Destroy Alloy',
-  ore: 'Destroy Ore',
-  building: 'Delay Construction',
+type SpyMissionMode = 'embed' | 'sabotage';
+
+const SABOTAGE_TARGETS: { key: string; label: string; desc: string }[] = [
+  { key: 'troops',   label: 'Sabotage Troops',      desc: 'Eliminate a portion of the target\'s deployed forces' },
+  { key: 'biomass',  label: 'Destroy Biomass',       desc: 'Burn stored biomass reserves' },
+  { key: 'alloy',    label: 'Destroy Alloy',         desc: 'Destroy alloy stockpiles' },
+  { key: 'ore',      label: 'Destroy Ore',           desc: 'Detonate ore deposits' },
+  { key: 'building', label: 'Delay Construction',    desc: 'Sabotage the active build queue' },
+];
+
+const TROOP_DISPLAY_NAME: Record<string, string> = {
+  reconOperative:     'Recon Operative',
+  assaultTrooper:     'Assault Trooper',
+  bulwarkGuard:       'Bulwark Guard',
+  interceptorBike:    'Interceptor Bike',
+  breakerUnit:        'Breaker Unit',
+  disruptorUnit:      'Disruptor Unit',
+  annihilatorPlatform:'Annihilator Platform',
 };
 
+function humanizeTroopKey(key: string): string {
+  return TROOP_DISPLAY_NAME[key] ?? key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
+}
+
+function EspionageIntelPanel({ report }: { report: Record<string, unknown> }) {
+  if (!report.intel) {
+    if (report.message) return <span className="espionage-result-msg">{report.message as string}</span>;
+    return null;
+  }
+  const intel = report.intel as Record<string, unknown>;
+  const troops = (intel.troops ?? {}) as Record<string, number>;
+  const resources = (intel.resources ?? {}) as Record<string, number>;
+  const troopEntries = Object.entries(troops).filter(([, v]) => v > 0);
+  return (
+    <div className="espionage-intel">
+      <div className="espionage-intel-section">
+        <span className="espionage-intel-heading">Troops (approx.)</span>
+        {troopEntries.length === 0
+          ? <span className="espionage-intel-empty">No troops detected</span>
+          : troopEntries.map(([k, v]) => (
+              <div key={k} className="espionage-intel-row">
+                <span>{humanizeTroopKey(k)}</span>
+                <span>{v.toLocaleString()}</span>
+              </div>
+            ))
+        }
+      </div>
+      <div className="espionage-intel-section">
+        <span className="espionage-intel-heading">Resources (approx.)</span>
+        {Object.entries(resources).map(([k, v]) => (
+          <div key={k} className="espionage-intel-row">
+            <span>{k.charAt(0).toUpperCase() + k.slice(1)}</span>
+            <span>{v.toLocaleString()}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string, t: 'success' | 'error' | 'info') => void }) {
+  const [mode, setMode] = useState<SpyMissionMode>('embed');
   const [spyTarget, setSpyTarget] = useState<MapNexus | null>(null);
   const [operatives, setOperatives] = useState(1);
+  const [sabotageTarget, setSabotageTarget] = useState<string>(SABOTAGE_TARGETS[0].key);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [assets, setAssets] = useState<Array<Record<string, unknown>>>([]);
@@ -2464,17 +2518,29 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
     setResult(null);
   };
 
+  const handleModeSwitch = (next: SpyMissionMode) => {
+    setMode(next);
+    setSpyTarget(null);
+    setResult(null);
+  };
+
   const handleSend = async () => {
     if (!spyTarget) { onToast('Select a target nexus on the map', 'error'); return; }
     setLoading(true);
     setResult(null);
     try {
       const { sendSpyMission } = await import('../services/api');
-      const r: any = await sendSpyMission(String(nexus._id), spyTarget._id, 'embed', operatives, undefined);
+      const r: any = await sendSpyMission(
+        String(nexus._id),
+        spyTarget._id,
+        mode,
+        operatives,
+        mode === 'sabotage' ? sabotageTarget : undefined,
+      );
       setResult(r.data);
       if (r.data?.success) {
-        onToast('Operative embedded successfully', 'success');
-        refreshAssets();
+        onToast(mode === 'embed' ? 'Operative embedded successfully' : 'Sabotage mission succeeded', 'success');
+        if (mode === 'embed') refreshAssets();
       } else {
         onToast('Mission failed — operative detected and eliminated', 'error');
       }
@@ -2513,19 +2579,46 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
   };
 
   const reconCount = nexus.troops?.reconOperative ?? 0;
+  const embedCost = { biomass: 400 * operatives, alloy: 200 * operatives };
+  const sabotCost = { biomass: 600 * operatives, alloy: 300 * operatives };
+  const cost = mode === 'embed' ? embedCost : sabotCost;
+  const maxOps = Math.min(20, reconCount);
+  const selectedSabTarget = SABOTAGE_TARGETS.find(t => t.key === sabotageTarget)!;
 
   return (
     <div className="espionage-tab">
+      {/* Header */}
       <div className="espionage-intro">
         <Eye size={16} />
         <div>
           <strong>Espionage Operations</strong>
           <span className="espionage-intro-sub">
-            Click a nexus on the map to embed a Recon Operative. You have <strong>{reconCount}</strong> available.
+            You have <strong>{reconCount}</strong> Recon Operative{reconCount !== 1 ? 's' : ''} available.
           </span>
         </div>
       </div>
 
+      {/* Mission type switcher */}
+      <div className="espionage-mode-row">
+        <button
+          className={`espionage-mode-btn${mode === 'embed' ? ' active' : ''}`}
+          onClick={() => handleModeSwitch('embed')}
+        >
+          <span className="espionage-mode-icon">👁</span>
+          Embed Operative
+          <span className="espionage-mode-desc">Gather intel on troops &amp; resources</span>
+        </button>
+        <button
+          className={`espionage-mode-btn${mode === 'sabotage' ? ' active' : ''}`}
+          onClick={() => handleModeSwitch('sabotage')}
+        >
+          <span className="espionage-mode-icon">💥</span>
+          Sabotage
+          <span className="espionage-mode-desc">Destroy troops, resources, or buildings</span>
+        </button>
+      </div>
+
+      {/* Map */}
       <div className="espionage-map-wrapper">
         <StarfieldMap
           currentNexus={nexus}
@@ -2535,84 +2628,128 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
         />
       </div>
 
-      {spyTarget && (
+      {/* Target bar */}
+      {spyTarget ? (
         <div className="espionage-target-bar">
           <Eye size={13} />
-          <span>Target: <strong>{spyTarget.name}</strong> ({spyTarget.x}|{spyTarget.y})</span>
-          <button className="espionage-target-clear" onClick={() => setSpyTarget(null)}>✕</button>
+          <span>Target: <strong>{spyTarget.name}</strong> <span className="espionage-target-coords">({spyTarget.x}|{spyTarget.y})</span></span>
+          <button className="espionage-target-clear" onClick={() => { setSpyTarget(null); setResult(null); }}>✕</button>
+        </div>
+      ) : (
+        <div className="espionage-target-hint">
+          Click any enemy nexus on the map to select it as your target
         </div>
       )}
 
+      {/* Mission config form */}
       {spyTarget && (
         <div className="espionage-form">
+          {/* Sabotage target selector */}
+          {mode === 'sabotage' && (
+            <div className="espionage-form-section">
+              <label className="espionage-label">Sabotage Target</label>
+              <div className="espionage-sab-targets">
+                {SABOTAGE_TARGETS.map(t => (
+                  <button
+                    key={t.key}
+                    className={`espionage-sab-btn${sabotageTarget === t.key ? ' active' : ''}`}
+                    onClick={() => setSabotageTarget(t.key)}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+              <span className="espionage-sab-desc">{selectedSabTarget.desc}</span>
+            </div>
+          )}
+
+          {/* Operative count */}
           <div className="espionage-form-row">
             <label className="espionage-label">Recon Operatives</label>
-            <input
-              className="espionage-input espionage-input--narrow"
-              type="number"
-              min={1}
-              max={Math.min(20, reconCount)}
-              value={operatives}
-              onChange={(e) => setOperatives(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
-            />
+            <div className="espionage-ops-controls">
+              <button
+                className="espionage-ops-step"
+                onClick={() => setOperatives(o => Math.max(1, o - 1))}
+                disabled={operatives <= 1}
+              >−</button>
+              <input
+                className="espionage-input espionage-input--narrow"
+                type="number"
+                min={1}
+                max={maxOps}
+                value={operatives}
+                onChange={(e) => setOperatives(Math.max(1, Math.min(maxOps, parseInt(e.target.value) || 1)))}
+              />
+              <button
+                className="espionage-ops-step"
+                onClick={() => setOperatives(o => Math.min(maxOps, o + 1))}
+                disabled={operatives >= maxOps}
+              >+</button>
+            </div>
           </div>
-          <div className="espionage-cost-note">
-            Cost: {400 * operatives} Biomass + {200 * operatives} Alloy
+
+          {/* Cost breakdown */}
+          <div className="espionage-cost-row">
+            <span className="espionage-cost-item">
+              <span className="espionage-cost-dot espionage-cost-dot--biomass" />
+              {cost.biomass.toLocaleString()} Biomass
+            </span>
+            <span className="espionage-cost-sep">+</span>
+            <span className="espionage-cost-item">
+              <span className="espionage-cost-dot espionage-cost-dot--alloy" />
+              {cost.alloy.toLocaleString()} Alloy
+            </span>
           </div>
+
+          {reconCount < operatives && (
+            <div className="espionage-warn">Not enough Recon Operatives — train more at your Recruitment Core.</div>
+          )}
+
           <button
             className="espionage-send-btn"
             onClick={handleSend}
             disabled={loading || reconCount < operatives}
           >
-            {loading ? 'Sending...' : 'Embed Operative'}
+            {loading ? 'Sending...' : mode === 'embed' ? 'Embed Operative' : 'Launch Sabotage'}
           </button>
         </div>
       )}
 
+      {/* Result panel */}
       {result && (
         <div className={`espionage-result${result.success ? ' espionage-result--success' : ' espionage-result--fail'}`}>
-          <strong>{result.success ? 'Mission Successful' : 'Mission Failed — Detected'}</strong>
-          {Boolean(result.success) && Boolean(result.report) && ((): React.ReactNode => {
-            const r = result.report as Record<string, unknown>;
-            if (r.intel) {
-              const intel = r.intel as Record<string, unknown>;
-              const troops = intel.troops as Record<string, number>;
-              const resources = intel.resources as Record<string, number>;
-              return (
-                <div className="espionage-intel">
-                  <div className="espionage-intel-section">
-                    <span className="espionage-intel-heading">Troops (approx.)</span>
-                    {Object.entries(troops).filter(([, v]) => v > 0).map(([k, v]) => (
-                      <div key={k} className="espionage-intel-row"><span>{k}</span><span>{v}</span></div>
-                    ))}
-                  </div>
-                  <div className="espionage-intel-section">
-                    <span className="espionage-intel-heading">Resources (approx.)</span>
-                    {Object.entries(resources).map(([k, v]) => (
-                      <div key={k} className="espionage-intel-row"><span>{k}</span><span>{v.toLocaleString()}</span></div>
-                    ))}
-                  </div>
-                </div>
-              );
-            }
-            if (r.message) return <span>{r.message as string}</span>;
-            return null;
-          })()}
+          <strong className="espionage-result-title">
+            {result.success ? (mode === 'embed' ? 'Operative Embedded' : 'Sabotage Succeeded') : 'Mission Failed — Detected'}
+          </strong>
+          {Boolean(result.success) && Boolean(result.report) && (
+            <EspionageIntelPanel report={result.report as Record<string, unknown>} />
+          )}
+          {Boolean(result.success) && mode === 'sabotage' && !result.report && (
+            <span className="espionage-result-msg">Target successfully sabotaged. Operative extracted.</span>
+          )}
+          {!result.success && (
+            <span className="espionage-result-msg">Your operative was identified and eliminated. Increase operative count to improve success odds.</span>
+          )}
         </div>
       )}
 
-      {!assetsLoading && assets.length > 0 && (
-        <div className="espionage-assets">
-          <div className="espionage-assets-heading">Active Embedded Operatives</div>
-          {assets.map((a) => (
+      {/* Active embedded assets */}
+      <div className="espionage-assets">
+        <div className="espionage-assets-heading">Active Embedded Operatives</div>
+        {assetsLoading ? (
+          <div className="espionage-assets-empty">Loading...</div>
+        ) : assets.length === 0 ? (
+          <div className="espionage-assets-empty">No operatives currently embedded at enemy nexuses.</div>
+        ) : (
+          assets.map((a) => (
             <div key={String(a.id)} className="espionage-asset-row">
               <div className="espionage-asset-info">
                 <span className="espionage-asset-target">{(a.targetName as string) ?? `Nexus #${a.targetNexusId}`}</span>
-                {a.lastReportAt != null && (
-                  <span className="espionage-asset-last">
-                    Last report: {new Date(a.lastReportAt as string).toLocaleTimeString()}
-                  </span>
-                )}
+                <span className="espionage-asset-last">
+                  {a.lastReportAt != null
+                    ? `Last report: ${new Date(a.lastReportAt as string).toLocaleString()}`
+                    : 'No report yet'}
+                </span>
               </div>
               <div className="espionage-asset-actions">
                 <button className="espionage-asset-btn" onClick={() => handleRefreshIntel(a.id as number)}>
@@ -2623,9 +2760,9 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
                 </button>
               </div>
             </div>
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </div>
     </div>
   );
 }
