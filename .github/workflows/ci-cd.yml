@@ -292,7 +292,7 @@ jobs:
             PGADMIN_EMAIL=${{ secrets.PGADMIN_EMAIL }}
             PGADMIN_PASSWORD=${{ secrets.PGADMIN_PASSWORD }}
             PGADMIN_ALLOW_IPS=${{ vars.PGADMIN_ALLOW_IPS }}
-            MAILGUN_API_KEY=${{ secrets.MAILGUN_API_KEY }}
+            RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
             ENVEOF
 
             # Log in to GHCR on the VPS

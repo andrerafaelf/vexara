@@ -100,14 +100,15 @@ model GalaxyPlayer {
 }
 
 model AlphaSignup {
-  id          Int       @id @default(autoincrement())
-  email       String    @unique @db.VarChar(254)
-  createdAt   DateTime  @default(now())
-  invitedAt   DateTime?
-  source      String?   @db.VarChar(64)
-  utmSource   String?   @db.VarChar(64)
-  utmMedium   String?   @db.VarChar(64)
-  utmCampaign String?   @db.VarChar(64)
+  id             Int       @id @default(autoincrement())
+  email          String    @unique @db.VarChar(254)
+  createdAt      DateTime  @default(now())
+  invitedAt      DateTime?
+  unsubscribedAt DateTime?
+  source         String?   @db.VarChar(64)
+  utmSource      String?   @db.VarChar(64)
+  utmMedium      String?   @db.VarChar(64)
+  utmCampaign    String?   @db.VarChar(64)
 
   @@index([createdAt])
 }

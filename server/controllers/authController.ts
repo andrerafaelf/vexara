@@ -60,12 +60,13 @@ export async function alphaSignup(req: Request, res: Response): Promise<void> {
         utmCampaign: pickUtm(body?.utm_campaign),
       },
       update: {},
-      select: { createdAt: true },
+      select: { createdAt: true, unsubscribedAt: true },
     });
 
     // Only send welcome email on first signup (createdAt within last 5s means just created)
+    // and never to addresses that have previously unsubscribed.
     const isNew = Date.now() - record.createdAt.getTime() < 5_000;
-    if (isNew) {
+    if (isNew && !record.unsubscribedAt) {
       sendAlphaWelcome(email).catch((err) => console.error('[emailService] alphaWelcome failed:', err));
     }
 

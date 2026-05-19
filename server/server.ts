@@ -11,6 +11,7 @@ import { initWarRoomSocket, initGameSocket } from './services/warRoomSocket.js';
 import { processCompletedQueuesAndNotify, recoverControlLevels, updateAllResources } from './models/Nexus.js';
 import attackRoutes from './routes/attack.js';
 import authRoutes from './routes/auth.js';
+import { unsubscribe } from './controllers/unsubscribeController.js';
 import buildingRoutes from './routes/building.js';
 import chatRoutes from './routes/chat.js';
 import factionRoutes from './routes/faction.js';
@@ -116,6 +117,8 @@ if (process.env.NODE_ENV === 'production') {
   app.use('/api/', apiLimiter);
 }
 
+app.get('/api/unsubscribe', unsubscribe);
+app.post('/api/unsubscribe', express.urlencoded({ extended: false }), unsubscribe);
 app.use('/api/auth', authRoutes);
 app.use('/api/nexus', nexusRoutes);
 app.use('/api/building', buildingRoutes);
