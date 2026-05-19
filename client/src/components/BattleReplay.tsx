@@ -1,355 +1,326 @@
-// Cinematic battle replay. Wraps BattlefieldCanvas with a transport bar,
-// playback speed selector, share controls, and a final outcome panel.
-//
-// Deterministic: the (seed, initial forces, losses) tuple stored on the
-// Attack reproduces the exact same animation every time, on any device.
-
-'use client';
-
-import { Copy, Maximize2, Pause, Play, RotateCcw, Share2 } from 'lucide-react';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Play, Square } from 'lucide-react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import '../styles/BattleReplay.css';
 import type { Attack } from '../types/game';
-import { simulateBattle, type Force, type SimResult, type TroopKey } from '../utils/combatSim';
-import BattlefieldCanvas, { type BattlefieldHandle } from './BattlefieldCanvas';
+import { deriveReplay, type CombatReplay, type CombatRound } from '../utils/combatReplay';
 import ResourceIcon from './ResourceIcon';
 
 interface BattleReplayProps {
-  /** Existing in-game flow path: derived from a full Attack object. */
-  report?: Attack;
-  /** Public flow path: pre-built simulation result (from /api/replay endpoint). */
-  sim?: SimResult;
-  /** Used in both flows; in public flow these come from the API payload. */
-  attackerLabel?: string;
-  defenderLabel?: string;
-  /** Optional resources stolen breakdown for the outcome panel. */
-  resourcesStolen?: { biomass: number; alloy: number; ore: number };
-  /** Public shareable URL for this replay. If set, the share button appears. */
-  shareUrl?: string;
-  /** Hide the share button (e.g. embed view). */
-  hideShare?: boolean;
-  /** Internal in-game flow: called when playback finishes once. */
+  report: Attack;
+  isMyAttack: boolean;
   onComplete?: () => void;
-  /** Auto-play on mount (defaults to true). */
-  autoPlay?: boolean;
-  /** Compatibility: existing callers pass this; unused in the new renderer. */
-  isMyAttack?: boolean;
 }
 
-function buildSimFromReport(report: Attack): SimResult | null {
-  if (report.type === 'scout' || report.result?.mission === 'scout') return null;
-  if (!report.result) return null;
+const TROOP_SHORT: Record<string, string> = {
+  lancerDrone: 'Lancer',
+  assaultTrooper: 'Assault',
+  breakerUnit: 'Breaker',
+  reconOperative: 'Recon',
+  skimmerBike: 'Skimmer',
+  siegeMech: 'Siege Mech',
+  bulwarkGuard: 'Bulwark',
+  suppressorTeam: 'Suppressor',
+  disruptorUnit: 'Disruptor',
+  interceptorBike: 'Interceptor',
+  annihilatorPlatform: 'Annihilator',
+  voidStalker: 'Void Stalker',
+  plasmaTurret: 'Plasma Turret',
+  overseer: 'Overseer',
+};
 
-  const seedRaw = (report.result as unknown as { combatSeed?: number }).combatSeed;
-  // Fall back to deriving from the attack id if seed missing on older reports.
-  const seed = typeof seedRaw === 'number'
-    ? seedRaw
-    : ((parseInt(report._id, 10) || 1) * 2654435761) >>> 0;
-
-  // Newer reports store the engagement-time defender composition. For
-  // legacy reports we degrade gracefully to defender losses (better than
-  // nothing — replay will show the destroyed force only).
-  const stored = report.result as unknown as {
-    attackerInitial?: Force;
-    defenderInitial?: Force;
-  };
-
-  const attackerInitial: Force = {};
-  if (stored.attackerInitial) {
-    for (const [k, v] of Object.entries(stored.attackerInitial)) {
-      if ((v as number) > 0) attackerInitial[k as TroopKey] = v as number;
-    }
-  } else {
-    for (const [k, v] of Object.entries(report.troops)) {
-      if ((v as number) > 0) attackerInitial[k as TroopKey] = v as number;
-    }
-  }
-
-  const defenderInitial: Force = {};
-  if (stored.defenderInitial && Object.keys(stored.defenderInitial).length > 0) {
-    for (const [k, v] of Object.entries(stored.defenderInitial)) {
-      if ((v as number) > 0) defenderInitial[k as TroopKey] = v as number;
-    }
-  } else {
-    // Legacy fallback: reconstruct from losses only
-    for (const [k, v] of Object.entries(report.result.defenderLosses ?? {})) {
-      if ((v as number) > 0) defenderInitial[k as TroopKey] = v as number;
-    }
-  }
-
-  const attackerLosses: Force = {};
-  for (const [k, v] of Object.entries(report.result.attackerLosses ?? {})) {
-    if ((v as number) > 0) attackerLosses[k as TroopKey] = v as number;
-  }
-  if (report.result.conquered && (report.troops.overseer ?? 0) > 0 && !attackerLosses.overseer) {
-    attackerLosses.overseer = report.troops.overseer;
-  }
-
-  const defenderLosses: Force = {};
-  for (const [k, v] of Object.entries(report.result.defenderLosses ?? {})) {
-    if ((v as number) > 0) defenderLosses[k as TroopKey] = v as number;
-  }
-
-  return simulateBattle({
-    attackerInitial,
-    defenderInitial,
-    attackerLosses,
-    defenderLosses,
-    seed,
-    victory: !!report.result.victory,
-    conquered: !!report.result.conquered,
-  });
+function PowerBar({ current, max, side }: { current: number; max: number; side: 'attacker' | 'defender' }) {
+  const pct = max > 0 ? Math.max(0, Math.min(100, (current / max) * 100)) : 0;
+  return (
+    <div className="replay-power-bar-track">
+      <div
+        className={`replay-power-bar-fill replay-power-bar-fill--${side}`}
+        style={{ width: `${pct}%` }}
+      />
+    </div>
+  );
 }
 
-const SPEED_OPTIONS = [0.5, 1, 2, 4] as const;
-
-const BattleReplay: React.FC<BattleReplayProps> = ({
-  report,
-  sim: providedSim,
-  attackerLabel: labelOverrideA,
-  defenderLabel: labelOverrideD,
-  resourcesStolen: resourcesOverride,
-  shareUrl,
-  hideShare,
-  onComplete,
-  autoPlay = true,
-}) => {
-  const sim = useMemo<SimResult | null>(() => {
-    if (providedSim) return providedSim;
-    if (report) return buildSimFromReport(report);
-    return null;
-  }, [report, providedSim]);
-
-  const attackerLabel = labelOverrideA ?? report?.attacker.user?.username ?? 'Attacker';
-  const defenderLabel = labelOverrideD ?? report?.defender.user?.username ?? 'Defender';
-  const resourcesStolen = resourcesOverride ?? report?.result?.resourcesStolen ?? { biomass: 0, alloy: 0, ore: 0 };
-
-  const canvasRef = useRef<BattlefieldHandle | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [isPlaying, setIsPlaying] = useState(autoPlay);
-  const [playhead, setPlayhead] = useState(0);
-  const [speed, setSpeed] = useState<number>(1);
-  const [shareOpen, setShareOpen] = useState(false);
-  const [shareMsg, setShareMsg] = useState<string | null>(null);
-
-  // Auto-play on mount
-  useEffect(() => {
-    const t = setTimeout(() => {
-      if (autoPlay) {
-        canvasRef.current?.play();
-        setIsPlaying(true);
-      }
-    }, 200);
-    return () => clearTimeout(t);
-  }, [autoPlay, sim]);
-
-  const handleProgress = useCallback((p: number) => {
-    setPlayhead(p);
-  }, []);
-
-  const handleCanvasComplete = useCallback(() => {
-    setIsPlaying(false);
-    onComplete?.();
-  }, [onComplete]);
-
-  const togglePlay = useCallback(() => {
-    if (!canvasRef.current) return;
-    if (playhead >= 0.999) {
-      canvasRef.current.seek(0);
-      canvasRef.current.play();
-      setIsPlaying(true);
-    } else {
-      canvasRef.current.togglePlay();
-      setIsPlaying(canvasRef.current.isPlaying());
-    }
-  }, [playhead]);
-
-  const restart = useCallback(() => {
-    canvasRef.current?.seek(0);
-    canvasRef.current?.play();
-    setIsPlaying(true);
-  }, []);
-
-  const onScrub = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const ph = Number(e.target.value) / 1000;
-    canvasRef.current?.pause();
-    canvasRef.current?.seek(ph);
-    setIsPlaying(false);
-    setPlayhead(ph);
-  }, []);
-
-  const onSpeedChange = useCallback((s: number) => {
-    setSpeed(s);
-    canvasRef.current?.setSpeed(s);
-  }, []);
-
-  const enterFullscreen = useCallback(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    if (document.fullscreenElement) {
-      void document.exitFullscreen();
-    } else {
-      void el.requestFullscreen?.();
-    }
-  }, []);
-
-  const copyShareLink = useCallback(async () => {
-    if (!shareUrl) return;
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setShareMsg('Link copied');
-      setTimeout(() => setShareMsg(null), 1800);
-    } catch {
-      setShareMsg('Copy failed');
-      setTimeout(() => setShareMsg(null), 1800);
-    }
-  }, [shareUrl]);
-
-  const shareToTwitter = useCallback(() => {
-    if (!shareUrl) return;
-    const outcome = sim?.conquered ? 'I just conquered a Nexus' : sim?.victory ? 'Victory at the Nexus' : 'Defended the Nexus';
-    const text = `${outcome} on Vexara — watch the replay:`;
-    const u = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`;
-    window.open(u, '_blank', 'noopener');
-  }, [shareUrl, sim]);
-
-  if (!sim) return null;
-
-  const totalSeconds = 22 + 4; // must match BattlefieldCanvas
-  const elapsedSec = Math.min(totalSeconds, playhead * totalSeconds);
-
-  const totalResourcesStolen =
-    resourcesStolen.biomass + resourcesStolen.alloy + resourcesStolen.ore;
+function TroopRow({
+  type,
+  initial,
+  current,
+  lostThisRound,
+  side,
+}: {
+  type: string;
+  initial: number;
+  current: number;
+  lostThisRound: number;
+  side: 'attacker' | 'defender';
+}) {
+  const pct = initial > 0 ? Math.max(0, (current / initial) * 100) : 0;
+  const isDepleted = current <= 0;
 
   return (
-    <div ref={containerRef} className="replay-cine-root">
-      <div className="replay-cine-stage">
-        <BattlefieldCanvas
-          ref={canvasRef}
-          sim={sim}
-          attackerLabel={attackerLabel}
-          defenderLabel={defenderLabel}
-          onProgress={handleProgress}
-          onComplete={handleCanvasComplete}
+    <div className={`replay-troop-row ${isDepleted ? 'replay-troop-row--depleted' : ''}`}>
+      <span className="replay-troop-name">{TROOP_SHORT[type] ?? type}</span>
+      <div className="replay-troop-bar-wrap">
+        <div
+          className={`replay-troop-bar-fill replay-troop-bar-fill--${side}`}
+          style={{ width: `${pct}%` }}
         />
       </div>
+      <span className={`replay-troop-count ${lostThisRound > 0 ? 'replay-troop-count--losing' : ''}`}>
+        {current}
+        {lostThisRound > 0 && <span className="replay-troop-loss">-{lostThisRound}</span>}
+      </span>
+    </div>
+  );
+}
 
-      {/* Transport bar */}
-      <div className="replay-cine-transport">
-        <button
-          type="button"
-          className="replay-cine-btn replay-cine-btn--primary"
-          onClick={togglePlay}
-          aria-label={isPlaying ? 'Pause' : 'Play'}
-          title={isPlaying ? 'Pause' : 'Play'}
-        >
-          {isPlaying ? <Pause size={16} /> : <Play size={16} />}
-        </button>
+function RoundLog({ rounds, currentRound }: { rounds: CombatRound[]; currentRound: number }) {
+  const listRef = useRef<HTMLDivElement>(null);
 
-        <button
-          type="button"
-          className="replay-cine-btn"
-          onClick={restart}
-          aria-label="Restart"
-          title="Restart"
-        >
-          <RotateCcw size={14} />
-        </button>
+  useEffect(() => {
+    if (listRef.current) {
+      const active = listRef.current.querySelector('.replay-log-entry--active');
+      active?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }, [currentRound]);
 
-        <input
-          type="range"
-          min={0}
-          max={1000}
-          step={1}
-          value={Math.round(playhead * 1000)}
-          onChange={onScrub}
-          className="replay-cine-scrub"
-          aria-label="Scrub timeline"
-        />
+  return (
+    <div className="replay-log" ref={listRef}>
+      {rounds.map((r) => {
+        const aTotal = Object.values(r.attackerLostThisRound).reduce((s, n) => s + n, 0);
+        const dTotal = Object.values(r.defenderLostThisRound).reduce((s, n) => s + n, 0);
+        const isCurrent = r.round === currentRound + 1;
+        const isPast = r.round <= currentRound;
 
-        <span className="replay-cine-time">
-          {elapsedSec.toFixed(1)}s / {totalSeconds}s
+        return (
+          <div
+            key={r.round}
+            className={`replay-log-entry ${isCurrent ? 'replay-log-entry--active' : ''} ${isPast && !isCurrent ? 'replay-log-entry--past' : ''}`}
+          >
+            <span className="replay-log-round">R{r.round}</span>
+            <span className="replay-log-losses replay-log-losses--attacker">-{aTotal} atk</span>
+            <span className="replay-log-losses replay-log-losses--defender">-{dTotal} def</span>
+            {r.event && <span className="replay-log-event">{r.event}</span>}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+const BattleReplay: React.FC<BattleReplayProps> = ({ report, isMyAttack, onComplete }) => {
+  const replay = React.useMemo<CombatReplay | null>(() => deriveReplay(report), [report]);
+
+  const [currentRound, setCurrentRound] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const maxPower = React.useMemo(() => {
+    if (!replay) return 1;
+    return Math.max(
+      ...replay.rounds.map((r) => r.attackPower),
+      ...replay.rounds.map((r) => r.defensePower),
+      1,
+    );
+  }, [replay]);
+
+  const stop = useCallback(() => {
+    setIsPlaying(false);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, []);
+
+  const play = useCallback(() => {
+    if (!replay) return;
+    if (currentRound >= replay.totalRounds - 1) {
+      setCurrentRound(0);
+    }
+    setIsPlaying(true);
+  }, [replay, currentRound]);
+
+  useEffect(() => {
+    if (!replay) return;
+    if (isPlaying) {
+      intervalRef.current = setInterval(() => {
+        setCurrentRound((prev) => {
+          if (prev >= replay.totalRounds - 1) {
+            stop();
+            return prev;
+          }
+          return prev + 1;
+        });
+      }, 900);
+    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [isPlaying, replay, stop]);
+
+  useEffect(() => {
+    stop();
+    setCurrentRound(0);
+  }, [report._id, stop]);
+
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+  useEffect(() => {
+    if (replay && currentRound === replay.totalRounds - 1) {
+      onCompleteRef.current?.();
+    }
+  }, [currentRound, replay]);
+
+  if (!replay) return null;
+
+  const round = replay.rounds[currentRound];
+  const attackerLabel = report.attacker.user?.username ?? 'Attacker';
+  const defenderLabel = report.defender.user?.username ?? 'Defender';
+
+  const totalResourcesStolen =
+    replay.resourcesStolen.biomass + replay.resourcesStolen.alloy + replay.resourcesStolen.ore;
+
+  return (
+    <div className="replay-root">
+      <div className="replay-header">
+        <span className="replay-title">Battle Replay</span>
+        <span className="replay-subtitle">
+          Round {currentRound + 1} of {replay.totalRounds}
         </span>
+      </div>
 
-        <div className="replay-cine-speeds">
-          {SPEED_OPTIONS.map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => onSpeedChange(s)}
-              className={`replay-cine-speed ${speed === s ? 'replay-cine-speed--active' : ''}`}
-              aria-label={`Playback speed ${s}x`}
-            >
-              {s}×
-            </button>
-          ))}
+      <div className="replay-power-section">
+        <div className="replay-power-side replay-power-side--attacker">
+          <span className="replay-power-label">{attackerLabel}</span>
+          <PowerBar current={round.attackPower} max={maxPower} side="attacker" />
+          <span className="replay-power-value">{Math.round(round.attackPower).toLocaleString()}</span>
         </div>
+        <div className="replay-power-vs">VS</div>
+        <div className="replay-power-side replay-power-side--defender">
+          <span className="replay-power-label">{defenderLabel}</span>
+          <PowerBar current={round.defensePower} max={maxPower} side="defender" />
+          <span className="replay-power-value">{Math.round(round.defensePower).toLocaleString()}</span>
+        </div>
+      </div>
 
-        {!hideShare && shareUrl && (
-          <div className="replay-cine-share">
-            <button
-              type="button"
-              className="replay-cine-btn"
-              onClick={() => setShareOpen((v) => !v)}
-              aria-label="Share replay"
-              title="Share replay"
-            >
-              <Share2 size={14} />
-            </button>
-            {shareOpen && (
-              <div className="replay-cine-share-pop" role="dialog">
-                <div className="replay-cine-share-row">
-                  <input
-                    className="replay-cine-share-input"
-                    readOnly
-                    value={shareUrl}
-                    onClick={(e) => (e.target as HTMLInputElement).select()}
-                  />
-                  <button type="button" className="replay-cine-btn" onClick={copyShareLink} title="Copy link">
-                    <Copy size={14} />
-                  </button>
-                </div>
-                <button type="button" className="replay-cine-share-twitter" onClick={shareToTwitter}>
-                  Share on X / Twitter
-                </button>
-                {shareMsg && <div className="replay-cine-share-msg">{shareMsg}</div>}
-              </div>
+      <div className={`replay-event-banner ${round.event ? 'replay-event-banner--visible' : ''} ${round.event === 'NEXUS CONQUERED' ? 'replay-event-banner--conquest' : ''}`}>
+        {round.event ?? ' '}
+      </div>
+
+      <div className="replay-forces">
+        <div className="replay-force-col replay-force-col--attacker">
+          <div className="replay-force-heading">
+            <span className="replay-force-name">{attackerLabel}</span>
+            <span className="replay-force-role">Attacker</span>
+          </div>
+          <div className="replay-troop-list">
+            {Object.keys(replay.attackerInitial).map((type) => (
+              <TroopRow
+                key={type}
+                type={type}
+                initial={replay.attackerInitial[type]}
+                current={round.attackerForce[type] ?? 0}
+                lostThisRound={round.attackerLostThisRound[type] ?? 0}
+                side="attacker"
+              />
+            ))}
+            {Object.keys(replay.attackerInitial).length === 0 && (
+              <span className="replay-force-empty">No data</span>
             )}
           </div>
+        </div>
+
+        <div className="replay-force-col replay-force-col--defender">
+          <div className="replay-force-heading">
+            <span className="replay-force-name">{defenderLabel}</span>
+            <span className="replay-force-role">Defender</span>
+          </div>
+          <div className="replay-troop-list">
+            {Object.keys(replay.defenderInitial).map((type) => (
+              <TroopRow
+                key={type}
+                type={type}
+                initial={replay.defenderInitial[type]}
+                current={round.defenderForce[type] ?? 0}
+                lostThisRound={round.defenderLostThisRound[type] ?? 0}
+                side="defender"
+              />
+            ))}
+            {Object.keys(replay.defenderInitial).length === 0 && (
+              <span className="replay-force-empty">No enemy losses recorded</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <RoundLog rounds={replay.rounds} currentRound={currentRound} />
+
+      <div className="replay-controls">
+        <button
+          className="replay-btn"
+          onClick={() => { stop(); setCurrentRound(0); }}
+          disabled={currentRound === 0 && !isPlaying}
+          title="First round"
+        >
+          <ChevronsLeft size={16} />
+        </button>
+        <button
+          className="replay-btn"
+          onClick={() => { stop(); setCurrentRound((p) => Math.max(0, p - 1)); }}
+          disabled={currentRound === 0 && !isPlaying}
+          title="Previous round"
+        >
+          <ChevronLeft size={16} />
+        </button>
+
+        {isPlaying ? (
+          <button className="replay-btn replay-btn--primary" onClick={stop} title="Stop">
+            <Square size={16} />
+          </button>
+        ) : (
+          <button
+            className="replay-btn replay-btn--primary"
+            onClick={play}
+            disabled={currentRound >= replay.totalRounds - 1}
+            title="Play"
+          >
+            <Play size={16} />
+          </button>
         )}
 
         <button
-          type="button"
-          className="replay-cine-btn"
-          onClick={enterFullscreen}
-          aria-label="Fullscreen"
-          title="Fullscreen"
+          className="replay-btn"
+          onClick={() => { stop(); setCurrentRound((p) => Math.min(replay.totalRounds - 1, p + 1)); }}
+          disabled={currentRound >= replay.totalRounds - 1}
+          title="Next round"
         >
-          <Maximize2 size={14} />
+          <ChevronRight size={16} />
+        </button>
+        <button
+          className="replay-btn"
+          onClick={() => { stop(); setCurrentRound(replay.totalRounds - 1); }}
+          disabled={currentRound >= replay.totalRounds - 1}
+          title="Last round"
+        >
+          <ChevronsRight size={16} />
         </button>
       </div>
 
-      {/* Outcome strip — only when finished */}
-      {playhead >= 0.999 && (
-        <div
-          className={`replay-cine-outcome ${
-            sim.conquered ? 'replay-cine-outcome--conquest'
-            : sim.victory ? 'replay-cine-outcome--victory'
-            : 'replay-cine-outcome--defeat'
-          }`}
-        >
-          <span className="replay-cine-outcome-text">
-            {sim.conquered ? 'Nexus conquered. Control transferred.'
-              : sim.victory ? 'Attacker wins the engagement.'
-              : 'Defense holds. Raid repelled.'}
-          </span>
+      {currentRound === replay.totalRounds - 1 && (
+        <div className={`replay-outcome ${replay.victory ? 'replay-outcome--victory' : 'replay-outcome--defeat'}`}>
+          {replay.conquered ? (
+            <span>Nexus conquered. Control transferred.</span>
+          ) : replay.victory ? (
+            <span>Attacker wins the engagement</span>
+          ) : (
+            <span>Defense holds. Raid repelled.</span>
+          )}
           {totalResourcesStolen > 0 && (
-            <span className="replay-cine-outcome-loot">
-              <ResourceIcon kind="biomass" size={13} /> {resourcesStolen.biomass}
-              <ResourceIcon kind="alloy" size={13} /> {resourcesStolen.alloy}
-              <ResourceIcon kind="ore" size={13} /> {resourcesStolen.ore}
-              <span className="replay-cine-outcome-loot-label">plundered</span>
-            </span>
+            <div className="replay-outcome-loot">
+              <ResourceIcon kind="biomass" size={13} /> {replay.resourcesStolen.biomass}
+              <ResourceIcon kind="alloy" size={13} /> {replay.resourcesStolen.alloy}
+              <ResourceIcon kind="ore" size={13} /> {replay.resourcesStolen.ore}
+              <span className="replay-outcome-loot-label">plundered</span>
+            </div>
           )}
         </div>
       )}

@@ -244,7 +244,6 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
             <BattleReplay
               report={selectedReport}
               isMyAttack={isMyAttack}
-              shareUrl={typeof window !== 'undefined' ? `${window.location.origin}/replay/${selectedReport._id}` : undefined}
               onComplete={() => setReplayComplete(true)}
             />
           )}

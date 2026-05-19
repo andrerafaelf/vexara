@@ -516,113 +516,75 @@ const BattlefieldCanvas = React.forwardRef<BattlefieldHandle, BattlefieldCanvasP
         ctx.beginPath(); ctx.moveTo(centerX, 30); ctx.lineTo(centerX, h - 30); ctx.stroke();
         ctx.setLineDash([]);
 
-        // ─── Unit progress bars ──────────────────────────────────────
+        // ─── Unit dots ───────────────────────────────────────────────
         const ph = playheadRef.current;
-
-        // Compute live count per (side, type) from dot death timings
-        const liveCount = (side: 'attacker' | 'defender', type: TroopKey): number => {
-          let alive = 0;
-          for (const dot of scriptRef.current.dots) {
-            if (dot.side !== side || dot.type !== type) continue;
-            if (dot.deathAt === null || ph < dot.deathAt) alive += dot.weight;
-          }
-          return Math.max(0, Math.round(alive));
+        const teamArea = (side: 'attacker' | 'defender') => {
+          const padTop = 70, padBottom = 100;
+          const padX = 36;
+          const x = side === 'attacker' ? padX : centerX + 18;
+          const y = padTop;
+          const wRect = centerX - padX - 18;
+          const hRect = h - padTop - padBottom;
+          return { x, y, w: wRect, h: hRect };
         };
 
-        // Collect troop types present on each side
-        const aTypes = TROOP_KEYS.filter((k) => (sim.attackerInitial[k] ?? 0) > 0);
-        const dTypes = TROOP_KEYS.filter((k) => (sim.defenderInitial[k] ?? 0) > 0);
+        const aRect = teamArea('attacker');
+        const dRect = teamArea('defender');
 
-        const barH = 14;
-        const barGap = 6;
-        const rowH = barH + barGap;
-        const padTop = 68;
-        const padX = 14;
-        const colW = centerX - padX - 14; // width of each column
-        const labelW = 88; // reserved for unit name
-        const barMaxW = colW - labelW - 46; // rest for bar + count
+        const marchPct = Math.min(0.4, ph * 0.9);
 
-        const drawUnitRow = (
-          side: 'attacker' | 'defender',
-          type: TroopKey,
-          rowIndex: number,
-        ) => {
-          const initial = side === 'attacker'
-            ? (sim.attackerInitial[type] ?? 0)
-            : (sim.defenderInitial[type] ?? 0);
-          if (initial === 0) return;
+        const drawDot = (dot: UnitDot) => {
+          if (dot.deathAt !== null && ph > dot.deathAt + 0.04) return;
 
-          const live = liveCount(side, type);
-          const ratio = live / initial;
-          const dead = live === 0;
-          const color = TROOP_COLORS[type];
+          const rect = dot.side === 'attacker' ? aRect : dRect;
+          const baseX = rect.x + (dot.slotX + dot.jitterX * 0.05) * rect.w;
+          const baseY = rect.y + (dot.slotY + dot.jitterY * 0.05) * rect.h;
 
-          const rowY = padTop + rowIndex * rowH;
+          const advance = (rect.w * 0.5) * marchPct;
+          const x = dot.side === 'attacker' ? baseX + advance : baseX - advance;
+          const y = baseY;
 
-          // Attacker rows: left-aligned. Defender rows: right-aligned (mirrored).
-          const colX = side === 'attacker' ? padX : centerX + 14;
-
-          // Dim entire row if wiped out
-          ctx.globalAlpha = dead ? 0.38 : 1;
-
-          // Unit name
-          ctx.font = '500 10px ui-sans-serif, system-ui, sans-serif';
-          ctx.textBaseline = 'middle';
-          ctx.fillStyle = dead ? '#555' : color;
-          if (side === 'attacker') {
-            ctx.textAlign = 'left';
-            ctx.fillText(TROOP_NAMES_SHORT[type], colX, rowY + barH / 2);
-          } else {
-            ctx.textAlign = 'right';
-            ctx.fillText(TROOP_NAMES_SHORT[type], colX + colW, rowY + barH / 2);
-          }
-
-          // Bar track
-          const barX = side === 'attacker' ? colX + labelW : colX + colW - labelW - barMaxW;
-          ctx.fillStyle = 'rgba(255,255,255,0.06)';
-          ctx.fillRect(barX, rowY, barMaxW, barH);
-
-          // Bar fill
-          if (!dead) {
-            ctx.fillStyle = color;
-            ctx.globalAlpha = 0.82;
-            if (side === 'attacker') {
-              ctx.fillRect(barX, rowY, barMaxW * ratio, barH);
-            } else {
-              // Defender bar fills from right to left
-              const filled = barMaxW * ratio;
-              ctx.fillRect(barX + barMaxW - filled, rowY, filled, barH);
+          let alpha = 1;
+          let scale = 1;
+          if (dot.deathAt !== null && ph >= dot.deathAt) {
+            const t = Math.min(1, (ph - dot.deathAt) / 0.04);
+            alpha = 1 - t;
+            scale = 1 + t * 0.8;
+            if (Math.random() < 0.18 && particlesRef.current.length < PARTICLE_BUDGET) {
+              particlesRef.current.push({
+                x, y, vx: (Math.random() - 0.5) * 60, vy: -40 - Math.random() * 40,
+                life: 0, ttl: 0.35, size: 1.5,
+                color: TROOP_COLORS[dot.type], kind: 'spark',
+              });
             }
           }
 
-          // Count label
-          ctx.globalAlpha = dead ? 0.38 : 1;
-          ctx.font = `${dead ? '400' : '600'} 10px ui-monospace, monospace`;
-          ctx.fillStyle = dead ? '#555' : 'rgba(255,255,255,0.9)';
-          if (side === 'attacker') {
-            ctx.textAlign = 'left';
-            ctx.fillText(dead ? 'LOST' : String(live), barX + barMaxW + 6, rowY + barH / 2);
-          } else {
-            ctx.textAlign = 'right';
-            ctx.fillText(dead ? 'LOST' : String(live), barX - 6, rowY + barH / 2);
-          }
+          const baseSize = TROOP_STATS[dot.type].defense > 100 ? 7.5
+                          : TROOP_STATS[dot.type].defense > 50 ? 6
+                          : 5;
+          const size = baseSize * scale;
+
+          ctx.globalAlpha = alpha * 0.5;
+          ctx.fillStyle = TROOP_COLORS[dot.type];
+          ctx.beginPath();
+          ctx.arc(x, y, size * 1.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = TROOP_COLORS[dot.type];
+          ctx.beginPath();
+          ctx.arc(x, y, size, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.strokeStyle = dot.side === 'attacker' ? 'rgba(255,158,61,0.85)' : 'rgba(74,158,176,0.85)';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
 
           ctx.globalAlpha = 1;
         };
 
-        const maxRows = Math.max(aTypes.length, dTypes.length);
-        // Centre the block vertically between top HUD and bottom kill feed
-        const blockH = maxRows * rowH;
-        const usableTop = 68;
-        const usableBot = h - 80;
-        const startY = usableTop + Math.max(0, (usableBot - usableTop - blockH) / 2);
-
-        // Redraw with vertical offset applied via transform
-        ctx.save();
-        ctx.translate(0, startY - padTop);
-        aTypes.forEach((type, i) => drawUnitRow('attacker', type, i));
-        dTypes.forEach((type, i) => drawUnitRow('defender', type, i));
-        ctx.restore();
+        for (const dot of scriptRef.current.dots) if (dot.side === 'defender') drawDot(dot);
+        for (const dot of scriptRef.current.dots) if (dot.side === 'attacker') drawDot(dot);
 
         // ─── Particles ───────────────────────────────────────────────
         for (const p of ps) {
@@ -689,28 +651,28 @@ const BattlefieldCanvas = React.forwardRef<BattlefieldHandle, BattlefieldCanvasP
         const dPow = computePower('defender');
         const maxPow = Math.max(sim.attackerPowerInitial, sim.defenderPowerInitial, 1);
 
-        const powBarY = 34;
-        const powBarH = 6;
-        const powBarMaxW = w * 0.34;
+        const barY = 34;
+        const barH = 6;
+        const barMaxW = w * 0.34;
         // Attacker (left, fills right)
         ctx.fillStyle = 'rgba(255,255,255,0.06)';
-        ctx.fillRect(14, powBarY, powBarMaxW, powBarH);
+        ctx.fillRect(14, barY, barMaxW, barH);
         ctx.fillStyle = '#FF9E3D';
-        ctx.fillRect(14, powBarY, powBarMaxW * (aPow / maxPow), powBarH);
+        ctx.fillRect(14, barY, barMaxW * (aPow / maxPow), barH);
         // Defender (right, fills left)
         ctx.fillStyle = 'rgba(255,255,255,0.06)';
-        ctx.fillRect(w - 14 - powBarMaxW, powBarY, powBarMaxW, powBarH);
+        ctx.fillRect(w - 14 - barMaxW, barY, barMaxW, barH);
         ctx.fillStyle = '#4A9EB0';
-        const dW = powBarMaxW * (dPow / maxPow);
-        ctx.fillRect(w - 14 - dW, powBarY, dW, powBarH);
+        const dW = barMaxW * (dPow / maxPow);
+        ctx.fillRect(w - 14 - dW, barY, dW, barH);
 
         // Power values text
         ctx.font = '500 10px ui-sans-serif, system-ui, sans-serif';
         ctx.fillStyle = 'rgba(255,255,255,0.85)';
         ctx.textAlign = 'left';
-        ctx.fillText(Math.round(aPow).toLocaleString() + ' atk', 14, powBarY + powBarH + 12);
+        ctx.fillText(Math.round(aPow).toLocaleString() + ' atk', 14, barY + barH + 12);
         ctx.textAlign = 'right';
-        ctx.fillText(Math.round(dPow).toLocaleString() + ' def', w - 14, powBarY + powBarH + 12);
+        ctx.fillText(Math.round(dPow).toLocaleString() + ' def', w - 14, barY + barH + 12);
 
         // ─── Banner ──────────────────────────────────────────────────
         if (bannerRef.current) {

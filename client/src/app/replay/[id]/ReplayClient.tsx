@@ -1,9 +1,5 @@
 'use client';
 
-import { useMemo } from 'react';
-import BattleReplay from '@/components/BattleReplay';
-import { simulateBattle, type Force, type TroopKey } from '@/utils/combatSim';
-
 interface ReplayPayload {
   id: string;
   attacker: { username: string | null; nexusName: string | null; x: number | null; y: number | null };
@@ -21,29 +17,9 @@ interface ReplayPayload {
   createdAt: string;
 }
 
-function clean(force: Record<string, number>): Force {
-  const out: Force = {};
-  for (const [k, v] of Object.entries(force || {})) {
-    if (typeof v === 'number' && v > 0) out[k as TroopKey] = v;
-  }
-  return out;
-}
-
 export default function ReplayClient({ data }: { data: ReplayPayload }) {
-  const sim = useMemo(() => simulateBattle({
-    attackerInitial: clean(data.attackerInitial),
-    defenderInitial: clean(data.defenderInitial),
-    attackerLosses: clean(data.attackerLosses),
-    defenderLosses: clean(data.defenderLosses),
-    seed: data.combatSeed,
-    victory: data.victory,
-    conquered: data.conquered,
-  }), [data]);
-
   const attackerLabel = data.attacker.username || 'Unknown';
   const defenderLabel = data.defender.username || 'Unknown';
-
-  const shareUrl = typeof window !== 'undefined' ? window.location.href : `/replay/${data.id}`;
 
   const outcomeChip = data.conquered
     ? { text: 'NEXUS CONQUERED', color: '#F85149' }
@@ -101,13 +77,9 @@ export default function ReplayClient({ data }: { data: ReplayPayload }) {
         </div>
 
         <div className="public-replay-stage">
-          <BattleReplay
-            sim={sim}
-            attackerLabel={attackerLabel}
-            defenderLabel={defenderLabel}
-            resourcesStolen={data.resourcesStolen}
-            shareUrl={shareUrl}
-          />
+          <div style={{ textAlign: 'center', padding: '32px', color: '#6E7681', fontSize: '13px' }}>
+            Detailed replay not available for this battle.
+          </div>
         </div>
 
         <div className="public-replay-footer">
