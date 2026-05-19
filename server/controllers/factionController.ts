@@ -1078,7 +1078,7 @@ export async function getChatMessages(req: AuthRequest, res: Response): Promise<
         id: true,
         content: true,
         createdAt: true,
-        user: { select: { id: true, username: true } },
+        user: { select: { id: true, username: true, isSupporter: true } },
       },
       orderBy: { id: 'desc' },
       take: CHAT_PAGE_SIZE,
@@ -1122,7 +1122,7 @@ export async function sendChatMessage(req: AuthRequest, res: Response): Promise<
         id: true,
         content: true,
         createdAt: true,
-        user: { select: { id: true, username: true } },
+        user: { select: { id: true, username: true, isSupporter: true } },
       },
     });
 

@@ -724,3 +724,11 @@
   font-family: var(--font-mono);
   letter-spacing: 0.04em;
 }
+
+.auth-support {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 12px;
+  color: var(--text-faint);
+}

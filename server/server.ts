@@ -12,6 +12,7 @@ import { processCompletedQueuesAndNotify, recoverControlLevels, updateAllResourc
 import attackRoutes from './routes/attack.js';
 import authRoutes from './routes/auth.js';
 import { unsubscribe } from './controllers/unsubscribeController.js';
+import { handleKofiWebhook } from './controllers/kofiWebhookController.js';
 import buildingRoutes from './routes/building.js';
 import chatRoutes from './routes/chat.js';
 import factionRoutes from './routes/faction.js';
@@ -119,6 +120,7 @@ if (process.env.NODE_ENV === 'production') {
 
 app.get('/api/unsubscribe', unsubscribe);
 app.post('/api/unsubscribe', express.urlencoded({ extended: false }), unsubscribe);
+app.post('/api/webhooks/kofi', express.urlencoded({ extended: false, limit: '64kb' }), handleKofiWebhook);
 app.use('/api/auth', authRoutes);
 app.use('/api/nexus', nexusRoutes);
 app.use('/api/building', buildingRoutes);

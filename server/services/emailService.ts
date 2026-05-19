@@ -5,6 +5,7 @@ const REPLY_TO = 'support@vexara.world';
 const SITE_URL = 'https://vexara.world';
 const LOGO_URL = 'https://vexara.world/vexara-logo.png';
 const DISCORD_URL = 'https://discord.gg/D858rzCHP7';
+const KOFI_URL = 'https://ko-fi.com/andrerfferreira';
 const UNSUBSCRIBE_URL = 'https://vexara.world/api/unsubscribe';
 const SENDER_LOCATION = 'Funchal, Portugal';
 
@@ -130,7 +131,12 @@ function tplAlphaWelcome(email: string): RenderedEmail {
       In the meantime, join the Discord for bug reports, patch notes, and dev updates.
     </p>
     <div style="text-align:center;">${buttonHtml(DISCORD_URL, 'Join the Discord')}</div>
-    <p style="margin:0;font-size:14px;line-height:1.6;color:#8a90a0;">Questions? Just reply to this email. It reaches a real person.</p>
+    <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#8a90a0;">
+      Vexara runs on a small server during alpha. If you want to help keep it online, you can
+      <a href="${KOFI_URL}" style="color:#7aa2ff;text-decoration:underline;">support the project on Ko-fi</a>.
+      Supporters get a glowing name in-game.
+    </p>
+    <p style="margin:16px 0 0;font-size:14px;line-height:1.6;color:#8a90a0;">Questions? Just reply to this email. It reaches a real person.</p>
   `;
   const text = [
     "You're on the Vexara alpha list",
@@ -143,6 +149,8 @@ function tplAlphaWelcome(email: string): RenderedEmail {
     '',
     'In the meantime, join the Discord for bug reports, patch notes, and dev updates.',
     `Discord: ${DISCORD_URL}`,
+    '',
+    `Vexara runs on a small server during alpha. Support the project: ${KOFI_URL}`,
     '',
     'Questions? Just reply to this email. It reaches a real person.',
     ...renderTextFooter(email, true),

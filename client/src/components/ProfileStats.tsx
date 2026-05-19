@@ -3,7 +3,7 @@
 import { useAuth } from '@/context/AuthContext';
 import { getUserStats } from '@/services/api';
 import { UserStats } from '@/types/game';
-import { Bell, LogOut, User as UserIcon } from 'lucide-react';
+import { Bell, Heart, LogOut, User as UserIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import '../styles/ProfileStats.css';
 import NotificationSettings from './NotificationSettings';
@@ -114,7 +114,7 @@ export default function ProfileStats() {
       <div className="ps-header">
         <div className="ps-avatar">{stats.username.charAt(0).toUpperCase()}</div>
         <div className="ps-header-info">
-          <h2 className="ps-username">{stats.username}</h2>
+          <h2 className={`ps-username${stats.isSupporter ? ' supporter-name' : ''}`}>{stats.username}</h2>
           <span className="ps-meta">
             {stats.points.toLocaleString()} influence · {stats.nexusCount} nexus{stats.nexusCount !== 1 ? 'es' : ''} · {stats.accountAgeDays}d played
           </span>
@@ -193,6 +193,32 @@ export default function ProfileStats() {
         <h3 className="ps-section-title">Activity Graph</h3>
         <div style={{ padding: '0' }}>
           <StatsChart />
+        </div>
+      </div>
+
+      <div className="ps-support">
+        <div className="ps-support-icon" aria-hidden="true">
+          <Heart size={18} />
+        </div>
+        <div className="ps-support-body">
+          <div className="ps-support-title">
+            {stats.isSupporter ? 'Thanks for supporting Vexara' : 'Support Vexara'}
+          </div>
+          <p className="ps-support-text">
+            {stats.isSupporter
+              ? <>Your <span className="supporter-name">name now glows</span> in chat and on your profile. You&apos;re helping keep the lights on — thank you.</>
+              : <>Vexara is in alpha and runs on a small server. Supporters get a <span className="supporter-name">glowing name</span> in chat and on their profile.</>}
+          </p>
+          {!stats.isSupporter && (
+            <a
+              href="https://ko-fi.com/andrerfferreira"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ps-support-cta"
+            >
+              Support on Ko-fi
+            </a>
+          )}
         </div>
       </div>
       </>}

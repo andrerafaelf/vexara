@@ -368,7 +368,7 @@ export async function login(req: Request, res: Response): Promise<void> {
     }
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
-    res.json({ token, user: { id: user.id, username: user.username, email: user.email } });
+    res.json({ token, user: { id: user.id, username: user.username, email: user.email, isSupporter: user.isSupporter } });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }

@@ -457,3 +457,27 @@ a:focus-visible,
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ── Supporter username glow ───────────────────────────────
+   Applied to usernames belonging to Ko-fi supporters. Slow
+   amber pulse, matches the industrial accent palette. */
+.supporter-name {
+  color: var(--accent);
+  text-shadow:
+    0 0 4px rgba(255, 158, 61, 0.45),
+    0 0 10px rgba(255, 158, 61, 0.25);
+  animation: vx-supporter-pulse 3s ease-in-out infinite;
+}
+
+@keyframes vx-supporter-pulse {
+  0%, 100% {
+    text-shadow:
+      0 0 3px rgba(255, 158, 61, 0.35),
+      0 0 8px rgba(255, 158, 61, 0.20);
+  }
+  50% {
+    text-shadow:
+      0 0 6px rgba(255, 158, 61, 0.75),
+      0 0 14px rgba(255, 158, 61, 0.40);
+  }
+}

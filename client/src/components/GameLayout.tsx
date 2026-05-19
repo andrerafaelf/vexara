@@ -164,7 +164,7 @@ export default function GameLayout({
               {(user.username ?? '?').slice(0, 1).toUpperCase()}
             </div>
             <div className="commander-info">
-              <div className="commander-name">{user.username}</div>
+              <div className={`commander-name${user.isSupporter ? ' supporter-name' : ''}`}>{user.username}</div>
               <div className="commander-meta">
                 Commander · {nexuses.reduce((s, n) => s + (n.points ?? 0), 0).toLocaleString()} inf
               </div>

@@ -1,7 +1,7 @@
 import prisma from '../lib/prisma.js';
 
 export function getUserById(userId: number) {
-  return prisma.user.findUnique({ where: { id: userId }, select: { id: true, username: true, createdAt: true } });
+  return prisma.user.findUnique({ where: { id: userId }, select: { id: true, username: true, createdAt: true, isSupporter: true } });
 }
 
 export function getGalaxyPlayer(userId: number, galaxyId: number) {

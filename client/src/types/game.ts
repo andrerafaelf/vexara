@@ -2,6 +2,7 @@ export interface User {
   id: string;
   username: string;
   email: string;
+  isSupporter?: boolean;
 }
 
 export interface TimelineDay {
@@ -19,6 +20,7 @@ export interface TimelineDay {
 
 export interface UserStats {
   username: string;
+  isSupporter?: boolean;
   points: number;
   accountAgeDays: number;
   nexusCount: number;

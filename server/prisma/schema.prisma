@@ -12,6 +12,8 @@ model User {
   email          String    @unique
   password       String
   isAlphaFounder Boolean   @default(false)
+  isSupporter    Boolean   @default(false)
+  supporterSince DateTime?
   createdAt      DateTime  @default(now())
 
   emailVerifiedAt                   DateTime?

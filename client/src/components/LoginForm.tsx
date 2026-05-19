@@ -218,6 +218,19 @@ const LoginForm: React.FC = () => {
               Request alpha access
             </Link>
           </p>
+
+          <p className="auth-secondary auth-support">
+            Vexara is in alpha and runs on a small server.{' '}
+            <a
+              href="https://ko-fi.com/andrerfferreira"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="auth-link"
+            >
+              Support the project
+            </a>
+            .
+          </p>
         </div>
       </div>
     </div>

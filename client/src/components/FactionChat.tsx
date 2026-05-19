@@ -3,12 +3,13 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { getFactionChat, sendFactionMessage } from '../services/api';
 import { useGameSocket } from '../hooks/useGameSocket';
+import Username from './Username';
 
 interface ChatMessage {
   id: number;
   content: string;
   createdAt: string;
-  user: { id: number; username: string };
+  user: { id: number; username: string; isSupporter?: boolean };
 }
 
 interface Props {
@@ -176,7 +177,11 @@ export default function FactionChat({ factionId, currentUserId }: Props) {
                 <div key={msg.id} className={`faction-chat-msg${isMine ? ' faction-chat-msg--mine' : ''}`}>
                   {showAuthor && (
                     <div className="faction-chat-author">
-                      <span className="faction-chat-username">{msg.user.username}</span>
+                      <Username
+                        name={msg.user.username}
+                        isSupporter={msg.user.isSupporter}
+                        className="faction-chat-username"
+                      />
                       <span className="faction-chat-time">{formatTime(msg.createdAt)}</span>
                     </div>
                   )}

@@ -152,7 +152,7 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
               {commanderInitial}
             </div>
             <div className="commander-info">
-              <div className="commander-name">{user.username}</div>
+              <div className={`commander-name${user.isSupporter ? ' supporter-name' : ''}`}>{user.username}</div>
               <div className="commander-meta">
                 Commander · {totalPoints.toLocaleString()} inf
               </div>
