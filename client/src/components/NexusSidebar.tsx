@@ -8,7 +8,7 @@ import {
   setGroupNexuses,
 } from '../services/api';
 
-import { Check, Hammer, Pencil, ScrollText, Settings, Swords, Trash2, X } from 'lucide-react';
+import { Check, Hammer, Heart, Pencil, ScrollText, Settings, Swords, Trash2, X } from 'lucide-react';
 import { Nexus, NexusGroup, User } from '../types/game';
 import GalaxyChip from './GalaxyChip';
 import NexusTypeBadge from './NexusTypeBadge';
@@ -158,6 +158,19 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
               </div>
             </div>
           </div>
+        )}
+
+        {!user?.isSupporter && (
+          <a
+            href="https://ko-fi.com/andrerfferreira"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="sidebar-support-btn"
+            title="Support Vexara on Ko-fi"
+          >
+            <Heart size={14} aria-hidden="true" />
+            <span>Support Vexara</span>
+          </a>
         )}
       </nav>
 

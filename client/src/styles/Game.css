@@ -1654,3 +1654,30 @@ label {
     padding: 10px 12px;
   }
 }
+
+/* Support Vexara button in the nexus sidebar */
+.sidebar-support-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 12px 8px;
+  padding: 8px 12px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+
+.sidebar-support-btn:hover {
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
