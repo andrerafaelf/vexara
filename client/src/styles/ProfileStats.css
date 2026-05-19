@@ -288,4 +288,7 @@
   border-radius: var(--radius-md);
 }
 
-.ps-support-cta:hover { background: var(--accent-hover); }
+.ps-support-cta:hover {
+  background: var(--accent-hover);
+  color: var(--text-on-accent);
+}

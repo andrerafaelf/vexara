@@ -213,7 +213,7 @@
 }
 
 .nexus-drawer-toggle {
-  display: inline-flex;
+  display: none;
   align-items: center;
   justify-content: center;
   width: 36px;
@@ -1142,6 +1142,7 @@
   }
 
   .nexus-drawer-toggle {
+    display: inline-flex;
     width: 44px;
     height: 44px;
   }
