@@ -83,6 +83,7 @@ services:
       ADMIN_CORS_ORIGINS: ${ADMIN_CORS_ORIGINS}
       ADMIN_PORT: 3002
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      RESEND_API_KEY: ${RESEND_API_KEY}
     networks:
       - app_net
     healthcheck:

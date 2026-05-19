@@ -66,6 +66,46 @@ export const requestAlphaAccess = (email: string, utm?: Utm) =>
 
 export const getAlphaSignupCount = () => apiRequest('/auth/alpha-signup/count');
 
+export interface RegisterPayload {
+  username: string;
+  email: string;
+  password: string;
+  referralCode?: string;
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+}
+
+export const register = (payload: RegisterPayload) =>
+  apiRequest('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+export const verifyEmail = (token: string) =>
+  apiRequest('/auth/verify-email', {
+    method: 'POST',
+    body: JSON.stringify({ token }),
+  });
+
+export const resendVerification = (email: string) =>
+  apiRequest('/auth/resend-verification', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+
+export const requestPasswordReset = (email: string) =>
+  apiRequest('/auth/request-password-reset', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+
+export const resetPassword = (token: string, newPassword: string) =>
+  apiRequest('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ token, newPassword }),
+  });
+
 // Galaxies
 export const getGalaxies = () => apiRequest('/galaxies');
 export const getMyGalaxy = () => apiRequest('/galaxies/me');

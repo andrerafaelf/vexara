@@ -11,6 +11,7 @@
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import '../styles/Admin.css';
+import AlphaInvitePanel from './AlphaInvitePanel';
 import Toast from './Toast';
 
 interface UserNexus {
@@ -718,6 +719,8 @@ const Admin: React.FC = () => {
           )}
         </>
       )}
+
+      <AlphaInvitePanel showToast={showToast} />
 
       <div className="admin-section" style={{ marginBottom: 28 }}>
         <div className="admin-section-header">

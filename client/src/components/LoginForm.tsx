@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { login as loginApi } from '../services/api';
+import { login as loginApi, resendVerification as resendVerificationApi } from '../services/api';
 import '../styles/Auth.css';
 
 const SCREENSHOTS = ['/vexara-overview.png', '/vexara-troops.png', '/vexara-buildings.png'];
@@ -15,6 +15,9 @@ const LoginForm: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [resendEmail, setResendEmail] = useState('');
+  const [resendState, setResendState] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [bgIndex, setBgIndex] = useState(0);
   const [fading, setFading] = useState(false);
   const [zooming, setZooming] = useState(true);
@@ -44,6 +47,8 @@ const LoginForm: React.FC = () => {
     e.preventDefault();
     if (submitting) return;
     setError('');
+    setNeedsVerification(false);
+    setResendState('idle');
     setSubmitting(true);
 
     try {
@@ -51,12 +56,28 @@ const LoginForm: React.FC = () => {
       login(response.data.token, response.data.user);
       router.push('/');
     } catch (err) {
-      const message =
-        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ||
-        'Unable to sign in. Please try again.';
-      setError(message);
+      const data = (err as { response?: { data?: { error?: string; code?: string } } })?.response?.data;
+      if (data?.code === 'EMAIL_NOT_VERIFIED') {
+        setNeedsVerification(true);
+        setError(data.error || 'Please confirm your email before logging in.');
+      } else {
+        setError(data?.error || 'Unable to sign in. Please try again.');
+      }
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleResend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (resendState === 'sending') return;
+    setResendState('sending');
+    try {
+      await resendVerificationApi(resendEmail.trim());
+      setResendState('sent');
+    } catch {
+      // Endpoint always returns 200 to avoid leaking which emails exist; treat any failure as a generic error.
+      setResendState('sent');
     }
   };
 
@@ -154,6 +175,42 @@ const LoginForm: React.FC = () => {
               {submitting ? 'Signing in…' : 'Sign in'}
             </button>
           </form>
+
+          {needsVerification && (
+            <div className="auth-resend-block" style={{ marginTop: 16 }}>
+              {resendState === 'sent' ? (
+                <p className="auth-secondary">
+                  If an account exists for that email, we&apos;ve sent a new verification link. Check your inbox.
+                </p>
+              ) : (
+                <form onSubmit={handleResend} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <label className="auth-field">
+                    <span className="auth-label">Email</span>
+                    <input
+                      type="email"
+                      placeholder="you@example.com"
+                      value={resendEmail}
+                      onChange={(e) => setResendEmail(e.target.value)}
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      autoComplete="email"
+                      spellCheck={false}
+                      required
+                    />
+                  </label>
+                  <button type="submit" className="auth-link" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left' }} disabled={resendState === 'sending'}>
+                    {resendState === 'sending' ? 'Sending…' : 'Resend verification email'}
+                  </button>
+                </form>
+              )}
+            </div>
+          )}
+
+          <p className="auth-secondary" style={{ marginTop: 16 }}>
+            <Link href="/forgot-password" className="auth-link">
+              Forgot your password?
+            </Link>
+          </p>
 
           <p className="auth-secondary">
             Don&apos;t have an account?{' '}

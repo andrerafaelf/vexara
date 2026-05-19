@@ -13,6 +13,12 @@ model User {
   password       String
   isAlphaFounder Boolean   @default(false)
   createdAt      DateTime  @default(now())
+
+  emailVerifiedAt                   DateTime?
+  emailVerificationToken            String?   @unique @db.VarChar(64)
+  emailVerificationTokenExpiresAt   DateTime?
+  passwordResetToken                String?   @unique @db.VarChar(64)
+  passwordResetTokenExpiresAt       DateTime?
   nexuses  Nexus[]
 
   activeGalaxyId Int?
