@@ -48,6 +48,10 @@ import NexusMap from './NexusMap';
 import NexusTypeBadge from './NexusTypeBadge';
 import ResourceIcon from './ResourceIcon';
 import Toast from './Toast';
+import { Countdown } from './Countdown';
+import { QueueCountdown } from './QueueCountdown';
+import { LiveResourceStrip } from './LiveResourceStrip';
+import { useNow } from '@/hooks/useNow';
 
 // Import troop images
 import annihilatorplatformImg from '../assets/troops/annihilatorplatform.png';
@@ -435,8 +439,6 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   const [isRenamingNexus, setIsRenamingNexus] = useState(false);
   const [renameValue, setRenameValue] = useState(nexus.name);
   const [isSavingNexusName, setIsSavingNexusName] = useState(false);
-  const [trainAmount, setTrainAmount] = useState<{ [key: string]: string }>({});
-  const [currentTime, setCurrentTime] = useState(() => new Date());
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const queryClient = useQueryClient();
   const { data: incomingAttacks = [] } = useQuery({
@@ -516,37 +518,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     setIsRenamingNexus(false);
   };
 
-  const handleTrainAmountChange = (troopType: string, value: string) => {
-    const digitsOnly = value.replace(/\D/g, '');
-    setTrainAmount((prev) => ({ ...prev, [troopType]: digitsOnly }));
-  };
-
-  useEffect(() => {
-    // Tick `currentTime` once per second to drive countdowns and live resource math.
-    // Pause the tick when the document is hidden so backgrounded PWA/tabs don't burn CPU
-    // re-rendering a tree the user can't see. We immediately catch up on visibilitychange.
-    let timeInterval: ReturnType<typeof setInterval> | null = null;
-    const start = () => {
-      if (timeInterval) return;
-      setCurrentTime(new Date());
-      timeInterval = setInterval(() => setCurrentTime(new Date()), 1000);
-    };
-    const stop = () => {
-      if (!timeInterval) return;
-      clearInterval(timeInterval);
-      timeInterval = null;
-    };
-    const onVisibility = () => {
-      if (document.visibilityState === 'visible') start();
-      else stop();
-    };
-    if (document.visibilityState === 'visible') start();
-    document.addEventListener('visibilitychange', onVisibility);
-    return () => {
-      document.removeEventListener('visibilitychange', onVisibility);
-      stop();
-    };
-  }, []);
+  // Countdown components now subscribe to the shared `useNow()` clock directly, so this
+  // component no longer needs its own per-second tick. Only the leaf countdowns re-render
+  // every second; this tree stays stable until `nexus` or local state actually changes.
 
   useEffect(() => {
     setActiveTabState(initialTab);
@@ -693,9 +667,12 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     }
   };
 
-  const handleTrainTroops = async (troopType: string) => {
+  // `rawAmount` is now passed in by the caller (the TrainCard) which owns its own input state,
+  // so typing in the input no longer re-renders this entire component. Returns true on
+  // successful submission so the caller can clear its own input.
+  const handleTrainTroopsImpl = async (troopType: string, rawAmount: string): Promise<boolean> => {
     const key = `train-${troopType}`;
-    if (submittingRef.current.has(key)) return;
+    if (submittingRef.current.has(key)) return false;
     submittingRef.current.add(key);
 
     const sameChainCount = nexus.trainingQueue.filter((entry: any) =>
@@ -704,19 +681,18 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     if (sameChainCount >= MAX_TRAINING_QUEUE) {
       showToast(`Training queue is full (${MAX_TRAINING_QUEUE}/${MAX_TRAINING_QUEUE})`, 'error');
       submittingRef.current.delete(key);
-      return;
+      return false;
     }
 
     const requirementsResult = checkTroopRequirements(troopType);
     const { maxTrainable } = getMaxTrainableAmount(troopType, TROOP_COSTS[troopType], requirementsResult.canTrain);
-    const rawAmount = trainAmount[troopType] ?? '';
     const requestedAmount = rawAmount === '' ? 1 : Number.parseInt(rawAmount, 10);
     const amount = Math.min(Number.isFinite(requestedAmount) ? requestedAmount : 0, maxTrainable);
 
     if (!Number.isFinite(amount) || amount <= 0) {
       showToast('Not enough population or resources to train this unit right now', 'error');
       submittingRef.current.delete(key);
-      return;
+      return false;
     }
 
     // Check requirements
@@ -727,7 +703,8 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
         for (const [building, level] of Object.entries(requirements.buildings)) {
           if ((nexus.buildings as any)[building] < (level as number)) {
             showToast(`Requires ${BUILDING_NAMES[building]} Level ${level}`, 'error');
-            return;
+            submittingRef.current.delete(key);
+            return false;
           }
         }
       }
@@ -736,11 +713,13 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
       if (requirements.maxPerNexus) {
         if ((nexus.troops as any)[troopType] >= requirements.maxPerNexus) {
           showToast(`Maximum ${requirements.maxPerNexus} ${TROOP_NAMES[troopType]} per nexus`, 'error');
-          return;
+          submittingRef.current.delete(key);
+          return false;
         }
         if (amount > requirements.maxPerNexus - (nexus.troops as any)[troopType]) {
           showToast(`Can only train ${requirements.maxPerNexus - (nexus.troops as any)[troopType]} more`, 'error');
-          return;
+          submittingRef.current.delete(key);
+          return false;
         }
       }
     }
@@ -754,14 +733,24 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
           : `Training ${amount}x ${TROOP_NAMES[troopType]} started!`,
         queued ? 'info' : 'success',
       );
-      setTrainAmount({ ...trainAmount, [troopType]: '' });
       onUpdate();
+      return true;
     } catch (err: any) {
       showToast(err.response?.data?.error || 'Error training troops', 'error');
+      return false;
     } finally {
       submittingRef.current.delete(key);
     }
   };
+
+  // Stable wrapper that delegates to the latest impl via ref — lets memoized children
+  // (TrainAmountControls) hold onto a single identity instead of getting a fresh function
+  // every parent render. Without this, React.memo on the control would always be defeated.
+  const handleTrainTroopsRef = useRef(handleTrainTroopsImpl);
+  handleTrainTroopsRef.current = handleTrainTroopsImpl;
+  const handleTrainTroops = useRef((troopType: string, rawAmount: string) =>
+    handleTrainTroopsRef.current(troopType, rawAmount),
+  ).current;
 
   const handleCancelBuildQueue = async (index: number) => {
     const key = `cancel-build-${index}`;
@@ -793,19 +782,8 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     }
   };
 
-  const formatTime = (date: Date | string) => {
-    const diff = new Date(date).getTime() - currentTime.getTime();
-    if (diff <= 0) return 'Ready to apply';
-
-    const hours = Math.floor(diff / 3600000);
-    const minutes = Math.floor((diff % 3600000) / 60000);
-    const seconds = Math.floor((diff % 60000) / 1000);
-
-    if (hours > 0) {
-      return `${hours}h ${minutes}m ${seconds}s`;
-    }
-    return `${minutes}m ${seconds}s`;
-  };
+  // formatTime() was removed — every consumer in the render path now renders a <Countdown />
+  // leaf (or, for transient labels driven by handlers, computes diffs against Date.now() inline).
 
   const fmtNum = (n: number) => {
     if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
@@ -825,76 +803,26 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     return `${minutes}m ${seconds}s`;
   };
 
-  const getBuildQueueTimeDisplay = (index: number) => {
+  // Returns the `prevEndAt` for the given build-queue index (for QueueCountdown), since the
+  // build queue is a simple linear chain.
+  const getPrevBuildEnd = (index: number): string | Date | undefined => {
     const queue = Array.isArray(nexus.buildQueue) ? nexus.buildQueue : [];
-    const item = queue[index];
-    if (!item) {
-      return { label: '', isWaiting: false };
-    }
-
-    const now = currentTime.getTime();
-    const endAt = new Date(item.completesAt).getTime();
-
-    if (index > 0) {
-      const startsAt = new Date(queue[index - 1].completesAt).getTime();
-      const ownDurationSeconds = Math.floor((endAt - startsAt) / 1000);
-
-      if (now < startsAt) {
-        return {
-          label: `Queued • ${formatDurationSeconds(ownDurationSeconds)}`,
-          isWaiting: true,
-        };
-      }
-    }
-
-    const remainingSeconds = Math.floor((endAt - now) / 1000);
-    if (remainingSeconds <= 0) {
-      return { label: 'Ready to apply', isWaiting: false };
-    }
-
-    return { label: formatDurationSeconds(remainingSeconds), isWaiting: false };
+    return index > 0 ? queue[index - 1]?.completesAt : undefined;
   };
 
-  const getTrainingQueueTimeDisplay = (index: number) => {
+  // Training queue has two parallel chains (overseer vs non-overseer); find the prior entry
+  // in the same chain so QueueCountdown can label "Queued • …" correctly.
+  const getPrevTrainingEnd = (index: number): string | Date | undefined => {
     const queue = Array.isArray(nexus.trainingQueue) ? nexus.trainingQueue : [];
     const item = queue[index];
-    if (!item) {
-      return { label: '', isWaiting: false };
-    }
-
-    const now = currentTime.getTime();
-    const endAt = new Date(item.completesAt).getTime();
-
-    // Find the previous entry in the same chain (overseer vs non-overseer).
+    if (!item) return undefined;
     const isOverseerItem = item.troopType === 'overseer';
-    let prevSameChain: any = null;
     for (let i = index - 1; i >= 0; i -= 1) {
       const candidate = queue[i];
       const candidateIsOverseer = candidate.troopType === 'overseer';
-      if (candidateIsOverseer === isOverseerItem) {
-        prevSameChain = candidate;
-        break;
-      }
+      if (candidateIsOverseer === isOverseerItem) return candidate.completesAt;
     }
-
-    if (prevSameChain) {
-      const startsAt = new Date(prevSameChain.completesAt).getTime();
-      const ownDurationSeconds = Math.floor((endAt - startsAt) / 1000);
-
-      if (now < startsAt) {
-        return {
-          label: `Queued • ${formatDurationSeconds(ownDurationSeconds)}`,
-          isWaiting: true,
-        };
-      }
-    }
-
-    const remainingSeconds = Math.floor((endAt - now) / 1000);
-    if (remainingSeconds <= 0) {
-      return { label: 'Ready to apply', isWaiting: false };
-    }
-
-    return { label: formatDurationSeconds(remainingSeconds), isWaiting: false };
+    return undefined;
   };
 
   const checkTroopRequirements = (troopType: string) => {
@@ -965,10 +893,14 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     };
   };
 
+  // Snapshot of live (interpolated) resources at this moment. Used inside event handlers and
+  // for one-off `getTimeUntilAffordable` estimates that don't need to tick per second.
+  // The header resource strip uses <LiveResourceStrip> for continuous updates instead.
   const getLiveResources = () => {
     const prod = calculateProduction();
-    const anchorMs = nexus.lastResourceUpdate ? new Date(nexus.lastResourceUpdate).getTime() : currentTime.getTime();
-    const elapsedHours = Math.max(0, (currentTime.getTime() - anchorMs) / 3600000);
+    const nowMs = Date.now();
+    const anchorMs = nexus.lastResourceUpdate ? new Date(nexus.lastResourceUpdate).getTime() : nowMs;
+    const elapsedHours = Math.max(0, (nowMs - anchorMs) / 3600000);
     return {
       biomass: nexus.resources.biomass + prod.biomass * elapsedHours,
       alloy: nexus.resources.alloy + prod.alloy * elapsedHours,
@@ -1457,8 +1389,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   const { batches: questBatches, allQuestsComplete } = getQuestBatches();
   const activeBuild = nexus.buildQueue[0];
   const activeTraining = nexus.trainingQueue[0];
-  const activeBuildTimer = activeBuild ? getBuildQueueTimeDisplay(0).label : null;
-  const activeTrainingTimer = activeTraining ? getTrainingQueueTimeDisplay(0).label : null;
+  // (`activeBuildTimer` and `activeTrainingTimer` were removed — the live countdown labels are
+  // now driven by the <Countdown> leaf wherever they appear, so the tree doesn't re-render on
+  // each tick just to recompute these strings.)
 
   return (
     <div className="nexus-view">
@@ -1535,40 +1468,12 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
             )}
           </div>
         )}
-        {(() => {
-          const live = getLiveResources();
-          const cap = storageCapacity;
-          const prod = production;
-          const fmt = (v: number) => {
-            if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
-            if (v >= 1_000) return `${(v / 1_000).toFixed(1).replace(/\.0$/, '')}k`;
-            return Math.floor(v).toString();
-          };
-          const fmtRate = (v: number) => {
-            if (v >= 1_000) return `+${(v / 1_000).toFixed(1).replace(/\.0$/, '')}k/h`;
-            return `+${v}/h`;
-          };
-          const entries = [
-            { key: 'biomass', label: 'BIOMASS', val: Math.min(cap, live.biomass), rate: prod.biomass },
-            { key: 'alloy',   label: 'ALLOY',   val: Math.min(cap, live.alloy),   rate: prod.alloy   },
-            { key: 'ore',     label: 'ORE',      val: Math.min(cap, live.ore),     rate: prod.ore     },
-          ] as const;
-          return (
-            <div className="header-resource-strip">
-              {entries.map(({ key, label, val, rate }) => {
-                const ratio = val / cap;
-                const fullCls = ratio >= 0.98 ? 'header-res-full' : ratio >= 0.85 ? 'header-res-near' : '';
-                return (
-                  <div key={key} className={`header-res header-res-${key} ${fullCls}`}>
-                    <span className="header-res-label">{label}</span>
-                    <span className="header-res-value">{fmt(val)}<span style={{ fontSize: '0.65em', opacity: 0.6, fontWeight: 400 }}>/{fmt(cap)}</span></span>
-                    <span className="header-res-rate">{fmtRate(rate)}</span>
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })()}
+        <LiveResourceStrip
+          baseResources={nexus.resources}
+          production={production}
+          storageCapacity={storageCapacity}
+          lastResourceUpdate={nexus.lastResourceUpdate}
+        />
       </div>
 
       <div className="nexus-tab-bar">
@@ -1680,13 +1585,8 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
               </div>
             </div>
 
-            {nexus.newbieProtectionEndsAt && new Date(nexus.newbieProtectionEndsAt) > currentTime && (
-              <div className="newbie-protection-banner">
-                <ShieldCheck size={14} className="newbie-protection-icon" aria-hidden="true" />
-                <span className="newbie-protection-text">
-                  Newbie Protection. Expires in <strong>{formatTime(nexus.newbieProtectionEndsAt)}</strong>
-                </span>
-              </div>
+            {nexus.newbieProtectionEndsAt && (
+              <NewbieProtectionBanner endsAt={nexus.newbieProtectionEndsAt} />
             )}
 
             <div className="overview-shortcuts">
@@ -1698,9 +1598,14 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                   {activeBuild ? 'Active upgrade in progress' : 'No active construction'}
                 </span>
                 <span className="overview-shortcut-subtitle">
-                  {activeBuild
-                    ? `${BUILDING_NAMES[activeBuild.building] || activeBuild.building} → Lv${activeBuild.targetLevel} • ${activeBuildTimer}`
-                    : 'Open Buildings'}
+                  {activeBuild ? (
+                    <>
+                      {BUILDING_NAMES[activeBuild.building] || activeBuild.building} → Lv{activeBuild.targetLevel} •{' '}
+                      <Countdown endAt={activeBuild.completesAt} />
+                    </>
+                  ) : (
+                    'Open Buildings'
+                  )}
                 </span>
               </button>
               <button type="button" className="overview-shortcut-card" onClick={() => setActiveTab('troops')}>
@@ -1711,9 +1616,14 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                   {activeTraining ? 'Troops are being trained' : 'No active training'}
                 </span>
                 <span className="overview-shortcut-subtitle">
-                  {activeTraining
-                    ? `${activeTraining.amount}x ${TROOP_NAMES[activeTraining.troopType] || activeTraining.troopType} • ${activeTrainingTimer}`
-                    : 'Open Troops'}
+                  {activeTraining ? (
+                    <>
+                      {activeTraining.amount}x {TROOP_NAMES[activeTraining.troopType] || activeTraining.troopType} •{' '}
+                      <Countdown endAt={activeTraining.completesAt} />
+                    </>
+                  ) : (
+                    'Open Troops'
+                  )}
                 </span>
               </button>
               <div className="overview-shortcut-card overview-strikes-card">
@@ -1733,9 +1643,10 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                               )}
                               {a.defender?.nexus?.name ?? '?'}
                             </span>
-                            <span className="strikes-card-entry-time">
-                              {formatTime(a.status === 'returning' ? a.returnsAt : a.arrivesAt)}
-                            </span>
+                            <Countdown
+                              endAt={a.status === 'returning' ? a.returnsAt : a.arrivesAt}
+                              className="strikes-card-entry-time"
+                            />
                           </div>
                         ))}
                       </div>
@@ -1753,7 +1664,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                             <span className="strikes-card-entry-who">
                               {a.attacker?.user?.username ?? '?'} · {a.attacker?.nexus?.name ?? '?'}
                             </span>
-                            <span className="strikes-card-entry-time">{formatTime(a.arrivesAt)}</span>
+                            <Countdown endAt={a.arrivesAt} className="strikes-card-entry-time" />
                           </div>
                         ))}
                       </div>
@@ -1775,7 +1686,12 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                     {nexus.buildQueue.length} item{nexus.buildQueue.length !== 1 ? 's' : ''} ·{' '}
                     {BUILDING_NAMES[nexus.buildQueue[0].building] || nexus.buildQueue[0].building} → Lv
                     {nexus.buildQueue[0].targetLevel}
-                    {activeBuildTimer ? ` · ${activeBuildTimer}` : ''}
+                    {activeBuild && (
+                      <>
+                        {' · '}
+                        <Countdown endAt={activeBuild.completesAt} />
+                      </>
+                    )}
                   </span>
                 </div>
                 <button type="button" className="overview-queue-manage-btn" onClick={() => setActiveTab('buildings')}>
@@ -1794,7 +1710,12 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                     {nexus.trainingQueue.length} item{nexus.trainingQueue.length !== 1 ? 's' : ''} ·{' '}
                     {nexus.trainingQueue[0].amount}x{' '}
                     {TROOP_NAMES[nexus.trainingQueue[0].troopType] || nexus.trainingQueue[0].troopType}
-                    {activeTrainingTimer ? ` · ${activeTrainingTimer}` : ''}
+                    {activeTraining && (
+                      <>
+                        {' · '}
+                        <Countdown endAt={activeTraining.completesAt} />
+                      </>
+                    )}
                   </span>
                 </div>
                 <button type="button" className="overview-queue-manage-btn" onClick={() => setActiveTab('troops')}>
@@ -1933,27 +1854,27 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
               <div className="queue-section">
                 <h4>Building Queue</h4>
                 {nexus.buildQueue.map((item, idx) => {
-                  const queueTime = getBuildQueueTimeDisplay(idx);
-
                   return (
-                    <div key={idx} className={`queue-item ${queueTime.isWaiting ? 'queue-item-waiting' : ''}`}>
-                      <span>
-                        {BUILDING_NAMES[item.building]} → Level {item.targetLevel}
-                      </span>
-                      <div className="queue-item-actions">
-                        <span className={queueTime.isWaiting ? 'queue-time-queued' : 'queue-time'}>
-                          {queueTime.label}
-                        </span>
-                        <button
-                          type="button"
-                          className="queue-cancel-btn"
-                          onClick={() => handleCancelBuildQueue(idx)}
-                          title="Cancel (85% refund)"
-                        >
-                          <X size={12} aria-hidden="true" />
-                        </button>
-                      </div>
-                    </div>
+                    <QueueCountdown key={idx} endAt={item.completesAt} prevEndAt={getPrevBuildEnd(idx)}>
+                      {({ label, isWaiting }) => (
+                        <div className={`queue-item ${isWaiting ? 'queue-item-waiting' : ''}`}>
+                          <span>
+                            {BUILDING_NAMES[item.building]} → Level {item.targetLevel}
+                          </span>
+                          <div className="queue-item-actions">
+                            <span className={isWaiting ? 'queue-time-queued' : 'queue-time'}>{label}</span>
+                            <button
+                              type="button"
+                              className="queue-cancel-btn"
+                              onClick={() => handleCancelBuildQueue(idx)}
+                              title="Cancel (85% refund)"
+                            >
+                              <X size={12} aria-hidden="true" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </QueueCountdown>
                   );
                 })}
               </div>
@@ -2012,15 +1933,12 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                           <Hammer size={12} aria-hidden="true" /> Upgrading…
                         </span>
                         {firstQueuedForBuilding && (
-                          <span
-                            className={
-                              firstQueuedForBuildingIndex > 0
-                                ? 'queue-time-small queue-time-queued'
-                                : 'queue-time-small'
-                            }
-                          >
-                            {getBuildQueueTimeDisplay(firstQueuedForBuildingIndex).label}
-                          </span>
+                          <QueueCountdown
+                            endAt={firstQueuedForBuilding.completesAt}
+                            prevEndAt={getPrevBuildEnd(firstQueuedForBuildingIndex)}
+                            waitingClassName="queue-time-small queue-time-queued"
+                            runningClassName="queue-time-small"
+                          />
                         )}
                       </div>
                     )}
@@ -2141,30 +2059,32 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                 {nexus.trainingQueue.length > 0 && (
                   <div className="queue-section">
                     <h4>Training queue</h4>
-                    {nexus.trainingQueue.map((item, idx) => {
-                      const queueTime = getTrainingQueueTimeDisplay(idx);
-
-                      return (
-                        <div key={idx} className={`queue-item ${queueTime.isWaiting ? 'queue-item-waiting' : ''}`}>
-                          <span>
-                            {item.amount}x {TROOP_NAMES[item.troopType] || item.troopType}
-                          </span>
-                          <div className="queue-item-actions">
-                            <span className={queueTime.isWaiting ? 'queue-time-queued' : 'queue-time'}>
-                              {queueTime.label}
+                    {nexus.trainingQueue.map((item, idx) => (
+                      <QueueCountdown
+                        key={idx}
+                        endAt={item.completesAt}
+                        prevEndAt={getPrevTrainingEnd(idx)}
+                      >
+                        {({ label, isWaiting }) => (
+                          <div className={`queue-item ${isWaiting ? 'queue-item-waiting' : ''}`}>
+                            <span>
+                              {item.amount}x {TROOP_NAMES[item.troopType] || item.troopType}
                             </span>
-                            <button
-                              type="button"
-                              className="queue-cancel-btn"
-                              onClick={() => handleCancelTrainingQueue(idx)}
-                              title="Cancel (85% refund)"
-                            >
-                              <X size={12} aria-hidden="true" />
-                            </button>
+                            <div className="queue-item-actions">
+                              <span className={isWaiting ? 'queue-time-queued' : 'queue-time'}>{label}</span>
+                              <button
+                                type="button"
+                                className="queue-cancel-btn"
+                                onClick={() => handleCancelTrainingQueue(idx)}
+                                title="Cancel (85% refund)"
+                              >
+                                <X size={12} aria-hidden="true" />
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        )}
+                      </QueueCountdown>
+                    ))}
                   </div>
                 )}
 
@@ -2281,26 +2201,14 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                                       </div>
                                     );
                                   })()}
-                                <div className="train-controls-wrapper">
-                                  {canTrain && maxTrainable > 0 && (
-                                    <span className="train-max-label">Max trainable: {maxTrainable}</span>
-                                  )}
-                                  <div className="train-controls">
-                                    <input
-                                      type="text"
-                                      inputMode="numeric"
-                                      pattern="[0-9]*"
-                                      placeholder={maxTrainable > 0 ? `1–${maxTrainable}` : '0'}
-                                      value={trainAmount[type] ?? ''}
-                                      onChange={(e) => handleTrainAmountChange(type, e.target.value)}
-                                      aria-label={`${TROOP_NAMES[type]} amount`}
-                                      disabled={isTrainDisabled}
-                                    />
-                                    <button onClick={() => handleTrainTroops(type)} disabled={isTrainDisabled}>
-                                      Train
-                                    </button>
-                                  </div>
-                                </div>
+                                <TrainAmountControls
+                                  troopType={type}
+                                  troopLabel={TROOP_NAMES[type]}
+                                  maxTrainable={maxTrainable}
+                                  canTrain={canTrain}
+                                  isTrainDisabled={isTrainDisabled}
+                                  onTrain={handleTrainTroops}
+                                />
                               </div>
                             );
                           })}
@@ -2319,17 +2227,17 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                       const troopEntries = Object.entries(t.troops).filter(([, v]) => Number(v) > 0);
 
                       let statusLabel: string;
-                      let countdown: string | null = null;
+                      let countdownEndAt: string | null = null;
                       if (t.status === 'traveling' && t.arrivesAt) {
                         statusLabel = isOwner
                           ? `→ ${t.hostNexus?.name ?? '?'}`
                           : `From ${t.ownerNexus?.name ?? '?'} arriving`;
-                        countdown = formatTime(t.arrivesAt);
+                        countdownEndAt = t.arrivesAt;
                       } else if (t.status === 'returning' && t.returnsAt) {
                         statusLabel = isOwner
                           ? `← Returning from ${t.hostNexus?.name ?? '?'}`
                           : `Returning to ${t.ownerNexus?.name ?? '?'}`;
-                        countdown = formatTime(t.returnsAt);
+                        countdownEndAt = t.returnsAt;
                       } else {
                         statusLabel = isOwner
                           ? `Stationed at ${t.hostNexus?.name ?? '?'}`
@@ -2340,7 +2248,12 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                         <div key={t._id} className={`borrowed-entry borrowed-entry-${t.status}`}>
                           <div className="borrowed-label">
                             {statusLabel}
-                            {countdown && <span className="borrowed-countdown"> · {countdown}</span>}
+                            {countdownEndAt && (
+                              <span className="borrowed-countdown">
+                                {' · '}
+                                <Countdown endAt={countdownEndAt} />
+                              </span>
+                            )}
                           </div>
                           <div className="borrowed-troops">
                             {troopEntries.map(([type, count]) => (
@@ -2471,7 +2384,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
 
               <div className="attack-info-section">
                 <h4>Arrival time</h4>
-                <p className="arrival-countdown">{formatTime(selectedAttack.arrivesAt)}</p>
+                <p className="arrival-countdown"><Countdown endAt={selectedAttack.arrivesAt} /></p>
               </div>
 
               <div className="attack-info-section">
@@ -2664,6 +2577,74 @@ function EspionageIntelPanel({ report }: { report: Record<string, unknown> }) {
     </div>
   );
 }
+
+// Leaf input component owning its own `amount` state, so keystrokes in the train-amount field
+// don't re-render the entire Troops tab (with its 14 train cards) or the parent NexusView.
+// On successful submit `onTrain` returns true and we clear the local input.
+interface TrainAmountControlsProps {
+  troopType: string;
+  troopLabel: string;
+  maxTrainable: number;
+  canTrain: boolean;
+  isTrainDisabled: boolean;
+  onTrain: (troopType: string, rawAmount: string) => Promise<boolean>;
+}
+
+const TrainAmountControls = React.memo(function TrainAmountControls({
+  troopType,
+  troopLabel,
+  maxTrainable,
+  canTrain,
+  isTrainDisabled,
+  onTrain,
+}: TrainAmountControlsProps) {
+  const [amount, setAmount] = useState('');
+  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAmount(e.target.value.replace(/\D/g, ''));
+  };
+  const onSubmit = async () => {
+    const ok = await onTrain(troopType, amount);
+    if (ok) setAmount('');
+  };
+  return (
+    <div className="train-controls-wrapper">
+      {canTrain && maxTrainable > 0 && (
+        <span className="train-max-label">Max trainable: {maxTrainable}</span>
+      )}
+      <div className="train-controls">
+        <input
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          placeholder={maxTrainable > 0 ? `1–${maxTrainable}` : '0'}
+          value={amount}
+          onChange={onChange}
+          aria-label={`${troopLabel} amount`}
+          disabled={isTrainDisabled}
+        />
+        <button onClick={onSubmit} disabled={isTrainDisabled}>
+          Train
+        </button>
+      </div>
+    </div>
+  );
+});
+
+// Small leaf banner that subscribes to the shared clock itself, so the surrounding overview
+// tree doesn't re-render every second just to check whether newbie protection has expired.
+const NewbieProtectionBanner = React.memo(function NewbieProtectionBanner({ endsAt }: { endsAt: string | Date }) {
+  const now = useNow();
+  const endMs = endsAt instanceof Date ? endsAt.getTime() : new Date(endsAt).getTime();
+  if (endMs <= now) return null;
+  return (
+    <div className="newbie-protection-banner">
+      <ShieldCheck size={14} className="newbie-protection-icon" aria-hidden="true" />
+      <span className="newbie-protection-text">
+        Newbie Protection. Expires in <strong><Countdown endAt={endMs} /></strong>
+      </span>
+    </div>
+  );
+});
 
 function formatCountdown(ms: number): string {
   if (ms <= 0) return 'Arriving...';
