@@ -32,6 +32,7 @@ export default function NavigationProgress({ children }: { children?: React.Reac
   const waitersRef = useRef<Set<string>>(new Set());
   const routeKey = `${pathname}?${searchParams}`;
   const prevRouteRef = useRef(routeKey);
+  const prevPathnameRef = useRef(pathname);
   const routeCommittedRef = useRef(true);
 
   const clearTimers = () => {
@@ -77,14 +78,16 @@ export default function NavigationProgress({ children }: { children?: React.Reac
     }
   }, [start, tryFinish]);
 
-  // Route change: bar runs until route is committed AND waiters drain
+  // Route change: bar runs until route is committed AND waiters drain.
+  // Only blank the page (contentReady=false) on actual pathname changes — not query-param-only
+  // changes like tab switches, which don't unmount/remount the page component.
   useEffect(() => {
     if (routeKey === prevRouteRef.current) return;
+    const pathnameChanged = pathname !== prevPathnameRef.current;
     prevRouteRef.current = routeKey;
+    prevPathnameRef.current = pathname;
     routeCommittedRef.current = false;
-    setContentReady(false);
-    // Defer marking the route committed until the page mounts and registers
-    // any waiters (one frame is enough for client components to mount).
+    if (pathnameChanged) setContentReady(false);
     const raf = requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         routeCommittedRef.current = true;
@@ -92,7 +95,7 @@ export default function NavigationProgress({ children }: { children?: React.Reac
       });
     });
     return () => cancelAnimationFrame(raf);
-  }, [routeKey, tryFinish]);
+  }, [routeKey, pathname, tryFinish]);
 
   // Link click interception — bar starts immediately, before Next.js begins routing
   useEffect(() => {
