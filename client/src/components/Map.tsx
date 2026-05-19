@@ -246,12 +246,6 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
     };
   }, [centerX, centerY]);
 
-  useEffect(() => {
-    loadAttacks();
-  }, [loadAttacks]);
-
-  useGameSocket({ onAttacksRefresh: () => loadAttacks() });
-
   // Pre-select current nexus on mount
   useEffect(() => {
     const selectCurrentNexus = async () => {
@@ -398,6 +392,12 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
       console.error('Error loading attacks:', err);
     }
   }, [currentNexus._id]);
+
+  useEffect(() => {
+    loadAttacks();
+  }, [loadAttacks]);
+
+  useGameSocket({ onAttacksRefresh: () => loadAttacks() });
 
   useEffect(() => {
     getMyNexuses().then((r) => setOwnNexuses(r.data)).catch(() => {});
