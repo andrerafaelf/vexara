@@ -101,6 +101,8 @@ const BUILDING_OPTIONS: Array<{ key: string; label: string }> = [
   { key: 'alloyForge', label: 'Alloy Forge' },
   { key: 'oreExtractor', label: 'Ore Extractor' },
   { key: 'shieldGrid', label: 'Shield Grid' },
+  { key: 'armory', label: 'Armory' },
+  { key: 'stealthArray', label: 'Stealth Array' },
 ];
 
 const ADMIN_API_URL = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:3002/api/admin';

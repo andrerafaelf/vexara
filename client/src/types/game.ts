@@ -80,6 +80,7 @@ export interface Nexus {
     oreExtractor: number;
     shieldGrid: number;
     armory: number;
+    stealthArray: number;
   };
   troops: {
     lancerDrone: number;
@@ -259,6 +260,7 @@ export interface Attack {
         oreExtractor: number;
         shieldGrid: number;
         armory: number;
+        stealthArray: number;
       };
       troops: {
         [key: string]: number;

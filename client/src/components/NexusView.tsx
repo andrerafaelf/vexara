@@ -64,6 +64,7 @@ import lifesupportImg from '../assets/buildings/lifesupport.png';
 import oreextractorImg from '../assets/buildings/oreextractor.png';
 import recruitmentcoreImg from '../assets/buildings/recruitmentcore.png';
 import armoryImg from '../assets/buildings/armory.png';
+import stealtharrayImg from '../assets/buildings/stealtharray.png';
 import shieldgridImg from '../assets/buildings/shieldgrid.png';
 import storagevaultImg from '../assets/buildings/storagevault.png';
 
@@ -96,6 +97,7 @@ const BUILDING_NAMES: { [key: string]: string } = {
   oreExtractor: 'Ore Extractor',
   shieldGrid: 'Shield Grid',
   armory: 'Armory',
+  stealthArray: 'Stealth Array',
 };
 
 const BUILDING_DESCRIPTIONS: { [key: string]: string } = {
@@ -108,6 +110,7 @@ const BUILDING_DESCRIPTIONS: { [key: string]: string } = {
   oreExtractor: 'Produces Ore per hour. Higher levels increase production rate.',
   shieldGrid: 'Increases defensive bonus. Protects your nexus from enemy attacks.',
   armory: 'Amplifies unit class-counter bonuses in combat (+1.5% per level). Unlocks Void Stalker (Lv3) and Plasma Turret (Lv5).',
+  stealthArray: 'Reduces enemy spy success rate and boosts your operative effectiveness (+2% per level). Requires Armory Lv3.',
 };
 
 const BUILDING_COSTS: { [key: string]: any } = {
@@ -120,6 +123,7 @@ const BUILDING_COSTS: { [key: string]: any } = {
   oreExtractor: { biomass: 75, alloy: 65, ore: 70, time: 90 },
   shieldGrid: { biomass: 50, alloy: 100, ore: 60, time: 115 },
   armory: { biomass: 120, alloy: 180, ore: 140, time: 130 },
+  stealthArray: { biomass: 100, alloy: 150, ore: 180, time: 140 },
 };
 
 const BUILDING_RULES: {
@@ -201,6 +205,15 @@ const BUILDING_RULES: {
       { level: 10, requires: [{ building: 'commandCore', level: 10 }, { building: 'recruitmentCore', level: 10 }] },
     ],
   },
+  stealthArray: {
+    maxLevel: 15,
+    unlock: { building: 'commandCore', level: 7 },
+    milestones: [
+      { level: 3,  requires: [{ building: 'armory', level: 3 }] },
+      { level: 7,  requires: [{ building: 'shieldGrid', level: 5 }, { building: 'commandCore', level: 10 }] },
+      { level: 12, requires: [{ building: 'armory', level: 10 }, { building: 'commandCore', level: 15 }] },
+    ],
+  },
 };
 
 const COST_SCALING = {
@@ -249,6 +262,7 @@ const BUILDING_IMAGES: { [key: string]: any } = {
   oreExtractor: oreextractorImg,
   shieldGrid: shieldgridImg,
   armory: armoryImg,
+  stealthArray: stealtharrayImg,
 };
 
 const TROOP_NAMES: { [key: string]: string } = {
@@ -1060,6 +1074,18 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
         const currentBonus = Math.round(currentLevel * SHIELD_BONUS_PER_LEVEL * 100);
         const nextBonus = Math.round(targetLevel * SHIELD_BONUS_PER_LEVEL * 100);
         return `Defense bonus: ${currentBonus}% -> ${nextBonus}%`;
+      }
+      case 'armory': {
+        const currentBonus = (currentLevel * 1.5).toFixed(1);
+        const nextBonus = (targetLevel * 1.5).toFixed(1);
+        const unlockSummary = getUnlockSummary(building, targetLevel);
+        if (unlockSummary) return unlockSummary;
+        return `Counter-bonus: +${currentBonus}% → +${nextBonus}%`;
+      }
+      case 'stealthArray': {
+        const currentBonus = currentLevel * 2;
+        const nextBonus = targetLevel * 2;
+        return `Spy defense / offense: ${currentBonus}% → ${nextBonus}%`;
       }
       case 'commandCore':
       case 'recruitmentCore': {

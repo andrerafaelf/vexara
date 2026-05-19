@@ -7,6 +7,7 @@ import lifesupportImg from '../assets/buildings/lifesupport.png';
 import oreextractorImg from '../assets/buildings/oreextractor.png';
 import recruitmentcoreImg from '../assets/buildings/recruitmentcore.png';
 import shieldgridImg from '../assets/buildings/shieldgrid.png';
+import stealtharrayImg from '../assets/buildings/stealtharray.png';
 import storagevaultImg from '../assets/buildings/storagevault.png';
 import '../styles/NexusMap.css';
 import { Nexus } from '../types/game';
@@ -21,6 +22,7 @@ const BUILDINGS = [
   { key: 'oreExtractor', img: oreextractorImg, name: 'Ore Extractor', short: 'Ore Ext.' },
   { key: 'shieldGrid', img: shieldgridImg, name: 'Shield Grid', short: 'Shield' },
   { key: 'armory', img: armoryImg, name: 'Armory', short: 'Armory' },
+  { key: 'stealthArray', img: stealtharrayImg, name: 'Stealth Array', short: 'Stealth' },
 ];
 
 interface NexusMapProps {

@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Nexus" ADD COLUMN "stealthArray" INTEGER NOT NULL DEFAULT 0;

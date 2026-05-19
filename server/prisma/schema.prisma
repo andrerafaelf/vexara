@@ -217,6 +217,7 @@ model Nexus {
   oreExtractor    Int @default(1)
   shieldGrid      Int @default(0)
   armory          Int @default(0)
+  stealthArray    Int @default(0)
 
   // Troops
   lancerDrone         Int @default(0)

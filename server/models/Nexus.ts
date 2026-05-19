@@ -397,7 +397,7 @@ export async function updateAllResources(): Promise<void> {
           galaxyId: true, x: true, y: true,
           biomassFarm: true, alloyForge: true, oreExtractor: true, storageVault: true,
           biomass: true, alloy: true, ore: true, lastResourceUpdate: true,
-          commandCore: true, recruitmentCore: true, lifeSupport: true, shieldGrid: true, armory: true,
+          commandCore: true, recruitmentCore: true, lifeSupport: true, shieldGrid: true, armory: true, stealthArray: true,
           lancerDrone: true, assaultTrooper: true, breakerUnit: true, reconOperative: true,
           skimmerBike: true, siegeMech: true, voidStalker: true, plasmaTurret: true,
         },
@@ -468,6 +468,7 @@ export function serializeNexus(v: NexusWithQuests, opts: { ownerData?: unknown }
       storageVault: v.storageVault, biomassFarm: v.biomassFarm, alloyForge: v.alloyForge,
       oreExtractor: v.oreExtractor, shieldGrid: v.shieldGrid,
       armory: (v as unknown as { armory?: number }).armory ?? 0,
+      stealthArray: (v as unknown as { stealthArray?: number }).stealthArray ?? 0,
     },
     troops: {
       lancerDrone: v.lancerDrone, assaultTrooper: v.assaultTrooper, breakerUnit: v.breakerUnit,

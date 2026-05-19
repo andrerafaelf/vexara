@@ -18,6 +18,8 @@ const BUILDING_COSTS: Record<string, { biomass: number; alloy: number; ore: numb
   shieldGrid: { biomass: 50, alloy: 100, ore: 60, time: 115 },
   // Armory: amplifies unit class-counter bonuses and unlocks Void Stalker / Plasma Turret
   armory: { biomass: 120, alloy: 180, ore: 140, time: 130 },
+  // Stealth Array: reduces enemy spy success and boosts operative effectiveness
+  stealthArray: { biomass: 100, alloy: 150, ore: 180, time: 140 },
 };
 
 const BUILDING_RULES: Record<string, {
@@ -89,6 +91,14 @@ const BUILDING_RULES: Record<string, {
       { level: 10, requires: [{ building: 'commandCore', level: 10 }, { building: 'recruitmentCore', level: 10 }] },
     ],
   },
+  stealthArray: {
+    maxLevel: 15, unlock: { building: 'commandCore', level: 7 },
+    milestones: [
+      { level: 3,  requires: [{ building: 'armory', level: 3 }] },
+      { level: 7,  requires: [{ building: 'shieldGrid', level: 5 }, { building: 'commandCore', level: 10 }] },
+      { level: 12, requires: [{ building: 'armory', level: 10 }, { building: 'commandCore', level: 15 }] },
+    ],
+  },
 };
 
 const COST_SCALING = { early: 1.5, mid: 1.65, late: 1.8 };
@@ -98,7 +108,7 @@ const COMMAND_BUILD_TIME_FACTOR_PER_LEVEL = 0.95;
 const BUILDING_NAMES: Record<string, string> = {
   commandCore: 'Command Core', recruitmentCore: 'Recruitment Core', lifeSupport: 'Life Support',
   storageVault: 'Storage Vault', biomassFarm: 'Biomass Farm', alloyForge: 'Alloy Forge',
-  oreExtractor: 'Ore Extractor', shieldGrid: 'Shield Grid', armory: 'Armory',
+  oreExtractor: 'Ore Extractor', shieldGrid: 'Shield Grid', armory: 'Armory', stealthArray: 'Stealth Array',
 };
 
 function getCommandTimeFactor(commandLevel: number) {
@@ -158,6 +168,7 @@ function getPlannedBuildingLevels(nexus: Record<string, unknown>) {
     biomassFarm: nexus.biomassFarm as number, alloyForge: nexus.alloyForge as number,
     oreExtractor: nexus.oreExtractor as number, shieldGrid: nexus.shieldGrid as number,
     armory: (nexus.armory as number) || 0,
+    stealthArray: (nexus.stealthArray as number) || 0,
   };
   const buildQueue = normalizeBuildQueue(nexus.buildQueue);
   for (const queued of buildQueue) {
