@@ -58,6 +58,7 @@ export function buildDetailedScoutIntel(nexus: Nexus): ScoutIntel {
       oreExtractor:   nexus.oreExtractor,
       shieldGrid:     nexus.shieldGrid,
       armory:         n['armory'] ?? 0,
+      stealthArray:   n['stealthArray'] ?? 0,
     },
     troops: {
       lancerDrone:         nexus.lancerDrone,

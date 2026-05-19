@@ -241,7 +241,12 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
         )}
 
           {!scoutReport && (
-            <BattleReplay report={selectedReport} isMyAttack={isMyAttack} onComplete={() => setReplayComplete(true)} />
+            <BattleReplay
+              report={selectedReport}
+              isMyAttack={isMyAttack}
+              shareUrl={typeof window !== 'undefined' ? `${window.location.origin}/replay/${selectedReport._id}` : undefined}
+              onComplete={() => setReplayComplete(true)}
+            />
           )}
 
           {scoutReport && isMyAttack && (

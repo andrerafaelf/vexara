@@ -37,6 +37,7 @@ export interface BuildingLevels {
   oreExtractor: number;
   shieldGrid: number;
   armory: number;
+  stealthArray: number;
 }
 
 export type BuildingKey = keyof BuildingLevels;

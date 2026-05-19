@@ -377,11 +377,29 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
     const travelMs = attack.arrivesAt!.getTime() - attack.createdAt.getTime();
     const returnsAt = new Date(Date.now() + travelMs);
 
+    // Capture the defender's force composition at engagement time so replays are
+    // reproducible. Without this, an observer only knows defender *losses* — not
+    // who survived — which would make the replay underwhelming.
+    const defenderInitial: Record<string, number> = {};
+    for (const k of TROOP_KEYS) {
+      const n = mergedDefenderForce[k] || 0;
+      if (n > 0) defenderInitial[k] = n;
+    }
+
     await prisma.attack.update({
       where: { id: attack.id },
       data: {
         status: 'returning', returnsAt,
-        result: { attackerLosses, defenderLosses, resourcesStolen, survivingTroops, victory: attackerWins, conquered, remainingControl: newControlLevel, combatSeed: seed, buildingDamage: buildingDamageLog.length > 0 ? buildingDamageLog : undefined },
+        result: {
+          attackerLosses, defenderLosses, resourcesStolen, survivingTroops,
+          victory: attackerWins, conquered, remainingControl: newControlLevel,
+          combatSeed: seed,
+          attackerInitial: attackTroops,
+          defenderInitial,
+          attackerPower: Math.round(attackPower),
+          defenderPower: Math.round(defensePower),
+          buildingDamage: buildingDamageLog.length > 0 ? buildingDamageLog : undefined,
+        },
       },
     });
 
