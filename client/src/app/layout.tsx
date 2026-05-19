@@ -22,6 +22,8 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   minimumScale: 1,
+  viewportFit: 'cover',
+  userScalable: false,
 };
 
 export default function RootLayout({
@@ -34,7 +36,7 @@ export default function RootLayout({
       <head>
         <link rel="apple-touch-icon" href="/logo192.png" />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         <AuthProvider>
           <QueryProvider>
             <ToastProvider>

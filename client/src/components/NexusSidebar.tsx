@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createNexusGroup,
   deleteNexusGroup,
@@ -6,10 +7,13 @@ import {
   renameNexusGroup,
   setGroupNexuses,
 } from '../services/api';
+
 import { Check, Hammer, Pencil, ScrollText, Settings, Swords, Trash2, X } from 'lucide-react';
 import { Nexus, NexusGroup, User } from '../types/game';
 import GalaxyChip from './GalaxyChip';
 import NexusTypeBadge from './NexusTypeBadge';
+
+export const NEXUS_GROUPS_KEY = ['nexusGroups'] as const;
 
 interface NexusSidebarProps {
   nexuses: Nexus[];
@@ -30,30 +34,27 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
   unreadNexusIds,
   user,
 }) => {
-  const [groups, setGroups] = useState<NexusGroup[]>([]);
+  const qc = useQueryClient();
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [showGroupManager, setShowGroupManager] = useState(false);
 
-  const updateGroups = useCallback(
-    (next: NexusGroup[]) => {
-      setGroups(next);
-      onGroupsChange?.(next);
-    },
-    [onGroupsChange],
-  );
-
-  const loadGroups = useCallback(async () => {
-    try {
-      const response = await getNexusGroups();
-      updateGroups(response.data ?? []);
-    } catch (err) {
-      console.error('Error loading groups:', err);
-    }
-  }, [updateGroups]);
+  const { data: groups = [] } = useQuery<NexusGroup[]>({
+    queryKey: NEXUS_GROUPS_KEY,
+    queryFn: () => getNexusGroups().then((r) => r.data ?? []),
+    staleTime: 60_000,
+  });
 
   useEffect(() => {
-    loadGroups();
-  }, [loadGroups]);
+    onGroupsChange?.(groups);
+  }, [groups, onGroupsChange]);
+
+  const updateGroups = useCallback(
+    (next: NexusGroup[]) => {
+      qc.setQueryData(NEXUS_GROUPS_KEY, next);
+      onGroupsChange?.(next);
+    },
+    [qc, onGroupsChange],
+  );
 
   const visibleNexuses = (() => {
     const filtered =

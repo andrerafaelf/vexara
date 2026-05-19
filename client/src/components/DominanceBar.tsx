@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getFactionLeaderboard, getMyFaction } from '../services/api';
 import '../styles/DominanceBar.css';
 
@@ -22,52 +23,33 @@ interface LeaderboardData {
   dominanceLocked: boolean;
 }
 
-const POLL_INTERVAL = 60_000;
 const TOP_N = 4;
 const VISIBILITY_THRESHOLD_PCT = 55;
 
 const DominanceBar: React.FC = () => {
-  const [data, setData] = useState<LeaderboardData | null>(null);
-  const [inFaction, setInFaction] = useState(false);
-  const [myFactionId, setMyFactionId] = useState<number | null>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { data: factionData } = useQuery({
+    queryKey: ['myFaction'],
+    queryFn: () => getMyFaction().then((r) => r.data),
+    staleTime: 60_000,
+    refetchInterval: (query) => {
+      if ((query.state.error as any)?.response?.status === 429) return false;
+      return 120_000;
+    },
+  });
 
-  useEffect(() => {
-    let alive = true;
+  const inFaction = !!factionData?.faction?.id;
+  const myFactionId: number | null = factionData?.faction?.id ?? null;
 
-    const checkFaction = async () => {
-      try {
-        const res = await getMyFaction();
-        if (!alive) return;
-        if (res.data?.faction?.id) {
-          setInFaction(true);
-          setMyFactionId(res.data.faction.id);
-        } else {
-          setInFaction(false);
-        }
-      } catch {
-        setInFaction(false);
-      }
-    };
-
-    const fetchData = async () => {
-      try {
-        const res = await getFactionLeaderboard();
-        if (alive) setData(res.data);
-      } catch {
-        // silently ignore — bar just stays hidden
-      }
-    };
-
-    checkFaction();
-    fetchData();
-
-    const interval = setInterval(fetchData, POLL_INTERVAL);
-    return () => {
-      alive = false;
-      clearInterval(interval);
-    };
-  }, []);
+  const { data } = useQuery<LeaderboardData>({
+    queryKey: ['factionLeaderboard'],
+    queryFn: () => getFactionLeaderboard().then((r) => r.data),
+    staleTime: 60_000,
+    refetchInterval: (query) => {
+      if ((query.state.error as any)?.response?.status === 429) return false;
+      return 120_000;
+    },
+    enabled: inFaction,
+  });
 
   if (!inFaction || !data || data.rows.length === 0) return null;
   if (data.dominanceLocked) return null;
@@ -97,7 +79,6 @@ const DominanceBar: React.FC = () => {
               >
                 <span className="dom-faction-tag">[{faction.tag}]</span>
                 <div className="dom-faction-bar-wrap">
-                  {/* threshold marker */}
                   <div
                     className="dom-threshold-marker"
                     style={{ left: `${threshold}%` }}

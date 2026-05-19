@@ -2,6 +2,7 @@
 
 import { Globe2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getMyGalaxy } from '../services/api';
 import GalaxyPicker, { Galaxy } from './GalaxyPicker';
 
@@ -10,31 +11,26 @@ interface Props {
   onGalaxyChanged?: (galaxy: Galaxy) => void;
 }
 
+export const MY_GALAXY_KEY = ['myGalaxy'] as const;
+
 const GalaxyChip: React.FC<Props> = ({ onGalaxyChanged }) => {
-  const [activeGalaxy, setActiveGalaxy] = useState<Galaxy | null>(null);
   const [showPicker, setShowPicker] = useState(false);
   const [pickerForced, setPickerForced] = useState(false);
 
+  const { data } = useQuery({
+    queryKey: MY_GALAXY_KEY,
+    queryFn: () => getMyGalaxy().then((r) => r.data),
+    staleTime: 5 * 60_000,
+  });
+
+  const activeGalaxy: Galaxy | null = data?.activeGalaxy ?? null;
+
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await getMyGalaxy();
-        if (cancelled) return;
-        const g = res.data?.activeGalaxy ?? null;
-        setActiveGalaxy(g);
-        if (!g) {
-          setPickerForced(true);
-          setShowPicker(true);
-        }
-      } catch {
-        // The api layer dispatches galaxy:needs-selection on 409 — handled below.
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    if (data !== undefined && !activeGalaxy) {
+      setPickerForced(true);
+      setShowPicker(true);
+    }
+  }, [data, activeGalaxy]);
 
   useEffect(() => {
     const handler = () => {
@@ -68,7 +64,6 @@ const GalaxyChip: React.FC<Props> = ({ onGalaxyChanged }) => {
           forced={pickerForced}
           onClose={() => setShowPicker(false)}
           onSelected={(g) => {
-            setActiveGalaxy(g);
             setShowPicker(false);
             setPickerForced(false);
             onGalaxyChanged?.(g);

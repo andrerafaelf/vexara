@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createNexusGroup,
   deleteNexusGroup,
@@ -8,6 +9,7 @@ import {
   renameNexusGroup,
   setGroupNexuses,
 } from '../services/api';
+import { NEXUS_GROUPS_KEY } from './NexusSidebar';
 import { Check, Hammer, Pencil, ScrollText, Settings, Swords, Trash2, X } from 'lucide-react';
 import '../styles/MobileNexusDrawer.css';
 import { Nexus, NexusGroup } from '../types/game';
@@ -33,20 +35,15 @@ const MobileNexusDrawer: React.FC<MobileNexusDrawerProps> = ({
   onClose,
   unreadNexusIds,
 }) => {
-  const [groups, setGroups] = useState<NexusGroup[]>([]);
+  const qc = useQueryClient();
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [showGroupManager, setShowGroupManager] = useState(false);
 
-  const loadGroups = useCallback(async () => {
-    try {
-      const response = await getNexusGroups();
-      setGroups(response.data ?? []);
-    } catch {}
-  }, []);
-
-  useEffect(() => {
-    loadGroups();
-  }, [loadGroups]);
+  const { data: groups = [] } = useQuery<NexusGroup[]>({
+    queryKey: NEXUS_GROUPS_KEY,
+    queryFn: () => getNexusGroups().then((r) => r.data ?? []),
+    staleTime: 60_000,
+  });
 
   const visibleNexuses =
     activeGroupId !== null
@@ -150,7 +147,7 @@ const MobileNexusDrawer: React.FC<MobileNexusDrawerProps> = ({
           groups={groups}
           nexuses={nexuses}
           onClose={() => setShowGroupManager(false)}
-          onGroupsChange={setGroups}
+          onGroupsChange={(next) => qc.setQueryData(NEXUS_GROUPS_KEY, next)}
         />
       )}
     </>

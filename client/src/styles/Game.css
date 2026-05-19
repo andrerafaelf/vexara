@@ -28,6 +28,8 @@
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0%, rgba(255, 255, 255, 0) 100%), rgba(11, 15, 35, 0.85);
   padding: 10px 24px;
+  padding-left: calc(24px + env(safe-area-inset-left));
+  padding-right: calc(24px + env(safe-area-inset-right));
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -208,6 +210,37 @@
   gap: var(--space-3);
   flex-shrink: 0;
   margin-left: auto;
+}
+
+.nexus-drawer-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out);
+  touch-action: manipulation;
+  flex-shrink: 0;
+}
+
+.nexus-drawer-toggle:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-strong);
+  border-color: var(--border-strong);
+}
+
+.nexus-drawer-toggle.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--border-accent);
 }
 
 /* NexusView overview strip */
@@ -1077,14 +1110,22 @@
   }
 
   .game-header {
-    padding: 12px 16px;
+    padding: 0 16px;
+    padding-left: calc(16px + env(safe-area-inset-left));
+    padding-right: calc(16px + env(safe-area-inset-right));
     position: sticky;
     top: 0;
     z-index: 1050;
+    /* Extend background under status bar on notched devices */
+    padding-top: env(safe-area-inset-top);
+    height: calc(56px + env(safe-area-inset-top));
   }
 
   .menu-toggle {
     display: inline-flex;
+    width: 44px;
+    height: 44px;
+    touch-action: manipulation;
   }
 
   .header-left {
@@ -1100,6 +1141,16 @@
     display: none;
   }
 
+  .nexus-drawer-toggle {
+    width: 44px;
+    height: 44px;
+  }
+
+  .logout-btn {
+    /* Tuck logout to mobile drawer on small screens */
+    display: none;
+  }
+
   .header-center,
   .nexus-nav {
     display: none;
@@ -1108,14 +1159,17 @@
   .mobile-drawer {
     display: block;
     position: fixed;
-    top: 64px;
+    top: calc(56px + env(safe-area-inset-top));
     left: 0;
     right: 0;
-    max-height: calc(100vh - 64px);
+    max-height: calc(100dvh - 56px - env(safe-area-inset-top));
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     background: var(--color-navy-800);
     border-bottom: 2px solid var(--color-navy-700);
     padding: 16px;
+    padding-left: calc(16px + env(safe-area-inset-left));
+    padding-right: calc(16px + env(safe-area-inset-right));
     z-index: 1040;
     opacity: 0;
     visibility: hidden;
@@ -1151,6 +1205,17 @@
 
   .main-content {
     padding: 14px;
+    padding-left: calc(14px + env(safe-area-inset-left));
+    padding-right: calc(14px + env(safe-area-inset-right));
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  }
+
+  /* Nav buttons in mobile drawer: full 44px touch target */
+  .mobile-drawer-links .nav-btn {
+    min-height: 44px;
+    padding: 12px 8px;
+    font-size: 15px;
+    touch-action: manipulation;
   }
 
   .mobile-drawer-logout {
@@ -1500,4 +1565,91 @@
   color: var(--accent);
   font-size: 22px;
   margin: 0 0 20px 0;
+}
+
+/* ── Global touch polish ─────────────────────────────
+   Kill the 300ms tap delay on every interactive element.
+   Browsers apply it when user-scalable is not disabled;
+   touch-action: manipulation is the safe surgical fix.
+────────────────────────────────────────────────────── */
+button,
+a,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="checkbox"],
+input[type="radio"],
+select,
+label {
+  touch-action: manipulation;
+}
+
+/* Ensure nexus sidebar items have a comfortable tap height on desktop too */
+.nexus-item {
+  min-height: 52px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Desktop sidebar: make group-select easier to interact with */
+.nexus-group-select {
+  min-height: 36px;
+  font-size: 14px;
+  padding: 7px 10px;
+}
+
+/* Commander card: pointer on desktop, active scale on touch */
+.commander-card {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.commander-card:active {
+  transform: scale(0.985);
+}
+
+/* ── Group modal: stack to single column on narrow screens ── */
+@media (max-width: 640px) {
+  .group-modal {
+    width: 100%;
+    max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 32px);
+    margin: 0;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    align-self: flex-end;
+  }
+
+  .group-modal-overlay {
+    align-items: flex-end;
+  }
+
+  .group-modal-body {
+    grid-template-columns: 1fr;
+  }
+
+  .group-modal-left {
+    border-right: none;
+    border-bottom: 1px solid var(--color-navy-700);
+    max-height: 200px;
+  }
+
+  .group-list-item {
+    min-height: 44px;
+  }
+
+  .group-nexus-item {
+    min-height: 44px;
+  }
+}
+
+/* ── Desktop: widen comfortable interaction zones ── */
+@media (min-width: 769px) {
+  .nexus-item {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .nav-btn {
+    padding: 10px 12px;
+  }
 }

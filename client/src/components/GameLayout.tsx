@@ -49,6 +49,7 @@ export default function GameLayout({
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
+    setIsNexusDrawerOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -122,9 +123,10 @@ export default function GameLayout({
 
         <div className="header-right">
           <button
-            className="nexus-drawer-toggle"
+            className={`nexus-drawer-toggle${isNexusDrawerOpen ? ' active' : ''}`}
             onClick={() => setIsNexusDrawerOpen((v) => !v)}
             aria-label="Toggle nexus panel"
+            aria-expanded={isNexusDrawerOpen}
             title="Your Nexuses"
           >
             <Building2 size={18} />

@@ -52,12 +52,15 @@ export function useFriendRequests() {
   });
 }
 
+const stopOn429 = (query: { state: { error: unknown } }) =>
+  (query.state.error as any)?.response?.status === 429 ? false : undefined;
+
 export function useConversations() {
   return useQuery({
     queryKey: socialKeys.conversations(),
     queryFn: () => getConversations().then((r) => r.data),
     staleTime: 15_000,
-    refetchInterval: 30_000,
+    refetchInterval: (query) => stopOn429(query) ?? 30_000,
   });
 }
 
@@ -66,7 +69,7 @@ export function useChatUnread() {
     queryKey: socialKeys.chatUnread(),
     queryFn: () => getChatUnreadCount().then((r) => r.data),
     staleTime: 15_000,
-    refetchInterval: 30_000,
+    refetchInterval: (query) => stopOn429(query) ?? 30_000,
   });
 }
 
@@ -75,7 +78,7 @@ export function useChatMessages(friendId: string) {
     queryKey: socialKeys.messages(friendId),
     queryFn: () => getChatMessages(friendId).then((r) => r.data),
     staleTime: 10_000,
-    refetchInterval: 15_000,
+    refetchInterval: (query) => stopOn429(query) ?? 15_000,
     enabled: !!friendId,
   });
 }

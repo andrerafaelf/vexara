@@ -58,8 +58,9 @@
   font-size: 20px;
   font-weight: 700;
   line-height: 1.2;
-  min-width: 220px;
+  min-width: min(220px, calc(100vw - 120px));
   max-width: 420px;
+  width: 100%;
 }
 
 .nexus-rename-input:focus {
@@ -530,6 +531,12 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 16px;
+}
+
+@media (max-width: 767px) and (min-width: 480px) {
+  .overview-shortcuts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .overview-shortcut-card {
@@ -1680,7 +1687,8 @@
 
 @media (max-width: 768px) {
   .nexus-view {
-    padding: 16px;
+    /* main-content already provides horizontal padding on mobile */
+    padding: 0;
   }
 
   .resources {
@@ -1865,7 +1873,23 @@
 .transfer-input-row label {
   color: var(--text-muted);
   font-size: 13px;
-  min-width: 90px;
+  min-width: 70px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .transfer-input-row {
+    flex-wrap: wrap;
+  }
+
+  .transfer-input-row label {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .transfer-input-row input {
+    width: 100%;
+  }
 }
 
 .transfer-input-row input {
@@ -2209,6 +2233,26 @@
   letter-spacing: 0.04em;
 }
 
+@media (max-width: 480px) {
+  .espionage-form-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .espionage-label {
+    width: auto;
+  }
+
+  .espionage-input {
+    width: 100%;
+  }
+
+  .espionage-cost-note {
+    padding-left: 0;
+  }
+}
+
 .espionage-input {
   flex: 1;
   background: var(--color-navy-900);
@@ -2394,7 +2438,14 @@
 
 @media (max-width: 768px) {
   .espionage-map-wrapper {
-    height: 460px;
+    /* Use at least 50% of the visible viewport height, capped to 70% */
+    height: clamp(320px, 55dvh, 520px);
+  }
+}
+
+@media (max-width: 480px) {
+  .espionage-map-wrapper {
+    height: clamp(280px, 50dvh, 400px);
   }
 }
 
@@ -2688,6 +2739,68 @@
   color: var(--text-muted);
   font-style: italic;
   padding: 6px 0;
+}
+
+/* ── Nexus header: wrap cleanly on small screens ────────────── */
+@media (max-width: 540px) {
+  .nexus-header h2 {
+    font-size: var(--text-2xl);
+  }
+
+  .nexus-title-row {
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  /* Resource cards: 2-up then full on tiny screens */
+  .resource {
+    padding: 10px 12px;
+  }
+
+  /* Queue items: stack label and action instead of crowding */
+  .queue-item {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .queue-item-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  /* Train controls: ensure button hits 44px */
+  .train-controls button {
+    min-height: 44px;
+  }
+
+  .building-upgrade-button {
+    min-height: 44px;
+  }
+
+  /* Tab buttons: slightly tighter but still legible */
+  .nexus-tab-btn {
+    font-size: 12px;
+    padding: 8px 10px;
+    gap: 5px;
+  }
+
+  /* Espionage ops stepper: larger hit target */
+  .espionage-ops-step {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+
+  /* Espionage mode row: stack vertically if narrow */
+  .espionage-mode-row {
+    flex-direction: column;
+  }
+
+  /* Sabotage target buttons: easier to tap */
+  .espionage-sab-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
 }
 
 /* in-flight missions */

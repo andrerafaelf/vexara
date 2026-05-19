@@ -169,6 +169,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   min-height: 100vh;
+  min-height: 100dvh;
+  /* Prevent elastic overscroll showing white edges on iOS */
+  overscroll-behavior: none;
+  /* Prevent iOS font size inflation on landscape rotation */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 code,

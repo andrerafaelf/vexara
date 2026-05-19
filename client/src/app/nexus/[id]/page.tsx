@@ -44,7 +44,10 @@ export default function NexusPage() {
     queryKey: ['nexus', nexusId],
     queryFn: () => getNexus(nexusId).then((r) => r.data as Nexus),
     staleTime: 20 * 1000,
-    refetchInterval: 30 * 1000,
+    refetchInterval: (query) => {
+      if ((query.state.error as any)?.response?.status === 429) return false;
+      return 30_000;
+    },
     enabled: !!nexusId && typeof window !== 'undefined' && !!localStorage.getItem('token'),
     // Seed from the nexuses list so NexusView renders immediately without a loading flash
     initialData: () => {

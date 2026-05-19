@@ -28,7 +28,8 @@
     display: flex;
     flex-direction: column;
     position: fixed;
-    top: 0;
+    /* Start below the sticky header (56px + notch inset) */
+    top: calc(56px + env(safe-area-inset-top));
     right: 0;
     bottom: 0;
     width: min(300px, 85vw);
@@ -36,8 +37,11 @@
     border-left: 2px solid var(--color-navy-700);
     z-index: 1070;
     transform: translateX(100%);
-    transition: transform 0.25s ease;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
+    /* Extra bottom padding for home indicator on iPhone */
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-right: env(safe-area-inset-right);
   }
 
   .mobile-nexus-drawer.open {
@@ -52,6 +56,8 @@
     border-bottom: 1px solid var(--color-navy-700);
     flex-shrink: 0;
     background: var(--color-navy-700);
+    /* Comfortable header height */
+    min-height: 52px;
   }
 
   .mobile-nexus-drawer-header h3 {
@@ -72,14 +78,22 @@
     color: var(--text-muted);
     font-size: 18px;
     cursor: pointer;
-    padding: 4px 6px;
-    border-radius: 4px;
+    /* 44×44 minimum touch target */
+    width: 44px;
+    height: 44px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     line-height: 1;
-    transition: color 0.2s;
+    transition: color 0.2s, background 0.2s;
+    touch-action: manipulation;
   }
 
-  .mobile-nexus-drawer-close:hover {
+  .mobile-nexus-drawer-close:hover,
+  .mobile-nexus-drawer-close:active {
     color: var(--accent);
+    background: rgba(255, 158, 61, 0.1);
   }
 
   .mobile-nexus-drawer .nexus-group-filter {
@@ -87,40 +101,61 @@
     flex-shrink: 0;
   }
 
+  /* Larger group select for touch */
+  .mobile-nexus-drawer .nexus-group-select {
+    min-height: 40px;
+    font-size: 14px;
+    padding: 8px 10px;
+  }
+
   .mobile-nexus-drawer-list {
     flex: 1;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     padding: 10px 14px 20px;
   }
 
   .mobile-nexus-drawer-list .nexus-item {
-    margin-bottom: 8px;
+    margin-bottom: 6px;
+    /* Comfortable touch target — nexus-item already has min-height from Game.css */
   }
 
-  /* Nexus toggle button in header — shown only on mobile */
+  /* Nexus toggle button in header — shown only on mobile (overrides Game.css base) */
   .nexus-drawer-toggle {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     background: transparent;
-    color: var(--text-strong);
-    border: 1px solid var(--color-navy-700);
-    border-radius: 6px;
+    color: var(--text-muted);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
     font-size: 18px;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     cursor: pointer;
-    transition: background 0.2s, color 0.2s;
+    transition:
+      background 0.2s,
+      color 0.2s,
+      border-color 0.2s;
     flex-shrink: 0;
+    touch-action: manipulation;
   }
 
-  .nexus-drawer-toggle:hover {
-    background: var(--color-navy-700);
+  .nexus-drawer-toggle:hover,
+  .nexus-drawer-toggle:active {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-strong);
+    border-color: var(--border-strong);
+  }
+
+  .nexus-drawer-toggle.active {
+    background: var(--accent-soft);
     color: var(--accent);
+    border-color: var(--border-accent);
   }
 }
 
-/* Hide on desktop */
+/* Hide toggle on desktop — sidebar is always visible */
 @media (min-width: 769px) {
   .nexus-drawer-toggle {
     display: none;
