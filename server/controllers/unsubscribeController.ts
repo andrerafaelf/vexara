@@ -66,7 +66,7 @@ export async function unsubscribe(req: Request, res: Response): Promise<void> {
 export async function sendTestAlphaEmail(_req: Request, res: Response): Promise<void> {
   const recipients = [
     'andrerafaelff@gmail.com',
-    'test-0q3pfnj4t@srv1.mail-tester.com',
+    'test-unnph4w1f@srv1.mail-tester.com',
   ];
   const results = await Promise.allSettled(recipients.map((to) => sendAlphaWelcome(to)));
   const sent = recipients.filter((_, i) => results[i].status === 'fulfilled');
