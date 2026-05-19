@@ -14,9 +14,10 @@ const SELECTED_NEXUS_KEY = 'selectedNexusId';
 export default function Home() {
   const router = useRouter();
   const toast = useToast();
-  const isAuthed = typeof window !== 'undefined' && !!localStorage.getItem('token');
+  // Read localStorage synchronously on mount so the fast-path redirect fires before any render.
+  const [isAuthed] = useState(() => typeof window !== 'undefined' && !!localStorage.getItem('token'));
+  const [hasStoredNexus] = useState(() => typeof window !== 'undefined' && !!localStorage.getItem(SELECTED_NEXUS_KEY));
   const { nexuses, isLoading, isFetching } = useMyNexuses();
-  const hasStoredNexus = typeof window !== 'undefined' && !!localStorage.getItem(SELECTED_NEXUS_KEY);
   // Home page is "ready" once we know whether to redirect or show the create UI
   const homeReady = !isLoading && !isFetching && !hasStoredNexus && nexuses.length === 0;
   usePageReady(homeReady || hasStoredNexus, 'home');

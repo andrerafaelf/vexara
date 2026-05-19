@@ -41,7 +41,7 @@ export default function NexusPage() {
   const qc = useQueryClient();
   const { nexuses, isLoading: nexusesLoading, isFetching: nexusesFetching, refetch: refetchNexuses } = useMyNexuses();
 
-  const { data: selectedNexusData, refetch: refetchSelectedNexus } = useQuery({
+  const { data: selectedNexusData, isFetching: nexusFetching, refetch: refetchSelectedNexus } = useQuery({
     queryKey: ['nexus', nexusId],
     queryFn: () => getNexus(nexusId).then((r) => r.data as Nexus),
     staleTime: 20 * 1000,
@@ -59,6 +59,10 @@ export default function NexusPage() {
   });
 
   const selectedNexus: Nexus | null = selectedNexusData ?? null;
+
+  // Latch: once we've ever seen nexuses we know the user isn't eliminated, so never show that screen.
+  const everHadNexus = useRef(false);
+  if (nexuses.length > 0 || selectedNexus) everHadNexus.current = true;
 
   // Page is ready when we have a nexus to render, OR we've confirmed there are no nexuses (eliminated)
   const nexusesSettled = !nexusesLoading && !nexusesFetching;
@@ -146,8 +150,12 @@ export default function NexusPage() {
     }
   };
 
-  // Hard gate: only show eliminated screen after data has fully settled and we still see 0 nexuses
-  const isEliminated = pageReady && !selectedNexus && nexuses.length === 0;
+  // Hard gate: only show eliminated screen after ALL queries have fully settled and we still see 0
+  // nexuses. The everHadNexus latch prevents flashing the create screen during the brief window
+  // where nexusesSettled flips true before selectedNexus populates from initialData, and
+  // nexusFetching guards the case where the individual nexus query is still in-flight.
+  const isEliminated =
+    pageReady && !selectedNexus && nexuses.length === 0 && !nexusFetching && !everHadNexus.current;
 
   return (
     <>
