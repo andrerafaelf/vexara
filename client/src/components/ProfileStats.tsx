@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import '../styles/ProfileStats.css';
 import NotificationSettings from './NotificationSettings';
 import StatsChart from './StatsChart';
+import { usePageReady } from './NavigationProgress';
 
 function fmt(n: number): string {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
@@ -40,6 +41,7 @@ export default function ProfileStats() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<'stats' | 'notifications'>('stats');
+  usePageReady(!loading, 'profile');
 
   useEffect(() => {
     getUserStats()
@@ -48,7 +50,7 @@ export default function ProfileStats() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="ps-loading">Loading stats...</div>;
+  if (loading) return null;
   if (error) return <div className="ps-error">Failed to load stats: {error}</div>;
   if (!stats) return null;
 

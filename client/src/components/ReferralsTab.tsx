@@ -189,7 +189,7 @@ export default function ReferralsTab() {
 
   const totalPendingCount = pendingReferralTokens.length + pendingMilestoneTokens.length;
 
-  if (loading) return <div className="referrals-loading">Loading...</div>;
+  if (loading) return null;
 
   const redeemForm = (
     <form className="referrals-redeem-form" onSubmit={handleRedeem}>

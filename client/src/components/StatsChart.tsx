@@ -104,7 +104,7 @@ export default function StatsChart() {
       <div className="sc-metric-label">{active.metricLabel}</div>
 
       <div className="sc-chart-area">
-        {loading && <div className="sc-overlay">Loading...</div>}
+        {loading && null}
         {error && <div className="sc-overlay sc-error">Failed to load: {error}</div>}
 
         {!loading && !error && (

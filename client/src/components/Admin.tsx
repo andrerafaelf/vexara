@@ -346,7 +346,7 @@ const Admin: React.FC = () => {
     }
   };
 
-  if (loading) return <div className="loading">Loading admin panel...</div>;
+  if (loading) return null;
 
   return (
     <div className="admin-panel">

@@ -43,9 +43,10 @@ export default function RootLayout({
             <ToastProvider>
               <Suspense fallback={null}>
                 <ScrollToTop />
-                <NavigationProgress />
               </Suspense>
-              {children}
+              <Suspense fallback={null}>
+                <NavigationProgress>{children}</NavigationProgress>
+              </Suspense>
             </ToastProvider>
           </QueryProvider>
         </AuthProvider>

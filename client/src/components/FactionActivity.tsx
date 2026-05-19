@@ -119,7 +119,7 @@ export default function FactionActivity({ factionId }: Props) {
     }
   };
 
-  if (loading) return <div className="faction-activity-loading">Loading activity log...</div>;
+  if (loading) return null;
 
   return (
     <div className="faction-activity">

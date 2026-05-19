@@ -2,6 +2,7 @@
 
 import GameLayout from '@/components/GameLayout';
 import Map from '@/components/Map';
+import { usePageReady } from '@/components/NavigationProgress';
 import { useMyNexuses } from '@/hooks/useMyNexuses';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -9,6 +10,8 @@ import { useEffect } from 'react';
 export default function StarfieldPage() {
   const { selectedNexus, refetch } = useMyNexuses();
   const router = useRouter();
+
+  usePageReady(!!selectedNexus, 'starfield');
 
   useEffect(() => {
     if (typeof window !== 'undefined' && !localStorage.getItem('token')) {
@@ -21,9 +24,7 @@ export default function StarfieldPage() {
     <GameLayout activePage="starfield" mainClassName="main-content--map">
       {selectedNexus ? (
         <Map currentNexus={selectedNexus} onRefresh={refetch} />
-      ) : (
-        <div className="loading">No nexuses available</div>
-      )}
+      ) : null}
     </GameLayout>
   );
 }

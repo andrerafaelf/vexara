@@ -39,6 +39,7 @@ import FactionChat from './FactionChat';
 import FactionActivity from './FactionActivity';
 import FactionLeaderboard from './FactionLeaderboard';
 import WarRoom from './WarRoom';
+import { usePageReady } from './NavigationProgress';
 import '../styles/Factions.css';
 
 interface Faction {
@@ -123,6 +124,7 @@ export default function FactionsView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState<Tab>('overview');
+  usePageReady(!loading, 'factions');
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [formName, setFormName] = useState('');
@@ -525,7 +527,7 @@ export default function FactionsView() {
   // ── Loading / error ─────────────────────────────────────────────────────────
 
   if (loading) {
-    return <div className="factions-container"><div className="factions-loading">Loading factions...</div></div>;
+    return null;
   }
 
   // ── No faction: browser + create ────────────────────────────────────────────

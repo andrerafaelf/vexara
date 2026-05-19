@@ -8,6 +8,7 @@ import { formatDateTime } from '../utils/date';
 import BattleReplay from './BattleReplay';
 import ScoutIntelCard from './ScoutIntelCard';
 import ResourceIcon from './ResourceIcon';
+import { usePageReady } from './NavigationProgress';
 
 interface ReportsProps {
   nexus: Nexus;
@@ -47,6 +48,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
   const [reports, setReports] = useState<Attack[]>([]);
   const [selectedReport, setSelectedReport] = useState<Attack | null>(null);
   const [loading, setLoading] = useState(true);
+  usePageReady(!loading, 'reports');
   const [showAttackForm, setShowAttackForm] = useState(false);
   const [attackTroops, setAttackTroops] = useState({
     lancerDrone: 0,
@@ -166,7 +168,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
   };
 
   if (loading) {
-    return <div className="reports-container">Loading reports...</div>;
+    return null;
   }
 
   if (selectedReport) {

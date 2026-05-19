@@ -342,7 +342,7 @@ export default function WarRoom({ factionId, myRole }: Props) {
   // ── render ─────────────────────────────────────────────────────────────────
 
   if (loading) {
-    return <div className="warroom warroom--loading">Loading war room…</div>;
+    return null;
   }
   if (error) {
     return <div className="warroom warroom--error"><AlertCircle size={16} /> {error}</div>;
@@ -370,9 +370,7 @@ export default function WarRoom({ factionId, myRole }: Props) {
         <div className="warroom-main">
           {selectedOpId == null ? (
             <EmptyState canManage={canManage} onCreate={() => setShowCreate(true)} />
-          ) : opLoading || !selectedOp ? (
-            <div className="warroom-op-loading">Loading operation…</div>
-          ) : (
+          ) : opLoading || !selectedOp ? null : (
             <OperationBoard
               op={selectedOp}
               now={now}
@@ -1488,9 +1486,7 @@ function CreateOperationModal({
                 espionageHint="Click a nexus to set it as the operation target"
                 onSelectSpyTarget={setTarget}
               />
-            ) : (
-              <div className="warroom-starfield-loading">No nexus available</div>
-            )}
+            ) : null}
           </div>
         </form>
       </div>

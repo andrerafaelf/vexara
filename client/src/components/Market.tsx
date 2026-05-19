@@ -4,6 +4,7 @@ import '../styles/Market.css';
 import { MarketListing, Nexus } from '../types/game';
 import { formatDateTime } from '../utils/date';
 import ResourceIcon from './ResourceIcon';
+import { usePageReady } from './NavigationProgress';
 
 interface MarketProps {
   nexuses: Nexus[];
@@ -29,6 +30,7 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
+  usePageReady(!loading, 'market');
 
   const [formOffer, setFormOffer] = useState<'biomass' | 'alloy' | 'ore'>('biomass');
   const [formOfferAmount, setFormOfferAmount] = useState('');
@@ -174,7 +176,7 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
   const selectedFormNexus = nexuses.find((n) => String(n._id) === formNexusId);
   const selectedBuyNexus = nexuses.find((n) => String(n._id) === buyNexusId);
 
-  if (loading) return <div className="market-loading">Loading market...</div>;
+  if (loading) return null;
 
   return (
     <div className="market">

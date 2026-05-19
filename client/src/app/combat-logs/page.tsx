@@ -2,6 +2,7 @@
 
 import GameLayout from '@/components/GameLayout';
 import Reports from '@/components/Reports';
+import { usePageReady } from '@/components/NavigationProgress';
 import { useMyNexuses } from '@/hooks/useMyNexuses';
 import { useUnreadReports } from '@/hooks/useUnreadReports';
 import { useRouter } from 'next/navigation';
@@ -11,6 +12,8 @@ export default function CombatLogsPage() {
   const { selectedNexus } = useMyNexuses();
   const { refresh: refreshUnreadReports } = useUnreadReports();
   const router = useRouter();
+
+  usePageReady(!!selectedNexus, 'combat-logs');
 
   useEffect(() => {
     if (typeof window !== 'undefined' && !localStorage.getItem('token')) {
@@ -23,9 +26,7 @@ export default function CombatLogsPage() {
     <GameLayout activePage="combat-logs">
       {selectedNexus ? (
         <Reports nexus={selectedNexus} onReadStateChange={refreshUnreadReports} />
-      ) : (
-        <div className="loading">No nexuses available</div>
-      )}
+      ) : null}
     </GameLayout>
   );
 }

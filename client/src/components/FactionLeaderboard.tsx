@@ -59,7 +59,7 @@ export default function FactionLeaderboard({ myFactionId }: { myFactionId?: numb
     return () => clearInterval(interval);
   }, [load]);
 
-  if (loading) return <div className="flb-loading">Loading...</div>;
+  if (loading) return null;
   if (error) return <div className="flb-error">{error}</div>;
   if (!data || data.rows.length === 0) return <div className="flb-empty">No factions in this galaxy yet.</div>;
 

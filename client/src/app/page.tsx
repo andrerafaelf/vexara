@@ -3,6 +3,7 @@
 import { useToast } from '@/context/ToastContext';
 import { createNexus, getMyGalaxy } from '@/services/api';
 import GalaxyPicker, { Galaxy } from '@/components/GalaxyPicker';
+import { usePageReady } from '@/components/NavigationProgress';
 import { useMyNexuses } from '@/hooks/useMyNexuses';
 import '@/styles/Game.css';
 import { useRouter } from 'next/navigation';
@@ -15,6 +16,10 @@ export default function Home() {
   const toast = useToast();
   const isAuthed = typeof window !== 'undefined' && !!localStorage.getItem('token');
   const { nexuses, isLoading, isFetching } = useMyNexuses();
+  const hasStoredNexus = typeof window !== 'undefined' && !!localStorage.getItem(SELECTED_NEXUS_KEY);
+  // Home page is "ready" once we know whether to redirect or show the create UI
+  const homeReady = !isLoading && !isFetching && !hasStoredNexus && nexuses.length === 0;
+  usePageReady(homeReady || hasStoredNexus, 'home');
   const [creating, setCreating] = useState(false);
   const [activeGalaxy, setActiveGalaxy] = useState<Galaxy | null>(null);
   const [showGalaxyPicker, setShowGalaxyPicker] = useState(false);
@@ -71,7 +76,6 @@ export default function Home() {
   };
 
   // While we're determining where to go, render nothing (no "Loading..." text)
-  const hasStoredNexus = typeof window !== 'undefined' && !!localStorage.getItem(SELECTED_NEXUS_KEY);
   if (!isAuthed || isLoading || isFetching || nexuses.length > 0 || hasStoredNexus) {
     return null;
   }

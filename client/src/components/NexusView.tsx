@@ -2943,9 +2943,7 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
       {/* Active embedded assets */}
       <div className="espionage-assets">
         <div className="espionage-assets-heading">Active Embedded Operatives</div>
-        {assetsLoading ? (
-          <div className="espionage-assets-empty">Loading...</div>
-        ) : assets.length === 0 ? (
+        {assetsLoading ? null : assets.length === 0 ? (
           <div className="espionage-assets-empty">No operatives currently embedded at enemy nexuses.</div>
         ) : (
           assets.map((a) => (

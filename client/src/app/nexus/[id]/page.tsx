@@ -4,6 +4,7 @@ import GameLayout from '@/components/GameLayout';
 import NexusView from '@/components/NexusView';
 import PwaGuideModal from '@/components/PwaGuideModal';
 import WhileYouWereAway from '@/components/WhileYouWereAway';
+import { usePageReady } from '@/components/NavigationProgress';
 import { useMyNexuses } from '@/hooks/useMyNexuses';
 import { useUnreadReports } from '@/hooks/useUnreadReports';
 import { createNexus, getNexus } from '@/services/api';
@@ -58,6 +59,11 @@ export default function NexusPage() {
   });
 
   const selectedNexus: Nexus | null = selectedNexusData ?? null;
+
+  // Page is ready when we have a nexus to render, OR we've confirmed there are no nexuses (eliminated)
+  const nexusesSettled = !nexusesLoading && !nexusesFetching;
+  const pageReady = !!selectedNexus || (nexusesSettled && nexuses.length === 0);
+  usePageReady(pageReady, 'nexus');
 
   useEffect(() => {
     if (!localStorage.getItem(PWA_GUIDE_SEEN_KEY)) {
@@ -140,9 +146,8 @@ export default function NexusPage() {
     }
   };
 
-  const isEliminated = !nexusesLoading && !nexusesFetching && nexuses.length === 0;
-  // While any data is still in-flight, render nothing — prevents eliminated/loading flashes
-  const isResolving = nexusesFetching && nexuses.length === 0;
+  // Hard gate: only show eliminated screen after data has fully settled and we still see 0 nexuses
+  const isEliminated = pageReady && !selectedNexus && nexuses.length === 0;
 
   return (
     <>
@@ -153,7 +158,14 @@ export default function NexusPage() {
         selectedNexusId={nexusId}
         onSelectNexus={handleSelectNexus}
       >
-        {isResolving ? null : isEliminated ? (
+        {selectedNexus ? (
+          <NexusView
+            nexus={selectedNexus}
+            onUpdate={handleUpdate}
+            initialTab={activeTab}
+            onTabChange={handleTabChange}
+          />
+        ) : isEliminated ? (
           <div className="eliminated-screen">
             <div className="eliminated-card">
               <div className="eliminated-icon">💀</div>
@@ -178,13 +190,6 @@ export default function NexusPage() {
               </button>
             </div>
           </div>
-        ) : selectedNexus ? (
-          <NexusView
-            nexus={selectedNexus}
-            onUpdate={handleUpdate}
-            initialTab={activeTab}
-            onTabChange={handleTabChange}
-          />
         ) : null}
       </GameLayout>
     </>

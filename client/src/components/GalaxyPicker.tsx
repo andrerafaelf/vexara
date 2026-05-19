@@ -186,7 +186,7 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
           </p>
         )}
 
-        {loading && <div>Loading galaxies…</div>}
+        {loading && null}
         {error && <div style={{ color: '#ff8a8a' }}>{error}</div>}
 
         {!loading && galaxies.length === 0 && <div>No galaxies exist yet.</div>}
