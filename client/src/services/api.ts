@@ -399,6 +399,7 @@ export const getActivitySummary = (since?: string) =>
   apiRequest(`/report/summary${since ? `?since=${encodeURIComponent(since)}` : ''}`);
 
 // War Room (real-time faction operation planning)
+export const getWarRoomStarfield = () => apiRequest('/warroom/starfield');
 export const listWarRoomOperations = () => apiRequest('/warroom/operations');
 export const getWarRoomOperation = (operationId: number) => apiRequest(`/warroom/operations/${operationId}`);
 export const createWarRoomOperation = (data: { name: string; targetNexusId: number; arrivalAt: string }) =>

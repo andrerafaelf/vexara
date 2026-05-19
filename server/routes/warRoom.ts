@@ -6,6 +6,7 @@ import type { AuthRequest } from '../types/index.js';
 
 const router = Router();
 
+router.get('/starfield', auth, (req, res) => ctrl.getGalaxyStarfield(req as AuthRequest, res as Response));
 router.get('/operations', auth, (req, res) => ctrl.listOperations(req as AuthRequest, res as Response));
 router.post('/operations', auth, (req, res) => ctrl.createOperation(req as AuthRequest, res as Response));
 router.get('/operations/:operationId', auth, (req, res) => ctrl.getOperation(req as AuthRequest, res as Response));

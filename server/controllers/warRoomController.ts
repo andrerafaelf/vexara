@@ -742,4 +742,73 @@ export async function getThread(req: AuthRequest, res: Response): Promise<void> 
   }
 }
 
+// Galaxy starfield — every nexus, classified by relationship to the caller's faction.
+// Used by the "Open Operation" target picker so officers can click rather than type coords.
+export async function getGalaxyStarfield(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const ctx = await loadMembership(req);
+    if (!ctx) {
+      res.status(403).json({ error: 'You are not in a faction' });
+      return;
+    }
+
+    const [nexuses, factionMembers, activeWars] = await Promise.all([
+      prisma.nexus.findMany({
+        where: { galaxyId: ctx.galaxyId },
+        select: { id: true, name: true, x: true, y: true, points: true, ownerId: true },
+      }),
+      prisma.factionMember.findMany({
+        where: { galaxyId: ctx.galaxyId },
+        select: { userId: true, factionId: true },
+      }),
+      prisma.factionWar.findMany({
+        where: {
+          galaxyId: ctx.galaxyId,
+          status: 'active',
+          OR: [{ declarerFactionId: ctx.factionId }, { targetFactionId: ctx.factionId }],
+        },
+        select: { declarerFactionId: true, targetFactionId: true },
+      }),
+    ]);
+
+    const factionByUserId = new Map(factionMembers.map((m) => [m.userId, m.factionId] as const));
+    const enemyFactionIds = new Set<number>();
+    for (const w of activeWars) {
+      enemyFactionIds.add(w.declarerFactionId === ctx.factionId ? w.targetFactionId : w.declarerFactionId);
+    }
+
+    const ownerIds = Array.from(new Set(nexuses.map((n) => n.ownerId).filter((v): v is number => v != null)));
+    const owners = ownerIds.length
+      ? await prisma.user.findMany({ where: { id: { in: ownerIds } }, select: { id: true, username: true } })
+      : [];
+    const usernameById = new Map(owners.map((u) => [u.id, u.username] as const));
+
+    const items = nexuses.map((n) => {
+      let rel: 'mine' | 'faction' | 'enemy' | 'neutral' | 'unowned' = 'neutral';
+      if (n.ownerId == null) rel = 'unowned';
+      else if (n.ownerId === req.userId) rel = 'mine';
+      else {
+        const fid = factionByUserId.get(n.ownerId);
+        if (fid === ctx.factionId) rel = 'faction';
+        else if (fid != null && enemyFactionIds.has(fid)) rel = 'enemy';
+        else rel = 'neutral';
+      }
+      return {
+        id: n.id,
+        name: n.name,
+        x: n.x,
+        y: n.y,
+        points: n.points,
+        ownerId: n.ownerId,
+        ownerName: n.ownerId != null ? (usernameById.get(n.ownerId) ?? null) : null,
+        relationship: rel,
+      };
+    });
+
+    res.json({ nexuses: items });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
 export { serializeOperationSummary };

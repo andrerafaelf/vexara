@@ -1284,6 +1284,224 @@
   padding-top: 4px;
 }
 
+/* ── Starfield target picker ───────────────────────────────────────────── */
+
+.warroom-modal--wide { max-width: 980px; }
+
+.warroom-modal-body--two-col {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 18px;
+  padding: 16px 18px;
+  align-items: stretch;
+  /* Fixed body height — keeps the starfield from resizing when the
+     selected-target card grows or shrinks. Without this, content changes
+     in the left column could push total height past 90vh, trigger a
+     scrollbar, narrow the right column, and make the square SVG re-render
+     smaller (looks like the starfield is shrinking on click). */
+  height: 560px;
+  max-height: calc(90vh - 60px);
+  overflow: hidden;
+}
+
+.warroom-modal-left {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.warroom-modal-right {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.warroom-target-card {
+  margin-top: auto;
+  padding: 12px;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.warroom-target-card-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+}
+.warroom-target-card-head svg { color: var(--accent); }
+.warroom-target-card-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.warroom-target-card-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-strong);
+  line-height: 1.2;
+}
+.warroom-target-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.warroom-target-card-owner { color: var(--text-default); }
+.warroom-target-card-points { color: var(--accent); font-weight: 700; }
+.warroom-target-card-empty {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--text-muted);
+}
+.warroom-target-card-empty svg { opacity: 0.5; }
+
+.warroom-rel-chip {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+.warroom-rel-chip--mine    { background: rgba(86,211,100,0.15); color: var(--success); border: 1px solid rgba(86,211,100,0.3); }
+.warroom-rel-chip--faction { background: rgba(86,211,100,0.1); color: var(--success); border: 1px solid rgba(86,211,100,0.25); }
+.warroom-rel-chip--enemy   { background: rgba(248,81,73,0.15); color: var(--danger); border: 1px solid rgba(248,81,73,0.35); }
+.warroom-rel-chip--neutral { background: rgba(255,158,61,0.1); color: var(--accent); border: 1px solid rgba(255,158,61,0.25); }
+.warroom-rel-chip--unowned { background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border-default); }
+
+.warroom-starfield-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.warroom-starfield-filters {
+  display: inline-flex;
+  background: var(--color-navy-900);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  padding: 2px;
+}
+.warroom-starfield-filter {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.warroom-starfield-filter:hover { color: var(--text-default); }
+.warroom-starfield-filter.is-active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.warroom-starfield-search {
+  flex: 1;
+  min-width: 160px;
+}
+
+.warroom-starfield {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  background:
+    radial-gradient(ellipse at 25% 15%, rgba(255, 158, 61, 0.07) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 85%, rgba(86, 211, 100, 0.05) 0%, transparent 45%),
+    radial-gradient(ellipse at 55% 50%, rgba(42, 48, 86, 0.5) 0%, transparent 65%),
+    linear-gradient(160deg, #060a18 0%, #0a0e22 35%, #0d1228 65%, #080c1c 100%);
+  border: 1px solid rgba(255, 158, 61, 0.18);
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.warroom-starfield-loading {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-style: italic;
+  letter-spacing: 0.06em;
+}
+
+.warroom-starfield-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: default;
+}
+
+.warroom-star-group {
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+.warroom-star-group:hover { transform: scale(1.4); }
+.warroom-star-group:focus { outline: none; transform: scale(1.4); }
+.warroom-star-group.is-selected { transform: scale(1.2); }
+.warroom-star-group--mine    { color: #56d364; }
+.warroom-star-group--faction { color: #56d364; }
+.warroom-star-group--enemy   { color: #f85149; }
+.warroom-star-group--neutral { color: #ff9e3d; }
+.warroom-star-group--unowned { color: #8b95b2; }
+
+.warroom-star-selected-ring {
+  animation: warroom-ring-pulse 1.8s ease-in-out infinite;
+  transform-origin: center;
+}
+@keyframes warroom-ring-pulse {
+  0%, 100% { opacity: 0.9; }
+  50%      { opacity: 0.4; }
+}
+
+.warroom-starfield-legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 4px 2px;
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.warroom-starfield-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.warroom-star-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 6px currentColor;
+}
+.warroom-star-dot--mine    { background: #56d364; color: #56d364; }
+.warroom-star-dot--faction { background: #56d364; color: #56d364; opacity: 0.7; }
+.warroom-star-dot--enemy   { background: #f85149; color: #f85149; }
+.warroom-star-dot--neutral { background: #ff9e3d; color: #ff9e3d; }
+.warroom-star-dot--unowned { background: #8b95b2; color: #8b95b2; }
+
 /* ── Responsive ────────────────────────────────────────────────────────── */
 
 @media (max-width: 1100px) {
@@ -1293,6 +1511,17 @@
   .warroom-thread {
     display: none;
   }
+}
+
+@media (max-width: 820px) {
+  .warroom-modal-body--two-col {
+    grid-template-columns: 1fr;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+  .warroom-modal-left { overflow-y: visible; }
+  .warroom-starfield { min-height: 320px; }
 }
 
 @media (max-width: 760px) {

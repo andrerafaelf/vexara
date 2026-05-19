@@ -131,19 +131,30 @@
   align-items: center;
   justify-content: center;
   overscroll-behavior: contain;
+  /* Switched from `container-type: size` + `cqw`/`cqh` cell sizing to
+     viewport-relative sizing. Reason: with `container-type: size`, the
+     wrapper is size-contained and its `cqw`/`cqh` resolution interacts
+     with sibling reflow (the .map-sidebar content grows on selection
+     and triggers a layout pass). Browsers can briefly resolve `cq` units
+     against a transient mid-reflow inline/block-size, producing the
+     visible "starfield shrinks on click" glitch. Viewport units are
+     stable across layout passes triggered by sibling changes. */
   contain: layout paint;
-  container-type: size;
-  container-name: mapviewport;
 }
 
 .map-grid {
   --map-visible-range: 11;
-  --map-cell-size: clamp(28px, min(85cqw / var(--map-visible-range), 90cqh / var(--map-visible-range)), 96px);
+  /* Approximation: usable area ≈ viewport minus nexus-nav (260) and
+     map-sidebar (350) horizontally, minus header (~60) and bottom padding
+     vertically. We use straight viewport units so the calc is stable
+     regardless of intermediate flex resolution. clamp() guards both ends.
+     On mobile, the sidebar collapses (see media queries) so 85vw is fine. */
+  --map-cell-size: clamp(28px, min(60vw / var(--map-visible-range), 80vh / var(--map-visible-range)), 96px);
 }
 
-@supports not (container-type: size) {
+@media (max-width: 1100px) {
   .map-grid {
-    --map-cell-size: clamp(28px, calc(min(70vw, 80vh) / var(--map-visible-range)), 96px);
+    --map-cell-size: clamp(28px, min(85vw / var(--map-visible-range), 70vh / var(--map-visible-range)), 96px);
   }
 }
 
@@ -264,6 +275,13 @@
 }
 
 .map-cell {
+  /* box-sizing: border-box keeps the outer cell size constant when the
+     border width changes (1px → 2px for current/own/enemy cells). Without
+     it, classifying cells as highlighted grows the grid by the cumulative
+     extra border width, and any layout that depends on that size (e.g. the
+     container-query cell-size calc) can recompute and produce visible
+     "shrink" effects when selection state changes. */
+  box-sizing: border-box;
   width: var(--map-cell-size, 60px);
   height: var(--map-cell-size, 60px);
   border: 1px solid rgba(255, 158, 61,0.10);
@@ -395,7 +413,7 @@
   pointer-events: none;
 }
 
-@container mapviewport (max-height: 600px) {
+@media (max-height: 700px) {
   .cell-coords { display: none; }
 }
 

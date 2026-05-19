@@ -99,7 +99,7 @@ interface MyJoinRequest {
   createdAt: string;
 }
 
-type Tab = 'overview' | 'chat' | 'warroom' | 'members' | 'activity' | 'wars' | 'diplomacy';
+type Tab = 'overview' | 'chat' | 'warroom' | 'members' | 'wars' | 'diplomacy' | 'activity';
 
 interface FactionTreaty {
   id: number;
@@ -748,7 +748,7 @@ export default function FactionsView() {
 
       {/* Tabs */}
       <div className="factions-tabs">
-        {(['overview', 'chat', 'warroom', 'members', 'activity', 'wars', 'diplomacy'] as Tab[]).map((tab) => (
+        {(['overview', 'chat', 'warroom', 'members', 'wars', 'diplomacy', 'activity'] as Tab[]).map((tab) => (
           <button
             key={tab}
             className={`factions-tab${activeTab === tab ? ' factions-tab--active' : ''}`}

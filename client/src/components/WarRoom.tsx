@@ -26,9 +26,9 @@ import {
   createWarRoomOperation,
   deleteWarRoomOperation,
   deleteWarRoomWave,
-  getMapArea,
   getMyNexuses,
   getWarRoomOperation,
+  getWarRoomStarfield,
   listWarRoomOperations,
   postWarRoomThreadMessage,
   releaseWarRoomSlot,
@@ -109,12 +109,15 @@ interface Operation {
   thread: ThreadMessage[];
 }
 
-interface MapAreaNexus {
-  _id: string;
+interface StarNexus {
+  id: number;
   name: string;
   x: number;
   y: number;
-  owner: { _id: string; username: string } | null;
+  points: number;
+  ownerId: number | null;
+  ownerName: string | null;
+  relationship: 'mine' | 'faction' | 'enemy' | 'neutral' | 'unowned';
 }
 
 interface Props {
@@ -1392,10 +1395,11 @@ function CreateOperationModal({
   onSubmit: (data: { name: string; targetNexusId: number; arrivalAt: string }) => Promise<void>;
 }) {
   const [name, setName] = useState('');
-  const [coords, setCoords] = useState({ x: '', y: '' });
-  const [searching, setSearching] = useState(false);
-  const [results, setResults] = useState<MapAreaNexus[]>([]);
-  const [target, setTarget] = useState<MapAreaNexus | null>(null);
+  const [stars, setStars] = useState<StarNexus[] | null>(null);
+  const [loadingStars, setLoadingStars] = useState(true);
+  const [filter, setFilter] = useState<'all' | 'enemy' | 'neutral'>('enemy');
+  const [searchText, setSearchText] = useState('');
+  const [target, setTarget] = useState<StarNexus | null>(null);
   const [arrival, setArrival] = useState(() => {
     const d = new Date(Date.now() + 60 * 60 * 1000);
     d.setSeconds(0, 0);
@@ -1403,28 +1407,20 @@ function CreateOperationModal({
   });
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSearch = async () => {
-    const x = parseInt(coords.x);
-    const y = parseInt(coords.y);
-    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-    setSearching(true);
-    setResults([]);
-    try {
-      const res = await getMapArea(x, y);
-      const list = (res.data ?? []) as MapAreaNexus[];
-      // Sort by distance from queried point
-      list.sort((a, b) => {
-        const da = (a.x - x) ** 2 + (a.y - y) ** 2;
-        const db = (b.x - x) ** 2 + (b.y - y) ** 2;
-        return da - db;
-      });
-      setResults(list.slice(0, 20));
-    } catch {
-      setResults([]);
-    } finally {
-      setSearching(false);
-    }
-  };
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await getWarRoomStarfield();
+        if (!cancelled) setStars((res.data?.nexuses ?? []) as StarNexus[]);
+      } catch {
+        if (!cancelled) setStars([]);
+      } finally {
+        if (!cancelled) setLoadingStars(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1433,7 +1429,7 @@ function CreateOperationModal({
     try {
       await onSubmit({
         name: name.trim(),
-        targetNexusId: parseInt(target._id, 10),
+        targetNexusId: target.id,
         arrivalAt: new Date(arrival).toISOString(),
       });
     } finally {
@@ -1443,100 +1439,304 @@ function CreateOperationModal({
 
   return (
     <div className="warroom-modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="warroom-modal">
+      <div className="warroom-modal warroom-modal--wide">
         <div className="warroom-modal-head">
           <div className="warroom-modal-title">
             <Radar size={15} /> Open Operation
           </div>
           <button className="warroom-icon-btn" onClick={onClose}><X size={16} /></button>
         </div>
-        <form onSubmit={handleSubmit} className="warroom-modal-body">
-          <label className="warroom-field">
-            <span className="warroom-field-label">Operation name</span>
-            <input
-              className="warroom-field-input"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Iron Hammer · Crush COBRA-04"
-              maxLength={64}
-              required
-              disabled={submitting}
-            />
-          </label>
+        <form onSubmit={handleSubmit} className="warroom-modal-body warroom-modal-body--two-col">
+          <div className="warroom-modal-left">
+            <label className="warroom-field">
+              <span className="warroom-field-label">Operation name</span>
+              <input
+                className="warroom-field-input"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Iron Hammer · Crush COBRA-04"
+                maxLength={64}
+                required
+                disabled={submitting}
+                autoFocus
+              />
+            </label>
 
-          <div className="warroom-field">
-            <span className="warroom-field-label">Find target</span>
-            <div className="warroom-modal-search">
+            <label className="warroom-field">
+              <span className="warroom-field-label">Target arrival time</span>
               <input
-                className="warroom-field-input warroom-field-input--narrow"
-                type="number"
-                value={coords.x}
-                onChange={(e) => setCoords((c) => ({ ...c, x: e.target.value }))}
-                placeholder="X"
+                className="warroom-field-input"
+                type="datetime-local"
+                value={arrival}
+                onChange={(e) => setArrival(e.target.value)}
                 disabled={submitting}
+                required
               />
-              <input
-                className="warroom-field-input warroom-field-input--narrow"
-                type="number"
-                value={coords.y}
-                onChange={(e) => setCoords((c) => ({ ...c, y: e.target.value }))}
-                placeholder="Y"
-                disabled={submitting}
-              />
-              <button
-                type="button"
-                className="warroom-ghost-btn"
-                onClick={handleSearch}
-                disabled={searching || !coords.x || !coords.y}
-              >
-                {searching ? 'Searching…' : 'Search'}
+            </label>
+
+            <div className="warroom-target-card">
+              {target ? (
+                <>
+                  <div className="warroom-target-card-head">
+                    <Target size={14} />
+                    <span className="warroom-target-card-label">Selected target</span>
+                  </div>
+                  <div className="warroom-target-card-name">{target.name}</div>
+                  <div className="warroom-target-card-meta">
+                    <span className={`warroom-rel-chip warroom-rel-chip--${target.relationship}`}>
+                      {target.relationship === 'mine' && 'YOURS'}
+                      {target.relationship === 'faction' && 'FACTION'}
+                      {target.relationship === 'enemy' && 'ENEMY'}
+                      {target.relationship === 'neutral' && 'NEUTRAL'}
+                      {target.relationship === 'unowned' && 'UNOWNED'}
+                    </span>
+                    {target.ownerName && <span className="warroom-target-card-owner">{target.ownerName}</span>}
+                    <span className="warroom-target-card-points">{target.points.toLocaleString()} pts</span>
+                  </div>
+                </>
+              ) : (
+                <div className="warroom-target-card-empty">
+                  <Target size={14} />
+                  <span>Click a star to select a target</span>
+                </div>
+              )}
+            </div>
+
+            <div className="warroom-modal-actions">
+              <button type="button" className="warroom-ghost-btn" onClick={onClose} disabled={submitting}>Cancel</button>
+              <button type="submit" className="warroom-primary-btn" disabled={submitting || !target || !name.trim()}>
+                {submitting ? 'Opening…' : 'Open Operation'}
               </button>
             </div>
           </div>
 
-          {results.length > 0 && (
-            <div className="warroom-modal-results">
-              {results.map((n) => (
+          <div className="warroom-modal-right">
+            <div className="warroom-starfield-toolbar">
+              <div className="warroom-starfield-filters" role="tablist">
                 <button
                   type="button"
-                  key={n._id}
-                  className={`warroom-modal-result ${target?._id === n._id ? 'warroom-modal-result--selected' : ''}`}
-                  onClick={() => setTarget(n)}
+                  className={`warroom-starfield-filter ${filter === 'enemy' ? 'is-active' : ''}`}
+                  onClick={() => setFilter('enemy')}
                 >
-                  <span className="warroom-modal-result-name">{n.name}</span>
-                  <span className="warroom-modal-result-coords">{n.x}|{n.y}</span>
-                  <span className="warroom-modal-result-owner">{n.owner?.username ?? 'unowned'}</span>
+                  Enemies
                 </button>
-              ))}
+                <button
+                  type="button"
+                  className={`warroom-starfield-filter ${filter === 'neutral' ? 'is-active' : ''}`}
+                  onClick={() => setFilter('neutral')}
+                >
+                  Neutrals
+                </button>
+                <button
+                  type="button"
+                  className={`warroom-starfield-filter ${filter === 'all' ? 'is-active' : ''}`}
+                  onClick={() => setFilter('all')}
+                >
+                  All
+                </button>
+              </div>
+              <input
+                className="warroom-field-input warroom-starfield-search"
+                placeholder="Find by name or owner…"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+              />
             </div>
-          )}
 
-          {target && (
-            <div className="warroom-modal-target">
-              <Target size={13} /> Target: <strong>{target.name}</strong> ({target.x}|{target.y})
-            </div>
-          )}
-
-          <label className="warroom-field">
-            <span className="warroom-field-label">Target arrival time</span>
-            <input
-              className="warroom-field-input"
-              type="datetime-local"
-              value={arrival}
-              onChange={(e) => setArrival(e.target.value)}
-              disabled={submitting}
-              required
+            <Starfield
+              stars={stars ?? []}
+              loading={loadingStars}
+              filter={filter}
+              searchText={searchText.trim().toLowerCase()}
+              selectedId={target?.id ?? null}
+              onSelect={setTarget}
             />
-          </label>
 
-          <div className="warroom-modal-actions">
-            <button type="button" className="warroom-ghost-btn" onClick={onClose} disabled={submitting}>Cancel</button>
-            <button type="submit" className="warroom-primary-btn" disabled={submitting || !target || !name.trim()}>
-              {submitting ? 'Opening…' : 'Open Operation'}
-            </button>
+            <div className="warroom-starfield-legend">
+              <span><span className="warroom-star-dot warroom-star-dot--mine" /> Yours</span>
+              <span><span className="warroom-star-dot warroom-star-dot--faction" /> Faction</span>
+              <span><span className="warroom-star-dot warroom-star-dot--enemy" /> Enemy</span>
+              <span><span className="warroom-star-dot warroom-star-dot--neutral" /> Neutral</span>
+              <span><span className="warroom-star-dot warroom-star-dot--unowned" /> Unclaimed</span>
+            </div>
           </div>
         </form>
       </div>
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Starfield — interactive SVG galaxy map for target selection
+// ────────────────────────────────────────────────────────────────────────────
+
+const GALAXY_SIZE = 35; // matches Map.tsx MAP_SIZE
+const STARFIELD_VIEWBOX = 700;
+
+function Starfield({
+  stars,
+  loading,
+  filter,
+  searchText,
+  selectedId,
+  onSelect,
+}: {
+  stars: StarNexus[];
+  loading: boolean;
+  filter: 'all' | 'enemy' | 'neutral';
+  searchText: string;
+  selectedId: number | null;
+  onSelect: (s: StarNexus) => void;
+}) {
+  const [hovered, setHovered] = useState<StarNexus | null>(null);
+
+  const matchesFilter = (n: StarNexus) => {
+    if (filter === 'enemy') return n.relationship === 'enemy';
+    if (filter === 'neutral') return n.relationship === 'neutral' || n.relationship === 'unowned';
+    return true;
+  };
+  const matchesSearch = (n: StarNexus) => {
+    if (!searchText) return true;
+    return (
+      n.name.toLowerCase().includes(searchText) ||
+      (n.ownerName?.toLowerCase().includes(searchText) ?? false)
+    );
+  };
+
+  // Two-tier render: always show ALL stars (dim), highlight ones matching filter+search.
+  // That way you keep galactic context even when filtering down to enemies.
+
+  // Position: galaxy coords (0..GALAXY_SIZE-1) → viewbox (with margin)
+  const margin = 28;
+  const span = STARFIELD_VIEWBOX - margin * 2;
+  const pos = (v: number) => margin + (v / (GALAXY_SIZE - 1)) * span;
+
+  // Pre-render background twinkles (deterministic by index) for ambience
+  const ambient = Array.from({ length: 80 }, (_, i) => {
+    const seed = i * 9301 + 49297;
+    const a = (seed % 233280) / 233280;
+    const b = ((seed * 2) % 233280) / 233280;
+    const c = ((seed * 3) % 233280) / 233280;
+    return { x: a * STARFIELD_VIEWBOX, y: b * STARFIELD_VIEWBOX, r: 0.5 + c * 0.8, o: 0.15 + c * 0.25 };
+  });
+
+  return (
+    <div className="warroom-starfield">
+      {loading ? (
+        <div className="warroom-starfield-loading">Scanning galaxy…</div>
+      ) : (
+        <svg
+          viewBox={`0 0 ${STARFIELD_VIEWBOX} ${STARFIELD_VIEWBOX}`}
+          className="warroom-starfield-svg"
+          preserveAspectRatio="xMidYMid meet"
+          role="application"
+          aria-label="Galaxy starfield target picker"
+        >
+          <defs>
+            <radialGradient id="warroom-galaxy-bg" cx="50%" cy="50%" r="65%">
+              <stop offset="0%" stopColor="rgba(255,158,61,0.08)" />
+              <stop offset="45%" stopColor="rgba(42,48,86,0.4)" />
+              <stop offset="100%" stopColor="rgba(8,12,26,0)" />
+            </radialGradient>
+            <filter id="warroom-star-glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Galactic haze backdrop */}
+          <rect x="0" y="0" width={STARFIELD_VIEWBOX} height={STARFIELD_VIEWBOX} fill="url(#warroom-galaxy-bg)" />
+
+          {/* Ambient twinkles */}
+          {ambient.map((s, i) => (
+            <circle key={`a${i}`} cx={s.x} cy={s.y} r={s.r} fill="white" opacity={s.o} />
+          ))}
+
+          {/* Faint sector grid */}
+          {Array.from({ length: 7 }).map((_, i) => {
+            const t = margin + (i / 6) * span;
+            return (
+              <g key={`grid${i}`} stroke="rgba(255,255,255,0.04)" strokeWidth="0.5">
+                <line x1={t} y1={margin} x2={t} y2={STARFIELD_VIEWBOX - margin} />
+                <line x1={margin} y1={t} x2={STARFIELD_VIEWBOX - margin} y2={t} />
+              </g>
+            );
+          })}
+
+          {/* Stars — dim layer (non-matching) */}
+          {stars.filter((n) => !(matchesFilter(n) && matchesSearch(n))).map((n) => (
+            <circle
+              key={n.id}
+              cx={pos(n.x)}
+              cy={pos(n.y)}
+              r={1.5}
+              fill="white"
+              opacity={0.18}
+              className="warroom-star warroom-star--dim"
+            />
+          ))}
+
+          {/* Stars — active layer (matching) */}
+          {stars.filter((n) => matchesFilter(n) && matchesSearch(n)).map((n) => {
+            const selected = selectedId === n.id;
+            const baseSize =
+              n.relationship === 'mine' || n.relationship === 'faction' ? 3.2 :
+              n.relationship === 'enemy' ? 3.5 :
+              2.4;
+            const r = selected ? baseSize + 2 : baseSize;
+            return (
+              <g
+                key={n.id}
+                className={`warroom-star-group warroom-star-group--${n.relationship} ${selected ? 'is-selected' : ''}`}
+                transform={`translate(${pos(n.x)} ${pos(n.y)})`}
+                onMouseEnter={() => setHovered(n)}
+                onMouseLeave={() => setHovered((h) => (h?.id === n.id ? null : h))}
+                onClick={() => onSelect(n)}
+                tabIndex={0}
+                role="button"
+                aria-label={`${n.name} at ${n.x},${n.y}`}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onSelect(n);
+                  }
+                }}
+              >
+                {selected && (
+                  <circle r={r + 5} fill="none" stroke="var(--accent)" strokeWidth="1.5" opacity={0.9} className="warroom-star-selected-ring" />
+                )}
+                <circle r={r + 3} fill="currentColor" opacity={0.18} filter="url(#warroom-star-glow)" />
+                <circle r={r} fill="currentColor" />
+              </g>
+            );
+          })}
+
+          {/* Hover tooltip */}
+          {hovered && (
+            <g transform={`translate(${pos(hovered.x)} ${pos(hovered.y)})`} pointerEvents="none">
+              <rect
+                x={10}
+                y={-30}
+                width={Math.max(140, hovered.name.length * 7 + 30)}
+                height={48}
+                rx={5}
+                fill="rgba(8,12,26,0.92)"
+                stroke="rgba(255,158,61,0.4)"
+                strokeWidth="1"
+              />
+              <text x={20} y={-12} fill="var(--text-strong)" fontSize="12" fontWeight="700">
+                {hovered.name}
+              </text>
+              <text x={20} y={4} fill="var(--text-muted)" fontSize="10">
+                {hovered.ownerName ?? 'unclaimed'} · {hovered.points.toLocaleString()} pts
+              </text>
+            </g>
+          )}
+        </svg>
+      )}
     </div>
   );
 }
