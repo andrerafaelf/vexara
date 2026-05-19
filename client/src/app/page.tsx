@@ -17,9 +17,11 @@ export default function Home() {
   // Read localStorage synchronously on mount so the fast-path redirect fires before any render.
   const [isAuthed] = useState(() => typeof window !== 'undefined' && !!localStorage.getItem('token'));
   const [hasStoredNexus] = useState(() => typeof window !== 'undefined' && !!localStorage.getItem(SELECTED_NEXUS_KEY));
-  const { nexuses, isLoading, isFetching } = useMyNexuses();
-  // Home page is "ready" once we know whether to redirect or show the create UI
-  const homeReady = !isLoading && !isFetching && !hasStoredNexus && nexuses.length === 0;
+  const { nexuses, isLoading, isFetching, hasResolved } = useMyNexuses();
+  // Home page is "ready" once we know whether to redirect or show the create UI.
+  // Require a successful server response (not just idle) before showing the create-nexus UI,
+  // so an F5 with no cache doesn't briefly render it before the redirect fires.
+  const homeReady = hasResolved && !hasStoredNexus && nexuses.length === 0;
   usePageReady(homeReady || hasStoredNexus, 'home');
   const [creating, setCreating] = useState(false);
   const [activeGalaxy, setActiveGalaxy] = useState<Galaxy | null>(null);
@@ -76,8 +78,10 @@ export default function Home() {
     }
   };
 
-  // While we're determining where to go, render nothing (no "Loading..." text)
-  if (!isAuthed || isLoading || isFetching || nexuses.length > 0 || hasStoredNexus) {
+  // While we're determining where to go, render nothing (no "Loading..." text).
+  // !hasResolved keeps the page blank during the F5 race window where the query is briefly
+  // idle with no data, before redirecting or showing the create UI.
+  if (!isAuthed || !hasResolved || isLoading || isFetching || nexuses.length > 0 || hasStoredNexus) {
     return null;
   }
 

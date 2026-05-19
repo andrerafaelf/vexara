@@ -14,7 +14,7 @@ function getStoredNexusId(): string | null {
 
 export function useMyNexuses() {
   const qc = useQueryClient();
-  const { data, isLoading, isFetching, refetch } = useQuery({
+  const { data, isLoading, isFetching, isSuccess, refetch } = useQuery({
     queryKey: MY_NEXUSES_KEY,
     queryFn: () => getMyNexuses().then((r) => r.data as Nexus[]),
     staleTime: 20 * 1000,
@@ -36,7 +36,20 @@ export function useMyNexuses() {
     return nexuses.find((n) => String(n._id) === storedId) ?? nexuses[0];
   }, [nexuses]);
 
-  return { nexuses, selectedNexus, isLoading: isLoading && nexuses.length === 0, isFetching, refetch };
+  // hasResolved = "the server has actually answered at least once". We need this distinct from
+  // !isLoading because on a cold F5 the query is briefly in a quiet idle state with no data,
+  // and any gate of the form `!isLoading && nexuses.length === 0` would flash an empty/eliminated
+  // UI for a frame before the request resolves.
+  const hasResolved = isSuccess && !isFetching;
+
+  return {
+    nexuses,
+    selectedNexus,
+    isLoading: isLoading && nexuses.length === 0,
+    isFetching,
+    hasResolved,
+    refetch,
+  };
 }
 
 export function useInvalidateNexuses() {

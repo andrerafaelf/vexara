@@ -368,4 +368,4 @@ const GroupManagerModal: React.FC<GroupManagerModalProps> = ({
   );
 };
 
-export default MobileNexusDrawer;
+export default React.memo(MobileNexusDrawer);

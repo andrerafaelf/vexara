@@ -409,4 +409,8 @@ const GroupManagerModal: React.FC<GroupManagerModalProps> = ({
   );
 };
 
-export default NexusSidebar;
+// NexusSidebar re-rendering is a hot path: GameLayout subscribes to React Query polling
+// (myNexuses, unreadReports, dominance) and would push fresh props through every 30s tick.
+// Memoizing here means the list of nexus rows only re-renders when something it actually
+// displays has changed.
+export default React.memo(NexusSidebar);

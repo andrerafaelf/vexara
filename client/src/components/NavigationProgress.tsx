@@ -26,14 +26,21 @@ export default function NavigationProgress({ children }: { children?: React.Reac
   const searchParams = useSearchParams();
   const [progress, setProgress] = useState(0);
   const [visible, setVisible] = useState(false);
+  // Start with content visible. The previous default of true caused a one-shot opacity 0→1
+  // fade on the very first hydration of every page, even when the data was already cached
+  // and there was nothing to wait for. We only set this to false for *subsequent* pathname
+  // changes (see the route-change effect below).
   const [contentReady, setContentReady] = useState(true);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const fadeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const waitersRef = useRef<Set<string>>(new Set());
-  const routeKey = `${pathname}?${searchParams}`;
+  // Serialize searchParams properly — the previous template-string form coerced the
+  // ReadonlyURLSearchParams to "[object Object]" and never actually compared the params.
+  const routeKey = `${pathname}?${searchParams?.toString() ?? ''}`;
   const prevRouteRef = useRef(routeKey);
   const prevPathnameRef = useRef(pathname);
   const routeCommittedRef = useRef(true);
+  const isFirstRouteEffectRef = useRef(true);
 
   const clearTimers = () => {
     if (tickRef.current) { clearInterval(tickRef.current); tickRef.current = null; }
@@ -81,7 +88,15 @@ export default function NavigationProgress({ children }: { children?: React.Reac
   // Route change: bar runs until route is committed AND waiters drain.
   // Only blank the page (contentReady=false) on actual pathname changes — not query-param-only
   // changes like tab switches, which don't unmount/remount the page component.
+  //
+  // Skip on the very first run: that's the initial mount, where the routeKey "changes" only
+  // because the ref was seeded with the same value. Triggering the route-change machinery there
+  // produces a needless opacity 0→1 fade on every cold page load.
   useEffect(() => {
+    if (isFirstRouteEffectRef.current) {
+      isFirstRouteEffectRef.current = false;
+      return;
+    }
     if (routeKey === prevRouteRef.current) return;
     const pathnameChanged = pathname !== prevPathnameRef.current;
     prevRouteRef.current = routeKey;

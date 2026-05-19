@@ -34,7 +34,16 @@ import {
 } from 'lucide-react';
 import '../styles/NexusView.css';
 import { Nexus, TroopTransfer } from '../types/game';
-import StarfieldMap, { MapNexus } from './Map';
+import dynamic from 'next/dynamic';
+import type { MapNexus } from './Map';
+
+// StarfieldMap is ~1300 LOC + heavy assets and websocket-bound effects. It's only used inside
+// the Map and Espionage tabs, which aren't visible on first paint. Pulling it out of the
+// initial bundle keeps /nexus/[id] fast on cold load and on every other tab.
+const StarfieldMap = dynamic(() => import('./Map'), {
+  ssr: false,
+  loading: () => null,
+});
 import NexusMap from './NexusMap';
 import NexusTypeBadge from './NexusTypeBadge';
 import ResourceIcon from './ResourceIcon';
@@ -513,11 +522,30 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   };
 
   useEffect(() => {
-    // Update current time every second for real-time countdown
-    const timeInterval = setInterval(() => {
+    // Tick `currentTime` once per second to drive countdowns and live resource math.
+    // Pause the tick when the document is hidden so backgrounded PWA/tabs don't burn CPU
+    // re-rendering a tree the user can't see. We immediately catch up on visibilitychange.
+    let timeInterval: ReturnType<typeof setInterval> | null = null;
+    const start = () => {
+      if (timeInterval) return;
       setCurrentTime(new Date());
-    }, 1000);
-    return () => clearInterval(timeInterval);
+      timeInterval = setInterval(() => setCurrentTime(new Date()), 1000);
+    };
+    const stop = () => {
+      if (!timeInterval) return;
+      clearInterval(timeInterval);
+      timeInterval = null;
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') start();
+      else stop();
+    };
+    if (document.visibilityState === 'visible') start();
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      stop();
+    };
   }, []);
 
   useEffect(() => {
@@ -2662,10 +2690,26 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
   const dispatchRef = useRef<HTMLDivElement | null>(null);
   const targetBarRef = useRef<HTMLDivElement | null>(null);
 
-  // Tick for countdowns
+  // Tick for countdowns — pause while the document is hidden.
   useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
+    let t: ReturnType<typeof setInterval> | null = null;
+    const start = () => {
+      if (t) return;
+      setNow(Date.now());
+      t = setInterval(() => setNow(Date.now()), 1000);
+    };
+    const stop = () => {
+      if (!t) return;
+      clearInterval(t);
+      t = null;
+    };
+    const onVis = () => (document.visibilityState === 'visible' ? start() : stop());
+    if (document.visibilityState === 'visible') start();
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      document.removeEventListener('visibilitychange', onVis);
+      stop();
+    };
   }, []);
 
   // When a spy target is selected, scroll the dispatch section into view.

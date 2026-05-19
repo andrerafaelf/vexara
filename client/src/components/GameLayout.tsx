@@ -11,7 +11,7 @@ import '@/styles/Game.css';
 import { Nexus } from '@/types/game';
 import { Building2, Menu } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 type ActivePage = 'dashboard' | 'starfield' | 'market' | 'combat-logs' | 'allies' | 'factions' | 'profile';
 
@@ -59,20 +59,31 @@ export default function GameLayout({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nexuses.length, hookSelectedNexus?._id]);
 
-  const handleSelectNexus = (nexus: Nexus) => {
-    localStorage.setItem('selectedNexusId', String(nexus._id));
-    setIsMobileMenuOpen(false);
-    if (onSelectNexus) {
-      onSelectNexus(nexus);
-    } else {
-      router.push(`/nexus/${nexus._id}`);
-    }
-  };
+  const handleSelectNexus = useCallback(
+    (nexus: Nexus) => {
+      localStorage.setItem('selectedNexusId', String(nexus._id));
+      setIsMobileMenuOpen(false);
+      if (onSelectNexus) {
+        onSelectNexus(nexus);
+      } else {
+        router.push(`/nexus/${nexus._id}`);
+      }
+    },
+    [onSelectNexus, router],
+  );
 
-  const nav = (href: string) => () => {
-    setIsMobileMenuOpen(false);
-    router.push(href);
-  };
+  // Stable per-href click handler factory so nav buttons don't get new function identities every
+  // render. (Buttons themselves don't memoize, but if we move to memoized nav components later
+  // this is the right shape.)
+  const nav = useCallback(
+    (href: string) => () => {
+      setIsMobileMenuOpen(false);
+      router.push(href);
+    },
+    [router],
+  );
+
+  const closeNexusDrawer = useCallback(() => setIsNexusDrawerOpen(false), []);
 
   const is = (page: ActivePage) => activePage === page;
 
@@ -146,7 +157,7 @@ export default function GameLayout({
         selectedNexusId={resolvedSelectedId}
         onSelectNexus={handleSelectNexus}
         isOpen={isNexusDrawerOpen}
-        onClose={() => setIsNexusDrawerOpen(false)}
+        onClose={closeNexusDrawer}
         unreadNexusIds={unreadNexusIds}
       />
 
