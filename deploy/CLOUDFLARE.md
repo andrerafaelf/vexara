@@ -88,6 +88,8 @@ Not needed — Next.js already outputs minified JS/CSS at build time.
 
 Go to **Network**:
 
+- ✅ **WebSockets** — **must be enabled** or Cloudflare will drop Socket.IO connections
+  (the game's real-time push events won't work without this)
 - ✅ **HTTP/2 to Origin** — keeps persistent connections from Cloudflare to nginx
   (nginx keepalive is already configured for this)
 
