@@ -38,7 +38,7 @@ export default function NexusPage() {
   const activeTab = parseTab(searchParams.get('tab'));
 
   const qc = useQueryClient();
-  const { nexuses, isLoading: nexusesLoading, refetch: refetchNexuses } = useMyNexuses();
+  const { nexuses, isLoading: nexusesLoading, isFetching: nexusesFetching, refetch: refetchNexuses } = useMyNexuses();
 
   const { data: selectedNexusData, refetch: refetchSelectedNexus } = useQuery({
     queryKey: ['nexus', nexusId],
@@ -140,7 +140,7 @@ export default function NexusPage() {
     }
   };
 
-  const isEliminated = !nexusesLoading && nexuses.length === 0;
+  const isEliminated = !nexusesLoading && !nexusesFetching && nexuses.length === 0;
 
   return (
     <>

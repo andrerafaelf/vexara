@@ -14,7 +14,7 @@ function getStoredNexusId(): string | null {
 
 export function useMyNexuses() {
   const qc = useQueryClient();
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: MY_NEXUSES_KEY,
     queryFn: () => getMyNexuses().then((r) => r.data as Nexus[]),
     staleTime: 20 * 1000,
@@ -36,7 +36,7 @@ export function useMyNexuses() {
     return nexuses.find((n) => String(n._id) === storedId) ?? nexuses[0];
   }, [nexuses]);
 
-  return { nexuses, selectedNexus, isLoading: isLoading && nexuses.length === 0, refetch };
+  return { nexuses, selectedNexus, isLoading: isLoading && nexuses.length === 0, isFetching, refetch };
 }
 
 export function useInvalidateNexuses() {

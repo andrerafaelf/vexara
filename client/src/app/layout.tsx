@@ -2,6 +2,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { ToastProvider } from '@/context/ToastContext';
 import QueryProvider from '@/context/QueryProvider';
 import ScrollToTop from '@/components/ScrollToTop';
+import NavigationProgress from '@/components/NavigationProgress';
 import type { Metadata, Viewport } from 'next';
 import { Suspense } from 'react';
 import './globals.css';
@@ -42,6 +43,7 @@ export default function RootLayout({
             <ToastProvider>
               <Suspense fallback={null}>
                 <ScrollToTop />
+                <NavigationProgress />
               </Suspense>
               {children}
             </ToastProvider>
