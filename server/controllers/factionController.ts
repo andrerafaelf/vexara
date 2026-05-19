@@ -1,5 +1,6 @@
 import type { Response } from 'express';
 import prisma from '../lib/prisma.js';
+import { notifyFactionChat } from '../services/warRoomSocket.js';
 import type { AuthRequest } from '../types/index.js';
 
 const FACTION_NAME_MIN = 3;
@@ -1125,6 +1126,7 @@ export async function sendChatMessage(req: AuthRequest, res: Response): Promise<
       },
     });
 
+    notifyFactionChat(factionId, message);
     res.status(201).json(message);
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });

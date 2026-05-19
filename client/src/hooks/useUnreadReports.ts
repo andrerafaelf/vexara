@@ -2,17 +2,23 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getUnreadNexusIds } from '@/services/api';
+import { useGameSocket } from './useGameSocket';
+
+const UNREAD_NEXUS_IDS_KEY = ['unreadNexusIds'] as const;
 
 export function useUnreadReports() {
   const queryClient = useQueryClient();
 
+  // useGameSocket already invalidates ['unreadNexusIds'] on 'reports:refresh' events.
+  useGameSocket();
+
   const { data = [] } = useQuery<string[]>({
-    queryKey: ['unreadNexusIds'],
+    queryKey: UNREAD_NEXUS_IDS_KEY,
     queryFn: () => getUnreadNexusIds().then((r) => (Array.isArray(r.data) ? r.data : [])),
-    refetchInterval: 60000,
+    staleTime: 60_000,
   });
 
-  const refresh = () => queryClient.invalidateQueries({ queryKey: ['unreadNexusIds'] });
+  const refresh = () => queryClient.invalidateQueries({ queryKey: UNREAD_NEXUS_IDS_KEY });
 
   return {
     hasUnreadReports: data.length > 0,

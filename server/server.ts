@@ -7,7 +7,7 @@ import { createServer } from 'http';
 import rateLimit from 'express-rate-limit';
 import jwt from 'jsonwebtoken';
 import prisma from './lib/prisma.js';
-import { initWarRoomSocket } from './services/warRoomSocket.js';
+import { initWarRoomSocket, initGameSocket } from './services/warRoomSocket.js';
 import { processCompletedQueuesAndNotify, recoverControlLevels, updateAllResources } from './models/Nexus.js';
 import attackRoutes from './routes/attack.js';
 import authRoutes from './routes/auth.js';
@@ -192,6 +192,21 @@ process.on('uncaughtException', (error) => {
 
 const PORT = process.env.PORT || 3001;
 const httpServer = createServer(app);
+// initGameSocket must be called before initWarRoomSocket so the shared io instance is created first.
+initGameSocket(httpServer, {
+  cors: {
+    origin(origin, callback) {
+      if (!origin) return callback(null, true);
+      const normalizedOrigin = normalizeOriginValue(origin);
+      const normalizedAllowed = allowedCorsOrigins.map((v) => normalizeOriginValue(v));
+      if (allowedCorsOrigins.length === 0 && process.env.NODE_ENV !== 'production') return callback(null, true);
+      if (normalizedAllowed.includes(normalizedOrigin)) return callback(null, true);
+      if (allowedCorsOrigins.some((rule) => matchesCorsOrigin(normalizedOrigin, rule))) return callback(null, true);
+      return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+  },
+});
 initWarRoomSocket(httpServer, {
   cors: {
     origin(origin, callback) {

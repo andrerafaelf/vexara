@@ -429,12 +429,10 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   const { data: incomingAttacks = [] } = useQuery({
     queryKey: ['incomingAttacks', nexus._id],
     queryFn: () => getIncomingAttacks(nexus._id).then((r) => r.data),
-    refetchInterval: 15000,
   });
   const { data: outgoingAttacks = [] } = useQuery({
     queryKey: ['outgoingAttacks', nexus._id],
     queryFn: () => getOutgoingAttacks(nexus._id).then((r) => r.data),
-    refetchInterval: 15000,
   });
   const { data: ownNexusesData = [] } = useQuery({
     queryKey: ['myNexuses'],
@@ -443,7 +441,6 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   const { data: troopTransfersData = [], refetch: refetchTransfers } = useQuery({
     queryKey: ['troopTransfers', nexus._id],
     queryFn: () => getNexusTroopTransfers(nexus._id).then((r) => r.data),
-    refetchInterval: 15000,
   });
   const [selectedAttack, setSelectedAttack] = useState<any | null>(null);
   const [infoModal, setInfoModal] = useState<InfoModalState | null>(null);

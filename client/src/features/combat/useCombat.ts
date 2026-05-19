@@ -27,7 +27,6 @@ export function useIncomingAttacks(nexusId: string) {
   return useQuery({
     queryKey: combatKeys.incoming(nexusId),
     queryFn: () => getIncomingAttacks(nexusId).then((r) => r.data),
-    refetchInterval: 10_000,
     enabled: !!nexusId,
   });
 }
@@ -36,7 +35,6 @@ export function useOutgoingAttacks(nexusId: string) {
   return useQuery({
     queryKey: combatKeys.outgoing(nexusId),
     queryFn: () => getOutgoingAttacks(nexusId).then((r) => r.data),
-    refetchInterval: 10_000,
     enabled: !!nexusId,
   });
 }
@@ -135,7 +133,6 @@ export function useNexusTroopTransfers(nexusId: string) {
   return useQuery({
     queryKey: combatKeys.transfers(nexusId),
     queryFn: () => getNexusTroopTransfers(nexusId).then((r) => r.data),
-    refetchInterval: 15_000,
     enabled: !!nexusId,
   });
 }

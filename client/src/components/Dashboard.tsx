@@ -1,6 +1,7 @@
 import { Check, Users } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { getOutgoingAttacks } from '../services/api';
+import { useGameSocket } from '../hooks/useGameSocket';
 import '../styles/Dashboard.css';
 import { Nexus, NexusGroup } from '../types/game';
 import NexusMap from './NexusMap';
@@ -111,13 +112,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
     return () => clearInterval(timeInterval);
   }, []);
 
-  useEffect(() => {
-    loadOutgoingAttacks();
-    const interval = setInterval(loadOutgoingAttacks, 20000);
-    return () => clearInterval(interval);
-  }, [nexuses]);
-
-  const loadOutgoingAttacks = async () => {
+  const loadOutgoingAttacks = useCallback(async () => {
     try {
       const allAttacks = await Promise.all(nexuses.map((v) => getOutgoingAttacks(v._id)));
       const attacks = allAttacks.flatMap((response) => response.data);
@@ -125,7 +120,13 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
     } catch (err) {
       console.error('Error loading outgoing attacks:', err);
     }
-  };
+  }, [nexuses]);
+
+  useEffect(() => {
+    loadOutgoingAttacks();
+  }, [loadOutgoingAttacks]);
+
+  useGameSocket({ onAttacksRefresh: () => loadOutgoingAttacks() });
   const totalPoints = nexuses.reduce((sum, v) => sum + v.points, 0);
 
   const totalTroops = nexuses.reduce(

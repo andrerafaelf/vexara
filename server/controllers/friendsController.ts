@@ -1,6 +1,7 @@
 import type { Response } from 'express';
 import * as chatService from '../services/chatService.js';
 import * as friendsService from '../services/friendsService.js';
+import { notifyBadgeUpdate } from '../services/warRoomSocket.js';
 import type { AuthRequest } from '../types/index.js';
 
 function serializeFriend(user: { id: number; username: string }, friendshipCreatedAt: Date, points: number | undefined) {
@@ -36,11 +37,15 @@ export async function sendFriendRequest(req: AuthRequest, res: Response): Promis
     const reverse = await friendsService.getPendingRequestBetween(target.id, req.userId);
     if (reverse) {
       await friendsService.autoAcceptRequest(reverse.id, userAId, userBId);
+      notifyBadgeUpdate(target.id);
+      notifyBadgeUpdate(req.userId);
       res.json({ success: true, autoAccepted: true }); return;
     }
     const mine = await friendsService.getPendingRequestBetween(req.userId, target.id);
     if (mine) { res.status(400).json({ error: 'Friend request already pending' }); return; }
     await friendsService.createFriendRequest(req.userId, target.id);
+    // Notify the target that they have a new incoming friend request.
+    notifyBadgeUpdate(target.id);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
@@ -80,6 +85,9 @@ export async function acceptRequest(req: AuthRequest, res: Response): Promise<vo
     if (reqRow.status !== 'pending') { res.status(400).json({ error: 'Request is not pending' }); return; }
     const { userAId, userBId } = friendsService.pairKey(reqRow.senderId, reqRow.receiverId);
     await friendsService.acceptRequest(id, userAId, userBId);
+    // Both users' badge counts change when a request is accepted.
+    notifyBadgeUpdate(reqRow.senderId);
+    notifyBadgeUpdate(reqRow.receiverId);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });

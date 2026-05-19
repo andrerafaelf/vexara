@@ -1,7 +1,8 @@
 import { AlertTriangle, Building, Home, Info, Shield, Sparkles, Star, Swords, Waves, Zap } from 'lucide-react';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { useGameSocket } from '../hooks/useGameSocket';
 import WavePlanner from './WavePlanner';
 import {
   getGalaxyEvents,
@@ -247,10 +248,9 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
 
   useEffect(() => {
     loadAttacks();
-    const interval = setInterval(loadAttacks, 15000);
-    return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentNexus._id]);
+  }, [loadAttacks]);
+
+  useGameSocket({ onAttacksRefresh: () => loadAttacks() });
 
   // Pre-select current nexus on mount
   useEffect(() => {
@@ -386,7 +386,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
     }
   };
 
-  const loadAttacks = async () => {
+  const loadAttacks = useCallback(async () => {
     try {
       const [incoming, outgoing] = await Promise.all([
         getIncomingAttacks(currentNexus._id),
@@ -397,7 +397,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
     } catch (err) {
       console.error('Error loading attacks:', err);
     }
-  };
+  }, [currentNexus._id]);
 
   useEffect(() => {
     getMyNexuses().then((r) => setOwnNexuses(r.data)).catch(() => {});

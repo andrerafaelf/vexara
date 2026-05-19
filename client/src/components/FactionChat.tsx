@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { getFactionChat, sendFactionMessage } from '../services/api';
+import { useGameSocket } from '../hooks/useGameSocket';
 
 interface ChatMessage {
   id: number;
@@ -14,8 +15,6 @@ interface Props {
   factionId: number;
   currentUserId?: number;
 }
-
-const POLL_INTERVAL = 8000;
 
 export default function FactionChat({ factionId, currentUserId }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -53,33 +52,21 @@ export default function FactionChat({ factionId, currentUserId }: Props) {
     }
   }, [messages]);
 
-  // poll for new messages
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      if (latestIdRef.current === 0) return;
-      try {
-        const res = await getFactionChat(factionId);
-        const data: ChatMessage[] = res.data;
-        if (data.length > 0 && data[data.length - 1].id > latestIdRef.current) {
-          const newOnes = data.filter((m) => m.id > latestIdRef.current);
-          latestIdRef.current = data[data.length - 1].id;
-          setMessages((prev) => {
-            const existingIds = new Set(prev.map((m) => m.id));
-            return [...prev, ...newOnes.filter((m) => !existingIds.has(m.id))];
-          });
-          // scroll to bottom if user is near bottom
-          const list = listRef.current;
-          if (list) {
-            const nearBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 120;
-            if (nearBottom) setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
-          }
-        }
-      } catch {
-        // silently ignore poll errors
-      }
-    }, POLL_INTERVAL);
-    return () => clearInterval(interval);
-  }, [factionId]);
+  const appendMessage = useCallback((msg: ChatMessage) => {
+    setMessages((prev) => {
+      if (prev.some((m) => m.id === msg.id)) return prev;
+      const next = [...prev, msg];
+      if (msg.id > latestIdRef.current) latestIdRef.current = msg.id;
+      return next;
+    });
+    const list = listRef.current;
+    if (list) {
+      const nearBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 120;
+      if (nearBottom) setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+    }
+  }, []);
+
+  useGameSocket({ onFactionChat: appendMessage });
 
   const loadOlder = async () => {
     if (!hasOlder || loadingOlder || messages.length === 0) return;

@@ -10,6 +10,7 @@ import {
 import { buildDetailedScoutIntel } from './scouting.js';
 import { NOTIF, sendPushToUser } from './push.js';
 import { resolveEventForNexus } from './galaxyEvents.js';
+import { notifyAttackUpdate, notifyTransferUpdate, notifyReportUpdate } from '../services/warRoomSocket.js';
 import type { TroopKey } from '../types/index.js';
 
 async function logFactionEvent(userId: number, galaxyId: number, type: string, actorName?: string, targetName?: string, meta?: string) {
@@ -430,6 +431,11 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
       });
     }
 
+    // Socket push: tell both players to refresh their attack lists and reports.
+    notifyAttackUpdate(attack.attackerUserId, attack.defenderUserId, attack.defenderNexusId!);
+    notifyReportUpdate(attack.attackerUserId!);
+    if (attack.defenderUserId) notifyReportUpdate(attack.defenderUserId);
+
     console.log(`Combat resolved: Attack ${attack.id} - ${attackerWins ? 'Attacker' : 'Defender'} wins${conquered ? ' - NEXUS CONQUERED!' : ''}`);
   } catch (err) {
     console.error('Error resolving combat:', err);
@@ -472,6 +478,9 @@ async function processReturnedTroops(attack: Attack): Promise<void> {
         : '💔 Your troops have returned (no survivors). Combat report ready.',
       tag: `returned-${attack.id}`, data: { url: '/combat-logs' },
     });
+
+    // Socket push: attacker sees their outgoing attack disappear and nexus resources update.
+    notifyAttackUpdate(attack.attackerUserId, null, attack.attackerNexusId!);
   } catch (err) {
     console.error(`Error processing returned troops for attack ${attack.id}:`, err);
   }
@@ -513,6 +522,7 @@ export async function processArrivedTransfers(): Promise<void> {
           body: `📦 ${total} troop${total !== 1 ? 's' : ''} arrived at ${transfer.hostNexus.name}.`,
           tag: `transfer-arrived-${transfer.id}`, data: { url: '/' },
         });
+        notifyTransferUpdate(ownerId, transfer.ownerNexusId);
       }
     } catch (err) {
       console.error(`Error processing arriving transfer ${transfer.id}:`, err);
@@ -544,6 +554,7 @@ export async function processArrivedTransfers(): Promise<void> {
           body: `🪖 ${total} troop${total !== 1 ? 's' : ''} returned to ${transfer.ownerNexus.name}.`,
           tag: `transfer-returned-${transfer.id}`, data: { url: '/' },
         });
+        notifyTransferUpdate(ownerId, transfer.ownerNexusId);
       }
     } catch (err) {
       console.error(`Error processing returning transfer ${transfer.id}:`, err);

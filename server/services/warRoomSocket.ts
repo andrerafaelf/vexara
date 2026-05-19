@@ -5,6 +5,117 @@ import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma.js';
 import { logInfo, logWarn } from '../utils/logger.js';
 
+// ────────────────────────────────────────────────────────────────────────────
+// Shared Socket.IO server instance — created once, reused by all namespaces.
+// ────────────────────────────────────────────────────────────────────────────
+
+let _io: SocketIOServer | null = null;
+
+function getOrCreateIo(httpServer: HttpServer, opts: { cors: CorsOptions }): SocketIOServer {
+  if (_io) return _io;
+  _io = new SocketIOServer(httpServer, {
+    cors: opts.cors as Record<string, unknown>,
+    path: '/ws',
+    serveClient: false,
+    pingInterval: 25_000,
+    pingTimeout: 20_000,
+  });
+  return _io;
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// /game namespace — per-user and per-faction push events
+// ────────────────────────────────────────────────────────────────────────────
+
+export function initGameSocket(httpServer: HttpServer, opts: { cors: CorsOptions }) {
+  const io = getOrCreateIo(httpServer, opts);
+  const ns = io.of('/game');
+
+  ns.use(async (socket, next) => {
+    try {
+      const token = (socket.handshake.auth?.token as string | undefined) ?? '';
+      if (!token) return next(new Error('no_token'));
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.userId },
+        select: { id: true, activeGalaxyId: true },
+      });
+      if (!user) return next(new Error('no_user'));
+
+      (socket.data as Record<string, unknown>).userId = user.id;
+
+      // Resolve faction membership so we can join the faction room for chat pushes.
+      if (user.activeGalaxyId) {
+        const member = await prisma.factionMember.findUnique({
+          where: { userId_galaxyId: { userId: user.id, galaxyId: user.activeGalaxyId } },
+          select: { factionId: true },
+        });
+        if (member) (socket.data as Record<string, unknown>).factionId = member.factionId;
+      }
+
+      next();
+    } catch (err) {
+      next(err as Error);
+    }
+  });
+
+  ns.on('connection', (socket) => {
+    const userId = socket.data.userId as number;
+    socket.join(`user:${userId}`);
+
+    const factionId = socket.data.factionId as number | undefined;
+    if (factionId) socket.join(`faction:${factionId}`);
+
+    logInfo('game_socket_connect', { userId, factionId });
+    socket.on('disconnect', () => logInfo('game_socket_disconnect', { userId }));
+  });
+
+  return ns;
+}
+
+// ── Public push helpers — called by server-side jobs and controllers ──────────
+
+function emitToUser(userId: number, event: string, payload: unknown) {
+  if (!_io) return;
+  _io.of('/game').to(`user:${userId}`).emit(event, payload);
+}
+
+function emitToFaction(factionId: number, event: string, payload: unknown) {
+  if (!_io) return;
+  _io.of('/game').to(`faction:${factionId}`).emit(event, payload);
+}
+
+/** Tell affected users to refresh their incoming/outgoing attack lists. */
+export function notifyAttackUpdate(attackerUserId: number | null, defenderUserId: number | null, nexusId: number) {
+  const payload = { nexusId, at: Date.now() };
+  if (attackerUserId) emitToUser(attackerUserId, 'attacks:refresh', payload);
+  if (defenderUserId) emitToUser(defenderUserId, 'attacks:refresh', payload);
+}
+
+/** Tell a user to refresh their troop transfer list. */
+export function notifyTransferUpdate(ownerUserId: number, nexusId: number) {
+  emitToUser(ownerUserId, 'transfers:refresh', { nexusId, at: Date.now() });
+}
+
+/** Push a new faction chat message to all online faction members. */
+export function notifyFactionChat(factionId: number, message: unknown) {
+  emitToFaction(factionId, 'faction:chat', { message, at: Date.now() });
+}
+
+/** Tell a user their badge counts may have changed (friend requests / DMs). */
+export function notifyBadgeUpdate(userId: number) {
+  emitToUser(userId, 'badges:refresh', { at: Date.now() });
+}
+
+/** Tell a user they have a new unread combat report. */
+export function notifyReportUpdate(userId: number) {
+  emitToUser(userId, 'reports:refresh', { at: Date.now() });
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// /warroom namespace — faction war room collaboration (presence, cursors, ops)
+// ────────────────────────────────────────────────────────────────────────────
+
 interface PresenceEntry {
   userId: number;
   username: string;
@@ -15,20 +126,10 @@ interface PresenceEntry {
   focusOpId?: number | null;
 }
 
-// Faction id -> map of socketId -> presence
 const presenceByFaction = new Map<number, Map<string, PresenceEntry>>();
 
-let ioRef: SocketIOServer | null = null;
-
 export function initWarRoomSocket(httpServer: HttpServer, opts: { cors: CorsOptions }) {
-  const io = new SocketIOServer(httpServer, {
-    cors: opts.cors as Record<string, unknown>,
-    path: '/ws',
-    serveClient: false,
-    pingInterval: 25_000,
-    pingTimeout: 20_000,
-  });
-  ioRef = io;
+  const io = getOrCreateIo(httpServer, opts);
 
   const ns = io.of('/warroom');
 
@@ -161,7 +262,7 @@ export function initWarRoomSocket(httpServer: HttpServer, opts: { cors: CorsOpti
 }
 
 function emitPresence(factionId: number) {
-  if (!ioRef) return;
+  if (!_io) return;
   const bucket = presenceByFaction.get(factionId);
   const peers = bucket
     ? Array.from(bucket.values()).map((e) => ({
@@ -178,7 +279,7 @@ function emitPresence(factionId: number) {
     seen.add(p.userId);
     return true;
   });
-  ioRef.of('/warroom').to(`faction:${factionId}`).emit('presence:update', {
+  _io.of('/warroom').to(`faction:${factionId}`).emit('presence:update', {
     peers: unique,
     count: unique.length,
   });
@@ -190,8 +291,8 @@ function emitPresence(factionId: number) {
 // ────────────────────────────────────────────────────────────────────────────
 
 export function broadcastOperationUpdate(factionId: number, operationId: number, change: string, actorUserId?: number) {
-  if (!ioRef) return;
-  ioRef.of('/warroom').to(`faction:${factionId}`).emit('op:update', {
+  if (!_io) return;
+  _io.of('/warroom').to(`faction:${factionId}`).emit('op:update', {
     operationId,
     change,
     actorUserId: actorUserId ?? null,
@@ -200,8 +301,8 @@ export function broadcastOperationUpdate(factionId: number, operationId: number,
 }
 
 export function broadcastOperationDeleted(factionId: number, operationId: number, actorUserId?: number) {
-  if (!ioRef) return;
-  ioRef.of('/warroom').to(`faction:${factionId}`).emit('op:deleted', {
+  if (!_io) return;
+  _io.of('/warroom').to(`faction:${factionId}`).emit('op:deleted', {
     operationId,
     actorUserId: actorUserId ?? null,
     at: Date.now(),
@@ -209,8 +310,8 @@ export function broadcastOperationDeleted(factionId: number, operationId: number
 }
 
 export function broadcastThreadMessage(factionId: number, operationId: number, message: unknown) {
-  if (!ioRef) return;
-  ioRef.of('/warroom').to(`faction:${factionId}`).emit('thread:message', {
+  if (!_io) return;
+  _io.of('/warroom').to(`faction:${factionId}`).emit('thread:message', {
     operationId,
     message,
     at: Date.now(),

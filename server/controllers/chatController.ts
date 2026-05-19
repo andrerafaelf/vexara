@@ -1,5 +1,6 @@
 import type { Response } from 'express';
 import * as chatService from '../services/chatService.js';
+import { notifyBadgeUpdate } from '../services/warRoomSocket.js';
 import type { AuthRequest } from '../types/index.js';
 
 const MAX_MESSAGE_LENGTH = 2000;
@@ -71,6 +72,7 @@ export async function sendMessage(req: AuthRequest, res: Response): Promise<void
     const friendship = await chatService.assertFriendship(req.userId, friendId);
     if (!friendship) { res.status(403).json({ error: 'Not friends' }); return; }
     const message = await chatService.createMessage(req.userId, friendId, content);
+    notifyBadgeUpdate(friendId);
     res.json(serializeMessage(message));
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
