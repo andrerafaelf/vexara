@@ -253,6 +253,33 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
       }
     }
 
+    // Building damage: if attacker wins and all defender troops are wiped, overflow attack damages buildings.
+    // shieldGrid is always hit first (it's the wall). Each "hit" reduces one building by 1 level.
+    const buildingDamageUpdates: Record<string, number> = {};
+    const totalDefenderTroopsInForce = TROOP_KEYS.filter((t) => t !== 'overseer').reduce((s, t) => s + (mergedDefenderForce[t] || 0), 0);
+    const totalDefenderTroopsLost = TROOP_KEYS.filter((t) => t !== 'overseer').reduce((s, t) => s + (defenderLosses[t] || 0), 0);
+    const buildingDamageLog: { building: string; from: number; to: number }[] = [];
+    if (attackerWins && (totalDefenderTroopsInForce === 0 || totalDefenderTroopsLost >= totalDefenderTroopsInForce)) {
+      // Number of building levels reduced is proportional to how dominant the attack was
+      const overflowRatio = Math.min(1, defensePower > 0 ? (attackPower - defensePower) / Math.max(1, attackPower) : 0.5);
+      const maxHits = Math.max(1, Math.floor(overflowRatio * 5)); // 1–5 levels total
+      const BUILDING_PRIORITY = [
+        'shieldGrid', 'commandCore', 'recruitmentCore', 'lifeSupport',
+        'storageVault', 'biomassFarm', 'alloyForge', 'oreExtractor', 'armory', 'stealthArray',
+      ] as const;
+      type BuildingKey = typeof BUILDING_PRIORITY[number];
+      let hitsRemaining = maxHits;
+      for (const building of BUILDING_PRIORITY) {
+        if (hitsRemaining <= 0) break;
+        const currentLevel = (defenderNexus as unknown as Record<BuildingKey, number>)[building] ?? 0;
+        if (currentLevel <= 0) continue;
+        const newLevel = Math.max(0, currentLevel - 1);
+        buildingDamageUpdates[building] = newLevel;
+        buildingDamageLog.push({ building, from: currentLevel, to: newLevel });
+        hitsRemaining--;
+      }
+    }
+
     let resourcesStolen = { biomass: 0, alloy: 0, ore: 0 };
     let conquered = false;
     const defenderResourceUpdates: Record<string, number> = {};
@@ -312,6 +339,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
       data: {
         ...defenderTroopUpdates,
         ...defenderResourceUpdates,
+        ...buildingDamageUpdates,
         populationCurrent: Math.max(0, defenderNexus.populationCurrent - defenderPopLost),
         controlLevel: conquered ? 0 : newControlLevel,
       },
@@ -353,7 +381,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
       where: { id: attack.id },
       data: {
         status: 'returning', returnsAt,
-        result: { attackerLosses, defenderLosses, resourcesStolen, survivingTroops, victory: attackerWins, conquered, remainingControl: newControlLevel, combatSeed: seed },
+        result: { attackerLosses, defenderLosses, resourcesStolen, survivingTroops, victory: attackerWins, conquered, remainingControl: newControlLevel, combatSeed: seed, buildingDamage: buildingDamageLog.length > 0 ? buildingDamageLog : undefined },
       },
     });
 

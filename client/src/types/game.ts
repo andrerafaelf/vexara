@@ -243,6 +243,7 @@ export interface Attack {
     remainingControl?: number;
     nexusLifeReduced?: boolean;
     remainingNexusLife?: number;
+    buildingDamage?: { building: string; from: number; to: number }[];
     mission?: 'scout';
     intel?: {
       resources: {

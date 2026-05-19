@@ -682,6 +682,96 @@
   filter: brightness(0.97);
 }
 
+.eliminated-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+.eliminated-card {
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0) 100%), var(--bg-surface);
+  border: 1px solid var(--border-default);
+  padding: 48px 40px;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+}
+
+.eliminated-icon {
+  font-size: 3rem;
+  margin-bottom: var(--space-4);
+}
+
+.eliminated-title {
+  color: var(--danger);
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: var(--space-3);
+}
+
+.eliminated-subtitle {
+  color: var(--text-muted);
+  font-size: var(--text-md);
+  line-height: 1.55;
+  margin-bottom: var(--space-6);
+}
+
+.eliminated-name-input {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  color: var(--text-strong);
+  font-size: var(--text-md);
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+
+.eliminated-name-input:focus {
+  border-color: var(--color-cyan-500);
+}
+
+.eliminated-create-btn {
+  background: linear-gradient(180deg, var(--color-cyan-500) 0%, var(--color-cyan-600) 100%);
+  color: var(--text-on-accent);
+  border: none;
+  padding: 14px 36px;
+  font-size: var(--text-md);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  width: 100%;
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    filter var(--duration-fast) var(--ease-out);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.eliminated-create-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+  box-shadow: var(--shadow-md), var(--glow-accent-soft);
+}
+
+.eliminated-create-btn:active:not(:disabled) {
+  transform: translateY(0);
+  filter: brightness(0.97);
+}
+
+.eliminated-create-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .link-btn {
   background: none;
   border: none;

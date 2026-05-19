@@ -85,15 +85,13 @@ function liveResources(nexus: Nexus, now: number) {
 }
 
 function fmtAmount(v: number) {
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 10_000) return `${(v / 1000).toFixed(1)}k`;
-  if (v >= 1000) return `${(v / 1000).toFixed(2)}k`;
+  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
+  if (v >= 1_000) return `${(v / 1_000).toFixed(1).replace(/\.0$/, '')}k`;
   return Math.floor(v).toString();
 }
 
 function fmtRate(v: number) {
-  if (v >= 10_000) return `+${(v / 1000).toFixed(1)}k/h`;
-  if (v >= 1000) return `+${(v / 1000).toFixed(2)}k/h`;
+  if (v >= 1_000) return `+${(v / 1_000).toFixed(1).replace(/\.0$/, '')}k/h`;
   return `+${v}/h`;
 }
 

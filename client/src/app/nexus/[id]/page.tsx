@@ -6,7 +6,7 @@ import PwaGuideModal from '@/components/PwaGuideModal';
 import WhileYouWereAway from '@/components/WhileYouWereAway';
 import { useMyNexuses } from '@/hooks/useMyNexuses';
 import { useUnreadReports } from '@/hooks/useUnreadReports';
-import { getNexus } from '@/services/api';
+import { createNexus, getNexus } from '@/services/api';
 import '@/styles/Game.css';
 import { Nexus } from '@/types/game';
 import { useQuery } from '@tanstack/react-query';
@@ -28,6 +28,8 @@ export default function NexusPage() {
   const { refresh: refreshUnread } = useUnreadReports();
   const [showPwaGuide, setShowPwaGuide] = useState(false);
   const [showWywa, setShowWywa] = useState(false);
+  const [creatingNexus, setCreatingNexus] = useState(false);
+  const [nexusNameInput, setNexusNameInput] = useState('');
   const wywaChecked = useRef(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -35,7 +37,7 @@ export default function NexusPage() {
   const nexusId = params.id as string;
   const activeTab = parseTab(searchParams.get('tab'));
 
-  const { nexuses, refetch: refetchNexuses } = useMyNexuses();
+  const { nexuses, isLoading: nexusesLoading, refetch: refetchNexuses } = useMyNexuses();
 
   const { data: selectedNexusData, refetch: refetchSelectedNexus } = useQuery({
     queryKey: ['nexus', nexusId],
@@ -110,6 +112,24 @@ export default function NexusPage() {
     refreshUnread();
   };
 
+  const handleCreateNexus = async () => {
+    setCreatingNexus(true);
+    try {
+      const name = nexusNameInput.trim() || undefined;
+      const result = await createNexus(name);
+      const newNexus = result.data as Nexus;
+      localStorage.setItem(SELECTED_NEXUS_KEY, String(newNexus._id));
+      await refetchNexuses();
+      router.replace(`/nexus/${newNexus._id}`);
+    } catch {
+      // leave creatingNexus=false so user can retry
+    } finally {
+      setCreatingNexus(false);
+    }
+  };
+
+  const isEliminated = !nexusesLoading && nexuses.length === 0;
+
   return (
     <>
       {showPwaGuide && <PwaGuideModal onClose={() => setShowPwaGuide(false)} />}
@@ -119,7 +139,32 @@ export default function NexusPage() {
         selectedNexusId={nexusId}
         onSelectNexus={handleSelectNexus}
       >
-        {selectedNexus ? (
+        {isEliminated ? (
+          <div className="eliminated-screen">
+            <div className="eliminated-card">
+              <div className="eliminated-icon">💀</div>
+              <h2 className="eliminated-title">Eliminated</h2>
+              <p className="eliminated-subtitle">All your nexuses have been conquered. Rise from the ashes and build again.</p>
+              <input
+                className="eliminated-name-input"
+                type="text"
+                placeholder="Name your new nexus (optional)"
+                value={nexusNameInput}
+                onChange={(e) => setNexusNameInput(e.target.value)}
+                maxLength={32}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleCreateNexus(); }}
+                disabled={creatingNexus}
+              />
+              <button
+                className="eliminated-create-btn"
+                onClick={handleCreateNexus}
+                disabled={creatingNexus}
+              >
+                {creatingNexus ? 'Creating...' : 'Create Your Nexus'}
+              </button>
+            </div>
+          </div>
+        ) : selectedNexus ? (
           <NexusView
             nexus={selectedNexus}
             onUpdate={handleUpdate}

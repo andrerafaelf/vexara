@@ -14,6 +14,19 @@ interface ReportsProps {
   onReadStateChange?: () => void;
 }
 
+const buildingNames: Record<string, string> = {
+  shieldGrid: 'Shield Grid',
+  commandCore: 'Command Core',
+  recruitmentCore: 'Recruitment Core',
+  lifeSupport: 'Life Support',
+  storageVault: 'Storage Vault',
+  biomassFarm: 'Biomass Farm',
+  alloyForge: 'Alloy Forge',
+  oreExtractor: 'Ore Extractor',
+  armory: 'Armory',
+  stealthArray: 'Stealth Array',
+};
+
 const troopNames: Record<string, string> = {
   lancerDrone: 'Lancer Drone',
   assaultTrooper: 'Assault Trooper',
@@ -457,6 +470,25 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
                 </div>
               </div>
             )}
+          {selectedReport.result.buildingDamage && selectedReport.result.buildingDamage.length > 0 && (
+            <div className="report-section">
+              <h3>Buildings Damaged {isMyAttack ? '(Enemy)' : '(Your Nexus)'}</h3>
+              <table className="report-table">
+                <thead>
+                  <tr><th>Building</th><th>Before</th><th>After</th></tr>
+                </thead>
+                <tbody>
+                  {selectedReport.result.buildingDamage.map((d, i) => (
+                    <tr key={i}>
+                      <td>{buildingNames[d.building] ?? d.building}</td>
+                      <td>Lv {d.from}</td>
+                      <td className="losses">Lv {d.to}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     );
