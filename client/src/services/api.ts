@@ -398,6 +398,42 @@ export const getGalaxyEvents = () =>
 export const getActivitySummary = (since?: string) =>
   apiRequest(`/report/summary${since ? `?since=${encodeURIComponent(since)}` : ''}`);
 
+// War Room (real-time faction operation planning)
+export const listWarRoomOperations = () => apiRequest('/warroom/operations');
+export const getWarRoomOperation = (operationId: number) => apiRequest(`/warroom/operations/${operationId}`);
+export const createWarRoomOperation = (data: { name: string; targetNexusId: number; arrivalAt: string }) =>
+  apiRequest('/warroom/operations', { method: 'POST', body: JSON.stringify(data) });
+export const updateWarRoomOperation = (
+  operationId: number,
+  data: { name?: string; arrivalAt?: string; status?: 'planning' | 'locked' | 'cancelled' | 'completed' },
+) =>
+  apiRequest(`/warroom/operations/${operationId}`, { method: 'PATCH', body: JSON.stringify(data) });
+export const deleteWarRoomOperation = (operationId: number) =>
+  apiRequest(`/warroom/operations/${operationId}`, { method: 'DELETE' });
+export const addWarRoomWave = (
+  operationId: number,
+  data: { label?: string; arrivalOffsetMs?: number; troops?: Record<string, number> },
+) =>
+  apiRequest(`/warroom/operations/${operationId}/waves`, { method: 'POST', body: JSON.stringify(data) });
+export const updateWarRoomWave = (
+  waveId: number,
+  data: { label?: string; arrivalOffsetMs?: number; troops?: Record<string, number> },
+) =>
+  apiRequest(`/warroom/waves/${waveId}`, { method: 'PATCH', body: JSON.stringify(data) });
+export const deleteWarRoomWave = (waveId: number) =>
+  apiRequest(`/warroom/waves/${waveId}`, { method: 'DELETE' });
+export const claimWarRoomSlot = (
+  waveId: number,
+  data: { fromNexusId: number; troops: Record<string, number>; note?: string },
+) =>
+  apiRequest(`/warroom/waves/${waveId}/slots`, { method: 'POST', body: JSON.stringify(data) });
+export const releaseWarRoomSlot = (slotId: number) =>
+  apiRequest(`/warroom/slots/${slotId}`, { method: 'DELETE' });
+export const getWarRoomThread = (operationId: number, before?: number) =>
+  apiRequest(`/warroom/operations/${operationId}/thread${before ? `?before=${before}` : ''}`);
+export const postWarRoomThreadMessage = (operationId: number, content: string) =>
+  apiRequest(`/warroom/operations/${operationId}/thread`, { method: 'POST', body: JSON.stringify({ content }) });
+
 // Faction diplomacy
 export const proposeTreaty = (factionId: number, targetFactionId: number, type: string, durationDays?: number) =>
   apiRequest(`/faction/${factionId}/treaties/propose`, {

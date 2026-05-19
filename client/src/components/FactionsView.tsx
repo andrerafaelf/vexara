@@ -38,6 +38,7 @@ import { useAuth } from '../context/AuthContext';
 import FactionChat from './FactionChat';
 import FactionActivity from './FactionActivity';
 import FactionLeaderboard from './FactionLeaderboard';
+import WarRoom from './WarRoom';
 import '../styles/Factions.css';
 
 interface Faction {
@@ -98,7 +99,7 @@ interface MyJoinRequest {
   createdAt: string;
 }
 
-type Tab = 'overview' | 'chat' | 'members' | 'activity' | 'wars' | 'diplomacy';
+type Tab = 'overview' | 'chat' | 'warroom' | 'members' | 'activity' | 'wars' | 'diplomacy';
 
 interface FactionTreaty {
   id: number;
@@ -747,7 +748,7 @@ export default function FactionsView() {
 
       {/* Tabs */}
       <div className="factions-tabs">
-        {(['overview', 'chat', 'members', 'activity', 'wars', 'diplomacy'] as Tab[]).map((tab) => (
+        {(['overview', 'chat', 'warroom', 'members', 'activity', 'wars', 'diplomacy'] as Tab[]).map((tab) => (
           <button
             key={tab}
             className={`factions-tab${activeTab === tab ? ' factions-tab--active' : ''}`}
@@ -755,6 +756,7 @@ export default function FactionsView() {
           >
             {tab === 'overview' && 'Overview'}
             {tab === 'chat' && 'Chat'}
+            {tab === 'warroom' && 'War Room'}
             {tab === 'members' && (
               <>
                 Members ({myFaction.members?.length ?? 0})
@@ -855,6 +857,13 @@ export default function FactionsView() {
       {activeTab === 'chat' && (
         <section className="factions-panel factions-tab-content factions-tab-content--chat">
           <FactionChat factionId={myFaction.id} currentUserId={currentUserId} />
+        </section>
+      )}
+
+      {/* Tab: War Room */}
+      {activeTab === 'warroom' && (
+        <section className="factions-panel factions-tab-content factions-tab-content--chat">
+          <WarRoom factionId={myFaction.id} myRole={myFaction.myRole as 'leader' | 'officer' | 'member'} />
         </section>
       )}
 

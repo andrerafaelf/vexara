@@ -3,15 +3,18 @@ import cors from 'cors';
 import { randomUUID } from 'crypto';
 import dotenv from 'dotenv';
 import express from 'express';
+import { createServer } from 'http';
 import rateLimit from 'express-rate-limit';
 import jwt from 'jsonwebtoken';
 import prisma from './lib/prisma.js';
+import { initWarRoomSocket } from './services/warRoomSocket.js';
 import { processCompletedQueuesAndNotify, recoverControlLevels, updateAllResources } from './models/Nexus.js';
 import attackRoutes from './routes/attack.js';
 import authRoutes from './routes/auth.js';
 import buildingRoutes from './routes/building.js';
 import chatRoutes from './routes/chat.js';
 import factionRoutes from './routes/faction.js';
+import warRoomRoutes from './routes/warRoom.js';
 import friendsRoutes from './routes/friends.js';
 import referralRoutes from './routes/referral.js';
 import galaxyRoutes from './routes/galaxy.js';
@@ -129,6 +132,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/faction', factionRoutes);
+app.use('/api/warroom', warRoomRoutes);
 app.use('/api/referral', referralRoutes);
 
 const JOB_LOCKS = { updateResources: 9101, processCombat: 9102, syncNeutralPool: 9103, recoverControl: 9104, processTransfers: 9105, levelNeutralNexuses: 9106, processQueues: 9107, processDominance: 9108, dailyNexusGrowth: 9109, galaxyEvents: 9110, processSpyMissions: 9111 };
@@ -187,4 +191,19 @@ process.on('uncaughtException', (error) => {
 });
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => logInfo('server_started', { port: PORT }));
+const httpServer = createServer(app);
+initWarRoomSocket(httpServer, {
+  cors: {
+    origin(origin, callback) {
+      if (!origin) return callback(null, true);
+      const normalizedOrigin = normalizeOriginValue(origin);
+      const normalizedAllowed = allowedCorsOrigins.map((v) => normalizeOriginValue(v));
+      if (allowedCorsOrigins.length === 0 && process.env.NODE_ENV !== 'production') return callback(null, true);
+      if (normalizedAllowed.includes(normalizedOrigin)) return callback(null, true);
+      if (allowedCorsOrigins.some((rule) => matchesCorsOrigin(normalizedOrigin, rule))) return callback(null, true);
+      return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+  },
+});
+httpServer.listen(PORT, () => logInfo('server_started', { port: PORT }));

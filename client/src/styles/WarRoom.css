@@ -1,0 +1,1326 @@
+/* ============================================================================
+   War Room — real-time faction operation planning board
+   ========================================================================== */
+
+.warroom {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-navy-900);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  height: calc(100vh - 240px);
+  min-height: 560px;
+  font-variant-numeric: tabular-nums;
+}
+
+.warroom--loading,
+.warroom--error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 280px;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.warroom--error { color: var(--danger); }
+
+/* ── Header bar (always visible) ───────────────────────────────────────── */
+
+.warroom-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 10px 16px;
+  background: linear-gradient(180deg, var(--color-navy-800), var(--color-navy-900));
+  border-bottom: 1px solid rgba(255, 158, 61, 0.18);
+  flex-shrink: 0;
+}
+
+.warroom-header-left { display: flex; align-items: center; gap: 12px; }
+
+.warroom-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  color: var(--text-strong);
+  text-transform: uppercase;
+}
+.warroom-title svg { color: var(--accent); }
+
+.warroom-conn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+.warroom-conn-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+}
+.warroom-conn--live {
+  color: var(--success);
+  background: rgba(86, 211, 100, 0.1);
+  border: 1px solid rgba(86, 211, 100, 0.25);
+}
+.warroom-conn--live .warroom-conn-dot { animation: warroom-pulse 1.4s ease-in-out infinite; }
+.warroom-conn--offline {
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border-default);
+}
+
+@keyframes warroom-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px currentColor; }
+  50% { opacity: 0.4; box-shadow: 0 0 14px currentColor; }
+}
+
+.warroom-presence {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.warroom-presence-count { font-weight: 600; color: var(--text-default); }
+.warroom-presence svg { color: var(--accent); }
+
+.warroom-presence-stack {
+  display: flex;
+  margin-left: 4px;
+}
+.warroom-presence-stack > * + * { margin-left: -8px; }
+
+.warroom-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: #0a0e1e;
+  border: 2px solid var(--color-navy-800);
+  letter-spacing: 0.02em;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+.warroom-avatar--sm { width: 22px; height: 22px; font-size: 9px; border-width: 1px; }
+.warroom-avatar--xs { width: 18px; height: 18px; font-size: 8px; border-width: 1px; }
+.warroom-avatar--more {
+  background: var(--color-navy-700);
+  color: var(--text-muted);
+}
+
+/* ── Body layout (3 columns) ───────────────────────────────────────────── */
+
+.warroom-body {
+  display: grid;
+  grid-template-columns: 260px 1fr 320px;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Left rail */
+
+.warroom-rail {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  background: rgba(0,0,0,0.15);
+  min-height: 0;
+}
+
+.warroom-rail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.warroom-rail-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.warroom-rail-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid rgba(255, 158, 61, 0.3);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.warroom-rail-new:hover { background: rgba(255,158,61,0.18); }
+
+.warroom-rail-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,158,61,0.2) transparent;
+}
+
+.warroom-rail-empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 32px 8px;
+  font-style: italic;
+}
+
+.warroom-rail-item {
+  width: 100%;
+  text-align: left;
+  background: var(--color-navy-800);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+  color: inherit;
+  font-family: inherit;
+}
+.warroom-rail-item:hover {
+  border-color: rgba(255,158,61,0.3);
+  background: var(--color-navy-700);
+}
+.warroom-rail-item--active {
+  border-color: var(--accent);
+  background: rgba(255,158,61,0.08);
+  box-shadow: 0 0 0 1px rgba(255,158,61,0.15);
+}
+.warroom-rail-item--launched { border-left: 3px solid var(--danger); }
+.warroom-rail-item--locked   { border-left: 3px solid var(--warning); }
+.warroom-rail-item--planning { border-left: 3px solid var(--accent); }
+.warroom-rail-item--completed { opacity: 0.55; }
+.warroom-rail-item--cancelled { opacity: 0.4; }
+
+.warroom-rail-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.warroom-rail-item-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1;
+}
+.warroom-rail-item-status {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  padding: 2px 5px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.warroom-rail-item-status--planning { background: rgba(255,158,61,0.15); color: var(--accent); }
+.warroom-rail-item-status--locked   { background: rgba(210,153,34,0.15); color: var(--warning); }
+.warroom-rail-item-status--launched { background: rgba(248,81,73,0.18); color: var(--danger); }
+.warroom-rail-item-status--completed { background: rgba(86,211,100,0.15); color: var(--success); }
+.warroom-rail-item-status--cancelled { background: rgba(255,255,255,0.05); color: var(--text-muted); }
+
+.warroom-rail-item-target {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  min-width: 0;
+}
+.warroom-rail-item-target span:first-of-type {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1;
+}
+.warroom-rail-item-coords { color: var(--accent); font-weight: 600; flex-shrink: 0; }
+
+.warroom-rail-item-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+.warroom-rail-item-eta {
+  color: var(--accent);
+  font-weight: 600;
+}
+.warroom-rail-item-eta--past { color: var(--danger); }
+.warroom-rail-item-stats .dot { margin: 0 4px; opacity: 0.5; }
+
+.warroom-rail-item-focus {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--success);
+  font-weight: 600;
+}
+.warroom-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--success);
+  animation: warroom-pulse 1.4s ease-in-out infinite;
+}
+
+/* ── Main (centre) ─────────────────────────────────────────────────────── */
+
+.warroom-main {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,158,61,0.2) transparent;
+}
+
+.warroom-op-loading,
+.warroom-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  padding: 64px 24px;
+  color: var(--text-muted);
+  text-align: center;
+  height: 100%;
+}
+.warroom-empty svg { color: rgba(255,158,61,0.4); }
+.warroom-empty h3 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--text-strong);
+}
+.warroom-empty p {
+  max-width: 420px;
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* Board */
+
+.warroom-board {
+  display: flex;
+  flex-direction: column;
+  padding: 16px 20px 24px;
+  gap: 14px;
+}
+
+.warroom-board-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 6px 12px;
+  align-items: center;
+}
+
+.warroom-board-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  grid-column: 1;
+  grid-row: 1;
+}
+.warroom-board-title h2 {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-strong);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.warroom-status-pill {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+.warroom-status-pill--planning  { background: rgba(255,158,61,0.12); color: var(--accent); border: 1px solid rgba(255,158,61,0.3); }
+.warroom-status-pill--locked    { background: rgba(210,153,34,0.12); color: var(--warning); border: 1px solid rgba(210,153,34,0.3); }
+.warroom-status-pill--launched  { background: rgba(248,81,73,0.15); color: var(--danger); border: 1px solid rgba(248,81,73,0.35); animation: warroom-pulse 2s ease-in-out infinite; }
+.warroom-status-pill--completed { background: rgba(86,211,100,0.1); color: var(--success); border: 1px solid rgba(86,211,100,0.25); }
+.warroom-status-pill--cancelled { background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border-default); }
+
+.warroom-viewing-here {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--success);
+  font-weight: 600;
+  margin-left: 6px;
+}
+
+.warroom-board-target {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  grid-column: 1;
+  grid-row: 2;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.warroom-board-target-name { font-weight: 600; color: var(--text-default); }
+.warroom-board-target-coords { color: var(--accent); font-weight: 700; }
+
+.warroom-board-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+
+/* Arrival countdown big tile */
+
+.warroom-arrival {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 4px 18px;
+  padding: 14px 18px;
+  background: linear-gradient(120deg, rgba(255,158,61,0.06), rgba(248,81,73,0.04));
+  border: 1px solid rgba(255,158,61,0.2);
+  border-radius: 10px;
+  align-items: center;
+}
+.warroom-arrival--past {
+  background: linear-gradient(120deg, rgba(248,81,73,0.1), rgba(248,81,73,0.04));
+  border-color: rgba(248,81,73,0.35);
+}
+.warroom-arrival-label {
+  grid-column: 1;
+  grid-row: 1;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.warroom-arrival-time {
+  grid-column: 1;
+  grid-row: 2;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  white-space: nowrap;
+}
+.warroom-arrival--past .warroom-arrival-time { color: var(--danger); }
+.warroom-arrival-abs {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-align: right;
+}
+
+/* Timeline ribbon */
+
+.warroom-timeline {
+  background: var(--color-navy-800);
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  padding: 12px 16px 18px;
+}
+.warroom-timeline-axis {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  position: relative;
+}
+.warroom-timeline-axis-now {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  position: absolute;
+  transform: translateX(-50%);
+  color: var(--success);
+}
+.warroom-timeline-axis-now-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 6px var(--success);
+}
+.warroom-timeline-axis-end {
+  margin-left: auto;
+  color: var(--danger);
+}
+.warroom-timeline-bar {
+  position: relative;
+  height: 28px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,158,61,0.06), rgba(248,81,73,0.08));
+  border-radius: 6px;
+  overflow: visible;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.warroom-timeline-progress {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(86,211,100,0.18), rgba(86,211,100,0.05));
+  border-right: 1px solid rgba(86,211,100,0.5);
+  border-radius: 6px 0 0 6px;
+  transition: width 1s linear;
+  pointer-events: none;
+}
+.warroom-timeline-chip {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.warroom-timeline-chip-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--color-navy-800);
+  box-shadow: 0 0 6px rgba(255,158,61,0.6);
+  transition: transform 0.15s;
+}
+.warroom-timeline-chip:hover .warroom-timeline-chip-dot { transform: scale(1.25); }
+.warroom-timeline-chip-label {
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+}
+.warroom-timeline-chip--past .warroom-timeline-chip-dot {
+  background: var(--danger);
+  box-shadow: 0 0 6px rgba(248,81,73,0.6);
+}
+.warroom-timeline-chip--past .warroom-timeline-chip-label { color: var(--danger); }
+
+/* ── Wave cards ─────────────────────────────────────────────────────────── */
+
+.warroom-waves {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.warroom-no-waves {
+  padding: 18px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-style: italic;
+  background: var(--color-navy-800);
+  border: 1px dashed var(--border-default);
+  border-radius: 8px;
+}
+
+.warroom-wave {
+  background: var(--color-navy-800);
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.warroom-wave-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.warroom-wave-num {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid rgba(255,158,61,0.3);
+  padding: 3px 8px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.warroom-wave-title {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-strong);
+  min-width: 0;
+}
+.warroom-wave-offset {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--warning);
+  background: rgba(210,153,34,0.1);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+.warroom-wave-eta {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.warroom-wave-quota {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.warroom-wave-quota-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.warroom-wave-quota-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.warroom-wave-quota-counts {
+  font-size: 12px;
+}
+.warroom-wave-quota-counts strong { color: var(--text-strong); }
+.warroom-wave-quota-counts .muted { color: var(--text-muted); }
+
+.warroom-wave-quota-bar {
+  height: 5px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.warroom-wave-quota-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-hover, var(--accent)));
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.warroom-wave-quota-chips {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 6px;
+}
+.warroom-troop-chip {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 2px 6px;
+  background: rgba(0,0,0,0.2);
+  padding: 5px 8px;
+  border-radius: 5px;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.warroom-troop-chip-name {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.warroom-troop-chip-counts {
+  font-size: 10px;
+  color: var(--text-default);
+  font-weight: 700;
+  text-align: right;
+}
+.warroom-troop-chip-bar {
+  grid-column: 1 / -1;
+  height: 3px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 2px;
+  overflow: hidden;
+  display: block;
+}
+.warroom-troop-chip-bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+/* Slot rows */
+
+.warroom-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.warroom-slot-empty {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 8px 10px;
+  text-align: center;
+  background: rgba(0,0,0,0.15);
+  border-radius: 6px;
+}
+.warroom-slot {
+  display: grid;
+  grid-template-columns: minmax(140px, 1.2fr) 1.5fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  background: rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 7px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.warroom-slot:hover { border-color: rgba(255,158,61,0.18); }
+.warroom-slot--mine {
+  border-color: rgba(86,211,100,0.3);
+  background: rgba(86,211,100,0.04);
+}
+.warroom-slot--sent {
+  opacity: 0.6;
+}
+
+.warroom-slot-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.warroom-slot-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.warroom-slot-username {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-strong);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.warroom-you {
+  font-size: 8px;
+  font-weight: 800;
+  background: var(--success-soft);
+  color: var(--success);
+  padding: 1px 4px;
+  border-radius: 3px;
+  letter-spacing: 0.1em;
+}
+.warroom-slot-nexus {
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.warroom-slot-troops {
+  font-size: 11px;
+  color: var(--text-default);
+  line-height: 1.4;
+  min-width: 0;
+}
+.warroom-slot-troops .muted { color: var(--text-muted); font-style: italic; }
+.warroom-slot-launch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.warroom-slot-launch-past {
+  color: var(--danger);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.warroom-slot-sent {
+  color: var(--success);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Claim CTA + form */
+
+.warroom-claim-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  align-self: stretch;
+  background: linear-gradient(180deg, rgba(255,158,61,0.18), rgba(255,158,61,0.08));
+  border: 1px solid rgba(255,158,61,0.35);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 9px 14px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.warroom-claim-cta:hover {
+  background: linear-gradient(180deg, rgba(255,158,61,0.28), rgba(255,158,61,0.12));
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.warroom-claim-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,158,61,0.18);
+  border-radius: 7px;
+}
+.warroom-claim-form-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.warroom-claim-form-row .warroom-field { flex: 1; min-width: 200px; }
+.warroom-claim-troops {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 6px;
+}
+.warroom-claim-troop {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-navy-900);
+  padding: 4px 8px;
+  border-radius: 5px;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.warroom-claim-troop-label { font-size: 11px; color: var(--text-muted); flex: 1; }
+.warroom-claim-troop-input {
+  width: 50px;
+  background: var(--color-navy-800);
+  border: 1px solid var(--color-navy-500);
+  color: var(--text-strong);
+  font-size: 11px;
+  padding: 3px 5px;
+  border-radius: 4px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.warroom-claim-troop-input:focus { outline: none; border-color: var(--accent); }
+.warroom-claim-troop-avail {
+  font-size: 10px;
+  color: var(--text-muted);
+  min-width: 20px;
+}
+
+.warroom-claim-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.warroom-claim-total {
+  margin-right: auto;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.warroom-claim-total strong { color: var(--accent); }
+.warroom-claim-launch-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 6px 8px;
+  background: rgba(255,158,61,0.06);
+  border-radius: 5px;
+}
+.warroom-claim-launch-hint strong { color: var(--accent); }
+
+/* Send Now action */
+
+.warroom-send-now {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  align-self: stretch;
+  background: var(--color-navy-700);
+  border: 1px solid var(--border-default);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 9px 14px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.warroom-send-now:disabled { opacity: 0.5; cursor: default; }
+.warroom-send-now--ready {
+  background: linear-gradient(180deg, var(--danger), rgba(248,81,73,0.85));
+  color: white;
+  border-color: var(--danger);
+  animation: warroom-send-pulse 1.8s ease-in-out infinite;
+}
+@keyframes warroom-send-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(248,81,73,0.4); }
+  50%      { box-shadow: 0 0 0 8px rgba(248,81,73,0); }
+}
+
+/* Add wave form */
+
+.warroom-add-wave {
+  background: rgba(0,0,0,0.2);
+  border: 1px dashed rgba(255,158,61,0.25);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.warroom-add-wave-head {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.warroom-add-wave-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.warroom-add-wave-meta input.warroom-field-input { flex: 1; min-width: 220px; }
+.warroom-add-wave-offset {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.warroom-add-wave-troops {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 6px;
+}
+.warroom-add-wave-troop {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-navy-900);
+  padding: 4px 8px;
+  border-radius: 5px;
+}
+.warroom-add-wave-troop-label { font-size: 11px; color: var(--text-muted); flex: 1; }
+.warroom-add-wave-actions { display: flex; justify-content: flex-end; }
+
+/* ── Thread (right pane) ───────────────────────────────────────────────── */
+
+.warroom-thread {
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid rgba(255,255,255,0.06);
+  background: rgba(0,0,0,0.18);
+  min-height: 0;
+}
+.warroom-thread-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.warroom-thread-head svg { color: var(--accent); }
+
+.warroom-thread-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,158,61,0.2) transparent;
+}
+.warroom-thread-empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-style: italic;
+  padding: 32px 8px;
+}
+.warroom-thread-msg {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 2px 4px;
+  border-radius: 5px;
+}
+.warroom-thread-msg-author {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+.warroom-thread-msg-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.warroom-thread-msg--mine .warroom-thread-msg-name { color: var(--success); }
+.warroom-thread-msg-time {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+.warroom-thread-msg-bubble {
+  font-size: 13px;
+  color: var(--text-default);
+  line-height: 1.45;
+  word-break: break-word;
+  white-space: pre-wrap;
+  padding-left: 26px;
+}
+
+.warroom-typing {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 14px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+  min-height: 18px;
+}
+.warroom-typing-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.warroom-typing-dots span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: warroom-typing 1.2s ease-in-out infinite;
+}
+.warroom-typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+.warroom-typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes warroom-typing {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-2px); }
+}
+
+.warroom-thread-form {
+  display: flex;
+  gap: 6px;
+  padding: 10px 12px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  background: var(--color-navy-900);
+}
+.warroom-thread-input {
+  flex: 1;
+  background: var(--color-navy-800);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  padding: 7px 10px;
+  color: var(--text-default);
+  font-size: 12px;
+  font-family: inherit;
+}
+.warroom-thread-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(255,158,61,0.15);
+}
+.warroom-thread-send {
+  padding: 6px 10px;
+}
+
+/* ── Shared button + field primitives ──────────────────────────────────── */
+
+.warroom-primary-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border: none;
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.warroom-primary-btn:hover:not(:disabled) { background: var(--accent-hover); }
+.warroom-primary-btn:disabled { opacity: 0.5; cursor: default; }
+
+.warroom-ghost-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: 1px solid var(--border-default);
+  color: var(--text-default);
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.warroom-ghost-btn:hover:not(:disabled) {
+  border-color: rgba(255,158,61,0.35);
+  color: var(--accent);
+  background: rgba(255,158,61,0.06);
+}
+.warroom-ghost-btn--danger:hover:not(:disabled) {
+  border-color: rgba(248,81,73,0.4);
+  color: var(--danger);
+  background: rgba(248,81,73,0.06);
+}
+.warroom-ghost-btn:disabled { opacity: 0.4; cursor: default; }
+
+.warroom-icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.warroom-icon-btn:hover { color: var(--accent); background: rgba(255,158,61,0.08); }
+
+.warroom-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.warroom-field-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.warroom-field-input {
+  background: var(--color-navy-900);
+  border: 1px solid var(--border-default);
+  color: var(--text-strong);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: inherit;
+}
+.warroom-field-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(255,158,61,0.15);
+}
+.warroom-field-input--narrow { width: 80px; }
+.warroom-field--note { flex: 2; }
+
+/* ── Create operation modal ────────────────────────────────────────────── */
+
+.warroom-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 11, 26, 0.75);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.warroom-modal {
+  background: var(--color-navy-800);
+  border: 1px solid rgba(255, 158, 61, 0.25);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 540px;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+}
+.warroom-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.warroom-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--text-strong);
+}
+.warroom-modal-title svg { color: var(--accent); }
+.warroom-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  overflow-y: auto;
+}
+.warroom-modal-search {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.warroom-modal-results {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  padding: 4px;
+}
+.warroom-modal-result {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  color: inherit;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+.warroom-modal-result:hover {
+  background: rgba(255,158,61,0.06);
+  border-color: rgba(255,158,61,0.18);
+}
+.warroom-modal-result--selected {
+  background: rgba(255,158,61,0.12);
+  border-color: var(--accent);
+}
+.warroom-modal-result-name { font-size: 12px; font-weight: 700; color: var(--text-strong); }
+.warroom-modal-result-coords { font-size: 11px; color: var(--accent); font-weight: 600; }
+.warroom-modal-result-owner { font-size: 11px; color: var(--text-muted); }
+.warroom-modal-target {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  background: rgba(255,158,61,0.08);
+  border: 1px solid rgba(255,158,61,0.2);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text-default);
+}
+.warroom-modal-target svg { color: var(--accent); }
+.warroom-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────── */
+
+@media (max-width: 1100px) {
+  .warroom-body {
+    grid-template-columns: 220px 1fr;
+  }
+  .warroom-thread {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .warroom {
+    height: auto;
+    min-height: 0;
+  }
+  .warroom-body {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+  }
+  .warroom-rail {
+    border-right: none;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    max-height: 260px;
+  }
+  .warroom-rail-list { flex-direction: row; overflow-x: auto; flex-wrap: nowrap; }
+  .warroom-rail-item { min-width: 220px; }
+
+  .warroom-slot {
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 4px;
+  }
+  .warroom-slot-launch { grid-column: 2; grid-row: 1; }
+  .warroom-slot-troops { grid-column: 1 / -1; grid-row: 2; }
+
+  .warroom-board-actions { grid-column: 1; grid-row: 3; }
+  .warroom-arrival { grid-template-columns: 1fr; }
+  .warroom-arrival-abs { grid-column: 1; grid-row: 3; text-align: left; }
+}

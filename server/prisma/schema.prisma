@@ -633,3 +633,80 @@ model MilestoneToken {
   @@unique([userId, milestone])
   @@index([userId])
 }
+
+enum WarOperationStatus {
+  planning
+  locked
+  launched
+  completed
+  cancelled
+}
+
+model WarOperation {
+  id              Int                @id @default(autoincrement())
+  factionId       Int
+  galaxyId        Int
+  name            String             @db.VarChar(64)
+  targetNexusId   Int
+  targetX         Int
+  targetY         Int
+  targetName      String             @db.VarChar(64)
+  arrivalAt       DateTime
+  status          WarOperationStatus @default(planning)
+  createdByUserId Int
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @default(now()) @updatedAt
+  rev             Int                @default(0)
+
+  waves    WarOperationWave[]
+  messages WarOperationMessage[]
+
+  @@index([factionId, status])
+  @@index([galaxyId])
+  @@index([arrivalAt])
+}
+
+model WarOperationWave {
+  id              Int      @id @default(autoincrement())
+  operationId     Int
+  ordinal         Int
+  label           String?  @db.VarChar(48)
+  arrivalOffsetMs Int      @default(0)
+  troops          Json     @default("{}")
+  createdAt       DateTime @default(now())
+
+  operation WarOperation       @relation(fields: [operationId], references: [id], onDelete: Cascade)
+  slots     WarOperationSlot[]
+
+  @@index([operationId, ordinal])
+}
+
+model WarOperationSlot {
+  id            Int      @id @default(autoincrement())
+  waveId        Int
+  userId        Int
+  fromNexusId   Int
+  troops        Json     @default("{}")
+  note          String?  @db.VarChar(128)
+  sentAttackId  Int?
+  claimedAt     DateTime @default(now())
+
+  wave WarOperationWave @relation(fields: [waveId], references: [id], onDelete: Cascade)
+
+  @@unique([waveId, userId, fromNexusId])
+  @@index([userId])
+  @@index([waveId])
+}
+
+model WarOperationMessage {
+  id          Int      @id @default(autoincrement())
+  operationId Int
+  userId      Int
+  content     String   @db.VarChar(1000)
+  kind        String   @default("chat") @db.VarChar(16)
+  createdAt   DateTime @default(now())
+
+  operation WarOperation @relation(fields: [operationId], references: [id], onDelete: Cascade)
+
+  @@index([operationId, createdAt])
+}
