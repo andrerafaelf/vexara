@@ -246,8 +246,10 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
     };
   }, [centerX, centerY]);
 
-  // Pre-select current nexus on mount
+  // Pre-select current nexus on mount (desktop only — on mobile this would
+  // immediately pop the modal open before the user has interacted)
   useEffect(() => {
+    if (isMobile) return;
     const selectCurrentNexus = async () => {
       try {
         const response = await getNexusInfo(currentNexus._id);
@@ -257,7 +259,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
       }
     };
     selectCurrentNexus();
-  }, [currentNexus._id]);
+  }, [currentNexus._id, isMobile]);
 
   useEffect(() => {
     setTargetX(String(centerX));

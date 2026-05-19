@@ -914,7 +914,7 @@
     background: var(--color-navy-800);
     border-radius: 16px 16px 0 0;
     width: 100%;
-    max-height: 75vh;
+    max-height: 55vh;
     display: flex;
     flex-direction: column;
     animation: slideUp 0.25s ease;
@@ -925,7 +925,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 20px 10px;
+    padding: 10px 16px 8px;
     border-bottom: 1px solid var(--color-navy-700);
     flex-shrink: 0;
   }
@@ -933,7 +933,7 @@
   .map-mobile-modal-header h3 {
     color: var(--accent);
     margin: 0;
-    font-size: 18px;
+    font-size: 16px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -957,8 +957,19 @@
 
   .map-mobile-modal-body {
     overflow-y: auto;
-    padding: 16px 20px 24px;
+    padding: 10px 14px 16px;
     flex: 1;
+  }
+
+  /* Tighter row spacing inside the mobile modal */
+  .map-mobile-modal-body .detail-line {
+    padding: 6px 10px;
+    margin-bottom: 4px;
+    font-size: 13px;
+  }
+
+  .map-mobile-modal-body .nexus-actions {
+    margin-top: 12px;
   }
 
   /* Hide the h3 title inside body since header already shows it */
