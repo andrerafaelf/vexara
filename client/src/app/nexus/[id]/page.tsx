@@ -141,6 +141,8 @@ export default function NexusPage() {
   };
 
   const isEliminated = !nexusesLoading && !nexusesFetching && nexuses.length === 0;
+  // While any data is still in-flight, render nothing — prevents eliminated/loading flashes
+  const isResolving = nexusesFetching && nexuses.length === 0;
 
   return (
     <>
@@ -151,7 +153,7 @@ export default function NexusPage() {
         selectedNexusId={nexusId}
         onSelectNexus={handleSelectNexus}
       >
-        {isEliminated ? (
+        {isResolving ? null : isEliminated ? (
           <div className="eliminated-screen">
             <div className="eliminated-card">
               <div className="eliminated-icon">💀</div>
@@ -183,9 +185,7 @@ export default function NexusPage() {
             initialTab={activeTab}
             onTabChange={handleTabChange}
           />
-        ) : (
-          <div className="loading">Loading nexus...</div>
-        )}
+        ) : null}
       </GameLayout>
     </>
   );
