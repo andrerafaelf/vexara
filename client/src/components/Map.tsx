@@ -35,6 +35,7 @@ interface MapProps {
   onRefresh: () => void;
   mode?: 'normal' | 'espionage';
   onSelectSpyTarget?: (nexus: MapNexus) => void;
+  espionageHint?: string;
 }
 
 export interface MapNexus {
@@ -110,7 +111,7 @@ interface CrosshairPosition {
   top: number;
 }
 
-const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onSelectSpyTarget }) => {
+const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onSelectSpyTarget, espionageHint }) => {
   const { user } = useAuth();
   const toast = useToast();
   const isMobile = useIsMobile();
@@ -1219,7 +1220,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
       </div>}
       {mode === 'espionage' && (
         <div className="map-header map-header--espionage">
-          <span className="map-hint">Click a nexus to select it as your spy target</span>
+          <span className="map-hint">{espionageHint ?? 'Click a nexus to select it as your spy target'}</span>
         </div>
       )}
 
