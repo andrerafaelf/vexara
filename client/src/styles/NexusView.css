@@ -284,7 +284,22 @@
 
 .tab-content {
   min-height: 400px;
+  contain: layout style;
 }
+
+@keyframes tab-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.tab-content > .overview-tab,
+.tab-content > .buildings-tab,
+.tab-content > .troops-tab,
+.tab-content > .map-tab,
+.tab-content > .espionage-tab {
+  animation: tab-fade-in 120ms var(--ease-out) both;
+}
+
 
 /* Overview queue summary rows */
 .overview-queue-summary {

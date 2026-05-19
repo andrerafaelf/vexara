@@ -13,12 +13,16 @@ function getStoredNexusId(): string | null {
 }
 
 export function useMyNexuses() {
+  const qc = useQueryClient();
   const { data, isLoading, refetch } = useQuery({
     queryKey: MY_NEXUSES_KEY,
     queryFn: () => getMyNexuses().then((r) => r.data as Nexus[]),
     staleTime: 20 * 1000,
     refetchInterval: 30 * 1000,
     enabled: typeof window !== 'undefined' && !!window.localStorage.getItem('token'),
+    // Seed from cache so page switches never show a loading state when data is already known
+    initialData: () => qc.getQueryData<Nexus[]>(MY_NEXUSES_KEY),
+    initialDataUpdatedAt: () => qc.getQueryState(MY_NEXUSES_KEY)?.dataUpdatedAt,
   });
 
   const nexuses: Nexus[] = data ?? [];

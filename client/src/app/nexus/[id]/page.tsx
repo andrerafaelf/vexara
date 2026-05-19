@@ -9,9 +9,9 @@ import { useUnreadReports } from '@/hooks/useUnreadReports';
 import { createNexus, getNexus } from '@/services/api';
 import '@/styles/Game.css';
 import { Nexus } from '@/types/game';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { startTransition, useEffect, useRef, useState } from 'react';
 
 const PWA_GUIDE_SEEN_KEY = 'pwa_guide_seen';
 const WYWA_SESSION_KEY = 'wywa_shown_session';
@@ -37,6 +37,7 @@ export default function NexusPage() {
   const nexusId = params.id as string;
   const activeTab = parseTab(searchParams.get('tab'));
 
+  const qc = useQueryClient();
   const { nexuses, isLoading: nexusesLoading, refetch: refetchNexuses } = useMyNexuses();
 
   const { data: selectedNexusData, refetch: refetchSelectedNexus } = useQuery({
@@ -45,6 +46,12 @@ export default function NexusPage() {
     staleTime: 20 * 1000,
     refetchInterval: 30 * 1000,
     enabled: !!nexusId && typeof window !== 'undefined' && !!localStorage.getItem('token'),
+    // Seed from the nexuses list so NexusView renders immediately without a loading flash
+    initialData: () => {
+      const cached = qc.getQueryData<Nexus[]>(['myNexuses']);
+      return cached?.find((n) => String(n._id) === nexusId);
+    },
+    initialDataUpdatedAt: () => qc.getQueryState(['myNexuses'])?.dataUpdatedAt,
   });
 
   const selectedNexus: Nexus | null = selectedNexusData ?? null;
@@ -102,8 +109,10 @@ export default function NexusPage() {
   };
 
   const handleTabChange = (tab: NexusTab) => {
-    const query = tab === 'overview' ? '' : `?tab=${tab}`;
-    router.replace(`/nexus/${nexusId}${query}`);
+    startTransition(() => {
+      const query = tab === 'overview' ? '' : `?tab=${tab}`;
+      router.replace(`/nexus/${nexusId}${query}`);
+    });
   };
 
   const handleUpdate = () => {

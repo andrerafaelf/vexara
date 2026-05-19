@@ -415,8 +415,12 @@ interface InfoModalState {
 
 const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'overview', onTabChange }) => {
   const [activeTab, setActiveTabState] = useState<NexusTab>(initialTab);
+  const [mapEverVisited, setMapEverVisited] = useState(initialTab === 'map');
+  const [espionageEverVisited, setEspionageEverVisited] = useState(initialTab === 'espionage');
   const setActiveTab = (tab: NexusTab) => {
     setActiveTabState(tab);
+    if (tab === 'map') setMapEverVisited(true);
+    if (tab === 'espionage') setEspionageEverVisited(true);
     onTabChange?.(tab);
   };
   const [isRenamingNexus, setIsRenamingNexus] = useState(false);
@@ -1585,8 +1589,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
       </div>
 
       <div className="tab-content">
-        {activeTab === 'overview' && (
-          <div className="overview-tab">
+        <div className="overview-tab" style={activeTab !== 'overview' ? { display: 'none' } : undefined}>
             <NexusMap nexus={nexus} onClickBuilding={() => setActiveTab('buildings')} />
 
             <div className="nexus-stats-row" aria-label="Nexus key stats">
@@ -1814,10 +1817,8 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
               );
             })}
           </div>
-        )}
 
-        {activeTab === 'buildings' && (
-          <div className="buildings-tab">
+        <div className="buildings-tab" style={activeTab !== 'buildings' ? { display: 'none' } : undefined}>
             <h3>Buildings</h3>
 
             {nexus.buildings.commandCore >= 20 && !nexus.nexusTypeLockedAt && !nexus.nexusType && (
@@ -2078,10 +2079,8 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
               })}
             </div>
           </div>
-        )}
 
-        {activeTab === 'troops' && (
-          <div className="troops-tab">
+        <div className="troops-tab" style={activeTab !== 'troops' ? { display: 'none' } : undefined}>
             <h3>Troops</h3>
 
             {!allQuestsComplete &&
@@ -2342,16 +2341,17 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
               </>
             )}
           </div>
-        )}
 
-        {activeTab === 'map' && (
-          <div className="map-tab">
+        {(activeTab === 'map' || mapEverVisited) && (
+          <div className="map-tab" style={activeTab !== 'map' ? { display: 'none' } : undefined}>
             <StarfieldMap currentNexus={nexus} onRefresh={onUpdate} />
           </div>
         )}
 
-        {activeTab === 'espionage' && (
-          <EspionageTab nexus={nexus} onToast={showToast} />
+        {(activeTab === 'espionage' || espionageEverVisited) && (
+          <div style={activeTab !== 'espionage' ? { display: 'none' } : undefined}>
+            <EspionageTab nexus={nexus} onToast={showToast} />
+          </div>
         )}
       </div>
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
