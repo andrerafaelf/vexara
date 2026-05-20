@@ -1699,3 +1699,58 @@
   letter-spacing: 0.04em;
   flex-shrink: 0;
 }
+
+/* ── Diplomacy Chat ─────────────────────────────────────────────────────────── */
+
+.diplomacy-chat {
+  display: flex;
+  flex-direction: column;
+  height: 420px;
+  border: 1px solid rgba(255, 158, 61, 0.2);
+  border-radius: var(--radius-md);
+  background: rgba(255, 158, 61, 0.03);
+  margin-top: var(--space-4);
+  overflow: hidden;
+}
+
+.diplomacy-chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid rgba(255, 158, 61, 0.15);
+  background: rgba(255, 158, 61, 0.05);
+  flex-shrink: 0;
+}
+
+.diplomacy-chat-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+}
+
+.diplomacy-chat-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  padding: 0 var(--space-1);
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.diplomacy-chat-close:hover {
+  color: var(--text-default);
+}
+
+.diplomacy-chat-messages {
+  height: 100%;
+}
+
+.factions-btn-active {
+  background: rgba(255, 158, 61, 0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+}

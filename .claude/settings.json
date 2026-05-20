@@ -1,0 +1,47 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e ' *)",
+      "Bash(npx eslint *)",
+      "Bash(grep -rhoiE '#[0-9a-f]{3,8}' src/styles/Admin.css)",
+      "Bash(echo \"TSC=$?\")",
+      "Bash(echo \"BUILD=$?\")",
+      "Bash(echo \"CLIENT_TSC=$?\")",
+      "Bash(echo \"ADMIN_TSC=$?\")",
+      "Bash(echo \"SERVER_TSC=$?\")",
+      "Bash(echo \"CLIENT_BUILD=$?\")",
+      "Bash(echo \"ADMIN_BUILD=$?\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\academie\\\\Vexara\" -Force)",
+      "Bash(node -e \"console.log\\(require\\('express-rate-limit/package.json'\\).version\\)\")",
+      "Bash(powershell -NoProfile -Command \"\\(Get-Content admin-client/src/components/Admin.tsx\\) -replace 'loadData\\\\\\(\\\\\\)', 'reloadAll\\(\\)' | Set-Content -Encoding utf8 admin-client/src/components/Admin.tsx\")",
+      "Bash(powershell -NoProfile -Command \"Get-Content admin-client/src/components/Admin.tsx -Raw -Encoding Byte | Select-Object -First 3\")",
+      "Bash(npx tsup *)",
+      "Bash(xargs grep -l \"useQuery\\\\|useMutation\\\\|useCache\")",
+      "PowerShell(cd \"c:\\\\academie\\\\Vexara\\\\client\"; npx tsc --noEmit --skipLibCheck 2>&1 | Where-Object { $_ -notmatch \"react-query\" } | Select-Object -First 40)",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "Bash(grep -E \"\\\\.\\(ts|js\\)$\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\academie\\\\Vexara\" -Recurse -Directory)",
+      "Bash(Select-Object -First 30 FullName)",
+      "Bash(Get-ChildItem -Path \"c:\\\\academie\\\\Vexara\" -Directory)",
+      "Bash(mkdir -p \"c:/academie/Vexara/server/prisma/migrations/20260518100000_add_diplomacy_spy_events\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\academie\\\\Vexara\\\\server\" -Recurse -Include \"*attack*\", \"*combat*\", \"*battle*\", \"*resolver*\" -File)",
+      "Bash(git -C c:\\\\academie\\\\Vexara log --oneline -20 -- client/src/components/NavigationProgress.tsx client/src/app/layout.tsx client/src/components/GameLayout.tsx)",
+      "Bash(awk '/^C:/{file=$0} /error/ && !/no-explicit-any/ {print file\" || \"$0}')",
+      "Bash(xargs grep -l \"interface GalaxyEvent\\\\|type GalaxyEvent\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\academie\\\\Vexara\\\\client\\\\src\\\\pages\" -Force)",
+      "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\academie\\\\Vexara\\\\client\\\\src\" -Recurse -Filter \"*chat*\" -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\academie\\\\Vexara\" -Force | Select-Object Name, @{Name=\"Type\"; Expression={if\\($_.PSIsContainer\\){\"Directory\"}else{\"File\"}}} | Format-Table -AutoSize)",
+      "Bash(ssh root@vexara.world \"sudo du -xh /var --max-depth=2 2>/dev/null | sort -h | tail -20\")",
+      "Bash(git stash *)",
+      "Bash(Select-Object Name, FullName)",
+      "Bash(Get-ChildItem -Path \"c:\\\\academie\\\\Vexara\\\\server\" -Recurse -Filter \"*.ts\" -Exclude \"node_modules\")",
+      "Bash(xargs grep -l -i \"treaty\\\\|agreement\")",
+      "Bash(Select-Object Name, Mode)",
+      "PowerShell(Get-ChildItem \"C:\\\\academie\\\\Vexara\\\\client\\\\src\\\\components\\\\\" | Where-Object {$_.Name -match \"Faction|Diplomacy\"})"
+    ],
+    "additionalDirectories": [
+      "c:\\academie\\Vexara\\server\\prisma\\migrations"
+    ]
+  }
+}

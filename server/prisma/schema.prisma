@@ -39,6 +39,7 @@ model User {
   factionMembers   FactionMember[]
   factionMessages  FactionMessage[]
   factionJoinRequests FactionJoinRequest[]
+  diplomacyMessages DiplomacyMessage[]
 
   referredById     Int?
   registrationIp   String?   @db.VarChar(45)
@@ -547,11 +548,25 @@ model FactionTreaty {
   galaxy           Galaxy  @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
   proposerFaction  Faction @relation("TreatyProposer", fields: [proposerFactionId], references: [id], onDelete: Cascade)
   targetFaction    Faction @relation("TreatyTarget",   fields: [targetFactionId],   references: [id], onDelete: Cascade)
+  chatMessages     DiplomacyMessage[]
 
   @@index([galaxyId])
   @@index([proposerFactionId])
   @@index([targetFactionId])
   @@index([status])
+}
+
+model DiplomacyMessage {
+  id        Int      @id @default(autoincrement())
+  treatyId  Int
+  userId    Int
+  content   String   @db.VarChar(1000)
+  createdAt DateTime @default(now())
+
+  treaty FactionTreaty @relation(fields: [treatyId], references: [id], onDelete: Cascade)
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([treatyId, createdAt])
 }
 
 model GalaxyEvent {

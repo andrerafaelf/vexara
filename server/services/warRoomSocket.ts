@@ -102,6 +102,13 @@ export function notifyFactionChat(factionId: number, message: unknown) {
   emitToFaction(factionId, 'faction:chat', { message, at: Date.now() });
 }
 
+/** Push a new diplomacy chat message to both faction rooms sharing the treaty. */
+export function notifyDiplomacyChat(proposerFactionId: number, targetFactionId: number, treatyId: number, message: unknown) {
+  const payload = { treatyId, message, at: Date.now() };
+  emitToFaction(proposerFactionId, 'diplomacy:chat', payload);
+  emitToFaction(targetFactionId, 'diplomacy:chat', payload);
+}
+
 /** Tell a user their badge counts may have changed (friend requests / DMs). */
 export function notifyBadgeUpdate(userId: number) {
   emitToUser(userId, 'badges:refresh', { at: Date.now() });

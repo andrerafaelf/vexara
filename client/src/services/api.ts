@@ -494,3 +494,10 @@ export const getActiveTreaties = (factionId: number) =>
 export const getGalaxyDiplomacy = () =>
   apiRequest('/faction/diplomacy/galaxy');
 
+// Diplomacy chat
+export const getDiplomacyMessages = (treatyId: number, before?: number) =>
+  apiRequest(`/faction/treaties/${treatyId}/chat${before ? `?before=${before}` : ''}`);
+
+export const sendDiplomacyMessage = (treatyId: number, content: string) =>
+  apiRequest(`/faction/treaties/${treatyId}/chat`, { method: 'POST', body: JSON.stringify({ content }) });
+

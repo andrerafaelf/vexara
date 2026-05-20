@@ -34,6 +34,7 @@ import {
 } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import FactionChat from './FactionChat';
+import DiplomacyChat from './DiplomacyChat';
 import Username from './Username';
 import FactionActivity from './FactionActivity';
 import FactionLeaderboard from './FactionLeaderboard';
@@ -156,6 +157,7 @@ export default function FactionsView() {
   const [treatyError, setTreatyError] = useState('');
   const [treatySubmitting, setTreatySubmitting] = useState(false);
   const [galaxyTreaties, setGalaxyTreaties] = useState<FactionTreaty[]>([]);
+  const [activeDiplomacyTreatyId, setActiveDiplomacyTreatyId] = useState<number | null>(null);
 
   // Join requests (for leader/officer view inside a faction)
   const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
@@ -1095,6 +1097,7 @@ export default function FactionsView() {
               <h3 className="factions-war-section-title factions-war-section-title--active">Active Agreements</h3>
               {treaties.filter((t) => t.status === 'active').map((t) => {
                 const other = t.proposerFactionId === myFaction.id ? t.targetFaction : t.proposerFaction;
+                const isOpen = activeDiplomacyTreatyId === t.id;
                 return (
                   <div key={t.id} className="factions-war-card factions-war-card--active">
                     <div className="factions-war-info">
@@ -1106,14 +1109,36 @@ export default function FactionsView() {
                         </span>
                       )}
                     </div>
-                    {canManage && (
-                      <button className="factions-btn-small factions-btn-danger" onClick={() => handleCancelTreaty(t.id)}>Cancel</button>
-                    )}
+                    <div className="factions-war-actions">
+                      <button
+                        className={`factions-btn-small${isOpen ? ' factions-btn-active' : ''}`}
+                        onClick={() => setActiveDiplomacyTreatyId(isOpen ? null : t.id)}
+                      >
+                        {isOpen ? 'Close Chat' : 'Chat'}
+                      </button>
+                      {canManage && (
+                        <button className="factions-btn-small factions-btn-danger" onClick={() => handleCancelTreaty(t.id)}>Cancel</button>
+                      )}
+                    </div>
                   </div>
                 );
               })}
             </div>
           )}
+
+          {activeDiplomacyTreatyId !== null && (() => {
+            const t = treaties.find((x) => x.id === activeDiplomacyTreatyId && x.status === 'active');
+            if (!t) return null;
+            const other = t.proposerFactionId === myFaction.id ? t.targetFaction : t.proposerFaction;
+            return (
+              <DiplomacyChat
+                treatyId={t.id}
+                currentUserId={currentUserId}
+                partnerFactionName={other ? `[${other.tag}] ${other.name}` : 'Ally'}
+                onClose={() => setActiveDiplomacyTreatyId(null)}
+              />
+            );
+          })()}
 
           {treaties.filter((t) => t.status === 'pending' && t.proposerFactionId === myFaction.id).length > 0 && (
             <div className="factions-war-section">

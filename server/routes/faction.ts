@@ -3,6 +3,7 @@ import type { Response } from 'express';
 import * as factionController from '../controllers/factionController.js';
 import * as warController from '../controllers/factionWarController.js';
 import * as treatyController from '../controllers/factionTreatyController.js';
+import * as diplomacyChatController from '../controllers/diplomacyChatController.js';
 import auth from '../middleware/auth.js';
 import type { AuthRequest } from '../types/index.js';
 
@@ -17,6 +18,8 @@ router.get('/diplomacy/galaxy', auth, (req, res) => treatyController.getGalaxyDi
 // Treaty action routes (must precede /:id)
 router.post('/treaties/:treatyId/accept', auth, (req, res) => treatyController.acceptTreaty(req as AuthRequest, res as Response));
 router.post('/treaties/:treatyId/cancel', auth, (req, res) => treatyController.cancelTreaty(req as AuthRequest, res as Response));
+router.get('/treaties/:treatyId/chat', auth, (req, res) => diplomacyChatController.getDiplomacyMessages(req as AuthRequest, res as Response));
+router.post('/treaties/:treatyId/chat', auth, (req, res) => diplomacyChatController.sendDiplomacyMessage(req as AuthRequest, res as Response));
 router.get('/invites/list', auth, (req, res) => factionController.getMyInvites(req as AuthRequest, res as Response));
 router.post('/invites/:inviteId/accept', auth, (req, res) => factionController.acceptInvite(req as AuthRequest, res as Response));
 router.delete('/invites/:inviteId', auth, (req, res) => factionController.declineInvite(req as AuthRequest, res as Response));

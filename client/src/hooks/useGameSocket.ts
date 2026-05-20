@@ -14,12 +14,14 @@ export interface FactionChatMessage {
 }
 
 type ChatHandler = (msg: FactionChatMessage) => void;
+type DiplomacyChatHandler = (treatyId: number, msg: FactionChatMessage) => void;
 type BadgeHandler = () => void;
 type AttacksRefreshHandler = (nexusId: number) => void;
 type TransfersRefreshHandler = (nexusId: number) => void;
 
 interface GameSocketHandlers {
   onFactionChat?: ChatHandler;
+  onDiplomacyChat?: DiplomacyChatHandler;
   onBadgeRefresh?: BadgeHandler;
   onAttacksRefresh?: AttacksRefreshHandler;
   onTransfersRefresh?: TransfersRefreshHandler;
@@ -31,6 +33,7 @@ let _refCount = 0;
 let _destroyTimer: ReturnType<typeof setTimeout> | null = null;
 
 const _chatHandlers = new Set<ChatHandler>();
+const _diplomacyChatHandlers = new Set<DiplomacyChatHandler>();
 const _badgeHandlers = new Set<BadgeHandler>();
 const _attacksHandlers = new Set<AttacksRefreshHandler>();
 const _transfersHandlers = new Set<TransfersRefreshHandler>();
@@ -59,6 +62,10 @@ function getSocket(): Socket {
 
   socket.on('faction:chat', (data: { message: FactionChatMessage }) => {
     for (const h of _chatHandlers) h(data.message);
+  });
+
+  socket.on('diplomacy:chat', (data: { treatyId: number; message: FactionChatMessage }) => {
+    for (const h of _diplomacyChatHandlers) h(data.treatyId, data.message);
   });
 
   socket.on('badges:refresh', () => {
@@ -138,12 +145,14 @@ export function useGameSocket(handlers?: GameSocketHandlers) {
     socket.on('reports:refresh', onReportsRefresh);
 
     const chatHandler: ChatHandler = (msg) => handlersRef.current?.onFactionChat?.(msg);
+    const diplomacyChatHandler: DiplomacyChatHandler = (treatyId, msg) => handlersRef.current?.onDiplomacyChat?.(treatyId, msg);
     const badgeHandler: BadgeHandler = () => handlersRef.current?.onBadgeRefresh?.();
     const attacksHandler: AttacksRefreshHandler = (nexusId) =>
       handlersRef.current?.onAttacksRefresh?.(nexusId);
     const transfersHandler: TransfersRefreshHandler = (nexusId) =>
       handlersRef.current?.onTransfersRefresh?.(nexusId);
     _chatHandlers.add(chatHandler);
+    _diplomacyChatHandlers.add(diplomacyChatHandler);
     _badgeHandlers.add(badgeHandler);
     _attacksHandlers.add(attacksHandler);
     _transfersHandlers.add(transfersHandler);
@@ -153,6 +162,7 @@ export function useGameSocket(handlers?: GameSocketHandlers) {
       socket.off('transfers:refresh', onTransfersRefresh);
       socket.off('reports:refresh', onReportsRefresh);
       _chatHandlers.delete(chatHandler);
+      _diplomacyChatHandlers.delete(diplomacyChatHandler);
       _badgeHandlers.delete(badgeHandler);
       _attacksHandlers.delete(attacksHandler);
       _transfersHandlers.delete(transfersHandler);
