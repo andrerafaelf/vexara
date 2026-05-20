@@ -2,6 +2,7 @@ import type { Response } from 'express';
 import prisma from '../lib/prisma.js';
 import type { AuthRequest, TroopCounts } from '../types/index.js';
 import {
+import { logError } from '../utils/logger.js';
   broadcastOperationDeleted,
   broadcastOperationUpdate,
   broadcastThreadMessage,
@@ -239,7 +240,8 @@ export async function listOperations(req: AuthRequest, res: Response): Promise<v
 
     res.json({ operations: summaries });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'warRoomController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -263,7 +265,8 @@ export async function getOperation(req: AuthRequest, res: Response): Promise<voi
     const full = await serializeOperation(operationId);
     res.json({ operation: full });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'warRoomController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -335,7 +338,8 @@ export async function createOperation(req: AuthRequest, res: Response): Promise<
     const full = await serializeOperation(op.id);
     res.json({ operation: full });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'warRoomController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -394,7 +398,8 @@ export async function updateOperation(req: AuthRequest, res: Response): Promise<
     const full = await serializeOperation(operationId);
     res.json({ operation: full });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'warRoomController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -423,7 +428,8 @@ export async function deleteOperation(req: AuthRequest, res: Response): Promise<
     broadcastOperationDeleted(ctx.factionId, operationId, req.userId);
     res.json({ ok: true });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'warRoomController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -469,7 +475,8 @@ export async function addWave(req: AuthRequest, res: Response): Promise<void> {
     const full = await serializeOperation(operationId);
     res.json({ operation: full });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'warRoomController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -509,7 +516,8 @@ export async function updateWave(req: AuthRequest, res: Response): Promise<void>
     const full = await serializeOperation(wave.operation.id);
     res.json({ operation: full });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'warRoomController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -553,7 +561,8 @@ export async function deleteWave(req: AuthRequest, res: Response): Promise<void>
     const full = await serializeOperation(operationId);
     res.json({ operation: full });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'warRoomController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -617,7 +626,8 @@ export async function claimSlot(req: AuthRequest, res: Response): Promise<void> 
     const full = await serializeOperation(wave.operation.id);
     res.json({ operation: full, slotId: slot.id });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'warRoomController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -651,7 +661,8 @@ export async function releaseSlot(req: AuthRequest, res: Response): Promise<void
     const full = await serializeOperation(slot.wave.operationId);
     res.json({ operation: full });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'warRoomController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -698,7 +709,8 @@ export async function postThreadMessage(req: AuthRequest, res: Response): Promis
     broadcastThreadMessage(ctx.factionId, operationId, out);
     res.json({ message: out });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'warRoomController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -743,7 +755,8 @@ export async function getThread(req: AuthRequest, res: Response): Promise<void> 
       })),
     });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'warRoomController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -814,7 +827,8 @@ export async function getGalaxyStarfield(req: AuthRequest, res: Response): Promi
 
     res.json({ nexuses: items });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'warRoomController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 

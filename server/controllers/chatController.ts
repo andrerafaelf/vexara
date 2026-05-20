@@ -2,6 +2,7 @@ import type { Response } from 'express';
 import * as chatService from '../services/chatService.js';
 import { notifyBadgeUpdate } from '../services/warRoomSocket.js';
 import type { AuthRequest } from '../types/index.js';
+import { logError } from '../utils/logger.js';
 
 const MAX_MESSAGE_LENGTH = 2000;
 const DEFAULT_PAGE_SIZE = 50;
@@ -35,7 +36,8 @@ export async function listConversations(req: AuthRequest, res: Response): Promis
     });
     res.json(conversations);
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'chatController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -44,7 +46,8 @@ export async function getUnreadCount(req: AuthRequest, res: Response): Promise<v
     const count = await chatService.getTotalUnreadCount(req.userId);
     res.json({ count });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'chatController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -59,7 +62,8 @@ export async function getMessages(req: AuthRequest, res: Response): Promise<void
     const messages = await chatService.getMessages(req.userId, friendId, limit, before);
     res.json(messages.reverse().map(serializeMessage));
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'chatController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -76,7 +80,8 @@ export async function sendMessage(req: AuthRequest, res: Response): Promise<void
     notifyBadgeUpdate(friendId);
     res.json(serializeMessage(message));
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'chatController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -89,6 +94,7 @@ export async function markRead(req: AuthRequest, res: Response): Promise<void> {
     const result = await chatService.markMessagesRead(friendId, req.userId);
     res.json({ success: true, count: result.count });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'chatController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }

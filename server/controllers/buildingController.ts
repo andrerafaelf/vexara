@@ -4,6 +4,7 @@ import * as buildingService from '../services/buildingService.js';
 import type { AuthRequest } from '../types/index.js';
 import { NEXUS_TYPE_BONUSES } from '../utils/economy.js';
 import { getPopulationMax } from '../utils/population.js';
+import { logError } from '../utils/logger.js';
 
 const MAX_BUILD_QUEUE = 5;
 
@@ -235,7 +236,8 @@ export async function upgradeBuilding(req: AuthRequest, res: Response): Promise<
     const rewardApplied = await applyQuestRewards(updated);
     res.json({ success: true, completesAt, nexus: serializeNexus(rewardApplied) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'buildingController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -287,7 +289,8 @@ export async function cancelBuildQueue(req: AuthRequest, res: Response): Promise
     });
     res.json({ success: true, refund, nexus: serializeNexus(updated) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'buildingController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -317,6 +320,7 @@ export async function checkBuildQueue(req: AuthRequest, res: Response): Promise<
     const rewardApplied = await applyQuestRewards(updated);
     res.json({ completed, nexus: serializeNexus(rewardApplied) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'buildingController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }

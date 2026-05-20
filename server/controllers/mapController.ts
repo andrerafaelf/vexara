@@ -3,6 +3,7 @@ import prisma from '../lib/prisma.js';
 import * as mapService from '../services/mapService.js';
 import type { AuthRequest } from '../types/index.js';
 import { getNexusIntelForUser } from '../utils/scouting.js';
+import { logError } from '../utils/logger.js';
 
 export async function getArea(req: AuthRequest, res: Response): Promise<void> {
   try {
@@ -24,7 +25,8 @@ export async function getArea(req: AuthRequest, res: Response): Promise<void> {
     }));
     res.json(result);
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'mapController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -34,7 +36,8 @@ export async function getNexusIntel(req: AuthRequest, res: Response): Promise<vo
     if (!nexus) { res.status(404).json({ error: 'Nexus not found' }); return; }
     res.json(nexus);
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'mapController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -46,6 +49,7 @@ export async function getGalaxyEvents(req: AuthRequest, res: Response): Promise<
     const events = await getActiveGalaxyEvents(user.activeGalaxyId);
     res.json(events);
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'mapController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }

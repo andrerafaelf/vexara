@@ -3,6 +3,7 @@ import { serializeAttack } from '../models/Nexus.js';
 import prisma from '../lib/prisma.js';
 import * as reportService from '../services/reportService.js';
 import type { AuthRequest } from '../types/index.js';
+import { logError } from '../utils/logger.js';
 
 export async function getReports(req: AuthRequest, res: Response): Promise<void> {
   try {
@@ -23,7 +24,8 @@ export async function getReports(req: AuthRequest, res: Response): Promise<void>
     );
     res.json(enriched);
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'reportController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -41,7 +43,8 @@ export async function markRead(req: AuthRequest, res: Response): Promise<void> {
     await reportService.upsertReportRead(req.userId, attackId, req.galaxyId);
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'reportController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -57,7 +60,8 @@ export async function markAllRead(req: AuthRequest, res: Response): Promise<void
     await reportService.markAllRead(req.userId, attacks, req.galaxyId);
     res.json({ success: true, count: attacks.length, ids: attacks.map((a) => String(a.id)) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'reportController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -66,7 +70,8 @@ export async function getUnreadNexusIds(req: AuthRequest, res: Response): Promis
     const nexusIds = await reportService.getUnreadNexusIds(req.userId, req.galaxyId);
     res.json(nexusIds);
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'reportController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -82,7 +87,8 @@ export async function getReadIds(req: AuthRequest, res: Response): Promise<void>
     const reads = await reportService.getReadIds(req.userId, req.galaxyId);
     res.json(reads.map((r) => String(r.attackId)));
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'reportController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -165,6 +171,7 @@ export async function getActivitySummary(req: AuthRequest, res: Response): Promi
 
     res.json({ attacks, buildings: buildingsDone, troops: troopsDone, since: since.toISOString() });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'reportController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }

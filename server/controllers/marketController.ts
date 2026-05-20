@@ -3,6 +3,7 @@ import { refreshResources } from '../models/Nexus.js';
 import * as marketService from '../services/marketService.js';
 import type { AuthRequest } from '../types/index.js';
 import { parsePositiveInt } from '../utils/validation.js';
+import { logError } from '../utils/logger.js';
 
 const VALID_RESOURCES = new Set(['biomass', 'alloy', 'ore']);
 const MAX_LISTINGS_PER_NEXUS = 5;
@@ -13,7 +14,8 @@ export async function getListings(req: AuthRequest, res: Response): Promise<void
     const listings = await marketService.getAllListings(req.galaxyId);
     res.json(listings.map((l) => ({ ...l, sellerUsername: l.sellerNexus.owner?.username ?? null })));
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'marketController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -48,7 +50,8 @@ export async function createListing(req: AuthRequest, res: Response): Promise<vo
     );
     res.json({ success: true, listing });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'marketController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -87,7 +90,8 @@ export async function buyListing(req: AuthRequest, res: Response): Promise<void>
     );
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'marketController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -96,7 +100,8 @@ export async function getHistory(req: AuthRequest, res: Response): Promise<void>
     const transactions = await marketService.getTransactionHistory(req.galaxyId);
     res.json(transactions);
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'marketController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -116,7 +121,8 @@ export async function cancelListing(req: AuthRequest, res: Response): Promise<vo
     );
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'marketController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -146,6 +152,7 @@ export async function systemBuy(req: AuthRequest, res: Response): Promise<void> 
     });
     res.json({ success: true, paid: cost, received: parsedReceive });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'marketController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }

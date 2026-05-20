@@ -1,6 +1,7 @@
 import type { Response } from 'express';
 import prisma from '../lib/prisma.js';
 import type { AuthRequest } from '../types/index.js';
+import { logError } from '../utils/logger.js';
 
 async function getMembership(userId: number, galaxyId: number) {
   return prisma.factionMember.findUnique({
@@ -57,7 +58,8 @@ export async function declareWar(req: AuthRequest, res: Response): Promise<void>
 
     res.json({ war: serializeWar(war) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionWarController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -89,7 +91,8 @@ export async function acceptWar(req: AuthRequest, res: Response): Promise<void> 
 
     res.json({ war: serializeWar(updated) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionWarController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -108,7 +111,8 @@ export async function declineWar(req: AuthRequest, res: Response): Promise<void>
     await prisma.factionWar.delete({ where: { id: warId } });
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionWarController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -149,7 +153,8 @@ export async function proposeCeasefire(req: AuthRequest, res: Response): Promise
 
     res.json({ war: serializeWar(updated) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionWarController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -193,7 +198,8 @@ export async function acceptCeasefire(req: AuthRequest, res: Response): Promise<
 
     res.json({ war: serializeWar(updated) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionWarController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -237,7 +243,8 @@ export async function declineCeasefire(req: AuthRequest, res: Response): Promise
 
     res.json({ war: serializeWar(updated) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionWarController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -255,7 +262,8 @@ export async function getWars(req: AuthRequest, res: Response): Promise<void> {
     });
     res.json(wars.map(serializeWar));
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionWarController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 

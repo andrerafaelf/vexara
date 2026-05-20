@@ -3,6 +3,7 @@ import { applyCompletedQueues, serializeNexus } from '../models/Nexus.js';
 import prisma from '../lib/prisma.js';
 import * as referralService from '../services/referralService.js';
 import type { AuthRequest } from '../types/index.js';
+import { logError } from '../utils/logger.js';
 
 const BUILDINGS = ['commandCore', 'recruitmentCore', 'lifeSupport', 'storageVault', 'biomassFarm', 'alloyForge', 'oreExtractor', 'shieldGrid', 'armory', 'stealthArray'] as const;
 
@@ -65,7 +66,8 @@ export async function getMyReferrals(req: AuthRequest, res: Response): Promise<v
     const status = await referralService.getReferralStatus(req.userId!);
     res.json(status);
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'referralController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -80,7 +82,8 @@ export async function getMyPendingTokens(req: AuthRequest, res: Response): Promi
       milestone: milestoneTokens,
     });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'referralController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -181,7 +184,8 @@ export async function redeemToken(req: AuthRequest, res: Response): Promise<void
 
     res.status(400).json({ error: 'Unknown rewardType' });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'referralController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -261,7 +265,8 @@ export async function redeemMilestoneToken(req: AuthRequest, res: Response): Pro
 
     res.status(400).json({ error: 'Unknown rewardType' });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'referralController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -274,7 +279,8 @@ export async function getMyReferralCode(req: AuthRequest, res: Response): Promis
     if (!me) { res.status(404).json({ error: 'User not found' }); return; }
     res.json({ referralCode: me.referralCode });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'referralController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -319,7 +325,8 @@ export async function getMyReferrer(req: AuthRequest, res: Response): Promise<vo
       },
     });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'referralController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 

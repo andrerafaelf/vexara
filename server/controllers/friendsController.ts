@@ -3,6 +3,7 @@ import * as chatService from '../services/chatService.js';
 import * as friendsService from '../services/friendsService.js';
 import { notifyBadgeUpdate } from '../services/warRoomSocket.js';
 import type { AuthRequest } from '../types/index.js';
+import { logError } from '../utils/logger.js';
 
 function serializeFriend(user: { id: number; username: string; isSupporter: boolean }, friendshipCreatedAt: Date, points: number | undefined) {
   return { id: String(user.id), username: user.username, isSupporter: user.isSupporter, points: points ?? 0, friendsSince: friendshipCreatedAt };
@@ -20,7 +21,8 @@ export async function listFriends(req: AuthRequest, res: Response): Promise<void
     });
     res.json(friends);
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'friendsController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -48,7 +50,8 @@ export async function sendFriendRequest(req: AuthRequest, res: Response): Promis
     notifyBadgeUpdate(target.id);
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'friendsController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -60,7 +63,8 @@ export async function getBadges(req: AuthRequest, res: Response): Promise<void> 
     ]);
     res.json({ incomingRequests: incoming, unreadChat });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'friendsController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -72,7 +76,8 @@ export async function listRequests(req: AuthRequest, res: Response): Promise<voi
       outgoing: outgoing.map((r) => ({ id: String(r.id), userId: String(r.receiver.id), username: r.receiver.username, isSupporter: r.receiver.isSupporter, createdAt: r.createdAt })),
     });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'friendsController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -90,7 +95,8 @@ export async function acceptRequest(req: AuthRequest, res: Response): Promise<vo
     notifyBadgeUpdate(reqRow.receiverId);
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'friendsController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -104,7 +110,8 @@ export async function declineRequest(req: AuthRequest, res: Response): Promise<v
     await friendsService.updateRequestStatus(id, 'declined');
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'friendsController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -118,7 +125,8 @@ export async function cancelRequest(req: AuthRequest, res: Response): Promise<vo
     await friendsService.updateRequestStatus(id, 'cancelled');
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'friendsController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -132,6 +140,7 @@ export async function unfriend(req: AuthRequest, res: Response): Promise<void> {
     await friendsService.deleteFriendship(friendship.id);
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'friendsController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }

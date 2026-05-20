@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import prisma from '../lib/prisma.js';
-import { sendAlphaWelcome } from '../services/emailService.js';
 import { validateEmail } from '../utils/validation.js';
+import { logError } from '../utils/logger.js';
 
 function extractEmail(req: Request): string | null {
   const fromQuery = typeof req.query?.email === 'string' ? req.query.email : '';
@@ -58,25 +58,8 @@ export async function unsubscribe(req: Request, res: Response): Promise<void> {
 
     res.status(200).type('html').send(renderConfirmation(email));
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'unsubscribeController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
-// TODO(launch): remove this test endpoint before opening signups.
-export async function sendTestAlphaEmail(_req: Request, res: Response): Promise<void> {
-  const recipients = [
-    'andrerafaelff@gmail.com',
-    'test-unnph4w1f@srv1.mail-tester.com',
-  ];
-  const results = await Promise.allSettled(recipients.map((to) => sendAlphaWelcome(to)));
-  const sent = recipients.filter((_, i) => results[i].status === 'fulfilled');
-  const failed = results
-    .map((r, i) => (r.status === 'rejected' ? { to: recipients[i], error: (r.reason as Error).message } : null))
-    .filter((v): v is { to: string; error: string } => v !== null);
-
-  if (failed.length === 0) {
-    res.json({ ok: true, sentTo: sent });
-    return;
-  }
-  res.status(failed.length === recipients.length ? 500 : 207).json({ ok: false, sentTo: sent, failed });
-}

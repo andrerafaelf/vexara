@@ -1,4 +1,6 @@
 import type { Request, Response } from 'express';
+import prisma from '../../server/lib/prisma.js';
+import { sendAlphaInviteAnnouncement } from '../../server/services/emailService.js';
 
 const SEND_DELAY_MS = 150; // ~6/sec, well under Resend free tier 10/sec.
 
@@ -10,7 +12,6 @@ function sleep(ms: number): Promise<void> {
 
 export async function getAlphaInviteStatus(_req: Request, res: Response): Promise<void> {
   try {
-    const { default: prisma } = await import('../../server/lib/prisma.js');
     const [total, invited, unsubscribed, eligible] = await Promise.all([
       prisma.alphaSignup.count(),
       prisma.alphaSignup.count({ where: { invitedAt: { not: null } } }),
@@ -19,7 +20,8 @@ export async function getAlphaInviteStatus(_req: Request, res: Response): Promis
     ]);
     res.json({ total, invited, unsubscribed, eligible, inFlight });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    console.error('[alphaInviteController] getAlphaInviteStatus error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -31,9 +33,6 @@ export async function blastAlphaInvite(_req: Request, res: Response): Promise<vo
   inFlight = true;
 
   try {
-    const { default: prisma } = await import('../../server/lib/prisma.js');
-    const { sendAlphaInviteAnnouncement } = await import('../../server/services/emailService.js');
-
     const eligible = await prisma.alphaSignup.findMany({
       where: { invitedAt: null, unsubscribedAt: null },
       select: { id: true, email: true },
@@ -60,7 +59,8 @@ export async function blastAlphaInvite(_req: Request, res: Response): Promise<vo
 
     res.json({ ok: true, attempted: eligible.length, sent, failed });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    console.error('[alphaInviteController] blastAlphaInvite error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   } finally {
     inFlight = false;
   }

@@ -4,6 +4,7 @@ import prisma from '../lib/prisma.js';
 import type { AuthRequest } from '../types/index.js';
 import { parsePositiveInt } from '../utils/validation.js';
 import { TROOP_STATS } from '../utils/combatMath.js';
+import { logError } from '../utils/logger.js';
 
 // ---- constants ----
 const MAX_OPERATIVES = 20;
@@ -170,7 +171,8 @@ export async function sendSpyMission(req: AuthRequest, res: Response): Promise<v
       returnsAt: new Date(arrivesAt.getTime() + travelMs), // estimated return
     });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'spyController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -361,7 +363,8 @@ export async function getSpyMissions(req: AuthRequest, res: Response): Promise<v
 
     res.json(enriched);
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'spyController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -395,7 +398,8 @@ export async function getCompletedSpyMissions(req: AuthRequest, res: Response): 
 
     res.json(enriched);
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'spyController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -427,7 +431,8 @@ export async function getSpyAssets(req: AuthRequest, res: Response): Promise<voi
 
     res.json(enriched);
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'spyController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -445,7 +450,8 @@ export async function recallSpyAsset(req: AuthRequest, res: Response): Promise<v
     await prisma.spyAsset.update({ where: { id: assetId }, data: { status: 'recalled' } });
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'spyController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -482,6 +488,7 @@ export async function getEmbedIntel(req: AuthRequest, res: Response): Promise<vo
     await prisma.spyAsset.update({ where: { id: assetId }, data: { lastReportAt: new Date() } });
     res.json({ discovered: false, intel: buildIntel(defender as unknown as Record<string, unknown>) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'spyController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }

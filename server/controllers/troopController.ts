@@ -4,6 +4,7 @@ import * as troopService from '../services/troopService.js';
 import type { AuthRequest } from '../types/index.js';
 import { NEXUS_TYPE_BONUSES } from '../utils/economy.js';
 import { parsePositiveInt } from '../utils/validation.js';
+import { logError } from '../utils/logger.js';
 
 const MAX_TRAINING_QUEUE = 5;
 const RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL = 0.92;
@@ -144,7 +145,8 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
     const rewardApplied = await applyQuestRewards(updated);
     res.json({ success: true, completesAt, nexus: serializeNexus(rewardApplied) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'troopController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -202,7 +204,8 @@ export async function cancelTrainingQueue(req: AuthRequest, res: Response): Prom
     });
     res.json({ success: true, refund, nexus: serializeNexus(updated) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'troopController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -249,6 +252,7 @@ export async function checkTrainingQueue(req: AuthRequest, res: Response): Promi
     const rewardApplied = await applyQuestRewards(updated);
     res.json({ completed, nexus: serializeNexus(rewardApplied) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'troopController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }

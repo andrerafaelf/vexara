@@ -11,7 +11,6 @@ import {
   resetPassword,
   verifyEmail,
 } from '../controllers/authController.js';
-import { sendTestAlphaEmail } from '../controllers/unsubscribeController.js';
 
 void _registerReal; // suppress unused-import warning until launch day
 
@@ -26,6 +25,5 @@ router.post('/request-password-reset', requestPasswordReset);
 router.post('/reset-password', resetPassword);
 router.post('/alpha-signup', alphaSignup);
 router.get('/alpha-signup/count', alphaSignupCount);
-router.post('/alpha-signup/test-email', sendTestAlphaEmail);
 
 export default router;

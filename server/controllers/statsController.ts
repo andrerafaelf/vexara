@@ -2,6 +2,7 @@ import type { Response } from 'express';
 import * as statsService from '../services/statsService.js';
 import type { AuthRequest } from '../types/index.js';
 import { getResourceProduction } from '../utils/economy.js';
+import { logError } from '../utils/logger.js';
 
 const TROOP_KEYS = [
   'lancerDrone', 'assaultTrooper', 'breakerUnit', 'reconOperative',
@@ -76,7 +77,8 @@ export async function getMyStats(req: AuthRequest, res: Response): Promise<void>
       },
     });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'statsController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -117,6 +119,7 @@ export async function getTimeline(req: AuthRequest, res: Response): Promise<void
     }
     res.json(Object.values(buckets));
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'statsController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }

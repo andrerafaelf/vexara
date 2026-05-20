@@ -4,6 +4,7 @@ import * as adminService from '../services/internalAdminService.js';
 import { processArrivedAttacks } from '../utils/combat.js';
 import { getPopulationMax } from '../utils/population.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
+import { logError } from '../utils/logger.js';
 
 export async function getUsers(req: Request, res: Response): Promise<void> {
   try {
@@ -15,7 +16,8 @@ export async function getUsers(req: Request, res: Response): Promise<void> {
       nexuses: u.nexuses.map((v) => serializeNexus(v)),
     })));
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'internalAdminController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -37,7 +39,8 @@ export async function getStats(req: Request, res: Response): Promise<void> {
       topUsers: topUsers.map((player) => ({ id: player.user.id, _id: player.user.id, username: player.user.username, points: player.points })),
     });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'internalAdminController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -50,7 +53,8 @@ export async function deleteUser(req: Request, res: Response): Promise<void> {
     await adminService.deleteUser(userId, userVillages.map((v) => v.id));
     res.json({ success: true, message: 'User deleted' });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'internalAdminController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -62,7 +66,8 @@ export async function giveResources(req: Request, res: Response): Promise<void> 
     const updated = await adminService.updateNexus(nexus.id, { biomass: nexus.biomass + (biomass || 0), alloy: nexus.alloy + (alloy || 0), ore: nexus.ore + (ore || 0) });
     res.json({ success: true, nexus: serializeNexus(updated) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'internalAdminController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -75,7 +80,8 @@ export async function addTroops(req: Request, res: Response): Promise<void> {
     const updated = await adminService.updateNexus(nexus.id, { lancerDrone: nexus.lancerDrone + lancerDrone, assaultTrooper: nexus.assaultTrooper + assaultTrooper, breakerUnit: nexus.breakerUnit + breakerUnit, reconOperative: nexus.reconOperative + reconOperative, skimmerBike: nexus.skimmerBike + skimmerBike, siegeMech: nexus.siegeMech + siegeMech, bulwarkGuard: nexus.bulwarkGuard + bulwarkGuard, suppressorTeam: nexus.suppressorTeam + suppressorTeam, disruptorUnit: nexus.disruptorUnit + disruptorUnit, interceptorBike: nexus.interceptorBike + interceptorBike, annihilatorPlatform: nexus.annihilatorPlatform + annihilatorPlatform, overseer: nexus.overseer + overseer, populationCurrent: nexus.populationCurrent + troopsAdded });
     res.json({ success: true, nexus: serializeNexus(updated) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'internalAdminController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -88,7 +94,8 @@ export async function addBuildings(req: Request, res: Response): Promise<void> {
     const updated = await adminService.updateNexus(nexus.id, { commandCore: nexus.commandCore + commandCore, recruitmentCore: nexus.recruitmentCore + recruitmentCore, lifeSupport: newLifeSupport, storageVault: nexus.storageVault + storageVault, biomassFarm: nexus.biomassFarm + biomassFarm, alloyForge: nexus.alloyForge + alloyForge, oreExtractor: nexus.oreExtractor + oreExtractor, shieldGrid: nexus.shieldGrid + shieldGrid, populationMax: getPopulationMax(newLifeSupport) });
     res.json({ success: true, nexus: serializeNexus(updated) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'internalAdminController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -99,7 +106,8 @@ export async function resetTroops(req: Request, res: Response): Promise<void> {
     const updated = await adminService.updateNexus(nexus.id, { lancerDrone: 0, assaultTrooper: 0, breakerUnit: 0, reconOperative: 0, skimmerBike: 0, siegeMech: 0, bulwarkGuard: 0, suppressorTeam: 0, disruptorUnit: 0, interceptorBike: 0, annihilatorPlatform: 0, overseer: 0, populationCurrent: 0 });
     res.json({ success: true, nexus: serializeNexus(updated) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'internalAdminController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -110,7 +118,8 @@ export async function resetBuildings(req: Request, res: Response): Promise<void>
     const updated = await adminService.updateNexus(nexus.id, { commandCore: 0, recruitmentCore: 0, lifeSupport: 0, storageVault: 0, biomassFarm: 0, alloyForge: 0, oreExtractor: 0, shieldGrid: 0, populationMax: getPopulationMax(0) });
     res.json({ success: true, nexus: serializeNexus(updated) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'internalAdminController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -130,7 +139,8 @@ export async function completeBuild(req: Request, res: Response): Promise<void> 
     }
     res.json({ success: true, nexus: serializeNexus(updated) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'internalAdminController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -149,7 +159,8 @@ export async function completeTraining(req: Request, res: Response): Promise<voi
     }
     res.json({ success: true, nexus: serializeNexus(updated) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'internalAdminController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -163,7 +174,8 @@ export async function deleteNexus(req: Request, res: Response): Promise<void> {
     await prisma.nexus.delete({ where: { id: nexusId } });
     res.json({ success: true, message: 'Nexus deleted' });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'internalAdminController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -172,7 +184,8 @@ export async function getAttacks(req: Request, res: Response): Promise<void> {
     const attacks = await adminService.getAdminAttacks();
     res.json(attacks.map((a) => ({ ...a, _id: a.id })));
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'internalAdminController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -186,6 +199,7 @@ export async function completeAttack(req: Request, res: Response): Promise<void>
     await processArrivedAttacks();
     res.json({ success: true, message: 'Attack completed' });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'internalAdminController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }

@@ -2,6 +2,7 @@ import type { Response } from 'express';
 import prisma from '../lib/prisma.js';
 import { notifyFactionChat } from '../services/warRoomSocket.js';
 import type { AuthRequest } from '../types/index.js';
+import { logError } from '../utils/logger.js';
 
 const FACTION_NAME_MIN = 3;
 const FACTION_NAME_MAX = 32;
@@ -80,7 +81,8 @@ export async function getMyFaction(req: AuthRequest, res: Response): Promise<voi
       },
     });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -117,7 +119,8 @@ export async function getFaction(req: AuthRequest, res: Response): Promise<void>
       members: faction.members.map((m: any) => ({ id: m.id, userId: m.userId, username: m.user.username, isSupporter: m.user.isSupporter, role: m.role })),
     });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -147,7 +150,8 @@ export async function listFactionsInGalaxy(req: AuthRequest, res: Response): Pro
 
     res.json(factions.map((f: any) => ({ ...f, memberCount: f._count.members })));
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -243,7 +247,7 @@ export async function createFaction(req: AuthRequest, res: Response): Promise<vo
       res.status(400).json({ error: `A faction with that ${field} already exists in this galaxy` });
       return;
     }
-    res.status(500).json({ error: (error as Error).message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -313,7 +317,7 @@ export async function inviteToFaction(req: AuthRequest, res: Response): Promise<
       res.status(400).json({ error: 'Invite already pending for this user' });
       return;
     }
-    res.status(500).json({ error: (error as Error).message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -350,7 +354,8 @@ export async function getMyInvites(req: AuthRequest, res: Response): Promise<voi
 
     res.json(invitesWithUsers);
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -405,7 +410,8 @@ export async function acceptInvite(req: AuthRequest, res: Response): Promise<voi
 
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -433,7 +439,8 @@ export async function declineInvite(req: AuthRequest, res: Response): Promise<vo
     await prisma.factionInvite.delete({ where: { id: inviteId } });
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -488,7 +495,8 @@ export async function setMemberRole(req: AuthRequest, res: Response): Promise<vo
 
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -546,7 +554,8 @@ export async function kickMember(req: AuthRequest, res: Response): Promise<void>
 
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -582,7 +591,8 @@ export async function leaveFaction(req: AuthRequest, res: Response): Promise<voi
 
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -624,7 +634,8 @@ export async function transferLeader(req: AuthRequest, res: Response): Promise<v
 
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -654,7 +665,8 @@ export async function disbandFaction(req: AuthRequest, res: Response): Promise<v
     await prisma.faction.delete({ where: { id: factionId } });
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -746,7 +758,8 @@ export async function getLeaderboard(req: AuthRequest, res: Response): Promise<v
       dominanceMinFactions: DOMINANCE_MIN_FACTIONS,
     });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -812,7 +825,7 @@ export async function requestToJoin(req: AuthRequest, res: Response): Promise<vo
       res.status(400).json({ error: 'You already have a pending request to join this faction' });
       return;
     }
-    res.status(500).json({ error: (error as Error).message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -834,7 +847,8 @@ export async function cancelJoinRequest(req: AuthRequest, res: Response): Promis
 
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -875,7 +889,8 @@ export async function getJoinRequests(req: AuthRequest, res: Response): Promise<
       createdAt: r.createdAt,
     })));
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -935,7 +950,8 @@ export async function approveJoinRequest(req: AuthRequest, res: Response): Promi
 
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -967,7 +983,8 @@ export async function declineJoinRequest(req: AuthRequest, res: Response): Promi
 
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -1003,7 +1020,8 @@ export async function getMyJoinRequests(req: AuthRequest, res: Response): Promis
       createdAt: r.createdAt,
     })));
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -1046,7 +1064,8 @@ export async function updateMotd(req: AuthRequest, res: Response): Promise<void>
 
     res.json(updated);
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -1087,7 +1106,8 @@ export async function getChatMessages(req: AuthRequest, res: Response): Promise<
 
     res.json(messages.reverse());
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -1130,7 +1150,8 @@ export async function sendChatMessage(req: AuthRequest, res: Response): Promise<
     notifyFactionChat(factionId, message);
     res.status(201).json(message);
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -1166,6 +1187,7 @@ export async function getEvents(req: AuthRequest, res: Response): Promise<void> 
 
     res.json(events.reverse());
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }

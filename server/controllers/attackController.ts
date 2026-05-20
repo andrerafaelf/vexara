@@ -6,6 +6,7 @@ import * as attackService from '../services/attackService.js';
 import type { AuthRequest, TroopKey } from '../types/index.js';
 import { TROOP_STATS } from '../utils/combatMath.js';
 import { normalizeTroopPayload, parsePositiveInt } from '../utils/validation.js';
+import { logError } from '../utils/logger.js';
 
 const TROOP_KEYS: TroopKey[] = [
   'lancerDrone', 'assaultTrooper', 'breakerUnit', 'reconOperative', 'skimmerBike',
@@ -119,7 +120,8 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
     await applyQuestRewards(updatedAttackerNexus, { hasOutgoingStrike: true });
     res.json({ success: true, attack: serializeAttack(attack) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'attackController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -137,7 +139,8 @@ export async function getIncomingAttacks(req: AuthRequest, res: Response): Promi
       return serializeAttack({ ...a, attackerUsername: u?.username, attackerIsSupporter: u?.isSupporter });
     }));
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'attackController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -155,6 +158,7 @@ export async function getOutgoingAttacks(req: AuthRequest, res: Response): Promi
       return serializeAttack({ ...a, defenderUsername: u?.username, defenderIsSupporter: u?.isSupporter });
     }));
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'attackController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }

@@ -3,6 +3,7 @@ import { invalidateAuthCache } from '../middleware/auth.js';
 import prisma from '../lib/prisma.js';
 import * as galaxyService from '../services/galaxyService.js';
 import type { AuthRequest } from '../types/index.js';
+import { logError } from '../utils/logger.js';
 
 function serializeGalaxy(g: { id: number; name: string; status: string; endedAt?: Date | null; winnerUserId?: number | null; winnerFactionId?: number | null; createdAt: Date }, opts: { isJoined?: boolean } = {}) {
   return { id: g.id, name: g.name, status: g.status, endedAt: g.endedAt ?? null, winnerUserId: g.winnerUserId ?? null, winnerFactionId: g.winnerFactionId ?? null, createdAt: g.createdAt, isJoined: opts.isJoined ?? false };
@@ -23,7 +24,8 @@ export async function listGalaxies(req: AuthRequest, res: Response): Promise<voi
     );
     res.json(visible.map((g) => serializeGalaxy(g, { isJoined: joined.has(g.id) })));
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'galaxyController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -78,7 +80,8 @@ export async function getGalaxyWinResults(req: AuthRequest, res: Response): Prom
 
     res.json({ galaxy: serializeGalaxy(galaxy), factionLeaderboard, topPlayers: players.slice(0, 20).map((p) => ({ userId: p.userId, username: p.user?.username ?? 'Unknown', isSupporter: p.user?.isSupporter ?? false, points: p.points, nexuses: nexusByOwner.get(p.userId) || 0, factionId: userFactionMap.get(p.userId) ?? null })) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'galaxyController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -88,7 +91,8 @@ export async function getMyGalaxy(req: AuthRequest, res: Response): Promise<void
     if (!user) { res.status(404).json({ error: 'User not found' }); return; }
     res.json({ activeGalaxy: user.activeGalaxy ? serializeGalaxy(user.activeGalaxy, { isJoined: true }) : null });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'galaxyController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -103,7 +107,13 @@ export async function leaveGalaxy(req: AuthRequest, res: Response): Promise<void
     invalidateAuthCache(req.userId);
     res.json({ success: true });
   } catch (error) {
-    res.status((error as { status?: number }).status || 500).json({ error: (error as Error).message });
+    const status = (error as { status?: number }).status || 500;
+    if (status >= 500) {
+      logError('unhandled_controller_error', { message: (error as Error).message, file: 'galaxyController.ts' });
+      res.status(status).json({ error: 'Internal server error' });
+    } else {
+      res.status(status).json({ error: (error as Error).message });
+    }
   }
 }
 
@@ -120,6 +130,7 @@ export async function selectGalaxy(req: AuthRequest, res: Response): Promise<voi
     invalidateAuthCache(req.userId);
     res.json({ success: true, joined: result.joined, activeGalaxy: serializeGalaxy(galaxy, { isJoined: true }) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'galaxyController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }

@@ -1,6 +1,7 @@
 import type { Response } from 'express';
 import prisma from '../lib/prisma.js';
 import type { AuthRequest } from '../types/index.js';
+import { logError } from '../utils/logger.js';
 
 const VALID_TREATY_TYPES = ['nap', 'trade', 'vassal'] as const;
 type TreatyType = (typeof VALID_TREATY_TYPES)[number];
@@ -74,7 +75,8 @@ export async function proposeTreaty(req: AuthRequest, res: Response): Promise<vo
 
     res.json(treaty);
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionTreatyController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -111,7 +113,8 @@ export async function acceptTreaty(req: AuthRequest, res: Response): Promise<voi
 
     res.json(updated);
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionTreatyController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -141,7 +144,8 @@ export async function cancelTreaty(req: AuthRequest, res: Response): Promise<voi
 
     res.json(updated);
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionTreatyController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -189,7 +193,8 @@ export async function getActiveTreaties(req: AuthRequest, res: Response): Promis
 
     res.json(enriched);
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionTreatyController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -228,6 +233,7 @@ export async function getGalaxyDiplomacy(req: AuthRequest, res: Response): Promi
 
     res.json(enriched);
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionTreatyController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }

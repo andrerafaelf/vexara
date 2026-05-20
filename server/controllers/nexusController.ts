@@ -4,6 +4,7 @@ import prisma from '../lib/prisma.js';
 import * as nexusService from '../services/nexusService.js';
 import type { AuthRequest } from '../types/index.js';
 import { getPopulationMax } from '../utils/population.js';
+import { logError } from '../utils/logger.js';
 
 const MAX_NEXUSES_PER_USER = 10;
 
@@ -45,7 +46,8 @@ export async function getMyNexuses(req: AuthRequest, res: Response): Promise<voi
 
     res.json(updated.map((v) => serializeNexus(v)));
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'nexusController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -64,7 +66,8 @@ export async function getNexus(req: AuthRequest, res: Response): Promise<void> {
     const updated = await applyQuestRewards(refreshed);
     res.json(serializeNexus(updated));
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'nexusController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -103,7 +106,8 @@ export async function createNexus(req: AuthRequest, res: Response): Promise<void
 
     res.json(serializeNexus(nexus));
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'nexusController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -127,7 +131,8 @@ export async function renameNexus(req: AuthRequest, res: Response): Promise<void
     const updated = await nexusService.updateNexus(nexus.id, { name });
     res.json(serializeNexus(updated));
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'nexusController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -136,7 +141,8 @@ export async function getGroups(req: AuthRequest, res: Response): Promise<void> 
     const player = await nexusService.getPlayerGroups(req.userId, req.galaxyId);
     res.json(Array.isArray(player?.nexusGroups) ? player.nexusGroups : []);
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'nexusController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -159,7 +165,8 @@ export async function createGroup(req: AuthRequest, res: Response): Promise<void
     const updated = await nexusService.updatePlayerGroups(req.userId, req.galaxyId, [...groups, newGroup]);
     res.json(updated);
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'nexusController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -184,7 +191,8 @@ export async function renameGroup(req: AuthRequest, res: Response): Promise<void
     const updated = await nexusService.updatePlayerGroups(req.userId, req.galaxyId, groups);
     res.json(updated);
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'nexusController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -203,7 +211,8 @@ export async function deleteGroup(req: AuthRequest, res: Response): Promise<void
     const updated = await nexusService.updatePlayerGroups(req.userId, req.galaxyId, filtered);
     res.json(updated);
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'nexusController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -231,7 +240,8 @@ export async function setGroupNexuses(req: AuthRequest, res: Response): Promise<
     const updated = await nexusService.updatePlayerGroups(req.userId, req.galaxyId, groups);
     res.json(updated);
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'nexusController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -282,7 +292,8 @@ export async function transferResources(req: AuthRequest, res: Response): Promis
 
     res.json({ from: serializeNexus(updatedFrom), to: serializeNexus(updatedTo) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'nexusController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -319,6 +330,7 @@ export async function specializeNexus(req: AuthRequest, res: Response): Promise<
 
     res.json({ success: true, nexus: serializeNexus(updated as Parameters<typeof serializeNexus>[0]) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'nexusController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }

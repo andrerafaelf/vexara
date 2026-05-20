@@ -12,6 +12,7 @@ import {
 } from '../services/emailService.js';
 import { generateUniqueReferralCode } from '../services/referralService.js';
 import { detectEmailTypo, validateEmail, validatePassword, validateUsername } from '../utils/validation.js';
+import { logError } from '../utils/logger.js';
 
 const VERIFY_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -129,7 +130,8 @@ export async function registerReal(req: Request, res: Response): Promise<void> {
 
     res.status(201).json({ ok: true, message: 'Check your email to confirm your account.' });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'authController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -177,7 +179,8 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
 
     res.json({ ok: true });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'authController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -211,7 +214,8 @@ export async function resendVerification(req: Request, res: Response): Promise<v
 
     res.json({ ok: true });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'authController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -245,7 +249,8 @@ export async function requestPasswordReset(req: Request, res: Response): Promise
 
     res.json({ ok: true });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'authController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -285,7 +290,8 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
 
     res.json({ ok: true });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'authController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -294,7 +300,8 @@ export async function alphaSignupCount(_req: Request, res: Response): Promise<vo
     const total = await prisma.alphaSignup.count();
     res.json({ total, limit: 150, remaining: Math.max(0, 150 - total) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'authController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -336,7 +343,8 @@ export async function alphaSignup(req: Request, res: Response): Promise<void> {
 
     res.status(202).json({ ok: true });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'authController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -370,6 +378,7 @@ export async function login(req: Request, res: Response): Promise<void> {
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
     res.json({ token, user: { id: user.id, username: user.username, email: user.email, isSupporter: user.isSupporter } });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'authController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }

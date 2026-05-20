@@ -2,6 +2,7 @@ import type { Response } from 'express';
 import { serializeNexus } from '../models/Nexus.js';
 import * as transferService from '../services/troopTransferService.js';
 import type { AuthRequest } from '../types/index.js';
+import { logError } from '../utils/logger.js';
 
 const TROOP_FIELDS = [
   'lancerDrone', 'assaultTrooper', 'breakerUnit', 'reconOperative',
@@ -65,7 +66,8 @@ export async function sendTroops(req: AuthRequest, res: Response): Promise<void>
     });
     res.json({ from: serializeNexus(updatedFrom), transfer: serializeTransfer(transfer) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'troopTransferController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -89,7 +91,8 @@ export async function recallTroops(req: AuthRequest, res: Response): Promise<voi
     const updated = await transferService.updateTransfer(transfer.id, { status: 'returning', returnsAt, arrivesAt: null });
     res.json({ transfer: serializeTransfer(updated) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'troopTransferController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -103,7 +106,8 @@ export async function sendBack(req: AuthRequest, res: Response): Promise<void> {
     const updated = await transferService.updateTransfer(transfer.id, { status: 'returning', returnsAt, arrivesAt: null });
     res.json({ transfer: serializeTransfer(updated) });
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'troopTransferController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -117,6 +121,7 @@ export async function getTransfersForNexus(req: AuthRequest, res: Response): Pro
     const transfers = await transferService.getTransfersForNexus(nexusId, req.galaxyId);
     res.json(transfers.map(serializeTransfer));
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'troopTransferController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
