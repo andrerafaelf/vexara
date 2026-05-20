@@ -19,6 +19,7 @@ import { formatDate, formatTimeOfDay } from '@/utils/date';
 import { MessageSquare, Users, UserPlus, GitBranch } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReferralsTab from './ReferralsTab';
+import Username from './Username';
 import { usePageReady } from './NavigationProgress';
 
 type TabId = 'friends' | 'requests' | 'chat' | 'referrals';
@@ -26,6 +27,7 @@ type TabId = 'friends' | 'requests' | 'chat' | 'referrals';
 interface Friend {
   id: string;
   username: string;
+  isSupporter?: boolean;
   points: number;
   friendsSince: string;
 }
@@ -34,12 +36,14 @@ interface FriendRequestItem {
   id: string;
   userId: string;
   username: string;
+  isSupporter?: boolean;
   createdAt: string;
 }
 
 interface Conversation {
   friendId: string;
   username: string;
+  isSupporter?: boolean;
   lastMessage: ChatMessage | null;
   unreadCount: number;
 }
@@ -350,7 +354,7 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
               {friends.map((f) => (
                 <li key={f.id} className="friends-list-item" onClick={() => handleOpenChat(f.id)} style={{ cursor: 'pointer' }}>
                   <div className="friends-list-info">
-                    <span className="friends-name">{f.username}</span>
+                    <span className="friends-name"><Username name={f.username} isSupporter={f.isSupporter} /></span>
                     <span className="friends-meta">
                       {f.points} pts · since {formatDate(f.friendsSince)}
                     </span>
@@ -386,7 +390,7 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
               {incoming.map((r) => (
                 <li key={r.id} className="friends-list-item">
                   <div className="friends-list-info">
-                    <span className="friends-name">{r.username}</span>
+                    <span className="friends-name"><Username name={r.username} isSupporter={r.isSupporter} /></span>
                     <span className="friends-meta">{formatDate(r.createdAt)}</span>
                   </div>
                   <div className="friends-list-actions">
@@ -410,7 +414,7 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
               {outgoing.map((r) => (
                 <li key={r.id} className="friends-list-item">
                   <div className="friends-list-info">
-                    <span className="friends-name">{r.username}</span>
+                    <span className="friends-name"><Username name={r.username} isSupporter={r.isSupporter} /></span>
                     <span className="friends-meta">{formatDate(r.createdAt)}</span>
                   </div>
                   <div className="friends-list-actions">
@@ -439,7 +443,7 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
                       onClick={() => handleOpenChat(c.friendId)}
                     >
                       <span className="friends-conversation-name">
-                        {c.username}
+                        <Username name={c.username} isSupporter={c.isSupporter} />
                         {c.unreadCount > 0 && <span className="friends-badge">{c.unreadCount}</span>}
                       </span>
                       {c.lastMessage && (
@@ -462,7 +466,7 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
             ) : (
               <>
                 <header className="friends-chat-header">
-                  <span className="friends-name">{activeFriend.username}</span>
+                  <span className="friends-name"><Username name={activeFriend.username} isSupporter={activeFriend.isSupporter} /></span>
                   <button
                     className="friends-btn danger"
                     onClick={() => activeFriendId && handleUnfriend(activeFriendId)}
@@ -477,13 +481,17 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
                   ) : (
                     messages.map((m) => {
                       const mine = m.senderId === myId;
-                      const senderName = mine ? (user?.username ?? 'You') : (activeFriend?.username ?? '');
                       return (
                         <div
                           key={m.id}
                           className={`friends-chat-bubble ${mine ? 'mine' : 'theirs'}`}
                         >
-                          <div className="friends-chat-bubble-sender">{senderName}</div>
+                          <div className="friends-chat-bubble-sender">
+                            {mine
+                              ? <Username name={user?.username ?? 'You'} isSupporter={user?.isSupporter} />
+                              : <Username name={activeFriend?.username ?? ''} isSupporter={activeFriend?.isSupporter} />
+                            }
+                          </div>
                           <div className="friends-chat-bubble-content">{m.content}</div>
                           <div className="friends-chat-bubble-time">{formatTime(m.createdAt)}</div>
                         </div>

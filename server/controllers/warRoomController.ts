@@ -88,8 +88,9 @@ async function serializeOperation(operationId: number) {
     ? []
     : await prisma.user.findMany({
         where: { id: { in: Array.from(userIds) } },
-        select: { id: true, username: true },
+        select: { id: true, username: true, isSupporter: true },
       });
+  const userById = new Map(users.map((u) => [u.id, u] as const));
   const usernameById = new Map(users.map((u) => [u.id, u.username] as const));
 
   // Hydrate nexus labels for slots
@@ -130,6 +131,7 @@ async function serializeOperation(operationId: number) {
           id: s.id,
           userId: s.userId,
           username: usernameById.get(s.userId) ?? '—',
+          isSupporter: userById.get(s.userId)?.isSupporter ?? false,
           fromNexusId: s.fromNexusId,
           fromNexusName: nx?.name ?? `Nexus #${s.fromNexusId}`,
           fromNexusX: nx?.x ?? null,
@@ -148,6 +150,7 @@ async function serializeOperation(operationId: number) {
         id: m.id,
         userId: m.userId,
         username: usernameById.get(m.userId) ?? '—',
+        isSupporter: userById.get(m.userId)?.isSupporter ?? false,
         content: m.content,
         kind: m.kind,
         createdAt: m.createdAt.toISOString(),
@@ -682,11 +685,12 @@ export async function postThreadMessage(req: AuthRequest, res: Response): Promis
     const msg = await prisma.warOperationMessage.create({
       data: { operationId, userId: req.userId, content, kind: 'chat' },
     });
-    const user = await prisma.user.findUnique({ where: { id: req.userId }, select: { username: true } });
+    const user = await prisma.user.findUnique({ where: { id: req.userId }, select: { username: true, isSupporter: true } });
     const out = {
       id: msg.id,
       userId: msg.userId,
       username: user?.username ?? '—',
+      isSupporter: user?.isSupporter ?? false,
       content: msg.content,
       kind: msg.kind,
       createdAt: msg.createdAt.toISOString(),
@@ -724,14 +728,15 @@ export async function getThread(req: AuthRequest, res: Response): Promise<void> 
     const userIds = Array.from(new Set(messages.map((m) => m.userId)));
     const users = await prisma.user.findMany({
       where: { id: { in: userIds } },
-      select: { id: true, username: true },
+      select: { id: true, username: true, isSupporter: true },
     });
-    const usernameById = new Map(users.map((u) => [u.id, u.username] as const));
+    const userById2 = new Map(users.map((u) => [u.id, u] as const));
     res.json({
       messages: messages.reverse().map((m) => ({
         id: m.id,
         userId: m.userId,
-        username: usernameById.get(m.userId) ?? '—',
+        username: userById2.get(m.userId)?.username ?? '—',
+        isSupporter: userById2.get(m.userId)?.isSupporter ?? false,
         content: m.content,
         kind: m.kind,
         createdAt: m.createdAt.toISOString(),

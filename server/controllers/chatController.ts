@@ -22,6 +22,7 @@ export async function listConversations(req: AuthRequest, res: Response): Promis
       return {
         friendId: String(friend.id),
         username: friend.username,
+        isSupporter: friend.isSupporter,
         lastMessage: s?.lastMessage ? serializeMessage(s.lastMessage) : null,
         unreadCount: s?.unreadCount ?? 0,
       };

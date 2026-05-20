@@ -4,8 +4,8 @@ import * as friendsService from '../services/friendsService.js';
 import { notifyBadgeUpdate } from '../services/warRoomSocket.js';
 import type { AuthRequest } from '../types/index.js';
 
-function serializeFriend(user: { id: number; username: string }, friendshipCreatedAt: Date, points: number | undefined) {
-  return { id: String(user.id), username: user.username, points: points ?? 0, friendsSince: friendshipCreatedAt };
+function serializeFriend(user: { id: number; username: string; isSupporter: boolean }, friendshipCreatedAt: Date, points: number | undefined) {
+  return { id: String(user.id), username: user.username, isSupporter: user.isSupporter, points: points ?? 0, friendsSince: friendshipCreatedAt };
 }
 
 export async function listFriends(req: AuthRequest, res: Response): Promise<void> {
@@ -68,8 +68,8 @@ export async function listRequests(req: AuthRequest, res: Response): Promise<voi
   try {
     const [incoming, outgoing] = await friendsService.getPendingRequests(req.userId);
     res.json({
-      incoming: incoming.map((r) => ({ id: String(r.id), userId: String(r.sender.id), username: r.sender.username, createdAt: r.createdAt })),
-      outgoing: outgoing.map((r) => ({ id: String(r.id), userId: String(r.receiver.id), username: r.receiver.username, createdAt: r.createdAt })),
+      incoming: incoming.map((r) => ({ id: String(r.id), userId: String(r.sender.id), username: r.sender.username, isSupporter: r.sender.isSupporter, createdAt: r.createdAt })),
+      outgoing: outgoing.map((r) => ({ id: String(r.id), userId: String(r.receiver.id), username: r.receiver.username, isSupporter: r.receiver.isSupporter, createdAt: r.createdAt })),
     });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });

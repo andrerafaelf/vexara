@@ -18,6 +18,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import Username from './Username';
 import { useToast } from '../context/ToastContext';
 import { useWarRoomSocket, type WarRoomEvent } from '../hooks/useWarRoomSocket';
 import {
@@ -62,6 +63,7 @@ interface Slot {
   id: number;
   userId: number;
   username: string;
+  isSupporter?: boolean;
   fromNexusId: number;
   fromNexusName: string;
   fromNexusX: number | null;
@@ -85,6 +87,7 @@ interface ThreadMessage {
   id: number;
   userId: number;
   username: string;
+  isSupporter?: boolean;
   content: string;
   kind: string;
   createdAt: string;
@@ -948,7 +951,7 @@ function SlotRow({
           {initials(slot.username)}
         </div>
         <div className="warroom-slot-meta">
-          <span className="warroom-slot-username">{slot.username}{isMine && <span className="warroom-you">YOU</span>}</span>
+          <span className="warroom-slot-username"><Username name={slot.username} isSupporter={slot.isSupporter} />{isMine && <span className="warroom-you">YOU</span>}</span>
           <span className="warroom-slot-nexus">from {slot.fromNexusName}</span>
         </div>
       </div>
@@ -1335,7 +1338,7 @@ function ThreadPanel({
                   <div className="warroom-avatar warroom-avatar--xs" style={{ background: colorForUser(m.userId) }}>
                     {initials(m.username)}
                   </div>
-                  <span className="warroom-thread-msg-name">{m.username}</span>
+                  <span className="warroom-thread-msg-name"><Username name={m.username} isSupporter={m.isSupporter} /></span>
                   <span className="warroom-thread-msg-time">{fmtShortTime(m.createdAt)}</span>
                 </div>
               )}
