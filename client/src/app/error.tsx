@@ -9,6 +9,7 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  // Log the error to an external service, or just the console for now
   useEffect(() => {
     console.error('[ErrorBoundary]', error);
   }, [error]);

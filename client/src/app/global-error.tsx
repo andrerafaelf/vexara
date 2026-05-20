@@ -9,6 +9,7 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  // Log the error to an external service, or just the console for now
   useEffect(() => {
     console.error('[GlobalErrorBoundary]', error);
   }, [error]);
