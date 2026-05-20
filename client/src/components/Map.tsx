@@ -863,7 +863,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
 
         <div className="detail-line">
           <span>Owner</span>
-          <Username name={selectedNexus.owner?.username ?? ''} isSupporter={selectedNexus.owner?.isSupporter} />
+          <Username name={selectedNexus.owner?.username ?? ''} isSupporter={selectedNexus.owner?.isSupporter} linkToProfile />
         </div>
         <div className="detail-line">
           <span>Points</span>

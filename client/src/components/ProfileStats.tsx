@@ -3,7 +3,8 @@
 import { useAuth } from '@/context/AuthContext';
 import { getUserStats } from '@/services/api';
 import { UserStats } from '@/types/game';
-import { Bell, Heart, LogOut, User as UserIcon } from 'lucide-react';
+import { Bell, ExternalLink, Heart, LogOut, User as UserIcon } from 'lucide-react';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import '../styles/ProfileStats.css';
 import NotificationSettings from './NotificationSettings';
@@ -119,6 +120,14 @@ export default function ProfileStats() {
           <span className="ps-meta">
             {stats.points.toLocaleString()} influence · {stats.nexusCount} nexus{stats.nexusCount !== 1 ? 'es' : ''} · {stats.accountAgeDays}d played
           </span>
+          <Link
+            href={`/u/${encodeURIComponent(stats.username)}`}
+            className="ps-meta"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 4 }}
+          >
+            <ExternalLink size={12} aria-hidden="true" />
+            <span>View public profile</span>
+          </Link>
         </div>
       </div>
 

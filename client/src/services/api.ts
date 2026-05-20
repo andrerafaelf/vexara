@@ -341,6 +341,10 @@ export const cancelFriendRequest = (requestId: string) =>
 export const removeFriend = (friendId: string) =>
   apiRequest(`/friends/${friendId}`, { method: 'DELETE' });
 
+// Users (public profile)
+export const getPublicProfile = (username: string) =>
+  apiRequest(`/users/${encodeURIComponent(username)}/profile`);
+
 // Stats
 export const getUserStats = () => apiRequest('/stats/me');
 export const getStatsTimeline = (days: number) => apiRequest(`/stats/timeline?days=${days}`);

@@ -90,11 +90,12 @@ model Galaxy {
 }
 
 model GalaxyPlayer {
-  id       Int      @id @default(autoincrement())
-  userId   Int
-  galaxyId Int
-  points   Int      @default(0)
-  joinedAt DateTime @default(now())
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  galaxyId    Int
+  points      Int      @default(0)
+  finalPoints Int?
+  joinedAt    DateTime @default(now())
 
   questRewardClaims Json @default("[]")
   completedQuestIds Json @default("[]")

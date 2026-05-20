@@ -354,7 +354,7 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
               {friends.map((f) => (
                 <li key={f.id} className="friends-list-item" onClick={() => handleOpenChat(f.id)} style={{ cursor: 'pointer' }}>
                   <div className="friends-list-info">
-                    <span className="friends-name"><Username name={f.username} isSupporter={f.isSupporter} /></span>
+                    <span className="friends-name"><Username name={f.username} isSupporter={f.isSupporter} linkToProfile /></span>
                     <span className="friends-meta">
                       {f.points} pts · since {formatDate(f.friendsSince)}
                     </span>
@@ -390,7 +390,7 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
               {incoming.map((r) => (
                 <li key={r.id} className="friends-list-item">
                   <div className="friends-list-info">
-                    <span className="friends-name"><Username name={r.username} isSupporter={r.isSupporter} /></span>
+                    <span className="friends-name"><Username name={r.username} isSupporter={r.isSupporter} linkToProfile /></span>
                     <span className="friends-meta">{formatDate(r.createdAt)}</span>
                   </div>
                   <div className="friends-list-actions">
@@ -414,7 +414,7 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
               {outgoing.map((r) => (
                 <li key={r.id} className="friends-list-item">
                   <div className="friends-list-info">
-                    <span className="friends-name"><Username name={r.username} isSupporter={r.isSupporter} /></span>
+                    <span className="friends-name"><Username name={r.username} isSupporter={r.isSupporter} linkToProfile /></span>
                     <span className="friends-meta">{formatDate(r.createdAt)}</span>
                   </div>
                   <div className="friends-list-actions">
@@ -466,7 +466,7 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
             ) : (
               <>
                 <header className="friends-chat-header">
-                  <span className="friends-name"><Username name={activeFriend.username} isSupporter={activeFriend.isSupporter} /></span>
+                  <span className="friends-name"><Username name={activeFriend.username} isSupporter={activeFriend.isSupporter} linkToProfile /></span>
                   <button
                     className="friends-btn danger"
                     onClick={() => activeFriendId && handleUnfriend(activeFriendId)}

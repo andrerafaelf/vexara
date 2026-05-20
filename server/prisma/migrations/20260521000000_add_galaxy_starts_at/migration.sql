@@ -1,0 +1,1 @@
+ALTER TABLE "Galaxy" ADD COLUMN "startsAt" TIMESTAMP(3);

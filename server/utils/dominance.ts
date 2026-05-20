@@ -154,6 +154,17 @@ async function endGalaxy(galaxy: { id: number; name: string }, winnerFactionId: 
   });
   const winnerIds = new Set(factionMembers.map((m) => m.userId));
 
+  if (winnerIds.size > 0) {
+    // Snapshot influence for winning-faction members. Raw SQL because Prisma can't
+    // copy a column to another column in one statement.
+    await prisma.$executeRaw`
+      UPDATE "GalaxyPlayer"
+      SET "finalPoints" = "points"
+      WHERE "galaxyId" = ${galaxy.id}
+        AND "userId" = ANY(${Array.from(winnerIds)}::int[])
+    `;
+  }
+
   for (const p of allPlayers) {
     const isWinner = winnerIds.has(p.userId);
     void sendPushToUser(p.userId, isWinner ? NOTIF.ATTACK_RESOLVED : NOTIF.ATTACK_INCOMING, {

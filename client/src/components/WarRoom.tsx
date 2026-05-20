@@ -216,6 +216,12 @@ export default function WarRoom({ factionId, myRole }: Props) {
   const socket = useWarRoomSocket(true);
   const selectedOpIdRef = useRef<number | null>(null);
   selectedOpIdRef.current = selectedOpId;
+  // Stable refs for the socket methods. The `socket` object's identity
+  // changes whenever peers/cursors/typing update (presence broadcasts arrive
+  // constantly), but the methods themselves are useCallback-stable. Pinning
+  // them via ref lets effects below depend on nothing but real triggers.
+  const setFocus = socket.setFocus;
+  const subscribe = socket.subscribe;
 
   // tick every second for countdowns
   useEffect(() => {
@@ -288,12 +294,12 @@ export default function WarRoom({ factionId, myRole }: Props) {
       return;
     }
     loadOperation(selectedOpId);
-    socket.setFocus(selectedOpId);
-  }, [selectedOpId, loadOperation, socket]);
+    setFocus(selectedOpId);
+  }, [selectedOpId, loadOperation, setFocus]);
 
   // socket event handler, keep list + selected op in sync without polling
   useEffect(() => {
-    const unsub = socket.subscribe((e: WarRoomEvent) => {
+    const unsub = subscribe((e: WarRoomEvent) => {
       if (e.type === 'op:deleted') {
         setOperations((prev) => prev.filter((o) => o.id !== e.operationId));
         if (selectedOpIdRef.current === e.operationId) {
@@ -321,7 +327,7 @@ export default function WarRoom({ factionId, myRole }: Props) {
       }
     });
     return unsub;
-  }, [socket, loadOperation, refreshList, debouncedRefreshList, debouncedLoadOperation]);
+  }, [subscribe, debouncedRefreshList, debouncedLoadOperation]);
 
   const handleCreate = async (data: { name: string; targetNexusId: number; arrivalAt: string }) => {
     try {
@@ -966,7 +972,7 @@ function SlotRow({
           {initials(slot.username)}
         </div>
         <div className="warroom-slot-meta">
-          <span className="warroom-slot-username"><Username name={slot.username} isSupporter={slot.isSupporter} />{isMine && <span className="warroom-you">YOU</span>}</span>
+          <span className="warroom-slot-username"><Username name={slot.username} isSupporter={slot.isSupporter} linkToProfile />{isMine && <span className="warroom-you">YOU</span>}</span>
           <span className="warroom-slot-nexus">from {slot.fromNexusName}</span>
         </div>
       </div>
@@ -1475,7 +1481,7 @@ function CreateOperationModal({
                   </div>
                   <div className="warroom-target-card-name">{target.name}</div>
                   <div className="warroom-target-card-meta">
-                    {target.owner?.username && <span className="warroom-target-card-owner"><Username name={target.owner.username} isSupporter={target.owner?.isSupporter} /></span>}
+                    {target.owner?.username && <span className="warroom-target-card-owner"><Username name={target.owner.username} isSupporter={target.owner?.isSupporter} linkToProfile /></span>}
                     <span className="warroom-target-card-points">{target.points.toLocaleString()} pts</span>
                   </div>
                 </>
