@@ -176,7 +176,6 @@ export default function ReferralsTab() {
 
   const openRedeem = (tokenId: number, kind: TokenKind) => {
     setRedeemError('');
-    setRedeemSuccess('');
     setRedeemState({
       tokenId,
       kind,
