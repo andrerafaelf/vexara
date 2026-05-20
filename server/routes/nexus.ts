@@ -2,11 +2,16 @@ import { Router } from 'express';
 import * as nexusController from '../controllers/nexusController.js';
 import auth from '../middleware/auth.js';
 import type { AuthRequest } from '../types/index.js';
-import type { Response } from 'express';
+import type { Request, NextFunction, Response } from 'express';
+
+function authNoGalaxy(req: Request, res: Response, next: NextFunction) {
+  (req as AuthRequest).activeGalaxyOptional = true;
+  return auth(req, res, next);
+}
 
 const router = Router();
 
-router.get('/my-nexuses', auth, (req, res) => nexusController.getMyNexuses(req as AuthRequest, res as Response));
+router.get('/my-nexuses', authNoGalaxy, (req, res) => nexusController.getMyNexuses(req as AuthRequest, res as Response));
 router.post('/create', auth, (req, res) => nexusController.createNexus(req as AuthRequest, res as Response));
 router.post('/transfer-resources', auth, (req, res) => nexusController.transferResources(req as AuthRequest, res as Response));
 router.get('/groups', auth, (req, res) => nexusController.getGroups(req as AuthRequest, res as Response));
