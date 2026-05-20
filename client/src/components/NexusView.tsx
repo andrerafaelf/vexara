@@ -5,6 +5,7 @@ import {
   cancelTrainingQueueItem,
   checkBuildQueue,
   checkTrainingQueue,
+  getGalaxyEvents,
   getIncomingAttacks,
   getMyNexuses,
   getNexusTroopTransfers,
@@ -18,6 +19,7 @@ import {
   upgradeBuilding,
 } from '../services/api';
 import {
+  AlertTriangle,
   ArrowDownLeft,
   Building2,
   Check,
@@ -28,6 +30,7 @@ import {
   LayoutGrid,
   Pencil,
   ShieldCheck,
+  Sparkles,
   Swords,
   X,
   Zap,
@@ -442,6 +445,11 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   const [isSavingNexusName, setIsSavingNexusName] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const queryClient = useQueryClient();
+  const { data: galaxyEvents = [] } = useQuery({
+    queryKey: ['galaxyEvents'],
+    queryFn: () => getGalaxyEvents().then((r) => r.data),
+    staleTime: 5 * 60 * 1000,
+  });
   const { data: incomingAttacks = [] } = useQuery({
     queryKey: ['incomingAttacks', nexus._id],
     queryFn: () => getIncomingAttacks(nexus._id).then((r) => r.data),
@@ -1724,6 +1732,36 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                 <button type="button" className="overview-queue-manage-btn" onClick={() => setActiveTab('troops')}>
                   Manage →
                 </button>
+              </div>
+            )}
+
+            {galaxyEvents.length > 0 && (
+              <div className="overview-galaxy-events">
+                <div className="overview-galaxy-events-header">
+                  <Sparkles size={13} aria-hidden="true" />
+                  <span>Galaxy Events</span>
+                </div>
+                {(galaxyEvents as any[]).map((ev: any) => {
+                  const EventIcon = ev.type === 'resource_storm' ? Zap
+                    : ev.type === 'rogue_ai' ? AlertTriangle
+                    : Sparkles;
+                  return (
+                    <div key={ev.id} className={`overview-galaxy-event-row overview-galaxy-event-row--${ev.type}`}>
+                      <EventIcon size={12} aria-hidden="true" />
+                      <span className="overview-galaxy-event-title">{ev.title}</span>
+                      {ev.type === 'resource_storm' && ev.meta?.xMin != null && (
+                        <span className="overview-galaxy-event-zone">
+                          ({ev.meta.xMin}–{ev.meta.xMax} | {ev.meta.yMin}–{ev.meta.yMax})
+                        </span>
+                      )}
+                      {ev.expiresAt && (
+                        <span className="overview-galaxy-event-expires">
+                          expires {new Date(ev.expiresAt).toLocaleString()}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
 

@@ -703,8 +703,19 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
           : false;
         const isEnemyNexus = !!nexus && !isCurrent && !isOwnNexus && !isNpcNexus;
 
+        const isInStormZone = !isOutOfBounds && galaxyEvents.some(
+          (ev) =>
+            ev.type === 'resource_storm' &&
+            ev.meta?.xMin != null &&
+            x >= ev.meta.xMin! &&
+            x <= ev.meta.xMax! &&
+            y >= ev.meta.yMin! &&
+            y <= ev.meta.yMax!,
+        );
+
         const cellClasses = ['map-cell'];
         if (isOutOfBounds) cellClasses.push('out-of-bounds');
+        if (isInStormZone) cellClasses.push('resource-storm-zone');
         if (nexus) cellClasses.push('has-nexus');
         if (isCurrent) cellClasses.push('current-nexus');
         if (isOwnNexus && !isCurrent) cellClasses.push('own-nexus');
@@ -749,7 +760,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
     }
 
     return grid;
-  }, [nexusLookup, ownNexusIds, centerX, centerY, visibleRange, currentNexus._id, isEspionage]);
+  }, [nexusLookup, ownNexusIds, centerX, centerY, visibleRange, currentNexus._id, isEspionage, galaxyEvents]);
 
   useEffect(() => {
     if (!selectedNexus) {

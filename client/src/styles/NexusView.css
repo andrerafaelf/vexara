@@ -376,6 +376,64 @@
   box-shadow: var(--glow-accent-soft);
 }
 
+/* Galaxy events in overview */
+.overview-galaxy-events {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  margin-bottom: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.overview-galaxy-events-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.10em;
+  margin-bottom: 2px;
+}
+
+.overview-galaxy-events-header svg {
+  color: var(--accent);
+}
+
+.overview-galaxy-event-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-sm);
+  color: var(--text-strong);
+}
+
+.overview-galaxy-event-row--resource_storm { color: var(--success); }
+.overview-galaxy-event-row--resource_storm svg { color: var(--success); }
+.overview-galaxy-event-row--rogue_ai { color: var(--danger); }
+.overview-galaxy-event-row--rogue_ai svg { color: var(--danger); }
+
+.overview-galaxy-event-title {
+  font-weight: 600;
+}
+
+.overview-galaxy-event-zone {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.overview-galaxy-event-expires {
+  margin-left: auto;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-faint);
+}
+
 /* Resource cap warnings */
 .resource-near-full .resource-main {
   color: var(--warning);

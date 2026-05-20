@@ -361,6 +361,30 @@
     0 0 24px rgba(248, 81, 73,0.14);
 }
 
+/* Resource storm zone — teal/green tint over every cell in the affected quadrant */
+.map-cell.resource-storm-zone {
+  background: rgba(86, 211, 100, 0.08);
+  border-color: rgba(86, 211, 100, 0.22);
+}
+
+.map-cell.resource-storm-zone:hover {
+  background: rgba(86, 211, 100, 0.18);
+  border-color: rgba(86, 211, 100, 0.45);
+}
+
+/* Nexus cells inside a storm keep their own colour but get a green glow ring */
+.map-cell.resource-storm-zone.has-nexus {
+  box-shadow: inset 0 0 10px rgba(86, 211, 100, 0.18), 0 0 8px rgba(86, 211, 100, 0.22);
+}
+
+.map-cell.resource-storm-zone.current-nexus,
+.map-cell.resource-storm-zone.own-nexus {
+  box-shadow:
+    inset 0 0 14px rgba(86, 211, 100, 0.35),
+    0 0 12px rgba(86, 211, 100, 0.50),
+    0 0 24px rgba(86, 211, 100, 0.22);
+}
+
 /* Selected cell, white outline on top of any state */
 .map-cell.selected {
   outline: 2px solid rgba(255,255,255,0.7);
