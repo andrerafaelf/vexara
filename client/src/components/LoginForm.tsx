@@ -3,12 +3,22 @@
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { login as loginApi, resendVerification as resendVerificationApi } from '../services/api';
 import '../styles/Auth.css';
 
-const SCREENSHOTS = ['/vexara-overview.png', '/vexara-troops.png', '/vexara-buildings.png'];
+const SCREENSHOTS: { src: string; label: string }[] = [
+  { src: '/vexara-overview.png',     label: 'Overview' },
+  { src: '/vexara-starfield.png',    label: 'Galaxy Map' },
+  { src: '/vexara-factions.png',     label: 'Factions' },
+  { src: '/vexara-diplomacy.png',    label: 'Diplomacy' },
+  { src: '/vexara-combatreport.png', label: 'Combat Report' },
+  { src: '/vexara-troops.png',       label: 'Troops' },
+  { src: '/vexara-buildings.png',    label: 'Buildings' },
+  { src: '/vexara-market.png',       label: 'Market' },
+  { src: '/vexara-profile.png',      label: 'Profile' },
+];
 
 const LoginForm: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -18,24 +28,40 @@ const LoginForm: React.FC = () => {
   const [needsVerification, setNeedsVerification] = useState(false);
   const [resendEmail, setResendEmail] = useState('');
   const [resendState, setResendState] = useState<'idle' | 'sending' | 'sent'>('idle');
-  const [bgIndex, setBgIndex] = useState(0);
-  const [fading, setFading] = useState(false);
-  const [zooming, setZooming] = useState(true);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [prevIndex, setPrevIndex] = useState<number | null>(null);
+  const [transitioning, setTransitioning] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const touchStartX = useRef<number | null>(null);
   const { login, isAuthenticated } = useAuth();
   const router = useRouter();
 
+  const goTo = (idx: number) => {
+    if (transitioning || idx === activeIndex) return;
+    setPrevIndex(activeIndex);
+    setTransitioning(true);
+    setActiveIndex(idx);
+    setTimeout(() => { setPrevIndex(null); setTransitioning(false); }, 600);
+  };
+
   useEffect(() => {
+    if (paused) return;
     const interval = setInterval(() => {
-      setFading(true);
-      setZooming(false);
-      setTimeout(() => {
-        setBgIndex(i => (i + 1) % SCREENSHOTS.length);
-        setFading(false);
-        setZooming(true);
-      }, 800);
+      goTo((activeIndex + 1) % SCREENSHOTS.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeIndex, paused, transitioning]);
+
+  const handleTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const delta = e.changedTouches[0].clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(delta) < 40) return;
+    if (delta < 0) goTo((activeIndex + 1) % SCREENSHOTS.length);
+    else goTo((activeIndex - 1 + SCREENSHOTS.length) % SCREENSHOTS.length);
+  };
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -85,10 +111,35 @@ const LoginForm: React.FC = () => {
     <div className="auth-container">
       <div className="auth-panel-left">
         <div
-          className={`auth-panel-left-bg${fading ? ' fading' : ''}${zooming ? ' zooming' : ''}`}
-          style={{ backgroundImage: `url(${SCREENSHOTS[bgIndex]})` }}
-        />
-        <div className="auth-panel-left-overlay" />
+          className="lp-carousel"
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div className="lp-carousel-track">
+            {SCREENSHOTS.map((s, i) => (
+              <div
+                key={s.src}
+                className={`lp-carousel-slide${i === activeIndex ? ' is-active' : ''}${i === prevIndex ? ' is-leaving' : ''}`}
+                aria-hidden={i !== activeIndex}
+              >
+                <img src={s.src} alt={s.label} className="lp-carousel-img" draggable={false} />
+              </div>
+            ))}
+          </div>
+          <div className="carousel-label" key={activeIndex}>
+            <span className="carousel-label-dot" />
+            {SCREENSHOTS[activeIndex].label}
+          </div>
+          <button className="lp-carousel-arrow lp-carousel-arrow-prev" onClick={() => goTo((activeIndex - 1 + SCREENSHOTS.length) % SCREENSHOTS.length)} aria-label="Previous">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10 12L6 8l4-4"/></svg>
+          </button>
+          <button className="lp-carousel-arrow lp-carousel-arrow-next" onClick={() => goTo((activeIndex + 1) % SCREENSHOTS.length)} aria-label="Next">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 4l4 4-4 4"/></svg>
+          </button>
+        </div>
+
         <div className="auth-panel-left-copy">
           <p className="auth-panel-eyebrow">Live galaxy</p>
           <h2 className="auth-panel-headline">
@@ -111,6 +162,18 @@ const LoginForm: React.FC = () => {
               <span className="auth-panel-stat-value">24/7</span>
               <span className="auth-panel-stat-label">Live economy</span>
             </div>
+          </div>
+          <div className="carousel-dots" role="tablist" aria-label="Screenshot navigation">
+            {SCREENSHOTS.map((s, i) => (
+              <button
+                key={s.src}
+                role="tab"
+                aria-selected={i === activeIndex}
+                aria-label={s.label}
+                className={`carousel-dot${i === activeIndex ? ' is-active' : ''}`}
+                onClick={() => goTo(i)}
+              />
+            ))}
           </div>
         </div>
       </div>

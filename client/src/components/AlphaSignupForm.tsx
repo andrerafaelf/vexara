@@ -199,12 +199,16 @@ const AlphaSignupForm: React.FC = () => {
             className="lp-carousel-arrow lp-carousel-arrow-prev"
             onClick={() => goTo((activeIndex - 1 + SCREENSHOTS.length) % SCREENSHOTS.length)}
             aria-label="Previous screenshot"
-          >‹</button>
+          >
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10 12L6 8l4-4"/></svg>
+          </button>
           <button
             className="lp-carousel-arrow lp-carousel-arrow-next"
             onClick={() => goTo((activeIndex + 1) % SCREENSHOTS.length)}
             aria-label="Next screenshot"
-          >›</button>
+          >
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 4l4 4-4 4"/></svg>
+          </button>
         </div>
 
         {/* Copy + stats + dots — below the carousel */}
