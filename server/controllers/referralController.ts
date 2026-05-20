@@ -4,17 +4,17 @@ import prisma from '../lib/prisma.js';
 import * as referralService from '../services/referralService.js';
 import type { AuthRequest } from '../types/index.js';
 
-const BUILDINGS = ['commandCore', 'recruitmentCore', 'lifeSupport', 'storageVault', 'biomassFarm', 'alloyForge', 'oreExtractor', 'shieldGrid'] as const;
+const BUILDINGS = ['commandCore', 'recruitmentCore', 'lifeSupport', 'storageVault', 'biomassFarm', 'alloyForge', 'oreExtractor', 'shieldGrid', 'armory', 'stealthArray'] as const;
 
 const BUILDING_MAX: Record<string, number> = {
   commandCore: 20, recruitmentCore: 15, lifeSupport: 20, storageVault: 20,
-  biomassFarm: 20, alloyForge: 20, oreExtractor: 20, shieldGrid: 15,
+  biomassFarm: 20, alloyForge: 20, oreExtractor: 20, shieldGrid: 15, armory: 20, stealthArray: 15,
 };
 
 const BUILDING_NAMES: Record<string, string> = {
   commandCore: 'Command Core', recruitmentCore: 'Recruitment Core', lifeSupport: 'Life Support',
   storageVault: 'Storage Vault', biomassFarm: 'Biomass Farm', alloyForge: 'Alloy Forge',
-  oreExtractor: 'Ore Extractor', shieldGrid: 'Shield Grid',
+  oreExtractor: 'Ore Extractor', shieldGrid: 'Shield Grid', armory: 'Armory', stealthArray: 'Stealth Array',
 };
 
 const TROOP_NAMES: Record<string, string> = {

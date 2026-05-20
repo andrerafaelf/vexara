@@ -43,32 +43,37 @@ interface QuestBatch {
 }
 
 export const QUEST_REWARD_BATCHES: QuestBatch[] = [
+  // --- Chapter 1: Establishing the Nexus ---
   {
     id: 'intro',
     isUnlocked: () => true,
     quests: [
-      { id: 'build_command_core_1',  check: ({ nexus }) => nexus.commandCore >= 1 },
-      { id: 'build_troop_fab_1',     check: ({ nexus }) => nexus.recruitmentCore >= 1 },
-      { id: 'build_storage_vault_2', check: ({ nexus }) => nexus.storageVault >= 2 },
+      { id: 'build_command_core_1',    check: ({ nexus }) => nexus.commandCore >= 1 },
+      { id: 'build_troop_fab_1',       check: ({ nexus }) => nexus.recruitmentCore >= 1 },
+      { id: 'build_storage_vault_2',   check: ({ nexus }) => nexus.storageVault >= 2 },
       { id: 'train_assault_trooper_5', check: ({ nexus }) => nexus.assaultTrooper >= 5 },
     ],
-    reward: { biomass: 250, alloy: 250, ore: 250, populationCurrent: 5, troops: { assaultTrooper: 5 } },
+    reward: { biomass: 500, alloy: 500, ore: 500, populationCurrent: 10, troops: { assaultTrooper: 10 } },
   },
+
+  // --- Chapter 2: Expansion ---
   {
-    id: 'intermediate',
+    id: 'expansion',
     isUnlocked: ({ claimedRewards }) => claimedRewards.has('intro'),
     quests: [
-      { id: 'build_command_core_3',  check: ({ nexus }) => nexus.commandCore >= 3 },
-      { id: 'build_shield_grid_1',   check: ({ nexus }) => nexus.shieldGrid >= 1 },
-      { id: 'build_biomass_farm_2',  check: ({ nexus }) => nexus.biomassFarm >= 2 },
-      { id: 'build_alloy_forge_2',   check: ({ nexus }) => nexus.alloyForge >= 2 },
-      { id: 'train_recon_operative_1', check: ({ nexus }) => nexus.reconOperative >= 1 },
+      { id: 'build_command_core_3',      check: ({ nexus }) => nexus.commandCore >= 3 },
+      { id: 'build_shield_grid_1',       check: ({ nexus }) => nexus.shieldGrid >= 1 },
+      { id: 'build_biomass_farm_2',      check: ({ nexus }) => nexus.biomassFarm >= 2 },
+      { id: 'build_alloy_forge_2',       check: ({ nexus }) => nexus.alloyForge >= 2 },
+      { id: 'train_recon_operative_3',   check: ({ nexus }) => nexus.reconOperative >= 3 },
     ],
-    reward: { biomass: 900, alloy: 900, ore: 900, populationCurrent: 10, troops: { reconOperative: 10 } },
+    reward: { biomass: 1500, alloy: 1500, ore: 1500, populationCurrent: 15, troops: { reconOperative: 15, lancerDrone: 20 } },
   },
+
+  // --- Chapter 3: First Blood ---
   {
-    id: 'advanced',
-    isUnlocked: ({ claimedRewards }) => claimedRewards.has('intermediate'),
+    id: 'first_blood',
+    isUnlocked: ({ claimedRewards }) => claimedRewards.has('expansion'),
     quests: [
       { id: 'build_command_core_4',  check: ({ nexus }) => nexus.commandCore >= 4 },
       { id: 'build_ore_extractor_4', check: ({ nexus }) => nexus.oreExtractor >= 4 },
@@ -76,31 +81,77 @@ export const QUEST_REWARD_BATCHES: QuestBatch[] = [
       { id: 'train_skimmer_bike_5',  check: ({ nexus }) => nexus.skimmerBike >= 5 },
       { id: 'send_first_strike',     check: ({ hasOutgoingStrike }) => hasOutgoingStrike },
     ],
-    reward: { biomass: 2500, alloy: 2500, ore: 2500, populationCurrent: 80, troops: { skimmerBike: 20, siegeMech: 5 } },
+    reward: { biomass: 3500, alloy: 3500, ore: 3500, populationCurrent: 30, troops: { skimmerBike: 25, breakerUnit: 15 } },
   },
+
+  // --- Chapter 4: Shadow Operations (Espionage) ---
   {
-    id: 'veteran',
-    isUnlocked: ({ claimedRewards }) => claimedRewards.has('advanced'),
+    id: 'shadow_ops',
+    isUnlocked: ({ claimedRewards }) => claimedRewards.has('first_blood'),
+    quests: [
+      { id: 'build_command_core_5',      check: ({ nexus }) => nexus.commandCore >= 5 },
+      { id: 'build_stealth_array_1',     check: ({ nexus }) => (nexus as unknown as Record<string, number>).stealthArray >= 1 },
+      { id: 'build_shield_grid_3',       check: ({ nexus }) => nexus.shieldGrid >= 3 },
+      { id: 'train_recon_operative_10',  check: ({ nexus }) => nexus.reconOperative >= 10 },
+      { id: 'send_spy_mission',          check: ({ hasOutgoingStrike }) => hasOutgoingStrike },
+    ],
+    reward: { biomass: 5000, alloy: 5000, ore: 5000, populationCurrent: 25, troops: { reconOperative: 25, disruptorUnit: 10 } },
+  },
+
+  // --- Chapter 5: Arsenal (Armory & Heavy Weapons) ---
+  {
+    id: 'arsenal',
+    isUnlocked: ({ claimedRewards }) => claimedRewards.has('shadow_ops'),
     quests: [
       { id: 'build_command_core_6',  check: ({ nexus }) => nexus.commandCore >= 6 },
+      { id: 'build_armory_3',        check: ({ nexus }) => (nexus as unknown as Record<string, number>).armory >= 3 },
       { id: 'build_troop_fab_5',     check: ({ nexus }) => nexus.recruitmentCore >= 5 },
       { id: 'build_life_support_4',  check: ({ nexus }) => nexus.lifeSupport >= 4 },
-      { id: 'train_siege_mech_3',    check: ({ nexus }) => nexus.siegeMech >= 3 },
-      { id: 'train_disruptor_unit_5', check: ({ nexus }) => nexus.disruptorUnit >= 5 },
+      { id: 'train_siege_mech_5',    check: ({ nexus }) => nexus.siegeMech >= 5 },
     ],
-    reward: { biomass: 5000, alloy: 5000, ore: 5000, populationCurrent: 50, troops: { siegeMech: 10, disruptorUnit: 5 } },
+    reward: { biomass: 8000, alloy: 8000, ore: 8000, populationCurrent: 50, troops: { siegeMech: 15, disruptorUnit: 10, suppressorTeam: 10 } },
   },
+
+  // --- Chapter 6: Veteran Commander ---
   {
-    id: 'conqueror',
+    id: 'veteran',
+    isUnlocked: ({ claimedRewards }) => claimedRewards.has('arsenal'),
+    quests: [
+      { id: 'build_command_core_8',   check: ({ nexus }) => nexus.commandCore >= 8 },
+      { id: 'build_armory_5',         check: ({ nexus }) => (nexus as unknown as Record<string, number>).armory >= 5 },
+      { id: 'build_stealth_array_3',  check: ({ nexus }) => (nexus as unknown as Record<string, number>).stealthArray >= 3 },
+      { id: 'train_disruptor_10',     check: ({ nexus }) => nexus.disruptorUnit >= 10 },
+      { id: 'complete_attack',        check: ({ hasCompletedAttack }) => hasCompletedAttack },
+    ],
+    reward: { biomass: 15000, alloy: 15000, ore: 15000, populationCurrent: 75, troops: { siegeMech: 20, interceptorBike: 15, voidStalker: 5 } },
+  },
+
+  // --- Chapter 7: Ghost Protocol (Advanced Espionage) ---
+  {
+    id: 'ghost_protocol',
     isUnlocked: ({ claimedRewards }) => claimedRewards.has('veteran'),
     quests: [
-      { id: 'build_command_core_8',  check: ({ nexus }) => nexus.commandCore >= 8 },
-      { id: 'build_ore_extractor_8', check: ({ nexus }) => nexus.oreExtractor >= 8 },
-      { id: 'build_shield_grid_5',   check: ({ nexus }) => nexus.shieldGrid >= 5 },
-      { id: 'train_annihilator_1',   check: ({ nexus }) => nexus.annihilatorPlatform >= 1 },
-      { id: 'complete_attack',       check: ({ hasCompletedAttack }) => hasCompletedAttack },
+      { id: 'build_command_core_10',  check: ({ nexus }) => nexus.commandCore >= 10 },
+      { id: 'build_stealth_array_5',  check: ({ nexus }) => (nexus as unknown as Record<string, number>).stealthArray >= 5 },
+      { id: 'build_shield_grid_5',    check: ({ nexus }) => nexus.shieldGrid >= 5 },
+      { id: 'build_ore_extractor_8',  check: ({ nexus }) => nexus.oreExtractor >= 8 },
+      { id: 'train_recon_op_20',      check: ({ nexus }) => nexus.reconOperative >= 20 },
     ],
-    reward: { biomass: 10000, alloy: 10000, ore: 10000, populationCurrent: 100, troops: { annihilatorPlatform: 1, siegeMech: 10 } },
+    reward: { biomass: 25000, alloy: 25000, ore: 25000, populationCurrent: 100, troops: { reconOperative: 30, voidStalker: 10, plasmaTurret: 5 } },
+  },
+
+  // --- Chapter 8: Annihilator (Endgame) ---
+  {
+    id: 'annihilator',
+    isUnlocked: ({ claimedRewards }) => claimedRewards.has('ghost_protocol'),
+    quests: [
+      { id: 'build_command_core_12',  check: ({ nexus }) => nexus.commandCore >= 12 },
+      { id: 'build_armory_10',        check: ({ nexus }) => (nexus as unknown as Record<string, number>).armory >= 10 },
+      { id: 'build_stealth_array_7',  check: ({ nexus }) => (nexus as unknown as Record<string, number>).stealthArray >= 7 },
+      { id: 'train_annihilator_3',    check: ({ nexus }) => nexus.annihilatorPlatform >= 3 },
+      { id: 'complete_attack_2',      check: ({ hasCompletedAttack }) => hasCompletedAttack },
+    ],
+    reward: { biomass: 50000, alloy: 50000, ore: 50000, populationCurrent: 150, troops: { annihilatorPlatform: 3, siegeMech: 25, plasmaTurret: 10 } },
   },
 ];
 

@@ -201,130 +201,98 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
     const done = (batchId: string, questId: string, condition: boolean) =>
       completedQuestIds.has(questId) || claimedBatches.has(batchId) || condition;
 
-    const assaultTroopers = nexus.troops.assaultTrooper || 0;
-    const reconOperatives = nexus.troops.reconOperative || 0;
-    const skimmerBikes = nexus.troops.skimmerBike || 0;
+    const b = nexus.buildings as Record<string, number>;
+    const t = nexus.troops as Record<string, number>;
     const hasOutgoingStrike = outgoingAttacks.some((attack) => attack.attacker?.nexus === nexus._id);
+    const hasCompletedAttack = nexus.completedQuestIds?.includes('complete_attack') || false;
 
+    // Chapter 1: Establishing the Nexus
     const introQuests: DashboardQuest[] = [
-      {
-        id: 'command-core-online',
-        title: 'Power The Nexus',
-        description: 'Upgrade Command Core to Lv1.',
-        completed: done('intro', 'build_command_core_1', nexus.buildings.commandCore >= 1),
-      },
-      {
-        id: 'start-fabrication',
-        title: 'Enable Recruitment',
-        description: 'Upgrade Recruitment Core to Lv1.',
-        completed: done('intro', 'build_troop_fab_1', nexus.buildings.recruitmentCore >= 1),
-      },
-      {
-        id: 'increase-capacity',
-        title: 'Secure Capacity',
-        description: 'Upgrade Storage Vault to Lv2.',
-        completed: done('intro', 'build_storage_vault_2', nexus.buildings.storageVault >= 2),
-      },
-      {
-        id: 'raise-force',
-        title: 'Field Troops',
-        description: 'Train 5 Assault Troopers.',
-        completed: done('intro', 'train_assault_trooper_5', assaultTroopers >= 5),
-      },
+      { id: 'command-core-online', title: 'Power The Nexus',    description: 'Upgrade Command Core to Lv1.',      completed: done('intro', 'build_command_core_1',    b.commandCore >= 1) },
+      { id: 'start-fabrication',  title: 'Enable Recruitment',  description: 'Upgrade Recruitment Core to Lv1.',  completed: done('intro', 'build_troop_fab_1',       b.recruitmentCore >= 1) },
+      { id: 'increase-capacity',  title: 'Secure Capacity',     description: 'Upgrade Storage Vault to Lv2.',     completed: done('intro', 'build_storage_vault_2',   b.storageVault >= 2) },
+      { id: 'raise-force',        title: 'Field Troops',         description: 'Train 5 Assault Troopers.',         completed: done('intro', 'train_assault_trooper_5', (t.assaultTrooper || 0) >= 5) },
     ];
+    const introComplete = introQuests.every((q) => q.completed);
 
-    const introComplete = introQuests.every((quest) => quest.completed);
-
-    const intermediateQuests: DashboardQuest[] = [
-      {
-        id: 'fortify-core',
-        title: 'Fortify The Core',
-        description: 'Upgrade Command Core to Lv3.',
-        completed: done('intermediate', 'build_command_core_3', nexus.buildings.commandCore >= 3),
-      },
-      {
-        id: 'unlock-defenses',
-        title: 'Activate Shield Grid',
-        description: 'Upgrade Shield Grid to Lv1.',
-        completed: done('intermediate', 'build_shield_grid_1', nexus.buildings.shieldGrid >= 1),
-      },
-      {
-        id: 'upgrade-biomass-chain',
-        title: 'Expand Biomass Chain',
-        description: 'Upgrade Biomass Farm to Lv2.',
-        completed: done('intermediate', 'build_biomass_farm_2', nexus.buildings.biomassFarm >= 2),
-      },
-      {
-        id: 'expand-logistics',
-        title: 'Expand Logistics',
-        description: 'Upgrade Alloy Forge to Lv2.',
-        completed: done('intermediate', 'build_alloy_forge_2', nexus.buildings.alloyForge >= 2),
-      },
-      {
-        id: 'deploy-recon',
-        title: 'Deploy Recon',
-        description: 'Train 1 Recon Operative.',
-        completed: done('intermediate', 'train_recon_operative_1', reconOperatives >= 1),
-      },
+    // Chapter 2: Expansion
+    const expansionQuests: DashboardQuest[] = [
+      { id: 'fortify-core',           title: 'Fortify The Core',      description: 'Upgrade Command Core to Lv3.',     completed: done('expansion', 'build_command_core_3',    b.commandCore >= 3) },
+      { id: 'unlock-defenses',        title: 'Activate Shield Grid',  description: 'Upgrade Shield Grid to Lv1.',      completed: done('expansion', 'build_shield_grid_1',    b.shieldGrid >= 1) },
+      { id: 'upgrade-biomass-chain',  title: 'Expand Biomass Chain',  description: 'Upgrade Biomass Farm to Lv2.',     completed: done('expansion', 'build_biomass_farm_2',   b.biomassFarm >= 2) },
+      { id: 'expand-logistics',       title: 'Expand Logistics',       description: 'Upgrade Alloy Forge to Lv2.',      completed: done('expansion', 'build_alloy_forge_2',    b.alloyForge >= 2) },
+      { id: 'deploy-recon',           title: 'Deploy Recon',           description: 'Train 3 Recon Operatives.',        completed: done('expansion', 'train_recon_operative_3', (t.reconOperative || 0) >= 3) },
     ];
+    const expansionComplete = expansionQuests.every((q) => q.completed);
 
-    const intermediateComplete = intermediateQuests.every((quest) => quest.completed);
+    // Chapter 3: First Blood
+    const firstBloodQuests: DashboardQuest[] = [
+      { id: 'command-core-mastery',     title: 'Core Mastery',          description: 'Upgrade Command Core to Lv4.',     completed: done('first_blood', 'build_command_core_4',  b.commandCore >= 4) },
+      { id: 'extractor-specialization', title: 'Extractor Focus',        description: 'Upgrade Ore Extractor to Lv4.',    completed: done('first_blood', 'build_ore_extractor_4', b.oreExtractor >= 4) },
+      { id: 'defense-posture',          title: 'Defense Posture',        description: 'Upgrade Shield Grid to Lv2.',      completed: done('first_blood', 'build_shield_grid_2',   b.shieldGrid >= 2) },
+      { id: 'fast-raiders',             title: 'Fast Raiders',            description: 'Train 5 Skimmer Bikes.',           completed: done('first_blood', 'train_skimmer_bike_5',  (t.skimmerBike || 0) >= 5) },
+      { id: 'first-expedition',         title: 'First Expedition',        description: 'Launch an outgoing strike.',       completed: done('first_blood', 'send_first_strike',     hasOutgoingStrike) },
+    ];
+    const firstBloodComplete = firstBloodQuests.every((q) => q.completed);
 
-    const advancedQuests: DashboardQuest[] = [
-      {
-        id: 'command-core-mastery',
-        title: 'Core Mastery',
-        description: 'Upgrade Command Core to Lv4.',
-        completed: done('advanced', 'build_command_core_4', nexus.buildings.commandCore >= 4),
-      },
-      {
-        id: 'extractor-specialization',
-        title: 'Extractor Specialization',
-        description: 'Upgrade Ore Extractor to Lv4.',
-        completed: done('advanced', 'build_ore_extractor_4', nexus.buildings.oreExtractor >= 4),
-      },
-      {
-        id: 'defense-posture',
-        title: 'Defense Posture',
-        description: 'Upgrade Shield Grid to Lv2.',
-        completed: done('advanced', 'build_shield_grid_2', nexus.buildings.shieldGrid >= 2),
-      },
-      {
-        id: 'fast-raiders',
-        title: 'Fast Raiders',
-        description: 'Train 5 Skimmer Bikes.',
-        completed: done('advanced', 'train_skimmer_bike_5', skimmerBikes >= 5),
-      },
-      {
-        id: 'first-expedition',
-        title: 'First Expedition',
-        description: 'Launch 1 outgoing strike.',
-        completed: done('advanced', 'send_first_strike', hasOutgoingStrike),
-      },
+    // Chapter 4: Shadow Operations (Espionage)
+    const shadowOpsQuests: DashboardQuest[] = [
+      { id: 'shadow-command',     title: 'Shadow Command',      description: 'Upgrade Command Core to Lv5.',      completed: done('shadow_ops', 'build_command_core_5',     b.commandCore >= 5) },
+      { id: 'dark-network',       title: 'Dark Network',        description: 'Build a Stealth Array (Lv1).',      completed: done('shadow_ops', 'build_stealth_array_1',    (b.stealthArray || 0) >= 1) },
+      { id: 'reinforce-shields',  title: 'Reinforce Shields',   description: 'Upgrade Shield Grid to Lv3.',       completed: done('shadow_ops', 'build_shield_grid_3',      b.shieldGrid >= 3) },
+      { id: 'recon-corps',        title: 'Recon Corps',          description: 'Train 10 Recon Operatives.',        completed: done('shadow_ops', 'train_recon_operative_10', (t.reconOperative || 0) >= 10) },
+      { id: 'first-spy-mission',  title: 'First Spy Mission',   description: 'Send an outgoing strike or spy mission.', completed: done('shadow_ops', 'send_spy_mission',     hasOutgoingStrike) },
+    ];
+    const shadowOpsComplete = shadowOpsQuests.every((q) => q.completed);
+
+    // Chapter 5: Arsenal
+    const arsenalQuests: DashboardQuest[] = [
+      { id: 'arsenal-command',   title: 'Arsenal Command',   description: 'Upgrade Command Core to Lv6.',   completed: done('arsenal', 'build_command_core_6', b.commandCore >= 6) },
+      { id: 'build-armory',      title: 'Open The Armory',   description: 'Upgrade Armory to Lv3.',         completed: done('arsenal', 'build_armory_3',        (b.armory || 0) >= 3) },
+      { id: 'troop-logistics',   title: 'Troop Logistics',   description: 'Upgrade Recruitment Core to Lv5.', completed: done('arsenal', 'build_troop_fab_5',   b.recruitmentCore >= 5) },
+      { id: 'life-support-push', title: 'Life Support Push', description: 'Upgrade Life Support to Lv4.',   completed: done('arsenal', 'build_life_support_4', b.lifeSupport >= 4) },
+      { id: 'heavy-armor',       title: 'Heavy Armor',        description: 'Train 5 Siege Mechs.',           completed: done('arsenal', 'train_siege_mech_5',   (t.siegeMech || 0) >= 5) },
+    ];
+    const arsenalComplete = arsenalQuests.every((q) => q.completed);
+
+    // Chapter 6: Veteran Commander
+    const veteranQuests: DashboardQuest[] = [
+      { id: 'veteran-command',    title: 'Veteran Command',    description: 'Upgrade Command Core to Lv8.',   completed: done('veteran', 'build_command_core_8',  b.commandCore >= 8) },
+      { id: 'veteran-armory',     title: 'Hardened Arsenal',   description: 'Upgrade Armory to Lv5.',         completed: done('veteran', 'build_armory_5',        (b.armory || 0) >= 5) },
+      { id: 'shadow-network',     title: 'Shadow Network',     description: 'Upgrade Stealth Array to Lv3.',  completed: done('veteran', 'build_stealth_array_3', (b.stealthArray || 0) >= 3) },
+      { id: 'disruptor-corps',    title: 'Disruptor Corps',    description: 'Train 10 Disruptor Units.',      completed: done('veteran', 'train_disruptor_10',    (t.disruptorUnit || 0) >= 10) },
+      { id: 'proven-in-battle',   title: 'Proven In Battle',   description: 'Complete an attack.',            completed: done('veteran', 'complete_attack',       hasCompletedAttack) },
+    ];
+    const veteranComplete = veteranQuests.every((q) => q.completed);
+
+    // Chapter 7: Ghost Protocol (Advanced Espionage)
+    const ghostProtocolQuests: DashboardQuest[] = [
+      { id: 'ghost-command',      title: 'Ghost Command',      description: 'Upgrade Command Core to Lv10.',  completed: done('ghost_protocol', 'build_command_core_10',  b.commandCore >= 10) },
+      { id: 'ghost-array',        title: 'Ghost Array',        description: 'Upgrade Stealth Array to Lv5.',  completed: done('ghost_protocol', 'build_stealth_array_5', (b.stealthArray || 0) >= 5) },
+      { id: 'iron-dome',          title: 'Iron Dome',          description: 'Upgrade Shield Grid to Lv5.',    completed: done('ghost_protocol', 'build_shield_grid_5',   b.shieldGrid >= 5) },
+      { id: 'ore-dominance',      title: 'Ore Dominance',      description: 'Upgrade Ore Extractor to Lv8.',  completed: done('ghost_protocol', 'build_ore_extractor_8', b.oreExtractor >= 8) },
+      { id: 'shadow-army',        title: 'Shadow Army',        description: 'Train 20 Recon Operatives.',     completed: done('ghost_protocol', 'train_recon_op_20',     (t.reconOperative || 0) >= 20) },
+    ];
+    const ghostProtocolComplete = ghostProtocolQuests.every((q) => q.completed);
+
+    // Chapter 8: Annihilator (Endgame)
+    const annihilatorQuests: DashboardQuest[] = [
+      { id: 'apex-command',       title: 'Apex Command',       description: 'Upgrade Command Core to Lv12.',  completed: done('annihilator', 'build_command_core_12',  b.commandCore >= 12) },
+      { id: 'apex-armory',        title: 'Apex Armory',        description: 'Upgrade Armory to Lv10.',        completed: done('annihilator', 'build_armory_10',        (b.armory || 0) >= 10) },
+      { id: 'deep-cover',         title: 'Deep Cover',         description: 'Upgrade Stealth Array to Lv7.',  completed: done('annihilator', 'build_stealth_array_7', (b.stealthArray || 0) >= 7) },
+      { id: 'field-annihilators', title: 'Field Annihilators', description: 'Train 3 Annihilator Platforms.', completed: done('annihilator', 'train_annihilator_3',    (t.annihilatorPlatform || 0) >= 3) },
+      { id: 'domination',         title: 'Domination',         description: 'Complete an attack.',            completed: done('annihilator', 'complete_attack_2',     hasCompletedAttack) },
     ];
 
     const batches: DashboardQuestBatch[] = [
-      {
-        id: 'intro',
-        title: 'Intro Quests',
-        quests: introQuests,
-        unlocked: true,
-        reward: '+250 Biomass, +250 Alloy, +250 Ore, +5 Assault Troopers',
-      },
-      {
-        id: 'intermediate',
-        title: 'Intermediate Quests',
-        quests: intermediateQuests,
-        unlocked: introComplete,
-        reward: '+900 Biomass, +900 Alloy, +900 Ore, +10 Recon Operatives',
-      },
-      {
-        id: 'advanced',
-        title: 'Advanced Quests',
-        quests: advancedQuests,
-        unlocked: introComplete && intermediateComplete,
-        reward: '+2500 Biomass, +2500 Alloy, +2500 Ore, +20 Skimmer Bikes, +5 Siege Mechs',
-      },
+      { id: 'intro',          title: 'Ch.1 — Establishing the Nexus', quests: introQuests,         unlocked: true,                                            reward: '+500 each resource, +10 pop, +10 Assault Troopers' },
+      { id: 'expansion',      title: 'Ch.2 — Expansion',              quests: expansionQuests,     unlocked: introComplete,                                   reward: '+1500 each resource, +15 pop, +15 Recon Operatives, +20 Lancer Drones' },
+      { id: 'first_blood',    title: 'Ch.3 — First Blood',            quests: firstBloodQuests,    unlocked: expansionComplete,                               reward: '+3500 each resource, +30 pop, +25 Skimmer Bikes, +15 Breaker Units' },
+      { id: 'shadow_ops',     title: 'Ch.4 — Shadow Operations',      quests: shadowOpsQuests,     unlocked: firstBloodComplete,                              reward: '+5000 each resource, +25 pop, +25 Recon Operatives, +10 Disruptor Units' },
+      { id: 'arsenal',        title: 'Ch.5 — Arsenal',                quests: arsenalQuests,       unlocked: shadowOpsComplete,                               reward: '+8000 each resource, +50 pop, +15 Siege Mechs, +10 Disruptors, +10 Suppressors' },
+      { id: 'veteran',        title: 'Ch.6 — Veteran Commander',      quests: veteranQuests,       unlocked: arsenalComplete,                                 reward: '+15000 each resource, +75 pop, +20 Siege Mechs, +15 Interceptors, +5 Void Stalkers' },
+      { id: 'ghost_protocol', title: 'Ch.7 — Ghost Protocol',         quests: ghostProtocolQuests, unlocked: veteranComplete,                                 reward: '+25000 each resource, +100 pop, +30 Recon Operatives, +10 Void Stalkers, +5 Plasma Turrets' },
+      { id: 'annihilator',    title: 'Ch.8 — Annihilator',            quests: annihilatorQuests,   unlocked: ghostProtocolComplete,                           reward: '+50000 each resource, +150 pop, +3 Annihilator Platforms, +25 Siege Mechs, +10 Plasma Turrets' },
     ];
     return batches.filter((batch) => !claimedBatches.has(batch.id));
   };

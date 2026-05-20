@@ -52,7 +52,7 @@ export function markTokenRedeemed(tokenId: number, rewardType: string, rewardMet
   });
 }
 
-export async function checkAndGrantToken(refereeId: number, currentPoints: number): Promise<void> {
+export async function checkAndGrantToken(refereeId: number, currentPoints: number, galaxyId: number): Promise<void> {
   if (currentPoints < REFERRAL_THRESHOLD) return;
 
   const referee = await prisma.user.findUnique({
@@ -61,16 +61,20 @@ export async function checkAndGrantToken(refereeId: number, currentPoints: numbe
   });
   if (!referee?.referredById) return;
 
-  // Idempotent: only grant once per referee (check existing count)
-  const existingCount = await prisma.referralToken.count({ where: { refereeId } });
-  if (existingCount > 0) return;
+  // Idempotent per (refereeId, galaxyId) — tokens stack across galaxies
+  const existing = await prisma.referralToken.findUnique({
+    where: { refereeId_galaxyId: { refereeId, galaxyId } },
+    select: { id: true },
+  });
+  if (existing) return;
 
-  // Referrer earns 2 tokens
+  // Referrer earns 2 tokens per galaxy the referee reaches the threshold in
   await prisma.referralToken.createMany({
     data: [
-      { referrerId: referee.referredById, refereeId },
-      { referrerId: referee.referredById, refereeId },
+      { referrerId: referee.referredById, refereeId, galaxyId },
+      { referrerId: referee.referredById, refereeId, galaxyId },
     ],
+    skipDuplicates: true,
   });
 }
 

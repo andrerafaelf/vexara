@@ -619,12 +619,14 @@ model ReferralToken {
   id          Int       @id @default(autoincrement())
   referrerId  Int
   refereeId   Int
+  galaxyId    Int       @default(0)
   redeemedAt  DateTime?
   rewardType  String?   @db.VarChar(32)
   rewardMeta  Json?
 
   referrer    User      @relation(fields: [referrerId], references: [id], onDelete: Cascade)
 
+  @@unique([refereeId, galaxyId])
   @@index([refereeId])
   @@index([referrerId])
 }

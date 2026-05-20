@@ -28,7 +28,7 @@ const TROOP_KEYS = Object.keys(TROOP_LABELS);
 const BUILDING_LABELS: Record<string, string> = {
   commandCore: 'Command Core', recruitmentCore: 'Recruitment Core', lifeSupport: 'Life Support',
   storageVault: 'Storage Vault', biomassFarm: 'Biomass Farm', alloyForge: 'Alloy Forge',
-  oreExtractor: 'Ore Extractor', shieldGrid: 'Shield Grid',
+  oreExtractor: 'Ore Extractor', shieldGrid: 'Shield Grid', armory: 'Armory', stealthArray: 'Stealth Array',
 };
 
 const BUILDING_KEYS = Object.keys(BUILDING_LABELS);
@@ -76,12 +76,18 @@ interface ReferrerInfo {
   myPoints: number;
 }
 
+const BUILDING_MAX: Record<string, number> = {
+  commandCore: 20, recruitmentCore: 15, lifeSupport: 20, storageVault: 20,
+  biomassFarm: 20, alloyForge: 20, oreExtractor: 20, shieldGrid: 15, armory: 20, stealthArray: 15,
+};
+
 interface NexusSummary {
   id: string;
   name: string;
   commandCore: number;
   populationCurrent: number;
   populationMax: number;
+  buildings: Record<string, number>;
 }
 
 type RewardType = 'building_instant' | 'troop_grant';
@@ -130,9 +136,10 @@ export default function ReferralsTab() {
       const mappedNexuses: NexusSummary[] = (nexusRes.data as any[]).map((n: any) => ({
         id: String(n.id),
         name: n.name,
-        commandCore: n.commandCore ?? 0,
-        populationCurrent: n.populationCurrent ?? 0,
-        populationMax: n.populationMax ?? 24,
+        commandCore: n.buildings?.commandCore ?? n.commandCore ?? 0,
+        populationCurrent: n.population?.current ?? n.populationCurrent ?? 0,
+        populationMax: n.population?.max ?? n.populationMax ?? 24,
+        buildings: n.buildings ?? {},
       }));
       setNexuses(mappedNexuses);
     } catch {
@@ -189,7 +196,6 @@ export default function ReferralsTab() {
   const tier = ccTier(ccLevel);
   const troopGrantPreview = redeemState ? (TROOP_GRANTS[redeemState.troopType]?.[tier] ?? 0) : 0;
 
-  const totalPendingCount = pendingReferralTokens.length + pendingMilestoneTokens.length;
 
   if (loading) return null;
 
@@ -247,21 +253,33 @@ export default function ReferralsTab() {
         </label>
       )}
 
-      {redeemState?.rewardType === 'building_instant' && (
-        <label className="referrals-field">
-          <span className="referrals-label">Building to Level Up</span>
-          <select
-            value={redeemState.building}
-            onChange={(e) => setRedeemState(s => s ? { ...s, building: e.target.value } : s)}
-            disabled={redeemSubmitting}
-          >
-            {BUILDING_KEYS.map((b) => (
-              <option key={b} value={b}>{BUILDING_LABELS[b]}</option>
-            ))}
-          </select>
-          <span className="referrals-preview">2 instant levels, no resource cost, no queue.</span>
-        </label>
-      )}
+      {redeemState?.rewardType === 'building_instant' && (() => {
+        const upgradeable = BUILDING_KEYS.filter((b) => {
+          const current = selectedNexus?.buildings[b] ?? 0;
+          return current < (BUILDING_MAX[b] ?? 20);
+        });
+        return (
+          <label className="referrals-field">
+            <span className="referrals-label">Building to Level Up</span>
+            {upgradeable.length === 0 ? (
+              <span className="referrals-error">All buildings on this nexus are at max level. Choose a different nexus or switch to troop grant.</span>
+            ) : (
+              <>
+                <select
+                  value={upgradeable.includes(redeemState.building) ? redeemState.building : upgradeable[0]}
+                  onChange={(e) => setRedeemState(s => s ? { ...s, building: e.target.value } : s)}
+                  disabled={redeemSubmitting}
+                >
+                  {upgradeable.map((b) => (
+                    <option key={b} value={b}>{BUILDING_LABELS[b]}</option>
+                  ))}
+                </select>
+                <span className="referrals-preview">2 instant levels, no resource cost, no queue.</span>
+              </>
+            )}
+          </label>
+        );
+      })()}
 
       {redeemError && <div className="referrals-error">{redeemError}</div>}
 
@@ -269,7 +287,7 @@ export default function ReferralsTab() {
         <button type="button" className="referrals-btn" onClick={() => setRedeemState(null)} disabled={redeemSubmitting}>
           Cancel
         </button>
-        <button type="submit" className="referrals-btn primary" disabled={redeemSubmitting || !redeemState?.nexusId}>
+        <button type="submit" className="referrals-btn primary" disabled={redeemSubmitting || !redeemState?.nexusId || (redeemState.rewardType === 'building_instant' && BUILDING_KEYS.filter((b) => (selectedNexus?.buildings[b] ?? 0) < (BUILDING_MAX[b] ?? 20)).length === 0)}>
           {redeemSubmitting ? 'Redeeming...' : 'Redeem Token'}
         </button>
       </div>

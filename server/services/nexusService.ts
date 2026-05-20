@@ -29,7 +29,7 @@ export async function updateGalaxyPlayerPoints(userId: number, galaxyId: number,
     where: { userId_galaxyId: { userId, galaxyId } },
     data: { points },
   });
-  void checkAndGrantToken(userId, points);
+  void checkAndGrantToken(userId, points, galaxyId);
   void checkAndGrantMilestoneToken(userId, points);
   return updated;
 }
