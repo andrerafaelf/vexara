@@ -398,7 +398,8 @@ export async function recoverControlLevels(): Promise<void> {
 
 interface ActiveStorm {
   galaxyId: number;
-  resource: string;
+  resources: string[];
+  multiplier: number;
   xMin: number; xMax: number; yMin: number; yMax: number;
 }
 
@@ -412,9 +413,17 @@ async function loadActiveStorms(): Promise<ActiveStorm[]> {
   for (const ev of events) {
     const meta = ev.meta as Record<string, unknown> | null;
     if (!meta) continue;
+    // Support both old (resource: string) and new (resources: string[]) format
+    const resources: string[] = Array.isArray(meta.resources)
+      ? (meta.resources as string[])
+      : typeof meta.resource === 'string'
+        ? [meta.resource]
+        : [];
+    const multiplier = typeof meta.multiplier === 'number' ? meta.multiplier : 2;
     storms.push({
       galaxyId: ev.galaxyId,
-      resource: meta.resource as string,
+      resources,
+      multiplier,
       xMin: meta.xMin as number, xMax: meta.xMax as number,
       yMin: meta.yMin as number, yMax: meta.yMax as number,
     });
@@ -431,9 +440,11 @@ function getStormBonus(nexus: { galaxyId: number; x: number; y: number }, storms
   if (active.length === 0) return undefined;
   const bonus: StormBonus = {};
   for (const s of active) {
-    if (s.resource === 'biomass') bonus.biomass = (bonus.biomass ?? 1) * 2;
-    else if (s.resource === 'alloy') bonus.alloy = (bonus.alloy ?? 1) * 2;
-    else if (s.resource === 'ore') bonus.ore = (bonus.ore ?? 1) * 2;
+    for (const resource of s.resources) {
+      if (resource === 'biomass') bonus.biomass = (bonus.biomass ?? 1) * s.multiplier;
+      else if (resource === 'alloy') bonus.alloy = (bonus.alloy ?? 1) * s.multiplier;
+      else if (resource === 'ore') bonus.ore = (bonus.ore ?? 1) * s.multiplier;
+    }
   }
   return bonus;
 }

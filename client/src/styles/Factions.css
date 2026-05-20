@@ -1170,9 +1170,14 @@
   font-weight: 600;
 }
 
+.flb-th--members {
+  text-align: center;
+}
+
 .flb-td--members {
   font-size: var(--text-sm);
-  color: var(--text-muted);
+  font-weight: 700;
+  color: var(--text-strong);
   justify-content: center;
 }
 

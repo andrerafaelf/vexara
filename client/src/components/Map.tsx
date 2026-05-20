@@ -32,6 +32,8 @@ interface GalaxyEvent {
   createdAt: string;
   meta?: {
     resource?: string;
+    resources?: string[];
+    multiplier?: number;
     xMin?: number;
     xMax?: number;
     yMin?: number;

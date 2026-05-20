@@ -20,15 +20,39 @@ function randInt(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function pickQuadrant(): { xMin: number; xMax: number; yMin: number; yMax: number } {
-  const qx = Math.floor(Math.random() * 2); // 0 or 1
-  const qy = Math.floor(Math.random() * 2);
+const STORM_ZONE_SIZE = 15;
+
+function pickZone(): { xMin: number; xMax: number; yMin: number; yMax: number } {
+  const xMin = randInt(0, MAP_SIZE - STORM_ZONE_SIZE);
+  const yMin = randInt(0, MAP_SIZE - STORM_ZONE_SIZE);
   return {
-    xMin: qx * 25,
-    xMax: qx * 25 + 24,
-    yMin: qy * 25,
-    yMax: qy * 25 + 24,
+    xMin,
+    xMax: xMin + STORM_ZONE_SIZE - 1,
+    yMin,
+    yMax: yMin + STORM_ZONE_SIZE - 1,
   };
+}
+
+// Roll for storm tier: 2x (base), 3x (rare), 4x (very rare)
+function rollMultiplier(): number {
+  const r = Math.random();
+  if (r < 0.05) return 4;  // 5% chance
+  if (r < 0.20) return 3;  // 15% chance
+  return 2;                 // 80% base
+}
+
+// Roll which resources are affected
+// 60% single resource, 25% two resources, 15% all three
+function rollAffectedResources(): readonly ('biomass' | 'alloy' | 'ore')[] {
+  const all = ['biomass', 'alloy', 'ore'] as const;
+  const r = Math.random();
+  if (r < 0.15) return all;
+  if (r < 0.40) {
+    // two random resources
+    const shuffled = [...all].sort(() => Math.random() - 0.5);
+    return [shuffled[0], shuffled[1]];
+  }
+  return [all[Math.floor(Math.random() * 3)]];
 }
 
 async function spawnDerelictShip(galaxyId: number) {
@@ -63,20 +87,38 @@ async function spawnDerelictShip(galaxyId: number) {
 }
 
 async function spawnResourceStorm(galaxyId: number) {
-  const q = pickQuadrant();
+  const q = pickZone();
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
-  const resource = (['biomass', 'alloy', 'ore'] as const)[Math.floor(Math.random() * 3)];
+  const resources = rollAffectedResources();
+  const multiplier = rollMultiplier();
+
+  const resourceLabel = resources.length === 3
+    ? 'all resources'
+    : resources.join(' & ');
+  const multiplierLabel = `${multiplier}x`;
+  const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+  const title = resources.length === 3
+    ? `${multiplierLabel} Mega Storm`
+    : resources.length === 2
+      ? `${multiplierLabel} ${resources.map(capitalize).join(' & ')} Storm`
+      : `${multiplierLabel} ${capitalize(resources[0])} Storm`;
+
+  const description = `A resource storm has swept through zone (${q.xMin}–${q.xMax} | ${q.yMin}–${q.yMax}). All nexuses in this zone produce ${multiplierLabel} ${resourceLabel} for the next 24 hours.`;
 
   return prisma.galaxyEvent.create({
     data: {
       galaxyId,
       type: 'resource_storm',
-      title: `${resource.charAt(0).toUpperCase() + resource.slice(1)} Storm`,
-      description: `A resource storm has swept through quadrant (${q.xMin}-${q.xMax}|${q.yMin}-${q.yMax}). All nexuses in this zone produce double ${resource} for the next 24 hours.`,
+      title,
+      description,
       x: Math.floor((q.xMin + q.xMax) / 2),
       y: Math.floor((q.yMin + q.yMax) / 2),
       expiresAt,
-      meta: { resource, xMin: q.xMin, xMax: q.xMax, yMin: q.yMin, yMax: q.yMax },
+      meta: {
+        resources: [...resources],
+        multiplier,
+        xMin: q.xMin, xMax: q.xMax, yMin: q.yMin, yMax: q.yMax,
+      },
     },
   });
 }

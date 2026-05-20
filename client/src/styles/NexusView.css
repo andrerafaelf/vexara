@@ -385,7 +385,7 @@
   margin-bottom: var(--space-2);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .overview-galaxy-events-header {
@@ -397,11 +397,39 @@
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.10em;
-  margin-bottom: 2px;
 }
 
 .overview-galaxy-events-header svg {
   color: var(--accent);
+}
+
+.overview-galaxy-event-card {
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.overview-galaxy-event-card--resource_storm {
+  border-color: color-mix(in srgb, var(--success) 30%, transparent);
+  background: color-mix(in srgb, var(--success) 5%, transparent);
+}
+
+.overview-galaxy-event-card--resource_storm.in-zone {
+  border-color: var(--success);
+  background: color-mix(in srgb, var(--success) 10%, transparent);
+}
+
+.overview-galaxy-event-card--rogue_ai {
+  border-color: color-mix(in srgb, var(--danger) 30%, transparent);
+  background: color-mix(in srgb, var(--danger) 5%, transparent);
+}
+
+.overview-galaxy-event-card--derelict_ship {
+  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
 }
 
 .overview-galaxy-event-row {
@@ -412,19 +440,30 @@
   color: var(--text-strong);
 }
 
-.overview-galaxy-event-row--resource_storm { color: var(--success); }
-.overview-galaxy-event-row--resource_storm svg { color: var(--success); }
-.overview-galaxy-event-row--rogue_ai { color: var(--danger); }
-.overview-galaxy-event-row--rogue_ai svg { color: var(--danger); }
+.overview-galaxy-event-card--resource_storm .overview-galaxy-event-row { color: var(--success); }
+.overview-galaxy-event-card--rogue_ai .overview-galaxy-event-row { color: var(--danger); }
 
 .overview-galaxy-event-title {
   font-weight: 600;
 }
 
+.overview-galaxy-event-desc {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin: 0;
+}
+
 .overview-galaxy-event-zone {
   font-family: var(--font-mono);
-  font-size: 11px;
-  opacity: 0.8;
+  font-size: 10px;
+  color: var(--text-faint);
+  margin: 0;
+}
+
+.overview-galaxy-event-in-zone {
+  color: var(--success);
+  font-weight: 600;
 }
 
 .overview-galaxy-event-expires {
@@ -432,6 +471,36 @@
   font-size: 10px;
   font-family: var(--font-mono);
   color: var(--text-faint);
+  white-space: nowrap;
+}
+
+/* Per-resource boost badges shown when nexus is inside a storm zone */
+.overview-storm-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.overview-storm-badge--biomass {
+  background: color-mix(in srgb, var(--success) 20%, transparent);
+  color: var(--success);
+  border: 1px solid color-mix(in srgb, var(--success) 40%, transparent);
+}
+
+.overview-storm-badge--alloy {
+  background: color-mix(in srgb, #60c0ff 20%, transparent);
+  color: #60c0ff;
+  border: 1px solid color-mix(in srgb, #60c0ff 40%, transparent);
+}
+
+.overview-storm-badge--ore {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
 }
 
 /* Resource cap warnings */

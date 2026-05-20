@@ -1745,19 +1745,39 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                   const EventIcon = ev.type === 'resource_storm' ? Zap
                     : ev.type === 'rogue_ai' ? AlertTriangle
                     : Sparkles;
+
+                  const isStorm = ev.type === 'resource_storm' && ev.meta?.xMin != null;
+                  const inZone = isStorm &&
+                    nexus.x >= ev.meta.xMin && nexus.x <= ev.meta.xMax &&
+                    nexus.y >= ev.meta.yMin && nexus.y <= ev.meta.yMax;
+                  const multiplier: number = ev.meta?.multiplier ?? 2;
+                  // support both old (resource) and new (resources) format
+                  const affectedResources: string[] = isStorm
+                    ? (Array.isArray(ev.meta?.resources) ? ev.meta.resources : ev.meta?.resource ? [ev.meta.resource] : [])
+                    : [];
+
                   return (
-                    <div key={ev.id} className={`overview-galaxy-event-row overview-galaxy-event-row--${ev.type}`}>
-                      <EventIcon size={12} aria-hidden="true" />
-                      <span className="overview-galaxy-event-title">{ev.title}</span>
-                      {ev.type === 'resource_storm' && ev.meta?.xMin != null && (
-                        <span className="overview-galaxy-event-zone">
-                          ({ev.meta.xMin}–{ev.meta.xMax} | {ev.meta.yMin}–{ev.meta.yMax})
-                        </span>
-                      )}
-                      {ev.expiresAt && (
-                        <span className="overview-galaxy-event-expires">
-                          expires {new Date(ev.expiresAt).toLocaleString()}
-                        </span>
+                    <div key={ev.id} className={`overview-galaxy-event-card overview-galaxy-event-card--${ev.type}${inZone ? ' in-zone' : ''}`}>
+                      <div className="overview-galaxy-event-row">
+                        <EventIcon size={12} aria-hidden="true" />
+                        <span className="overview-galaxy-event-title">{ev.title}</span>
+                        {inZone && affectedResources.map((r: string) => (
+                          <span key={r} className={`overview-storm-badge overview-storm-badge--${r}`}>
+                            {multiplier}x {r}
+                          </span>
+                        ))}
+                        {ev.expiresAt && (
+                          <span className="overview-galaxy-event-expires">
+                            {new Date(ev.expiresAt).toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                      <p className="overview-galaxy-event-desc">{ev.description}</p>
+                      {isStorm && (
+                        <p className="overview-galaxy-event-zone">
+                          Zone: ({ev.meta.xMin}–{ev.meta.xMax} | {ev.meta.yMin}–{ev.meta.yMax})
+                          {inZone && <span className="overview-galaxy-event-in-zone"> · This nexus is in the zone</span>}
+                        </p>
                       )}
                     </div>
                   );
