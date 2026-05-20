@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useToast } from '../context/ToastContext';
 import {
   getMyNexuses,
   getMyPendingTokens,
@@ -52,6 +53,13 @@ function ccTier(level: number): 0 | 1 | 2 | 3 {
   if (level <= 8) return 1;
   if (level <= 12) return 2;
   return 3;
+}
+
+interface RefereeRow {
+  refereeId: number;
+  refereeUsername: string;
+  refereePoints: number;
+  thresholdMet: boolean;
 }
 
 interface ReferralRow {
@@ -115,6 +123,7 @@ interface RedeemState {
 }
 
 export default function ReferralsTab() {
+  const [refereeRows, setRefereeRows] = useState<RefereeRow[]>([]);
   const [referrals, setReferrals] = useState<ReferralRow[]>([]);
   const [pendingReferralTokens, setPendingReferralTokens] = useState<PendingToken[]>([]);
   const [pendingMilestoneTokens, setPendingMilestoneTokens] = useState<PendingToken[]>([]);
@@ -126,7 +135,7 @@ export default function ReferralsTab() {
   const [redeemState, setRedeemState] = useState<RedeemState | null>(null);
   const [redeemError, setRedeemError] = useState('');
   const [redeemSubmitting, setRedeemSubmitting] = useState(false);
-  const [redeemSuccess, setRedeemSuccess] = useState('');
+  const toast = useToast();
 
   const [loading, setLoading] = useState(true);
 
@@ -139,7 +148,9 @@ export default function ReferralsTab() {
         getMyReferralCode(),
         getMyNexuses(),
       ]);
-      setReferrals(referralsRes.data as ReferralRow[]);
+      const referralsData = referralsRes.data as { referees: RefereeRow[]; tokens: ReferralRow[] };
+      setRefereeRows(referralsData.referees ?? []);
+      setReferrals(referralsData.tokens ?? []);
       const pending = pendingRes.data as { referral: PendingToken[]; milestone: PendingToken[] };
       setPendingReferralTokens(pending.referral ?? []);
       setPendingMilestoneTokens(pending.milestone ?? []);
@@ -191,7 +202,7 @@ export default function ReferralsTab() {
           ? { building: redeemState.building }
           : { troopType: redeemState.troopType },
       );
-      setRedeemSuccess((res.data as any).message);
+      toast((res.data as any).message, 'success');
       setRedeemState(null);
       await load();
     } catch (err) {
@@ -322,7 +333,6 @@ export default function ReferralsTab() {
           <p className="referrals-hint">
             You reached {MILESTONE_THRESHOLD} influence points. Claim your reward token.
           </p>
-          {redeemSuccess && !redeemState && <div className="referrals-success">{redeemSuccess}</div>}
           {redeemState?.kind === 'milestone' ? redeemForm : (
             <div className="referrals-token-list">
               {pendingMilestoneTokens.map((t) => (
@@ -410,7 +420,6 @@ export default function ReferralsTab() {
             <span className="referrals-count-badge">{pendingReferralTokens.length}</span>
           </h3>
           <p className="referrals-hint">Someone you referred reached {REFERRAL_THRESHOLD} influence points. Each token is a one-time reward.</p>
-          {redeemSuccess && !redeemState && <div className="referrals-success">{redeemSuccess}</div>}
           {redeemState?.kind === 'referral' ? redeemForm : (
             <div className="referrals-token-list">
               {pendingReferralTokens.map((t) => {
@@ -435,23 +444,21 @@ export default function ReferralsTab() {
       {/* Referral list, who you've referred */}
       <section className="referrals-section">
         <h3 className="referrals-section-title">Your Referrals</h3>
-        {referrals.length === 0 ? (
+        {refereeRows.length === 0 ? (
           <p className="referrals-hint">
             No referrals yet. Share your referral code so new players can enter it when they sign up.
           </p>
         ) : (
           <ul className="referrals-list">
-            {referrals.map((r) => (
-              <li key={r.tokenId} className={`referrals-list-item ${r.redeemed ? 'referrals-list-item--done' : ''}`}>
+            {refereeRows.map((r) => (
+              <li key={r.refereeId} className="referrals-list-item">
                 <div className="referrals-list-info">
                   <span className="referrals-list-name">{r.refereeUsername}</span>
                   <div className="referrals-list-meta">
                     <span>{r.refereePoints} pts</span>
-                    {r.redeemed ? (
-                      <span className="referrals-badge referrals-badge--done">Claimed</span>
-                    ) : r.thresholdMet ? (
-                      <span className="referrals-badge referrals-badge--ready">Token ready</span>
-                    ) : null}
+                    {r.thresholdMet && (
+                      <span className="referrals-badge referrals-badge--ready">Token earned</span>
+                    )}
                   </div>
                 </div>
                 <div className="referrals-progress-bar-wrap">

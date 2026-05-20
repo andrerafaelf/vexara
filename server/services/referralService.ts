@@ -79,23 +79,28 @@ export async function checkAndGrantToken(refereeId: number, currentPoints: numbe
 }
 
 export async function getReferralStatus(referrerId: number) {
-  const tokens = await prisma.referralToken.findMany({
-    where: { referrerId },
+  // All users who signed up with this referrer's code
+  const referees = await prisma.user.findMany({
+    where: { referredById: referrerId },
+    select: { id: true, username: true },
     orderBy: { id: 'asc' },
   });
 
-  // Deduplicate referees for display, show unique referees with their best-points status
-  const refereeIds = [...new Set(tokens.map((t) => t.refereeId))];
-  const referees = await prisma.user.findMany({
-    where: { id: { in: refereeIds } },
-    select: { id: true, username: true },
-  });
+  if (referees.length === 0) return { referees: [], tokens: [] };
 
-  const playerRecords = await prisma.galaxyPlayer.findMany({
-    where: { userId: { in: refereeIds } },
-    select: { userId: true, points: true },
-    orderBy: { points: 'desc' },
-  });
+  const refereeIds = referees.map((r) => r.id);
+
+  const [tokens, playerRecords] = await Promise.all([
+    prisma.referralToken.findMany({
+      where: { referrerId },
+      orderBy: { id: 'asc' },
+    }),
+    prisma.galaxyPlayer.findMany({
+      where: { userId: { in: refereeIds } },
+      select: { userId: true, points: true },
+      orderBy: { points: 'desc' },
+    }),
+  ]);
 
   const bestPoints = new Map<number, number>();
   for (const p of playerRecords) {
@@ -105,7 +110,16 @@ export async function getReferralStatus(referrerId: number) {
 
   const usernameMap = new Map(referees.map((r) => [r.id, r.username]));
 
-  return tokens.map((t) => ({
+  // One row per referee showing their progress, regardless of whether they've earned a token yet
+  const refereeRows = referees.map((r) => ({
+    refereeId: r.id,
+    refereeUsername: r.username,
+    refereePoints: bestPoints.get(r.id) ?? 0,
+    thresholdMet: (bestPoints.get(r.id) ?? 0) >= REFERRAL_THRESHOLD,
+  }));
+
+  // Token rows (for redemption UI)
+  const tokenRows = tokens.map((t) => ({
     tokenId: t.id,
     refereeId: t.refereeId,
     refereeUsername: usernameMap.get(t.refereeId) ?? 'Unknown',
@@ -116,6 +130,8 @@ export async function getReferralStatus(referrerId: number) {
     rewardType: t.rewardType,
     rewardMeta: t.rewardMeta,
   }));
+
+  return { referees: refereeRows, tokens: tokenRows };
 }
 
 // --- Milestone tokens (everyone earns 1 at MILESTONE_THRESHOLD points, no referral needed) ---
