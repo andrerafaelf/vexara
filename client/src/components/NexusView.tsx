@@ -1642,7 +1642,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                               {a.status === 'returning' && (
                                 <ArrowDownLeft size={11} aria-hidden="true" style={{ marginRight: 4 }} />
                               )}
-                              {a.defender?.nexus?.name ?? '?'}
+                              {a.defenderNexus
+                                ? `${a.defenderNexus.name} (${a.defenderNexus.x}|${a.defenderNexus.y})`
+                                : '?'}
                             </span>
                             <Countdown
                               endAt={a.status === 'returning' ? a.returnsAt : a.arrivesAt}

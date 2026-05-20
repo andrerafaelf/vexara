@@ -1134,7 +1134,12 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
                 <div key={attack._id} className={`attack-item outgoing${isSupport ? ' support-mission' : ''}`}>
                   <div className="attack-to">
                     {isSupport && <span className="support-mission-badge">Support</span>}
-                    {label} <strong>{attack.defenderNexus?.name || 'Unknown'}</strong>
+                    {label}{' '}
+                    <strong>
+                      {attack.defenderNexus
+                        ? `${attack.defenderNexus.name} (${attack.defenderNexus.x}|${attack.defenderNexus.y})`
+                        : `Unknown (${attack.targetX ?? '?'}|${attack.targetY ?? '?'})`}
+                    </strong>
                   </div>
                   <div className="attack-time">
                     {timeLabel}{' '}
