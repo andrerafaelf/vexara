@@ -9,7 +9,7 @@ const MAX_NEXUSES_PER_USER = 10;
 
 export async function getMyNexuses(req: AuthRequest, res: Response): Promise<void> {
   try {
-    // Fetch nexuses and the galaxy player record in parallel — two DB calls total
+    // Fetch nexuses and the galaxy player record in parallel, two DB calls total
     const [nexusesRaw, player] = await Promise.all([
       nexusService.getNexusByOwner(req.userId, req.galaxyId),
       prisma.galaxyPlayer.findUnique({

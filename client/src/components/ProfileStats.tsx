@@ -65,7 +65,7 @@ export default function ProfileStats() {
       ? (stats.combat.troopsKilled / stats.combat.troopsLost).toFixed(2)
       : stats.combat.troopsKilled > 0
         ? '∞'
-        : '—';
+        : '.';
 
   const totalStolen =
     stats.combat.resourcesStolen.biomass +

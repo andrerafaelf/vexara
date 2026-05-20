@@ -6,7 +6,7 @@
 // The server uses combatMath.ts to determine the *final* losses; this sim
 // produces a per-round timeline that converges to those exact same totals.
 // We anchor the simulation to the server-known final losses so replays are
-// always faithful — variance is purely visual sequencing.
+// always faithful, variance is purely visual sequencing.
 
 export type TroopKey =
   | 'lancerDrone' | 'assaultTrooper' | 'breakerUnit' | 'reconOperative'
@@ -51,7 +51,7 @@ export const CLASS_COUNTERS: Record<TroopClass, Record<TroopClass, number>> = {
 export const TROOP_KEYS = Object.keys(TROOP_STATS) as TroopKey[];
 
 // ─── Deterministic PRNG ───────────────────────────────────────────────────
-// Mulberry32 — fast, decent distribution, fully reproducible from a u32 seed.
+// Mulberry32, fast, decent distribution, fully reproducible from a u32 seed.
 export function mulberry32(seed: number) {
   let s = seed >>> 0;
   return function rand(): number {
@@ -134,7 +134,7 @@ export interface SimRound {
   hits: CombatHit[];
   // Optional cinematic event banner
   event: string | null;
-  // Phase tag — drives camera/animation choices
+  // Phase tag, drives camera/animation choices
   phase: 'engage' | 'clash' | 'rout' | 'final';
 }
 

@@ -22,7 +22,7 @@ const TROOP_COSTS: Record<string, { biomass: number; alloy: number; ore: number;
   annihilatorPlatform:  { biomass: 2000,   alloy: 1750,   ore: 3000,   population: 5, time: 7200  },
   // Void Stalker: fast light cavalry that hard-counters ranged units
   voidStalker:          { biomass: 900,    alloy: 700,    ore: 1100,   population: 3, time: 1200  },
-  // Plasma Turret: immobile ranged emplacement — can train but cannot be sent on attacks
+  // Plasma Turret: immobile ranged emplacement, can train but cannot be sent on attacks
   plasmaTurret:         { biomass: 1500,   alloy: 1200,   ore: 2500,   population: 4, time: 5400  },
   overseer:             { biomass: 180000, alloy: 140000, ore: 120000, population: 5, time: 14400 },
 };

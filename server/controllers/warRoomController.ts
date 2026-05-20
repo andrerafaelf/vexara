@@ -116,7 +116,7 @@ async function serializeOperation(operationId: number) {
     arrivalAt: op.arrivalAt.toISOString(),
     rev: op.rev,
     createdByUserId: op.createdByUserId,
-    createdByUsername: usernameById.get(op.createdByUserId) ?? '—',
+    createdByUsername: usernameById.get(op.createdByUserId) ?? '.',
     createdAt: op.createdAt.toISOString(),
     updatedAt: op.updatedAt.toISOString(),
     waves: op.waves.map((w) => ({
@@ -130,7 +130,7 @@ async function serializeOperation(operationId: number) {
         return {
           id: s.id,
           userId: s.userId,
-          username: usernameById.get(s.userId) ?? '—',
+          username: usernameById.get(s.userId) ?? '.',
           isSupporter: userById.get(s.userId)?.isSupporter ?? false,
           fromNexusId: s.fromNexusId,
           fromNexusName: nx?.name ?? `Nexus #${s.fromNexusId}`,
@@ -149,7 +149,7 @@ async function serializeOperation(operationId: number) {
       .map((m) => ({
         id: m.id,
         userId: m.userId,
-        username: usernameById.get(m.userId) ?? '—',
+        username: usernameById.get(m.userId) ?? '.',
         isSupporter: userById.get(m.userId)?.isSupporter ?? false,
         content: m.content,
         kind: m.kind,
@@ -689,7 +689,7 @@ export async function postThreadMessage(req: AuthRequest, res: Response): Promis
     const out = {
       id: msg.id,
       userId: msg.userId,
-      username: user?.username ?? '—',
+      username: user?.username ?? '.',
       isSupporter: user?.isSupporter ?? false,
       content: msg.content,
       kind: msg.kind,
@@ -735,7 +735,7 @@ export async function getThread(req: AuthRequest, res: Response): Promise<void> 
       messages: messages.reverse().map((m) => ({
         id: m.id,
         userId: m.userId,
-        username: userById2.get(m.userId)?.username ?? '—',
+        username: userById2.get(m.userId)?.username ?? '.',
         isSupporter: userById2.get(m.userId)?.isSupporter ?? false,
         content: m.content,
         kind: m.kind,
@@ -747,7 +747,7 @@ export async function getThread(req: AuthRequest, res: Response): Promise<void> 
   }
 }
 
-// Galaxy starfield — every nexus, classified by relationship to the caller's faction.
+// Galaxy starfield, every nexus, classified by relationship to the caller's faction.
 // Used by the "Open Operation" target picker so officers can click rather than type coords.
 export async function getGalaxyStarfield(req: AuthRequest, res: Response): Promise<void> {
   try {

@@ -21,7 +21,7 @@ export function useUnreadReports() {
 
   // Memoize the Set so its identity is stable across renders when the data array hasn't changed.
   // Without this, every consumer of `unreadNexusIds` would re-render on every parent render even
-  // when the contents are unchanged — defeating React.memo on the sidebar.
+  // when the contents are unchanged, defeating React.memo on the sidebar.
   const unreadNexusIds = useMemo(() => new Set(data), [data]);
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: UNREAD_NEXUS_IDS_KEY });

@@ -1,4 +1,4 @@
-# Vexara — Production Runbook
+# Vexara, Production Runbook
 
 ## Architecture
 
@@ -10,19 +10,19 @@ Internet
    │
 [ Nginx (host) ]  ← TLS termination, rate limiting, static asset caching
    │
-   ├──► vx-client        (Next.js, port 3000)  — player UI
-   ├──► vx-server        (Express, port 3001)  — game API + background jobs
-   ├──► vx-admin-client  (Next.js, port 3003)  — admin UI
-   ├──► vx-admin-server  (Express, port 3002)  — admin API
-   ├──► vx-postgres      (PostgreSQL 16)       — single database (internal only)
+   ├──► vx-client        (Next.js, port 3000) , player UI
+   ├──► vx-server        (Express, port 3001) , game API + background jobs
+   ├──► vx-admin-client  (Next.js, port 3003) , admin UI
+   ├──► vx-admin-server  (Express, port 3002) , admin API
+   ├──► vx-postgres      (PostgreSQL 16)      , single database (internal only)
    ├──► vx-prometheus    (metrics collection)
    ├──► vx-loki          (log aggregation)
    ├──► vx-promtail      (log shipping)
-   └──► vx-grafana       (dashboards — admin.domain/grafana/)
+   └──► vx-grafana       (dashboards, admin.domain/grafana/)
 ```
 
 All services communicate on the internal Docker `app_net` network.  
-PostgreSQL is never exposed to the host — only reachable by other containers.
+PostgreSQL is never exposed to the host, only reachable by other containers.
 
 ---
 
@@ -91,10 +91,10 @@ git push main
       │
       ▼
 GitHub Actions: ci-cd.yml
-  1. test     — TypeScript type-check + unit tests
-  2. build    — Build 4 Docker images, push to GHCR with sha-<commit> tag
-  3. deploy   — SSH to VPS, write .env, call deploy.sh
-  4. smoke    — HTTP 200 on /healthz confirms deploy succeeded
+  1. test    , TypeScript type-check + unit tests
+  2. build   , Build 4 Docker images, push to GHCR with sha-<commit> tag
+  3. deploy  , SSH to VPS, write .env, call deploy.sh
+  4. smoke   , HTTP 200 on /healthz confirms deploy succeeded
 ```
 
 Push to `main` = deploy. Use PRs to develop safely before merging.

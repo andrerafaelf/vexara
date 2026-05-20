@@ -42,7 +42,7 @@ interface WinResults {
 const WIN_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
 interface Props {
-  /** If true, the user has not yet selected a galaxy — close button is hidden. */
+  /** If true, the user has not yet selected a galaxy, close button is hidden. */
   forced?: boolean;
   onClose?: () => void;
   onSelected?: (galaxy: Galaxy) => void;
@@ -84,7 +84,7 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
       const res = await getGalaxyWinResults(galaxy.id);
       setWinScreen(res.data);
     } catch {
-      // silently ignore — the button won't appear for truly old galaxies
+      // silently ignore, the button won't appear for truly old galaxies
     } finally {
       setLoadingWin(false);
     }
@@ -381,7 +381,7 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
             {/* Header */}
             <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
               <h2 style={{ margin: '0.25rem 0 0.1rem', color: '#ffd700', fontSize: '1.4rem' }}>
-                {winScreen.galaxy.name} — Galaxy Ended
+                {winScreen.galaxy.name}. Galaxy Ended
               </h2>
               {winScreen.galaxy.endedAt && (
                 <div style={{ color: '#8a98c2', fontSize: '0.8em' }}>

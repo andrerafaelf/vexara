@@ -182,7 +182,7 @@ function fmtShortTime(iso: string): string {
 }
 
 function colorForUser(userId: number): string {
-  // Stable HSL hue from user id — used for presence avatars + cursor labels.
+  // Stable HSL hue from user id, used for presence avatars + cursor labels.
   const h = (userId * 137.508) % 360;
   return `hsl(${h}, 70%, 60%)`;
 }
@@ -276,7 +276,7 @@ export default function WarRoom({ factionId, myRole }: Props) {
     socket.setFocus(selectedOpId);
   }, [selectedOpId, loadOperation, socket]);
 
-  // socket event handler — keep list + selected op in sync without polling
+  // socket event handler, keep list + selected op in sync without polling
   useEffect(() => {
     const unsub = socket.subscribe((e: WarRoomEvent) => {
       if (e.type === 'op:deleted') {
@@ -412,7 +412,7 @@ export default function WarRoom({ factionId, myRole }: Props) {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Header — presence stack + connection state
+// Header, presence stack + connection state
 // ────────────────────────────────────────────────────────────────────────────
 
 function WarRoomHeader({
@@ -466,7 +466,7 @@ function WarRoomHeader({
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Left rail — operations list
+// Left rail, operations list
 // ────────────────────────────────────────────────────────────────────────────
 
 function OperationsRail({
@@ -656,7 +656,7 @@ function OperationBoard({
         {op.waves.length === 0 && (
           <div className="warroom-no-waves">
             No waves planned yet.
-            {canManage && ' Officers — add the first wave below.'}
+            {canManage && ' Officers, add the first wave below.'}
           </div>
         )}
         {op.waves.map((wave) => (
@@ -694,7 +694,7 @@ function ArrivalCountdown({ ttArrive, arrivalAt }: { ttArrive: number; arrivalAt
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Timeline ribbon — visualizes launch windows for each wave
+// Timeline ribbon, visualizes launch windows for each wave
 // ────────────────────────────────────────────────────────────────────────────
 
 function Timeline({
@@ -707,7 +707,7 @@ function Timeline({
   myNexuses: Nexus[];
 }) {
   const arrivalMs = new Date(op.arrivalAt).getTime();
-  // Each wave has a "launch window" — the earliest launch is from the fastest source nexus,
+  // Each wave has a "launch window", the earliest launch is from the fastest source nexus,
   // the latest from the slowest. We render each wave as a chip placed at its expected launch time.
   const items = op.waves.map((wave) => {
     // Use the fastest of my nexuses as the reference travel time. If none, fall back to a guess.
@@ -750,7 +750,7 @@ function Timeline({
               key={wave.id}
               className={`warroom-timeline-chip ${past ? 'warroom-timeline-chip--past' : ''}`}
               style={{ left: `${positionFor(launchMs)}%` }}
-              title={`Wave ${wave.ordinal + 1} — launch ${fmtShortTime(new Date(launchMs).toISOString())} (${Math.round(travel)}m travel)`}
+              title={`Wave ${wave.ordinal + 1}. Launch ${fmtShortTime(new Date(launchMs).toISOString())} (${Math.round(travel)}m travel)`}
             >
               <span className="warroom-timeline-chip-dot" />
               <span className="warroom-timeline-chip-label">W{wave.ordinal + 1}</span>
@@ -763,7 +763,7 @@ function Timeline({
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Wave card — quota, claimed slots, claim form
+// Wave card, quota, claimed slots, claim form
 // ────────────────────────────────────────────────────────────────────────────
 
 function WaveCard({
@@ -971,7 +971,7 @@ function SlotRow({
             </>
           )
         ) : (
-          <span className="muted">—</span>
+          <span className="muted">.</span>
         )}
       </div>
 

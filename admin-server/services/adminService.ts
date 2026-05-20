@@ -58,7 +58,7 @@ export function createUser(username: string, email: string, password: string) {
     const userCount = await prisma.user.count();
     const isAlphaFounder = userCount < ALPHA_FOUNDER_LIMIT;
     const referralCode = await generateUniqueReferralCode();
-    // Do NOT auto-join a galaxy or create a nexus — the user picks a galaxy themselves on first login.
+    // Do NOT auto-join a galaxy or create a nexus, the user picks a galaxy themselves on first login.
     const user = await prisma.user.create({ data: { username, email: email.toLowerCase(), password: hashedPassword, isAlphaFounder, referralCode } });
     return { user };
   });

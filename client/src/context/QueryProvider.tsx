@@ -18,7 +18,7 @@ export default function QueryProvider({ children }: { children: React.ReactNode 
               if (status === 429 || status === 401 || status === 403) return false;
               return failureCount < 1;
             },
-            // Don't refetch just because the window regained focus in a game app —
+            // Don't refetch just because the window regained focus in a game app .
             // the 30s polling intervals handle freshness.
             refetchOnWindowFocus: false,
           },

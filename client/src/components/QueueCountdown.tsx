@@ -19,7 +19,7 @@ export interface QueueCountdownResult {
 
 /**
  * Computes the live label for a queue entry that depends on when the previous entry finishes.
- * Pure — exported for callers that already render their own time-aware UI (e.g. shortcut cards).
+ * Pure, exported for callers that already render their own time-aware UI (e.g. shortcut cards).
  */
 export function computeQueueCountdown(
   endAt: string | number | Date | undefined,

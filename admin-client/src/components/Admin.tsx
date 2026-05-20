@@ -915,7 +915,7 @@ const Admin: React.FC = () => {
                 {modal === 'buildings' && `Set Building Level: ${selectedUser?.username}`}
               </h3>
               <button className="modal-close" onClick={closeModal}>
-                Ã—
+                ×
               </button>
             </div>
 

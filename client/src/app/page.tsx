@@ -99,7 +99,7 @@ export default function Home() {
           {activeGalaxy ? (
             <>
               <p>
-                Galaxy: <strong>{activeGalaxy.name}</strong> —{' '}
+                Galaxy: <strong>{activeGalaxy.name}</strong>,{' '}
                 <button className="link-btn" onClick={() => setShowGalaxyPicker(true)}>
                   change
                 </button>

@@ -23,7 +23,7 @@ The **Armory** building amplifies counter bonuses by +1.5% per level (max +30% a
 - Defense Power = sum of (unit defense × unit count), boosted by Shield Grid
 - Shield Grid provides +2% total defense per level
 - Casualties scale with power ratio; variance is smaller for large stacks (±4%) than small (<20 units, ±15%)
-- All losses are seeded deterministically per battle — replays are reproducible
+- All losses are seeded deterministically per battle, replays are reproducible
 - Overseers reduce enemy control by 50 on a successful attack if they survive
 
 ## Recruitment Core Training-Time Reduction
@@ -42,7 +42,7 @@ wait behind it (and vice versa).
 
 ### Assault Trooper
 
-- Role: Heavy frontline infantry — counters Special units
+- Role: Heavy frontline infantry, counters Special units
 - Class: Heavy
 - Stats: Attack 30, Defense 45, Speed 18, Carry 15
 - Cost: Biomass 150, Alloy 150, Ore 350
@@ -52,7 +52,7 @@ wait behind it (and vice versa).
 
 ### Lancer Drone
 
-- Role: Ranged interceptor — counters Light units
+- Role: Ranged interceptor, counters Light units
 - Class: Ranged
 - Stats: Attack 15, Defense 28, Speed 20, Carry 20
 - Cost: Biomass 150, Alloy 150, Ore 200
@@ -62,7 +62,7 @@ wait behind it (and vice versa).
 
 ### Breaker Unit
 
-- Role: Light assault breacher — counters Heavy units
+- Role: Light assault breacher, counters Heavy units
 - Class: Light
 - Stats: Attack 55, Defense 15, Speed 16, Carry 10
 - Cost: Biomass 250, Alloy 150, Ore 300
@@ -74,7 +74,7 @@ wait behind it (and vice versa).
 
 ### Recon Operative
 
-- Role: Scout / support unit (Special class — no counter bonus)
+- Role: Scout / support unit (Special class, no counter bonus)
 - Class: Special
 - Stats: Attack 5, Defense 20, Speed 25, Carry 10
 - Cost: Biomass 400, Alloy 150, Ore 400
@@ -88,7 +88,7 @@ wait behind it (and vice versa).
 
 ### Skimmer Bike
 
-- Role: Fast light raider — counters Heavy units
+- Role: Fast light raider, counters Heavy units
 - Class: Light
 - Stats: Attack 80, Defense 65, Speed 22, Carry 60
 - Cost: Biomass 625, Alloy 500, Ore 750
@@ -100,7 +100,7 @@ wait behind it (and vice versa).
 
 ### Bulwark Guard
 
-- Role: Elite heavy defender — counters Special units
+- Role: Elite heavy defender, counters Special units
 - Class: Heavy
 - Stats: Attack 20, Defense 130, Speed 12, Carry 25
 - Cost: Biomass 400, Alloy 600, Ore 500
@@ -112,7 +112,7 @@ wait behind it (and vice versa).
 
 ### Suppressor Team
 
-- Role: Ranged suppressor — counters Light units
+- Role: Ranged suppressor, counters Light units
 - Class: Ranged
 - Stats: Attack 65, Defense 45, Speed 15, Carry 20
 - Cost: Biomass 450, Alloy 400, Ore 450
@@ -124,7 +124,7 @@ wait behind it (and vice versa).
 
 ### Disruptor Unit
 
-- Role: Ranged anti-armor — counters Light units
+- Role: Ranged anti-armor, counters Light units
 - Class: Ranged
 - Stats: Attack 75, Defense 55, Speed 17, Carry 25
 - Cost: Biomass 550, Alloy 750, Ore 650
@@ -136,7 +136,7 @@ wait behind it (and vice versa).
 
 ### Interceptor Bike
 
-- Role: Light rapid-response cavalry — counters Heavy units
+- Role: Light rapid-response cavalry, counters Heavy units
 - Class: Light
 - Stats: Attack 95, Defense 75, Speed 28, Carry 50
 - Cost: Biomass 750, Alloy 600, Ore 900
@@ -148,7 +148,7 @@ wait behind it (and vice versa).
 
 ### Siege Mech
 
-- Role: Heavy siege anchor — counters Special units
+- Role: Heavy siege anchor, counters Special units
 - Class: Heavy
 - Stats: Attack 150, Defense 210, Speed 10, Carry 80
 - Cost: Biomass 1250, Alloy 1000, Ore 2000
@@ -161,7 +161,7 @@ wait behind it (and vice versa).
 
 ### Annihilator Platform
 
-- Role: Heavy ranged artillery — counters light units
+- Role: Heavy ranged artillery, counters light units
 - Class: Ranged
 - Stats: Attack 210, Defense 140, Speed 8, Carry 100
 - Cost: Biomass 2000, Alloy 1750, Ore 3000
@@ -174,7 +174,7 @@ wait behind it (and vice versa).
 
 ### Void Stalker
 
-- Role: Ultra-fast light cavalry — hard-counters ranged emplacements
+- Role: Ultra-fast light cavalry, hard-counters ranged emplacements
 - Class: Light
 - Stats: Attack 110, Defense 50, Speed 32, Carry 40
 - Cost: Biomass 900, Alloy 700, Ore 1100
@@ -190,7 +190,7 @@ wait behind it (and vice versa).
 
 ### Plasma Turret
 
-- Role: Immobile ranged emplacement — cannot attack, defends nexus only
+- Role: Immobile ranged emplacement, cannot attack, defends nexus only
 - Class: Ranged
 - Stats: Attack 180, Defense 90, Speed 0, Carry 0
 - Cost: Biomass 1500, Alloy 1200, Ore 2500
@@ -201,7 +201,7 @@ wait behind it (and vice versa).
   - Command Core Lv9
   - Armory Lv5
 - Notes:
-  - Speed 0 — cannot be sent on attacks or transfers; stripped from raiding armies
+  - Speed 0, cannot be sent on attacks or transfers; stripped from raiding armies
   - Remains on nexus and participates in defense when attacked
   - Counters light cavalry (Void Stalker, Skimmer Bike, Interceptor Bike, Breaker Unit)
 

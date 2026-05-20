@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   reactStrictMode: true,
 
-  // Compress responses — Next.js gzip by default; Cloudflare handles Brotli at edge
+  // Compress responses, Next.js gzip by default; Cloudflare handles Brotli at edge
   compress: true,
 
   async rewrites() {
@@ -19,7 +19,7 @@ const nextConfig: NextConfig = {
 
   async headers() {
     return [
-      // Hashed JS/CSS bundles — immutable for 1 year, Cloudflare will cache at edge
+      // Hashed JS/CSS bundles, immutable for 1 year, Cloudflare will cache at edge
       {
         source: '/_next/static/:path*',
         headers: [
@@ -40,7 +40,7 @@ const nextConfig: NextConfig = {
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
       },
-      // Service worker — must never be cached
+      // Service worker, must never be cached
       {
         source: '/sw.js',
         headers: [
@@ -57,7 +57,7 @@ const nextConfig: NextConfig = {
           { key: 'Cache-Control', value: 'public, max-age=86400' },
         ],
       },
-      // HTML pages — always revalidate, but allow Cloudflare to serve stale for 1s
+      // HTML pages, always revalidate, but allow Cloudflare to serve stale for 1s
       {
         source: '/((?!_next/static|_next/image|api).*)',
         headers: [

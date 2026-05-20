@@ -192,7 +192,7 @@ export async function processArrivedSpyMissions(): Promise<void> {
       ]);
 
       if (!defender) {
-        // Target nexus gone — mission just completes with no result, return operatives
+        // Target nexus gone, mission just completes with no result, return operatives
         const travelMs = mission.arrivesAt.getTime() - mission.createdAt.getTime();
         await Promise.all([
           prisma.spyMission.update({
@@ -291,7 +291,7 @@ export async function processArrivedSpyMissions(): Promise<void> {
         }
       }
 
-      // Mark as returning — operatives come back after another travel leg
+      // Mark as returning, operatives come back after another travel leg
       await prisma.spyMission.update({
         where: { id: mission.id },
         data: { status: 'returning', returnsAt, result: result as Prisma.InputJsonValue },

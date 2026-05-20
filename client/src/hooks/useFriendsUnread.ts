@@ -16,7 +16,7 @@ export function useFriendsUnread() {
   const { data } = useQuery({
     queryKey: FRIENDS_BADGES_KEY,
     queryFn: () => getFriendsBadges().then((r) => r.data),
-    // No refetchInterval — socket push handles freshness.
+    // No refetchInterval, socket push handles freshness.
     staleTime: 60_000,
   });
 

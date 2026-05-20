@@ -255,7 +255,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
     };
   }, [centerX, centerY]);
 
-  // Pre-select current nexus on mount (desktop only — on mobile this would
+  // Pre-select current nexus on mount (desktop only, on mobile this would
   // immediately pop the modal open before the user has interacted)
   useEffect(() => {
     if (isMobile) return;
@@ -512,7 +512,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 1) {
-      // In espionage mode, don't start a drag on single-finger touch — let
+      // In espionage mode, don't start a drag on single-finger touch, let
       // the browser scroll the page vertically. Tapping a cell still selects
       // a spy target (see handleGridClick).
       if (mode === 'espionage') return;
@@ -737,7 +737,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
                 {isCurrent ? <Star size={14} /> : isOwnNexus ? <Building size={14} /> : <Home size={14} />}
               </div>
             )}
-            <div className="cell-coords">{isOutOfBounds ? '—' : `${x}|${y}`}</div>
+            <div className="cell-coords">{isOutOfBounds ? '.' : `${x}|${y}`}</div>
           </div>,
         );
       }

@@ -1,4 +1,4 @@
-// Feature hooks — import from here rather than from services/api directly.
+// Feature hooks, import from here rather than from services/api directly.
 // Hooks handle query keys, caching, and invalidation automatically.
 
 export * from './nexus/useNexus';

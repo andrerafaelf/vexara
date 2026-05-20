@@ -1,5 +1,5 @@
 // Public, shareable battle replay page.
-// No auth required — anyone with the link can watch the battle.
+// No auth required, anyone with the link can watch the battle.
 // The page is server-rendered with OG/Twitter card meta so paste-into-Slack
 // and tweets get a rich preview.
 

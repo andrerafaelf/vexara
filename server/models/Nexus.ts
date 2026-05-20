@@ -240,7 +240,7 @@ export async function applyQuestRewards(
 // --- DB helpers ---
 
 // Lazily computes current resources without always writing to the DB.
-// Only persists when the staleness exceeds 5 minutes — reduces write pressure while
+// Only persists when the staleness exceeds 5 minutes, reduces write pressure while
 // keeping displayed values accurate on every read.
 const LAZY_WRITE_THRESHOLD_MS = 5 * 60 * 1000;
 
@@ -384,7 +384,7 @@ export async function processCompletedQueuesAndNotify(): Promise<void> {
 
 export async function recoverControlLevels(): Promise<void> {
   try {
-    // Single SQL expression — no per-row round-trips
+    // Single SQL expression, no per-row round-trips
     await prisma.$executeRaw`
       UPDATE "Nexus"
       SET "controlLevel" = LEAST("controlLevel" + 10, 100)
@@ -440,7 +440,7 @@ function getStormBonus(nexus: { galaxyId: number; x: number; y: number }, storms
 
 export async function updateAllResources(): Promise<void> {
   try {
-    // Select only columns needed for computation — avoids loading queues/troops/etc.
+    // Select only columns needed for computation, avoids loading queues/troops/etc.
     const [nexuses, activeStorms] = await Promise.all([
       prisma.nexus.findMany({
         select: {
@@ -458,7 +458,7 @@ export async function updateAllResources(): Promise<void> {
 
     if (nexuses.length === 0) return;
 
-    // Compute all updates in memory — pure JS, no DB round-trips
+    // Compute all updates in memory, pure JS, no DB round-trips
     const rows: Array<{ id: number; biomass: number; alloy: number; ore: number; points: number; lastResourceUpdate: Date; notifyOwner: number | null }> = [];
 
     for (const nexus of nexuses) {
@@ -472,7 +472,7 @@ export async function updateAllResources(): Promise<void> {
       rows.push({ id: nexus.id, ...resourceUpdate, points, notifyOwner });
     }
 
-    // Single bulk UPDATE via VALUES list — O(1) round-trips regardless of nexus count
+    // Single bulk UPDATE via VALUES list, O(1) round-trips regardless of nexus count
     const values = rows
       .map((r) => `(${r.id}, ${r.biomass}, ${r.alloy}, ${r.ore}, ${r.points}, '${r.lastResourceUpdate.toISOString()}'::timestamptz)`)
       .join(',');

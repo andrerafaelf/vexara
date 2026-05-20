@@ -25,7 +25,7 @@ interface GameSocketHandlers {
   onTransfersRefresh?: TransfersRefreshHandler;
 }
 
-// Module-level singleton — one socket shared across all hook instances.
+// Module-level singleton, one socket shared across all hook instances.
 let _socket: Socket | null = null;
 let _refCount = 0;
 let _destroyTimer: ReturnType<typeof setTimeout> | null = null;
@@ -53,7 +53,7 @@ function getSocket(): Socket {
     auth: { token },
     reconnectionDelay: 2_000,
     reconnectionDelayMax: 30_000,
-    // Socket.IO will give up after this many attempts — prevents infinite storm.
+    // Socket.IO will give up after this many attempts, prevents infinite storm.
     reconnectionAttempts: 10,
   });
 

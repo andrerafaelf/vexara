@@ -14,7 +14,7 @@ const LoadingBarCtx = createContext<Ctx | null>(null);
 
 /**
  * Register a per-page "is this view ready" signal so the top progress bar can finish at the
- * right moment. This NEVER blanks the page — pages render their own content (or skeletons)
+ * right moment. This NEVER blanks the page, pages render their own content (or skeletons)
  * synchronously; this hook only drives the bar.
  */
 export function usePageReady(isReady: boolean, key: string = 'page') {
@@ -81,7 +81,7 @@ export default function NavigationProgress({ children }: { children?: React.Reac
   }, [start, tryFinish]);
 
   // Route change: bar runs until route is committed AND waiters drain.
-  // Crucially we do NOT blank the page — the shell stays visible at all times. Pages
+  // Crucially we do NOT blank the page, the shell stays visible at all times. Pages
   // already render skeletons or `null` while their data loads.
   useEffect(() => {
     if (isFirstRouteEffectRef.current) {
@@ -100,7 +100,7 @@ export default function NavigationProgress({ children }: { children?: React.Reac
     return () => cancelAnimationFrame(raf);
   }, [routeKey, tryFinish]);
 
-  // Link click interception — bar starts immediately, before Next.js begins routing
+  // Link click interception, bar starts immediately, before Next.js begins routing
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;

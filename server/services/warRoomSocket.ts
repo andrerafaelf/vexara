@@ -6,7 +6,7 @@ import prisma from '../lib/prisma.js';
 import { logInfo, logWarn } from '../utils/logger.js';
 
 // ────────────────────────────────────────────────────────────────────────────
-// Shared Socket.IO server instance — created once, reused by all namespaces.
+// Shared Socket.IO server instance, created once, reused by all namespaces.
 // ────────────────────────────────────────────────────────────────────────────
 
 let _io: SocketIOServer | null = null;
@@ -24,7 +24,7 @@ function getOrCreateIo(httpServer: HttpServer, opts: { cors: CorsOptions }): Soc
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// /game namespace — per-user and per-faction push events
+// /game namespace, per-user and per-faction push events
 // ────────────────────────────────────────────────────────────────────────────
 
 export function initGameSocket(httpServer: HttpServer, opts: { cors: CorsOptions }) {
@@ -73,7 +73,7 @@ export function initGameSocket(httpServer: HttpServer, opts: { cors: CorsOptions
   return ns;
 }
 
-// ── Public push helpers — called by server-side jobs and controllers ──────────
+// ── Public push helpers, called by server-side jobs and controllers ──────────
 
 function emitToUser(userId: number, event: string, payload: unknown) {
   if (!_io) return;
@@ -113,7 +113,7 @@ export function notifyReportUpdate(userId: number) {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// /warroom namespace — faction war room collaboration (presence, cursors, ops)
+// /warroom namespace, faction war room collaboration (presence, cursors, ops)
 // ────────────────────────────────────────────────────────────────────────────
 
 interface PresenceEntry {
@@ -133,7 +133,7 @@ export function initWarRoomSocket(httpServer: HttpServer, opts: { cors: CorsOpti
 
   const ns = io.of('/warroom');
 
-  // Auth handshake — clients pass { token } via auth payload
+  // Auth handshake, clients pass { token } via auth payload
   ns.use(async (socket, next) => {
     try {
       const token = (socket.handshake.auth?.token as string | undefined) ?? '';
@@ -286,7 +286,7 @@ function emitPresence(factionId: number) {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Public helpers — called by the REST controller after mutations so all
+// Public helpers, called by the REST controller after mutations so all
 // connected clients in the faction see the change immediately.
 // ────────────────────────────────────────────────────────────────────────────
 

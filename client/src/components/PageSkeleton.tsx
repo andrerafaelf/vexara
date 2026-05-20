@@ -4,11 +4,11 @@ import { CSSProperties } from 'react';
 
 /**
  * Generic page skeleton used as a low-contrast placeholder while a page's primary data
- * is loading. Renders inside the existing layout shell — header, sidebar, dominance bar
- * stay visible — so the user never sees a blank/black main area.
+ * is loading. Renders inside the existing layout shell, header, sidebar, dominance bar
+ * stay visible, so the user never sees a blank/black main area.
  *
  * Variant tunes the rough shape:
- *  - "rows"   : a list of horizontal bars (default — fits Reports, Friends, Profile, etc.)
+ *  - "rows"   : a list of horizontal bars (default, fits Reports, Friends, Profile, etc.)
  *  - "grid"   : a card grid (fits Market listings, Factions roster)
  *  - "canvas" : a single large filled rect (fits Starfield map)
  */
@@ -94,7 +94,7 @@ export default function PageSkeleton({ variant = 'rows', count, style }: Props) 
   );
 }
 
-// Inject keyframes once — cheap, no global CSS dependency.
+// Inject keyframes once, cheap, no global CSS dependency.
 function SkeletonKeyframes() {
   return (
     <style>{`

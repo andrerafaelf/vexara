@@ -171,7 +171,7 @@ export async function acceptCeasefire(req: AuthRequest, res: Response): Promise<
     });
     if (!war) { res.status(404).json({ error: 'Pending ceasefire not found' }); return; }
     if (war.ceasefireProposerFactionId === membership.factionId) {
-      res.status(400).json({ error: 'You proposed this ceasefire — wait for the other faction to respond' }); return;
+      res.status(400).json({ error: 'You proposed this ceasefire. Wait for the other faction to respond' }); return;
     }
 
     const updated = await prisma.factionWar.update({
@@ -215,7 +215,7 @@ export async function declineCeasefire(req: AuthRequest, res: Response): Promise
     });
     if (!war) { res.status(404).json({ error: 'Pending ceasefire not found' }); return; }
     if (war.ceasefireProposerFactionId === membership.factionId) {
-      res.status(400).json({ error: 'You proposed this ceasefire — wait for the other faction to respond' }); return;
+      res.status(400).json({ error: 'You proposed this ceasefire. Wait for the other faction to respond' }); return;
     }
 
     const updated = await prisma.factionWar.update({

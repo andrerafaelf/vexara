@@ -26,7 +26,7 @@ function fmtRate(v: number): string {
 
 /**
  * Interpolates live resource amounts at 1Hz against a server-anchored baseline. Subscribes only
- * itself to the shared clock — the header that contains it stays stable across ticks.
+ * itself to the shared clock, the header that contains it stays stable across ticks.
  */
 function LiveResourceStripInner({
   baseResources,

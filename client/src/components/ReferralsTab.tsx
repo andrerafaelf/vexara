@@ -297,7 +297,7 @@ export default function ReferralsTab() {
   return (
     <div className="referrals-tab">
 
-      {/* Milestone token — everyone gets 1 at 500 pts */}
+      {/* Milestone token, everyone gets 1 at 500 pts */}
       {pendingMilestoneTokens.length > 0 && (
         <section className="referrals-section">
           <h3 className="referrals-section-title">
@@ -326,7 +326,7 @@ export default function ReferralsTab() {
         </section>
       )}
 
-      {/* Your referral code — account-bound, unique across galaxies */}
+      {/* Your referral code, account-bound, unique across galaxies */}
       {myReferralCode && (
         <section className="referrals-section">
           <h3 className="referrals-section-title">Your Referral Code</h3>
@@ -356,7 +356,7 @@ export default function ReferralsTab() {
         </section>
       )}
 
-      {/* Referrer section — read-only display of who referred you at signup */}
+      {/* Referrer section, read-only display of who referred you at signup */}
       {referrer && (
         <section className="referrals-section">
           <h3 className="referrals-section-title">Referred By</h3>
@@ -417,7 +417,7 @@ export default function ReferralsTab() {
         </section>
       )}
 
-      {/* Referral list — who you've referred */}
+      {/* Referral list, who you've referred */}
       <section className="referrals-section">
         <h3 className="referrals-section-title">Your Referrals</h3>
         {referrals.length === 0 ? (

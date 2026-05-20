@@ -13,7 +13,7 @@ type Theme = {
 const THEMES: Theme[] = [
   {
     id: 'current',
-    name: 'Current — Cyan-on-navy',
+    name: 'Current, Cyan-on-navy',
     blurb: 'Baseline. What you have today. Included for comparison.',
     className: 'pp-theme-current',
   },
@@ -77,10 +77,10 @@ function ThemeSample() {
         </div>
       </div>
 
-      {/* Card with numeric data — most "in-world" surface */}
+      {/* Card with numeric data, most "in-world" surface */}
       <div className="pp-card">
         <div className="pp-card-head">
-          <span className="pp-card-label">NEXUS — ARGENT IV</span>
+          <span className="pp-card-label">NEXUS, ARGENT IV</span>
           <span className="pp-card-meta">Lv 04 · Sector 12-B</span>
         </div>
         <table className="pp-table">

@@ -134,7 +134,7 @@
   color: var(--warning);
 }
 
-/* Sustain track — thin bar below the main bar showing time progress */
+/* Sustain track, thin bar below the main bar showing time progress */
 .dom-sustain-track {
   position: absolute;
   left: 0;

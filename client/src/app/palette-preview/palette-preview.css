@@ -1,5 +1,5 @@
 /* ============================================================
-   Palette preview — scoped, doesn't touch global tokens.
+   Palette preview, scoped, doesn't touch global tokens.
    Each .pp-theme-* sets local CSS vars consumed by .pp-* parts.
    ============================================================ */
 
@@ -47,7 +47,7 @@
 }
 
 /* ============================================================
-   Theme wrapper — defines tokens consumed below
+   Theme wrapper, defines tokens consumed below
    Defaults match the CURRENT palette so anything that forgets
    to override still renders sensibly.
    ============================================================ */
@@ -107,7 +107,7 @@
 }
 
 /* ============================================================
-   THEME — Current (cyan gradient hero, glow on primary)
+   THEME, Current (cyan gradient hero, glow on primary)
    ============================================================ */
 .pp-theme-current {
   --pp-hero-h-bg: linear-gradient(135deg, #67FFF2 0%, #43B0AF 100%);
@@ -122,7 +122,7 @@
 }
 
 /* ============================================================
-   THEME — Industrial military sci-fi
+   THEME, Industrial military sci-fi
    Gunmetal base, amber primary, mono everywhere, sharp corners.
    ============================================================ */
 .pp-theme-industrial {
@@ -169,7 +169,7 @@
 }
 
 /* ============================================================
-   THEME — Cold deep-space, desaturated
+   THEME, Cold deep-space, desaturated
    Same family, no gradients, no glows.
    ============================================================ */
 .pp-theme-cold {
@@ -197,7 +197,7 @@
 }
 
 /* ============================================================
-   THEME — Imperial / faction-coded
+   THEME, Imperial / faction-coded
    ============================================================ */
 .pp-theme-imperial {
   --pp-bg: #0a0a0a;
@@ -237,7 +237,7 @@
 }
 
 /* ============================================================
-   Sample components — consume the theme variables
+   Sample components, consume the theme variables
    ============================================================ */
 .pp-sample {
   display: flex;

@@ -25,7 +25,7 @@ function formatDefault(msRemaining: number, completedLabel: string): string {
 }
 
 /**
- * Renders a 1Hz-updating time-remaining label. Subscribes only itself to the shared clock —
+ * Renders a 1Hz-updating time-remaining label. Subscribes only itself to the shared clock .
  * does not force re-renders in ancestors. Drop it wherever you would have written
  * `formatTime(currentTime, endAt)` to keep the parent stable.
  */

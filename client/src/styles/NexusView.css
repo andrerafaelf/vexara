@@ -400,7 +400,7 @@
   margin-bottom: 15px;
 }
 
-/* ── Overview resource strip — always visible, reuses header-res classes ── */
+/* ── Overview resource strip, always visible, reuses header-res classes ── */
 .overview-resource-strip {
   display: flex !important;
   align-self: flex-start;
@@ -498,7 +498,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* sm: comfortable phone (≥ 480px) — pair into two columns */
+/* sm: comfortable phone (≥ 480px), pair into two columns */
 @media (min-width: 480px) {
   .nexus-stats-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -511,7 +511,7 @@
   }
 }
 
-/* lg: small desktop (≥ 1100px) — full 4-up with bigger numbers */
+/* lg: small desktop (≥ 1100px), full 4-up with bigger numbers */
 @media (min-width: 1100px) {
   .nexus-stats-row {
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -2462,7 +2462,7 @@
 
 /* In espionage mode, allow vertical page scroll on touch when swiping
    over the map. Users select targets by tapping, so we don't need
-   single-finger pan to drive map movement — pinch-zoom (2 fingers)
+   single-finger pan to drive map movement, pinch-zoom (2 fingers)
    still works for zooming. Apply touch-action on the full chain so
    the browser knows scroll is permitted regardless of which element
    the touch lands on. */
@@ -2517,7 +2517,7 @@
   color: var(--danger);
 }
 
-/* mode switcher — richer layout */
+/* mode switcher, richer layout */
 .espionage-mode-btn {
   display: flex;
   flex-direction: column;

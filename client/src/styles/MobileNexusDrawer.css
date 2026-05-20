@@ -1,4 +1,4 @@
-/* Mobile nexus drawer — slides in from right */
+/* Mobile nexus drawer, slides in from right */
 .mobile-nexus-backdrop {
   display: none;
 }
@@ -117,10 +117,10 @@
 
   .mobile-nexus-drawer-list .nexus-item {
     margin-bottom: 6px;
-    /* Comfortable touch target — nexus-item already has min-height from Game.css */
+    /* Comfortable touch target, nexus-item already has min-height from Game.css */
   }
 
-  /* Nexus toggle button in header — shown only on mobile (overrides Game.css base) */
+  /* Nexus toggle button in header, shown only on mobile (overrides Game.css base) */
   .nexus-drawer-toggle {
     display: inline-flex;
     align-items: center;
@@ -155,7 +155,7 @@
   }
 }
 
-/* Hide toggle on desktop — sidebar is always visible */
+/* Hide toggle on desktop, sidebar is always visible */
 @media (min-width: 769px) {
   .nexus-drawer-toggle {
     display: none;

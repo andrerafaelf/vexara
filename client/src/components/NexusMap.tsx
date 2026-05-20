@@ -53,7 +53,7 @@ const NexusMap: React.FC<NexusMapProps> = ({ nexus, compact = false, onClickBuil
                 {isUpgrading && <div className="nexus-map-upgrading-ring" />}
                 {compact && (
                   <span className={`nexus-map-badge${level === 0 ? ' badge-zero' : ''}`}>
-                    {level === 0 ? '—' : `${level}`}
+                    {level === 0 ? '.' : `${level}`}
                   </span>
                 )}
               </div>
@@ -62,7 +62,7 @@ const NexusMap: React.FC<NexusMapProps> = ({ nexus, compact = false, onClickBuil
                   <span className="nexus-map-tile-name nexus-map-name-full">{name}</span>
                   <span className="nexus-map-tile-name nexus-map-name-short">{short}</span>
                   <span className={`nexus-map-tile-level${level === 0 ? ' level-zero' : ''}`}>
-                    {level === 0 ? '—' : `Lv ${level}`}
+                    {level === 0 ? '.' : `Lv ${level}`}
                   </span>
                 </div>
               )}

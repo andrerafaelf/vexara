@@ -1,4 +1,4 @@
-// Public replay endpoint — no auth required.
+// Public replay endpoint, no auth required.
 // Returns the minimum data needed for the client-side combat simulator to
 // reproduce the battle exactly. Designed for shareable links and embeds.
 
@@ -64,7 +64,7 @@ router.get('/replay/:attackId', async (req: Request, res: Response) => {
       arrivesAt: attack.arrivesAt?.toISOString() ?? null,
     };
 
-    // Replays are immutable once resolved — cache hard for 24h.
+    // Replays are immutable once resolved, cache hard for 24h.
     res.setHeader('Cache-Control', 'public, max-age=86400, immutable');
     res.json(payload);
   } catch (err) {

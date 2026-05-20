@@ -8,7 +8,7 @@ import type { AuthRequest } from '../types/index.js';
 
 const router = Router();
 
-// Static routes first — must precede /:id to avoid param capture
+// Static routes first, must precede /:id to avoid param capture
 router.get('/my', auth, (req, res) => factionController.getMyFaction(req as AuthRequest, res as Response));
 router.get('/galaxy/list', auth, (req, res) => factionController.listFactionsInGalaxy(req as AuthRequest, res as Response));
 router.get('/leaderboard', auth, (req, res) => factionController.getLeaderboard(req as AuthRequest, res as Response));

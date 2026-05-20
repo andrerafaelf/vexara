@@ -332,7 +332,7 @@
   gap: var(--space-2);
 }
 
-/* Chat bubbles — keep asymmetric radius for readability, but bring it in line */
+/* Chat bubbles, keep asymmetric radius for readability, but bring it in line */
 .friends-chat-bubble {
   max-width: 68%;
   padding: 8px 12px;

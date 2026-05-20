@@ -109,7 +109,7 @@ export default function GameLayout({
     [pathname, router, startProgress],
   );
 
-  // Hover/focus prefetch on individual nav buttons — top-up over the mount-time prefetch
+  // Hover/focus prefetch on individual nav buttons, top-up over the mount-time prefetch
   // for cases where chunks may have been evicted, and a cheap signal that a click is coming.
   const prefetchOnHover = useCallback(
     (href: string) => () => {

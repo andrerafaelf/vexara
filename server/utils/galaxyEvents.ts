@@ -35,13 +35,13 @@ async function spawnDerelictShip(galaxyId: number) {
   const nexus = await createNeutralNexus(galaxyId, 0.4); // easy difficulty
   if (!nexus) return null;
 
-  // Tag it as a special derelict — very low troops, bonus on capture
+  // Tag it as a special derelict, very low troops, bonus on capture
   await prisma.nexus.update({
     where: { id: nexus.id },
     data: {
       name: 'Derelict Ship',
       nexusType: 'Resource Depot', // whoever captures gets 2x production
-      // Zero most troops — should be easy to take
+      // Zero most troops, should be easy to take
       lancerDrone: 0, assaultTrooper: 0, breakerUnit: 0,
       reconOperative: randInt(2, 6),
     },

@@ -346,7 +346,7 @@ a:focus-visible,
 .vx-danger { color: var(--danger); }
 .vx-warning { color: var(--warning); }
 
-/* Button variants — opt-in helpers (existing buttons keep their classes) */
+/* Button variants, opt-in helpers (existing buttons keep their classes) */
 .vx-btn {
   display: inline-flex;
   align-items: center;

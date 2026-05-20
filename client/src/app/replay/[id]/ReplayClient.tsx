@@ -61,7 +61,7 @@ export default function ReplayClient({ data }: { data: ReplayPayload }) {
                   {data.attacker.x != null && ` (${data.attacker.x}|${data.attacker.y})`}
                 </span>
               )}
-              <span className="public-replay-side-stat">{totalAttackers} units · {data.attackerPower ? data.attackerPower.toLocaleString() : '—'} atk</span>
+              <span className="public-replay-side-stat">{totalAttackers} units · {data.attackerPower ? data.attackerPower.toLocaleString() : '.'} atk</span>
             </div>
             <span className="public-replay-vs">VS</span>
             <div className="public-replay-side public-replay-side--defender">
@@ -73,7 +73,7 @@ export default function ReplayClient({ data }: { data: ReplayPayload }) {
                   {data.defender.x != null && ` (${data.defender.x}|${data.defender.y})`}
                 </span>
               )}
-              <span className="public-replay-side-stat">{totalDefenders} units · {data.defenderPower ? data.defenderPower.toLocaleString() : '—'} def</span>
+              <span className="public-replay-side-stat">{totalDefenders} units · {data.defenderPower ? data.defenderPower.toLocaleString() : '.'} def</span>
             </div>
           </div>
         </div>

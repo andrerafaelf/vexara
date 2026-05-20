@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from 'react';
 
-// One shared 1Hz clock. Components opt in via useNow() — only subscribed components re-render
+// One shared 1Hz clock. Components opt in via useNow(), only subscribed components re-render
 // each tick, instead of forcing a setState higher in the tree that cascades through everything.
 // The clock pauses when the document is hidden so backgrounded PWAs/tabs don't burn CPU.
 
@@ -61,7 +61,7 @@ const getServerSnapshot = () => 0;
 
 /**
  * Subscribes the calling component to a shared 1Hz clock. Returns the current time as a number
- * of milliseconds since the epoch. Only components that call this hook re-render on each tick —
+ * of milliseconds since the epoch. Only components that call this hook re-render on each tick .
  * not their parents or siblings. The clock auto-pauses when the document is hidden.
  */
 export function useNow(): number {

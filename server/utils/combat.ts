@@ -137,7 +137,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 
     if (!defenderNexus) return;
 
-    // Plasma Turrets cannot leave their nexus — strip them from the attacking force.
+    // Plasma Turrets cannot leave their nexus, strip them from the attacking force.
     // They remain on the nexus and contribute to defense when under attack.
     const plasmaTurretsKept = attackTroops.plasmaTurret || 0;
     if (plasmaTurretsKept > 0) {
@@ -379,8 +379,8 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
     const returnsAt = new Date(Date.now() + travelMs);
 
     // Capture the defender's force composition at engagement time so replays are
-    // reproducible. Without this, an observer only knows defender *losses* — not
-    // who survived — which would make the replay underwhelming.
+    // reproducible. Without this, an observer only knows defender *losses*, not
+    // who survived, which would make the replay underwhelming.
     const defenderInitial: Record<string, number> = {};
     for (const k of TROOP_KEYS) {
       const n = mergedDefenderForce[k] || 0;
@@ -414,7 +414,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
       body: attackerWins
         ? conquered
           ? `Your forces conquered ${defenderNexusForNotif?.name || 'a nexus'}! Combat report ready.`
-          : `You won the battle at ${defenderNexusForNotif?.name || 'a nexus'}. Troops returning — combat report ready!`
+          : `You won the battle at ${defenderNexusForNotif?.name || 'a nexus'}. Troops returning, combat report ready!`
         : `Your attack on ${defenderNexusForNotif?.name || 'a nexus'} was repelled. Combat report ready.`,
       tag: `attack-resolved-${attack.id}`, data: { url: '/combat-logs' },
     });

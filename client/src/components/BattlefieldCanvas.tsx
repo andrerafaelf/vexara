@@ -3,7 +3,7 @@
 // Architecture:
 //   - All visual state is derived from `SimResult` + `playhead` (0..1).
 //   - The simulator output is treated as the ground truth; we never "make up"
-//     casualties — we just animate the transition between rounds.
+//     casualties, we just animate the transition between rounds.
 //   - Units are rendered as small chevron sprites with a faction-tinted glow.
 //   - Round transitions produce particle bursts, screen shake, floating damage
 //     numbers and a kill-feed entry, all keyed off the deterministic seed so
@@ -33,14 +33,14 @@ const OUTRO_DURATION_S = 4;
 const MAX_UNIT_DOTS_PER_SIDE = 220;  // cap dot count for performance on huge battles
 const PARTICLE_BUDGET = 240;
 const TROOP_COLORS: Record<TroopKey, string> = {
-  // Light — cyan
+  // Light, cyan
   breakerUnit: '#74E0FF', skimmerBike: '#46B5E8', interceptorBike: '#2A8FCC', voidStalker: '#A0F2FF',
-  // Heavy — orange/amber
+  // Heavy, orange/amber
   assaultTrooper: '#FFB05A', bulwarkGuard: '#E67D2F', siegeMech: '#C25A12',
-  // Ranged — magenta/violet
+  // Ranged, magenta/violet
   lancerDrone: '#D484F0', suppressorTeam: '#B85CDD', disruptorUnit: '#9038C0',
   annihilatorPlatform: '#7022A8', plasmaTurret: '#5915A0',
-  // Special — pale gold
+  // Special, pale gold
   reconOperative: '#E8E4A8', overseer: '#FFD700',
 };
 
@@ -91,7 +91,7 @@ interface UnitDot {
   // PRNG-derived offsets so dots wobble independently
   jitterX: number;
   jitterY: number;
-  // Birth time within the replay (0..1) — used for staggered death anims
+  // Birth time within the replay (0..1), used for staggered death anims
   deathAt: number | null;     // playhead at which this dot is destroyed
 }
 
@@ -136,7 +136,7 @@ function buildBattleScript(sim: SimResult): BattleScript {
       const n = initial[k] || 0;
       if (n > 0) { types.push(k); counts.push(n); }
     }
-    // Heavy troops get larger dots — render-time concern, not assignment.
+    // Heavy troops get larger dots, render-time concern, not assignment.
     // Distribute dotCount across types proportionally to count.
     let assigned = 0;
     const perType = counts.map((c) => Math.floor((c / totalReal) * dotCount));

@@ -333,13 +333,13 @@ const TROOP_DESCRIPTIONS: { [key: string]: string } = {
   disruptorUnit:
     'Ranged anti-armor. EMP weapons suppress heavy units. Requires Lv7 Recruitment Core, Lv6 Ore Extractor.',
   interceptorBike:
-    'Light rapid-response cavalry. Extremely fast — counters heavy armor. Requires Lv8 Recruitment Core, Lv7 Alloy Forge.',
+    'Light rapid-response cavalry. Extremely fast, counters heavy armor. Requires Lv8 Recruitment Core, Lv7 Alloy Forge.',
   annihilatorPlatform:
     'Heavy artillery. Slow but devastating ranged platform that suppresses light units. Requires Lv12 Recruitment Core, Lv10 Command Core, Lv10 Shield Grid.',
   voidStalker:
     'Light stealth cavalry. Ultra-fast raider that hard-counters ranged emplacements. Requires Lv9 Recruitment Core, Lv8 Alloy Forge, Lv3 Armory.',
   plasmaTurret:
-    'Ranged static emplacement. Cannot be sent on attacks — defends from the nexus. Decimates light cavalry. Requires Lv11 Recruitment Core, Lv9 Command Core, Lv5 Armory.',
+    'Ranged static emplacement. Cannot be sent on attacks, defends from the nexus. Decimates light cavalry. Requires Lv11 Recruitment Core, Lv9 Command Core, Lv5 Armory.',
   overseer:
     'Conquest unit. Reduces enemy Control by 50 per successful strike. Requires Lv14 Recruitment Core, Lv14 Command Core, Lv13 Shield Grid. Up to 3 per nexus.',
 };
@@ -744,7 +744,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     }
   };
 
-  // Stable wrapper that delegates to the latest impl via ref — lets memoized children
+  // Stable wrapper that delegates to the latest impl via ref, lets memoized children
   // (TrainAmountControls) hold onto a single identity instead of getting a fresh function
   // every parent render. Without this, React.memo on the control would always be defeated.
   const handleTrainTroopsRef = useRef(handleTrainTroopsImpl);
@@ -783,7 +783,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     }
   };
 
-  // formatTime() was removed — every consumer in the render path now renders a <Countdown />
+  // formatTime() was removed, every consumer in the render path now renders a <Countdown />
   // leaf (or, for transient labels driven by handlers, computes diffs against Date.now() inline).
 
   const fmtNum = (n: number) => {
@@ -1126,7 +1126,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   };
 
   const getQuestBatches = (): { batches: QuestBatch[]; allQuestsComplete: boolean } => {
-    // A batch that has had its reward claimed is permanently complete — quests inside it
+    // A batch that has had its reward claimed is permanently complete, quests inside it
     // should show as done even if live state (e.g. troops lost in combat) no longer meets the condition.
     const claimedBatches = new Set<string>(Array.isArray(nexus.questRewardClaims) ? nexus.questRewardClaims : []);
     const completedQuestIds = new Set<string>(Array.isArray(nexus.completedQuestIds) ? nexus.completedQuestIds : []);
@@ -1373,7 +1373,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     const conquerorComplete = claimedBatches.has('conqueror') || conquerorQuests.every((quest) => quest.completed);
     const allQuestsComplete = conquerorComplete;
 
-    // Hide batches that have already been claimed — next tier naturally appears
+    // Hide batches that have already been claimed, next tier naturally appears
     return { batches: allBatches.filter((batch) => !claimedBatches.has(batch.id)), allQuestsComplete };
   };
 
@@ -1390,7 +1390,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   const { batches: questBatches, allQuestsComplete } = getQuestBatches();
   const activeBuild = nexus.buildQueue[0];
   const activeTraining = nexus.trainingQueue[0];
-  // (`activeBuildTimer` and `activeTrainingTimer` were removed — the live countdown labels are
+  // (`activeBuildTimer` and `activeTrainingTimer` were removed, the live countdown labels are
   // now driven by the <Countdown> leaf wherever they appear, so the tree doesn't re-render on
   // each tick just to recompute these strings.)
 
@@ -2674,7 +2674,7 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
   const dispatchRef = useRef<HTMLDivElement | null>(null);
   const targetBarRef = useRef<HTMLDivElement | null>(null);
 
-  // Tick for countdowns — pause while the document is hidden.
+  // Tick for countdowns, pause while the document is hidden.
   useEffect(() => {
     let t: ReturnType<typeof setInterval> | null = null;
     const start = () => {
@@ -2745,7 +2745,7 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
         mode === 'sabotage' ? sabotageTarget : undefined,
       );
       if (r.data?.queued) {
-        onToast(`Operative${mode === 'sabotage' ? 's' : ''} dispatched — arrives in ${formatCountdown(new Date(r.data.arrivesAt).getTime() - Date.now())}`, 'info');
+        onToast(`Operative${mode === 'sabotage' ? 's' : ''} dispatched. Arrives in ${formatCountdown(new Date(r.data.arrivesAt).getTime() - Date.now())}`, 'info');
         setSpyTarget(null);
         loadAll();
       }

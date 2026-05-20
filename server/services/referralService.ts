@@ -61,7 +61,7 @@ export async function checkAndGrantToken(refereeId: number, currentPoints: numbe
   });
   if (!referee?.referredById) return;
 
-  // Idempotent per (refereeId, galaxyId) — tokens stack across galaxies
+  // Idempotent per (refereeId, galaxyId), tokens stack across galaxies
   const existing = await prisma.referralToken.findUnique({
     where: { refereeId_galaxyId: { refereeId, galaxyId } },
     select: { id: true },
@@ -84,7 +84,7 @@ export async function getReferralStatus(referrerId: number) {
     orderBy: { id: 'asc' },
   });
 
-  // Deduplicate referees for display — show unique referees with their best-points status
+  // Deduplicate referees for display, show unique referees with their best-points status
   const refereeIds = [...new Set(tokens.map((t) => t.refereeId))];
   const referees = await prisma.user.findMany({
     where: { id: { in: refereeIds } },

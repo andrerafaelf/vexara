@@ -81,7 +81,7 @@ export default function FactionLeaderboard({ myFactionId }: { myFactionId?: numb
         </div>
       )}
 
-      {/* Dominance alert — only when unlocked */}
+      {/* Dominance alert, only when unlocked */}
       {dominating && (
         <div className="flb-dominance-alert">
           <div className="flb-dominance-alert-header">

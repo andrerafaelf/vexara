@@ -124,7 +124,7 @@ export async function getActivitySummary(req: AuthRequest, res: Response): Promi
     const nexusIds = ownNexuses.map((n) => n.id);
 
     // Completed building upgrades: items in trainingQueue/buildQueue that finished since last visit
-    // We proxy this via the attack/report data — buildings that finished show up in nexus state.
+    // We proxy this via the attack/report data, buildings that finished show up in nexus state.
     // Instead surface a simple count of buildings/troops that likely completed based on queue timestamps.
     const buildingsDone: Array<{ nexusName: string; building: string; level: number }> = [];
     const troopsDone: Array<{ nexusName: string; type: string; count: number }> = [];

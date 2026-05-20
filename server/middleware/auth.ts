@@ -6,7 +6,7 @@ import type { AuthRequest } from '../types/index.js';
 const READ_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 // Short-lived in-process cache keyed by userId.
-// Entries expire after 30 s — galaxy switches are reflected quickly,
+// Entries expire after 30 s, galaxy switches are reflected quickly,
 // and we avoid a DB hit on every API call for active players.
 const TTL_MS = 30_000;
 interface CacheEntry {

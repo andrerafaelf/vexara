@@ -152,7 +152,7 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
     }
 
     if (user.emailVerifiedAt) {
-      // Already verified — token should have been cleared, but be idempotent.
+      // Already verified, token should have been cleared, but be idempotent.
       res.json({ ok: true, alreadyVerified: true });
       return;
     }

@@ -2,7 +2,7 @@
 
 Vexara uses **Cloudflare as a reverse proxy** in front of your nginx/Docker stack.
 Cloudflare terminates SSL, caches static assets globally, provides DDoS protection,
-and compresses responses with Brotli — all on the free plan.
+and compresses responses with Brotli, all on the free plan.
 
 ---
 
@@ -34,7 +34,7 @@ and compresses responses with Brotli — all on the free plan.
 In **SSL/TLS → Overview**:
 
 - Mode: **Full (strict)**
-  - "Flexible" sends HTTP to your origin — insecure.
+  - "Flexible" sends HTTP to your origin, insecure.
   - "Full (strict)" requires a valid cert on origin (your Let's Encrypt cert in nginx).
 
 In **SSL/TLS → Edge Certificates**:
@@ -50,19 +50,19 @@ In **SSL/TLS → Edge Certificates**:
 
 Go to **Caching → Cache Rules → Create rule**.
 
-### Rule 1 — Cache static assets forever
+### Rule 1, Cache static assets forever
 
 - **When**: URI Path matches `/_next/static/*`
 - **Then**: Cache eligibility = **Eligible for cache**
 - Edge TTL: **1 year** (override origin)
 - Browser TTL: **1 year**
 
-### Rule 2 — Never cache API responses
+### Rule 2, Never cache API responses
 
 - **When**: URI Path starts with `/api/`
 - **Then**: Cache eligibility = **Bypass cache**
 
-### Rule 3 — Short cache for HTML pages
+### Rule 3, Short cache for HTML pages
 
 - **When**: URI Path matches `/*` AND does NOT contain `/api/` AND does NOT contain `/_next/static/`
 - **Then**: Cache eligibility = **Eligible for cache**
@@ -75,12 +75,12 @@ Go to **Caching → Cache Rules → Create rule**.
 
 Go to **Speed → Optimization → Protocol Optimization**:
 
-- ✅ **HTTP/3 (QUIC)** — enable for mobile perf gains
+- ✅ **HTTP/3 (QUIC)**, enable for mobile perf gains
 
-**Brotli** is always-on in Cloudflare — the toggle was removed in 2024. Nothing to do.
+**Brotli** is always-on in Cloudflare, the toggle was removed in 2024. Nothing to do.
 
 **Auto Minify** was deprecated by Cloudflare in 2024 and removed from the UI.
-Not needed — Next.js already outputs minified JS/CSS at build time.
+Not needed, Next.js already outputs minified JS/CSS at build time.
 
 ---
 
@@ -88,9 +88,9 @@ Not needed — Next.js already outputs minified JS/CSS at build time.
 
 Go to **Network**:
 
-- ✅ **WebSockets** — **must be enabled** or Cloudflare will drop Socket.IO connections
+- ✅ **WebSockets**, **must be enabled** or Cloudflare will drop Socket.IO connections
   (the game's real-time push events won't work without this)
-- ✅ **HTTP/2 to Origin** — keeps persistent connections from Cloudflare to nginx
+- ✅ **HTTP/2 to Origin**, keeps persistent connections from Cloudflare to nginx
   (nginx keepalive is already configured for this)
 
 ---
@@ -102,7 +102,7 @@ Go to **Security → Settings**:
 - Security Level: **Medium**
 - Bot Fight Mode: ✅ (free, blocks known bad bots)
 
-**Rate Limiting** on `/api/auth/*` is a paid feature — skip it.
+**Rate Limiting** on `/api/auth/*` is a paid feature, skip it.
 Origin-level rate limiting is already handled by nginx (`limit_req zone=auth burst=5 nodelay`)
 so auth endpoints are protected regardless.
 

@@ -254,15 +254,15 @@
   z-index: 1;
   will-change: transform;
   background:
-    /* cyan nebula bloom — top-left quadrant */
+    /* cyan nebula bloom, top-left quadrant */
     radial-gradient(ellipse 55% 40% at 18% 22%, rgba(255, 158, 61,0.18) 0%, transparent 100%),
-    /* green bloom — bottom-right */
+    /* green bloom, bottom-right */
     radial-gradient(ellipse 50% 35% at 82% 78%, rgba(86, 211, 100,0.13) 0%, transparent 100%),
-    /* warm magenta rift — mid-right */
+    /* warm magenta rift, mid-right */
     radial-gradient(ellipse 30% 50% at 88% 35%, rgba(248, 81, 73,0.10) 0%, transparent 100%),
-    /* deep core glow — centre */
+    /* deep core glow, centre */
     radial-gradient(ellipse 60% 60% at 50% 50%, rgba(20,25,60,0.7) 0%, transparent 100%),
-    /* base — near-black deep space */
+    /* base, near-black deep space */
     linear-gradient(135deg, #020408 0%, #060a14 30%, #08101e 55%, #030608 100%);
   box-shadow:
     inset 0 0 80px rgba(255, 158, 61,0.06),
@@ -331,7 +331,7 @@
   background: rgba(20,25,55,0.45);
 }
 
-/* Active/selected nexus — bright cyan, prominent */
+/* Active/selected nexus, bright cyan, prominent */
 .map-cell.current-nexus {
   background: rgba(255, 158, 61,0.22);
   border: 2px solid var(--accent);
@@ -341,7 +341,7 @@
     0 0 28px rgba(255, 158, 61,0.18);
 }
 
-/* Player's other nexuses — green, clearly distinct */
+/* Player's other nexuses, green, clearly distinct */
 .map-cell.own-nexus {
   background: rgba(86, 211, 100,0.20);
   border: 2px solid var(--success);
@@ -351,7 +351,7 @@
     0 0 24px rgba(86, 211, 100,0.15);
 }
 
-/* Enemy nexuses — warm red/orange, immediately hostile feel */
+/* Enemy nexuses, warm red/orange, immediately hostile feel */
 .map-cell.enemy-nexus {
   background: rgba(248, 81, 73,0.18);
   border: 2px solid var(--danger);
@@ -361,7 +361,7 @@
     0 0 24px rgba(248, 81, 73,0.14);
 }
 
-/* Selected cell — white outline on top of any state */
+/* Selected cell, white outline on top of any state */
 .map-cell.selected {
   outline: 2px solid rgba(255,255,255,0.7);
   outline-offset: -2px;

@@ -37,7 +37,7 @@ export async function getConversationSummaries(
   if (friendIds.length === 0) return new Map();
 
   // One query: latest message id per conversation pair using a raw grouping approach.
-  // We fetch recent messages for all friends and pick the newest per pair in JS —
+  // We fetch recent messages for all friends and pick the newest per pair in JS .
   // cheaper than N round-trips, still one DB call.
   const recentMessages = await prisma.chatMessage.findMany({
     where: {

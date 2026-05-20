@@ -138,7 +138,7 @@ export async function systemBuy(req: AuthRequest, res: Response): Promise<void> 
     const nexusRecord = nexus as unknown as Record<string, number>;
     const cost = Math.ceil(parsedReceive * SYSTEM_BUY_RATE);
     if ((nexusRecord[String(payResource)] || 0) < cost) {
-      res.status(400).json({ error: `Insufficient ${payResource} — need ${cost}` }); return;
+      res.status(400).json({ error: `Insufficient ${payResource}, need ${cost}` }); return;
     }
     await marketService.updateNexusResources(parsedNexusId, {
       [String(payResource)]: nexusRecord[String(payResource)] - cost,

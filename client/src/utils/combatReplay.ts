@@ -98,7 +98,7 @@ export function deriveReplay(report: Attack): CombatReplay | null {
   // Defender initial = their final survivors + what they lost
   const defenderLosses = report.result.defenderLosses;
   // We don't know exact defender starting counts, but we know losses and result.
-  // Estimate defender initial from losses — if defender won, they kept most troops.
+  // Estimate defender initial from losses, if defender won, they kept most troops.
   // We can only reconstruct losses, so defender initial is losses (minimum visible force).
   const defenderInitial: Record<string, number> = {};
   for (const [k, v] of Object.entries(defenderLosses)) {

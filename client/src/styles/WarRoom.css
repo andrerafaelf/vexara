@@ -1,5 +1,5 @@
 /* ============================================================================
-   War Room — real-time faction operation planning board
+   War Room, real-time faction operation planning board
    ========================================================================== */
 
 .warroom {
@@ -1294,7 +1294,7 @@
   gap: 18px;
   padding: 16px 18px;
   align-items: stretch;
-  /* Fixed body height — keeps the starfield from resizing when the
+  /* Fixed body height, keeps the starfield from resizing when the
      selected-target card grows or shrinks. Without this, content changes
      in the left column could push total height past 90vh, trigger a
      scrollbar, narrow the right column, and make the square SVG re-render

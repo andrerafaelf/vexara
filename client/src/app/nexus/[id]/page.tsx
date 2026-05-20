@@ -78,7 +78,7 @@ export default function NexusPage() {
 
   // Page is ready when we have a nexus to render, OR we've confirmed (via a real server response)
   // there are no nexuses. nexusesResolved guards the F5 race where the query is briefly idle
-  // with no data — in that window pageReady must stay false to avoid an eliminated-screen flash.
+  // with no data, in that window pageReady must stay false to avoid an eliminated-screen flash.
   const pageReady = !!selectedNexus || (nexusesResolved && nexuses.length === 0);
   usePageReady(pageReady, 'nexus');
 

@@ -4,7 +4,7 @@ import {
   alphaSignupCount,
   login,
   register,
-  // registerReal — real registration. On launch day, swap the /register route below from `register` to `registerReal`.
+  // registerReal, real registration. On launch day, swap the /register route below from `register` to `registerReal`.
   registerReal as _registerReal,
   requestPasswordReset,
   resendVerification,
