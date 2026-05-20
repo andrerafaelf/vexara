@@ -33,6 +33,7 @@ import {
   Zap,
 } from 'lucide-react';
 import '../styles/NexusView.css';
+import Username from './Username';
 import { Nexus, TroopTransfer } from '../types/game';
 import dynamic from 'next/dynamic';
 import type { MapNexus } from './Map';
@@ -1662,7 +1663,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                         {incomingAttacks.map((a: any) => (
                           <div key={a._id} className="strikes-card-entry">
                             <span className="strikes-card-entry-who">
-                              {a.attacker?.user?.username ?? '?'} · {a.attacker?.nexus?.name ?? '?'}
+                              <Username name={a.attacker?.user?.username ?? '?'} isSupporter={a.attacker?.user?.isSupporter} /> · {a.attacker?.nexus?.name ?? '?'}
                             </span>
                             <Countdown endAt={a.arrivesAt} className="strikes-card-entry-time" />
                           </div>

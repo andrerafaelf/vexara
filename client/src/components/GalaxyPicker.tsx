@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { getGalaxies, getGalaxyWinResults, leaveGalaxy, selectGalaxy } from '../services/api';
+import Username from './Username';
 
 export interface Galaxy {
   id: number;
@@ -26,6 +27,7 @@ interface FactionEntry {
 interface PlayerEntry {
   userId: number;
   username: string;
+  isSupporter?: boolean;
   points: number;
   nexuses: number;
   factionId: number | null;
@@ -446,7 +448,7 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
                     <tr key={p.userId} style={{ background: i % 2 === 0 ? 'rgba(255,255,255,0.03)' : 'transparent' }}>
                       <td style={{ padding: '0.4rem 0.5rem', color: '#8a98c2' }}>{i + 1}</td>
                       <td style={{ padding: '0.4rem 0.5rem' }}>
-                        {p.username}
+                        <Username name={p.username} isSupporter={p.isSupporter} />
                         {faction && <span style={{ marginLeft: 6, color: '#8a98c2', fontSize: '0.85em' }}>[{faction.tag}]</span>}
                       </td>
                       <td style={{ padding: '0.4rem 0.5rem', textAlign: 'right' }}>{p.points.toLocaleString()}</td>

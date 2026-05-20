@@ -282,7 +282,7 @@ export async function getMyReferrer(req: AuthRequest, res: Response): Promise<vo
   try {
     const me = await prisma.user.findUnique({
       where: { id: req.userId! },
-      select: { referredById: true, referredBy: { select: { username: true } } },
+      select: { referredById: true, referredBy: { select: { username: true, isSupporter: true } } },
     });
     if (!me?.referredById) {
       res.json({ referrer: null }); return;
@@ -312,6 +312,7 @@ export async function getMyReferrer(req: AuthRequest, res: Response): Promise<vo
     res.json({
       referrer: {
         username: me.referredBy?.username,
+        isSupporter: me.referredBy?.isSupporter ?? false,
         thresholdMet: tokenCount > 0,
         referrerPoints,
         myPoints,

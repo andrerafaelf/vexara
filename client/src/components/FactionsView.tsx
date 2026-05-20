@@ -36,6 +36,7 @@ import {
 } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import FactionChat from './FactionChat';
+import Username from './Username';
 import FactionActivity from './FactionActivity';
 import FactionLeaderboard from './FactionLeaderboard';
 import WarRoom from './WarRoom';
@@ -51,7 +52,7 @@ interface Faction {
   motd?: string;
   createdAt: string;
   myRole?: string;
-  members?: Array<{ id: number; userId: number; username: string; role: string }>;
+  members?: Array<{ id: number; userId: number; username: string; isSupporter?: boolean; role: string }>;
 }
 
 interface FactionInvite {
@@ -88,6 +89,7 @@ interface JoinRequest {
   id: number;
   userId: number;
   username: string;
+  isSupporter?: boolean;
   message: string | null;
   createdAt: string;
 }
@@ -809,7 +811,7 @@ export default function FactionsView() {
               {sortedMembers.slice(0, 5).map((member) => (
                 <div key={member.id} className="factions-member-row">
                   <div className="factions-member-info">
-                    <span className="factions-member-name">{member.username}</span>
+                    <span className="factions-member-name"><Username name={member.username} isSupporter={member.isSupporter} /></span>
                     <span className={`factions-member-role factions-member-role--${member.role}`}>{member.role}</span>
                   </div>
                 </div>
@@ -888,7 +890,7 @@ export default function FactionsView() {
                   {joinRequests.map((req) => (
                     <div key={req.id} className="factions-member-row factions-join-req-row">
                       <div className="factions-member-info">
-                        <span className="factions-member-name">{req.username}</span>
+                        <span className="factions-member-name"><Username name={req.username} isSupporter={req.isSupporter} /></span>
                         {req.message && <span className="factions-join-req-msg-display">&ldquo;{req.message}&rdquo;</span>}
                       </div>
                       <div className="factions-member-actions">
@@ -929,7 +931,7 @@ export default function FactionsView() {
             {sortedMembers.map((member) => (
               <div key={member.id} className="factions-member-row">
                 <div className="factions-member-info">
-                  <span className="factions-member-name">{member.username}</span>
+                  <span className="factions-member-name"><Username name={member.username} isSupporter={member.isSupporter} /></span>
                   <span className={`factions-member-role factions-member-role--${member.role}`}>{member.role}</span>
                 </div>
                 {myFaction.myRole === 'leader' && member.role !== 'leader' && (

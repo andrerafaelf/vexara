@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useGameSocket } from '../hooks/useGameSocket';
 import WavePlanner from './WavePlanner';
+import Username from './Username';
 import {
   getGalaxyEvents,
   getIncomingAttacks,
@@ -53,6 +54,7 @@ export interface MapNexus {
   y: number;
   owner: {
     username: string;
+    isSupporter?: boolean;
     points: number;
   };
   points: number;
@@ -839,7 +841,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
 
         <div className="detail-line">
           <span>Owner</span>
-          <span>{selectedNexus.owner?.username}</span>
+          <Username name={selectedNexus.owner?.username ?? ''} isSupporter={selectedNexus.owner?.isSupporter} />
         </div>
         <div className="detail-line">
           <span>Points</span>

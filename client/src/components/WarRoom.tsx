@@ -1460,7 +1460,7 @@ function CreateOperationModal({
                   </div>
                   <div className="warroom-target-card-name">{target.name}</div>
                   <div className="warroom-target-card-meta">
-                    {target.owner?.username && <span className="warroom-target-card-owner">{target.owner.username}</span>}
+                    {target.owner?.username && <span className="warroom-target-card-owner"><Username name={target.owner.username} isSupporter={target.owner?.isSupporter} /></span>}
                     <span className="warroom-target-card-points">{target.points.toLocaleString()} pts</span>
                   </div>
                 </>

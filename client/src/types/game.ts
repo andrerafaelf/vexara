@@ -157,6 +157,7 @@ export interface Attack {
     user: {
       _id: string;
       username: string;
+      isSupporter?: boolean;
     };
     nexus: {
       _id: string;
@@ -172,6 +173,7 @@ export interface Attack {
     user: {
       _id: string;
       username: string;
+      isSupporter?: boolean;
     };
     nexus: {
       _id: string;

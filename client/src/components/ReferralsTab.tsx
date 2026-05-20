@@ -11,6 +11,7 @@ import {
   redeemReferralToken,
 } from '../services/api';
 import '../styles/ReferralsTab.css';
+import Username from './Username';
 
 const REFERRAL_THRESHOLD = 1000;
 const MILESTONE_THRESHOLD = 500;
@@ -69,6 +70,7 @@ interface PendingToken { id: number; refereeId?: number; userId?: number; milest
 
 interface ReferrerInfo {
   username: string;
+  isSupporter?: boolean;
   thresholdMet: boolean;
   referrerPoints: number;
   myPoints: number;
@@ -341,7 +343,7 @@ export default function ReferralsTab() {
         <section className="referrals-section">
           <h3 className="referrals-section-title">Referred By</h3>
           <div className="referrals-referrer-card">
-            <span className="referrals-referrer-name">{referrer.username}</span>
+            <span className="referrals-referrer-name"><Username name={referrer.username} isSupporter={referrer.isSupporter} /></span>
             {referrer.thresholdMet ? (
               <span className="referrals-badge referrals-badge--done">Their reward unlocked</span>
             ) : (

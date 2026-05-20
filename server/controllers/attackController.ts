@@ -132,7 +132,10 @@ export async function getIncomingAttacks(req: AuthRequest, res: Response): Promi
     const attacks = await attackService.getIncomingAttacks(nexus.id);
     const attackerIds = [...new Set(attacks.map((a) => a.attackerUserId).filter((id): id is number => id != null))];
     const userMap = await attackService.getUsersByIds(attackerIds);
-    res.json(attacks.map((a) => serializeAttack({ ...a, attackerUsername: a.attackerUserId != null ? userMap.get(a.attackerUserId) : undefined })));
+    res.json(attacks.map((a) => {
+      const u = a.attackerUserId != null ? userMap.get(a.attackerUserId) : undefined;
+      return serializeAttack({ ...a, attackerUsername: u?.username, attackerIsSupporter: u?.isSupporter });
+    }));
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }
@@ -147,7 +150,10 @@ export async function getOutgoingAttacks(req: AuthRequest, res: Response): Promi
     const attacks = await attackService.getOutgoingAttacks(nexus.id);
     const defenderIds = [...new Set(attacks.map((a) => a.defenderUserId).filter((id): id is number => id != null))];
     const userMap = await attackService.getUsersByIds(defenderIds);
-    res.json(attacks.map((a) => serializeAttack({ ...a, defenderUsername: a.defenderUserId != null ? userMap.get(a.defenderUserId) : undefined })));
+    res.json(attacks.map((a) => {
+      const u = a.defenderUserId != null ? userMap.get(a.defenderUserId) : undefined;
+      return serializeAttack({ ...a, defenderUsername: u?.username, defenderIsSupporter: u?.isSupporter });
+    }));
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }

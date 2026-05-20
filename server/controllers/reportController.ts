@@ -18,7 +18,7 @@ export async function getReports(req: AuthRequest, res: Response): Promise<void>
           reportService.getUserById(r.attackerUserId),
           r.defenderUserId ? reportService.getUserById(r.defenderUserId) : null,
         ]);
-        return serializeAttack({ ...r, attackerUsername: attackerUser?.username, defenderUsername: defenderUser?.username });
+        return serializeAttack({ ...r, attackerUsername: attackerUser?.username, attackerIsSupporter: attackerUser?.isSupporter, defenderUsername: defenderUser?.username, defenderIsSupporter: defenderUser?.isSupporter });
       }),
     );
     res.json(enriched);

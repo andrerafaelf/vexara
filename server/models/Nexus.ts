@@ -503,10 +503,12 @@ interface AttackWithNexuses {
   id: number;
   attackerUserId: number | null;
   attackerUsername?: string;
+  attackerIsSupporter?: boolean;
   attackerNexusId: number | null;
   attackerNexus?: { id: number; name: string; x: number; y: number; shieldGrid?: number } | null;
   defenderUserId: number | null;
   defenderUsername?: string;
+  defenderIsSupporter?: boolean;
   defenderNexusId: number | null;
   defenderNexus?: { id: number; name: string; x: number; y: number; shieldGrid?: number } | null;
   troops: unknown;
@@ -535,6 +537,7 @@ export function serializeAttack(a: AttackWithNexuses) {
         _id: a.attackerUserId != null ? String(a.attackerUserId) : a.attackerUserId,
         id:  a.attackerUserId != null ? String(a.attackerUserId) : a.attackerUserId,
         username: a.attackerUsername,
+        isSupporter: a.attackerIsSupporter ?? false,
       },
       nexus: a.attackerNexus
         ? { _id: String(a.attackerNexus.id), id: String(a.attackerNexus.id), name: a.attackerNexus.name, x: a.attackerNexus.x, y: a.attackerNexus.y,
@@ -546,6 +549,7 @@ export function serializeAttack(a: AttackWithNexuses) {
         _id: a.defenderUserId != null ? String(a.defenderUserId) : a.defenderUserId,
         id:  a.defenderUserId != null ? String(a.defenderUserId) : a.defenderUserId,
         username: a.defenderUsername,
+        isSupporter: a.defenderIsSupporter ?? false,
       },
       nexus: a.defenderNexus
         ? { _id: String(a.defenderNexus.id), id: String(a.defenderNexus.id), name: a.defenderNexus.name, x: a.defenderNexus.x, y: a.defenderNexus.y,

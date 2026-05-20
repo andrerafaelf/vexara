@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext';
 import { Attack, Nexus } from '../types/game';
 import { formatDateTime } from '../utils/date';
 import BattleReplay from './BattleReplay';
+import Username from './Username';
 import ScoutIntelCard from './ScoutIntelCard';
 import ResourceIcon from './ResourceIcon';
 import { usePageReady } from './NavigationProgress';
@@ -330,12 +331,12 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
                   <strong>Date:</strong> {formatDate(selectedReport.arrivesAt)}
                 </p>
                 <p>
-                  <strong>Striker:</strong> {selectedReport.attacker.user?.username || 'Unknown'} from{' '}
+                  <strong>Striker:</strong> <Username name={selectedReport.attacker.user?.username || 'Unknown'} isSupporter={selectedReport.attacker.user?.isSupporter} /> from{' '}
                   {selectedReport.attacker.nexus?.name || 'Unknown'} ({selectedReport.attacker.nexus?.x || '?'}|
                   {selectedReport.attacker.nexus?.y || '?'})
                 </p>
                 <p>
-                  <strong>Defender:</strong> {selectedReport.defender.user?.username || 'Unknown'} from{' '}
+                  <strong>Defender:</strong> <Username name={selectedReport.defender.user?.username || 'Unknown'} isSupporter={selectedReport.defender.user?.isSupporter} /> from{' '}
                   {selectedReport.defender.nexus?.name || 'Unknown'} ({selectedReport.defender.nexus?.x || '?'}|
                   {selectedReport.defender.nexus?.y || '?'})
                 </p>
@@ -555,7 +556,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
                         </>
                       ) : (
                         <>
-                          Defense against {report.attacker.user?.username || 'Unknown'} from{' '}
+                          Defense against <Username name={report.attacker.user?.username || 'Unknown'} isSupporter={report.attacker.user?.isSupporter} /> from{' '}
                           {report.attacker.nexus?.name || 'Unknown'} ({report.attacker.nexus?.x || '?'}|
                           {report.attacker.nexus?.y || '?'})
                         </>

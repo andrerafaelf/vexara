@@ -784,8 +784,9 @@ export async function getGalaxyStarfield(req: AuthRequest, res: Response): Promi
 
     const ownerIds = Array.from(new Set(nexuses.map((n) => n.ownerId).filter((v): v is number => v != null)));
     const owners = ownerIds.length
-      ? await prisma.user.findMany({ where: { id: { in: ownerIds } }, select: { id: true, username: true } })
+      ? await prisma.user.findMany({ where: { id: { in: ownerIds } }, select: { id: true, username: true, isSupporter: true } })
       : [];
+    const ownerById = new Map(owners.map((u) => [u.id, u] as const));
     const usernameById = new Map(owners.map((u) => [u.id, u.username] as const));
 
     const items = nexuses.map((n) => {
@@ -806,6 +807,7 @@ export async function getGalaxyStarfield(req: AuthRequest, res: Response): Promi
         points: n.points,
         ownerId: n.ownerId,
         ownerName: n.ownerId != null ? (usernameById.get(n.ownerId) ?? null) : null,
+        ownerIsSupporter: n.ownerId != null ? (ownerById.get(n.ownerId)?.isSupporter ?? false) : false,
         relationship: rel,
       };
     });

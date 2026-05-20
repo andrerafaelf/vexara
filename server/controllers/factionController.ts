@@ -55,7 +55,7 @@ export async function getMyFaction(req: AuthRequest, res: Response): Promise<voi
             motd: true,
             createdAt: true,
             members: {
-              select: { id: true, userId: true, role: true, user: { select: { username: true } } },
+              select: { id: true, userId: true, role: true, user: { select: { username: true, isSupporter: true } } },
             },
           },
         },
@@ -102,7 +102,7 @@ export async function getFaction(req: AuthRequest, res: Response): Promise<void>
         createdAt: true,
         galaxyId: true,
         members: {
-          select: { id: true, userId: true, role: true, user: { select: { username: true } } },
+          select: { id: true, userId: true, role: true, user: { select: { username: true, isSupporter: true } } },
         },
       },
     });
@@ -114,7 +114,7 @@ export async function getFaction(req: AuthRequest, res: Response): Promise<void>
 
     res.json({
       ...faction,
-      members: faction.members.map((m: any) => ({ id: m.id, userId: m.userId, username: m.user.username, role: m.role })),
+      members: faction.members.map((m: any) => ({ id: m.id, userId: m.userId, username: m.user.username, isSupporter: m.user.isSupporter, role: m.role })),
     });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
@@ -861,7 +861,7 @@ export async function getJoinRequests(req: AuthRequest, res: Response): Promise<
         id: true,
         message: true,
         createdAt: true,
-        user: { select: { id: true, username: true } },
+        user: { select: { id: true, username: true, isSupporter: true } },
       },
       orderBy: { createdAt: 'asc' },
     });
@@ -870,6 +870,7 @@ export async function getJoinRequests(req: AuthRequest, res: Response): Promise<
       id: r.id,
       userId: r.user.id,
       username: r.user.username,
+      isSupporter: r.user.isSupporter,
       message: r.message,
       createdAt: r.createdAt,
     })));

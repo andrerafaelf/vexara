@@ -9,7 +9,7 @@ export function getAttackById(id: number) {
 }
 
 export function getUserById(id: number) {
-  return prisma.user.findUnique({ where: { id }, select: { id: true, username: true } });
+  return prisma.user.findUnique({ where: { id }, select: { id: true, username: true, isSupporter: true } });
 }
 
 export function getReportsForNexus(nexusId: number) {
