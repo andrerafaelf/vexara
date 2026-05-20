@@ -462,7 +462,7 @@ a:focus-visible,
    Applied to usernames belonging to Ko-fi supporters. Slow
    amber pulse, matches the industrial accent palette. */
 .supporter-name {
-  color: var(--accent);
+  color: var(--accent) !important;
   animation: vx-supporter-pulse 3s ease-in-out infinite;
 }
 

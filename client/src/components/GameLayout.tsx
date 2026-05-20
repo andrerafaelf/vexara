@@ -14,6 +14,7 @@ import { KOFI_URL } from '@/constants/support';
 import { usePathname, useRouter } from 'next/navigation';
 import { startTransition, useCallback, useEffect, useMemo, useState } from 'react';
 import { useStartProgress } from './NavigationProgress';
+import { useUserStats } from '@/features/social/useSocial';
 
 type ActivePage = 'dashboard' | 'starfield' | 'market' | 'combat-logs' | 'allies' | 'factions' | 'profile';
 
@@ -40,7 +41,8 @@ export default function GameLayout({
   const { nexuses, selectedNexus: hookSelectedNexus, refetch } = useMyNexuses();
   const { hasUnreadReports, unreadNexusIds: _unreadNexusIds } = useUnreadReports();
   const unreadNexusIds = _unreadNexusIds as Set<string>;
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
+  useUserStats();
   const router = useRouter();
   const pathname = usePathname();
   const startProgress = useStartProgress();
@@ -175,11 +177,6 @@ export default function GameLayout({
           >
             <Building2 size={18} />
           </button>
-          {activePage !== 'dashboard' && (
-            <button onClick={logout} className="logout-btn">
-              Logout
-            </button>
-          )}
         </div>
       </header>
 
@@ -252,9 +249,6 @@ export default function GameLayout({
             <Heart size={14} aria-hidden="true" />
             Support Vexara
           </a>
-          <button className="nav-btn mobile-drawer-logout" onClick={logout}>
-            Logout
-          </button>
         </div>
       </aside>
 
