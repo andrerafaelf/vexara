@@ -219,6 +219,24 @@ export default function ReferralsTab() {
   const tier = ccTier(ccLevel);
   const troopGrantPreview = redeemState ? (TROOP_GRANTS[redeemState.troopType]?.[tier] ?? 0) : 0;
 
+  const upgradeableBuildings = BUILDING_KEYS.filter((b) => {
+    const current = selectedNexus?.buildings[b] ?? 0;
+    if (current >= (BUILDING_MAX[b] ?? 20)) return false;
+    const unlock = BUILDING_UNLOCK[b];
+    if (unlock && (selectedNexus?.buildings[unlock.building] ?? 0) < unlock.level) return false;
+    return true;
+  });
+
+  // Keep the selected building valid when the nexus changes or the current pick maxes out.
+  // Without this, the select shows a fallback value but redeemState.building still points
+  // at e.g. a max-level Command Core, causing the server to reject the redemption.
+  useEffect(() => {
+    if (!redeemState || redeemState.rewardType !== 'building_instant') return;
+    if (upgradeableBuildings.length === 0) return;
+    if (!upgradeableBuildings.includes(redeemState.building)) {
+      setRedeemState((s) => (s ? { ...s, building: upgradeableBuildings[0] } : s));
+    }
+  }, [redeemState?.nexusId, redeemState?.rewardType, redeemState?.building, upgradeableBuildings.join(',')]);
 
   if (loading) return null;
 
@@ -276,36 +294,27 @@ export default function ReferralsTab() {
         </label>
       )}
 
-      {redeemState?.rewardType === 'building_instant' && (() => {
-        const upgradeable = BUILDING_KEYS.filter((b) => {
-          const current = selectedNexus?.buildings[b] ?? 0;
-          if (current >= (BUILDING_MAX[b] ?? 20)) return false;
-          const unlock = BUILDING_UNLOCK[b];
-          if (unlock && (selectedNexus?.buildings[unlock.building] ?? 0) < unlock.level) return false;
-          return true;
-        });
-        return (
-          <label className="referrals-field">
-            <span className="referrals-label">Building to Level Up</span>
-            {upgradeable.length === 0 ? (
-              <span className="referrals-error">All buildings on this nexus are at max level. Choose a different nexus or switch to troop grant.</span>
-            ) : (
-              <>
-                <select
-                  value={upgradeable.includes(redeemState.building) ? redeemState.building : upgradeable[0]}
-                  onChange={(e) => setRedeemState(s => s ? { ...s, building: e.target.value } : s)}
-                  disabled={redeemSubmitting}
-                >
-                  {upgradeable.map((b) => (
-                    <option key={b} value={b}>{BUILDING_LABELS[b]}</option>
-                  ))}
-                </select>
-                <span className="referrals-preview">2 instant levels, no resource cost, no queue.</span>
-              </>
-            )}
-          </label>
-        );
-      })()}
+      {redeemState?.rewardType === 'building_instant' && (
+        <label className="referrals-field">
+          <span className="referrals-label">Building to Level Up</span>
+          {upgradeableBuildings.length === 0 ? (
+            <span className="referrals-error">All buildings on this nexus are at max level. Choose a different nexus or switch to troop grant.</span>
+          ) : (
+            <>
+              <select
+                value={upgradeableBuildings.includes(redeemState.building) ? redeemState.building : upgradeableBuildings[0]}
+                onChange={(e) => setRedeemState(s => s ? { ...s, building: e.target.value } : s)}
+                disabled={redeemSubmitting}
+              >
+                {upgradeableBuildings.map((b) => (
+                  <option key={b} value={b}>{BUILDING_LABELS[b]}</option>
+                ))}
+              </select>
+              <span className="referrals-preview">2 instant levels, no resource cost, no queue.</span>
+            </>
+          )}
+        </label>
+      )}
 
       {redeemError && <div className="referrals-error">{redeemError}</div>}
 
@@ -313,7 +322,7 @@ export default function ReferralsTab() {
         <button type="button" className="referrals-btn" onClick={() => setRedeemState(null)} disabled={redeemSubmitting}>
           Cancel
         </button>
-        <button type="submit" className="referrals-btn primary" disabled={redeemSubmitting || !redeemState?.nexusId || (redeemState.rewardType === 'building_instant' && BUILDING_KEYS.filter((b) => { const cur = selectedNexus?.buildings[b] ?? 0; if (cur >= (BUILDING_MAX[b] ?? 20)) return false; const ul = BUILDING_UNLOCK[b]; return !ul || (selectedNexus?.buildings[ul.building] ?? 0) >= ul.level; }).length === 0)}>
+        <button type="submit" className="referrals-btn primary" disabled={redeemSubmitting || !redeemState?.nexusId || (redeemState?.rewardType === 'building_instant' && upgradeableBuildings.length === 0)}>
           {redeemSubmitting ? 'Redeeming...' : 'Redeem Token'}
         </button>
       </div>

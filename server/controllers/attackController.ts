@@ -13,6 +13,7 @@ const TROOP_KEYS: TroopKey[] = [
   'siegeMech', 'bulwarkGuard', 'suppressorTeam', 'disruptorUnit', 'interceptorBike',
   'annihilatorPlatform', 'overseer',
 ];
+// Note: Overseers are not actually a troop type that can be sent on their own, but we include them in the normalization and validation logic for convenience since they can be included in attacks/support missions.
 const SUPPORTED_ATTACK_TYPES = new Set<AttackType>(['attack', 'scout', 'support']);
 
 export async function sendAttack(req: AuthRequest, res: Response): Promise<void> {
