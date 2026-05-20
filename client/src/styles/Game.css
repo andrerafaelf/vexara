@@ -1219,6 +1219,19 @@
     touch-action: manipulation;
   }
 
+  .mobile-drawer-kofi {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: var(--accent) !important;
+  }
+
+  .mobile-drawer-kofi:hover {
+    background: rgba(255, 158, 61, 0.12) !important;
+    color: var(--accent) !important;
+  }
+
   .mobile-drawer-logout {
     margin-top: 8px;
     border-top: 1px solid var(--color-navy-700);

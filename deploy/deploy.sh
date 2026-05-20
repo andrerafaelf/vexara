@@ -117,7 +117,7 @@ $COMPOSE pull --quiet
 
 # Rolling restart: database first, then backends, then frontends
 # Each service is restarted individually so the others stay up.
-SERVICES_ORDER="postgres server admin-server client admin-client grafana pgadmin nginx"
+SERVICES_ORDER="postgres server admin-server client admin-client loki promtail grafana pgadmin nginx"
 
 for SERVICE in $SERVICES_ORDER; do
   echo "[deploy] Updating $SERVICE..."

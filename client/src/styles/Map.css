@@ -1210,6 +1210,13 @@
   margin: 0 0 4px;
 }
 
+.galaxy-event-quadrant {
+  font-size: 11px;
+  color: var(--success);
+  font-family: var(--font-mono);
+  margin: 0 0 4px;
+}
+
 .galaxy-event-expires {
   font-size: 10px;
   color: var(--text-faint);

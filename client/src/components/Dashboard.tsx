@@ -1,6 +1,6 @@
-import { Check, Users } from 'lucide-react';
+import { Check, Sparkles, Users } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
-import { getOutgoingAttacks } from '../services/api';
+import { getGalaxyEvents, getOutgoingAttacks } from '../services/api';
 import { useGameSocket } from '../hooks/useGameSocket';
 import '../styles/Dashboard.css';
 import { Nexus, NexusGroup } from '../types/game';
@@ -101,6 +101,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
   const [now, setNow] = useState(() => Date.now());
   const [outgoingAttacks, setOutgoingAttacks] = useState<any[]>([]);
   const [selectedAttack, setSelectedAttack] = useState<any | null>(null);
+  const [activeEventCount, setActiveEventCount] = useState(0);
   const [focusedNexusId, setFocusedNexusId] = useState<string | null>(nexuses[0]?._id ?? null);
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
 
@@ -127,6 +128,15 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
   }, [loadOutgoingAttacks]);
 
   useGameSocket({ onAttacksRefresh: () => loadOutgoingAttacks() });
+
+  useEffect(() => {
+    getGalaxyEvents().then((r) => setActiveEventCount(r.data.length)).catch(() => {});
+    const interval = setInterval(() => {
+      getGalaxyEvents().then((r) => setActiveEventCount(r.data.length)).catch(() => {});
+    }, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const totalPoints = nexuses.reduce((sum, v) => sum + v.points, 0);
 
   const totalTroops = nexuses.reduce(
@@ -321,6 +331,15 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 
   return (
     <div className="dashboard">
+      {activeEventCount > 0 && (
+        <div className="dashboard-events-flag">
+          <Sparkles size={13} aria-hidden="true" />
+          <span>
+            {activeEventCount} active galaxy event{activeEventCount !== 1 ? 's' : ''} — check Starfield
+          </span>
+        </div>
+      )}
+
       {/* ── Hero: selected nexus ── */}
       {focusedNexus && (
         <div className="cc-hero">

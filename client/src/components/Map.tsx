@@ -29,6 +29,13 @@ interface GalaxyEvent {
   nexusId?: number | null;
   expiresAt?: string | null;
   createdAt: string;
+  meta?: {
+    resource?: string;
+    xMin?: number;
+    xMax?: number;
+    yMin?: number;
+    yMax?: number;
+  } | null;
 }
 
 interface MapProps {
@@ -406,9 +413,14 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
   }, [currentNexus._id]);
 
   useEffect(() => {
-    getGalaxyEvents().then((r) => setGalaxyEvents(r.data)).catch(() => {});
+    getGalaxyEvents().then((r) => {
+      setGalaxyEvents(r.data);
+      if (r.data.length > 0) setShowEventsPanel(true);
+    }).catch(() => {});
     const interval = setInterval(() => {
-      getGalaxyEvents().then((r) => setGalaxyEvents(r.data)).catch(() => {});
+      getGalaxyEvents().then((r) => {
+        setGalaxyEvents(r.data);
+      }).catch(() => {});
     }, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
@@ -1173,6 +1185,11 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
                       )}
                     </div>
                     <p className="galaxy-event-desc">{ev.description}</p>
+                    {ev.type === 'resource_storm' && ev.meta?.xMin != null && (
+                      <p className="galaxy-event-quadrant">
+                        Zone: ({ev.meta.xMin}–{ev.meta.xMax} | {ev.meta.yMin}–{ev.meta.yMax})
+                      </p>
+                    )}
                     {ev.expiresAt && (
                       <span className="galaxy-event-expires">
                         Expires: {new Date(ev.expiresAt).toLocaleString()}
