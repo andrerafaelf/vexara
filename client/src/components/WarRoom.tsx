@@ -1043,6 +1043,20 @@ function ClaimForm({
 
   const total = sumTroops(troops);
 
+  // Feasibility check: would these troops physically arrive on time from this nexus?
+  // Annihilator/Turret/Overseer move at speed 6-8, so even short distances can be
+  // hours of travel — easy to pledge a composition that can never make impact.
+  const waveArrivalMs = new Date(op.arrivalAt).getTime() + (wave.arrivalOffsetMs ?? 0);
+  const launchAt = selectedNexus && total > 0
+    ? waveArrivalMs - travelMinutes(
+        { x: selectedNexus.x, y: selectedNexus.y },
+        { x: op.targetX, y: op.targetY },
+        troops,
+      ) * 60 * 1000
+    : null;
+  const tooLate = launchAt != null && launchAt < Date.now();
+  const lateBy = tooLate && launchAt != null ? Date.now() - launchAt : 0;
+
   const handleSubmit = async () => {
     if (!selectedNexus) {
       toast('Select a source nexus', 'error');
@@ -1050,6 +1064,10 @@ function ClaimForm({
     }
     if (total === 0) {
       toast('Pledge at least one troop', 'error');
+      return;
+    }
+    if (tooLate) {
+      toast('These troops are too slow to reach impact on time', 'error');
       return;
     }
     setSubmitting(true);
@@ -1130,23 +1148,29 @@ function ClaimForm({
       <div className="warroom-claim-actions">
         <span className="warroom-claim-total">Pledging <strong>{total.toLocaleString()}</strong> troops</span>
         <button className="warroom-ghost-btn" onClick={onCancel} disabled={submitting}>Cancel</button>
-        <button className="warroom-primary-btn" onClick={handleSubmit} disabled={submitting || total === 0}>
-          {submitting ? 'Pledging…' : 'Pledge'}
+        <button
+          className="warroom-primary-btn"
+          onClick={handleSubmit}
+          disabled={submitting || total === 0 || tooLate}
+          title={tooLate ? `Too slow — would arrive ${formatCountdown(lateBy)} after impact` : undefined}
+        >
+          {submitting ? 'Pledging…' : tooLate ? 'Too slow to make it' : 'Pledge'}
         </button>
       </div>
 
-      {selectedNexus && total > 0 && (
-        <div className="warroom-claim-launch-hint">
-          <Radio size={12} />
-          Launch from {selectedNexus.name} in{' '}
-          <strong>
-            {formatCountdown(
-              new Date(op.arrivalAt).getTime() + (wave.arrivalOffsetMs ?? 0) -
-                travelMinutes({ x: selectedNexus.x, y: selectedNexus.y }, { x: op.targetX, y: op.targetY }, troops) * 60 * 1000 -
-                Date.now(),
-            )}
-          </strong>
-        </div>
+      {selectedNexus && total > 0 && launchAt != null && (
+        tooLate ? (
+          <div className="warroom-claim-launch-hint warroom-claim-launch-hint--late">
+            <AlertCircle size={12} />
+            Too slow — would arrive <strong>{formatCountdown(lateBy)}</strong> after impact. Try faster units or a closer nexus.
+          </div>
+        ) : (
+          <div className="warroom-claim-launch-hint">
+            <Radio size={12} />
+            Launch from {selectedNexus.name} in{' '}
+            <strong>{formatCountdown(launchAt - Date.now())}</strong>
+          </div>
+        )
       )}
     </div>
   );
@@ -1174,8 +1198,14 @@ function SendNowBar({
   const travel = travelMinutes({ x: nexus.x, y: nexus.y }, { x: op.targetX, y: op.targetY }, slot.troops);
   const launchAt = new Date(op.arrivalAt).getTime() + (wave.arrivalOffsetMs ?? 0) - travel * 60 * 1000;
   const ready = launchAt <= now + 30_000; // within 30s of launch window
+  // Past the launch window: these troops physically cannot reach impact on time.
+  // Block the send so slow units (Annihilator, Turret, Overseer) can't be launched
+  // late and miss the coordinated wave.
+  const tooLate = launchAt < now;
+  const lateBy = tooLate ? now - launchAt : 0;
 
   const handleSend = async () => {
+    if (tooLate) return;
     setSending(true);
     try {
       await sendAttack(nexus._id, String(op.targetNexusId), slot.troops, 'attack');
@@ -1191,13 +1221,18 @@ function SendNowBar({
 
   return (
     <button
-      className={`warroom-send-now ${ready ? 'warroom-send-now--ready' : ''}`}
+      className={`warroom-send-now ${ready && !tooLate ? 'warroom-send-now--ready' : ''} ${tooLate ? 'warroom-send-now--late' : ''}`}
       onClick={handleSend}
-      disabled={sending}
-      title={ready ? 'Launch your wave now' : 'Will be launchable within window'}
+      disabled={sending || tooLate}
+      title={tooLate
+        ? `Too late, these troops would arrive ${formatCountdown(lateBy)} after impact`
+        : ready ? 'Launch your wave now' : 'Will be launchable within window'}
     >
       <Send size={13} />
-      {sending ? 'Launching…' : ready ? 'Launch My Wave Now' : `Launch in ${formatCountdown(launchAt - now)}`}
+      {sending ? 'Launching…'
+        : tooLate ? `Too late, would miss impact by ${formatCountdown(lateBy)}`
+        : ready ? 'Launch My Wave Now'
+        : `Launch in ${formatCountdown(launchAt - now)}`}
     </button>
   );
 }
