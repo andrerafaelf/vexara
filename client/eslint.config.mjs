@@ -17,6 +17,9 @@ const eslintConfig = defineConfig([
     rules: {
       // Codebase uses loadX() inside useEffect for data fetching — this is intentional.
       "react-hooks/set-state-in-effect": "off",
+      // `any` is used intentionally for axios response shapes and external/dynamic data
+      // shapes throughout the codebase. Keep it visible as a warning, not a hard error.
+      "@typescript-eslint/no-explicit-any": "warn",
     },
   },
 ]);

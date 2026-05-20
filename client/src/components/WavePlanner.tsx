@@ -83,12 +83,13 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
   const [myNexuses, setMyNexuses] = useState<Nexus[]>([]);
   const [waves, setWaves] = useState<Wave[]>([]);
   const [arrivalTime, setArrivalTime] = useState<string>('');
-  const [tick, setTick] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
   const [sendingAll, setSendingAll] = useState(false);
 
-  // Tick every second to keep countdown live
+  // Tick `now` every second so countdowns + isPast checks stay live without calling
+  // Date.now() from inside render (react-hooks/purity).
   useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 1000);
+    const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
 
@@ -241,7 +242,7 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
             const launchCountdown = nexus && arrivalMs && travelMin > 0
               ? formatLaunchTime(arrivalMs, travelMin)
               : null;
-            const isPast = arrivalMs > 0 && travelMin > 0 && (arrivalMs - travelMin * 60 * 1000) < Date.now();
+            const isPast = arrivalMs > 0 && travelMin > 0 && (arrivalMs - travelMin * 60 * 1000) < now;
 
             return (
               <div key={wave.id} className={`wplanner-wave ${wave.sent ? 'wplanner-wave--sent' : ''} ${wave.error ? 'wplanner-wave--error' : ''}`}>

@@ -9,6 +9,7 @@ import BattleReplay from './BattleReplay';
 import ScoutIntelCard from './ScoutIntelCard';
 import ResourceIcon from './ResourceIcon';
 import { usePageReady } from './NavigationProgress';
+import PageSkeleton from './PageSkeleton';
 
 interface ReportsProps {
   nexus: Nexus;
@@ -168,7 +169,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
   };
 
   if (loading) {
-    return null;
+    return <PageSkeleton variant="rows" count={5} />;
   }
 
   if (selectedReport) {

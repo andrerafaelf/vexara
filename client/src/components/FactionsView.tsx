@@ -40,6 +40,7 @@ import FactionActivity from './FactionActivity';
 import FactionLeaderboard from './FactionLeaderboard';
 import WarRoom from './WarRoom';
 import { usePageReady } from './NavigationProgress';
+import PageSkeleton from './PageSkeleton';
 import '../styles/Factions.css';
 
 interface Faction {
@@ -527,7 +528,7 @@ export default function FactionsView() {
   // ── Loading / error ─────────────────────────────────────────────────────────
 
   if (loading) {
-    return null;
+    return <PageSkeleton variant="rows" count={6} />;
   }
 
   // ── No faction: browser + create ────────────────────────────────────────────
@@ -888,7 +889,7 @@ export default function FactionsView() {
                     <div key={req.id} className="factions-member-row factions-join-req-row">
                       <div className="factions-member-info">
                         <span className="factions-member-name">{req.username}</span>
-                        {req.message && <span className="factions-join-req-msg-display">"{req.message}"</span>}
+                        {req.message && <span className="factions-join-req-msg-display">&ldquo;{req.message}&rdquo;</span>}
                       </div>
                       <div className="factions-member-actions">
                         <button className="factions-btn-primary" onClick={() => handleApproveJoinRequest(req.id)}>Approve</button>

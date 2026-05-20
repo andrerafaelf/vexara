@@ -2,6 +2,7 @@
 
 import GameLayout from '@/components/GameLayout';
 import Map from '@/components/Map';
+import PageSkeleton from '@/components/PageSkeleton';
 import { usePageReady } from '@/components/NavigationProgress';
 import { useMyNexuses } from '@/hooks/useMyNexuses';
 import { useRouter } from 'next/navigation';
@@ -24,7 +25,9 @@ export default function StarfieldPage() {
     <GameLayout activePage="starfield" mainClassName="main-content--map">
       {selectedNexus ? (
         <Map currentNexus={selectedNexus} onRefresh={refetch} />
-      ) : null}
+      ) : (
+        <PageSkeleton variant="canvas" />
+      )}
     </GameLayout>
   );
 }

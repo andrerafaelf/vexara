@@ -5,6 +5,7 @@ import { MarketListing, Nexus } from '../types/game';
 import { formatDateTime } from '../utils/date';
 import ResourceIcon from './ResourceIcon';
 import { usePageReady } from './NavigationProgress';
+import PageSkeleton from './PageSkeleton';
 
 interface MarketProps {
   nexuses: Nexus[];
@@ -176,7 +177,7 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
   const selectedFormNexus = nexuses.find((n) => String(n._id) === formNexusId);
   const selectedBuyNexus = nexuses.find((n) => String(n._id) === buyNexusId);
 
-  if (loading) return null;
+  if (loading) return <PageSkeleton variant="grid" count={8} />;
 
   return (
     <div className="market">

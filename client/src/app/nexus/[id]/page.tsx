@@ -2,6 +2,7 @@
 
 import GameLayout from '@/components/GameLayout';
 import NexusView from '@/components/NexusView';
+import PageSkeleton from '@/components/PageSkeleton';
 import PwaGuideModal from '@/components/PwaGuideModal';
 import WhileYouWereAway from '@/components/WhileYouWereAway';
 import { usePageReady } from '@/components/NavigationProgress';
@@ -215,7 +216,9 @@ export default function NexusPage() {
               </button>
             </div>
           </div>
-        ) : null}
+        ) : (
+          <PageSkeleton variant="rows" count={6} />
+        )}
       </GameLayout>
     </>
   );

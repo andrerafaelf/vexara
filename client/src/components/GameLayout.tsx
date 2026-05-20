@@ -11,7 +11,8 @@ import '@/styles/Game.css';
 import { Nexus } from '@/types/game';
 import { Building2, Menu } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { startTransition, useCallback, useEffect, useMemo, useState } from 'react';
+import { useStartProgress } from './NavigationProgress';
 
 type ActivePage = 'dashboard' | 'starfield' | 'market' | 'combat-logs' | 'allies' | 'factions' | 'profile';
 
@@ -41,11 +42,33 @@ export default function GameLayout({
   const { user, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const startProgress = useStartProgress();
   const hasUnreadFriends = useFriendsUnread();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNexusDrawerOpen, setIsNexusDrawerOpen] = useState(false);
 
   const resolvedSelectedId = externalSelectedId ?? (hookSelectedNexus ? String(hookSelectedNexus._id) : null);
+
+  // Prefetch all sibling routes on mount so cross-page navigation is instant. Next caches
+  // these aggressively (RSC payloads + JS chunks). Doing it once per layout mount is cheap.
+  const prefetchTargets = useMemo(
+    () => [
+      resolvedSelectedId ? `/nexus/${resolvedSelectedId}` : null,
+      '/starfield',
+      '/market',
+      '/combat-logs',
+      '/allies',
+      '/factions',
+      '/profile',
+    ].filter(Boolean) as string[],
+    [resolvedSelectedId],
+  );
+
+  useEffect(() => {
+    for (const href of prefetchTargets) {
+      try { router.prefetch(href); } catch { /* prefetch is best-effort */ }
+    }
+  }, [prefetchTargets, router]);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -66,19 +89,28 @@ export default function GameLayout({
       if (onSelectNexus) {
         onSelectNexus(nexus);
       } else {
-        router.push(`/nexus/${nexus._id}`);
+        startProgress();
+        startTransition(() => router.push(`/nexus/${nexus._id}`));
       }
     },
-    [onSelectNexus, router],
+    [onSelectNexus, router, startProgress],
   );
 
-  // Stable per-href click handler factory so nav buttons don't get new function identities every
-  // render. (Buttons themselves don't memoize, but if we move to memoized nav components later
-  // this is the right shape.)
   const nav = useCallback(
     (href: string) => () => {
       setIsMobileMenuOpen(false);
-      router.push(href);
+      if (href === pathname) return;
+      startProgress();
+      startTransition(() => router.push(href));
+    },
+    [pathname, router, startProgress],
+  );
+
+  // Hover/focus prefetch on individual nav buttons — top-up over the mount-time prefetch
+  // for cases where chunks may have been evicted, and a cheap signal that a click is coming.
+  const prefetchOnHover = useCallback(
+    (href: string) => () => {
+      try { router.prefetch(href); } catch { /* best-effort */ }
     },
     [router],
   );
@@ -103,31 +135,31 @@ export default function GameLayout({
         </div>
 
         <div className="header-center">
-          <button className={`nav-btn${is('dashboard') ? ' active' : ''}`} onClick={nav(`/nexus/${resolvedSelectedId ?? ''}`)}>
+          <button className={`nav-btn${is('dashboard') ? ' active' : ''}`} onClick={nav(`/nexus/${resolvedSelectedId ?? ''}`)} onMouseEnter={prefetchOnHover(`/nexus/${resolvedSelectedId ?? ''}`)} onFocus={prefetchOnHover(`/nexus/${resolvedSelectedId ?? ''}`)}>
             Dashboard
           </button>
-          <button className={`nav-btn${is('starfield') ? ' active' : ''}`} onClick={nav('/starfield')}>
+          <button className={`nav-btn${is('starfield') ? ' active' : ''}`} onClick={nav('/starfield')} onMouseEnter={prefetchOnHover('/starfield')} onFocus={prefetchOnHover('/starfield')}>
             Starfield
           </button>
-          <button className={`nav-btn${is('market') ? ' active' : ''}`} onClick={nav('/market')}>
+          <button className={`nav-btn${is('market') ? ' active' : ''}`} onClick={nav('/market')} onMouseEnter={prefetchOnHover('/market')} onFocus={prefetchOnHover('/market')}>
             Market
           </button>
-          <button className={`nav-btn${is('combat-logs') ? ' active' : ''}`} onClick={nav('/combat-logs')}>
+          <button className={`nav-btn${is('combat-logs') ? ' active' : ''}`} onClick={nav('/combat-logs')} onMouseEnter={prefetchOnHover('/combat-logs')} onFocus={prefetchOnHover('/combat-logs')}>
             <span className="nav-btn-content">
               Combat Logs
               {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
             </span>
           </button>
-          <button className={`nav-btn${is('allies') ? ' active' : ''}`} onClick={nav('/allies')}>
+          <button className={`nav-btn${is('allies') ? ' active' : ''}`} onClick={nav('/allies')} onMouseEnter={prefetchOnHover('/allies')} onFocus={prefetchOnHover('/allies')}>
             <span className="nav-btn-content">
               Allies
               {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
             </span>
           </button>
-          <button className={`nav-btn${is('factions') ? ' active' : ''}`} onClick={nav('/factions')}>
+          <button className={`nav-btn${is('factions') ? ' active' : ''}`} onClick={nav('/factions')} onMouseEnter={prefetchOnHover('/factions')} onFocus={prefetchOnHover('/factions')}>
             Factions
           </button>
-          <button className={`nav-btn${is('profile') ? ' active' : ''}`} onClick={nav('/profile')}>
+          <button className={`nav-btn${is('profile') ? ' active' : ''}`} onClick={nav('/profile')} onMouseEnter={prefetchOnHover('/profile')} onFocus={prefetchOnHover('/profile')}>
             Profile
           </button>
         </div>

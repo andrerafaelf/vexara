@@ -70,10 +70,6 @@ const Admin: React.FC = () => {
     return () => clearInterval(timeInterval);
   }, []);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
   const showToast = (message: string, type: 'success' | 'error' | 'info') => {
     setToast({ message, type });
   };
@@ -99,6 +95,11 @@ const Admin: React.FC = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleDeleteUser = async (userId: string, username: string) => {
     if (!window.confirm(`Delete user "${username}"?`)) return;

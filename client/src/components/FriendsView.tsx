@@ -19,6 +19,7 @@ import { formatDate, formatTimeOfDay } from '@/utils/date';
 import { MessageSquare, Users, UserPlus, GitBranch } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReferralsTab from './ReferralsTab';
+import { usePageReady } from './NavigationProgress';
 
 type TabId = 'friends' | 'requests' | 'chat' | 'referrals';
 
@@ -77,6 +78,8 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
   const [sending, setSending] = useState(false);
+  const [initialLoaded, setInitialLoaded] = useState(false);
+  usePageReady(initialLoaded, 'allies');
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const lastMessageIdRef = useRef<string | null>(null);
@@ -129,9 +132,11 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
   );
 
   useEffect(() => {
-    loadFriends();
-    loadRequests();
-    loadConversations();
+    let cancelled = false;
+    Promise.allSettled([loadFriends(), loadRequests(), loadConversations()]).then(() => {
+      if (!cancelled) setInitialLoaded(true);
+    });
+    return () => { cancelled = true; };
   }, [loadFriends, loadRequests, loadConversations]);
 
   // Poll requests + conversations across the view

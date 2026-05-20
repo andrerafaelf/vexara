@@ -314,7 +314,7 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
           >
             <h3 style={{ margin: '0 0 0.5rem 0' }}>Join {confirmingJoin.name}?</h3>
             <p style={{ color: '#9ab', marginTop: 0 }}>
-              You'll be placed in this galaxy with a fresh starter nexus. Your progress in other galaxies is unaffected.
+              You&apos;ll be placed in this galaxy with a fresh starter nexus. Your progress in other galaxies is unaffected.
             </p>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: '1rem' }}>
               <button

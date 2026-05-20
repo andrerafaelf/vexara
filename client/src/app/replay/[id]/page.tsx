@@ -4,6 +4,7 @@
 // and tweets get a rich preview.
 
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import ReplayClient from './ReplayClient';
 
 export const dynamic = 'force-dynamic';
@@ -93,8 +94,8 @@ export default async function ReplayPage({ params }: { params: Promise<{ id: str
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0D1117', color: '#C9D1D9', flexDirection: 'column', gap: 12, padding: 24 }}>
         <h1 style={{ fontSize: 24, color: '#FF9E3D' }}>Replay not found</h1>
-        <p>This battle either never happened or hasn't resolved yet.</p>
-        <a href="/" style={{ color: '#FF9E3D' }}>← Back to Vexara</a>
+        <p>This battle either never happened or hasn&apos;t resolved yet.</p>
+        <Link href="/" style={{ color: '#FF9E3D' }}>← Back to Vexara</Link>
       </div>
     );
   }
@@ -103,7 +104,7 @@ export default async function ReplayPage({ params }: { params: Promise<{ id: str
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0D1117', color: '#C9D1D9', flexDirection: 'column', gap: 12, padding: 24 }}>
         <h1 style={{ fontSize: 24, color: '#FF9E3D' }}>Scout missions don&apos;t have a replay</h1>
-        <a href="/" style={{ color: '#FF9E3D' }}>← Back to Vexara</a>
+        <Link href="/" style={{ color: '#FF9E3D' }}>← Back to Vexara</Link>
       </div>
     );
   }

@@ -16,7 +16,9 @@ const ICONS = {
 
 const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
   const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
 
   useEffect(() => {
     const timer = setTimeout(() => onCloseRef.current(), 3000);

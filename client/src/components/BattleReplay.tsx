@@ -163,7 +163,9 @@ const BattleReplay: React.FC<BattleReplayProps> = ({ report, isMyAttack, onCompl
   }, [report._id, stop]);
 
   const onCompleteRef = useRef(onComplete);
-  onCompleteRef.current = onComplete;
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  });
   useEffect(() => {
     if (replay && currentRound === replay.totalRounds - 1) {
       onCompleteRef.current?.();

@@ -140,7 +140,7 @@ function buildBattleScript(sim: SimResult): BattleScript {
     // Distribute dotCount across types proportionally to count.
     let assigned = 0;
     const perType = counts.map((c) => Math.floor((c / totalReal) * dotCount));
-    let remainder = dotCount - perType.reduce((a, b) => a + b, 0);
+    const remainder = dotCount - perType.reduce((a, b) => a + b, 0);
     // Distribute remainder to highest-count types
     const order = perType.map((_, i) => i).sort((a, b) => counts[b] - counts[a]);
     for (let i = 0; i < remainder; i++) perType[order[i % order.length]]++;

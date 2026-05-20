@@ -1,6 +1,7 @@
 'use client';
 
 import GameLayout from '@/components/GameLayout';
+import PageSkeleton from '@/components/PageSkeleton';
 import Reports from '@/components/Reports';
 import { usePageReady } from '@/components/NavigationProgress';
 import { useMyNexuses } from '@/hooks/useMyNexuses';
@@ -26,7 +27,9 @@ export default function CombatLogsPage() {
     <GameLayout activePage="combat-logs">
       {selectedNexus ? (
         <Reports nexus={selectedNexus} onReadStateChange={refreshUnreadReports} />
-      ) : null}
+      ) : (
+        <PageSkeleton variant="rows" count={5} />
+      )}
     </GameLayout>
   );
 }

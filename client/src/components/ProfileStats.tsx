@@ -9,6 +9,7 @@ import '../styles/ProfileStats.css';
 import NotificationSettings from './NotificationSettings';
 import StatsChart from './StatsChart';
 import { usePageReady } from './NavigationProgress';
+import PageSkeleton from './PageSkeleton';
 
 function fmt(n: number): string {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
@@ -50,9 +51,9 @@ export default function ProfileStats() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return null;
+  if (loading) return <PageSkeleton variant="rows" count={5} />;
   if (error) return <div className="ps-error">Failed to load stats: {error}</div>;
-  if (!stats) return null;
+  if (!stats) return <PageSkeleton variant="rows" count={5} />;
 
   const winRate =
     stats.combat.victories + stats.combat.defeats > 0

@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 interface ReplayPayload {
   id: string;
   attacker: { username: string | null; nexusName: string | null; x: number | null; y: number | null };
@@ -34,17 +36,17 @@ export default function ReplayClient({ data }: { data: ReplayPayload }) {
   return (
     <div className="public-replay-root">
       <header className="public-replay-header">
-        <a href="/" className="public-replay-brand" aria-label="Vexara home">
+        <Link href="/" className="public-replay-brand" aria-label="Vexara home">
           <span className="public-replay-brand-mark">▲</span>
           <span className="public-replay-brand-name">VEXARA</span>
-        </a>
+        </Link>
         <span
           className="public-replay-outcome-chip"
           style={{ background: outcomeChip.color, color: '#0D1117' }}
         >
           {outcomeChip.text}
         </span>
-        <a href="/" className="public-replay-cta">Play Vexara →</a>
+        <Link href="/" className="public-replay-cta">Play Vexara →</Link>
       </header>
 
       <main className="public-replay-main">

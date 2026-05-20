@@ -9,7 +9,7 @@ interface AdBannerProps {
 const AdBanner: React.FC<AdBannerProps> = ({ slot, style, className }) => {
   useEffect(() => {
     try {
-      // @ts-ignore
+      // @ts-expect-error adsbygoogle is injected at runtime by the Google AdSense script
       (window.adsbygoogle = window.adsbygoogle || []).push({});
     } catch (e) {
       console.error('Ad error:', e);
