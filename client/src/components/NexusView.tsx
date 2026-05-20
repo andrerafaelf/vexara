@@ -1078,10 +1078,6 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
 
     const merged = new Map<string, number>();
 
-    if (building !== 'commandCore' && targetLevel >= 1) {
-      merged.set('commandCore', 1);
-    }
-
     if (rule.unlock && targetLevel >= 1) {
       merged.set(rule.unlock.building, rule.unlock.level);
     }
@@ -1121,7 +1117,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
 
     const missing: string[] = [];
     for (const requirement of requirements) {
-      if ((nexus.buildings as any)[requirement.building] < requirement.level) {
+      if (((nexus.buildings as any)[requirement.building] ?? 0) < requirement.level) {
         const isQueued = (nexus.buildQueue || []).some(
           (q) => q.building === requirement.building && q.targetLevel >= requirement.level,
         );
@@ -2006,15 +2002,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                     {cost ? (
                       <div className="building-cost">
                         <div className="cost-details">
-                          <span className="cost-pill">
-                            <ResourceIcon kind="biomass" size={12} /> {fmtNum(cost.biomass)}
-                          </span>
-                          <span className="cost-pill">
-                            <ResourceIcon kind="alloy" size={12} /> {fmtNum(cost.alloy)}
-                          </span>
-                          <span className="cost-pill">
-                            <ResourceIcon kind="ore" size={12} /> {fmtNum(cost.ore)}
-                          </span>
+                          <span className="cost-pill"><span className="cost-pill-label">Biomass</span>{fmtNum(cost.biomass)}</span>
+                          <span className="cost-pill"><span className="cost-pill-label">Alloy</span>{fmtNum(cost.alloy)}</span>
+                          <span className="cost-pill"><span className="cost-pill-label">Ore</span>{fmtNum(cost.ore)}</span>
                         </div>
                         <p className="build-time">
                           {cost.time >= 3600
@@ -2205,18 +2195,10 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                                   </div>
                                 </div>
                                 <div className="train-costs">
-                                  <span className="cost-pill">
-                                    <ResourceIcon kind="biomass" size={12} /> {costs.biomass}
-                                  </span>
-                                  <span className="cost-pill">
-                                    <ResourceIcon kind="alloy" size={12} /> {costs.alloy}
-                                  </span>
-                                  <span className="cost-pill">
-                                    <ResourceIcon kind="ore" size={12} /> {costs.ore}
-                                  </span>
-                                  <span className="cost-pill">
-                                    <ResourceIcon kind="population" size={12} /> {costs.population}
-                                  </span>
+                                  <span className="cost-pill"><span className="cost-pill-label">Biomass</span>{costs.biomass}</span>
+                                  <span className="cost-pill"><span className="cost-pill-label">Alloy</span>{costs.alloy}</span>
+                                  <span className="cost-pill"><span className="cost-pill-label">Ore</span>{costs.ore}</span>
+                                  <span className="cost-pill"><span className="cost-pill-label">Pop</span>{costs.population}</span>
                                   <p className="train-time">
                                     {trainSeconds >= 3600
                                       ? `${Math.floor(trainSeconds / 3600)}h ${Math.floor((trainSeconds % 3600) / 60)}m ${trainSeconds % 60}s`
@@ -2845,7 +2827,7 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
   const embedCost = { biomass: 400, secondary: 200, secondaryLabel: 'Alloy' };
   const sabotCost = { biomass: 300 * operatives, secondary: 300 * operatives, secondaryLabel: 'Ore' };
   const cost = mode === 'embed' ? embedCost : sabotCost;
-  const maxOps = Math.min(20, reconCount);
+  const maxOps = reconCount;
   const selectedSabTarget = SABOTAGE_TARGETS.find(t => t.key === sabotageTarget)!;
 
   return (

@@ -7,7 +7,6 @@ import { TROOP_STATS } from '../utils/combatMath.js';
 import { logError } from '../utils/logger.js';
 
 // ---- constants ----
-const MAX_OPERATIVES = 20;
 const EMBED_BASE_COST = { biomass: 400, alloy: 200 };
 const SABOTAGE_BASE_COST = { biomass: 300, ore: 300 };
 
@@ -101,8 +100,8 @@ export async function sendSpyMission(req: AuthRequest, res: Response): Promise<v
     if (type !== 'sabotage' && type !== 'embed') { res.status(400).json({ error: 'type must be sabotage or embed' }); return; }
 
     const opCount = Math.floor(Number(operatives));
-    if (opCount < 1 || opCount > MAX_OPERATIVES) {
-      res.status(400).json({ error: `operatives must be between 1 and ${MAX_OPERATIVES}` }); return;
+    if (opCount < 1) {
+      res.status(400).json({ error: 'operatives must be at least 1' }); return;
     }
 
     if (type === 'sabotage') {

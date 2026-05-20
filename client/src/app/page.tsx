@@ -4,7 +4,7 @@ import { useToast } from '@/context/ToastContext';
 import { createNexus, getMyGalaxy } from '@/services/api';
 import GalaxyPicker, { Galaxy } from '@/components/GalaxyPicker';
 import { usePageReady } from '@/components/NavigationProgress';
-import { useMyNexuses } from '@/hooks/useMyNexuses';
+import { useMyNexuses, useInvalidateNexuses } from '@/hooks/useMyNexuses';
 import '@/styles/Game.css';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -18,6 +18,7 @@ export default function Home() {
   const [isAuthed] = useState(() => typeof window !== 'undefined' && !!localStorage.getItem('token'));
   const [hasStoredNexus] = useState(() => typeof window !== 'undefined' && !!localStorage.getItem(SELECTED_NEXUS_KEY));
   const { nexuses, isLoading, isFetching, hasResolved } = useMyNexuses();
+  const invalidateNexuses = useInvalidateNexuses();
   // Home page is "ready" once we know whether to redirect or show the create UI.
   // Require a successful server response (not just idle) before showing the create-nexus UI,
   // so an F5 with no cache doesn't briefly render it before the redirect fires.
@@ -71,9 +72,10 @@ export default function Home() {
     setCreating(true);
     try {
       await createNexus();
+      invalidateNexuses();
+      // Leave creating=true — button stays disabled until the nexus list refetches and redirects
     } catch {
       toast('Failed to create nexus', 'error');
-    } finally {
       setCreating(false);
     }
   };

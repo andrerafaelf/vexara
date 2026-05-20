@@ -27,8 +27,12 @@ const DOMAIN_TYPOS: Record<string, string> = {
 };
 
 function getEmailError(email: string): string | null {
+  if (!EMAIL_RE.test(email.trim().toLowerCase())) return 'Please enter a valid email address.';
+  return null;
+}
+
+function getEmailTypoWarning(email: string): string | null {
   const normalized = email.trim().toLowerCase();
-  if (!EMAIL_RE.test(normalized)) return 'Please enter a valid email address.';
   const atIdx = normalized.lastIndexOf('@');
   const domain = normalized.slice(atIdx + 1);
   const correction = DOMAIN_TYPOS[domain];
@@ -93,6 +97,7 @@ const RegistrationForm: React.FC = () => {
   const [password, setPassword] = useState('');
   const [referralCode, setReferralCode] = useState('');
   const [error, setError] = useState('');
+  const [emailWarning, setEmailWarning] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [bgIndex, setBgIndex] = useState(0);
@@ -140,6 +145,9 @@ const RegistrationForm: React.FC = () => {
     if (usernameError) { setError(usernameError); return; }
     const emailError = getEmailError(emailNormalized);
     if (emailError) { setError(emailError); return; }
+    const typoWarning = getEmailTypoWarning(emailNormalized);
+    if (typoWarning && !emailWarning) { setEmailWarning(typoWarning); return; }
+    setEmailWarning('');
     const passwordError = getPasswordError(password);
     if (passwordError) { setError(passwordError); return; }
     const referralError = getReferralError(referralNormalized);
@@ -309,6 +317,12 @@ const RegistrationForm: React.FC = () => {
                 {error && (
                   <div className="auth-error" role="alert">
                     {error}
+                  </div>
+                )}
+
+                {emailWarning && (
+                  <div className="auth-warning" role="alert">
+                    {emailWarning} Submit again to continue anyway.
                   </div>
                 )}
 

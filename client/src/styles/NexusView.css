@@ -1369,14 +1369,19 @@
 
 .cost-pill {
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 1px;
   color: var(--text-default);
   font-variant-numeric: tabular-nums;
 }
 
-.cost-pill svg {
+.cost-pill-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--text-muted);
+  line-height: 1;
 }
 
 .build-time {

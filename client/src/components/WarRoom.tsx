@@ -266,6 +266,21 @@ export default function WarRoom({ factionId, myRole }: Props) {
     }
   }, []);
 
+  // Debounce timers for socket-driven refreshes so rapid op:update bursts
+  // don't fire one HTTP request per event and hit the rate limiter.
+  const refreshListTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loadOpTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const debouncedRefreshList = useCallback(() => {
+    if (refreshListTimerRef.current) clearTimeout(refreshListTimerRef.current);
+    refreshListTimerRef.current = setTimeout(() => refreshList(), 400);
+  }, [refreshList]);
+
+  const debouncedLoadOperation = useCallback((opId: number) => {
+    if (loadOpTimerRef.current) clearTimeout(loadOpTimerRef.current);
+    loadOpTimerRef.current = setTimeout(() => loadOperation(opId), 400);
+  }, [loadOperation]);
+
   // load full op when selection changes
   useEffect(() => {
     if (selectedOpId == null) {
@@ -288,9 +303,9 @@ export default function WarRoom({ factionId, myRole }: Props) {
         return;
       }
       if (e.type === 'op:update') {
-        refreshList();
+        debouncedRefreshList();
         if (selectedOpIdRef.current === e.operationId) {
-          loadOperation(e.operationId);
+          debouncedLoadOperation(e.operationId);
         }
         return;
       }
@@ -306,7 +321,7 @@ export default function WarRoom({ factionId, myRole }: Props) {
       }
     });
     return unsub;
-  }, [socket, loadOperation, refreshList]);
+  }, [socket, loadOperation, refreshList, debouncedRefreshList, debouncedLoadOperation]);
 
   const handleCreate = async (data: { name: string; targetNexusId: number; arrivalAt: string }) => {
     try {

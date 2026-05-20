@@ -81,6 +81,18 @@ const BUILDING_MAX: Record<string, number> = {
   biomassFarm: 20, alloyForge: 20, oreExtractor: 20, shieldGrid: 15, armory: 20, stealthArray: 15,
 };
 
+const BUILDING_UNLOCK: Record<string, { building: string; level: number }> = {
+  recruitmentCore: { building: 'commandCore', level: 2 },
+  lifeSupport:     { building: 'commandCore', level: 2 },
+  storageVault:    { building: 'commandCore', level: 2 },
+  biomassFarm:     { building: 'lifeSupport', level: 1 },
+  alloyForge:      { building: 'oreExtractor', level: 2 },
+  oreExtractor:    { building: 'commandCore', level: 1 },
+  shieldGrid:      { building: 'commandCore', level: 3 },
+  armory:          { building: 'commandCore', level: 5 },
+  stealthArray:    { building: 'commandCore', level: 7 },
+};
+
 interface NexusSummary {
   id: string;
   name: string;
@@ -256,7 +268,10 @@ export default function ReferralsTab() {
       {redeemState?.rewardType === 'building_instant' && (() => {
         const upgradeable = BUILDING_KEYS.filter((b) => {
           const current = selectedNexus?.buildings[b] ?? 0;
-          return current < (BUILDING_MAX[b] ?? 20);
+          if (current >= (BUILDING_MAX[b] ?? 20)) return false;
+          const unlock = BUILDING_UNLOCK[b];
+          if (unlock && (selectedNexus?.buildings[unlock.building] ?? 0) < unlock.level) return false;
+          return true;
         });
         return (
           <label className="referrals-field">
@@ -287,7 +302,7 @@ export default function ReferralsTab() {
         <button type="button" className="referrals-btn" onClick={() => setRedeemState(null)} disabled={redeemSubmitting}>
           Cancel
         </button>
-        <button type="submit" className="referrals-btn primary" disabled={redeemSubmitting || !redeemState?.nexusId || (redeemState.rewardType === 'building_instant' && BUILDING_KEYS.filter((b) => (selectedNexus?.buildings[b] ?? 0) < (BUILDING_MAX[b] ?? 20)).length === 0)}>
+        <button type="submit" className="referrals-btn primary" disabled={redeemSubmitting || !redeemState?.nexusId || (redeemState.rewardType === 'building_instant' && BUILDING_KEYS.filter((b) => { const cur = selectedNexus?.buildings[b] ?? 0; if (cur >= (BUILDING_MAX[b] ?? 20)) return false; const ul = BUILDING_UNLOCK[b]; return !ul || (selectedNexus?.buildings[ul.building] ?? 0) >= ul.level; }).length === 0)}>
           {redeemSubmitting ? 'Redeeming...' : 'Redeem Token'}
         </button>
       </div>

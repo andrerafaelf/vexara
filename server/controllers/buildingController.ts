@@ -144,7 +144,6 @@ function getRequirementsForTargetLevel(building: string, targetLevel: number) {
   const rule = BUILDING_RULES[building];
   if (!rule) return [];
   const merged = new Map<string, number>();
-  if (building !== 'commandCore' && targetLevel >= 1) merged.set('commandCore', 1);
   if (rule.unlock && targetLevel >= 1) merged.set(rule.unlock.building, rule.unlock.level);
   for (const milestone of rule.milestones) {
     if (targetLevel >= milestone.level) {
