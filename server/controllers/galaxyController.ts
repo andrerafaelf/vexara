@@ -5,8 +5,8 @@ import * as galaxyService from '../services/galaxyService.js';
 import type { AuthRequest } from '../types/index.js';
 import { logError } from '../utils/logger.js';
 
-function serializeGalaxy(g: { id: number; name: string; status: string; endedAt?: Date | null; winnerUserId?: number | null; winnerFactionId?: number | null; createdAt: Date }, opts: { isJoined?: boolean } = {}) {
-  return { id: g.id, name: g.name, status: g.status, endedAt: g.endedAt ?? null, winnerUserId: g.winnerUserId ?? null, winnerFactionId: g.winnerFactionId ?? null, createdAt: g.createdAt, isJoined: opts.isJoined ?? false };
+function serializeGalaxy(g: { id: number; name: string; status: string; startsAt?: Date | null; endedAt?: Date | null; winnerUserId?: number | null; winnerFactionId?: number | null; createdAt: Date }, opts: { isJoined?: boolean } = {}) {
+  return { id: g.id, name: g.name, status: g.status, startsAt: g.startsAt ?? null, endedAt: g.endedAt ?? null, winnerUserId: g.winnerUserId ?? null, winnerFactionId: g.winnerFactionId ?? null, createdAt: g.createdAt, isJoined: opts.isJoined ?? false };
 }
 
 const GALAXY_WIN_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
@@ -124,6 +124,7 @@ export async function selectGalaxy(req: AuthRequest, res: Response): Promise<voi
     const galaxy = await galaxyService.getGalaxyById(galaxyId);
     if (!galaxy) { res.status(404).json({ error: 'Galaxy not found' }); return; }
     if (galaxy.status !== 'active') { res.status(400).json({ error: 'Cannot select an ended galaxy as active' }); return; }
+    if (galaxy.startsAt && new Date(galaxy.startsAt) > new Date()) { res.status(400).json({ error: 'This galaxy has not started yet' }); return; }
     const user = await galaxyService.getUserById(req.userId);
     if (!user) { res.status(404).json({ error: 'User not found' }); return; }
     const result = await galaxyService.selectGalaxy(req.userId, user.username, galaxyId);

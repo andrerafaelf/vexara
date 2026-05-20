@@ -6,7 +6,7 @@ import { NOTIF, sendPushToUser } from '../../server/utils/push.js';
 import * as adminService from '../services/adminService.js';
 
 const TROOP_KEYS = ['lancerDrone', 'assaultTrooper', 'breakerUnit', 'reconOperative', 'skimmerBike', 'siegeMech', 'bulwarkGuard', 'suppressorTeam', 'disruptorUnit', 'interceptorBike', 'annihilatorPlatform', 'overseer'] as const;
-const BUILDING_KEYS = ['commandCore', 'recruitmentCore', 'lifeSupport', 'storageVault', 'biomassFarm', 'alloyForge', 'oreExtractor', 'shieldGrid'] as const;
+const BUILDING_KEYS = ['commandCore', 'recruitmentCore', 'lifeSupport', 'storageVault', 'biomassFarm', 'alloyForge', 'oreExtractor', 'shieldGrid', 'armory', 'stealthArray'] as const;
 
 function getGalaxyId(req: Request): number | null {
   const raw = (req.query.galaxyId ?? req.body?.galaxyId) as unknown;
@@ -23,7 +23,7 @@ function requireGalaxyId(req: Request, res: Response): number | null {
 export async function listGalaxies(req: Request, res: Response): Promise<void> {
   try {
     const galaxies = await adminService.getAllGalaxies();
-    res.json(galaxies.map((g) => ({ _id: g.id, id: g.id, name: g.name, status: g.status, endedAt: g.endedAt, winnerUserId: g.winnerUserId, createdAt: g.createdAt, playerCount: g._count.players, nexusCount: g._count.nexuses })));
+    res.json(galaxies.map((g) => ({ _id: g.id, id: g.id, name: g.name, status: g.status, startsAt: g.startsAt, endedAt: g.endedAt, winnerUserId: g.winnerUserId, createdAt: g.createdAt, playerCount: g._count.players, nexusCount: g._count.nexuses })));
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }
@@ -35,8 +35,24 @@ export async function createGalaxy(req: Request, res: Response): Promise<void> {
     if (rawName.length < 3 || rawName.length > 40) { res.status(400).json({ error: 'Galaxy name must be between 3 and 40 characters' }); return; }
     const existing = await adminService.getGalaxyByName(rawName);
     if (existing) { res.status(400).json({ error: 'A galaxy with that name already exists' }); return; }
-    const galaxy = await adminService.createGalaxy(rawName);
-    res.json({ success: true, galaxy: { _id: galaxy.id, id: galaxy.id, name: galaxy.name, status: galaxy.status, endedAt: galaxy.endedAt, winnerUserId: galaxy.winnerUserId, createdAt: galaxy.createdAt, playerCount: 0, nexusCount: 0 } });
+    const rawStartsAt = req.body?.startsAt;
+    const startsAt = rawStartsAt ? new Date(rawStartsAt) : null;
+    if (startsAt && isNaN(startsAt.getTime())) { res.status(400).json({ error: 'Invalid startsAt date' }); return; }
+    const galaxy = await adminService.createGalaxy(rawName, startsAt ?? undefined);
+    res.json({ success: true, galaxy: { _id: galaxy.id, id: galaxy.id, name: galaxy.name, status: galaxy.status, startsAt: galaxy.startsAt, endedAt: galaxy.endedAt, winnerUserId: galaxy.winnerUserId, createdAt: galaxy.createdAt, playerCount: 0, nexusCount: 0 } });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
+export async function deleteGalaxy(req: Request, res: Response): Promise<void> {
+  try {
+    const galaxyId = adminService.toInt(req.params.galaxyId);
+    const { default: prisma } = await import('../../server/lib/prisma.js');
+    const galaxy = await prisma.galaxy.findUnique({ where: { id: galaxyId } });
+    if (!galaxy) { res.status(404).json({ error: 'Galaxy not found' }); return; }
+    await prisma.galaxy.delete({ where: { id: galaxyId } });
+    res.json({ success: true, message: 'Galaxy deleted' });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }

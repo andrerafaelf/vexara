@@ -324,16 +324,24 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
       return Math.sqrt(dx * dx + dy * dy);
     };
 
-    const onWheel = (e: WheelEvent) => {
+    // Two-listener split so plain wheel never blocks page scroll:
+    //  - passive listener performs the zoom calc on ctrl/meta+wheel
+    //  - non-passive listener calls preventDefault only on ctrl/meta+wheel
+    //    to suppress the browser's native page-zoom gesture
+    // Without ctrl/meta both handlers no-op, so wheel events bubble freely to
+    // whatever ancestor scrolls (e.g. .main-content on the espionage tab).
+    const onWheelZoom = (e: WheelEvent) => {
       if (!e.ctrlKey && !e.metaKey) return;
-      e.preventDefault();
-      e.stopPropagation();
       const delta = e.deltaY > 0 ? 1 : -1;
       const newRange = clampRange(rangeRef.current + delta);
       if (newRange !== rangeRef.current) {
         rangeRef.current = newRange;
         setVisibleRange(newRange);
       }
+    };
+    const onWheelPrevent = (e: WheelEvent) => {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
     };
 
     let pinchStartRange = rangeRef.current;
@@ -369,14 +377,16 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
       }
     };
 
-    el.addEventListener('wheel', onWheel, { passive: false });
+    el.addEventListener('wheel', onWheelZoom, { passive: true });
+    el.addEventListener('wheel', onWheelPrevent, { passive: false });
     el.addEventListener('touchstart', onTouchStart, { passive: false });
     el.addEventListener('touchmove', onTouchMove, { passive: false });
     el.addEventListener('touchend', onTouchEnd, { passive: false });
     el.addEventListener('touchcancel', onTouchEnd, { passive: false });
 
     return () => {
-      el.removeEventListener('wheel', onWheel);
+      el.removeEventListener('wheel', onWheelZoom);
+      el.removeEventListener('wheel', onWheelPrevent);
       el.removeEventListener('touchstart', onTouchStart);
       el.removeEventListener('touchmove', onTouchMove);
       el.removeEventListener('touchend', onTouchEnd);
@@ -419,7 +429,6 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
   useEffect(() => {
     getGalaxyEvents().then((r) => {
       setGalaxyEvents(r.data);
-      if (r.data.length > 0) setShowEventsPanel(true);
     }).catch(() => {});
     const interval = setInterval(() => {
       getGalaxyEvents().then((r) => {
@@ -1167,73 +1176,71 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
     );
   };
 
-  return (
-    <div className="map-container">
-      {mode === 'normal' && galaxyEvents.length > 0 && (
-        <div className="galaxy-events-bar">
-          <button
-            className="galaxy-events-toggle"
-            onClick={() => setShowEventsPanel((v) => !v)}
-            aria-expanded={showEventsPanel}
-          >
-            <Sparkles size={14} aria-hidden="true" />
-            <span>{galaxyEvents.length} active galaxy event{galaxyEvents.length !== 1 ? 's' : ''}</span>
-            <span className="galaxy-events-chevron">{showEventsPanel ? '▲' : '▼'}</span>
-          </button>
-          {showEventsPanel && (
-            <div className="galaxy-events-panel">
-              {galaxyEvents.map((ev) => {
-                const EventIcon = ev.type === 'resource_storm' ? Zap
-                  : ev.type === 'rogue_ai' ? AlertTriangle
-                  : Star;
-                return (
-                  <div key={ev.id} className={`galaxy-event-card galaxy-event-card--${ev.type}`}>
-                    <div className="galaxy-event-card-header">
-                      <EventIcon size={14} aria-hidden="true" />
-                      <strong>{ev.title}</strong>
-                      {ev.x != null && ev.y != null && (
-                        <button
-                          className="galaxy-event-goto"
-                          onClick={() => {
-                            setCenterX(ev.x!);
-                            setCenterY(ev.y!);
-                            setShowEventsPanel(false);
-                          }}
-                        >
-                          Go to ({ev.x}|{ev.y})
-                        </button>
-                      )}
-                    </div>
-                    <p className="galaxy-event-desc">{ev.description}</p>
-                    {ev.type === 'resource_storm' && ev.meta?.xMin != null && (
-                      <p className="galaxy-event-quadrant">
-                        Zone: ({ev.meta.xMin}–{ev.meta.xMax} | {ev.meta.yMin}–{ev.meta.yMax})
-                      </p>
-                    )}
-                    {ev.expiresAt && (
-                      <span className="galaxy-event-expires">
-                        Expires: {new Date(ev.expiresAt).toLocaleString()}
-                      </span>
+  const renderGalaxyEventsPanel = () => {
+    if (mode !== 'normal' || galaxyEvents.length === 0) return null;
+    return (
+      <div className="galaxy-events-section">
+        <button
+          className="galaxy-events-toggle"
+          onClick={() => setShowEventsPanel((v) => !v)}
+          aria-expanded={showEventsPanel}
+        >
+          <Sparkles size={13} aria-hidden="true" />
+          <span>{galaxyEvents.length} galaxy event{galaxyEvents.length !== 1 ? 's' : ''}</span>
+          <span className="galaxy-events-chevron">{showEventsPanel ? '▲' : '▼'}</span>
+        </button>
+        {showEventsPanel && (
+          <div className="galaxy-events-panel">
+            {galaxyEvents.map((ev) => {
+              const EventIcon = ev.type === 'resource_storm' ? Zap
+                : ev.type === 'rogue_ai' ? AlertTriangle
+                : Star;
+              return (
+                <div key={ev.id} className={`galaxy-event-card galaxy-event-card--${ev.type}`}>
+                  <div className="galaxy-event-card-header">
+                    <EventIcon size={13} aria-hidden="true" />
+                    <strong>{ev.title}</strong>
+                    {ev.x != null && ev.y != null && (
+                      <button
+                        className="galaxy-event-goto"
+                        onClick={() => {
+                          setCenterX(ev.x!);
+                          setCenterY(ev.y!);
+                        }}
+                      >
+                        ({ev.x}|{ev.y})
+                      </button>
                     )}
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
+                  <p className="galaxy-event-desc">{ev.description}</p>
+                  {ev.type === 'resource_storm' && ev.meta?.xMin != null && (
+                    <p className="galaxy-event-quadrant">
+                      Zone: ({ev.meta.xMin}–{ev.meta.xMax} | {ev.meta.yMin}–{ev.meta.yMax})
+                    </p>
+                  )}
+                  {ev.expiresAt && (
+                    <span className="galaxy-event-expires">
+                      Expires {new Date(ev.expiresAt).toLocaleString()}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="map-container">
       {mode === 'normal' && <div className="map-header">
-        <h2>World Map</h2>
         <div className="map-info">
-          <span>
-            Viewing: ({centerX}|{centerY}) | Map Size: {MAP_SIZE}x{MAP_SIZE} ({MAP_SIZE * MAP_SIZE} hexes)
-          </span>
-          <span className="map-hint">Drag or swipe to pan • Ctrl+scroll or pinch to zoom</span>
+          <span className="map-viewing">({centerX}|{centerY})</span>
+          <span className="map-hint">Drag to pan · Ctrl+scroll to zoom</span>
         </div>
         <div className="map-controls">
-          <button onClick={handleResetMap}>Reset Map</button>
           <div className="map-coordinate-controls">
-            <span>Go to</span>
             <input
               type="number"
               min={0}
@@ -1255,6 +1262,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
             />
             <button onClick={handleJumpToCoordinates}>Jump</button>
           </div>
+          <button onClick={handleResetMap} className="map-reset-btn">Reset</button>
         </div>
       </div>}
       {mode === 'espionage' && (
@@ -1264,6 +1272,9 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
       )}
 
       <div className="map-content">
+        <div className="map-content-mobile-events">
+          {renderGalaxyEventsPanel()}
+        </div>
         <div className="map-grid-wrapper" ref={mapGridWrapperRef}>
           <div
             ref={mapGridRef}
@@ -1303,6 +1314,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
 
         {mode === 'normal' && (
           <div className="map-sidebar">
+            {renderGalaxyEventsPanel()}
             {renderNexusContent()}
             {renderAttacksPanel()}
           </div>

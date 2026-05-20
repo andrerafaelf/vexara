@@ -15,28 +15,21 @@
 }
 
 .map-header {
-  padding: 8px 14px;
-  background: var(--color-navy-700);
-  border-bottom: 2px solid var(--accent);
+  padding: 6px 12px;
+  background: var(--color-navy-800);
+  border-bottom: 1px solid var(--border-default);
   flex-shrink: 0;
   position: relative;
   z-index: 10;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
-}
-
-.map-header h2 {
-  color: var(--accent);
-  margin: 0;
-  font-size: 16px;
-  white-space: nowrap;
+  gap: 10px;
 }
 
 .map-info {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 10px;
   flex: 1;
   min-width: 0;
@@ -48,6 +41,13 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.map-viewing {
+  color: var(--accent) !important;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 13px !important;
 }
 
 .map-hint {
@@ -64,9 +64,21 @@
 .map-controls button {
   background: var(--color-navy-500);
   color: var(--text-strong);
-  padding: 5px 10px;
+  padding: 4px 10px;
   border-radius: var(--radius-sm);
-  font-size: var(--text-sm);
+  font-size: 12px;
+}
+
+.map-reset-btn {
+  background: transparent !important;
+  color: var(--text-muted) !important;
+  border: 1px solid var(--border-default);
+}
+
+.map-reset-btn:hover {
+  background: var(--color-navy-700) !important;
+  color: var(--text-strong) !important;
+  border-color: var(--border-strong);
 }
 
 .map-controls button:hover {
@@ -85,27 +97,34 @@
 .map-coordinate-controls {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
+  gap: 4px;
+  padding: 3px 6px;
   border-radius: var(--radius-sm);
-  background: var(--color-navy-800);
+  background: var(--color-navy-900);
   border: 1px solid var(--border-default);
 }
 
 .map-coordinate-controls span {
-  color: var(--text-strong);
-  font-size: 12px;
+  color: var(--text-muted);
+  font-size: 11px;
 }
 
 .map-coordinate-controls input {
-  width: 50px;
-  padding: 3px 6px;
-  border: 1px solid var(--border-default);
+  width: 42px;
+  padding: 2px 4px;
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  background: var(--color-navy-900);
+  background: var(--color-navy-800);
   color: var(--text-strong);
-  font-size: var(--text-sm);
+  font-size: 12px;
   text-align: center;
+  -moz-appearance: textfield;
+}
+
+.map-coordinate-controls input::-webkit-outer-spin-button,
+.map-coordinate-controls input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .map-coordinate-controls input:focus {
@@ -130,7 +149,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  overscroll-behavior: contain;
   /* Switched from `container-type: size` + `cqw`/`cqh` cell sizing to
      viewport-relative sizing. Reason: with `container-type: size`, the
      wrapper is size-contained and its `cqw`/`cqh` resolution interacts
@@ -1138,22 +1156,42 @@
   cursor: not-allowed;
 }
 
-/* ── Galaxy events bar ─────────────────── */
-.galaxy-events-bar {
-  border-bottom: 1px solid var(--border-default);
+/* Inline events container, only used on mobile where the sidebar is hidden */
+.map-content-mobile-events {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .map-content-mobile-events {
+    display: block;
+    padding: 8px 10px 0;
+    flex-shrink: 0;
+  }
+
+  .map-content-mobile-events .galaxy-events-section {
+    margin: 0;
+  }
+}
+
+/* ── Galaxy events (sidebar section) ─────── */
+.galaxy-events-section {
+  margin: 0 0 var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
   background: var(--color-navy-900);
+  overflow: hidden;
 }
 
 .galaxy-events-toggle {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: 8px 14px;
+  gap: 6px;
+  padding: 7px 10px;
   background: transparent;
   border: none;
   color: var(--accent);
-  font-size: var(--text-sm);
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   text-align: left;
@@ -1166,21 +1204,20 @@
 
 .galaxy-events-chevron {
   margin-left: auto;
-  font-size: 10px;
+  font-size: 9px;
   opacity: 0.7;
 }
 
 .galaxy-events-panel {
-  padding: var(--space-3) var(--space-4) var(--space-4);
+  padding: 8px 10px 10px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  max-height: 280px;
-  overflow-y: auto;
+  gap: 6px;
+  border-top: 1px solid var(--border-default);
 }
 
 .galaxy-event-card {
-  padding: var(--space-3) var(--space-3);
+  padding: 8px 10px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-default);
   background: var(--color-navy-800);
@@ -1204,9 +1241,10 @@
 .galaxy-event-card-header {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 4px;
+  gap: 5px;
+  margin-bottom: 3px;
   color: var(--text-strong);
+  font-size: 12px;
 }
 
 .galaxy-event-card--rogue_ai .galaxy-event-card-header { color: var(--danger); }
@@ -1219,26 +1257,27 @@
   border: 1px solid var(--border-strong);
   border-radius: 3px;
   color: var(--text-default);
-  font-size: 11px;
-  padding: 2px 8px;
+  font-size: 10px;
+  padding: 1px 6px;
   cursor: pointer;
   transition: background var(--duration-fast) var(--ease-out);
+  white-space: nowrap;
 }
 
 .galaxy-event-goto:hover { background: var(--color-navy-600); }
 
 .galaxy-event-desc {
-  font-size: var(--text-xs);
+  font-size: 11px;
   color: var(--text-muted);
-  line-height: 1.45;
-  margin: 0 0 4px;
+  line-height: 1.4;
+  margin: 0 0 3px;
 }
 
 .galaxy-event-quadrant {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--success);
   font-family: var(--font-mono);
-  margin: 0 0 4px;
+  margin: 0 0 3px;
 }
 
 .galaxy-event-expires {

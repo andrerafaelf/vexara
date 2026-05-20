@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { io, type Socket } from 'socket.io-client';
 
 export interface Peer {
@@ -162,5 +162,8 @@ export function useWarRoomSocket(enabled: boolean): UseWarRoomSocketResult {
     };
   }, []);
 
-  return { connected, peers, peerCursors, peerTyping, setFocus, sendCursor, setTyping, subscribe };
+  return useMemo(
+    () => ({ connected, peers, peerCursors, peerTyping, setFocus, sendCursor, setTyping, subscribe }),
+    [connected, peers, peerCursors, peerTyping, setFocus, sendCursor, setTyping, subscribe],
+  );
 }

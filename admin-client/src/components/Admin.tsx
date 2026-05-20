@@ -64,6 +64,7 @@ interface Galaxy {
   id: number;
   name: string;
   status: 'active' | 'ended';
+  startsAt: string | null;
   endedAt: string | null;
   winnerUserId: number | null;
   createdAt: string;
@@ -121,7 +122,11 @@ const Admin: React.FC = () => {
   const [galaxies, setGalaxies] = useState<Galaxy[]>([]);
   const [selectedGalaxyId, setSelectedGalaxyId] = useState<number | null>(null);
   const [newGalaxyName, setNewGalaxyName] = useState('');
+  const [newGalaxyStartsAt, setNewGalaxyStartsAt] = useState('');
   const [creatingGalaxy, setCreatingGalaxy] = useState(false);
+  const [deleteGalaxyTarget, setDeleteGalaxyTarget] = useState<Galaxy | null>(null);
+  const [deleteGalaxyInput, setDeleteGalaxyInput] = useState('');
+  const [deletingGalaxy, setDeletingGalaxy] = useState(false);
 
   const [addUserForm, setAddUserForm] = useState({ username: '', email: '', password: '' });
   const [editUserForm, setEditUserForm] = useState({ email: '', password: '' });
@@ -298,9 +303,11 @@ const Admin: React.FC = () => {
     }
     setCreatingGalaxy(true);
     try {
+      const body: Record<string, unknown> = { name };
+      if (newGalaxyStartsAt) body.startsAt = new Date(newGalaxyStartsAt).toISOString();
       const res = await adminFetch(`${ADMIN_API_URL}/galaxies`, {
         method: 'POST',
-        body: JSON.stringify({ name }),
+        body: JSON.stringify(body),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -309,11 +316,31 @@ const Admin: React.FC = () => {
       }
       showToast(`Galaxy "${name}" created`, 'success');
       setNewGalaxyName('');
+      setNewGalaxyStartsAt('');
       reloadAll();
     } catch {
       showToast('Error creating galaxy', 'error');
     } finally {
       setCreatingGalaxy(false);
+    }
+  };
+
+  const handleDeleteGalaxy = async () => {
+    if (!deleteGalaxyTarget || deleteGalaxyInput !== 'delete') return;
+    setDeletingGalaxy(true);
+    try {
+      const res = await adminFetch(`${ADMIN_API_URL}/galaxies/${deleteGalaxyTarget.id}`, { method: 'DELETE' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { showToast(data.error || 'Failed to delete galaxy', 'error'); return; }
+      showToast(`Galaxy "${deleteGalaxyTarget.name}" deleted`, 'success');
+      setDeleteGalaxyTarget(null);
+      setDeleteGalaxyInput('');
+      if (selectedGalaxyId === deleteGalaxyTarget.id) setSelectedGalaxyId(null);
+      reloadAll();
+    } catch {
+      showToast('Error deleting galaxy', 'error');
+    } finally {
+      setDeletingGalaxy(false);
     }
   };
 
@@ -734,7 +761,7 @@ const Admin: React.FC = () => {
             placeholder="New galaxy name"
             maxLength={40}
             style={{
-              flex: '1 1 240px',
+              flex: '1 1 200px',
               padding: '0.5rem 0.75rem',
               borderRadius: 4,
               border: '1px solid #2c3a78',
@@ -743,6 +770,19 @@ const Admin: React.FC = () => {
             }}
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleCreateGalaxy();
+            }}
+          />
+          <input
+            type="datetime-local"
+            value={newGalaxyStartsAt}
+            onChange={(e) => setNewGalaxyStartsAt(e.target.value)}
+            style={{
+              flex: '1 1 180px',
+              padding: '0.5rem 0.75rem',
+              borderRadius: 4,
+              border: '1px solid #2c3a78',
+              background: '#0c1430',
+              color: '#e0e8ff',
             }}
           />
           <button
@@ -773,19 +813,26 @@ const Admin: React.FC = () => {
                 boxShadow: g.id === selectedGalaxyId ? '0 0 0 1px rgba(255,158,61,0.4)' : undefined,
               }}
             >
-              <div>
+              <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 600 }}>
                   {g.name}{' '}
-                  <span style={{ fontSize: '0.8em', color: g.status === 'ended' ? '#ffae3a' : '#7df58c' }}>
-                    {g.status}
+                  <span style={{ fontSize: '0.8em', color: g.status === 'ended' ? '#ffae3a' : g.startsAt && new Date(g.startsAt) > new Date() ? '#aab' : '#7df58c' }}>
+                    {g.status === 'ended' ? 'ended' : g.startsAt && new Date(g.startsAt) > new Date() ? 'pending' : 'active'}
                   </span>
                 </div>
                 <div style={{ fontSize: '0.8em', color: '#8a98c2' }}>
                   {g.playerCount} player{g.playerCount === 1 ? '' : 's'} · {g.nexusCount} nexus{g.nexusCount === 1 ? '' : 'es'}
                   {g.winnerUserId ? ` · Winner #${g.winnerUserId}` : ''}
                   {' · Created '}{new Date(g.createdAt).toLocaleDateString()}
+                  {g.startsAt ? ` · Starts ${new Date(g.startsAt).toLocaleString()}` : ''}
                 </div>
               </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); setDeleteGalaxyTarget(g); setDeleteGalaxyInput(''); }}
+                style={{ background: 'transparent', border: '1px solid #6a2030', color: '#ff8a8a', padding: '0.3rem 0.6rem', borderRadius: 4, cursor: 'pointer', fontSize: '0.8em', flexShrink: 0 }}
+              >
+                Delete
+              </button>
             </div>
           ))}
         </div>
@@ -1141,6 +1188,48 @@ const Admin: React.FC = () => {
                   Set Level
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteGalaxyTarget && (
+        <div
+          onClick={() => { setDeleteGalaxyTarget(null); setDeleteGalaxyInput(''); }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: '1rem' }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background: '#0e1430', border: '1px solid #6a2030', borderRadius: 8, padding: '1.5rem', width: '100%', maxWidth: 420, color: '#e0e8ff' }}
+          >
+            <h3 style={{ margin: '0 0 0.75rem', color: '#ff8a8a' }}>Delete Galaxy</h3>
+            <p style={{ margin: '0 0 0.5rem', color: '#c8b0b0' }}>
+              Are you sure you want to delete <strong>{deleteGalaxyTarget.name}</strong>? This will permanently remove all players, nexuses, attacks, and all data in this galaxy.
+            </p>
+            <p style={{ margin: '0 0 1rem', fontSize: '0.9em', color: '#aaa' }}>
+              Type <strong>delete</strong> to confirm.
+            </p>
+            <input
+              type="text"
+              value={deleteGalaxyInput}
+              onChange={(e) => setDeleteGalaxyInput(e.target.value)}
+              placeholder='Type "delete" to confirm'
+              style={{ width: '100%', padding: '0.5rem 0.75rem', borderRadius: 4, border: '1px solid #6a2030', background: '#0c1430', color: '#e0e8ff', marginBottom: '1rem', boxSizing: 'border-box' }}
+            />
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => { setDeleteGalaxyTarget(null); setDeleteGalaxyInput(''); }}
+                style={{ background: 'transparent', border: '1px solid #2c3a78', color: '#e0e8ff', padding: '0.45rem 0.9rem', borderRadius: 4, cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button
+                disabled={deleteGalaxyInput !== 'delete' || deletingGalaxy}
+                onClick={handleDeleteGalaxy}
+                style={{ background: deleteGalaxyInput === 'delete' ? '#6a2030' : '#2a1a1a', border: '1px solid #6a2030', color: deleteGalaxyInput === 'delete' ? '#ff8a8a' : '#664', padding: '0.45rem 0.9rem', borderRadius: 4, cursor: deleteGalaxyInput === 'delete' ? 'pointer' : 'not-allowed' }}
+              >
+                {deletingGalaxy ? 'Deleting…' : 'Delete Galaxy'}
+              </button>
             </div>
           </div>
         </div>

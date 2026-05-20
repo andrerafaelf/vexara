@@ -9,6 +9,7 @@ router.post('/alpha-invite/blast', blastAlphaInvite);
 
 router.get('/galaxies', adminController.listGalaxies);
 router.post('/galaxies', adminController.createGalaxy);
+router.delete('/galaxies/:galaxyId', adminController.deleteGalaxy);
 router.get('/users', adminController.listUsers);
 router.get('/stats', adminController.getStats);
 router.post('/users', adminController.createUser);

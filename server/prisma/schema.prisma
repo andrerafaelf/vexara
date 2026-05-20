@@ -68,6 +68,7 @@ model Galaxy {
   id           Int          @id @default(autoincrement())
   name         String       @unique
   status       GalaxyStatus @default(active)
+  startsAt     DateTime?
   endedAt      DateTime?
   winnerUserId Int?
   winnerFactionId Int?

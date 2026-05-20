@@ -8,6 +8,7 @@ export interface Galaxy {
   id: number;
   name: string;
   status: 'active' | 'ended';
+  startsAt: string | null;
   endedAt: string | null;
   winnerUserId: number | null;
   winnerFactionId: number | null;
@@ -48,6 +49,18 @@ interface Props {
   onSelected?: (galaxy: Galaxy) => void;
 }
 
+function formatCountdown(ms: number): string {
+  if (ms <= 0) return '0s';
+  const s = Math.floor(ms / 1000) % 60;
+  const m = Math.floor(ms / 60000) % 60;
+  const h = Math.floor(ms / 3600000) % 24;
+  const d = Math.floor(ms / 86400000);
+  if (d > 0) return `${d}d ${h}h ${m}m`;
+  if (h > 0) return `${h}h ${m}m ${s}s`;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
+}
+
 const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) => {
   const [galaxies, setGalaxies] = useState<Galaxy[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,6 +73,14 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
   const [leaving, setLeaving] = useState(false);
   const [winScreen, setWinScreen] = useState<WinResults | null>(null);
   const [loadingWin, setLoadingWin] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const hasUpcoming = galaxies.some((g) => g.startsAt && new Date(g.startsAt).getTime() > Date.now());
+    if (!hasUpcoming) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [galaxies]);
 
   useEffect(() => {
     let cancelled = false;
@@ -92,8 +113,8 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
 
   const requestSelect = (galaxy: Galaxy) => {
     if (galaxy.status !== 'active') return;
+    if (galaxy.startsAt && new Date(galaxy.startsAt).getTime() > Date.now()) return;
     if (!galaxy.isJoined) {
-      // First-time join: confirm before placing a starter nexus
       setConfirmingJoin(galaxy);
       return;
     }
@@ -197,11 +218,14 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
           {galaxies.map((g) => {
             const isEnded = g.status === 'ended';
             const isRecentlyEnded = isEnded && g.endedAt && Date.now() - new Date(g.endedAt).getTime() < WIN_WINDOW_MS;
+            const startsAtMs = g.startsAt ? new Date(g.startsAt).getTime() : null;
+            const isPending = !isEnded && startsAtMs !== null && startsAtMs > now;
+            const countdownMs = isPending ? startsAtMs! - now : 0;
             return (
               <li
                 key={g.id}
                 style={{
-                  border: isRecentlyEnded ? '1px solid #c4a000' : '1px solid #2c3a78',
+                  border: isRecentlyEnded ? '1px solid #c4a000' : isPending ? '1px solid #3a4a88' : '1px solid #2c3a78',
                   borderRadius: 6,
                   padding: '0.75rem',
                   marginBottom: '0.5rem',
@@ -217,7 +241,8 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
                     {g.name}{' '}
                     {isRecentlyEnded && <span style={{ color: '#ffd700', fontSize: '0.85em' }}>Ended</span>}
                     {isEnded && !isRecentlyEnded && <span style={{ color: '#ffae3a', fontSize: '0.85em' }}>(Ended)</span>}
-                    {g.isJoined && !isEnded && (
+                    {isPending && <span style={{ color: '#7aa8ff', fontSize: '0.85em', marginLeft: 6 }}>Starting soon</span>}
+                    {g.isJoined && !isEnded && !isPending && (
                       <span style={{ color: '#7df58c', fontSize: '0.85em', marginLeft: 6 }}>(Joined)</span>
                     )}
                   </div>
@@ -226,6 +251,11 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
                     {isRecentlyEnded && g.endedAt && (
                       <span style={{ marginLeft: 8, color: '#c4a000' }}>
                         · Ended {new Date(g.endedAt).toLocaleDateString()}
+                      </span>
+                    )}
+                    {isPending && (
+                      <span style={{ marginLeft: 8, color: '#7aa8ff' }}>
+                        · Starts in <strong>{formatCountdown(countdownMs)}</strong>
                       </span>
                     )}
                   </div>
@@ -250,22 +280,22 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
                   )}
                   {!isEnded && (
                     <button
-                      disabled={selecting !== null}
+                      disabled={selecting !== null || isPending}
                       onClick={() => requestSelect(g)}
                       style={{
-                        background: '#3a55c4',
-                        color: '#fff',
+                        background: isPending ? '#1a2040' : '#3a55c4',
+                        color: isPending ? '#556' : '#fff',
                         border: 'none',
                         padding: '0.45rem 0.9rem',
                         borderRadius: 4,
-                        cursor: 'pointer',
+                        cursor: isPending ? 'not-allowed' : 'pointer',
                         minWidth: 92,
                       }}
                     >
-                      {selecting === g.id ? '…' : g.isJoined ? 'Enter' : 'Join'}
+                      {selecting === g.id ? '…' : isPending ? 'Locked' : g.isJoined ? 'Enter' : 'Join'}
                     </button>
                   )}
-                  {g.isJoined && !isEnded && (
+                  {g.isJoined && !isEnded && !isPending && (
                     <button
                       disabled={selecting !== null}
                       onClick={() => requestLeave(g)}

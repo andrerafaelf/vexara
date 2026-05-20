@@ -14,8 +14,8 @@ export function getAllGalaxies() {
   return prisma.galaxy.findMany({ orderBy: { createdAt: 'asc' }, include: { _count: { select: { players: true, nexuses: true } } } });
 }
 
-export function createGalaxy(name: string) {
-  return prisma.galaxy.create({ data: { name } });
+export function createGalaxy(name: string, startsAt?: Date) {
+  return prisma.galaxy.create({ data: { name, ...(startsAt ? { startsAt } : {}) } });
 }
 
 export function getGalaxyByName(name: string) {
