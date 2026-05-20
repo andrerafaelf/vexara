@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getAlphaSignupCount, requestAlphaAccess } from '../services/api';
 import '../styles/Auth.css';
@@ -61,7 +61,17 @@ function captureUtm(): Utm {
   return {};
 }
 
-const SCREENSHOTS = ['/vexara-overview.png', '/vexara-troops.png', '/vexara-buildings.png'];
+const SCREENSHOTS: { src: string; label: string; caption: string }[] = [
+  { src: '/vexara-overview.png',      label: 'Overview',       caption: 'Your nexus at a glance — resources, buildings, and queues' },
+  { src: '/vexara-starfield.png',     label: 'Galaxy Map',     caption: 'A living galaxy shared by real players, running 24/7' },
+  { src: '/vexara-factions.png',      label: 'Factions',       caption: 'Join a faction, climb the leaderboard, and wage galaxy-wide wars' },
+  { src: '/vexara-diplomacy.png',     label: 'Diplomacy',      caption: 'Sign treaties, declare war, or negotiate vassal terms in real time' },
+  { src: '/vexara-combatreport.png',  label: 'Combat Report',  caption: 'Detailed blow-by-blow after every raid, strike, or conquest' },
+  { src: '/vexara-troops.png',        label: 'Troops',         caption: 'Twelve unit types — each with attack, defense, speed, and carry' },
+  { src: '/vexara-buildings.png',     label: 'Buildings',      caption: 'Eight core buildings drive your economy and military' },
+  { src: '/vexara-market.png',        label: 'Market',         caption: 'Trade resources with other players at dynamic exchange rates' },
+  { src: '/vexara-profile.png',       label: 'Profile',        caption: 'Track your stats, badges, and founder status' },
+];
 
 const AlphaSignupForm: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -70,9 +80,10 @@ const AlphaSignupForm: React.FC = () => {
   const [success, setSuccess] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [signupCount, setSignupCount] = useState<number | null>(null);
-  const [bgIndex, setBgIndex] = useState(0);
-  const [fading, setFading] = useState(false);
-  const [zooming, setZooming] = useState(true);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [prevIndex, setPrevIndex] = useState<number | null>(null);
+  const [transitioning, setTransitioning] = useState(false);
+  const [paused, setPaused] = useState(false);
   const { isAuthenticated } = useAuth();
   const router = useRouter();
 
@@ -88,18 +99,40 @@ const AlphaSignupForm: React.FC = () => {
       .catch(() => {});
   }, []);
 
+  const touchStartX = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const delta = e.changedTouches[0].clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(delta) < 40) return;
+    if (delta < 0) goTo((activeIndex + 1) % SCREENSHOTS.length);
+    else goTo((activeIndex - 1 + SCREENSHOTS.length) % SCREENSHOTS.length);
+  };
+
+  const goTo = (idx: number) => {
+    if (transitioning || idx === activeIndex) return;
+    setPrevIndex(activeIndex);
+    setTransitioning(true);
+    setActiveIndex(idx);
+    setTimeout(() => {
+      setPrevIndex(null);
+      setTransitioning(false);
+    }, 600);
+  };
+
   useEffect(() => {
+    if (paused) return;
     const interval = setInterval(() => {
-      setFading(true);
-      setZooming(false);
-      setTimeout(() => {
-        setBgIndex(i => (i + 1) % SCREENSHOTS.length);
-        setFading(false);
-        setZooming(true);
-      }, 800);
+      goTo((activeIndex + 1) % SCREENSHOTS.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeIndex, paused, transitioning]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,20 +162,40 @@ const AlphaSignupForm: React.FC = () => {
 
   return (
     <div className="auth-container">
-      <div className="auth-panel-left">
+      <div
+        className="auth-panel-left"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+      >
+        {/* Slide stack — previous fades out, active fades in */}
+        {prevIndex !== null && (
+          <div
+            key={`prev-${prevIndex}`}
+            className="carousel-slide carousel-slide-out"
+            style={{ backgroundImage: `url(${SCREENSHOTS[prevIndex].src})` }}
+          />
+        )}
         <div
-          className={`auth-panel-left-bg${fading ? ' fading' : ''}${zooming ? ' zooming' : ''}`}
-          style={{ backgroundImage: `url(${SCREENSHOTS[bgIndex]})` }}
+          key={`active-${activeIndex}`}
+          className={`carousel-slide carousel-slide-in${transitioning ? ' is-transitioning' : ''}`}
+          style={{ backgroundImage: `url(${SCREENSHOTS[activeIndex].src})` }}
         />
         <div className="auth-panel-left-overlay" />
+
+        {/* Label chip — top left */}
+        <div className="carousel-label">
+          <span className="carousel-label-dot" />
+          {SCREENSHOTS[activeIndex].label}
+        </div>
+
+        {/* Bottom: copy + dots */}
         <div className="auth-panel-left-copy">
           <p className="auth-panel-eyebrow">Alpha access</p>
           <h2 className="auth-panel-headline">
             Build.<br />Conquer.<br />Dominate.
           </h2>
           <p className="auth-panel-sub">
-            Browser-based 4X strategy. A living galaxy shared by real players,
-            running 24/7 with no resets and no pay-to-win.
+            {SCREENSHOTS[activeIndex].caption}
           </p>
           <div className="auth-panel-stats">
             <div className="auth-panel-stat">
@@ -158,10 +211,61 @@ const AlphaSignupForm: React.FC = () => {
               <span className="auth-panel-stat-label">Developer</span>
             </div>
           </div>
+
+          {/* Dot indicators */}
+          <div className="carousel-dots" role="tablist" aria-label="Screenshot navigation">
+            {SCREENSHOTS.map((s, i) => (
+              <button
+                key={s.src}
+                role="tab"
+                aria-selected={i === activeIndex}
+                aria-label={s.label}
+                className={`carousel-dot${i === activeIndex ? ' is-active' : ''}`}
+                onClick={() => goTo(i)}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
       <div className="auth-panel-right">
+        {/* Mobile-only screenshot hero — hidden on desktop where the left panel takes over */}
+        <div
+          className="mobile-carousel"
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          {prevIndex !== null && (
+            <div
+              className="carousel-slide carousel-slide-out"
+              style={{ backgroundImage: `url(${SCREENSHOTS[prevIndex].src})` }}
+            />
+          )}
+          <div
+            className={`carousel-slide carousel-slide-in${transitioning ? ' is-transitioning' : ''}`}
+            style={{ backgroundImage: `url(${SCREENSHOTS[activeIndex].src})` }}
+          />
+          <div className="mobile-carousel-overlay" />
+          <div className="carousel-label">
+            <span className="carousel-label-dot" />
+            {SCREENSHOTS[activeIndex].label}
+          </div>
+          <div className="mobile-carousel-dots" role="tablist" aria-label="Screenshot navigation">
+            {SCREENSHOTS.map((s, i) => (
+              <button
+                key={s.src}
+                role="tab"
+                aria-selected={i === activeIndex}
+                aria-label={s.label}
+                className={`carousel-dot${i === activeIndex ? ' is-active' : ''}`}
+                onClick={() => goTo(i)}
+              />
+            ))}
+          </div>
+        </div>
+
         <div className="auth-form-wrap">
           <Link href="/" className="auth-wordmark" aria-label="Vexara home">
             <Image
