@@ -137,6 +137,7 @@ export interface MarketListing {
   wantResource: 'biomass' | 'alloy' | 'ore';
   wantAmount: number;
   createdAt: string;
+  hasTreaty?: boolean;
 }
 
 export interface BuildQueueItem {

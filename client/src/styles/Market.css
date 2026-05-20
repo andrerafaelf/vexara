@@ -671,3 +671,23 @@
     grid-template-columns: 1fr;
   }
 }
+
+.market-treaty-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  border-radius: 4px;
+  padding: 2px 7px;
+  margin-bottom: 8px;
+  display: inline-block;
+}
+
+.market-commission-note {
+  font-size: 0.72rem;
+  color: var(--text-muted, #888);
+  margin-left: 4px;
+}

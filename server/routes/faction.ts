@@ -25,8 +25,6 @@ router.get('/join-requests/my', auth, (req, res) => factionController.getMyJoinR
 router.post('/', auth, (req, res) => factionController.createFaction(req as AuthRequest, res as Response));
 
 // War action routes (must precede /:id to prevent 'wars' being captured as an id)
-router.post('/wars/:warId/accept', auth, (req, res) => warController.acceptWar(req as AuthRequest, res as Response));
-router.post('/wars/:warId/decline', auth, (req, res) => warController.declineWar(req as AuthRequest, res as Response));
 router.post('/wars/:warId/ceasefire', auth, (req, res) => warController.proposeCeasefire(req as AuthRequest, res as Response));
 router.post('/wars/:warId/ceasefire/accept', auth, (req, res) => warController.acceptCeasefire(req as AuthRequest, res as Response));
 router.post('/wars/:warId/ceasefire/decline', auth, (req, res) => warController.declineCeasefire(req as AuthRequest, res as Response));

@@ -1,5 +1,26 @@
 import prisma from '../lib/prisma.js';
 
+export const MARKET_COMMISSION_RATE = 0.10;
+
+export async function getActiveTradeTreaty(userIdA: number, userIdB: number, galaxyId: number) {
+  const [memberA, memberB] = await Promise.all([
+    prisma.factionMember.findFirst({ where: { userId: userIdA, galaxyId }, select: { factionId: true } }),
+    prisma.factionMember.findFirst({ where: { userId: userIdB, galaxyId }, select: { factionId: true } }),
+  ]);
+  if (!memberA || !memberB || memberA.factionId === memberB.factionId) return null;
+  return prisma.factionTreaty.findFirst({
+    where: {
+      galaxyId,
+      type: 'trade',
+      status: 'active',
+      OR: [
+        { proposerFactionId: memberA.factionId, targetFactionId: memberB.factionId },
+        { proposerFactionId: memberB.factionId, targetFactionId: memberA.factionId },
+      ],
+    },
+  });
+}
+
 export function getAllListings(galaxyId: number) {
   return prisma.marketListing.findMany({
     where: { galaxyId },
@@ -50,12 +71,14 @@ export async function buyListing(
   },
   buyerNexus: Record<string, number>,
   sellerUsername: string, buyerUsername: string, galaxyId: number,
+  commission: number,
 ) {
+  const totalBuyerPays = listing.wantAmount + commission;
   return prisma.$transaction([
     prisma.nexus.update({
       where: { id: buyerNexusId },
       data: {
-        [listing.wantResource]: buyerNexus[listing.wantResource] - listing.wantAmount,
+        [listing.wantResource]: buyerNexus[listing.wantResource] - totalBuyerPays,
         [listing.offerResource]: buyerNexus[listing.offerResource] + listing.offerAmount,
       },
     }),

@@ -12,7 +12,18 @@ const SYSTEM_BUY_RATE = 1.25;
 export async function getListings(req: AuthRequest, res: Response): Promise<void> {
   try {
     const listings = await marketService.getAllListings(req.galaxyId);
-    res.json(listings.map((l) => ({ ...l, sellerUsername: l.sellerNexus.owner?.username ?? null })));
+    const treatyChecks = await Promise.all(
+      listings.map((l) => {
+        const sellerOwnerId = l.sellerNexus.ownerId;
+        if (!sellerOwnerId || sellerOwnerId === req.userId) return Promise.resolve(null);
+        return marketService.getActiveTradeTreaty(req.userId, sellerOwnerId, req.galaxyId);
+      }),
+    );
+    res.json(listings.map((l, i) => ({
+      ...l,
+      sellerUsername: l.sellerNexus.owner?.username ?? null,
+      hasTreaty: !!treatyChecks[i],
+    })));
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'marketController.ts' });
     res.status(500).json({ error: 'Internal server error' });
@@ -73,22 +84,32 @@ export async function buyListing(req: AuthRequest, res: Response): Promise<void>
     if (listing.galaxyId !== req.galaxyId) { res.status(403).json({ error: 'Listing is in a different galaxy' }); return; }
     if (listing.sellerNexus.ownerId === req.userId) { res.status(400).json({ error: 'Cannot buy your own listing' }); return; }
     const buyerRecord = buyerNexus as unknown as Record<string, number>;
-    if ((buyerRecord[listing.wantResource] || 0) < listing.wantAmount) {
-      res.status(400).json({ error: `Insufficient ${listing.wantResource}` }); return;
-    }
 
-    const [sellerOwner, buyerOwner] = await Promise.all([
-      listing.sellerNexus.ownerId ? marketService.getUserById(listing.sellerNexus.ownerId) : null,
-      buyerNexus.ownerId ? marketService.getUserById(buyerNexus.ownerId) : null,
+    const sellerOwnerId = listing.sellerNexus.ownerId;
+    const buyerOwnerId = buyerNexus.ownerId;
+
+    const [sellerOwner, buyerOwner, treaty] = await Promise.all([
+      sellerOwnerId ? marketService.getUserById(sellerOwnerId) : null,
+      buyerOwnerId ? marketService.getUserById(buyerOwnerId) : null,
+      sellerOwnerId && buyerOwnerId
+        ? marketService.getActiveTradeTreaty(buyerOwnerId, sellerOwnerId, req.galaxyId)
+        : null,
     ]);
+
+    const commission = treaty ? 0 : Math.ceil(listing.wantAmount * marketService.MARKET_COMMISSION_RATE);
+    const totalRequired = listing.wantAmount + commission;
+    if ((buyerRecord[listing.wantResource] || 0) < totalRequired) {
+      res.status(400).json({ error: `Insufficient ${listing.wantResource} (need ${totalRequired} including ${commission} commission)` }); return;
+    }
 
     await marketService.buyListing(
       listingId, parsedBuyerNexusId,
       { ...listing, sellerNexus: listing.sellerNexus as unknown as Record<string, number> },
       buyerRecord,
       sellerOwner?.username ?? 'Unknown', buyerOwner?.username ?? 'Unknown', req.galaxyId,
+      commission,
     );
-    res.json({ success: true });
+    res.json({ success: true, commission, hasTreaty: !!treaty });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'marketController.ts' });
     res.status(500).json({ error: 'Internal server error' });

@@ -30,21 +30,22 @@ export async function declareWar(req: AuthRequest, res: Response): Promise<void>
     const existing = await prisma.factionWar.findFirst({
       where: {
         galaxyId: req.galaxyId!,
-        status: { in: ['pending', 'active', 'ceasefire_pending'] },
+        status: { in: ['active', 'ceasefire_pending'] },
         OR: [
           { declarerFactionId: membership.factionId, targetFactionId },
           { declarerFactionId: targetFactionId, targetFactionId: membership.factionId },
         ],
       },
     });
-    if (existing) { res.status(400).json({ error: 'A war or war declaration already exists between these factions' }); return; }
+    if (existing) { res.status(400).json({ error: 'A war already exists between these factions' }); return; }
 
     const war = await prisma.factionWar.create({
       data: {
         galaxyId: req.galaxyId!,
         declarerFactionId: membership.factionId,
         targetFactionId,
-        status: 'pending',
+        status: 'active',
+        acceptedAt: new Date(),
       },
       include: { declarerFaction: { select: { name: true, tag: true } }, targetFaction: { select: { name: true, tag: true } } },
     });
@@ -57,59 +58,6 @@ export async function declareWar(req: AuthRequest, res: Response): Promise<void>
     });
 
     res.json({ war: serializeWar(war) });
-  } catch (error) {
-    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionWarController.ts' });
-    res.status(500).json({ error: 'Internal server error' });
-  }
-}
-
-export async function acceptWar(req: AuthRequest, res: Response): Promise<void> {
-  try {
-    const warId = parseInt(req.params.warId);
-    const membership = await getMembership(req.userId!, req.galaxyId!);
-    if (!membership) { res.status(403).json({ error: 'Not in a faction' }); return; }
-    if (!canManageWars(membership.role)) { res.status(403).json({ error: 'Only leaders and officers can accept war declarations' }); return; }
-
-    const war = await prisma.factionWar.findFirst({
-      where: { id: warId, galaxyId: req.galaxyId!, targetFactionId: membership.factionId, status: 'pending' },
-      include: { declarerFaction: { select: { name: true } }, targetFaction: { select: { name: true } } },
-    });
-    if (!war) { res.status(404).json({ error: 'War declaration not found' }); return; }
-
-    const updated = await prisma.factionWar.update({
-      where: { id: warId },
-      data: { status: 'active', acceptedAt: new Date() },
-      include: { declarerFaction: { select: { name: true, tag: true } }, targetFaction: { select: { name: true, tag: true } } },
-    });
-
-    await prisma.factionEvent.createMany({
-      data: [
-        { factionId: war.declarerFactionId, type: 'war_accepted', targetName: war.targetFaction.name, meta: String(warId) },
-        { factionId: membership.factionId, type: 'war_accepted', targetName: war.declarerFaction.name, meta: String(warId) },
-      ],
-    });
-
-    res.json({ war: serializeWar(updated) });
-  } catch (error) {
-    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionWarController.ts' });
-    res.status(500).json({ error: 'Internal server error' });
-  }
-}
-
-export async function declineWar(req: AuthRequest, res: Response): Promise<void> {
-  try {
-    const warId = parseInt(req.params.warId);
-    const membership = await getMembership(req.userId!, req.galaxyId!);
-    if (!membership) { res.status(403).json({ error: 'Not in a faction' }); return; }
-    if (!canManageWars(membership.role)) { res.status(403).json({ error: 'Only leaders and officers can decline war declarations' }); return; }
-
-    const war = await prisma.factionWar.findFirst({
-      where: { id: warId, galaxyId: req.galaxyId!, targetFactionId: membership.factionId, status: 'pending' },
-    });
-    if (!war) { res.status(404).json({ error: 'War declaration not found' }); return; }
-
-    await prisma.factionWar.delete({ where: { id: warId } });
-    res.json({ success: true });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionWarController.ts' });
     res.status(500).json({ error: 'Internal server error' });
@@ -255,7 +203,7 @@ export async function getWars(req: AuthRequest, res: Response): Promise<void> {
       where: {
         galaxyId: req.galaxyId!,
         OR: [{ declarerFactionId: factionId }, { targetFactionId: factionId }],
-        status: { in: ['pending', 'active', 'ceasefire_pending'] },
+        status: { in: ['active', 'ceasefire_pending'] },
       },
       include: { declarerFaction: { select: { name: true, tag: true } }, targetFaction: { select: { name: true, tag: true } } },
       orderBy: { declaredAt: 'desc' },

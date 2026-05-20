@@ -16,8 +16,6 @@ import {
   updateFactionMotd,
   getFactionWars,
   declareWar,
-  acceptWar,
-  declineWar,
   proposeCeasefire,
   acceptCeasefire,
   declineCeasefire,
@@ -374,26 +372,6 @@ export default function FactionsView() {
       setWarError((err as { response?: { data?: { error?: string } } }).response?.data?.error || (err as Error).message);
     } finally {
       setWarSubmitting(false);
-    }
-  };
-
-  const handleAcceptWar = async (warId: number) => {
-    if (!myFaction) return;
-    try {
-      await acceptWar(warId);
-      await refreshWars(myFaction.id);
-    } catch (err) {
-      setWarError((err as { response?: { data?: { error?: string } } }).response?.data?.error || (err as Error).message);
-    }
-  };
-
-  const handleDeclineWar = async (warId: number) => {
-    if (!myFaction) return;
-    try {
-      await declineWar(warId);
-      await refreshWars(myFaction.id);
-    } catch (err) {
-      setWarError((err as { response?: { data?: { error?: string } } }).response?.data?.error || (err as Error).message);
     }
   };
 
@@ -978,45 +956,6 @@ export default function FactionsView() {
         <section className="factions-panel factions-tab-content">
           {warError && <div className="factions-field-error factions-war-error">{warError}</div>}
 
-          {wars.filter((w) => w.status === 'pending' && w.targetFactionId === myFaction.id).length > 0 && (
-            <div className="factions-war-section">
-              <h3 className="factions-war-section-title factions-war-section-title--alert">Incoming War Declarations</h3>
-              {wars
-                .filter((w) => w.status === 'pending' && w.targetFactionId === myFaction.id)
-                .map((w) => (
-                  <div key={w.id} className="factions-war-card factions-war-card--pending-incoming">
-                    <div className="factions-war-info">
-                      <span className="factions-war-faction">[{w.declarerFaction.tag}] {w.declarerFaction.name}</span>
-                      <span className="factions-war-meta">declared war on you</span>
-                    </div>
-                    {canManage && (
-                      <div className="factions-war-actions">
-                        <button className="factions-btn-danger" onClick={() => handleAcceptWar(w.id)}>Accept</button>
-                        <button className="factions-btn-small" onClick={() => handleDeclineWar(w.id)}>Decline</button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-            </div>
-          )}
-
-          {wars.filter((w) => w.status === 'pending' && w.declarerFactionId === myFaction.id).length > 0 && (
-            <div className="factions-war-section">
-              <h3 className="factions-war-section-title">Pending Declarations</h3>
-              {wars
-                .filter((w) => w.status === 'pending' && w.declarerFactionId === myFaction.id)
-                .map((w) => (
-                  <div key={w.id} className="factions-war-card factions-war-card--pending-outgoing">
-                    <div className="factions-war-info">
-                      <span className="factions-war-faction">[{w.targetFaction.tag}] {w.targetFaction.name}</span>
-                      <span className="factions-war-meta">awaiting response</span>
-                    </div>
-                    <span className="factions-war-status-badge factions-war-status-badge--pending">Pending</span>
-                  </div>
-                ))}
-            </div>
-          )}
-
           {wars.filter((w) => w.status === 'active').length > 0 && (
             <div className="factions-war-section">
               <h3 className="factions-war-section-title factions-war-section-title--active">Active Wars</h3>
@@ -1105,7 +1044,7 @@ export default function FactionsView() {
                 >
                   <option value="">Select a faction...</option>
                   {galaxyFactions
-                    .filter((f) => !wars.some((w) => (w.status === 'pending' || w.status === 'active') &&
+                    .filter((f) => !wars.some((w) => w.status === 'active' &&
                       ((w.declarerFactionId === myFaction.id && w.targetFactionId === f.id) ||
                        (w.targetFactionId === myFaction.id && w.declarerFactionId === f.id))))
                     .map((f) => (

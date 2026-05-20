@@ -3,7 +3,6 @@ import { buyMarketListing, cancelMarketListing, createMarketListing, getMarketHi
 import '../styles/Market.css';
 import { MarketListing, Nexus } from '../types/game';
 import { formatDateTime } from '../utils/date';
-import ResourceIcon from './ResourceIcon';
 import { usePageReady } from './NavigationProgress';
 import PageSkeleton from './PageSkeleton';
 
@@ -19,11 +18,6 @@ const RESOURCE_LABELS: Record<string, string> = {
   ore: 'Ore',
 };
 
-const RESOURCE_ICONS: Record<string, React.ReactNode> = {
-  biomass: <ResourceIcon kind="biomass" size={14} />,
-  alloy: <ResourceIcon kind="alloy" size={14} />,
-  ore: <ResourceIcon kind="ore" size={14} />,
-};
 
 const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) => {
   const [listings, setListings] = useState<MarketListing[]>([]);
@@ -200,15 +194,9 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
           <form onSubmit={handleCreate}>
             {selectedFormNexus && (
               <div className="market-nexus-resources">
-                <span>
-                  {RESOURCE_ICONS.biomass} {Math.floor(selectedFormNexus.resources.biomass).toLocaleString()}
-                </span>
-                <span>
-                  {RESOURCE_ICONS.alloy} {Math.floor(selectedFormNexus.resources.alloy).toLocaleString()}
-                </span>
-                <span>
-                  {RESOURCE_ICONS.ore} {Math.floor(selectedFormNexus.resources.ore).toLocaleString()}
-                </span>
+                <span>Biomass {Math.floor(selectedFormNexus.resources.biomass).toLocaleString()}</span>
+                <span>Alloy {Math.floor(selectedFormNexus.resources.alloy).toLocaleString()}</span>
+                <span>Ore {Math.floor(selectedFormNexus.resources.ore).toLocaleString()}</span>
               </div>
             )}
             <div className="market-form-trade">
@@ -281,13 +269,11 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
                 <div className="market-card-nexus">{l.sellerNexus.name}</div>
                 <div className="market-card-trade">
                   <div className="market-card-offer">
-                    <span className="market-resource-icon">{RESOURCE_ICONS[l.offerResource]}</span>
                     <span className="market-amount">{l.offerAmount.toLocaleString()}</span>
                     <span className="market-resource-label">{RESOURCE_LABELS[l.offerResource]}</span>
                   </div>
                   <div className="market-card-arrow">→</div>
                   <div className="market-card-want">
-                    <span className="market-resource-icon">{RESOURCE_ICONS[l.wantResource]}</span>
                     <span className="market-amount">{l.wantAmount.toLocaleString()}</span>
                     <span className="market-resource-label">{RESOURCE_LABELS[l.wantResource]}</span>
                   </div>
@@ -316,9 +302,9 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
             </select>
             {selectedBuyNexus && (
               <span className="market-buy-nexus-resources">
-                {RESOURCE_ICONS.biomass} {Math.floor(selectedBuyNexus.resources.biomass).toLocaleString()} &nbsp;
-                {RESOURCE_ICONS.alloy} {Math.floor(selectedBuyNexus.resources.alloy).toLocaleString()} &nbsp;
-                {RESOURCE_ICONS.ore} {Math.floor(selectedBuyNexus.resources.ore).toLocaleString()}
+                Biomass {Math.floor(selectedBuyNexus.resources.biomass).toLocaleString()} &nbsp;
+                Alloy {Math.floor(selectedBuyNexus.resources.alloy).toLocaleString()} &nbsp;
+                Ore {Math.floor(selectedBuyNexus.resources.ore).toLocaleString()}
               </span>
             )}
           </div>
@@ -328,8 +314,9 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
 
         <div className="market-listings-grid">
           {otherListings.map((l) => {
-            const canAfford =
-              selectedBuyNexus && (selectedBuyNexus.resources[l.wantResource] || 0) >= l.wantAmount;
+            const commission = l.hasTreaty ? 0 : Math.ceil(l.wantAmount * 0.10);
+            const totalCost = l.wantAmount + commission;
+            const canAfford = selectedBuyNexus && (selectedBuyNexus.resources[l.wantResource] || 0) >= totalCost;
             return (
               <div key={l.id} className="market-card">
                 <div className="market-card-nexus">
@@ -338,24 +325,28 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
                     <span className="market-card-seller"> · {l.sellerUsername}</span>
                   )}
                 </div>
+                {l.hasTreaty && (
+                  <div className="market-treaty-badge">Trade Agreement · No commission</div>
+                )}
                 <div className="market-card-trade">
                   <div className="market-card-offer">
                     <span className="market-trade-role">Give</span>
-                    <span className="market-resource-icon">{RESOURCE_ICONS[l.wantResource]}</span>
-                    <span className="market-amount">{l.wantAmount.toLocaleString()}</span>
+                    <span className="market-amount">{totalCost.toLocaleString()}</span>
                     <span className="market-resource-label">{RESOURCE_LABELS[l.wantResource]}</span>
+                    {commission > 0 && (
+                      <span className="market-commission-note">+{commission.toLocaleString()} fee</span>
+                    )}
                   </div>
                   <div className="market-card-arrow">→</div>
                   <div className="market-card-want">
                     <span className="market-trade-role">Receive</span>
-                    <span className="market-resource-icon">{RESOURCE_ICONS[l.offerResource]}</span>
                     <span className="market-amount">{l.offerAmount.toLocaleString()}</span>
                     <span className="market-resource-label">{RESOURCE_LABELS[l.offerResource]}</span>
                   </div>
                 </div>
                 {buyingId === l.id ? (
                   <div className="market-buy-confirm">
-                    <span>Pay {l.wantAmount.toLocaleString()} {RESOURCE_LABELS[l.wantResource]}?</span>
+                    <span>Pay {totalCost.toLocaleString()} {RESOURCE_LABELS[l.wantResource]}{commission > 0 ? ` (incl. ${commission.toLocaleString()} commission)` : ''}?</span>
                     <button className="market-buy-btn" onClick={() => handleBuy(l)} disabled={!canAfford}>
                       Confirm
                     </button>
@@ -368,7 +359,7 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
                     className="market-buy-btn"
                     onClick={() => { setBuyError(''); setBuyingId(l.id); }}
                     disabled={!canAfford}
-                    title={!canAfford ? `Need ${l.wantAmount.toLocaleString()} ${RESOURCE_LABELS[l.wantResource]}` : ''}
+                    title={!canAfford ? `Need ${totalCost.toLocaleString()} ${RESOURCE_LABELS[l.wantResource]}` : ''}
                   >
                     {canAfford ? 'Buy' : 'Insufficient'}
                   </button>
@@ -396,9 +387,9 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
               const n = nexuses.find((n) => String(n._id) === sysNexusId);
               return n ? (
                 <span className="market-buy-nexus-resources">
-                  {RESOURCE_ICONS.biomass} {Math.floor(n.resources.biomass).toLocaleString()} &nbsp;
-                  {RESOURCE_ICONS.alloy} {Math.floor(n.resources.alloy).toLocaleString()} &nbsp;
-                  {RESOURCE_ICONS.ore} {Math.floor(n.resources.ore).toLocaleString()}
+                  Biomass {Math.floor(n.resources.biomass).toLocaleString()} &nbsp;
+                  Alloy {Math.floor(n.resources.alloy).toLocaleString()} &nbsp;
+                  Ore {Math.floor(n.resources.ore).toLocaleString()}
                 </span>
               ) : null;
             })()}
@@ -409,7 +400,7 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
               <label>Pay</label>
               <select value={sysFrom} onChange={(e) => setSysFrom(e.target.value as any)}>
                 {SYSTEM_RESOURCES.map((r) => (
-                  <option key={r} value={r}>{RESOURCE_ICONS[r]} {RESOURCE_LABELS[r]}</option>
+                  <option key={r} value={r}>{RESOURCE_LABELS[r]}</option>
                 ))}
               </select>
             </div>
@@ -417,7 +408,7 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
               <label>Receive</label>
               <select value={sysTo} onChange={(e) => setSysTo(e.target.value as any)}>
                 {SYSTEM_RESOURCES.map((r) => (
-                  <option key={r} value={r}>{RESOURCE_ICONS[r]} {RESOURCE_LABELS[r]}</option>
+                  <option key={r} value={r}>{RESOURCE_LABELS[r]}</option>
                 ))}
               </select>
             </div>
@@ -455,11 +446,11 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
               <div key={t.id} className="market-history-row">
                 <div className="market-history-trade">
                   <span className="market-history-resource">
-                    {RESOURCE_ICONS[t.wantResource]} {t.wantAmount.toLocaleString()} {RESOURCE_LABELS[t.wantResource]}
+                    {t.wantAmount.toLocaleString()} {RESOURCE_LABELS[t.wantResource]}
                   </span>
                   <span className="market-history-arrow">→</span>
                   <span className="market-history-resource">
-                    {RESOURCE_ICONS[t.offerResource]} {t.offerAmount.toLocaleString()} {RESOURCE_LABELS[t.offerResource]}
+                    {t.offerAmount.toLocaleString()} {RESOURCE_LABELS[t.offerResource]}
                   </span>
                 </div>
                 <div className="market-history-meta">
