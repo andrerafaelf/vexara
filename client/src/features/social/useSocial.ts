@@ -1,4 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import {
   acceptFriendRequest,
   cancelFriendRequest,
@@ -84,11 +86,18 @@ export function useChatMessages(friendId: string) {
 }
 
 export function useUserStats() {
-  return useQuery({
+  const { updateUser } = useAuth();
+  const query = useQuery({
     queryKey: socialKeys.stats(),
     queryFn: () => getUserStats().then((r) => r.data),
     staleTime: 60_000,
   });
+  useEffect(() => {
+    if (query.data?.isSupporter !== undefined) {
+      updateUser({ isSupporter: query.data.isSupporter });
+    }
+  }, [query.data?.isSupporter]);
+  return query;
 }
 
 export function useStatsTimeline(days: number) {
