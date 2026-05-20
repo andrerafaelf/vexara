@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { register as registerApi } from '../services/api';
+import { registerReal as registerApi } from '../services/api';
 import '../styles/Auth.css';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;

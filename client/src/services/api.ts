@@ -82,6 +82,12 @@ export const register = (payload: RegisterPayload) =>
     body: JSON.stringify(payload),
   });
 
+export const registerReal = (payload: RegisterPayload) =>
+  apiRequest('/auth/register-real', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
 export const verifyEmail = (token: string) =>
   apiRequest('/auth/verify-email', {
     method: 'POST',
