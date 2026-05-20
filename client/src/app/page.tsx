@@ -27,6 +27,10 @@ export default function Home() {
   const [creating, setCreating] = useState(false);
   const [activeGalaxy, setActiveGalaxy] = useState<Galaxy | null>(null);
   const [showGalaxyPicker, setShowGalaxyPicker] = useState(false);
+  // True between "user just picked a galaxy" and the nexus list refetch landing.
+  // The server creates a starter nexus on join, so we must not render the manual-create
+  // button during this window or the user will end up with two nexuses.
+  const [joiningGalaxy, setJoiningGalaxy] = useState(false);
 
   useEffect(() => {
     if (!localStorage.getItem('token')) {
@@ -53,6 +57,13 @@ export default function Home() {
       router.replace(`/nexus/${preferred._id}`);
     }
   }, [nexuses, router]);
+
+  // Clear the joining-galaxy gate once the post-join refetch settles. If the server provisioned
+  // a starter nexus the redirect effect above will fire first; if not (rejoining an existing
+  // galaxyPlayer with 0 nexuses), we drop back to the manual-create UI.
+  useEffect(() => {
+    if (joiningGalaxy && hasResolved) setJoiningGalaxy(false);
+  }, [joiningGalaxy, hasResolved]);
 
   // If no nexus yet + not loading: show the create-nexus/galaxy UI
   useEffect(() => {
@@ -83,7 +94,10 @@ export default function Home() {
   // While we're determining where to go, render nothing (no "Loading..." text).
   // !hasResolved keeps the page blank during the F5 race window where the query is briefly
   // idle with no data, before redirecting or showing the create UI.
-  if (!isAuthed || !hasResolved || isLoading || isFetching || nexuses.length > 0 || hasStoredNexus) {
+  // joiningGalaxy keeps the page blank between "user picked a galaxy" and the nexus refetch
+  // landing — otherwise the manual-create button would flash and could be clicked, producing
+  // a second nexus on top of the starter the server just provisioned.
+  if (!isAuthed || !hasResolved || isLoading || isFetching || nexuses.length > 0 || hasStoredNexus || joiningGalaxy) {
     return null;
   }
 
@@ -129,6 +143,10 @@ export default function Home() {
           onSelected={(g) => {
             setActiveGalaxy(g);
             setShowGalaxyPicker(false);
+            // Joining a galaxy provisions a starter nexus server-side. Refetch so the
+            // redirect effect picks it up instead of showing the manual-create button.
+            setJoiningGalaxy(true);
+            invalidateNexuses();
           }}
         />
       )}
