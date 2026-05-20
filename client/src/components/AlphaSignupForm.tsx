@@ -162,40 +162,59 @@ const AlphaSignupForm: React.FC = () => {
 
   return (
     <div className="auth-container">
-      <div
-        className="auth-panel-left"
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
-      >
-        {/* Slide stack — previous fades out, active fades in */}
-        {prevIndex !== null && (
-          <div
-            key={`prev-${prevIndex}`}
-            className="carousel-slide carousel-slide-out"
-            style={{ backgroundImage: `url(${SCREENSHOTS[prevIndex].src})` }}
-          />
-        )}
+      <div className="auth-panel-left">
+        {/* Screenshot carousel — images shown in full, no cropping */}
         <div
-          key={`active-${activeIndex}`}
-          className={`carousel-slide carousel-slide-in${transitioning ? ' is-transitioning' : ''}`}
-          style={{ backgroundImage: `url(${SCREENSHOTS[activeIndex].src})` }}
-        />
-        <div className="auth-panel-left-overlay" />
+          className="lp-carousel"
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div className="lp-carousel-track">
+            {SCREENSHOTS.map((s, i) => (
+              <div
+                key={s.src}
+                className={`lp-carousel-slide${i === activeIndex ? ' is-active' : ''}${i === prevIndex ? ' is-leaving' : ''}`}
+                aria-hidden={i !== activeIndex}
+              >
+                <img
+                  src={s.src}
+                  alt={s.caption}
+                  className="lp-carousel-img"
+                  draggable={false}
+                />
+              </div>
+            ))}
+          </div>
 
-        {/* Label chip — top left */}
-        <div className="carousel-label">
-          <span className="carousel-label-dot" />
-          {SCREENSHOTS[activeIndex].label}
+          {/* Label chip */}
+          <div className="carousel-label" key={activeIndex}>
+            <span className="carousel-label-dot" />
+            {SCREENSHOTS[activeIndex].label}
+          </div>
+
+          {/* Prev / Next arrows */}
+          <button
+            className="lp-carousel-arrow lp-carousel-arrow-prev"
+            onClick={() => goTo((activeIndex - 1 + SCREENSHOTS.length) % SCREENSHOTS.length)}
+            aria-label="Previous screenshot"
+          >‹</button>
+          <button
+            className="lp-carousel-arrow lp-carousel-arrow-next"
+            onClick={() => goTo((activeIndex + 1) % SCREENSHOTS.length)}
+            aria-label="Next screenshot"
+          >›</button>
         </div>
 
-        {/* Bottom: copy + dots */}
+        {/* Copy + stats + dots — below the carousel */}
         <div className="auth-panel-left-copy">
           <p className="auth-panel-eyebrow">Alpha access</p>
           <h2 className="auth-panel-headline">
             Build.<br />Conquer.<br />Dominate.
           </h2>
           <p className="auth-panel-sub">
-            {SCREENSHOTS[activeIndex].caption}
+            Detailed blow-by-blow after every raid, strike, or conquest
           </p>
           <div className="auth-panel-stats">
             <div className="auth-panel-stat">
@@ -212,7 +231,6 @@ const AlphaSignupForm: React.FC = () => {
             </div>
           </div>
 
-          {/* Dot indicators */}
           <div className="carousel-dots" role="tablist" aria-label="Screenshot navigation">
             {SCREENSHOTS.map((s, i) => (
               <button
@@ -229,43 +247,6 @@ const AlphaSignupForm: React.FC = () => {
       </div>
 
       <div className="auth-panel-right">
-        {/* Mobile-only screenshot hero — hidden on desktop where the left panel takes over */}
-        <div
-          className="mobile-carousel"
-          onMouseEnter={() => setPaused(true)}
-          onMouseLeave={() => setPaused(false)}
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-        >
-          {prevIndex !== null && (
-            <div
-              className="carousel-slide carousel-slide-out"
-              style={{ backgroundImage: `url(${SCREENSHOTS[prevIndex].src})` }}
-            />
-          )}
-          <div
-            className={`carousel-slide carousel-slide-in${transitioning ? ' is-transitioning' : ''}`}
-            style={{ backgroundImage: `url(${SCREENSHOTS[activeIndex].src})` }}
-          />
-          <div className="mobile-carousel-overlay" />
-          <div className="carousel-label">
-            <span className="carousel-label-dot" />
-            {SCREENSHOTS[activeIndex].label}
-          </div>
-          <div className="mobile-carousel-dots" role="tablist" aria-label="Screenshot navigation">
-            {SCREENSHOTS.map((s, i) => (
-              <button
-                key={s.src}
-                role="tab"
-                aria-selected={i === activeIndex}
-                aria-label={s.label}
-                className={`carousel-dot${i === activeIndex ? ' is-active' : ''}`}
-                onClick={() => goTo(i)}
-              />
-            ))}
-          </div>
-        </div>
-
         <div className="auth-form-wrap">
           <Link href="/" className="auth-wordmark" aria-label="Vexara home">
             <Image
@@ -576,6 +557,42 @@ const AlphaSignupForm: React.FC = () => {
               </p>
             </>
           )}
+        </div>
+
+        {/* Mobile-only screenshot carousel — below the form, hidden on desktop */}
+        <div
+          className="mobile-carousel"
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          {SCREENSHOTS.map((s, i) => (
+            <div
+              key={s.src}
+              className={`lp-carousel-slide${i === activeIndex ? ' is-active' : ''}${i === prevIndex ? ' is-leaving' : ''}`}
+              aria-hidden={i !== activeIndex}
+            >
+              <img src={s.src} alt={s.caption} className="lp-carousel-img" draggable={false} />
+            </div>
+          ))}
+          <div className="mobile-carousel-overlay" />
+          <div className="carousel-label" key={activeIndex}>
+            <span className="carousel-label-dot" />
+            {SCREENSHOTS[activeIndex].label}
+          </div>
+          <div className="mobile-carousel-dots" role="tablist" aria-label="Screenshot navigation">
+            {SCREENSHOTS.map((s, i) => (
+              <button
+                key={s.src}
+                role="tab"
+                aria-selected={i === activeIndex}
+                aria-label={s.label}
+                className={`carousel-dot${i === activeIndex ? ' is-active' : ''}`}
+                onClick={() => goTo(i)}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>
