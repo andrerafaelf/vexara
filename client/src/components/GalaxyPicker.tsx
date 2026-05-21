@@ -259,6 +259,11 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
                       </span>
                     )}
                   </div>
+                  {isPending && (
+                    <div style={{ fontSize: '0.75em', color: '#556a99', marginTop: 4 }}>
+                      15:30 UTC · 16:30 Lisbon · 17:30 Paris · 11:30 New York · 08:30 Los Angeles
+                    </div>
+                  )}
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
                   {isRecentlyEnded && (
