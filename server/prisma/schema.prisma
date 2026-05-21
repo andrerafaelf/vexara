@@ -51,6 +51,8 @@ model User {
   referrals        User[]    @relation("UserReferrals")
   referralTokens   ReferralToken[]
   milestoneTokens  MilestoneToken[]
+
+  lastSeenWarsAt   DateTime?
 }
 
 enum GalaxyStatus {
@@ -659,16 +661,19 @@ model ReferralToken {
 }
 
 model MilestoneToken {
-  id         Int       @id @default(autoincrement())
-  userId     Int
-  milestone  Int
-  redeemedAt DateTime?
-  rewardType String?   @db.VarChar(32)
-  rewardMeta Json?
+  id                 Int       @id @default(autoincrement())
+  userId             Int
+  milestone          Int
+  redeemedAt         DateTime?
+  rewardType         String?   @db.VarChar(32)
+  rewardMeta         Json?
+  kofiTransactionId  String?   @unique @db.VarChar(64)
 
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, milestone])
+  // Point-milestone tokens (positive `milestone`) are unique per user via the partial
+  // index in migration 20260521040000_kofi_transaction_id. Ko-fi tokens use milestone=0
+  // and dedupe via the unique kofiTransactionId column instead.
   @@index([userId])
 }
 

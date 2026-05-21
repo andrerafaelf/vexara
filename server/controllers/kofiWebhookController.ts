@@ -1,6 +1,8 @@
 import type { Request, Response } from 'express';
 import prisma from '../lib/prisma.js';
 import { logError, logInfo, logWarn } from '../utils/logger.js';
+import { NOTIF, sendPushToUser } from '../utils/push.js';
+import { notifyBadgeUpdate } from '../services/warRoomSocket.js';
 
 interface KofiPayload {
   verification_token?: string;
@@ -87,6 +89,40 @@ export async function handleKofiWebhook(req: Request, res: Response): Promise<vo
         amount: payload.amount,
         transactionId: payload.kofi_transaction_id,
       });
+    }
+
+    // Grant one supporter token per donation, idempotent on kofi_transaction_id.
+    // milestone=0 is reserved for Ko-fi grants; the unique index on kofiTransactionId
+    // is what dedupes webhook retries.
+    const txId = typeof payload.kofi_transaction_id === 'string' ? payload.kofi_transaction_id.slice(0, 64) : null;
+    if (txId) {
+      try {
+        const created = await prisma.milestoneToken.create({
+          data: {
+            userId: user.id,
+            milestone: 0,
+            rewardType: 'kofi',
+            rewardMeta: { amount: payload.amount ?? null, type: payload.type ?? null },
+            kofiTransactionId: txId,
+          },
+        });
+        void sendPushToUser(user.id, NOTIF.TOKEN_GRANTED, {
+          title: 'Supporter token granted',
+          body: 'Thanks for backing Vexara! 1 token added to your Profile, plus the supporter glow on your name.',
+          tag: `token-kofi-${txId}`,
+          data: { url: '/profile' },
+        });
+        notifyBadgeUpdate(user.id);
+        logInfo('kofi_token_granted', { userId: user.id, tokenId: created.id, transactionId: txId });
+      } catch (err) {
+        const code = (err as { code?: string }).code;
+        if (code === 'P2002') {
+          // Duplicate webhook delivery — safe no-op.
+          logInfo('kofi_token_duplicate', { userId: user.id, transactionId: txId });
+        } else {
+          logError('kofi_token_grant_error', { userId: user.id, message: (err as Error).message });
+        }
+      }
     }
 
     res.status(200).json({ ok: true });

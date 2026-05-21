@@ -3,6 +3,7 @@ import prisma from '../lib/prisma.js';
 import type { AuthRequest } from '../types/index.js';
 import { logError } from '../utils/logger.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
+import { notifyBadgeUpdate } from '../services/warRoomSocket.js';
 
 async function getMembership(userId: number, galaxyId: number) {
   return prisma.factionMember.findUnique({
@@ -69,6 +70,7 @@ export async function declareWar(req: AuthRequest, res: Response): Promise<void>
         tag: `faction-war-${war.id}`,
         data: { url: '/factions' },
       });
+      notifyBadgeUpdate(m.userId);
     }
 
     res.json({ war: serializeWar(war) });
@@ -222,6 +224,16 @@ export async function getWars(req: AuthRequest, res: Response): Promise<void> {
       include: { declarerFaction: { select: { name: true, tag: true } }, targetFaction: { select: { name: true, tag: true } } },
       orderBy: { declaredAt: 'desc' },
     });
+
+    // If the caller is viewing their own faction's wars, mark the unseen-war dot as read.
+    const membership = await getMembership(req.userId!, req.galaxyId!);
+    if (membership?.factionId === factionId) {
+      await prisma.user.update({
+        where: { id: req.userId! },
+        data: { lastSeenWarsAt: new Date() },
+      });
+    }
+
     res.json(wars.map(serializeWar));
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionWarController.ts' });

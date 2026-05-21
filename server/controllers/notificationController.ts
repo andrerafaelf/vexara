@@ -65,7 +65,7 @@ export async function getBadges(req: AuthRequest, res: Response): Promise<void> 
   try {
     const now = new Date();
 
-    const [referralTokenCount, milestoneTokenCount, factionInvites, leadership] = await Promise.all([
+    const [referralTokenCount, milestoneTokenCount, factionInvites, leadership, allMemberships, user] = await Promise.all([
       prisma.referralToken.count({ where: { referrerId: req.userId, redeemedAt: null } }),
       prisma.milestoneToken.count({ where: { userId: req.userId, redeemedAt: null } }),
       prisma.factionInvite.count({ where: { invitedUserId: req.userId, expiresAt: { gt: now } } }),
@@ -73,6 +73,11 @@ export async function getBadges(req: AuthRequest, res: Response): Promise<void> 
         where: { userId: req.userId, role: { in: ['leader', 'officer'] } },
         select: { factionId: true, galaxyId: true },
       }),
+      prisma.factionMember.findMany({
+        where: { userId: req.userId },
+        select: { factionId: true, galaxyId: true },
+      }),
+      prisma.user.findUnique({ where: { id: req.userId }, select: { lastSeenWarsAt: true } }),
     ]);
 
     let pendingTreaties = 0;
@@ -85,8 +90,22 @@ export async function getBadges(req: AuthRequest, res: Response): Promise<void> 
       });
     }
 
+    let unseenWars = 0;
+    if (allMemberships.length > 0) {
+      unseenWars = await prisma.factionWar.count({
+        where: {
+          status: { in: ['active', 'ceasefire_pending'] },
+          declaredAt: user?.lastSeenWarsAt ? { gt: user.lastSeenWarsAt } : undefined,
+          OR: allMemberships.flatMap((m) => [
+            { targetFactionId: m.factionId, galaxyId: m.galaxyId },
+            { declarerFactionId: m.factionId, galaxyId: m.galaxyId },
+          ]),
+        },
+      });
+    }
+
     const tokensAvailable = referralTokenCount + milestoneTokenCount;
-    const factionAttention = factionInvites + pendingTreaties;
+    const factionAttention = factionInvites + pendingTreaties + unseenWars;
 
     res.json({ tokensAvailable, factionAttention });
   } catch (err) {

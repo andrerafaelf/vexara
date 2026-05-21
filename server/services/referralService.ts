@@ -150,14 +150,16 @@ export async function getReferralStatus(referrerId: number) {
 export async function checkAndGrantMilestoneToken(userId: number, currentPoints: number): Promise<void> {
   if (currentPoints < MILESTONE_THRESHOLD) return;
 
-  const existing = await prisma.milestoneToken.findUnique({
-    where: { userId_milestone: { userId, milestone: MILESTONE_THRESHOLD } },
-  });
-  if (existing) return;
-
-  await prisma.milestoneToken.create({
-    data: { userId, milestone: MILESTONE_THRESHOLD },
-  });
+  // Dedupe is handled by a partial unique index (userId, milestone) WHERE milestone > 0,
+  // so a P2002 here means "already granted" and we swallow it.
+  try {
+    await prisma.milestoneToken.create({
+      data: { userId, milestone: MILESTONE_THRESHOLD },
+    });
+  } catch (err) {
+    const code = (err as { code?: string }).code;
+    if (code !== 'P2002') throw err;
+  }
 }
 
 export function getPendingMilestoneTokens(userId: number) {

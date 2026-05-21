@@ -216,8 +216,8 @@ export default function ProfileStats() {
           </div>
           <p className="ps-support-text">
             {stats.isSupporter
-              ? <>Your <span className="supporter-name">name now glows</span> in chat and on your profile. You&apos;re helping keep the lights on, thank you.</>
-              : <>Vexara is in alpha and runs on a small server. Supporters get a <span className="supporter-name">glowing name</span> in chat and on their profile.</>}
+              ? <>Your <span className="supporter-name">name now glows</span> in chat and on your profile, and every donation grants <strong>1 token</strong> to spend on your account. Thank you for helping keep the lights on.</>
+              : <>Vexara is in alpha and runs on a small server. Each donation grants a <span className="supporter-name">glowing name</span> in chat and on your profile, plus <strong>1 token</strong> to spend on your account.</>}
           </p>
           <a
             href="https://ko-fi.com/andrerfferreira"
