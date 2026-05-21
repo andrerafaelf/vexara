@@ -70,6 +70,8 @@ const LoginForm: React.FC = () => {
     }
   }, [isAuthenticated, router]);
 
+  if (isAuthenticated) return null;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
