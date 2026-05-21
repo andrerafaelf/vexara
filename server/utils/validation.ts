@@ -59,6 +59,13 @@ export function detectEmailTypo(email: string): string | null {
 }
 const USERNAME_RE = /^[a-zA-Z0-9_]{3,20}$/;
 
+const RESERVED_USERNAMES = new Set([
+  'vexara', 'admin', 'administrator', 'moderator', 'mod', 'staff', 'support',
+  'root', 'system', 'bot', 'official', 'help', 'info', 'contact', 'security',
+  'null', 'undefined', 'anonymous', 'guest', 'superuser', 'sysadmin',
+  'webmaster', 'postmaster', 'hostmaster', 'noreply', 'no-reply',
+]);
+
 export function parsePositiveInt(value: unknown): number | null {
   const num = Number(value);
   if (!Number.isInteger(num) || num <= 0) return null;
@@ -96,7 +103,9 @@ export function normalizeTroopPayload(
 
 export function validateUsername(username: unknown): boolean {
   if (typeof username !== 'string') return false;
-  return USERNAME_RE.test(username.trim());
+  const trimmed = username.trim();
+  if (!USERNAME_RE.test(trimmed)) return false;
+  return !RESERVED_USERNAMES.has(trimmed.toLowerCase());
 }
 
 export function validateEmail(email: unknown): boolean {

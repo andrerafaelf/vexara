@@ -7,7 +7,7 @@ export default function AdminPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('http://localhost:3003');
+    router.replace(process.env.NEXT_PUBLIC_ADMIN_URL || 'https://admin.vexara.world');
   }, [router]);
 
   return null;
