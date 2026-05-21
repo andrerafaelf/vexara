@@ -1,163 +1,47 @@
-﻿import {
-  AlertTriangle,
-  Building2,
-  ScrollText,
-  ShoppingCart,
-  Sparkles,
-  Swords,
-  TrendingUp,
-  Trophy,
-  Users,
-} from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import '../styles/Admin.css';
-import AlphaInvitePanel from './AlphaInvitePanel';
+import type { AllUser, Attack, Galaxy, GalaxyStats, GalaxyUser } from '../types/admin';
+import GalaxyTab from './GalaxyTab';
 import Toast from './Toast';
+import UsersTab from './UsersTab';
 
-interface AllUser {
-  _id: string;
-  username: string;
-  email: string;
-  createdAt: string;
-  emailVerified: boolean;
-  hasPendingToken: boolean;
-  galaxyCount: number;
-}
+const ADMIN_API_URL = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:3002/api/admin';
 
-interface UserNexus {
-  _id: string;
-  name: string;
-}
-
-interface User {
-  _id: string;
-  username: string;
-  email: string;
-  points: number;
-  createdAt: string;
-  nexuses: UserNexus[];
-}
-
-interface TopUser {
-  _id: string;
-  username: string;
-  points: number;
-}
-
-interface Stats {
-  userCount: number;
-  villageCount: number;
-  travelingAttackCount: number;
-  totalAttackCount: number;
-  newUsersThisWeek: number;
-  zeroNexusCount: number;
-  totalTroops: number;
-  avgPoints: number;
-  marketCount: number;
-  topUsers: TopUser[];
-}
-
-interface Attack {
-  _id: string;
-  attacker: {
-    user: { username: string };
-  };
-  defender: {
-    user: { username: string };
-  };
-  troops: Record<string, number>;
-  arrivesAt: string;
-}
-
-interface Galaxy {
-  _id: number;
-  id: number;
-  name: string;
-  status: 'active' | 'ended';
-  startsAt: string | null;
-  endedAt: string | null;
-  winnerUserId: number | null;
-  createdAt: string;
-  playerCount: number;
-  nexusCount: number;
-}
+type Tab = 'galaxy' | 'users';
+type AddUserModal = { open: true } | null;
 
 interface ToastMessage {
   message: string;
   type: 'success' | 'error' | 'info';
 }
 
-type AdminModal = 'addUser' | 'editUser' | 'resources' | 'troops' | 'buildings' | null;
-
-const TROOP_OPTIONS: Array<{ key: string; label: string }> = [
-  { key: 'lancerDrone', label: 'Lancer Drone' },
-  { key: 'assaultTrooper', label: 'Assault Trooper' },
-  { key: 'breakerUnit', label: 'Breaker Unit' },
-  { key: 'reconOperative', label: 'Recon Operative' },
-  { key: 'skimmerBike', label: 'Skimmer Bike' },
-  { key: 'siegeMech', label: 'Siege Mech' },
-  { key: 'bulwarkGuard', label: 'Bulwark Guard' },
-  { key: 'suppressorTeam', label: 'Suppressor Team' },
-  { key: 'disruptorUnit', label: 'Disruptor Unit' },
-  { key: 'interceptorBike', label: 'Interceptor Bike' },
-  { key: 'annihilatorPlatform', label: 'Annihilator Platform' },
-  { key: 'overseer', label: 'Overseer' },
-];
-
-const BUILDING_OPTIONS: Array<{ key: string; label: string }> = [
-  { key: 'commandCore', label: 'Command Core' },
-  { key: 'recruitmentCore', label: 'Recruitment Core' },
-  { key: 'lifeSupport', label: 'Life Support' },
-  { key: 'storageVault', label: 'Storage Vault' },
-  { key: 'biomassFarm', label: 'Biomass Farm' },
-  { key: 'alloyForge', label: 'Alloy Forge' },
-  { key: 'oreExtractor', label: 'Ore Extractor' },
-  { key: 'shieldGrid', label: 'Shield Grid' },
-  { key: 'armory', label: 'Armory' },
-  { key: 'stealthArray', label: 'Stealth Array' },
-];
-
-const ADMIN_API_URL = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:3002/api/admin';
-
 const Admin: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [attacks, setAttacks] = useState<Attack[]>([]);
+  const [tab, setTab] = useState<Tab>('galaxy');
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [modal, setModal] = useState<AdminModal>(null);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
+  // Galaxy data
   const [galaxies, setGalaxies] = useState<Galaxy[]>([]);
   const [selectedGalaxyId, setSelectedGalaxyId] = useState<number | null>(null);
-  const [newGalaxyName, setNewGalaxyName] = useState('');
-  const [newGalaxyStartsAt, setNewGalaxyStartsAt] = useState('');
-  const [creatingGalaxy, setCreatingGalaxy] = useState(false);
-  const [deleteGalaxyTarget, setDeleteGalaxyTarget] = useState<Galaxy | null>(null);
-  const [deleteGalaxyInput, setDeleteGalaxyInput] = useState('');
-  const [deletingGalaxy, setDeletingGalaxy] = useState(false);
+  const [galaxyUsers, setGalaxyUsers] = useState<GalaxyUser[]>([]);
+  const [stats, setStats] = useState<GalaxyStats | null>(null);
+  const [attacks, setAttacks] = useState<Attack[]>([]);
 
+  // All-users data
   const [allUsers, setAllUsers] = useState<AllUser[]>([]);
-  const [allUsersSearch, setAllUsersSearch] = useState('');
-  const [allUsersFilter, setAllUsersFilter] = useState<'all' | 'unverified'>('all');
 
+  // Add user modal (triggered from either tab)
+  const [addUserModal, setAddUserModal] = useState<AddUserModal>(null);
   const [addUserForm, setAddUserForm] = useState({ username: '', email: '', password: '' });
-  const [editUserForm, setEditUserForm] = useState({ email: '', password: '' });
-  const [resourcesForm, setResourcesForm] = useState({ nexusId: '', biomass: 0, alloy: 0, ore: 0 });
-  const [troopsForm, setTroopsForm] = useState({ nexusId: '', troopType: 'reconOperative', amount: 0 });
-  const [buildingsForm, setBuildingsForm] = useState({ nexusId: '', building: 'shieldGrid', level: 0 });
 
   useEffect(() => {
-    const timeInterval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-    return () => clearInterval(timeInterval);
+    const id = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(id);
   }, []);
 
   useEffect(() => {
-    loadGalaxies();
-    loadAllUsers();
+    initialLoad();
   }, []);
 
   useEffect(() => {
@@ -168,47 +52,37 @@ const Admin: React.FC = () => {
     setToast({ message, type });
   };
 
-  const adminFetch = async (url: string, options: RequestInit = {}) => {
+  const adminFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
     const token = sessionStorage.getItem('admin_basic_auth');
     const headers = new Headers(options.headers || {});
-
-    if (token) {
-      headers.set('Authorization', `Basic ${token}`);
-    }
-
-    if (options.body && !headers.has('Content-Type')) {
-      headers.set('Content-Type', 'application/json');
-    }
-
+    if (token) headers.set('Authorization', `Basic ${token}`);
+    if (options.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
     const response = await fetch(url, { ...options, headers });
-
     if (response.status === 401) {
       sessionStorage.removeItem('admin_basic_auth');
       window.location.href = '/auth';
     }
-
     return response;
+  };
+
+  const initialLoad = async () => {
+    await Promise.all([loadGalaxies(), loadAllUsers()]);
   };
 
   const loadGalaxies = async () => {
     try {
-      const galaxiesRes = await adminFetch(`${ADMIN_API_URL}/galaxies`);
-      const galaxiesData = await galaxiesRes.json().catch(() => null);
-      const list: Galaxy[] = Array.isArray(galaxiesData) ? galaxiesData : [];
+      const res = await adminFetch(`${ADMIN_API_URL}/galaxies`);
+      const data = await res.json().catch(() => null);
+      const list: Galaxy[] = Array.isArray(data) ? data : [];
       setGalaxies(list);
-
-      // Pick the most recent active galaxy by default, falling back to most recent overall.
       if (selectedGalaxyId == null && list.length > 0) {
-        const sorted = [...list].sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-        );
+        const sorted = [...list].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         const preferred = sorted.find((g) => g.status === 'active') ?? sorted[0];
         setSelectedGalaxyId(preferred.id);
       } else {
         setLoading(false);
       }
-    } catch (err) {
-      console.error('Error loading galaxies:', err);
+    } catch {
       setLoading(false);
     }
   };
@@ -218,156 +92,59 @@ const Admin: React.FC = () => {
       const res = await adminFetch(`${ADMIN_API_URL}/users/all`);
       const data = await res.json().catch(() => null);
       setAllUsers(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error('Error loading all users:', err);
-    }
+    } catch { /* silent */ }
   };
 
   const loadGalaxyData = async (galaxyId: number) => {
     try {
-      const query = `?galaxyId=${galaxyId}`;
       const [usersRes, statsRes, attacksRes] = await Promise.all([
-        adminFetch(`${ADMIN_API_URL}/users${query}`),
-        adminFetch(`${ADMIN_API_URL}/stats${query}`),
-        adminFetch(`${ADMIN_API_URL}/attacks${query}`),
+        adminFetch(`${ADMIN_API_URL}/users?galaxyId=${galaxyId}`),
+        adminFetch(`${ADMIN_API_URL}/stats?galaxyId=${galaxyId}`),
+        adminFetch(`${ADMIN_API_URL}/attacks?galaxyId=${galaxyId}`),
       ]);
-
       const [usersData, statsData, attacksData] = await Promise.all([
         usersRes.json().catch(() => null),
         statsRes.json().catch(() => null),
         attacksRes.json().catch(() => null),
       ]);
 
-      const normalizedUsers = Array.isArray(usersData)
-        ? usersData.map((user) => ({
-            ...user,
-            nexuses: Array.isArray(user?.nexuses) ? user.nexuses : [],
-          }))
-        : [];
-      const normalizedAttacks = Array.isArray(attacksData) ? attacksData : [];
-      const normalizedStats =
+      setGalaxyUsers(
+        Array.isArray(usersData)
+          ? usersData.map((u) => ({ ...u, nexuses: Array.isArray(u?.nexuses) ? u.nexuses : [] }))
+          : [],
+      );
+      setAttacks(Array.isArray(attacksData) ? attacksData : []);
+      setStats(
         statsData && typeof statsData === 'object'
           ? {
-              userCount: Number((statsData as any).userCount ?? 0),
-              villageCount: Number((statsData as any).villageCount ?? 0),
-              travelingAttackCount: Number((statsData as any).travelingAttackCount ?? 0),
-              totalAttackCount: Number((statsData as any).totalAttackCount ?? 0),
-              newUsersThisWeek: Number((statsData as any).newUsersThisWeek ?? 0),
-              zeroNexusCount: Number((statsData as any).zeroNexusCount ?? 0),
-              totalTroops: Number((statsData as any).totalTroops ?? 0),
-              avgPoints: Number((statsData as any).avgPoints ?? 0),
-              marketCount: Number((statsData as any).marketCount ?? 0),
-              topUsers: Array.isArray((statsData as any).topUsers) ? (statsData as any).topUsers : [],
+              userCount: Number(statsData.userCount ?? 0),
+              villageCount: Number(statsData.villageCount ?? 0),
+              travelingAttackCount: Number(statsData.travelingAttackCount ?? 0),
+              totalAttackCount: Number(statsData.totalAttackCount ?? 0),
+              newUsersThisWeek: Number(statsData.newUsersThisWeek ?? 0),
+              zeroNexusCount: Number(statsData.zeroNexusCount ?? 0),
+              totalTroops: Number(statsData.totalTroops ?? 0),
+              avgPoints: Number(statsData.avgPoints ?? 0),
+              marketCount: Number(statsData.marketCount ?? 0),
+              topUsers: Array.isArray(statsData.topUsers) ? statsData.topUsers : [],
             }
-          : null;
-
-      setUsers(normalizedUsers);
-      setStats(normalizedStats);
-      setAttacks(normalizedAttacks);
-      setLoading(false);
-    } catch (err) {
-      console.error('Error loading admin data:', err);
-      setUsers([]);
+          : null,
+      );
+    } catch {
+      setGalaxyUsers([]);
       setStats(null);
       setAttacks([]);
+    } finally {
       setLoading(false);
     }
   };
 
   const reloadAll = async () => {
-    await loadGalaxies();
-    await loadAllUsers();
-    if (selectedGalaxyId != null) await loadGalaxyData(selectedGalaxyId);
-  };
-
-  const requireGalaxy = (): number | null => {
-    if (selectedGalaxyId == null) {
-      showToast('Select a galaxy first', 'error');
-      return null;
-    }
-    return selectedGalaxyId;
-  };
-
-  const withGalaxy = (path: string): string => {
-    const sep = path.includes('?') ? '&' : '?';
-    return `${path}${sep}galaxyId=${selectedGalaxyId}`;
-  };
-
-  const openUserModal = (type: Exclude<AdminModal, 'addUser' | null>, user: User) => {
-    setSelectedUser(user);
-    const defaultNexusId = user.nexuses?.[0]?._id || '';
-
-    if (type === 'editUser') {
-      setEditUserForm({ email: user.email, password: '' });
-    }
-
-    if (type === 'resources') {
-      setResourcesForm({ nexusId: defaultNexusId, biomass: 0, alloy: 0, ore: 0 });
-    }
-
-    if (type === 'troops') {
-      setTroopsForm({ nexusId: defaultNexusId, troopType: 'reconOperative', amount: 0 });
-    }
-
-    if (type === 'buildings') {
-      setBuildingsForm({ nexusId: defaultNexusId, building: 'shieldGrid', level: 0 });
-    }
-
-    setModal(type);
-  };
-
-  const closeModal = () => {
-    setModal(null);
-    setSelectedUser(null);
-  };
-
-  const handleCreateGalaxy = async () => {
-    const name = newGalaxyName.trim();
-    if (name.length < 3 || name.length > 40) {
-      showToast('Galaxy name must be between 3 and 40 characters', 'error');
-      return;
-    }
-    setCreatingGalaxy(true);
-    try {
-      const body: Record<string, unknown> = { name };
-      if (newGalaxyStartsAt) body.startsAt = new Date(newGalaxyStartsAt).toISOString();
-      const res = await adminFetch(`${ADMIN_API_URL}/galaxies`, {
-        method: 'POST',
-        body: JSON.stringify(body),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        showToast(data.error || 'Failed to create galaxy', 'error');
-        return;
-      }
-      showToast(`Galaxy "${name}" created`, 'success');
-      setNewGalaxyName('');
-      setNewGalaxyStartsAt('');
-      reloadAll();
-    } catch {
-      showToast('Error creating galaxy', 'error');
-    } finally {
-      setCreatingGalaxy(false);
-    }
-  };
-
-  const handleDeleteGalaxy = async () => {
-    if (!deleteGalaxyTarget || deleteGalaxyInput !== 'delete') return;
-    setDeletingGalaxy(true);
-    try {
-      const res = await adminFetch(`${ADMIN_API_URL}/galaxies/${deleteGalaxyTarget.id}`, { method: 'DELETE' });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) { showToast(data.error || 'Failed to delete galaxy', 'error'); return; }
-      showToast(`Galaxy "${deleteGalaxyTarget.name}" deleted`, 'success');
-      setDeleteGalaxyTarget(null);
-      setDeleteGalaxyInput('');
-      if (selectedGalaxyId === deleteGalaxyTarget.id) setSelectedGalaxyId(null);
-      reloadAll();
-    } catch {
-      showToast('Error deleting galaxy', 'error');
-    } finally {
-      setDeletingGalaxy(false);
-    }
+    await Promise.all([
+      loadGalaxies(),
+      loadAllUsers(),
+      ...(selectedGalaxyId != null ? [loadGalaxyData(selectedGalaxyId)] : []),
+    ]);
   };
 
   const handleAddUser = async () => {
@@ -375,970 +152,98 @@ const Admin: React.FC = () => {
       showToast('Username, email and password are required', 'error');
       return;
     }
-
     try {
-      const res = await adminFetch(`${ADMIN_API_URL}/users`, {
-        method: 'POST',
-        body: JSON.stringify(addUserForm),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        showToast(data.error || 'Failed to add user', 'error');
-        return;
-      }
-
+      const res = await adminFetch(`${ADMIN_API_URL}/users`, { method: 'POST', body: JSON.stringify(addUserForm) });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error || 'Failed to add user', 'error'); return; }
       showToast(`User "${addUserForm.username}" created`, 'success');
       setAddUserForm({ username: '', email: '', password: '' });
-      closeModal();
+      setAddUserModal(null);
       reloadAll();
-    } catch (err) {
+    } catch {
       showToast('Error adding user', 'error');
     }
   };
 
-  const handleUpdateUser = async () => {
-    if (!selectedUser) return;
-
-    if (!editUserForm.email && !editUserForm.password) {
-      showToast('Provide a new email or password', 'error');
-      return;
-    }
-
-    try {
-      const payload: { email?: string; password?: string } = {};
-      if (editUserForm.email) payload.email = editUserForm.email;
-      if (editUserForm.password) payload.password = editUserForm.password;
-
-      const res = await adminFetch(`${ADMIN_API_URL}/users/${selectedUser._id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        showToast(data.error || 'Failed to update user', 'error');
-        return;
-      }
-
-      showToast(`Updated credentials for ${selectedUser.username}`, 'success');
-      closeModal();
-      reloadAll();
-    } catch (err) {
-      showToast('Error updating user', 'error');
-    }
-  };
-
-  const handleAdjustResources = async () => {
-    if (!selectedUser) return;
-    if (requireGalaxy() == null) return;
-
-    try {
-      const res = await adminFetch(withGalaxy(`${ADMIN_API_URL}/users/${selectedUser._id}/resources`), {
-        method: 'POST',
-        body: JSON.stringify(resourcesForm),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        showToast(data.error || 'Failed to adjust resources', 'error');
-        return;
-      }
-
-      showToast(`Resources updated for ${selectedUser.username}`, 'success');
-      closeModal();
-      reloadAll();
-    } catch (err) {
-      showToast('Error adjusting resources', 'error');
-    }
-  };
-
-  const handleAdjustTroops = async (direction: 'add' | 'remove') => {
-    if (!selectedUser) return;
-
-    const magnitude = Math.max(0, Math.floor(Number(troopsForm.amount) || 0));
-    if (magnitude === 0) {
-      showToast('Enter a positive amount', 'error');
-      return;
-    }
-
-    const signedAmount = direction === 'add' ? magnitude : -magnitude;
-    if (requireGalaxy() == null) return;
-
-    try {
-      const res = await adminFetch(withGalaxy(`${ADMIN_API_URL}/users/${selectedUser._id}/troops`), {
-        method: 'POST',
-        body: JSON.stringify({ ...troopsForm, amount: signedAmount }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        showToast(data.error || 'Failed to adjust troops', 'error');
-        return;
-      }
-
-      showToast(`Troops ${direction === 'add' ? 'added' : 'removed'} for ${selectedUser.username}`, 'success');
-      closeModal();
-      reloadAll();
-    } catch (err) {
-      showToast('Error adjusting troops', 'error');
-    }
-  };
-
-  const handleSetBuildingLevel = async () => {
-    if (!selectedUser) return;
-    if (requireGalaxy() == null) return;
-
-    try {
-      const res = await adminFetch(withGalaxy(`${ADMIN_API_URL}/users/${selectedUser._id}/buildings`), {
-        method: 'POST',
-        body: JSON.stringify(buildingsForm),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        showToast(data.error || 'Failed to update building level', 'error');
-        return;
-      }
-
-      showToast(`Building updated for ${selectedUser.username}`, 'success');
-      closeModal();
-      reloadAll();
-    } catch (err) {
-      showToast('Error updating building', 'error');
-    }
-  };
-
-  const handleResendVerification = async (userId: string, username: string, currentEmail: string) => {
-    const correctedEmail = window.prompt(`Resend verification email for ${username}.\nCorrect email if needed, or leave as-is:`, currentEmail);
-    if (correctedEmail === null) return;
-    const target = correctedEmail.trim() || currentEmail;
-    try {
-      const res = await adminFetch(`${ADMIN_API_URL}/users/${userId}/resend-verification`, {
-        method: 'POST',
-        body: JSON.stringify({ email: target }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        showToast(data.message || `Verification email sent to ${target}`, 'success');
-      } else {
-        showToast(data.error || 'Failed to send verification email', 'error');
-      }
-    } catch {
-      showToast('Error sending verification email', 'error');
-    }
-  };
-
-  const handleTestNotification = async (userId: string, username: string) => {
-    try {
-      const res = await adminFetch(`${ADMIN_API_URL}/users/${userId}/test-notification`, { method: 'POST' });
-      const data = await res.json();
-      if (res.ok) {
-        showToast(`Test notification sent to ${username}`, 'success');
-      } else {
-        showToast(data.error || 'Failed to send notification', 'error');
-      }
-    } catch {
-      showToast('Error sending test notification', 'error');
-    }
-  };
-
-  const handleDeleteUser = async (userId: string, username: string) => {
-    if (!window.confirm(`Delete user "${username}"?`)) return;
-
-    try {
-      const res = await adminFetch(`${ADMIN_API_URL}/users/${userId}`, {
-        method: 'DELETE',
-      });
-
-      if (res.ok) {
-        showToast(`User "${username}" deleted`, 'success');
-        reloadAll();
-      } else {
-        showToast('Failed to delete user', 'error');
-      }
-    } catch (err) {
-      showToast('Error deleting user', 'error');
-    }
-  };
-
-  const handleResetUser = async (user: User) => {
-    if (requireGalaxy() == null) return;
-    const galaxyName = galaxies.find((g) => g.id === selectedGalaxyId)?.name ?? 'this galaxy';
-    const confirmed = window.confirm(
-      `Reset account "${user.username}" inside galaxy "${galaxyName}"? This will remove their nexuses, attacks, queues, troops, and resources in this galaxy.`,
-    );
-    if (!confirmed) return;
-
-    try {
-      const res = await adminFetch(withGalaxy(`${ADMIN_API_URL}/users/${user._id}/reset-account`), {
-        method: 'POST',
-      });
-
-      if (res.ok) {
-        showToast(`Account reset for ${user.username}`, 'success');
-        reloadAll();
-      } else {
-        const data = await res.json();
-        showToast(data.error || 'Failed to reset account', 'error');
-      }
-    } catch (err) {
-      showToast('Error resetting account', 'error');
-    }
-  };
-
-  const handleCompleteAttack = async (attackId: string) => {
-    try {
-      const res = await adminFetch(`${ADMIN_API_URL}/attacks/${attackId}/complete`, {
-        method: 'POST',
-      });
-
-      if (res.ok) {
-        showToast('Strike completed instantly', 'success');
-        reloadAll();
-      } else {
-        const data = await res.json();
-        showToast(data.error || 'Failed to complete strike', 'error');
-      }
-    } catch (err) {
-      showToast('Error completing strike', 'error');
-    }
-  };
-
-  const handleCompleteUserStrike = async (user: User) => {
-    if (requireGalaxy() == null) return;
-    try {
-      const res = await adminFetch(withGalaxy(`${ADMIN_API_URL}/users/${user._id}/complete-strike`), {
-        method: 'POST',
-      });
-
-      if (res.ok) {
-        showToast(`Completed active strike for ${user.username}`, 'success');
-        reloadAll();
-      } else {
-        const data = await res.json();
-        showToast(data.error || 'Failed to complete active strike', 'error');
-      }
-    } catch (err) {
-      showToast('Error completing user strike', 'error');
-    }
-  };
-
-  const handleCompleteUserBuild = async (user: User) => {
-    if (requireGalaxy() == null) return;
-    try {
-      const res = await adminFetch(withGalaxy(`${ADMIN_API_URL}/users/${user._id}/complete-build`), {
-        method: 'POST',
-        body: JSON.stringify({}),
-      });
-
-      if (res.ok) {
-        showToast(`Completed current build for ${user.username}`, 'success');
-        reloadAll();
-      } else {
-        const data = await res.json();
-        showToast(data.error || 'Failed to complete build', 'error');
-      }
-    } catch (err) {
-      showToast('Error completing build', 'error');
-    }
-  };
-
-  const handleCompleteUserTraining = async (user: User) => {
-    if (requireGalaxy() == null) return;
-    try {
-      const res = await adminFetch(withGalaxy(`${ADMIN_API_URL}/users/${user._id}/complete-training`), {
-        method: 'POST',
-        body: JSON.stringify({}),
-      });
-
-      if (res.ok) {
-        showToast(`Completed all queued training for ${user.username}`, 'success');
-        reloadAll();
-      } else {
-        const data = await res.json();
-        showToast(data.error || 'Failed to complete troop queue', 'error');
-      }
-    } catch (err) {
-      showToast('Error completing troop queue', 'error');
-    }
-  };
-
-  if (loading) return <div className="loading">Loading admin panel...</div>;
+  if (loading) return <div className="loading">Loading admin panel…</div>;
 
   return (
     <div className="admin-panel">
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
+      {/* Top bar */}
       <div className="admin-top-bar">
-        <h2 className="admin-title">Admin Controls</h2>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.85em', color: '#8a98c2' }}>
-            <span>Galaxy</span>
-            <select
-              value={selectedGalaxyId ?? ''}
-              onChange={(e) => {
-                const val = parseInt(e.target.value, 10);
-                setSelectedGalaxyId(Number.isFinite(val) ? val : null);
-              }}
-              style={{
-                padding: '0.45rem 0.6rem',
-                borderRadius: 4,
-                border: '1px solid #2c3a78',
-                background: '#0c1430',
-                color: '#e0e8ff',
-                minWidth: 220,
-              }}
-            >
-              {galaxies.length === 0 && <option value="">No galaxies</option>}
-              {galaxies.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name} ({g.status})
-                </option>
-              ))}
-            </select>
-          </label>
-          <button className="btn-primary" onClick={() => setModal('addUser')}>
-            + Add User
-          </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <h2 className="admin-title">Admin</h2>
+          <div className="admin-tabs">
+            <button className={`admin-tab${tab === 'galaxy' ? ' admin-tab-active' : ''}`} onClick={() => setTab('galaxy')}>
+              Galaxy
+            </button>
+            <button className={`admin-tab${tab === 'users' ? ' admin-tab-active' : ''}`} onClick={() => setTab('users')}>
+              Users
+              {allUsers.filter((u) => !u.emailVerified).length > 0 && (
+                <span className="admin-tab-badge">{allUsers.filter((u) => !u.emailVerified).length}</span>
+              )}
+            </button>
+          </div>
         </div>
+        <button className="btn-primary" onClick={() => setAddUserModal({ open: true })}>
+          + Add User
+        </button>
       </div>
 
-      {stats && (
-        <>
-          <div className="admin-stats">
-            <div className="stat-card">
-              <div className="stat-card-icon" aria-hidden="true"><Users size={18} /></div>
-              <div className="stat-card-body">
-                <h3>{stats.userCount}</h3>
-                <p>Total Players</p>
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-card-icon" aria-hidden="true"><Building2 size={18} /></div>
-              <div className="stat-card-body">
-                <h3>{stats.villageCount}</h3>
-                <p>Total Nexuses</p>
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-card-icon" aria-hidden="true"><Swords size={18} /></div>
-              <div className="stat-card-body">
-                <h3>{stats.travelingAttackCount}</h3>
-                <p>Active Strikes</p>
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-card-icon" aria-hidden="true"><Swords size={18} /></div>
-              <div className="stat-card-body">
-                <h3>{stats.totalTroops.toLocaleString()}</h3>
-                <p>World Troops</p>
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-card-icon" aria-hidden="true"><TrendingUp size={18} /></div>
-              <div className="stat-card-body">
-                <h3>{stats.avgPoints.toLocaleString()}</h3>
-                <p>Avg Influence</p>
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-card-icon" aria-hidden="true"><Sparkles size={18} /></div>
-              <div className="stat-card-body">
-                <h3>{stats.newUsersThisWeek}</h3>
-                <p>New This Week</p>
-              </div>
-            </div>
-            <div className="stat-card stat-card-warn">
-              <div className="stat-card-icon" aria-hidden="true"><AlertTriangle size={18} /></div>
-              <div className="stat-card-body">
-                <h3>{stats.zeroNexusCount}</h3>
-                <p>No Nexus</p>
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-card-icon" aria-hidden="true"><ShoppingCart size={18} /></div>
-              <div className="stat-card-body">
-                <h3>{stats.marketCount}</h3>
-                <p>Market Listings</p>
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-card-icon" aria-hidden="true"><ScrollText size={18} /></div>
-              <div className="stat-card-body">
-                <h3>{stats.totalAttackCount.toLocaleString()}</h3>
-                <p>All-time Strikes</p>
-              </div>
-            </div>
-          </div>
-
-          {stats.topUsers.length > 0 && (
-            <div className="admin-section" style={{ marginBottom: 28 }}>
-              <div className="admin-section-header">
-                <h3>
-                  <Trophy size={16} aria-hidden="true" /> Top Players by Influence
-                </h3>
-              </div>
-              <div className="leaderboard">
-                {stats.topUsers.map((u, i) => (
-                  <div key={u._id} className="leaderboard-row">
-                    <span className={`leaderboard-rank rank-${i + 1}`}>#{i + 1}</span>
-                    <span className="leaderboard-name">{u.username}</span>
-                    <span className="leaderboard-pts">{u.points.toLocaleString()} pts</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </>
+      {/* Tab content */}
+      {tab === 'galaxy' && (
+        <GalaxyTab
+          galaxies={galaxies}
+          selectedGalaxyId={selectedGalaxyId}
+          onSelectGalaxy={setSelectedGalaxyId}
+          users={galaxyUsers}
+          stats={stats}
+          attacks={attacks}
+          currentTime={currentTime}
+          adminFetch={adminFetch}
+          showToast={showToast}
+          onChanged={reloadAll}
+          onAddUserClick={() => setAddUserModal({ open: true })}
+        />
+      )}
+      {tab === 'users' && (
+        <UsersTab
+          users={allUsers}
+          adminFetch={adminFetch}
+          showToast={showToast}
+          onUserChanged={reloadAll}
+        />
       )}
 
-      <AlphaInvitePanel showToast={showToast} />
-
-      {(() => {
-        const term = allUsersSearch.trim().toLowerCase();
-        const filtered = allUsers.filter((u) => {
-          if (allUsersFilter === 'unverified' && u.emailVerified) return false;
-          if (!term) return true;
-          return u.username.toLowerCase().includes(term) || u.email.toLowerCase().includes(term);
-        });
-        return (
-          <div className="admin-section" style={{ marginBottom: 28 }}>
-            <div className="admin-section-header">
-              <h3><Users size={16} aria-hidden="true" /> All Users ({allUsers.length})</h3>
-            </div>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-              <input
-                type="text"
-                placeholder="Search username or email…"
-                value={allUsersSearch}
-                onChange={(e) => setAllUsersSearch(e.target.value)}
-                style={{ flex: '1 1 220px', padding: '0.45rem 0.7rem', background: '#0b0d12', border: '1px solid #2c3a78', borderRadius: 4, color: '#fff', fontSize: '0.9em' }}
-              />
-              <select
-                value={allUsersFilter}
-                onChange={(e) => setAllUsersFilter(e.target.value as 'all' | 'unverified')}
-                style={{ padding: '0.45rem 0.6rem', background: '#0b0d12', border: '1px solid #2c3a78', borderRadius: 4, color: '#e0e8ff', fontSize: '0.9em' }}
-              >
-                <option value="all">All</option>
-                <option value="unverified">Unverified only</option>
-              </select>
-              <span style={{ fontSize: '0.85em', color: '#8a98c2' }}>{filtered.length} shown</span>
-            </div>
-            <div style={{ display: 'grid', gap: 6 }}>
-              {filtered.map((u) => (
-                <div key={u._id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0.55rem 0.8rem', background: '#0e1430', border: '1px solid #1c2a50', borderRadius: 6 }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <span style={{ fontWeight: 600, color: '#e0e8ff' }}>{u.username}</span>
-                    <span style={{ marginLeft: 10, fontSize: '0.85em', color: '#8a98c2' }}>{u.email}</span>
-                  </div>
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0, fontSize: '0.8em', color: '#8a98c2' }}>
-                    <span title={u.emailVerified ? 'Email verified' : 'Awaiting verification'} style={{ color: u.emailVerified ? '#7df58c' : '#ffb86b' }}>
-                      {u.emailVerified ? '✓ verified' : '⚠ unverified'}
-                    </span>
-                    <span>{u.galaxyCount} {u.galaxyCount === 1 ? 'galaxy' : 'galaxies'}</span>
-                    <span>Joined {new Date(u.createdAt).toLocaleDateString()}</span>
-                    {!u.emailVerified && u.hasPendingToken && (
-                      <button
-                        className="btn-action btn-notif"
-                        style={{ fontSize: '0.8em', padding: '0.2rem 0.5rem' }}
-                        onClick={() => handleResendVerification(u._id, u.username, u.email)}
-                      >
-                        Resend verification
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      })()}
-
-      <div className="admin-section" style={{ marginBottom: 28 }}>
-        <div className="admin-section-header">
-          <h3>Galaxies ({galaxies.length})</h3>
-        </div>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-          <input
-            type="text"
-            value={newGalaxyName}
-            onChange={(e) => setNewGalaxyName(e.target.value)}
-            placeholder="New galaxy name"
-            maxLength={40}
-            style={{
-              flex: '1 1 200px',
-              padding: '0.5rem 0.75rem',
-              borderRadius: 4,
-              border: '1px solid #2c3a78',
-              background: '#0c1430',
-              color: '#e0e8ff',
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleCreateGalaxy();
-            }}
-          />
-          <input
-            type="datetime-local"
-            value={newGalaxyStartsAt}
-            onChange={(e) => setNewGalaxyStartsAt(e.target.value)}
-            style={{
-              flex: '1 1 180px',
-              padding: '0.5rem 0.75rem',
-              borderRadius: 4,
-              border: '1px solid #2c3a78',
-              background: '#0c1430',
-              color: '#e0e8ff',
-            }}
-          />
-          <button
-            className="btn-primary"
-            disabled={creatingGalaxy}
-            onClick={handleCreateGalaxy}
-          >
-            {creatingGalaxy ? 'Creating…' : '+ Create Galaxy'}
-          </button>
-        </div>
-        <div style={{ display: 'grid', gap: 8 }}>
-          {galaxies.map((g) => (
-            <div
-              key={g._id}
-              onClick={() => setSelectedGalaxyId(g.id)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedGalaxyId(g.id); }}
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '0.6rem 0.8rem',
-                border: `1px solid ${g.id === selectedGalaxyId ? '#ff9e3d' : '#2c3a78'}`,
-                borderRadius: 6,
-                background: g.status === 'ended' ? '#1a1430' : '#0e1430',
-                cursor: 'pointer',
-                boxShadow: g.id === selectedGalaxyId ? '0 0 0 1px rgba(255,158,61,0.4)' : undefined,
-              }}
-            >
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600 }}>
-                  {g.name}{' '}
-                  <span style={{ fontSize: '0.8em', color: g.status === 'ended' ? '#ffae3a' : g.startsAt && new Date(g.startsAt) > new Date() ? '#aab' : '#7df58c' }}>
-                    {g.status === 'ended' ? 'ended' : g.startsAt && new Date(g.startsAt) > new Date() ? 'pending' : 'active'}
-                  </span>
-                </div>
-                <div style={{ fontSize: '0.8em', color: '#8a98c2' }}>
-                  {g.playerCount} player{g.playerCount === 1 ? '' : 's'} · {g.nexusCount} nexus{g.nexusCount === 1 ? '' : 'es'}
-                  {g.winnerUserId ? ` · Winner #${g.winnerUserId}` : ''}
-                  {' · Created '}{new Date(g.createdAt).toLocaleDateString()}
-                  {g.startsAt ? ` · Starts ${new Date(g.startsAt).toLocaleString()}` : ''}
-                </div>
-              </div>
-              <button
-                onClick={(e) => { e.stopPropagation(); setDeleteGalaxyTarget(g); setDeleteGalaxyInput(''); }}
-                style={{ background: 'transparent', border: '1px solid #6a2030', color: '#ff8a8a', padding: '0.3rem 0.6rem', borderRadius: 4, cursor: 'pointer', fontSize: '0.8em', flexShrink: 0 }}
-              >
-                Delete
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="admin-section">
-        <div className="admin-section-header">
-          <h3>
-            Players in {galaxies.find((g) => g.id === selectedGalaxyId)?.name ?? 'galaxy'} ({users.length})
-          </h3>
-        </div>
-        <div className="user-cards">
-          {users.map((user) => (
-            <div key={user._id} className="user-card">
-              <div className="user-card-info">
-                <span className="user-card-name">{user.username}</span>
-                <div className="user-card-meta">
-                  <span>{user.email}</span>
-                  <span className="meta-pts">{user.points} pts</span>
-                  <span>Joined {new Date(user.createdAt).toLocaleDateString()}</span>
-                </div>
-              </div>
-              <div className="user-actions">
-                <button className="btn-action btn-edit" onClick={() => openUserModal('editUser', user)}>
-                  Login as
-                </button>
-                <div className="action-divider" />
-                <button className="btn-action btn-res" onClick={() => openUserModal('resources', user)}>
-                  +/- Resources
-                </button>
-                <button className="btn-action btn-troops" onClick={() => openUserModal('troops', user)}>
-                  +/- Troops
-                </button>
-                <button className="btn-action btn-bld" onClick={() => openUserModal('buildings', user)}>
-                  Set Building
-                </button>
-                <div className="action-divider" />
-                <button className="btn-action btn-cmpl" onClick={() => handleCompleteUserStrike(user)}>
-                  Finish strike
-                </button>
-                <button className="btn-action btn-cmpl" onClick={() => handleCompleteUserBuild(user)}>
-                  Finish build
-                </button>
-                <button className="btn-action btn-cmpl" onClick={() => handleCompleteUserTraining(user)}>
-                  Finish training
-                </button>
-                <div className="action-divider" />
-                <button className="btn-action btn-reset" onClick={() => handleResetUser(user)}>
-                  Reset
-                </button>
-                <button className="btn-action btn-notif" onClick={() => handleResendVerification(user._id, user.username, user.email)}>
-                  Resend verification
-                </button>
-                <button className="btn-action btn-notif" onClick={() => handleTestNotification(user._id, user.username)}>
-                  Test notification
-                </button>
-                <button className="btn-action btn-delete" onClick={() => handleDeleteUser(user._id, user.username)}>
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {attacks.length > 0 && (
-        <div className="admin-section">
-          <div className="admin-section-header">
-            <h3>
-              <Swords size={16} aria-hidden="true" /> Traveling Strikes ({attacks.length})
-            </h3>
-          </div>
-          <div className="attacks-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>Attacker</th>
-                  <th>Defender</th>
-                  <th>Troops</th>
-                  <th>Arrives In</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {attacks.map((attack) => {
-                  const diff = new Date(attack.arrivesAt).getTime() - currentTime.getTime();
-                  const seconds = Math.max(0, Math.floor(diff / 1000));
-                  const minutes = Math.floor(seconds / 60);
-                  const hours = Math.floor(minutes / 60);
-                  const timeStr =
-                    hours > 0
-                      ? `${hours}h ${minutes % 60}m ${seconds % 60}s`
-                      : minutes > 0
-                        ? `${minutes}m ${seconds % 60}s`
-                        : `${seconds}s`;
-
-                  const totalTroops = Object.values(attack.troops || {}).reduce((a, b) => a + Number(b || 0), 0);
-
-                  return (
-                    <tr key={attack._id}>
-                      <td>{attack.attacker?.user?.username || 'Unknown'}</td>
-                      <td>{attack.defender?.user?.username || 'Unknown'}</td>
-                      <td>{totalTroops}</td>
-                      <td>
-                        <span className={diff <= 10000 ? 'time-urgent' : ''}>{timeStr}</span>
-                      </td>
-                      <td>
-                        <button className="btn-action btn-cmpl" onClick={() => handleCompleteAttack(attack._id)}>
-                          Complete
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {modal && (
-        <div className="modal-overlay" onClick={closeModal}>
+      {/* Add user modal */}
+      {addUserModal && (
+        <div className="modal-overlay" onClick={() => setAddUserModal(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>
-                {modal === 'addUser' && 'Add User'}
-                {modal === 'editUser' && `Edit Login: ${selectedUser?.username}`}
-                {modal === 'resources' && `Adjust Resources: ${selectedUser?.username}`}
-                {modal === 'troops' && `Adjust Troops: ${selectedUser?.username}`}
-                {modal === 'buildings' && `Set Building Level: ${selectedUser?.username}`}
-              </h3>
-              <button className="modal-close" onClick={closeModal}>
-                ×
-              </button>
+              <h3>Add User</h3>
+              <button className="modal-close" onClick={() => setAddUserModal(null)}>×</button>
             </div>
-
             <div className="modal-body">
-              {modal === 'addUser' && (
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label>Username</label>
-                    <input
-                      value={addUserForm.username}
-                      onChange={(e) => setAddUserForm({ ...addUserForm, username: e.target.value })}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Email</label>
-                    <input
-                      value={addUserForm.email}
-                      onChange={(e) => setAddUserForm({ ...addUserForm, email: e.target.value })}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Password</label>
-                    <input
-                      type="password"
-                      value={addUserForm.password}
-                      onChange={(e) => setAddUserForm({ ...addUserForm, password: e.target.value })}
-                    />
-                  </div>
+              <div className="form-grid">
+                <div className="form-group">
+                  <label>Username</label>
+                  <input value={addUserForm.username} onChange={(e) => setAddUserForm({ ...addUserForm, username: e.target.value })} />
                 </div>
-              )}
-
-              {modal === 'editUser' && (
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label>Email</label>
-                    <input
-                      value={editUserForm.email}
-                      onChange={(e) => setEditUserForm({ ...editUserForm, email: e.target.value })}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>New Password</label>
-                    <input
-                      type="password"
-                      placeholder="Leave blank to keep current"
-                      value={editUserForm.password}
-                      onChange={(e) => setEditUserForm({ ...editUserForm, password: e.target.value })}
-                    />
-                  </div>
+                <div className="form-group">
+                  <label>Email</label>
+                  <input value={addUserForm.email} onChange={(e) => setAddUserForm({ ...addUserForm, email: e.target.value })} />
                 </div>
-              )}
-
-              {modal === 'resources' && selectedUser && (
-                <div className="form-grid">
-                  <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                    <small>Use negative values to remove resources.</small>
-                  </div>
-                  <div className="form-group">
-                    <label>Nexus</label>
-                    <select
-                      value={resourcesForm.nexusId}
-                      onChange={(e) => setResourcesForm({ ...resourcesForm, nexusId: e.target.value })}
-                    >
-                      {(selectedUser.nexuses || []).map((nexus) => (
-                        <option key={nexus._id} value={nexus._id}>
-                          {nexus.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>Biomass</label>
-                    <input
-                      type="number"
-                      value={resourcesForm.biomass}
-                      onChange={(e) => setResourcesForm({ ...resourcesForm, biomass: Number(e.target.value) || 0 })}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Alloy</label>
-                    <input
-                      type="number"
-                      value={resourcesForm.alloy}
-                      onChange={(e) => setResourcesForm({ ...resourcesForm, alloy: Number(e.target.value) || 0 })}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Ore</label>
-                    <input
-                      type="number"
-                      value={resourcesForm.ore}
-                      onChange={(e) => setResourcesForm({ ...resourcesForm, ore: Number(e.target.value) || 0 })}
-                    />
-                  </div>
+                <div className="form-group">
+                  <label>Password</label>
+                  <input type="password" value={addUserForm.password} onChange={(e) => setAddUserForm({ ...addUserForm, password: e.target.value })} />
                 </div>
-              )}
-
-              {modal === 'troops' && selectedUser && (
-                <div className="form-grid">
-                  <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                    <small>Enter a positive amount, then choose Add or Remove.</small>
-                  </div>
-                  <div className="form-group">
-                    <label>Nexus</label>
-                    <select
-                      value={troopsForm.nexusId}
-                      onChange={(e) => setTroopsForm({ ...troopsForm, nexusId: e.target.value })}
-                    >
-                      {(selectedUser.nexuses || []).map((nexus) => (
-                        <option key={nexus._id} value={nexus._id}>
-                          {nexus.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>Troop</label>
-                    <select
-                      value={troopsForm.troopType}
-                      onChange={(e) => setTroopsForm({ ...troopsForm, troopType: e.target.value })}
-                    >
-                      {TROOP_OPTIONS.map((troop) => (
-                        <option key={troop.key} value={troop.key}>
-                          {troop.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>Amount</label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={troopsForm.amount}
-                      onChange={(e) =>
-                        setTroopsForm({
-                          ...troopsForm,
-                          amount: Math.max(0, Math.floor(Number(e.target.value) || 0)),
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-              )}
-
-              {modal === 'buildings' && selectedUser && (
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label>Nexus</label>
-                    <select
-                      value={buildingsForm.nexusId}
-                      onChange={(e) => setBuildingsForm({ ...buildingsForm, nexusId: e.target.value })}
-                    >
-                      {(selectedUser.nexuses || []).map((nexus) => (
-                        <option key={nexus._id} value={nexus._id}>
-                          {nexus.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>Building</label>
-                    <select
-                      value={buildingsForm.building}
-                      onChange={(e) => setBuildingsForm({ ...buildingsForm, building: e.target.value })}
-                    >
-                      {BUILDING_OPTIONS.map((building) => (
-                        <option key={building.key} value={building.key}>
-                          {building.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>Level</label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={buildingsForm.level}
-                      onChange={(e) =>
-                        setBuildingsForm({
-                          ...buildingsForm,
-                          level: Math.max(0, Math.floor(Number(e.target.value) || 0)),
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
-
             <div className="modal-footer">
-              <button className="btn-secondary" onClick={closeModal}>
-                Cancel
-              </button>
-              {modal === 'addUser' && (
-                <button className="btn-primary" onClick={handleAddUser}>
-                  Create User
-                </button>
-              )}
-              {modal === 'editUser' && (
-                <button className="btn-primary" onClick={handleUpdateUser}>
-                  Save Changes
-                </button>
-              )}
-              {modal === 'resources' && (
-                <button className="btn-primary" onClick={handleAdjustResources}>
-                  Apply Resource Change
-                </button>
-              )}
-              {modal === 'troops' && (
-                <>
-                  <button className="btn-primary" onClick={() => handleAdjustTroops('add')}>
-                    Add Troops
-                  </button>
-                  <button className="btn-secondary" onClick={() => handleAdjustTroops('remove')}>
-                    Remove Troops
-                  </button>
-                </>
-              )}
-              {modal === 'buildings' && (
-                <button className="btn-primary" onClick={handleSetBuildingLevel}>
-                  Set Level
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {deleteGalaxyTarget && (
-        <div
-          onClick={() => { setDeleteGalaxyTarget(null); setDeleteGalaxyInput(''); }}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: '1rem' }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{ background: '#0e1430', border: '1px solid #6a2030', borderRadius: 8, padding: '1.5rem', width: '100%', maxWidth: 420, color: '#e0e8ff' }}
-          >
-            <h3 style={{ margin: '0 0 0.75rem', color: '#ff8a8a' }}>Delete Galaxy</h3>
-            <p style={{ margin: '0 0 0.5rem', color: '#c8b0b0' }}>
-              Are you sure you want to delete <strong>{deleteGalaxyTarget.name}</strong>? This will permanently remove all players, nexuses, attacks, and all data in this galaxy.
-            </p>
-            <p style={{ margin: '0 0 1rem', fontSize: '0.9em', color: '#aaa' }}>
-              Type <strong>delete</strong> to confirm.
-            </p>
-            <input
-              type="text"
-              value={deleteGalaxyInput}
-              onChange={(e) => setDeleteGalaxyInput(e.target.value)}
-              placeholder='Type "delete" to confirm'
-              style={{ width: '100%', padding: '0.5rem 0.75rem', borderRadius: 4, border: '1px solid #6a2030', background: '#0c1430', color: '#e0e8ff', marginBottom: '1rem', boxSizing: 'border-box' }}
-            />
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => { setDeleteGalaxyTarget(null); setDeleteGalaxyInput(''); }}
-                style={{ background: 'transparent', border: '1px solid #2c3a78', color: '#e0e8ff', padding: '0.45rem 0.9rem', borderRadius: 4, cursor: 'pointer' }}
-              >
-                Cancel
-              </button>
-              <button
-                disabled={deleteGalaxyInput !== 'delete' || deletingGalaxy}
-                onClick={handleDeleteGalaxy}
-                style={{ background: deleteGalaxyInput === 'delete' ? '#6a2030' : '#2a1a1a', border: '1px solid #6a2030', color: deleteGalaxyInput === 'delete' ? '#ff8a8a' : '#664', padding: '0.45rem 0.9rem', borderRadius: 4, cursor: deleteGalaxyInput === 'delete' ? 'pointer' : 'not-allowed' }}
-              >
-                {deletingGalaxy ? 'Deleting…' : 'Delete Galaxy'}
-              </button>
+              <button className="btn-secondary" onClick={() => setAddUserModal(null)}>Cancel</button>
+              <button className="btn-primary" onClick={handleAddUser}>Create User</button>
             </div>
           </div>
         </div>

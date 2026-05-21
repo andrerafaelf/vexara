@@ -1,10 +1,6 @@
 import { Router } from 'express';
 import * as adminController from '../controllers/adminController.js';
-import { getAlphaInviteStatus } from '../controllers/alphaInviteController.js';
-
 const router = Router();
-
-router.get('/alpha-invite/status', getAlphaInviteStatus);
 
 router.get('/galaxies', adminController.listGalaxies);
 router.post('/galaxies', adminController.createGalaxy);
