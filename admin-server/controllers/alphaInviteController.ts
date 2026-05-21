@@ -25,6 +25,18 @@ export async function getAlphaInviteStatus(_req: Request, res: Response): Promis
   }
 }
 
+export async function sendTestAlphaInvite(req: Request, res: Response): Promise<void> {
+  const { email } = req.body as { email?: string };
+  if (!email) { res.status(400).json({ error: 'email is required' }); return; }
+  try {
+    await sendAlphaInviteAnnouncement(email);
+    res.json({ ok: true, email });
+  } catch (err) {
+    console.error('[alpha-invite-test] send failed for', email, err);
+    res.status(500).json({ error: (err as Error).message });
+  }
+}
+
 export async function blastAlphaInvite(_req: Request, res: Response): Promise<void> {
   if (inFlight) {
     res.status(409).json({ error: 'A blast is already running.' });

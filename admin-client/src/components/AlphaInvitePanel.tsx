@@ -35,6 +35,8 @@ export default function AlphaInvitePanel({ showToast }: Props) {
   const [blasting, setBlasting] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [lastResult, setLastResult] = useState<BlastResult | null>(null);
+  const [testEmail, setTestEmail] = useState('');
+  const [testSending, setTestSending] = useState(false);
 
   const loadStatus = useCallback(async () => {
     try {
@@ -52,6 +54,29 @@ export default function AlphaInvitePanel({ showToast }: Props) {
   useEffect(() => {
     loadStatus();
   }, [loadStatus]);
+
+  const handleTestSend = async () => {
+    if (!testEmail) return;
+    setTestSending(true);
+    try {
+      const res = await fetch(`${ADMIN_API_URL}/alpha-invite/test`, {
+        method: 'POST',
+        headers: { ...authHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: testEmail }),
+      });
+      const data = (await res.json()) as { ok: boolean; email: string } | { error: string };
+      if (!res.ok) {
+        showToast(`Test send failed: ${'error' in data ? data.error : 'Unknown error'}`, 'error');
+      } else {
+        showToast(`Test email sent to ${testEmail}`, 'success');
+        setTestEmail('');
+      }
+    } catch (err) {
+      showToast(`Test send failed: ${(err as Error).message}`, 'error');
+    } finally {
+      setTestSending(false);
+    }
+  };
 
   const handleBlast = async () => {
     setConfirming(false);
@@ -98,6 +123,23 @@ export default function AlphaInvitePanel({ showToast }: Props) {
             <div><strong style={{ color: '#fff' }}>{status.invited}</strong> already invited</div>
             <div><strong style={{ color: '#fff' }}>{status.unsubscribed}</strong> unsubscribed</div>
             <div><strong style={{ color: '#7aa2ff' }}>{status.eligible}</strong> eligible to send</div>
+          </div>
+
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 16 }}>
+            <input
+              type="email"
+              placeholder="Test email address"
+              value={testEmail}
+              onChange={(e) => setTestEmail(e.target.value)}
+              style={{ flex: 1, maxWidth: 280, padding: '0.45rem 0.7rem', background: '#0b0d12', border: '1px solid #2c3a78', borderRadius: 4, color: '#fff', fontSize: '0.9em' }}
+            />
+            <button
+              className="btn-primary"
+              disabled={testSending || !testEmail}
+              onClick={handleTestSend}
+            >
+              {testSending ? 'Sending…' : 'Send test'}
+            </button>
           </div>
 
           <p style={{ color: '#8a98c2', fontSize: '0.85em', marginBottom: 12 }}>
