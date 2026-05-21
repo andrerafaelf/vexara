@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 
+// email service
 const FROM = 'Vexara <hello@vexara.world>';
 const REPLY_TO = 'support@vexara.world';
 const SITE_URL = 'https://vexara.world';
