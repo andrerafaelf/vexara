@@ -339,6 +339,12 @@ export const removeFriend = (friendId: string) =>
 export const getPublicProfile = (username: string) =>
   apiRequest(`/users/${encodeURIComponent(username)}/profile`);
 
+export const changePassword = (currentPassword: string, newPassword: string) =>
+  apiRequest('/users/me/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+
 // Stats
 export const getUserStats = () => apiRequest('/stats/me');
 export const getStatsTimeline = (days: number) => apiRequest(`/stats/timeline?days=${days}`);

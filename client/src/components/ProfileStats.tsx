@@ -1,9 +1,9 @@
 'use client';
 
 import { useAuth } from '@/context/AuthContext';
-import { getUserStats } from '@/services/api';
+import { getUserStats, changePassword } from '@/services/api';
 import { UserStats } from '@/types/game';
-import { Bell, ExternalLink, Heart, LogOut, User as UserIcon } from 'lucide-react';
+import { Bell, ExternalLink, Heart, Lock, LogOut, User as UserIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import '../styles/ProfileStats.css';
@@ -42,8 +42,34 @@ export default function ProfileStats() {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState<'stats' | 'notifications'>('stats');
+  const [tab, setTab] = useState<'stats' | 'notifications' | 'security'>('stats');
+  const [pwCurrent, setPwCurrent] = useState('');
+  const [pwNew, setPwNew] = useState('');
+  const [pwConfirm, setPwConfirm] = useState('');
+  const [pwError, setPwError] = useState<string | null>(null);
+  const [pwSuccess, setPwSuccess] = useState(false);
+  const [pwLoading, setPwLoading] = useState(false);
   usePageReady(!loading, 'profile');
+
+  async function handleChangePassword(e: React.FormEvent) {
+    e.preventDefault();
+    setPwError(null);
+    setPwSuccess(false);
+    if (pwNew !== pwConfirm) { setPwError('New passwords do not match.'); return; }
+    if (pwNew.length < 8) { setPwError('New password must be at least 8 characters.'); return; }
+    setPwLoading(true);
+    try {
+      await changePassword(pwCurrent, pwNew);
+      setPwSuccess(true);
+      setPwCurrent('');
+      setPwNew('');
+      setPwConfirm('');
+    } catch (err: any) {
+      setPwError(err?.response?.data?.error ?? err.message ?? 'Something went wrong.');
+    } finally {
+      setPwLoading(false);
+    }
+  }
 
   useEffect(() => {
     getUserStats()
@@ -100,6 +126,13 @@ export default function ProfileStats() {
           <Bell size={14} aria-hidden="true" />
           <span>Notifications</span>
         </button>
+        <button
+          className={`ps-tab ${tab === 'security' ? 'ps-tab--active' : ''}`}
+          onClick={() => setTab('security')}
+        >
+          <Lock size={14} aria-hidden="true" />
+          <span>Security</span>
+        </button>
         <button className="ps-tab ps-tab--logout" onClick={logout}>
           <LogOut size={14} aria-hidden="true" />
           <span>Logout</span>
@@ -109,6 +142,55 @@ export default function ProfileStats() {
       {tab === 'notifications' && (
         <div className="ps-notif-panel">
           <NotificationSettings />
+        </div>
+      )}
+
+      {tab === 'security' && (
+        <div className="ps-security-panel">
+          <h3 className="ps-section-title">Change password</h3>
+          <form className="ps-pw-form" onSubmit={handleChangePassword}>
+            <div className="ps-pw-field">
+              <label className="ps-pw-label" htmlFor="pw-current">Current password</label>
+              <input
+                id="pw-current"
+                className="ps-pw-input"
+                type="password"
+                autoComplete="current-password"
+                value={pwCurrent}
+                onChange={(e) => setPwCurrent(e.target.value)}
+                required
+              />
+            </div>
+            <div className="ps-pw-field">
+              <label className="ps-pw-label" htmlFor="pw-new">New password</label>
+              <input
+                id="pw-new"
+                className="ps-pw-input"
+                type="password"
+                autoComplete="new-password"
+                value={pwNew}
+                onChange={(e) => setPwNew(e.target.value)}
+                required
+              />
+            </div>
+            <div className="ps-pw-field">
+              <label className="ps-pw-label" htmlFor="pw-confirm">Confirm new password</label>
+              <input
+                id="pw-confirm"
+                className="ps-pw-input"
+                type="password"
+                autoComplete="new-password"
+                value={pwConfirm}
+                onChange={(e) => setPwConfirm(e.target.value)}
+                required
+              />
+            </div>
+            {pwError && <p className="ps-pw-error">{pwError}</p>}
+            {pwSuccess && <p className="ps-pw-success">Password changed. A confirmation email has been sent.</p>}
+            <button className="ps-pw-submit" type="submit" disabled={pwLoading}>
+              {pwLoading ? 'Saving…' : 'Change password'}
+            </button>
+          </form>
         </div>
       )}
 

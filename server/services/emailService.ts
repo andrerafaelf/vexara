@@ -322,6 +322,43 @@ function tplWelcome(email: string, username: string, referralCode: string): Rend
   };
 }
 
+function tplPasswordChanged(email: string, username: string): RenderedEmail {
+  const resetUrl = `${SITE_URL}/forgot-password`;
+  const body = `
+    <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#ffffff;font-weight:600;">Your password was changed</h1>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#c8ccd6;">
+      Hi ${escapeHtml(username)}, the password for your Vexara account was just changed successfully.
+    </p>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#c8ccd6;">
+      If you made this change, no further action is needed.
+    </p>
+    <p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#c8ccd6;">
+      If you didn't do this, your account may be compromised. Reset your password immediately:
+    </p>
+    <div style="text-align:center;">${buttonHtml(resetUrl, 'Reset password now', '#ef4444')}</div>
+    <p style="margin:0;font-size:13px;line-height:1.6;color:#8a90a0;">If you have any questions, reply to this email — it reaches a real person.</p>
+  `;
+  const text = [
+    'Your Vexara password was changed',
+    '',
+    `Hi ${username}, the password for your Vexara account was just changed successfully.`,
+    '',
+    "If you made this change, no further action is needed.",
+    '',
+    "If you didn't do this, your account may be compromised. Reset your password immediately:",
+    `Reset: ${resetUrl}`,
+    '',
+    "If you have any questions, reply to this email — it reaches a real person.",
+    ...renderTextFooter(email, false),
+  ].join('\n');
+  return {
+    subject: 'Your Vexara password was changed',
+    html: renderLayout({ recipientEmail: email, preheader: 'Your Vexara password was just changed. If this wasn\'t you, reset it immediately.', bodyHtml: body, showUnsubscribe: false }),
+    text,
+    showUnsubscribe: false,
+  };
+}
+
 function tplPasswordReset(email: string, username: string, resetUrl: string): RenderedEmail {
   const body = `
     <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#ffffff;font-weight:600;">Reset your password</h1>
@@ -392,4 +429,8 @@ export async function sendWelcome(email: string, username: string, referralCode:
 export async function sendPasswordReset(email: string, username: string, token: string): Promise<void> {
   const resetUrl = `${SITE_URL}/reset-password?token=${encodeURIComponent(token)}`;
   await send(email, tplPasswordReset(email, username, resetUrl));
+}
+
+export async function sendPasswordChanged(email: string, username: string): Promise<void> {
+  await send(email, tplPasswordChanged(email, username));
 }

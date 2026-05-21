@@ -7,5 +7,6 @@ import type { AuthRequest } from '../types/index.js';
 const router = Router();
 
 router.get('/:username/profile', auth, (req, res) => usersController.getPublicProfile(req as AuthRequest, res as Response));
+router.post('/me/change-password', auth, (req, res) => usersController.changePassword(req as AuthRequest, res as Response));
 
 export default router;

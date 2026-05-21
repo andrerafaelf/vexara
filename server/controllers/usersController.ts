@@ -1,10 +1,52 @@
 import type { Response } from 'express';
 import prisma from '../lib/prisma.js';
 import * as friendsService from '../services/friendsService.js';
+import { comparePassword, hashPassword } from '../models/User.js';
+import { sendPasswordChanged } from '../services/emailService.js';
 import type { AuthRequest } from '../types/index.js';
+import { validatePassword } from '../utils/validation.js';
 import { logError } from '../utils/logger.js';
 
 type FriendshipStatus = 'self' | 'none' | 'pending_outgoing' | 'pending_incoming' | 'friends';
+
+export async function changePassword(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const { currentPassword, newPassword } = (req.body ?? {}) as { currentPassword?: string; newPassword?: string };
+
+    if (typeof currentPassword !== 'string' || currentPassword.length === 0) {
+      res.status(400).json({ error: 'Current password is required.' });
+      return;
+    }
+    if (!validatePassword(newPassword)) {
+      res.status(400).json({ error: 'New password must be 8-72 characters.' });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+      select: { id: true, username: true, email: true, password: true },
+    });
+    if (!user) { res.status(404).json({ error: 'User not found.' }); return; }
+
+    const isMatch = await comparePassword(currentPassword, user.password);
+    if (!isMatch) {
+      res.status(400).json({ error: 'Current password is incorrect.' });
+      return;
+    }
+
+    const hashed = await hashPassword(newPassword!);
+    await prisma.user.update({ where: { id: user.id }, data: { password: hashed } });
+
+    sendPasswordChanged(user.email, user.username).catch((err) =>
+      console.error('[emailService] sendPasswordChanged failed:', err),
+    );
+
+    res.json({ ok: true });
+  } catch (error) {
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'usersController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
 
 export async function getPublicProfile(req: AuthRequest, res: Response): Promise<void> {
   try {
