@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { registerReal as registerApi } from '../services/api';
+import PasswordField from './PasswordField';
 import '../styles/Auth.css';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
@@ -129,6 +130,7 @@ const RegistrationForm: React.FC = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [referralCode, setReferralCode] = useState('');
   const [error, setError] = useState('');
   const [emailWarning, setEmailWarning] = useState('');
@@ -184,6 +186,7 @@ const RegistrationForm: React.FC = () => {
     setEmailWarning('');
     const passwordError = getPasswordError(password);
     if (passwordError) { setError(passwordError); return; }
+    if (password !== confirmPassword) { setError('Passwords do not match.'); return; }
     const referralError = getReferralError(referralNormalized);
     if (referralError) { setError(referralError); return; }
 
@@ -315,23 +318,29 @@ const RegistrationForm: React.FC = () => {
                   />
                 </label>
 
-                <label className="auth-field">
-                  <span className="auth-label">Password</span>
-                  <input
-                    type="password"
-                    placeholder="At least 8 characters"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoCapitalize="none"
-                    autoCorrect="off"
-                    autoComplete="new-password"
-                    spellCheck={false}
-                    minLength={8}
-                    maxLength={72}
-                    required
-                    aria-invalid={Boolean(error)}
-                  />
-                </label>
+                <PasswordField
+                  label="Password"
+                  value={password}
+                  onChange={setPassword}
+                  placeholder="At least 8 characters"
+                  autoComplete="new-password"
+                  minLength={8}
+                  maxLength={72}
+                  required
+                  ariaInvalid={Boolean(error)}
+                />
+
+                <PasswordField
+                  label="Confirm password"
+                  value={confirmPassword}
+                  onChange={setConfirmPassword}
+                  placeholder="Repeat your password"
+                  autoComplete="new-password"
+                  minLength={8}
+                  maxLength={72}
+                  required
+                  ariaInvalid={Boolean(error)}
+                />
 
                 <label className="auth-field">
                   <span className="auth-label">Referral code <span style={{ color: 'var(--text-muted, #8a90a0)', fontWeight: 'normal' }}>(optional)</span></span>

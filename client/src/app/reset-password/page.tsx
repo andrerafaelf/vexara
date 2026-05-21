@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import { resetPassword as resetPasswordApi } from '../../services/api';
+import PasswordField from '../../components/PasswordField';
 import '../../styles/Auth.css';
 
 function ResetPasswordInner() {
@@ -69,35 +70,27 @@ function ResetPasswordInner() {
               <p className="auth-form-subheading">8 to 72 characters.</p>
 
               <form className="auth-form" onSubmit={handleSubmit} noValidate>
-                <label className="auth-field">
-                  <span className="auth-label">New password</span>
-                  <input
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoCapitalize="none"
-                    autoCorrect="off"
-                    autoComplete="new-password"
-                    spellCheck={false}
-                    required
-                  />
-                </label>
+                <PasswordField
+                  label="New password"
+                  value={password}
+                  onChange={setPassword}
+                  placeholder="••••••••"
+                  autoComplete="new-password"
+                  minLength={8}
+                  maxLength={72}
+                  required
+                />
 
-                <label className="auth-field">
-                  <span className="auth-label">Confirm password</span>
-                  <input
-                    type="password"
-                    placeholder="••••••••"
-                    value={confirm}
-                    onChange={(e) => setConfirm(e.target.value)}
-                    autoCapitalize="none"
-                    autoCorrect="off"
-                    autoComplete="new-password"
-                    spellCheck={false}
-                    required
-                  />
-                </label>
+                <PasswordField
+                  label="Confirm password"
+                  value={confirm}
+                  onChange={setConfirm}
+                  placeholder="••••••••"
+                  autoComplete="new-password"
+                  minLength={8}
+                  maxLength={72}
+                  required
+                />
 
                 {error && <div className="auth-error" role="alert">{error}</div>}
 

@@ -1202,6 +1202,16 @@
   background: var(--color-navy-800);
 }
 
+.galaxy-events-toggle--pre {
+  color: var(--text-muted);
+  cursor: default;
+  font-variant-numeric: tabular-nums;
+}
+
+.galaxy-events-toggle--pre:hover {
+  background: transparent;
+}
+
 .galaxy-events-chevron {
   margin-left: auto;
   font-size: 9px;

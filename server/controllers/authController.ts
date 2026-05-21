@@ -145,7 +145,7 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
 
     const user = await prisma.user.findUnique({
       where: { emailVerificationToken: token },
-      select: { id: true, username: true, email: true, emailVerifiedAt: true, emailVerificationTokenExpiresAt: true },
+      select: { id: true, username: true, email: true, isSupporter: true, emailVerifiedAt: true, emailVerificationTokenExpiresAt: true },
     });
 
     if (!user) {
@@ -177,7 +177,12 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
       console.error('[emailService] sendWelcome failed:', err),
     );
 
-    res.json({ ok: true });
+    const authToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
+    res.json({
+      ok: true,
+      token: authToken,
+      user: { id: user.id, username: user.username, email: user.email, isSupporter: user.isSupporter },
+    });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'authController.ts' });
     res.status(500).json({ error: 'Internal server error' });

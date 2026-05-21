@@ -46,8 +46,8 @@ export async function getGalaxyEvents(req: AuthRequest, res: Response): Promise<
     const { getActiveGalaxyEvents } = await import('../utils/galaxyEvents.js');
     const user = await prisma.user.findUnique({ where: { id: req.userId }, select: { activeGalaxyId: true } });
     if (!user?.activeGalaxyId) { res.status(409).json({ error: 'No active galaxy' }); return; }
-    const events = await getActiveGalaxyEvents(user.activeGalaxyId);
-    res.json(events);
+    const { events, eventsStartAt } = await getActiveGalaxyEvents(user.activeGalaxyId);
+    res.json({ events, eventsStartAt });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'mapController.ts' });
     res.status(500).json({ error: 'Internal server error' });

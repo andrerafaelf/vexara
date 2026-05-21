@@ -263,6 +263,7 @@ model Nexus {
   points                   Int       @default(5)
   controlLevel             Int       @default(100)
   newbieProtectionEndsAt   DateTime?
+  protectionWarningSentAt  DateTime?
   createdAt                DateTime  @default(now())
   conqueredAt              DateTime?
 
@@ -368,7 +369,7 @@ model Attack {
   galaxyId Int
   galaxy   Galaxy @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
 
-  attackerUserId    Int
+  attackerUserId    Int?
   attackerNexusId Int
   defenderUserId    Int?
   defenderNexusId Int

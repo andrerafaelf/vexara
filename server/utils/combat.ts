@@ -93,11 +93,13 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
         }),
       ]);
 
-      void sendPushToUser(attack.attackerUserId!, NOTIF.TROOP_TRANSFER, {
-        title: 'Support Arrived',
-        body: `Your support troops have arrived at the destination nexus.`,
-        tag: `support-arrived-${attack.id}`, data: { url: '/' },
-      });
+      if (attack.attackerUserId) {
+        void sendPushToUser(attack.attackerUserId, NOTIF.TROOP_TRANSFER, {
+          title: 'Support Arrived',
+          body: `Your support troops have arrived at the destination nexus.`,
+          tag: `support-arrived-${attack.id}`, data: { url: '/' },
+        });
+      }
       if (attack.defenderUserId) {
         void sendPushToUser(attack.defenderUserId, NOTIF.TROOP_TRANSFER, {
           title: 'Reinforcements Arrived',
@@ -127,11 +129,13 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
         },
       });
 
-      void sendPushToUser(attack.attackerUserId!, NOTIF.ATTACK_RESOLVED, {
-        title: '🛰️ Scout Returning',
-        body: '🔭 Your scout mission is complete. Combat report ready!',
-        tag: `scout-${attack.id}`, data: { url: '/combat-logs' },
-      });
+      if (attack.attackerUserId) {
+        void sendPushToUser(attack.attackerUserId, NOTIF.ATTACK_RESOLVED, {
+          title: '🛰️ Scout Returning',
+          body: '🔭 Your scout mission is complete. Combat report ready!',
+          tag: `scout-${attack.id}`, data: { url: '/combat-logs' },
+        });
+      }
       return;
     }
 
@@ -409,15 +413,17 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
       prisma.nexus.findUnique({ where: { id: attack.defenderNexusId! }, select: { name: true, ownerId: true } }),
     ]);
 
-    void sendPushToUser(attack.attackerUserId!, NOTIF.ATTACK_RESOLVED, {
-      title: attackerWins ? (conquered ? 'Nexus Conquered!' : 'Attack Victorious') : 'Attack Repelled',
-      body: attackerWins
-        ? conquered
-          ? `Your forces conquered ${defenderNexusForNotif?.name || 'a nexus'}! Combat report ready.`
-          : `You won the battle at ${defenderNexusForNotif?.name || 'a nexus'}. Troops returning, combat report ready!`
-        : `Your attack on ${defenderNexusForNotif?.name || 'a nexus'} was repelled. Combat report ready.`,
-      tag: `attack-resolved-${attack.id}`, data: { url: '/combat-logs' },
-    });
+    if (attack.attackerUserId) {
+      void sendPushToUser(attack.attackerUserId, NOTIF.ATTACK_RESOLVED, {
+        title: attackerWins ? (conquered ? 'Nexus Conquered!' : 'Attack Victorious') : 'Attack Repelled',
+        body: attackerWins
+          ? conquered
+            ? `Your forces conquered ${defenderNexusForNotif?.name || 'a nexus'}! Combat report ready.`
+            : `You won the battle at ${defenderNexusForNotif?.name || 'a nexus'}. Troops returning, combat report ready!`
+          : `Your attack on ${defenderNexusForNotif?.name || 'a nexus'} was repelled. Combat report ready.`,
+        tag: `attack-resolved-${attack.id}`, data: { url: '/combat-logs' },
+      });
+    }
 
     if (attack.defenderUserId) {
       void sendPushToUser(attack.defenderUserId, NOTIF.ATTACK_INCOMING, {
@@ -433,7 +439,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 
     // Socket push: tell both players to refresh their attack lists and reports.
     notifyAttackUpdate(attack.attackerUserId, attack.defenderUserId, attack.defenderNexusId!);
-    notifyReportUpdate(attack.attackerUserId!);
+    if (attack.attackerUserId) notifyReportUpdate(attack.attackerUserId);
     if (attack.defenderUserId) notifyReportUpdate(attack.defenderUserId);
 
     console.log(`Combat resolved: Attack ${attack.id} - ${attackerWins ? 'Attacker' : 'Defender'} wins${conquered ? ' - NEXUS CONQUERED!' : ''}`);
@@ -471,13 +477,15 @@ async function processReturnedTroops(attack: Attack): Promise<void> {
     const loot = resourcesStolen;
     const hasLoot = (loot.biomass || 0) + (loot.alloy || 0) + (loot.ore || 0) > 0;
 
-    void sendPushToUser(attack.attackerUserId!, NOTIF.TROOPS_RETURNED, {
-      title: '🪖 Troops Returned',
-      body: totalReturned > 0
-        ? `🎖️ ${totalReturned} troop${totalReturned !== 1 ? 's' : ''} returned${hasLoot ? ' with loot 💰' : ''}. Combat report ready!`
-        : '💔 Your troops have returned (no survivors). Combat report ready.',
-      tag: `returned-${attack.id}`, data: { url: '/combat-logs' },
-    });
+    if (attack.attackerUserId) {
+      void sendPushToUser(attack.attackerUserId, NOTIF.TROOPS_RETURNED, {
+        title: '🪖 Troops Returned',
+        body: totalReturned > 0
+          ? `🎖️ ${totalReturned} troop${totalReturned !== 1 ? 's' : ''} returned${hasLoot ? ' with loot 💰' : ''}. Combat report ready!`
+          : '💔 Your troops have returned (no survivors). Combat report ready.',
+        tag: `returned-${attack.id}`, data: { url: '/combat-logs' },
+      });
+    }
 
     // Socket push: attacker sees their outgoing attack disappear and nexus resources update.
     notifyAttackUpdate(attack.attackerUserId, null, attack.attackerNexusId!);

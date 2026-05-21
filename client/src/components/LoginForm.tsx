@@ -6,6 +6,7 @@ import Link from 'next/link';
 import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { login as loginApi, resendVerification as resendVerificationApi } from '../services/api';
+import PasswordField from './PasswordField';
 import '../styles/Auth.css';
 
 const SCREENSHOTS: { src: string; label: string }[] = [
@@ -212,21 +213,16 @@ const LoginForm: React.FC = () => {
               />
             </label>
 
-            <label className="auth-field">
-              <span className="auth-label">Password</span>
-              <input
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoCapitalize="none"
-                autoCorrect="off"
-                autoComplete="current-password"
-                spellCheck={false}
-                required
-                aria-invalid={Boolean(error)}
-              />
-            </label>
+            <PasswordField
+              label="Password"
+              value={password}
+              onChange={setPassword}
+              placeholder="••••••••"
+              autoComplete="current-password"
+              required
+              ariaInvalid={Boolean(error)}
+            />
+
 
             {error && (
               <div className="auth-error" role="alert">

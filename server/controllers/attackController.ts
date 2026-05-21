@@ -137,7 +137,8 @@ export async function getIncomingAttacks(req: AuthRequest, res: Response): Promi
     const userMap = await attackService.getUsersByIds(attackerIds);
     res.json(attacks.map((a) => {
       const u = a.attackerUserId != null ? userMap.get(a.attackerUserId) : undefined;
-      return serializeAttack({ ...a, attackerUsername: u?.username, attackerIsSupporter: u?.isSupporter });
+      const attackerUsername = u?.username ?? (a.attackerUserId == null ? 'Rogue AI' : undefined);
+      return serializeAttack({ ...a, attackerUsername, attackerIsSupporter: u?.isSupporter });
     }));
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'attackController.ts' });

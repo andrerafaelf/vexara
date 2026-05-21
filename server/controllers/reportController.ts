@@ -16,10 +16,11 @@ export async function getReports(req: AuthRequest, res: Response): Promise<void>
     const enriched = await Promise.all(
       reports.map(async (r) => {
         const [attackerUser, defenderUser] = await Promise.all([
-          reportService.getUserById(r.attackerUserId),
+          r.attackerUserId ? reportService.getUserById(r.attackerUserId) : null,
           r.defenderUserId ? reportService.getUserById(r.defenderUserId) : null,
         ]);
-        return serializeAttack({ ...r, attackerUsername: attackerUser?.username, attackerIsSupporter: attackerUser?.isSupporter, defenderUsername: defenderUser?.username, defenderIsSupporter: defenderUser?.isSupporter });
+        const attackerUsername = attackerUser?.username ?? (r.attackerUserId == null ? 'Rogue AI' : undefined);
+        return serializeAttack({ ...r, attackerUsername, attackerIsSupporter: attackerUser?.isSupporter, defenderUsername: defenderUser?.username, defenderIsSupporter: defenderUser?.isSupporter });
       }),
     );
     res.json(enriched);

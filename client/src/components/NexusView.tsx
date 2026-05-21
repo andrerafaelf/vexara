@@ -2682,9 +2682,28 @@ const NewbieProtectionBanner = React.memo(function NewbieProtectionBanner({ ends
   return (
     <div className="newbie-protection-banner">
       <ShieldCheck size={14} className="newbie-protection-icon" aria-hidden="true" />
-      <span className="newbie-protection-text">
-        Newbie Protection. Expires in <strong><Countdown endAt={endMs} /></strong>
-      </span>
+      <div className="newbie-protection-text">
+        <span>
+          Newbie Protection &middot; ends in{' '}
+          <strong>
+            <Countdown
+              endAt={endMs}
+              render={(ms) => {
+                const totalMin = Math.floor(ms / 60_000);
+                const days = Math.floor(totalMin / 1440);
+                const hours = Math.floor((totalMin % 1440) / 60);
+                const minutes = totalMin % 60;
+                if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+                if (hours > 0) return `${hours}h ${minutes}m`;
+                return `${minutes}m`;
+              }}
+            />
+          </strong>
+        </span>
+        <span className="newbie-protection-subtext">
+          New nexuses get 3 days of protection from player attacks. No one can hit you until the timer runs out.
+        </span>
+      </div>
     </div>
   );
 });

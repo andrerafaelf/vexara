@@ -10,6 +10,13 @@ const EVENT_FIRE_CHANCE = 0.55;
 const MAX_ACTIVE_EVENTS = 3;
 // Event TTL when no nexus involved
 const DEFAULT_EVENT_TTL_MS = 72 * 60 * 60 * 1000; // 72 hours
+// Galaxy events are gated for this long after a galaxy opens, so new players have a buffer.
+export const EVENT_START_DELAY_MS = 4 * 24 * 60 * 60 * 1000; // 4 days
+
+export function getEventsStartAt(galaxy: { startsAt: Date | null; createdAt: Date }): Date {
+  const base = galaxy.startsAt ?? galaxy.createdAt;
+  return new Date(base.getTime() + EVENT_START_DELAY_MS);
+}
 
 const EVENT_TYPES = ['derelict_ship', 'resource_storm', 'rogue_ai'] as const;
 type EventType = (typeof EVENT_TYPES)[number];
@@ -189,10 +196,17 @@ async function expireOldEvents(galaxyId: number) {
 
 export async function processGalaxyEvents(): Promise<void> {
   try {
-    const galaxies = await prisma.galaxy.findMany({ where: { status: 'active' }, select: { id: true } });
+    const galaxies = await prisma.galaxy.findMany({
+      where: { status: 'active' },
+      select: { id: true, startsAt: true, createdAt: true },
+    });
 
+    const now = new Date();
     for (const galaxy of galaxies) {
       await expireOldEvents(galaxy.id);
+
+      // Hold off on events until the galaxy has been open for the start delay.
+      if (getEventsStartAt(galaxy).getTime() > now.getTime()) continue;
 
       const activeCount = await prisma.galaxyEvent.count({
         where: { galaxyId: galaxy.id, resolvedAt: null },
@@ -228,10 +242,15 @@ export async function processGalaxyEvents(): Promise<void> {
 }
 
 export async function getActiveGalaxyEvents(galaxyId: number) {
-  return prisma.galaxyEvent.findMany({
-    where: { galaxyId, resolvedAt: null },
-    orderBy: { createdAt: 'desc' },
-  });
+  const [galaxy, events] = await Promise.all([
+    prisma.galaxy.findUnique({ where: { id: galaxyId }, select: { startsAt: true, createdAt: true } }),
+    prisma.galaxyEvent.findMany({
+      where: { galaxyId, resolvedAt: null },
+      orderBy: { createdAt: 'desc' },
+    }),
+  ]);
+  const eventsStartAt = galaxy ? getEventsStartAt(galaxy) : null;
+  return { events, eventsStartAt };
 }
 
 export async function resolveEventForNexus(nexusId: number) {

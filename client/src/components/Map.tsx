@@ -158,6 +158,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
   const [showWavePlanner, setShowWavePlanner] = useState(false);
   const [attackMissionType, setAttackMissionType] = useState<'attack' | 'support'>('attack');
   const [galaxyEvents, setGalaxyEvents] = useState<GalaxyEvent[]>([]);
+  const [eventsStartAt, setEventsStartAt] = useState<string | null>(null);
   const [showEventsPanel, setShowEventsPanel] = useState(false);
 
   const availableTroops = useMemo(() => {
@@ -432,13 +433,19 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
   }, [currentNexus._id]);
 
   useEffect(() => {
-    getGalaxyEvents().then((r) => {
-      setGalaxyEvents(r.data);
-    }).catch(() => {});
+    const apply = (data: { events?: GalaxyEvent[]; eventsStartAt?: string | null } | GalaxyEvent[]) => {
+      // Backward-compat: older server build returned a bare array.
+      if (Array.isArray(data)) {
+        setGalaxyEvents(data);
+        setEventsStartAt(null);
+        return;
+      }
+      setGalaxyEvents(data.events ?? []);
+      setEventsStartAt(data.eventsStartAt ?? null);
+    };
+    getGalaxyEvents().then((r) => apply(r.data)).catch(() => {});
     const interval = setInterval(() => {
-      getGalaxyEvents().then((r) => {
-        setGalaxyEvents(r.data);
-      }).catch(() => {});
+      getGalaxyEvents().then((r) => apply(r.data)).catch(() => {});
     }, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
@@ -1177,7 +1184,33 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
   };
 
   const renderGalaxyEventsPanel = () => {
-    if (mode !== 'normal' || galaxyEvents.length === 0) return null;
+    if (mode !== 'normal') return null;
+
+    const startsAtMs = eventsStartAt ? new Date(eventsStartAt).getTime() : null;
+    const nowMs = currentTimeRef.current.getTime();
+    const isPreStart = startsAtMs != null && startsAtMs > nowMs;
+
+    if (isPreStart) {
+      const diff = startsAtMs! - nowMs;
+      const days = Math.floor(diff / 86_400_000);
+      const hours = Math.floor((diff % 86_400_000) / 3_600_000);
+      const minutes = Math.floor((diff % 3_600_000) / 60_000);
+      const label = days > 0
+        ? `${days}d ${hours}h ${minutes}m`
+        : hours > 0
+          ? `${hours}h ${minutes}m`
+          : `${minutes}m`;
+      return (
+        <div className="galaxy-events-section">
+          <div className="galaxy-events-toggle galaxy-events-toggle--pre" aria-live="polite">
+            <Sparkles size={13} aria-hidden="true" />
+            <span>Galaxy events start in {label}</span>
+          </div>
+        </div>
+      );
+    }
+
+    if (galaxyEvents.length === 0) return null;
     return (
       <div className="galaxy-events-section">
         <button

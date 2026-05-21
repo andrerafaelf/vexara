@@ -130,9 +130,9 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
   useGameSocket({ onAttacksRefresh: () => loadOutgoingAttacks() });
 
   useEffect(() => {
-    getGalaxyEvents().then((r) => setActiveEventCount(r.data.length)).catch(() => {});
+    getGalaxyEvents().then((r) => setActiveEventCount(r.data.events?.length ?? 0)).catch(() => {});
     const interval = setInterval(() => {
-      getGalaxyEvents().then((r) => setActiveEventCount(r.data.length)).catch(() => {});
+      getGalaxyEvents().then((r) => setActiveEventCount(r.data.events?.length ?? 0)).catch(() => {});
     }, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);

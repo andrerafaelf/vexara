@@ -2,8 +2,9 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useRef, useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import { verifyEmail as verifyEmailApi } from '../../services/api';
 import '../../styles/Auth.css';
 
@@ -11,6 +12,8 @@ type Status = 'pending' | 'success' | 'already' | 'error';
 
 function VerifyEmailInner() {
   const params = useSearchParams();
+  const router = useRouter();
+  const { login } = useAuth();
   const token = params.get('token') ?? '';
   const [status, setStatus] = useState<Status>('pending');
   const [errorMessage, setErrorMessage] = useState('');
@@ -29,7 +32,18 @@ function VerifyEmailInner() {
     (async () => {
       try {
         const res = await verifyEmailApi(token);
-        setStatus(res.data?.alreadyVerified ? 'already' : 'success');
+        if (res.data?.alreadyVerified) {
+          setStatus('already');
+          return;
+        }
+        if (res.data?.token && res.data?.user) {
+          login(res.data.token, res.data.user);
+          setStatus('success');
+          // Brief pause so the user sees the confirmation before the redirect.
+          setTimeout(() => router.replace('/'), 1200);
+          return;
+        }
+        setStatus('success');
       } catch (err) {
         const message =
           (err as { response?: { data?: { error?: string } } })?.response?.data?.error ||
@@ -38,7 +52,7 @@ function VerifyEmailInner() {
         setStatus('error');
       }
     })();
-  }, [token]);
+  }, [token, login, router]);
 
   return (
     <div className="auth-container">
@@ -59,10 +73,7 @@ function VerifyEmailInner() {
           {status === 'success' && (
             <>
               <h1 className="auth-form-heading">Email confirmed</h1>
-              <p className="auth-form-subheading">Your account is active. You can sign in now.</p>
-              <Link href="/login" className="auth-submit" style={{ display: 'inline-block', textAlign: 'center', textDecoration: 'none', marginTop: 16 }}>
-                Sign in
-              </Link>
+              <p className="auth-form-subheading">Signing you in…</p>
             </>
           )}
 

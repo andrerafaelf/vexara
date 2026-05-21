@@ -1,0 +1,1 @@
+ALTER TABLE "Attack" ALTER COLUMN "attackerUserId" DROP NOT NULL;
