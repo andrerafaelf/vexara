@@ -276,19 +276,22 @@ export default function WarRoom({ factionId, myRole }: Props) {
     }
   }, []);
 
-  // Debounce timers for socket-driven refreshes so rapid op:update bursts
-  // don't fire one HTTP request per event and hit the rate limiter.
+  // Debounce timers for socket-driven refreshes. With 5+ officers active in
+  // one op, op:update broadcasts can fire many times per second; without a
+  // wide debounce + jitter every client refetches in lockstep and hammers
+  // the limiter. 800ms feels live (socket already pushed the trigger; this
+  // GET only hydrates details) and jitter staggers the herd.
   const refreshListTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const loadOpTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const debouncedRefreshList = useCallback(() => {
     if (refreshListTimerRef.current) clearTimeout(refreshListTimerRef.current);
-    refreshListTimerRef.current = setTimeout(() => refreshList(), 400);
+    refreshListTimerRef.current = setTimeout(() => refreshList(), 800 + Math.random() * 400);
   }, [refreshList]);
 
   const debouncedLoadOperation = useCallback((opId: number) => {
     if (loadOpTimerRef.current) clearTimeout(loadOpTimerRef.current);
-    loadOpTimerRef.current = setTimeout(() => loadOperation(opId), 400);
+    loadOpTimerRef.current = setTimeout(() => loadOperation(opId), 800 + Math.random() * 400);
   }, [loadOperation]);
 
   // load full op when selection changes

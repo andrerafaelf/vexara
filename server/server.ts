@@ -111,8 +111,15 @@ if (process.env.NODE_ENV === 'production') {
           if (decoded?.userId) return `u:${decoded.userId}`;
         } catch {}
       }
-      return `ip:${req.ip ?? 'unknown'}`;
+      // Mobile carriers NAT many users behind one IP. To avoid a whole
+      // carrier sharing one bucket when JWT decode fails (expired token,
+      // PWA waking up, pre-login flows), prefix with the User-Agent hash
+      // so different devices on the same NAT get separate buckets.
+      const ua = req.header('User-Agent') ?? 'unknown';
+      let h = 0; for (let i = 0; i < ua.length; i++) h = ((h << 5) - h + ua.charCodeAt(i)) | 0;
+      return `ip:${req.ip ?? 'unknown'}:${h}`;
     },
+    message: { error: 'Too many requests. Please try again in a minute.' },
   });
   app.use('/api/auth/login', loginLimiter);
   app.use('/api/auth/alpha-signup', alphaSignupLimiter);
