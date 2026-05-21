@@ -130,13 +130,63 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
   const removeWave = (id: string) => setWaves((prev) => prev.filter((w) => w.id !== id));
 
   const updateWaveTroop = (waveId: string, troopType: string, value: number) => {
-    setWaves((prev) =>
-      prev.map((w) => w.id !== waveId ? w : { ...w, troops: { ...w.troops, [troopType]: Math.max(0, value) } }),
-    );
+    setWaves((prev) => {
+      const next = prev.map((w) =>
+        w.id !== waveId ? w : { ...w, troops: { ...w.troops, [troopType]: Math.max(0, value) } },
+      );
+
+      // After updating troops, check if the current arrival time is still
+      // reachable. If the slowest unit in this wave now needs more travel time
+      // than there is before the current arrival, bump the arrival to the
+      // earliest feasible moment (travel + 1 min buffer, rounded to the minute).
+      const updatedWave = next.find((w) => w.id === waveId);
+      if (updatedWave) {
+        const nexus = myNexuses.find((n) => n._id === updatedWave.nexusId);
+        if (nexus) {
+          const travelMin = computeTravelMinutes(nexus, target, updatedWave.troops);
+          if (travelMin > 0) {
+            const minArrivalMs = Date.now() + travelMin * 60 * 1000 + 60_000;
+            setArrivalTime((prev) => {
+              const currentMs = prev ? new Date(prev).getTime() : 0;
+              if (currentMs < minArrivalMs) {
+                const d = new Date(minArrivalMs);
+                d.setSeconds(0, 0);
+                return d.toISOString().slice(0, 16);
+              }
+              return prev;
+            });
+          }
+        }
+      }
+
+      return next;
+    });
   };
 
   const updateWaveNexus = (waveId: string, nexusId: string) => {
-    setWaves((prev) => prev.map((w) => w.id !== waveId ? w : { ...w, nexusId }));
+    setWaves((prev) => {
+      const next = prev.map((w) => w.id !== waveId ? w : { ...w, nexusId });
+      const updatedWave = next.find((w) => w.id === waveId);
+      if (updatedWave) {
+        const nexus = myNexuses.find((n) => n._id === nexusId);
+        if (nexus) {
+          const travelMin = computeTravelMinutes(nexus, target, updatedWave.troops);
+          if (travelMin > 0) {
+            const minArrivalMs = Date.now() + travelMin * 60 * 1000 + 60_000;
+            setArrivalTime((prev) => {
+              const currentMs = prev ? new Date(prev).getTime() : 0;
+              if (currentMs < minArrivalMs) {
+                const d = new Date(minArrivalMs);
+                d.setSeconds(0, 0);
+                return d.toISOString().slice(0, 16);
+              }
+              return prev;
+            });
+          }
+        }
+      }
+      return next;
+    });
   };
 
   const getWaveNexus = (nexusId: string) => myNexuses.find((n) => n._id === nexusId);
