@@ -14,6 +14,16 @@ import '../styles/Admin.css';
 import AlphaInvitePanel from './AlphaInvitePanel';
 import Toast from './Toast';
 
+interface AllUser {
+  _id: string;
+  username: string;
+  email: string;
+  createdAt: string;
+  emailVerified: boolean;
+  hasPendingToken: boolean;
+  galaxyCount: number;
+}
+
 interface UserNexus {
   _id: string;
   name: string;
@@ -128,6 +138,10 @@ const Admin: React.FC = () => {
   const [deleteGalaxyInput, setDeleteGalaxyInput] = useState('');
   const [deletingGalaxy, setDeletingGalaxy] = useState(false);
 
+  const [allUsers, setAllUsers] = useState<AllUser[]>([]);
+  const [allUsersSearch, setAllUsersSearch] = useState('');
+  const [allUsersFilter, setAllUsersFilter] = useState<'all' | 'unverified'>('all');
+
   const [addUserForm, setAddUserForm] = useState({ username: '', email: '', password: '' });
   const [editUserForm, setEditUserForm] = useState({ email: '', password: '' });
   const [resourcesForm, setResourcesForm] = useState({ nexusId: '', biomass: 0, alloy: 0, ore: 0 });
@@ -143,6 +157,7 @@ const Admin: React.FC = () => {
 
   useEffect(() => {
     loadGalaxies();
+    loadAllUsers();
   }, []);
 
   useEffect(() => {
@@ -195,6 +210,16 @@ const Admin: React.FC = () => {
     } catch (err) {
       console.error('Error loading galaxies:', err);
       setLoading(false);
+    }
+  };
+
+  const loadAllUsers = async () => {
+    try {
+      const res = await adminFetch(`${ADMIN_API_URL}/users/all`);
+      const data = await res.json().catch(() => null);
+      setAllUsers(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Error loading all users:', err);
     }
   };
 
@@ -251,6 +276,7 @@ const Admin: React.FC = () => {
 
   const reloadAll = async () => {
     await loadGalaxies();
+    await loadAllUsers();
     if (selectedGalaxyId != null) await loadGalaxyData(selectedGalaxyId);
   };
 
@@ -480,6 +506,26 @@ const Admin: React.FC = () => {
       reloadAll();
     } catch (err) {
       showToast('Error updating building', 'error');
+    }
+  };
+
+  const handleResendVerification = async (userId: string, username: string, currentEmail: string) => {
+    const correctedEmail = window.prompt(`Resend verification email for ${username}.\nCorrect email if needed, or leave as-is:`, currentEmail);
+    if (correctedEmail === null) return;
+    const target = correctedEmail.trim() || currentEmail;
+    try {
+      const res = await adminFetch(`${ADMIN_API_URL}/users/${userId}/resend-verification`, {
+        method: 'POST',
+        body: JSON.stringify({ email: target }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(data.message || `Verification email sent to ${target}`, 'success');
+      } else {
+        showToast(data.error || 'Failed to send verification email', 'error');
+      }
+    } catch {
+      showToast('Error sending verification email', 'error');
     }
   };
 
@@ -749,6 +795,66 @@ const Admin: React.FC = () => {
 
       <AlphaInvitePanel showToast={showToast} />
 
+      {(() => {
+        const term = allUsersSearch.trim().toLowerCase();
+        const filtered = allUsers.filter((u) => {
+          if (allUsersFilter === 'unverified' && u.emailVerified) return false;
+          if (!term) return true;
+          return u.username.toLowerCase().includes(term) || u.email.toLowerCase().includes(term);
+        });
+        return (
+          <div className="admin-section" style={{ marginBottom: 28 }}>
+            <div className="admin-section-header">
+              <h3><Users size={16} aria-hidden="true" /> All Users ({allUsers.length})</h3>
+            </div>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+              <input
+                type="text"
+                placeholder="Search username or email…"
+                value={allUsersSearch}
+                onChange={(e) => setAllUsersSearch(e.target.value)}
+                style={{ flex: '1 1 220px', padding: '0.45rem 0.7rem', background: '#0b0d12', border: '1px solid #2c3a78', borderRadius: 4, color: '#fff', fontSize: '0.9em' }}
+              />
+              <select
+                value={allUsersFilter}
+                onChange={(e) => setAllUsersFilter(e.target.value as 'all' | 'unverified')}
+                style={{ padding: '0.45rem 0.6rem', background: '#0b0d12', border: '1px solid #2c3a78', borderRadius: 4, color: '#e0e8ff', fontSize: '0.9em' }}
+              >
+                <option value="all">All</option>
+                <option value="unverified">Unverified only</option>
+              </select>
+              <span style={{ fontSize: '0.85em', color: '#8a98c2' }}>{filtered.length} shown</span>
+            </div>
+            <div style={{ display: 'grid', gap: 6 }}>
+              {filtered.map((u) => (
+                <div key={u._id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0.55rem 0.8rem', background: '#0e1430', border: '1px solid #1c2a50', borderRadius: 6 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ fontWeight: 600, color: '#e0e8ff' }}>{u.username}</span>
+                    <span style={{ marginLeft: 10, fontSize: '0.85em', color: '#8a98c2' }}>{u.email}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0, fontSize: '0.8em', color: '#8a98c2' }}>
+                    <span title={u.emailVerified ? 'Email verified' : 'Awaiting verification'} style={{ color: u.emailVerified ? '#7df58c' : '#ffb86b' }}>
+                      {u.emailVerified ? '✓ verified' : '⚠ unverified'}
+                    </span>
+                    <span>{u.galaxyCount} {u.galaxyCount === 1 ? 'galaxy' : 'galaxies'}</span>
+                    <span>Joined {new Date(u.createdAt).toLocaleDateString()}</span>
+                    {!u.emailVerified && u.hasPendingToken && (
+                      <button
+                        className="btn-action btn-notif"
+                        style={{ fontSize: '0.8em', padding: '0.2rem 0.5rem' }}
+                        onClick={() => handleResendVerification(u._id, u.username, u.email)}
+                      >
+                        Resend verification
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
       <div className="admin-section" style={{ marginBottom: 28 }}>
         <div className="admin-section-header">
           <h3>Galaxies ({galaxies.length})</h3>
@@ -882,6 +988,9 @@ const Admin: React.FC = () => {
                 <div className="action-divider" />
                 <button className="btn-action btn-reset" onClick={() => handleResetUser(user)}>
                   Reset
+                </button>
+                <button className="btn-action btn-notif" onClick={() => handleResendVerification(user._id, user.username, user.email)}>
+                  Resend verification
                 </button>
                 <button className="btn-action btn-notif" onClick={() => handleTestNotification(user._id, user.username)}>
                   Test notification

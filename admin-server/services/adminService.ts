@@ -22,6 +22,17 @@ export function getGalaxyByName(name: string) {
   return prisma.galaxy.findUnique({ where: { name } });
 }
 
+export function getAllUsers() {
+  return prisma.user.findMany({
+    select: {
+      id: true, username: true, email: true, createdAt: true,
+      emailVerifiedAt: true, emailVerificationToken: true,
+      _count: { select: { galaxyPlayers: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+}
+
 export function getUsersInGalaxy(galaxyId: number) {
   return prisma.user.findMany({
     where: { galaxyPlayers: { some: { galaxyId } } },

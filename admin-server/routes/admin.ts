@@ -1,16 +1,15 @@
 import { Router } from 'express';
 import * as adminController from '../controllers/adminController.js';
-import { blastAlphaInvite, getAlphaInviteStatus, sendTestAlphaInvite } from '../controllers/alphaInviteController.js';
+import { getAlphaInviteStatus } from '../controllers/alphaInviteController.js';
 
 const router = Router();
 
 router.get('/alpha-invite/status', getAlphaInviteStatus);
-router.post('/alpha-invite/test', sendTestAlphaInvite);
-router.post('/alpha-invite/blast', blastAlphaInvite);
 
 router.get('/galaxies', adminController.listGalaxies);
 router.post('/galaxies', adminController.createGalaxy);
 router.delete('/galaxies/:galaxyId', adminController.deleteGalaxy);
+router.get('/users/all', adminController.listAllUsers);
 router.get('/users', adminController.listUsers);
 router.get('/stats', adminController.getStats);
 router.post('/users', adminController.createUser);
@@ -23,6 +22,7 @@ router.post('/users/:userId/complete-build', adminController.completeBuildForUse
 router.post('/users/:userId/complete-training', adminController.completeTrainingForUser);
 router.post('/users/:userId/reset-account', adminController.resetAccount);
 router.delete('/users/:userId', adminController.deleteUser);
+router.post('/users/:userId/resend-verification', adminController.resendVerificationEmail);
 router.post('/users/:userId/test-notification', adminController.testNotification);
 router.post('/nexuses/:nexusId/resources', adminController.giveResourcesToNexus);
 router.post('/nexuses/:nexusId/troops', adminController.addTroopsToNexus);

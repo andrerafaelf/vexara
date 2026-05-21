@@ -58,6 +58,20 @@ export async function deleteGalaxy(req: Request, res: Response): Promise<void> {
   }
 }
 
+export async function listAllUsers(_req: Request, res: Response): Promise<void> {
+  try {
+    const users = await adminService.getAllUsers();
+    res.json(users.map((u) => ({
+      _id: u.id, id: u.id, username: u.username, email: u.email, createdAt: u.createdAt,
+      emailVerified: !!u.emailVerifiedAt,
+      hasPendingToken: !!u.emailVerificationToken,
+      galaxyCount: u._count.galaxyPlayers,
+    })));
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
 export async function listUsers(req: Request, res: Response): Promise<void> {
   try {
     const galaxyId = requireGalaxyId(req, res);
@@ -387,6 +401,22 @@ export async function completeAttack(req: Request, res: Response): Promise<void>
     await adminService.updateAttack(attackId, { arrivesAt: new Date() });
     await processArrivedAttacks();
     res.json({ success: true, message: 'Attack completed' });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
+export async function resendVerificationEmail(req: Request, res: Response): Promise<void> {
+  try {
+    const userId = adminService.toInt(req.params.userId);
+    const { email } = req.body as { email?: string };
+    const user = await adminService.getUserById(userId);
+    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+    if (!user.emailVerificationToken) { res.status(400).json({ error: 'User has no pending verification token' }); return; }
+    const { sendVerifyEmail } = await import('../../server/services/emailService.js');
+    const targetEmail = typeof email === 'string' && email.trim() ? email.trim().toLowerCase() : user.email;
+    await sendVerifyEmail(targetEmail, user.username, user.emailVerificationToken);
+    res.json({ success: true, message: `Verification email sent to ${targetEmail}` });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }
