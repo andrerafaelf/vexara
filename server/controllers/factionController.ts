@@ -841,6 +841,14 @@ export async function requestToJoin(req: AuthRequest, res: Response): Promise<vo
       },
     });
 
+    // Bump badge for every leader/officer of the target faction so the
+    // Factions nav dot lights up live (the count itself comes from /badges).
+    const leaders = await prisma.factionMember.findMany({
+      where: { factionId, role: { in: ['leader', 'officer'] } },
+      select: { userId: true },
+    });
+    for (const l of leaders) notifyBadgeUpdate(l.userId);
+
     res.status(201).json({ id: joinRequest.id });
   } catch (error) {
     const err = error as any;

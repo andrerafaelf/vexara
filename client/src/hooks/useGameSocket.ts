@@ -138,6 +138,9 @@ export function useGameSocket(handlers?: GameSocketHandlers) {
     const onReportsRefresh = () => {
       qc.invalidateQueries({ queryKey: combatKeys.unreadNexusIds() });
       qc.invalidateQueries({ queryKey: ['unreadNexusIds'] });
+      // The unread-nexus list is now baked into /notifications/badges, so the
+      // consolidated query must also refresh when reports change.
+      qc.invalidateQueries({ queryKey: ['notificationBadges'] });
     };
 
     socket.on('attacks:refresh', onAttacksRefresh);

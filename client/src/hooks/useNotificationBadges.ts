@@ -1,36 +1,71 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getNotificationBadges } from '@/services/api';
 import { useGameSocket } from './useGameSocket';
 
 export const NOTIFICATION_BADGES_KEY = ['notificationBadges'] as const;
 
-interface NotificationBadges {
+export interface NotificationBadges {
   tokensAvailable: number;
   factionAttention: number;
+  friendsIncomingRequests: number;
+  friendsUnreadChat: number;
+  unreadReportNexusIds: string[];
 }
 
+const EMPTY_BADGES: NotificationBadges = {
+  tokensAvailable: 0,
+  factionAttention: 0,
+  friendsIncomingRequests: 0,
+  friendsUnreadChat: 0,
+  unreadReportNexusIds: [],
+};
+
 /**
- * Returns flags for the top-nav dots that aren't covered by the existing
- * combat-logs/friends badges: tokens awaiting redemption, and faction actions
- * (invites you've received, treaty proposals directed at a faction you lead).
+ * Single source of truth for top-nav badges. One request per page navigation
+ * covers tokens, faction action items, friends, and combat reports — instead
+ * of fanning out into three separate /badges endpoints that all compete for
+ * the per-user API rate-limit budget.
  */
-export function useNotificationBadges() {
+export function useBadgesQuery() {
   const qc = useQueryClient();
 
   useGameSocket({
     onBadgeRefresh: () => qc.invalidateQueries({ queryKey: NOTIFICATION_BADGES_KEY }),
   });
 
-  const { data } = useQuery<NotificationBadges>({
+  const query = useQuery<NotificationBadges>({
     queryKey: NOTIFICATION_BADGES_KEY,
     queryFn: () => getNotificationBadges().then((r) => r.data),
     staleTime: 60_000,
   });
 
+  return query.data ?? EMPTY_BADGES;
+}
+
+/** Backwards-compatible flags for the Profile + Factions nav dots. */
+export function useNotificationBadges() {
+  const data = useBadgesQuery();
   return {
-    hasTokens: (data?.tokensAvailable ?? 0) > 0,
-    hasFactionAttention: (data?.factionAttention ?? 0) > 0,
+    hasTokens: data.tokensAvailable > 0,
+    hasFactionAttention: data.factionAttention > 0,
   };
+}
+
+/** Derived view used by NexusSidebar/MobileNexusDrawer for combat-log dots. */
+export function useUnreadReportsFromBadges() {
+  const data = useBadgesQuery();
+  const unreadNexusIds = useMemo(() => new Set(data.unreadReportNexusIds), [data.unreadReportNexusIds]);
+  return {
+    hasUnreadReports: data.unreadReportNexusIds.length > 0,
+    unreadNexusIds,
+  };
+}
+
+/** Derived view for the friends/allies nav dot. */
+export function useFriendsUnreadFromBadges() {
+  const data = useBadgesQuery();
+  return data.friendsUnreadChat > 0 || data.friendsIncomingRequests > 0;
 }

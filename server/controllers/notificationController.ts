@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import prisma from '../lib/prisma.js';
 import * as notifService from '../services/notificationService.js';
+import { getUnreadNexusIds as fetchUnreadNexusIds } from '../services/reportService.js';
 import type { AuthRequest } from '../types/index.js';
 import { logError } from '../utils/logger.js';
 
@@ -65,7 +66,17 @@ export async function getBadges(req: AuthRequest, res: Response): Promise<void> 
   try {
     const now = new Date();
 
-    const [referralTokenCount, milestoneTokenCount, factionInvites, leadership, allMemberships, user] = await Promise.all([
+    const [
+      referralTokenCount,
+      milestoneTokenCount,
+      factionInvites,
+      leadership,
+      allMemberships,
+      user,
+      friendsIncomingRequests,
+      friendsUnreadChat,
+      unreadReportNexusIds,
+    ] = await Promise.all([
       prisma.referralToken.count({ where: { referrerId: req.userId, redeemedAt: null } }),
       prisma.milestoneToken.count({ where: { userId: req.userId, redeemedAt: null } }),
       prisma.factionInvite.count({ where: { invitedUserId: req.userId, expiresAt: { gt: now } } }),
@@ -78,16 +89,29 @@ export async function getBadges(req: AuthRequest, res: Response): Promise<void> 
         select: { factionId: true, galaxyId: true },
       }),
       prisma.user.findUnique({ where: { id: req.userId }, select: { lastSeenWarsAt: true } }),
+      prisma.friendRequest.count({ where: { receiverId: req.userId, status: 'pending' } }),
+      prisma.chatMessage.count({ where: { receiverId: req.userId, readAt: null } }),
+      // Mirror /report/unread-nexus-ids: nexus IDs in the active galaxy that own
+      // at least one unread completed combat report.
+      fetchUnreadNexusIds(req.userId, req.galaxyId),
     ]);
 
     let pendingTreaties = 0;
+    let pendingJoinRequests = 0;
     if (leadership.length > 0) {
-      pendingTreaties = await prisma.factionTreaty.count({
-        where: {
-          status: 'pending',
-          OR: leadership.map((l) => ({ targetFactionId: l.factionId, galaxyId: l.galaxyId })),
-        },
-      });
+      [pendingTreaties, pendingJoinRequests] = await Promise.all([
+        prisma.factionTreaty.count({
+          where: {
+            status: 'pending',
+            OR: leadership.map((l) => ({ targetFactionId: l.factionId, galaxyId: l.galaxyId })),
+          },
+        }),
+        prisma.factionJoinRequest.count({
+          where: {
+            OR: leadership.map((l) => ({ factionId: l.factionId, galaxyId: l.galaxyId })),
+          },
+        }),
+      ]);
     }
 
     let unseenWars = 0;
@@ -105,9 +129,15 @@ export async function getBadges(req: AuthRequest, res: Response): Promise<void> 
     }
 
     const tokensAvailable = referralTokenCount + milestoneTokenCount;
-    const factionAttention = factionInvites + pendingTreaties + unseenWars;
+    const factionAttention = factionInvites + pendingTreaties + unseenWars + pendingJoinRequests;
 
-    res.json({ tokensAvailable, factionAttention });
+    res.json({
+      tokensAvailable,
+      factionAttention,
+      friendsIncomingRequests,
+      friendsUnreadChat,
+      unreadReportNexusIds,
+    });
   } catch (err) {
     logError('badges_error', { userId: req.userId, message: (err as Error).message });
     res.status(500).json({ error: 'Failed to fetch badges' });

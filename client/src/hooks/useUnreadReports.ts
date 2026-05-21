@@ -1,34 +1,22 @@
 'use client';
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo } from 'react';
-import { getUnreadNexusIds } from '@/services/api';
-import { useGameSocket } from './useGameSocket';
+import { useQueryClient } from '@tanstack/react-query';
+import { NOTIFICATION_BADGES_KEY, useUnreadReportsFromBadges } from './useNotificationBadges';
 
-const UNREAD_NEXUS_IDS_KEY = ['unreadNexusIds'] as const;
-
+/**
+ * Combat-log unread state for nav dots + nexus row indicators.
+ *
+ * The list of unread-report nexus IDs is bundled into /notifications/badges
+ * so this hook does NOT fire its own request. It reads from the cached badge
+ * query and offers a refresh() that invalidates the same cache. The
+ * `reports:refresh` socket event is wired through useGameSocket and
+ * invalidates `notificationBadges`, so live updates still work.
+ */
 export function useUnreadReports() {
-  const queryClient = useQueryClient();
+  const qc = useQueryClient();
+  const { hasUnreadReports, unreadNexusIds } = useUnreadReportsFromBadges();
 
-  // useGameSocket already invalidates ['unreadNexusIds'] on 'reports:refresh' events.
-  useGameSocket();
+  const refresh = () => qc.invalidateQueries({ queryKey: NOTIFICATION_BADGES_KEY });
 
-  const { data = [] } = useQuery<string[]>({
-    queryKey: UNREAD_NEXUS_IDS_KEY,
-    queryFn: () => getUnreadNexusIds().then((r) => (Array.isArray(r.data) ? r.data : [])),
-    staleTime: 60_000,
-  });
-
-  // Memoize the Set so its identity is stable across renders when the data array hasn't changed.
-  // Without this, every consumer of `unreadNexusIds` would re-render on every parent render even
-  // when the contents are unchanged, defeating React.memo on the sidebar.
-  const unreadNexusIds = useMemo(() => new Set(data), [data]);
-
-  const refresh = () => queryClient.invalidateQueries({ queryKey: UNREAD_NEXUS_IDS_KEY });
-
-  return {
-    hasUnreadReports: data.length > 0,
-    unreadNexusIds,
-    refresh,
-  };
+  return { hasUnreadReports, unreadNexusIds, refresh };
 }

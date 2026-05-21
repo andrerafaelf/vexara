@@ -21,6 +21,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReferralsTab from './ReferralsTab';
 import Username from './Username';
 import { usePageReady } from './NavigationProgress';
+import { useNotificationBadges } from '@/hooks/useNotificationBadges';
 
 type TabId = 'friends' | 'requests' | 'chat' | 'referrals';
 
@@ -84,6 +85,7 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
   const [sending, setSending] = useState(false);
   const [initialLoaded, setInitialLoaded] = useState(false);
   usePageReady(initialLoaded, 'allies');
+  const { hasTokens } = useNotificationBadges();
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const lastMessageIdRef = useRef<string | null>(null);
@@ -319,6 +321,9 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
         >
           <MessageSquare size={14} aria-hidden="true" />
           <span>Chat</span>
+          {conversations.some((c) => c.unreadCount > 0) && (
+            <span className="friends-tab-dot" aria-label="Unread messages" />
+          )}
         </button>
         <button
           className={`friends-tab ${tab === 'referrals' ? 'active' : ''}`}
@@ -326,6 +331,7 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
         >
           <GitBranch size={14} aria-hidden="true" />
           <span>Referrals</span>
+          {hasTokens && <span className="friends-tab-dot" aria-label="Tokens available to redeem" />}
         </button>
       </div>
 

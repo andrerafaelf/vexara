@@ -158,7 +158,7 @@ export default function GameLayout({
           <button className={`nav-btn${is('allies') ? ' active' : ''}`} onClick={nav('/allies')} onMouseEnter={prefetchOnHover('/allies')} onFocus={prefetchOnHover('/allies')}>
             <span className="nav-btn-content">
               Allies
-              {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
+              {(hasUnreadFriends || hasTokens) && <span className="combat-report-dot" aria-label="Unread ally activity or tokens to redeem" />}
             </span>
           </button>
           <button className={`nav-btn${is('factions') ? ' active' : ''}`} onClick={nav('/factions')} onMouseEnter={prefetchOnHover('/factions')} onFocus={prefetchOnHover('/factions')}>
@@ -168,10 +168,7 @@ export default function GameLayout({
             </span>
           </button>
           <button className={`nav-btn${is('profile') ? ' active' : ''}`} onClick={nav('/profile')} onMouseEnter={prefetchOnHover('/profile')} onFocus={prefetchOnHover('/profile')}>
-            <span className="nav-btn-content">
-              Profile
-              {hasTokens && <span className="combat-report-dot" aria-label="Tokens available to spend" />}
-            </span>
+            Profile
           </button>
         </div>
 
@@ -239,7 +236,7 @@ export default function GameLayout({
           <button className={`nav-btn${is('allies') ? ' active' : ''}`} onClick={nav('/allies')}>
             <span className="nav-btn-content">
               Allies
-              {hasUnreadFriends && <span className="combat-report-dot" aria-label="Unread ally activity" />}
+              {(hasUnreadFriends || hasTokens) && <span className="combat-report-dot" aria-label="Unread ally activity or tokens to redeem" />}
             </span>
           </button>
           <button className={`nav-btn${is('factions') ? ' active' : ''}`} onClick={nav('/factions')}>
@@ -249,10 +246,7 @@ export default function GameLayout({
             </span>
           </button>
           <button className={`nav-btn${is('profile') ? ' active' : ''}`} onClick={nav('/profile')}>
-            <span className="nav-btn-content">
-              Profile
-              {hasTokens && <span className="combat-report-dot" aria-label="Tokens available to spend" />}
-            </span>
+            Profile
           </button>
           <a
             href={KOFI_URL}
