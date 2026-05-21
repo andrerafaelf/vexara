@@ -166,35 +166,55 @@ function tplAlphaWelcome(email: string): RenderedEmail {
 function tplAlphaInviteAnnouncement(email: string): RenderedEmail {
   const registerUrl = `${SITE_URL}/register`;
   const body = `
-    <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#ffffff;font-weight:600;">Alpha is open</h1>
+    <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#ffffff;font-weight:600;">Alpha starts Saturday</h1>
+    <p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#c8ccd6;">
+      You're on the waitlist, so you get to know first.
+    </p>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:16px 0 24px;width:100%;">
+      <tr>
+        <td style="padding:16px 20px;background:#0b0d12;border:1px solid #1c2230;border-radius:10px;">
+          <div style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#8a90a0;margin-bottom:6px;">Registration opens</div>
+          <div style="font-size:20px;font-weight:700;color:#ffffff;margin-bottom:4px;">Saturday, 23 May 2026 &mdash; 19:30 WEST</div>
+          <div style="font-size:13px;color:#8a90a0;">18:30 UTC &nbsp;&middot;&nbsp; 20:30 Paris &nbsp;&middot;&nbsp; 14:30 New York &nbsp;&middot;&nbsp; 11:30 Los Angeles</div>
+        </td>
+      </tr>
+    </table>
     <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#c8ccd6;">
-      You're getting this first because you signed up to the waitlist. Vexara is now open. Come create your account and start your first galaxy.
+      The link below goes live at that time. Bookmark it now &mdash; the first players in get the founder&apos;s badge and a permanent leaderboard mark.
     </p>
     <div style="text-align:center;">${buttonHtml(registerUrl, 'Create your account', '#3b82f6')}</div>
     <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#8a90a0;">
-      Tip: a friend can give you their referral code at signup. You don't need one to play.
+      If a friend gave you their referral code, enter it at signup. You don&apos;t need one to play.
     </p>
     <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#c8ccd6;">
-      Join the Discord for bug reports, patch notes, and dev updates.
+      Join the Discord for launch updates, bug reports, and strategy talk.
     </p>
     <div style="text-align:center;">${buttonHtml(DISCORD_URL, 'Join the Discord')}</div>
+    <p style="margin:0;font-size:14px;line-height:1.6;color:#8a90a0;">Questions? Just reply to this email. It reaches a real person.</p>
   `;
   const text = [
-    'Alpha is open',
+    'Vexara alpha starts Saturday, 23 May 2026',
     '',
-    "You're getting this first because you signed up to the waitlist. Vexara is now open. Come create your account and start your first galaxy.",
+    "You're on the waitlist, so you get to know first.",
+    '',
+    'Registration opens: Saturday, 23 May 2026 at 19:30 WEST (18:30 UTC)',
+    'That\'s 20:30 Paris · 14:30 New York · 11:30 Los Angeles.',
+    '',
+    'The link below goes live at that time. Bookmark it now — the first players in get the founder\'s badge and a permanent leaderboard mark.',
     '',
     `Create your account: ${registerUrl}`,
     '',
-    "Tip: a friend can give you their referral code at signup. You don't need one to play.",
+    "If a friend gave you their referral code, enter it at signup. You don't need one to play.",
     '',
-    'Join the Discord for bug reports, patch notes, and dev updates.',
+    'Join the Discord for launch updates, bug reports, and strategy talk.',
     `Discord: ${DISCORD_URL}`,
+    '',
+    'Questions? Just reply to this email. It reaches a real person.',
     ...renderTextFooter(email, true),
   ].join('\n');
   return {
-    subject: 'Vexara alpha is open',
-    html: renderLayout({ recipientEmail: email, preheader: 'Vexara alpha is open. Create your account and start your first galaxy.', bodyHtml: body }),
+    subject: 'Vexara alpha starts Saturday at 19:30',
+    html: renderLayout({ recipientEmail: email, preheader: 'Registration opens Saturday, 23 May 2026 at 19:30 WEST (18:30 UTC). Founder badges for the first players in.', bodyHtml: body }),
     text,
     showUnsubscribe: true,
   };
