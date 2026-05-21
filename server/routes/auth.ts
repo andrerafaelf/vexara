@@ -4,7 +4,6 @@ import {
   alphaSignupCount,
   login,
   register,
-  registerReal,
   requestPasswordReset,
   resendVerification,
   resetPassword,
@@ -13,9 +12,7 @@ import {
 
 const router = Router();
 
-// LAUNCH SWAP: change `register` to `registerReal` to enable real account creation.
 router.post('/register', register);
-router.post('/register-real', registerReal);
 router.post('/login', login);
 router.post('/verify-email', verifyEmail);
 router.post('/resend-verification', resendVerification);

@@ -274,12 +274,12 @@ const LoginForm: React.FC = () => {
           <p className="auth-secondary">
             Don&apos;t have an account?{' '}
             <Link href="/register" className="auth-link">
-              Request alpha access
+              Create one
             </Link>
           </p>
 
           <p className="auth-secondary auth-support">
-            Vexara is in alpha and runs on a small server.{' '}
+            Vexara runs on a small server.{' '}
             <a
               href="https://ko-fi.com/andrerfferreira"
               target="_blank"

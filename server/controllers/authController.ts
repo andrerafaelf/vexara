@@ -32,13 +32,7 @@ function pickUtm(value: unknown): string | null {
   return typeof value === 'string' && value.length > 0 ? value.slice(0, 64) : null;
 }
 
-// Disabled until alpha opens. Route wires this in place of `registerReal`.
-// To enable real registration: swap `register` → `registerReal` in routes/auth.ts.
-export async function register(_req: Request, res: Response): Promise<void> {
-  res.status(403).json({ error: 'Registration is disabled' });
-}
-
-export async function registerReal(req: Request, res: Response): Promise<void> {
+export async function register(req: Request, res: Response): Promise<void> {
   try {
     const body = (req.body ?? {}) as {
       username?: string;
@@ -145,7 +139,7 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
 
     const user = await prisma.user.findUnique({
       where: { emailVerificationToken: token },
-      select: { id: true, username: true, email: true, isSupporter: true, emailVerifiedAt: true, emailVerificationTokenExpiresAt: true },
+      select: { id: true, username: true, email: true, isSupporter: true, referralCode: true, emailVerifiedAt: true, emailVerificationTokenExpiresAt: true },
     });
 
     if (!user) {
@@ -173,7 +167,7 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
       },
     });
 
-    sendWelcome(user.email, user.username).catch((err) =>
+    sendWelcome(user.email, user.username, user.referralCode).catch((err) =>
       console.error('[emailService] sendWelcome failed:', err),
     );
 

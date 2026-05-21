@@ -9,8 +9,22 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Vexara',
-  description: 'Strategic conquest game in a neon-lit cyberpunk universe',
+  description: 'Browser-based 4X strategy. A living galaxy shared by real players — build, conquer, and dominate 24/7. No resets. No pay-to-win.',
   manifest: '/manifest.json',
+  openGraph: {
+    title: 'Vexara',
+    description: 'Browser-based 4X strategy. A living galaxy shared by real players — build, conquer, and dominate 24/7. No resets. No pay-to-win.',
+    url: 'https://vexara.world',
+    siteName: 'Vexara',
+    images: [{ url: 'https://vexara.world/vexara-overview.png', width: 1280, height: 720, alt: 'Vexara nexus overview' }],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Vexara',
+    description: 'Browser-based 4X strategy. A living galaxy shared by real players — build, conquer, and dominate 24/7.',
+    images: ['https://vexara.world/vexara-overview.png'],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',

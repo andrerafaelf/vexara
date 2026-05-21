@@ -125,6 +125,7 @@ if (process.env.NODE_ENV === 'production') {
     message: { error: 'Too many requests. Please try again in a minute.' },
   });
   app.use('/api/auth/login', loginLimiter);
+  app.use('/api/auth/register', loginLimiter);
   app.use('/api/auth/alpha-signup', alphaSignupLimiter);
   app.use('/api/', apiLimiter);
 }

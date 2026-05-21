@@ -229,17 +229,43 @@ function tplVerifyEmail(email: string, username: string, verifyUrl: string): Ren
   };
 }
 
-function tplWelcome(email: string, username: string): RenderedEmail {
+function tplWelcome(email: string, username: string, referralCode: string): RenderedEmail {
   const playUrl = `${SITE_URL}/galaxies`;
+  const inviteUrl = `${SITE_URL}/register?ref=${encodeURIComponent(referralCode)}`;
+  const safeCode = escapeHtml(referralCode);
   const body = `
     <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#ffffff;font-weight:600;">Welcome to Vexara, ${escapeHtml(username)}</h1>
     <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#c8ccd6;">
       Your account is active. Pick a galaxy, claim your first nexus, and start building.
     </p>
     <div style="text-align:center;">${buttonHtml(playUrl, 'Enter the game', '#3b82f6')}</div>
+
+    <h2 style="margin:28px 0 12px;font-size:15px;line-height:1.4;color:#ffffff;font-weight:600;">Invite your friends</h2>
+    <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#c8ccd6;">
+      This is your personal referral code. Share it with friends &mdash; when they reach 1,000 influence points, you earn 2 reward tokens redeemable for instant building levels or troop grants.
+    </p>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px;width:100%;">
+      <tr>
+        <td align="center" style="padding:14px 16px;background:#0b0d12;border:1px solid #1c2230;border-radius:10px;">
+          <div style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#8a90a0;margin-bottom:6px;">Your referral code</div>
+          <div style="font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:22px;font-weight:700;letter-spacing:0.18em;color:#ffffff;">${safeCode}</div>
+        </td>
+      </tr>
+    </table>
+    <p style="margin:0 0 8px;font-size:14px;line-height:1.6;color:#c8ccd6;">
+      Or send friends this one-click invite link:
+    </p>
+    <p style="margin:0 0 16px;font-size:13px;line-height:1.6;color:#7aa2ff;word-break:break-all;">
+      <a href="${inviteUrl}" style="color:#7aa2ff;text-decoration:underline;">${inviteUrl}</a>
+    </p>
+    <p style="margin:0 0 20px;font-size:13px;line-height:1.6;color:#8a90a0;">
+      The link pre-fills the referral field at signup, so they don't have to type anything.
+    </p>
+
     <h2 style="margin:24px 0 12px;font-size:15px;line-height:1.4;color:#ffffff;font-weight:600;">A few pointers</h2>
     <ul style="margin:0 0 16px;padding:0 0 0 20px;font-size:15px;line-height:1.7;color:#c8ccd6;">
-      <li>Found a friend? Share your referral code from the Referrals page.</li>
+      <li>Build your Command Core early &mdash; it speeds up every upgrade you queue afterwards.</li>
+      <li>Scout before you strike. A Recon Operative is cheaper than a wiped fleet.</li>
       <li>Hit a bug or want to talk strategy? The Discord is the place.</li>
     </ul>
     <div style="text-align:center;">${buttonHtml(DISCORD_URL, 'Join the Discord')}</div>
@@ -252,8 +278,15 @@ function tplWelcome(email: string, username: string): RenderedEmail {
     '',
     `Enter the game: ${playUrl}`,
     '',
+    'Invite your friends',
+    `Your referral code: ${referralCode}`,
+    `Invite link: ${inviteUrl}`,
+    'When a friend you referred reaches 1,000 influence points, you earn 2 reward tokens',
+    'redeemable for instant building levels or troop grants.',
+    '',
     'A few pointers:',
-    '  - Found a friend? Share your referral code from the Referrals page.',
+    '  - Build your Command Core early - it speeds up every upgrade you queue afterwards.',
+    '  - Scout before you strike. A Recon Operative is cheaper than a wiped fleet.',
     '  - Hit a bug or want to talk strategy? The Discord is the place.',
     '',
     `Discord: ${DISCORD_URL}`,
@@ -332,8 +365,8 @@ export async function sendVerifyEmail(email: string, username: string, token: st
   await send(email, tplVerifyEmail(email, username, verifyUrl));
 }
 
-export async function sendWelcome(email: string, username: string): Promise<void> {
-  await send(email, tplWelcome(email, username));
+export async function sendWelcome(email: string, username: string, referralCode: string): Promise<void> {
+  await send(email, tplWelcome(email, username, referralCode));
 }
 
 export async function sendPasswordReset(email: string, username: string, token: string): Promise<void> {

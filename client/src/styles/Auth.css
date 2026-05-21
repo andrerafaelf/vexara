@@ -533,6 +533,14 @@
   font-weight: 600;
 }
 
+.auth-tos-note {
+  color: var(--text-muted);
+  font-size: var(--text-xs, 11px);
+  line-height: 1.5;
+  margin-top: var(--space-3);
+  text-align: center;
+}
+
 .auth-secondary {
   color: var(--text-muted);
   font-size: var(--text-sm);
