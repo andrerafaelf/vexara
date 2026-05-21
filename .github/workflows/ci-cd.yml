@@ -73,6 +73,8 @@ jobs:
               - 'server/**'
             admin-server:
               - 'admin-server/**'
+              - 'server/services/emailService.ts'
+              - 'server/lib/**'
             client:
               - 'client/**'
             admin-client:
