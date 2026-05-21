@@ -367,6 +367,11 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
           rangeRef.current = newRange;
           setVisibleRange(newRange);
         }
+      } else if (e.touches.length === 1) {
+        // Prevent page scroll while panning the map with one finger.
+        // This must be in the non-passive listener (passive: false above) —
+        // React's synthetic onTouchMove is passive and ignores preventDefault.
+        e.preventDefault();
       }
     };
 
@@ -523,10 +528,6 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 1) {
-      // In espionage mode, don't start a drag on single-finger touch, let
-      // the browser scroll the page vertically. Tapping a cell still selects
-      // a spy target (see handleGridClick).
-      if (mode === 'espionage') return;
       touchDraggedRef.current = false;
       const touch = e.touches[0];
       setIsDragging(true);
@@ -541,7 +542,6 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
     if (e.touches.length === 2) {
       return;
     }
-    if (mode === 'espionage') return;
     if (!isDragging || e.touches.length !== 1) return;
     const touch = e.touches[0];
     const deltaX = touch.clientX - dragStart.x;

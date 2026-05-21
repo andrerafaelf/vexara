@@ -219,6 +219,7 @@ export default function WarRoom({ factionId, myRole }: Props) {
   const socket = useWarRoomSocket(true);
   const selectedOpIdRef = useRef<number | null>(null);
   selectedOpIdRef.current = selectedOpId;
+  const mainPaneRef = useRef<HTMLDivElement>(null);
   // Stable refs for the socket methods. The `socket` object's identity
   // changes whenever peers/cursors/typing update (presence broadcasts arrive
   // constantly), but the methods themselves are useCallback-stable. Pinning
@@ -388,7 +389,11 @@ export default function WarRoom({ factionId, myRole }: Props) {
           operations={operations}
           selectedOpId={selectedOpId}
           now={now}
-          onSelect={(id) => { setSelectedOpId(id); setMobileTab('board'); }}
+          onSelect={(id) => {
+            setSelectedOpId(id);
+            setMobileTab('board');
+            mainPaneRef.current?.scrollTo({ top: 0 });
+          }}
           onCreate={() => setShowCreate(true)}
           canManage={canManage}
           peers={socket.peers}
@@ -418,7 +423,7 @@ export default function WarRoom({ factionId, myRole }: Props) {
           </div>
         )}
 
-        <div className="warroom-main">
+        <div className="warroom-main" ref={mainPaneRef}>
           {selectedOpId == null ? (
             <EmptyState canManage={canManage} onCreate={() => setShowCreate(true)} />
           ) : opLoading || !selectedOp ? null : (
