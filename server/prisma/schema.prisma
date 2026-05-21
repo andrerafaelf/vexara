@@ -146,6 +146,15 @@ model NotificationPreferences {
   troopComplete     Boolean @default(true)
   resourcesFull     Boolean @default(true)
   troopTransfer     Boolean @default(true)
+  factionInvite      Boolean @default(true)
+  factionPromotion   Boolean @default(true)
+  factionWar         Boolean @default(true)
+  factionDiplomacy   Boolean @default(true)
+  friendRequest      Boolean @default(true)
+  friendMessage      Boolean @default(true)
+  nearbyGalaxyEvent  Boolean @default(true)
+  protectionExpiring Boolean @default(true)
+  tokenGranted       Boolean @default(true)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

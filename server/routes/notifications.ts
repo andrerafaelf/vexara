@@ -11,5 +11,6 @@ router.post('/subscribe', auth, (req, res) => notifController.subscribe(req as A
 router.delete('/subscribe', auth, (req, res) => notifController.unsubscribe(req as AuthRequest, res as Response));
 router.get('/preferences', auth, (req, res) => notifController.getPreferences(req as AuthRequest, res as Response));
 router.patch('/preferences', auth, (req, res) => notifController.updatePreferences(req as AuthRequest, res as Response));
+router.get('/badges', auth, (req, res) => notifController.getBadges(req as AuthRequest, res as Response));
 
 export default router;

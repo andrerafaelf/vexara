@@ -1,8 +1,10 @@
 import type { Response } from 'express';
+import prisma from '../lib/prisma.js';
 import * as chatService from '../services/chatService.js';
 import { notifyBadgeUpdate } from '../services/warRoomSocket.js';
 import type { AuthRequest } from '../types/index.js';
 import { logError } from '../utils/logger.js';
+import { NOTIF, sendPushToUser } from '../utils/push.js';
 
 const MAX_MESSAGE_LENGTH = 2000;
 const DEFAULT_PAGE_SIZE = 50;
@@ -78,6 +80,16 @@ export async function sendMessage(req: AuthRequest, res: Response): Promise<void
     if (!friendship) { res.status(403).json({ error: 'Not friends' }); return; }
     const message = await chatService.createMessage(req.userId, friendId, content);
     notifyBadgeUpdate(friendId);
+
+    const sender = await prisma.user.findUnique({ where: { id: req.userId }, select: { username: true } });
+    const preview = content.length > 80 ? `${content.slice(0, 80)}…` : content;
+    void sendPushToUser(friendId, NOTIF.FRIEND_MESSAGE, {
+      title: `New message from ${sender?.username ?? 'a friend'}`,
+      body: preview,
+      tag: `friend-message-${req.userId}`,
+      data: { url: '/allies' },
+    });
+
     res.json(serializeMessage(message));
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'chatController.ts' });

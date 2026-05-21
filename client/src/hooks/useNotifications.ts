@@ -17,6 +17,15 @@ export interface NotificationPreferences {
   troopComplete: boolean;
   resourcesFull: boolean;
   troopTransfer: boolean;
+  factionInvite: boolean;
+  factionPromotion: boolean;
+  factionWar: boolean;
+  factionDiplomacy: boolean;
+  friendRequest: boolean;
+  friendMessage: boolean;
+  nearbyGalaxyEvent: boolean;
+  protectionExpiring: boolean;
+  tokenGranted: boolean;
 }
 
 const DEFAULT_PREFS: NotificationPreferences = {
@@ -27,6 +36,15 @@ const DEFAULT_PREFS: NotificationPreferences = {
   troopComplete: true,
   resourcesFull: true,
   troopTransfer: true,
+  factionInvite: true,
+  factionPromotion: true,
+  factionWar: true,
+  factionDiplomacy: true,
+  friendRequest: true,
+  friendMessage: true,
+  nearbyGalaxyEvent: true,
+  protectionExpiring: true,
+  tokenGranted: true,
 };
 
 function urlBase64ToUint8Array(base64String: string): ArrayBuffer {

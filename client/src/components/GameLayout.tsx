@@ -6,6 +6,7 @@ import NexusSidebar from '@/components/NexusSidebar';
 import { useAuth } from '@/context/AuthContext';
 import { useFriendsUnread } from '@/hooks/useFriendsUnread';
 import { useMyNexuses } from '@/hooks/useMyNexuses';
+import { useNotificationBadges } from '@/hooks/useNotificationBadges';
 import { useUnreadReports } from '@/hooks/useUnreadReports';
 import '@/styles/Game.css';
 import { Nexus } from '@/types/game';
@@ -47,6 +48,7 @@ export default function GameLayout({
   const pathname = usePathname();
   const startProgress = useStartProgress();
   const hasUnreadFriends = useFriendsUnread();
+  const { hasTokens, hasFactionAttention } = useNotificationBadges();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNexusDrawerOpen, setIsNexusDrawerOpen] = useState(false);
 
@@ -160,10 +162,16 @@ export default function GameLayout({
             </span>
           </button>
           <button className={`nav-btn${is('factions') ? ' active' : ''}`} onClick={nav('/factions')} onMouseEnter={prefetchOnHover('/factions')} onFocus={prefetchOnHover('/factions')}>
-            Factions
+            <span className="nav-btn-content">
+              Factions
+              {hasFactionAttention && <span className="combat-report-dot" aria-label="Faction action required" />}
+            </span>
           </button>
           <button className={`nav-btn${is('profile') ? ' active' : ''}`} onClick={nav('/profile')} onMouseEnter={prefetchOnHover('/profile')} onFocus={prefetchOnHover('/profile')}>
-            Profile
+            <span className="nav-btn-content">
+              Profile
+              {hasTokens && <span className="combat-report-dot" aria-label="Tokens available to spend" />}
+            </span>
           </button>
         </div>
 
@@ -235,10 +243,16 @@ export default function GameLayout({
             </span>
           </button>
           <button className={`nav-btn${is('factions') ? ' active' : ''}`} onClick={nav('/factions')}>
-            Factions
+            <span className="nav-btn-content">
+              Factions
+              {hasFactionAttention && <span className="combat-report-dot" aria-label="Faction action required" />}
+            </span>
           </button>
           <button className={`nav-btn${is('profile') ? ' active' : ''}`} onClick={nav('/profile')}>
-            Profile
+            <span className="nav-btn-content">
+              Profile
+              {hasTokens && <span className="combat-report-dot" aria-label="Tokens available to spend" />}
+            </span>
           </button>
           <a
             href={KOFI_URL}

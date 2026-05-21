@@ -1,9 +1,11 @@
 import type { Response } from 'express';
+import prisma from '../lib/prisma.js';
 import * as chatService from '../services/chatService.js';
 import * as friendsService from '../services/friendsService.js';
 import { notifyBadgeUpdate } from '../services/warRoomSocket.js';
 import type { AuthRequest } from '../types/index.js';
 import { logError } from '../utils/logger.js';
+import { NOTIF, sendPushToUser } from '../utils/push.js';
 
 function serializeFriend(user: { id: number; username: string; isSupporter: boolean }, friendshipCreatedAt: Date, points: number | undefined) {
   return { id: String(user.id), username: user.username, isSupporter: user.isSupporter, points: points ?? 0, friendsSince: friendshipCreatedAt };
@@ -48,6 +50,15 @@ export async function sendFriendRequest(req: AuthRequest, res: Response): Promis
     await friendsService.createFriendRequest(req.userId, target.id);
     // Notify the target that they have a new incoming friend request.
     notifyBadgeUpdate(target.id);
+
+    const sender = await prisma.user.findUnique({ where: { id: req.userId }, select: { username: true } });
+    void sendPushToUser(target.id, NOTIF.FRIEND_REQUEST, {
+      title: 'New friend request',
+      body: `${sender?.username ?? 'A commander'} wants to be friends.`,
+      tag: `friend-request-${req.userId}`,
+      data: { url: '/allies' },
+    });
+
     res.json({ success: true });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'friendsController.ts' });

@@ -1,8 +1,9 @@
 import type { Response } from 'express';
 import prisma from '../lib/prisma.js';
-import { notifyFactionChat } from '../services/warRoomSocket.js';
+import { notifyBadgeUpdate, notifyFactionChat } from '../services/warRoomSocket.js';
 import type { AuthRequest } from '../types/index.js';
 import { logError } from '../utils/logger.js';
+import { NOTIF, sendPushToUser } from '../utils/push.js';
 
 const FACTION_NAME_MIN = 3;
 const FACTION_NAME_MAX = 32;
@@ -310,6 +311,18 @@ export async function inviteToFaction(req: AuthRequest, res: Response): Promise<
       },
     });
 
+    const [factionRow, inviter] = await Promise.all([
+      prisma.faction.findUnique({ where: { id: factionId }, select: { name: true, tag: true } }),
+      prisma.user.findUnique({ where: { id: req.userId }, select: { username: true } }),
+    ]);
+    void sendPushToUser(invitedUser.id, NOTIF.FACTION_INVITE, {
+      title: 'Faction invite',
+      body: `${inviter?.username ?? 'A leader'} invited you to ${factionRow?.name ? `[${factionRow.tag}] ${factionRow.name}` : 'a faction'}.`,
+      tag: `faction-invite-${invite.id}`,
+      data: { url: '/factions' },
+    });
+    notifyBadgeUpdate(invitedUser.id);
+
     res.status(201).json({ id: invite.id, expiresAt: invite.expiresAt });
   } catch (error) {
     const err = error as any;
@@ -492,6 +505,16 @@ export async function setMemberRole(req: AuthRequest, res: Response): Promise<vo
 
     const eventType = role === 'officer' ? 'member_promoted' : 'member_demoted';
     await logEvent(factionId, eventType, callerUser?.username, targetUser?.username);
+
+    if (role === 'officer' && target.role !== 'officer') {
+      const factionRow = await prisma.faction.findUnique({ where: { id: factionId }, select: { name: true, tag: true } });
+      void sendPushToUser(targetUserId, NOTIF.FACTION_PROMOTION, {
+        title: 'Promoted to officer',
+        body: `${callerUser?.username ?? 'Your leader'} promoted you to officer in ${factionRow ? `[${factionRow.tag}] ${factionRow.name}` : 'your faction'}.`,
+        tag: `faction-promotion-${factionId}-${targetUserId}`,
+        data: { url: '/factions' },
+      });
+    }
 
     res.json({ success: true });
   } catch (error) {

@@ -13,6 +13,15 @@ const PREF_LABELS: { key: keyof NotificationPreferences; label: string; descript
   { key: 'troopComplete', label: 'Training Complete', description: 'When a troop training batch finishes' },
   { key: 'resourcesFull', label: 'Storage Full', description: 'When all resources hit max capacity' },
   { key: 'troopTransfer', label: 'Troop Transfer', description: 'When transferred troops arrive or return' },
+  { key: 'protectionExpiring', label: 'Protection Expiring', description: '24h before newbie protection ends on a nexus' },
+  { key: 'tokenGranted', label: 'Tokens Earned', description: 'When you earn referral or reward tokens' },
+  { key: 'friendRequest', label: 'Friend Requests', description: 'When someone sends you a friend request' },
+  { key: 'friendMessage', label: 'Private Messages', description: 'When a friend sends you a message' },
+  { key: 'factionInvite', label: 'Faction Invites', description: 'When a faction invites you to join' },
+  { key: 'factionPromotion', label: 'Faction Promotions', description: 'When you are promoted to officer' },
+  { key: 'factionWar', label: 'Faction Wars', description: 'When war is declared on your faction' },
+  { key: 'factionDiplomacy', label: 'Faction Diplomacy', description: 'When a treaty is proposed or signed' },
+  { key: 'nearbyGalaxyEvent', label: 'Nearby Galaxy Events', description: 'When a rogue AI, storm or derelict spawns near your nexuses' },
 ];
 
 export default function NotificationSettings() {

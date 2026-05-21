@@ -11,13 +11,22 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
 }
 
 export const NOTIF = {
-  ATTACK_INCOMING:   'attackIncoming',
-  ATTACK_RESOLVED:   'attackResolved',
-  TROOPS_RETURNED:   'troopsReturned',
-  BUILDING_COMPLETE: 'buildingComplete',
-  TROOP_COMPLETE:    'troopComplete',
-  RESOURCES_FULL:    'resourcesFull',
-  TROOP_TRANSFER:    'troopTransfer',
+  ATTACK_INCOMING:     'attackIncoming',
+  ATTACK_RESOLVED:     'attackResolved',
+  TROOPS_RETURNED:     'troopsReturned',
+  BUILDING_COMPLETE:   'buildingComplete',
+  TROOP_COMPLETE:      'troopComplete',
+  RESOURCES_FULL:      'resourcesFull',
+  TROOP_TRANSFER:      'troopTransfer',
+  FACTION_INVITE:      'factionInvite',
+  FACTION_PROMOTION:   'factionPromotion',
+  FACTION_WAR:         'factionWar',
+  FACTION_DIPLOMACY:   'factionDiplomacy',
+  FRIEND_REQUEST:      'friendRequest',
+  FRIEND_MESSAGE:      'friendMessage',
+  NEARBY_GALAXY_EVENT: 'nearbyGalaxyEvent',
+  PROTECTION_EXPIRING: 'protectionExpiring',
+  TOKEN_GRANTED:       'tokenGranted',
 } as const;
 
 export type NotifCategory = (typeof NOTIF)[keyof typeof NOTIF];

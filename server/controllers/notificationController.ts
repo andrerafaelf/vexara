@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express';
+import prisma from '../lib/prisma.js';
 import * as notifService from '../services/notificationService.js';
 import type { AuthRequest } from '../types/index.js';
 import { logError } from '../utils/logger.js';
@@ -36,21 +37,66 @@ export async function unsubscribe(req: AuthRequest, res: Response): Promise<void
   }
 }
 
+const PREF_KEYS = [
+  'attackIncoming', 'attackResolved', 'troopsReturned', 'buildingComplete',
+  'troopComplete', 'resourcesFull', 'troopTransfer',
+  'factionInvite', 'factionPromotion', 'factionWar', 'factionDiplomacy',
+  'friendRequest', 'friendMessage',
+  'nearbyGalaxyEvent', 'protectionExpiring', 'tokenGranted',
+] as const;
+
 export async function getPreferences(req: AuthRequest, res: Response): Promise<void> {
   try {
     const prefs = await notifService.getPreferences(req.userId);
-    res.json(prefs || {
-      attackIncoming: true, attackResolved: true, troopsReturned: true, buildingComplete: true,
-      troopComplete: true, resourcesFull: true, troopTransfer: true,
-    });
+    const defaults = Object.fromEntries(PREF_KEYS.map((k) => [k, true]));
+    res.json(prefs || defaults);
   } catch (err) {
     logError('get_prefs_error', { userId: req.userId, message: (err as Error).message });
     res.status(500).json({ error: 'Failed to fetch preferences' });
   }
 }
 
+/**
+ * Aggregate badge counts for the top nav: tokens awaiting redemption, plus whether
+ * the user has a faction action pending (an unanswered invite, or a treaty proposal
+ * directed at a faction they lead/officer for).
+ */
+export async function getBadges(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const now = new Date();
+
+    const [referralTokenCount, milestoneTokenCount, factionInvites, leadership] = await Promise.all([
+      prisma.referralToken.count({ where: { referrerId: req.userId, redeemedAt: null } }),
+      prisma.milestoneToken.count({ where: { userId: req.userId, redeemedAt: null } }),
+      prisma.factionInvite.count({ where: { invitedUserId: req.userId, expiresAt: { gt: now } } }),
+      prisma.factionMember.findMany({
+        where: { userId: req.userId, role: { in: ['leader', 'officer'] } },
+        select: { factionId: true, galaxyId: true },
+      }),
+    ]);
+
+    let pendingTreaties = 0;
+    if (leadership.length > 0) {
+      pendingTreaties = await prisma.factionTreaty.count({
+        where: {
+          status: 'pending',
+          OR: leadership.map((l) => ({ targetFactionId: l.factionId, galaxyId: l.galaxyId })),
+        },
+      });
+    }
+
+    const tokensAvailable = referralTokenCount + milestoneTokenCount;
+    const factionAttention = factionInvites + pendingTreaties;
+
+    res.json({ tokensAvailable, factionAttention });
+  } catch (err) {
+    logError('badges_error', { userId: req.userId, message: (err as Error).message });
+    res.status(500).json({ error: 'Failed to fetch badges' });
+  }
+}
+
 export async function updatePreferences(req: AuthRequest, res: Response): Promise<void> {
-  const allowed = ['attackIncoming', 'attackResolved', 'troopsReturned', 'buildingComplete', 'troopComplete', 'resourcesFull', 'troopTransfer'];
+  const allowed = PREF_KEYS as readonly string[];
   const updates: Record<string, boolean> = {};
   for (const key of allowed) {
     if (typeof (req.body as Record<string, unknown>)[key] === 'boolean') updates[key] = (req.body as Record<string, boolean>)[key];

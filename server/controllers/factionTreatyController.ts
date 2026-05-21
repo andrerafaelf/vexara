@@ -2,6 +2,36 @@ import type { Response } from 'express';
 import prisma from '../lib/prisma.js';
 import type { AuthRequest } from '../types/index.js';
 import { logError } from '../utils/logger.js';
+import { NOTIF, sendPushToUser } from '../utils/push.js';
+import { notifyBadgeUpdate } from '../services/warRoomSocket.js';
+
+const TREATY_LABELS: Record<string, string> = {
+  nap: 'Non-Aggression Pact',
+  trade: 'Trade Agreement',
+  vassal: 'Vassalage',
+};
+
+async function notifyDiplomacyLeaders(
+  factionId: number,
+  galaxyId: number,
+  title: string,
+  body: string,
+  tag: string,
+) {
+  const leaders = await prisma.factionMember.findMany({
+    where: { factionId, galaxyId, role: { in: ['leader', 'officer'] } },
+    select: { userId: true },
+  });
+  for (const l of leaders) {
+    void sendPushToUser(l.userId, NOTIF.FACTION_DIPLOMACY, {
+      title,
+      body,
+      tag,
+      data: { url: '/factions' },
+    });
+    notifyBadgeUpdate(l.userId);
+  }
+}
 
 const VALID_TREATY_TYPES = ['nap', 'trade', 'vassal'] as const;
 type TreatyType = (typeof VALID_TREATY_TYPES)[number];
@@ -73,6 +103,14 @@ export async function proposeTreaty(req: AuthRequest, res: Response): Promise<vo
       },
     });
 
+    void notifyDiplomacyLeaders(
+      parsedTarget,
+      req.galaxyId,
+      'Treaty proposed',
+      `[${member.faction.tag}] ${member.faction.name} proposed a ${TREATY_LABELS[type] ?? type}. Awaiting your response.`,
+      `treaty-proposed-${treaty.id}`,
+    );
+
     res.json(treaty);
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionTreatyController.ts' });
@@ -110,6 +148,14 @@ export async function acceptTreaty(req: AuthRequest, res: Response): Promise<voi
         updatedAt: now,
       },
     });
+
+    void notifyDiplomacyLeaders(
+      treaty.proposerFactionId,
+      req.galaxyId,
+      'Treaty accepted',
+      `[${member.faction.tag}] ${member.faction.name} accepted your ${TREATY_LABELS[treaty.type] ?? treaty.type}.`,
+      `treaty-accepted-${treaty.id}`,
+    );
 
     res.json(updated);
   } catch (error) {

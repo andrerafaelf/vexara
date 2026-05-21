@@ -1,5 +1,7 @@
 import { randomInt } from 'crypto';
 import prisma from '../lib/prisma.js';
+import { NOTIF, sendPushToUser } from '../utils/push.js';
+import { notifyBadgeUpdate } from './warRoomSocket.js';
 
 export const REFERRAL_THRESHOLD = 1000;
 export const MILESTONE_THRESHOLD = 500;
@@ -76,6 +78,15 @@ export async function checkAndGrantToken(refereeId: number, currentPoints: numbe
     ],
     skipDuplicates: true,
   });
+
+  const refereeUser = await prisma.user.findUnique({ where: { id: refereeId }, select: { username: true } });
+  void sendPushToUser(referee.referredById, NOTIF.TOKEN_GRANTED, {
+    title: 'You earned 2 referral tokens',
+    body: `${refereeUser?.username ?? 'Your referral'} hit ${REFERRAL_THRESHOLD} points — you can spend the tokens from your Referrals tab.`,
+    tag: `token-referral-${refereeId}-${galaxyId}`,
+    data: { url: '/profile' },
+  });
+  notifyBadgeUpdate(referee.referredById);
 }
 
 export async function getReferralStatus(referrerId: number) {

@@ -385,6 +385,8 @@ export const updateNotificationPreferences = (prefs: Partial<Record<string, bool
     body: JSON.stringify(prefs),
   });
 
+export const getNotificationBadges = () => apiRequest('/notifications/badges');
+
 // Referrals
 export const getMyReferrals = () => apiRequest('/referral');
 export const getMyPendingTokens = () => apiRequest('/referral/pending');

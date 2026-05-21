@@ -1,6 +1,38 @@
 import prisma from '../lib/prisma.js';
 import { logInfo } from './logger.js';
 import { createNeutralNexus } from './neutralNexuses.js';
+import { NOTIF, sendPushToUser } from './push.js';
+
+const NEARBY_EVENT_RADIUS = 15;
+
+async function notifyOwnersNearEvent(
+  galaxyId: number,
+  x: number,
+  y: number,
+  title: string,
+  body: string,
+  tag: string,
+) {
+  const owners = await prisma.nexus.findMany({
+    where: {
+      galaxyId,
+      ownerId: { not: null },
+      x: { gte: x - NEARBY_EVENT_RADIUS, lte: x + NEARBY_EVENT_RADIUS },
+      y: { gte: y - NEARBY_EVENT_RADIUS, lte: y + NEARBY_EVENT_RADIUS },
+    },
+    select: { ownerId: true },
+    distinct: ['ownerId'],
+  });
+  for (const o of owners) {
+    if (!o.ownerId) continue;
+    void sendPushToUser(o.ownerId, NOTIF.NEARBY_GALAXY_EVENT, {
+      title,
+      body,
+      tag,
+      data: { url: '/starfield' },
+    });
+  }
+}
 
 // How often events can fire per galaxy (ms between rolls)
 const EVENT_ROLL_INTERVAL_MS = 4 * 60 * 60 * 1000; // 4 hours
@@ -234,6 +266,14 @@ export async function processGalaxyEvents(): Promise<void> {
 
       if (created) {
         logInfo('galaxy_event_spawned', { galaxyId: galaxy.id, type: chosen, eventId: created.id });
+        if (created.x != null && created.y != null) {
+          await notifyOwnersNearEvent(
+            galaxy.id, created.x, created.y,
+            created.title,
+            `${created.title} at (${created.x}|${created.y}) — check the galaxy map.`,
+            `galaxy-event-${created.id}`,
+          );
+        }
       }
     }
   } catch (err) {

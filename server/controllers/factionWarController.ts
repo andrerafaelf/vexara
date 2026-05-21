@@ -2,6 +2,7 @@ import type { Response } from 'express';
 import prisma from '../lib/prisma.js';
 import type { AuthRequest } from '../types/index.js';
 import { logError } from '../utils/logger.js';
+import { NOTIF, sendPushToUser } from '../utils/push.js';
 
 async function getMembership(userId: number, galaxyId: number) {
   return prisma.factionMember.findUnique({
@@ -56,6 +57,19 @@ export async function declareWar(req: AuthRequest, res: Response): Promise<void>
         { factionId: targetFactionId, type: 'war_declared_received', targetName: null, actorName: war.declarerFaction.name, meta: String(war.id) },
       ],
     });
+
+    const targetMembers = await prisma.factionMember.findMany({
+      where: { factionId: targetFactionId, galaxyId: req.galaxyId! },
+      select: { userId: true },
+    });
+    for (const m of targetMembers) {
+      void sendPushToUser(m.userId, NOTIF.FACTION_WAR, {
+        title: 'War declared on your faction',
+        body: `[${war.declarerFaction.tag}] ${war.declarerFaction.name} just declared war on you.`,
+        tag: `faction-war-${war.id}`,
+        data: { url: '/factions' },
+      });
+    }
 
     res.json({ war: serializeWar(war) });
   } catch (error) {
