@@ -212,6 +212,9 @@ export default function WarRoom({ factionId, myRole }: Props) {
   const [now, setNow] = useState(Date.now());
   const [myNexuses, setMyNexuses] = useState<Nexus[]>([]);
   const [showCreate, setShowCreate] = useState(false);
+  // On narrow viewports the board and thread can't both fit, so they share
+  // space via this tab. Ignored on desktop (CSS shows both panes).
+  const [mobileTab, setMobileTab] = useState<'board' | 'thread'>('board');
 
   const socket = useWarRoomSocket(true);
   const selectedOpIdRef = useRef<number | null>(null);
@@ -380,16 +383,40 @@ export default function WarRoom({ factionId, myRole }: Props) {
         currentUserId={currentUserId}
       />
 
-      <div className="warroom-body">
+      <div className={`warroom-body warroom-body--tab-${mobileTab}`}>
         <OperationsRail
           operations={operations}
           selectedOpId={selectedOpId}
           now={now}
-          onSelect={(id) => setSelectedOpId(id)}
+          onSelect={(id) => { setSelectedOpId(id); setMobileTab('board'); }}
           onCreate={() => setShowCreate(true)}
           canManage={canManage}
           peers={socket.peers}
         />
+
+        {selectedOp && (
+          <div className="warroom-mobile-tabs" role="tablist">
+            <button
+              role="tab"
+              aria-selected={mobileTab === 'board'}
+              className={`warroom-mobile-tab ${mobileTab === 'board' ? 'is-active' : ''}`}
+              onClick={() => setMobileTab('board')}
+            >
+              <Radar size={13} /> Board
+            </button>
+            <button
+              role="tab"
+              aria-selected={mobileTab === 'thread'}
+              className={`warroom-mobile-tab ${mobileTab === 'thread' ? 'is-active' : ''}`}
+              onClick={() => setMobileTab('thread')}
+            >
+              <Crosshair size={13} /> Thread
+              {selectedOp.thread.length > 0 && (
+                <span className="warroom-mobile-tab-badge">{selectedOp.thread.length}</span>
+              )}
+            </button>
+          </div>
+        )}
 
         <div className="warroom-main">
           {selectedOpId == null ? (

@@ -8,7 +8,11 @@
   background: var(--color-navy-900);
   border-radius: var(--radius-sm);
   overflow: hidden;
+  /* dvh = dynamic viewport height; doesn't include the mobile URL bar, so
+     the layout doesn't jump when iOS Safari/Chrome collapse the chrome on
+     scroll. Falls back to vh on older browsers. */
   height: calc(100vh - 240px);
+  height: calc(100dvh - 240px);
   min-height: 560px;
   font-variant-numeric: tabular-nums;
 }
@@ -1514,17 +1518,98 @@
 .warroom-star-dot--neutral { background: #ff9e3d; color: #ff9e3d; }
 .warroom-star-dot--unowned { background: #8b95b2; color: #8b95b2; }
 
+/* ── Mobile pane tabs (hidden on desktop) ──────────────────────────────── */
+
+.warroom-mobile-tabs { display: none; }
+
+.warroom-mobile-tab {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 12px 8px;
+  cursor: pointer;
+  min-height: 44px;
+  font-family: inherit;
+  position: relative;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.warroom-mobile-tab.is-active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  background: rgba(255,158,61,0.04);
+}
+.warroom-mobile-tab-badge {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 8px;
+  min-width: 16px;
+  text-align: center;
+}
+
 /* ── Responsive ────────────────────────────────────────────────────────── */
 
+/* Tablet / small laptop: drop the third column. The thread joins the
+   board/main column via the mobile-tabs switcher so it isn't lost.
+   We use a 2-col flow with the tabs as a stacked sibling above the main
+   pane inside its own subgrid wrapper, simpler than juggling row indices. */
 @media (max-width: 1100px) {
   .warroom-body {
     grid-template-columns: 220px 1fr;
+    grid-template-rows: 1fr;
   }
+  .warroom-rail {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .warroom-mobile-tabs {
+    display: flex;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    background: rgba(0,0,0,0.18);
+    grid-column: 2;
+    grid-row: 1;
+    align-self: start;
+  }
+  /* When tabs are present we need them stacked above the main/thread.
+     Use a nested flex on the second column via a contents wrapper trick:
+     stack mobile-tabs + main/thread in column 2 by giving them all
+     grid-column:2 and using implicit row flow. */
+  .warroom-body { grid-auto-rows: min-content 1fr; }
+  .warroom-mobile-tabs { grid-row: 1; }
+  .warroom-main,
   .warroom-thread {
-    display: none;
+    grid-column: 2;
+    grid-row: 2;
+    border-left: none;
+  }
+  /* Rail needs to span both rows so it stays full height. */
+  .warroom-rail { grid-row: 1 / span 2; }
+  .warroom-body--tab-board .warroom-thread { display: none; }
+  .warroom-body--tab-thread .warroom-main { display: none; }
+  /* If no operation is selected, no tabs render — main pane should still
+     fill, so collapse the empty tab row by selecting only when tabs exist. */
+  .warroom-body:not(:has(.warroom-mobile-tabs)) {
+    grid-template-rows: 1fr;
+  }
+  .warroom-body:not(:has(.warroom-mobile-tabs)) .warroom-main,
+  .warroom-body:not(:has(.warroom-mobile-tabs)) .warroom-thread {
+    grid-row: 1;
   }
 }
 
+/* Tablet portrait: starfield in the create-modal stacks under the form. */
 @media (max-width: 820px) {
   .warroom-modal-body--two-col {
     grid-template-columns: 1fr;
@@ -1533,9 +1618,11 @@
     overflow: visible;
   }
   .warroom-modal-left { overflow-y: visible; }
-  .warroom-starfield { min-height: 320px; }
+  .warroom-starfield { min-height: 280px; }
 }
 
+/* Phone: rail across the top, board OR thread below via tabs, dvh-based
+   height so iOS URL-bar collapse doesn't reflow the viewport. */
 @media (max-width: 760px) {
   .warroom {
     height: auto;
@@ -1543,25 +1630,146 @@
   }
   .warroom-body {
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto;
+    grid-template-rows: auto auto 1fr;
+    min-height: calc(100dvh - 200px);
   }
   .warroom-rail {
+    grid-column: 1;
+    grid-row: 1;
     border-right: none;
     border-bottom: 1px solid rgba(255,255,255,0.06);
-    max-height: 260px;
+    max-height: none;
   }
-  .warroom-rail-list { flex-direction: row; overflow-x: auto; flex-wrap: nowrap; }
-  .warroom-rail-item { min-width: 220px; }
+  .warroom-rail-head { padding: 10px 12px; }
+  .warroom-rail-list {
+    flex-direction: row;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding: 8px 12px;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+  }
+  .warroom-rail-item {
+    min-width: 220px;
+    scroll-snap-align: start;
+  }
+  .warroom-mobile-tabs {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .warroom-main,
+  .warroom-thread {
+    grid-column: 1;
+    grid-row: 3;
+  }
 
+  /* Header: keep LIVE pill + avatar stack, drop the wordy "X officers planning"
+     so it fits on a single row on phones. */
+  .warroom-header { padding: 10px 12px; }
+  .warroom-presence-count { display: none; }
+  .warroom-presence svg { display: none; }
+
+  /* Board header: name + status pill on row 1, target on row 2, actions
+     wrap below as a full-width row. */
+  .warroom-board { padding: 12px 12px 24px; gap: 12px; }
+  .warroom-board-header {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+  }
+  .warroom-board-title { flex-wrap: wrap; gap: 6px; }
+  .warroom-board-title h2 { font-size: 16px; }
+  .warroom-board-target {
+    grid-column: 1;
+    grid-row: 2;
+    flex-wrap: wrap;
+  }
+  .warroom-board-actions {
+    grid-column: 1;
+    grid-row: 3;
+    flex-wrap: wrap;
+  }
+  .warroom-viewing-here { margin-left: 0; }
+
+  /* Arrival tile: stack everything vertically, large countdown stays prominent. */
+  .warroom-arrival {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    padding: 12px 14px;
+    gap: 2px;
+  }
+  .warroom-arrival-time { font-size: 24px; }
+  .warroom-arrival-abs {
+    grid-column: 1;
+    grid-row: 3;
+    text-align: left;
+  }
+
+  /* Slot rows: two-row layout, troops wrap onto their own line. */
   .warroom-slot {
     grid-template-columns: 1fr auto;
     grid-template-rows: auto auto;
-    gap: 4px;
+    gap: 6px 8px;
+    padding: 10px;
   }
   .warroom-slot-launch { grid-column: 2; grid-row: 1; }
   .warroom-slot-troops { grid-column: 1 / -1; grid-row: 2; }
 
-  .warroom-board-actions { grid-column: 1; grid-row: 3; }
-  .warroom-arrival { grid-template-columns: 1fr; }
-  .warroom-arrival-abs { grid-column: 1; grid-row: 3; text-align: left; }
+  /* Touch targets: bring primary actions to >=44px so they're tappable. */
+  .warroom-claim-cta,
+  .warroom-send-now { padding: 12px 14px; min-height: 44px; font-size: 13px; }
+  .warroom-primary-btn { padding: 10px 14px; min-height: 40px; }
+  .warroom-ghost-btn { padding: 8px 12px; min-height: 36px; }
+  .warroom-icon-btn { padding: 8px; min-width: 36px; min-height: 36px; }
+
+  /* Inputs: 16px font prevents iOS Safari from zooming on focus. */
+  .warroom-field-input,
+  .warroom-thread-input,
+  .warroom-claim-troop-input {
+    font-size: 16px;
+  }
+  .warroom-claim-troop-input { width: 60px; padding: 6px 6px; }
+
+  /* Claim/wave troop grids: single column on the smallest screens so each
+     row has comfortable space; auto-fill at minmax(140px) caused 2 cramped
+     columns on 380px wide phones. */
+  .warroom-claim-troops,
+  .warroom-add-wave-troops,
+  .warroom-wave-quota-chips {
+    grid-template-columns: 1fr 1fr;
+  }
+  .warroom-claim-form-row .warroom-field { min-width: 0; flex-basis: 100%; }
+  .warroom-add-wave-meta input.warroom-field-input { min-width: 0; flex-basis: 100%; }
+
+  /* Timeline: a hair smaller, axis labels can wrap. */
+  .warroom-timeline { padding: 10px 12px 16px; }
+
+  /* Thread input: respect iOS home indicator. */
+  .warroom-thread-form {
+    padding: 10px 12px max(10px, env(safe-area-inset-bottom));
+  }
+
+  /* Modal: tighter padding, full-width on small screens. */
+  .warroom-modal-overlay { padding: 0; }
+  .warroom-modal {
+    max-width: 100%;
+    max-height: 100dvh;
+    height: 100dvh;
+    border-radius: 0;
+  }
+  .warroom-modal-body { padding: 14px; }
+  .warroom-modal-body--two-col {
+    padding: 12px;
+    gap: 12px;
+  }
+  .warroom-starfield { min-height: 240px; }
+}
+
+/* Very small phones: drop chip grids to a single column. */
+@media (max-width: 420px) {
+  .warroom-claim-troops,
+  .warroom-add-wave-troops,
+  .warroom-wave-quota-chips {
+    grid-template-columns: 1fr;
+  }
+  .warroom-arrival-time { font-size: 22px; }
 }
