@@ -2,6 +2,7 @@ import type { Response } from 'express';
 import prisma from '../lib/prisma.js';
 import type { AuthRequest, TroopCounts } from '../types/index.js';
 import { logError } from '../utils/logger.js';
+import { containsBlockedChatWord } from '../utils/profanity.js';
 import {
   broadcastOperationDeleted,
   broadcastOperationUpdate,
@@ -691,6 +692,10 @@ export async function postThreadMessage(req: AuthRequest, res: Response): Promis
     }
     if (content.length > MESSAGE_MAX) {
       res.status(400).json({ error: `Message must be ${MESSAGE_MAX} characters or less` });
+      return;
+    }
+    if (containsBlockedChatWord(content)) {
+      res.status(400).json({ error: 'Message contains prohibited language.' });
       return;
     }
     const msg = await prisma.warOperationMessage.create({

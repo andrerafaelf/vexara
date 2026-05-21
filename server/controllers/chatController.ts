@@ -4,6 +4,7 @@ import * as chatService from '../services/chatService.js';
 import { notifyBadgeUpdate } from '../services/warRoomSocket.js';
 import type { AuthRequest } from '../types/index.js';
 import { logError } from '../utils/logger.js';
+import { containsBlockedChatWord } from '../utils/profanity.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
 
 const MAX_MESSAGE_LENGTH = 2000;
@@ -76,6 +77,7 @@ export async function sendMessage(req: AuthRequest, res: Response): Promise<void
     const content = typeof req.body?.content === 'string' ? req.body.content.trim() : '';
     if (!content) { res.status(400).json({ error: 'Empty message' }); return; }
     if (content.length > MAX_MESSAGE_LENGTH) { res.status(400).json({ error: `Message too long (max ${MAX_MESSAGE_LENGTH} chars)` }); return; }
+    if (containsBlockedChatWord(content)) { res.status(400).json({ error: 'Message contains prohibited language.' }); return; }
     const friendship = await chatService.assertFriendship(req.userId, friendId);
     if (!friendship) { res.status(403).json({ error: 'Not friends' }); return; }
     const message = await chatService.createMessage(req.userId, friendId, content);

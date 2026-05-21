@@ -2,6 +2,7 @@ import type { Response } from 'express';
 import prisma from '../lib/prisma.js';
 import type { AuthRequest } from '../types/index.js';
 import { logError } from '../utils/logger.js';
+import { containsBlockedChatWord } from '../utils/profanity.js';
 import { notifyDiplomacyChat } from '../services/warRoomSocket.js';
 
 const CHAT_PAGE_SIZE = 50;
@@ -72,6 +73,9 @@ export async function sendDiplomacyMessage(req: AuthRequest, res: Response): Pro
     }
     if (content.trim().length > MSG_MAX) {
       res.status(400).json({ error: `Message must be ${MSG_MAX} characters or less` }); return;
+    }
+    if (containsBlockedChatWord(content.trim())) {
+      res.status(400).json({ error: 'Message contains prohibited language.' }); return;
     }
 
     const member = await getMemberFaction(req.userId, req.galaxyId);

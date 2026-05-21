@@ -3,6 +3,7 @@ import prisma from '../lib/prisma.js';
 import { notifyBadgeUpdate, notifyFactionChat } from '../services/warRoomSocket.js';
 import type { AuthRequest } from '../types/index.js';
 import { logError } from '../utils/logger.js';
+import { containsBlockedChatWord } from '../utils/profanity.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
 
 const FACTION_NAME_MIN = 3;
@@ -1157,6 +1158,10 @@ export async function sendChatMessage(req: AuthRequest, res: Response): Promise<
     }
     if (content.trim().length > FACTION_MSG_MAX) {
       res.status(400).json({ error: `Message must be ${FACTION_MSG_MAX} characters or less` });
+      return;
+    }
+    if (containsBlockedChatWord(content.trim())) {
+      res.status(400).json({ error: 'Message contains prohibited language.' });
       return;
     }
 

@@ -1,5 +1,6 @@
 import EmailSpellChecker from '@zootools/email-spell-checker';
 import type { TroopKey } from '../types/index.js';
+import { containsBlockedUsername } from './profanity.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
 
@@ -56,7 +57,8 @@ export function validateUsername(username: unknown): boolean {
   if (typeof username !== 'string') return false;
   const trimmed = username.trim();
   if (!USERNAME_RE.test(trimmed)) return false;
-  return !RESERVED_USERNAMES.has(trimmed.toLowerCase());
+  if (RESERVED_USERNAMES.has(trimmed.toLowerCase())) return false;
+  return !containsBlockedUsername(trimmed);
 }
 
 export function validateEmail(email: unknown): boolean {
