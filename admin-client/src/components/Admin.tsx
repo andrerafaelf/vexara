@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import '../styles/Admin.css';
 import type { AllUser, Attack, Galaxy, GalaxyStats, GalaxyUser } from '../types/admin';
+import AlphaSignupsTab from './AlphaSignupsTab';
 import GalaxyTab from './GalaxyTab';
 import Toast from './Toast';
 import UsersTab from './UsersTab';
 
 const ADMIN_API_URL = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:3002/api/admin';
 
-type Tab = 'galaxy' | 'users';
+type Tab = 'galaxy' | 'users' | 'alpha';
 type AddUserModal = { open: true } | null;
 
 interface ToastMessage {
@@ -92,7 +93,9 @@ const Admin: React.FC = () => {
       const res = await adminFetch(`${ADMIN_API_URL}/users/all`);
       const data = await res.json().catch(() => null);
       setAllUsers(Array.isArray(data) ? data : []);
-    } catch { /* silent */ }
+    } catch {
+      /* silent */
+    }
   };
 
   const loadGalaxyData = async (galaxyId: number) => {
@@ -155,7 +158,10 @@ const Admin: React.FC = () => {
     try {
       const res = await adminFetch(`${ADMIN_API_URL}/users`, { method: 'POST', body: JSON.stringify(addUserForm) });
       const data = await res.json();
-      if (!res.ok) { showToast(data.error || 'Failed to add user', 'error'); return; }
+      if (!res.ok) {
+        showToast(data.error || 'Failed to add user', 'error');
+        return;
+      }
       showToast(`User "${addUserForm.username}" created`, 'success');
       setAddUserForm({ username: '', email: '', password: '' });
       setAddUserModal(null);
@@ -176,14 +182,26 @@ const Admin: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <h2 className="admin-title">Admin</h2>
           <div className="admin-tabs">
-            <button className={`admin-tab${tab === 'galaxy' ? ' admin-tab-active' : ''}`} onClick={() => setTab('galaxy')}>
+            <button
+              className={`admin-tab${tab === 'galaxy' ? ' admin-tab-active' : ''}`}
+              onClick={() => setTab('galaxy')}
+            >
               Galaxy
             </button>
-            <button className={`admin-tab${tab === 'users' ? ' admin-tab-active' : ''}`} onClick={() => setTab('users')}>
+            <button
+              className={`admin-tab${tab === 'users' ? ' admin-tab-active' : ''}`}
+              onClick={() => setTab('users')}
+            >
               Users
               {allUsers.filter((u) => !u.emailVerified).length > 0 && (
                 <span className="admin-tab-badge">{allUsers.filter((u) => !u.emailVerified).length}</span>
               )}
+            </button>
+            <button
+              className={`admin-tab${tab === 'alpha' ? ' admin-tab-active' : ''}`}
+              onClick={() => setTab('alpha')}
+            >
+              Alpha Signups
             </button>
           </div>
         </div>
@@ -209,13 +227,9 @@ const Admin: React.FC = () => {
         />
       )}
       {tab === 'users' && (
-        <UsersTab
-          users={allUsers}
-          adminFetch={adminFetch}
-          showToast={showToast}
-          onUserChanged={reloadAll}
-        />
+        <UsersTab users={allUsers} adminFetch={adminFetch} showToast={showToast} onUserChanged={reloadAll} />
       )}
+      {tab === 'alpha' && <AlphaSignupsTab showToast={showToast} adminFetch={adminFetch} />}
 
       {/* Add user modal */}
       {addUserModal && (
@@ -223,27 +237,43 @@ const Admin: React.FC = () => {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Add User</h3>
-              <button className="modal-close" onClick={() => setAddUserModal(null)}>×</button>
+              <button className="modal-close" onClick={() => setAddUserModal(null)}>
+                ×
+              </button>
             </div>
             <div className="modal-body">
               <div className="form-grid">
                 <div className="form-group">
                   <label>Username</label>
-                  <input value={addUserForm.username} onChange={(e) => setAddUserForm({ ...addUserForm, username: e.target.value })} />
+                  <input
+                    value={addUserForm.username}
+                    onChange={(e) => setAddUserForm({ ...addUserForm, username: e.target.value })}
+                  />
                 </div>
                 <div className="form-group">
                   <label>Email</label>
-                  <input value={addUserForm.email} onChange={(e) => setAddUserForm({ ...addUserForm, email: e.target.value })} />
+                  <input
+                    value={addUserForm.email}
+                    onChange={(e) => setAddUserForm({ ...addUserForm, email: e.target.value })}
+                  />
                 </div>
                 <div className="form-group">
                   <label>Password</label>
-                  <input type="password" value={addUserForm.password} onChange={(e) => setAddUserForm({ ...addUserForm, password: e.target.value })} />
+                  <input
+                    type="password"
+                    value={addUserForm.password}
+                    onChange={(e) => setAddUserForm({ ...addUserForm, password: e.target.value })}
+                  />
                 </div>
               </div>
             </div>
             <div className="modal-footer">
-              <button className="btn-secondary" onClick={() => setAddUserModal(null)}>Cancel</button>
-              <button className="btn-primary" onClick={handleAddUser}>Create User</button>
+              <button className="btn-secondary" onClick={() => setAddUserModal(null)}>
+                Cancel
+              </button>
+              <button className="btn-primary" onClick={handleAddUser}>
+                Create User
+              </button>
             </div>
           </div>
         </div>
