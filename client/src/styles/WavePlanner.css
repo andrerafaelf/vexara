@@ -374,3 +374,64 @@
   .wplanner-troop-grid { grid-template-columns: 1fr; }
   .wplanner-arrival-row { flex-direction: column; align-items: flex-start; }
 }
+
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║ Pass C · WavePlanner industrial restyle
+   ╚══════════════════════════════════════════════════════════════════╝ */
+
+[class^='wplanner-'],
+[class*=' wplanner-'] {
+  border-radius: 0;
+}
+
+[class*='wplanner-'][class*='-card'],
+[class*='wplanner-'][class*='-panel'],
+[class*='wplanner-'][class*='-row'] {
+  border-left: 2px solid var(--border-default);
+}
+
+[class*='wplanner-'][class*='-title'],
+[class*='wplanner-'][class*='-heading'] {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+[class*='wplanner-'][class*='-label'] {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+[class*='wplanner-'][class*='-time'],
+[class*='wplanner-'][class*='-count'],
+[class*='wplanner-'][class*='-qty'],
+[class*='wplanner-'][class*='-arrival'] {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.wplanner-send-all-btn {
+  position: relative;
+  overflow: hidden;
+  background: var(--accent);
+  color: var(--text-on-accent);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
+}
+
+.wplanner-send-all-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.18) 50%, transparent 70%);
+  transform: translateX(-110%);
+  transition: transform 0.5s var(--ease-out);
+  pointer-events: none;
+}
+
+.wplanner-send-all-btn:hover:not(:disabled)::before {
+  transform: translateX(110%);
+}

@@ -161,3 +161,35 @@
     display: none;
   }
 }
+
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║ Pass C · MobileNexusDrawer industrial restyle
+   ╚══════════════════════════════════════════════════════════════════╝ */
+
+[class^='nexus-drawer-'],
+[class*=' nexus-drawer-'] {
+  border-radius: 0;
+}
+
+[class*='nexus-drawer-'][class*='-item'] {
+  border-left: 2px solid transparent;
+  transition: border-left-color var(--duration-base) var(--ease-out);
+}
+
+[class*='nexus-drawer-'][class*='-item']:hover {
+  border-left-color: var(--accent);
+}
+
+[class*='nexus-drawer-'][class*='-item'][class*='active'],
+[class*='nexus-drawer-'][class*='-item'].active {
+  border-left-color: var(--accent);
+}
+
+[class*='nexus-drawer-'][class*='-title'],
+[class*='nexus-drawer-'][class*='-heading'] {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}

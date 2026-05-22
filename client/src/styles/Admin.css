@@ -370,3 +370,50 @@
     opacity: 0.6;
   }
 }
+
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║ Pass C · Admin industrial restyle
+   ╚══════════════════════════════════════════════════════════════════╝ */
+
+[class^='admin-'],
+[class*=' admin-'] {
+  border-radius: 0;
+}
+
+[class*='admin-'][class*='-card'],
+[class*='admin-'][class*='-panel'],
+[class*='admin-'][class*='-section'] {
+  border-left: 2px solid var(--border-default);
+}
+
+[class*='admin-'][class*='-section-title'],
+[class*='admin-'][class*='-heading'] {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+[class*='admin-'][class*='-label'] {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+[class*='admin-'][class*='-badge'],
+[class*='admin-'][class*='-chip'],
+[class*='admin-'][class*='-tag'],
+[class*='admin-'][class*='-pill'] {
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+}
+
+[class*='admin-'][class*='-count'],
+[class*='admin-'][class*='-value'],
+[class*='admin-'][class*='-numeric'],
+[class*='admin-'][class*='-stat'] {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}

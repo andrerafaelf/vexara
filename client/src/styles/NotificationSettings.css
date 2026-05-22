@@ -215,3 +215,41 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║ Pass C · NotificationSettings industrial restyle
+   ╚══════════════════════════════════════════════════════════════════╝ */
+
+[class^='notif-'],
+[class*=' notif-'] {
+  border-radius: 0;
+}
+
+[class*='notif-'][class*='-card'],
+[class*='notif-'][class*='-row'],
+[class*='notif-'][class*='-panel'] {
+  border-left: 2px solid var(--border-default);
+}
+
+[class*='notif-'][class*='-title'],
+[class*='notif-'][class*='-heading'] {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+[class*='notif-'][class*='-btn'] {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+[class*='notif-'][class*='-label'] {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}

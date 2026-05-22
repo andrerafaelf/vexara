@@ -74,12 +74,12 @@
   --danger: var(--color-rose-500);
   --danger-soft: rgba(248, 81, 73, 0.14);
 
-  /* ── Radii (sharpened for industrial look) ───────────────── */
-  --radius-xs: 1px;
-  --radius-sm: 2px;
-  --radius-md: 3px;
-  --radius-lg: 4px;
-  --radius-xl: 6px;
+  /* ── Radii (sharpened for industrial look — Pass C: near-zero) ── */
+  --radius-xs: 0;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 1px;
   --radius-pill: 999px;
 
   /* ── Spacing scale (4px grid) ─────────────────────────────── */
@@ -175,6 +175,25 @@ body {
   /* Prevent iOS font size inflation on landscape rotation */
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  position: relative;
+}
+
+/* Global grain — very subtle, applied once at the body level so every
+   screen (landing, codex, in-game) shares the same hand-built texture.
+   Keep opacity low; this is a finish, not a feature. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.018;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before { display: none; }
 }
 
 code,
@@ -224,7 +243,7 @@ a:hover {
 
 *::-webkit-scrollbar-thumb {
   background: var(--color-navy-400);
-  border-radius: var(--radius-pill);
+  border-radius: 0;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
@@ -267,7 +286,7 @@ select {
   color: var(--text-strong);
   background: var(--color-navy-800);
   border: 1px solid var(--border-default);
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   padding: 10px 12px;
   outline: none;
   transition: border-color var(--duration-fast) var(--ease-out),
@@ -320,19 +339,19 @@ a:focus-visible,
 .vx-surface {
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
+  border-radius: 0;
 }
 
 .vx-surface-2 {
   background: var(--bg-surface-2);
   border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
+  border-radius: 0;
 }
 
 .vx-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
-  border-radius: var(--radius-lg);
+  border-radius: 0;
   box-shadow: var(--shadow-sm);
   transition: border-color var(--duration-base) var(--ease-out),
               box-shadow var(--duration-base) var(--ease-out),
@@ -364,7 +383,7 @@ a:focus-visible,
   justify-content: center;
   gap: 8px;
   padding: 10px 18px;
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   font-size: var(--text-base);
   font-weight: 600;
   letter-spacing: 0.01em;

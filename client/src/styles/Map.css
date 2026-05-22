@@ -1295,3 +1295,64 @@
   color: var(--text-faint);
   font-family: var(--font-mono);
 }
+
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║ Pass C · Map industrial restyle
+   ╚══════════════════════════════════════════════════════════════════╝ */
+
+/* Map UI chrome — sharpen everything but leave the grid cells alone
+   (they're game terrain; rounded corners on cells would look wrong). */
+[class*='map-'][class*='-card'],
+[class*='map-'][class*='-panel'],
+[class*='map-'][class*='-modal'],
+[class*='map-'][class*='-tooltip'],
+[class*='map-'][class*='-popover'],
+[class*='map-'][class*='-tile']:not(.map-cell):not([class*='map-grid']),
+[class*='map-'][class*='-btn'],
+[class*='map-'][class*='-input'],
+[class*='map-'][class*='-chip'],
+[class*='map-'][class*='-badge'],
+[class*='map-'][class*='-pill'],
+[class*='map-'][class*='-tag'] {
+  border-radius: 0;
+}
+
+[class*='map-'][class*='-card'],
+[class*='map-'][class*='-panel'],
+[class*='map-'][class*='-modal'] {
+  border-left: 2px solid var(--border-default);
+}
+
+[class*='map-'][class*='-chip'],
+[class*='map-'][class*='-badge'],
+[class*='map-'][class*='-tag'] {
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+}
+
+[class*='map-'][class*='-coord'],
+[class*='map-'][class*='-time'],
+[class*='map-'][class*='-distance'],
+[class*='map-'][class*='-count'] {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+[class*='map-'][class*='-title'] {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+[class*='map-'][class*='-section-title'],
+[class*='map-'][class*='-heading'] {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.galaxy-event-expires,
+.galaxy-event-zone {
+  font-family: var(--font-mono);
+}

@@ -218,3 +218,25 @@
     display: none;
   }
 }
+
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║ Pass C · DominanceBar industrial restyle
+   ╚══════════════════════════════════════════════════════════════════╝ */
+
+[class^='dom-'],
+[class*=' dom-'] {
+  border-radius: 0;
+}
+
+.dom-faction-pct,
+.dom-faction-points,
+[class*='dom-'][class*='-numeric'] {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+[class*='dom-'][class*='-label'],
+[class*='dom-'][class*='-name'] {
+  font-family: var(--font-mono);
+  letter-spacing: 0.06em;
+}

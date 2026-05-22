@@ -296,3 +296,53 @@
 @media (max-width: 500px) {
   .intel-buildings-grid { grid-template-columns: 1fr; }
 }
+
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║ Pass C · ScoutIntelCard industrial restyle
+   ╚══════════════════════════════════════════════════════════════════╝ */
+
+[class^='intel-'],
+[class*=' intel-'] {
+  border-radius: 0;
+}
+
+[class*='intel-'][class*='-card'],
+[class*='intel-'][class*='-section'],
+[class*='intel-'][class*='-panel'] {
+  border-left: 2px solid var(--border-default);
+}
+
+[class*='intel-'][class*='-card']:first-child,
+[class*='intel-'][class*='-header'] {
+  border-left: 3px solid var(--accent-2);
+}
+
+[class*='intel-'][class*='-title'],
+[class*='intel-'][class*='-heading'] {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+[class*='intel-'][class*='-label'] {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+[class*='intel-'][class*='-value'],
+[class*='intel-'][class*='-count'],
+[class*='intel-'][class*='-numeric'] {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+[class*='intel-'][class*='-badge'],
+[class*='intel-'][class*='-chip'],
+[class*='intel-'][class*='-tag'] {
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+}

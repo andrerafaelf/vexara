@@ -360,3 +360,85 @@
   background: var(--accent-hover);
   color: var(--text-on-accent);
 }
+
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║ Pass C · ProfileStats industrial restyle
+   ╚══════════════════════════════════════════════════════════════════╝ */
+
+[class^='ps-'],
+[class*=' ps-'] {
+  border-radius: 0 !important;
+}
+
+.ps-support-cta {
+  position: relative;
+  overflow: hidden;
+  background: var(--accent);
+  color: var(--text-on-accent);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%);
+}
+
+.ps-support-cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.18) 50%, transparent 70%);
+  transform: translateX(-110%);
+  transition: transform 0.5s var(--ease-out);
+  pointer-events: none;
+}
+
+.ps-support-cta:hover::before {
+  transform: translateX(110%);
+}
+
+/* Section cards get left-rule */
+[class*='ps-card'],
+[class*='ps-panel'],
+[class*='ps-section'] {
+  border-left: 2px solid var(--border-default);
+  transition: border-left-color var(--duration-base) var(--ease-out);
+}
+
+[class*='ps-card']:hover,
+[class*='ps-panel']:hover {
+  border-left-color: var(--accent);
+}
+
+/* Section / module titles */
+[class*='ps-title'],
+[class*='ps-heading'],
+[class*='ps-section-title'] {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* Numbers tabular */
+[class*='ps-value'],
+[class*='ps-stat'],
+[class*='ps-count'],
+[class*='ps-rank'],
+[class*='ps-points'],
+[class*='ps-numeric'] {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+[class*='ps-label'] {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+[class*='ps-badge'],
+[class*='ps-chip'],
+[class*='ps-tag'],
+[class*='ps-pill'] {
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+}

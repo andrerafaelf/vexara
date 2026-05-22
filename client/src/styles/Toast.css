@@ -43,8 +43,6 @@
   top: 0;
   bottom: 0;
   width: 3px;
-  border-top-left-radius: var(--radius-md);
-  border-bottom-left-radius: var(--radius-md);
   background: var(--accent);
 }
 

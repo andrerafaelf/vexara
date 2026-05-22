@@ -114,7 +114,7 @@ function Hero() {
         <p className="lp-hero-sub">
           Browser-based 4X strategy. A living galaxy shared by real players, running 24/7.
           <br className="lp-hero-sub-br" />
-          No resets. No pay-to-win. Just you, your nexus, and the cold math of empire.
+          {' '}No resets. No pay-to-win. Just you, your nexus, and the cold math of empire.
         </p>
 
         <div className="lp-hero-ctas">

@@ -18,7 +18,7 @@ button {
   cursor: pointer;
   border: none;
   padding: 10px 20px;
-  border-radius: 4px;
+  border-radius: 0;
   font-size: 14px;
   transition: all 0.3s ease;
 }
@@ -31,7 +31,7 @@ button:disabled {
 input {
   padding: 10px;
   border: 1px solid var(--color-navy-500);
-  border-radius: 4px;
+  border-radius: 0;
   font-size: 14px;
   background: var(--color-navy-500);
   color: var(--text-strong);

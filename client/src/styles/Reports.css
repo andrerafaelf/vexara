@@ -554,3 +554,82 @@
     padding: 8px;
   }
 }
+
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║ Pass C · Reports industrial restyle
+   ╚══════════════════════════════════════════════════════════════════╝ */
+
+/* All buttons sharp + mono'd */
+.btn-read-all,
+.btn-back,
+.btn-nav-arrow {
+  border-radius: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
+
+.reports-nav-count {
+  font-family: var(--font-mono);
+}
+
+/* Report list items */
+[class*='report-item'],
+[class*='report-card'],
+[class*='report-row'] {
+  border-radius: 0;
+  border-left: 2px solid var(--border-default);
+  transition: border-left-color var(--duration-base) var(--ease-out);
+}
+
+[class*='report-item']:hover,
+[class*='report-card']:hover,
+[class*='report-row']:hover {
+  border-left-color: var(--accent);
+}
+
+/* Victory / defeat / draw left rules */
+[class*='report-'][class*='victory'],
+[class*='report-'][class*='--won'],
+[class*='report-'][class*='-win'] { border-left-color: var(--success) !important; }
+
+[class*='report-'][class*='defeat'],
+[class*='report-'][class*='--lost'],
+[class*='report-'][class*='-loss'] { border-left-color: var(--danger) !important; }
+
+[class*='report-'][class*='scout'] { border-left-color: var(--accent-2) !important; }
+
+/* Report tables */
+.report-table {
+  border-radius: 0;
+}
+
+.report-table thead th {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.report-meta,
+.report-time,
+.report-coords {
+  font-family: var(--font-mono);
+}
+
+/* Sharpen anything that looks like a badge / pill / chip */
+[class*='report-'][class*='-badge'],
+[class*='report-'][class*='-chip'] {
+  border-radius: 0;
+  font-family: var(--font-mono);
+  letter-spacing: 0.10em;
+}
+
+/* No-reports placeholder */
+.no-reports {
+  border-radius: 0;
+  border-left: 3px solid var(--text-faint);
+  background: var(--bg-surface);
+}

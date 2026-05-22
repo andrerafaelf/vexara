@@ -1781,3 +1781,98 @@
   border-color: var(--accent);
   color: var(--accent);
 }
+
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║ Pass C · Factions industrial restyle
+   ╚══════════════════════════════════════════════════════════════════╝ */
+
+.factions-panel {
+  border-radius: 0;
+  border-left: 2px solid var(--border-default);
+  position: relative;
+  transition: border-left-color var(--duration-base) var(--ease-out);
+}
+
+.factions-container > .factions-panel:first-of-type {
+  border-left: 3px solid var(--accent);
+}
+
+.factions-member-row,
+.factions-invite-form,
+.factions-field {
+  border-radius: 0;
+}
+
+.factions-member-row {
+  border-left: 2px solid var(--border-default);
+  transition: border-left-color var(--duration-base) var(--ease-out);
+}
+
+.factions-member-row:hover {
+  border-left-color: var(--accent);
+}
+
+.factions-member-role {
+  border-radius: 0;
+  font-family: var(--font-mono);
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
+
+.factions-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+[class*='factions-'][class*='-btn'],
+[class*='factions-'][class*='-input'],
+[class*='factions-'][class*='-card'],
+[class*='factions-'][class*='-tile'],
+[class*='factions-'][class*='-row'],
+[class*='factions-'][class*='-badge'],
+[class*='factions-'][class*='-chip'],
+[class*='factions-'][class*='-pill'] {
+  border-radius: 0;
+}
+
+[class*='factions-'][class*='-btn-primary'] {
+  background: var(--accent);
+  color: var(--text-on-accent);
+  position: relative;
+  overflow: hidden;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
+}
+
+[class*='factions-'][class*='-btn-primary']::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.18) 50%, transparent 70%);
+  transform: translateX(-110%);
+  transition: transform 0.5s var(--ease-out);
+  pointer-events: none;
+}
+
+[class*='factions-'][class*='-btn-primary']:hover:not(:disabled)::before {
+  transform: translateX(110%);
+}
+
+[class*='factions-'][class*='-error'] {
+  border-radius: 0;
+  border-left: 3px solid var(--danger);
+}
+
+[class*='factions-'][class*='-rank'],
+[class*='factions-'][class*='-points'],
+[class*='factions-'][class*='-influence'],
+[class*='factions-'][class*='-numeric'] {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Chat bubbles within faction view inherit sharper edges */
+[class*='factions-'][class*='chat-'] {
+  border-radius: 0;
+}

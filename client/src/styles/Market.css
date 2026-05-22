@@ -740,3 +740,79 @@
   color: var(--text-muted, #888);
   margin-left: 4px;
 }
+
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║ Pass C · Market industrial restyle
+   ╚══════════════════════════════════════════════════════════════════╝ */
+
+.market-create-form {
+  border-radius: 0;
+  border-left: 3px solid var(--accent);
+  background: var(--bg-surface);
+}
+
+.market-create-form h3 {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.market-form-row label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+}
+
+.market-form-row select,
+.market-form-row input {
+  border-radius: 0;
+}
+
+.market-error,
+.market-form-error {
+  border-radius: 0;
+  border-left: 3px solid var(--danger);
+}
+
+/* Listings */
+[class*='market-listing'],
+[class*='market-offer'],
+[class*='listing-card'] {
+  border-radius: 0;
+  border-left: 2px solid var(--border-default);
+  transition: border-left-color var(--duration-base) var(--ease-out);
+}
+
+[class*='market-listing']:hover,
+[class*='market-offer']:hover,
+[class*='listing-card']:hover {
+  border-left-color: var(--accent);
+}
+
+/* Badges, chips, pills in market */
+[class*='market-'][class*='-badge'],
+[class*='market-'][class*='-chip'],
+[class*='market-'][class*='-pill'] {
+  border-radius: 0;
+  font-family: var(--font-mono);
+  letter-spacing: 0.10em;
+}
+
+[class*='market-'][class*='-btn']:not(.market-create-btn) {
+  border-radius: 0;
+}
+
+.market-commission-note {
+  font-family: var(--font-mono);
+}
+
+/* Numeric quantities tabular */
+[class*='market-'][class*='-amount'],
+[class*='market-'][class*='-qty'],
+[class*='market-'][class*='-price'],
+[class*='market-'][class*='-rate'] {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}

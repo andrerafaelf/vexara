@@ -1360,3 +1360,124 @@
   color: var(--success) !important;
   font-weight: bold;
 }
+
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║ Pass C · Industrial restyle overrides for Dashboard
+   ╚══════════════════════════════════════════════════════════════════╝ */
+
+/* ── Events flag ───────────────────────────────────────────────── */
+.dashboard-events-flag {
+  border-radius: 0;
+  border-left: 3px solid var(--accent);
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+
+/* ── Group tabs / Nexus tabs — flat pills become flat chiclets ── */
+.cc-group-tab,
+.cc-nexus-tab {
+  border-radius: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.cc-group-tab.active,
+.cc-nexus-tab.active {
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%);
+}
+
+/* ── Resource blocks ───────────────────────────────────────────── */
+.cc-resource-block {
+  border-radius: 0;
+  border-left: 2px solid var(--border-default);
+  position: relative;
+  background: var(--color-navy-800);
+  transition: border-left-color var(--duration-base) var(--ease-out),
+              border-color var(--duration-base) var(--ease-out),
+              background var(--duration-base) var(--ease-out);
+}
+
+.cc-resource-block:hover {
+  border-left-color: var(--accent);
+}
+
+/* Per-resource left-rule tint */
+.cc-resource-block:has(.cc-resource-label:where(:is(*))):nth-child(1),
+.cc-resource-block:nth-of-type(1) { border-left-color: var(--success); }
+.cc-resource-block:nth-of-type(2) { border-left-color: var(--accent); }
+.cc-resource-block:nth-of-type(3) { border-left-color: var(--warning); }
+
+.cc-resource-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.cc-resource-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.cc-resource-bar-wrap {
+  border-radius: 0;
+  height: 3px;
+}
+
+.cc-resource-bar {
+  border-radius: 0;
+}
+
+.cc-resource-rate {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ── Shared card base — drop the gradient + radius, add left rule ── */
+.cc-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-left: 3px solid var(--border-strong);
+  border-radius: 0;
+  box-shadow: none;
+  position: relative;
+  transition: border-color var(--duration-base) var(--ease-out),
+              border-left-color var(--duration-base) var(--ease-out);
+}
+
+.cc-card:hover {
+  border-color: var(--border-strong);
+  border-left-color: var(--accent);
+  box-shadow: none;
+}
+
+.cc-card-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+}
+
+/* ── Quests panel ──────────────────────────────────────────────── */
+[class*='quest-item'],
+[class*='quest-card'] {
+  border-radius: 0;
+}
+
+/* ── Empire panel stats ────────────────────────────────────────── */
+.cc-empire-stats {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Generic dashboard buttons sharpening ─────────────────────── */
+.dashboard button[class*='-btn']:not(.cc-manage-btn):not(.create-nexus-btn) {
+  border-radius: 0;
+}

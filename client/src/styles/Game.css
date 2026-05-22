@@ -1694,3 +1694,340 @@ label {
   background: var(--accent);
   color: var(--text-on-accent);
 }
+
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║ Pass C · Industrial restyle overrides
+   ║ Applied at the end of Game.css so they win the cascade without
+   ║ requiring us to edit every original rule above.
+   ╚══════════════════════════════════════════════════════════════════╝ */
+
+/* ── Game header: industrial bezel ──────────────────────────────── */
+.game-header {
+  background:
+    linear-gradient(180deg, rgba(255, 158, 61, 0.025) 0%, transparent 30%),
+    var(--color-navy-900);
+  border-bottom: 1px solid var(--border-default);
+  position: relative;
+}
+
+/* Amber under-rule when scrolling content sits beneath the header */
+.game-header::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background:
+    linear-gradient(90deg,
+      transparent 0%,
+      rgba(255, 158, 61, 0.35) 14%,
+      rgba(255, 158, 61, 0.35) 22%,
+      transparent 28%);
+  pointer-events: none;
+}
+
+/* The wordmark h1 was reset to inline-flex by .vx-wordmark; restore
+   the legacy block sizing properties to no-ops so the stamp + name
+   are the only visual elements. */
+.game-wordmark {
+  font-size: var(--text-xl);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* ── Nav tabs ──────────────────────────────────────────────────── */
+.nav-btn {
+  font-family: var(--font-sans);
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+.nav-btn.active {
+  color: var(--text-strong);
+  border-bottom-color: var(--accent);
+  background: linear-gradient(180deg, rgba(255, 158, 61, 0.06), transparent);
+}
+
+.nav-btn.active::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background: var(--accent);
+  margin-right: 2px;
+}
+
+/* ── Sidebar (left rail) ───────────────────────────────────────── */
+.nexus-nav {
+  background: var(--color-navy-900);
+  position: relative;
+}
+
+.nexus-nav::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -1px;
+  width: 1px;
+  height: 64px;
+  background: var(--accent);
+}
+
+.nexus-nav h3 {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  text-transform: uppercase;
+  position: relative;
+  padding-left: 14px;
+}
+
+.nexus-nav h3::before {
+  content: '//';
+  position: absolute;
+  left: 0;
+  color: var(--text-faint);
+}
+
+/* ── Commander card (sidebar footer) ───────────────────────────── */
+.commander-card {
+  background: var(--color-navy-800);
+  border: 1px solid var(--border-default);
+  border-left: 3px solid var(--accent);
+  border-radius: 0;
+  position: relative;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
+}
+
+.commander-avatar {
+  background: var(--accent);
+  border-radius: 0;
+  font-family: var(--font-mono);
+  box-shadow: none;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%);
+}
+
+.commander-meta {
+  font-family: var(--font-mono);
+}
+
+/* ── Galaxy chip ───────────────────────────────────────────────── */
+.galaxy-chip {
+  background: var(--color-navy-800);
+  border: 1px solid var(--border-default);
+  border-radius: 0;
+  position: relative;
+  padding-left: 22px;
+}
+
+.galaxy-chip::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--accent);
+  opacity: 0.6;
+  transition: opacity var(--duration-base) var(--ease-out);
+}
+
+.galaxy-chip:hover {
+  background: var(--color-navy-700);
+}
+
+.galaxy-chip:hover::before {
+  opacity: 1;
+}
+
+.galaxy-chip-tag {
+  border-radius: 0;
+  font-family: var(--font-mono);
+}
+
+/* ── Nexus items in the sidebar ────────────────────────────────── */
+.nexus-item {
+  border-radius: 0;
+  padding-left: 18px;
+}
+
+.nexus-item::before {
+  content: '';
+  border-radius: 0;
+  width: 3px;
+  height: 14px;
+  background: var(--text-faint);
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.nexus-item.active {
+  background: var(--accent-soft);
+  border-color: var(--border-accent);
+  border-left: 3px solid var(--accent);
+  padding-left: 15px;
+}
+
+.nexus-item.active::before {
+  background: var(--accent);
+  box-shadow: none;
+  width: 0;
+}
+
+.nexus-item:hover::before {
+  background: var(--accent);
+}
+
+.nexus-type-badge,
+.nexus-badge {
+  border-radius: 0;
+}
+
+/* ── Resource strip in the header ──────────────────────────────── */
+.header-resource-strip {
+  background: var(--color-navy-800);
+  border: 1px solid var(--border-default);
+  border-left: 3px solid var(--accent);
+  border-radius: 0;
+}
+
+.header-res-label {
+  font-family: var(--font-mono);
+}
+
+.header-res-value {
+  font-family: var(--font-mono);
+}
+
+.header-res-rate {
+  font-family: var(--font-mono);
+}
+
+/* ── No-nexuses & eliminated screens ──────────────────────────── */
+.no-nexuses,
+.eliminated-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-left: 3px solid var(--accent);
+  border-radius: 0;
+  position: relative;
+  box-shadow: var(--shadow-md);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
+}
+
+.no-nexuses h2,
+.eliminated-title {
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.no-nexuses h2::before {
+  content: '// WELCOME · NEW COMMANDER';
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.eliminated-title::before {
+  content: '// SIGNAL LOST · REINSTANTIATE';
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.create-nexus-btn,
+.eliminated-create-btn {
+  background: var(--accent);
+  border-radius: 0;
+  box-shadow: none;
+  border: 1px solid transparent;
+  position: relative;
+  overflow: hidden;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+}
+
+.create-nexus-btn::before,
+.eliminated-create-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.18) 50%, transparent 70%);
+  transform: translateX(-110%);
+  transition: transform 0.5s var(--ease-out);
+  pointer-events: none;
+}
+
+.create-nexus-btn:hover,
+.eliminated-create-btn:hover:not(:disabled) {
+  background: var(--accent-hover);
+  filter: none;
+}
+
+.create-nexus-btn:hover::before,
+.eliminated-create-btn:hover:not(:disabled)::before {
+  transform: translateX(110%);
+}
+
+.eliminated-name-input {
+  border-radius: 0;
+}
+
+/* ── Mobile drawer ─────────────────────────────────────────────── */
+.menu-toggle {
+  border-radius: 0;
+}
+
+.commander-card-mobile {
+  margin: 0 0 14px;
+}
+
+/* ── Nexus drawer toggle ───────────────────────────────────────── */
+.nexus-drawer-toggle {
+  border-radius: 0;
+  position: relative;
+}
+
+.nexus-drawer-toggle.active {
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%);
+}
+
+/* ── Logout button ─────────────────────────────────────────────── */
+.logout-btn {
+  border-radius: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+/* ── Docs dropdown ─────────────────────────────────────────────── */
+.docs-dropdown {
+  border-radius: 0;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+}
+
+.docs-dropdown-item {
+  border-radius: 0;
+}
+
+/* ── Ad banners (reduce visual chrome — they're already plain) ── */
+.ad-banner-top,
+.ad-banner-bottom {
+  background: var(--color-navy-900);
+}
+

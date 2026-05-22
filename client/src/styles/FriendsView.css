@@ -409,3 +409,77 @@
     max-width: 82%;
   }
 }
+
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║ Pass C · FriendsView industrial restyle
+   ╚══════════════════════════════════════════════════════════════════╝ */
+
+[class^='friends-'],
+[class*=' friends-'] {
+  border-radius: 0;
+}
+
+[class*='friends-'][class*='-card'],
+[class*='friends-'][class*='-panel'],
+[class*='friends-'][class*='-section'],
+[class*='friends-'][class*='-row'] {
+  border-left: 2px solid var(--border-default);
+  transition: border-left-color var(--duration-base) var(--ease-out);
+}
+
+[class*='friends-'][class*='-card']:hover,
+[class*='friends-'][class*='-row']:hover {
+  border-left-color: var(--accent);
+}
+
+[class*='friends-'][class*='-title'],
+[class*='friends-'][class*='-heading'] {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+[class*='friends-'][class*='-label'] {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+[class*='friends-'][class*='-badge'],
+[class*='friends-'][class*='-chip'],
+[class*='friends-'][class*='-tag'],
+[class*='friends-'][class*='-pill'],
+[class*='friends-'][class*='-status'] {
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+}
+
+/* Chat bubbles: keep them sharp, but they're chat bubbles —
+   allow a tiny radius for visual difference between sender/recipient.
+   Pass C otherwise = zero. */
+.friends-chat-bubble {
+  border-radius: 0;
+  border-left: 2px solid var(--border-default);
+}
+
+.friends-chat-bubble[class*='--me'],
+.friends-chat-bubble[class*='--self'],
+.friends-chat-bubble[class*='--mine'] {
+  border-left-color: var(--accent);
+}
+
+/* Unread / online dots stay round (they're indicators, not chrome) */
+[class*='friends-'][class*='-dot'] {
+  border-radius: 50% !important;
+}
+
+/* Buttons */
+[class*='friends-'][class*='-btn'] {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}

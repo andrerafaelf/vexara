@@ -176,20 +176,37 @@
   }
 }
 
+@media (max-width: 480px) {
+  .lp-hero-grid {
+    padding: 72px 16px 56px;
+    gap: 22px;
+  }
+}
+
 .lp-hero-stamp {
   grid-column: 1 / -1;
   display: inline-flex;
   align-items: center;
-  gap: 14px;
+  flex-wrap: wrap;
+  gap: 10px 14px;
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--accent);
   width: max-content;
+  max-width: 100%;
   padding: 6px 14px 6px 6px;
   border: 1px solid var(--border-accent);
   background: rgba(255, 158, 61, 0.04);
+}
+
+@media (max-width: 480px) {
+  .lp-hero-stamp {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    padding: 6px 10px 6px 6px;
+  }
 }
 
 .lp-hero-stamp-dot {
@@ -208,6 +225,7 @@
 /* Title — three lines, mixed weight, asymmetric tracking */
 .lp-hero-title {
   grid-column: 1 / 2;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -220,7 +238,7 @@
 }
 
 .lp-hero-title-thin {
-  font-size: clamp(36px, 6vw, 84px);
+  font-size: clamp(28px, 6vw, 84px);
   font-weight: 300;
   letter-spacing: -0.025em;
   color: var(--text-default);
@@ -228,7 +246,7 @@
 }
 
 .lp-hero-title-shout {
-  font-size: clamp(56px, 9.5vw, 132px);
+  font-size: clamp(40px, 11vw, 132px);
   font-weight: 900;
   letter-spacing: -0.045em;
   background: linear-gradient(180deg, #ffffff 0%, #b8c0cc 100%);

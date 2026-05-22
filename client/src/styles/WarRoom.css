@@ -1791,3 +1791,82 @@ body:has(.warroom-modal-overlay) { overflow: hidden; }
   }
   .warroom-arrival-time { font-size: 22px; }
 }
+
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║ Pass C · WarRoom industrial restyle
+   ╚══════════════════════════════════════════════════════════════════╝ */
+
+.warroom {
+  border-radius: 0;
+  border-left: 3px solid var(--accent);
+}
+
+.warroom-conn {
+  border-radius: 0;
+  font-family: var(--font-mono);
+}
+
+.warroom-conn-dot {
+  border-radius: 0;
+  width: 6px;
+  height: 6px;
+}
+
+.warroom-avatar {
+  border-radius: 0;
+  font-family: var(--font-mono);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%);
+}
+
+.warroom-arrival-time {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Sharpen all warroom sub-elements */
+[class*='warroom-'][class*='-card'],
+[class*='warroom-'][class*='-panel'],
+[class*='warroom-'][class*='-tile'],
+[class*='warroom-'][class*='-row'],
+[class*='warroom-'][class*='-chip'],
+[class*='warroom-'][class*='-badge'],
+[class*='warroom-'][class*='-pill'],
+[class*='warroom-'][class*='-btn'],
+[class*='warroom-'][class*='-input'],
+[class*='warroom-'][class*='-tab'],
+[class*='warroom-'][class*='-modal'] {
+  border-radius: 0;
+}
+
+[class*='warroom-'][class*='-chip'],
+[class*='warroom-'][class*='-badge'] {
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+}
+
+[class*='warroom-'][class*='-card'],
+[class*='warroom-'][class*='-panel'] {
+  border-left: 2px solid var(--border-default);
+  transition: border-left-color var(--duration-base) var(--ease-out);
+}
+
+[class*='warroom-'][class*='-card']:hover,
+[class*='warroom-'][class*='-panel']:hover {
+  border-left-color: var(--accent);
+}
+
+[class*='warroom-'][class*='-section-title'],
+[class*='warroom-'][class*='-heading'] {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+[class*='warroom-'][class*='-time'],
+[class*='warroom-'][class*='-count'],
+[class*='warroom-'][class*='-qty'] {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}

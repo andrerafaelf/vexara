@@ -100,3 +100,40 @@
 .sc-error {
   color: var(--accent);
 }
+
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║ Pass C · StatsChart industrial restyle
+   ╚══════════════════════════════════════════════════════════════════╝ */
+
+[class^='sc-'],
+[class*=' sc-'] {
+  border-radius: 0;
+}
+
+[class*='sc-'][class*='-card'],
+[class*='sc-'][class*='-panel'] {
+  border-left: 2px solid var(--accent-2);
+}
+
+[class*='sc-'][class*='-title'],
+[class*='sc-'][class*='-heading'] {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+[class*='sc-'][class*='-label'] {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+[class*='sc-'][class*='-value'],
+[class*='sc-'][class*='-numeric'],
+[class*='sc-'][class*='-tooltip'] {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}

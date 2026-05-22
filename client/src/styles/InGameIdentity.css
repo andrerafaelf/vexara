@@ -202,3 +202,187 @@
   display: inline-block;
   width: max-content;
 }
+
+/* ════════════════════════════════════════════════════════════════
+   In-game card & panel signatures
+   These are layered on top of existing component styles via
+   compound selectors. Each card gets ONE signature:
+   - left-rule (amber 3px left border)
+   - clip-corner (diagonal cut bottom-right)
+   - stamp (small amber corner stamp)
+   - top-tick (3px amber top accent on the leading row)
+   ════════════════════════════════════════════════════════════════ */
+
+/* Amber 3px left-rule — used on the most "anchored" panels */
+.vx-rule-l {
+  border-left: 3px solid var(--accent) !important;
+}
+
+.vx-rule-l-soft {
+  border-left: 2px solid rgba(255, 158, 61, 0.55) !important;
+}
+
+/* Diagonal cut on the bottom-right corner */
+.vx-cut {
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+}
+
+.vx-cut-sm {
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%);
+}
+
+.vx-cut-lg {
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
+}
+
+/* Top amber tick — 3px stripe across the top of a panel */
+.vx-tick-t {
+  border-top: 3px solid var(--accent) !important;
+}
+
+/* ── Mono stat-label idiom used for cells across the game ── */
+.vx-stat-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  display: block;
+}
+
+.vx-stat-value {
+  font-family: var(--font-mono);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-strong);
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   Global card sharpening — soft kill-list applied to every card-like
+   surface in the authed UI so we don't have to find and edit each one
+   individually. Targets only selectors that universally describe cards.
+   ════════════════════════════════════════════════════════════════ */
+
+/* Anything that uses the legacy "card" / "panel" naming convention.
+   Scoped to inside .game-container so it can't leak into the landing
+   page or codex (those use their own systems). */
+.game-container [class*='-card'],
+.game-container [class*='-panel'],
+.game-container [class*='-modal'],
+.game-container [class*='-tile'] {
+  border-radius: 0;
+}
+
+/* Sharpen any rounded-pill or rounded badge that isn't explicitly meant
+   to be a pill (pills keep their --radius-pill). */
+.game-container [class*='-badge']:not(.combat-report-dot):not([class*='-pill']),
+.game-container [class*='-chip']:not([class*='-pill']) {
+  border-radius: 0;
+}
+
+/* ── Mono eyebrow used inline for in-game module heads ── */
+.vx-mono-head {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.vx-mono-head-quiet {
+  color: var(--text-muted);
+}
+
+/* Inline amber tick used as a row accent / list bullet */
+.vx-tick {
+  display: inline-block;
+  width: 6px;
+  height: 14px;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+.vx-tick-sm {
+  display: inline-block;
+  width: 4px;
+  height: 10px;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   Cross-file class catch-alls (chat, activity, leaderboard, etc.)
+   These class prefixes appear inside multiple CSS files
+   ════════════════════════════════════════════════════════════════ */
+
+.game-container [class*='faction-chat-'],
+.game-container [class*='diplomacy-chat-'],
+.game-container [class*='faction-activity-'],
+.game-container [class*='faction-leaderboard-'],
+.game-container [class*='live-resource-'],
+.game-container [class*='galaxy-chip-'],
+.game-container [class*='galaxy-picker-'],
+.game-container [class*='galaxy-event-'],
+.game-container [class*='pwa-'],
+.game-container [class*='wywa-'],
+.game-container [class*='battlefield-'],
+.game-container [class*='replay-'],
+.game-container [class*='palette-'] {
+  border-radius: 0;
+}
+
+/* Chat bubbles in faction/diplomacy chat */
+[class*='faction-chat-bubble'],
+[class*='diplomacy-chat-bubble'],
+[class*='factions-chat-bubble'] {
+  border-radius: 0;
+  border-left: 2px solid var(--border-default);
+  position: relative;
+}
+
+[class*='faction-chat-bubble']:where([class*='--me'], [class*='--self'], [class*='--own']),
+[class*='diplomacy-chat-bubble']:where([class*='--me'], [class*='--self'], [class*='--own']),
+[class*='factions-chat-bubble']:where([class*='--me'], [class*='--self'], [class*='--own']) {
+  border-left-color: var(--accent);
+}
+
+/* Online / unread dots stay circular */
+.game-container [class*='-dot']:not([class*='-rect']) {
+  border-radius: 50%;
+}
+
+/* Section titles inside chat / activity */
+[class*='faction-chat-'][class*='-title'],
+[class*='diplomacy-chat-'][class*='-title'],
+[class*='faction-activity-'][class*='-title'] {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* Timestamps */
+[class*='-timestamp'],
+[class*='-time-ago'] {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Leaderboard rows */
+[class*='faction-leaderboard-row'],
+[class*='leaderboard-row'] {
+  border-radius: 0;
+  border-left: 2px solid var(--border-default);
+}
+
+/* Galaxy picker modal */
+[class*='galaxy-picker'][class*='-modal'],
+[class*='galaxy-picker'][class*='-card'] {
+  border-radius: 0;
+  border-left: 3px solid var(--accent);
+}

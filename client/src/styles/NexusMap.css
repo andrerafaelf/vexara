@@ -183,3 +183,24 @@
     display: block;
   }
 }
+
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║ Pass C · NexusMap industrial restyle
+   ╚══════════════════════════════════════════════════════════════════╝ */
+
+[class^='nexus-map-'],
+[class*=' nexus-map-'] {
+  border-radius: 0;
+}
+
+[class*='nexus-map-'][class*='-coord'],
+[class*='nexus-map-'][class*='-numeric'] {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+[class*='nexus-map-'][class*='-tag'],
+[class*='nexus-map-'][class*='-badge'] {
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+}
