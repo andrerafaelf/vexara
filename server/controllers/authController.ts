@@ -4,15 +4,10 @@ import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma.js';
 import { comparePassword, hashPassword } from '../models/User.js';
 import * as authService from '../services/authService.js';
-import {
-  sendAlphaWelcome,
-  sendPasswordReset,
-  sendVerifyEmail,
-  sendWelcome,
-} from '../services/emailService.js';
+import { sendAlphaWelcome, sendPasswordReset, sendVerifyEmail, sendWelcome } from '../services/emailService.js';
 import { generateUniqueReferralCode } from '../services/referralService.js';
-import { detectEmailTypo, validateEmail, validatePassword, validateUsername } from '../utils/validation.js';
 import { logError } from '../utils/logger.js';
+import { detectEmailTypo, validateEmail, validatePassword, validateUsername } from '../utils/validation.js';
 
 const VERIFY_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -45,8 +40,48 @@ export async function register(req: Request, res: Response): Promise<void> {
     };
 
     const rawUsername = typeof body.username === 'string' ? body.username.trim() : '';
-    if (!validateUsername(rawUsername)) {
+    // Username format/length check
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(rawUsername)) {
       res.status(400).json({ error: 'Username must be 3-20 characters: letters, numbers, or underscores.' });
+      return;
+    }
+    // Profanity/inappropriate check
+    const { containsBlockedUsername } = await import('../utils/profanity.js');
+    if (containsBlockedUsername(rawUsername)) {
+      res.status(400).json({ error: 'Username is not allowed due to inappropriate content.' });
+      return;
+    }
+    // Reserved usernames check (optional, for completeness)
+    const RESERVED_USERNAMES = new Set([
+      'vexara',
+      'admin',
+      'administrator',
+      'moderator',
+      'mod',
+      'staff',
+      'support',
+      'root',
+      'system',
+      'bot',
+      'official',
+      'help',
+      'info',
+      'contact',
+      'security',
+      'null',
+      'undefined',
+      'anonymous',
+      'guest',
+      'superuser',
+      'sysadmin',
+      'webmaster',
+      'postmaster',
+      'hostmaster',
+      'noreply',
+      'no-reply',
+    ]);
+    if (RESERVED_USERNAMES.has(rawUsername.toLowerCase())) {
+      res.status(400).json({ error: 'Username is reserved or not allowed.' });
       return;
     }
 
@@ -64,7 +99,10 @@ export async function register(req: Request, res: Response): Promise<void> {
 
     // Conflicts
     const [usernameClash, emailClash] = await Promise.all([
-      prisma.user.findFirst({ where: { username: { equals: rawUsername, mode: 'insensitive' } }, select: { id: true } }),
+      prisma.user.findFirst({
+        where: { username: { equals: rawUsername, mode: 'insensitive' } },
+        select: { id: true },
+      }),
       prisma.user.findUnique({ where: { email }, select: { id: true } }),
     ]);
     if (usernameClash) {
@@ -139,7 +177,15 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
 
     const user = await prisma.user.findUnique({
       where: { emailVerificationToken: token },
-      select: { id: true, username: true, email: true, isSupporter: true, referralCode: true, emailVerifiedAt: true, emailVerificationTokenExpiresAt: true },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        isSupporter: true,
+        referralCode: true,
+        emailVerifiedAt: true,
+        emailVerificationTokenExpiresAt: true,
+      },
     });
 
     if (!user) {
@@ -375,7 +421,10 @@ export async function login(req: Request, res: Response): Promise<void> {
     }
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
-    res.json({ token, user: { id: user.id, username: user.username, email: user.email, isSupporter: user.isSupporter } });
+    res.json({
+      token,
+      user: { id: user.id, username: user.username, email: user.email, isSupporter: user.isSupporter },
+    });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'authController.ts' });
     res.status(500).json({ error: 'Internal server error' });
