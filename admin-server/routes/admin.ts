@@ -1,9 +1,10 @@
-// Alpha signups admin endpoints
-router.get('/alpha-signups/pending', adminController.listPendingAlphaSignups);
-router.post('/alpha-signups/resend', adminController.resendAlphaRegistrationEmail);
 import { Router } from 'express';
 import * as adminController from '../controllers/adminController.js';
 const router = Router();
+
+// Alpha signups admin endpoints
+router.get('/alpha-signups/pending', adminController.listPendingAlphaSignups);
+router.post('/alpha-signups/resend', adminController.resendAlphaRegistrationEmail);
 
 router.get('/galaxies', adminController.listGalaxies);
 router.post('/galaxies', adminController.createGalaxy);
