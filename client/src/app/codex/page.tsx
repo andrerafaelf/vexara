@@ -1,26 +1,48 @@
 import type { Metadata } from 'next';
 import CodexPage from '@/components/Codex/CodexPage';
 
+const TITLE = 'Vexara Codex — Field Manual: Buildings, Units, Stats & Milestones';
+const DESCRIPTION =
+  'The complete Vexara field manual. Browse all 8 core buildings, 12 unit types, full stats, build requirements, milestones, and scaling formulas for the free browser 4X strategy game Vexara.';
+
 export const metadata: Metadata = {
-  title: 'Codex — Vexara field manual',
-  description:
-    'The complete Vexara field manual. Eight core buildings, twelve unit types, full stats, requirements, milestones, and scaling.',
+  title: TITLE,
+  description: DESCRIPTION,
+  keywords: [
+    'Vexara codex',
+    'Vexara buildings',
+    'Vexara units',
+    'Vexara troops',
+    'Vexara field manual',
+    'Vexara stats',
+    'Vexara guide',
+    'Vexara wiki',
+    '4X strategy guide',
+  ],
+  alternates: { canonical: '/codex' },
   openGraph: {
-    title: 'Vexara Codex',
-    description: 'Full field manual: every building, every unit, every milestone.',
+    title: TITLE,
+    description: DESCRIPTION,
     url: 'https://vexara.world/codex',
     siteName: 'Vexara',
-    images: [
-      { url: 'https://vexara.world/vexara-overview.png', width: 1280, height: 720, alt: 'Vexara codex' },
-    ],
+    locale: 'en_US',
     type: 'article',
+    images: [
+      {
+        url: 'https://vexara.world/vexara-overview.png',
+        width: 1280,
+        height: 720,
+        alt: 'Vexara Codex — field manual',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Vexara Codex',
-    description: 'Full field manual: every building, every unit, every milestone.',
+    title: 'Vexara Codex — Field Manual',
+    description: 'Every building, every unit, every milestone in Vexara.',
     images: ['https://vexara.world/vexara-overview.png'],
   },
+  robots: { index: true, follow: true },
 };
 
 export default function Page() {

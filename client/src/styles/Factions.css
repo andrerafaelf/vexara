@@ -22,17 +22,44 @@
 }
 
 .factions-panel h2 {
-  font-size: var(--text-xl);
+  font-size: var(--text-2xl);
   color: var(--text-strong);
   margin: 0 0 var(--space-4) 0;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Amber tick that sits before every panel h2 — quiet, repeated detail */
+.factions-panel h2::before {
+  content: '';
+  width: 6px;
+  height: 18px;
+  background: var(--accent);
+  flex-shrink: 0;
 }
 
 .factions-panel h3 {
   font-size: var(--text-lg);
   color: var(--text-strong);
   margin: var(--space-4) 0 var(--space-3) 0;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* First panel on a page gets the full eyebrow + rule treatment.
+   :first-child here matches against .factions-container's first child,
+   so each FactionsView "tab" gets exactly one eyebrowed header. */
+.factions-container > .factions-panel:first-of-type > h2:first-child::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 3px;
+  background: var(--accent);
+  margin-left: 14px;
 }
 
 .factions-description {

@@ -2,6 +2,9 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy — Vexara',
+  description: 'How Vexara collects, uses, and protects your data. No advertising trackers, no third-party analytics, no data sales.',
+  alternates: { canonical: '/privacy' },
+  robots: { index: true, follow: true },
 };
 
 export default function PrivacyPage() {

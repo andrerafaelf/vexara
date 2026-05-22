@@ -9,6 +9,7 @@ import { useMyNexuses } from '@/hooks/useMyNexuses';
 import { useNotificationBadges } from '@/hooks/useNotificationBadges';
 import { useUnreadReports } from '@/hooks/useUnreadReports';
 import '@/styles/Game.css';
+import '@/styles/InGameIdentity.css';
 import { Nexus } from '@/types/game';
 import { Building2, Heart, Menu } from 'lucide-react';
 import { KOFI_URL } from '@/constants/support';
@@ -136,7 +137,10 @@ export default function GameLayout({
           >
             <Menu size={18} />
           </button>
-          <h1>Vexara</h1>
+          <h1 className="vx-wordmark game-wordmark">
+            <span className="vx-wordmark-stamp" aria-hidden="true">VX</span>
+            <span className="vx-wordmark-name">Vexara</span>
+          </h1>
         </div>
 
         <div className="header-center">

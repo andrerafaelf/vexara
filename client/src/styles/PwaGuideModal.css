@@ -12,7 +12,8 @@
 .pwa-modal {
   background: var(--color-navy-800);
   border: 1px solid var(--color-navy-500);
-  border-radius: 12px;
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
   padding: 28px 24px 24px;
   max-width: 480px;
   width: 100%;
@@ -20,6 +21,7 @@
   overflow-y: auto;
   position: relative;
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%);
 }
 
 .pwa-modal-close {
@@ -52,12 +54,25 @@
 }
 
 .pwa-modal-title {
-  color: var(--accent);
-  font-size: 18px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  color: var(--text-strong);
+  font-size: 22px;
+  font-weight: 800;
+  text-transform: none;
+  letter-spacing: -0.02em;
   margin: 0 0 8px;
+  line-height: 1.1;
+}
+
+.pwa-modal-title::before {
+  content: '// INSTALL · FIELD KIT';
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 6px;
 }
 
 .pwa-modal-subtitle {
@@ -78,7 +93,7 @@
   padding: 9px 12px;
   background: var(--color-navy-700);
   border: 1px solid var(--color-navy-500);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: var(--text-muted);
   font-size: 13px;
   font-weight: 600;

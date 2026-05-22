@@ -1827,13 +1827,13 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
         <div className="buildings-tab" style={activeTab !== 'buildings' ? { display: 'none' } : undefined}>
             <h3>Buildings</h3>
 
-            {nexus.buildings.commandCore >= 20 && !nexus.nexusTypeLockedAt && !nexus.nexusType && (
+            {nexus.buildings.commandCore >= 15 && !nexus.nexusTypeLockedAt && !nexus.nexusType && (
               <div className="nexus-spec-prompt" role="alert">
                 <span className="nexus-spec-prompt-icon" aria-hidden="true">
                   <Zap size={16} />
                 </span>
                 <div className="nexus-spec-prompt-body">
-                  <strong>Command Core maxed.</strong> This nexus is ready to specialize. Choose a permanent role to unlock a powerful bonus that cannot be changed.
+                  <strong>Specialization unlocked.</strong> This nexus is ready to specialize. Choose a permanent role to unlock a powerful bonus that cannot be changed.
                 </div>
                 <button
                   type="button"

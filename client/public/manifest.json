@@ -1,13 +1,15 @@
 {
-  "name": "Vexara - Sci-Fi Strategy Game",
+  "name": "Vexara — Browser 4X Strategy",
   "short_name": "Vexara",
-  "description": "Strategic conquest game in a neon-lit cyberpunk universe",
+  "description": "Free browser-based 4X strategy in a persistent sci-fi galaxy. Build, conquer, dominate 24/7. No resets. No pay-to-win.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
   "theme_color": "#0F1326",
   "background_color": "#0F1326",
-  "categories": ["games", "strategy"],
+  "lang": "en",
+  "categories": ["games", "strategy", "entertainment"],
   "icons": [
     {
       "src": "favicon.ico",

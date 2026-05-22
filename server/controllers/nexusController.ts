@@ -299,7 +299,7 @@ export async function transferResources(req: AuthRequest, res: Response): Promis
 }
 
 const VALID_SPEC_TYPES = ['Resource Depot', 'Supply Cache', 'Military Outpost', 'Reclaimed Outpost'] as const;
-const COMMAND_CORE_MAX = 20;
+const COMMAND_CORE_SPECIALIZE_LEVEL = 15;
 
 export async function specializeNexus(req: AuthRequest, res: Response): Promise<void> {
   try {
@@ -317,8 +317,8 @@ export async function specializeNexus(req: AuthRequest, res: Response): Promise<
     if (!nexus || nexus.ownerId !== req.userId || nexus.galaxyId !== req.galaxyId) {
       res.status(403).json({ error: 'Not authorized' }); return;
     }
-    if (nexus.commandCore < COMMAND_CORE_MAX) {
-      res.status(400).json({ error: `Command Core must be at max level (${COMMAND_CORE_MAX}) to specialize` }); return;
+    if (nexus.commandCore < COMMAND_CORE_SPECIALIZE_LEVEL) {
+      res.status(400).json({ error: `Command Core must be level ${COMMAND_CORE_SPECIALIZE_LEVEL} or higher to specialize` }); return;
     }
     if (nexus.nexusType || (nexus as unknown as { nexusTypeLockedAt?: Date | null }).nexusTypeLockedAt) {
       res.status(400).json({ error: 'This nexus is already specialized' }); return;

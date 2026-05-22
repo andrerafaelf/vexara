@@ -12,14 +12,38 @@
 .reports-header h2 {
   color: var(--text-strong);
   margin-bottom: var(--space-1);
-  font-size: var(--text-2xl);
+  font-size: clamp(24px, 2.6vw, 32px);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  position: relative;
+}
+
+.reports-header h2::before {
+  content: '// TRANSMISSION · COMBAT';
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.reports-header h2::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 3px;
+  background: var(--accent);
+  margin-top: 8px;
 }
 
 .reports-header p {
   color: var(--text-muted);
   font-size: var(--text-base);
+  margin-top: var(--space-3);
 }
 
 .reports-header-row {

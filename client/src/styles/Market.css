@@ -10,15 +10,64 @@
 
 .market-header h2 {
   color: var(--text-strong);
-  font-size: var(--text-3xl);
-  font-weight: 700;
-  letter-spacing: -0.025em;
+  font-size: clamp(28px, 3vw, 36px);
+  font-weight: 800;
+  letter-spacing: -0.035em;
   margin-bottom: var(--space-1);
+  line-height: 1.05;
+}
+
+.market-header h2::before {
+  content: '// TRANSMISSION · EXCHANGE';
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.market-header h2::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 3px;
+  background: var(--accent);
+  margin-top: 8px;
 }
 
 .market-subtitle {
   color: var(--text-muted);
   font-size: var(--text-base);
+  margin-top: var(--space-3);
+}
+
+/* Restyle the create button to match the new in-game CTA idiom */
+.market-create-btn {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0;
+  box-shadow: none;
+  border: 1px solid transparent;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%);
+  transition: background var(--duration-base) var(--ease-out),
+              transform var(--duration-fast) var(--ease-out);
+}
+
+.market-create-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.18) 50%, transparent 70%);
+  transform: translateX(-110%);
+  transition: transform 0.5s var(--ease-out);
+  pointer-events: none;
+}
+
+.market-create-btn:hover::before {
+  transform: translateX(110%);
 }
 
 .market-loading {
