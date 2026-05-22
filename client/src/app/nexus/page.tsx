@@ -20,8 +20,8 @@ export default function NexusIndexPage() {
       router.replace(`/nexus/${storedId}`);
       return;
     }
-    // Slow path: "/" already resolves preferred nexus (or shows create-nexus / galaxy picker).
-    router.replace('/');
+    // Slow path: /play resolves preferred nexus (or shows create-nexus / galaxy picker).
+    router.replace('/play');
   }, [router]);
 
   return null;

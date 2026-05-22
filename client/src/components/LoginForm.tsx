@@ -66,7 +66,7 @@ const LoginForm: React.FC = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace('/');
+      router.replace('/play');
     }
   }, [isAuthenticated, router]);
 
@@ -83,7 +83,7 @@ const LoginForm: React.FC = () => {
     try {
       const response = await loginApi(username.trim(), password);
       login(response.data.token, response.data.user);
-      router.push('/');
+      router.push('/play');
     } catch (err) {
       const data = (err as { response?: { data?: { error?: string; code?: string } } })?.response?.data;
       if (data?.code === 'EMAIL_NOT_VERIFIED') {

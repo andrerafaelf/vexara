@@ -549,6 +549,14 @@
   border-top: 1px solid var(--border-default);
 }
 
+.auth-secondary-quiet {
+  border-top: 0;
+  padding-top: 0;
+  color: var(--text-faint);
+  font-size: var(--text-xs);
+  letter-spacing: 0.01em;
+}
+
 .auth-link {
   color: var(--accent);
   text-decoration: none;

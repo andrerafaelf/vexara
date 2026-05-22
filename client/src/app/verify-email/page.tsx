@@ -40,7 +40,7 @@ function VerifyEmailInner() {
           login(res.data.token, res.data.user);
           setStatus('success');
           // Brief pause so the user sees the confirmation before the redirect.
-          setTimeout(() => router.replace('/'), 1200);
+          setTimeout(() => router.replace('/play'), 1200);
           return;
         }
         setStatus('success');

@@ -1,0 +1,621 @@
+'use client';
+
+import { useEffect, useMemo, useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { TROOPS_DOC, BUILDINGS_DOC, BUILDING_SCALING_DOC } from '@/data/gameDocs';
+import { TROOP_ICONS, BUILDING_ICONS } from '@/data/gameIcons';
+import SiteFooter from '@/components/SiteFooter';
+import '@/styles/Codex.css';
+
+type Tab = 'buildings' | 'troops' | 'scaling';
+
+export default function CodexPage() {
+  const [tab, setTab] = useState<Tab>('buildings');
+  const [activeAnchor, setActiveAnchor] = useState<string>('');
+
+  // Track which entry is in view, to highlight in the rail.
+  useEffect(() => {
+    const entries = [
+      ...BUILDINGS_DOC.map((b) => `building-${b.key}`),
+      ...TROOPS_DOC.map((t) => `troop-${t.key}`),
+    ];
+    const observers: IntersectionObserver[] = [];
+    const seen = new Map<string, number>();
+
+    entries.forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const io = new IntersectionObserver(
+        ([entry]) => {
+          seen.set(id, entry.intersectionRatio);
+          // Pick the most visible entry.
+          let best: [string, number] = ['', 0];
+          seen.forEach((ratio, key) => {
+            if (ratio > best[1]) best = [key, ratio];
+          });
+          if (best[0]) setActiveAnchor(best[0]);
+        },
+        { rootMargin: '-30% 0px -55% 0px', threshold: [0.1, 0.3, 0.6] }
+      );
+      io.observe(el);
+      observers.push(io);
+    });
+
+    return () => observers.forEach((io) => io.disconnect());
+  }, []);
+
+  // On initial load, honor #troop-x / #building-x in the URL.
+  useEffect(() => {
+    const hash = window.location.hash.replace('#', '');
+    if (!hash) return;
+    if (hash.startsWith('troop-')) setTab('troops');
+    else if (hash.startsWith('building-')) setTab('buildings');
+    // small delay so the rendered tab content lands before we scroll
+    setTimeout(() => {
+      const el = document.getElementById(hash);
+      if (el) el.scrollIntoView({ behavior: 'auto', block: 'start' });
+    }, 60);
+  }, []);
+
+  return (
+    <div className="cx-root">
+      <CodexNav />
+      <CodexHeader />
+
+      <div className="cx-shell">
+        <CodexRail
+          tab={tab}
+          setTab={setTab}
+          activeAnchor={activeAnchor}
+        />
+
+        <main className="cx-main">
+          <CodexTabs tab={tab} setTab={setTab} />
+
+          {tab === 'buildings' && (
+            <section className="cx-stream" aria-label="Buildings">
+              <CodexStreamHead
+                eyebrow="DOSSIER · CORE"
+                title="Buildings"
+                lede="Eight structures drive every nexus. Build order is identity."
+              />
+              {BUILDINGS_DOC.map((b, i) => (
+                <BuildingEntry key={b.key} doc={b} index={i + 1} />
+              ))}
+            </section>
+          )}
+
+          {tab === 'troops' && (
+            <section className="cx-stream" aria-label="Troops">
+              <CodexStreamHead
+                eyebrow="DOSSIER · MILITARY"
+                title="Troops"
+                lede="Twelve units. Four stats. Composition wins fights."
+              />
+              {TROOPS_DOC.map((t, i) => (
+                <TroopEntry key={t.key} doc={t} index={i + 1} />
+              ))}
+            </section>
+          )}
+
+          {tab === 'scaling' && (
+            <section className="cx-stream" aria-label="Scaling">
+              <CodexStreamHead
+                eyebrow="APPENDIX · MATH"
+                title="Scaling"
+                lede="Cost and time multipliers per construction stage."
+              />
+              <ScalingPanel />
+            </section>
+          )}
+        </main>
+      </div>
+
+      <SiteFooter />
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────── NAV / HEADER === */
+
+function CodexNav() {
+  return (
+    <header className="cx-nav">
+      <Link href="/" className="cx-nav-mark" aria-label="Vexara home">
+        <Image src="/vexara-logo.png" alt="" width={26} height={26} priority />
+        <span>Vexara</span>
+        <span className="cx-nav-sep">/</span>
+        <span className="cx-nav-loc">Codex</span>
+      </Link>
+      <nav className="cx-nav-links" aria-label="Primary">
+        <Link href="/" className="cx-nav-link-quiet">Home</Link>
+        <Link href="/login" className="cx-nav-link-quiet">Sign in</Link>
+        <Link href="/register" className="cx-nav-cta">Enlist</Link>
+      </nav>
+    </header>
+  );
+}
+
+function CodexHeader() {
+  return (
+    <section className="cx-header" aria-labelledby="cx-header-title">
+      <div className="cx-header-inner">
+        <div className="cx-header-stamps" aria-hidden="true">
+          <span className="cx-header-stamp">VEXARA · CODEX</span>
+          <span className="cx-header-stamp cx-header-stamp-rot">VOLUME 01 · v0.1</span>
+        </div>
+
+        <h1 id="cx-header-title" className="cx-header-title">
+          <span className="cx-header-title-thin">A field manual</span>
+          <span className="cx-header-title-shout">for the persistent galaxy.</span>
+        </h1>
+
+        <p className="cx-header-sub">
+          Every building. Every unit. Every requirement. Updated by the developer, not crowdsourced.
+          Read in order or jump in from the rail.
+        </p>
+
+        <dl className="cx-header-stats">
+          <div>
+            <dt>Buildings</dt>
+            <dd>{BUILDINGS_DOC.length.toString().padStart(2, '0')}</dd>
+          </div>
+          <div>
+            <dt>Unit types</dt>
+            <dd>{TROOPS_DOC.length.toString().padStart(2, '0')}</dd>
+          </div>
+          <div>
+            <dt>Max level</dt>
+            <dd>{Math.max(...BUILDINGS_DOC.map((b) => b.maxLevel))}</dd>
+          </div>
+          <div>
+            <dt>Pop cost</dt>
+            <dd>{TROOPS_DOC.reduce((s, t) => s + t.cost.population, 0)}</dd>
+          </div>
+        </dl>
+      </div>
+    </section>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────── RAIL === */
+
+function CodexRail({
+  tab,
+  setTab,
+  activeAnchor,
+}: {
+  tab: Tab;
+  setTab: (t: Tab) => void;
+  activeAnchor: string;
+}) {
+  return (
+    <aside className="cx-rail" aria-label="Codex navigation">
+      <div className="cx-rail-inner">
+        <CodexRailGroup
+          title="// Buildings"
+          isOpen={tab === 'buildings'}
+          onClick={() => setTab('buildings')}
+        >
+          {BUILDINGS_DOC.map((b) => {
+            const id = `building-${b.key}`;
+            const icon = BUILDING_ICONS[b.key];
+            return (
+              <a
+                key={id}
+                href={`#${id}`}
+                className={`cx-rail-link ${activeAnchor === id ? 'is-active' : ''}`}
+              >
+                {icon ? (
+                  <span className="cx-rail-link-icon">
+                    <Image src={icon} alt="" width={24} height={24} />
+                  </span>
+                ) : (
+                  <span className="cx-rail-link-icon" />
+                )}
+                <span className="cx-rail-link-name">{b.name}</span>
+              </a>
+            );
+          })}
+        </CodexRailGroup>
+
+        <CodexRailGroup
+          title="// Troops"
+          isOpen={tab === 'troops'}
+          onClick={() => setTab('troops')}
+        >
+          {TROOPS_DOC.map((t) => {
+            const id = `troop-${t.key}`;
+            const icon = TROOP_ICONS[t.key];
+            return (
+              <a
+                key={id}
+                href={`#${id}`}
+                className={`cx-rail-link ${activeAnchor === id ? 'is-active' : ''}`}
+              >
+                {icon ? (
+                  <span className="cx-rail-link-icon">
+                    <Image src={icon} alt="" width={24} height={24} />
+                  </span>
+                ) : (
+                  <span className="cx-rail-link-icon" />
+                )}
+                <span className="cx-rail-link-name">{t.name}</span>
+              </a>
+            );
+          })}
+        </CodexRailGroup>
+
+        <CodexRailGroup
+          title="// Appendix"
+          isOpen={tab === 'scaling'}
+          onClick={() => setTab('scaling')}
+        >
+          <a
+            href="#scaling"
+            className={`cx-rail-link ${tab === 'scaling' ? 'is-active' : ''}`}
+            onClick={() => setTab('scaling')}
+          >
+            <span className="cx-rail-link-icon cx-rail-link-icon-text">∑</span>
+            <span className="cx-rail-link-name">Scaling math</span>
+          </a>
+        </CodexRailGroup>
+      </div>
+    </aside>
+  );
+}
+
+function CodexRailGroup({
+  title,
+  children,
+  isOpen,
+  onClick,
+}: {
+  title: string;
+  children: React.ReactNode;
+  isOpen: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <div className={`cx-rail-group ${isOpen ? 'is-open' : ''}`}>
+      <button type="button" className="cx-rail-group-head" onClick={onClick}>
+        <span>{title}</span>
+        <span className="cx-rail-group-caret" aria-hidden="true">{isOpen ? '−' : '+'}</span>
+      </button>
+      {isOpen && <div className="cx-rail-group-body">{children}</div>}
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────── MOBILE TABS ===== */
+
+function CodexTabs({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
+  return (
+    <div className="cx-tabs" role="tablist" aria-label="Section selection">
+      {(['buildings', 'troops', 'scaling'] as Tab[]).map((t) => (
+        <button
+          key={t}
+          role="tab"
+          aria-selected={tab === t}
+          className={`cx-tab ${tab === t ? 'is-active' : ''}`}
+          onClick={() => setTab(t)}
+        >
+          {t === 'buildings' && 'Buildings'}
+          {t === 'troops' && 'Troops'}
+          {t === 'scaling' && 'Scaling'}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function CodexStreamHead({ eyebrow, title, lede }: { eyebrow: string; title: string; lede: string }) {
+  return (
+    <header className="cx-stream-head">
+      <span className="cx-stream-eyebrow">{eyebrow}</span>
+      <h2 className="cx-stream-title">{title}</h2>
+      <p className="cx-stream-lede">{lede}</p>
+      <span className="cx-stream-rule" aria-hidden="true" />
+    </header>
+  );
+}
+
+/* ─────────────────────────────────────────────────── BUILDING ENTRY === */
+
+function BuildingEntry({ doc, index }: { doc: typeof BUILDINGS_DOC[number]; index: number }) {
+  const icon = BUILDING_ICONS[doc.key];
+  return (
+    <article id={`building-${doc.key}`} className="cx-entry cx-entry-building">
+      <div className="cx-entry-head">
+        <div className="cx-entry-icon">
+          {icon && <Image src={icon} alt="" width={72} height={72} />}
+        </div>
+        <div className="cx-entry-titleblock">
+          <span className="cx-entry-idx">№ {index.toString().padStart(2, '0')} / BLD</span>
+          <h3 className="cx-entry-title">{doc.name}</h3>
+          <p className="cx-entry-role">{doc.role}</p>
+        </div>
+        <div className="cx-entry-meta">
+          <div className="cx-meta-cell">
+            <span className="cx-meta-label">Max level</span>
+            <span className="cx-meta-value">{doc.maxLevel}</span>
+          </div>
+          {doc.unlock && (
+            <div className="cx-meta-cell">
+              <span className="cx-meta-label">Unlocks at</span>
+              <span className="cx-meta-value cx-meta-value-text">{doc.unlock}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <p className="cx-entry-desc">{doc.description}</p>
+
+      <div className="cx-entry-grid">
+        <div className="cx-block">
+          <span className="cx-block-label">{'// Base cost · Lv 1'}</span>
+          <ul className="cx-resource-list">
+            <li>
+              <span className="cx-res-name">BIO</span>
+              <span className="cx-res-value">{doc.baseCost.biomass}</span>
+            </li>
+            <li>
+              <span className="cx-res-name">ALY</span>
+              <span className="cx-res-value">{doc.baseCost.alloy}</span>
+            </li>
+            <li>
+              <span className="cx-res-name">ORE</span>
+              <span className="cx-res-value">{doc.baseCost.ore}</span>
+            </li>
+            <li>
+              <span className="cx-res-name">TIME</span>
+              <span className="cx-res-value">{doc.baseCost.timeSeconds}s</span>
+            </li>
+          </ul>
+        </div>
+
+        <div className="cx-block cx-block-track">
+          <span className="cx-block-label">{'// Milestones'}</span>
+          <MilestoneTrack doc={doc} />
+        </div>
+      </div>
+
+      {doc.impact.length > 0 && (
+        <aside className="cx-callout">
+          <span className="cx-callout-tag">IMPACT</span>
+          <ul>
+            {doc.impact.map((line, i) => (
+              <li key={i}>{line}</li>
+            ))}
+          </ul>
+        </aside>
+      )}
+
+      <span className="cx-entry-divider" aria-hidden="true" />
+    </article>
+  );
+}
+
+function MilestoneTrack({ doc }: { doc: typeof BUILDINGS_DOC[number] }) {
+  // Build a track from 1 to maxLevel with marks at milestone levels.
+  const max = doc.maxLevel;
+  const milestoneByLevel = new Map(doc.milestones.map((m) => [m.level, m.requires]));
+
+  // Render a horizontal segmented bar.
+  const segments = useMemo(() => {
+    return Array.from({ length: max }, (_, i) => i + 1);
+  }, [max]);
+
+  return (
+    <div className="cx-track">
+      <div className="cx-track-bar">
+        {segments.map((lvl) => {
+          const isMilestone = milestoneByLevel.has(lvl);
+          return (
+            <span
+              key={lvl}
+              className={`cx-track-seg ${isMilestone ? 'is-milestone' : ''}`}
+              title={isMilestone ? `Lv ${lvl}: requires ${milestoneByLevel.get(lvl)?.join(', ')}` : `Lv ${lvl}`}
+            >
+              {isMilestone && <span className="cx-track-diamond" aria-hidden="true" />}
+            </span>
+          );
+        })}
+      </div>
+      <div className="cx-track-legend">
+        <span>Lv 01</span>
+        <span>Lv {max.toString().padStart(2, '0')}</span>
+      </div>
+      {doc.milestones.length > 0 && (
+        <ul className="cx-milestones">
+          {doc.milestones.map((m) => (
+            <li key={m.level}>
+              <span className="cx-milestone-mark">Lv {m.level}</span>
+              <span className="cx-milestone-req">requires {m.requires.join(' + ')}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────── TROOP ENTRY === */
+
+function TroopEntry({ doc, index }: { doc: typeof TROOPS_DOC[number]; index: number }) {
+  const icon = TROOP_ICONS[doc.key];
+  // Normalize stat bars to a per-page max so the visual is comparable.
+  const STAT_MAX = { attack: 220, defense: 220, speed: 30, carry: 110 };
+  return (
+    <article id={`troop-${doc.key}`} className="cx-entry cx-entry-troop">
+      <div className="cx-entry-head">
+        <div className="cx-entry-icon">
+          {icon && <Image src={icon} alt="" width={72} height={72} />}
+        </div>
+        <div className="cx-entry-titleblock">
+          <span className="cx-entry-idx">№ {index.toString().padStart(2, '0')} / TRP</span>
+          <h3 className="cx-entry-title">{doc.name}</h3>
+          <p className="cx-entry-role">{doc.role}</p>
+        </div>
+        <div className="cx-entry-meta">
+          <div className="cx-meta-cell">
+            <span className="cx-meta-label">Pop cost</span>
+            <span className="cx-meta-value">{doc.cost.population}</span>
+          </div>
+          <div className="cx-meta-cell">
+            <span className="cx-meta-label">Build time</span>
+            <span className="cx-meta-value cx-meta-value-text">{doc.cost.time}</span>
+          </div>
+        </div>
+      </div>
+
+      <p className="cx-entry-desc">{doc.description}</p>
+
+      <div className="cx-entry-grid">
+        <div className="cx-block">
+          <span className="cx-block-label">{'// Stats'}</span>
+          <ul className="cx-statbars">
+            <StatBar label="ATK" value={doc.stats.attack} max={STAT_MAX.attack} tone="attack" />
+            <StatBar label="DEF" value={doc.stats.defense} max={STAT_MAX.defense} tone="defense" />
+            <StatBar label="SPD" value={doc.stats.speed} max={STAT_MAX.speed} tone="speed" />
+            <StatBar label="CRY" value={doc.stats.carry} max={STAT_MAX.carry} tone="carry" />
+          </ul>
+        </div>
+
+        <div className="cx-block">
+          <span className="cx-block-label">{'// Cost · per unit'}</span>
+          <ul className="cx-resource-list">
+            <li>
+              <span className="cx-res-name">BIO</span>
+              <span className="cx-res-value">{doc.cost.biomass}</span>
+            </li>
+            <li>
+              <span className="cx-res-name">ALY</span>
+              <span className="cx-res-value">{doc.cost.alloy}</span>
+            </li>
+            <li>
+              <span className="cx-res-name">ORE</span>
+              <span className="cx-res-value">{doc.cost.ore}</span>
+            </li>
+            <li>
+              <span className="cx-res-name">POP</span>
+              <span className="cx-res-value">{doc.cost.population}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      {doc.requirements.length > 0 && (
+        <div className="cx-reqs">
+          <span className="cx-reqs-label">{'// Requires'}</span>
+          <div className="cx-reqs-chips">
+            {doc.requirements.map((r) => (
+              <span key={r} className="cx-chip">{r}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {doc.notes && doc.notes.length > 0 && (
+        <aside className="cx-callout">
+          <span className="cx-callout-tag">FIELD NOTES</span>
+          <ul>
+            {doc.notes.map((n, i) => (
+              <li key={i}>{n}</li>
+            ))}
+          </ul>
+        </aside>
+      )}
+
+      <span className="cx-entry-divider" aria-hidden="true" />
+    </article>
+  );
+}
+
+function StatBar({
+  label,
+  value,
+  max,
+  tone,
+}: {
+  label: string;
+  value: number;
+  max: number;
+  tone: 'attack' | 'defense' | 'speed' | 'carry';
+}) {
+  const pct = Math.max(2, Math.min(100, (value / max) * 100));
+  return (
+    <li className="cx-statbar">
+      <span className="cx-statbar-label">{label}</span>
+      <span className="cx-statbar-track">
+        <span
+          className={`cx-statbar-fill cx-statbar-${tone}`}
+          style={{ width: `${pct}%` }}
+        />
+        {/* Tick marks every 25% */}
+        <span className="cx-statbar-ticks" aria-hidden="true">
+          <span style={{ left: '25%' }} />
+          <span style={{ left: '50%' }} />
+          <span style={{ left: '75%' }} />
+        </span>
+      </span>
+      <span className="cx-statbar-value">{value}</span>
+    </li>
+  );
+}
+
+/* ──────────────────────────────────────────────────────── SCALING ===== */
+
+function ScalingPanel() {
+  return (
+    <div id="scaling" className="cx-scaling">
+      <div className="cx-scaling-grid">
+        <div className="cx-scaling-card">
+          <span className="cx-scaling-label">{'// Cost multiplier per level'}</span>
+          <table className="cx-scaling-table">
+            <thead>
+              <tr>
+                <th>Stage</th>
+                <th>Multiplier</th>
+                <th>Applies to</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Early</td><td>×{BUILDING_SCALING_DOC.costScaling.early}</td><td>Lv 1–5</td></tr>
+              <tr><td>Mid</td><td>×{BUILDING_SCALING_DOC.costScaling.mid}</td><td>Lv 6–10</td></tr>
+              <tr><td>Late</td><td>×{BUILDING_SCALING_DOC.costScaling.late}</td><td>Lv 11+</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div className="cx-scaling-card">
+          <span className="cx-scaling-label">{'// Build-time multiplier per level'}</span>
+          <table className="cx-scaling-table">
+            <thead>
+              <tr>
+                <th>Stage</th>
+                <th>Multiplier</th>
+                <th>Applies to</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Early</td><td>×{BUILDING_SCALING_DOC.timeScaling.early}</td><td>Lv 1–5</td></tr>
+              <tr><td>Mid</td><td>×{BUILDING_SCALING_DOC.timeScaling.mid}</td><td>Lv 6–10</td></tr>
+              <tr><td>Late</td><td>×{BUILDING_SCALING_DOC.timeScaling.late}</td><td>Lv 11+</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <aside className="cx-callout">
+        <span className="cx-callout-tag">RULE OF THUMB</span>
+        <ul>
+          {BUILDING_SCALING_DOC.stages.map((s, i) => (
+            <li key={i}>{s}</li>
+          ))}
+        </ul>
+      </aside>
+    </div>
+  );
+}
