@@ -1,3 +1,7 @@
+-- pgcrypto provides gen_random_bytes(). Required for the backfill below;
+-- safe to enable repeatedly on prod and fresh dev DBs alike.
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 -- Add token column so unsubscribe links require a per-recipient secret
 -- instead of allowing arbitrary `?email=` lookups.
 ALTER TABLE "AlphaSignup" ADD COLUMN IF NOT EXISTS "unsubscribeToken" VARCHAR(64);
