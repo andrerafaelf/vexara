@@ -4,6 +4,8 @@ import prisma from '../lib/prisma.js';
 import * as nexusService from '../services/nexusService.js';
 import type { AuthRequest } from '../types/index.js';
 import { getPopulationMax } from '../utils/population.js';
+import { getMaxStorage, getResourceProduction } from '../utils/economy.js';
+import { notifyNexusResources } from '../services/warRoomSocket.js';
 import { logError } from '../utils/logger.js';
 
 const MAX_NEXUSES_PER_USER = 10;
@@ -290,6 +292,22 @@ export async function transferResources(req: AuthRequest, res: Response): Promis
       { biomass: from.biomass - sendBiomass, alloy: from.alloy - sendAlloy, ore: from.ore - sendOre },
       { biomass: to.biomass + sendBiomass, alloy: to.alloy + sendAlloy, ore: to.ore + sendOre },
     );
+
+    // Both nexuses belong to the same owner (verified above), so a single user
+    // gets two snapshots. Failures here must not break the HTTP response.
+    try {
+      for (const n of [updatedFrom, updatedTo]) {
+        notifyNexusResources(req.userId!, {
+          nexusId: n.id,
+          base: { biomass: n.biomass, alloy: n.alloy, ore: n.ore },
+          production: getResourceProduction(n),
+          storageMax: getMaxStorage(n),
+          lastResourceUpdate: n.lastResourceUpdate,
+        });
+      }
+    } catch (emitErr) {
+      logError('nexus_resources_emit_failed', { message: (emitErr as Error).message, file: 'nexusController.ts', op: 'transferResources' });
+    }
 
     res.json({ from: serializeNexus(updatedFrom), to: serializeNexus(updatedTo) });
   } catch (error) {

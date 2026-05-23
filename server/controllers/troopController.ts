@@ -2,9 +2,42 @@ import type { Response } from 'express';
 import { applyCompletedQueues, applyQuestRewards, computeResourceUpdate, normalizeTrainingQueue, queueToJson, serializeNexus } from '../models/Nexus.js';
 import * as troopService from '../services/troopService.js';
 import type { AuthRequest } from '../types/index.js';
-import { NEXUS_TYPE_BONUSES } from '../utils/economy.js';
+import { NEXUS_TYPE_BONUSES, getMaxStorage, getResourceProduction } from '../utils/economy.js';
 import { parsePositiveInt } from '../utils/validation.js';
 import { logError } from '../utils/logger.js';
+import { notifyNexusResources } from '../services/warRoomSocket.js';
+
+// Pushes a fresh resource snapshot to the nexus owner. Best-effort: a failed
+// emit must never break the HTTP response, so all callers wrap in try/catch.
+// Accepts a Prisma row shape (nexusTypeDoubled may be null in the DB) and
+// normalizes to the economy module's `boolean | undefined` expectation.
+function emitResourceSnapshot(userId: number, nexus: {
+  id: number; biomass: number; alloy: number; ore: number; lastResourceUpdate: Date;
+  nexusType?: string | null; nexusTypeDoubled?: boolean | null;
+  biomassFarm: number; alloyForge: number; oreExtractor: number; storageVault: number;
+}) {
+  const economyInput = {
+    nexusType: nexus.nexusType ?? null,
+    nexusTypeDoubled: nexus.nexusTypeDoubled ?? false,
+    biomassFarm: nexus.biomassFarm,
+    alloyForge: nexus.alloyForge,
+    oreExtractor: nexus.oreExtractor,
+    storageVault: nexus.storageVault,
+    // computeResourceUpdate isn't called here, but the interface requires
+    // these to be present, so pass through the current values.
+    biomass: nexus.biomass,
+    alloy: nexus.alloy,
+    ore: nexus.ore,
+    lastResourceUpdate: nexus.lastResourceUpdate,
+  };
+  notifyNexusResources(userId, {
+    nexusId: nexus.id,
+    base: { biomass: nexus.biomass, alloy: nexus.alloy, ore: nexus.ore },
+    production: getResourceProduction(economyInput),
+    storageMax: getMaxStorage(economyInput),
+    lastResourceUpdate: nexus.lastResourceUpdate,
+  });
+}
 
 const MAX_TRAINING_QUEUE = 5;
 const RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL = 0.92;
@@ -143,6 +176,8 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
       trainingQueue: queueToJson(newQueue),
     });
     const rewardApplied = await applyQuestRewards(updated);
+    try { emitResourceSnapshot(req.userId!, rewardApplied); }
+    catch (e) { logError('nexus_resources_emit_failed', { message: (e as Error).message, file: 'troopController.ts', op: 'trainTroops' }); }
     res.json({ success: true, completesAt, nexus: serializeNexus(rewardApplied) });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'troopController.ts' });
@@ -202,6 +237,8 @@ export async function cancelTrainingQueue(req: AuthRequest, res: Response): Prom
       populationCurrent: Math.max(0, nexus.populationCurrent - totalCost.population),
       trainingQueue: queueToJson(newQueue),
     });
+    try { emitResourceSnapshot(req.userId!, updated); }
+    catch (e) { logError('nexus_resources_emit_failed', { message: (e as Error).message, file: 'troopController.ts', op: 'cancelTrainingQueue' }); }
     res.json({ success: true, refund, nexus: serializeNexus(updated) });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'troopController.ts' });
@@ -250,6 +287,8 @@ export async function checkTrainingQueue(req: AuthRequest, res: Response): Promi
     const resourceUpdate = computeResourceUpdate(nexus);
     const updated = await troopService.updateNexus(nexus.id, { ...resourceUpdate, ...troopUpdates, trainingQueue: queueToJson(trainingQueue) });
     const rewardApplied = await applyQuestRewards(updated);
+    try { emitResourceSnapshot(req.userId!, rewardApplied); }
+    catch (e) { logError('nexus_resources_emit_failed', { message: (e as Error).message, file: 'troopController.ts', op: 'checkTrainingQueue' }); }
     res.json({ completed, nexus: serializeNexus(rewardApplied) });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'troopController.ts' });

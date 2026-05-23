@@ -5,6 +5,7 @@ import { io, type Socket } from 'socket.io-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { combatKeys } from '../features/combat/useCombat';
 import { MY_NEXUSES_KEY } from './useMyNexuses';
+import { realtimeStore } from '../realtime/store';
 
 export interface FactionChatMessage {
   id: number;
@@ -18,6 +19,12 @@ type DiplomacyChatHandler = (treatyId: number, msg: FactionChatMessage) => void;
 type BadgeHandler = () => void;
 type AttacksRefreshHandler = (nexusId: number) => void;
 type TransfersRefreshHandler = (nexusId: number) => void;
+export interface QueueCompletionPayload {
+  nexusId: string;
+  builds: Array<{ building: string; targetLevel: number }>;
+  trainings: Array<{ troopType: string; amount: number }>;
+}
+type QueueCompletedHandler = (payload: QueueCompletionPayload) => void;
 
 interface GameSocketHandlers {
   onFactionChat?: ChatHandler;
@@ -25,6 +32,7 @@ interface GameSocketHandlers {
   onBadgeRefresh?: BadgeHandler;
   onAttacksRefresh?: AttacksRefreshHandler;
   onTransfersRefresh?: TransfersRefreshHandler;
+  onQueueCompleted?: QueueCompletedHandler;
 }
 
 // Module-level singleton, one socket shared across all hook instances.
@@ -37,6 +45,11 @@ const _diplomacyChatHandlers = new Set<DiplomacyChatHandler>();
 const _badgeHandlers = new Set<BadgeHandler>();
 const _attacksHandlers = new Set<AttacksRefreshHandler>();
 const _transfersHandlers = new Set<TransfersRefreshHandler>();
+const _queueCompletedHandlers = new Set<QueueCompletedHandler>();
+const _factionUpdateHandlers = new Set<() => void>();
+const _factionInvitesHandlers = new Set<() => void>();
+const _friendsUpdateHandlers = new Set<() => void>();
+const _marketUpdateHandlers = new Set<() => void>();
 
 function buildOrigin(): string {
   const apiUrl =
@@ -79,6 +92,42 @@ function getSocket(): Socket {
   socket.on('transfers:refresh', (data: { nexusId: number }) => {
     for (const h of _transfersHandlers) h(data.nexusId);
   });
+
+  // Realtime resource snapshot. Server pushes one of these after any mutation
+  // that touched resources (currently: building upgrade). The store update
+  // re-anchors local interpolation against the fresh server baseline.
+  socket.on('nexus:resources', (data: {
+    nexusId: string;
+    base: { biomass: number; alloy: number; ore: number };
+    production: { biomass: number; alloy: number; ore: number };
+    storageMax: number;
+    lastResourceUpdateMs: number;
+  }) => {
+    realtimeStore.set({
+      nexusId: data.nexusId,
+      base: data.base,
+      production: data.production,
+      storageMax: data.storageMax,
+      // Anchor against the *server* timestamp rather than Date.now(): the server
+      // computed `base` as the snapshot at lastResourceUpdate, so interpolating
+      // from a client-side "now" would double-count any latency on the way down.
+      anchorMs: data.lastResourceUpdateMs,
+    });
+  });
+
+  // Queue-completion event: server batches all builds/trainings that drained
+  // in a single 15s job tick into one emit. Module-scope fan-out, per-hook
+  // listeners decide whether to act (toast, refetch, etc.).
+  socket.on('nexus:queue:completed', (data: QueueCompletionPayload) => {
+    for (const h of _queueCompletedHandlers) h(data);
+  });
+
+  // Faction / friends / market refresh signals. No payload data — handlers
+  // invalidate the relevant React Query keys and let normal refetch handle it.
+  socket.on('faction:updated', () => { for (const h of _factionUpdateHandlers) h(); });
+  socket.on('faction:invites:updated', () => { for (const h of _factionInvitesHandlers) h(); });
+  socket.on('friends:updated', () => { for (const h of _friendsUpdateHandlers) h(); });
+  socket.on('market:updated', () => { for (const h of _marketUpdateHandlers) h(); });
 
   _socket = socket;
   return socket;
@@ -147,6 +196,22 @@ export function useGameSocket(handlers?: GameSocketHandlers) {
     socket.on('transfers:refresh', onTransfersRefresh);
     socket.on('reports:refresh', onReportsRefresh);
 
+    // Reconnect handler: on the *second and later* connect events for this
+    // subscription, refetch the queries that the server may have pushed updates
+    // to while the socket was offline. The first connect is the initial one
+    // and the component is already fetching — invalidating then would trigger
+    // a redundant duplicate request.
+    let sawFirstConnect = socket.connected;
+    const onReconnect = () => {
+      if (!sawFirstConnect) {
+        sawFirstConnect = true;
+        return;
+      }
+      qc.invalidateQueries({ queryKey: MY_NEXUSES_KEY });
+      qc.invalidateQueries({ queryKey: ['notificationBadges'] });
+    };
+    socket.on('connect', onReconnect);
+
     const chatHandler: ChatHandler = (msg) => handlersRef.current?.onFactionChat?.(msg);
     const diplomacyChatHandler: DiplomacyChatHandler = (treatyId, msg) => handlersRef.current?.onDiplomacyChat?.(treatyId, msg);
     const badgeHandler: BadgeHandler = () => handlersRef.current?.onBadgeRefresh?.();
@@ -154,21 +219,61 @@ export function useGameSocket(handlers?: GameSocketHandlers) {
       handlersRef.current?.onAttacksRefresh?.(nexusId);
     const transfersHandler: TransfersRefreshHandler = (nexusId) =>
       handlersRef.current?.onTransfersRefresh?.(nexusId);
+    const queueCompletedHandler: QueueCompletedHandler = (payload) => {
+      // Always invalidate the nexus list so the new building level / troop
+      // count surfaces immediately; consumers get a chance to show their own
+      // toast/sound via the optional onQueueCompleted handler.
+      qc.invalidateQueries({ queryKey: MY_NEXUSES_KEY });
+      handlersRef.current?.onQueueCompleted?.(payload);
+    };
+
+    // Faction / friends / market handlers invalidate their respective React
+    // Query keys. Using the loose top-level key (e.g. ['faction']) is fine
+    // because TanStack Query matches by prefix.
+    const onFactionUpdate = () => {
+      qc.invalidateQueries({ queryKey: ['faction'] });
+    };
+    const onFactionInvites = () => {
+      qc.invalidateQueries({ queryKey: ['faction', 'invites'] });
+      qc.invalidateQueries({ queryKey: ['notificationBadges'] });
+    };
+    const onFriendsUpdate = () => {
+      qc.invalidateQueries({ queryKey: ['friends'] });
+      qc.invalidateQueries({ queryKey: ['notificationBadges'] });
+    };
+    const onMarketUpdate = () => {
+      qc.invalidateQueries({ queryKey: ['market'] });
+      // Buy/sell move resources between the player's nexuses, so refresh
+      // the nexus list too. Cheap (cached, 30s stale) for everyone else.
+      qc.invalidateQueries({ queryKey: MY_NEXUSES_KEY });
+    };
+
     _chatHandlers.add(chatHandler);
     _diplomacyChatHandlers.add(diplomacyChatHandler);
     _badgeHandlers.add(badgeHandler);
     _attacksHandlers.add(attacksHandler);
     _transfersHandlers.add(transfersHandler);
+    _queueCompletedHandlers.add(queueCompletedHandler);
+    _factionUpdateHandlers.add(onFactionUpdate);
+    _factionInvitesHandlers.add(onFactionInvites);
+    _friendsUpdateHandlers.add(onFriendsUpdate);
+    _marketUpdateHandlers.add(onMarketUpdate);
 
     return () => {
       socket.off('attacks:refresh', onAttacksRefresh);
       socket.off('transfers:refresh', onTransfersRefresh);
       socket.off('reports:refresh', onReportsRefresh);
+      socket.off('connect', onReconnect);
       _chatHandlers.delete(chatHandler);
       _diplomacyChatHandlers.delete(diplomacyChatHandler);
       _badgeHandlers.delete(badgeHandler);
       _attacksHandlers.delete(attacksHandler);
       _transfersHandlers.delete(transfersHandler);
+      _queueCompletedHandlers.delete(queueCompletedHandler);
+      _factionUpdateHandlers.delete(onFactionUpdate);
+      _factionInvitesHandlers.delete(onFactionInvites);
+      _friendsUpdateHandlers.delete(onFriendsUpdate);
+      _marketUpdateHandlers.delete(onMarketUpdate);
 
       _refCount--;
       if (_refCount <= 0) {

@@ -2,7 +2,8 @@ import type { Response } from 'express';
 import { applyCompletedQueues, applyQuestRewards, computeResourceUpdate, normalizeBuildQueue, queueToJson, serializeNexus } from '../models/Nexus.js';
 import * as buildingService from '../services/buildingService.js';
 import type { AuthRequest } from '../types/index.js';
-import { NEXUS_TYPE_BONUSES } from '../utils/economy.js';
+import { NEXUS_TYPE_BONUSES, getMaxStorage, getResourceProduction } from '../utils/economy.js';
+import { notifyNexusResources } from '../services/warRoomSocket.js';
 import { getPopulationMax } from '../utils/population.js';
 import { logError } from '../utils/logger.js';
 
@@ -236,6 +237,20 @@ export async function upgradeBuilding(req: AuthRequest, res: Response): Promise<
       buildQueue: queueToJson(newQueue),
     });
     const rewardApplied = await applyQuestRewards(updated);
+    // Push a fresh resource snapshot so the client's live tick and any
+    // affordability gates re-anchor against the post-deduction baseline.
+    // Best-effort: a failed emit must not break the HTTP response.
+    try {
+      notifyNexusResources(req.userId!, {
+        nexusId: rewardApplied.id,
+        base: { biomass: rewardApplied.biomass, alloy: rewardApplied.alloy, ore: rewardApplied.ore },
+        production: getResourceProduction(rewardApplied),
+        storageMax: getMaxStorage(rewardApplied),
+        lastResourceUpdate: rewardApplied.lastResourceUpdate,
+      });
+    } catch (emitErr) {
+      logError('nexus_resources_emit_failed', { message: (emitErr as Error).message, file: 'buildingController.ts' });
+    }
     res.json({ success: true, completesAt, nexus: serializeNexus(rewardApplied) });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'buildingController.ts' });
@@ -289,6 +304,17 @@ export async function cancelBuildQueue(req: AuthRequest, res: Response): Promise
       ore: current.ore + refund.ore,
       buildQueue: queueToJson(newQueue),
     });
+    try {
+      notifyNexusResources(req.userId!, {
+        nexusId: updated.id,
+        base: { biomass: updated.biomass, alloy: updated.alloy, ore: updated.ore },
+        production: getResourceProduction(updated),
+        storageMax: getMaxStorage(updated),
+        lastResourceUpdate: updated.lastResourceUpdate,
+      });
+    } catch (emitErr) {
+      logError('nexus_resources_emit_failed', { message: (emitErr as Error).message, file: 'buildingController.ts', op: 'cancelBuildQueue' });
+    }
     res.json({ success: true, refund, nexus: serializeNexus(updated) });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'buildingController.ts' });
@@ -320,6 +346,17 @@ export async function checkBuildQueue(req: AuthRequest, res: Response): Promise<
     const resourceUpdate = computeResourceUpdate(nexus);
     const updated = await buildingService.updateNexus(nexus.id, { ...resourceUpdate, ...data });
     const rewardApplied = await applyQuestRewards(updated);
+    try {
+      notifyNexusResources(req.userId!, {
+        nexusId: rewardApplied.id,
+        base: { biomass: rewardApplied.biomass, alloy: rewardApplied.alloy, ore: rewardApplied.ore },
+        production: getResourceProduction(rewardApplied),
+        storageMax: getMaxStorage(rewardApplied),
+        lastResourceUpdate: rewardApplied.lastResourceUpdate,
+      });
+    } catch (emitErr) {
+      logError('nexus_resources_emit_failed', { message: (emitErr as Error).message, file: 'buildingController.ts', op: 'checkBuildQueue' });
+    }
     res.json({ completed, nexus: serializeNexus(rewardApplied) });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'buildingController.ts' });

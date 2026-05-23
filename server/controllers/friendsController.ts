@@ -2,7 +2,7 @@ import type { Response } from 'express';
 import prisma from '../lib/prisma.js';
 import * as chatService from '../services/chatService.js';
 import * as friendsService from '../services/friendsService.js';
-import { notifyBadgeUpdate } from '../services/warRoomSocket.js';
+import { notifyBadgeUpdate, notifyFriendsUpdate } from '../services/warRoomSocket.js';
 import type { AuthRequest } from '../types/index.js';
 import { logError } from '../utils/logger.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
@@ -43,6 +43,8 @@ export async function sendFriendRequest(req: AuthRequest, res: Response): Promis
       await friendsService.autoAcceptRequest(reverse.id, userAId, userBId);
       notifyBadgeUpdate(target.id);
       notifyBadgeUpdate(req.userId);
+      try { notifyFriendsUpdate(target.id); notifyFriendsUpdate(req.userId); }
+      catch (emitErr) { logError('friends_emit_failed', { message: (emitErr as Error).message, op: 'sendFriendRequest:autoAccept' }); }
       res.json({ success: true, autoAccepted: true }); return;
     }
     const mine = await friendsService.getPendingRequestBetween(req.userId, target.id);
@@ -50,6 +52,8 @@ export async function sendFriendRequest(req: AuthRequest, res: Response): Promis
     await friendsService.createFriendRequest(req.userId, target.id);
     // Notify the target that they have a new incoming friend request.
     notifyBadgeUpdate(target.id);
+    try { notifyFriendsUpdate(target.id); notifyFriendsUpdate(req.userId); }
+    catch (emitErr) { logError('friends_emit_failed', { message: (emitErr as Error).message, op: 'sendFriendRequest' }); }
 
     const sender = await prisma.user.findUnique({ where: { id: req.userId }, select: { username: true } });
     void sendPushToUser(target.id, NOTIF.FRIEND_REQUEST, {
@@ -104,6 +108,8 @@ export async function acceptRequest(req: AuthRequest, res: Response): Promise<vo
     // Both users' badge counts change when a request is accepted.
     notifyBadgeUpdate(reqRow.senderId);
     notifyBadgeUpdate(reqRow.receiverId);
+    try { notifyFriendsUpdate(reqRow.senderId); notifyFriendsUpdate(reqRow.receiverId); }
+    catch (emitErr) { logError('friends_emit_failed', { message: (emitErr as Error).message, op: 'acceptRequest' }); }
     res.json({ success: true });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'friendsController.ts' });
@@ -119,6 +125,8 @@ export async function declineRequest(req: AuthRequest, res: Response): Promise<v
     if (!reqRow || reqRow.receiverId !== req.userId) { res.status(404).json({ error: 'Request not found' }); return; }
     if (reqRow.status !== 'pending') { res.status(400).json({ error: 'Request is not pending' }); return; }
     await friendsService.updateRequestStatus(id, 'declined');
+    try { notifyFriendsUpdate(reqRow.senderId); notifyFriendsUpdate(reqRow.receiverId); }
+    catch (emitErr) { logError('friends_emit_failed', { message: (emitErr as Error).message, op: 'declineRequest' }); }
     res.json({ success: true });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'friendsController.ts' });
@@ -134,6 +142,8 @@ export async function cancelRequest(req: AuthRequest, res: Response): Promise<vo
     if (!reqRow || reqRow.senderId !== req.userId) { res.status(404).json({ error: 'Request not found' }); return; }
     if (reqRow.status !== 'pending') { res.status(400).json({ error: 'Request is not pending' }); return; }
     await friendsService.updateRequestStatus(id, 'cancelled');
+    try { notifyFriendsUpdate(reqRow.senderId); notifyFriendsUpdate(reqRow.receiverId); }
+    catch (emitErr) { logError('friends_emit_failed', { message: (emitErr as Error).message, op: 'cancelRequest' }); }
     res.json({ success: true });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'friendsController.ts' });
@@ -149,6 +159,8 @@ export async function unfriend(req: AuthRequest, res: Response): Promise<void> {
     const friendship = await friendsService.getFriendship(userAId, userBId);
     if (!friendship) { res.status(404).json({ error: 'Not friends' }); return; }
     await friendsService.deleteFriendship(friendship.id);
+    try { notifyFriendsUpdate(req.userId); notifyFriendsUpdate(friendId); }
+    catch (emitErr) { logError('friends_emit_failed', { message: (emitErr as Error).message, op: 'unfriend' }); }
     res.json({ success: true });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'friendsController.ts' });

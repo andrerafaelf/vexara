@@ -56,6 +56,9 @@ import { Countdown } from './Countdown';
 import { QueueCountdown } from './QueueCountdown';
 import { LiveResourceStrip } from './LiveResourceStrip';
 import { useNow } from '@/hooks/useNow';
+import { useLiveResources } from '@/realtime/useLiveResources';
+import { realtimeStore } from '@/realtime/store';
+import { getMaxStorage, getResourceProduction } from '@/realtime/economy.shared';
 
 // Import troop images
 import annihilatorplatformImg from '../assets/troops/annihilatorplatform.png';
@@ -531,6 +534,53 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   // component no longer needs its own per-second tick. Only the leaf countdowns re-render
   // every second; this tree stays stable until `nexus` or local state actually changes.
 
+  // Seed the realtime store from the latest server snapshot so useLiveResources
+  // and useCanAfford have data to interpolate against before (and between) any
+  // socket events. Re-runs whenever the nexus payload changes, which keeps the
+  // baseline correct after a manual onUpdate() refetch or any mutation.
+  useEffect(() => {
+    realtimeStore.set({
+      nexusId: String(nexus._id),
+      base: { biomass: nexus.resources.biomass, alloy: nexus.resources.alloy, ore: nexus.resources.ore },
+      production: getResourceProduction({
+        nexusType: nexus.nexusType,
+        nexusTypeDoubled: nexus.nexusTypeDoubled,
+        biomassFarm: nexus.buildings.biomassFarm,
+        alloyForge: nexus.buildings.alloyForge,
+        oreExtractor: nexus.buildings.oreExtractor,
+        storageVault: nexus.buildings.storageVault,
+      }),
+      storageMax: getMaxStorage({
+        nexusType: nexus.nexusType,
+        nexusTypeDoubled: nexus.nexusTypeDoubled,
+        biomassFarm: nexus.buildings.biomassFarm,
+        alloyForge: nexus.buildings.alloyForge,
+        oreExtractor: nexus.buildings.oreExtractor,
+        storageVault: nexus.buildings.storageVault,
+      }),
+      anchorMs: nexus.lastResourceUpdate
+        ? new Date(nexus.lastResourceUpdate).getTime()
+        : Date.now(),
+    });
+  }, [
+    nexus._id,
+    nexus.resources.biomass,
+    nexus.resources.alloy,
+    nexus.resources.ore,
+    nexus.buildings.biomassFarm,
+    nexus.buildings.alloyForge,
+    nexus.buildings.oreExtractor,
+    nexus.buildings.storageVault,
+    nexus.nexusType,
+    nexus.nexusTypeDoubled,
+    nexus.lastResourceUpdate,
+  ]);
+
+  // Live (interpolated) resources for affordability gates throughout this view.
+  // Returns null on first render before the seed effect has run; gates fall back
+  // to the static nexus.resources snapshot in that case.
+  const liveResources = useLiveResources(String(nexus._id));
+
   useEffect(() => {
     setActiveTabState(initialTab);
   }, [initialTab]);
@@ -882,10 +932,17 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   const getMaxTrainableAmount = (troopType: string, costs: (typeof TROOP_COSTS)[string], canTrain: boolean) => {
     if (!canTrain) return { maxTrainable: 0, shortageReasons: [] };
 
+    // Use live (interpolated) resources when available so max-trainable counts
+    // up in real time as resources accrue, instead of waiting for refetch.
+    // Population is server-state and doesn't tick locally — kept as-is.
+    const availableBiomass = liveResources?.biomass ?? nexus.resources.biomass;
+    const availableAlloy = liveResources?.alloy ?? nexus.resources.alloy;
+    const availableOre = liveResources?.ore ?? nexus.resources.ore;
+
     const byBiomass =
-      costs.biomass > 0 ? Math.floor(nexus.resources.biomass / costs.biomass) : Number.POSITIVE_INFINITY;
-    const byAlloy = costs.alloy > 0 ? Math.floor(nexus.resources.alloy / costs.alloy) : Number.POSITIVE_INFINITY;
-    const byOre = costs.ore > 0 ? Math.floor(nexus.resources.ore / costs.ore) : Number.POSITIVE_INFINITY;
+      costs.biomass > 0 ? Math.floor(availableBiomass / costs.biomass) : Number.POSITIVE_INFINITY;
+    const byAlloy = costs.alloy > 0 ? Math.floor(availableAlloy / costs.alloy) : Number.POSITIVE_INFINITY;
+    const byOre = costs.ore > 0 ? Math.floor(availableOre / costs.ore) : Number.POSITIVE_INFINITY;
     const remainingPopulation = Math.max(0, nexus.population.max - nexus.population.current);
     const byPopulation =
       costs.population > 0 ? Math.floor(remainingPopulation / costs.population) : Number.POSITIVE_INFINITY;
@@ -900,9 +957,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
 
     const shortageReasons: string[] = [];
     if (maxTrainable === 0) {
-      if (byBiomass === 0) shortageReasons.push(`Biomass ${Math.floor(nexus.resources.biomass)}/${costs.biomass}`);
-      if (byAlloy === 0) shortageReasons.push(`Alloy ${Math.floor(nexus.resources.alloy)}/${costs.alloy}`);
-      if (byOre === 0) shortageReasons.push(`Ore ${Math.floor(nexus.resources.ore)}/${costs.ore}`);
+      if (byBiomass === 0) shortageReasons.push(`Biomass ${Math.floor(availableBiomass)}/${costs.biomass}`);
+      if (byAlloy === 0) shortageReasons.push(`Alloy ${Math.floor(availableAlloy)}/${costs.alloy}`);
+      if (byOre === 0) shortageReasons.push(`Ore ${Math.floor(availableOre)}/${costs.ore}`);
       if (byPopulation === 0) shortageReasons.push(`Population ${remainingPopulation}/${costs.population} free`);
     }
 
@@ -2026,11 +2083,18 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                 const upgradeBenefit = isAtMax ? 'Maximum level reached' : getBuildingUpgradeBenefit(key, plannedLevel);
                 const { canUpgrade, missingRequirements, atMax } = checkBuildingRequirements(key);
                 const isBuildQueueFull = nexus.buildQueue.length >= MAX_BUILD_QUEUE;
+                // Use the live (interpolated) resource value when available so the
+                // button enables the instant production crosses the threshold,
+                // without waiting for the next refetch. Falls back to the static
+                // server snapshot if the realtime store hasn't been seeded yet.
+                const availableBiomass = liveResources?.biomass ?? nexus.resources.biomass;
+                const availableAlloy = liveResources?.alloy ?? nexus.resources.alloy;
+                const availableOre = liveResources?.ore ?? nexus.resources.ore;
                 const hasResources =
                   !cost ||
-                  (nexus.resources.biomass >= cost.biomass &&
-                    nexus.resources.alloy >= cost.alloy &&
-                    nexus.resources.ore >= cost.ore);
+                  (availableBiomass >= cost.biomass &&
+                    availableAlloy >= cost.alloy &&
+                    availableOre >= cost.ore);
                 const isDisabled = isBuildQueueFull || !canUpgrade || atMax || !hasResources;
                 return (
                   <div

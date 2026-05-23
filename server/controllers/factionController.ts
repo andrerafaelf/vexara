@@ -1,6 +1,11 @@
 import type { Response } from 'express';
 import prisma from '../lib/prisma.js';
-import { notifyBadgeUpdate, notifyFactionChat } from '../services/warRoomSocket.js';
+import {
+  notifyBadgeUpdate,
+  notifyFactionChat,
+  notifyFactionInviteUpdate,
+  notifyFactionUpdated,
+} from '../services/warRoomSocket.js';
 import type { AuthRequest } from '../types/index.js';
 import { logError } from '../utils/logger.js';
 import { containsBlockedChatWord } from '../utils/profanity.js';
@@ -323,6 +328,8 @@ export async function inviteToFaction(req: AuthRequest, res: Response): Promise<
       data: { url: '/factions' },
     });
     notifyBadgeUpdate(invitedUser.id);
+    try { notifyFactionInviteUpdate(invitedUser.id); }
+    catch (emitErr) { logError('faction_emit_failed', { message: (emitErr as Error).message, op: 'inviteToFaction' }); }
 
     res.status(201).json({ id: invite.id, expiresAt: invite.expiresAt });
   } catch (error) {
@@ -422,6 +429,13 @@ export async function acceptInvite(req: AuthRequest, res: Response): Promise<voi
 
     await logEvent(invite.factionId, 'member_joined', joiner?.username);
 
+    try {
+      notifyFactionUpdated(invite.factionId);
+      notifyFactionInviteUpdate(req.userId);
+    } catch (emitErr) {
+      logError('faction_emit_failed', { message: (emitErr as Error).message, op: 'acceptInvite' });
+    }
+
     res.json({ success: true });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
@@ -451,6 +465,8 @@ export async function declineInvite(req: AuthRequest, res: Response): Promise<vo
     }
 
     await prisma.factionInvite.delete({ where: { id: inviteId } });
+    try { notifyFactionInviteUpdate(req.userId); }
+    catch (emitErr) { logError('faction_emit_failed', { message: (emitErr as Error).message, op: 'declineInvite' }); }
     res.json({ success: true });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
@@ -506,6 +522,8 @@ export async function setMemberRole(req: AuthRequest, res: Response): Promise<vo
 
     const eventType = role === 'officer' ? 'member_promoted' : 'member_demoted';
     await logEvent(factionId, eventType, callerUser?.username, targetUser?.username);
+    try { notifyFactionUpdated(factionId); }
+    catch (emitErr) { logError('faction_emit_failed', { message: (emitErr as Error).message, op: 'setMemberRole' }); }
 
     if (role === 'officer' && target.role !== 'officer') {
       const factionRow = await prisma.faction.findUnique({ where: { id: factionId }, select: { name: true, tag: true } });
@@ -575,6 +593,8 @@ export async function kickMember(req: AuthRequest, res: Response): Promise<void>
     });
 
     await logEvent(factionId, 'member_kicked', callerUser?.username, targetUser?.username);
+    try { notifyFactionUpdated(factionId); }
+    catch (emitErr) { logError('faction_emit_failed', { message: (emitErr as Error).message, op: 'kickMember' }); }
 
     res.json({ success: true });
   } catch (error) {
@@ -612,6 +632,8 @@ export async function leaveFaction(req: AuthRequest, res: Response): Promise<voi
     });
 
     await logEvent(factionId, 'member_left', leaver?.username);
+    try { notifyFactionUpdated(factionId); }
+    catch (emitErr) { logError('faction_emit_failed', { message: (emitErr as Error).message, op: 'leaveFaction' }); }
 
     res.json({ success: true });
   } catch (error) {
@@ -655,6 +677,8 @@ export async function transferLeader(req: AuthRequest, res: Response): Promise<v
     ]);
 
     await logEvent(factionId, 'leader_transferred', callerUser?.username, targetUser?.username);
+    try { notifyFactionUpdated(factionId); }
+    catch (emitErr) { logError('faction_emit_failed', { message: (emitErr as Error).message, op: 'transferLeader' }); }
 
     res.json({ success: true });
   } catch (error) {
@@ -686,6 +710,10 @@ export async function disbandFaction(req: AuthRequest, res: Response): Promise<v
       return;
     }
 
+    // Emit *before* deletion so the faction:* room subscribers still exist.
+    // Members will leave the room on their next reconnect anyway.
+    try { notifyFactionUpdated(factionId); }
+    catch (emitErr) { logError('faction_emit_failed', { message: (emitErr as Error).message, op: 'disbandFaction' }); }
     await prisma.faction.delete({ where: { id: factionId } });
     res.json({ success: true });
   } catch (error) {
@@ -979,6 +1007,8 @@ export async function approveJoinRequest(req: AuthRequest, res: Response): Promi
     ]);
 
     await logEvent(factionId, 'member_joined', joiner?.username);
+    try { notifyFactionUpdated(factionId); }
+    catch (emitErr) { logError('faction_emit_failed', { message: (emitErr as Error).message, op: 'approveJoinRequest' }); }
 
     res.json({ success: true });
   } catch (error) {

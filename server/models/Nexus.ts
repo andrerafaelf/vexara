@@ -9,6 +9,7 @@ import {
 } from '../utils/economy.js';
 import { getPopulationMax } from '../utils/population.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
+import { isUserOnline, notifyNexusQueueCompleted, notifyNexusResources } from '../services/warRoomSocket.js';
 import type { SerializedNexus, TroopKey } from '../types/index.js';
 
 // --- Re-exports of pure computation helpers ---
@@ -381,6 +382,41 @@ export async function processCompletedQueuesAndNotify(): Promise<void> {
           data: { url: '/' },
         });
       }
+
+      // Push fresh resource snapshot so the client's interpolation re-anchors
+      // and any completed building's new production rate takes effect on the
+      // owner's open tab without waiting for the next poll. Drained queues will
+      // also re-render via the included MY_NEXUSES refetch on next mutation.
+      try {
+        notifyNexusResources(nexus.ownerId!, {
+          nexusId: updated.id,
+          base: { biomass: updated.biomass, alloy: updated.alloy, ore: updated.ore },
+          production: getResourceProduction(updated),
+          storageMax: getMaxStorage(updated),
+          lastResourceUpdate: updated.lastResourceUpdate,
+        });
+      } catch (emitErr) {
+        console.error(`processCompletedQueuesAndNotify emit failed for nexus ${nexus.id}:`, emitErr);
+      }
+
+      // Per-completion event so the client can show an instant toast / sound
+      // without waiting for its polling loop. The existing push-notification
+      // already fires above; this one is for in-tab UX.
+      try {
+        notifyNexusQueueCompleted(nexus.ownerId!, {
+          nexusId: updated.id,
+          builds: buildQueueBefore.slice(0, drainedBuildCount).map((b) => ({
+            building: b.building,
+            targetLevel: b.targetLevel,
+          })),
+          trainings: Object.entries(trainTotals).map(([troopType, amount]) => ({
+            troopType,
+            amount: Number(amount),
+          })),
+        });
+      } catch (emitErr) {
+        console.error(`processCompletedQueuesAndNotify completion emit failed for nexus ${nexus.id}:`, emitErr);
+      }
     } catch (err) {
       console.error(`processCompletedQueuesAndNotify failed for nexus ${nexus.id}:`, err);
     }
@@ -516,6 +552,37 @@ export async function updateAllResources(): Promise<void> {
           data: { url: '/' },
         });
       }
+    }
+
+    // Push the post-tick resource snapshot to any owner with an active socket
+    // so their live interpolation re-anchors against the server baseline.
+    // We skip neutral nexuses (ownerId null) and offline owners (no socket
+    // joined to user:{ownerId}) so we don't build payloads no one will read.
+    // The per-row emit is intentionally trivial — payload is ~120 bytes JSON.
+    try {
+      const onlineCache = new Map<number, boolean>();
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const src = nexuses[i];
+        // nexuses[i] and rows[i] correspond because the rows loop above
+        // iterates `nexuses` in order; preserved here to avoid a per-row find().
+        if (!src.ownerId || src.id !== row.id) continue;
+        let online = onlineCache.get(src.ownerId);
+        if (online === undefined) {
+          online = isUserOnline(src.ownerId);
+          onlineCache.set(src.ownerId, online);
+        }
+        if (!online) continue;
+        notifyNexusResources(src.ownerId, {
+          nexusId: row.id,
+          base: { biomass: row.biomass, alloy: row.alloy, ore: row.ore },
+          production: getResourceProduction(src),
+          storageMax: getMaxStorage(src),
+          lastResourceUpdate: row.lastResourceUpdate,
+        });
+      }
+    } catch (emitErr) {
+      console.error('updateAllResources emit failed:', emitErr);
     }
   } catch (err) {
     console.error('Error updating resources:', err);

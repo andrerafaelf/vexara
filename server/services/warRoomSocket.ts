@@ -80,6 +80,18 @@ function emitToUser(userId: number, event: string, payload: unknown) {
   _io.of('/game').to(`user:${userId}`).emit(event, payload);
 }
 
+/**
+ * Returns true if at least one socket is currently joined to user:{userId}.
+ * Used by bulk jobs to skip building per-user payloads for offline users.
+ * Returns false in environments where the io instance hasn't been created
+ * yet (e.g. some tests), so callers can skip emits safely either way.
+ */
+export function isUserOnline(userId: number): boolean {
+  if (!_io) return false;
+  const room = _io.of('/game').adapter.rooms.get(`user:${userId}`);
+  return !!room && room.size > 0;
+}
+
 function emitToFaction(factionId: number, event: string, payload: unknown) {
   if (!_io) return;
   _io.of('/game').to(`faction:${factionId}`).emit(event, payload);
@@ -117,6 +129,77 @@ export function notifyBadgeUpdate(userId: number) {
 /** Tell a user they have a new unread combat report. */
 export function notifyReportUpdate(userId: number) {
   emitToUser(userId, 'reports:refresh', { at: Date.now() });
+}
+
+/**
+ * Push a fresh resource snapshot to the nexus owner so the client can replace
+ * its locally-interpolated baseline. Payload mirrors the client ResourceSnapshot
+ * shape (see client/src/realtime/store.ts) intentionally: keeping these in sync
+ * is enforced by code review, not types, since they live in separate TS projects.
+ */
+export interface NexusResourceSnapshotPayload {
+  nexusId: number;
+  base: { biomass: number; alloy: number; ore: number };
+  production: { biomass: number; alloy: number; ore: number };
+  storageMax: number;
+  lastResourceUpdate: Date;
+}
+
+export function notifyNexusResources(userId: number, snap: NexusResourceSnapshotPayload) {
+  emitToUser(userId, 'nexus:resources', {
+    nexusId: String(snap.nexusId),
+    base: snap.base,
+    production: snap.production,
+    storageMax: snap.storageMax,
+    lastResourceUpdateMs: snap.lastResourceUpdate.getTime(),
+  });
+}
+
+/**
+ * One-shot completion event used to drive toasts / sounds without polling.
+ * Servers can batch multiple completions per emit if many drained at once
+ * (e.g. several troop training entries finishing in the same job tick).
+ */
+export interface NexusQueueCompletionPayload {
+  nexusId: number;
+  builds: Array<{ building: string; targetLevel: number }>;
+  trainings: Array<{ troopType: string; amount: number }>;
+}
+
+export function notifyNexusQueueCompleted(userId: number, payload: NexusQueueCompletionPayload) {
+  if (payload.builds.length === 0 && payload.trainings.length === 0) return;
+  emitToUser(userId, 'nexus:queue:completed', {
+    nexusId: String(payload.nexusId),
+    builds: payload.builds,
+    trainings: payload.trainings,
+  });
+}
+
+// ── Faction / friends / market refresh signals ────────────────────────────────
+// These intentionally carry no payload data. The client treats them as cache-
+// invalidation pings: receive event → invalidate the relevant React Query key
+// → next render refetches. Keeps the client and server decoupled from each
+// other's response shapes, which is what kept turning into the brittle bit.
+
+/** Faction membership / roster / motd / leadership changed. */
+export function notifyFactionUpdated(factionId: number) {
+  emitToFaction(factionId, 'faction:updated', { factionId, at: Date.now() });
+}
+
+/** A specific user has a new pending faction invite (or one was withdrawn). */
+export function notifyFactionInviteUpdate(userId: number) {
+  emitToUser(userId, 'faction:invites:updated', { at: Date.now() });
+}
+
+/** A user's friend list or friend-request inbox changed. */
+export function notifyFriendsUpdate(userId: number) {
+  emitToUser(userId, 'friends:updated', { at: Date.now() });
+}
+
+/** Market listings changed (new listing, buy, cancel). Broadcast to all sockets in /game. */
+export function notifyMarketUpdated() {
+  if (!_io) return;
+  _io.of('/game').emit('market:updated', { at: Date.now() });
 }
 
 // ────────────────────────────────────────────────────────────────────────────

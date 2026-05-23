@@ -4,6 +4,12 @@ import * as marketService from '../services/marketService.js';
 import type { AuthRequest } from '../types/index.js';
 import { parsePositiveInt } from '../utils/validation.js';
 import { logError } from '../utils/logger.js';
+import { notifyMarketUpdated } from '../services/warRoomSocket.js';
+
+function emitMarket() {
+  try { notifyMarketUpdated(); }
+  catch (emitErr) { logError('market_emit_failed', { message: (emitErr as Error).message }); }
+}
 
 const VALID_RESOURCES = new Set(['biomass', 'alloy', 'ore']);
 const MAX_LISTINGS_PER_NEXUS = 5;
@@ -59,6 +65,7 @@ export async function createListing(req: AuthRequest, res: Response): Promise<vo
       { galaxyId: req.galaxyId, sellerNexusId: parsedNexusId, offerResource: String(offerResource), offerAmount: parsedOffer, wantResource: String(wantResource), wantAmount: parsedWant },
       parsedNexusId, String(offerResource), nexusRecord[String(offerResource)] - parsedOffer,
     );
+    emitMarket();
     res.json({ success: true, listing });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'marketController.ts' });
@@ -109,6 +116,7 @@ export async function buyListing(req: AuthRequest, res: Response): Promise<void>
       sellerOwner?.username ?? 'Unknown', buyerOwner?.username ?? 'Unknown', req.galaxyId,
       commission,
     );
+    emitMarket();
     res.json({ success: true, commission, hasTreaty: !!treaty });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'marketController.ts' });
@@ -140,6 +148,7 @@ export async function cancelListing(req: AuthRequest, res: Response): Promise<vo
       listingId, listing.sellerNexusId, listing.offerResource,
       sellerRecord[listing.offerResource] + listing.offerAmount,
     );
+    emitMarket();
     res.json({ success: true });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'marketController.ts' });
