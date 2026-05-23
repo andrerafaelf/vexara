@@ -6,9 +6,9 @@ export const STARTER_NEXUS_DEFAULTS = {
   recruitmentCore: 0,
   lifeSupport:    0,
   storageVault:   0,
-  biomassFarm:    0,
-  alloyForge:     0,
-  oreExtractor:   0,
+  biomassFarm:    1,
+  alloyForge:     1,
+  oreExtractor:   1,
   shieldGrid:     0,
 } as const;
 
