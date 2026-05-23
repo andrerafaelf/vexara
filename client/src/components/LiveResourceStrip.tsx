@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useNow } from '@/hooks/useNow';
+import { useFlashOnChange } from '@/realtime/useFlashOnChange';
 
 interface LiveResourceStripProps {
   baseResources: { biomass: number; alloy: number; ore: number };
@@ -38,6 +39,10 @@ function LiveResourceStripInner({
   const anchorMs = lastResourceUpdate
     ? (lastResourceUpdate instanceof Date ? lastResourceUpdate.getTime() : new Date(lastResourceUpdate).getTime())
     : now;
+  // Flash whenever a fresh server snapshot lands. anchorMs is the server
+  // timestamp the baseline values were computed at, so it only changes on
+  // a real push/refetch — not on every interpolation tick.
+  const flashFresh = useFlashOnChange(anchorMs, 700);
   const elapsedHours = Math.max(0, (now - anchorMs) / 3600000);
   const live = {
     biomass: baseResources.biomass + production.biomass * elapsedHours,
@@ -55,7 +60,7 @@ function LiveResourceStripInner({
         const ratio = val / storageCapacity;
         const fullCls = ratio >= 0.98 ? 'header-res-full' : ratio >= 0.85 ? 'header-res-near' : '';
         return (
-          <div key={key} className={`header-res header-res-${key} ${fullCls}`}>
+          <div key={key} className={`header-res header-res-${key} ${fullCls}${flashFresh ? ' header-res-flash' : ''}`}>
             <span className="header-res-label">{label}</span>
             <span className="header-res-value">
               {fmt(val)}

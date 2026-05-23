@@ -13,12 +13,12 @@ interface FactionRow {
   isDominating: boolean;
   dominancePct: number;
   nexusCount: number;
-  totalOwnedNexuses: number;
+  totalNexuses: number;
 }
 
 interface LeaderboardData {
   rows: FactionRow[];
-  totalOwnedNexuses: number;
+  totalNexuses: number;
   dominanceThresholdPct: number;
   dominanceLocked: boolean;
 }
@@ -75,7 +75,7 @@ const DominanceBar: React.FC = () => {
               <div
                 key={faction.id}
                 className={`dom-faction ${isMe ? 'dom-faction--mine' : ''} ${isDom ? 'dom-faction--dominating' : ''}`}
-                title={`${faction.name} · ${faction.pct}% (${faction.nexusCount}/${faction.totalOwnedNexuses} nexuses)`}
+                title={`${faction.name} · ${faction.pct}% (${faction.nexusCount}/${faction.totalNexuses} nexuses)`}
               >
                 <span className="dom-faction-tag">[{faction.tag}]</span>
                 <div className="dom-faction-bar-wrap">

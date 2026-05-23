@@ -55,6 +55,7 @@ import Toast from './Toast';
 import { Countdown } from './Countdown';
 import { QueueCountdown } from './QueueCountdown';
 import { LiveResourceStrip } from './LiveResourceStrip';
+import { BuildingCard } from './BuildingCard';
 import { useNow } from '@/hooks/useNow';
 import { useLiveResources } from '@/realtime/useLiveResources';
 import { realtimeStore } from '@/realtime/store';
@@ -2071,149 +2072,39 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
             )}
 
             <div className="buildings-grid">
-              {Object.entries(nexus.buildings).map(([key, level]) => {
-                const queuedForBuilding = nexus.buildQueue.filter((item) => item.building === key).length;
-                const firstQueuedForBuilding = nexus.buildQueue.find((item) => item.building === key);
-                const firstQueuedForBuildingIndex = nexus.buildQueue.findIndex((item) => item.building === key);
-                const plannedLevel = level + queuedForBuilding;
-                const isUpgrading = nexus.buildQueue.some((item) => item.building === key);
-                const maxLevel = BUILDING_RULES[key]?.maxLevel || 0;
-                const isAtMax = plannedLevel >= maxLevel;
-                const cost = isAtMax ? null : getBuildingCost(key, plannedLevel);
-                const upgradeBenefit = isAtMax ? 'Maximum level reached' : getBuildingUpgradeBenefit(key, plannedLevel);
-                const { canUpgrade, missingRequirements, atMax } = checkBuildingRequirements(key);
-                const isBuildQueueFull = nexus.buildQueue.length >= MAX_BUILD_QUEUE;
-                // Use the live (interpolated) resource value when available so the
-                // button enables the instant production crosses the threshold,
-                // without waiting for the next refetch. Falls back to the static
-                // server snapshot if the realtime store hasn't been seeded yet.
+              {/* Live resource values are shared across all cards so we compute
+                  the fallbacks once here, instead of subscribing per-card. */}
+              {(() => {
                 const availableBiomass = liveResources?.biomass ?? nexus.resources.biomass;
                 const availableAlloy = liveResources?.alloy ?? nexus.resources.alloy;
                 const availableOre = liveResources?.ore ?? nexus.resources.ore;
-                const hasResources =
-                  !cost ||
-                  (availableBiomass >= cost.biomass &&
-                    availableAlloy >= cost.alloy &&
-                    availableOre >= cost.ore);
-                const isDisabled = isBuildQueueFull || !canUpgrade || atMax || !hasResources;
-                return (
-                  <div
+                return Object.entries(nexus.buildings).map(([key, level]) => (
+                  <BuildingCard
                     key={key}
-                    className={`building-card ${isUpgrading ? 'upgrading' : ''} ${isAtMax ? 'maxed' : isDisabled ? 'disabled' : ''}`}
-                  >
-                    {BUILDING_IMAGES[key] && (
-                      <img
-                        src={BUILDING_IMAGES[key].src || BUILDING_IMAGES[key]}
-                        alt={BUILDING_NAMES[key]}
-                        className="building-card-image"
-                      />
-                    )}
-                    <div className="building-header">
-                      <h4>{BUILDING_NAMES[key]}</h4>
-                      <button
-                        type="button"
-                        className="building-info"
-                        title={BUILDING_DESCRIPTIONS[key]}
-                        aria-label={`${BUILDING_NAMES[key]} info`}
-                        onClick={() => handleInfoTap(BUILDING_NAMES[key], BUILDING_DESCRIPTIONS[key])}
-                      >
-                        <Info size={14} />
-                      </button>
-                    </div>
-                    <p>
-                      Level: {level} / {maxLevel}
-                    </p>
-                    {!isAtMax && <p className="building-benefit">{upgradeBenefit}</p>}
-                    {isUpgrading && (
-                      <div className="upgrading-status">
-                        <span className="upgrading-badge">
-                          <Hammer size={12} aria-hidden="true" /> Upgrading…
-                        </span>
-                        {firstQueuedForBuilding && (
-                          <QueueCountdown
-                            endAt={firstQueuedForBuilding.completesAt}
-                            prevEndAt={getPrevBuildEnd(firstQueuedForBuildingIndex)}
-                            waitingClassName="queue-time-small queue-time-queued"
-                            runningClassName="queue-time-small"
-                          />
-                        )}
-                      </div>
-                    )}
-                    {cost ? (
-                      <div className="building-cost">
-                        <div className="cost-details">
-                          <span className="cost-pill"><span className="cost-pill-label">Biomass</span>{fmtNum(cost.biomass)}</span>
-                          <span className="cost-pill"><span className="cost-pill-label">Alloy</span>{fmtNum(cost.alloy)}</span>
-                          <span className="cost-pill"><span className="cost-pill-label">Ore</span>{fmtNum(cost.ore)}</span>
-                        </div>
-                        <p className="build-time">
-                          {cost.time >= 3600
-                            ? `${Math.floor(cost.time / 3600)}h ${Math.floor((cost.time % 3600) / 60)}m ${cost.time % 60}s`
-                            : `${Math.floor(cost.time / 60)}m ${cost.time % 60}s`}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="building-maxed-banner">
-                        <span className="maxed-badge">MAX LEVEL</span>
-                      </div>
-                    )}
-                    {!isAtMax && isBuildQueueFull && (
-                      <div className="requirements-missing">
-                        <p className="requires-label">Queue full</p>
-                        <p className="requirement-item">Build queue limit reached ({MAX_BUILD_QUEUE})</p>
-                      </div>
-                    )}
-                    {!isAtMax && !canUpgrade && (
-                      <div className="requirements-missing">
-                        <p className="requires-label">Requires</p>
-                        {missingRequirements.map((req, idx) => (
-                          <p key={idx} className="requirement-item">
-                            • {req}
-                          </p>
-                        ))}
-                      </div>
-                    )}
-                    {!hasResources &&
-                      cost &&
-                      canUpgrade &&
-                      (() => {
-                        const eta = getTimeUntilAffordable(cost);
-                        return (
-                          <div className="requirements-missing insuff-resources">
-                            <p className="requires-label">Insufficient resources</p>
-                            {nexus.resources.biomass < cost.biomass && (
-                              <p className="requirement-item">
-                                • Biomass: {Math.floor(nexus.resources.biomass)}/{cost.biomass}
-                              </p>
-                            )}
-                            {nexus.resources.alloy < cost.alloy && (
-                              <p className="requirement-item">
-                                • Alloy: {Math.floor(nexus.resources.alloy)}/{cost.alloy}
-                              </p>
-                            )}
-                            {nexus.resources.ore < cost.ore && (
-                              <p className="requirement-item">
-                                • Ore: {Math.floor(nexus.resources.ore)}/{cost.ore}
-                              </p>
-                            )}
-                            {eta !== null && (
-                              <p className="requirement-item resource-eta">Ready in {formatDurationSeconds(eta)}</p>
-                            )}
-                          </div>
-                        );
-                      })()}
-                    {!isAtMax && (
-                      <button
-                        className="building-upgrade-button"
-                        onClick={() => handleUpgrade(key)}
-                        disabled={isDisabled}
-                      >
-                        Upgrade
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
+                    buildingKey={key}
+                    level={level}
+                    nexus={nexus}
+                    availableBiomass={availableBiomass}
+                    availableAlloy={availableAlloy}
+                    availableOre={availableOre}
+                    buildingName={BUILDING_NAMES[key]}
+                    buildingDescription={BUILDING_DESCRIPTIONS[key]}
+                    buildingImage={BUILDING_IMAGES[key]}
+                    maxLevel={BUILDING_RULES[key]?.maxLevel || 0}
+                    buildQueueLength={nexus.buildQueue.length}
+                    maxBuildQueue={MAX_BUILD_QUEUE}
+                    getBuildingCost={getBuildingCost}
+                    getBuildingUpgradeBenefit={getBuildingUpgradeBenefit}
+                    checkBuildingRequirements={checkBuildingRequirements}
+                    getPrevBuildEnd={getPrevBuildEnd}
+                    getTimeUntilAffordable={getTimeUntilAffordable}
+                    fmtNum={fmtNum}
+                    formatDurationSeconds={formatDurationSeconds}
+                    onUpgrade={handleUpgrade}
+                    onInfoTap={handleInfoTap}
+                  />
+                ));
+              })()}
             </div>
           </div>
 

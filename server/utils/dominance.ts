@@ -22,9 +22,10 @@ export async function processDominanceVictories(): Promise<void> {
 }
 
 async function processGalaxy(galaxy: { id: number; name: string }): Promise<void> {
-  // Get all nexuses with owners
+  // Get all nexuses in the galaxy. Win share is % of the entire map (owned + neutral),
+  // so a faction can't claim victory by joining the only faction in a sparsely-claimed galaxy.
   const nexuses = await prisma.nexus.findMany({
-    where: { galaxyId: galaxy.id, ownerId: { not: null } },
+    where: { galaxyId: galaxy.id },
     select: { id: true, ownerId: true },
   });
 
@@ -53,10 +54,11 @@ async function processGalaxy(galaxy: { id: number; name: string }): Promise<void
   });
   const userToFaction = new Map(members.map((m) => [m.userId, m.factionId]));
 
-  // Count nexuses per faction
+  // Count nexuses per faction (only owned nexuses contribute to a faction's count)
   const factionCounts = new Map<number, number>();
   for (const nexus of nexuses) {
-    const factionId = userToFaction.get(nexus.ownerId!);
+    if (nexus.ownerId == null) continue;
+    const factionId = userToFaction.get(nexus.ownerId);
     if (factionId) {
       factionCounts.set(factionId, (factionCounts.get(factionId) || 0) + 1);
     }

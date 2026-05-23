@@ -1435,6 +1435,32 @@
   color: var(--text-faint);
 }
 
+/* One-shot glow when the upgrade button transitions from disabled to enabled
+   (e.g. resources just ticked past the cost). Applied via the --flash modifier
+   from BuildingCard's useFlashOnTrue. */
+.building-upgrade-button--flash {
+  animation: building-upgrade-button-flash 700ms ease-out;
+}
+
+@keyframes building-upgrade-button-flash {
+  0% {
+    box-shadow: 0 0 0 0 rgba(74, 222, 128, 0);
+    background-color: var(--accent-soft);
+  }
+  20% {
+    box-shadow: 0 0 0 4px rgba(74, 222, 128, 0.35);
+    background-color: rgba(74, 222, 128, 0.18);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(74, 222, 128, 0);
+    background-color: var(--accent-soft);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .building-upgrade-button--flash { animation: none; }
+}
+
 /* Troops Tab */
 .troops-tab h3 {
   color: var(--accent);

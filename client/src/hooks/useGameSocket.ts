@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { combatKeys } from '../features/combat/useCombat';
@@ -51,6 +51,35 @@ const _factionInvitesHandlers = new Set<() => void>();
 const _friendsUpdateHandlers = new Set<() => void>();
 const _marketUpdateHandlers = new Set<() => void>();
 
+// ── Connection-state pub-sub ─────────────────────────────────────────────────
+// Exposed via useGameConnectionStatus() so a banner / dot in the layout can
+// reflect socket health. 'connected' is the happy path, 'reconnecting' is the
+// transient (most user-visible) state, 'disconnected' is the give-up state
+// (after socket.io's reconnectionAttempts is exhausted). 'idle' is pre-connect
+// — never shown to the user but lets the first render avoid a misleading flash.
+
+export type GameConnectionStatus = 'idle' | 'connected' | 'reconnecting' | 'disconnected';
+
+let _connectionStatus: GameConnectionStatus = 'idle';
+const _statusListeners = new Set<() => void>();
+
+function setConnectionStatus(next: GameConnectionStatus) {
+  if (_connectionStatus === next) return;
+  _connectionStatus = next;
+  for (const l of _statusListeners) l();
+}
+
+function subscribeConnectionStatus(listener: () => void): () => void {
+  _statusListeners.add(listener);
+  return () => { _statusListeners.delete(listener); };
+}
+
+// SSR + first-render snapshot: 'idle' so the banner never flashes before the
+// socket has had a chance to connect. Don't return 'connected' here — that
+// would lie if the socket is mid-handshake.
+const getConnectionStatusSnapshot = () => _connectionStatus;
+const getConnectionStatusServerSnapshot = (): GameConnectionStatus => 'idle';
+
 function buildOrigin(): string {
   const apiUrl =
     (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_URL) ||
@@ -72,6 +101,22 @@ function getSocket(): Socket {
     // Socket.IO will give up after this many attempts, prevents infinite storm.
     reconnectionAttempts: 10,
   });
+
+  // Drive the public connection-status pub-sub from socket.io's lifecycle.
+  // 'reconnecting' is the user-visible failure state — set it on disconnect
+  // immediately rather than waiting for the first failed reconnection_attempt,
+  // so the banner appears within ~1s of a network drop, not 2s+ in.
+  socket.on('connect', () => setConnectionStatus('connected'));
+  socket.on('disconnect', (reason) => {
+    // 'io client disconnect' = we called disconnect() ourselves (component
+    // teardown). Don't show a "reconnecting" banner for an intentional close.
+    if (reason === 'io client disconnect') {
+      setConnectionStatus('idle');
+    } else {
+      setConnectionStatus('reconnecting');
+    }
+  });
+  socket.io.on('reconnect_failed', () => setConnectionStatus('disconnected'));
 
   socket.on('faction:chat', (data: { message: FactionChatMessage }) => {
     for (const h of _chatHandlers) h(data.message);
@@ -282,4 +327,18 @@ export function useGameSocket(handlers?: GameSocketHandlers) {
       }
     };
   }, [qc]);
+}
+
+/**
+ * Read the current game-socket connection state. Re-renders on transitions.
+ * Calling this hook does *not* open a connection — use useGameSocket() for
+ * that. This is for layout-level indicators (banner, status dot) that should
+ * reflect the socket health regardless of which page is mounted.
+ */
+export function useGameConnectionStatus(): GameConnectionStatus {
+  return useSyncExternalStore(
+    subscribeConnectionStatus,
+    getConnectionStatusSnapshot,
+    getConnectionStatusServerSnapshot,
+  );
 }

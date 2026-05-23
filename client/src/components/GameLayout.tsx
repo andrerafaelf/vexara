@@ -1,6 +1,8 @@
 'use client';
 
+import ConnectionStatusBar from '@/components/ConnectionStatusBar';
 import DominanceBar from '@/components/DominanceBar';
+import '@/styles/ConnectionStatusBar.css';
 import MobileNexusDrawer from '@/components/MobileNexusDrawer';
 import NexusSidebar from '@/components/NexusSidebar';
 import { useAuth } from '@/context/AuthContext';
@@ -193,6 +195,7 @@ export default function GameLayout({
         </div>
       </header>
 
+      <ConnectionStatusBar />
       <DominanceBar />
 
       <MobileNexusDrawer

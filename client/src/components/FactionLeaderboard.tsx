@@ -9,7 +9,7 @@ interface LeaderboardRow {
   tag: string;
   memberCount: number;
   nexusCount: number;
-  totalOwnedNexuses: number;
+  totalNexuses: number;
   pct: number;
   isDominating: boolean;
   dominanceSince: string | null;
@@ -18,7 +18,7 @@ interface LeaderboardRow {
 
 interface LeaderboardData {
   rows: LeaderboardRow[];
-  totalOwnedNexuses: number;
+  totalNexuses: number;
   dominanceThresholdPct: number;
   dominanceLocked: boolean;
   galaxyPlayerCount: number;
@@ -63,7 +63,7 @@ export default function FactionLeaderboard({ myFactionId }: { myFactionId?: numb
   if (error) return <div className="flb-error">{error}</div>;
   if (!data || data.rows.length === 0) return <div className="flb-empty">No factions in this galaxy yet.</div>;
 
-  const { rows, totalOwnedNexuses, dominanceThresholdPct, dominanceLocked, galaxyPlayerCount, factionCount, dominanceMinPlayers, dominanceMinFactions } = data;
+  const { rows, totalNexuses, dominanceThresholdPct, dominanceLocked, galaxyPlayerCount, factionCount, dominanceMinPlayers, dominanceMinFactions } = data;
   const dominating = !dominanceLocked ? rows.find((r) => r.isDominating && r.dominanceSince) : undefined;
 
   return (
@@ -100,7 +100,7 @@ export default function FactionLeaderboard({ myFactionId }: { myFactionId?: numb
 
       {/* Stats row */}
       <div className="flb-meta">
-        <span>{totalOwnedNexuses} nexuses contested</span>
+        <span>{totalNexuses} nexuses on the map</span>
         {!dominanceLocked && <span>Threshold: {dominanceThresholdPct}% to dominate</span>}
       </div>
 

@@ -742,8 +742,8 @@ export async function getLeaderboard(req: AuthRequest, res: Response): Promise<v
 
     const galaxyId = user.activeGalaxyId;
 
-    const [totalOwnedNexuses, galaxyPlayerCount, allFactions, memberRows, nexuses] = await Promise.all([
-      prisma.nexus.count({ where: { galaxyId, ownerId: { not: null } } }),
+    const [totalNexuses, galaxyPlayerCount, allFactions, memberRows, nexuses] = await Promise.all([
+      prisma.nexus.count({ where: { galaxyId } }),
       prisma.galaxyPlayer.count({ where: { galaxyId } }),
       prisma.faction.findMany({
         where: { galaxyId },
@@ -775,7 +775,7 @@ export async function getLeaderboard(req: AuthRequest, res: Response): Promise<v
 
     const rows = allFactions.map((f: any) => {
       const nexusCount = factionNexusCounts.get(f.id) ?? 0;
-      const pct = totalOwnedNexuses > 0 ? nexusCount / totalOwnedNexuses : 0;
+      const pct = totalNexuses > 0 ? nexusCount / totalNexuses : 0;
       const isDominating = !dominanceLocked && pct >= DOMINANCE_THRESHOLD;
       let dominancePct = 0;
       if (isDominating && f.dominanceSince) {
@@ -789,7 +789,7 @@ export async function getLeaderboard(req: AuthRequest, res: Response): Promise<v
         description: f.description ?? null,
         memberCount: f._count.members,
         nexusCount,
-        totalOwnedNexuses,
+        totalNexuses,
         pct: Math.round(pct * 1000) / 10,
         isDominating,
         dominanceSince: f.dominanceSince,
@@ -801,7 +801,7 @@ export async function getLeaderboard(req: AuthRequest, res: Response): Promise<v
 
     res.json({
       rows,
-      totalOwnedNexuses,
+      totalNexuses,
       dominanceThresholdPct: DOMINANCE_THRESHOLD * 100,
       dominanceLocked,
       galaxyPlayerCount,

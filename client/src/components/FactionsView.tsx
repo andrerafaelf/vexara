@@ -103,7 +103,7 @@ interface MyJoinRequest {
   createdAt: string;
 }
 
-type Tab = 'overview' | 'chat' | 'warroom' | 'members' | 'wars' | 'diplomacy' | 'activity';
+type Tab = 'overview' | 'chat' | 'warroom' | 'members' | 'wars' | 'diplomacy' | 'activity' | 'galaxy';
 
 interface FactionTreaty {
   id: number;
@@ -789,7 +789,7 @@ export default function FactionsView() {
 
       {/* Tabs */}
       <div className="factions-tabs">
-        {(['overview', 'chat', 'warroom', 'members', 'wars', 'diplomacy', 'activity'] as Tab[]).map((tab) => (
+        {(['overview', 'chat', 'warroom', 'members', 'wars', 'diplomacy', 'galaxy', 'activity'] as Tab[]).map((tab) => (
           <button
             key={tab}
             className={`factions-tab${activeTab === tab ? ' factions-tab--active' : ''}`}
@@ -807,6 +807,7 @@ export default function FactionsView() {
               </>
             )}
             {tab === 'activity' && 'Activity'}
+            {tab === 'galaxy' && `Galaxy (${galaxyFactions.length})`}
             {tab === 'wars' && (
               <>
                 Wars
@@ -1006,6 +1007,70 @@ export default function FactionsView() {
       {activeTab === 'activity' && (
         <section className="factions-panel factions-tab-content">
           <FactionActivity factionId={myFaction.id} />
+        </section>
+      )}
+
+      {/* Tab: Galaxy */}
+      {activeTab === 'galaxy' && (
+        <section className="factions-panel factions-tab-content">
+          {galaxyFactions.length === 0 ? (
+            <p className="factions-browser-empty">No other factions in this galaxy yet.</p>
+          ) : (
+            <div className="factions-browser-list">
+              {galaxyFactions.map((f) => {
+                const isExpanded = expandedFactionId === f.id;
+                const cachedMembers = factionMemberCache[f.id];
+                return (
+                  <div key={f.id} className="factions-browser-card">
+                    <div className="factions-browser-card-header">
+                      <div className="factions-browser-card-identity">
+                        <button
+                          type="button"
+                          className="factions-browser-card-name factions-browser-card-name-button"
+                          onClick={() => toggleFactionExpanded(f.id)}
+                          aria-expanded={isExpanded}
+                          aria-controls={`faction-members-${f.id}`}
+                        >
+                          {f.name}
+                        </button>
+                        <span className="factions-browser-card-tag">[{f.tag}]</span>
+                      </div>
+                      <span className="factions-browser-card-members">{f.memberCount} member{f.memberCount !== 1 ? 's' : ''}</span>
+                    </div>
+                    {f.description && (
+                      <p className="factions-browser-card-desc">{f.description}</p>
+                    )}
+                    {isExpanded && (
+                      <div className="factions-browser-card-members-panel" id={`faction-members-${f.id}`}>
+                        {cachedMembers === 'loading' && (
+                          <span className="factions-browser-card-members-status">Loading members…</span>
+                        )}
+                        {cachedMembers === 'error' && (
+                          <span className="factions-browser-card-members-status factions-field-error">Failed to load members.</span>
+                        )}
+                        {Array.isArray(cachedMembers) && cachedMembers.length === 0 && (
+                          <span className="factions-browser-card-members-status">This faction has no members.</span>
+                        )}
+                        {Array.isArray(cachedMembers) && cachedMembers.length > 0 && (
+                          <ul className="factions-browser-card-members-list">
+                            {cachedMembers.map((m) => (
+                              <li key={m.userId} className="factions-browser-card-members-item">
+                                <Username name={m.username} isSupporter={m.isSupporter} linkToProfile />
+                                <span className={`factions-role-badge factions-role-badge--${m.role}`}>{m.role}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <p className="factions-treaty-hint" style={{ marginTop: 16 }}>
+            Click a member to view their profile, add them as a friend, or check their galaxy history.
+          </p>
         </section>
       )}
 

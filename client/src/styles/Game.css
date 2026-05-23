@@ -324,6 +324,32 @@
   }
 }
 
+/* Brief flash when a fresh server snapshot lands, signals "live" without
+   being noisy. Background pulse only — keeps the value color (which already
+   conveys resource type / capacity state) untouched. */
+.header-res.header-res-flash {
+  animation: header-res-flash 700ms ease-out;
+}
+
+@keyframes header-res-flash {
+  0% {
+    background-color: rgba(74, 222, 128, 0);
+    box-shadow: none;
+  }
+  20% {
+    background-color: rgba(74, 222, 128, 0.18);
+    box-shadow: inset 0 0 0 1px rgba(74, 222, 128, 0.4);
+  }
+  100% {
+    background-color: rgba(74, 222, 128, 0);
+    box-shadow: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header-res.header-res-flash { animation: none; }
+}
+
 @media (max-width: 600px) {
   .header-resource-strip {
     flex-direction: column;
