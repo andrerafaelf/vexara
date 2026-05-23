@@ -23,6 +23,51 @@ export async function resendAlphaRegistrationEmail(req: Request, res: Response):
     res.status(500).json({ error: (error as Error).message });
   }
 }
+
+// Preview the recipient list for the galaxy-live launch broadcast (no emails sent)
+export async function previewGalaxyLiveBroadcast(_req: Request, res: Response): Promise<void> {
+  try {
+    const { collectGalaxyLiveRecipients } = await import('../../server/services/broadcastService.js');
+    const recipients = await collectGalaxyLiveRecipients();
+    const fromUsers = recipients.filter((r) => r.source === 'user').length;
+    const fromSignups = recipients.filter((r) => r.source === 'alphaSignup').length;
+    res.json({
+      total: recipients.length,
+      fromUsers,
+      fromSignups,
+      sample: recipients.slice(0, 10).map((r) => ({ email: r.email, displayName: r.displayName, source: r.source })),
+    });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
+// Send a single test copy of the galaxy-live email to a hardcoded address (for previewing the template)
+export async function sendGalaxyLiveTest(_req: Request, res: Response): Promise<void> {
+  try {
+    const testEmail = 'andrerafaelff@gmail.com';
+    const { sendGalaxyLive } = await import('../../server/services/emailService.js');
+    await sendGalaxyLive(testEmail);
+    res.json({ success: true, message: `Test launch email sent to ${testEmail}` });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
+// Send the galaxy-live launch broadcast to every recipient
+export async function sendGalaxyLiveBroadcast(req: Request, res: Response): Promise<void> {
+  try {
+    const body = (req.body ?? {}) as { dryRun?: boolean; ratePerSecond?: number };
+    const { broadcastGalaxyLive } = await import('../../server/services/broadcastService.js');
+    const result = await broadcastGalaxyLive({
+      dryRun: body.dryRun === true,
+      ratePerSecond: typeof body.ratePerSecond === 'number' ? body.ratePerSecond : undefined,
+    });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
 import type { Request, Response } from 'express';
 import { serializeNexus } from '../../server/models/Nexus.js';
 import { processArrivedAttacks } from '../../server/utils/combat.js';

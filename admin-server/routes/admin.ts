@@ -6,6 +6,11 @@ const router = Router();
 router.get('/alpha-signups/pending', adminController.listPendingAlphaSignups);
 router.post('/alpha-signups/resend', adminController.resendAlphaRegistrationEmail);
 
+// Galaxy launch broadcast (galaxy-live announcement email to all users + waitlist)
+router.get('/broadcast/galaxy-live/preview', adminController.previewGalaxyLiveBroadcast);
+router.post('/broadcast/galaxy-live/test', adminController.sendGalaxyLiveTest);
+router.post('/broadcast/galaxy-live', adminController.sendGalaxyLiveBroadcast);
+
 router.get('/galaxies', adminController.listGalaxies);
 router.post('/galaxies', adminController.createGalaxy);
 router.delete('/galaxies/:galaxyId', adminController.deleteGalaxy);

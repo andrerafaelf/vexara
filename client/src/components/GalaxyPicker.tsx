@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { getGalaxies, getGalaxyWinResults, leaveGalaxy, selectGalaxy } from '../services/api';
 import Username from './Username';
+import '../styles/GalaxyPicker.css';
 
 export interface Galaxy {
   id: number;
@@ -156,162 +157,101 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
 
   return (
     <div
+      className="gp-overlay"
       onClick={() => {
         if (!forced) onClose?.();
       }}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0, 0, 0, 0.85)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 9999,
-        padding: '1rem',
-      }}
     >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          background: '#0e1430',
-          border: '1px solid #2c3a78',
-          borderRadius: 8,
-          padding: '1.5rem',
-          width: '100%',
-          maxWidth: 520,
-          color: '#e0e8ff',
-          maxHeight: '90vh',
-          overflow: 'auto',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h2 style={{ margin: 0, fontSize: '1.25rem' }}>Select a Galaxy</h2>
+      <div className="gp-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="gp-header">
+          <h2 className="gp-title">Select a Galaxy</h2>
           {!forced && onClose && (
-            <button
-              onClick={onClose}
-              style={{
-                background: 'transparent',
-                border: '1px solid #2c3a78',
-                color: '#e0e8ff',
-                padding: '0.25rem 0.6rem',
-                borderRadius: 4,
-                cursor: 'pointer',
-              }}
-            >
+            <button className="gp-close" onClick={onClose}>
               Close
             </button>
           )}
         </div>
 
         {forced && (
-          <p style={{ marginTop: 0, color: '#9ab' }}>
+          <p className="gp-intro">
             Pick a galaxy to enter. Joining a new galaxy gives you a fresh starter nexus there.
           </p>
         )}
 
         {loading && null}
-        {error && <div style={{ color: '#ff8a8a' }}>{error}</div>}
+        {error && <div className="gp-error">{error}</div>}
 
-        {!loading && galaxies.length === 0 && <div>No galaxies exist yet.</div>}
+        {!loading && galaxies.length === 0 && <div className="gp-empty">No galaxies exist yet.</div>}
 
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+        <ul className="gp-list">
           {galaxies.map((g) => {
             const isEnded = g.status === 'ended';
-            const isRecentlyEnded = isEnded && g.endedAt && Date.now() - new Date(g.endedAt).getTime() < WIN_WINDOW_MS;
+            const isRecentlyEnded = !!(isEnded && g.endedAt && Date.now() - new Date(g.endedAt).getTime() < WIN_WINDOW_MS);
             const startsAtMs = g.startsAt ? new Date(g.startsAt).getTime() : null;
             const isPending = !isEnded && startsAtMs !== null && startsAtMs > now;
             const countdownMs = isPending ? startsAtMs! - now : 0;
+            const cardClass = [
+              'gp-card',
+              isRecentlyEnded ? 'gp-card-ended-recent' : '',
+              isEnded && !isRecentlyEnded ? 'gp-card-ended-old' : '',
+              isPending ? 'gp-card-pending' : '',
+              g.isJoined && !isEnded && !isPending ? 'gp-card-joined' : '',
+            ].filter(Boolean).join(' ');
             return (
-              <li
-                key={g.id}
-                style={{
-                  border: isRecentlyEnded ? '1px solid #c4a000' : isPending ? '1px solid #3a4a88' : '1px solid #2c3a78',
-                  borderRadius: 6,
-                  padding: '0.75rem',
-                  marginBottom: '0.5rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '0.75rem',
-                  opacity: isEnded && !isRecentlyEnded ? 0.5 : 1,
-                }}
-              >
-                <div>
-                  <div style={{ fontWeight: 600 }}>
-                    {g.name}{' '}
-                    {isRecentlyEnded && <span style={{ color: '#ffd700', fontSize: '0.85em' }}>Ended</span>}
-                    {isEnded && !isRecentlyEnded && <span style={{ color: '#ffae3a', fontSize: '0.85em' }}>(Ended)</span>}
-                    {isPending && <span style={{ color: '#7aa8ff', fontSize: '0.85em', marginLeft: 6 }}>Starting soon</span>}
+              <li key={g.id} className={cardClass}>
+                <div className="gp-card-body">
+                  <div className="gp-card-name">
+                    <span>{g.name}</span>
+                    {isRecentlyEnded && <span className="gp-card-tag gp-card-tag-ended">Ended</span>}
+                    {isEnded && !isRecentlyEnded && <span className="gp-card-tag gp-card-tag-old">Ended</span>}
+                    {isPending && <span className="gp-card-tag gp-card-tag-pending">Starting soon</span>}
                     {g.isJoined && !isEnded && !isPending && (
-                      <span style={{ color: '#7df58c', fontSize: '0.85em', marginLeft: 6 }}>(Joined)</span>
+                      <span className="gp-card-tag gp-card-tag-joined">Joined</span>
                     )}
                   </div>
-                  <div style={{ fontSize: '0.8em', color: '#8a98c2' }}>
-                    Created {new Date(g.createdAt).toLocaleDateString()}
+                  <div className="gp-card-meta">
+                    <span>Created {new Date(g.createdAt).toLocaleDateString()}</span>
                     {isRecentlyEnded && g.endedAt && (
-                      <span style={{ marginLeft: 8, color: '#c4a000' }}>
+                      <span className="gp-card-meta-ended">
                         · Ended {new Date(g.endedAt).toLocaleDateString()}
                       </span>
                     )}
                     {isPending && (
-                      <span style={{ marginLeft: 8, color: '#7aa8ff' }}>
-                        · Starts in <strong>{formatCountdown(countdownMs)}</strong>
+                      <span className="gp-card-meta-strong">
+                        · Starts in {formatCountdown(countdownMs)}
                       </span>
                     )}
                   </div>
                   {isPending && (
-                    <div style={{ fontSize: '0.75em', color: '#556a99', marginTop: 4 }}>
+                    <div className="gp-card-tz">
                       15:30 UTC · 16:30 Lisbon · 17:30 Paris · 11:30 New York · 08:30 Los Angeles
                     </div>
                   )}
                 </div>
-                <div style={{ display: 'flex', gap: 6 }}>
+                <div className="gp-card-actions">
                   {isRecentlyEnded && (
                     <button
+                      className="gp-btn gp-btn-results"
                       disabled={loadingWin}
                       onClick={() => openWinScreen(g)}
-                      style={{
-                        background: '#2a2200',
-                        color: '#ffd700',
-                        border: '1px solid #c4a000',
-                        padding: '0.45rem 0.9rem',
-                        borderRadius: 4,
-                        cursor: 'pointer',
-                        fontWeight: 700,
-                      }}
                     >
                       {loadingWin ? '...' : 'Results'}
                     </button>
                   )}
                   {!isEnded && (
                     <button
+                      className={`gp-btn ${isPending ? 'gp-btn-pending' : 'gp-btn-primary'}`}
                       disabled={selecting !== null || isPending}
                       onClick={() => requestSelect(g)}
-                      style={{
-                        background: isPending ? '#1a2040' : '#3a55c4',
-                        color: isPending ? '#556' : '#fff',
-                        border: 'none',
-                        padding: '0.45rem 0.9rem',
-                        borderRadius: 4,
-                        cursor: isPending ? 'not-allowed' : 'pointer',
-                        minWidth: 92,
-                      }}
                     >
                       {selecting === g.id ? '…' : isPending ? 'Locked' : g.isJoined ? 'Enter' : 'Join'}
                     </button>
                   )}
                   {g.isJoined && !isEnded && !isPending && (
                     <button
+                      className="gp-btn gp-btn-danger-ghost"
                       disabled={selecting !== null}
                       onClick={() => requestLeave(g)}
-                      style={{
-                        background: 'transparent',
-                        color: '#ff8a8a',
-                        border: '1px solid #6a2030',
-                        padding: '0.45rem 0.9rem',
-                        borderRadius: 4,
-                        cursor: 'pointer',
-                      }}
                     >
                       Leave
                     </button>
@@ -324,60 +264,17 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
       </div>
 
       {confirmingJoin && (
-        <div
-          onClick={() => setConfirmingJoin(null)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.7)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 10000,
-            padding: '1rem',
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: '#0e1430',
-              border: '1px solid #2c3a78',
-              borderRadius: 8,
-              padding: '1.25rem',
-              width: '100%',
-              maxWidth: 420,
-              color: '#e0e8ff',
-            }}
-          >
-            <h3 style={{ margin: '0 0 0.5rem 0' }}>Join {confirmingJoin.name}?</h3>
-            <p style={{ color: '#9ab', marginTop: 0 }}>
+        <div className="gp-overlay" onClick={() => setConfirmingJoin(null)}>
+          <div className="gp-modal gp-modal-confirm" onClick={(e) => e.stopPropagation()}>
+            <h3 className="gp-confirm-title">Join {confirmingJoin.name}?</h3>
+            <p className="gp-confirm-body">
               You&apos;ll be placed in this galaxy with a fresh starter nexus. Your progress in other galaxies is unaffected.
             </p>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: '1rem' }}>
-              <button
-                onClick={() => setConfirmingJoin(null)}
-                style={{
-                  background: 'transparent',
-                  color: '#e0e8ff',
-                  border: '1px solid #2c3a78',
-                  padding: '0.45rem 0.9rem',
-                  borderRadius: 4,
-                  cursor: 'pointer',
-                }}
-              >
+            <div className="gp-confirm-actions">
+              <button className="gp-btn gp-btn-ghost" onClick={() => setConfirmingJoin(null)}>
                 Cancel
               </button>
-              <button
-                onClick={() => doSelect(confirmingJoin)}
-                style={{
-                  background: '#3a55c4',
-                  color: '#fff',
-                  border: 'none',
-                  padding: '0.45rem 0.9rem',
-                  borderRadius: 4,
-                  cursor: 'pointer',
-                }}
-              >
+              <button className="gp-btn gp-btn-primary" onClick={() => doSelect(confirmingJoin)}>
                 Join
               </button>
             </div>
@@ -386,126 +283,80 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
       )}
 
       {winScreen && (
-        <div
-          onClick={() => setWinScreen(null)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.85)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 10000,
-            padding: '1rem',
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: '#0e1430',
-              border: '2px solid #c4a000',
-              borderRadius: 10,
-              padding: '1.5rem',
-              width: '100%',
-              maxWidth: 560,
-              color: '#e0e8ff',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-            }}
-          >
-            {/* Header */}
-            <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
-              <h2 style={{ margin: '0.25rem 0 0.1rem', color: '#ffd700', fontSize: '1.4rem' }}>
-                {winScreen.galaxy.name}. Galaxy Ended
+        <div className="gp-overlay" onClick={() => setWinScreen(null)}>
+          <div className="gp-modal gp-modal-winscreen" onClick={(e) => e.stopPropagation()}>
+            <div className="gp-win-header">
+              <span className="gp-win-eyebrow">{'// GALAXY · CONCLUDED'}</span>
+              <h2 className="gp-win-title">
+                <span className="gp-win-title-strong">{winScreen.galaxy.name}</span> · Galaxy Ended
               </h2>
               {winScreen.galaxy.endedAt && (
-                <div style={{ color: '#8a98c2', fontSize: '0.8em' }}>
+                <div className="gp-win-date">
                   Ended {new Date(winScreen.galaxy.endedAt).toLocaleString()}
                 </div>
               )}
               {winScreen.factionLeaderboard[0]?.isWinner && (
-                <div style={{ marginTop: '0.5rem', color: '#ffd700', fontWeight: 700, fontSize: '1.05rem' }}>
-                  {winScreen.factionLeaderboard[0].name} [{winScreen.factionLeaderboard[0].tag}] achieved dominance!
+                <div className="gp-win-victor">
+                  {winScreen.factionLeaderboard[0].name} [{winScreen.factionLeaderboard[0].tag}] achieved dominance
                 </div>
               )}
             </div>
 
-            {/* Faction leaderboard */}
-            <h3 style={{ margin: '0 0 0.5rem', color: '#a0b0ff', fontSize: '1rem', borderBottom: '1px solid #2c3a78', paddingBottom: '0.4rem' }}>
-              Faction Leaderboard
-            </h3>
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '1.25rem', fontSize: '0.88em' }}>
+            <h3 className="gp-win-section">{'// Faction Leaderboard'}</h3>
+            <table className="gp-win-table">
               <thead>
-                <tr style={{ color: '#8a98c2' }}>
-                  <th style={{ textAlign: 'left', padding: '0.3rem 0.5rem' }}>#</th>
-                  <th style={{ textAlign: 'left', padding: '0.3rem 0.5rem' }}>Faction</th>
-                  <th style={{ textAlign: 'right', padding: '0.3rem 0.5rem' }}>Points</th>
-                  <th style={{ textAlign: 'right', padding: '0.3rem 0.5rem' }}>Nexuses</th>
+                <tr>
+                  <th>#</th>
+                  <th>Faction</th>
+                  <th className="gp-num">Points</th>
+                  <th className="gp-num">Nexuses</th>
                 </tr>
               </thead>
               <tbody>
                 {winScreen.factionLeaderboard.map((f, i) => (
                   <tr
                     key={f.id}
-                    style={{
-                      background: f.isWinner ? 'rgba(196,160,0,0.1)' : i % 2 === 0 ? 'rgba(255,255,255,0.03)' : 'transparent',
-                      borderLeft: f.isWinner ? '3px solid #ffd700' : '3px solid transparent',
-                    }}
+                    className={f.isWinner ? 'gp-win-row-winner' : i % 2 === 0 ? 'gp-win-row-zebra' : ''}
                   >
-                    <td style={{ padding: '0.4rem 0.5rem', color: f.isWinner ? '#ffd700' : '#8a98c2' }}>{i + 1}</td>
-                    <td style={{ padding: '0.4rem 0.5rem', fontWeight: f.isWinner ? 700 : 400, color: f.isWinner ? '#ffd700' : '#e0e8ff' }}>
-                      [{f.tag}] {f.name}
-                    </td>
-                    <td style={{ padding: '0.4rem 0.5rem', textAlign: 'right' }}>{f.points.toLocaleString()}</td>
-                    <td style={{ padding: '0.4rem 0.5rem', textAlign: 'right' }}>{f.nexuses}</td>
+                    <td className="gp-win-rank">{i + 1}</td>
+                    <td>[{f.tag}] {f.name}</td>
+                    <td className="gp-num">{f.points.toLocaleString()}</td>
+                    <td className="gp-num">{f.nexuses}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
 
-            {/* Top players */}
-            <h3 style={{ margin: '0 0 0.5rem', color: '#a0b0ff', fontSize: '1rem', borderBottom: '1px solid #2c3a78', paddingBottom: '0.4rem' }}>
-              Top Players
-            </h3>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88em' }}>
+            <h3 className="gp-win-section">{'// Top Players'}</h3>
+            <table className="gp-win-table">
               <thead>
-                <tr style={{ color: '#8a98c2' }}>
-                  <th style={{ textAlign: 'left', padding: '0.3rem 0.5rem' }}>#</th>
-                  <th style={{ textAlign: 'left', padding: '0.3rem 0.5rem' }}>Player</th>
-                  <th style={{ textAlign: 'right', padding: '0.3rem 0.5rem' }}>Points</th>
-                  <th style={{ textAlign: 'right', padding: '0.3rem 0.5rem' }}>Nexuses</th>
+                <tr>
+                  <th>#</th>
+                  <th>Player</th>
+                  <th className="gp-num">Points</th>
+                  <th className="gp-num">Nexuses</th>
                 </tr>
               </thead>
               <tbody>
                 {winScreen.topPlayers.map((p, i) => {
                   const faction = winScreen.factionLeaderboard.find((f) => f.id === p.factionId);
                   return (
-                    <tr key={p.userId} style={{ background: i % 2 === 0 ? 'rgba(255,255,255,0.03)' : 'transparent' }}>
-                      <td style={{ padding: '0.4rem 0.5rem', color: '#8a98c2' }}>{i + 1}</td>
-                      <td style={{ padding: '0.4rem 0.5rem' }}>
+                    <tr key={p.userId} className={i % 2 === 0 ? 'gp-win-row-zebra' : ''}>
+                      <td className="gp-win-rank">{i + 1}</td>
+                      <td>
                         <Username name={p.username} isSupporter={p.isSupporter} />
-                        {faction && <span style={{ marginLeft: 6, color: '#8a98c2', fontSize: '0.85em' }}>[{faction.tag}]</span>}
+                        {faction && <span className="gp-win-faction-tag">[{faction.tag}]</span>}
                       </td>
-                      <td style={{ padding: '0.4rem 0.5rem', textAlign: 'right' }}>{p.points.toLocaleString()}</td>
-                      <td style={{ padding: '0.4rem 0.5rem', textAlign: 'right' }}>{p.nexuses}</td>
+                      <td className="gp-num">{p.points.toLocaleString()}</td>
+                      <td className="gp-num">{p.nexuses}</td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
 
-            <div style={{ textAlign: 'center', marginTop: '1.25rem' }}>
-              <button
-                onClick={() => setWinScreen(null)}
-                style={{
-                  background: '#2c3a78',
-                  color: '#e0e8ff',
-                  border: 'none',
-                  padding: '0.5rem 1.5rem',
-                  borderRadius: 6,
-                  cursor: 'pointer',
-                }}
-              >
+            <div className="gp-win-close">
+              <button className="gp-btn gp-btn-ghost" onClick={() => setWinScreen(null)}>
                 Close
               </button>
             </div>
@@ -515,111 +366,56 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
 
       {leaveTarget && (
         <div
+          className="gp-overlay"
           onClick={() => {
             if (!leaving) {
               setLeaveTarget(null);
               setLeaveStep(1);
             }
           }}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.7)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 10000,
-            padding: '1rem',
-          }}
         >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: '#0e1430',
-              border: '1px solid #6a2030',
-              borderRadius: 8,
-              padding: '1.25rem',
-              width: '100%',
-              maxWidth: 440,
-              color: '#e0e8ff',
-            }}
-          >
+          <div className="gp-modal gp-modal-confirm gp-modal-confirm-danger" onClick={(e) => e.stopPropagation()}>
             {leaveStep === 1 ? (
               <>
-                <h3 style={{ margin: '0 0 0.5rem 0' }}>Leave {leaveTarget.name}?</h3>
-                <p style={{ color: '#9ab', marginTop: 0 }}>
+                <h3 className="gp-confirm-title gp-confirm-title-leave">Leave {leaveTarget.name}?</h3>
+                <p className="gp-confirm-body">
                   Your nexuses will be abandoned and turn into neutral NPC outposts that other players can conquer.
                   Your resources, buildings, and troops stay in those nexuses for whoever takes them.
                 </p>
-                <p style={{ color: '#ff8a8a', marginTop: 0 }}>
+                <p className="gp-confirm-body gp-confirm-body-warn">
                   Quest progress, dominance, nexus groups, and any in-flight attacks or transfers in this galaxy will
                   be lost.
                 </p>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: '1rem' }}>
+                <div className="gp-confirm-actions">
                   <button
+                    className="gp-btn gp-btn-ghost"
                     onClick={() => {
                       setLeaveTarget(null);
                       setLeaveStep(1);
                     }}
-                    style={{
-                      background: 'transparent',
-                      color: '#e0e8ff',
-                      border: '1px solid #2c3a78',
-                      padding: '0.45rem 0.9rem',
-                      borderRadius: 4,
-                      cursor: 'pointer',
-                    }}
                   >
                     Cancel
                   </button>
-                  <button
-                    onClick={() => setLeaveStep(2)}
-                    style={{
-                      background: '#6a2030',
-                      color: '#fff',
-                      border: 'none',
-                      padding: '0.45rem 0.9rem',
-                      borderRadius: 4,
-                      cursor: 'pointer',
-                    }}
-                  >
+                  <button className="gp-btn gp-btn-danger-ghost" onClick={() => setLeaveStep(2)}>
                     Continue
                   </button>
                 </div>
               </>
             ) : (
               <>
-                <h3 style={{ margin: '0 0 0.5rem 0' }}>Are you sure?</h3>
-                <p style={{ color: '#ff8a8a', marginTop: 0 }}>
+                <h3 className="gp-confirm-title gp-confirm-title-final">Are you sure?</h3>
+                <p className="gp-confirm-body gp-confirm-body-warn">
                   This cannot be undone. {leaveTarget.name} progress will be permanently abandoned.
                 </p>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: '1rem' }}>
+                <div className="gp-confirm-actions">
                   <button
+                    className="gp-btn gp-btn-ghost"
                     disabled={leaving}
                     onClick={() => setLeaveStep(1)}
-                    style={{
-                      background: 'transparent',
-                      color: '#e0e8ff',
-                      border: '1px solid #2c3a78',
-                      padding: '0.45rem 0.9rem',
-                      borderRadius: 4,
-                      cursor: leaving ? 'not-allowed' : 'pointer',
-                    }}
                   >
                     Back
                   </button>
-                  <button
-                    disabled={leaving}
-                    onClick={doLeave}
-                    style={{
-                      background: '#a02030',
-                      color: '#fff',
-                      border: 'none',
-                      padding: '0.45rem 0.9rem',
-                      borderRadius: 4,
-                      cursor: leaving ? 'not-allowed' : 'pointer',
-                    }}
-                  >
+                  <button className="gp-btn gp-btn-danger" disabled={leaving} onClick={doLeave}>
                     {leaving ? 'Leaving…' : 'Leave galaxy'}
                   </button>
                 </div>

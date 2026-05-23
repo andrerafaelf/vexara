@@ -1872,6 +1872,73 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Broader prefixes used inside Factions.css */
+[class^='flb-'],
+[class*=' flb-'],
+[class^='faction-'],
+[class*=' faction-'],
+[class^='diplomacy-'],
+[class*=' diplomacy-'],
+[class^='event-'],
+[class*=' event-'] {
+  border-radius: 0;
+}
+
+[class*='flb-'][class*='-card'],
+[class*='flb-'][class*='-row'],
+[class*='flb-'][class*='-panel'],
+[class*='faction-'][class*='-card'],
+[class*='faction-'][class*='-row'],
+[class*='diplomacy-'][class*='-card'],
+[class*='diplomacy-'][class*='-row'] {
+  border-left: 2px solid var(--border-default);
+  transition: border-left-color var(--duration-base) var(--ease-out);
+}
+
+[class*='flb-'][class*='-card']:hover,
+[class*='flb-'][class*='-row']:hover {
+  border-left-color: var(--accent);
+}
+
+[class*='flb-'][class*='-title'],
+[class*='flb-'][class*='-heading'],
+[class*='diplomacy-'][class*='-title'],
+[class*='diplomacy-'][class*='-heading'],
+[class*='faction-'][class*='-title']:not([class*='factions-']) {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+[class*='flb-'][class*='-numeric'],
+[class*='flb-'][class*='-points'],
+[class*='flb-'][class*='-rank'],
+[class*='flb-'][class*='-pct'],
+[class*='flb-'][class*='-bar'] {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+[class*='flb-'][class*='-badge'],
+[class*='flb-'][class*='-chip'],
+[class*='flb-'][class*='-tag'],
+[class*='faction-'][class*='-badge'],
+[class*='diplomacy-'][class*='-badge'] {
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+}
+
+/* Diplomacy chat bubbles */
+[class*='diplomacy-'][class*='-bubble'] {
+  border-left: 2px solid var(--border-default);
+}
+
+[class*='diplomacy-'][class*='-bubble']:where([class*='--me'], [class*='--self'], [class*='--own']) {
+  border-left-color: var(--accent);
+}
+
 /* Chat bubbles within faction view inherit sharper edges */
 [class*='factions-'][class*='chat-'] {
   border-radius: 0;

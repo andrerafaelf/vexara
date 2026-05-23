@@ -1,6 +1,7 @@
 import {
   AlertTriangle,
   Building2,
+  Mail,
   ScrollText,
   ShoppingCart,
   Sparkles,
@@ -76,6 +77,16 @@ export default function GalaxyTab({
   const [newGalaxyStartsAt, setNewGalaxyStartsAt] = useState('');
   const [creatingGalaxy, setCreatingGalaxy] = useState(false);
 
+  // Galaxy-live launch broadcast
+  interface BroadcastPreview { total: number; fromUsers: number; fromSignups: number; sample: Array<{ email: string; displayName?: string; source: 'user' | 'alphaSignup' }> }
+  interface BroadcastResult { total: number; sent: number; failed: number; skipped: number; durationMs: number }
+  const [broadcastPreview, setBroadcastPreview] = useState<BroadcastPreview | null>(null);
+  const [broadcastPreviewing, setBroadcastPreviewing] = useState(false);
+  const [broadcastConfirmInput, setBroadcastConfirmInput] = useState('');
+  const [broadcastSending, setBroadcastSending] = useState(false);
+  const [broadcastResult, setBroadcastResult] = useState<BroadcastResult | null>(null);
+  const [testSending, setTestSending] = useState(false);
+
   const selectedGalaxy = galaxies.find((g) => g.id === selectedGalaxyId) ?? null;
 
   const withGalaxy = (path: string) => `${path}${path.includes('?') ? '&' : '?'}galaxyId=${selectedGalaxyId}`;
@@ -115,6 +126,51 @@ export default function GalaxyTab({
       onChanged();
     } catch { showToast('Error creating galaxy', 'error'); }
     finally { setCreatingGalaxy(false); }
+  };
+
+  const handleSendBroadcastTest = async () => {
+    setTestSending(true);
+    try {
+      const res = await adminFetch(`${ADMIN_API_URL}/broadcast/galaxy-live/test`, { method: 'POST', body: JSON.stringify({}) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { showToast(data.error || 'Failed to send test', 'error'); return; }
+      showToast(data.message || 'Test email sent', 'success');
+    } catch { showToast('Error sending test email', 'error'); }
+    finally { setTestSending(false); }
+  };
+
+  const handlePreviewBroadcast = async () => {
+    setBroadcastPreviewing(true);
+    setBroadcastResult(null);
+    setBroadcastConfirmInput('');
+    try {
+      const res = await adminFetch(`${ADMIN_API_URL}/broadcast/galaxy-live/preview`);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { showToast(data.error || 'Failed to load recipients', 'error'); return; }
+      setBroadcastPreview(data as BroadcastPreview);
+    } catch { showToast('Error loading recipients', 'error'); }
+    finally { setBroadcastPreviewing(false); }
+  };
+
+  const handleSendBroadcast = async () => {
+    if (broadcastConfirmInput !== 'SEND') return;
+    setBroadcastSending(true);
+    try {
+      const res = await adminFetch(`${ADMIN_API_URL}/broadcast/galaxy-live`, { method: 'POST', body: JSON.stringify({}) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { showToast(data.error || 'Broadcast failed', 'error'); return; }
+      const result = data as BroadcastResult;
+      setBroadcastResult(result);
+      showToast(`Launch email sent to ${result.sent}/${result.total} recipients`, result.failed > 0 ? 'info' : 'success');
+    } catch { showToast('Error sending broadcast', 'error'); }
+    finally { setBroadcastSending(false); }
+  };
+
+  const closeBroadcastModal = () => {
+    if (broadcastSending) return;
+    setBroadcastPreview(null);
+    setBroadcastConfirmInput('');
+    setBroadcastResult(null);
   };
 
   const handleDeleteGalaxy = async () => {
@@ -271,6 +327,46 @@ export default function GalaxyTab({
 
   return (
     <div>
+      {/* Galaxy launch broadcast */}
+      <div
+        className="admin-section"
+        style={{
+          marginBottom: 24,
+          background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(122,162,255,0.04))',
+          border: '1px solid rgba(122,162,255,0.25)',
+        }}
+      >
+        <div className="admin-section-header" style={{ alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Mail size={18} color="#7aa2ff" />
+            <h3 style={{ margin: 0 }}>Launch broadcast</h3>
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <button
+              className="btn-secondary"
+              onClick={handleSendBroadcastTest}
+              disabled={testSending}
+              title="Send a single test copy to andrerafaelff@gmail.com"
+            >
+              {testSending ? 'Sending…' : 'Send test'}
+            </button>
+            <button
+              className="btn-primary"
+              onClick={handlePreviewBroadcast}
+              disabled={broadcastPreviewing}
+              style={{ background: '#3b82f6' }}
+            >
+              {broadcastPreviewing ? 'Loading…' : 'Send launch email'}
+            </button>
+          </div>
+        </div>
+        <p style={{ margin: '8px 0 0', color: 'var(--text-muted)', fontSize: 13, lineHeight: 1.5 }}>
+          Sends the &ldquo;galaxy is live&rdquo; announcement to every verified user and non-unsubscribed alpha signup.
+          You&rsquo;ll see the recipient count and a confirmation prompt before anything is sent.
+          The <strong>Send test</strong> button delivers a single copy to <code>andrerafaelff@gmail.com</code> so you can preview the template.
+        </p>
+      </div>
+
       {/* Galaxy selector + create */}
       <div className="admin-section" style={{ marginBottom: 24 }}>
         <div className="admin-section-header">
@@ -602,6 +698,84 @@ export default function GalaxyTab({
               >
                 {deletingGalaxy ? 'Deleting…' : 'Delete Galaxy'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Launch broadcast confirmation */}
+      {broadcastPreview && (
+        <div className="modal-overlay" onClick={closeBroadcastModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ borderColor: 'rgba(122,162,255,0.4)', maxWidth: 520 }}>
+            <div className="modal-header">
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Mail size={18} color="#7aa2ff" />
+                Send launch email
+              </h3>
+              <button className="modal-close" onClick={closeBroadcastModal} disabled={broadcastSending}>×</button>
+            </div>
+            <div className="modal-body">
+              {broadcastResult ? (
+                <>
+                  <p style={{ color: 'var(--text-default)', marginBottom: 12 }}>
+                    Broadcast complete. <strong>{broadcastResult.sent}</strong> of {broadcastResult.total} sent
+                    {broadcastResult.failed > 0 ? <> &middot; <span style={{ color: 'var(--danger)' }}>{broadcastResult.failed} failed</span></> : null}
+                    {broadcastResult.skipped > 0 ? <> &middot; {broadcastResult.skipped} skipped</> : null}
+                    {' '}in {(broadcastResult.durationMs / 1000).toFixed(1)}s.
+                  </p>
+                  <p style={{ fontSize: '0.875em', color: 'var(--text-muted)' }}>Check the server logs for any failure details.</p>
+                </>
+              ) : (
+                <>
+                  <p style={{ color: 'var(--text-default)', marginBottom: 12 }}>
+                    Send the &ldquo;galaxy is live&rdquo; announcement to <strong>{broadcastPreview.total}</strong> recipients?
+                  </p>
+                  <div style={{ background: 'var(--color-navy-900)', border: '1px solid var(--color-navy-400)', borderRadius: 6, padding: '10px 12px', marginBottom: 12, fontSize: 13 }}>
+                    <div style={{ color: 'var(--text-muted)', marginBottom: 6 }}>Breakdown</div>
+                    <div style={{ color: 'var(--text-default)' }}>
+                      {broadcastPreview.fromUsers} verified users &middot; {broadcastPreview.fromSignups} alpha waitlist signups
+                    </div>
+                  </div>
+                  {broadcastPreview.sample.length > 0 && (
+                    <div style={{ background: 'var(--color-navy-900)', border: '1px solid var(--color-navy-400)', borderRadius: 6, padding: '10px 12px', marginBottom: 12, fontSize: 12, color: 'var(--text-muted)', maxHeight: 140, overflowY: 'auto' }}>
+                      <div style={{ marginBottom: 6, fontWeight: 600 }}>Sample (first {broadcastPreview.sample.length})</div>
+                      {broadcastPreview.sample.map((r) => (
+                        <div key={r.email} style={{ fontFamily: 'monospace' }}>
+                          {r.email} <span style={{ opacity: 0.6 }}>({r.source === 'user' ? 'user' : 'signup'})</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <p style={{ fontSize: '0.875em', color: 'var(--text-muted)', marginBottom: 8 }}>
+                    Type <strong>SEND</strong> to confirm. This cannot be undone &mdash; calling twice would double-send.
+                  </p>
+                  <input
+                    type="text"
+                    value={broadcastConfirmInput}
+                    onChange={(e) => setBroadcastConfirmInput(e.target.value)}
+                    placeholder='Type "SEND" to confirm'
+                    disabled={broadcastSending}
+                    className="form-group input"
+                    style={{ width: '100%', padding: '9px 10px', background: 'var(--color-navy-900)', border: '1px solid var(--color-navy-400)', color: 'var(--text-strong)', borderRadius: 4, boxSizing: 'border-box' }}
+                  />
+                </>
+              )}
+            </div>
+            <div className="modal-footer">
+              {broadcastResult ? (
+                <button className="btn-primary" onClick={closeBroadcastModal}>Close</button>
+              ) : (
+                <>
+                  <button className="btn-secondary" onClick={closeBroadcastModal} disabled={broadcastSending}>Cancel</button>
+                  <button
+                    disabled={broadcastConfirmInput !== 'SEND' || broadcastSending}
+                    onClick={handleSendBroadcast}
+                    style={{ background: '#3b82f6', color: '#fff', border: '1px solid rgba(122,162,255,0.5)', padding: '9px 20px', borderRadius: 4, fontWeight: 700, fontSize: 13, cursor: broadcastConfirmInput === 'SEND' && !broadcastSending ? 'pointer' : 'not-allowed', opacity: broadcastConfirmInput === 'SEND' && !broadcastSending ? 1 : 0.5 }}
+                  >
+                    {broadcastSending ? 'Sending…' : `Send to ${broadcastPreview.total}`}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

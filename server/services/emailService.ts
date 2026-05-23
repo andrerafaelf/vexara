@@ -220,6 +220,85 @@ function tplAlphaInviteAnnouncement(email: string): RenderedEmail {
   };
 }
 
+function tplGalaxyLive(email: string, displayName?: string): RenderedEmail {
+  const playUrl = `${SITE_URL}/galaxies`;
+  const greeting = displayName
+    ? `Commander ${escapeHtml(displayName)},`
+    : 'Commander,';
+  const body = `
+    <p style="margin:0 0 8px;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#7aa2ff;font-weight:700;">// Transmission inbound</p>
+    <h1 style="margin:0 0 16px;font-size:26px;line-height:1.25;color:#ffffff;font-weight:700;letter-spacing:-0.01em;">The galaxy is live.</h1>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#c8ccd6;">
+      ${greeting}
+    </p>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#c8ccd6;">
+      The stars are open. Alliances are forming as you read this. Every minute you wait, someone else is claiming a nexus, drawing borders, and writing the early history of this galaxy.
+    </p>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:16px 0 24px;width:100%;">
+      <tr>
+        <td style="padding:18px 22px;background:#0b0d12;border:1px solid #1c2230;border-radius:10px;">
+          <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#7aa2ff;margin-bottom:8px;font-weight:700;">// Status</div>
+          <div style="font-size:22px;font-weight:700;color:#ffffff;margin-bottom:4px;">Galaxy online &mdash; ${escapeHtml('23 May 2026, 15:30 UTC')}</div>
+          <div style="font-size:13px;color:#8a90a0;">Founder badges are minting for the first players in.</div>
+        </td>
+      </tr>
+    </table>
+    <div style="text-align:center;">${buttonHtml(playUrl, 'Enter the galaxy', '#3b82f6')}</div>
+    <h2 style="margin:24px 0 12px;font-size:15px;line-height:1.4;color:#ffffff;font-weight:600;">First moves matter</h2>
+    <ul style="margin:0 0 16px;padding:0 0 0 20px;font-size:15px;line-height:1.7;color:#c8ccd6;">
+      <li>Claim your starting nexus before the map fills around you.</li>
+      <li>Build the Command Core early &mdash; it accelerates every upgrade that follows.</li>
+      <li>Scout neighbours before you strike. Recon is cheaper than a wiped fleet.</li>
+      <li>Find a faction. Galaxies are won by groups, not lone commanders.</li>
+    </ul>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#c8ccd6;">
+      The Discord is where launch coordination, bug reports, and strategy talk are happening right now.
+    </p>
+    <div style="text-align:center;">${buttonHtml(DISCORD_URL, 'Join the Discord')}</div>
+    <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#8a90a0;">
+      Vexara is running on a single small server during alpha. If you want to help keep it online, you can
+      <a href="${KOFI_URL}" style="color:#7aa2ff;text-decoration:underline;">support the project on Ko-fi</a>.
+      Supporters get a glowing name in-game.
+    </p>
+    <p style="margin:16px 0 0;font-size:14px;line-height:1.6;color:#8a90a0;">See you in the dark. Questions? Just reply to this email &mdash; it reaches a real person.</p>
+  `;
+  const text = [
+    'The galaxy is live.',
+    '',
+    displayName ? `Commander ${displayName},` : 'Commander,',
+    '',
+    'The stars are open. Alliances are forming as you read this. Every minute you wait, someone else is claiming a nexus, drawing borders, and writing the early history of this galaxy.',
+    '',
+    'Status: Galaxy online - 23 May 2026, 15:30 UTC',
+    "Founder badges are minting for the first players in.",
+    '',
+    `Enter the galaxy: ${playUrl}`,
+    '',
+    'First moves matter:',
+    '  - Claim your starting nexus before the map fills around you.',
+    '  - Build the Command Core early - it accelerates every upgrade that follows.',
+    '  - Scout neighbours before you strike. Recon is cheaper than a wiped fleet.',
+    '  - Find a faction. Galaxies are won by groups, not lone commanders.',
+    '',
+    `Discord: ${DISCORD_URL}`,
+    '',
+    `Support the project on Ko-fi: ${KOFI_URL}`,
+    '',
+    'See you in the dark. Questions? Just reply to this email - it reaches a real person.',
+    ...renderTextFooter(email, true),
+  ].join('\n');
+  return {
+    subject: 'The galaxy is live. Enter now.',
+    html: renderLayout({
+      recipientEmail: email,
+      preheader: 'Vexara is open. Claim your nexus before the map fills around you.',
+      bodyHtml: body,
+    }),
+    text,
+    showUnsubscribe: true,
+  };
+}
+
 function tplVerifyEmail(email: string, username: string, verifyUrl: string): RenderedEmail {
   const body = `
     <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#ffffff;font-weight:600;">Confirm your email</h1>
@@ -415,6 +494,10 @@ export async function sendAlphaWelcome(email: string): Promise<void> {
 
 export async function sendAlphaInviteAnnouncement(email: string): Promise<void> {
   await send(email, tplAlphaInviteAnnouncement(email));
+}
+
+export async function sendGalaxyLive(email: string, displayName?: string): Promise<void> {
+  await send(email, tplGalaxyLive(email, displayName));
 }
 
 export async function sendVerifyEmail(email: string, username: string, token: string): Promise<void> {

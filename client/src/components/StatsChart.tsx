@@ -22,8 +22,8 @@ const RANGES = [
 ];
 
 const TABS = [
-  { id: 'combat', label: 'Combat', metricLabel: 'Net troops (killed − lost)', color: '#4ade80' },
-  { id: 'resources', label: 'Resources', metricLabel: 'Resources produced', color: '#a8dadc' },
+  { id: 'combat', label: 'Combat', metricLabel: 'Net troops (killed − lost)', color: '#FF9E3D' },
+  { id: 'resources', label: 'Resources', metricLabel: 'Resources produced', color: '#4A9EB0' },
 ] as const;
 type TabId = (typeof TABS)[number]['id'];
 
@@ -35,11 +35,13 @@ function fmtNum(n: number): string {
 }
 
 const TOOLTIP_STYLE = {
-  backgroundColor: '#16213e',
-  border: '1px solid #0f3460',
-  borderRadius: 6,
-  color: '#e2e8f0',
+  backgroundColor: 'var(--color-navy-800)',
+  border: '1px solid var(--border-strong)',
+  borderLeft: '3px solid var(--accent)',
+  borderRadius: 0,
+  color: 'var(--text-strong)',
   fontSize: 12,
+  fontFamily: 'var(--font-mono)',
 };
 
 const CURSOR_STYLE = { stroke: 'rgba(255,255,255,0.15)', strokeWidth: 1 };
@@ -116,16 +118,16 @@ export default function StatsChart() {
                   <stop offset="100%" stopColor={active.color} stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#0f3460" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#30363D" vertical={false} />
               <XAxis
                 dataKey="date"
-                tick={{ fill: '#6b7c9e', fontSize: 11 }}
+                tick={{ fill: '#8B949E', fontSize: 11, fontFamily: 'var(--font-mono)' }}
                 tickLine={false}
                 axisLine={false}
                 minTickGap={24}
               />
               <YAxis
-                tick={{ fill: '#6b7c9e', fontSize: 11 }}
+                tick={{ fill: '#8B949E', fontSize: 11, fontFamily: 'var(--font-mono)' }}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={fmtNum}

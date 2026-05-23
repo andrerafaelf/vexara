@@ -236,7 +236,8 @@ export default function ProfileStats() {
           {(['biomass', 'alloy', 'ore'] as const).map((r) => {
             const total = stats.resources.avgPerDay.biomass + stats.resources.avgPerDay.alloy + stats.resources.avgPerDay.ore;
             const pct = total > 0 ? Math.round((stats.resources.avgPerDay[r] / total) * 100) : 33;
-            const colors = { biomass: '#4caf50', alloy: '#2196f3', ore: '#ff9800' };
+            // Match the in-game resource palette: biomass=success, alloy=accent (amber), ore=warning
+            const colors = { biomass: '#56D364', alloy: '#FF9E3D', ore: '#D29922' };
             const labels = { biomass: 'Biomass', alloy: 'Alloy', ore: 'Ore' };
             return (
               <div key={r} className="ps-bar-row">
