@@ -224,7 +224,7 @@ export async function listUsers(req: Request, res: Response): Promise<void> {
         ...u,
         _id: u.id,
         points: u.galaxyPlayers.reduce((sum, gp) => sum + (gp.points || 0), 0),
-        nexuses: u.nexuses.map((v) => ({ _id: v.id, id: v.id, name: v.name })),
+        nexuses: u.nexuses.map((v) => ({ ...v, _id: v.id, id: v.id })),
       })),
     );
   } catch (error) {

@@ -1,8 +1,12 @@
 import {
   AlertTriangle,
   Building2,
+  Coins,
   Mail,
+  Pencil,
+  Save,
   ScrollText,
+  Search,
   ShoppingCart,
   Sparkles,
   Swords,
@@ -10,40 +14,61 @@ import {
   Trophy,
   Users,
 } from 'lucide-react';
-import React, { useState } from 'react';
-import type { AdminFetch, Attack, Galaxy, GalaxyStats, GalaxyUser } from '../types/admin';
+import React, { useMemo, useState } from 'react';
+import type {
+  AdminFetch,
+  Attack,
+  BuildingKey,
+  Galaxy,
+  GalaxyStats,
+  GalaxyUser,
+  TroopKey,
+  UserNexus,
+} from '../types/admin';
+import { BUILDING_KEYS, TROOP_KEYS } from '../types/admin';
 
 const ADMIN_API_URL = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:3002/api/admin';
 
-const TROOP_OPTIONS = [
-  { key: 'lancerDrone', label: 'Lancer Drone' },
-  { key: 'assaultTrooper', label: 'Assault Trooper' },
-  { key: 'breakerUnit', label: 'Breaker Unit' },
-  { key: 'reconOperative', label: 'Recon Operative' },
-  { key: 'skimmerBike', label: 'Skimmer Bike' },
-  { key: 'siegeMech', label: 'Siege Mech' },
-  { key: 'bulwarkGuard', label: 'Bulwark Guard' },
-  { key: 'suppressorTeam', label: 'Suppressor Team' },
-  { key: 'disruptorUnit', label: 'Disruptor Unit' },
-  { key: 'interceptorBike', label: 'Interceptor Bike' },
-  { key: 'annihilatorPlatform', label: 'Annihilator Platform' },
-  { key: 'overseer', label: 'Overseer' },
-];
+const RESOURCE_KEYS = ['biomass', 'alloy', 'ore'] as const;
+type ResourceKey = (typeof RESOURCE_KEYS)[number];
 
-const BUILDING_OPTIONS = [
-  { key: 'commandCore', label: 'Command Core' },
-  { key: 'recruitmentCore', label: 'Recruitment Core' },
-  { key: 'lifeSupport', label: 'Life Support' },
-  { key: 'storageVault', label: 'Storage Vault' },
-  { key: 'biomassFarm', label: 'Biomass Farm' },
-  { key: 'alloyForge', label: 'Alloy Forge' },
-  { key: 'oreExtractor', label: 'Ore Extractor' },
-  { key: 'shieldGrid', label: 'Shield Grid' },
-  { key: 'armory', label: 'Armory' },
-  { key: 'stealthArray', label: 'Stealth Array' },
-];
+const TROOP_LABELS: Record<TroopKey, string> = {
+  lancerDrone: 'Lancer Drone',
+  assaultTrooper: 'Assault Trooper',
+  breakerUnit: 'Breaker Unit',
+  reconOperative: 'Recon Operative',
+  skimmerBike: 'Skimmer Bike',
+  siegeMech: 'Siege Mech',
+  bulwarkGuard: 'Bulwark Guard',
+  suppressorTeam: 'Suppressor Team',
+  disruptorUnit: 'Disruptor Unit',
+  interceptorBike: 'Interceptor Bike',
+  annihilatorPlatform: 'Annihilator Platform',
+  overseer: 'Overseer',
+};
 
-type PlayerModal = 'editUser' | 'resources' | 'troops' | 'buildings' | null;
+const BUILDING_LABELS: Record<BuildingKey, string> = {
+  commandCore: 'Command Core',
+  recruitmentCore: 'Recruitment Core',
+  lifeSupport: 'Life Support',
+  storageVault: 'Storage Vault',
+  biomassFarm: 'Biomass Farm',
+  alloyForge: 'Alloy Forge',
+  oreExtractor: 'Ore Extractor',
+  shieldGrid: 'Shield Grid',
+  armory: 'Armory',
+  stealthArray: 'Stealth Array',
+};
+
+const RESOURCE_LABELS: Record<ResourceKey, string> = {
+  biomass: 'Biomass',
+  alloy: 'Alloy',
+  ore: 'Ore',
+};
+
+type PlayerModal = 'editUser' | 'editPlayer' | null;
+
+type DraftMap = Partial<Record<string, number>>;
 
 interface Props {
   galaxies: Galaxy[];
@@ -67,9 +92,13 @@ export default function GalaxyTab({
   const [modal, setModal] = useState<PlayerModal>(null);
   const [selectedUser, setSelectedUser] = useState<GalaxyUser | null>(null);
   const [editForm, setEditForm] = useState({ email: '', password: '' });
-  const [resourcesForm, setResourcesForm] = useState({ nexusId: '', biomass: 0, alloy: 0, ore: 0 });
-  const [troopsForm, setTroopsForm] = useState({ nexusId: '', troopType: 'reconOperative', amount: 0 });
-  const [buildingsForm, setBuildingsForm] = useState({ nexusId: '', building: 'shieldGrid', level: 0 });
+
+  // Player editor state
+  const [editNexusId, setEditNexusId] = useState<string>('');
+  const [drafts, setDrafts] = useState<DraftMap>({});
+  const [editFilter, setEditFilter] = useState('');
+  const [saving, setSaving] = useState(false);
+
   const [deleteGalaxyTarget, setDeleteGalaxyTarget] = useState<Galaxy | null>(null);
   const [deleteGalaxyInput, setDeleteGalaxyInput] = useState('');
   const [deletingGalaxy, setDeletingGalaxy] = useState(false);
@@ -96,17 +125,27 @@ export default function GalaxyTab({
     return true;
   };
 
-  const openModal = (type: Exclude<PlayerModal, null>, user: GalaxyUser) => {
-    const defaultNexus = user.nexuses?.[0]?._id || '';
+  const openEditUser = (user: GalaxyUser) => {
     setSelectedUser(user);
-    if (type === 'editUser') setEditForm({ email: user.email, password: '' });
-    if (type === 'resources') setResourcesForm({ nexusId: defaultNexus, biomass: 0, alloy: 0, ore: 0 });
-    if (type === 'troops') setTroopsForm({ nexusId: defaultNexus, troopType: 'reconOperative', amount: 0 });
-    if (type === 'buildings') setBuildingsForm({ nexusId: defaultNexus, building: 'shieldGrid', level: 0 });
-    setModal(type);
+    setEditForm({ email: user.email, password: '' });
+    setModal('editUser');
   };
 
-  const closeModal = () => { setModal(null); setSelectedUser(null); };
+  const openEditPlayer = (user: GalaxyUser) => {
+    setSelectedUser(user);
+    setEditNexusId(user.nexuses?.[0]?._id ?? '');
+    setDrafts({});
+    setEditFilter('');
+    setModal('editPlayer');
+  };
+
+  const closeModal = () => {
+    if (saving) return;
+    setModal(null);
+    setSelectedUser(null);
+    setDrafts({});
+    setEditFilter('');
+  };
 
   // ── Galaxy CRUD ──────────────────────────────────────────────────────────
 
@@ -205,40 +244,86 @@ export default function GalaxyTab({
     } catch { showToast('Error updating user', 'error'); }
   };
 
-  const handleAdjustResources = async () => {
+  const handleSavePlayerEdits = async () => {
     if (!selectedUser || !requireGalaxy()) return;
-    try {
-      const res = await adminFetch(withGalaxy(`${ADMIN_API_URL}/users/${selectedUser._id}/resources`), { method: 'POST', body: JSON.stringify(resourcesForm) });
-      const data = await res.json();
-      if (!res.ok) { showToast(data.error || 'Failed to adjust resources', 'error'); return; }
-      showToast(`Resources updated for ${selectedUser.username}`, 'success');
-      closeModal(); onChanged();
-    } catch { showToast('Error adjusting resources', 'error'); }
-  };
+    const nexus = selectedUser.nexuses.find((n) => n._id === editNexusId);
+    if (!nexus) { showToast('No nexus selected', 'error'); return; }
 
-  const handleAdjustTroops = async (direction: 'add' | 'remove') => {
-    if (!selectedUser || !requireGalaxy()) return;
-    const magnitude = Math.max(0, Math.floor(Number(troopsForm.amount) || 0));
-    if (magnitude === 0) { showToast('Enter a positive amount', 'error'); return; }
-    const signedAmount = direction === 'add' ? magnitude : -magnitude;
-    try {
-      const res = await adminFetch(withGalaxy(`${ADMIN_API_URL}/users/${selectedUser._id}/troops`), { method: 'POST', body: JSON.stringify({ ...troopsForm, amount: signedAmount }) });
-      const data = await res.json();
-      if (!res.ok) { showToast(data.error || 'Failed to adjust troops', 'error'); return; }
-      showToast(`Troops ${direction === 'add' ? 'added' : 'removed'} for ${selectedUser.username}`, 'success');
-      closeModal(); onChanged();
-    } catch { showToast('Error adjusting troops', 'error'); }
-  };
+    const dirtyResources: ResourceKey[] = RESOURCE_KEYS.filter(
+      (k) => drafts[k] !== undefined && drafts[k] !== nexus[k],
+    );
+    const dirtyBuildings: BuildingKey[] = BUILDING_KEYS.filter(
+      (k) => drafts[k] !== undefined && drafts[k] !== nexus[k],
+    );
+    const dirtyTroops: TroopKey[] = TROOP_KEYS.filter(
+      (k) => drafts[k] !== undefined && drafts[k] !== nexus[k],
+    );
 
-  const handleSetBuilding = async () => {
-    if (!selectedUser || !requireGalaxy()) return;
+    const totalChanges = dirtyResources.length + dirtyBuildings.length + dirtyTroops.length;
+    if (totalChanges === 0) { showToast('No changes to save', 'info'); return; }
+
+    setSaving(true);
+    const failures: string[] = [];
+
     try {
-      const res = await adminFetch(withGalaxy(`${ADMIN_API_URL}/users/${selectedUser._id}/buildings`), { method: 'POST', body: JSON.stringify(buildingsForm) });
-      const data = await res.json();
-      if (!res.ok) { showToast(data.error || 'Failed to update building', 'error'); return; }
-      showToast(`Building updated for ${selectedUser.username}`, 'success');
-      closeModal(); onChanged();
-    } catch { showToast('Error updating building', 'error'); }
+      // 1. Resources — single bulk delta call to /users/:id/resources
+      if (dirtyResources.length > 0) {
+        const body: Record<string, unknown> = { nexusId: editNexusId };
+        for (const k of dirtyResources) body[k] = (drafts[k] as number) - nexus[k];
+        const res = await adminFetch(withGalaxy(`${ADMIN_API_URL}/users/${selectedUser._id}/resources`), {
+          method: 'POST', body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          failures.push(`resources: ${data.error || res.statusText}`);
+        }
+      }
+
+      // 2. Buildings — one request per dirty building (endpoint sets a single building)
+      await Promise.all(
+        dirtyBuildings.map(async (k) => {
+          const res = await adminFetch(withGalaxy(`${ADMIN_API_URL}/users/${selectedUser._id}/buildings`), {
+            method: 'POST',
+            body: JSON.stringify({ nexusId: editNexusId, building: k, level: drafts[k] }),
+          });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            failures.push(`${BUILDING_LABELS[k]}: ${data.error || res.statusText}`);
+          }
+        }),
+      );
+
+      // 3. Troops — one signed-delta request per dirty troop
+      await Promise.all(
+        dirtyTroops.map(async (k) => {
+          const next = drafts[k] as number;
+          const delta = next - nexus[k];
+          if (delta === 0) return;
+          const res = await adminFetch(withGalaxy(`${ADMIN_API_URL}/users/${selectedUser._id}/troops`), {
+            method: 'POST',
+            body: JSON.stringify({ nexusId: editNexusId, troopType: k, amount: delta }),
+          });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            failures.push(`${TROOP_LABELS[k]}: ${data.error || res.statusText}`);
+          }
+        }),
+      );
+
+      if (failures.length === 0) {
+        showToast(`Saved ${totalChanges} change${totalChanges === 1 ? '' : 's'} for ${selectedUser.username}`, 'success');
+        closeModal();
+      } else if (failures.length < totalChanges) {
+        showToast(`Saved with ${failures.length} failure(s): ${failures[0]}`, 'info');
+      } else {
+        showToast(`Failed: ${failures[0]}`, 'error');
+      }
+      onChanged();
+    } catch {
+      showToast('Error saving changes', 'error');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleResendVerification = async (user: GalaxyUser) => {
@@ -315,6 +400,40 @@ export default function GalaxyTab({
       if (res.ok) { showToast('Strike completed instantly', 'success'); onChanged(); }
       else { const data = await res.json(); showToast(data.error || 'Failed', 'error'); }
     } catch { showToast('Error completing strike', 'error'); }
+  };
+
+  // ── Editor helpers ───────────────────────────────────────────────────────
+
+  const activeNexus: UserNexus | null = useMemo(() => {
+    if (!selectedUser) return null;
+    return selectedUser.nexuses.find((n) => n._id === editNexusId) ?? selectedUser.nexuses[0] ?? null;
+  }, [selectedUser, editNexusId]);
+
+  const draftValueFor = (key: string, current: number): number => {
+    const d = drafts[key];
+    return d === undefined ? current : d;
+  };
+
+  const setDraft = (key: string, value: number, current: number) => {
+    setDrafts((prev) => {
+      const next = { ...prev };
+      if (value === current) delete next[key];
+      else next[key] = value;
+      return next;
+    });
+  };
+
+  const totalDirty = useMemo(() => {
+    if (!activeNexus) return 0;
+    return Object.keys(drafts).filter(
+      (k) => drafts[k] !== undefined && drafts[k] !== (activeNexus as unknown as Record<string, number>)[k],
+    ).length;
+  }, [drafts, activeNexus]);
+
+  const filterMatches = (label: string, key: string) => {
+    if (!editFilter.trim()) return true;
+    const q = editFilter.trim().toLowerCase();
+    return label.toLowerCase().includes(q) || key.toLowerCase().includes(q);
   };
 
   // ── Render ───────────────────────────────────────────────────────────────
@@ -495,15 +614,24 @@ export default function GalaxyTab({
                 <div className="user-card-meta">
                   <span>{user.email}</span>
                   <span className="meta-pts">{user.points} pts</span>
+                  <span>{user.nexuses.length} nexus{user.nexuses.length === 1 ? '' : 'es'}</span>
                   <span>Joined {new Date(user.createdAt).toLocaleDateString()}</span>
                 </div>
               </div>
               <div className="user-actions">
-                <button className="btn-action btn-edit" onClick={() => openModal('editUser', user)}>Edit login</button>
-                <div className="action-divider" />
-                <button className="btn-action btn-res" onClick={() => openModal('resources', user)}>Resources</button>
-                <button className="btn-action btn-troops" onClick={() => openModal('troops', user)}>Troops</button>
-                <button className="btn-action btn-bld" onClick={() => openModal('buildings', user)}>Building</button>
+                <button className="btn-action btn-edit" onClick={() => openEditUser(user)}>
+                  <Pencil size={11} aria-hidden="true" style={{ marginRight: 4, verticalAlign: '-1px' }} />
+                  Login
+                </button>
+                <button
+                  className="btn-action btn-edit-player"
+                  onClick={() => openEditPlayer(user)}
+                  disabled={user.nexuses.length === 0}
+                  title={user.nexuses.length === 0 ? 'No nexus to edit' : 'Edit resources, buildings, and troops'}
+                >
+                  <Pencil size={11} aria-hidden="true" style={{ marginRight: 4, verticalAlign: '-1px' }} />
+                  Edit player
+                </button>
                 <div className="action-divider" />
                 <button className="btn-action btn-cmpl" onClick={() => handleCompleteStrike(user)}>Finish strike</button>
                 <button className="btn-action btn-cmpl" onClick={() => handleCompleteBuild(user)}>Finish build</button>
@@ -562,106 +690,189 @@ export default function GalaxyTab({
         </div>
       )}
 
-      {/* Player modals */}
-      {modal && selectedUser && (
+      {/* Edit login modal */}
+      {modal === 'editUser' && selectedUser && (
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>
-                {modal === 'editUser' && `Edit login: ${selectedUser.username}`}
-                {modal === 'resources' && `Resources: ${selectedUser.username}`}
-                {modal === 'troops' && `Troops: ${selectedUser.username}`}
-                {modal === 'buildings' && `Building: ${selectedUser.username}`}
-              </h3>
+              <h3>Edit login: {selectedUser.username}</h3>
               <button className="modal-close" onClick={closeModal}>×</button>
             </div>
             <div className="modal-body">
-              {modal === 'editUser' && (
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label>Email</label>
-                    <input value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} />
-                  </div>
-                  <div className="form-group">
-                    <label>New Password</label>
-                    <input type="password" placeholder="Leave blank to keep current" value={editForm.password} onChange={(e) => setEditForm({ ...editForm, password: e.target.value })} />
-                  </div>
+              <div className="form-grid">
+                <div className="form-group">
+                  <label>Email</label>
+                  <input value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} />
                 </div>
-              )}
-              {modal === 'resources' && (
-                <div className="form-grid">
-                  <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                    <small>Use negative values to remove resources.</small>
-                  </div>
-                  <div className="form-group">
-                    <label>Nexus</label>
-                    <select value={resourcesForm.nexusId} onChange={(e) => setResourcesForm({ ...resourcesForm, nexusId: e.target.value })}>
-                      {selectedUser.nexuses.map((n) => <option key={n._id} value={n._id}>{n.name}</option>)}
-                    </select>
-                  </div>
-                  {(['biomass', 'alloy', 'ore'] as const).map((r) => (
-                    <div key={r} className="form-group">
-                      <label>{r.charAt(0).toUpperCase() + r.slice(1)}</label>
-                      <input type="number" value={resourcesForm[r]} onChange={(e) => setResourcesForm({ ...resourcesForm, [r]: Number(e.target.value) || 0 })} />
-                    </div>
-                  ))}
+                <div className="form-group">
+                  <label>New Password</label>
+                  <input type="password" placeholder="Leave blank to keep current" value={editForm.password} onChange={(e) => setEditForm({ ...editForm, password: e.target.value })} />
                 </div>
-              )}
-              {modal === 'troops' && (
-                <div className="form-grid">
-                  <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                    <small>Enter a positive amount, then choose Add or Remove.</small>
-                  </div>
-                  <div className="form-group">
-                    <label>Nexus</label>
-                    <select value={troopsForm.nexusId} onChange={(e) => setTroopsForm({ ...troopsForm, nexusId: e.target.value })}>
-                      {selectedUser.nexuses.map((n) => <option key={n._id} value={n._id}>{n.name}</option>)}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>Troop</label>
-                    <select value={troopsForm.troopType} onChange={(e) => setTroopsForm({ ...troopsForm, troopType: e.target.value })}>
-                      {TROOP_OPTIONS.map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>Amount</label>
-                    <input type="number" min="0" value={troopsForm.amount} onChange={(e) => setTroopsForm({ ...troopsForm, amount: Math.max(0, Math.floor(Number(e.target.value) || 0)) })} />
-                  </div>
-                </div>
-              )}
-              {modal === 'buildings' && (
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label>Nexus</label>
-                    <select value={buildingsForm.nexusId} onChange={(e) => setBuildingsForm({ ...buildingsForm, nexusId: e.target.value })}>
-                      {selectedUser.nexuses.map((n) => <option key={n._id} value={n._id}>{n.name}</option>)}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>Building</label>
-                    <select value={buildingsForm.building} onChange={(e) => setBuildingsForm({ ...buildingsForm, building: e.target.value })}>
-                      {BUILDING_OPTIONS.map((b) => <option key={b.key} value={b.key}>{b.label}</option>)}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>Level</label>
-                    <input type="number" min="0" value={buildingsForm.level} onChange={(e) => setBuildingsForm({ ...buildingsForm, level: Math.max(0, Math.floor(Number(e.target.value) || 0)) })} />
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
             <div className="modal-footer">
               <button className="btn-secondary" onClick={closeModal}>Cancel</button>
-              {modal === 'editUser' && <button className="btn-primary" onClick={handleUpdateUser}>Save Changes</button>}
-              {modal === 'resources' && <button className="btn-primary" onClick={handleAdjustResources}>Apply</button>}
-              {modal === 'troops' && (
-                <>
-                  <button className="btn-primary" onClick={() => handleAdjustTroops('add')}>Add Troops</button>
-                  <button className="btn-secondary" onClick={() => handleAdjustTroops('remove')}>Remove Troops</button>
-                </>
+              <button className="btn-primary" onClick={handleUpdateUser}>Save Changes</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit player modal (resources / buildings / troops) */}
+      {modal === 'editPlayer' && selectedUser && activeNexus && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div
+            className="modal-content player-editor"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: 720 }}
+          >
+            <div className="modal-header">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <h3 style={{ margin: 0 }}>
+                  <Pencil size={14} style={{ verticalAlign: '-2px', marginRight: 6 }} />
+                  {selectedUser.username}
+                </h3>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                  {selectedUser.email} · {selectedUser.points} pts
+                </span>
+              </div>
+              <button className="modal-close" onClick={closeModal} disabled={saving}>×</button>
+            </div>
+
+            <div className="player-editor-toolbar">
+              {selectedUser.nexuses.length > 1 ? (
+                <div className="form-group" style={{ flex: '1 1 220px' }}>
+                  <label>Nexus</label>
+                  <select
+                    value={editNexusId}
+                    onChange={(e) => { setEditNexusId(e.target.value); setDrafts({}); }}
+                    disabled={saving}
+                  >
+                    {selectedUser.nexuses.map((n) => (
+                      <option key={n._id} value={n._id}>{n.name}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="player-editor-nexus-chip">
+                  <Building2 size={13} /> {activeNexus.name}
+                </div>
               )}
-              {modal === 'buildings' && <button className="btn-primary" onClick={handleSetBuilding}>Set Level</button>}
+              <div className="player-editor-search">
+                <Search size={14} aria-hidden="true" />
+                <input
+                  type="text"
+                  value={editFilter}
+                  onChange={(e) => setEditFilter(e.target.value)}
+                  placeholder="Filter buildings, troops, resources…"
+                  disabled={saving}
+                />
+              </div>
+              <div className="player-editor-pop">
+                Population <strong>{activeNexus.populationCurrent.toLocaleString()}</strong> / {activeNexus.populationMax.toLocaleString()}
+              </div>
+            </div>
+
+            <div className="modal-body player-editor-body">
+              {/* Resources */}
+              <EditorSection
+                title="Resources"
+                icon={<Coins size={14} />}
+                accent="rgba(245, 158, 11, 0.6)"
+              >
+                {RESOURCE_KEYS.filter((k) => filterMatches(RESOURCE_LABELS[k], k)).map((k) => {
+                  const current = activeNexus[k];
+                  const draft = draftValueFor(k, current);
+                  const dirty = draft !== current;
+                  return (
+                    <EditorRow
+                      key={k}
+                      label={RESOURCE_LABELS[k]}
+                      current={current}
+                      draft={draft}
+                      dirty={dirty}
+                      onChange={(v) => setDraft(k, v, current)}
+                      onReset={() => setDraft(k, current, current)}
+                      disabled={saving}
+                    />
+                  );
+                })}
+              </EditorSection>
+
+              {/* Buildings */}
+              <EditorSection
+                title="Buildings"
+                icon={<Building2 size={14} />}
+                accent="rgba(122, 162, 255, 0.6)"
+              >
+                {BUILDING_KEYS.filter((k) => filterMatches(BUILDING_LABELS[k], k)).map((k) => {
+                  const current = activeNexus[k];
+                  const draft = draftValueFor(k, current);
+                  const dirty = draft !== current;
+                  return (
+                    <EditorRow
+                      key={k}
+                      label={BUILDING_LABELS[k]}
+                      current={current}
+                      draft={draft}
+                      dirty={dirty}
+                      hint="level"
+                      onChange={(v) => setDraft(k, v, current)}
+                      onReset={() => setDraft(k, current, current)}
+                      disabled={saving}
+                    />
+                  );
+                })}
+              </EditorSection>
+
+              {/* Troops */}
+              <EditorSection
+                title="Troops"
+                icon={<Swords size={14} />}
+                accent="rgba(239, 68, 68, 0.55)"
+              >
+                {TROOP_KEYS.filter((k) => filterMatches(TROOP_LABELS[k], k)).map((k) => {
+                  const current = activeNexus[k];
+                  const draft = draftValueFor(k, current);
+                  const dirty = draft !== current;
+                  return (
+                    <EditorRow
+                      key={k}
+                      label={TROOP_LABELS[k]}
+                      current={current}
+                      draft={draft}
+                      dirty={dirty}
+                      onChange={(v) => setDraft(k, v, current)}
+                      onReset={() => setDraft(k, current, current)}
+                      disabled={saving}
+                    />
+                  );
+                })}
+              </EditorSection>
+            </div>
+
+            <div className="modal-footer" style={{ justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 12, color: totalDirty > 0 ? 'var(--accent)' : 'var(--text-muted)' }}>
+                {totalDirty === 0 ? 'No pending changes' : `${totalDirty} pending change${totalDirty === 1 ? '' : 's'}`}
+              </span>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button
+                  className="btn-secondary"
+                  onClick={() => setDrafts({})}
+                  disabled={saving || totalDirty === 0}
+                >
+                  Reset
+                </button>
+                <button className="btn-secondary" onClick={closeModal} disabled={saving}>Cancel</button>
+                <button
+                  className="btn-primary"
+                  onClick={handleSavePlayerEdits}
+                  disabled={saving || totalDirty === 0}
+                >
+                  <Save size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
+                  {saving ? 'Saving…' : totalDirty === 0 ? 'Save' : `Save ${totalDirty} change${totalDirty === 1 ? '' : 's'}`}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -780,6 +991,92 @@ export default function GalaxyTab({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Player editor sub-components
+// ──────────────────────────────────────────────────────────────────────────
+
+function EditorSection({
+  title, icon, accent, children,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  accent: string;
+  children: React.ReactNode;
+}) {
+  const childArray = React.Children.toArray(children);
+  if (childArray.length === 0) return null;
+  return (
+    <section className="editor-section">
+      <header className="editor-section-header" style={{ borderLeft: `3px solid ${accent}` }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+          {icon}
+          {title}
+        </span>
+        <span className="editor-section-count">{childArray.length}</span>
+      </header>
+      <div className="editor-rows">
+        {children}
+      </div>
+    </section>
+  );
+}
+
+function EditorRow({
+  label, current, draft, dirty, hint, onChange, onReset, disabled,
+}: {
+  label: string;
+  current: number;
+  draft: number;
+  dirty: boolean;
+  hint?: string;
+  onChange: (v: number) => void;
+  onReset: () => void;
+  disabled?: boolean;
+}) {
+  const diff = draft - current;
+  return (
+    <div className={`editor-row${dirty ? ' editor-row-dirty' : ''}`}>
+      <div className="editor-row-label">{label}</div>
+      <div className="editor-row-current">
+        <span className="editor-row-current-num">{current.toLocaleString()}</span>
+        {hint && <span className="editor-row-hint">{hint}</span>}
+      </div>
+      <div className="editor-row-arrow">→</div>
+      <input
+        className="editor-row-input"
+        type="number"
+        min={0}
+        value={Number.isFinite(draft) ? draft : 0}
+        onChange={(e) => {
+          const n = Math.max(0, Math.floor(Number(e.target.value)));
+          onChange(Number.isFinite(n) ? n : 0);
+        }}
+        onFocus={(e) => e.target.select()}
+        disabled={disabled}
+      />
+      <div className="editor-row-delta">
+        {dirty && (
+          <>
+            <span className={diff > 0 ? 'delta-pos' : 'delta-neg'}>
+              {diff > 0 ? `+${diff.toLocaleString()}` : diff.toLocaleString()}
+            </span>
+            <button
+              type="button"
+              className="editor-row-undo"
+              onClick={onReset}
+              disabled={disabled}
+              title="Discard this change"
+              aria-label="Discard this change"
+            >
+              ↺
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 }

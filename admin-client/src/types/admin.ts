@@ -8,10 +8,47 @@ export interface AllUser {
   galaxyCount: number;
 }
 
-export interface UserNexus {
+export const BUILDING_KEYS = [
+  'commandCore',
+  'recruitmentCore',
+  'lifeSupport',
+  'storageVault',
+  'biomassFarm',
+  'alloyForge',
+  'oreExtractor',
+  'shieldGrid',
+  'armory',
+  'stealthArray',
+] as const;
+export type BuildingKey = (typeof BUILDING_KEYS)[number];
+
+export const TROOP_KEYS = [
+  'lancerDrone',
+  'assaultTrooper',
+  'breakerUnit',
+  'reconOperative',
+  'skimmerBike',
+  'siegeMech',
+  'bulwarkGuard',
+  'suppressorTeam',
+  'disruptorUnit',
+  'interceptorBike',
+  'annihilatorPlatform',
+  'overseer',
+] as const;
+export type TroopKey = (typeof TROOP_KEYS)[number];
+
+export type UserNexus = {
   _id: string;
+  id?: number;
   name: string;
-}
+  biomass: number;
+  alloy: number;
+  ore: number;
+  populationCurrent: number;
+  populationMax: number;
+} & Record<BuildingKey, number> &
+  Record<TroopKey, number>;
 
 export interface GalaxyUser {
   _id: string;
