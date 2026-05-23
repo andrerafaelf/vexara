@@ -1,4 +1,6 @@
+import { randomBytes } from 'crypto';
 import { Resend } from 'resend';
+import prisma from '../lib/prisma.js';
 
 const FROM = 'Vexara <hello@vexara.world>';
 const REPLY_TO = 'support@vexara.world';
@@ -15,8 +17,33 @@ function client(): Resend {
   return cached;
 }
 
-function unsubscribeLinkFor(email: string): string {
-  return `${UNSUBSCRIBE_URL}?email=${encodeURIComponent(email)}`;
+function unsubscribeLinkFor(token: string): string {
+  return `${UNSUBSCRIBE_URL}?token=${encodeURIComponent(token)}`;
+}
+
+/**
+ * Look up (or mint) a per-recipient unsubscribe token. The token replaces the
+ * old `?email=` lookup so an unsubscribe link only works for the address it
+ * was issued to. The AlphaSignup row is the single source of truth for
+ * email opt-outs (both alpha announcements and post-launch player emails), so
+ * we upsert it on demand — registered players who never went through the
+ * waitlist still get a working unsubscribe link.
+ */
+async function getOrCreateUnsubscribeToken(email: string): Promise<string> {
+  const token = randomBytes(32).toString('hex');
+  const row = await prisma.alphaSignup.upsert({
+    where: { email },
+    create: { email, source: 'user', unsubscribeToken: token },
+    update: {},
+    select: { unsubscribeToken: true },
+  });
+  if (row.unsubscribeToken) return row.unsubscribeToken;
+  const updated = await prisma.alphaSignup.update({
+    where: { email },
+    data: { unsubscribeToken: token },
+    select: { unsubscribeToken: true },
+  });
+  return updated.unsubscribeToken ?? token;
 }
 
 function escapeHtml(value: string): string {
@@ -29,17 +56,18 @@ function escapeHtml(value: string): string {
 }
 
 interface LayoutOptions {
-  recipientEmail: string;
   preheader: string;
   bodyHtml: string;
   // Transactional emails (verify, reset) should not show an unsubscribe link.
   showUnsubscribe?: boolean;
+  // Per-recipient unsubscribe token. When omitted (or null) the link is hidden.
+  unsubscribeToken?: string | null;
 }
 
-function renderLayout({ recipientEmail, preheader, bodyHtml, showUnsubscribe = true }: LayoutOptions): string {
-  const unsubBlock = showUnsubscribe
+function renderLayout({ preheader, bodyHtml, showUnsubscribe = true, unsubscribeToken = null }: LayoutOptions): string {
+  const unsubBlock = showUnsubscribe && unsubscribeToken
     ? `<p style="margin:0;font-size:12px;line-height:1.6;color:#6b7180;">
-                  <a href="${unsubscribeLinkFor(recipientEmail)}" style="color:#7aa2ff;text-decoration:underline;">Unsubscribe</a>
+                  <a href="${unsubscribeLinkFor(unsubscribeToken)}" style="color:#7aa2ff;text-decoration:underline;">Unsubscribe</a>
                 </p>`
     : '';
   return `<!doctype html>
@@ -82,7 +110,7 @@ function renderLayout({ recipientEmail, preheader, bodyHtml, showUnsubscribe = t
 </html>`;
 }
 
-function renderTextFooter(recipientEmail: string, showUnsubscribe: boolean): string[] {
+function renderTextFooter(showUnsubscribe: boolean, unsubscribeToken?: string | null): string[] {
   const lines = [
     '',
     '---',
@@ -91,8 +119,8 @@ function renderTextFooter(recipientEmail: string, showUnsubscribe: boolean): str
     '',
     `Vexara . ${SENDER_LOCATION}`,
   ];
-  if (showUnsubscribe) {
-    lines.push(`Unsubscribe: ${unsubscribeLinkFor(recipientEmail)}`);
+  if (showUnsubscribe && unsubscribeToken) {
+    lines.push(`Unsubscribe: ${unsubscribeLinkFor(unsubscribeToken)}`);
   }
   return lines;
 }
@@ -116,7 +144,7 @@ interface RenderedEmail {
   showUnsubscribe: boolean;
 }
 
-function tplAlphaWelcome(email: string): RenderedEmail {
+function tplAlphaWelcome(email: string, unsubscribeToken: string | null): RenderedEmail {
   const body = `
     <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#ffffff;font-weight:600;">You're on the alpha list</h1>
     <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#c8ccd6;">
@@ -153,17 +181,18 @@ function tplAlphaWelcome(email: string): RenderedEmail {
     `Vexara runs on a small server during alpha. Support the project: ${KOFI_URL}`,
     '',
     'Questions? Just reply to this email. It reaches a real person.',
-    ...renderTextFooter(email, true),
+    ...renderTextFooter(true, unsubscribeToken),
   ].join('\n');
+  void email;
   return {
     subject: "You're on the Vexara alpha list",
-    html: renderLayout({ recipientEmail: email, preheader: "You're on the Vexara alpha list. We'll email you when alpha opens.", bodyHtml: body }),
+    html: renderLayout({ preheader: "You're on the Vexara alpha list. We'll email you when alpha opens.", bodyHtml: body, unsubscribeToken }),
     text,
     showUnsubscribe: true,
   };
 }
 
-function tplAlphaInviteAnnouncement(email: string): RenderedEmail {
+function tplAlphaInviteAnnouncement(email: string, unsubscribeToken: string | null): RenderedEmail {
   const registerUrl = `${SITE_URL}/register`;
   const body = `
     <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#ffffff;font-weight:600;">Alpha starts Saturday. Registration is open now.</h1>
@@ -210,17 +239,18 @@ function tplAlphaInviteAnnouncement(email: string): RenderedEmail {
     `Discord: ${DISCORD_URL}`,
     '',
     'Questions? Just reply to this email. It reaches a real person.',
-    ...renderTextFooter(email, true),
+    ...renderTextFooter(true, unsubscribeToken),
   ].join('\n');
+  void email;
   return {
     subject: 'Vexara alpha starts Saturday at 15:30 UTC',
-    html: renderLayout({ recipientEmail: email, preheader: 'Registration is open now. Alpha goes live Saturday, 23 May at 15:30 UTC. Founder badges for the first players in.', bodyHtml: body }),
+    html: renderLayout({ preheader: 'Registration is open now. Alpha goes live Saturday, 23 May at 15:30 UTC. Founder badges for the first players in.', bodyHtml: body, unsubscribeToken }),
     text,
     showUnsubscribe: true,
   };
 }
 
-function tplGalaxyLive(email: string, displayName?: string): RenderedEmail {
+function tplGalaxyLive(email: string, unsubscribeToken: string | null, displayName?: string): RenderedEmail {
   const playUrl = `${SITE_URL}/galaxies`;
   const greeting = displayName
     ? `Commander ${escapeHtml(displayName)},`
@@ -285,14 +315,15 @@ function tplGalaxyLive(email: string, displayName?: string): RenderedEmail {
     `Support the project on Ko-fi: ${KOFI_URL}`,
     '',
     'See you in the dark. Questions? Just reply to this email - it reaches a real person.',
-    ...renderTextFooter(email, true),
+    ...renderTextFooter(true, unsubscribeToken),
   ].join('\n');
+  void email;
   return {
     subject: 'The galaxy is live. Enter now.',
     html: renderLayout({
-      recipientEmail: email,
       preheader: 'Vexara is open. Claim your nexus before the map fills around you.',
       bodyHtml: body,
+      unsubscribeToken,
     }),
     text,
     showUnsubscribe: true,
@@ -318,17 +349,18 @@ function tplVerifyEmail(email: string, username: string, verifyUrl: string): Ren
     `Confirm: ${verifyUrl}`,
     '',
     "This link expires in 24 hours. If you didn't sign up for Vexara, you can ignore this email.",
-    ...renderTextFooter(email, false),
+    ...renderTextFooter(false),
   ].join('\n');
+  void email;
   return {
     subject: 'Confirm your Vexara email',
-    html: renderLayout({ recipientEmail: email, preheader: 'Confirm your email to activate your Vexara account.', bodyHtml: body, showUnsubscribe: false }),
+    html: renderLayout({ preheader: 'Confirm your email to activate your Vexara account.', bodyHtml: body, showUnsubscribe: false }),
     text,
     showUnsubscribe: false,
   };
 }
 
-function tplWelcome(email: string, username: string, referralCode: string): RenderedEmail {
+function tplWelcome(email: string, username: string, referralCode: string, unsubscribeToken: string | null): RenderedEmail {
   const playUrl = `${SITE_URL}/galaxies`;
   const inviteUrl = `${SITE_URL}/register?ref=${encodeURIComponent(referralCode)}`;
   const safeCode = escapeHtml(referralCode);
@@ -391,11 +423,12 @@ function tplWelcome(email: string, username: string, referralCode: string): Rend
     `Discord: ${DISCORD_URL}`,
     '',
     'Questions? Just reply to this email. It reaches a real person.',
-    ...renderTextFooter(email, true),
+    ...renderTextFooter(true, unsubscribeToken),
   ].join('\n');
+  void email;
   return {
     subject: 'Welcome to Vexara',
-    html: renderLayout({ recipientEmail: email, preheader: 'Your Vexara account is active. Enter the game and claim your first nexus.', bodyHtml: body }),
+    html: renderLayout({ preheader: 'Your Vexara account is active. Enter the game and claim your first nexus.', bodyHtml: body, unsubscribeToken }),
     text,
     showUnsubscribe: true,
   };
@@ -428,11 +461,12 @@ function tplPasswordChanged(email: string, username: string): RenderedEmail {
     `Reset: ${resetUrl}`,
     '',
     "If you have any questions, reply to this email — it reaches a real person.",
-    ...renderTextFooter(email, false),
+    ...renderTextFooter(false),
   ].join('\n');
+  void email;
   return {
     subject: 'Your Vexara password was changed',
-    html: renderLayout({ recipientEmail: email, preheader: 'Your Vexara password was just changed. If this wasn\'t you, reset it immediately.', bodyHtml: body, showUnsubscribe: false }),
+    html: renderLayout({ preheader: 'Your Vexara password was just changed. If this wasn\'t you, reset it immediately.', bodyHtml: body, showUnsubscribe: false }),
     text,
     showUnsubscribe: false,
   };
@@ -457,11 +491,12 @@ function tplPasswordReset(email: string, username: string, resetUrl: string): Re
     `Reset: ${resetUrl}`,
     '',
     "This link expires in 1 hour. If you didn't ask for a password reset, you can ignore this email. Your password will not change.",
-    ...renderTextFooter(email, false),
+    ...renderTextFooter(false),
   ].join('\n');
+  void email;
   return {
     subject: 'Reset your Vexara password',
-    html: renderLayout({ recipientEmail: email, preheader: 'Reset your Vexara password. Link expires in 1 hour.', bodyHtml: body, showUnsubscribe: false }),
+    html: renderLayout({ preheader: 'Reset your Vexara password. Link expires in 1 hour.', bodyHtml: body, showUnsubscribe: false }),
     text,
     showUnsubscribe: false,
   };
@@ -471,10 +506,14 @@ function tplPasswordReset(email: string, username: string, resetUrl: string): Re
 // Send helpers (caller-facing API)
 // ────────────────────────────────────────────────────────────────────────────
 
-async function send(to: string, rendered: RenderedEmail): Promise<void> {
+async function send(
+  to: string,
+  rendered: RenderedEmail,
+  unsubscribeToken: string | null,
+): Promise<void> {
   const headers: Record<string, string> = {};
-  if (rendered.showUnsubscribe) {
-    headers['List-Unsubscribe'] = `<${unsubscribeLinkFor(to)}>, <mailto:unsubscribe@vexara.world>`;
+  if (rendered.showUnsubscribe && unsubscribeToken) {
+    headers['List-Unsubscribe'] = `<${unsubscribeLinkFor(unsubscribeToken)}>, <mailto:unsubscribe@vexara.world>`;
     headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
   }
   await client().emails.send({
@@ -489,31 +528,35 @@ async function send(to: string, rendered: RenderedEmail): Promise<void> {
 }
 
 export async function sendAlphaWelcome(email: string): Promise<void> {
-  await send(email, tplAlphaWelcome(email));
+  const token = await getOrCreateUnsubscribeToken(email);
+  await send(email, tplAlphaWelcome(email, token), token);
 }
 
 export async function sendAlphaInviteAnnouncement(email: string): Promise<void> {
-  await send(email, tplAlphaInviteAnnouncement(email));
+  const token = await getOrCreateUnsubscribeToken(email);
+  await send(email, tplAlphaInviteAnnouncement(email, token), token);
 }
 
 export async function sendGalaxyLive(email: string, displayName?: string): Promise<void> {
-  await send(email, tplGalaxyLive(email, displayName));
+  const token = await getOrCreateUnsubscribeToken(email);
+  await send(email, tplGalaxyLive(email, token, displayName), token);
 }
 
 export async function sendVerifyEmail(email: string, username: string, token: string): Promise<void> {
   const verifyUrl = `${SITE_URL}/verify-email?token=${encodeURIComponent(token)}`;
-  await send(email, tplVerifyEmail(email, username, verifyUrl));
+  await send(email, tplVerifyEmail(email, username, verifyUrl), null);
 }
 
 export async function sendWelcome(email: string, username: string, referralCode: string): Promise<void> {
-  await send(email, tplWelcome(email, username, referralCode));
+  const token = await getOrCreateUnsubscribeToken(email);
+  await send(email, tplWelcome(email, username, referralCode, token), token);
 }
 
 export async function sendPasswordReset(email: string, username: string, token: string): Promise<void> {
   const resetUrl = `${SITE_URL}/reset-password?token=${encodeURIComponent(token)}`;
-  await send(email, tplPasswordReset(email, username, resetUrl));
+  await send(email, tplPasswordReset(email, username, resetUrl), null);
 }
 
 export async function sendPasswordChanged(email: string, username: string): Promise<void> {
-  await send(email, tplPasswordChanged(email, username));
+  await send(email, tplPasswordChanged(email, username), null);
 }

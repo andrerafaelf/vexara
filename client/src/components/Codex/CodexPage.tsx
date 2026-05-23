@@ -130,7 +130,7 @@ function CodexNav() {
       </Link>
       <nav className="cx-nav-links" aria-label="Primary">
         <Link href="/" className="cx-nav-link-quiet">Home</Link>
-        <Link href="/login" className="cx-nav-link-quiet">Sign in</Link>
+        <Link href="/login" className="cx-nav-link-login">Login</Link>
         <Link href="/register" className="cx-nav-cta">Enlist</Link>
       </nav>
     </header>

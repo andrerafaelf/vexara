@@ -68,6 +68,18 @@
 .cx-nav-link-quiet { color: var(--text-muted) !important; }
 .cx-nav-link-quiet:hover { color: var(--text-strong) !important; }
 
+.cx-nav-link-login {
+  color: var(--text-strong) !important;
+  font-weight: 600 !important;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.cx-nav-link-login:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.32);
+}
+
 .cx-nav-cta {
   background: var(--accent);
   color: var(--text-on-accent) !important;

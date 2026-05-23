@@ -8,7 +8,7 @@ interface CountdownProps {
   endAt: string | number | Date;
   /** Optional render override. Receives ms remaining (clamped at 0). */
   render?: (msRemaining: number) => React.ReactNode;
-  /** Override the "completed" label. Defaults to "Ready to apply". */
+  /** Override the "completed" label. Defaults to "Finishing…". */
   completedLabel?: string;
   className?: string;
   style?: React.CSSProperties;
@@ -29,7 +29,7 @@ function formatDefault(msRemaining: number, completedLabel: string): string {
  * does not force re-renders in ancestors. Drop it wherever you would have written
  * `formatTime(currentTime, endAt)` to keep the parent stable.
  */
-function CountdownInner({ endAt, render, completedLabel = 'Ready to apply', className, style }: CountdownProps) {
+function CountdownInner({ endAt, render, completedLabel = 'Finishing…', className, style }: CountdownProps) {
   const now = useNow();
   const endMs = endAt instanceof Date ? endAt.getTime() : new Date(endAt).getTime();
   const msRemaining = Math.max(0, endMs - now);

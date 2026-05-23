@@ -339,6 +339,8 @@ export const removeFriend = (friendId: string) =>
 export const getPublicProfile = (username: string) =>
   apiRequest(`/users/${encodeURIComponent(username)}/profile`);
 
+export const listPlayersInGalaxy = () => apiRequest('/users');
+
 export const changePassword = (currentPassword: string, newPassword: string) =>
   apiRequest('/users/me/change-password', {
     method: 'POST',

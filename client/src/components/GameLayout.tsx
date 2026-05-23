@@ -18,7 +18,7 @@ import { startTransition, useCallback, useEffect, useMemo, useState } from 'reac
 import { useStartProgress } from './NavigationProgress';
 import { useUserStats } from '@/features/social/useSocial';
 
-type ActivePage = 'dashboard' | 'starfield' | 'market' | 'combat-logs' | 'allies' | 'factions' | 'profile';
+type ActivePage = 'dashboard' | 'starfield' | 'market' | 'combat-logs' | 'allies' | 'factions' | 'players' | 'profile';
 
 interface GameLayoutProps {
   children: React.ReactNode;
@@ -65,6 +65,7 @@ export default function GameLayout({
       '/combat-logs',
       '/allies',
       '/factions',
+      '/players',
       '/profile',
     ].filter(Boolean) as string[],
     [resolvedSelectedId],
@@ -171,6 +172,9 @@ export default function GameLayout({
               {hasFactionAttention && <span className="combat-report-dot" aria-label="Faction action required" />}
             </span>
           </button>
+          <button className={`nav-btn${is('players') ? ' active' : ''}`} onClick={nav('/players')} onMouseEnter={prefetchOnHover('/players')} onFocus={prefetchOnHover('/players')}>
+            Players
+          </button>
           <button className={`nav-btn${is('profile') ? ' active' : ''}`} onClick={nav('/profile')} onMouseEnter={prefetchOnHover('/profile')} onFocus={prefetchOnHover('/profile')}>
             Profile
           </button>
@@ -248,6 +252,9 @@ export default function GameLayout({
               Factions
               {hasFactionAttention && <span className="combat-report-dot" aria-label="Faction action required" />}
             </span>
+          </button>
+          <button className={`nav-btn${is('players') ? ' active' : ''}`} onClick={nav('/players')}>
+            Players
           </button>
           <button className={`nav-btn${is('profile') ? ' active' : ''}`} onClick={nav('/profile')}>
             Profile

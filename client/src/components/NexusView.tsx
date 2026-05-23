@@ -131,16 +131,16 @@ const BUILDING_DESCRIPTIONS: { [key: string]: string } = {
 };
 
 const BUILDING_COSTS: { [key: string]: any } = {
-  commandCore: { biomass: 90, alloy: 80, ore: 70, time: 70 },
-  recruitmentCore: { biomass: 200, alloy: 170, ore: 90, time: 115 },
-  lifeSupport: { biomass: 80, alloy: 100, ore: 70, time: 90 },
-  storageVault: { biomass: 60, alloy: 50, ore: 70, time: 70 },
-  biomassFarm: { biomass: 50, alloy: 60, ore: 60, time: 70 },
-  alloyForge: { biomass: 65, alloy: 40, ore: 60, time: 70 },
-  oreExtractor: { biomass: 75, alloy: 65, ore: 70, time: 90 },
-  shieldGrid: { biomass: 50, alloy: 100, ore: 60, time: 115 },
-  armory: { biomass: 120, alloy: 180, ore: 140, time: 130 },
-  stealthArray: { biomass: 100, alloy: 150, ore: 180, time: 140 },
+  commandCore:     { biomass: 90,  alloy: 80,  ore: 70,  time: 120 },
+  recruitmentCore: { biomass: 180, alloy: 150, ore: 80,  time: 180 },
+  lifeSupport:     { biomass: 80,  alloy: 100, ore: 70,  time: 150 },
+  storageVault:    { biomass: 60,  alloy: 50,  ore: 70,  time: 120 },
+  biomassFarm:     { biomass: 50,  alloy: 60,  ore: 60,  time: 120 },
+  alloyForge:      { biomass: 65,  alloy: 40,  ore: 60,  time: 120 },
+  oreExtractor:    { biomass: 75,  alloy: 65,  ore: 70,  time: 150 },
+  shieldGrid:      { biomass: 50,  alloy: 100, ore: 60,  time: 180 },
+  armory:          { biomass: 120, alloy: 180, ore: 140, time: 210 },
+  stealthArray:    { biomass: 100, alloy: 150, ore: 180, time: 210 },
 };
 
 const BUILDING_RULES: {
@@ -540,12 +540,30 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   }, [activeTab]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      checkQueues();
-    }, 15000);
-    return () => clearInterval(interval);
+    // Apply finished build/training items as quickly as possible. We bias the
+    // polling interval toward the next completing queue entry: if something
+    // is about to finish in the next 20s we poll every second, otherwise we
+    // fall back to the cheap 15s heartbeat. This keeps "Finishing…" from
+    // lingering on screen for more than a tick or two after completion.
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const schedule = () => {
+      const now = Date.now();
+      const buildEnds = nexus.buildQueue.map((item) => new Date(item.completesAt).getTime());
+      const trainEnds = nexus.trainingQueue.map((item) => new Date(item.completesAt).getTime());
+      const allEnds = [...buildEnds, ...trainEnds].filter((t) => Number.isFinite(t));
+      const dueNow = allEnds.some((t) => t <= now);
+      const nextEnd = allEnds.filter((t) => t > now).sort((a, b) => a - b)[0];
+      const msUntilNext = nextEnd ? nextEnd - now : Infinity;
+      const delay = dueNow ? 750 : msUntilNext < 20_000 ? 1000 : 15_000;
+      timeoutId = setTimeout(async () => {
+        await checkQueues();
+        schedule();
+      }, delay);
+    };
+    schedule();
+    return () => { if (timeoutId) clearTimeout(timeoutId); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nexus._id]);
+  }, [nexus._id, nexus.buildQueue.length, nexus.trainingQueue.length]);
 
   useEffect(() => {
     if (!isRenamingNexus) {
@@ -892,13 +910,14 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   };
 
   const calculateProduction = () => {
-    const baseProduction = 600;
+    const baseProduction = 800;
     const NEXUS_PRODUCTION_MULTIPLIERS: Record<string, number> = { 'Resource Depot': 2 };
     const productionMult = NEXUS_PRODUCTION_MULTIPLIERS[nexus.nexusType ?? ''] ?? 1;
+    const prod = (level: number) => (level <= 0 ? 0 : Math.floor(baseProduction * Math.pow(1.35, level - 1) * productionMult));
     return {
-      biomass: Math.floor(baseProduction * Math.pow(1.35, nexus.buildings.biomassFarm - 1) * productionMult),
-      alloy: Math.floor(baseProduction * Math.pow(1.35, nexus.buildings.alloyForge - 1) * productionMult),
-      ore: Math.floor(baseProduction * Math.pow(1.35, nexus.buildings.oreExtractor - 1) * productionMult),
+      biomass: prod(nexus.buildings.biomassFarm),
+      alloy: prod(nexus.buildings.alloyForge),
+      ore: prod(nexus.buildings.oreExtractor),
     };
   };
 
@@ -984,8 +1003,12 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   const getStorageAtLevel = (level: number) => Math.floor(STORAGE_BASE * Math.pow(STORAGE_GROWTH, level));
 
   const getProductionAtLevel = (building: 'biomassFarm' | 'alloyForge' | 'oreExtractor', level: number) => {
-    const safeLevel = Math.max(1, level);
-    return Math.floor(600 * Math.pow(1.35, safeLevel - 1));
+    // Level 0 means the building hasn't been built yet, so production is zero.
+    // Without this, the upgrade-benefit preview would show "+800/h → +800/h"
+    // (the old clamp forced level 0 to behave like level 1 and the rendered
+    // current/next values matched).
+    if (level <= 0) return 0;
+    return Math.floor(800 * Math.pow(1.35, level - 1));
   };
 
   const getUnlocksAtLevel = (building: string, targetLevel: number) => {
@@ -1144,34 +1167,45 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     const disruptorUnits = nexus.troops.disruptorUnit || 0;
     const annihilatorPlatforms = nexus.troops.annihilatorPlatform || 0;
 
+    // First quest line walks the player through the entire opening loop:
+    //   Command Core → Recruitment Core → Train troops → Loot a nexus.
+    // Each step gates the next, so a player who follows the prompts hits
+    // their first scavenge raid without ever being stuck on "what now?".
     const introQuests: IntroQuest[] = [
       {
         id: 'command-core-online',
         title: 'Power The Nexus',
-        description: 'Upgrade Command Core to Lv1.',
+        description: 'Upgrade Command Core to Lv1 to bring your nexus online.',
         completed: done('intro', 'build_command_core_1', nexus.buildings.commandCore >= 1),
+        tab: 'buildings',
+      },
+      {
+        id: 'reinforce-command',
+        title: 'Reinforce Command',
+        description: 'Upgrade Command Core to Lv2 to unlock Recruitment Core.',
+        completed: done('intro', 'build_command_core_2', nexus.buildings.commandCore >= 2),
         tab: 'buildings',
       },
       {
         id: 'start-fabrication',
         title: 'Enable Recruitment',
-        description: 'Upgrade Recruitment Core to Lv1.',
+        description: 'Build Recruitment Core to Lv1 so you can train troops.',
         completed: done('intro', 'build_troop_fab_1', nexus.buildings.recruitmentCore >= 1),
         tab: 'buildings',
       },
       {
-        id: 'increase-capacity',
-        title: 'Secure Capacity',
-        description: 'Upgrade Storage Vault to Lv2.',
-        completed: done('intro', 'build_storage_vault_2', nexus.buildings.storageVault >= 2),
-        tab: 'buildings',
-      },
-      {
         id: 'raise-force',
-        title: 'Field Troops',
-        description: 'Train 5 Assault Troopers.',
+        title: 'Train Your First Troops',
+        description: 'Train 5 Assault Troopers — your first strike force.',
         completed: done('intro', 'train_assault_trooper_5', assaultTroopers >= 5),
         tab: 'troops',
+      },
+      {
+        id: 'first-loot',
+        title: 'Loot A Nexus',
+        description: 'Send your troops to scavenge a neutral nexus on the Starfield.',
+        completed: done('intro', 'send_first_strike', outgoingAttacks.length > 0),
+        tab: 'map',
       },
     ];
 
@@ -1866,14 +1900,35 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
             )}
             {!allQuestsComplete &&
               nexus.buildings.commandCore >= 1 &&
+              nexus.buildings.commandCore < 2 &&
+              !dismissedTips.has('tip-command-core-2') && (
+                <div className="noob-tip">
+                  <span className="noob-tip-icon" aria-hidden="true">
+                    <Info size={14} />
+                  </span>
+                  <span className="noob-tip-text">
+                    <strong>Next up:</strong> Upgrade <em>Command Core</em> to Lv2 to unlock the <em>Recruitment Core</em>.
+                  </span>
+                  <button
+                    type="button"
+                    className="noob-tip-dismiss"
+                    onClick={() => dismissTip('tip-command-core-2')}
+                    aria-label="Dismiss tip"
+                  >
+                    <X size={12} aria-hidden="true" />
+                  </button>
+                </div>
+              )}
+            {!allQuestsComplete &&
+              nexus.buildings.commandCore >= 2 &&
               nexus.buildings.recruitmentCore < 1 &&
               !dismissedTips.has('tip-recruitment-core') && (
                 <div className="noob-tip">
                   <span className="noob-tip-icon" aria-hidden="true">
-                  <Info size={14} />
-                </span>
+                    <Info size={14} />
+                  </span>
                   <span className="noob-tip-text">
-                    <strong>Next up:</strong> Upgrade <em>Recruitment Core</em> to Lv1 to unlock troop training.
+                    <strong>Next up:</strong> Build <em>Recruitment Core</em> to Lv1 so you can train your first troops.
                   </span>
                   <button
                     type="button"
@@ -1886,20 +1941,41 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                 </div>
               )}
             {!allQuestsComplete &&
-              nexus.buildings.storageVault < 2 &&
-              nexus.buildings.commandCore >= 1 &&
-              !dismissedTips.has('tip-storage-vault') && (
+              nexus.buildings.recruitmentCore >= 1 &&
+              (nexus.troops.assaultTrooper || 0) < 5 &&
+              !dismissedTips.has('tip-train-troops') && (
                 <div className="noob-tip">
                   <span className="noob-tip-icon" aria-hidden="true">
-                  <Info size={14} />
-                </span>
+                    <Info size={14} />
+                  </span>
                   <span className="noob-tip-text">
-                    <strong>Tip:</strong> Upgrade <em>Storage Vault</em> to Lv2 to secure higher resource capacity.
+                    <strong>Next up:</strong> Train 5 <em>Assault Troopers</em> in the Troops tab.
                   </span>
                   <button
                     type="button"
                     className="noob-tip-dismiss"
-                    onClick={() => dismissTip('tip-storage-vault')}
+                    onClick={() => dismissTip('tip-train-troops')}
+                    aria-label="Dismiss tip"
+                  >
+                    <X size={12} aria-hidden="true" />
+                  </button>
+                </div>
+              )}
+            {!allQuestsComplete &&
+              (nexus.troops.assaultTrooper || 0) >= 5 &&
+              outgoingAttacks.length === 0 &&
+              !dismissedTips.has('tip-first-loot') && (
+                <div className="noob-tip">
+                  <span className="noob-tip-icon" aria-hidden="true">
+                    <Info size={14} />
+                  </span>
+                  <span className="noob-tip-text">
+                    <strong>Next up:</strong> Open the <em>Starfield</em> and send your troops to scavenge a neutral nexus.
+                  </span>
+                  <button
+                    type="button"
+                    className="noob-tip-dismiss"
+                    onClick={() => dismissTip('tip-first-loot')}
                     aria-label="Dismiss tip"
                   >
                     <X size={12} aria-hidden="true" />

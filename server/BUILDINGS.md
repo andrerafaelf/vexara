@@ -31,7 +31,7 @@ Command Core's own next upgrade) by 0.95. The reduction stacks compoundingly:
 ### Command Core
 
 - Role: Main progression gate
-- Base cost: Biomass 90, Alloy 80, Ore 70, Time 45s
+- Base cost: Biomass 90, Alloy 80, Ore 70, Time 120s
 - Max level: 20
 - Unlock: none
 - Milestones:
@@ -42,7 +42,7 @@ Command Core's own next upgrade) by 0.95. The reduction stacks compoundingly:
 ### Recruitment Core (recruitmentCore)
 
 - Role: Troop production and military unlock gate
-- Base cost: Biomass 200, Alloy 170, Ore 90, Time 75s
+- Base cost: Biomass 180, Alloy 150, Ore 80, Time 180s
 - Max level: 15
 - Unlock: Command Core Lv2
 - Milestones:
@@ -53,7 +53,7 @@ Command Core's own next upgrade) by 0.95. The reduction stacks compoundingly:
 ### Life Support
 
 - Role: Population cap scaling
-- Base cost: Biomass 80, Alloy 100, Ore 70, Time 60s
+- Base cost: Biomass 80, Alloy 100, Ore 70, Time 150s
 - Max level: 20
 - Unlock: Command Core Lv2
 - Milestones:
@@ -65,7 +65,7 @@ Command Core's own next upgrade) by 0.95. The reduction stacks compoundingly:
 ### Storage Vault
 
 - Role: Resource cap scaling
-- Base cost: Biomass 60, Alloy 50, Ore 40, Time 45s
+- Base cost: Biomass 60, Alloy 50, Ore 40, Time 120s
 - Max level: 20
 - Unlock: Command Core Lv2
 - Milestones:
@@ -78,42 +78,42 @@ Command Core's own next upgrade) by 0.95. The reduction stacks compoundingly:
 ### Biomass Farm
 
 - Role: Biomass production
-- Base cost: Biomass 50, Alloy 60, Ore 40, Time 45s
+- Base cost: Biomass 50, Alloy 60, Ore 40, Time 120s
 - Max level: 20
 - Unlock: Life Support Lv1
 - Milestones:
   - Lv6 requires Recruitment Core Lv2
   - Lv10 requires Life Support Lv5
 - Impact:
-  - Production scales as floor(600 \* 1.35^(level-1))
+  - Production scales as floor(800 \* 1.35^(level-1))
 
 ### Alloy Forge
 
 - Role: Alloy production
-- Base cost: Biomass 65, Alloy 40, Ore 40, Time 45s
+- Base cost: Biomass 65, Alloy 40, Ore 40, Time 120s
 - Max level: 15
 - Unlock: Ore Extractor Lv2
 - Milestones:
   - Lv6 requires Command Core Lv4
   - Lv10 requires Ore Extractor Lv8
 - Impact:
-  - Production scales as floor(600 \* 1.35^(level-1))
+  - Production scales as floor(800 \* 1.35^(level-1))
 
 ### Ore Extractor
 
 - Role: Ore production
-- Base cost: Biomass 75, Alloy 65, Ore 70, Time 60s
+- Base cost: Biomass 75, Alloy 65, Ore 70, Time 150s
 - Max level: 20
 - Unlock: Command Core Lv1
 - Milestones:
   - Lv8 requires Alloy Forge Lv4
 - Impact:
-  - Production scales as floor(600 \* 1.35^(level-1))
+  - Production scales as floor(800 \* 1.35^(level-1))
 
 ### Shield Grid
 
 - Role: Defensive multiplier
-- Base cost: Biomass 50, Alloy 100, Ore 20, Time 75s
+- Base cost: Biomass 50, Alloy 100, Ore 20, Time 180s
 - Max level: 15
 - Unlock: Command Core Lv3
 - Milestones:

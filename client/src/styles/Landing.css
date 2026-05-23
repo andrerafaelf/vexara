@@ -74,6 +74,18 @@
 
 .lp-nav-link-quiet { color: var(--text-muted) !important; }
 
+.lp-nav-link-login {
+  color: var(--text-strong) !important;
+  font-weight: 600 !important;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.lp-nav-link-login:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.32);
+}
+
 .lp-nav-cta {
   background: var(--accent);
   color: var(--text-on-accent) !important;
@@ -90,7 +102,7 @@
 @media (max-width: 640px) {
   .lp-nav { padding: 12px 16px; }
   .lp-nav-links a { padding: 6px 10px; font-size: 12px; }
-  .lp-nav-links a:not(.lp-nav-cta):not([href='/codex']) { display: none; }
+  .lp-nav-links a:not(.lp-nav-cta):not(.lp-nav-link-login):not([href='/codex']) { display: none; }
 }
 
 /* ============================================================= HERO ===== */

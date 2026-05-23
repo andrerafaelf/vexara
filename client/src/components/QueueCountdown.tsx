@@ -41,7 +41,10 @@ export function computeQueueCountdown(
   }
 
   const remainingSeconds = Math.floor((endMs - now) / 1000);
-  if (remainingSeconds <= 0) return { label: 'Ready to apply', isWaiting: false };
+  // The server applies completed queues automatically the next time the
+  // nexus is touched (and the client polls every few seconds), so there is
+  // no "ready to apply" state to surface — the upgrade is on its way in.
+  if (remainingSeconds <= 0) return { label: 'Finishing…', isWaiting: false };
   return { label: formatDurationSeconds(remainingSeconds), isWaiting: false };
 }
 

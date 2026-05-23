@@ -8,19 +8,22 @@ import { logError } from '../utils/logger.js';
 
 const MAX_BUILD_QUEUE = 5;
 
+// Times are Lv1 construction in seconds. Early builds intentionally take ~2-3
+// minutes so the player has resources tick in during the build, instead of
+// hitting "wait for resources" walls between near-instant upgrades.
 const BUILDING_COSTS: Record<string, { biomass: number; alloy: number; ore: number; time: number }> = {
-  commandCore: { biomass: 90, alloy: 80, ore: 70, time: 70 },
-  recruitmentCore: { biomass: 200, alloy: 170, ore: 90, time: 115 },
-  lifeSupport: { biomass: 80, alloy: 100, ore: 70, time: 90 },
-  storageVault: { biomass: 60, alloy: 50, ore: 70, time: 70 },
-  biomassFarm: { biomass: 50, alloy: 60, ore: 60, time: 70 },
-  alloyForge: { biomass: 65, alloy: 40, ore: 60, time: 70 },
-  oreExtractor: { biomass: 75, alloy: 65, ore: 70, time: 90 },
-  shieldGrid: { biomass: 50, alloy: 100, ore: 60, time: 115 },
+  commandCore:     { biomass: 90,  alloy: 80,  ore: 70,  time: 120 },
+  recruitmentCore: { biomass: 180, alloy: 150, ore: 80,  time: 180 },
+  lifeSupport:     { biomass: 80,  alloy: 100, ore: 70,  time: 150 },
+  storageVault:    { biomass: 60,  alloy: 50,  ore: 70,  time: 120 },
+  biomassFarm:     { biomass: 50,  alloy: 60,  ore: 60,  time: 120 },
+  alloyForge:      { biomass: 65,  alloy: 40,  ore: 60,  time: 120 },
+  oreExtractor:    { biomass: 75,  alloy: 65,  ore: 70,  time: 150 },
+  shieldGrid:      { biomass: 50,  alloy: 100, ore: 60,  time: 180 },
   // Armory: amplifies unit class-counter bonuses and unlocks Void Stalker / Plasma Turret
-  armory: { biomass: 120, alloy: 180, ore: 140, time: 130 },
+  armory:          { biomass: 120, alloy: 180, ore: 140, time: 210 },
   // Stealth Array: reduces enemy spy success and boosts operative effectiveness
-  stealthArray: { biomass: 100, alloy: 150, ore: 180, time: 140 },
+  stealthArray:    { biomass: 100, alloy: 150, ore: 180, time: 210 },
 };
 
 const BUILDING_RULES: Record<string, {

@@ -376,6 +376,7 @@ export async function alphaSignup(req: Request, res: Response): Promise<void> {
         utmSource: pickUtm(body?.utm_source),
         utmMedium: pickUtm(body?.utm_medium),
         utmCampaign: pickUtm(body?.utm_campaign),
+        unsubscribeToken: randomBytes(32).toString('hex'),
       },
       update: {},
       select: { createdAt: true, unsubscribedAt: true },

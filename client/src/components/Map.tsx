@@ -70,6 +70,12 @@ export interface MapNexus {
   scoutedAt?: string;
   newbieProtectionEndsAt?: string | null;
   isFriendly?: boolean;
+  /**
+   * 'faction' = same faction as the viewer.
+   * 'friend'  = on the viewer's friends list but not in the same faction.
+   * Used by the map to colour these owners distinctly from neutrals/enemies.
+   */
+  relation?: 'faction' | 'friend' | null;
 }
 
 const TROOP_LABELS: Record<string, string> = {
@@ -731,13 +737,18 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
             y <= ev.meta.yMax!,
         );
 
+        const isFactionNexus = isEnemyNexus && nexus?.relation === 'faction';
+        const isAllyNexus = isEnemyNexus && nexus?.relation === 'friend';
+
         const cellClasses = ['map-cell'];
         if (isOutOfBounds) cellClasses.push('out-of-bounds');
         if (isInStormZone) cellClasses.push('resource-storm-zone');
         if (nexus) cellClasses.push('has-nexus');
         if (isCurrent) cellClasses.push('current-nexus');
         if (isOwnNexus && !isCurrent) cellClasses.push('own-nexus');
-        if (isEnemyNexus) cellClasses.push('enemy-nexus');
+        if (isFactionNexus) cellClasses.push('faction-nexus');
+        else if (isAllyNexus) cellClasses.push('ally-nexus');
+        else if (isEnemyNexus) cellClasses.push('enemy-nexus');
         if (isEspionage && nexus && !isCurrent) cellClasses.push('spy-target');
 
         const titleText = isOutOfBounds
@@ -759,7 +770,15 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
             {nexus && (
               <div
                 className={`nexus-marker ${
-                  isCurrent ? 'nexus-marker-current' : isOwnNexus ? 'nexus-marker-own' : 'nexus-marker-enemy'
+                  isCurrent
+                    ? 'nexus-marker-current'
+                    : isOwnNexus
+                      ? 'nexus-marker-own'
+                      : isFactionNexus
+                        ? 'nexus-marker-faction'
+                        : isAllyNexus
+                          ? 'nexus-marker-ally'
+                          : 'nexus-marker-enemy'
                 }`}
                 aria-hidden="true"
               >
@@ -819,9 +838,11 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
         <div className="no-selection">
           <p>Select a nexus on the map to view its details</p>
           <div className="legend">
-            <div>Active Nexus</div>
-            <div>Your Other Nexus</div>
-            <div>Enemy / NPC Nexus</div>
+            <div className="legend-row legend-row-current">Active Nexus</div>
+            <div className="legend-row legend-row-own">Your Other Nexus</div>
+            <div className="legend-row legend-row-faction">Faction Member</div>
+            <div className="legend-row legend-row-ally">Ally / Friend</div>
+            <div className="legend-row legend-row-enemy">Enemy / NPC Nexus</div>
           </div>
         </div>
       );

@@ -113,15 +113,16 @@ model GalaxyPlayer {
 }
 
 model AlphaSignup {
-  id             Int       @id @default(autoincrement())
-  email          String    @unique @db.VarChar(254)
-  createdAt      DateTime  @default(now())
-  invitedAt      DateTime?
-  unsubscribedAt DateTime?
-  source         String?   @db.VarChar(64)
-  utmSource      String?   @db.VarChar(64)
-  utmMedium      String?   @db.VarChar(64)
-  utmCampaign    String?   @db.VarChar(64)
+  id                Int       @id @default(autoincrement())
+  email             String    @unique @db.VarChar(254)
+  createdAt         DateTime  @default(now())
+  invitedAt         DateTime?
+  unsubscribedAt    DateTime?
+  unsubscribeToken  String?   @unique @db.VarChar(64)
+  source            String?   @db.VarChar(64)
+  utmSource         String?   @db.VarChar(64)
+  utmMedium         String?   @db.VarChar(64)
+  utmCampaign       String?   @db.VarChar(64)
 
   @@index([createdAt])
 }
@@ -226,9 +227,9 @@ model Nexus {
   y Int
 
   // Resources
-  biomass Float @default(500)
-  alloy   Float @default(500)
-  ore     Float @default(500)
+  biomass Float @default(1500)
+  alloy   Float @default(1500)
+  ore     Float @default(1500)
 
   // Buildings
   commandCore     Int @default(0)

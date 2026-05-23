@@ -9,6 +9,67 @@ import { logError } from '../utils/logger.js';
 
 type FriendshipStatus = 'self' | 'none' | 'pending_outgoing' | 'pending_incoming' | 'friends';
 
+export async function listPlayersInGalaxy(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const galaxyId = req.galaxyId;
+    if (!galaxyId) {
+      res.json([]);
+      return;
+    }
+
+    const [players, factions, nexusCounts] = await Promise.all([
+      prisma.galaxyPlayer.findMany({
+        where: { galaxyId },
+        select: {
+          userId: true,
+          points: true,
+          joinedAt: true,
+          user: { select: { username: true, isSupporter: true } },
+        },
+        orderBy: { points: 'desc' },
+      }),
+      prisma.factionMember.findMany({
+        where: { galaxyId },
+        select: {
+          userId: true,
+          role: true,
+          faction: { select: { id: true, name: true, tag: true } },
+        },
+      }),
+      prisma.nexus.groupBy({
+        by: ['ownerId'],
+        where: { galaxyId, ownerId: { not: null } },
+        _count: { id: true },
+      }),
+    ]);
+
+    const factionByUser = new Map(factions.map((m) => [m.userId, m]));
+    const nexusByOwner = new Map(nexusCounts.map((r) => [r.ownerId!, r._count.id]));
+
+    res.json(
+      players.map((p) => ({
+        userId: p.userId,
+        username: p.user?.username ?? 'Unknown',
+        isSupporter: p.user?.isSupporter ?? false,
+        points: p.points,
+        joinedAt: p.joinedAt,
+        nexuses: nexusByOwner.get(p.userId) || 0,
+        faction: factionByUser.get(p.userId)
+          ? {
+              id: factionByUser.get(p.userId)!.faction.id,
+              name: factionByUser.get(p.userId)!.faction.name,
+              tag: factionByUser.get(p.userId)!.faction.tag,
+              role: factionByUser.get(p.userId)!.role,
+            }
+          : null,
+      })),
+    );
+  } catch (error) {
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'usersController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 export async function changePassword(req: AuthRequest, res: Response): Promise<void> {
   try {
     const { currentPassword, newPassword } = (req.body ?? {}) as { currentPassword?: string; newPassword?: string };

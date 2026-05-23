@@ -379,6 +379,26 @@
     0 0 24px rgba(248, 81, 73,0.14);
 }
 
+/* Same-faction members: cyan/blue — clearly "with you", distinct from your own (green) */
+.map-cell.faction-nexus {
+  background: rgba(86, 156, 214, 0.20);
+  border: 2px solid #5a9ee6;
+  box-shadow:
+    inset 0 0 14px rgba(86, 156, 214, 0.30),
+    0 0 12px rgba(86, 156, 214, 0.35),
+    0 0 24px rgba(86, 156, 214, 0.15);
+}
+
+/* Individual allies / friends list: violet — friendly but not in your faction */
+.map-cell.ally-nexus {
+  background: rgba(168, 119, 232, 0.18);
+  border: 2px solid #a877e8;
+  box-shadow:
+    inset 0 0 14px rgba(168, 119, 232, 0.26),
+    0 0 12px rgba(168, 119, 232, 0.32),
+    0 0 24px rgba(168, 119, 232, 0.14);
+}
+
 /* Resource storm zone — teal/green tint over every cell in the affected quadrant */
 .map-cell.resource-storm-zone {
   background: rgba(86, 211, 100, 0.08);
@@ -429,6 +449,14 @@
 
 .nexus-marker-enemy {
   color: var(--danger);
+}
+
+.nexus-marker-faction {
+  color: #5a9ee6;
+}
+
+.nexus-marker-ally {
+  color: #a877e8;
 }
 
 .nexus-own-actions {
@@ -854,6 +882,26 @@
   font-size: var(--text-base);
   line-height: 1.8;
 }
+
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.legend-row::before {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  flex: 0 0 12px;
+}
+
+.legend-row-current::before { background: var(--accent); }
+.legend-row-own::before     { background: var(--success); }
+.legend-row-faction::before { background: #5a9ee6; }
+.legend-row-ally::before    { background: #a877e8; }
+.legend-row-enemy::before   { background: var(--danger); }
 
 .attacks-panel {
   margin-top: var(--space-6);

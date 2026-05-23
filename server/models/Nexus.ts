@@ -44,16 +44,21 @@ interface QuestBatch {
 
 export const QUEST_REWARD_BATCHES: QuestBatch[] = [
   // --- Chapter 1: Establishing the Nexus ---
+  // First quest line walks the player end-to-end through the opening loop:
+  //   Command Core → Recruitment Core → Train troops → Loot a nexus.
+  // The quest IDs are referenced verbatim by the client intro batch, so any
+  // changes here must be kept in sync with NexusView.tsx.
   {
     id: 'intro',
     isUnlocked: () => true,
     quests: [
       { id: 'build_command_core_1',    check: ({ nexus }) => nexus.commandCore >= 1 },
+      { id: 'build_command_core_2',    check: ({ nexus }) => nexus.commandCore >= 2 },
       { id: 'build_troop_fab_1',       check: ({ nexus }) => nexus.recruitmentCore >= 1 },
-      { id: 'build_storage_vault_2',   check: ({ nexus }) => nexus.storageVault >= 2 },
       { id: 'train_assault_trooper_5', check: ({ nexus }) => nexus.assaultTrooper >= 5 },
+      { id: 'send_first_strike',       check: ({ hasOutgoingStrike }) => hasOutgoingStrike },
     ],
-    reward: { biomass: 500, alloy: 500, ore: 500, populationCurrent: 10, troops: { assaultTrooper: 10 } },
+    reward: { biomass: 750, alloy: 750, ore: 750, populationCurrent: 10, troops: { assaultTrooper: 10 } },
   },
 
   // --- Chapter 2: Expansion ---

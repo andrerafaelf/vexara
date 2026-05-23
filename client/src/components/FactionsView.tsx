@@ -6,6 +6,7 @@ import {
   createFaction,
   declineFactionInvite,
   disbandFaction,
+  getFaction,
   getMyFaction,
   getMyFactionInvites,
   inviteToFaction,
@@ -170,6 +171,28 @@ export default function FactionsView() {
   const [joinRequestMsg, setJoinRequestMsg] = useState<Record<number, string>>({});
   const [joinRequestSubmitting, setJoinRequestSubmitting] = useState<Record<number, boolean>>({});
   const [joinRequestError, setJoinRequestError] = useState<Record<number, string>>({});
+
+  // Click-to-expand on faction names: fetch the member list lazily and cache it.
+  const [expandedFactionId, setExpandedFactionId] = useState<number | null>(null);
+  const [factionMemberCache, setFactionMemberCache] = useState<Record<number, Array<{ userId: number; username: string; isSupporter: boolean; role: string }> | 'loading' | 'error'>>({});
+
+  const toggleFactionExpanded = useCallback(async (factionId: number) => {
+    setExpandedFactionId((prev) => (prev === factionId ? null : factionId));
+    if (factionMemberCache[factionId] !== undefined) return;
+    setFactionMemberCache((prev) => ({ ...prev, [factionId]: 'loading' }));
+    try {
+      const res = await getFaction(factionId);
+      const members = (res.data?.members ?? []).map((m: { userId: number; username: string; isSupporter?: boolean; role: string }) => ({
+        userId: m.userId,
+        username: m.username,
+        isSupporter: !!m.isSupporter,
+        role: m.role,
+      }));
+      setFactionMemberCache((prev) => ({ ...prev, [factionId]: members }));
+    } catch {
+      setFactionMemberCache((prev) => ({ ...prev, [factionId]: 'error' }));
+    }
+  }, [factionMemberCache]);
 
   const { user: authUser } = useAuth();
   const currentUserId = authUser ? parseInt(authUser.id, 10) : undefined;
@@ -616,17 +639,50 @@ export default function FactionsView() {
                 const hasPending = pendingFactionIds.has(f.id);
                 const submitting = joinRequestSubmitting[f.id] ?? false;
                 const reqError = joinRequestError[f.id] ?? '';
+                const isExpanded = expandedFactionId === f.id;
+                const cachedMembers = factionMemberCache[f.id];
                 return (
                   <div key={f.id} className="factions-browser-card">
                     <div className="factions-browser-card-header">
                       <div className="factions-browser-card-identity">
-                        <span className="factions-browser-card-name">{f.name}</span>
+                        <button
+                          type="button"
+                          className="factions-browser-card-name factions-browser-card-name-button"
+                          onClick={() => toggleFactionExpanded(f.id)}
+                          aria-expanded={isExpanded}
+                          aria-controls={`faction-members-${f.id}`}
+                        >
+                          {f.name}
+                        </button>
                         <span className="factions-browser-card-tag">[{f.tag}]</span>
                       </div>
                       <span className="factions-browser-card-members">{f.memberCount} member{f.memberCount !== 1 ? 's' : ''}</span>
                     </div>
                     {f.description && (
                       <p className="factions-browser-card-desc">{f.description}</p>
+                    )}
+                    {isExpanded && (
+                      <div className="factions-browser-card-members-panel" id={`faction-members-${f.id}`}>
+                        {cachedMembers === 'loading' && (
+                          <span className="factions-browser-card-members-status">Loading members…</span>
+                        )}
+                        {cachedMembers === 'error' && (
+                          <span className="factions-browser-card-members-status factions-field-error">Failed to load members.</span>
+                        )}
+                        {Array.isArray(cachedMembers) && cachedMembers.length === 0 && (
+                          <span className="factions-browser-card-members-status">This faction has no members.</span>
+                        )}
+                        {Array.isArray(cachedMembers) && cachedMembers.length > 0 && (
+                          <ul className="factions-browser-card-members-list">
+                            {cachedMembers.map((m) => (
+                              <li key={m.userId} className="factions-browser-card-members-item">
+                                <Username name={m.username} isSupporter={m.isSupporter} linkToProfile />
+                                <span className={`factions-role-badge factions-role-badge--${m.role}`}>{m.role}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
                     )}
                     {hasPending ? (
                       <div className="factions-browser-card-pending">

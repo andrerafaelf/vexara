@@ -84,7 +84,9 @@ export function buildDetailedScoutIntel(nexus: Nexus): ScoutIntel {
   };
 }
 
-async function isFriendlyNexus(userId: number, galaxyId: number, ownerUserId: number): Promise<boolean> {
+type FriendlyRelation = 'faction' | 'friend' | null;
+
+async function getFriendlyRelation(userId: number, galaxyId: number, ownerUserId: number): Promise<FriendlyRelation> {
   const [sameFaction, areFriends] = await Promise.all([
     prisma.factionMember.findFirst({ where: { galaxyId, userId } })
       .then(async (m1) => {
@@ -96,14 +98,18 @@ async function isFriendlyNexus(userId: number, galaxyId: number, ownerUserId: nu
       where: { OR: [{ userAId: userId, userBId: ownerUserId }, { userAId: ownerUserId, userBId: userId }] },
     }).then(Boolean),
   ]);
-  return sameFaction || areFriends;
+  // Faction takes priority over friend so the map can colour shared-faction
+  // nexuses differently from individual allies.
+  if (sameFaction) return 'faction';
+  if (areFriends) return 'friend';
+  return null;
 }
 
 export async function getNexusIntelForUser(
   userId: number,
   nexusId: number,
   galaxyId: number | null,
-): Promise<(PublicNexusData & Partial<ScoutIntel> & { intelLevel: string; scoutedAt?: unknown; isFriendly?: boolean; newbieProtectionEndsAt?: string | null }) | null> {
+): Promise<(PublicNexusData & Partial<ScoutIntel> & { intelLevel: string; scoutedAt?: unknown; isFriendly?: boolean; relation?: FriendlyRelation; newbieProtectionEndsAt?: string | null }) | null> {
   const nexus = await prisma.nexus.findUnique({
     where: { id: nexusId },
     include: { owner: { select: { id: true, username: true, isSupporter: true } } },
@@ -126,9 +132,10 @@ export async function getNexusIntelForUser(
     return { ...publicData, ...buildDetailedScoutIntel(nexus), intelLevel: 'owned', scoutedAt: new Date().toISOString(), newbieProtectionEndsAt };
   }
 
-  const friendly = nexus.ownerId && galaxyId != null
-    ? await isFriendlyNexus(userId, galaxyId, nexus.ownerId)
-    : false;
+  const relation = nexus.ownerId && galaxyId != null
+    ? await getFriendlyRelation(userId, galaxyId, nexus.ownerId)
+    : null;
+  const friendly = relation !== null;
 
   const scoutReport = await prisma.attack.findFirst({
     where: { attackerUserId: userId, defenderNexusId: nexusId, type: 'scout', status: 'completed' },
@@ -136,7 +143,7 @@ export async function getNexusIntelForUser(
   });
 
   const intel = (scoutReport?.result as { intel?: ScoutIntel } | null)?.intel;
-  if (!intel) return { ...publicData, isFriendly: friendly, newbieProtectionEndsAt };
+  if (!intel) return { ...publicData, isFriendly: friendly, relation, newbieProtectionEndsAt };
 
-  return { ...publicData, ...intel, intelLevel: 'scouted', scoutedAt: scoutReport!.arrivesAt, isFriendly: friendly, newbieProtectionEndsAt };
+  return { ...publicData, ...intel, intelLevel: 'scouted', scoutedAt: scoutReport!.arrivesAt, isFriendly: friendly, relation, newbieProtectionEndsAt };
 }

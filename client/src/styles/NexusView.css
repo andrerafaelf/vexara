@@ -3475,6 +3475,7 @@
 
 .building-upgrade-button {
   background: var(--accent);
+  color: var(--text-on-accent);
   border-radius: 0;
   border: 1px solid transparent;
   font-family: var(--font-sans);
@@ -3483,6 +3484,19 @@
   position: relative;
   overflow: hidden;
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
+}
+
+.building-upgrade-button:hover:not(:disabled) {
+  background: var(--accent-hover);
+  color: var(--text-on-accent);
+  box-shadow: var(--glow-accent-soft);
+}
+
+.building-upgrade-button:disabled {
+  background: var(--bg-surface-2);
+  color: var(--text-faint);
+  border-color: var(--border-default);
+  opacity: 0.55;
 }
 
 .building-upgrade-button::before {
