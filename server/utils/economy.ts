@@ -72,7 +72,9 @@ export function getMaxStorage(nexus: NexusForEconomy): number {
   const storageMultiplier = rawMultiplier === 1
     ? 1
     : 1 + (rawMultiplier - 1) * getDoubleScale(nexus);
-  return 1000 * Math.pow(1.5, nexus.storageVault) * storageMultiplier;
+  // Base 1500 means Lv1 caps at 2250, so the buffed 1500 starting stockpile
+  // has headroom from spawn instead of capping farms instantly.
+  return 1500 * Math.pow(1.5, nexus.storageVault) * storageMultiplier;
 }
 
 export function getNexusTypeEffectiveMultipliers(nexus: NexusForEconomy): NexusTypeBonuses | null {

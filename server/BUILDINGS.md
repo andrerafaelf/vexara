@@ -73,7 +73,7 @@ Command Core's own next upgrade) by 0.95. The reduction stacks compoundingly:
   - Lv6 requires Alloy Forge Lv2
   - Lv10 requires Command Core Lv8
 - Impact:
-  - Storage formula: floor(1000 \* 1.5^level)
+  - Storage formula: floor(1500 \* 1.5^level)
 
 ### Biomass Farm
 

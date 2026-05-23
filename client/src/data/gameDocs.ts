@@ -198,7 +198,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
       { level: 6, requires: ['Alloy Forge Lv2'] },
       { level: 10, requires: ['Command Core Lv8'] },
     ],
-    impact: ['Storage formula: floor(1000 * 1.5^level).'],
+    impact: ['Storage formula: floor(1500 * 1.5^level).'],
   },
   {
     key: 'biomassFarm',
