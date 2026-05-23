@@ -884,7 +884,8 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
           <div className="newbie-protection-banner">
             <Shield size={14} className="newbie-protection-icon" aria-hidden="true" />
             <span className="newbie-protection-text">
-              Protected · {formatTime(new Date(selectedNexus.newbieProtectionEndsAt!))} remaining
+              Newbie protection &middot; cannot be attacked for{' '}
+              {formatTime(new Date(selectedNexus.newbieProtectionEndsAt!))}
             </span>
           </div>
         )}
@@ -975,9 +976,16 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
                   className="attack-btn"
                   onClick={() => { setAttackMissionType('attack'); setShowAttackForm(true); }}
                   disabled={isConquered || isNewbieProtected}
-                  title={isConquered ? 'Nexus already conquered' : isNewbieProtected ? 'Nexus is under newbie protection' : 'Launch attack'}
+                  title={
+                    isConquered
+                      ? 'Nexus already conquered'
+                      : isNewbieProtected
+                        ? `Protected by newbie shield · ${formatTime(new Date(selectedNexus.newbieProtectionEndsAt!))} remaining`
+                        : 'Launch attack'
+                  }
                 >
-                  <Swords size={14} aria-hidden="true" /> {isConquered ? 'Conquered' : 'Attack'}
+                  <Swords size={14} aria-hidden="true" />{' '}
+                  {isConquered ? 'Conquered' : isNewbieProtected ? 'Protected' : 'Attack'}
                 </button>
                 {selectedNexus.isFriendly && selectedNexus.owner && (
                   <button

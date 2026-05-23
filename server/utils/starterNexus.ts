@@ -28,6 +28,8 @@ export async function findOpenStarterCoordinates(
   return null;
 }
 
+export const NEWBIE_PROTECTION_DURATION_MS = 3 * 24 * 60 * 60 * 1000;
+
 export async function createStarterNexus(
   tx: TxClient,
   { userId, username, galaxyId }: { userId: number; username: string; galaxyId: number },
@@ -42,6 +44,7 @@ export async function createStarterNexus(
       y: coords.y,
       ...STARTER_NEXUS_DEFAULTS,
       populationMax: getPopulationMax(STARTER_NEXUS_DEFAULTS.lifeSupport),
+      newbieProtectionEndsAt: new Date(Date.now() + NEWBIE_PROTECTION_DURATION_MS),
     },
   });
 }

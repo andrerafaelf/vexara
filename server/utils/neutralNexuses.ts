@@ -19,7 +19,11 @@ const MIN_NEUTRALS = 32;
 const NEUTRALS_PER_CAPTURED = 1;
 const NEUTRALS_PER_PLAYER = 4;
 const DAILY_NEXUS_GROWTH = 6;
-const BASE_NEUTRAL_DIFFICULTY = 0.7;
+// Tuned so a fresh player's first 20 Assault Troopers can take a Neutral
+// Settlement (the most common pick, 40% weight). The opening loop is built
+// around "train 5 troopers, then scavenge", so the easiest neutrals must
+// be soft enough that a small early force is a winning bet, not a coin flip.
+const BASE_NEUTRAL_DIFFICULTY = 0.5;
 const MAX_NEUTRAL_DIFFICULTY = 1.35;
 const USER_DIFFICULTY_STEP = 0.015;
 const CAPTURE_DIFFICULTY_STEP = 0.004;

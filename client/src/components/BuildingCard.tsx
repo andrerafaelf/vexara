@@ -4,6 +4,7 @@ import React from 'react';
 import { Hammer, Info } from 'lucide-react';
 import { QueueCountdown } from './QueueCountdown';
 import { useFlashOnTrue } from '@/realtime/useFlashOnChange';
+import { useGatedLiveResources, useResourceSnapshot } from '@/realtime/useLiveResources';
 import type { Nexus } from '@/types/game';
 
 // Per-card props. The closure-bound helpers from NexusView are passed in as
@@ -14,11 +15,10 @@ export interface BuildingCardProps {
   buildingKey: string;
   level: number;
   nexus: Nexus;
-  // Affordability bits — computed once at the parent so all cards share the
-  // same `liveResources` subscription, instead of each card subscribing.
-  availableBiomass: number;
-  availableAlloy: number;
-  availableOre: number;
+  // nexusId for the per-card useLiveResources subscription. Keeping the parent
+  // free of the 1Hz clock subscription is the whole reason the card subscribes
+  // itself: NexusView is too large to re-render every second.
+  nexusId: string;
   // Static label / image dictionaries — looked up by buildingKey.
   buildingName: string;
   buildingDescription: string;
@@ -26,6 +26,10 @@ export interface BuildingCardProps {
   maxLevel: number;
   buildQueueLength: number;
   maxBuildQueue: number;
+  // Pre-computed by the parent in a single pass over the build queue. Avoids
+  // each of N cards doing its own O(queue) scan four times per render.
+  queuedCount: number;
+  firstQueuedIndex: number;
   // Helpers from NexusView (kept as closures for this step; lift to module scope later).
   getBuildingCost: (key: string, currentLevel: number) => { biomass: number; alloy: number; ore: number; time: number };
   getBuildingUpgradeBenefit: (key: string, currentLevel: number) => string;
@@ -43,15 +47,15 @@ function BuildingCardInner(props: BuildingCardProps) {
     buildingKey: key,
     level,
     nexus,
-    availableBiomass,
-    availableAlloy,
-    availableOre,
+    nexusId,
     buildingName,
     buildingDescription,
     buildingImage,
     maxLevel,
     buildQueueLength,
     maxBuildQueue,
+    queuedCount,
+    firstQueuedIndex,
     getBuildingCost,
     getBuildingUpgradeBenefit,
     checkBuildingRequirements,
@@ -63,16 +67,47 @@ function BuildingCardInner(props: BuildingCardProps) {
     onInfoTap,
   } = props;
 
-  const queuedForBuilding = nexus.buildQueue.filter((item) => item.building === key).length;
-  const firstQueuedForBuilding = nexus.buildQueue.find((item) => item.building === key);
-  const firstQueuedForBuildingIndex = nexus.buildQueue.findIndex((item) => item.building === key);
-  const plannedLevel = level + queuedForBuilding;
-  const isUpgrading = nexus.buildQueue.some((item) => item.building === key);
+  // Compute static gates first using the snapshot (no 1Hz subscription) so we
+  // can decide whether the per-second clock subscription is even worth it.
+  // If the card is at max, has no cost, is queue-blocked, or fails the
+  // prerequisites check, the affordability state doesn't matter — ticking
+  // would just waste a render per second.
+  const firstQueuedForBuilding = firstQueuedIndex >= 0 ? nexus.buildQueue[firstQueuedIndex] : undefined;
+  const plannedLevel = level + queuedCount;
+  const isUpgrading = queuedCount > 0;
   const isAtMax = plannedLevel >= maxLevel;
   const cost = isAtMax ? null : getBuildingCost(key, plannedLevel);
   const upgradeBenefit = isAtMax ? 'Maximum level reached' : getBuildingUpgradeBenefit(key, plannedLevel);
   const { canUpgrade, missingRequirements, atMax } = checkBuildingRequirements(key);
   const isBuildQueueFull = buildQueueLength >= maxBuildQueue;
+
+  // Snapshot baseline (no tick subscription).
+  const snapshot = useResourceSnapshot(nexusId);
+  const snapBiomass = snapshot?.base.biomass ?? nexus.resources.biomass;
+  const snapAlloy = snapshot?.base.alloy ?? nexus.resources.alloy;
+  const snapOre = snapshot?.base.ore ?? nexus.resources.ore;
+  const snapAffords =
+    !cost ||
+    (snapBiomass >= cost.biomass &&
+      snapAlloy >= cost.alloy &&
+      snapOre >= cost.ore);
+
+  // Tick only when affordability is genuinely the gate: not maxed, no other
+  // blockers, current snapshot doesn't afford yet, and production is positive
+  // for at least one deficit resource (else it will never flip without a
+  // refetch anyway). This keeps the per-second render count proportional to
+  // "interesting" cards, not all 10 buildings.
+  const productionCanFill =
+    !!cost && !!snapshot &&
+    ((snapshot.production.biomass > 0 && snapBiomass < cost.biomass) ||
+      (snapshot.production.alloy > 0 && snapAlloy < cost.alloy) ||
+      (snapshot.production.ore > 0 && snapOre < cost.ore));
+  const tickForAffordability = !isAtMax && !isBuildQueueFull && canUpgrade && !snapAffords && productionCanFill;
+
+  const liveResources = useGatedLiveResources(nexusId, tickForAffordability);
+  const availableBiomass = liveResources?.biomass ?? snapBiomass;
+  const availableAlloy = liveResources?.alloy ?? snapAlloy;
+  const availableOre = liveResources?.ore ?? snapOre;
   const hasResources =
     !cost ||
     (availableBiomass >= cost.biomass &&
@@ -127,7 +162,7 @@ function BuildingCardInner(props: BuildingCardProps) {
           {firstQueuedForBuilding && (
             <QueueCountdown
               endAt={firstQueuedForBuilding.completesAt}
-              prevEndAt={getPrevBuildEnd(firstQueuedForBuildingIndex)}
+              prevEndAt={getPrevBuildEnd(firstQueuedIndex)}
               waitingClassName="queue-time-small queue-time-queued"
               runningClassName="queue-time-small"
             />

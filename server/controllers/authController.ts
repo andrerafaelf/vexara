@@ -278,7 +278,12 @@ export async function requestPasswordReset(req: Request, res: Response): Promise
       select: { id: true, username: true, email: true, emailVerifiedAt: true },
     });
 
-    if (user && user.emailVerifiedAt) {
+    // We deliberately do NOT gate on emailVerifiedAt here. A user who can
+    // receive the reset email is proving control of the address, which is
+    // exactly what verification proves — gating the two against each other
+    // just locked unverified users out of recovering their accounts. The
+    // outer "user exists?" check still prevents fan-out to arbitrary inboxes.
+    if (user) {
       const token = generateToken();
       await prisma.user.update({
         where: { id: user.id },
@@ -315,7 +320,7 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
 
     const user = await prisma.user.findUnique({
       where: { passwordResetToken: token },
-      select: { id: true, passwordResetTokenExpiresAt: true },
+      select: { id: true, passwordResetTokenExpiresAt: true, emailVerifiedAt: true },
     });
 
     if (!user || !user.passwordResetTokenExpiresAt || user.passwordResetTokenExpiresAt.getTime() < Date.now()) {
@@ -330,6 +335,14 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
         password: hashed,
         passwordResetToken: null,
         passwordResetTokenExpiresAt: null,
+        // Clicking through a password reset link proves the user controls the
+        // inbox we sent it to, which is the same proof email verification asks
+        // for. Backfill it here so an unverified account isn't left stuck.
+        ...(user.emailVerifiedAt ? {} : {
+          emailVerifiedAt: new Date(),
+          emailVerificationToken: null,
+          emailVerificationTokenExpiresAt: null,
+        }),
       },
     });
 

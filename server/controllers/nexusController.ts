@@ -4,6 +4,7 @@ import prisma from '../lib/prisma.js';
 import * as nexusService from '../services/nexusService.js';
 import type { AuthRequest } from '../types/index.js';
 import { getPopulationMax } from '../utils/population.js';
+import { NEWBIE_PROTECTION_DURATION_MS } from '../utils/starterNexus.js';
 import { getMaxStorage, getResourceProduction } from '../utils/economy.js';
 import { notifyNexusResources } from '../services/warRoomSocket.js';
 import { logError } from '../utils/logger.js';
@@ -83,7 +84,7 @@ export async function createNexus(req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    const protectionEndsAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+    const protectionEndsAt = new Date(Date.now() + NEWBIE_PROTECTION_DURATION_MS);
     const bodyName = typeof req.body?.name === 'string' ? req.body.name : null;
 
     // Fetch username for default nexus name

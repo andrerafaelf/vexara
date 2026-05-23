@@ -67,3 +67,30 @@ const getServerSnapshot = () => 0;
 export function useNow(): number {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
+
+// Stable no-op subscribe used by useGatedNow when disabled, so the calling
+// component is wired to a store that *never* notifies — re-renders only when
+// `enabled` itself flips.
+function noopSubscribe(): () => void {
+  return () => {};
+}
+
+/**
+ * Like useNow(), but only subscribes to the 1Hz clock when `enabled` is true.
+ * Returns Date.now() at the most recent enabled-render; returns 0 when disabled.
+ * Callers should treat the return value as "current tick time" and only use it
+ * for code paths that are also gated on `enabled`.
+ *
+ * Why this exists: large lists of components (BuildingCard, TrainCard) only
+ * need 1Hz re-renders when something on that card is *on* the boundary of
+ * changing (e.g. resources about to cross a cost). For the other 90% of the
+ * lifetime, the card can stay static. Conditionally subscribing keeps the
+ * per-second render count proportional to "interesting" cards, not total cards.
+ */
+export function useGatedNow(enabled: boolean): number {
+  return useSyncExternalStore(
+    enabled ? subscribe : noopSubscribe,
+    enabled ? getSnapshot : () => 0,
+    getServerSnapshot,
+  );
+}

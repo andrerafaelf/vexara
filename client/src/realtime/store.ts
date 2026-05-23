@@ -26,6 +26,20 @@ type Listener = () => void;
 const snapshots = new Map<string, ResourceSnapshot>();
 const listeners = new Set<Listener>();
 
+function snapshotsEqual(a: ResourceSnapshot, b: ResourceSnapshot): boolean {
+  return (
+    a.nexusId === b.nexusId &&
+    a.anchorMs === b.anchorMs &&
+    a.storageMax === b.storageMax &&
+    a.base.biomass === b.base.biomass &&
+    a.base.alloy === b.base.alloy &&
+    a.base.ore === b.base.ore &&
+    a.production.biomass === b.production.biomass &&
+    a.production.alloy === b.production.alloy &&
+    a.production.ore === b.production.ore
+  );
+}
+
 function notify() {
   for (const l of listeners) l();
 }
@@ -36,6 +50,12 @@ export const realtimeStore = {
   },
 
   set(snap: ResourceSnapshot): void {
+    // Skip notify if the incoming snapshot is byte-identical to the existing
+    // one. Important because NexusView's seed effect runs on every refetch
+    // and would otherwise re-publish the same baseline, causing every leaf
+    // subscriber to re-render even when nothing actually changed.
+    const existing = snapshots.get(snap.nexusId);
+    if (existing && snapshotsEqual(existing, snap)) return;
     snapshots.set(snap.nexusId, snap);
     notify();
   },

@@ -1,57 +1,33 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useGameConnectionStatus } from '@/hooks/useGameSocket';
 
-// How long the socket can be in 'reconnecting' before we surface the banner.
-// Brief flaps (sub-second wifi blips, deploys with rolling restart) shouldn't
-// produce a UI jolt; only show the banner once it's been a real outage.
-const RECONNECT_GRACE_MS = 1500;
-
 /**
- * Thin top-of-page banner that appears when the realtime socket is unhealthy.
- * Stays hidden in the 'idle' and 'connected' states. Renders nothing during
- * SSR so it never participates in initial paint.
+ * Top-of-page banner that only appears in the hard-fail state, where the
+ * socket gave up after the configured reconnect attempts and a page reload
+ * is required. The transient 'reconnecting' state is intentionally silent —
+ * recoveries usually happen in under a second and a flashing banner during
+ * routine wifi blips is more noise than signal.
  */
 export default function ConnectionStatusBar() {
   const status = useGameConnectionStatus();
-  // Debounce 'reconnecting' so brief network flaps don't flash the banner.
-  const [showReconnecting, setShowReconnecting] = useState(false);
-
-  useEffect(() => {
-    if (status !== 'reconnecting') {
-      setShowReconnecting(false);
-      return;
-    }
-    const id = setTimeout(() => setShowReconnecting(true), RECONNECT_GRACE_MS);
-    return () => clearTimeout(id);
-  }, [status]);
-
-  if (status === 'idle' || status === 'connected') return null;
-  if (status === 'reconnecting' && !showReconnecting) return null;
-
-  const isHardFail = status === 'disconnected';
-  const message = isHardFail
-    ? 'Live updates disconnected — refresh to reconnect.'
-    : 'Reconnecting to live updates…';
+  if (status !== 'disconnected') return null;
 
   return (
     <div
       role="status"
       aria-live="polite"
-      className={`connection-status-bar ${isHardFail ? 'connection-status-bar--fail' : 'connection-status-bar--retry'}`}
+      className="connection-status-bar connection-status-bar--fail"
     >
       <span className="connection-status-dot" aria-hidden="true" />
-      <span className="connection-status-text">{message}</span>
-      {isHardFail && (
-        <button
-          type="button"
-          className="connection-status-action"
-          onClick={() => window.location.reload()}
-        >
-          Reload
-        </button>
-      )}
+      <span className="connection-status-text">Live updates disconnected — refresh to reconnect.</span>
+      <button
+        type="button"
+        className="connection-status-action"
+        onClick={() => window.location.reload()}
+      >
+        Reload
+      </button>
     </div>
   );
 }

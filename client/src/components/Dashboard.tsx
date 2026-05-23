@@ -207,11 +207,15 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
     const hasCompletedAttack = nexus.completedQuestIds?.includes('complete_attack') || false;
 
     // Chapter 1: Establishing the Nexus
+    // Quest IDs and conditions are kept in sync with server/models/Nexus.ts QUEST_REWARD_BATCHES
+    // and the intro list rendered in NexusView.tsx — diverging here means the dashboard will
+    // disagree with what the server actually credits the player for.
     const introQuests: DashboardQuest[] = [
-      { id: 'command-core-online', title: 'Power The Nexus',    description: 'Upgrade Command Core to Lv1.',      completed: done('intro', 'build_command_core_1',    b.commandCore >= 1) },
-      { id: 'start-fabrication',  title: 'Enable Recruitment',  description: 'Upgrade Recruitment Core to Lv1.',  completed: done('intro', 'build_troop_fab_1',       b.recruitmentCore >= 1) },
-      { id: 'increase-capacity',  title: 'Secure Capacity',     description: 'Upgrade Storage Vault to Lv2.',     completed: done('intro', 'build_storage_vault_2',   b.storageVault >= 2) },
-      { id: 'raise-force',        title: 'Field Troops',         description: 'Train 5 Assault Troopers.',         completed: done('intro', 'train_assault_trooper_5', (t.assaultTrooper || 0) >= 5) },
+      { id: 'command-core-online', title: 'Power The Nexus',     description: 'Upgrade Command Core to Lv1.',                            completed: done('intro', 'build_command_core_1',    b.commandCore >= 1) },
+      { id: 'reinforce-command',   title: 'Reinforce Command',   description: 'Upgrade Command Core to Lv2.',                            completed: done('intro', 'build_command_core_2',    b.commandCore >= 2) },
+      { id: 'start-fabrication',   title: 'Enable Recruitment',  description: 'Upgrade Recruitment Core to Lv1.',                        completed: done('intro', 'build_troop_fab_1',       b.recruitmentCore >= 1) },
+      { id: 'raise-force',         title: 'Field Troops',         description: 'Train 5 Assault Troopers.',                               completed: done('intro', 'train_assault_trooper_5', (t.assaultTrooper || 0) >= 5) },
+      { id: 'first-loot',          title: 'Loot A Nexus',         description: 'Send a scavenge raid from the Starfield.',                completed: done('intro', 'send_first_strike',       hasOutgoingStrike) },
     ];
     const introComplete = introQuests.every((q) => q.completed);
 
@@ -285,7 +289,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
     ];
 
     const batches: DashboardQuestBatch[] = [
-      { id: 'intro',          title: 'Ch.1. Establishing the Nexus', quests: introQuests,         unlocked: true,                                            reward: '+500 each resource, +10 pop, +10 Assault Troopers' },
+      { id: 'intro',          title: 'Ch.1. Establishing the Nexus', quests: introQuests,         unlocked: true,                                            reward: '+750 each resource, +10 pop, +10 Assault Troopers' },
       { id: 'expansion',      title: 'Ch.2. Expansion',              quests: expansionQuests,     unlocked: introComplete,                                   reward: '+1500 each resource, +15 pop, +15 Recon Operatives, +20 Lancer Drones' },
       { id: 'first_blood',    title: 'Ch.3. First Blood',            quests: firstBloodQuests,    unlocked: expansionComplete,                               reward: '+3500 each resource, +30 pop, +25 Skimmer Bikes, +15 Breaker Units' },
       { id: 'shadow_ops',     title: 'Ch.4. Shadow Operations',      quests: shadowOpsQuests,     unlocked: firstBloodComplete,                              reward: '+5000 each resource, +25 pop, +25 Recon Operatives, +10 Disruptor Units' },

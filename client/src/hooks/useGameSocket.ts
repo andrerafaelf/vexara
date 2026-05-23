@@ -257,6 +257,20 @@ export function useGameSocket(handlers?: GameSocketHandlers) {
     };
     socket.on('connect', onReconnect);
 
+    // PWA / tab resume: when the user opens the installed app after it was
+    // backgrounded, the OS may have killed the socket and any events sent
+    // while hidden were dropped. Force-reconnect if needed and refetch the
+    // queries that drive what the user sees first (nexus list + badges).
+    // Mobile Safari kills sockets after ~30s hidden; this is what makes
+    // re-opening the PWA feel instant instead of "stale, then snaps".
+    const onResume = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (!socket.connected) socket.connect();
+      qc.invalidateQueries({ queryKey: MY_NEXUSES_KEY });
+      qc.invalidateQueries({ queryKey: ['notificationBadges'] });
+    };
+    document.addEventListener('visibilitychange', onResume);
+
     const chatHandler: ChatHandler = (msg) => handlersRef.current?.onFactionChat?.(msg);
     const diplomacyChatHandler: DiplomacyChatHandler = (treatyId, msg) => handlersRef.current?.onDiplomacyChat?.(treatyId, msg);
     const badgeHandler: BadgeHandler = () => handlersRef.current?.onBadgeRefresh?.();
@@ -309,6 +323,7 @@ export function useGameSocket(handlers?: GameSocketHandlers) {
       socket.off('transfers:refresh', onTransfersRefresh);
       socket.off('reports:refresh', onReportsRefresh);
       socket.off('connect', onReconnect);
+      document.removeEventListener('visibilitychange', onResume);
       _chatHandlers.delete(chatHandler);
       _diplomacyChatHandlers.delete(diplomacyChatHandler);
       _badgeHandlers.delete(badgeHandler);

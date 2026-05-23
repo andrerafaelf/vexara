@@ -24,7 +24,6 @@ import {
   Building2,
   Check,
   Eye,
-  Globe2,
   Hammer,
   Info,
   LayoutGrid,
@@ -39,6 +38,7 @@ import '../styles/NexusView.css';
 import Username from './Username';
 import { Nexus, TroopTransfer } from '../types/game';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 import type { MapNexus } from './Map';
 
 // StarfieldMap is ~1300 LOC + heavy assets and websocket-bound effects. It's only used inside
@@ -57,9 +57,9 @@ import { QueueCountdown } from './QueueCountdown';
 import { LiveResourceStrip } from './LiveResourceStrip';
 import { BuildingCard } from './BuildingCard';
 import { useNow } from '@/hooks/useNow';
-import { useLiveResources } from '@/realtime/useLiveResources';
+import { useResourceSnapshot } from '@/realtime/useLiveResources';
 import { realtimeStore } from '@/realtime/store';
-import { getMaxStorage, getResourceProduction } from '@/realtime/economy.shared';
+import { getMaxStorage, getResourceProduction, interpolateResources } from '@/realtime/economy.shared';
 
 // Import troop images
 import annihilatorplatformImg from '../assets/troops/annihilatorplatform.png';
@@ -435,6 +435,7 @@ interface InfoModalState {
 }
 
 const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'overview', onTabChange }) => {
+  const router = useRouter();
   const [activeTab, setActiveTabState] = useState<NexusTab>(initialTab);
   const [mapEverVisited, setMapEverVisited] = useState(initialTab === 'map');
   const [espionageEverVisited, setEspionageEverVisited] = useState(initialTab === 'espionage');
@@ -577,10 +578,11 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     nexus.lastResourceUpdate,
   ]);
 
-  // Live (interpolated) resources for affordability gates throughout this view.
-  // Returns null on first render before the seed effect has run; gates fall back
-  // to the static nexus.resources snapshot in that case.
-  const liveResources = useLiveResources(String(nexus._id));
+  // Subscribe to the store *without* the 1Hz clock so this large component
+  // re-renders only when a fresh server snapshot arrives, not every second.
+  // Leaves that need ticking interpolation (BuildingCard, LiveResourceStrip,
+  // future TrainCard) call useLiveResources themselves.
+  const resourceSnapshot = useResourceSnapshot(String(nexus._id));
 
   useEffect(() => {
     setActiveTabState(initialTab);
@@ -612,7 +614,23 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
       }, delay);
     };
     schedule();
-    return () => { if (timeoutId) clearTimeout(timeoutId); };
+
+    // PWA / tab resume: timers fire late or get coalesced while the tab is
+    // hidden, so any queue item that completed during the background gets
+    // "Finishing…" stuck on screen until the next scheduled poll. On resume
+    // we immediately reconcile the queue and reset the schedule so the
+    // post-resume cadence is fresh instead of mid-15s-wait.
+    const onVisibility = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
+      void checkQueues().then(schedule);
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nexus._id, nexus.buildQueue.length, nexus.trainingQueue.length]);
 
@@ -933,12 +951,23 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   const getMaxTrainableAmount = (troopType: string, costs: (typeof TROOP_COSTS)[string], canTrain: boolean) => {
     if (!canTrain) return { maxTrainable: 0, shortageReasons: [] };
 
-    // Use live (interpolated) resources when available so max-trainable counts
-    // up in real time as resources accrue, instead of waiting for refetch.
-    // Population is server-state and doesn't tick locally — kept as-is.
-    const availableBiomass = liveResources?.biomass ?? nexus.resources.biomass;
-    const availableAlloy = liveResources?.alloy ?? nexus.resources.alloy;
-    const availableOre = liveResources?.ore ?? nexus.resources.ore;
+    // Interpolate from the server snapshot at this render. This does NOT
+    // tick — values only refresh when the snapshot does (refetch or push).
+    // Real-time ticking for the troop cards lives in a future <TroopCard>
+    // extraction (parallel to BuildingCard) so this parent component doesn't
+    // re-render every second on the buildings tab too.
+    const interpolated = resourceSnapshot
+      ? interpolateResources(
+          resourceSnapshot.base,
+          resourceSnapshot.production,
+          resourceSnapshot.storageMax,
+          resourceSnapshot.anchorMs,
+          Date.now(),
+        )
+      : null;
+    const availableBiomass = interpolated?.biomass ?? nexus.resources.biomass;
+    const availableAlloy = interpolated?.alloy ?? nexus.resources.alloy;
+    const availableOre = interpolated?.ore ?? nexus.resources.ore;
 
     const byBiomass =
       costs.biomass > 0 ? Math.floor(availableBiomass / costs.biomass) : Number.POSITIVE_INFINITY;
@@ -1209,6 +1238,35 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
 
     return { canUpgrade: missing.length === 0, missingRequirements: missing, atMax: false };
   };
+
+  // ── Stable wrappers around closure-bound helpers ────────────────────────
+  // BuildingCard is React.memo'd; without identity-stable props the memo is
+  // defeated because each render redefines these helper functions. Refs hold
+  // the latest implementation, the wrappers below are created once and stay
+  // identical for the lifetime of the component. This is the same pattern
+  // already used for handleTrainTroops below.
+  const helpersRef = useRef({
+    getBuildingCost, getBuildingUpgradeBenefit, checkBuildingRequirements,
+    getPrevBuildEnd, getTimeUntilAffordable, fmtNum, formatDurationSeconds,
+    handleUpgrade, handleInfoTap,
+  });
+  helpersRef.current = {
+    getBuildingCost, getBuildingUpgradeBenefit, checkBuildingRequirements,
+    getPrevBuildEnd, getTimeUntilAffordable, fmtNum, formatDurationSeconds,
+    handleUpgrade, handleInfoTap,
+  };
+  const stableHelpers = useRef({
+    getBuildingCost: (k: string, l: number) => helpersRef.current.getBuildingCost(k, l),
+    getBuildingUpgradeBenefit: (k: string, l: number) => helpersRef.current.getBuildingUpgradeBenefit(k, l),
+    checkBuildingRequirements: (k: string) => helpersRef.current.checkBuildingRequirements(k),
+    getPrevBuildEnd: (i: number) => helpersRef.current.getPrevBuildEnd(i),
+    getTimeUntilAffordable: (c: { biomass?: number; alloy?: number; ore?: number }) =>
+      helpersRef.current.getTimeUntilAffordable(c),
+    fmtNum: (n: number) => helpersRef.current.fmtNum(n),
+    formatDurationSeconds: (s: number) => helpersRef.current.formatDurationSeconds(s),
+    onUpgrade: (b: string) => helpersRef.current.handleUpgrade(b),
+    onInfoTap: (t: string, d: string) => helpersRef.current.handleInfoTap(t, d),
+  }).current;
 
   const getQuestBatches = (): { batches: QuestBatch[]; allQuestsComplete: boolean } => {
     // A batch that has had its reward claimed is permanently complete, quests inside it
@@ -1602,14 +1660,6 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
         </button>
         <button
           type="button"
-          className={`nexus-tab-btn${activeTab === 'map' ? ' active' : ''}`}
-          onClick={() => setActiveTab('map')}
-        >
-          <Globe2 size={14} aria-hidden="true" />
-          <span>Starfield</span>
-        </button>
-        <button
-          type="button"
           className={`nexus-tab-btn${activeTab === 'espionage' ? ' active' : ''}`}
           onClick={() => setActiveTab('espionage')}
         >
@@ -1620,6 +1670,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
 
       <div className="tab-content">
         <div className="overview-tab" style={activeTab !== 'overview' ? { display: 'none' } : undefined}>
+            {nexus.newbieProtectionEndsAt && (
+              <NewbieProtectionBanner endsAt={nexus.newbieProtectionEndsAt} />
+            )}
             <NexusMap nexus={nexus} onClickBuilding={() => setActiveTab('buildings')} />
 
             <div className="nexus-stats-row" aria-label="Nexus key stats">
@@ -1681,10 +1734,6 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                 </div>
               </div>
             </div>
-
-            {nexus.newbieProtectionEndsAt && (
-              <NewbieProtectionBanner endsAt={nexus.newbieProtectionEndsAt} />
-            )}
 
             <div className="overview-shortcuts">
               <button type="button" className="overview-shortcut-card" onClick={() => setActiveTab('buildings')}>
@@ -1891,7 +1940,14 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                       <div
                         key={quest.id}
                         className={`intro-quest-item ${quest.completed ? 'completed' : 'quest-actionable'}`}
-                        onClick={() => !quest.completed && setActiveTab(quest.tab)}
+                        onClick={() => {
+                          if (quest.completed) return;
+                          if (quest.tab === 'map') {
+                            router.push('/starfield');
+                          } else {
+                            setActiveTab(quest.tab);
+                          }
+                        }}
                       >
                         <span className="intro-quest-icon" aria-hidden="true">
                           {quest.completed ? <Check size={14} /> : null}
@@ -2072,38 +2128,50 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
             )}
 
             <div className="buildings-grid">
-              {/* Live resource values are shared across all cards so we compute
-                  the fallbacks once here, instead of subscribing per-card. */}
               {(() => {
-                const availableBiomass = liveResources?.biomass ?? nexus.resources.biomass;
-                const availableAlloy = liveResources?.alloy ?? nexus.resources.alloy;
-                const availableOre = liveResources?.ore ?? nexus.resources.ore;
-                return Object.entries(nexus.buildings).map(([key, level]) => (
-                  <BuildingCard
-                    key={key}
-                    buildingKey={key}
-                    level={level}
-                    nexus={nexus}
-                    availableBiomass={availableBiomass}
-                    availableAlloy={availableAlloy}
-                    availableOre={availableOre}
-                    buildingName={BUILDING_NAMES[key]}
-                    buildingDescription={BUILDING_DESCRIPTIONS[key]}
-                    buildingImage={BUILDING_IMAGES[key]}
-                    maxLevel={BUILDING_RULES[key]?.maxLevel || 0}
-                    buildQueueLength={nexus.buildQueue.length}
-                    maxBuildQueue={MAX_BUILD_QUEUE}
-                    getBuildingCost={getBuildingCost}
-                    getBuildingUpgradeBenefit={getBuildingUpgradeBenefit}
-                    checkBuildingRequirements={checkBuildingRequirements}
-                    getPrevBuildEnd={getPrevBuildEnd}
-                    getTimeUntilAffordable={getTimeUntilAffordable}
-                    fmtNum={fmtNum}
-                    formatDurationSeconds={formatDurationSeconds}
-                    onUpgrade={handleUpgrade}
-                    onInfoTap={handleInfoTap}
-                  />
-                ));
+                // Single pass over the build queue, indexed by building key.
+                // Without this each BuildingCard would do 4 separate scans
+                // (filter/find/findIndex/some) on every render, which became
+                // a hot path on mobile once we got 10+ buildings.
+                const queueIndex = new Map<string, { count: number; firstIndex: number }>();
+                for (let i = 0; i < nexus.buildQueue.length; i++) {
+                  const item = nexus.buildQueue[i];
+                  const existing = queueIndex.get(item.building);
+                  if (existing) {
+                    existing.count++;
+                  } else {
+                    queueIndex.set(item.building, { count: 1, firstIndex: i });
+                  }
+                }
+                return Object.entries(nexus.buildings).map(([key, level]) => {
+                  const stats = queueIndex.get(key);
+                  return (
+                    <BuildingCard
+                      key={key}
+                      buildingKey={key}
+                      level={level}
+                      nexus={nexus}
+                      nexusId={String(nexus._id)}
+                      buildingName={BUILDING_NAMES[key]}
+                      buildingDescription={BUILDING_DESCRIPTIONS[key]}
+                      buildingImage={BUILDING_IMAGES[key]}
+                      maxLevel={BUILDING_RULES[key]?.maxLevel || 0}
+                      buildQueueLength={nexus.buildQueue.length}
+                      maxBuildQueue={MAX_BUILD_QUEUE}
+                      queuedCount={stats?.count ?? 0}
+                      firstQueuedIndex={stats?.firstIndex ?? -1}
+                      getBuildingCost={stableHelpers.getBuildingCost}
+                      getBuildingUpgradeBenefit={stableHelpers.getBuildingUpgradeBenefit}
+                      checkBuildingRequirements={stableHelpers.checkBuildingRequirements}
+                      getPrevBuildEnd={stableHelpers.getPrevBuildEnd}
+                      getTimeUntilAffordable={stableHelpers.getTimeUntilAffordable}
+                      fmtNum={stableHelpers.fmtNum}
+                      formatDurationSeconds={stableHelpers.formatDurationSeconds}
+                      onUpgrade={stableHelpers.onUpgrade}
+                      onInfoTap={stableHelpers.onInfoTap}
+                    />
+                  );
+                });
               })()}
             </div>
           </div>

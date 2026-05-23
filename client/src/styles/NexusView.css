@@ -3373,7 +3373,11 @@
   letter-spacing: -0.02em;
 }
 
-.attack-modal-header h3::before {
+/* The "// COMBAT · ENGAGEMENT" eyebrow is specific to the strike modal.
+ * The generic .info-modal (troop / building tooltips) shares .attack-modal
+ * markup but is not a combat dialog — exclude it so its header doesn't pick
+ * up the eyebrow line. */
+.attack-modal:not(.info-modal) .attack-modal-header h3::before {
   content: '// COMBAT · ENGAGEMENT';
   display: block;
   font-family: var(--font-mono);
