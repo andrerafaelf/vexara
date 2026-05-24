@@ -14,16 +14,21 @@ const NPC_MAX_LEVELS: Record<LevelableBuilding, number> = {
 };
 
 const MAP_SIZE = 50;
-const MAX_NEUTRALS = Math.floor(MAP_SIZE * MAP_SIZE * 0.65);
+// Minimum gap (Chebyshev distance) between any two nexuses.
+// Distance 2 means no nexus can be placed in the 3x3 ring around an
+// existing one — visually they always have at least one empty cell between
+// them, so the map never looks like a solid wall of icons.
+const MIN_NEXUS_SPACING = 2;
+// Hard cap: at spacing=2 each nexus "owns" a 5×5 footprint, so the
+// theoretical maximum is 2500/25 = 100. We cap well below that so the map
+// never gets completely saturated regardless of player count.
+const MAX_NEUTRALS = 80;
 // MIN floor stops a brand-new galaxy from feeling empty, but the
-// per-player multiplier dominates once a galaxy fills out. Previously this
-// was 4/player which produced ~128 neutrals at 32 players (plus 32 player
-// nexuses → 160 total in 24h, far too dense). 1.5/player keeps the map
-// readable: ~48 neutrals at 32 players, ~75 at 50.
-const MIN_NEUTRALS = 24;
+// per-player multiplier dominates once a galaxy fills out.
+const MIN_NEUTRALS = 12;
 const NEUTRALS_PER_CAPTURED = 1;
-const NEUTRALS_PER_PLAYER = 1.5;
-const DAILY_NEXUS_GROWTH = 3;
+const NEUTRALS_PER_PLAYER = 1.2;
+const DAILY_NEXUS_GROWTH = 2;
 // Tuned so a fresh player's first 20 Assault Troopers can take a Neutral
 // Settlement (the most common pick, 40% weight). The opening loop is built
 // around "train 5 troopers, then scavenge", so the easiest neutrals must
@@ -62,9 +67,12 @@ function buildNeutralNexusData(x: number, y: number, difficultyScale = BASE_NEUT
   const nexusType = selectNexusType();
   const lifeSupport = Math.max(1, Math.floor(Math.random() * 3) + Math.floor(difficultyScale));
 
-  let biomass = Math.floor(Math.random() * 4000) + 1000;
-  let alloy   = Math.floor(Math.random() * 4000) + 1000;
-  let ore     = Math.floor(Math.random() * 2000) + 500;
+  // Resources scale linearly with difficulty: 1× at base (0.5) up to 3× at max (1.35)
+  const difficultyResourceScale = 1 + ((difficultyScale - BASE_NEUTRAL_DIFFICULTY) / (MAX_NEUTRAL_DIFFICULTY - BASE_NEUTRAL_DIFFICULTY)) * 2;
+
+  let biomass = (Math.floor(Math.random() * 4000) + 1000) * difficultyResourceScale;
+  let alloy   = (Math.floor(Math.random() * 4000) + 1000) * difficultyResourceScale;
+  let ore     = (Math.floor(Math.random() * 2000) + 500)  * difficultyResourceScale;
 
   if (nexusType.resourceBonus || nexusType.highResources) {
     const multiplier = nexusType.highResources ? 1.5 : 2;
@@ -102,11 +110,12 @@ function buildNeutralNexusData(x: number, y: number, difficultyScale = BASE_NEUT
 }
 
 async function findOpenCoordinates(galaxyId: number): Promise<{ x: number; y: number } | null> {
-  for (let attempt = 0; attempt < MAP_SIZE * 2; attempt++) {
+  const existing = await prisma.nexus.findMany({ where: { galaxyId }, select: { x: true, y: true } });
+  for (let attempt = 0; attempt < MAP_SIZE * 4; attempt++) {
     const x = Math.floor(Math.random() * MAP_SIZE);
     const y = Math.floor(Math.random() * MAP_SIZE);
-    const existing = await prisma.nexus.findFirst({ where: { galaxyId, x, y }, select: { id: true } });
-    if (!existing) return { x, y };
+    const tooClose = existing.some(n => Math.max(Math.abs(n.x - x), Math.abs(n.y - y)) < MIN_NEXUS_SPACING);
+    if (!tooClose) return { x, y };
   }
   return null;
 }
@@ -204,6 +213,15 @@ export async function levelUpNeutralNexuses() {
       updates['lancerDrone']    = Math.ceil((nexus.lancerDrone ?? 0) * 1.1);
       updates['breakerUnit']    = Math.ceil((nexus.breakerUnit ?? 0) * 1.08);
     }
+
+    // Refill resources each tick so raided NPCs recover their stockpiles.
+    // Rate is proportional to production building levels and current difficulty.
+    const biomassRate = (nexus.biomassFarm ?? 1) * 200 * difficulty;
+    const alloyRate   = (nexus.alloyForge  ?? 1) * 200 * difficulty;
+    const oreRate     = (nexus.oreExtractor ?? 1) * 100 * difficulty;
+    updates['biomass'] = Math.floor((nexus.biomass ?? 0) + biomassRate);
+    updates['alloy']   = Math.floor((nexus.alloy   ?? 0) + alloyRate);
+    updates['ore']     = Math.floor((nexus.ore     ?? 0) + oreRate);
 
     await prisma.nexus.update({ where: { id: nexus.id }, data: updates });
   }
