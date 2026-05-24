@@ -127,22 +127,23 @@ export function computeLossesForLoser(
     return (prng >>> 0) / 4294967296;
   };
 
-  // Base loss rate scales with how badly they lost (capped at 95%)
-  const baseLossRate = Math.min(0.95, 0.5 + (powerRatio - 1) * 0.25);
+  // Base loss rate scales with how badly they lost. At powerRatio=1 (evenly
+  // matched loss) ~50%; at ratio=2 (badly outmatched) ~75%; capped at 90%.
+  const baseLossRate = Math.min(0.90, 0.50 + (powerRatio - 1) * 0.20);
 
   for (const key of TROOP_KEYS) {
     if (key === 'overseer') continue;
     const count = Number((force as Record<string, unknown>)[key] || 0);
     if (count <= 0) continue;
 
-    // Variance: ±15% for small stacks (<20), ±5% for large stacks (>200)
-    const varianceMagnitude = count < 20 ? 0.15 : count < 200 ? 0.08 : 0.04;
+    // Variance: ±10% for small stacks (<20), ±5% for large stacks (>200)
+    const varianceMagnitude = count < 20 ? 0.10 : count < 200 ? 0.06 : 0.03;
     const variance = (lcg() - 0.5) * 2 * varianceMagnitude;
 
-    // Higher defense stat = more survivable; scale loss down proportionally
-    const defFactor = 1 - (TROOP_STATS[key].defense / 500); // max defense ~210 → ~0.58 factor
-
-    const rawRate = Math.min(0.98, Math.max(0.02, baseLossRate * defFactor + variance));
+    // Higher defense stat = more survivable; higher defense → lower loss rate.
+    // defSurvivalBonus ranges 0..0.35 (max defense 210 of 600 scale).
+    const defSurvivalBonus = TROOP_STATS[key].defense / 600;
+    const rawRate = Math.min(0.95, Math.max(0.05, baseLossRate * (1 - defSurvivalBonus * 0.5) + variance));
     losses[key] = Math.max(0, Math.ceil(count * rawRate));
   }
   return losses;
@@ -161,19 +162,23 @@ export function computeLossesForWinner(
     return (prng >>> 0) / 4294967296;
   };
 
-  // Winner loses far less; base rate represents the cost of victory
-  const baseLossRate = Math.min(0.5, 0.15 + (1 - powerRatio) * 0.35);
+  // When powerRatio is 0 (defender had no troops), the attacker walked in
+  // unopposed — they lose nothing. Scale linearly from 0 up to a modest cap.
+  // baseLossRate: 0% at ratio=0, up to ~18% at ratio=1 (evenly matched win).
+  const baseLossRate = Math.min(0.18, powerRatio * 0.18);
 
   for (const key of TROOP_KEYS) {
     if (key === 'overseer') continue;
     const count = Number((force as Record<string, unknown>)[key] || 0);
     if (count <= 0) continue;
 
-    const varianceMagnitude = count < 20 ? 0.15 : count < 200 ? 0.08 : 0.04;
+    const varianceMagnitude = count < 20 ? 0.10 : count < 200 ? 0.05 : 0.03;
     const variance = (lcg() - 0.5) * 2 * varianceMagnitude;
 
-    const defFactor = 1 - (TROOP_STATS[key].defense / 500);
-    const rawRate = Math.min(0.75, Math.max(0, baseLossRate * defFactor + variance));
+    // Higher defense stat = more survivable; scale loss down proportionally.
+    // Max defense is 210 (Siege Mech) → defFactor ≈ 0.58; keep range tight.
+    const defFactor = 1 - (TROOP_STATS[key].defense / 600);
+    const rawRate = Math.min(0.50, Math.max(0, baseLossRate * defFactor + variance));
     losses[key] = Math.max(0, Math.ceil(count * rawRate));
   }
   return losses;

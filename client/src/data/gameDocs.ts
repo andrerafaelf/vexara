@@ -187,17 +187,21 @@ export const TROOPS_DOC: TroopDoc[] = [
   {
     key: 'overseer',
     name: 'Overseer',
-    role: 'Conquest / control unit',
-    description: 'Conquest enabler used to reduce enemy Control and ultimately capture nexuses.',
+    role: 'Conquest / control unit (Special, no counter)',
+    description:
+      'The Overseer is a high-value command unit that enables nexus conquest. It does not fight — it administers. Sending an Overseer on a successful strike reduces the target\'s Control Level by 50. Control starts at 100; once it reaches 0, the nexus is conquered and changes ownership to you. Two successful strikes with an Overseer will conquer any nexus. The Overseer is only useful if the attack wins — if the attack fails, the Overseer is not used and survives the defeat alongside its escort. If every non-Overseer troop in the strike is killed, the Overseer dies too. On conquest, the Overseer is consumed — it does not return home. The conquered nexus keeps its type (Resource Depot, Military Outpost, etc.) and retains its current building levels, but its name resets to "Conquered Nexus." If you conquer a special NPC nexus (any type except Neutral Settlement), all type bonuses on that nexus are permanently doubled.',
     unitClass: 'special',
     stats: { attack: 0, defense: 30, speed: 15, carry: 0 },
     cost: { biomass: 180000, alloy: 140000, ore: 120000, population: 5, time: '4h 0m' },
     requirements: ['Recruitment Core Lv14', 'Command Core Lv14', 'Shield Grid Lv13'],
     notes: [
-      'Maximum 3 per nexus, maximum 1 per strike.',
-      'If every non-overseer troop dies, the overseer also dies.',
-      'Each successful attack with the overseer alive reduces enemy Control by 50.',
-      'Trains on its own independent queue (does not block other troop training).',
+      'Maximum 3 per nexus at any time; maximum 1 per strike.',
+      'Trains in an independent queue — does not block other troop training.',
+      'Control reduction: –50 per successful strike with a surviving Overseer. Two strikes conquer any nexus.',
+      'Overseer survives a failed attack (as long as its escort is not completely wiped).',
+      'On conquest: the Overseer is consumed and does NOT return home.',
+      'The conquered nexus retains its type, building levels, and any stationed support troops.',
+      'Conquering a special NPC nexus (non-Neutral Settlement) permanently doubles its type bonuses.',
     ],
   },
 ];
@@ -304,7 +308,8 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
     key: 'shieldGrid',
     name: 'Shield Grid',
     role: 'Defensive multiplier',
-    description: 'Boosts total defending force power during combat.',
+    description:
+      'How defense works: when an enemy attack arrives, every defending troop contributes its Defense stat to the total defending force power. That power is then multiplied by (1 + shieldGrid × 0.02) — so each Shield Grid level is worth +2% of your entire garrison\'s HP-equivalent. The defending power is then compared against the attacker\'s class-weighted attack power. The side with higher power wins. Losers take heavy losses (~50–90% depending on the power gap); winners take light losses (~0–18% depending on how close the fight was). Your Shield Grid bonus stacks with allied support troops stationed at your nexus and with the class-counter system. Military Outpost nexus type adds an additional 25% shield efficiency on top (50% if doubled).',
     baseCost: { biomass: 50, alloy: 100, ore: 60, timeSeconds: 180 },
     maxLevel: 15,
     unlock: 'Command Core Lv3',
@@ -312,7 +317,12 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
       { level: 4, requires: ['Storage Vault Lv3'] },
       { level: 8, requires: ['Alloy Forge Lv5'] },
     ],
-    impact: ['Defense bonus: +2% total defense per level.'],
+    impact: [
+      'Defense bonus: +2% total defending force power per level (multiplicative with troop defense stats).',
+      'At Lv15 (max): +30% to your entire garrison\'s effective defense.',
+      'Military Outpost nexuses gain an extra 25% shield efficiency (50% if the bonus is doubled).',
+      'Stacks additively with allied support troops stationed at your nexus.',
+    ],
   },
   {
     key: 'armory',

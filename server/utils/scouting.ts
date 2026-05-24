@@ -20,6 +20,9 @@ export interface ScoutIntel {
   troops: TroopCounts;
   population: { current: number; max: number };
   controlLevel: number;
+  nexusName: string;
+  nexusX: number;
+  nexusY: number;
 }
 
 function buildPublicNexusData(
@@ -81,6 +84,9 @@ export function buildDetailedScoutIntel(nexus: Nexus): ScoutIntel {
       max:     nexus.populationMax,
     },
     controlLevel: nexus.controlLevel,
+    nexusName: nexus.name,
+    nexusX: nexus.x,
+    nexusY: nexus.y,
   };
 }
 

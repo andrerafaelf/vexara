@@ -42,6 +42,8 @@ const troopNames: Record<string, string> = {
   disruptorUnit: 'Disruptor Unit',
   interceptorBike: 'Interceptor Bike',
   annihilatorPlatform: 'Annihilator Platform',
+  voidStalker: 'Void Stalker',
+  plasmaTurret: 'Plasma Turret',
   overseer: 'Overseer',
 };
 
@@ -307,8 +309,11 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
           {scoutReport && selectedReport.result?.intel && (
             <ScoutIntelCard
               intel={selectedReport.result.intel as any}
-              targetName={selectedReport.defender.nexus?.name ?? 'Unknown'}
-              targetCoords={{ x: selectedReport.defender.nexus?.x ?? 0, y: selectedReport.defender.nexus?.y ?? 0 }}
+              targetName={(selectedReport.result.intel as any).nexusName ?? selectedReport.defender.nexus?.name ?? 'Unknown'}
+              targetCoords={{
+                x: (selectedReport.result.intel as any).nexusX ?? selectedReport.defender.nexus?.x ?? 0,
+                y: (selectedReport.result.intel as any).nexusY ?? selectedReport.defender.nexus?.y ?? 0,
+              }}
             />
           )}
 

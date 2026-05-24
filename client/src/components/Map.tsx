@@ -167,21 +167,16 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
   const [eventsStartAt, setEventsStartAt] = useState<string | null>(null);
   const [showEventsPanel, setShowEventsPanel] = useState(false);
 
+  // currentNexus.troops is already the server-authoritative post-deduction
+  // count (the server deducts on send). Subtracting outgoing attacks on top
+  // would double-deduct troops that are already gone from the nexus snapshot.
   const availableTroops = useMemo(() => {
     const base: Record<string, number> = {};
     for (const key of Object.keys(TROOP_LABELS)) {
       base[key] = Number((currentNexus.troops as any)?.[key] || 0);
     }
-    for (const attack of outgoingAttacks) {
-      const t = attack.troops as Record<string, number> | undefined;
-      if (t) {
-        for (const [type, count] of Object.entries(t)) {
-          if (type in base) base[type] = Math.max(0, base[type] - Number(count));
-        }
-      }
-    }
     return base;
-  }, [currentNexus.troops, outgoingAttacks]);
+  }, [currentNexus.troops]);
   const currentTimeRef = useRef(new Date());
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });

@@ -1046,16 +1046,16 @@
 /* Attack Modal */
 .attack-modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  padding: 16px;
+  z-index: 9999;
   animation: fadeIn 0.2s ease;
+  /* Overflow scroll so the modal never gets clipped on short viewports */
+  overflow-y: auto;
 }
 
 @keyframes fadeIn {
@@ -1073,6 +1073,8 @@
   border-radius: var(--radius-sm);
   width: 90%;
   max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
   box-shadow: var(--shadow-lg);
   animation: slideUp 0.25s ease;
 }
