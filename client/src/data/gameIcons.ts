@@ -8,10 +8,12 @@ import disruptorunitImg from '@/assets/troops/disruptorunit.png';
 import interceptorbikeImg from '@/assets/troops/interceptorbike.png';
 import lancerdroneImg from '@/assets/troops/lancerdrone.png';
 import overseerImg from '@/assets/troops/overseer.png';
+import plasmaturretImg from '@/assets/troops/plasmaturret.png';
 import reconoperativeImg from '@/assets/troops/reconoperative.png';
 import siegemechImg from '@/assets/troops/siegemech.png';
 import skimmerbikeImg from '@/assets/troops/skimmerbike.png';
 import suppressorteamImg from '@/assets/troops/suppressorteam.png';
+import voidstalkerImg from '@/assets/troops/voidstalker.png';
 
 import alloyforgeImg from '@/assets/buildings/alloyforge.png';
 import armoryImg from '@/assets/buildings/armory.png';
@@ -34,7 +36,9 @@ export const TROOP_ICONS: Record<string, StaticImageData> = {
   suppressorTeam: suppressorteamImg,
   disruptorUnit: disruptorunitImg,
   interceptorBike: interceptorbikeImg,
+  voidStalker: voidstalkerImg,
   siegeMech: siegemechImg,
+  plasmaTurret: plasmaturretImg,
   annihilatorPlatform: annihilatorplatformImg,
   overseer: overseerImg,
 };

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Vexara has 8 core buildings. Buildings control economy, population, defense, and unlock progression.
+Vexara has 10 core buildings. Buildings control economy, population, defense, espionage, and unlock progression.
 
 - Build queue cap: 5 upgrades per nexus
 - Costs are paid when queued
@@ -65,7 +65,7 @@ Command Core's own next upgrade) by 0.95. The reduction stacks compoundingly:
 ### Storage Vault
 
 - Role: Resource cap scaling
-- Base cost: Biomass 60, Alloy 50, Ore 40, Time 120s
+- Base cost: Biomass 60, Alloy 50, Ore 70, Time 120s
 - Max level: 20
 - Unlock: Command Core Lv2
 - Milestones:
@@ -78,7 +78,7 @@ Command Core's own next upgrade) by 0.95. The reduction stacks compoundingly:
 ### Biomass Farm
 
 - Role: Biomass production
-- Base cost: Biomass 50, Alloy 60, Ore 40, Time 120s
+- Base cost: Biomass 50, Alloy 60, Ore 60, Time 120s
 - Max level: 20
 - Unlock: Life Support Lv1
 - Milestones:
@@ -90,8 +90,8 @@ Command Core's own next upgrade) by 0.95. The reduction stacks compoundingly:
 ### Alloy Forge
 
 - Role: Alloy production
-- Base cost: Biomass 65, Alloy 40, Ore 40, Time 120s
-- Max level: 15
+- Base cost: Biomass 65, Alloy 40, Ore 60, Time 120s
+- Max level: 20
 - Unlock: Ore Extractor Lv2
 - Milestones:
   - Lv6 requires Command Core Lv4
@@ -113,7 +113,7 @@ Command Core's own next upgrade) by 0.95. The reduction stacks compoundingly:
 ### Shield Grid
 
 - Role: Defensive multiplier
-- Base cost: Biomass 50, Alloy 100, Ore 20, Time 180s
+- Base cost: Biomass 50, Alloy 100, Ore 60, Time 180s
 - Max level: 15
 - Unlock: Command Core Lv3
 - Milestones:

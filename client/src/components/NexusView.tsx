@@ -344,7 +344,7 @@ const TROOP_DESCRIPTIONS: { [key: string]: string } = {
   annihilatorPlatform:
     'Heavy artillery. Slow but devastating ranged platform that suppresses light units. Requires Lv12 Recruitment Core, Lv10 Command Core, Lv10 Shield Grid.',
   voidStalker:
-    'Light stealth cavalry. Ultra-fast raider that hard-counters ranged emplacements. Requires Lv9 Recruitment Core, Lv8 Alloy Forge, Lv3 Armory.',
+    'Light stealth cavalry. Fastest unit in the game; hard-counters heavy armor — but is itself suppressed by ranged emplacements. Requires Lv9 Recruitment Core, Lv8 Alloy Forge, Lv3 Armory.',
   plasmaTurret:
     'Ranged static emplacement. Cannot be sent on attacks, defends from the nexus. Decimates light cavalry. Requires Lv11 Recruitment Core, Lv9 Command Core, Lv5 Armory.',
   overseer:
@@ -387,7 +387,7 @@ const TROOP_COSTS: { [key: string]: any } = {
   siegeMech: { biomass: 1250, alloy: 1000, ore: 2000, population: 4, time: 3600 },
   annihilatorPlatform: { biomass: 2000, alloy: 1750, ore: 3000, population: 5, time: 7200 },
   voidStalker: { biomass: 900, alloy: 700, ore: 1100, population: 3, time: 1200 },
-  plasmaTurret: { biomass: 1500, alloy: 1200, ore: 2500, population: 4, time: 5400 },
+  plasmaTurret: { biomass: 1500, alloy: 1200, ore: 2500, population: 2, time: 5400 },
   overseer: { biomass: 180000, alloy: 140000, ore: 120000, population: 5, time: 14400 },
 };
 

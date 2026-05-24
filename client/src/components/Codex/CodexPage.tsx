@@ -78,7 +78,7 @@ export default function CodexPage() {
               <CodexStreamHead
                 eyebrow="DOSSIER · CORE"
                 title="Buildings"
-                lede="Eight structures drive every nexus. Build order is identity."
+                lede="Ten structures drive every nexus. Build order is identity."
               />
               {BUILDINGS_DOC.map((b, i) => (
                 <BuildingEntry key={b.key} doc={b} index={i + 1} />
@@ -91,7 +91,7 @@ export default function CodexPage() {
               <CodexStreamHead
                 eyebrow="DOSSIER · MILITARY"
                 title="Troops"
-                lede="Twelve units. Four stats. Composition wins fights."
+                lede="Fourteen units. Four stats. Composition wins fights."
               />
               <ClassCountersPanel />
               {TROOPS_DOC.map((t, i) => (
@@ -144,7 +144,7 @@ function CodexHeader() {
       <div className="cx-header-inner">
         <div className="cx-header-stamps" aria-hidden="true">
           <span className="cx-header-stamp">VEXARA · CODEX</span>
-          <span className="cx-header-stamp cx-header-stamp-rot">VOLUME 01 · v0.1</span>
+          <span className="cx-header-stamp cx-header-stamp-rot">VOLUME 01 · v0.2</span>
         </div>
 
         <h1 id="cx-header-title" className="cx-header-title">

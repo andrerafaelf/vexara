@@ -174,7 +174,7 @@ wait behind it (and vice versa).
 
 ### Void Stalker
 
-- Role: Ultra-fast light cavalry, hard-counters ranged emplacements
+- Role: Ultra-fast light cavalry, counters Heavy units (and is itself countered by Ranged)
 - Class: Light
 - Stats: Attack 110, Defense 50, Speed 32, Carry 40
 - Cost: Biomass 900, Alloy 700, Ore 1100
@@ -194,7 +194,7 @@ wait behind it (and vice versa).
 - Class: Ranged
 - Stats: Attack 180, Defense 90, Speed 0, Carry 0
 - Cost: Biomass 1500, Alloy 1200, Ore 2500
-- Population: 4
+- Population: 2 (lighter pop tax than mobile units — turret can't transfer between nexuses)
 - Training Time: 1h 30m
 - Requirements:
   - Recruitment Core Lv11
