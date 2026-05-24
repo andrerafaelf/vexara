@@ -111,6 +111,19 @@ export function computeResourceUpdate(nexus: NexusForEconomy, storm?: StormBonus
   };
 }
 
+export const TROOP_INFLUENCE_POINTS: Record<string, number> = {
+  lancerDrone: 1, assaultTrooper: 2, breakerUnit: 1, reconOperative: 2,
+  skimmerBike: 3, siegeMech: 4, voidStalker: 4, plasmaTurret: 5,
+};
+
+export function calculateTroopInfluence(troops: Record<string, number | undefined | null>): number {
+  let points = 0;
+  for (const [troopType, pts] of Object.entries(TROOP_INFLUENCE_POINTS)) {
+    points += pts * (Number(troops[troopType]) || 0);
+  }
+  return points;
+}
+
 export function calculatePoints(nexus: NexusForEconomy & Partial<Record<string, unknown>>): number {
   let points = 0;
   const buildingPoints: Record<string, number> = {
@@ -120,12 +133,6 @@ export function calculatePoints(nexus: NexusForEconomy & Partial<Record<string, 
   for (const [building, pts] of Object.entries(buildingPoints)) {
     points += pts * (Number(nexus[building]) || 0);
   }
-  const troopPoints: Record<string, number> = {
-    lancerDrone: 1, assaultTrooper: 2, breakerUnit: 1, reconOperative: 2,
-    skimmerBike: 3, siegeMech: 4, voidStalker: 4, plasmaTurret: 5,
-  };
-  for (const [troopType, pts] of Object.entries(troopPoints)) {
-    points += pts * (Number(nexus[troopType]) || 0);
-  }
+  points += calculateTroopInfluence(nexus as Record<string, number | undefined | null>);
   return Math.floor(points);
 }

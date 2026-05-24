@@ -13,14 +13,14 @@ const SABOTAGE_BASE_COST = { biomass: 300, ore: 300 };
 // Recon operative speed (mirrors TROOP_STATS.reconOperative.speed = 25)
 const RECON_SPEED = (TROOP_STATS as Record<string, { speed: number }>)['reconOperative']?.speed ?? 25;
 
-// Embed detection: 5% base + 2% per defender shieldGrid, max 15%.
+// Embed detection: 5% base + 2% per defender stealthArray, max 15%.
 const EMBED_DETECT_BASE = 0.05;
-const EMBED_DETECT_PER_SHIELD = 0.02;
+const EMBED_DETECT_PER_STEALTH = 0.02;
 const EMBED_DETECT_MAX = 0.15;
 
 // Intel refresh detection: slightly lower since operative is already embedded.
 const REFRESH_DETECT_BASE = 0.04;
-const REFRESH_DETECT_PER_SHIELD = 0.015;
+const REFRESH_DETECT_PER_STEALTH = 0.015;
 const REFRESH_DETECT_MAX = 0.12;
 
 const SABOTAGE_TARGETS = ['troops', 'building'] as const;
@@ -215,8 +215,9 @@ export async function processArrivedSpyMissions(): Promise<void> {
       let operativesReturning = mission.operatives;
 
       if (mission.type === 'embed') {
+        const defenderStealth = (defender as unknown as { stealthArray?: number }).stealthArray ?? 0;
         const detectChance = clamp(
-          EMBED_DETECT_BASE + defender.shieldGrid * EMBED_DETECT_PER_SHIELD,
+          EMBED_DETECT_BASE + defenderStealth * EMBED_DETECT_PER_STEALTH,
           0, EMBED_DETECT_MAX,
         );
         const detected = Math.random() < detectChance;
@@ -474,8 +475,9 @@ export async function getEmbedIntel(req: AuthRequest, res: Response): Promise<vo
     }
 
     // Discovery chance per refresh
+    const defenderStealth = (defender as unknown as { stealthArray?: number }).stealthArray ?? 0;
     const discoveryChance = clamp(
-      REFRESH_DETECT_BASE + defender.shieldGrid * REFRESH_DETECT_PER_SHIELD,
+      REFRESH_DETECT_BASE + defenderStealth * REFRESH_DETECT_PER_STEALTH,
       0, REFRESH_DETECT_MAX,
     );
     if (Math.random() < discoveryChance) {

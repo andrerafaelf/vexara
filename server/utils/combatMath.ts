@@ -34,9 +34,9 @@ export const CLASS_COUNTERS: Record<TroopClass, Record<TroopClass, number>> = {
 };
 
 export const TROOP_STATS: Record<TroopKey, TroopStat> = {
-  lancerDrone:          { attack: 15,  defense: 28,  speed: 20, carry: 20  },
-  assaultTrooper:       { attack: 30,  defense: 45,  speed: 18, carry: 15  },
-  breakerUnit:          { attack: 55,  defense: 15,  speed: 16, carry: 10  },
+  lancerDrone:          { attack: 15,  defense: 28,  speed: 20, carry: 30  },
+  assaultTrooper:       { attack: 30,  defense: 45,  speed: 18, carry: 60  },
+  breakerUnit:          { attack: 55,  defense: 15,  speed: 16, carry: 50  },
   reconOperative:       { attack: 5,   defense: 20,  speed: 25, carry: 10  },
   skimmerBike:          { attack: 80,  defense: 65,  speed: 22, carry: 60  },
   bulwarkGuard:         { attack: 20,  defense: 130, speed: 12, carry: 25  },

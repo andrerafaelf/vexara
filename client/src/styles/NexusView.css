@@ -787,6 +787,14 @@
   font-size: 10px;
 }
 
+.strikes-card-entry-troops {
+  color: var(--text-muted);
+  font-size: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .stats {
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
@@ -2881,6 +2889,15 @@
   border-radius: var(--radius-sm);
 }
 
+/* embed risk explainer */
+.espionage-risk-note {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.4;
+  padding: 4px 2px;
+}
+
 /* result panel */
 .espionage-result-title {
   display: block;
@@ -3041,6 +3058,45 @@
 
 .espionage-completed-row .espionage-mission-status {
   color: var(--text-muted);
+}
+
+.espionage-mission-toggle {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  width: 100%;
+}
+
+.espionage-mission-toggle:hover .espionage-mission-label {
+  text-decoration: underline;
+}
+
+.espionage-mission-toggle-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--text-strong);
+  background: var(--bg-surface);
+  flex-shrink: 0;
+}
+
+.espionage-mission-toggle .espionage-mission-status {
+  margin-left: auto;
 }
 
 /* ╔══════════════════════════════════════════════════════════════════╗

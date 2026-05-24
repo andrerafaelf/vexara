@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { TROOPS_DOC, BUILDINGS_DOC, BUILDING_SCALING_DOC } from '@/data/gameDocs';
+import { TROOPS_DOC, BUILDINGS_DOC, BUILDING_SCALING_DOC, CLASS_COUNTERS, CLASS_COUNTERED_BY, type TroopClass } from '@/data/gameDocs';
 import { TROOP_ICONS, BUILDING_ICONS } from '@/data/gameIcons';
 import SiteFooter from '@/components/SiteFooter';
 import '@/styles/Codex.css';
@@ -93,6 +93,7 @@ export default function CodexPage() {
                 title="Troops"
                 lede="Twelve units. Four stats. Composition wins fights."
               />
+              <ClassCountersPanel />
               {TROOPS_DOC.map((t, i) => (
                 <TroopEntry key={t.key} doc={t} index={i + 1} />
               ))}
@@ -460,6 +461,19 @@ function TroopEntry({ doc, index }: { doc: typeof TROOPS_DOC[number]; index: num
         </div>
         <div className="cx-entry-meta">
           <div className="cx-meta-cell">
+            <span className="cx-meta-label">Class</span>
+            <span
+              className={`cx-class-chip cx-class-chip-${doc.unitClass}`}
+              title={
+                CLASS_COUNTERED_BY[doc.unitClass]
+                  ? `${CLASS_LABELS[doc.unitClass]} — countered by ${CLASS_LABELS[CLASS_COUNTERED_BY[doc.unitClass]!]}`
+                  : `${CLASS_LABELS[doc.unitClass]} — neutral matchup`
+              }
+            >
+              {CLASS_LABELS[doc.unitClass]}
+            </span>
+          </div>
+          <div className="cx-meta-cell">
             <span className="cx-meta-label">Pop cost</span>
             <span className="cx-meta-value">{doc.cost.population}</span>
           </div>
@@ -479,7 +493,7 @@ function TroopEntry({ doc, index }: { doc: typeof TROOPS_DOC[number]; index: num
             <StatBar label="ATK" value={doc.stats.attack} max={STAT_MAX.attack} tone="attack" />
             <StatBar label="DEF" value={doc.stats.defense} max={STAT_MAX.defense} tone="defense" />
             <StatBar label="SPD" value={doc.stats.speed} max={STAT_MAX.speed} tone="speed" />
-            <StatBar label="CRY" value={doc.stats.carry} max={STAT_MAX.carry} tone="carry" />
+            <StatBar label="CRG" value={doc.stats.carry} max={STAT_MAX.carry} tone="carry" />
           </ul>
         </div>
 
@@ -533,6 +547,53 @@ function TroopEntry({ doc, index }: { doc: typeof TROOPS_DOC[number]; index: num
   );
 }
 
+const CLASS_LABELS: Record<TroopClass, string> = {
+  light:   'LIGHT',
+  heavy:   'HEAVY',
+  ranged:  'RANGED',
+  special: 'SPECIAL',
+};
+
+function ClassCountersPanel() {
+  return (
+    <div className="cx-class-counters">
+      <div className="cx-class-counters-head">
+        <span className="cx-class-counters-eyebrow">{'// Class counters'}</span>
+        <p className="cx-class-counters-lede">
+          Every unit belongs to a class. Class advantage adds <strong>+35%</strong> damage on attack;
+          being countered subtracts <strong>20–25%</strong>. The Armory amplifies this gap by
+          +1.5%/level (capped at +30% extra at Lv20).
+        </p>
+      </div>
+      <ul className="cx-class-counters-list">
+        {CLASS_COUNTERS.map((c) => (
+          <li key={c.attacker} className="cx-class-counter-row">
+            <span className={`cx-class-chip cx-class-chip-${c.attacker}`}>{CLASS_LABELS[c.attacker]}</span>
+            <span className="cx-class-counter-arrow" aria-hidden="true">beats</span>
+            <span className={`cx-class-chip cx-class-chip-${c.beats}`}>{CLASS_LABELS[c.beats]}</span>
+            <span className="cx-class-counter-mult">×{c.multiplier.toFixed(2)}</span>
+          </li>
+        ))}
+        <li className="cx-class-counter-row cx-class-counter-row-note">
+          <span className={`cx-class-chip cx-class-chip-special`}>{CLASS_LABELS.special}</span>
+          <span className="cx-class-counter-arrow">no combat advantage (recon/overseer roles)</span>
+        </li>
+      </ul>
+      <p className="cx-class-counters-footer">
+        Mix your composition to match counters against the defender&apos;s class split. A pure stack
+        gets eaten by its hard counter; a balanced force loses less to one bad matchup.
+      </p>
+    </div>
+  );
+}
+
+const STAT_TOOLTIPS: Record<string, string> = {
+  attack: 'Attack — damage output in combat',
+  defense: 'Defense — damage absorbed before casualties',
+  speed: 'Speed — movement rate on the map (higher = faster travel)',
+  carry: 'Cargo — resources this unit can haul home as loot per raid',
+};
+
 function StatBar({
   label,
   value,
@@ -546,7 +607,7 @@ function StatBar({
 }) {
   const pct = Math.max(2, Math.min(100, (value / max) * 100));
   return (
-    <li className="cx-statbar">
+    <li className="cx-statbar" title={STAT_TOOLTIPS[tone]}>
       <span className="cx-statbar-label">{label}</span>
       <span className="cx-statbar-track">
         <span

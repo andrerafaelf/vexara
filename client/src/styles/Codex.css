@@ -593,6 +593,93 @@
   font-family: var(--font-sans);
 }
 
+/* Class chip — used both on troop entry meta and in the class counters panel. */
+.cx-class-chip {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+  align-self: flex-start;
+  white-space: nowrap;
+}
+
+.cx-class-chip-light   { color: #7dd3fc; background: rgba(125, 211, 252, 0.08); }
+.cx-class-chip-heavy   { color: #fca5a5; background: rgba(252, 165, 165, 0.08); }
+.cx-class-chip-ranged  { color: #fcd34d; background: rgba(252, 211, 77, 0.08); }
+.cx-class-chip-special { color: #c4b5fd; background: rgba(196, 181, 253, 0.08); }
+
+.cx-class-counters {
+  border: 1px solid var(--border-default);
+  background: var(--bg-surface, rgba(0, 0, 0, 0.25));
+  padding: 18px 22px;
+  margin: 8px 0 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cx-class-counters-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--text-faint);
+  text-transform: uppercase;
+}
+
+.cx-class-counters-lede {
+  margin: 6px 0 0;
+  color: var(--text-strong);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.cx-class-counters-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cx-class-counter-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.cx-class-counter-arrow {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.cx-class-counter-mult {
+  margin-left: auto;
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.cx-class-counter-row-note {
+  opacity: 0.75;
+}
+
+.cx-class-counters-footer {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .cx-entry-desc {
   color: var(--text-default);
   font-size: 15px;

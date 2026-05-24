@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { formatLabel, normalizeBuildQueue, serializeNexus } from '../models/Nexus.js';
+import { formatLabel, mergeTroopsTrained, normalizeBuildQueue, serializeNexus } from '../models/Nexus.js';
 import * as adminService from '../services/internalAdminService.js';
 import { processArrivedAttacks } from '../utils/combat.js';
 import { getPopulationMax } from '../utils/population.js';
@@ -152,7 +152,12 @@ export async function completeTraining(req: Request, res: Response): Promise<voi
     if (trainingQueue.length === 0) { res.status(400).json({ error: 'No troops in training' }); return; }
     const [training, ...remainingQueue] = trainingQueue as Array<{ troopType: string; amount: number }>;
     const nexusRecord = nexus as unknown as Record<string, number>;
-    const updated = await adminService.updateNexus(nexus.id, { [training.troopType]: (nexusRecord[training.troopType] || 0) + training.amount, populationCurrent: nexus.populationCurrent + training.amount, trainingQueue: remainingQueue });
+    const updated = await adminService.updateNexus(nexus.id, {
+      [training.troopType]: (nexusRecord[training.troopType] || 0) + training.amount,
+      populationCurrent: nexus.populationCurrent + training.amount,
+      trainingQueue: remainingQueue,
+      troopsTrained: mergeTroopsTrained((nexus as unknown as Record<string, unknown>).troopsTrained, { [training.troopType]: training.amount }),
+    });
     if (updated.ownerId) {
       const label = formatLabel(training.troopType);
       void sendPushToUser(updated.ownerId, NOTIF.TROOP_COMPLETE, { title: 'Training Complete', body: `${training.amount}x ${label} ready at ${updated.name}.`, tag: `troop-${updated.id}-${training.troopType}-${Date.now()}`, data: { url: '/' } });

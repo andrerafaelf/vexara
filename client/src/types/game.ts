@@ -108,6 +108,7 @@ export interface Nexus {
   trainingQueue: TrainingQueueItem[];
   questRewardClaims?: string[];
   completedQuestIds?: string[];
+  troopsTrained?: Record<string, number>;
   lastResourceUpdate: Date;
   points: number;
   control?: number;

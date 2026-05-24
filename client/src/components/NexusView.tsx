@@ -419,6 +419,11 @@ interface IntroQuest {
   description: string;
   completed: boolean;
   tab: 'buildings' | 'troops' | 'map';
+  // Optional inline "Next up" tooltip copy for the tab where this quest runs.
+  // Only present on chapters 1-3 quests — later chapters don't render tooltips.
+  // Rendered as raw JSX inside <span className="noob-tip-text">, so HTML-safe
+  // strings only (no user input).
+  tip?: React.ReactNode;
 }
 
 // Quest batch IDs are the canonical server identifiers from
@@ -1281,12 +1286,18 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     const done = (batchId: string, questId: string, condition: boolean) =>
       completedQuestIds.has(questId) || claimedBatches.has(batchId) || condition;
 
-    const assaultTroopers = nexus.troops.assaultTrooper || 0;
-    const reconOperatives = nexus.troops.reconOperative || 0;
-    const skimmerBikes = nexus.troops.skimmerBike || 0;
-    const siegeMechs = nexus.troops.siegeMech || 0;
-    const disruptorUnits = nexus.troops.disruptorUnit || 0;
-    const annihilatorPlatforms = nexus.troops.annihilatorPlatform || 0;
+    // Use lifetime trained counts (not current alive) so that "train N units" quests
+    // don't regress when troops die in combat. Falls back to alive count for legacy
+    // nexuses that predate the troopsTrained field. Mirrors trainedCount() on server.
+    const trained = nexus.troopsTrained ?? {};
+    const trainedOrAlive = (key: keyof typeof nexus.troops) =>
+      Math.max(trained[key] || 0, nexus.troops[key] || 0);
+    const assaultTroopers = trainedOrAlive('assaultTrooper');
+    const reconOperatives = trainedOrAlive('reconOperative');
+    const skimmerBikes = trainedOrAlive('skimmerBike');
+    const siegeMechs = trainedOrAlive('siegeMech');
+    const disruptorUnits = trainedOrAlive('disruptorUnit');
+    const annihilatorPlatforms = trainedOrAlive('annihilatorPlatform');
 
     // First quest line walks the player through the entire opening loop:
     //   Command Core → Recruitment Core → Train troops → Loot a nexus.
@@ -1299,6 +1310,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
         description: 'Upgrade Command Core to Lv1 to bring your nexus online.',
         completed: done('intro', 'build_command_core_1', nexus.buildings.commandCore >= 1),
         tab: 'buildings',
+        tip: <><strong>Start here:</strong> Upgrade <em>Command Core</em> to Lv1 to power your Nexus and unlock progression.</>,
       },
       {
         id: 'reinforce-command',
@@ -1306,6 +1318,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
         description: 'Upgrade Command Core to Lv2 to unlock Recruitment Core.',
         completed: done('intro', 'build_command_core_2', nexus.buildings.commandCore >= 2),
         tab: 'buildings',
+        tip: <><strong>Next up:</strong> Upgrade <em>Command Core</em> to Lv2 to unlock the <em>Recruitment Core</em>.</>,
       },
       {
         id: 'start-fabrication',
@@ -1313,6 +1326,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
         description: 'Build Recruitment Core to Lv1 so you can train troops.',
         completed: done('intro', 'build_troop_fab_1', nexus.buildings.recruitmentCore >= 1),
         tab: 'buildings',
+        tip: <><strong>Next up:</strong> Build <em>Recruitment Core</em> to Lv1 so you can train your first troops.</>,
       },
       {
         id: 'raise-force',
@@ -1320,6 +1334,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
         description: 'Train 5 Assault Troopers — your first strike force.',
         completed: done('intro', 'train_assault_trooper_5', assaultTroopers >= 5),
         tab: 'troops',
+        tip: <><strong>Next up:</strong> Train 5 <em>Assault Troopers</em> — your first strike force.</>,
       },
       {
         id: 'first-loot',
@@ -1327,6 +1342,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
         description: 'Send your troops to scavenge a neutral nexus on the Starfield.',
         completed: done('intro', 'send_first_strike', outgoingAttacks.length > 0),
         tab: 'map',
+        tip: <><strong>Next up:</strong> Open the <em>Starfield</em> and send your troops to scavenge a neutral nexus.</>,
       },
     ];
 
@@ -1339,20 +1355,20 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     // server file and with client/src/components/Dashboard.tsx.
 
     const expansionQuests: IntroQuest[] = [
-      { id: 'fortify-core',          title: 'Fortify The Core',     description: 'Upgrade Command Core to Lv3.',  completed: done('expansion', 'build_command_core_3',    nexus.buildings.commandCore >= 3),   tab: 'buildings' },
-      { id: 'unlock-defenses',       title: 'Activate Shield Grid', description: 'Upgrade Shield Grid to Lv1.',   completed: done('expansion', 'build_shield_grid_1',     nexus.buildings.shieldGrid >= 1),    tab: 'buildings' },
-      { id: 'upgrade-biomass-chain', title: 'Expand Biomass Chain', description: 'Upgrade Biomass Farm to Lv2.',  completed: done('expansion', 'build_biomass_farm_2',    nexus.buildings.biomassFarm >= 2),   tab: 'buildings' },
-      { id: 'expand-logistics',      title: 'Expand Logistics',     description: 'Upgrade Alloy Forge to Lv2.',   completed: done('expansion', 'build_alloy_forge_2',     nexus.buildings.alloyForge >= 2),    tab: 'buildings' },
-      { id: 'deploy-recon',          title: 'Deploy Recon',         description: 'Train 3 Recon Operatives.',     completed: done('expansion', 'train_recon_operative_3', reconOperatives >= 3),               tab: 'troops' },
+      { id: 'fortify-core',          title: 'Fortify The Core',     description: 'Upgrade Command Core to Lv3.',  completed: done('expansion', 'build_command_core_3',    nexus.buildings.commandCore >= 3),   tab: 'buildings', tip: <><strong>Next up:</strong> Upgrade <em>Command Core</em> to Lv3 to fortify your nexus.</> },
+      { id: 'unlock-defenses',       title: 'Activate Shield Grid', description: 'Upgrade Shield Grid to Lv1.',   completed: done('expansion', 'build_shield_grid_1',     nexus.buildings.shieldGrid >= 1),    tab: 'buildings', tip: <><strong>Next up:</strong> Build <em>Shield Grid</em> to Lv1 to start your defenses.</> },
+      { id: 'upgrade-biomass-chain', title: 'Expand Biomass Chain', description: 'Upgrade Biomass Farm to Lv2.',  completed: done('expansion', 'build_biomass_farm_2',    nexus.buildings.biomassFarm >= 2),   tab: 'buildings', tip: <><strong>Next up:</strong> Upgrade <em>Biomass Farm</em> to Lv2 to expand your food supply.</> },
+      { id: 'expand-logistics',      title: 'Expand Logistics',     description: 'Upgrade Alloy Forge to Lv2.',   completed: done('expansion', 'build_alloy_forge_2',     nexus.buildings.alloyForge >= 2),    tab: 'buildings', tip: <><strong>Next up:</strong> Upgrade <em>Alloy Forge</em> to Lv2 to expand your logistics.</> },
+      { id: 'deploy-recon',          title: 'Deploy Recon',         description: 'Train 3 Recon Operatives.',     completed: done('expansion', 'train_recon_operative_3', reconOperatives >= 3),               tab: 'troops', tip: <><strong>Next up:</strong> Train 3 <em>Recon Operatives</em> to scout the galaxy.</> },
     ];
     const expansionComplete = claimedBatches.has('expansion') || expansionQuests.every((quest) => quest.completed);
 
     const firstBloodQuests: IntroQuest[] = [
-      { id: 'command-core-mastery',     title: 'Core Mastery',     description: 'Upgrade Command Core to Lv4.',  completed: done('first_blood', 'build_command_core_4',  nexus.buildings.commandCore >= 4),   tab: 'buildings' },
-      { id: 'extractor-specialization', title: 'Extractor Focus',  description: 'Upgrade Ore Extractor to Lv4.', completed: done('first_blood', 'build_ore_extractor_4', nexus.buildings.oreExtractor >= 4),  tab: 'buildings' },
-      { id: 'defense-posture',          title: 'Defense Posture',  description: 'Upgrade Shield Grid to Lv2.',   completed: done('first_blood', 'build_shield_grid_2',   nexus.buildings.shieldGrid >= 2),    tab: 'buildings' },
-      { id: 'fast-raiders',             title: 'Fast Raiders',     description: 'Train 5 Skimmer Bikes.',        completed: done('first_blood', 'train_skimmer_bike_5',  skimmerBikes >= 5),                  tab: 'troops' },
-      { id: 'first-expedition',         title: 'First Expedition', description: 'Launch an outgoing strike.',    completed: done('first_blood', 'send_first_strike',     outgoingAttacks.length > 0),         tab: 'map' },
+      { id: 'command-core-mastery',     title: 'Core Mastery',     description: 'Upgrade Command Core to Lv4.',  completed: done('first_blood', 'build_command_core_4',  nexus.buildings.commandCore >= 4),   tab: 'buildings', tip: <><strong>Next up:</strong> Upgrade <em>Command Core</em> to Lv4.</> },
+      { id: 'extractor-specialization', title: 'Extractor Focus',  description: 'Upgrade Ore Extractor to Lv4.', completed: done('first_blood', 'build_ore_extractor_4', nexus.buildings.oreExtractor >= 4),  tab: 'buildings', tip: <><strong>Next up:</strong> Upgrade <em>Ore Extractor</em> to Lv4.</> },
+      { id: 'defense-posture',          title: 'Defense Posture',  description: 'Upgrade Shield Grid to Lv2.',   completed: done('first_blood', 'build_shield_grid_2',   nexus.buildings.shieldGrid >= 2),    tab: 'buildings', tip: <><strong>Next up:</strong> Upgrade <em>Shield Grid</em> to Lv2 to harden defenses.</> },
+      { id: 'fast-raiders',             title: 'Fast Raiders',     description: 'Train 5 Skimmer Bikes.',        completed: done('first_blood', 'train_skimmer_bike_5',  skimmerBikes >= 5),                  tab: 'troops', tip: <><strong>Next up:</strong> Train 5 <em>Skimmer Bikes</em> for fast raids.</> },
+      { id: 'first-expedition',         title: 'First Expedition', description: 'Launch an outgoing strike.',    completed: done('first_blood', 'send_first_strike',     outgoingAttacks.length > 0),         tab: 'map', tip: <><strong>Next up:</strong> Open the <em>Starfield</em> and launch an outgoing strike.</> },
     ];
     const firstBloodComplete = claimedBatches.has('first_blood') || firstBloodQuests.every((quest) => quest.completed);
 
@@ -1431,6 +1447,30 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     return 'resource-amount';
   };
   const { batches: questBatches, allQuestsComplete } = getQuestBatches();
+
+  // Inline "Next up" tooltip — only renders for the first 3 quest chapters
+  // (intro / expansion / first_blood). Picks the first incomplete quest in
+  // the earliest unclaimed batch that matches the requested tab. The tip ID
+  // doubles as the dismiss key so each step can be dismissed independently.
+  // 'map' quests fall back to the buildings tab since the Starfield isn't a
+  // NexusView tab — without this, the player would lose the nudge after
+  // they're ready to launch their first raid.
+  const TIP_BATCH_IDS = ['intro', 'expansion', 'first_blood'] as const;
+  const getNextTip = (tab: IntroQuest['tab']): { id: string; tip: React.ReactNode } | null => {
+    if (allQuestsComplete) return null;
+    for (const batchId of TIP_BATCH_IDS) {
+      const batch = questBatches.find((b) => b.id === batchId);
+      if (!batch) continue;
+      const matchesTab = (q: IntroQuest) => q.tab === tab || (tab === 'buildings' && q.tab === 'map');
+      const quest = batch.quests.find((q) => !q.completed && matchesTab(q) && q.tip);
+      if (quest) return { id: `tip-${batchId}-${quest.id}`, tip: quest.tip! };
+      // If this batch has any incomplete quest for any tab, stop — we don't
+      // want to leak tooltips from a later batch while an earlier one is
+      // still incomplete on a different tab.
+      if (batch.quests.some((q) => !q.completed)) return null;
+    }
+    return null;
+  };
   const activeBuild = nexus.buildQueue[0];
   const activeTraining = nexus.trainingQueue[0];
   // (`activeBuildTimer` and `activeTrainingTimer` were removed, the live countdown labels are
@@ -1670,22 +1710,34 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                     <span className="strikes-card-label">Outgoing</span>
                     {outgoingAttacks.length > 0 ? (
                       <div className="strikes-card-list">
-                        {outgoingAttacks.map((a: any) => (
-                          <div key={a._id} className="strikes-card-entry">
-                            <span className="strikes-card-entry-who">
-                              {a.status === 'returning' && (
-                                <ArrowDownLeft size={11} aria-hidden="true" style={{ marginRight: 4 }} />
+                        {outgoingAttacks.map((a: any) => {
+                          const target = a.defender?.nexus ?? a.defenderNexus;
+                          const troopSummary = a.troops
+                            ? Object.entries(a.troops as Record<string, number>)
+                                .filter(([, n]) => (Number(n) || 0) > 0)
+                                .map(([k, n]) => `${n} ${TROOP_NAMES[k] || k}`)
+                                .join(', ')
+                            : '';
+                          return (
+                            <div key={a._id} className="strikes-card-entry">
+                              <span className="strikes-card-entry-who">
+                                {a.status === 'returning' && (
+                                  <ArrowDownLeft size={11} aria-hidden="true" style={{ marginRight: 4 }} />
+                                )}
+                                {target?.name
+                                  ? `${target.name} (${target.x}|${target.y})`
+                                  : 'Unknown nexus'}
+                              </span>
+                              {troopSummary && (
+                                <span className="strikes-card-entry-troops">{troopSummary}</span>
                               )}
-                              {a.defenderNexus
-                                ? `${a.defenderNexus.name} (${a.defenderNexus.x}|${a.defenderNexus.y})`
-                                : '?'}
-                            </span>
-                            <Countdown
-                              endAt={a.status === 'returning' ? a.returnsAt : a.arrivesAt}
-                              className="strikes-card-entry-time"
-                            />
-                          </div>
-                        ))}
+                              <Countdown
+                                endAt={a.status === 'returning' ? a.returnsAt : a.arrivesAt}
+                                className="strikes-card-entry-time"
+                              />
+                            </div>
+                          );
+                        })}
                       </div>
                     ) : (
                       <span className="strikes-card-value">No outgoing strikes</span>
@@ -1696,14 +1748,18 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                     <span className="strikes-card-label">Incoming</span>
                     {incomingAttacks.length > 0 ? (
                       <div className="strikes-card-list">
-                        {incomingAttacks.map((a: any) => (
-                          <div key={a._id} className="strikes-card-entry">
-                            <span className="strikes-card-entry-who">
-                              <Username name={a.attacker?.user?.username ?? '?'} isSupporter={a.attacker?.user?.isSupporter} /> · {a.attacker?.nexus?.name ?? '?'}
-                            </span>
-                            <Countdown endAt={a.arrivesAt} className="strikes-card-entry-time" />
-                          </div>
-                        ))}
+                        {incomingAttacks.map((a: any) => {
+                          const src = a.attacker?.nexus ?? a.attackerNexus;
+                          return (
+                            <div key={a._id} className="strikes-card-entry">
+                              <span className="strikes-card-entry-who">
+                                <Username name={a.attacker?.user?.username ?? '?'} isSupporter={a.attacker?.user?.isSupporter} /> · {src?.name ?? '?'}
+                                {src?.x != null && src?.y != null ? ` (${src.x}|${src.y})` : ''}
+                              </span>
+                              <Countdown endAt={a.arrivesAt} className="strikes-card-entry-time" />
+                            </div>
+                          );
+                        })}
                       </div>
                     ) : (
                       <span className="strikes-card-value">No incoming strikes</span>
@@ -1882,109 +1938,26 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
               </div>
             )}
 
-            {!allQuestsComplete && nexus.buildings.commandCore < 1 && !dismissedTips.has('tip-command-core') && (
-              <div className="noob-tip">
-                <span className="noob-tip-icon" aria-hidden="true">
-                  <Info size={14} />
-                </span>
-                <span className="noob-tip-text">
-                  <strong>Start here:</strong> Upgrade <em>Command Core</em> to Lv1 to power your Nexus and unlock
-                  progression.
-                </span>
-                <button
-                  type="button"
-                  className="noob-tip-dismiss"
-                  onClick={() => dismissTip('tip-command-core')}
-                  aria-label="Dismiss tip"
-                >
-                  <X size={12} aria-hidden="true" />
-                </button>
-              </div>
-            )}
-            {!allQuestsComplete &&
-              nexus.buildings.commandCore >= 1 &&
-              nexus.buildings.commandCore < 2 &&
-              !dismissedTips.has('tip-command-core-2') && (
+            {(() => {
+              const next = getNextTip('buildings');
+              if (!next || dismissedTips.has(next.id)) return null;
+              return (
                 <div className="noob-tip">
                   <span className="noob-tip-icon" aria-hidden="true">
                     <Info size={14} />
                   </span>
-                  <span className="noob-tip-text">
-                    <strong>Next up:</strong> Upgrade <em>Command Core</em> to Lv2 to unlock the <em>Recruitment Core</em>.
-                  </span>
+                  <span className="noob-tip-text">{next.tip}</span>
                   <button
                     type="button"
                     className="noob-tip-dismiss"
-                    onClick={() => dismissTip('tip-command-core-2')}
+                    onClick={() => dismissTip(next.id)}
                     aria-label="Dismiss tip"
                   >
                     <X size={12} aria-hidden="true" />
                   </button>
                 </div>
-              )}
-            {!allQuestsComplete &&
-              nexus.buildings.commandCore >= 2 &&
-              nexus.buildings.recruitmentCore < 1 &&
-              !dismissedTips.has('tip-recruitment-core') && (
-                <div className="noob-tip">
-                  <span className="noob-tip-icon" aria-hidden="true">
-                    <Info size={14} />
-                  </span>
-                  <span className="noob-tip-text">
-                    <strong>Next up:</strong> Build <em>Recruitment Core</em> to Lv1 so you can train your first troops.
-                  </span>
-                  <button
-                    type="button"
-                    className="noob-tip-dismiss"
-                    onClick={() => dismissTip('tip-recruitment-core')}
-                    aria-label="Dismiss tip"
-                  >
-                    <X size={12} aria-hidden="true" />
-                  </button>
-                </div>
-              )}
-            {!allQuestsComplete &&
-              nexus.buildings.recruitmentCore >= 1 &&
-              (nexus.troops.assaultTrooper || 0) < 5 &&
-              !dismissedTips.has('tip-train-troops') && (
-                <div className="noob-tip">
-                  <span className="noob-tip-icon" aria-hidden="true">
-                    <Info size={14} />
-                  </span>
-                  <span className="noob-tip-text">
-                    <strong>Next up:</strong> Train 5 <em>Assault Troopers</em> in the Troops tab.
-                  </span>
-                  <button
-                    type="button"
-                    className="noob-tip-dismiss"
-                    onClick={() => dismissTip('tip-train-troops')}
-                    aria-label="Dismiss tip"
-                  >
-                    <X size={12} aria-hidden="true" />
-                  </button>
-                </div>
-              )}
-            {!allQuestsComplete &&
-              (nexus.troops.assaultTrooper || 0) >= 5 &&
-              outgoingAttacks.length === 0 &&
-              !dismissedTips.has('tip-first-loot') && (
-                <div className="noob-tip">
-                  <span className="noob-tip-icon" aria-hidden="true">
-                    <Info size={14} />
-                  </span>
-                  <span className="noob-tip-text">
-                    <strong>Next up:</strong> Open the <em>Starfield</em> and send your troops to scavenge a neutral nexus.
-                  </span>
-                  <button
-                    type="button"
-                    className="noob-tip-dismiss"
-                    onClick={() => dismissTip('tip-first-loot')}
-                    aria-label="Dismiss tip"
-                  >
-                    <X size={12} aria-hidden="true" />
-                  </button>
-                </div>
-              )}
+              );
+            })()}
 
             {nexus.buildQueue.length > 0 && (
               <div className="queue-section">
@@ -2068,28 +2041,26 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
         <div className="troops-tab" style={activeTab !== 'troops' ? { display: 'none' } : undefined}>
             <h3>Troops</h3>
 
-            {!allQuestsComplete &&
-              nexus.buildings.recruitmentCore >= 1 &&
-              (nexus.troops.assaultTrooper || 0) < 5 &&
-              !dismissedTips.has('tip-assault-troopers') && (
+            {(() => {
+              const next = getNextTip('troops');
+              if (!next || dismissedTips.has(next.id)) return null;
+              return (
                 <div className="noob-tip">
                   <span className="noob-tip-icon" aria-hidden="true">
-                  <Info size={14} />
-                </span>
-                  <span className="noob-tip-text">
-                    <strong>Field your first force:</strong> Train at least <em>5 Assault Troopers</em> to complete your
-                    intro quest.
+                    <Info size={14} />
                   </span>
+                  <span className="noob-tip-text">{next.tip}</span>
                   <button
                     type="button"
                     className="noob-tip-dismiss"
-                    onClick={() => dismissTip('tip-assault-troopers')}
+                    onClick={() => dismissTip(next.id)}
                     aria-label="Dismiss tip"
                   >
                     <X size={12} aria-hidden="true" />
                   </button>
                 </div>
-              )}
+              );
+            })()}
 
             {nexus.buildings.recruitmentCore === 0 ? (
               <p>Build a Recruitment Core to train troops!</p>
@@ -2717,6 +2688,9 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
   const [assetsLoading, setAssetsLoading] = useState(true);
   const [missions, setMissions] = useState<Array<Record<string, unknown>>>([]);
   const [completedMissions, setCompletedMissions] = useState<Array<Record<string, unknown>>>([]);
+  // Per-mission expand state. Collapsed by default; resets on every mount
+  // (i.e. when the user navigates back into the Espionage tab).
+  const [expandedMissions, setExpandedMissions] = useState<Set<string>>(() => new Set());
   const [now, setNow] = useState(() => Date.now());
   const dispatchRef = useRef<HTMLDivElement | null>(null);
   const targetBarRef = useRef<HTMLDivElement | null>(null);
@@ -2966,6 +2940,11 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
             </span>
           </div>
 
+          {mode === 'embed' && (
+            <div className="espionage-risk-note">
+              Detection chance: 5% base, +2% per enemy Stealth Array level (max 15%). On detection, 1 operative is lost and no intel is gained. Resources are spent regardless.
+            </div>
+          )}
           {mode === 'embed' && reconCount < 1 && (
             <div className="espionage-warn">No Recon Operatives available. Train some at your Recruitment Core.</div>
           )}
@@ -2983,30 +2962,6 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
         </div>
       )}
 
-      {/* Completed mission results (last 10, newest first) */}
-      {completedMissions.length > 0 && (
-        <div className="espionage-completed">
-          <div className="espionage-assets-heading">Recent Mission Results</div>
-          {completedMissions.map((m) => {
-            const r = m.result as Record<string, unknown> | null;
-            const success = r?.success as boolean | undefined;
-            return (
-              <div key={String(m.id)} className={`espionage-completed-row${success === false ? ' espionage-completed-row--fail' : ''}`}>
-                <div className="espionage-mission-info">
-                  <span className="espionage-mission-label">
-                    {m.type === 'embed' ? 'Embed' : 'Sabotage'} &rarr; {(m.targetName as string) ?? `Nexus #${m.toNexusId}`}
-                  </span>
-                  <span className="espionage-mission-status">
-                    {success === false ? 'Failed' : 'Succeeded'}
-                  </span>
-                </div>
-                {r && <EspionageIntelPanel report={r} />}
-              </div>
-            );
-          })}
-        </div>
-      )}
-
       {/* Intel refresh result */}
       {intelResult && (
         <div className="espionage-result espionage-result--success">
@@ -3015,7 +2970,8 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
         </div>
       )}
 
-      {/* Active embedded assets */}
+      {/* Active embedded assets — placed above mission history so the most
+          actionable surface (Refresh Intel / Recall) sits up top. */}
       <div className="espionage-assets">
         <div className="espionage-assets-heading">Active Embedded Operatives</div>
         {assetsLoading ? null : assets.length === 0 ? (
@@ -3043,6 +2999,48 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
           ))
         )}
       </div>
+
+      {/* Completed mission results (last 10, newest first). Collapsed by
+          default — the tab opens with these furled and only the actionable
+          assets list expanded. Toggling is per-row. */}
+      {completedMissions.length > 0 && (
+        <div className="espionage-completed">
+          <div className="espionage-assets-heading">Recent Mission Results</div>
+          {completedMissions.map((m) => {
+            const r = m.result as Record<string, unknown> | null;
+            const success = r?.success as boolean | undefined;
+            const id = String(m.id);
+            const isOpen = expandedMissions.has(id);
+            const toggle = () =>
+              setExpandedMissions((prev) => {
+                const next = new Set(prev);
+                if (next.has(id)) next.delete(id);
+                else next.add(id);
+                return next;
+              });
+            return (
+              <div key={id} className={`espionage-completed-row${success === false ? ' espionage-completed-row--fail' : ''}`}>
+                <button
+                  type="button"
+                  className="espionage-mission-toggle"
+                  onClick={toggle}
+                  aria-expanded={isOpen}
+                  aria-label={isOpen ? 'Collapse mission details' : 'Expand mission details'}
+                >
+                  <span className="espionage-mission-toggle-icon" aria-hidden="true">{isOpen ? '−' : '+'}</span>
+                  <span className="espionage-mission-label">
+                    {m.type === 'embed' ? 'Embed' : 'Sabotage'} &rarr; {(m.targetName as string) ?? `Nexus #${m.toNexusId}`}
+                  </span>
+                  <span className="espionage-mission-status">
+                    {success === false ? 'Failed' : 'Succeeded'}
+                  </span>
+                </button>
+                {isOpen && r && <EspionageIntelPanel report={r} />}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

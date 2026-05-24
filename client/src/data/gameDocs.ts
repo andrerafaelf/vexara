@@ -1,12 +1,30 @@
+export type TroopClass = 'light' | 'heavy' | 'ranged' | 'special';
+
 export type TroopDoc = {
   key: string;
   name: string;
   role: string;
   description: string;
+  unitClass: TroopClass;
   stats: { attack: number; defense: number; speed: number; carry: number };
   cost: { biomass: number; alloy: number; ore: number; population: number; time: string };
   requirements: string[];
   notes?: string[];
+};
+
+// Counter matrix: attacker class deals extra damage to the listed defender class.
+// (Pulled from server/utils/combatMath.ts; if you change one, change the other.)
+export const CLASS_COUNTERS: Array<{ attacker: TroopClass; beats: TroopClass; multiplier: number }> = [
+  { attacker: 'light',  beats: 'heavy',   multiplier: 1.35 },
+  { attacker: 'heavy',  beats: 'special', multiplier: 1.35 },
+  { attacker: 'ranged', beats: 'light',   multiplier: 1.35 },
+];
+
+export const CLASS_COUNTERED_BY: Record<TroopClass, TroopClass | null> = {
+  heavy:   'light',
+  special: 'heavy',
+  light:   'ranged',
+  ranged:  null, // special class deals neutral damage to ranged
 };
 
 export type BuildingDoc = {
@@ -27,7 +45,8 @@ export const TROOPS_DOC: TroopDoc[] = [
     name: 'Assault Trooper',
     role: 'Defensive frontline infantry',
     description: 'Solid all-rounder that holds the line and absorbs sustained pressure from attackers.',
-    stats: { attack: 30, defense: 40, speed: 18, carry: 15 },
+    unitClass: 'heavy',
+    stats: { attack: 30, defense: 40, speed: 18, carry: 60 },
     cost: { biomass: 150, alloy: 150, ore: 350, population: 1, time: '1m 19s' },
     requirements: ['Recruitment Core Lv1'],
   },
@@ -36,7 +55,8 @@ export const TROOPS_DOC: TroopDoc[] = [
     name: 'Lancer Drone',
     role: 'Early defensive interceptor',
     description: 'Cheap anti-vehicle style defender used to absorb early pressure.',
-    stats: { attack: 15, defense: 25, speed: 20, carry: 20 },
+    unitClass: 'ranged',
+    stats: { attack: 15, defense: 25, speed: 20, carry: 30 },
     cost: { biomass: 150, alloy: 150, ore: 200, population: 1, time: '53s' },
     requirements: ['Recruitment Core Lv2'],
   },
@@ -45,7 +65,8 @@ export const TROOPS_DOC: TroopDoc[] = [
     name: 'Breaker Unit',
     role: 'Heavy breacher',
     description: 'Higher attack unit meant to crack weaker defensive lines quickly.',
-    stats: { attack: 50, defense: 15, speed: 16, carry: 10 },
+    unitClass: 'light',
+    stats: { attack: 50, defense: 15, speed: 16, carry: 50 },
     cost: { biomass: 250, alloy: 150, ore: 300, population: 1, time: '1m 14s' },
     requirements: ['Recruitment Core Lv3', 'Ore Extractor Lv3'],
   },
@@ -55,6 +76,7 @@ export const TROOPS_DOC: TroopDoc[] = [
     role: 'Scout / support unit',
     description:
       'Lightly armed intel gatherer that reveals enemy nexus resources, troops, and defenses. Not a frontline fighter.',
+    unitClass: 'special',
     stats: { attack: 5, defense: 20, speed: 25, carry: 10 },
     cost: { biomass: 400, alloy: 150, ore: 400, population: 1, time: '3m 0s' },
     requirements: ['Recruitment Core Lv4', 'Command Core Lv3'],
@@ -65,6 +87,7 @@ export const TROOPS_DOC: TroopDoc[] = [
     name: 'Skimmer Bike',
     role: 'Fast raider',
     description: 'High mobility raider with strong carry for quick hit-and-run farming.',
+    unitClass: 'light',
     stats: { attack: 80, defense: 70, speed: 22, carry: 60 },
     cost: { biomass: 625, alloy: 500, ore: 750, population: 3, time: '10m 0s' },
     requirements: ['Recruitment Core Lv5', 'Alloy Forge Lv4'],
@@ -74,6 +97,7 @@ export const TROOPS_DOC: TroopDoc[] = [
     name: 'Bulwark Guard',
     role: 'Elite defensive infantry',
     description: 'One of the strongest dedicated defensive units in midgame.',
+    unitClass: 'heavy',
     stats: { attack: 20, defense: 120, speed: 12, carry: 25 },
     cost: { biomass: 400, alloy: 600, ore: 500, population: 2, time: '8m 0s' },
     requirements: ['Recruitment Core Lv5', 'Life Support Lv5'],
@@ -83,6 +107,7 @@ export const TROOPS_DOC: TroopDoc[] = [
     name: 'Suppressor Team',
     role: 'Ranged assault support',
     description: 'Flexible fire-support unit that bolsters offensive pushes with sustained ranged pressure.',
+    unitClass: 'ranged',
     stats: { attack: 60, defense: 50, speed: 15, carry: 20 },
     cost: { biomass: 450, alloy: 400, ore: 450, population: 2, time: '8m 0s' },
     requirements: ['Recruitment Core Lv7', 'Command Core Lv6'],
@@ -92,6 +117,7 @@ export const TROOPS_DOC: TroopDoc[] = [
     name: 'Disruptor Unit',
     role: 'Anti-armor assault unit',
     description: 'Aggressive specialist built to crack heavy defensive compositions on the offensive.',
+    unitClass: 'ranged',
     stats: { attack: 70, defense: 60, speed: 17, carry: 25 },
     cost: { biomass: 550, alloy: 750, ore: 650, population: 2, time: '11m 0s' },
     requirements: ['Recruitment Core Lv7', 'Ore Extractor Lv6'],
@@ -102,6 +128,7 @@ export const TROOPS_DOC: TroopDoc[] = [
     name: 'Interceptor Bike',
     role: 'Rapid-response cavalry',
     description: 'Fastest unit in the game, ideal for rapid redeploy and pressure.',
+    unitClass: 'light',
     stats: { attack: 90, defense: 80, speed: 28, carry: 50 },
     cost: { biomass: 750, alloy: 600, ore: 900, population: 3, time: '15m 0s' },
     requirements: ['Recruitment Core Lv8', 'Alloy Forge Lv7'],
@@ -112,6 +139,7 @@ export const TROOPS_DOC: TroopDoc[] = [
     role: 'Heavy defensive anchor',
     description:
       'Towering defensive platform with exceptional durability. Slow but nearly immovable when holding ground.',
+    unitClass: 'heavy',
     stats: { attack: 150, defense: 200, speed: 10, carry: 80 },
     cost: { biomass: 1250, alloy: 1000, ore: 2000, population: 4, time: '1h 0m' },
     requirements: ['Recruitment Core Lv10', 'Ore Extractor Lv9', 'Command Core Lv8'],
@@ -121,6 +149,7 @@ export const TROOPS_DOC: TroopDoc[] = [
     name: 'Annihilator Platform',
     role: 'Heavy artillery',
     description: 'Top-end damage platform for heavy assaults and sieges.',
+    unitClass: 'ranged',
     stats: { attack: 200, defense: 150, speed: 8, carry: 100 },
     cost: { biomass: 2000, alloy: 1750, ore: 3000, population: 5, time: '2h 0m' },
     requirements: ['Recruitment Core Lv12', 'Command Core Lv10', 'Shield Grid Lv10'],
@@ -130,6 +159,7 @@ export const TROOPS_DOC: TroopDoc[] = [
     name: 'Overseer',
     role: 'Conquest / control unit',
     description: 'Conquest enabler used to reduce control and capture nexuses.',
+    unitClass: 'special',
     stats: { attack: 0, defense: 30, speed: 15, carry: 0 },
     cost: { biomass: 12000, alloy: 10000, ore: 8000, population: 5, time: '4h 0m' },
     requirements: ['Recruitment Core Lv14', 'Command Core Lv14', 'Shield Grid Lv13'],

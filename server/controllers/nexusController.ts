@@ -5,7 +5,7 @@ import * as nexusService from '../services/nexusService.js';
 import type { AuthRequest } from '../types/index.js';
 import { getPopulationMax } from '../utils/population.js';
 import { NEWBIE_PROTECTION_DURATION_MS } from '../utils/starterNexus.js';
-import { getMaxStorage, getResourceProduction } from '../utils/economy.js';
+import { calculateTroopInfluence, getMaxStorage, getResourceProduction } from '../utils/economy.js';
 import { notifyNexusResources } from '../services/warRoomSocket.js';
 import { logError } from '../utils/logger.js';
 
@@ -45,7 +45,33 @@ export async function getMyNexuses(req: AuthRequest, res: Response): Promise<voi
       }),
     );
 
-    const totalPoints = updated.reduce((sum, v) => sum + v.points, 0);
+    // Include troops currently in flight on outgoing strikes so sending an
+    // attack doesn't immediately drop the player's influence. Survivors (or
+    // the initial roster while traveling) still count; losses on a completed
+    // 'returning' attack are excluded so influence drops only on combat end.
+    const inFlightAttacks = await prisma.attack.findMany({
+      where: {
+        attackerUserId: req.userId,
+        galaxyId: req.galaxyId,
+        status: { in: ['traveling', 'returning'] },
+      },
+      select: { troops: true, result: true, status: true },
+    });
+    let inFlightTroopInfluence = 0;
+    for (const a of inFlightAttacks) {
+      const sent = (a.troops as Record<string, number> | null) || {};
+      const result = a.result as { attackerLosses?: Record<string, number> } | null;
+      const losses = result?.attackerLosses || {};
+      const live: Record<string, number> = {};
+      for (const [k, v] of Object.entries(sent)) {
+        const sentN = Number(v) || 0;
+        const lostN = a.status === 'returning' ? Number(losses[k]) || 0 : 0;
+        live[k] = Math.max(0, sentN - lostN);
+      }
+      inFlightTroopInfluence += calculateTroopInfluence(live);
+    }
+
+    const totalPoints = updated.reduce((sum, v) => sum + v.points, 0) + Math.floor(inFlightTroopInfluence);
     await nexusService.updateGalaxyPlayerPoints(req.userId, req.galaxyId, totalPoints);
 
     res.json(updated.map((v) => serializeNexus(v)));

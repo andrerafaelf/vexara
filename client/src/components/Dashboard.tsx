@@ -203,6 +203,11 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 
     const b = nexus.buildings as Record<string, number>;
     const t = nexus.troops as Record<string, number>;
+    // Use lifetime trained counts for "train N units" quests so combat losses don't
+    // regress quest progress. Falls back to current alive count for legacy nexuses.
+    // Mirrors trainedCount() on the server.
+    const trained = (nexus.troopsTrained ?? {}) as Record<string, number>;
+    const tt = (key: string) => Math.max(trained[key] || 0, t[key] || 0);
     const hasOutgoingStrike = outgoingAttacks.some((attack) => attack.attacker?.nexus === nexus._id);
     const hasCompletedAttack = nexus.completedQuestIds?.includes('complete_attack') || false;
 
@@ -214,7 +219,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
       { id: 'command-core-online', title: 'Power The Nexus',     description: 'Upgrade Command Core to Lv1.',                            completed: done('intro', 'build_command_core_1',    b.commandCore >= 1) },
       { id: 'reinforce-command',   title: 'Reinforce Command',   description: 'Upgrade Command Core to Lv2.',                            completed: done('intro', 'build_command_core_2',    b.commandCore >= 2) },
       { id: 'start-fabrication',   title: 'Enable Recruitment',  description: 'Upgrade Recruitment Core to Lv1.',                        completed: done('intro', 'build_troop_fab_1',       b.recruitmentCore >= 1) },
-      { id: 'raise-force',         title: 'Field Troops',         description: 'Train 5 Assault Troopers.',                               completed: done('intro', 'train_assault_trooper_5', (t.assaultTrooper || 0) >= 5) },
+      { id: 'raise-force',         title: 'Field Troops',         description: 'Train 5 Assault Troopers.',                               completed: done('intro', 'train_assault_trooper_5', tt('assaultTrooper') >= 5) },
       { id: 'first-loot',          title: 'Loot A Nexus',         description: 'Send a scavenge raid from the Starfield.',                completed: done('intro', 'send_first_strike',       hasOutgoingStrike) },
     ];
     const introComplete = introQuests.every((q) => q.completed);
@@ -225,7 +230,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
       { id: 'unlock-defenses',        title: 'Activate Shield Grid',  description: 'Upgrade Shield Grid to Lv1.',      completed: done('expansion', 'build_shield_grid_1',    b.shieldGrid >= 1) },
       { id: 'upgrade-biomass-chain',  title: 'Expand Biomass Chain',  description: 'Upgrade Biomass Farm to Lv2.',     completed: done('expansion', 'build_biomass_farm_2',   b.biomassFarm >= 2) },
       { id: 'expand-logistics',       title: 'Expand Logistics',       description: 'Upgrade Alloy Forge to Lv2.',      completed: done('expansion', 'build_alloy_forge_2',    b.alloyForge >= 2) },
-      { id: 'deploy-recon',           title: 'Deploy Recon',           description: 'Train 3 Recon Operatives.',        completed: done('expansion', 'train_recon_operative_3', (t.reconOperative || 0) >= 3) },
+      { id: 'deploy-recon',           title: 'Deploy Recon',           description: 'Train 3 Recon Operatives.',        completed: done('expansion', 'train_recon_operative_3', tt('reconOperative') >= 3) },
     ];
     const expansionComplete = expansionQuests.every((q) => q.completed);
 
@@ -234,7 +239,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
       { id: 'command-core-mastery',     title: 'Core Mastery',          description: 'Upgrade Command Core to Lv4.',     completed: done('first_blood', 'build_command_core_4',  b.commandCore >= 4) },
       { id: 'extractor-specialization', title: 'Extractor Focus',        description: 'Upgrade Ore Extractor to Lv4.',    completed: done('first_blood', 'build_ore_extractor_4', b.oreExtractor >= 4) },
       { id: 'defense-posture',          title: 'Defense Posture',        description: 'Upgrade Shield Grid to Lv2.',      completed: done('first_blood', 'build_shield_grid_2',   b.shieldGrid >= 2) },
-      { id: 'fast-raiders',             title: 'Fast Raiders',            description: 'Train 5 Skimmer Bikes.',           completed: done('first_blood', 'train_skimmer_bike_5',  (t.skimmerBike || 0) >= 5) },
+      { id: 'fast-raiders',             title: 'Fast Raiders',            description: 'Train 5 Skimmer Bikes.',           completed: done('first_blood', 'train_skimmer_bike_5',  tt('skimmerBike') >= 5) },
       { id: 'first-expedition',         title: 'First Expedition',        description: 'Launch an outgoing strike.',       completed: done('first_blood', 'send_first_strike',     hasOutgoingStrike) },
     ];
     const firstBloodComplete = firstBloodQuests.every((q) => q.completed);
@@ -244,7 +249,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
       { id: 'shadow-command',     title: 'Shadow Command',      description: 'Upgrade Command Core to Lv5.',      completed: done('shadow_ops', 'build_command_core_5',     b.commandCore >= 5) },
       { id: 'dark-network',       title: 'Dark Network',        description: 'Build a Stealth Array (Lv1).',      completed: done('shadow_ops', 'build_stealth_array_1',    (b.stealthArray || 0) >= 1) },
       { id: 'reinforce-shields',  title: 'Reinforce Shields',   description: 'Upgrade Shield Grid to Lv3.',       completed: done('shadow_ops', 'build_shield_grid_3',      b.shieldGrid >= 3) },
-      { id: 'recon-corps',        title: 'Recon Corps',          description: 'Train 10 Recon Operatives.',        completed: done('shadow_ops', 'train_recon_operative_10', (t.reconOperative || 0) >= 10) },
+      { id: 'recon-corps',        title: 'Recon Corps',          description: 'Train 10 Recon Operatives.',        completed: done('shadow_ops', 'train_recon_operative_10', tt('reconOperative') >= 10) },
       { id: 'first-spy-mission',  title: 'First Spy Mission',   description: 'Send an outgoing strike or spy mission.', completed: done('shadow_ops', 'send_spy_mission',     hasOutgoingStrike) },
     ];
     const shadowOpsComplete = shadowOpsQuests.every((q) => q.completed);
@@ -255,7 +260,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
       { id: 'build-armory',      title: 'Open The Armory',   description: 'Upgrade Armory to Lv3.',         completed: done('arsenal', 'build_armory_3',        (b.armory || 0) >= 3) },
       { id: 'troop-logistics',   title: 'Troop Logistics',   description: 'Upgrade Recruitment Core to Lv5.', completed: done('arsenal', 'build_troop_fab_5',   b.recruitmentCore >= 5) },
       { id: 'life-support-push', title: 'Life Support Push', description: 'Upgrade Life Support to Lv4.',   completed: done('arsenal', 'build_life_support_4', b.lifeSupport >= 4) },
-      { id: 'heavy-armor',       title: 'Heavy Armor',        description: 'Train 5 Siege Mechs.',           completed: done('arsenal', 'train_siege_mech_5',   (t.siegeMech || 0) >= 5) },
+      { id: 'heavy-armor',       title: 'Heavy Armor',        description: 'Train 5 Siege Mechs.',           completed: done('arsenal', 'train_siege_mech_5',   tt('siegeMech') >= 5) },
     ];
     const arsenalComplete = arsenalQuests.every((q) => q.completed);
 
@@ -264,7 +269,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
       { id: 'veteran-command',    title: 'Veteran Command',    description: 'Upgrade Command Core to Lv8.',   completed: done('veteran', 'build_command_core_8',  b.commandCore >= 8) },
       { id: 'veteran-armory',     title: 'Hardened Arsenal',   description: 'Upgrade Armory to Lv5.',         completed: done('veteran', 'build_armory_5',        (b.armory || 0) >= 5) },
       { id: 'shadow-network',     title: 'Shadow Network',     description: 'Upgrade Stealth Array to Lv3.',  completed: done('veteran', 'build_stealth_array_3', (b.stealthArray || 0) >= 3) },
-      { id: 'disruptor-corps',    title: 'Disruptor Corps',    description: 'Train 10 Disruptor Units.',      completed: done('veteran', 'train_disruptor_10',    (t.disruptorUnit || 0) >= 10) },
+      { id: 'disruptor-corps',    title: 'Disruptor Corps',    description: 'Train 10 Disruptor Units.',      completed: done('veteran', 'train_disruptor_10',    tt('disruptorUnit') >= 10) },
       { id: 'proven-in-battle',   title: 'Proven In Battle',   description: 'Complete an attack.',            completed: done('veteran', 'complete_attack',       hasCompletedAttack) },
     ];
     const veteranComplete = veteranQuests.every((q) => q.completed);
@@ -275,7 +280,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
       { id: 'ghost-array',        title: 'Ghost Array',        description: 'Upgrade Stealth Array to Lv5.',  completed: done('ghost_protocol', 'build_stealth_array_5', (b.stealthArray || 0) >= 5) },
       { id: 'iron-dome',          title: 'Iron Dome',          description: 'Upgrade Shield Grid to Lv5.',    completed: done('ghost_protocol', 'build_shield_grid_5',   b.shieldGrid >= 5) },
       { id: 'ore-dominance',      title: 'Ore Dominance',      description: 'Upgrade Ore Extractor to Lv8.',  completed: done('ghost_protocol', 'build_ore_extractor_8', b.oreExtractor >= 8) },
-      { id: 'shadow-army',        title: 'Shadow Army',        description: 'Train 20 Recon Operatives.',     completed: done('ghost_protocol', 'train_recon_op_20',     (t.reconOperative || 0) >= 20) },
+      { id: 'shadow-army',        title: 'Shadow Army',        description: 'Train 20 Recon Operatives.',     completed: done('ghost_protocol', 'train_recon_op_20',     tt('reconOperative') >= 20) },
     ];
     const ghostProtocolComplete = ghostProtocolQuests.every((q) => q.completed);
 
@@ -284,7 +289,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
       { id: 'apex-command',       title: 'Apex Command',       description: 'Upgrade Command Core to Lv12.',  completed: done('annihilator', 'build_command_core_12',  b.commandCore >= 12) },
       { id: 'apex-armory',        title: 'Apex Armory',        description: 'Upgrade Armory to Lv10.',        completed: done('annihilator', 'build_armory_10',        (b.armory || 0) >= 10) },
       { id: 'deep-cover',         title: 'Deep Cover',         description: 'Upgrade Stealth Array to Lv7.',  completed: done('annihilator', 'build_stealth_array_7', (b.stealthArray || 0) >= 7) },
-      { id: 'field-annihilators', title: 'Field Annihilators', description: 'Train 3 Annihilator Platforms.', completed: done('annihilator', 'train_annihilator_3',    (t.annihilatorPlatform || 0) >= 3) },
+      { id: 'field-annihilators', title: 'Field Annihilators', description: 'Train 3 Annihilator Platforms.', completed: done('annihilator', 'train_annihilator_3',    tt('annihilatorPlatform') >= 3) },
       { id: 'domination',         title: 'Domination',         description: 'Complete an attack.',            completed: done('annihilator', 'complete_attack_2',     hasCompletedAttack) },
     ];
 

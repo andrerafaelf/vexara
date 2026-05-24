@@ -267,6 +267,10 @@ model Nexus {
   buildQueue         Json @default("[]")
   trainingQueue      Json @default("[]")
 
+  // Per-troop-type lifetime trained counter. Used by quest progress so that
+  // troops lost in combat don't roll back "train N units" quest completion.
+  troopsTrained      Json @default("{}")
+
   nexusType            String?
   nexusTypeLockedAt    DateTime?
   nexusTypeDoubled     Boolean   @default(false)

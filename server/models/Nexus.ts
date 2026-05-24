@@ -43,6 +43,17 @@ interface QuestBatch {
   };
 }
 
+// Lifetime trained count for a troop type — survives combat losses so that
+// "train N units" quests don't regress when troops die. Falls back to the
+// current alive count if no counter exists yet (e.g. legacy nexus row that
+// predates the troopsTrained column or skipped the backfill), so a player
+// who already has the troops alive doesn't lose quest progress.
+function trainedCount(nexus: Nexus & Record<string, unknown>, troopType: string): number {
+  const trained = normalizeTroopsTrained(nexus['troopsTrained'])[troopType] || 0;
+  const alive = Number(nexus[troopType] || 0);
+  return Math.max(trained, alive);
+}
+
 export const QUEST_REWARD_BATCHES: QuestBatch[] = [
   // --- Chapter 1: Establishing the Nexus ---
   // First quest line walks the player end-to-end through the opening loop:
@@ -56,7 +67,7 @@ export const QUEST_REWARD_BATCHES: QuestBatch[] = [
       { id: 'build_command_core_1',    check: ({ nexus }) => nexus.commandCore >= 1 },
       { id: 'build_command_core_2',    check: ({ nexus }) => nexus.commandCore >= 2 },
       { id: 'build_troop_fab_1',       check: ({ nexus }) => nexus.recruitmentCore >= 1 },
-      { id: 'train_assault_trooper_5', check: ({ nexus }) => nexus.assaultTrooper >= 5 },
+      { id: 'train_assault_trooper_5', check: ({ nexus }) => trainedCount(nexus, 'assaultTrooper') >= 5 },
       { id: 'send_first_strike',       check: ({ hasOutgoingStrike }) => hasOutgoingStrike },
     ],
     reward: { biomass: 750, alloy: 750, ore: 750, populationCurrent: 10, troops: { assaultTrooper: 10 } },
@@ -71,7 +82,7 @@ export const QUEST_REWARD_BATCHES: QuestBatch[] = [
       { id: 'build_shield_grid_1',       check: ({ nexus }) => nexus.shieldGrid >= 1 },
       { id: 'build_biomass_farm_2',      check: ({ nexus }) => nexus.biomassFarm >= 2 },
       { id: 'build_alloy_forge_2',       check: ({ nexus }) => nexus.alloyForge >= 2 },
-      { id: 'train_recon_operative_3',   check: ({ nexus }) => nexus.reconOperative >= 3 },
+      { id: 'train_recon_operative_3',   check: ({ nexus }) => trainedCount(nexus, 'reconOperative') >= 3 },
     ],
     reward: { biomass: 1500, alloy: 1500, ore: 1500, populationCurrent: 15, troops: { reconOperative: 15, lancerDrone: 20 } },
   },
@@ -84,7 +95,7 @@ export const QUEST_REWARD_BATCHES: QuestBatch[] = [
       { id: 'build_command_core_4',  check: ({ nexus }) => nexus.commandCore >= 4 },
       { id: 'build_ore_extractor_4', check: ({ nexus }) => nexus.oreExtractor >= 4 },
       { id: 'build_shield_grid_2',   check: ({ nexus }) => nexus.shieldGrid >= 2 },
-      { id: 'train_skimmer_bike_5',  check: ({ nexus }) => nexus.skimmerBike >= 5 },
+      { id: 'train_skimmer_bike_5',  check: ({ nexus }) => trainedCount(nexus, 'skimmerBike') >= 5 },
       { id: 'send_first_strike',     check: ({ hasOutgoingStrike }) => hasOutgoingStrike },
     ],
     reward: { biomass: 3500, alloy: 3500, ore: 3500, populationCurrent: 30, troops: { skimmerBike: 25, breakerUnit: 15 } },
@@ -98,7 +109,7 @@ export const QUEST_REWARD_BATCHES: QuestBatch[] = [
       { id: 'build_command_core_5',      check: ({ nexus }) => nexus.commandCore >= 5 },
       { id: 'build_stealth_array_1',     check: ({ nexus }) => (nexus as unknown as Record<string, number>).stealthArray >= 1 },
       { id: 'build_shield_grid_3',       check: ({ nexus }) => nexus.shieldGrid >= 3 },
-      { id: 'train_recon_operative_10',  check: ({ nexus }) => nexus.reconOperative >= 10 },
+      { id: 'train_recon_operative_10',  check: ({ nexus }) => trainedCount(nexus, 'reconOperative') >= 10 },
       { id: 'send_spy_mission',          check: ({ hasOutgoingStrike }) => hasOutgoingStrike },
     ],
     reward: { biomass: 5000, alloy: 5000, ore: 5000, populationCurrent: 25, troops: { reconOperative: 25, disruptorUnit: 10 } },
@@ -113,7 +124,7 @@ export const QUEST_REWARD_BATCHES: QuestBatch[] = [
       { id: 'build_armory_3',        check: ({ nexus }) => (nexus as unknown as Record<string, number>).armory >= 3 },
       { id: 'build_troop_fab_5',     check: ({ nexus }) => nexus.recruitmentCore >= 5 },
       { id: 'build_life_support_4',  check: ({ nexus }) => nexus.lifeSupport >= 4 },
-      { id: 'train_siege_mech_5',    check: ({ nexus }) => nexus.siegeMech >= 5 },
+      { id: 'train_siege_mech_5',    check: ({ nexus }) => trainedCount(nexus, 'siegeMech') >= 5 },
     ],
     reward: { biomass: 8000, alloy: 8000, ore: 8000, populationCurrent: 50, troops: { siegeMech: 15, disruptorUnit: 10, suppressorTeam: 10 } },
   },
@@ -126,7 +137,7 @@ export const QUEST_REWARD_BATCHES: QuestBatch[] = [
       { id: 'build_command_core_8',   check: ({ nexus }) => nexus.commandCore >= 8 },
       { id: 'build_armory_5',         check: ({ nexus }) => (nexus as unknown as Record<string, number>).armory >= 5 },
       { id: 'build_stealth_array_3',  check: ({ nexus }) => (nexus as unknown as Record<string, number>).stealthArray >= 3 },
-      { id: 'train_disruptor_10',     check: ({ nexus }) => nexus.disruptorUnit >= 10 },
+      { id: 'train_disruptor_10',     check: ({ nexus }) => trainedCount(nexus, 'disruptorUnit') >= 10 },
       { id: 'complete_attack',        check: ({ hasCompletedAttack }) => hasCompletedAttack },
     ],
     reward: { biomass: 15000, alloy: 15000, ore: 15000, populationCurrent: 75, troops: { siegeMech: 20, interceptorBike: 15, voidStalker: 5 } },
@@ -141,7 +152,7 @@ export const QUEST_REWARD_BATCHES: QuestBatch[] = [
       { id: 'build_stealth_array_5',  check: ({ nexus }) => (nexus as unknown as Record<string, number>).stealthArray >= 5 },
       { id: 'build_shield_grid_5',    check: ({ nexus }) => nexus.shieldGrid >= 5 },
       { id: 'build_ore_extractor_8',  check: ({ nexus }) => nexus.oreExtractor >= 8 },
-      { id: 'train_recon_op_20',      check: ({ nexus }) => nexus.reconOperative >= 20 },
+      { id: 'train_recon_op_20',      check: ({ nexus }) => trainedCount(nexus, 'reconOperative') >= 20 },
     ],
     reward: { biomass: 25000, alloy: 25000, ore: 25000, populationCurrent: 100, troops: { reconOperative: 30, voidStalker: 10, plasmaTurret: 5 } },
   },
@@ -154,7 +165,7 @@ export const QUEST_REWARD_BATCHES: QuestBatch[] = [
       { id: 'build_command_core_12',  check: ({ nexus }) => nexus.commandCore >= 12 },
       { id: 'build_armory_10',        check: ({ nexus }) => (nexus as unknown as Record<string, number>).armory >= 10 },
       { id: 'build_stealth_array_7',  check: ({ nexus }) => (nexus as unknown as Record<string, number>).stealthArray >= 7 },
-      { id: 'train_annihilator_3',    check: ({ nexus }) => nexus.annihilatorPlatform >= 3 },
+      { id: 'train_annihilator_3',    check: ({ nexus }) => trainedCount(nexus, 'annihilatorPlatform') >= 3 },
       { id: 'complete_attack_2',      check: ({ hasCompletedAttack }) => hasCompletedAttack },
     ],
     reward: { biomass: 50000, alloy: 50000, ore: 50000, populationCurrent: 150, troops: { annihilatorPlatform: 3, siegeMech: 25, plasmaTurret: 10 } },
@@ -287,6 +298,24 @@ export function normalizeTrainingQueue(queue: unknown): TrainingQueueEntry[] {
   return queue as unknown as TrainingQueueEntry[];
 }
 
+export function normalizeTroopsTrained(raw: unknown): Record<string, number> {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  const out: Record<string, number> = {};
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    const n = typeof v === 'number' ? v : Number(v);
+    if (Number.isFinite(n) && n > 0) out[k] = Math.floor(n);
+  }
+  return out;
+}
+
+export function mergeTroopsTrained(existing: unknown, delta: Record<string, number>): Prisma.InputJsonValue {
+  const merged = normalizeTroopsTrained(existing);
+  for (const [k, v] of Object.entries(delta)) {
+    if (v > 0) merged[k] = (merged[k] || 0) + v;
+  }
+  return merged as Prisma.InputJsonValue;
+}
+
 export async function applyCompletedQueues(nexus: Nexus): Promise<Nexus> {
   const now = new Date();
   const buildQueue = normalizeBuildQueue(nexus.buildQueue);
@@ -309,11 +338,13 @@ export async function applyCompletedQueues(nexus: Nexus): Promise<Nexus> {
 
   updates['buildQueue'] = queueToJson(buildQueue);
 
+  const trainedDelta: Record<string, number> = {};
   for (let i = 0; i < trainingQueue.length; ) {
     const entry = trainingQueue[i];
     if (new Date(entry.completesAt) <= now) {
       const key = entry.troopType as TroopKey;
       updates[key] = ((updates[key] as number | undefined) || (nexus as unknown as Record<string, number>)[key] || 0) + entry.amount;
+      trainedDelta[key] = (trainedDelta[key] || 0) + entry.amount;
       trainingQueue.splice(i, 1);
     } else {
       i++;
@@ -321,6 +352,10 @@ export async function applyCompletedQueues(nexus: Nexus): Promise<Nexus> {
   }
 
   updates['trainingQueue'] = queueToJson(trainingQueue);
+
+  if (Object.keys(trainedDelta).length > 0) {
+    updates['troopsTrained'] = mergeTroopsTrained((nexus as unknown as Record<string, unknown>)['troopsTrained'], trainedDelta);
+  }
 
   if (Object.keys(updates).length === 2 && 'buildQueue' in updates && 'trainingQueue' in updates) return nexus;
 
@@ -618,6 +653,7 @@ export function serializeNexus(v: NexusWithQuests, opts: { ownerData?: unknown }
     trainingQueue: (v.trainingQueue as unknown[]) ?? [],
     questRewardClaims: (v.questRewardClaims as string[] | null) ?? null,
     completedQuestIds: (v.completedQuestIds as string[] | null) ?? null,
+    troopsTrained: normalizeTroopsTrained((v as unknown as { troopsTrained?: unknown }).troopsTrained),
     lastResourceUpdate: v.lastResourceUpdate,
     points: v.points,
     controlLevel: v.controlLevel,

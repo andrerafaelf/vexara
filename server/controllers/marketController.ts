@@ -61,9 +61,17 @@ export async function createListing(req: AuthRequest, res: Response): Promise<vo
     if (existingCount >= MAX_LISTINGS_PER_NEXUS) {
       res.status(400).json({ error: `Maximum ${MAX_LISTINGS_PER_NEXUS} active listings per nexus` }); return;
     }
+    const offerKey = String(offerResource);
     const [listing] = await marketService.createListingAndDeductResource(
-      { galaxyId: req.galaxyId, sellerNexusId: parsedNexusId, offerResource: String(offerResource), offerAmount: parsedOffer, wantResource: String(wantResource), wantAmount: parsedWant },
-      parsedNexusId, String(offerResource), nexusRecord[String(offerResource)] - parsedOffer,
+      { galaxyId: req.galaxyId, sellerNexusId: parsedNexusId, offerResource: offerKey, offerAmount: parsedOffer, wantResource: String(wantResource), wantAmount: parsedWant },
+      parsedNexusId,
+      {
+        biomass: nexusRecord['biomass'],
+        alloy:   nexusRecord['alloy'],
+        ore:     nexusRecord['ore'],
+        [offerKey]: nexusRecord[offerKey] - parsedOffer,
+        lastResourceUpdate: nexus.lastResourceUpdate,
+      },
     );
     emitMarket();
     res.json({ success: true, listing });
@@ -109,12 +117,34 @@ export async function buyListing(req: AuthRequest, res: Response): Promise<void>
       res.status(400).json({ error: `Insufficient ${listing.wantResource} (need ${totalRequired} including ${commission} commission)` }); return;
     }
 
+    // Refresh both nexuses so writes carry the latest production tick and
+    // persist lastResourceUpdate; otherwise the deducted/added balances are
+    // recalculated on the next tick from a stale baseline.
+    const refreshedBuyer = await refreshResources(buyerNexus);
+    const refreshedSeller = await refreshResources(listing.sellerNexus);
+    const buyerFresh = refreshedBuyer as unknown as Record<string, number>;
+    const sellerFresh = refreshedSeller as unknown as Record<string, number>;
+    const buyerNexusData: Record<string, unknown> = {
+      biomass: buyerFresh['biomass'],
+      alloy:   buyerFresh['alloy'],
+      ore:     buyerFresh['ore'],
+      lastResourceUpdate: refreshedBuyer.lastResourceUpdate,
+    };
+    buyerNexusData[listing.wantResource]  = buyerFresh[listing.wantResource]  - totalRequired;
+    buyerNexusData[listing.offerResource] = buyerFresh[listing.offerResource] + listing.offerAmount;
+    const sellerNexusData: Record<string, unknown> = {
+      biomass: sellerFresh['biomass'],
+      alloy:   sellerFresh['alloy'],
+      ore:     sellerFresh['ore'],
+      lastResourceUpdate: refreshedSeller.lastResourceUpdate,
+    };
+    sellerNexusData[listing.wantResource] = sellerFresh[listing.wantResource] + listing.wantAmount;
+
     await marketService.buyListing(
       listingId, parsedBuyerNexusId,
-      { ...listing, sellerNexus: listing.sellerNexus as unknown as Record<string, number> },
-      buyerRecord,
+      listing,
+      buyerNexusData, sellerNexusData,
       sellerOwner?.username ?? 'Unknown', buyerOwner?.username ?? 'Unknown', req.galaxyId,
-      commission,
     );
     emitMarket();
     res.json({ success: true, commission, hasTreaty: !!treaty });
@@ -143,10 +173,21 @@ export async function cancelListing(req: AuthRequest, res: Response): Promise<vo
     if (listing.sellerNexus.ownerId !== req.userId || listing.galaxyId !== req.galaxyId) {
       res.status(403).json({ error: 'Not authorized' }); return;
     }
-    const sellerRecord = listing.sellerNexus as unknown as Record<string, number>;
+    // Refresh seller nexus so the refund lands on a fresh snapshot and we
+    // can persist lastResourceUpdate atomically — otherwise the next tick
+    // would replay production over the refunded balance.
+    const refreshedSeller = await refreshResources(listing.sellerNexus);
+    const sellerRecord = refreshedSeller as unknown as Record<string, number>;
+    const offerKey = listing.offerResource;
     await marketService.cancelListing(
-      listingId, listing.sellerNexusId, listing.offerResource,
-      sellerRecord[listing.offerResource] + listing.offerAmount,
+      listingId, listing.sellerNexusId,
+      {
+        biomass: sellerRecord['biomass'],
+        alloy:   sellerRecord['alloy'],
+        ore:     sellerRecord['ore'],
+        [offerKey]: sellerRecord[offerKey] + listing.offerAmount,
+        lastResourceUpdate: refreshedSeller.lastResourceUpdate,
+      },
     );
     emitMarket();
     res.json({ success: true });
@@ -176,9 +217,15 @@ export async function systemBuy(req: AuthRequest, res: Response): Promise<void> 
     if ((nexusRecord[String(payResource)] || 0) < cost) {
       res.status(400).json({ error: `Insufficient ${payResource}, need ${cost}` }); return;
     }
+    const payKey = String(payResource);
+    const receiveKey = String(receiveResource);
     await marketService.updateNexusResources(parsedNexusId, {
-      [String(payResource)]: nexusRecord[String(payResource)] - cost,
-      [String(receiveResource)]: nexusRecord[String(receiveResource)] + parsedReceive,
+      biomass: nexusRecord['biomass'],
+      alloy:   nexusRecord['alloy'],
+      ore:     nexusRecord['ore'],
+      [payKey]: nexusRecord[payKey] - cost,
+      [receiveKey]: nexusRecord[receiveKey] + parsedReceive,
+      lastResourceUpdate: nexus.lastResourceUpdate,
     });
     res.json({ success: true, paid: cost, received: parsedReceive });
   } catch (error) {

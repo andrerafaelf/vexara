@@ -15,10 +15,15 @@ const NPC_MAX_LEVELS: Record<LevelableBuilding, number> = {
 
 const MAP_SIZE = 50;
 const MAX_NEUTRALS = Math.floor(MAP_SIZE * MAP_SIZE * 0.65);
-const MIN_NEUTRALS = 32;
+// MIN floor stops a brand-new galaxy from feeling empty, but the
+// per-player multiplier dominates once a galaxy fills out. Previously this
+// was 4/player which produced ~128 neutrals at 32 players (plus 32 player
+// nexuses → 160 total in 24h, far too dense). 1.5/player keeps the map
+// readable: ~48 neutrals at 32 players, ~75 at 50.
+const MIN_NEUTRALS = 24;
 const NEUTRALS_PER_CAPTURED = 1;
-const NEUTRALS_PER_PLAYER = 4;
-const DAILY_NEXUS_GROWTH = 6;
+const NEUTRALS_PER_PLAYER = 1.5;
+const DAILY_NEXUS_GROWTH = 3;
 // Tuned so a fresh player's first 20 Assault Troopers can take a Neutral
 // Settlement (the most common pick, 40% weight). The opening loop is built
 // around "train 5 troopers, then scavenge", so the easiest neutrals must
@@ -126,7 +131,7 @@ async function ensureNeutralNexusPoolForGalaxy(galaxyId: number) {
     MAX_NEUTRAL_DIFFICULTY,
     BASE_NEUTRAL_DIFFICULTY + playerCount * USER_DIFFICULTY_STEP + capturedCount * CAPTURE_DIFFICULTY_STEP,
   );
-  const targetNeutralCount = Math.max(MIN_NEUTRALS, playerCount * NEUTRALS_PER_PLAYER + capturedCount * NEUTRALS_PER_CAPTURED);
+  const targetNeutralCount = Math.max(MIN_NEUTRALS, Math.floor(playerCount * NEUTRALS_PER_PLAYER + capturedCount * NEUTRALS_PER_CAPTURED));
   const missingCount = Math.max(0, targetNeutralCount - neutralCount);
 
   if (missingCount === 0) return { galaxyId, created: 0, neutralCount, targetNeutralCount };

@@ -1,5 +1,5 @@
 import type { Response } from 'express';
-import { applyCompletedQueues, applyQuestRewards, computeResourceUpdate, normalizeTrainingQueue, queueToJson, serializeNexus } from '../models/Nexus.js';
+import { applyCompletedQueues, applyQuestRewards, computeResourceUpdate, mergeTroopsTrained, normalizeTrainingQueue, queueToJson, serializeNexus } from '../models/Nexus.js';
 import * as troopService from '../services/troopService.js';
 import type { AuthRequest } from '../types/index.js';
 import { NEXUS_TYPE_BONUSES, getMaxStorage, getResourceProduction } from '../utils/economy.js';
@@ -256,6 +256,7 @@ export async function checkTrainingQueue(req: AuthRequest, res: Response): Promi
     const now = new Date();
     const trainingQueue = normalizeTrainingQueue(nexus.trainingQueue);
     const troopUpdates: Record<string, number> = {};
+    const trainedDelta: Record<string, number> = {};
     let completed = false;
     const nexusRecord = nexus as unknown as Record<string, number>;
     const advanceChain = (predicate: (e: { troopType: string }) => boolean) => {
@@ -273,6 +274,7 @@ export async function checkTrainingQueue(req: AuthRequest, res: Response): Promi
         if (elapsedMs < perUnitMs) break;
         const unitsCompleted = Math.min(entry.amount, Math.floor(elapsedMs / perUnitMs));
         troopUpdates[entry.troopType] = (troopUpdates[entry.troopType] || nexusRecord[entry.troopType] || 0) + unitsCompleted;
+        trainedDelta[entry.troopType] = (trainedDelta[entry.troopType] || 0) + unitsCompleted;
         completed = true;
         if (unitsCompleted >= entry.amount) {
           trainingQueue.splice(idx, 1);
@@ -285,7 +287,11 @@ export async function checkTrainingQueue(req: AuthRequest, res: Response): Promi
     advanceChain((e: { troopType: string }) => e.troopType !== 'overseer');
     advanceChain((e: { troopType: string }) => e.troopType === 'overseer');
     const resourceUpdate = computeResourceUpdate(nexus);
-    const updated = await troopService.updateNexus(nexus.id, { ...resourceUpdate, ...troopUpdates, trainingQueue: queueToJson(trainingQueue) });
+    const nexusUpdate: Record<string, unknown> = { ...resourceUpdate, ...troopUpdates, trainingQueue: queueToJson(trainingQueue) };
+    if (Object.keys(trainedDelta).length > 0) {
+      nexusUpdate['troopsTrained'] = mergeTroopsTrained((nexus as unknown as Record<string, unknown>)['troopsTrained'], trainedDelta);
+    }
+    const updated = await troopService.updateNexus(nexus.id, nexusUpdate);
     const rewardApplied = await applyQuestRewards(updated);
     try { emitResourceSnapshot(req.userId!, rewardApplied); }
     catch (e) { logError('nexus_resources_emit_failed', { message: (e as Error).message, file: 'troopController.ts', op: 'checkTrainingQueue' }); }

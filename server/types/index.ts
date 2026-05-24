@@ -65,6 +65,7 @@ export interface SerializedNexus {
   trainingQueue: unknown[];
   questRewardClaims: string[] | null;
   completedQuestIds: string[] | null;
+  troopsTrained: Record<string, number>;
   lastResourceUpdate: Date;
   points: number;
   controlLevel: number;

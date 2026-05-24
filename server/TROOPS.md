@@ -44,7 +44,7 @@ wait behind it (and vice versa).
 
 - Role: Heavy frontline infantry, counters Special units
 - Class: Heavy
-- Stats: Attack 30, Defense 45, Speed 18, Carry 15
+- Stats: Attack 30, Defense 45, Speed 18, Carry 60
 - Cost: Biomass 150, Alloy 150, Ore 350
 - Population: 1
 - Training Time: 1m 19s
@@ -54,7 +54,7 @@ wait behind it (and vice versa).
 
 - Role: Ranged interceptor, counters Light units
 - Class: Ranged
-- Stats: Attack 15, Defense 28, Speed 20, Carry 20
+- Stats: Attack 15, Defense 28, Speed 20, Carry 30
 - Cost: Biomass 150, Alloy 150, Ore 200
 - Population: 1
 - Training Time: 53s
@@ -64,7 +64,7 @@ wait behind it (and vice versa).
 
 - Role: Light assault breacher, counters Heavy units
 - Class: Light
-- Stats: Attack 55, Defense 15, Speed 16, Carry 10
+- Stats: Attack 55, Defense 15, Speed 16, Carry 50
 - Cost: Biomass 250, Alloy 150, Ore 300
 - Population: 1
 - Training Time: 1m 14s

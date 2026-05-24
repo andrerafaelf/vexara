@@ -51,12 +51,15 @@ export function countListingsByNexus(nexusId: number, galaxyId: number) {
 export function createListingAndDeductResource(
   listingData: Parameters<typeof prisma.marketListing.create>[0]['data'],
   nexusId: number,
-  resource: string,
-  newAmount: number,
+  nexusData: Record<string, unknown>,
 ) {
+  // Persist all three resources + lastResourceUpdate together. If we only
+  // wrote the offer column, a subsequent refreshResources call would replay
+  // production from the stale lastResourceUpdate and effectively refund the
+  // listed amount on the next tick.
   return prisma.$transaction([
     prisma.marketListing.create({ data: listingData }),
-    prisma.nexus.update({ where: { id: nexusId }, data: { [resource]: newAmount } }),
+    prisma.nexus.update({ where: { id: nexusId }, data: nexusData }),
   ]);
 }
 
@@ -67,25 +70,15 @@ export function getListingWithNexus(id: number) {
 export async function buyListing(
   listingId: number, buyerNexusId: number, listing: {
     wantResource: string; wantAmount: number; offerResource: string; offerAmount: number;
-    sellerNexusId: number; sellerNexus: Record<string, number>;
+    sellerNexusId: number;
   },
-  buyerNexus: Record<string, number>,
+  buyerNexusData: Record<string, unknown>,
+  sellerNexusData: Record<string, unknown>,
   sellerUsername: string, buyerUsername: string, galaxyId: number,
-  commission: number,
 ) {
-  const totalBuyerPays = listing.wantAmount + commission;
   return prisma.$transaction([
-    prisma.nexus.update({
-      where: { id: buyerNexusId },
-      data: {
-        [listing.wantResource]: buyerNexus[listing.wantResource] - totalBuyerPays,
-        [listing.offerResource]: buyerNexus[listing.offerResource] + listing.offerAmount,
-      },
-    }),
-    prisma.nexus.update({
-      where: { id: listing.sellerNexusId },
-      data: { [listing.wantResource]: listing.sellerNexus[listing.wantResource] + listing.wantAmount },
-    }),
+    prisma.nexus.update({ where: { id: buyerNexusId }, data: buyerNexusData }),
+    prisma.nexus.update({ where: { id: listing.sellerNexusId }, data: sellerNexusData }),
     prisma.marketListing.delete({ where: { id: listingId } }),
     prisma.marketTransaction.create({
       data: {
@@ -101,13 +94,13 @@ export function getTransactionHistory(galaxyId: number) {
   return prisma.marketTransaction.findMany({ where: { galaxyId }, orderBy: { completedAt: 'desc' }, take: 10 });
 }
 
-export async function cancelListing(listingId: number, sellerNexusId: number, resource: string, refundAmount: number) {
+export async function cancelListing(listingId: number, sellerNexusId: number, nexusData: Record<string, unknown>) {
   return prisma.$transaction([
-    prisma.nexus.update({ where: { id: sellerNexusId }, data: { [resource]: refundAmount } }),
+    prisma.nexus.update({ where: { id: sellerNexusId }, data: nexusData }),
     prisma.marketListing.delete({ where: { id: listingId } }),
   ]);
 }
 
-export function updateNexusResources(id: number, data: Record<string, number>) {
+export function updateNexusResources(id: number, data: Record<string, unknown>) {
   return prisma.nexus.update({ where: { id }, data });
 }
