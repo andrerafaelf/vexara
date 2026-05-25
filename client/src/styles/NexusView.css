@@ -3832,7 +3832,22 @@
 
 /* ── Info modal (generic) ─────────────────────────────────────── */
 .info-modal-overlay {
-  overflow-y: hidden;
+  /* Force the overlay to be a fresh containing block at the viewport.
+   * Rendered via React portal to <body>, so no ancestor transform can
+   * break position: fixed. Override the base .attack-modal-overlay rules
+   * that allow scrolling — the info modal is small, never needs scroll. */
+  position: fixed !important;
+  inset: 0 !important;
+  overflow: hidden !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.info-modal-overlay .info-modal {
+  /* Never let it grow past the viewport on tiny screens */
+  max-height: calc(100dvh - 24px);
+  max-height: calc(100vh - 24px);
+  overflow-y: auto;
 }
 
 .info-modal {

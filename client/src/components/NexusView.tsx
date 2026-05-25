@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   cancelBuildQueueItem,
   cancelTrainingQueueItem,
@@ -2348,7 +2349,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
         </div>
       )}
 
-      {infoModal && (
+      {infoModal && typeof document !== 'undefined' && createPortal(
         <div className="attack-modal-overlay info-modal-overlay" onClick={() => setInfoModal(null)}>
           <div className="attack-modal info-modal" onClick={(e) => e.stopPropagation()}>
             <div className="attack-modal-header">
@@ -2363,7 +2364,8 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {selectedAttack && (

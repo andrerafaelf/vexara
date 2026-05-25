@@ -15,6 +15,7 @@ import '../styles/ReferralsTab.css';
 import Username from './Username';
 
 const REFERRAL_THRESHOLD = 1000;
+const REFERRAL_EARLY_THRESHOLD = 100;
 const MILESTONE_THRESHOLD = 500;
 
 const TROOP_LABELS: Record<string, string> = {
@@ -362,29 +363,48 @@ export default function ReferralsTab() {
       {/* Your referral code, account-bound, unique across galaxies */}
       {myReferralCode && (
         <section className="referrals-section">
-          <h3 className="referrals-section-title">Your Referral Code</h3>
+          <h3 className="referrals-section-title">Invite a Friend</h3>
           <p className="referrals-hint">
-            Share this code with friends. It is tied to your account across every galaxy.
+            Share your invite link. Your recruit gets a resource head-start on day one. You earn tokens you can cash in for instant building levels or free troops — at two points in their journey.
           </p>
-          <div className="referrals-referrer-card">
-            <span className="referrals-referrer-name" style={{ fontFamily: 'monospace', letterSpacing: '0.1em' }}>
-              {myReferralCode}
-            </span>
-            <button
-              type="button"
-              className="referrals-btn primary"
-              onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(myReferralCode);
-                  setCodeCopied(true);
-                  setTimeout(() => setCodeCopied(false), 1500);
-                } catch {
-                  // clipboard unavailable
-                }
-              }}
-            >
-              {codeCopied ? 'Copied!' : 'Copy'}
-            </button>
+          <div className="referrals-invite-block">
+            <div className="referrals-invite-row">
+              <span className="referrals-invite-label">Your code</span>
+              <span className="referrals-invite-code">{myReferralCode}</span>
+            </div>
+            <div className="referrals-invite-actions">
+              <button
+                type="button"
+                className="referrals-btn primary"
+                onClick={async () => {
+                  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://vexara.world';
+                  const link = `${origin}/register?ref=${myReferralCode}`;
+                  try {
+                    await navigator.clipboard.writeText(link);
+                    setCodeCopied(true);
+                    setTimeout(() => setCodeCopied(false), 2000);
+                  } catch {
+                    // clipboard unavailable
+                  }
+                }}
+              >
+                {codeCopied ? 'Link copied!' : 'Copy invite link'}
+              </button>
+            </div>
+          </div>
+          <div className="referrals-reward-explainer">
+            <div className="referrals-reward-explainer-item">
+              <span className="referrals-reward-explainer-you">You — 100 pts</span>
+              <span>1 token (Early Scout) — they survived their first day, you get rewarded</span>
+            </div>
+            <div className="referrals-reward-explainer-item">
+              <span className="referrals-reward-explainer-you">You — 1,000 pts</span>
+              <span>Commander's Cache — 2 tokens for instant building upgrades or troops</span>
+            </div>
+            <div className="referrals-reward-explainer-item">
+              <span className="referrals-reward-explainer-them">They get</span>
+              <span>+5,000 of each resource on their starter nexus, plus a milestone token at 500 pts</span>
+            </div>
           </div>
         </section>
       )}
@@ -458,28 +478,36 @@ export default function ReferralsTab() {
           </p>
         ) : (
           <ul className="referrals-list">
-            {refereeRows.map((r) => (
-              <li key={r.refereeId} className="referrals-list-item">
-                <div className="referrals-list-info">
-                  <span className="referrals-list-name">{r.refereeUsername}</span>
-                  <div className="referrals-list-meta">
-                    <span>{r.refereePoints} pts</span>
-                    {r.thresholdMet && (
-                      <span className="referrals-badge referrals-badge--ready">Token earned</span>
-                    )}
+            {refereeRows.map((r) => {
+              const earlyDone = r.refereePoints >= REFERRAL_EARLY_THRESHOLD;
+              const mainDone = r.thresholdMet;
+              return (
+                <li key={r.refereeId} className="referrals-list-item">
+                  <div className="referrals-list-info">
+                    <span className="referrals-list-name">{r.refereeUsername}</span>
+                    <div className="referrals-list-meta">
+                      <span>{r.refereePoints} pts</span>
+                      {mainDone
+                        ? <span className="referrals-badge referrals-badge--done">All tokens earned</span>
+                        : earlyDone
+                        ? <span className="referrals-badge referrals-badge--ready">Early Scout earned</span>
+                        : null}
+                    </div>
                   </div>
-                </div>
-                <div className="referrals-progress-bar-wrap">
-                  <div
-                    className="referrals-progress-bar"
-                    style={{ width: `${Math.min(100, (r.refereePoints / REFERRAL_THRESHOLD) * 100)}%` }}
-                  />
-                </div>
-                <span className="referrals-progress-label">
-                  {Math.min(r.refereePoints, REFERRAL_THRESHOLD)} / {REFERRAL_THRESHOLD} pts
-                </span>
-              </li>
-            ))}
+                  <div className="referrals-progress-bar-wrap referrals-progress-bar-wrap--tiered">
+                    <div
+                      className="referrals-progress-bar"
+                      style={{ width: `${Math.min(100, (r.refereePoints / REFERRAL_THRESHOLD) * 100)}%` }}
+                    />
+                    <div className="referrals-progress-milestone" style={{ left: `${(REFERRAL_EARLY_THRESHOLD / REFERRAL_THRESHOLD) * 100}%` }} />
+                  </div>
+                  <span className="referrals-progress-label">
+                    {Math.min(r.refereePoints, REFERRAL_THRESHOLD)} / {REFERRAL_THRESHOLD} pts
+                    {!earlyDone && ` · ${REFERRAL_EARLY_THRESHOLD} for Early Scout`}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

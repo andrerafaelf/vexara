@@ -46,14 +46,17 @@ export function leaveGalaxy(userId: number, galaxyId: number) {
 
 export function selectGalaxy(userId: number, username: string, galaxyId: number) {
   return prisma.$transaction(async (tx) => {
-    const existing = await tx.galaxyPlayer.findUnique({
-      where: { userId_galaxyId: { userId, galaxyId } },
-      select: { id: true },
-    });
+    const [existing, user] = await Promise.all([
+      tx.galaxyPlayer.findUnique({
+        where: { userId_galaxyId: { userId, galaxyId } },
+        select: { id: true },
+      }),
+      tx.user.findUnique({ where: { id: userId }, select: { referredById: true } }),
+    ]);
     if (!existing) {
       await tx.galaxyPlayer.create({ data: { userId, galaxyId } });
       const { createStarterNexus } = await import('../utils/starterNexus.js');
-      await createStarterNexus(tx, { userId, username, galaxyId });
+      await createStarterNexus(tx, { userId, username, galaxyId, referredById: user?.referredById });
     }
     await tx.user.update({ where: { id: userId }, data: { activeGalaxyId: galaxyId } });
     return { joined: !existing };

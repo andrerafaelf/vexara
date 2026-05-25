@@ -2013,6 +2013,32 @@ label {
   border-radius: 0;
 }
 
+.eliminated-perks {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+  width: 100%;
+}
+
+.eliminated-perks li {
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border-left: 2px solid var(--accent);
+}
+
+.eliminated-perks li::before {
+  content: '+ ';
+  color: var(--accent);
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
 /* ── Mobile drawer ─────────────────────────────────────────────── */
 .menu-toggle {
   border-radius: 0;

@@ -101,21 +101,39 @@ export async function getNexus(req: AuthRequest, res: Response): Promise<void> {
   }
 }
 
+const ELIMINATED_RESPAWN_PROTECTION_MS = 24 * 60 * 60 * 1000;
+
 export async function createNexus(req: AuthRequest, res: Response): Promise<void> {
   try {
-    const user = await nexusService.getNexusById(req.userId);
     const existingCount = await nexusService.countNexusesByOwner(req.userId, req.galaxyId);
     if (existingCount >= MAX_NEXUSES_PER_USER) {
       res.status(400).json({ error: `Maximum of ${MAX_NEXUSES_PER_USER} nexuses allowed per player` });
       return;
     }
 
-    const protectionEndsAt = new Date(Date.now() + NEWBIE_PROTECTION_DURATION_MS);
     const bodyName = typeof req.body?.name === 'string' ? req.body.name : null;
 
-    // Fetch username for default nexus name
     const { default: prisma } = await import('../lib/prisma.js');
-    const userRecord = await prisma.user.findUnique({ where: { id: req.userId } });
+    const [userRecord, galaxyPlayer] = await Promise.all([
+      prisma.user.findUnique({ where: { id: req.userId } }),
+      prisma.galaxyPlayer.findUnique({
+        where: { userId_galaxyId: { userId: req.userId, galaxyId: req.galaxyId } },
+        select: { id: true },
+      }),
+    ]);
+
+    // A player with an existing GalaxyPlayer row but zero nexuses is being eliminated-respawned.
+    // Give them level-10 resource buildings, 100k of each resource, and 24h attack protection.
+    const isEliminatedRespawn = existingCount === 0 && galaxyPlayer !== null;
+
+    const RESPAWN_LEVEL = 10;
+    const RESPAWN_RESOURCES = 100_000;
+    const RESPAWN_PROTECTION_MS = ELIMINATED_RESPAWN_PROTECTION_MS;
+
+    const protectionEndsAt = new Date(
+      Date.now() + (isEliminatedRespawn ? RESPAWN_PROTECTION_MS : NEWBIE_PROTECTION_DURATION_MS),
+    );
+
     const nexus = await nexusService.createNexus({
       name: bodyName || `${userRecord?.username ?? 'Player'}'s Nexus`,
       ownerId: req.userId,
@@ -124,17 +142,20 @@ export async function createNexus(req: AuthRequest, res: Response): Promise<void
       y: Math.floor(Math.random() * 35),
       commandCore: 0,
       recruitmentCore: 0,
-      lifeSupport: 1,
-      storageVault: 1,
-      biomassFarm: 1,
-      alloyForge: 1,
-      oreExtractor: 1,
+      lifeSupport: isEliminatedRespawn ? RESPAWN_LEVEL : 1,
+      storageVault: isEliminatedRespawn ? RESPAWN_LEVEL : 1,
+      biomassFarm: isEliminatedRespawn ? RESPAWN_LEVEL : 1,
+      alloyForge: isEliminatedRespawn ? RESPAWN_LEVEL : 1,
+      oreExtractor: isEliminatedRespawn ? RESPAWN_LEVEL : 1,
       shieldGrid: 0,
-      populationMax: getPopulationMax(1),
+      biomass: isEliminatedRespawn ? RESPAWN_RESOURCES : 1500,
+      alloy: isEliminatedRespawn ? RESPAWN_RESOURCES : 1500,
+      ore: isEliminatedRespawn ? RESPAWN_RESOURCES : 1500,
+      populationMax: getPopulationMax(isEliminatedRespawn ? RESPAWN_LEVEL : 1),
       newbieProtectionEndsAt: protectionEndsAt,
     });
 
-    res.json(serializeNexus(nexus));
+    res.json({ ...serializeNexus(nexus), eliminatedRespawn: isEliminatedRespawn });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'nexusController.ts' });
     res.status(500).json({ error: 'Internal server error' });

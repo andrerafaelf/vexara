@@ -4,6 +4,7 @@ import { NOTIF, sendPushToUser } from '../utils/push.js';
 import { notifyBadgeUpdate } from './warRoomSocket.js';
 
 export const REFERRAL_THRESHOLD = 1000;
+export const REFERRAL_EARLY_THRESHOLD = 100;
 export const MILESTONE_THRESHOLD = 500;
 
 // Unambiguous alphabet: no 0/O/1/I/L. 8 chars → ~1.1e12 combinations.
@@ -55,7 +56,7 @@ export function markTokenRedeemed(tokenId: number, rewardType: string, rewardMet
 }
 
 export async function checkAndGrantToken(refereeId: number, currentPoints: number, galaxyId: number): Promise<void> {
-  if (currentPoints < REFERRAL_THRESHOLD) return;
+  if (currentPoints < REFERRAL_EARLY_THRESHOLD) return;
 
   const referee = await prisma.user.findUnique({
     where: { id: refereeId },
@@ -63,14 +64,39 @@ export async function checkAndGrantToken(refereeId: number, currentPoints: numbe
   });
   if (!referee?.referredById) return;
 
-  // Idempotent per (refereeId, galaxyId), tokens stack across galaxies
+  const refereeUser = await prisma.user.findUnique({ where: { id: refereeId }, select: { username: true } });
+  const refName = refereeUser?.username ?? 'Your referral';
+
+  // Early reward: 1 token when the referee hits REFERRAL_EARLY_THRESHOLD points.
+  // Keyed on a negative galaxyId sentinel so it doesn't collide with the main token's unique index.
+  const earlyKey = { refereeId, galaxyId: -galaxyId };
+  const earlyExists = await prisma.referralToken.findUnique({
+    where: { refereeId_galaxyId: earlyKey },
+    select: { id: true },
+  });
+  if (!earlyExists) {
+    await prisma.referralToken.create({
+      data: { referrerId: referee.referredById, refereeId, galaxyId: -galaxyId },
+    });
+    void sendPushToUser(referee.referredById, NOTIF.TOKEN_GRANTED, {
+      title: 'Referral reward — Early Scout',
+      body: `${refName} is active — you earned 1 token. Keep an eye out: 2 more coming when they hit ${REFERRAL_THRESHOLD} pts.`,
+      tag: `token-referral-early-${refereeId}-${galaxyId}`,
+      data: { url: '/profile' },
+    });
+    notifyBadgeUpdate(referee.referredById);
+  }
+
+  if (currentPoints < REFERRAL_THRESHOLD) return;
+
+  // Main reward: 2 tokens when the referee hits REFERRAL_THRESHOLD points.
+  // Idempotent per (refereeId, galaxyId), tokens stack across galaxies.
   const existing = await prisma.referralToken.findUnique({
     where: { refereeId_galaxyId: { refereeId, galaxyId } },
     select: { id: true },
   });
   if (existing) return;
 
-  // Referrer earns 2 tokens per galaxy the referee reaches the threshold in
   await prisma.referralToken.createMany({
     data: [
       { referrerId: referee.referredById, refereeId, galaxyId },
@@ -79,10 +105,9 @@ export async function checkAndGrantToken(refereeId: number, currentPoints: numbe
     skipDuplicates: true,
   });
 
-  const refereeUser = await prisma.user.findUnique({ where: { id: refereeId }, select: { username: true } });
   void sendPushToUser(referee.referredById, NOTIF.TOKEN_GRANTED, {
-    title: 'You earned 2 referral tokens',
-    body: `${refereeUser?.username ?? 'Your referral'} hit ${REFERRAL_THRESHOLD} points — you can spend the tokens from your Referrals tab.`,
+    title: "Commander's Cache — 2 tokens earned",
+    body: `${refName} hit ${REFERRAL_THRESHOLD} points. Spend your tokens on instant building levels or free troops.`,
     tag: `token-referral-${refereeId}-${galaxyId}`,
     data: { url: '/profile' },
   });

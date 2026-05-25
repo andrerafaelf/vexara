@@ -30,11 +30,16 @@ export async function findOpenStarterCoordinates(
 
 export const NEWBIE_PROTECTION_DURATION_MS = 3 * 24 * 60 * 60 * 1000;
 
+// Bonus resources credited to a new player's starter nexus when they joined via a referral link.
+// Enough to feel meaningful on day one without being game-breaking.
+export const REFERRAL_SIGNUP_BONUS = 5_000;
+
 export async function createStarterNexus(
   tx: TxClient,
-  { userId, username, galaxyId }: { userId: number; username: string; galaxyId: number },
+  { userId, username, galaxyId, referredById }: { userId: number; username: string; galaxyId: number; referredById?: number | null },
 ) {
   const coords = (await findOpenStarterCoordinates(tx, galaxyId)) ?? { x: 0, y: 0 };
+  const bonus = referredById ? REFERRAL_SIGNUP_BONUS : 0;
   return tx.nexus.create({
     data: {
       name: `${username}'s Nexus`,
@@ -43,6 +48,9 @@ export async function createStarterNexus(
       x: coords.x,
       y: coords.y,
       ...STARTER_NEXUS_DEFAULTS,
+      biomass: 1500 + bonus,
+      alloy: 1500 + bonus,
+      ore: 1500 + bonus,
       populationMax: getPopulationMax(STARTER_NEXUS_DEFAULTS.lifeSupport),
       newbieProtectionEndsAt: new Date(Date.now() + NEWBIE_PROTECTION_DURATION_MS),
     },

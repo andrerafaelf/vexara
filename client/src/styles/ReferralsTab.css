@@ -339,6 +339,21 @@
   overflow: hidden;
 }
 
+.referrals-progress-bar-wrap--tiered {
+  overflow: visible;
+  position: relative;
+}
+
+.referrals-progress-milestone {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 10px;
+  background: var(--accent);
+  opacity: 0.5;
+  transform: translateX(-50%);
+}
+
 .referrals-progress-bar {
   height: 100%;
   background: var(--accent);
@@ -352,6 +367,84 @@
   color: var(--text-muted);
   text-align: right;
   font-family: var(--font-mono);
+}
+
+/* Invite block */
+.referrals-invite-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: var(--color-navy-800, #0d1633);
+  border: 1px solid var(--border-default, #1e2d5a);
+}
+
+.referrals-invite-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.referrals-invite-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.referrals-invite-code {
+  font-family: var(--font-mono);
+  letter-spacing: 0.15em;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.referrals-invite-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Reward explainer */
+.referrals-reward-explainer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.referrals-reward-explainer-item {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.referrals-reward-explainer-you {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  padding: 2px 6px;
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.referrals-reward-explainer-them {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  padding: 2px 6px;
+  background: color-mix(in srgb, var(--color-cyan-400, #22d3ee) 12%, transparent);
+  color: var(--color-cyan-400, #22d3ee);
+  flex-shrink: 0;
 }
 
 /* ╔══════════════════════════════════════════════════════════════════╗
