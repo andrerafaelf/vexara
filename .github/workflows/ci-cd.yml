@@ -300,6 +300,7 @@ jobs:
             PGADMIN_ALLOW_IPS=${{ vars.PGADMIN_ALLOW_IPS }}
             RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
             KOFI_VERIFICATION_TOKEN=${{ secrets.KOFI_VERIFICATION_TOKEN }}
+            ALPHA_ACTIVE=${{ vars.ALPHA_ACTIVE }}
             ENVEOF
 
             # Log in to GHCR on the VPS
