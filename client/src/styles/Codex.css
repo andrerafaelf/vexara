@@ -1040,3 +1040,38 @@
 .cx-scaling-table tr:last-child td {
   border-bottom: 0;
 }
+
+/* ======================================================== ESPIONAGE ===== */
+
+.cx-espionage {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cx-callout-list {
+  list-style: none;
+  margin: 6px 0 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cx-callout-list li {
+  position: relative;
+  padding-left: 14px;
+  color: var(--text-default);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.cx-callout-list li::before {
+  content: '·';
+  position: absolute;
+  left: 2px;
+  top: -2px;
+  color: var(--accent);
+  font-size: 18px;
+  line-height: 1;
+}

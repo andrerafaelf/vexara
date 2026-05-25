@@ -143,6 +143,24 @@ export async function getNexusIntelForUser(
     : null;
   const friendly = relation !== null;
 
+  // An embedded operative gives continuous live intel, so it overrides any
+  // older scout report. Check for an active spy asset first.
+  const spyAsset = await prisma.spyAsset.findFirst({
+    where: { ownerUserId: userId, targetNexusId: nexusId, status: 'active' },
+    orderBy: { createdAt: 'desc' },
+  });
+  if (spyAsset) {
+    return {
+      ...publicData,
+      ...buildDetailedScoutIntel(nexus),
+      intelLevel: 'scouted',
+      scoutedAt: new Date().toISOString(),
+      isFriendly: friendly,
+      relation,
+      newbieProtectionEndsAt,
+    };
+  }
+
   const scoutReport = await prisma.attack.findFirst({
     where: { attackerUserId: userId, defenderNexusId: nexusId, type: 'scout', status: 'completed' },
     orderBy: { arrivesAt: 'desc' },

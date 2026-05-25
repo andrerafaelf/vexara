@@ -818,13 +818,14 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
 
       // Check max per nexus
       if (requirements.maxPerNexus) {
-        if ((nexus.troops as any)[troopType] >= requirements.maxPerNexus) {
+        const committed = getCommittedTroopCount(troopType);
+        if (committed >= requirements.maxPerNexus) {
           showToast(`Maximum ${requirements.maxPerNexus} ${TROOP_NAMES[troopType]} per nexus`, 'error');
           submittingRef.current.delete(key);
           return false;
         }
-        if (amount > requirements.maxPerNexus - (nexus.troops as any)[troopType]) {
-          showToast(`Can only train ${requirements.maxPerNexus - (nexus.troops as any)[troopType]} more`, 'error');
+        if (amount > requirements.maxPerNexus - committed) {
+          showToast(`Can only train ${requirements.maxPerNexus - committed} more`, 'error');
           submittingRef.current.delete(key);
           return false;
         }
@@ -932,6 +933,26 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     return undefined;
   };
 
+  // Total troops of this type that count against the per-nexus cap:
+  // at home + queued for training + away in outgoing strikes (traveling/returning)
+  // + away as outbound troop transfers (any status). Mirrors the server check.
+  const getCommittedTroopCount = (troopType: string): number => {
+    const atHome = (nexus.troops as any)[troopType] || 0;
+    const queued = (nexus.trainingQueue || []).reduce(
+      (sum: number, e: any) => sum + (e.troopType === troopType ? (Number(e.amount) || 0) : 0),
+      0,
+    );
+    const inFlight = (outgoingAttacks || []).reduce(
+      (sum: number, a: any) => sum + ((a.troops?.[troopType] as number) || 0),
+      0,
+    );
+    const outboundTransfers = (troopTransfers || []).reduce(
+      (sum: number, t: any) => sum + (String(t.ownerNexusId) === String(nexus._id) ? ((t.troops?.[troopType] as number) || 0) : 0),
+      0,
+    );
+    return atHome + queued + inFlight + outboundTransfers;
+  };
+
   const checkTroopRequirements = (troopType: string) => {
     const requirements = TROOP_REQUIREMENTS[troopType];
     if (!requirements) return { canTrain: true, missingRequirements: [] };
@@ -952,8 +973,11 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     }
 
     // Check max per nexus
-    if (requirements.maxPerNexus && (nexus.troops as any)[troopType] >= requirements.maxPerNexus) {
-      missing.push(`Max ${requirements.maxPerNexus} per nexus (already have ${(nexus.troops as any)[troopType]})`);
+    if (requirements.maxPerNexus) {
+      const committed = getCommittedTroopCount(troopType);
+      if (committed >= requirements.maxPerNexus) {
+        missing.push(`Max ${requirements.maxPerNexus} per nexus (already have ${committed})`);
+      }
     }
 
     return { canTrain: missing.length === 0, missingRequirements: missing };
@@ -992,7 +1016,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
 
     const requirements = TROOP_REQUIREMENTS[troopType];
     if (requirements?.maxPerNexus) {
-      const remainingAllowed = Math.max(0, requirements.maxPerNexus - ((nexus.troops as any)[troopType] || 0));
+      const remainingAllowed = Math.max(0, requirements.maxPerNexus - getCommittedTroopCount(troopType));
       maxTrainable = Math.min(maxTrainable, remainingAllowed);
     }
 

@@ -3,12 +3,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { TROOPS_DOC, BUILDINGS_DOC, BUILDING_SCALING_DOC, CLASS_COUNTERS, CLASS_COUNTERED_BY, type TroopClass } from '@/data/gameDocs';
+import { TROOPS_DOC, BUILDINGS_DOC, BUILDING_SCALING_DOC, CLASS_COUNTERS, CLASS_COUNTERED_BY, ESPIONAGE_DOC, type TroopClass } from '@/data/gameDocs';
 import { TROOP_ICONS, BUILDING_ICONS } from '@/data/gameIcons';
 import SiteFooter from '@/components/SiteFooter';
 import '@/styles/Codex.css';
 
-type Tab = 'buildings' | 'troops' | 'scaling';
+type Tab = 'buildings' | 'troops' | 'espionage' | 'scaling';
 
 export default function CodexPage() {
   const [tab, setTab] = useState<Tab>('buildings');
@@ -19,6 +19,8 @@ export default function CodexPage() {
     const entries = [
       ...BUILDINGS_DOC.map((b) => `building-${b.key}`),
       ...TROOPS_DOC.map((t) => `troop-${t.key}`),
+      ...ESPIONAGE_DOC.missions.map((m) => `espionage-${m.key}`),
+      'espionage-defense',
     ];
     const observers: IntersectionObserver[] = [];
     const seen = new Map<string, number>();
@@ -51,6 +53,7 @@ export default function CodexPage() {
     if (!hash) return;
     if (hash.startsWith('troop-')) setTab('troops');
     else if (hash.startsWith('building-')) setTab('buildings');
+    else if (hash.startsWith('espionage')) setTab('espionage');
     // small delay so the rendered tab content lands before we scroll
     setTimeout(() => {
       const el = document.getElementById(hash);
@@ -97,6 +100,17 @@ export default function CodexPage() {
               {TROOPS_DOC.map((t, i) => (
                 <TroopEntry key={t.key} doc={t} index={i + 1} />
               ))}
+            </section>
+          )}
+
+          {tab === 'espionage' && (
+            <section className="cx-stream" aria-label="Espionage">
+              <CodexStreamHead
+                eyebrow="DOSSIER · INTEL"
+                title="Espionage"
+                lede="Two missions, one operative type. Embed listens. Sabotage breaks things."
+              />
+              <EspionagePanel />
             </section>
           )}
 
@@ -249,6 +263,35 @@ function CodexRail({
         </CodexRailGroup>
 
         <CodexRailGroup
+          title="// Espionage"
+          isOpen={tab === 'espionage'}
+          onClick={() => setTab('espionage')}
+        >
+          {ESPIONAGE_DOC.missions.map((m) => {
+            const id = `espionage-${m.key}`;
+            return (
+              <a
+                key={id}
+                href={`#${id}`}
+                className={`cx-rail-link ${activeAnchor === id ? 'is-active' : ''}`}
+                onClick={() => setTab('espionage')}
+              >
+                <span className="cx-rail-link-icon cx-rail-link-icon-text">{m.key === 'embed' ? '◉' : '✖'}</span>
+                <span className="cx-rail-link-name">{m.name}</span>
+              </a>
+            );
+          })}
+          <a
+            href="#espionage-defense"
+            className={`cx-rail-link ${activeAnchor === 'espionage-defense' ? 'is-active' : ''}`}
+            onClick={() => setTab('espionage')}
+          >
+            <span className="cx-rail-link-icon cx-rail-link-icon-text">⛨</span>
+            <span className="cx-rail-link-name">Counter-intel</span>
+          </a>
+        </CodexRailGroup>
+
+        <CodexRailGroup
           title="// Appendix"
           isOpen={tab === 'scaling'}
           onClick={() => setTab('scaling')}
@@ -294,7 +337,7 @@ function CodexRailGroup({
 function CodexTabs({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
   return (
     <div className="cx-tabs" role="tablist" aria-label="Section selection">
-      {(['buildings', 'troops', 'scaling'] as Tab[]).map((t) => (
+      {(['buildings', 'troops', 'espionage', 'scaling'] as Tab[]).map((t) => (
         <button
           key={t}
           role="tab"
@@ -304,6 +347,7 @@ function CodexTabs({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
         >
           {t === 'buildings' && 'Buildings'}
           {t === 'troops' && 'Troops'}
+          {t === 'espionage' && 'Espionage'}
           {t === 'scaling' && 'Scaling'}
         </button>
       ))}
@@ -623,6 +667,187 @@ function StatBar({
       </span>
       <span className="cx-statbar-value">{value}</span>
     </li>
+  );
+}
+
+/* ────────────────────────────────────────────────────── ESPIONAGE ===== */
+
+function EspionagePanel() {
+  return (
+    <div className="cx-espionage">
+      <p className="cx-entry-desc">{ESPIONAGE_DOC.overview}</p>
+
+      {ESPIONAGE_DOC.missions.map((m, i) => (
+        <EspionageMissionCard key={m.key} doc={m} index={i + 1} />
+      ))}
+
+      <article id="espionage-defense" className="cx-entry">
+        <div className="cx-entry-head">
+          <div className="cx-entry-titleblock">
+            <span className="cx-entry-idx">№ 03 / ESP</span>
+            <h3 className="cx-entry-title">Counter-intelligence</h3>
+            <p className="cx-entry-role">What you can do when the operatives are pointed at YOU.</p>
+          </div>
+        </div>
+
+        <aside className="cx-callout">
+          <span className="cx-callout-tag">DEFENSE</span>
+          <ul>
+            {ESPIONAGE_DOC.defense.map((line, i) => (
+              <li key={i}>{line}</li>
+            ))}
+          </ul>
+        </aside>
+
+        <div className="cx-entry-grid">
+          <div className="cx-block">
+            <span className="cx-block-label">{'// Intel an embed gives away'}</span>
+            <ul className="cx-callout-list">
+              {ESPIONAGE_DOC.intelScope.map((line, i) => (
+                <li key={i}>{line}</li>
+              ))}
+            </ul>
+          </div>
+          <div className="cx-block">
+            <span className="cx-block-label">{'// Asset lifecycle (embed)'}</span>
+            <ul className="cx-callout-list">
+              {ESPIONAGE_DOC.embedAsset.map((line, i) => (
+                <li key={i}>{line}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <span className="cx-entry-divider" aria-hidden="true" />
+      </article>
+
+      <article className="cx-entry">
+        <div className="cx-entry-head">
+          <div className="cx-entry-titleblock">
+            <span className="cx-entry-idx">№ 04 / ESP</span>
+            <h3 className="cx-entry-title">Travel &amp; mission lifecycle</h3>
+            <p className="cx-entry-role">How long missions take, and how state moves through the system.</p>
+          </div>
+        </div>
+
+        <div className="cx-entry-grid">
+          <div className="cx-block">
+            <span className="cx-block-label">{'// Travel'}</span>
+            <ul className="cx-callout-list">
+              {ESPIONAGE_DOC.travel.map((line, i) => (
+                <li key={i}>{line}</li>
+              ))}
+            </ul>
+          </div>
+          <div className="cx-block">
+            <span className="cx-block-label">{'// Lifecycle'}</span>
+            <ul className="cx-callout-list">
+              {ESPIONAGE_DOC.lifecycle.map((line, i) => (
+                <li key={i}>{line}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <aside className="cx-callout">
+          <span className="cx-callout-tag">FIELD TIPS</span>
+          <ul>
+            {ESPIONAGE_DOC.tips.map((line, i) => (
+              <li key={i}>{line}</li>
+            ))}
+          </ul>
+        </aside>
+
+        <span className="cx-entry-divider" aria-hidden="true" />
+      </article>
+    </div>
+  );
+}
+
+function EspionageMissionCard({ doc, index }: { doc: typeof ESPIONAGE_DOC.missions[number]; index: number }) {
+  return (
+    <article id={`espionage-${doc.key}`} className="cx-entry">
+      <div className="cx-entry-head">
+        <div className="cx-entry-icon">
+          <span className="cx-rail-link-icon-text" style={{ fontSize: 48, lineHeight: '72px' }}>
+            {doc.key === 'embed' ? '◉' : '✖'}
+          </span>
+        </div>
+        <div className="cx-entry-titleblock">
+          <span className="cx-entry-idx">№ {index.toString().padStart(2, '0')} / ESP</span>
+          <h3 className="cx-entry-title">{doc.name}</h3>
+          <p className="cx-entry-role">{doc.oneLiner}</p>
+        </div>
+        <div className="cx-entry-meta">
+          <div className="cx-meta-cell">
+            <span className="cx-meta-label">Operatives</span>
+            <span className="cx-meta-value cx-meta-value-text">
+              {doc.cost.perOperative ? 'Per op' : 'Flat (1)'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <p className="cx-entry-desc">{doc.intent}</p>
+
+      <div className="cx-entry-grid">
+        <div className="cx-block">
+          <span className="cx-block-label">
+            {doc.cost.perOperative ? '// Cost · per operative' : '// Cost · flat'}
+          </span>
+          <ul className="cx-resource-list">
+            <li>
+              <span className="cx-res-name">BIO</span>
+              <span className="cx-res-value">{doc.cost.biomass}</span>
+            </li>
+            <li>
+              <span className="cx-res-name">{doc.cost.secondary.name.slice(0, 3).toUpperCase()}</span>
+              <span className="cx-res-value">{doc.cost.secondary.amount}</span>
+            </li>
+            <li>
+              <span className="cx-res-name">OPS</span>
+              <span className="cx-res-value">≥ 1</span>
+            </li>
+          </ul>
+        </div>
+
+        <div className="cx-block">
+          <span className="cx-block-label">{'// Operative rule'}</span>
+          <p className="cx-entry-desc" style={{ marginTop: 4 }}>{doc.operatives}</p>
+        </div>
+      </div>
+
+      <div className="cx-entry-grid">
+        <div className="cx-block">
+          <span className="cx-block-label">{'// Resolution'}</span>
+          <ul className="cx-callout-list">
+            {doc.resolution.map((line, i) => (
+              <li key={i}>{line}</li>
+            ))}
+          </ul>
+        </div>
+        <div className="cx-block">
+          <span className="cx-block-label">{'// On success'}</span>
+          <ul className="cx-callout-list">
+            {doc.successEffect.map((line, i) => (
+              <li key={i}>{line}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      <aside className="cx-callout">
+        <span className="cx-callout-tag">ON FAILURE</span>
+        <ul>
+          {doc.failureEffect.map((line, i) => (
+            <li key={i}>{line}</li>
+          ))}
+          <li><strong>Operative losses:</strong> {doc.losses}</li>
+        </ul>
+      </aside>
+
+      <span className="cx-entry-divider" aria-hidden="true" />
+    </article>
   );
 }
 
