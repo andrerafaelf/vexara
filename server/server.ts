@@ -172,6 +172,21 @@ async function runWithPgAdvisoryLock(lockId: number, jobName: string, jobHandler
   }
 }
 
+async function backfillResourceBuildingFloor() {
+  // Fix legacy nexuses that were created before the level-7 floor was enforced.
+  // Any nexus with biomassFarm, alloyForge, or oreExtractor at 0 gets bumped to 7.
+  const RESOURCE_BUILDINGS = ['biomassFarm', 'alloyForge', 'oreExtractor'] as const;
+  const updated = await prisma.nexus.updateMany({
+    where: {
+      OR: RESOURCE_BUILDINGS.map((b) => ({ [b]: 0 })),
+    },
+    data: Object.fromEntries(
+      RESOURCE_BUILDINGS.map((b) => [b, 7])
+    ),
+  });
+  if (updated.count > 0) logInfo('backfill_resource_buildings', { updatedNexuses: updated.count });
+}
+
 prisma.$connect()
   .then(async () => {
     logInfo('postgres_connected');
@@ -180,6 +195,11 @@ prisma.$connect()
       if (neutralSync.created > 0) logInfo('neutral_nexus_spawned', { created: neutralSync.created, neutralCount: neutralSync.neutralCount, targetNeutralCount: neutralSync.targetNeutralCount });
     } catch (err) {
       logError('neutral_nexus_pool_error', { message: (err as Error).message });
+    }
+    try {
+      await backfillResourceBuildingFloor();
+    } catch (err) {
+      logError('backfill_resource_buildings_error', { message: (err as Error).message });
     }
     setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.updateResources, 'update_resources', () => updateAllResources()); }, 60000);
     setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.processCombat, 'process_combat', () => processArrivedAttacks()); }, 10000);

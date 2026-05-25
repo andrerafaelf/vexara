@@ -7,11 +7,12 @@ import type { AuthRequest, TroopKey } from '../types/index.js';
 import { TROOP_STATS } from '../utils/combatMath.js';
 import { normalizeTroopPayload, parsePositiveInt } from '../utils/validation.js';
 import { logError } from '../utils/logger.js';
+import { NOTIF, sendPushToUser } from '../utils/push.js';
 
 const TROOP_KEYS: TroopKey[] = [
   'lancerDrone', 'assaultTrooper', 'breakerUnit', 'reconOperative', 'skimmerBike',
   'siegeMech', 'bulwarkGuard', 'suppressorTeam', 'disruptorUnit', 'interceptorBike',
-  'annihilatorPlatform', 'overseer',
+  'annihilatorPlatform', 'voidStalker', 'plasmaTurret', 'overseer',
 ];
 // Note: Overseers are not actually a troop type that can be sent on their own, but we include them in the normalization and validation logic for convenience since they can be included in attacks/support missions.
 const SUPPORTED_ATTACK_TYPES = new Set<AttackType>(['attack', 'scout', 'support']);
@@ -119,6 +120,19 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
       troopDeductions,
     );
     await applyQuestRewards(updatedAttackerNexus, { hasOutgoingStrike: true });
+
+    // Notify the defender immediately that an attack is inbound.
+    // Scout missions are intentionally excluded — stealth is part of the mechanic.
+    if (defenderNexus.ownerId && attackType === 'attack') {
+      const etaMinutes = Math.round(travelTimeMinutes);
+      void sendPushToUser(defenderNexus.ownerId, NOTIF.ATTACK_INCOMING, {
+        title: '⚠️ Incoming Attack',
+        body: `A strike is heading for ${defenderNexus.name}. ETA: ${etaMinutes < 60 ? `${etaMinutes}m` : `${Math.floor(etaMinutes / 60)}h ${etaMinutes % 60}m`}.`,
+        tag: `incoming-${attack.id}`,
+        data: { url: '/' },
+      });
+    }
+
     res.json({ success: true, attack: serializeAttack(attack) });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'attackController.ts' });

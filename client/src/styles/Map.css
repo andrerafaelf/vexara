@@ -594,6 +594,48 @@
   font-size: 12px;
 }
 
+.nexus-history {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-navy-900);
+  border: 1px solid var(--border-default);
+}
+
+.nexus-history-title {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+.nexus-history-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  padding: 2px 0;
+}
+
+.nexus-history-result {
+  font-size: 10px;
+  width: 14px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.nexus-history-result.win { color: var(--color-success, #4caf50); }
+.nexus-history-result.loss { color: var(--color-danger, #f44336); }
+
+.nexus-history-names {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .scout-btn {
   background: transparent;
   color: var(--text-muted);
@@ -713,7 +755,16 @@
 
 .attack-form h4 {
   color: var(--accent);
-  margin-bottom: 15px;
+  margin-bottom: 8px;
+}
+
+.attack-form-resources {
+  display: flex;
+  gap: 12px;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-bottom: 12px;
+  flex-wrap: wrap;
 }
 
 .troop-selector {

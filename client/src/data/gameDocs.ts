@@ -13,19 +13,55 @@ export type TroopDoc = {
 };
 
 // Counter matrix: attacker class deals extra damage to the listed defender class.
+// Triangle: light > heavy > ranged > light. Special is neutral everywhere.
 // (Pulled from server/utils/combatMath.ts; if you change one, change the other.)
 export const CLASS_COUNTERS: Array<{ attacker: TroopClass; beats: TroopClass; multiplier: number }> = [
-  { attacker: 'light',  beats: 'heavy',   multiplier: 1.35 },
-  { attacker: 'heavy',  beats: 'special', multiplier: 1.35 },
-  { attacker: 'ranged', beats: 'light',   multiplier: 1.35 },
+  { attacker: 'light',  beats: 'heavy',  multiplier: 1.35 },
+  { attacker: 'heavy',  beats: 'ranged', multiplier: 1.35 },
+  { attacker: 'ranged', beats: 'light',  multiplier: 1.35 },
 ];
 
 export const CLASS_COUNTERED_BY: Record<TroopClass, TroopClass | null> = {
   heavy:   'light',
-  special: 'heavy',
+  ranged:  'heavy',
   light:   'ranged',
-  ranged:  null, // special class deals neutral damage to ranged
+  special: null, // special units (Overseer, Recon Operative) have no counter — they don't fight
 };
+
+// How the counter system works in mixed engagements:
+// The attacker force's damage is computed per unit. Each unit's attack stat is
+// multiplied by a weighted-average counter multiplier against the DEFENDER'S
+// class composition. If half the defenders are heavy and half are ranged, a
+// light attacker gets roughly 50% of the 1.35 bonus (since it only counters the
+// heavy half) — not the full bonus. The counter activates proportionally to
+// how much of the enemy force it actually counters.
+//
+// Example: 10 Ranged vs 5 Heavy + 5 Light
+// Ranged counters Light (1.35x) and is countered by Heavy (0.75x).
+// Defender composition: 50% Light, 50% Heavy.
+// Effective ranged multiplier: (0.5 × 1.35) + (0.5 × 0.75) = 0.675 + 0.375 = 1.05
+// Result: ranged gets a slight edge — partial counter, not full.
+//
+// Full counter only applies when 100% of defenders are of the countered class.
+export const CLASS_COUNTER_CODEX = `
+**Class Counter System**
+
+Vexara uses a rock-paper-scissors class triangle: Light beats Heavy, Heavy beats Ranged, Ranged beats Light. Special units (Overseer, Recon Operative) are neutral — they have no counter advantage or vulnerability because they do not fight.
+
+**The triangle:**
+- Light (Breaker Unit, Skimmer Bike, Interceptor Bike, Void Stalker) — counters Heavy
+- Heavy (Assault Trooper, Bulwark Guard, Siege Mech) — counters Ranged
+- Ranged (Lancer Drone, Suppressor Team, Disruptor Unit, Annihilator Platform, Plasma Turret) — counters Light
+- Special (Overseer, Recon Operative) — no counter in either direction
+
+**Multipliers:** A class that counters the opposing class deals ×1.35 damage. A class being countered receives ×0.75 effective damage (its attacks are weakened). Neutral matchups are ×1.0.
+
+**Partial counters in mixed engagements:** The counter bonus is proportional to how much of the enemy force your class actually counters. If you send 10 Ranged units against a mix of 5 Light + 5 Heavy defenders, Ranged counters the Light half (×1.35) but is countered by the Heavy half (×0.75). Your effective multiplier is the weighted average: (0.5 × 1.35) + (0.5 × 0.75) = 1.05 — a small edge, not the full bonus. You only get the full ×1.35 if 100% of defenders are of the class you counter.
+
+**Armory amplification:** Each level of Armory (+1.5%, cap +30% at Lv20) amplifies counter bonuses above 1.0 and slightly deepens disadvantage penalties. A Lv20 Armory turns a ×1.35 counter into ×1.65 — a significant force multiplier for well-composed attacks.
+
+**Defender advantage:** The defender's Shield Grid multiplies total defensive power on top of all class counters. The attacker never gets the Shield Grid bonus, so pure defensive nexuses with high Shield Grid levels are always harder to break than their raw troop count suggests.
+`;
 
 export type BuildingDoc = {
   key: string;
@@ -43,8 +79,8 @@ export const TROOPS_DOC: TroopDoc[] = [
   {
     key: 'assaultTrooper',
     name: 'Assault Trooper',
-    role: 'Heavy frontline infantry — counters Special',
-    description: 'Solid all-rounder that holds the line and absorbs sustained pressure from attackers.',
+    role: 'Heavy frontline infantry — counters Ranged',
+    description: 'Solid all-rounder that holds the line and closes distance on ranged emplacements.',
     unitClass: 'heavy',
     stats: { attack: 30, defense: 45, speed: 18, carry: 60 },
     cost: { biomass: 150, alloy: 150, ore: 350, population: 1, time: '1m 19s' },
@@ -73,7 +109,7 @@ export const TROOPS_DOC: TroopDoc[] = [
   {
     key: 'reconOperative',
     name: 'Recon Operative',
-    role: 'Scout / intel gatherer (Special, no counter)',
+    role: 'Scout / intel gatherer (Special — no counter in either direction)',
     description:
       'Lightly armed intel gatherer that reveals enemy nexus resources, troops, and defenses. Not a frontline fighter.',
     unitClass: 'special',
@@ -95,8 +131,8 @@ export const TROOPS_DOC: TroopDoc[] = [
   {
     key: 'bulwarkGuard',
     name: 'Bulwark Guard',
-    role: 'Elite heavy defender — counters Special',
-    description: 'One of the strongest dedicated defensive units in midgame. Anchors a defending stack.',
+    role: 'Elite heavy defender — counters Ranged',
+    description: 'One of the strongest dedicated defensive units in midgame. Anchors a defending stack and suppresses ranged attackers.',
     unitClass: 'heavy',
     stats: { attack: 20, defense: 130, speed: 12, carry: 25 },
     cost: { biomass: 400, alloy: 600, ore: 500, population: 2, time: '8m 0s' },
@@ -145,15 +181,16 @@ export const TROOPS_DOC: TroopDoc[] = [
     requirements: ['Recruitment Core Lv9', 'Alloy Forge Lv8', 'Armory Lv3'],
     notes: [
       'Speed 32 — the fastest unit in the roster.',
-      'Light class is countered BY Ranged (Suppressor / Lancer / Disruptor / Annihilator / Plasma Turret), not the reverse.',
+      'Light class is countered BY Ranged (Suppressor / Lancer / Disruptor / Annihilator / Plasma Turret).',
+      'Ranged class is countered BY Heavy (Assault Trooper / Bulwark Guard / Siege Mech).',
     ],
   },
   {
     key: 'siegeMech',
     name: 'Siege Mech',
-    role: 'Heavy siege anchor — counters Special',
+    role: 'Heavy siege anchor — counters Ranged',
     description:
-      'Towering heavy platform with exceptional durability and crushing attack. Slow but nearly immovable when holding ground.',
+      'Towering heavy platform with exceptional durability and crushing attack. Slow but nearly immovable when holding ground — excels at eliminating ranged emplacements.',
     unitClass: 'heavy',
     stats: { attack: 150, defense: 210, speed: 10, carry: 20 },
     cost: { biomass: 1250, alloy: 1000, ore: 2000, population: 4, time: '1h 0m' },
@@ -166,7 +203,7 @@ export const TROOPS_DOC: TroopDoc[] = [
     description:
       'Immobile defensive emplacement. Cannot be sent on attacks, transfers, or raids — it always defends the nexus that built it. Decimates light cavalry that tries to rush you.',
     unitClass: 'ranged',
-    stats: { attack: 180, defense: 90, speed: 0, carry: 0 },
+    stats: { attack: 0, defense: 160, speed: 0, carry: 0 },
     cost: { biomass: 1500, alloy: 1200, ore: 2500, population: 2, time: '1h 30m' },
     requirements: ['Recruitment Core Lv11', 'Command Core Lv9', 'Armory Lv5'],
     notes: [
@@ -187,7 +224,7 @@ export const TROOPS_DOC: TroopDoc[] = [
   {
     key: 'overseer',
     name: 'Overseer',
-    role: 'Conquest / control unit (Special, no counter)',
+    role: 'Conquest / control unit (Special — no counter in either direction)',
     description:
       'The Overseer is a high-value command unit that enables nexus conquest. It does not fight — it administers. Sending an Overseer on a successful strike reduces the target\'s Control Level by 50. Control starts at 100; once it reaches 0, the nexus is conquered and changes ownership to you. Two successful strikes with an Overseer will conquer any nexus. The Overseer is only useful if the attack wins — if the attack fails, the Overseer is not used and survives the defeat alongside its escort. If every non-Overseer troop in the strike is killed, the Overseer dies too. On conquest, the Overseer is consumed — it does not return home. The conquered nexus keeps its type (Resource Depot, Military Outpost, etc.) and retains its current building levels, but its name resets to "Conquered Nexus." If you conquer a special NPC nexus (any type except Neutral Settlement), all type bonuses on that nexus are permanently doubled.',
     unitClass: 'special',
@@ -309,7 +346,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
     name: 'Shield Grid',
     role: 'Defensive multiplier',
     description:
-      'How defense works: when an enemy attack arrives, every defending troop contributes its Defense stat to the total defending force power. That power is then multiplied by (1 + shieldGrid × 0.02) — so each Shield Grid level is worth +2% of your entire garrison\'s HP-equivalent. The defending power is then compared against the attacker\'s class-weighted attack power. The side with higher power wins. Losers take heavy losses (~50–90% depending on the power gap); winners take light losses (~0–18% depending on how close the fight was). Your Shield Grid bonus stacks with allied support troops stationed at your nexus and with the class-counter system. Military Outpost nexus type adds an additional 100% shield efficiency on top (200% if doubled).',
+      'How defense works: when an enemy attack arrives, every defending troop contributes its Defense stat to the total defending force power. That power is then multiplied by (1 + shieldGrid × 0.02) — so each Shield Grid level is worth +2% of your entire garrison\'s HP-equivalent. The defending power is then compared against the attacker\'s class-weighted attack power. The side with higher power wins. Losers take heavy losses (~50–90% depending on the power gap); winners take light losses (~0–18% depending on how close the fight was). Your Shield Grid bonus stacks with allied support troops stationed at your nexus and with the class-counter system. Military Outpost nexus type multiplies shield efficiency by 2x (3x if doubled at CC15).',
     baseCost: { biomass: 50, alloy: 100, ore: 60, timeSeconds: 180 },
     maxLevel: 15,
     unlock: 'Command Core Lv3',
@@ -320,7 +357,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
     impact: [
       'Defense bonus: +2% total defending force power per level (multiplicative with troop defense stats).',
       'At Lv15 (max): +30% to your entire garrison\'s effective defense.',
-      'Military Outpost nexuses gain an extra 100% shield efficiency (200% if the bonus is doubled).',
+      'Military Outpost nexuses gain 2x shield efficiency (3x if the bonus is doubled at CC15).',
       'Stacks additively with allied support troops stationed at your nexus.',
     ],
   },

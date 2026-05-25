@@ -223,6 +223,7 @@ export const getNexusTroopTransfers = (nexusId: string) =>
 
 // Reports
 export const getReports = (nexusId: string) => apiRequest(`/report/reports/${nexusId}`);
+export const getNexusHistory = (nexusId: string) => apiRequest(`/report/nexus-history/${nexusId}`);
 export const markReportRead = (attackId: string) =>
   apiRequest(`/report/read/${attackId}`, { method: 'POST' });
 export const markAllReportsRead = (nexusId: string) =>

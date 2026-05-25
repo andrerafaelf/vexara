@@ -1,10 +1,10 @@
 import type { TroopKey, TroopStat } from '../types/index.js';
 
 // Unit classes drive the rock-paper-scissors counter system.
-// light  → beats heavy (mobility exploits armor gaps)
-// heavy  → beats special (brute force suppresses command units)
-// ranged → beats light (suppression fire pins fast movers)
-// special → no combat advantage (recon/overseer roles)
+// light  → beats heavy  (mobility exploits armor gaps)
+// heavy  → beats ranged (brute force closes distance, suppresses emplacements)
+// ranged → beats light  (suppression fire pins fast movers)
+// special → no combat advantage (recon/overseer roles — they don't fight)
 export type TroopClass = 'light' | 'heavy' | 'ranged' | 'special';
 
 export const TROOP_CLASS: Record<TroopKey, TroopClass> = {
@@ -25,12 +25,13 @@ export const TROOP_CLASS: Record<TroopKey, TroopClass> = {
 };
 
 // Counter matrix: CLASS_COUNTERS[attackerClass][defenderClass] = damage multiplier.
-// 1.0 = neutral, 1.35 = advantage, 0.70 = disadvantage.
+// 1.0 = neutral, 1.35 = advantage, 0.75 = disadvantage.
+// Triangle: light > heavy > ranged > light. Special is neutral in all matchups.
 export const CLASS_COUNTERS: Record<TroopClass, Record<TroopClass, number>> = {
-  light:   { light: 1.0, heavy: 1.35, ranged: 0.75, special: 1.0 },
-  heavy:   { light: 0.75, heavy: 1.0, ranged: 1.0,  special: 1.35 },
-  ranged:  { light: 1.35, heavy: 0.80, ranged: 1.0,  special: 1.0 },
-  special: { light: 1.0, heavy: 1.0,  ranged: 1.0,  special: 1.0 },
+  light:   { light: 1.0,  heavy: 1.35, ranged: 0.75, special: 1.0 },
+  heavy:   { light: 0.75, heavy: 1.0,  ranged: 1.35, special: 1.0 },
+  ranged:  { light: 1.35, heavy: 0.75, ranged: 1.0,  special: 1.0 },
+  special: { light: 1.0,  heavy: 1.0,  ranged: 1.0,  special: 1.0 },
 };
 
 export const TROOP_STATS: Record<TroopKey, TroopStat> = {
@@ -47,7 +48,7 @@ export const TROOP_STATS: Record<TroopKey, TroopStat> = {
   annihilatorPlatform:  { attack: 210, defense: 140, speed: 8,  carry: 160 },
   // New troops
   voidStalker:          { attack: 110, defense: 50,  speed: 32, carry: 40  },
-  plasmaTurret:         { attack: 180, defense: 90,  speed: 0,  carry: 0   },
+  plasmaTurret:         { attack: 0,   defense: 160, speed: 0,  carry: 0   },
   overseer:             { attack: 0,   defense: 30,  speed: 15, carry: 0   },
 };
 

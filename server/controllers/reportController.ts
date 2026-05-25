@@ -176,3 +176,50 @@ export async function getActivitySummary(req: AuthRequest, res: Response): Promi
     res.status(500).json({ error: 'Internal server error' });
   }
 }
+
+// Public battle log for a nexus — last 5 completed attacks visible to any authenticated galaxy member.
+export async function getNexusHistory(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const nexusId = parseInt(req.params.nexusId);
+    if (!nexusId) { res.status(400).json({ error: 'Invalid nexus ID' }); return; }
+
+    const nexus = await prisma.nexus.findUnique({ where: { id: nexusId }, select: { id: true, galaxyId: true } });
+    if (!nexus || nexus.galaxyId !== req.galaxyId) {
+      res.status(403).json({ error: 'Not authorized' }); return;
+    }
+
+    const attacks = await prisma.attack.findMany({
+      where: {
+        OR: [{ defenderNexusId: nexusId }, { attackerNexusId: nexusId }],
+        status: 'completed',
+        type: { not: 'support' },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      select: {
+        id: true, type: true, result: true, createdAt: true,
+        attackerUserId: true,
+        attackerNexus: { select: { name: true } },
+        defenderNexus: { select: { name: true } },
+      },
+    });
+
+    const history = attacks.map((a) => {
+      const r = a.result as { victory?: boolean; conquered?: boolean } | null;
+      return {
+        id: a.id,
+        attackerNexus: a.attackerNexus?.name ?? 'Unknown',
+        defenderNexus: a.defenderNexus?.name ?? 'Unknown',
+        victory: r?.victory ?? null,
+        conquered: r?.conquered ?? false,
+        isScout: a.type === 'scout',
+        createdAt: a.createdAt,
+      };
+    });
+
+    res.json(history);
+  } catch (error) {
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'reportController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}

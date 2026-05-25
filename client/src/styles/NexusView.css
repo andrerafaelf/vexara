@@ -3836,3 +3836,20 @@
   border-left: 3px solid var(--accent);
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%);
 }
+
+@media (max-width: 768px) {
+  .attack-modal-overlay {
+    /* Prevent the overlay from scrolling — the modal scrolls internally */
+    overflow-y: hidden;
+    align-items: center;
+    padding: 12px;
+  }
+
+  .attack-modal,
+  .info-modal {
+    max-height: calc(100dvh - 24px);
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
+    width: 100%;
+  }
+}

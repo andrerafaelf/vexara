@@ -10,6 +10,7 @@ import {
   getIncomingAttacks,
   getMapArea,
   getMyNexuses,
+  getNexusHistory,
   getNexusInfo,
   getOutgoingAttacks,
   sendAttack,
@@ -90,6 +91,7 @@ const TROOP_LABELS: Record<string, string> = {
   disruptorUnit: 'Disruptor Unit',
   interceptorBike: 'Interceptor Bike',
   annihilatorPlatform: 'Annihilator Platform',
+  voidStalker: 'Void Stalker',
   overseer: 'Overseer',
 };
 
@@ -100,6 +102,7 @@ const OFFENSE_TROOPS = new Set([
   'disruptorUnit',
   'interceptorBike',
   'annihilatorPlatform',
+  'voidStalker',
   'overseer',
 ]);
 
@@ -150,6 +153,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
     disruptorUnit: 0,
     interceptorBike: 0,
     annihilatorPlatform: 0,
+    voidStalker: 0,
     overseer: 0,
   });
   const [incomingAttacks, setIncomingAttacks] = useState<any[]>([]);
@@ -166,6 +170,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
   const [galaxyEvents, setGalaxyEvents] = useState<GalaxyEvent[]>([]);
   const [eventsStartAt, setEventsStartAt] = useState<string | null>(null);
   const [showEventsPanel, setShowEventsPanel] = useState(false);
+  const [nexusHistory, setNexusHistory] = useState<any[]>([]);
 
   // currentNexus.troops is already the server-authoritative post-deduction
   // count (the server deducts on send). Subtracting outgoing attacks on top
@@ -607,8 +612,12 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
       return;
     }
     try {
-      const response = await getNexusInfo(nexus._id);
-      setSelectedNexus(response.data);
+      const [infoRes, historyRes] = await Promise.all([
+        getNexusInfo(nexus._id),
+        getNexusHistory(nexus._id).catch(() => ({ data: [] })),
+      ]);
+      setSelectedNexus(infoRes.data);
+      setNexusHistory(historyRes.data ?? []);
       setShowAttackForm(false);
       setShowTransfer(false);
       setShowTroopSend(false);
@@ -653,6 +662,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
         disruptorUnit: 0,
         interceptorBike: 0,
         annihilatorPlatform: 0,
+        voidStalker: 0,
         overseer: 0,
       });
       onRefresh();
@@ -963,6 +973,22 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
           <div className="intel-warning">No intel. Send a scout to reveal resources and troops.</div>
         )}
 
+        {nexusHistory.length > 0 && (
+          <div className="nexus-history">
+            <div className="nexus-history-title">Recent Attacks</div>
+            {nexusHistory.map((h: any) => (
+              <div key={h.id} className="nexus-history-row">
+                <span className={`nexus-history-result${h.victory === true ? ' win' : h.victory === false ? ' loss' : ''}`}>
+                  {h.isScout ? '🔭' : h.conquered ? '⚑' : h.victory === true ? '✓' : h.victory === false ? '✗' : '?'}
+                </span>
+                <span className="nexus-history-names">
+                  {h.attackerNexus} → {h.defenderNexus}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {!isOwn && (
           <div className="nexus-actions">
             {!showAttackForm ? (
@@ -1004,6 +1030,11 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
             ) : (
               <div className="attack-form">
                 <h4>{attackMissionType === 'support' ? 'Send Support' : 'Launch Attack'}</h4>
+                <div className="attack-form-resources">
+                  <span title="Biomass">🌿 {Math.floor((currentNexus.resources as any)?.biomass ?? 0).toLocaleString()}</span>
+                  <span title="Alloy">⚙️ {Math.floor((currentNexus.resources as any)?.alloy ?? 0).toLocaleString()}</span>
+                  <span title="Ore">🪨 {Math.floor((currentNexus.resources as any)?.ore ?? 0).toLocaleString()}</span>
+                </div>
                 <div className="troop-selector">
                   {attackTroopRows.map(([type, available]) => {
                     const effectiveMax = type === 'overseer' ? Math.min(Number(available), 1) : Number(available);
@@ -1167,7 +1198,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
                 <div key={attack._id} className={`attack-item incoming${isSupport ? ' support-mission' : ''}`}>
                   <div className="attack-from">
                     {isSupport && <span className="support-mission-badge">Support</span>}
-                    From: <strong>{attack.attackerNexus?.name || 'Unknown'}</strong>
+                    From: <strong>{attack.attacker?.nexus?.name || 'Unknown'}</strong>
                   </div>
                   <div className="attack-time">Arrives: {formatTime(attack.arrivesAt)}</div>
                 </div>
@@ -1189,9 +1220,9 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
                     {isSupport && <span className="support-mission-badge">Support</span>}
                     {label}{' '}
                     <strong>
-                      {attack.defenderNexus
-                        ? `${attack.defenderNexus.name} (${attack.defenderNexus.x}|${attack.defenderNexus.y})`
-                        : `Unknown (${attack.targetX ?? '?'}|${attack.targetY ?? '?'})`}
+                      {attack.defender?.nexus?.name
+                        ? `${attack.defender.nexus.name} (${attack.defender.nexus.x}|${attack.defender.nexus.y})`
+                        : `Unknown`}
                     </strong>
                   </div>
                   <div className="attack-time">

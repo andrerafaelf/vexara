@@ -13,5 +13,6 @@ router.get('/read-ids/:nexusId', auth, (req, res) => reportController.getReadIds
 router.get('/read-ids', auth, (req, res) => reportController.getReadIds(req as AuthRequest, res as Response));
 router.get('/unread-nexus-ids', auth, (req, res) => reportController.getUnreadNexusIds(req as AuthRequest, res as Response));
 router.get('/summary', auth, (req, res) => reportController.getActivitySummary(req as AuthRequest, res as Response));
+router.get('/nexus-history/:nexusId', auth, (req, res) => reportController.getNexusHistory(req as AuthRequest, res as Response));
 
 export default router;
