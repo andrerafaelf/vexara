@@ -102,9 +102,9 @@ const MAX_BUILD_QUEUE = 5;
 const MAX_TRAINING_QUEUE = 5;
 
 const NEXUS_TYPE_BUFFS: Record<string, { label: string; doubledLabel: string }> = {
-  'Resource Depot': { label: '2x Resource Production', doubledLabel: '4x Resource Production' },
-  'Supply Cache': { label: '2x Storage Capacity', doubledLabel: '4x Storage Capacity' },
-  'Military Outpost': { label: '+50% Shield Efficiency · 25% Faster Training', doubledLabel: '+100% Shield Efficiency · 50% Faster Training' },
+  'Resource Depot': { label: '2x Resource Production', doubledLabel: '3x Resource Production' },
+  'Supply Cache': { label: '2x Storage Capacity', doubledLabel: '3x Storage Capacity' },
+  'Military Outpost': { label: '+100% Shield Efficiency · 50% Faster Training', doubledLabel: '+200% Shield Efficiency · 75% Faster Training' },
   'Reclaimed Outpost': { label: '20% Faster Construction', doubledLabel: '36% Faster Construction' },
 };
 
@@ -258,7 +258,7 @@ const getCommandTimeFactor = (commandLevel: number) =>
   Math.pow(COMMAND_BUILD_TIME_FACTOR_PER_LEVEL, Math.max(0, commandLevel || 0));
 
 const NEXUS_TYPE_TRAINING_MULTIPLIERS: Record<string, number> = {
-  'Military Outpost': 0.75,
+  'Military Outpost': 0.5,
 };
 
 const getTroopTrainSeconds = (
@@ -1539,7 +1539,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
         </div>
         {nexus.nexusType && NEXUS_TYPE_BUFFS[nexus.nexusType] && (
           <div className={`nexus-type-buff-banner${nexus.nexusTypeDoubled ? ' nexus-type-buff-banner--doubled' : ''}`}>
-            <NexusTypeBadge type={nexus.nexusType} size={14} />
+            <NexusTypeBadge type={nexus.nexusType} doubled={nexus.nexusTypeDoubled} size={14} />
             <span className="nexus-type-buff-label">
               {nexus.nexusType} · {nexus.nexusTypeDoubled
                 ? NEXUS_TYPE_BUFFS[nexus.nexusType].doubledLabel
@@ -2314,9 +2314,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
               </p>
               <div className="spec-options">
                 {[
-                  { type: 'Resource Depot', label: '2x Resource Production', desc: 'Double the output of all three resource buildings. Best for a dedicated economic nexus.' },
-                  { type: 'Supply Cache', label: '2x Storage Capacity', desc: 'Double your storage cap across all resources. Protects stockpiles and supports large armies.' },
-                  { type: 'Military Outpost', label: '+100% Shield Efficiency, 50% Faster Training', desc: 'Doubled shield defense and half training time. The strongest frontline base.' },
+                  { type: 'Resource Depot', label: '3x Resource Production', desc: 'Triple the output of all three resource buildings. Best for a dedicated economic nexus.' },
+                  { type: 'Supply Cache', label: '3x Storage Capacity', desc: 'Triple your storage cap across all resources. Protects stockpiles and supports large armies.' },
+                  { type: 'Military Outpost', label: '+200% Shield Efficiency, 75% Faster Training', desc: 'Tripled shield defense and quarter training time. The strongest frontline base.' },
                   { type: 'Reclaimed Outpost', label: '36% Faster Construction', desc: 'All build times cut significantly. Fastest expansion and rebuilding of any nexus type.' },
                 ].map(({ type, label, desc }) => (
                   <button

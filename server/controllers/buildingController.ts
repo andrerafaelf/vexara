@@ -225,7 +225,11 @@ export async function upgradeBuilding(req: AuthRequest, res: Response): Promise<
     const queueStart = buildQueue.length > 0
       ? new Date(buildQueue[buildQueue.length - 1].completesAt as string).getTime()
       : Date.now();
-    const nexusBuildTimeFactor = (NEXUS_TYPE_BONUSES as Record<string, { buildTimeMultiplier?: number }>)[nexus.nexusType as string]?.buildTimeMultiplier ?? 1;
+    const baseBuildMult = (NEXUS_TYPE_BONUSES as Record<string, { buildTimeMultiplier?: number }>)[nexus.nexusType as string]?.buildTimeMultiplier;
+    const buildDoubled = (nexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled ?? false;
+    const nexusBuildTimeFactor = baseBuildMult !== undefined && buildDoubled
+      ? Math.pow(baseBuildMult, 2)
+      : (baseBuildMult ?? 1);
     const buildSeconds = Math.max(1, Math.floor(cost.time * getCommandTimeFactor(nexus.commandCore) * nexusBuildTimeFactor));
     const completesAt = new Date(queueStart + buildSeconds * 1000);
     const newQueue = [...buildQueue, { building, targetLevel: currentLevel + 1, completesAt }];

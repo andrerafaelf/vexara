@@ -174,7 +174,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
     let attackPower = computeClassWeightedAttack(attackTroops, mergedDefenderForce, attackerArmoryLevel);
     let defensePower = computeForcePower(mergedDefenderForce, 'defense');
 
-    const baseShieldEff = defenderNexus.nexusType === 'Military Outpost' ? 1.25 : 1;
+    const baseShieldEff = defenderNexus.nexusType === 'Military Outpost' ? 2.0 : 1;
     const nexusDoubled = (defenderNexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled ?? false;
     const shieldEfficiencyMultiplier = baseShieldEff === 1 ? 1 : 1 + (baseShieldEff - 1) * (nexusDoubled ? 2 : 1);
     defensePower *= 1 + defenderNexus.shieldGrid * 0.02 * shieldEfficiencyMultiplier;
@@ -328,11 +328,9 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
         const wasNpc = defenderNexus.ownerId === null || NPC_TYPE_NAMES.includes(defenderNexus.name);
         const preservedType = defenderNexus.nexusType ?? (NPC_TYPE_NAMES.includes(defenderNexus.name) ? defenderNexus.name : null);
         defenderTroopUpdates['nexusType'] = preservedType;
-        // Double bonuses when conquering an NPC nexus that has a special type (not Neutral Settlement)
-        if (wasNpc && preservedType && preservedType !== 'Neutral Settlement') {
-          defenderTroopUpdates['nexusTypeDoubled'] = true;
-          defenderTroopUpdates['nexusTypeLockedAt'] = new Date();
-        }
+        // Conquest always resets to base tier — nexusTypeDoubled is never inherited.
+        // Player specialization (CC15) is the only path that grants doubled bonuses.
+        defenderTroopUpdates['nexusTypeDoubled'] = false;
         defenderTroopUpdates['conqueredAt'] = new Date();
         conquered = true;
         attackerLosses.overseer = overseerSent;

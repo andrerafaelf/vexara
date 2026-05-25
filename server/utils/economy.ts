@@ -12,7 +12,7 @@ interface NexusTypeBonuses {
 export const NEXUS_TYPE_BONUSES: Record<string, NexusTypeBonuses> = {
   'Resource Depot':    { productionMultiplier: 2, label: '2x Resource Production' },
   'Supply Cache':      { storageMultiplier: 2, label: '2x Storage Capacity' },
-  'Military Outpost':  { shieldEfficiencyMultiplier: 1.25, trainingTimeMultiplier: 0.75, label: '+50% Shield Efficiency, 25% Faster Training' },
+  'Military Outpost':  { shieldEfficiencyMultiplier: 2.0, trainingTimeMultiplier: 0.5, label: '+100% Shield Efficiency, 50% Faster Training' },
   'Reclaimed Outpost': { buildTimeMultiplier: 0.80, label: '20% Faster Construction' },
 };
 
@@ -91,9 +91,9 @@ export function getNexusTypeEffectiveMultipliers(nexus: NexusForEconomy): NexusT
     shieldEfficiencyMultiplier: base.shieldEfficiencyMultiplier !== undefined
       ? 1 + (base.shieldEfficiencyMultiplier - 1) * scale : undefined,
     trainingTimeMultiplier: base.trainingTimeMultiplier !== undefined
-      ? 1 - (1 - base.trainingTimeMultiplier) * scale : undefined,
+      ? Math.pow(base.trainingTimeMultiplier, scale) : undefined,
     buildTimeMultiplier: base.buildTimeMultiplier !== undefined
-      ? 1 - (1 - base.buildTimeMultiplier) * scale : undefined,
+      ? Math.pow(base.buildTimeMultiplier, scale) : undefined,
     label: nexus.nexusTypeDoubled ? `[DOUBLED] ${base.label}` : base.label,
   };
 }

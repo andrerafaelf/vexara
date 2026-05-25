@@ -309,7 +309,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
     name: 'Shield Grid',
     role: 'Defensive multiplier',
     description:
-      'How defense works: when an enemy attack arrives, every defending troop contributes its Defense stat to the total defending force power. That power is then multiplied by (1 + shieldGrid × 0.02) — so each Shield Grid level is worth +2% of your entire garrison\'s HP-equivalent. The defending power is then compared against the attacker\'s class-weighted attack power. The side with higher power wins. Losers take heavy losses (~50–90% depending on the power gap); winners take light losses (~0–18% depending on how close the fight was). Your Shield Grid bonus stacks with allied support troops stationed at your nexus and with the class-counter system. Military Outpost nexus type adds an additional 25% shield efficiency on top (50% if doubled).',
+      'How defense works: when an enemy attack arrives, every defending troop contributes its Defense stat to the total defending force power. That power is then multiplied by (1 + shieldGrid × 0.02) — so each Shield Grid level is worth +2% of your entire garrison\'s HP-equivalent. The defending power is then compared against the attacker\'s class-weighted attack power. The side with higher power wins. Losers take heavy losses (~50–90% depending on the power gap); winners take light losses (~0–18% depending on how close the fight was). Your Shield Grid bonus stacks with allied support troops stationed at your nexus and with the class-counter system. Military Outpost nexus type adds an additional 100% shield efficiency on top (200% if doubled).',
     baseCost: { biomass: 50, alloy: 100, ore: 60, timeSeconds: 180 },
     maxLevel: 15,
     unlock: 'Command Core Lv3',
@@ -320,7 +320,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
     impact: [
       'Defense bonus: +2% total defending force power per level (multiplicative with troop defense stats).',
       'At Lv15 (max): +30% to your entire garrison\'s effective defense.',
-      'Military Outpost nexuses gain an extra 25% shield efficiency (50% if the bonus is doubled).',
+      'Military Outpost nexuses gain an extra 100% shield efficiency (200% if the bonus is doubled).',
       'Stacks additively with allied support troops stationed at your nexus.',
     ],
   },

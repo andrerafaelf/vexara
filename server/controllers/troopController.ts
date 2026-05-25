@@ -161,7 +161,12 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
       res.status(400).json({ error: `Training queue is full (${MAX_TRAINING_QUEUE}/${MAX_TRAINING_QUEUE})` }); return;
     }
 
-    const nexusTimeFactor = troopType === 'overseer' ? 1 : ((NEXUS_TYPE_BONUSES as Record<string, { trainingTimeMultiplier?: number }>)[nexus.nexusType as string]?.trainingTimeMultiplier ?? 1);
+    const baseTrainMult = (NEXUS_TYPE_BONUSES as Record<string, { trainingTimeMultiplier?: number }>)[nexus.nexusType as string]?.trainingTimeMultiplier;
+    const doubled = (nexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled ?? false;
+    const effectiveTrainMult = baseTrainMult !== undefined && doubled
+      ? Math.pow(baseTrainMult, 2)
+      : (baseTrainMult ?? 1);
+    const nexusTimeFactor = troopType === 'overseer' ? 1 : effectiveTrainMult;
     const perUnitSeconds = Math.max(1, Math.floor(getTrainTimeSeconds(troopType, nexus.recruitmentCore) * nexusTimeFactor));
     const queueStart = sameChainQueue.length > 0
       ? new Date(sameChainQueue[sameChainQueue.length - 1].completesAt as string).getTime()

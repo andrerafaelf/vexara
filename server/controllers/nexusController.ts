@@ -371,7 +371,7 @@ export async function specializeNexus(req: AuthRequest, res: Response): Promise<
 
     const updated = await prisma.nexus.update({
       where: { id: nexusId },
-      data: { nexusType, nexusTypeLockedAt: new Date() },
+      data: { nexusType, nexusTypeLockedAt: new Date(), nexusTypeDoubled: true },
     });
 
     res.json({ success: true, nexus: serializeNexus(updated as Parameters<typeof serializeNexus>[0]) });
