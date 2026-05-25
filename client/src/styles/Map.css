@@ -758,15 +758,6 @@
   margin-bottom: 8px;
 }
 
-.attack-form-resources {
-  display: flex;
-  gap: 12px;
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-  margin-bottom: 12px;
-  flex-wrap: wrap;
-}
-
 .troop-selector {
   display: flex;
   flex-direction: column;

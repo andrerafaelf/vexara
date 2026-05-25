@@ -10,7 +10,14 @@ export function updateNexus(id: number, data: Parameters<typeof prisma.nexus.upd
 
 export function getInFlightTroops(nexusId: number) {
   return prisma.attack.findMany({
-    where: { attackerNexusId: nexusId, status: 'traveling' },
+    where: { attackerNexusId: nexusId, status: { in: ['traveling', 'returning'] } },
+    select: { troops: true },
+  });
+}
+
+export function getOutboundTransferTroops(nexusId: number) {
+  return prisma.troopTransfer.findMany({
+    where: { ownerNexusId: nexusId },
     select: { troops: true },
   });
 }

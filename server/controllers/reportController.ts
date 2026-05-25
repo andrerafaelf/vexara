@@ -177,7 +177,7 @@ export async function getActivitySummary(req: AuthRequest, res: Response): Promi
   }
 }
 
-// Public battle log for a nexus — last 5 completed attacks visible to any authenticated galaxy member.
+// Battle log for a nexus — last 5 completed attacks the requesting user was personally involved in.
 export async function getNexusHistory(req: AuthRequest, res: Response): Promise<void> {
   try {
     const nexusId = parseInt(req.params.nexusId);
@@ -190,7 +190,12 @@ export async function getNexusHistory(req: AuthRequest, res: Response): Promise<
 
     const attacks = await prisma.attack.findMany({
       where: {
-        OR: [{ defenderNexusId: nexusId }, { attackerNexusId: nexusId }],
+        OR: [
+          { defenderNexusId: nexusId, defenderUserId: req.userId },
+          { attackerNexusId: nexusId, attackerUserId: req.userId },
+          { defenderNexusId: nexusId, attackerUserId: req.userId },
+          { attackerNexusId: nexusId, defenderUserId: req.userId },
+        ],
         status: 'completed',
         type: { not: 'support' },
       },

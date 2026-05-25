@@ -1030,11 +1030,6 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
             ) : (
               <div className="attack-form">
                 <h4>{attackMissionType === 'support' ? 'Send Support' : 'Launch Attack'}</h4>
-                <div className="attack-form-resources">
-                  <span title="Biomass">🌿 {Math.floor((currentNexus.resources as any)?.biomass ?? 0).toLocaleString()}</span>
-                  <span title="Alloy">⚙️ {Math.floor((currentNexus.resources as any)?.alloy ?? 0).toLocaleString()}</span>
-                  <span title="Ore">🪨 {Math.floor((currentNexus.resources as any)?.ore ?? 0).toLocaleString()}</span>
-                </div>
                 <div className="troop-selector">
                   {attackTroopRows.map(([type, available]) => {
                     const effectiveMax = type === 'overseer' ? Math.min(Number(available), 1) : Number(available);

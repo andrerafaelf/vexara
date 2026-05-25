@@ -134,7 +134,9 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
         .reduce((sum: number, e: { amount: number }) => sum + (Number(e.amount) || 0), 0);
       const inFlight = await troopService.getInFlightTroops(nexus.id);
       const inFlightAmount = inFlight.reduce((sum, a) => sum + ((a.troops as Record<string, number>)?.[troopType] || 0), 0);
-      const current = ((nexus as unknown as Record<string, number>)[troopType] || 0) + queuedAmount + inFlightAmount;
+      const outboundTransfers = await troopService.getOutboundTransferTroops(nexus.id);
+      const transferAmount = outboundTransfers.reduce((sum, t) => sum + ((t.troops as Record<string, number>)?.[troopType] || 0), 0);
+      const current = ((nexus as unknown as Record<string, number>)[troopType] || 0) + queuedAmount + inFlightAmount + transferAmount;
       if (current + parsedAmount > requirements.maxPerNexus) {
         res.status(400).json({ error: `Maximum ${requirements.maxPerNexus} ${TROOP_NAMES[troopType] || troopType} per nexus` });
         return;
