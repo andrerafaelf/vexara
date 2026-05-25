@@ -2349,7 +2349,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
       )}
 
       {infoModal && (
-        <div className="attack-modal-overlay" onClick={() => setInfoModal(null)}>
+        <div className="attack-modal-overlay info-modal-overlay" onClick={() => setInfoModal(null)}>
           <div className="attack-modal info-modal" onClick={(e) => e.stopPropagation()}>
             <div className="attack-modal-header">
               <h3>{infoModal.title}</h3>

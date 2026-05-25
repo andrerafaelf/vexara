@@ -31,17 +31,17 @@ class. Against a mixed force, the multiplier is a weighted average. Ten
 Ranged units against 5 Light + 5 Heavy get roughly ×1.05 — a small edge,
 not a dominant one. The Codex now explains this in full with an example.
 
-**Plasma Turret stats corrected — attack was too high for a static unit.**
+**Plasma Turret stats corrected — it's a wall, not a weapon.**
 
 The Plasma Turret had 180 attack (tied with top-tier offensive units) and
-only 90 defense. It has been rebalanced to reflect its role as a wall, not
-a weapon:
+only 90 defense. A stationary emplacement shouldn't hit harder than an
+Annihilator Platform. Corrected:
 
-- Attack: was 180, now 90
+- Attack: was 180, now 0
 - Defense: was 90, now 160
 
-It still hard-counters light cavalry (ranged class). It just doesn't hit
-harder than an Annihilator Platform anymore.
+It still hard-counters light cavalry via the ranged class bonus. It just
+doesn't contribute offensive power — only defensive bulk.
 
 ---
 
@@ -102,8 +102,9 @@ stealth is part of the mechanic.
 
 Legacy nexuses (NPC and player) that were created before the floor was set
 had resource buildings stuck at level 0. On next server startup, any nexus
-with biomassFarm, alloyForge, or oreExtractor at 0 is bumped to level 7.
-New NPC nexuses are also created with at minimum level 7 on all three.
+with biomassFarm, alloyForge, or oreExtractor individually at 0 is bumped
+to level 7. New nexuses are unaffected — they spawn at their normal
+starting levels.
 
 ---
 

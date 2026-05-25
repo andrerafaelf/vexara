@@ -3831,6 +3831,10 @@
 }
 
 /* ── Info modal (generic) ─────────────────────────────────────── */
+.info-modal-overlay {
+  overflow-y: hidden;
+}
+
 .info-modal {
   border-radius: 0;
   border-left: 3px solid var(--accent);
