@@ -478,11 +478,30 @@ a:focus-visible,
 }
 
 /* ── Supporter username glow ───────────────────────────────
-   Applied to usernames belonging to Ko-fi supporters. Slow
-   amber pulse, matches the industrial accent palette. */
+   Three tiers, distinguished primarily by hue so names are
+   readable at chat-list size. Recruit/Officer stay in the
+   amber accent family; Commander shifts to cyan to read as
+   "top tier" at a glance. Base .supporter-name still works
+   on its own (legacy fallback / users without a tier set). */
 .supporter-name {
   color: var(--accent) !important;
   animation: vx-supporter-pulse 3s ease-in-out infinite;
+}
+
+/* Recruit: soft amber — the original glow, slightly dimmer */
+.supporter-name.supporter-tier-recruit {
+  animation: vx-supporter-pulse-recruit 3s ease-in-out infinite;
+}
+
+/* Officer: bright amber/gold — the original pulse, undimmed */
+.supporter-name.supporter-tier-officer {
+  animation: vx-supporter-pulse 3s ease-in-out infinite;
+}
+
+/* Commander: cyan/electric blue, reads as elite vs. amber UI */
+.supporter-name.supporter-tier-commander {
+  color: #5BE3FF !important;
+  animation: vx-supporter-pulse-commander 3s ease-in-out infinite;
 }
 
 @keyframes vx-supporter-pulse {
@@ -495,4 +514,108 @@ a:focus-visible,
       0 0 54px rgba(255, 158, 61, 1.00),
       0 0 96px rgba(255, 158, 61, 0.60);
   }
+}
+
+@keyframes vx-supporter-pulse-recruit {
+  0%, 100% { text-shadow: none; }
+  50% {
+    text-shadow:
+      0 0 12px rgba(255, 158, 61, 0.70),
+      0 0 28px rgba(255, 158, 61, 0.50);
+  }
+}
+
+@keyframes vx-supporter-pulse-commander {
+  0%, 100% { text-shadow: none; }
+  50% {
+    text-shadow:
+      0 0 24px rgba(91, 227, 255, 1.00),
+      0 0 54px rgba(91, 227, 255, 0.95),
+      0 0 96px rgba(91, 227, 255, 0.55);
+  }
+}
+
+/* Animated avatar/profile border for Officer + Commander tiers.
+   Reuses the same pulse cadence as the username glow for visual
+   consistency. Apply alongside .supporter-tier-officer / -commander
+   on the wrapping element. */
+.supporter-border {
+  position: relative;
+}
+.supporter-border-officer {
+  box-shadow: 0 0 0 1px rgba(255, 158, 61, 0.55);
+  animation: vx-border-pulse-officer 3s ease-in-out infinite;
+}
+.supporter-border-commander {
+  box-shadow: 0 0 0 1px rgba(91, 227, 255, 0.65);
+  animation: vx-border-pulse-commander 3s ease-in-out infinite;
+}
+
+@keyframes vx-border-pulse-officer {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px rgba(255, 158, 61, 0.55),
+      0 0 0 0 rgba(255, 158, 61, 0);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(255, 158, 61, 0.95),
+      0 0 18px 2px rgba(255, 158, 61, 0.45);
+  }
+}
+
+@keyframes vx-border-pulse-commander {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px rgba(91, 227, 255, 0.65),
+      0 0 0 0 rgba(91, 227, 255, 0);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(91, 227, 255, 1.00),
+      0 0 22px 3px rgba(91, 227, 255, 0.55);
+  }
+}
+
+/* ── Alpha Commander badge ──────────────────────────────────
+   Granted permanently to anyone who donates €25+ during alpha.
+   Compact chip form for chat/inline use; expanded form for
+   profile cards. Always cyan to reinforce Commander tier. */
+.alpha-commander-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  margin-left: 6px;
+  border-radius: 3px;
+  border: 1px solid rgba(91, 227, 255, 0.55);
+  background: rgba(91, 227, 255, 0.08);
+  color: #5BE3FF;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.alpha-commander-badge::before {
+  content: '◆';
+  font-size: 8px;
+  line-height: 1;
+}
+.alpha-commander-badge--compact {
+  padding: 0;
+  margin-left: 4px;
+  border: 0;
+  background: transparent;
+  color: #5BE3FF;
+  font-size: 10px;
+}
+.alpha-commander-badge--compact::before {
+  content: '◆';
+  font-size: 10px;
+}
+.alpha-commander-badge--compact > span {
+  display: none;
 }

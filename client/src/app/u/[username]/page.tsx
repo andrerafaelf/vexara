@@ -15,6 +15,8 @@ import '@/styles/ProfileStats.css';
 import { Crown, UserPlus, UserCheck, UserMinus, Clock } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
+import Username from '@/components/Username';
+import type { SupporterTier } from '@/types/game';
 
 type FriendshipStatus = 'self' | 'none' | 'pending_outgoing' | 'pending_incoming' | 'friends';
 
@@ -37,6 +39,8 @@ interface PublicProfile {
   userId: number;
   username: string;
   isSupporter: boolean;
+  supporterTier?: SupporterTier | null;
+  isFounder?: boolean;
   createdAt: string;
   accountAgeDays: number;
   totalInfluence: number;
@@ -145,9 +149,20 @@ export default function PublicProfilePage() {
     <GameLayout activePage="profile">
       <div className="profile-stats">
         <div className="ps-header">
-          <div className="ps-avatar">{profile.username.charAt(0).toUpperCase()}</div>
+          <div
+            className={`ps-avatar${profile.supporterTier === 'officer' ? ' supporter-border supporter-border-officer' : ''}${profile.supporterTier === 'commander' ? ' supporter-border supporter-border-commander' : ''}`}
+          >
+            {profile.username.charAt(0).toUpperCase()}
+          </div>
           <div className="ps-header-info">
-            <h2 className={`ps-username${profile.isSupporter ? ' supporter-name' : ''}`}>{profile.username}</h2>
+            <h2 className="ps-username">
+              <Username
+                name={profile.username}
+                isSupporter={profile.isSupporter}
+                supporterTier={profile.supporterTier ?? null}
+                isFounder={profile.isFounder}
+              />
+            </h2>
             <span className="ps-meta">
               {profile.totalInfluence.toLocaleString()} total influence · {profile.galaxiesPlayed} galax{profile.galaxiesPlayed === 1 ? 'y' : 'ies'} played · {profile.accountAgeDays}d
             </span>

@@ -8,10 +8,11 @@ import {
   setGroupNexuses,
 } from '../services/api';
 
-import { Check, Hammer, Heart, Pencil, ScrollText, Settings, Swords, Trash2, X } from 'lucide-react';
+import { Check, Hammer, Pencil, ScrollText, Settings, Swords, Trash2, X } from 'lucide-react';
 import { Nexus, NexusGroup, User } from '../types/game';
 import GalaxyChip from './GalaxyChip';
 import NexusTypeBadge from './NexusTypeBadge';
+import SupportTiersCard from './SupportTiersCard';
 
 export const NEXUS_GROUPS_KEY = ['nexusGroups'] as const;
 
@@ -148,11 +149,33 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
 
         {user && (
           <div className="commander-card" aria-label="Commander summary">
-            <div className="commander-avatar" aria-hidden="true">
+            <div
+              className={`commander-avatar${user.supporterTier === 'officer' ? ' supporter-border supporter-border-officer' : ''}${user.supporterTier === 'commander' ? ' supporter-border supporter-border-commander' : ''}`}
+              aria-hidden="true"
+            >
               {commanderInitial}
             </div>
             <div className="commander-info">
-              <div className={`commander-name${user.isSupporter ? ' supporter-name' : ''}`}>{user.username}</div>
+              <div
+                className={[
+                  'commander-name',
+                  user.isSupporter ? 'supporter-name' : null,
+                  user.supporterTier === 'recruit' ? 'supporter-tier-recruit' : null,
+                  user.supporterTier === 'officer' ? 'supporter-tier-officer' : null,
+                  user.supporterTier === 'commander' ? 'supporter-tier-commander' : null,
+                ].filter(Boolean).join(' ')}
+              >
+                {user.username}
+                {user.isFounder && (
+                  <span
+                    className="alpha-commander-badge alpha-commander-badge--compact"
+                    title="Alpha Commander — Vexara founding supporter"
+                    aria-label="Alpha Commander"
+                  >
+                    <span>Alpha Commander</span>
+                  </span>
+                )}
+              </div>
               <div className="commander-meta">
                 Commander · {totalPoints.toLocaleString()} inf
               </div>
@@ -160,18 +183,12 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
           </div>
         )}
 
-        {!user?.isSupporter && (
-          <a
-            href="https://ko-fi.com/andrerfferreira"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="sidebar-support-btn"
-            title="Support Vexara on Ko-fi"
-          >
-            <Heart size={14} aria-hidden="true" />
-            <span>Support Vexara</span>
-          </a>
-        )}
+        <SupportTiersCard
+          variant="compact"
+          currentTier={user?.supporterTier ?? null}
+          isFounder={user?.isFounder}
+          isSupporter={user?.isSupporter}
+        />
       </nav>
 
       {showGroupManager && (

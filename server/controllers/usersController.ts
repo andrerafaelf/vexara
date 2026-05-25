@@ -24,7 +24,7 @@ export async function listPlayersInGalaxy(req: AuthRequest, res: Response): Prom
           userId: true,
           points: true,
           joinedAt: true,
-          user: { select: { username: true, isSupporter: true } },
+          user: { select: { username: true, isSupporter: true, supporterTier: true, isFounder: true } },
         },
         orderBy: { points: 'desc' },
       }),
@@ -51,6 +51,8 @@ export async function listPlayersInGalaxy(req: AuthRequest, res: Response): Prom
         userId: p.userId,
         username: p.user?.username ?? 'Unknown',
         isSupporter: p.user?.isSupporter ?? false,
+        supporterTier: p.user?.supporterTier ?? null,
+        isFounder: p.user?.isFounder ?? false,
         points: p.points,
         joinedAt: p.joinedAt,
         nexuses: nexusByOwner.get(p.userId) || 0,
@@ -116,7 +118,7 @@ export async function getPublicProfile(req: AuthRequest, res: Response): Promise
 
     const user = await prisma.user.findUnique({
       where: { username },
-      select: { id: true, username: true, isSupporter: true, createdAt: true, activeGalaxyId: true },
+      select: { id: true, username: true, isSupporter: true, supporterTier: true, isFounder: true, createdAt: true, activeGalaxyId: true },
     });
     if (!user) { res.status(404).json({ error: 'User not found' }); return; }
 
@@ -206,6 +208,8 @@ export async function getPublicProfile(req: AuthRequest, res: Response): Promise
       userId: user.id,
       username: user.username,
       isSupporter: user.isSupporter,
+      supporterTier: user.supporterTier ?? null,
+      isFounder: user.isFounder ?? false,
       createdAt: user.createdAt,
       accountAgeDays,
       totalInfluence,

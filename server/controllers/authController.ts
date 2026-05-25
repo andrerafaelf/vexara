@@ -182,6 +182,8 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
         username: true,
         email: true,
         isSupporter: true,
+        supporterTier: true,
+        isFounder: true,
         referralCode: true,
         emailVerifiedAt: true,
         emailVerificationTokenExpiresAt: true,
@@ -221,7 +223,7 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
     res.json({
       ok: true,
       token: authToken,
-      user: { id: user.id, username: user.username, email: user.email, isSupporter: user.isSupporter },
+      user: { id: user.id, username: user.username, email: user.email, isSupporter: user.isSupporter, supporterTier: user.supporterTier ?? null, isFounder: user.isFounder ?? false },
     });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'authController.ts' });
@@ -437,7 +439,7 @@ export async function login(req: Request, res: Response): Promise<void> {
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
     res.json({
       token,
-      user: { id: user.id, username: user.username, email: user.email, isSupporter: user.isSupporter },
+      user: { id: user.id, username: user.username, email: user.email, isSupporter: user.isSupporter, supporterTier: user.supporterTier ?? null, isFounder: user.isFounder ?? false },
     });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'authController.ts' });

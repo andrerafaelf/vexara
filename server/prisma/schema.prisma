@@ -14,6 +14,9 @@ model User {
   isAlphaFounder Boolean   @default(false)
   isSupporter    Boolean   @default(false)
   supporterSince DateTime?
+  supporterTier  String?   @db.VarChar(16)
+  supporterTierSince DateTime?
+  isFounder      Boolean   @default(false)
   createdAt      DateTime  @default(now())
 
   emailVerifiedAt                   DateTime?

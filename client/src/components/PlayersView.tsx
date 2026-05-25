@@ -6,12 +6,15 @@ import { listPlayersInGalaxy } from '../services/api';
 import { usePageReady } from './NavigationProgress';
 import PageSkeleton from './PageSkeleton';
 import Username from './Username';
+import type { SupporterTier } from '@/types/game';
 import '../styles/Factions.css';
 
 interface GalaxyPlayer {
   userId: number;
   username: string;
   isSupporter: boolean;
+  supporterTier?: SupporterTier | null;
+  isFounder?: boolean;
   points: number;
   joinedAt: string;
   nexuses: number;
@@ -111,6 +114,8 @@ export default function PlayersView() {
                     <Username
                       name={p.username}
                       isSupporter={p.isSupporter}
+                      supporterTier={p.supporterTier ?? null}
+                      isFounder={p.isFounder}
                       linkToProfile
                       className="factions-browser-card-name"
                     />

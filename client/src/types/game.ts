@@ -1,8 +1,12 @@
+export type SupporterTier = 'recruit' | 'officer' | 'commander';
+
 export interface User {
   id: string;
   username: string;
   email: string;
   isSupporter?: boolean;
+  supporterTier?: SupporterTier | null;
+  isFounder?: boolean;
 }
 
 export interface TimelineDay {
@@ -21,6 +25,8 @@ export interface TimelineDay {
 export interface UserStats {
   username: string;
   isSupporter?: boolean;
+  supporterTier?: SupporterTier | null;
+  isFounder?: boolean;
   points: number;
   accountAgeDays: number;
   nexusCount: number;

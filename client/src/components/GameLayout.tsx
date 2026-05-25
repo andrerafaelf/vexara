@@ -13,8 +13,8 @@ import { useUnreadReports } from '@/hooks/useUnreadReports';
 import '@/styles/Game.css';
 import '@/styles/InGameIdentity.css';
 import { Nexus } from '@/types/game';
-import { Building2, Heart, Menu } from 'lucide-react';
-import { KOFI_URL } from '@/constants/support';
+import { Building2, Menu } from 'lucide-react';
+import SupportTiersCard from '@/components/SupportTiersCard';
 import { usePathname, useRouter } from 'next/navigation';
 import { startTransition, useCallback, useEffect, useMemo, useState } from 'react';
 import { useStartProgress } from './NavigationProgress';
@@ -262,15 +262,12 @@ export default function GameLayout({
           <button className={`nav-btn${is('profile') ? ' active' : ''}`} onClick={nav('/profile')}>
             Profile
           </button>
-          <a
-            href={KOFI_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="nav-btn mobile-drawer-kofi"
-          >
-            <Heart size={14} aria-hidden="true" />
-            Support Vexara
-          </a>
+          <SupportTiersCard
+            variant="compact"
+            currentTier={user?.supporterTier ?? null}
+            isFounder={user?.isFounder}
+            isSupporter={user?.isSupporter}
+          />
         </div>
       </aside>
 

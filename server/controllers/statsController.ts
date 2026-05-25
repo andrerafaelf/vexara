@@ -68,7 +68,7 @@ export async function getMyStats(req: AuthRequest, res: Response): Promise<void>
     const accountAgeDays = Math.max(1, Math.floor((Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24)));
 
     res.json({
-      username: user.username, isSupporter: user.isSupporter, points: player?.points ?? 0, accountAgeDays, nexusCount: nexuses.length, totalTroops,
+      username: user.username, isSupporter: user.isSupporter, supporterTier: user.supporterTier ?? null, isFounder: user.isFounder ?? false, points: player?.points ?? 0, accountAgeDays, nexusCount: nexuses.length, totalTroops,
       combat: { attacksLaunched, attacksDefended, victories, defeats, troopsLost, troopsKilled, resourcesStolen, resourcesLost },
       resources: {
         current: totalCurrentResources,

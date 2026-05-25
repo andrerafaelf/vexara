@@ -3,7 +3,7 @@
 import { useAuth } from '@/context/AuthContext';
 import { getUserStats, changePassword } from '@/services/api';
 import { UserStats } from '@/types/game';
-import { Bell, ExternalLink, Heart, Lock, LogOut, User as UserIcon } from 'lucide-react';
+import { Bell, ExternalLink, Lock, LogOut, User as UserIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import '../styles/ProfileStats.css';
@@ -11,6 +11,8 @@ import NotificationSettings from './NotificationSettings';
 import StatsChart from './StatsChart';
 import { usePageReady } from './NavigationProgress';
 import PageSkeleton from './PageSkeleton';
+import SupportTiersCard from './SupportTiersCard';
+import Username from './Username';
 
 function fmt(n: number): string {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
@@ -196,9 +198,20 @@ export default function ProfileStats() {
 
       {tab === 'stats' && <>
       <div className="ps-header">
-        <div className="ps-avatar">{stats.username.charAt(0).toUpperCase()}</div>
+        <div
+          className={`ps-avatar${stats.supporterTier === 'officer' ? ' supporter-border supporter-border-officer' : ''}${stats.supporterTier === 'commander' ? ' supporter-border supporter-border-commander' : ''}`}
+        >
+          {stats.username.charAt(0).toUpperCase()}
+        </div>
         <div className="ps-header-info">
-          <h2 className={`ps-username${stats.isSupporter ? ' supporter-name' : ''}`}>{stats.username}</h2>
+          <h2 className="ps-username">
+            <Username
+              name={stats.username}
+              isSupporter={stats.isSupporter}
+              supporterTier={stats.supporterTier ?? null}
+              isFounder={stats.isFounder}
+            />
+          </h2>
           <span className="ps-meta">
             {stats.points.toLocaleString()} influence · {stats.nexusCount} nexus{stats.nexusCount !== 1 ? 'es' : ''} · {stats.accountAgeDays}d played
           </span>
@@ -289,29 +302,12 @@ export default function ProfileStats() {
         </div>
       </div>
 
-      <div className="ps-support">
-        <div className="ps-support-icon" aria-hidden="true">
-          <Heart size={18} />
-        </div>
-        <div className="ps-support-body">
-          <div className="ps-support-title">
-            {stats.isSupporter ? 'Thanks for supporting Vexara' : 'Support Vexara'}
-          </div>
-          <p className="ps-support-text">
-            {stats.isSupporter
-              ? <>Your <span className="supporter-name">name now glows</span> in chat and on your profile, and every donation grants <strong>1 token</strong> to spend on your account. Thank you for helping keep the lights on.</>
-              : <>Vexara is in alpha and runs on a small server. Each donation grants a <span className="supporter-name">glowing name</span> in chat and on your profile, plus <strong>1 token</strong> to spend on your account.</>}
-          </p>
-          <a
-            href="https://ko-fi.com/andrerfferreira"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="ps-support-cta"
-          >
-            Support on Ko-fi
-          </a>
-        </div>
-      </div>
+      <SupportTiersCard
+        variant="full"
+        currentTier={stats.supporterTier ?? null}
+        isFounder={stats.isFounder}
+        isSupporter={stats.isSupporter}
+      />
       </>}
     </div>
   );
