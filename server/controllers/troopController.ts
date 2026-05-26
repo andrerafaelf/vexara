@@ -1,6 +1,7 @@
 import type { Response } from 'express';
 import { applyCompletedQueues, applyQuestRewards, computeResourceUpdate, mergeTroopsTrained, normalizeTrainingQueue, queueToJson, serializeNexus } from '../models/Nexus.js';
 import * as troopService from '../services/troopService.js';
+import { atomicUpdateNexusResources, ResourceConflictError } from '../services/nexusService.js';
 import type { AuthRequest } from '../types/index.js';
 import { NEXUS_TYPE_BONUSES, getMaxStorage, getResourceProduction } from '../utils/economy.js';
 import { parsePositiveInt } from '../utils/validation.js';
@@ -173,14 +174,20 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
     const completesAt = new Date(queueStart + perUnitSeconds * parsedAmount * 1000);
     const newQueue = [...trainingQueue, { troopType, amount: parsedAmount, completesAt, perUnitSeconds }];
 
-    const updated = await troopService.updateNexus(nexus.id, {
-      ...resourceUpdate,
-      biomass: current.biomass - totalCost.biomass,
-      alloy: current.alloy - totalCost.alloy,
-      ore: current.ore - totalCost.ore,
-      populationCurrent: nexus.populationCurrent + totalCost.population,
-      trainingQueue: queueToJson(newQueue),
-    });
+    let updated;
+    try {
+      updated = await atomicUpdateNexusResources(nexus.id, nexus.lastResourceUpdate, {
+        ...resourceUpdate,
+        biomass: current.biomass - totalCost.biomass,
+        alloy: current.alloy - totalCost.alloy,
+        ore: current.ore - totalCost.ore,
+        populationCurrent: nexus.populationCurrent + totalCost.population,
+        trainingQueue: queueToJson(newQueue),
+      });
+    } catch (e) {
+      if (e instanceof ResourceConflictError) { res.status(409).json({ error: 'Resources updated simultaneously — please retry' }); return; }
+      throw e;
+    }
     const rewardApplied = await applyQuestRewards(updated);
     try { emitResourceSnapshot(req.userId!, rewardApplied); }
     catch (e) { logError('nexus_resources_emit_failed', { message: (e as Error).message, file: 'troopController.ts', op: 'trainTroops' }); }
@@ -235,14 +242,20 @@ export async function cancelTrainingQueue(req: AuthRequest, res: Response): Prom
     }
     const resourceUpdate = computeResourceUpdate(nexus);
     const current = { ...nexus, ...resourceUpdate } as unknown as Record<string, number>;
-    const updated = await troopService.updateNexus(nexus.id, {
-      ...resourceUpdate,
-      biomass: current.biomass + refund.biomass,
-      alloy: current.alloy + refund.alloy,
-      ore: current.ore + refund.ore,
-      populationCurrent: Math.max(0, nexus.populationCurrent - totalCost.population),
-      trainingQueue: queueToJson(newQueue),
-    });
+    let updated;
+    try {
+      updated = await atomicUpdateNexusResources(nexus.id, nexus.lastResourceUpdate, {
+        ...resourceUpdate,
+        biomass: current.biomass + refund.biomass,
+        alloy: current.alloy + refund.alloy,
+        ore: current.ore + refund.ore,
+        populationCurrent: Math.max(0, nexus.populationCurrent - totalCost.population),
+        trainingQueue: queueToJson(newQueue),
+      });
+    } catch (e) {
+      if (e instanceof ResourceConflictError) { res.status(409).json({ error: 'Resources updated simultaneously — please retry' }); return; }
+      throw e;
+    }
     try { emitResourceSnapshot(req.userId!, updated); }
     catch (e) { logError('nexus_resources_emit_failed', { message: (e as Error).message, file: 'troopController.ts', op: 'cancelTrainingQueue' }); }
     res.json({ success: true, refund, nexus: serializeNexus(updated) });

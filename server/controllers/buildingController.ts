@@ -1,6 +1,7 @@
 import type { Response } from 'express';
 import { applyCompletedQueues, applyQuestRewards, computeResourceUpdate, normalizeBuildQueue, queueToJson, serializeNexus } from '../models/Nexus.js';
 import * as buildingService from '../services/buildingService.js';
+import { atomicUpdateNexusResources, ResourceConflictError } from '../services/nexusService.js';
 import type { AuthRequest } from '../types/index.js';
 import { NEXUS_TYPE_BONUSES, getMaxStorage, getResourceProduction } from '../utils/economy.js';
 import { notifyNexusResources } from '../services/warRoomSocket.js';
@@ -233,17 +234,20 @@ export async function upgradeBuilding(req: AuthRequest, res: Response): Promise<
     const buildSeconds = Math.max(1, Math.floor(cost.time * getCommandTimeFactor(nexus.commandCore) * nexusBuildTimeFactor));
     const completesAt = new Date(queueStart + buildSeconds * 1000);
     const newQueue = [...buildQueue, { building, targetLevel: currentLevel + 1, completesAt }];
-    const updated = await buildingService.updateNexus(nexus.id, {
-      ...resourceUpdate,
-      biomass: (current as unknown as Record<string, number>).biomass - cost.biomass,
-      alloy: (current as unknown as Record<string, number>).alloy - cost.alloy,
-      ore: (current as unknown as Record<string, number>).ore - cost.ore,
-      buildQueue: queueToJson(newQueue),
-    });
+    let updated;
+    try {
+      updated = await atomicUpdateNexusResources(nexus.id, nexus.lastResourceUpdate, {
+        ...resourceUpdate,
+        biomass: (current as unknown as Record<string, number>).biomass - cost.biomass,
+        alloy: (current as unknown as Record<string, number>).alloy - cost.alloy,
+        ore: (current as unknown as Record<string, number>).ore - cost.ore,
+        buildQueue: queueToJson(newQueue),
+      });
+    } catch (e) {
+      if (e instanceof ResourceConflictError) { res.status(409).json({ error: 'Resources updated simultaneously — please retry' }); return; }
+      throw e;
+    }
     const rewardApplied = await applyQuestRewards(updated);
-    // Push a fresh resource snapshot so the client's live tick and any
-    // affordability gates re-anchor against the post-deduction baseline.
-    // Best-effort: a failed emit must not break the HTTP response.
     try {
       notifyNexusResources(req.userId!, {
         nexusId: rewardApplied.id,
@@ -301,13 +305,19 @@ export async function cancelBuildQueue(req: AuthRequest, res: Response): Promise
     }
     const resourceUpdate = computeResourceUpdate(nexus);
     const current = { ...nexus, ...resourceUpdate } as unknown as Record<string, number>;
-    const updated = await buildingService.updateNexus(nexus.id, {
-      ...resourceUpdate,
-      biomass: current.biomass + refund.biomass,
-      alloy: current.alloy + refund.alloy,
-      ore: current.ore + refund.ore,
-      buildQueue: queueToJson(newQueue),
-    });
+    let updated;
+    try {
+      updated = await atomicUpdateNexusResources(nexus.id, nexus.lastResourceUpdate, {
+        ...resourceUpdate,
+        biomass: current.biomass + refund.biomass,
+        alloy: current.alloy + refund.alloy,
+        ore: current.ore + refund.ore,
+        buildQueue: queueToJson(newQueue),
+      });
+    } catch (e) {
+      if (e instanceof ResourceConflictError) { res.status(409).json({ error: 'Resources updated simultaneously — please retry' }); return; }
+      throw e;
+    }
     try {
       notifyNexusResources(req.userId!, {
         nexusId: updated.id,

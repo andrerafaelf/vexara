@@ -135,7 +135,7 @@ export async function sendSpyMission(req: AuthRequest, res: Response): Promise<v
     };
     resourceUpdate[secondaryKey] = (attacker as unknown as Record<string, number>)[secondaryKey] - secondaryNeeded;
 
-    const [mission] = await Promise.all([
+    const [mission] = await prisma.$transaction([
       prisma.spyMission.create({
         data: {
           galaxyId:       req.galaxyId,
@@ -182,18 +182,20 @@ export async function processArrivedSpyMissions(): Promise<void> {
       ]);
 
       if (!defender) {
-        // Target nexus gone, mission just completes with no result, return operatives
-        const travelMs = mission.arrivesAt.getTime() - mission.createdAt.getTime();
-        await Promise.all([
+        // Target nexus gone — complete mission and return operatives atomically
+        const ops: Prisma.PrismaPromise<unknown>[] = [
           prisma.spyMission.update({
             where: { id: mission.id },
             data: { status: 'completed', result: { error: 'Target nexus no longer exists' } },
           }),
-          attacker && prisma.nexus.update({
+        ];
+        if (attacker) {
+          ops.push(prisma.nexus.update({
             where: { id: mission.fromNexusId },
             data: { reconOperative: { increment: mission.operatives } },
-          }),
-        ]);
+          }));
+        }
+        await prisma.$transaction(ops);
         continue;
       }
 
@@ -248,18 +250,17 @@ export async function processArrivedSpyMissions(): Promise<void> {
           const sabotagePercent = clamp(0.05 + excessRatio * 0.35, 0.05, 0.40);
           operativesReturning = mission.operatives - Math.ceil(mission.operatives * 0.25);
 
+          // Collect all defender nexus mutations for this sabotage into one update
+          const defenderNexusData: Record<string, unknown> = {};
+
           if (target === 'troops') {
-            // Sabotage delays the training queue rather than killing garrison troops.
-            // Each excess operative past the defender's recon count adds 30 minutes of delay,
-            // mirroring the building sabotage mechanic.
             const delayMs = excessOps * 30 * 60 * 1000;
             const tq = (defender.trainingQueue as Array<{ troopType: string; amount: number; completesAt: string; perUnitSeconds?: number }>) ?? [];
             if (tq.length > 0) {
-              const delayed = tq.map((item) => ({
+              defenderNexusData.trainingQueue = tq.map((item) => ({
                 ...item,
                 completesAt: new Date(new Date(item.completesAt).getTime() + delayMs).toISOString(),
               }));
-              await prisma.nexus.update({ where: { id: mission.toNexusId }, data: { trainingQueue: delayed } });
               result = { ...result, success: true, target, delayMinutes: excessOps * 30 };
             } else {
               result = { ...result, success: true, target, message: 'No active training queue' };
@@ -268,11 +269,10 @@ export async function processArrivedSpyMissions(): Promise<void> {
             const delayMs = excessOps * 30 * 60 * 1000;
             const bq = (defender.buildQueue as Array<{ building: string; targetLevel: number; completesAt: string }>) ?? [];
             if (bq.length > 0) {
-              const delayed = bq.map((item) => ({
+              defenderNexusData.buildQueue = bq.map((item) => ({
                 ...item,
                 completesAt: new Date(new Date(item.completesAt).getTime() + delayMs).toISOString(),
               }));
-              await prisma.nexus.update({ where: { id: mission.toNexusId }, data: { buildQueue: delayed } });
               result = { ...result, success: true, target, delayMinutes: excessOps * 30 };
             } else {
               result = { ...result, success: true, target, message: 'No active build queue' };
@@ -280,29 +280,32 @@ export async function processArrivedSpyMissions(): Promise<void> {
           }
 
           if (defenderRecon > 0) {
-            await prisma.nexus.update({ where: { id: mission.toNexusId }, data: { reconOperative: 0 } });
+            defenderNexusData.reconOperative = 0;
           }
+
+          // Atomically apply all defender mutations + mark mission returning
+          const sabotageOps: Prisma.PrismaPromise<unknown>[] = [
+            prisma.spyMission.update({
+              where: { id: mission.id },
+              data: { status: 'returning', returnsAt, result: result as Prisma.InputJsonValue, operatives: operativesReturning },
+            }),
+          ];
+          if (Object.keys(defenderNexusData).length > 0) {
+            sabotageOps.push(prisma.nexus.update({ where: { id: mission.toNexusId }, data: defenderNexusData }));
+          }
+          await prisma.$transaction(sabotageOps);
+          continue;
         } else {
           operativesReturning = 0; // all lost on sabotage failure
           result = { ...result, success: false, detected: true, defenderRecon };
         }
       }
 
-      // Mark as returning, operatives come back after another travel leg
+      // Mark as returning (embed path and failed sabotage reach here)
       await prisma.spyMission.update({
         where: { id: mission.id },
-        data: { status: 'returning', returnsAt, result: result as Prisma.InputJsonValue },
+        data: { status: 'returning', returnsAt, result: result as Prisma.InputJsonValue, operatives: operativesReturning },
       });
-
-      // Surviving operatives are held in the mission until returnsAt
-      // (they're already deducted from the nexus, returned in the 'completed' phase)
-      if (operativesReturning !== mission.operatives) {
-        // Store how many survive so the return phase knows what to give back
-        await prisma.spyMission.update({
-          where: { id: mission.id },
-          data: { operatives: operativesReturning },
-        });
-      }
 
     } catch (err) {
       console.error('Error processing spy mission', mission.id, err);
@@ -316,13 +319,16 @@ export async function processArrivedSpyMissions(): Promise<void> {
 
   for (const mission of returning) {
     try {
-      await Promise.all([
+      const returnOps: Prisma.PrismaPromise<unknown>[] = [
         prisma.spyMission.update({ where: { id: mission.id }, data: { status: 'completed' } }),
-        mission.operatives > 0 && prisma.nexus.update({
+      ];
+      if (mission.operatives > 0) {
+        returnOps.push(prisma.nexus.update({
           where: { id: mission.fromNexusId },
           data: { reconOperative: { increment: mission.operatives } },
-        }),
-      ]);
+        }));
+      }
+      await prisma.$transaction(returnOps);
     } catch (err) {
       console.error('Error completing spy mission return', mission.id, err);
     }

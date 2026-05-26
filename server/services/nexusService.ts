@@ -2,6 +2,31 @@ import type { Prisma } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 import { checkAndGrantMilestoneToken, checkAndGrantToken } from './referralService.js';
 
+export class ResourceConflictError extends Error {
+  constructor() { super('Resource state changed — please retry'); this.name = 'ResourceConflictError'; }
+}
+
+/**
+ * Atomic compare-and-swap update for economy actions (train, build, cancel).
+ *
+ * Guards against the non-atomic read→check→write race by including
+ * `lastResourceUpdate` in the WHERE clause. If another request already
+ * committed a resource write, the stale timestamp won't match and we get
+ * 0 rows back → ResourceConflictError, which callers surface as 409.
+ */
+export async function atomicUpdateNexusResources(
+  id: number,
+  expectedLastUpdate: Date,
+  data: Parameters<typeof prisma.nexus.update>[0]['data'],
+) {
+  const { count } = await prisma.nexus.updateMany({
+    where: { id, lastResourceUpdate: expectedLastUpdate },
+    data,
+  });
+  if (count === 0) throw new ResourceConflictError();
+  return prisma.nexus.findUniqueOrThrow({ where: { id } });
+}
+
 export function getNexusByOwner(userId: number, galaxyId: number) {
   return prisma.nexus.findMany({
     where: { ownerId: userId, galaxyId },
