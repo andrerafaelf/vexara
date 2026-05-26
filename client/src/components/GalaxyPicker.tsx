@@ -30,6 +30,7 @@ interface PlayerEntry {
   userId: number;
   username: string;
   isSupporter?: boolean;
+  supporterTier?: string | null;
   points: number;
   nexuses: number;
   factionId: number | null;
@@ -344,7 +345,7 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
                     <tr key={p.userId} className={i % 2 === 0 ? 'gp-win-row-zebra' : ''}>
                       <td className="gp-win-rank">{i + 1}</td>
                       <td>
-                        <Username name={p.username} isSupporter={p.isSupporter} />
+                        <Username name={p.username} isSupporter={p.isSupporter} supporterTier={p.supporterTier as any} />
                         {faction && <span className="gp-win-faction-tag">[{faction.tag}]</span>}
                       </td>
                       <td className="gp-num">{p.points.toLocaleString()}</td>

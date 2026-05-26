@@ -296,7 +296,7 @@
 
 .tab-content {
   min-height: 400px;
-  contain: layout style;
+  contain: style;
 }
 
 @keyframes tab-fade-in {

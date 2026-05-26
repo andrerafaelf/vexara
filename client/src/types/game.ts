@@ -166,6 +166,7 @@ export interface Attack {
       _id: string;
       username: string;
       isSupporter?: boolean;
+      supporterTier?: SupporterTier | null;
     };
     nexus: {
       _id: string;
@@ -182,6 +183,7 @@ export interface Attack {
       _id: string;
       username: string;
       isSupporter?: boolean;
+      supporterTier?: SupporterTier | null;
     };
     nexus: {
       _id: string;

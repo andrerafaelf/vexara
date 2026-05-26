@@ -336,12 +336,12 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
                   <strong>Date:</strong> {formatDate(selectedReport.arrivesAt)}
                 </p>
                 <p>
-                  <strong>Striker:</strong> <Username name={selectedReport.attacker.user?.username || 'Unknown'} isSupporter={selectedReport.attacker.user?.isSupporter} /> from{' '}
+                  <strong>Striker:</strong> <Username name={selectedReport.attacker.user?.username || 'Unknown'} isSupporter={selectedReport.attacker.user?.isSupporter} supporterTier={selectedReport.attacker.user?.supporterTier} /> from{' '}
                   {selectedReport.attacker.nexus?.name || 'Unknown'} ({selectedReport.attacker.nexus?.x || '?'}|
                   {selectedReport.attacker.nexus?.y || '?'})
                 </p>
                 <p>
-                  <strong>Defender:</strong> <Username name={selectedReport.defender.user?.username || 'Unknown'} isSupporter={selectedReport.defender.user?.isSupporter} /> from{' '}
+                  <strong>Defender:</strong> <Username name={selectedReport.defender.user?.username || 'Unknown'} isSupporter={selectedReport.defender.user?.isSupporter} supporterTier={selectedReport.defender.user?.supporterTier} /> from{' '}
                   {selectedReport.defender.nexus?.name || 'Unknown'} ({selectedReport.defender.nexus?.x || '?'}|
                   {selectedReport.defender.nexus?.y || '?'})
                 </p>
@@ -561,7 +561,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
                         </>
                       ) : (
                         <>
-                          Defense against <Username name={report.attacker.user?.username || 'Unknown'} isSupporter={report.attacker.user?.isSupporter} /> from{' '}
+                          Defense against <Username name={report.attacker.user?.username || 'Unknown'} isSupporter={report.attacker.user?.isSupporter} supporterTier={report.attacker.user?.supporterTier} /> from{' '}
                           {report.attacker.nexus?.name || 'Unknown'} ({report.attacker.nexus?.x || '?'}|
                           {report.attacker.nexus?.y || '?'})
                         </>

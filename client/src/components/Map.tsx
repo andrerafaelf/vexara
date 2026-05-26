@@ -58,6 +58,7 @@ export interface MapNexus {
   owner: {
     username: string;
     isSupporter?: boolean;
+    supporterTier?: string | null;
     points: number;
   };
   points: number;
@@ -897,7 +898,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
 
         <div className="detail-line">
           <span>Owner</span>
-          <Username name={selectedNexus.owner?.username ?? ''} isSupporter={selectedNexus.owner?.isSupporter} linkToProfile />
+          <Username name={selectedNexus.owner?.username ?? ''} isSupporter={selectedNexus.owner?.isSupporter} supporterTier={selectedNexus.owner?.supporterTier as any} linkToProfile />
         </div>
         <div className="detail-line">
           <span>Points</span>

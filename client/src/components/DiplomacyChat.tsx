@@ -9,7 +9,7 @@ interface ChatMessage {
   id: number;
   content: string;
   createdAt: string;
-  user: { id: number; username: string; isSupporter?: boolean };
+  user: { id: number; username: string; isSupporter?: boolean; supporterTier?: string | null };
 }
 
 interface Props {
@@ -169,7 +169,7 @@ export default function DiplomacyChat({ treatyId, currentUserId, partnerFactionN
                 <div key={msg.id} className={`faction-chat-msg${isMine ? ' faction-chat-msg--mine' : ''}`}>
                   {showAuthor && (
                     <div className="faction-chat-author">
-                      <Username name={msg.user.username} isSupporter={msg.user.isSupporter} className="faction-chat-username" />
+                      <Username name={msg.user.username} isSupporter={msg.user.isSupporter} supporterTier={msg.user.supporterTier as any} className="faction-chat-username" />
                       <span className="faction-chat-time">{formatTime(msg.createdAt)}</span>
                     </div>
                   )}

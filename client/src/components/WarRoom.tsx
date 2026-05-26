@@ -64,6 +64,7 @@ interface Slot {
   userId: number;
   username: string;
   isSupporter?: boolean;
+  supporterTier?: string | null;
   fromNexusId: number;
   fromNexusName: string;
   fromNexusX: number | null;
@@ -88,6 +89,7 @@ interface ThreadMessage {
   userId: number;
   username: string;
   isSupporter?: boolean;
+  supporterTier?: string | null;
   content: string;
   kind: string;
   createdAt: string;
@@ -1007,7 +1009,7 @@ function SlotRow({
           {initials(slot.username)}
         </div>
         <div className="warroom-slot-meta">
-          <span className="warroom-slot-username"><Username name={slot.username} isSupporter={slot.isSupporter} linkToProfile />{isMine && <span className="warroom-you">YOU</span>}</span>
+          <span className="warroom-slot-username"><Username name={slot.username} isSupporter={slot.isSupporter} supporterTier={slot.supporterTier as any} linkToProfile />{isMine && <span className="warroom-you">YOU</span>}</span>
           <span className="warroom-slot-nexus">from {slot.fromNexusName}</span>
         </div>
       </div>
@@ -1429,7 +1431,7 @@ function ThreadPanel({
                   <div className="warroom-avatar warroom-avatar--xs" style={{ background: colorForUser(m.userId) }}>
                     {initials(m.username)}
                   </div>
-                  <span className="warroom-thread-msg-name"><Username name={m.username} isSupporter={m.isSupporter} /></span>
+                  <span className="warroom-thread-msg-name"><Username name={m.username} isSupporter={m.isSupporter} supporterTier={m.supporterTier as any} /></span>
                   <span className="warroom-thread-msg-time">{fmtShortTime(m.createdAt)}</span>
                 </div>
               )}
@@ -1551,7 +1553,7 @@ function CreateOperationModal({
                   </div>
                   <div className="warroom-target-card-name">{target.name}</div>
                   <div className="warroom-target-card-meta">
-                    {target.owner?.username && <span className="warroom-target-card-owner"><Username name={target.owner.username} isSupporter={target.owner?.isSupporter} linkToProfile /></span>}
+                    {target.owner?.username && <span className="warroom-target-card-owner"><Username name={target.owner.username} isSupporter={target.owner?.isSupporter} supporterTier={target.owner?.supporterTier as any} linkToProfile /></span>}
                     <span className="warroom-target-card-points">{target.points.toLocaleString()} pts</span>
                   </div>
                 </>

@@ -27,12 +27,16 @@ const TROOP_OPTIONS = [
 
 type FilterValue = 'all' | 'unverified' | 'verified';
 type EditModal = { userId: string; username: string; email: string } | null;
+type TokenModal = { userId: string; username: string } | null;
 
 export default function UsersTab({ users, adminFetch, showToast, onUserChanged }: Props) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FilterValue>('all');
   const [editModal, setEditModal] = useState<EditModal>(null);
   const [editForm, setEditForm] = useState({ email: '', password: '' });
+  const [tokenModal, setTokenModal] = useState<TokenModal>(null);
+  const [tokenCount, setTokenCount] = useState('1');
+  const [tokenReason, setTokenReason] = useState('manual');
 
   const term = search.trim().toLowerCase();
   const filtered = users.filter((u) => {
@@ -117,6 +121,32 @@ export default function UsersTab({ users, adminFetch, showToast, onUserChanged }
     }
   };
 
+  const handleGrantTokens = async () => {
+    if (!tokenModal) return;
+    const count = parseInt(tokenCount);
+    if (!Number.isFinite(count) || count < 1 || count > 50) {
+      showToast('Count must be 1–50', 'error');
+      return;
+    }
+    try {
+      const res = await adminFetch(`${ADMIN_API_URL}/users/${tokenModal.userId}/tokens`, {
+        method: 'POST',
+        body: JSON.stringify({ count, reason: tokenReason || 'admin_grant' }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(`Granted ${data.granted} token${data.granted !== 1 ? 's' : ''} to ${tokenModal.username}`, 'success');
+        setTokenModal(null);
+        setTokenCount('1');
+        setTokenReason('manual');
+      } else {
+        showToast(data.error || 'Failed to grant tokens', 'error');
+      }
+    } catch {
+      showToast('Error granting tokens', 'error');
+    }
+  };
+
   return (
     <div>
       {/* Toolbar */}
@@ -178,6 +208,9 @@ export default function UsersTab({ users, adminFetch, showToast, onUserChanged }
                     <button className="btn-action btn-edit" onClick={() => openEdit(u)}>
                       Edit
                     </button>
+                    <button className="btn-action btn-notif" onClick={() => setTokenModal({ userId: u._id, username: u.username })}>
+                      Tokens
+                    </button>
                     {!u.emailVerified && u.hasPendingToken && (
                       <button className="btn-action btn-notif" onClick={() => handleResendVerification(u)}>
                         Resend verification
@@ -193,6 +226,44 @@ export default function UsersTab({ users, adminFetch, showToast, onUserChanged }
           </tbody>
         </table>
       </div>
+
+      {/* Grant tokens modal */}
+      {tokenModal && (
+        <div className="modal-overlay" onClick={() => setTokenModal(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Grant tokens: {tokenModal.username}</h3>
+              <button className="modal-close" onClick={() => setTokenModal(null)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="form-grid">
+                <div className="form-group">
+                  <label>Count (1–50)</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={50}
+                    value={tokenCount}
+                    onChange={(e) => setTokenCount(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Reason</label>
+                  <input
+                    value={tokenReason}
+                    onChange={(e) => setTokenReason(e.target.value)}
+                    placeholder="e.g. commander, contest, compensation"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={() => setTokenModal(null)}>Cancel</button>
+              <button className="btn-primary" onClick={handleGrantTokens}>Grant</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Edit modal */}
       {editModal && (

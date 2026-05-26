@@ -47,7 +47,7 @@ export async function getGalaxyWinResults(req: AuthRequest, res: Response): Prom
       }),
       prisma.galaxyPlayer.findMany({
         where: { galaxyId },
-        select: { userId: true, points: true, user: { select: { username: true, isSupporter: true } } },
+        select: { userId: true, points: true, user: { select: { username: true, isSupporter: true, supporterTier: true } } },
         orderBy: { points: 'desc' },
       }),
     ]);
@@ -78,7 +78,7 @@ export async function getGalaxyWinResults(req: AuthRequest, res: Response): Prom
       .map((f) => ({ id: f.id, name: f.name, tag: f.tag, points: factionPoints.get(f.id) || 0, nexuses: factionNexuses.get(f.id) || 0, isWinner: f.id === galaxy.winnerFactionId }))
       .sort((a, b) => b.points - a.points);
 
-    res.json({ galaxy: serializeGalaxy(galaxy), factionLeaderboard, topPlayers: players.slice(0, 20).map((p) => ({ userId: p.userId, username: p.user?.username ?? 'Unknown', isSupporter: p.user?.isSupporter ?? false, points: p.points, nexuses: nexusByOwner.get(p.userId) || 0, factionId: userFactionMap.get(p.userId) ?? null })) });
+    res.json({ galaxy: serializeGalaxy(galaxy), factionLeaderboard, topPlayers: players.slice(0, 20).map((p) => ({ userId: p.userId, username: p.user?.username ?? 'Unknown', isSupporter: p.user?.isSupporter ?? false, supporterTier: p.user?.supporterTier ?? null, points: p.points, nexuses: nexusByOwner.get(p.userId) || 0, factionId: userFactionMap.get(p.userId) ?? null })) });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'galaxyController.ts' });
     res.status(500).json({ error: 'Internal server error' });

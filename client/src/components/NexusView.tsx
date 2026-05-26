@@ -1784,7 +1784,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                           return (
                             <div key={a._id} className="strikes-card-entry">
                               <span className="strikes-card-entry-who">
-                                <Username name={a.attacker?.user?.username ?? '?'} isSupporter={a.attacker?.user?.isSupporter} /> · {src?.name ?? '?'}
+                                <Username name={a.attacker?.user?.username ?? '?'} isSupporter={a.attacker?.user?.isSupporter} supporterTier={a.attacker?.user?.supporterTier} /> · {src?.name ?? '?'}
                                 {src?.x != null && src?.y != null ? ` (${src.x}|${src.y})` : ''}
                               </span>
                               <Countdown endAt={a.arrivesAt} className="strikes-card-entry-time" />

@@ -5,16 +5,16 @@ export function getNexusById(id: number) {
 }
 
 export function getUserById(id: number) {
-  return prisma.user.findUnique({ where: { id }, select: { id: true, username: true, isSupporter: true } });
+  return prisma.user.findUnique({ where: { id }, select: { id: true, username: true, isSupporter: true, supporterTier: true } });
 }
 
-export async function getUsersByIds(ids: number[]): Promise<Map<number, { username: string; isSupporter: boolean }>> {
+export async function getUsersByIds(ids: number[]): Promise<Map<number, { username: string; isSupporter: boolean; supporterTier: string | null }>> {
   if (ids.length === 0) return new Map();
   const users = await prisma.user.findMany({
     where: { id: { in: ids } },
-    select: { id: true, username: true, isSupporter: true },
+    select: { id: true, username: true, isSupporter: true, supporterTier: true },
   });
-  return new Map(users.map((u) => [u.id, { username: u.username, isSupporter: u.isSupporter }]));
+  return new Map(users.map((u) => [u.id, { username: u.username, isSupporter: u.isSupporter, supporterTier: u.supporterTier }]));
 }
 
 export function createAttackAndDeductTroops(

@@ -52,7 +52,7 @@ interface Faction {
   motd?: string;
   createdAt: string;
   myRole?: string;
-  members?: Array<{ id: number; userId: number; username: string; isSupporter?: boolean; role: string }>;
+  members?: Array<{ id: number; userId: number; username: string; isSupporter?: boolean; supporterTier?: string | null; role: string }>;
 }
 
 interface FactionInvite {
@@ -90,6 +90,7 @@ interface JoinRequest {
   userId: number;
   username: string;
   isSupporter?: boolean;
+  supporterTier?: string | null;
   message: string | null;
   createdAt: string;
 }
@@ -174,7 +175,7 @@ export default function FactionsView() {
 
   // Click-to-expand on faction names: fetch the member list lazily and cache it.
   const [expandedFactionId, setExpandedFactionId] = useState<number | null>(null);
-  const [factionMemberCache, setFactionMemberCache] = useState<Record<number, Array<{ userId: number; username: string; isSupporter: boolean; role: string }> | 'loading' | 'error'>>({});
+  const [factionMemberCache, setFactionMemberCache] = useState<Record<number, Array<{ userId: number; username: string; isSupporter: boolean; supporterTier?: string | null; role: string }> | 'loading' | 'error'>>({});
 
   const toggleFactionExpanded = useCallback(async (factionId: number) => {
     setExpandedFactionId((prev) => (prev === factionId ? null : factionId));
@@ -182,10 +183,11 @@ export default function FactionsView() {
     setFactionMemberCache((prev) => ({ ...prev, [factionId]: 'loading' }));
     try {
       const res = await getFaction(factionId);
-      const members = (res.data?.members ?? []).map((m: { userId: number; username: string; isSupporter?: boolean; role: string }) => ({
+      const members = (res.data?.members ?? []).map((m: { userId: number; username: string; isSupporter?: boolean; supporterTier?: string | null; role: string }) => ({
         userId: m.userId,
         username: m.username,
         isSupporter: !!m.isSupporter,
+        supporterTier: m.supporterTier ?? null,
         role: m.role,
       }));
       setFactionMemberCache((prev) => ({ ...prev, [factionId]: members }));
@@ -676,7 +678,7 @@ export default function FactionsView() {
                           <ul className="factions-browser-card-members-list">
                             {cachedMembers.map((m) => (
                               <li key={m.userId} className="factions-browser-card-members-item">
-                                <Username name={m.username} isSupporter={m.isSupporter} linkToProfile />
+                                <Username name={m.username} isSupporter={m.isSupporter} supporterTier={m.supporterTier as any} linkToProfile />
                                 <span className={`factions-role-badge factions-role-badge--${m.role}`}>{m.role}</span>
                               </li>
                             ))}
@@ -848,7 +850,7 @@ export default function FactionsView() {
               {sortedMembers.slice(0, 5).map((member) => (
                 <div key={member.id} className="factions-member-row">
                   <div className="factions-member-info">
-                    <span className="factions-member-name"><Username name={member.username} isSupporter={member.isSupporter} linkToProfile /></span>
+                    <span className="factions-member-name"><Username name={member.username} isSupporter={member.isSupporter} supporterTier={member.supporterTier as any} linkToProfile /></span>
                     <span className={`factions-member-role factions-member-role--${member.role}`}>{member.role}</span>
                   </div>
                 </div>
@@ -927,7 +929,7 @@ export default function FactionsView() {
                   {joinRequests.map((req) => (
                     <div key={req.id} className="factions-member-row factions-join-req-row">
                       <div className="factions-member-info">
-                        <span className="factions-member-name"><Username name={req.username} isSupporter={req.isSupporter} linkToProfile /></span>
+                        <span className="factions-member-name"><Username name={req.username} isSupporter={req.isSupporter} supporterTier={req.supporterTier as any} linkToProfile /></span>
                         {req.message && <span className="factions-join-req-msg-display">&ldquo;{req.message}&rdquo;</span>}
                       </div>
                       <div className="factions-member-actions">
@@ -968,7 +970,7 @@ export default function FactionsView() {
             {sortedMembers.map((member) => (
               <div key={member.id} className="factions-member-row">
                 <div className="factions-member-info">
-                  <span className="factions-member-name"><Username name={member.username} isSupporter={member.isSupporter} linkToProfile /></span>
+                  <span className="factions-member-name"><Username name={member.username} isSupporter={member.isSupporter} supporterTier={member.supporterTier as any} linkToProfile /></span>
                   <span className={`factions-member-role factions-member-role--${member.role}`}>{member.role}</span>
                 </div>
                 {myFaction.myRole === 'leader' && member.role !== 'leader' && (
@@ -1055,7 +1057,7 @@ export default function FactionsView() {
                           <ul className="factions-browser-card-members-list">
                             {cachedMembers.map((m) => (
                               <li key={m.userId} className="factions-browser-card-members-item">
-                                <Username name={m.username} isSupporter={m.isSupporter} linkToProfile />
+                                <Username name={m.username} isSupporter={m.isSupporter} supporterTier={m.supporterTier as any} linkToProfile />
                                 <span className={`factions-role-badge factions-role-badge--${m.role}`}>{m.role}</span>
                               </li>
                             ))}

@@ -16,5 +16,6 @@ router.post('/nexuses/:nexusId/complete-training', adminController.completeTrain
 router.delete('/nexuses/:nexusId', adminController.deleteNexus);
 router.get('/attacks', adminController.getAttacks);
 router.post('/attacks/:attackId/complete', adminController.completeAttack);
+router.post('/users/:userId/tokens', adminController.grantTokens);
 
 export default router;

@@ -4,7 +4,8 @@ import * as adminService from '../services/internalAdminService.js';
 import { processArrivedAttacks } from '../utils/combat.js';
 import { getPopulationMax } from '../utils/population.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
-import { logError } from '../utils/logger.js';
+import { logError, logInfo } from '../utils/logger.js';
+import prisma from '../lib/prisma.js';
 
 export async function getUsers(req: Request, res: Response): Promise<void> {
   try {
@@ -203,6 +204,38 @@ export async function completeAttack(req: Request, res: Response): Promise<void>
     await adminService.updateAttack(attackId, { arrivesAt: new Date() });
     await processArrivedAttacks();
     res.json({ success: true, message: 'Attack completed' });
+  } catch (error) {
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'internalAdminController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+export async function grantTokens(req: Request, res: Response): Promise<void> {
+  try {
+    const userId = parseInt(req.params.userId);
+    const count = parseInt(req.body?.count);
+    const reason = typeof req.body?.reason === 'string' ? req.body.reason.trim() : 'admin_grant';
+    if (!Number.isFinite(userId)) { res.status(400).json({ error: 'Invalid userId' }); return; }
+    if (!Number.isFinite(count) || count < 1 || count > 50) { res.status(400).json({ error: 'count must be 1–50' }); return; }
+
+    const user = await adminService.getUserById(userId);
+    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+
+    const now = Date.now();
+    const rows = Array.from({ length: count }, (_, i) =>
+      prisma.milestoneToken.create({
+        data: {
+          userId,
+          milestone: 0,
+          rewardType: 'admin',
+          rewardMeta: { reason, tokenIndex: i, tokenCount: count },
+          kofiTransactionId: `admin-${reason.slice(0, 20)}-${userId}-${now}-${i}`,
+        },
+      }),
+    );
+    await Promise.all(rows);
+    logInfo('admin_tokens_granted', { userId, count, reason });
+    res.json({ success: true, granted: count });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'internalAdminController.ts' });
     res.status(500).json({ error: 'Internal server error' });

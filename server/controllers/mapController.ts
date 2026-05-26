@@ -56,7 +56,7 @@ export async function getArea(req: AuthRequest, res: Response): Promise<void> {
       return {
         _id: String(v.id), id: String(v.id), name: v.name, x: v.x, y: v.y, points: v.points,
         owner: v.owner
-          ? { _id: String(v.owner.id), id: String(v.owner.id), username: v.owner.username, isSupporter: v.owner.isSupporter, points: pointsByOwnerId.get(v.owner.id) ?? 0 }
+          ? { _id: String(v.owner.id), id: String(v.owner.id), username: v.owner.username, isSupporter: v.owner.isSupporter, supporterTier: v.owner.supporterTier, points: pointsByOwnerId.get(v.owner.id) ?? 0 }
           : null,
         intelLevel: v.ownerId === req.userId ? 'owned' : 'public',
         newbieProtectionEndsAt: v.newbieProtectionEndsAt && v.newbieProtectionEndsAt > now ? v.newbieProtectionEndsAt : null,

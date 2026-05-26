@@ -49,7 +49,7 @@ export async function getDiplomacyMessages(req: AuthRequest, res: Response): Pro
         id: true,
         content: true,
         createdAt: true,
-        user: { select: { id: true, username: true, isSupporter: true } },
+        user: { select: { id: true, username: true, isSupporter: true, supporterTier: true } },
       },
       orderBy: { id: 'desc' },
       take: CHAT_PAGE_SIZE,
@@ -90,7 +90,7 @@ export async function sendDiplomacyMessage(req: AuthRequest, res: Response): Pro
         id: true,
         content: true,
         createdAt: true,
-        user: { select: { id: true, username: true, isSupporter: true } },
+        user: { select: { id: true, username: true, isSupporter: true, supporterTier: true } },
       },
     });
 

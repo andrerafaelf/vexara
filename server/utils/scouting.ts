@@ -10,7 +10,7 @@ interface PublicNexusData {
   x: number;
   y: number;
   points: number;
-  owner: { _id: number; id: number; username: string; isSupporter: boolean; points: number } | null;
+  owner: { _id: number; id: number; username: string; isSupporter: boolean; supporterTier: string | null; points: number } | null;
   intelLevel: string;
 }
 
@@ -26,7 +26,7 @@ export interface ScoutIntel {
 }
 
 function buildPublicNexusData(
-  nexus: Nexus & { owner?: { id: number; username: string; isSupporter: boolean } | null },
+  nexus: Nexus & { owner?: { id: number; username: string; isSupporter: boolean; supporterTier: string | null } | null },
   ownerPoints?: number | null,
 ): PublicNexusData {
   return {
@@ -37,7 +37,7 @@ function buildPublicNexusData(
     y: nexus.y,
     points: nexus.points,
     owner: nexus.owner
-      ? { _id: nexus.owner.id, id: nexus.owner.id, username: nexus.owner.username, isSupporter: nexus.owner.isSupporter, points: ownerPoints ?? 0 }
+      ? { _id: nexus.owner.id, id: nexus.owner.id, username: nexus.owner.username, isSupporter: nexus.owner.isSupporter, supporterTier: nexus.owner.supporterTier, points: ownerPoints ?? 0 }
       : null,
     intelLevel: 'public',
   };
@@ -118,7 +118,7 @@ export async function getNexusIntelForUser(
 ): Promise<(PublicNexusData & Partial<ScoutIntel> & { intelLevel: string; scoutedAt?: unknown; isFriendly?: boolean; relation?: FriendlyRelation; newbieProtectionEndsAt?: string | null }) | null> {
   const nexus = await prisma.nexus.findUnique({
     where: { id: nexusId },
-    include: { owner: { select: { id: true, username: true, isSupporter: true } } },
+    include: { owner: { select: { id: true, username: true, isSupporter: true, supporterTier: true } } },
   });
 
   if (!nexus) return null;

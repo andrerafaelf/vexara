@@ -63,7 +63,7 @@ export async function getMyFaction(req: AuthRequest, res: Response): Promise<voi
             motd: true,
             createdAt: true,
             members: {
-              select: { id: true, userId: true, role: true, user: { select: { username: true, isSupporter: true } } },
+              select: { id: true, userId: true, role: true, user: { select: { username: true, isSupporter: true, supporterTier: true } } },
             },
           },
         },
@@ -83,6 +83,8 @@ export async function getMyFaction(req: AuthRequest, res: Response): Promise<voi
           id: m.id,
           userId: m.userId,
           username: m.user.username,
+          isSupporter: m.user.isSupporter,
+          supporterTier: m.user.supporterTier,
           role: m.role,
         })),
       },
@@ -111,7 +113,7 @@ export async function getFaction(req: AuthRequest, res: Response): Promise<void>
         createdAt: true,
         galaxyId: true,
         members: {
-          select: { id: true, userId: true, role: true, user: { select: { username: true, isSupporter: true } } },
+          select: { id: true, userId: true, role: true, user: { select: { username: true, isSupporter: true, supporterTier: true } } },
         },
       },
     });
@@ -123,7 +125,7 @@ export async function getFaction(req: AuthRequest, res: Response): Promise<void>
 
     res.json({
       ...faction,
-      members: faction.members.map((m: any) => ({ id: m.id, userId: m.userId, username: m.user.username, isSupporter: m.user.isSupporter, role: m.role })),
+      members: faction.members.map((m: any) => ({ id: m.id, userId: m.userId, username: m.user.username, isSupporter: m.user.isSupporter, supporterTier: m.user.supporterTier, role: m.role })),
     });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
@@ -935,7 +937,7 @@ export async function getJoinRequests(req: AuthRequest, res: Response): Promise<
         id: true,
         message: true,
         createdAt: true,
-        user: { select: { id: true, username: true, isSupporter: true } },
+        user: { select: { id: true, username: true, isSupporter: true, supporterTier: true } },
       },
       orderBy: { createdAt: 'asc' },
     });
@@ -945,6 +947,7 @@ export async function getJoinRequests(req: AuthRequest, res: Response): Promise<
       userId: r.user.id,
       username: r.user.username,
       isSupporter: r.user.isSupporter,
+      supporterTier: r.user.supporterTier,
       message: r.message,
       createdAt: r.createdAt,
     })));
@@ -1160,7 +1163,7 @@ export async function getChatMessages(req: AuthRequest, res: Response): Promise<
         id: true,
         content: true,
         createdAt: true,
-        user: { select: { id: true, username: true, isSupporter: true } },
+        user: { select: { id: true, username: true, isSupporter: true, supporterTier: true } },
       },
       orderBy: { id: 'desc' },
       take: CHAT_PAGE_SIZE,
@@ -1209,7 +1212,7 @@ export async function sendChatMessage(req: AuthRequest, res: Response): Promise<
         id: true,
         content: true,
         createdAt: true,
-        user: { select: { id: true, username: true, isSupporter: true } },
+        user: { select: { id: true, username: true, isSupporter: true, supporterTier: true } },
       },
     });
 
