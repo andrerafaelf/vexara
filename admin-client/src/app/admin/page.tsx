@@ -9,6 +9,7 @@ export default function AdminPage() {
   const router = useRouter();
 
   useEffect(() => {
+    // Check for the presence of the authentication token in sessionStorage
     const token = sessionStorage.getItem('admin_basic_auth');
     if (!token) {
       router.replace('/auth');

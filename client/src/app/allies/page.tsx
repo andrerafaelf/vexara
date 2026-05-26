@@ -8,6 +8,7 @@ import { useEffect } from 'react';
 export default function FriendsPage() {
   const router = useRouter();
 
+  // Redirect to login if not authenticated
   useEffect(() => {
     if (typeof window !== 'undefined' && !localStorage.getItem('token')) {
       router.push('/login');

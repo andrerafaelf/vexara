@@ -17,6 +17,7 @@ const TROOP_KEYS: TroopKey[] = [
 // Note: Overseers are not actually a troop type that can be sent on their own, but we include them in the normalization and validation logic for convenience since they can be included in attacks/support missions.
 const SUPPORTED_ATTACK_TYPES = new Set<AttackType>(['attack', 'scout', 'support']);
 
+// Controller for handling attack-related endpoints: sending attacks, viewing incoming/outgoing attacks, etc.
 export async function sendAttack(req: AuthRequest, res: Response): Promise<void> {
   try {
     const { fromNexusId, toNexusId, troops, type = 'attack' } = req.body as {

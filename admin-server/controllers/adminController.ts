@@ -117,6 +117,7 @@ function requireGalaxyId(req: Request, res: Response): number | null {
   return id;
 }
 
+// Admin-only controllers for managing galaxies, users, and performing actions on behalf of users
 export async function listGalaxies(req: Request, res: Response): Promise<void> {
   try {
     const galaxies = await adminService.getAllGalaxies();
