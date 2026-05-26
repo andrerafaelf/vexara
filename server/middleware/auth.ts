@@ -9,10 +9,14 @@ const READ_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 // Entries expire after 30 s, galaxy switches are reflected quickly,
 // and we avoid a DB hit on every API call for active players.
 const TTL_MS = 30_000;
+// lastPlayedAt is written at most once per this interval per user to avoid
+// a DB write on every single API request.
+const LAST_PLAYED_UPDATE_INTERVAL_MS = 5 * 60 * 1000;
 interface CacheEntry {
   activeGalaxyId: number | null;
   galaxyStatus: string | null;
   expiresAt: number;
+  lastPlayedWrittenAt: number;
 }
 const userCache = new Map<number, CacheEntry>();
 
@@ -54,6 +58,7 @@ const auth = async (req: Request, res: Response, next: NextFunction): Promise<vo
         activeGalaxyId: user.activeGalaxyId ?? null,
         galaxyStatus: user.activeGalaxy?.status ?? null,
         expiresAt: now + TTL_MS,
+        lastPlayedWrittenAt: 0,
       };
       userCache.set(userId, cached);
     }
@@ -71,6 +76,12 @@ const auth = async (req: Request, res: Response, next: NextFunction): Promise<vo
     if (authReq.galaxyStatus === 'ended' && !READ_METHODS.has(req.method)) {
       res.status(423).json({ error: 'This galaxy has ended and is read-only', code: 'galaxy_ended' });
       return;
+    }
+
+    // Fire-and-forget lastPlayedAt update, throttled to once per 5 min per user.
+    if (now - cached.lastPlayedWrittenAt > LAST_PLAYED_UPDATE_INTERVAL_MS) {
+      cached.lastPlayedWrittenAt = now;
+      void prisma.user.update({ where: { id: userId }, data: { lastPlayedAt: new Date(now) } }).catch(() => {});
     }
 
     next();

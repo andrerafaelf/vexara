@@ -103,7 +103,7 @@ export const TROOPS_DOC: TroopDoc[] = [
     description: 'High attack unit that exploits armor gaps and cracks heavy defensive lines.',
     unitClass: 'light',
     stats: { attack: 55, defense: 15, speed: 16, carry: 60 },
-    cost: { biomass: 250, alloy: 150, ore: 300, population: 1, time: '1m 14s' },
+    cost: { biomass: 250, alloy: 150, ore: 300, population: 1, time: '2m 40s' },
     requirements: ['Recruitment Core Lv3', 'Ore Extractor Lv3'],
   },
   {
@@ -226,7 +226,7 @@ export const TROOPS_DOC: TroopDoc[] = [
     name: 'Overseer',
     role: 'Conquest / control unit (Special — no counter in either direction)',
     description:
-      'The Overseer is a high-value command unit that enables nexus conquest. It does not fight — it administers. Sending an Overseer on a successful strike reduces the target\'s Control Level by 50. Control starts at 100; once it reaches 0, the nexus is conquered and changes ownership to you. Two successful strikes with an Overseer will conquer any nexus. The Overseer is only useful if the attack wins — if the attack fails, the Overseer is not used and survives the defeat alongside its escort. If every non-Overseer troop in the strike is killed, the Overseer dies too. On conquest, the Overseer is consumed — it does not return home. The conquered nexus keeps its type (Resource Depot, Military Outpost, etc.) and retains its current building levels, but its name resets to "Conquered Nexus." If you conquer a special NPC nexus (any type except Neutral Settlement), all type bonuses on that nexus are permanently doubled.',
+      'The Overseer is a high-value command unit that enables nexus conquest. It does not fight — it administers. Sending an Overseer on a successful strike reduces the target\'s Control Level by 34. Control starts at 100; once it reaches 0, the nexus is conquered and changes ownership to you. Three successful strikes with an Overseer will conquer any nexus. Overseer strikes travel 3× slower than standard attacks — giving defenders time to react. The Overseer is only useful if the attack wins — if the attack fails, the Overseer is not used and survives the defeat alongside its escort. If every non-Overseer troop in the strike is killed, the Overseer dies too. On conquest, the Overseer is consumed — it does not return home. The conquered nexus keeps its type (Resource Depot, Military Outpost, etc.) and retains its current building levels, but its name resets to "Conquered Nexus." If you conquer a special NPC nexus (any type except Neutral Settlement), all type bonuses on that nexus are permanently doubled.',
     unitClass: 'special',
     stats: { attack: 0, defense: 30, speed: 15, carry: 0 },
     cost: { biomass: 180000, alloy: 140000, ore: 120000, population: 5, time: '4h 0m' },
@@ -234,7 +234,7 @@ export const TROOPS_DOC: TroopDoc[] = [
     notes: [
       'Maximum 3 per nexus at any time; maximum 1 per strike.',
       'Trains in an independent queue — does not block other troop training.',
-      'Control reduction: –50 per successful strike with a surviving Overseer. Two strikes conquer any nexus.',
+      'Control reduction: –34 per successful strike with a surviving Overseer. Three strikes conquer any nexus.',
       'Overseer survives a failed attack (as long as its escort is not completely wiped).',
       'On conquest: the Overseer is consumed and does NOT return home.',
       'The conquered nexus retains its type, building levels, and any stationed support troops.',
@@ -466,8 +466,8 @@ export const ESPIONAGE_DOC: {
     {
       key: 'sabotage',
       name: 'Sabotage',
-      oneLiner: 'Overwhelm the defender\'s Recon Operatives to wreck troops or stall construction.',
-      intent: 'Use sabotage to soften a target before an attack or to grief a rival\'s build timing. Effect scales with how badly you outnumber their stationed Recon Operatives.',
+      oneLiner: 'Overwhelm the defender\'s Recon Operatives to delay training or stall construction.',
+      intent: 'Use sabotage to stall a rival\'s production — delay their training queue before a raid, or grief their build timing mid-campaign. Effect scales with how badly you outnumber their stationed Recon Operatives.',
       cost: { biomass: 300, secondary: { name: 'ore', amount: 300 }, perOperative: true },
       operatives: 'Numbers matter. You MUST send strictly more operatives than the defender has stationed. Cost scales linearly per operative sent.',
       resolution: [
@@ -476,7 +476,7 @@ export const ESPIONAGE_DOC: {
         'Excess ratio = (sent − defenderRecon) / sent. Bigger overkill, bigger effect.',
       ],
       successEffect: [
-        'Target = troops → destroys 5–40% of the defender\'s LARGEST troop stack. Percent = 5% + excessRatio × 35%, capped at 40%.',
+        'Target = troops → delays every item in the defender\'s training queue by 30 minutes per excess operative. No garrison troops are killed. Empty queue = fizzle.',
         'Target = building → delays every item in the defender\'s build queue by 30 minutes per excess operative.',
         'Defender\'s stationed Recon Operatives are wiped to 0 in either case.',
         '75% of your operatives return; 25% are lost during exfil.',
@@ -532,7 +532,7 @@ export const ESPIONAGE_DOC: {
   tips: [
     'ALWAYS scout before sabotaging — sending one operative short of the defender\'s count means losing every operative you sent.',
     'Embed is cheap insurance against a single rival. Sabotage is a tool for active campaigns, not exploration.',
-    'For sabotage, overkill is efficient: 2× the defender\'s recon hits the 40% damage / 30-min-per-extra-op cap quickly.',
+    'For sabotage, overkill is efficient: the more excess operatives, the more minutes of delay per queue entry (30 min per excess op).',
     'Building a Stealth Array on outpost Nexuses costs the same as on your capital but defends them just as well — don\'t leave outposts blind.',
     'Refresh an embed only when you actually need fresh intel. Each refresh is a discovery roll.',
   ],

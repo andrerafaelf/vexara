@@ -104,8 +104,8 @@ const MAX_TRAINING_QUEUE = 5;
 
 const NEXUS_TYPE_BUFFS: Record<string, { label: string; doubledLabel: string }> = {
   'Resource Depot': { label: '2x Resource Production', doubledLabel: '3x Resource Production' },
-  'Supply Cache': { label: '2x Storage Capacity', doubledLabel: '3x Storage Capacity' },
-  'Military Outpost': { label: '2x Shield Efficiency · 2x Training Speed', doubledLabel: '3x Shield Efficiency · 3x Training Speed' },
+  'Supply Cache': { label: '2x Storage · 40% Loot Protection', doubledLabel: '3x Storage · 60% Loot Protection' },
+  'Military Outpost': { label: '2x Shield Efficiency · 2x Training Speed', doubledLabel: '3x Shield Efficiency · 4x Training Speed' },
   'Reclaimed Outpost': { label: '20% Faster Construction', doubledLabel: '36% Faster Construction' },
 };
 
@@ -1462,8 +1462,14 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   };
 
   const production = calculateProduction();
-  const storageCapacity =
-    getStorageAtLevel(nexus.buildings.storageVault) * (nexus.nexusType === 'Supply Cache' ? 2 : 1);
+  const storageCapacity = getMaxStorage({
+    nexusType: nexus.nexusType,
+    nexusTypeDoubled: nexus.nexusTypeDoubled,
+    biomassFarm: nexus.buildings.biomassFarm,
+    alloyForge: nexus.buildings.alloyForge,
+    oreExtractor: nexus.buildings.oreExtractor,
+    storageVault: nexus.buildings.storageVault,
+  });
 
   const getResourceFillClass = (amount: number) => {
     const pct = amount / storageCapacity;
@@ -1571,8 +1577,8 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                 : NEXUS_TYPE_BUFFS[nexus.nexusType].label}
             </span>
             {nexus.nexusTypeDoubled && (
-              <span className="nexus-type-buff-doubled-badge" title="Conquest bonus: bonuses doubled from original NPC nexus">
-                2x
+              <span className="nexus-type-buff-doubled-badge" title="Tier II: specialization bonus fully unlocked at Command Core 15">
+                T2
               </span>
             )}
           </div>
@@ -2340,8 +2346,8 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
               <div className="spec-options">
                 {[
                   { type: 'Resource Depot', label: '3x Resource Production', desc: 'Triple the output of all three resource buildings. Best for a dedicated economic nexus.' },
-                  { type: 'Supply Cache', label: '3x Storage Capacity', desc: 'Triple your storage cap across all resources. Protects stockpiles and supports large armies.' },
-                  { type: 'Military Outpost', label: '3x Shield Efficiency · 3x Training Speed', desc: 'Triple shield defense and triple training speed. The strongest frontline base.' },
+                  { type: 'Supply Cache', label: '3x Storage · 60% Loot Protection', desc: 'Triple your storage cap and reduce loot stolen in raids by 60%. The best nexus for holding a large stockpile safely.' },
+                  { type: 'Military Outpost', label: '3x Shield Efficiency · 4x Training Speed', desc: 'Triple shield defense and quadruple training speed. The strongest frontline base.' },
                   { type: 'Reclaimed Outpost', label: '36% Faster Construction', desc: 'All build times cut significantly. Fastest expansion and rebuilding of any nexus type.' },
                 ].map(({ type, label, desc }) => (
                   <button

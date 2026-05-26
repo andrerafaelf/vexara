@@ -234,9 +234,9 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
     if (nodeName.includes('Resource Depot')) {
       return 'Resource Depot: 2x Resources - High biomass, alloy, and ore production. Perfect farming target.';
     } else if (nodeName.includes('Military Outpost')) {
-      return 'Military Outpost: 1.5x Troops - Heavily defended with extra garrison. Difficult to conquer.';
+      return 'Military Outpost: 2x Shield Efficiency, 2x Training Speed - Heavily defended. Difficult to conquer.';
     } else if (nodeName.includes('Supply Cache')) {
-      return 'Supply Cache: 1.5x Resources - Extra stored resources ready to plunder.';
+      return 'Supply Cache: 2x Storage, 40% Loot Protection - Large stockpile, but raiding it yields less.';
     } else if (nodeName.includes('Abandoned Base')) {
       return 'Abandoned Base: 30% Troops - Lightly defended ruins. Easy conquest for beginners.';
     } else if (nodeName.includes('Neutral Settlement')) {

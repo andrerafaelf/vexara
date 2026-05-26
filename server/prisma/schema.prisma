@@ -56,6 +56,7 @@ model User {
   milestoneTokens  MilestoneToken[]
 
   lastSeenWarsAt   DateTime?
+  lastPlayedAt     DateTime?
 }
 
 enum GalaxyStatus {

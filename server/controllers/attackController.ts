@@ -98,7 +98,10 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
     if (attackType === 'scout') {
       travelTimeMinutes = distance * 4;
     } else {
+      // Overseer strikes use the slowest-troop formula then get a 3x surcharge —
+      // making conquest trains clearly distinct (and giving defenders time to react).
       const OVERSEER_EFFECTIVE_SPEED = 6;
+      const OVERSEER_TRAVEL_MULTIPLIER = 3;
       let minSpeed = Infinity;
       for (const [troopType, amount] of Object.entries(normalizedTroops)) {
         if (amount > 0 && (TROOP_STATS as Record<string, { speed: number }>)[troopType]) {
@@ -106,7 +109,8 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
           if (speed < minSpeed) minSpeed = speed;
         }
       }
-      travelTimeMinutes = distance * (4 + (28 - minSpeed) / 10);
+      const hasOverseer = (normalizedTroops.overseer || 0) > 0;
+      travelTimeMinutes = distance * (4 + (28 - minSpeed) / 10) * (hasOverseer ? OVERSEER_TRAVEL_MULTIPLIER : 1);
     }
     const arrivesAt = new Date(Date.now() + travelTimeMinutes * 60 * 1000);
 
@@ -125,9 +129,10 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
     // Scout missions are intentionally excluded — stealth is part of the mechanic.
     if (defenderNexus.ownerId && attackType === 'attack') {
       const etaMinutes = Math.round(travelTimeMinutes);
+      const etaStr = etaMinutes < 60 ? `${etaMinutes}m` : `${Math.floor(etaMinutes / 60)}h ${etaMinutes % 60}m`;
       void sendPushToUser(defenderNexus.ownerId, NOTIF.ATTACK_INCOMING, {
         title: '⚠️ Incoming Attack',
-        body: `A strike is heading for ${defenderNexus.name}. ETA: ${etaMinutes < 60 ? `${etaMinutes}m` : `${Math.floor(etaMinutes / 60)}h ${etaMinutes % 60}m`}.`,
+        body: `A strike is heading for ${defenderNexus.name}. ETA: ${etaStr}.`,
         tag: `incoming-${attack.id}`,
         data: { url: '/' },
       });

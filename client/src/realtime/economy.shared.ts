@@ -21,12 +21,13 @@ interface NexusTypeBonuses {
   shieldEfficiencyMultiplier?: number;
   trainingTimeMultiplier?: number;
   buildTimeMultiplier?: number;
+  lootProtection?: number;
   label: string;
 }
 
 export const NEXUS_TYPE_BONUSES: Record<string, NexusTypeBonuses> = {
   'Resource Depot':    { productionMultiplier: 2, label: '2x Resource Production' },
-  'Supply Cache':      { storageMultiplier: 2, label: '2x Storage Capacity' },
+  'Supply Cache':      { storageMultiplier: 2, lootProtection: 0.40, label: '2x Storage · 40% Loot Protection' },
   'Military Outpost':  { shieldEfficiencyMultiplier: 2.0, trainingTimeMultiplier: 0.5, label: '+100% Shield Efficiency, 50% Faster Training' },
   'Reclaimed Outpost': { buildTimeMultiplier: 0.80, label: '20% Faster Construction' },
 };

@@ -36,21 +36,7 @@ function travelMinutes(x1: number, y1: number, x2: number, y2: number): number {
   return distance * (4 + (28 - RECON_SPEED) / 10);
 }
 
-const TROOP_FIELDS = [
-  'lancerDrone', 'assaultTrooper', 'breakerUnit', 'reconOperative', 'skimmerBike',
-  'siegeMech', 'bulwarkGuard', 'suppressorTeam', 'disruptorUnit', 'interceptorBike',
-  'annihilatorPlatform', 'overseer',
-] as const;
 
-function pickLargestTroopField(nexus: Record<string, unknown>): string | null {
-  let best: string | null = null;
-  let bestCount = 0;
-  for (const f of TROOP_FIELDS) {
-    const v = (nexus[f] as number) ?? 0;
-    if (v > bestCount) { bestCount = v; best = f; }
-  }
-  return best;
-}
 
 function buildIntel(defender: Record<string, unknown>) {
   return {
@@ -120,6 +106,9 @@ export async function sendSpyMission(req: AuthRequest, res: Response): Promise<v
     }
     if (!defender || defender.galaxyId !== req.galaxyId) { res.status(404).json({ error: 'Target not found' }); return; }
     if (defender.ownerId === req.userId) { res.status(400).json({ error: 'Cannot spy on your own nexus' }); return; }
+    if (type === 'sabotage' && defender.newbieProtectionEndsAt && new Date(defender.newbieProtectionEndsAt) > new Date()) {
+      res.status(403).json({ error: 'This nexus is under newbie protection and cannot be sabotaged yet', protectedUntil: defender.newbieProtectionEndsAt }); return;
+    }
     if (attacker.reconOperative < opCount) {
       res.status(400).json({ error: `Not enough Recon Operatives (have ${attacker.reconOperative}, need ${opCount})` }); return;
     }
@@ -254,22 +243,28 @@ export async function processArrivedSpyMissions(): Promise<void> {
 
         if (success) {
           const target = mission.sabotageTarget as SabotageTarget;
+          const excessOps = Math.max(0, mission.operatives - defenderRecon);
           const excessRatio = clamp((mission.operatives - defenderRecon) / Math.max(mission.operatives, 1), 0, 1);
           const sabotagePercent = clamp(0.05 + excessRatio * 0.35, 0.05, 0.40);
           operativesReturning = mission.operatives - Math.ceil(mission.operatives * 0.25);
 
           if (target === 'troops') {
-            const field = pickLargestTroopField(defender as unknown as Record<string, unknown>);
-            if (field) {
-              const current = (defender as unknown as Record<string, number>)[field];
-              const loss = Math.ceil(current * sabotagePercent);
-              await prisma.nexus.update({ where: { id: mission.toNexusId }, data: { [field]: Math.max(0, current - loss) } });
-              result = { ...result, success: true, target, field, loss };
+            // Sabotage delays the training queue rather than killing garrison troops.
+            // Each excess operative past the defender's recon count adds 30 minutes of delay,
+            // mirroring the building sabotage mechanic.
+            const delayMs = excessOps * 30 * 60 * 1000;
+            const tq = (defender.trainingQueue as Array<{ troopType: string; amount: number; completesAt: string; perUnitSeconds?: number }>) ?? [];
+            if (tq.length > 0) {
+              const delayed = tq.map((item) => ({
+                ...item,
+                completesAt: new Date(new Date(item.completesAt).getTime() + delayMs).toISOString(),
+              }));
+              await prisma.nexus.update({ where: { id: mission.toNexusId }, data: { trainingQueue: delayed } });
+              result = { ...result, success: true, target, delayMinutes: excessOps * 30 };
             } else {
-              result = { ...result, success: true, target, message: 'No troops to sabotage' };
+              result = { ...result, success: true, target, message: 'No active training queue' };
             }
           } else if (target === 'building') {
-            const excessOps = Math.max(0, mission.operatives - defenderRecon);
             const delayMs = excessOps * 30 * 60 * 1000;
             const bq = (defender.buildQueue as Array<{ building: string; targetLevel: number; completesAt: string }>) ?? [];
             if (bq.length > 0) {

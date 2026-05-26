@@ -11,6 +11,7 @@ import { buildDetailedScoutIntel } from './scouting.js';
 import { NOTIF, sendPushToUser } from './push.js';
 import { resolveEventForNexus } from './galaxyEvents.js';
 import { notifyAttackUpdate, notifyTransferUpdate, notifyReportUpdate } from '../services/warRoomSocket.js';
+import { getNexusTypeEffectiveMultipliers } from './economy.js';
 import type { TroopKey } from '../types/index.js';
 
 async function logFactionEvent(userId: number, galaxyId: number, type: string, actorName?: string, targetName?: string, meta?: string) {
@@ -300,13 +301,17 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
       const surviveRatio = totalTroopsSent > 0 ? 1 - totalLost / totalTroopsSent : 0;
       const survivingCarry = lootCapacity * surviveRatio;
 
-      const totalAvailable = defenderNexus.biomass + defenderNexus.alloy + defenderNexus.ore;
+      const defenderBonuses = getNexusTypeEffectiveMultipliers(defenderNexus as Parameters<typeof getNexusTypeEffectiveMultipliers>[0]);
+      const lootProtection = defenderBonuses?.lootProtection ?? 0;
+      const lootableFraction = 1 - lootProtection;
+
+      const totalAvailable = (defenderNexus.biomass + defenderNexus.alloy + defenderNexus.ore) * lootableFraction;
       if (totalAvailable > 0 && survivingCarry > 0) {
         const lootRatio = Math.min(survivingCarry / totalAvailable, 1);
         resourcesStolen = {
-          biomass: Math.floor(defenderNexus.biomass * lootRatio),
-          alloy:   Math.floor(defenderNexus.alloy   * lootRatio),
-          ore:     Math.floor(defenderNexus.ore     * lootRatio),
+          biomass: Math.floor(defenderNexus.biomass * lootableFraction * lootRatio),
+          alloy:   Math.floor(defenderNexus.alloy   * lootableFraction * lootRatio),
+          ore:     Math.floor(defenderNexus.ore     * lootableFraction * lootRatio),
         };
       }
       defenderResourceUpdates.biomass = defenderNexus.biomass - resourcesStolen.biomass;
@@ -319,13 +324,12 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
     const overseerCanAct = attackerWins && overseerSent > 0 && attackerLosses.overseer === 0;
 
     if (overseerCanAct) {
-      newControlLevel = Math.max(0, newControlLevel - 50);
+      newControlLevel = Math.max(0, newControlLevel - 34);
       if (newControlLevel <= 0) {
         const attackerNexus = await prisma.nexus.findUnique({ where: { id: attack.attackerNexusId! } });
         defenderTroopUpdates['ownerId'] = attackerNexus!.ownerId;
         defenderTroopUpdates['name'] = 'Conquered Nexus';
         const NPC_TYPE_NAMES = ['Resource Depot', 'Military Outpost', 'Supply Cache', 'Neutral Settlement', 'Reclaimed Outpost'];
-        const wasNpc = defenderNexus.ownerId === null || NPC_TYPE_NAMES.includes(defenderNexus.name);
         const preservedType = defenderNexus.nexusType ?? (NPC_TYPE_NAMES.includes(defenderNexus.name) ? defenderNexus.name : null);
         defenderTroopUpdates['nexusType'] = preservedType;
         // Conquest always resets to base tier — nexusTypeDoubled is never inherited.

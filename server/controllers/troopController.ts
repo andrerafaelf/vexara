@@ -45,7 +45,7 @@ const RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL = 0.92;
 const TROOP_COSTS: Record<string, { biomass: number; alloy: number; ore: number; population: number; time: number }> = {
   lancerDrone:          { biomass: 150,    alloy: 150,    ore: 200,    population: 1, time: 53    },
   assaultTrooper:       { biomass: 150,    alloy: 150,    ore: 350,    population: 1, time: 79    },
-  breakerUnit:          { biomass: 250,    alloy: 150,    ore: 300,    population: 1, time: 74    },
+  breakerUnit:          { biomass: 250,    alloy: 150,    ore: 300,    population: 1, time: 160   },
   reconOperative:       { biomass: 400,    alloy: 150,    ore: 400,    population: 1, time: 180   },
   skimmerBike:          { biomass: 625,    alloy: 500,    ore: 750,    population: 3, time: 600   },
   bulwarkGuard:         { biomass: 400,    alloy: 600,    ore: 500,    population: 2, time: 480   },
