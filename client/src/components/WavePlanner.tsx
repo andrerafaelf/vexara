@@ -4,6 +4,7 @@ import { Clock, Plus, Send, Trash2, X } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useToast } from '../context/ToastContext';
 import { getMyNexuses, sendAttack } from '../services/api';
+import { serverNow } from '../realtime/serverClock';
 import '../styles/WavePlanner.css';
 import type { Nexus } from '../types/game';
 
@@ -63,7 +64,8 @@ function computeTravelMinutes(from: { x: number; y: number }, to: { x: number; y
 
 function formatLaunchTime(arrivalMs: number, travelMinutes: number): string {
   const launchMs = arrivalMs - travelMinutes * 60 * 1000;
-  const diff = launchMs - Date.now();
+  // arrivalMs is a server-anchored target; compare against the server clock.
+  const diff = launchMs - serverNow();
   if (diff < 0) return 'Already past';
   const h = Math.floor(diff / 3600000);
   const m = Math.floor((diff % 3600000) / 60000);
@@ -205,7 +207,9 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
     }
     const travelMin = computeTravelMinutes(nexus, target, wave.troops);
     const launchMs = arrivalMs - travelMin * 60 * 1000;
-    const delay = launchMs - Date.now();
+    // The setTimeout delay must be measured against the server clock, otherwise
+    // a skewed local clock fires the launch early or late.
+    const delay = launchMs - serverNow();
 
     setWaves((prev) => prev.map((w) => w.id !== wave.id ? w : { ...w, sending: true, error: null }));
 

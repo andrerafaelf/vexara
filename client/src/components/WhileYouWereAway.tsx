@@ -4,6 +4,7 @@ import { Building2, Shield, Swords, Trophy, Users, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import '../styles/WhileYouWereAway.css';
 import { getActivitySummary } from '../services/api';
+import { serverNow } from '../realtime/serverClock';
 
 const LAST_VISIT_KEY = 'wywa_last_visit';
 
@@ -63,7 +64,7 @@ const TROOP_LABELS: Record<string, string> = {
 };
 
 function formatDuration(since: string) {
-  const ms = Date.now() - new Date(since).getTime();
+  const ms = serverNow() - new Date(since).getTime();
   const h = Math.floor(ms / 3600000);
   const d = Math.floor(h / 24);
   if (d >= 2) return `${d} days`;

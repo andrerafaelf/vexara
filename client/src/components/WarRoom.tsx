@@ -35,6 +35,7 @@ import {
   sendAttack,
   updateWarRoomOperation,
 } from '../services/api';
+import { serverNow } from '../realtime/serverClock';
 import '../styles/WarRoom.css';
 import type { Nexus } from '../types/game';
 import StarfieldMap, { type MapNexus } from './Map';
@@ -1091,8 +1092,11 @@ function ClaimForm({
         troops,
       ) * 60 * 1000
     : null;
-  const tooLate = launchAt != null && launchAt < Date.now();
-  const lateBy = tooLate && launchAt != null ? Date.now() - launchAt : 0;
+  // launchAt is derived from a server-anchored arrival timestamp, so compare
+  // against the server clock — a skewed local clock would otherwise show
+  // "too late" warnings for launches that are actually still in time.
+  const tooLate = launchAt != null && launchAt < serverNow();
+  const lateBy = tooLate && launchAt != null ? serverNow() - launchAt : 0;
 
   const handleSubmit = async () => {
     if (!selectedNexus) {
@@ -1205,7 +1209,7 @@ function ClaimForm({
           <div className="warroom-claim-launch-hint">
             <Radio size={12} />
             Launch from {selectedNexus.name} in{' '}
-            <strong>{formatCountdown(launchAt - Date.now())}</strong>
+            <strong>{formatCountdown(launchAt - serverNow())}</strong>
           </div>
         )
       )}

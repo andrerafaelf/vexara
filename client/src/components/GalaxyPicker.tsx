@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { getGalaxies, getGalaxyWinResults, leaveGalaxy, selectGalaxy } from '../services/api';
+import { serverNow } from '../realtime/serverClock';
 import Username from './Username';
 import '../styles/GalaxyPicker.css';
 
@@ -75,12 +76,14 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
   const [leaving, setLeaving] = useState(false);
   const [winScreen, setWinScreen] = useState<WinResults | null>(null);
   const [loadingWin, setLoadingWin] = useState(false);
-  const [now, setNow] = useState(() => Date.now());
+  // `now` is server-anchored so the start-countdown stays accurate even if
+  // the local clock drifts. startsAt and endedAt are server-issued.
+  const [now, setNow] = useState(() => serverNow());
 
   useEffect(() => {
-    const hasUpcoming = galaxies.some((g) => g.startsAt && new Date(g.startsAt).getTime() > Date.now());
+    const hasUpcoming = galaxies.some((g) => g.startsAt && new Date(g.startsAt).getTime() > serverNow());
     if (!hasUpcoming) return;
-    const id = setInterval(() => setNow(Date.now()), 1000);
+    const id = setInterval(() => setNow(serverNow()), 1000);
     return () => clearInterval(id);
   }, [galaxies]);
 
@@ -115,7 +118,7 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
 
   const requestSelect = (galaxy: Galaxy) => {
     if (galaxy.status !== 'active') return;
-    if (galaxy.startsAt && new Date(galaxy.startsAt).getTime() > Date.now()) return;
+    if (galaxy.startsAt && new Date(galaxy.startsAt).getTime() > serverNow()) return;
     if (!galaxy.isJoined) {
       setConfirmingJoin(galaxy);
       return;
@@ -187,7 +190,7 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
         <ul className="gp-list">
           {galaxies.map((g) => {
             const isEnded = g.status === 'ended';
-            const isRecentlyEnded = !!(isEnded && g.endedAt && Date.now() - new Date(g.endedAt).getTime() < WIN_WINDOW_MS);
+            const isRecentlyEnded = !!(isEnded && g.endedAt && serverNow() - new Date(g.endedAt).getTime() < WIN_WINDOW_MS);
             const startsAtMs = g.startsAt ? new Date(g.startsAt).getTime() : null;
             const isPending = !isEnded && startsAtMs !== null && startsAtMs > now;
             const countdownMs = isPending ? startsAtMs! - now : 0;

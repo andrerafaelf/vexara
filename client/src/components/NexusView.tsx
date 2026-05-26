@@ -71,6 +71,7 @@ import { useNow } from '@/hooks/useNow';
 import { useResourceSnapshot } from '@/realtime/useLiveResources';
 import { realtimeStore } from '@/realtime/store';
 import { getMaxStorage, getResourceProduction, interpolateResources } from '@/realtime/economy.shared';
+import { serverNow } from '@/realtime/serverClock';
 
 // Import troop images
 import annihilatorplatformImg from '../assets/troops/annihilatorplatform.png';
@@ -555,7 +556,10 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     // lingering on screen for more than a tick or two after completion.
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
     const schedule = () => {
-      const now = Date.now();
+      // Compare server-issued completesAt against server-anchored now so the
+      // refetch fires at the actual queue-completion moment even if the local
+      // clock drifts.
+      const now = serverNow();
       const buildEnds = nexus.buildQueue.map((item) => new Date(item.completesAt).getTime());
       const trainEnds = nexus.trainingQueue.map((item) => new Date(item.completesAt).getTime());
       const allEnds = [...buildEnds, ...trainEnds].filter((t) => Number.isFinite(t));
@@ -2507,7 +2511,7 @@ function humanizeTroopKey(key: string): string {
 function capitalize(s: string) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
 function fmtTimeLeft(completesAt: string): string {
-  const ms = new Date(completesAt).getTime() - Date.now();
+  const ms = new Date(completesAt).getTime() - serverNow();
   if (ms <= 0) return 'Done';
   const s = Math.floor(ms / 1000);
   const m = Math.floor(s / 60);
@@ -2814,7 +2818,7 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
         mode === 'sabotage' ? sabotageTarget : undefined,
       );
       if (r.data?.queued) {
-        onToast(`Operative${mode === 'sabotage' ? 's' : ''} dispatched. Arrives in ${formatCountdown(new Date(r.data.arrivesAt).getTime() - Date.now())}`, 'info');
+        onToast(`Operative${mode === 'sabotage' ? 's' : ''} dispatched. Arrives in ${formatCountdown(new Date(r.data.arrivesAt).getTime() - serverNow())}`, 'info');
         setSpyTarget(null);
         loadAll();
       }

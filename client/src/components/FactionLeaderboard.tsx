@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { getFactionLeaderboard } from '../services/api';
+import { serverNow } from '../realtime/serverClock';
 
 interface LeaderboardRow {
   id: number;
@@ -30,7 +31,7 @@ interface LeaderboardData {
 const DOMINANCE_SUSTAIN_MS = 36 * 60 * 60 * 1000;
 
 function formatDominanceCountdown(dominanceSince: string): string {
-  const elapsed = Date.now() - new Date(dominanceSince).getTime();
+  const elapsed = serverNow() - new Date(dominanceSince).getTime();
   const remaining = Math.max(0, DOMINANCE_SUSTAIN_MS - elapsed);
   const h = Math.floor(remaining / 3600000);
   const m = Math.floor((remaining % 3600000) / 60000);

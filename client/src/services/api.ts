@@ -1,3 +1,5 @@
+import { recordServerTimeSample } from '../realtime/serverClock';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 // Helper function to make API requests
@@ -12,10 +14,15 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
+  const requestStartMs = Date.now();
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers,
   });
+  // Sync the client/server clock offset from the `Date` response header on
+  // every API call. Cheap, no extra round-trip. Countdowns and resource
+  // interpolation then read serverNow() instead of trusting the local clock.
+  recordServerTimeSample(response, requestStartMs, Date.now());
 
   const rawBody = await response.text();
   let data: any = {};

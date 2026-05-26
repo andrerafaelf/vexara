@@ -1,25 +1,31 @@
 'use client';
 
 import { useSyncExternalStore } from 'react';
+import { serverNow } from '../realtime/serverClock';
 
 // One shared 1Hz clock. Components opt in via useNow(), only subscribed components re-render
 // each tick, instead of forcing a setState higher in the tree that cascades through everything.
 // The clock pauses when the document is hidden so backgrounded PWAs/tabs don't burn CPU.
+//
+// The clock is server-anchored, not browser-anchored: serverNow() applies the
+// observed (clientNow - serverDate) offset from the most recent API responses,
+// so countdowns against server-issued timestamps (build/train queue
+// completesAt, attack ETAs) stay accurate even when the local clock drifts.
 
-let nowMs = Date.now();
+let nowMs = serverNow();
 const listeners = new Set<() => void>();
 let intervalId: ReturnType<typeof setInterval> | null = null;
 let visibilityBound = false;
 
 function tick() {
-  nowMs = Date.now();
+  nowMs = serverNow();
   for (const l of listeners) l();
 }
 
 function startInterval() {
   if (intervalId) return;
   // Snap to a fresh value immediately so subscribers don't see a stale `nowMs` on resume.
-  nowMs = Date.now();
+  nowMs = serverNow();
   intervalId = setInterval(tick, 1000);
 }
 
