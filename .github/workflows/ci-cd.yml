@@ -78,6 +78,8 @@ jobs:
 
       - name: Install server deps
         working-directory: server
+        env:
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
         run: npm ci
 
       - name: Run server tests
