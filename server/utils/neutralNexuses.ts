@@ -1,5 +1,6 @@
 import prisma from '../lib/prisma.js';
 import { getPopulationMax } from './population.js';
+import { getMaxStorage } from './economy.js';
 
 const NPC_LEVELABLE_BUILDINGS = [
   'commandCore', 'lifeSupport', 'storageVault', 'biomassFarm',
@@ -169,6 +170,32 @@ export async function ensureNeutralNexusPool() {
   return { created: totalCreated, neutralCount: totalNeutralCount, targetNeutralCount: totalTarget };
 }
 
+// Troop "recruitment" rules for NPC nexuses. Each entry maps an RC level
+// requirement to the count added per tick (scaled by difficulty). Garrison
+// caps prevent a single NPC from spawning a runaway army; once at cap the
+// type is skipped, so growth keeps shifting toward higher-tier units.
+const NPC_TROOP_TRAINING: Array<{
+  key: string;
+  rcMin: number;
+  perTick: number;
+  cap: number;
+}> = [
+  // Basic line — always recruited once RC is up.
+  { key: 'assaultTrooper',      rcMin: 1,  perTick: 12, cap: 220 },
+  { key: 'lancerDrone',         rcMin: 2,  perTick: 8,  cap: 160 },
+  { key: 'breakerUnit',         rcMin: 3,  perTick: 5,  cap: 110 },
+  // Support / mid-tier.
+  { key: 'bulwarkGuard',        rcMin: 5,  perTick: 4,  cap: 80  },
+  { key: 'suppressorTeam',      rcMin: 7,  perTick: 3,  cap: 60  },
+  { key: 'disruptorUnit',       rcMin: 7,  perTick: 3,  cap: 60  },
+  { key: 'reconOperative',      rcMin: 4,  perTick: 2,  cap: 30  },
+  // Heavy / late-game.
+  { key: 'siegeMech',           rcMin: 10, perTick: 1,  cap: 18  },
+  { key: 'annihilatorPlatform', rcMin: 12, perTick: 1,  cap: 8   },
+];
+
+const NPC_BUILDS_PER_TICK = 2;
+
 export async function levelUpNeutralNexuses() {
   const activeGalaxies = await prisma.galaxy.findMany({ where: { status: 'active' }, select: { id: true } });
   const activeGalaxyIds = activeGalaxies.map((g) => g.id);
@@ -189,39 +216,86 @@ export async function levelUpNeutralNexuses() {
   const difficultyRatio = (difficulty - BASE_NEUTRAL_DIFFICULTY) / (MAX_NEUTRAL_DIFFICULTY - BASE_NEUTRAL_DIFFICULTY);
 
   for (const nexus of neutralNexuses) {
-    let bestBuilding: LevelableBuilding | null = null;
-    let bestGap = 0;
+    const updates: Record<string, unknown> = {};
 
-    for (const building of NPC_LEVELABLE_BUILDINGS) {
-      const cap = NPC_MAX_LEVELS[building];
-      const target = Math.max(1, Math.round(1 + difficultyRatio * (cap - 1)));
-      const current = (nexus as Record<string, unknown>)[building] as number ?? 0;
-      const gap = target - current;
-      if (gap > bestGap) { bestGap = gap; bestBuilding = building; }
+    // ── Buildings ────────────────────────────────────────────────────────
+    // Each tick the NPC picks up to NPC_BUILDS_PER_TICK building levels
+    // (chosen by widest gap to its difficulty-scaled target). Without this,
+    // a single building per 6h tick meant a fresh neutral took weeks to
+    // become a real threat — players reported they "weren't evolving".
+    const buildingLevels: Record<string, number> = {};
+    for (const b of NPC_LEVELABLE_BUILDINGS) {
+      buildingLevels[b] = (nexus as Record<string, unknown>)[b] as number ?? 0;
     }
 
-    if (!bestBuilding) continue;
-
-    const currentLevel = (nexus as Record<string, unknown>)[bestBuilding] as number ?? 0;
-    const updates: Record<string, unknown> = { [bestBuilding]: currentLevel + 1 };
-
-    if (bestBuilding === 'lifeSupport') {
-      updates['populationMax'] = getPopulationMax(currentLevel + 1);
+    for (let i = 0; i < NPC_BUILDS_PER_TICK; i++) {
+      let bestBuilding: LevelableBuilding | null = null;
+      let bestGap = 0;
+      for (const building of NPC_LEVELABLE_BUILDINGS) {
+        const cap = NPC_MAX_LEVELS[building];
+        const target = Math.max(1, Math.round(1 + difficultyRatio * (cap - 1)));
+        const current = buildingLevels[building];
+        const gap = target - current;
+        if (gap > bestGap) { bestGap = gap; bestBuilding = building; }
+      }
+      if (!bestBuilding) break;
+      buildingLevels[bestBuilding] += 1;
+      updates[bestBuilding] = buildingLevels[bestBuilding];
+      if (bestBuilding === 'lifeSupport') {
+        updates['populationMax'] = getPopulationMax(buildingLevels.lifeSupport);
+      }
     }
-    if (bestBuilding === 'commandCore') {
-      updates['assaultTrooper'] = Math.ceil((nexus.assaultTrooper ?? 0) * 1.15);
-      updates['lancerDrone']    = Math.ceil((nexus.lancerDrone ?? 0) * 1.1);
-      updates['breakerUnit']    = Math.ceil((nexus.breakerUnit ?? 0) * 1.08);
+
+    // ── Troops ───────────────────────────────────────────────────────────
+    // NPCs recruit troops every tick based on their (now possibly newly
+    // upgraded) RC level. We cap by difficulty so weak galaxies don't get
+    // stomped, and respect a per-type garrison ceiling so each NPC keeps a
+    // varied composition rather than swelling into a single deathball.
+    const rcLevel = buildingLevels.recruitmentCore;
+    const lifeSupport = buildingLevels.lifeSupport;
+    const populationMax = getPopulationMax(lifeSupport);
+    let populationCurrent = nexus.populationCurrent ?? 0;
+
+    // Difficulty scales recruitment count — early galaxies grow slowly,
+    // late galaxies fill fast. (0.5x..1.5x roughly)
+    const trainScale = 0.5 + difficultyRatio;
+
+    for (const rule of NPC_TROOP_TRAINING) {
+      if (rcLevel < rule.rcMin) continue;
+      const current = (nexus as Record<string, unknown>)[rule.key] as number ?? 0;
+      const updatedFromThisTick = updates[rule.key] as number | undefined;
+      const base = updatedFromThisTick ?? current;
+      const cap = Math.floor(rule.cap * (0.6 + difficultyRatio));
+      if (base >= cap) continue;
+      const want = Math.max(1, Math.floor(rule.perTick * trainScale));
+      const popRoom = Math.max(0, populationMax - populationCurrent);
+      if (popRoom <= 0) break;
+      const allowed = Math.min(want, cap - base, popRoom);
+      if (allowed <= 0) continue;
+      updates[rule.key] = base + allowed;
+      populationCurrent += allowed;
+    }
+    if (populationCurrent !== (nexus.populationCurrent ?? 0)) {
+      updates['populationCurrent'] = populationCurrent;
     }
 
-    // Refill resources each tick so raided NPCs recover their stockpiles.
-    // Rate is proportional to production building levels and current difficulty.
+    // ── Resources ────────────────────────────────────────────────────────
+    // Refill stockpiles each tick so raided NPCs recover. Clamped to the
+    // storage cap (computed from the *post-update* StorageVault level) so
+    // we don't silently exceed the player-visible max.
     const biomassRate = (nexus.biomassFarm ?? 1) * 200 * difficulty;
     const alloyRate   = (nexus.alloyForge  ?? 1) * 200 * difficulty;
     const oreRate     = (nexus.oreExtractor ?? 1) * 100 * difficulty;
-    updates['biomass'] = Math.floor((nexus.biomass ?? 0) + biomassRate);
-    updates['alloy']   = Math.floor((nexus.alloy   ?? 0) + alloyRate);
-    updates['ore']     = Math.floor((nexus.ore     ?? 0) + oreRate);
+    const cappedNexus = {
+      ...nexus,
+      storageVault: buildingLevels.storageVault,
+      nexusType: nexus.nexusType,
+      nexusTypeDoubled: false,
+    } as Parameters<typeof getMaxStorage>[0];
+    const maxStorage = getMaxStorage(cappedNexus);
+    updates['biomass'] = Math.min(maxStorage, Math.floor((nexus.biomass ?? 0) + biomassRate));
+    updates['alloy']   = Math.min(maxStorage, Math.floor((nexus.alloy   ?? 0) + alloyRate));
+    updates['ore']     = Math.min(maxStorage, Math.floor((nexus.ore     ?? 0) + oreRate));
 
     await prisma.nexus.update({ where: { id: nexus.id }, data: updates });
   }

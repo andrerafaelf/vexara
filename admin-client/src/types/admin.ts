@@ -42,6 +42,8 @@ export type UserNexus = {
   _id: string;
   id?: number;
   name: string;
+  x?: number;
+  y?: number;
   biomass: number;
   alloy: number;
   ore: number;

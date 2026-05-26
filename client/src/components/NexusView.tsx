@@ -2431,8 +2431,8 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
               <div className="attack-info-section">
                 <h4>Target</h4>
                 <p>
-                  {selectedAttack.defender?.nexus?.name || 'Unknown'}({selectedAttack.defender?.nexus?.x || '?'}|
-                  {selectedAttack.defender?.nexus?.y || '?'})
+                  {selectedAttack.defender?.nexus?.name || 'Unknown'}({selectedAttack.defender?.nexus?.x ?? '?'}|
+                  {selectedAttack.defender?.nexus?.y ?? '?'})
                 </p>
               </div>
 
@@ -2730,6 +2730,7 @@ function formatCountdown(ms: number): string {
 }
 
 function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string, t: 'success' | 'error' | 'info') => void }) {
+  const router = useRouter();
   const [mode, setMode] = useState<SpyMissionMode>('embed');
   const [spyTarget, setSpyTarget] = useState<MapNexus | null>(null);
   const [operatives, setOperatives] = useState(1);
@@ -3043,6 +3044,13 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
                 <button className="espionage-asset-btn" onClick={() => handleRefreshIntel(a.id as number)}>
                   Refresh Intel
                 </button>
+                <button
+                  className="espionage-asset-btn"
+                  onClick={() => router.push(`/starfield?attack=${a.targetNexusId as number}`)}
+                  title="Attack this target"
+                >
+                  Attack
+                </button>
                 <button className="espionage-asset-btn espionage-asset-btn--recall" onClick={() => handleRecall(a.id as number)}>
                   Recall
                 </button>
@@ -3072,21 +3080,33 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
               });
             return (
               <div key={id} className={`espionage-completed-row${success === false ? ' espionage-completed-row--fail' : ''}`}>
-                <button
-                  type="button"
-                  className="espionage-mission-toggle"
-                  onClick={toggle}
-                  aria-expanded={isOpen}
-                  aria-label={isOpen ? 'Collapse mission details' : 'Expand mission details'}
-                >
-                  <span className="espionage-mission-toggle-icon" aria-hidden="true">{isOpen ? '−' : '+'}</span>
-                  <span className="espionage-mission-label">
-                    {m.type === 'embed' ? 'Embed' : 'Sabotage'} &rarr; {(m.targetName as string) ?? `Nexus #${m.toNexusId}`}
-                  </span>
-                  <span className="espionage-mission-status">
-                    {success === false ? 'Failed' : 'Succeeded'}
-                  </span>
-                </button>
+                <div className="espionage-mission-header">
+                  <button
+                    type="button"
+                    className="espionage-mission-toggle"
+                    onClick={toggle}
+                    aria-expanded={isOpen}
+                    aria-label={isOpen ? 'Collapse mission details' : 'Expand mission details'}
+                  >
+                    <span className="espionage-mission-toggle-icon" aria-hidden="true">{isOpen ? '−' : '+'}</span>
+                    <span className="espionage-mission-label">
+                      {m.type === 'embed' ? 'Embed' : 'Sabotage'} &rarr; {(m.targetName as string) ?? `Nexus #${m.toNexusId}`}
+                    </span>
+                    <span className="espionage-mission-status">
+                      {success === false ? 'Failed' : 'Succeeded'}
+                    </span>
+                  </button>
+                  {m.toNexusId != null && (
+                    <button
+                      type="button"
+                      className="espionage-asset-btn espionage-mission-attack-btn"
+                      onClick={() => router.push(`/starfield?attack=${m.toNexusId as number}`)}
+                      title="Attack this target"
+                    >
+                      <Swords size={12} aria-hidden="true" /> Attack
+                    </button>
+                  )}
+                </div>
                 {isOpen && r && <EspionageIntelPanel report={r} />}
               </div>
             );

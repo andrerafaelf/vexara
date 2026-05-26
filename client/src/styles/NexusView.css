@@ -3209,6 +3209,19 @@
   margin-left: auto;
 }
 
+.espionage-mission-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.espionage-mission-attack-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
 /* ╔══════════════════════════════════════════════════════════════════╗
    ║ Pass C · NexusView industrial restyle
    ║ The heaviest screen in the game. Apply identity treatments to

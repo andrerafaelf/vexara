@@ -89,7 +89,7 @@ export default function GalaxyTab({
   adminFetch, showToast, onChanged, onAddUserClick,
 }: Props) {
   const [modal, setModal] = useState<PlayerModal>(null);
-  const [selectedUser, setSelectedUser] = useState<GalaxyUser | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ email: '', password: '' });
 
   // Player editor state
@@ -97,6 +97,14 @@ export default function GalaxyTab({
   const [drafts, setDrafts] = useState<DraftMap>({});
   const [editFilter, setEditFilter] = useState('');
   const [saving, setSaving] = useState(false);
+
+  // Keep selectedUser fresh against the latest `users` prop so values reflect
+  // server state when onChanged() refetches. Looking up by id (not holding a
+  // captured object) means dropdown switches always see the current snapshot.
+  const selectedUser: GalaxyUser | null = useMemo(
+    () => (selectedUserId == null ? null : users.find((u) => u._id === selectedUserId) ?? null),
+    [users, selectedUserId],
+  );
 
   const [deleteGalaxyTarget, setDeleteGalaxyTarget] = useState<Galaxy | null>(null);
   const [deleteGalaxyInput, setDeleteGalaxyInput] = useState('');
@@ -115,13 +123,13 @@ export default function GalaxyTab({
   };
 
   const openEditUser = (user: GalaxyUser) => {
-    setSelectedUser(user);
+    setSelectedUserId(user._id);
     setEditForm({ email: user.email, password: '' });
     setModal('editUser');
   };
 
   const openEditPlayer = (user: GalaxyUser) => {
-    setSelectedUser(user);
+    setSelectedUserId(user._id);
     setEditNexusId(user.nexuses?.[0]?._id ?? '');
     setDrafts({});
     setEditFilter('');
@@ -131,7 +139,7 @@ export default function GalaxyTab({
   const closeModal = () => {
     if (saving) return;
     setModal(null);
-    setSelectedUser(null);
+    setSelectedUserId(null);
     setDrafts({});
     setEditFilter('');
   };
@@ -645,16 +653,19 @@ export default function GalaxyTab({
 
             <div className="player-editor-toolbar">
               {selectedUser.nexuses.length > 1 ? (
-                <div className="form-group" style={{ flex: '1 1 220px' }}>
+                <div className="form-group" style={{ flex: '1 1 280px' }}>
                   <label>Nexus</label>
                   <select
                     value={editNexusId}
                     onChange={(e) => { setEditNexusId(e.target.value); setDrafts({}); }}
                     disabled={saving}
                   >
-                    {selectedUser.nexuses.map((n) => (
-                      <option key={n._id} value={n._id}>{n.name}</option>
-                    ))}
+                    {selectedUser.nexuses.map((n) => {
+                      const coords = n.x != null && n.y != null ? ` (${n.x}|${n.y})` : '';
+                      return (
+                        <option key={n._id} value={n._id}>{n.name}{coords} · CC{n.commandCore}</option>
+                      );
+                    })}
                   </select>
                 </div>
               ) : (

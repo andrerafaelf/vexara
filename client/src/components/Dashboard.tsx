@@ -469,8 +469,8 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
                   </div>
                   <div className="activity-details">
                     {attack.status === 'returning' ? 'returning from' : '→'}{' '}
-                    {attack.defender?.nexus?.name || 'Unknown'} ({attack.defender?.nexus?.x || '?'}|
-                    {attack.defender?.nexus?.y || '?'})
+                    {attack.defender?.nexus?.name || 'Unknown'} ({attack.defender?.nexus?.x ?? '?'}|
+                    {attack.defender?.nexus?.y ?? '?'})
                   </div>
                   <div className="activity-time">
                     {formatTime(attack.status === 'returning' ? attack.returnsAt : attack.arrivesAt)}
@@ -607,8 +607,8 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
               <div className="attack-info-section">
                 <h4>Target</h4>
                 <p>
-                  {selectedAttack.defender?.nexus?.name || 'Unknown'}({selectedAttack.defender?.nexus?.x || '?'}|
-                  {selectedAttack.defender?.nexus?.y || '?'})
+                  {selectedAttack.defender?.nexus?.name || 'Unknown'}({selectedAttack.defender?.nexus?.x ?? '?'}|
+                  {selectedAttack.defender?.nexus?.y ?? '?'})
                 </p>
               </div>
 

@@ -1,9 +1,55 @@
 ## Vexara — Alpha Patch Notes v0.7
 
-Custom avatars for Officer and Commander supporters. Four urgent bug fixes
+Custom avatars for Officer and Commander supporters. Several urgent bug fixes
 (troop duplication, instant-upgrade revert, missing T2 bonus on conquered
-nexuses, and inaccurate build/train timers). Specialization bonuses now
-show their real numbers on the nexus banner.
+nexuses, inaccurate build/train timers, conquering overseer dying, influence
+dropping on strike send). Specialization bonuses now show their real numbers
+on the nexus banner. NPCs now actually grow — they level multiple buildings
+per tick and recruit troops based on their tech level.
+
+---
+
+### Conquering overseer no longer dies on the winning strike
+
+When an overseer landed the killing blow on a nexus, it was incorrectly
+counted as lost — you'd successfully take the nexus but the unit that did
+it never came home. Fixed: a successful conquest leaves the overseer
+stationed at the newly captured nexus to govern it, as intended.
+
+---
+
+### Influence no longer drops the moment you send a strike
+
+Per-nexus influence now includes troops still in flight on outgoing
+strikes (until they actually die in combat). The header total stops
+flickering down at strike-send and back up on return — the only time
+your influence drops on an attack is now when losses are confirmed in
+the combat report.
+
+---
+
+### NPC nexuses actually evolve now
+
+Neutral nexuses upgrade much more aggressively. Each growth tick they
+now level up to two buildings (instead of one), recruit a varied roster
+of troops scaled to their Recruitment Core tier (Assault Troopers all
+the way up to Annihilator Platforms when their tech allows it), and
+respect population and storage caps so they grow like a real player
+would, not by ignoring the rules.
+
+Growth runs every hour now (was every six). Newer galaxies still grow
+slowly; older galaxies see neutrals turn into real threats over days,
+not weeks.
+
+---
+
+### Admin: Edit Player nexus picker stays in sync
+
+The nexus dropdown in the player editor now shows coordinates and
+Command Core level so identically-named "Conquered Nexus" entries
+are distinguishable. The editor also re-binds against the latest
+data on refresh, so values reflect the current state of whichever
+nexus is selected.
 
 ---
 
@@ -69,3 +115,26 @@ only changes require active tier. 10 uploads per hour cap.
 Commander-tier sidebar avatar now renders the correct cyan glow instead of
 amber. Profile data also refreshes on every page load now, so future tier
 upgrades show up without needing a logout.
+
+---
+
+### Coordinates with zero no longer show as "?"
+
+Nexuses on row 0 or column 0 — e.g. (22|0) — were displaying as (22|?)
+across combat reports, scout reports, dashboard outgoing strikes, and admin.
+Caused by an `x || '?'` fallback that mistakenly treated `0` as missing.
+Replaced with a nullish-only check so legitimate edge-of-galaxy coords
+render correctly.
+
+---
+
+### "Attack Again" on combat and espionage reports
+
+Combat reports now show an Attack button alongside the existing scout-only
+one — open any of your own strike reports and you can re-attack the same
+target without leaving the report.
+
+Embed and sabotage missions in the Espionage tab now show an Attack button
+on each active operative and each completed mission row. Clicking it jumps
+to the Starfield map, selects the target, and opens the attack form
+pre-armed.

@@ -49,16 +49,20 @@ export async function getMyNexuses(req: AuthRequest, res: Response): Promise<voi
     // attack doesn't immediately drop the player's influence. Survivors (or
     // the initial roster while traveling) still count; losses on a completed
     // 'returning' attack are excluded so influence drops only on combat end.
+    // The bump is attributed back to the originating nexus so the per-nexus
+    // .points field — which the client sums for the header influence — also
+    // reflects in-flight troops, not just the GalaxyPlayer total.
     const inFlightAttacks = await prisma.attack.findMany({
       where: {
         attackerUserId: req.userId,
         galaxyId: req.galaxyId,
         status: { in: ['traveling', 'returning'] },
       },
-      select: { troops: true, result: true, status: true },
+      select: { attackerNexusId: true, troops: true, result: true, status: true },
     });
-    let inFlightTroopInfluence = 0;
+    const inFlightByNexus = new Map<number, number>();
     for (const a of inFlightAttacks) {
+      if (a.attackerNexusId == null) continue;
       const sent = (a.troops as Record<string, number> | null) || {};
       const result = a.result as { attackerLosses?: Record<string, number> } | null;
       const losses = result?.attackerLosses || {};
@@ -68,13 +72,20 @@ export async function getMyNexuses(req: AuthRequest, res: Response): Promise<voi
         const lostN = a.status === 'returning' ? Number(losses[k]) || 0 : 0;
         live[k] = Math.max(0, sentN - lostN);
       }
-      inFlightTroopInfluence += calculateTroopInfluence(live);
+      const inf = calculateTroopInfluence(live);
+      inFlightByNexus.set(a.attackerNexusId, (inFlightByNexus.get(a.attackerNexusId) ?? 0) + inf);
     }
 
-    const totalPoints = updated.reduce((sum, v) => sum + v.points, 0) + Math.floor(inFlightTroopInfluence);
+    const withInFlight = updated.map((v) => {
+      const bump = inFlightByNexus.get(v.id) ?? 0;
+      if (bump <= 0) return v;
+      return { ...v, points: v.points + Math.floor(bump) };
+    });
+
+    const totalPoints = withInFlight.reduce((sum, v) => sum + v.points, 0);
     await nexusService.updateGalaxyPlayerPoints(req.userId, req.galaxyId, totalPoints);
 
-    res.json(updated.map((v) => serializeNexus(v)));
+    res.json(withInFlight.map((v) => serializeNexus(v)));
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'nexusController.ts' });
     res.status(500).json({ error: 'Internal server error' });

@@ -337,7 +337,11 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
         defenderTroopUpdates['nexusTypeDoubled'] = false;
         defenderTroopUpdates['conqueredAt'] = new Date();
         conquered = true;
-        attackerLosses.overseer = overseerSent;
+        // The conquering overseer governs the new nexus rather than dying. It
+        // settles in at the conquered nexus and is removed from the returning
+        // force, so the attacker doesn't get a duplicate back home.
+        attackerLosses.overseer = 0;
+        defenderTroopUpdates['overseer'] = overseerSent;
       }
     }
 

@@ -1,5 +1,6 @@
 import { AlertTriangle, Building, Home, Info, Shield, Sparkles, Star, Swords, Waves, Zap } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useGameSocket } from '../hooks/useGameSocket';
@@ -137,6 +138,8 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
   const { user } = useAuth();
   const toast = useToast();
   const isMobile = useIsMobile();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [nexuses, setVillages] = useState<MapNexus[]>([]);
   const [selectedNexus, setSelectedNexus] = useState<MapNexus | null>(null);
   const [centerX, setCenterX] = useState(currentNexus.x);
@@ -279,6 +282,32 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
     };
     selectCurrentNexus();
   }, [currentNexus._id, isMobile]);
+
+  // When arriving with ?attack=<nexusId> (from Reports / Espionage "Attack Again"),
+  // jump to that target, select it, and open the attack form.
+  useEffect(() => {
+    const attackId = searchParams?.get('attack');
+    if (!attackId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await getNexusInfo(attackId);
+        if (cancelled || !r.data) return;
+        setSelectedNexus(r.data);
+        setCenterX(r.data.x);
+        setCenterY(r.data.y);
+        setAttackMissionType('attack');
+        setShowAttackForm(true);
+      } catch {
+        toast('Could not load target nexus', 'error');
+      } finally {
+        // Clear the param so a refresh doesn't re-trigger.
+        router.replace('/starfield');
+      }
+    })();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   useEffect(() => {
     setTargetX(String(centerX));

@@ -254,7 +254,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
             />
           )}
 
-          {scoutReport && isMyAttack && (
+          {isMyAttack && selectedReport.defender.nexus?._id && (
             <div className="report-section scout-attack-section">
               <div className="scout-target-bar">
                 <div className="scout-target-info">
@@ -267,7 +267,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
                   </span>
                 </div>
                 <button className="scout-attack-btn" onClick={() => setShowAttackForm((v) => !v)}>
-                  <Swords size={14} aria-hidden="true" /> {showAttackForm ? 'Cancel' : 'Attack'}
+                  <Swords size={14} aria-hidden="true" /> {showAttackForm ? 'Cancel' : scoutReport ? 'Attack' : 'Attack Again'}
                 </button>
               </div>
               {showAttackForm && (
@@ -337,13 +337,13 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
                 </p>
                 <p>
                   <strong>Striker:</strong> <Username name={selectedReport.attacker.user?.username || 'Unknown'} isSupporter={selectedReport.attacker.user?.isSupporter} supporterTier={selectedReport.attacker.user?.supporterTier} /> from{' '}
-                  {selectedReport.attacker.nexus?.name || 'Unknown'} ({selectedReport.attacker.nexus?.x || '?'}|
-                  {selectedReport.attacker.nexus?.y || '?'})
+                  {selectedReport.attacker.nexus?.name || 'Unknown'} ({selectedReport.attacker.nexus?.x ?? '?'}|
+                  {selectedReport.attacker.nexus?.y ?? '?'})
                 </p>
                 <p>
                   <strong>Defender:</strong> <Username name={selectedReport.defender.user?.username || 'Unknown'} isSupporter={selectedReport.defender.user?.isSupporter} supporterTier={selectedReport.defender.user?.supporterTier} /> from{' '}
-                  {selectedReport.defender.nexus?.name || 'Unknown'} ({selectedReport.defender.nexus?.x || '?'}|
-                  {selectedReport.defender.nexus?.y || '?'})
+                  {selectedReport.defender.nexus?.name || 'Unknown'} ({selectedReport.defender.nexus?.x ?? '?'}|
+                  {selectedReport.defender.nexus?.y ?? '?'})
                 </p>
                 {selectedReport.result?.remainingControl !== undefined &&
                   selectedReport.result.remainingControl !== null && (
@@ -551,19 +551,19 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
                     {hasBeenViewed ? (
                       scoutReport ? (
                         <>
-                          Scout report on {report.defender.nexus?.name || 'Unknown'} ({report.defender.nexus?.x || '?'}|
-                          {report.defender.nexus?.y || '?'})
+                          Scout report on {report.defender.nexus?.name || 'Unknown'} ({report.defender.nexus?.x ?? '?'}|
+                          {report.defender.nexus?.y ?? '?'})
                         </>
                       ) : isMyAttack ? (
                         <>
-                          Strike on {report.defender.nexus?.name || 'Unknown'} ({report.defender.nexus?.x || '?'}|
-                          {report.defender.nexus?.y || '?'})
+                          Strike on {report.defender.nexus?.name || 'Unknown'} ({report.defender.nexus?.x ?? '?'}|
+                          {report.defender.nexus?.y ?? '?'})
                         </>
                       ) : (
                         <>
                           Defense against <Username name={report.attacker.user?.username || 'Unknown'} isSupporter={report.attacker.user?.isSupporter} supporterTier={report.attacker.user?.supporterTier} /> from{' '}
-                          {report.attacker.nexus?.name || 'Unknown'} ({report.attacker.nexus?.x || '?'}|
-                          {report.attacker.nexus?.y || '?'})
+                          {report.attacker.nexus?.name || 'Unknown'} ({report.attacker.nexus?.x ?? '?'}|
+                          {report.attacker.nexus?.y ?? '?'})
                         </>
                       )
                     ) : (

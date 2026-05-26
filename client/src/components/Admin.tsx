@@ -703,8 +703,8 @@ const Admin: React.FC = () => {
                         <strong>{attack.attacker?.user?.username || 'Unknown'}</strong>
                         <br />
                         <small>
-                          {attack.attacker?.nexus?.name || 'Deleted'} ({attack.attacker?.nexus?.x || '?'}|
-                          {attack.attacker?.nexus?.y || '?'})
+                          {attack.attacker?.nexus?.name || 'Deleted'} ({attack.attacker?.nexus?.x ?? '?'}|
+                          {attack.attacker?.nexus?.y ?? '?'})
                         </small>
                       </td>
                       <td style={{ textAlign: 'center', fontSize: '20px' }}>→</td>
@@ -712,8 +712,8 @@ const Admin: React.FC = () => {
                         <strong>{attack.defender?.user?.username || 'Unknown'}</strong>
                         <br />
                         <small>
-                          {attack.defender?.nexus?.name || 'Deleted'} ({attack.defender?.nexus?.x || '?'}|
-                          {attack.defender?.nexus?.y || '?'})
+                          {attack.defender?.nexus?.name || 'Deleted'} ({attack.defender?.nexus?.x ?? '?'}|
+                          {attack.defender?.nexus?.y ?? '?'})
                         </small>
                       </td>
                       <td>{totalTroops} troops</td>

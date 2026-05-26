@@ -712,13 +712,6 @@ interface AttackWithNexuses {
 
 export function serializeAttack(a: AttackWithNexuses) {
   const normalizedResult = a.result ? { ...(a.result as Record<string, unknown>) } : a.result;
-  const troops = a.troops as Record<string, number> | null;
-  if ((normalizedResult as Record<string, unknown>)?.['conquered'] && (troops?.overseer || 0) > 0) {
-    (normalizedResult as Record<string, unknown>)['attackerLosses'] = {
-      ...((normalizedResult as Record<string, unknown>)['attackerLosses'] as object || {}),
-      overseer: troops!.overseer,
-    };
-  }
 
   return {
     _id: String(a.id), id: String(a.id),
