@@ -156,16 +156,18 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
               {commanderInitial}
             </div>
             <div className="commander-info">
-              <div
-                className={[
-                  'commander-name',
-                  user.isSupporter ? 'supporter-name' : null,
-                  user.supporterTier === 'recruit' ? 'supporter-tier-recruit' : null,
-                  user.supporterTier === 'officer' ? 'supporter-tier-officer' : null,
-                  user.supporterTier === 'commander' ? 'supporter-tier-commander' : null,
-                ].filter(Boolean).join(' ')}
-              >
-                {user.username}
+              <div className="commander-name-row">
+                <span
+                  className={[
+                    'commander-name',
+                    user.isSupporter ? 'supporter-name' : null,
+                    user.supporterTier === 'recruit' ? 'supporter-tier-recruit' : null,
+                    user.supporterTier === 'officer' ? 'supporter-tier-officer' : null,
+                    user.supporterTier === 'commander' ? 'supporter-tier-commander' : null,
+                  ].filter(Boolean).join(' ')}
+                >
+                  {user.username}
+                </span>
                 {user.isFounder && (
                   <span
                     className="alpha-commander-badge alpha-commander-badge--compact"

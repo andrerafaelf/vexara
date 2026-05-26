@@ -18,9 +18,9 @@ export async function getReports(req: AuthRequest, res: Response): Promise<void>
         const [attackerUser, defenderUser] = await Promise.all([
           r.attackerUserId ? reportService.getUserById(r.attackerUserId) : null,
           r.defenderUserId ? reportService.getUserById(r.defenderUserId) : null,
-        ]);
+        ]) as [{ username: string; isSupporter: boolean; supporterTier: string | null } | null, { username: string; isSupporter: boolean; supporterTier: string | null } | null];
         const attackerUsername = attackerUser?.username ?? (r.attackerUserId == null ? 'Rogue AI' : undefined);
-        return serializeAttack({ ...r, attackerUsername, attackerIsSupporter: attackerUser?.isSupporter, defenderUsername: defenderUser?.username, defenderIsSupporter: defenderUser?.isSupporter });
+        return serializeAttack({ ...r, attackerUsername, attackerIsSupporter: attackerUser?.isSupporter, attackerSupporterTier: attackerUser?.supporterTier, defenderUsername: defenderUser?.username, defenderIsSupporter: defenderUser?.isSupporter, defenderSupporterTier: defenderUser?.supporterTier });
       }),
     );
     res.json(enriched);

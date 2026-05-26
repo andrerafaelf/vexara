@@ -158,7 +158,7 @@ export async function getIncomingAttacks(req: AuthRequest, res: Response): Promi
     res.json(attacks.map((a) => {
       const u = a.attackerUserId != null ? userMap.get(a.attackerUserId) : undefined;
       const attackerUsername = u?.username ?? (a.attackerUserId == null ? 'Rogue AI' : undefined);
-      return serializeAttack({ ...a, attackerUsername, attackerIsSupporter: u?.isSupporter });
+      return serializeAttack({ ...a, attackerUsername, attackerIsSupporter: u?.isSupporter, attackerSupporterTier: u?.supporterTier });
     }));
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'attackController.ts' });
@@ -177,7 +177,7 @@ export async function getOutgoingAttacks(req: AuthRequest, res: Response): Promi
     const userMap = await attackService.getUsersByIds(defenderIds);
     res.json(attacks.map((a) => {
       const u = a.defenderUserId != null ? userMap.get(a.defenderUserId) : undefined;
-      return serializeAttack({ ...a, defenderUsername: u?.username, defenderIsSupporter: u?.isSupporter });
+      return serializeAttack({ ...a, defenderUsername: u?.username, defenderIsSupporter: u?.isSupporter, defenderSupporterTier: u?.supporterTier });
     }));
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'attackController.ts' });

@@ -1,6 +1,7 @@
 'use client';
 
-import React, { createContext, useCallback, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Toast from '../components/Toast';
 
 interface ToastItem {
@@ -19,6 +20,9 @@ let nextId = 0;
 
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   const toast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'info') => {
     const id = ++nextId;
@@ -29,14 +33,18 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
+  const stack = (
+    <div className="toast-stack" aria-live="polite" aria-atomic="false">
+      {toasts.map((t) => (
+        <Toast key={t.id} message={t.message} type={t.type} onClose={() => dismiss(t.id)} />
+      ))}
+    </div>
+  );
+
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
-      <div className="toast-stack" aria-live="polite" aria-atomic="false">
-        {toasts.map((t) => (
-          <Toast key={t.id} message={t.message} type={t.type} onClose={() => dismiss(t.id)} />
-        ))}
-      </div>
+      {mounted && createPortal(stack, document.body)}
     </ToastContext.Provider>
   );
 };

@@ -341,12 +341,20 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
       }
     }
 
+    // If CC is damaged below 15 on a conquered NPC nexus (nexusTypeLockedAt null = auto-granted, not player-chosen),
+    // revoke the T2 bonus so it doesn't stay doubled after the CC threshold is lost.
+    const damagedCC = buildingDamageUpdates['commandCore'] as number | undefined;
+    const nexusTypeLockedAt = (defenderNexus as unknown as { nexusTypeLockedAt?: Date | null }).nexusTypeLockedAt;
+    const nexusTypeDoubled = (defenderNexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled ?? false;
+    const shouldRevokeDoubled = damagedCC !== undefined && damagedCC < 15 && nexusTypeDoubled && !nexusTypeLockedAt;
+
     await prisma.nexus.update({
       where: { id: defenderNexus.id },
       data: {
         ...defenderTroopUpdates,
         ...defenderResourceUpdates,
         ...buildingDamageUpdates,
+        ...(shouldRevokeDoubled ? { nexusTypeDoubled: false } : {}),
         populationCurrent: Math.max(0, defenderNexus.populationCurrent - defenderPopLost),
         controlLevel: conquered ? 0 : newControlLevel,
       },

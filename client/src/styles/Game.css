@@ -453,6 +453,14 @@
   gap: 2px;
 }
 
+.commander-name-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  overflow: hidden;
+}
+
 .commander-name {
   color: var(--text-strong);
   font-weight: 600;

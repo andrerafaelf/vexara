@@ -468,6 +468,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
       await transferResources(currentNexus._id, selectedNexus._id, biomass, alloy, ore);
       setTransferAmounts({ biomass: '', alloy: '', ore: '' });
       setShowTransfer(false);
+      toast(`Resources sent to ${selectedNexus.name}`, 'success');
       onRefresh();
     } catch (err: any) {
       toast(err.response?.data?.error || 'Transfer failed', 'error');
@@ -487,6 +488,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
       await sendTroops(currentNexus._id, selectedNexus._id, troops);
       setTroopSendAmounts({});
       setShowTroopSend(false);
+      toast(`Troops sent to ${selectedNexus.name}`, 'success');
       onRefresh();
     } catch (err: any) {
       toast(err.response?.data?.error || 'Failed to send troops', 'error');
