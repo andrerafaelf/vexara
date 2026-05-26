@@ -16,6 +16,7 @@
   align-items: center;
   gap: var(--space-3);
   margin-bottom: var(--space-3);
+  line-height: 1;
 }
 
 .nexus-header h2 {
@@ -24,7 +25,7 @@
   font-size: var(--text-3xl);
   font-weight: 700;
   letter-spacing: -0.025em;
-  line-height: 1.1;
+  line-height: 1;
 }
 
 .nexus-rename-btn {

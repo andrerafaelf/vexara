@@ -52,7 +52,7 @@ const StarfieldMap = dynamic(() => import('./Map'), {
 import NexusMap from './NexusMap';
 import NexusTypeBadge from './NexusTypeBadge';
 import ResourceIcon from './ResourceIcon';
-import Toast from './Toast';
+import { useToast } from '../context/ToastContext';
 import { Countdown } from './Countdown';
 import { QueueCountdown } from './QueueCountdown';
 import { LiveResourceStrip } from './LiveResourceStrip';
@@ -409,10 +409,6 @@ const TROOP_CATEGORIES: Record<string, 'offense' | 'defense'> = {
   plasmaTurret: 'defense',
 };
 
-interface ToastMessage {
-  message: string;
-  type: 'success' | 'error' | 'info';
-}
 
 interface IntroQuest {
   id: string;
@@ -459,7 +455,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   const [isRenamingNexus, setIsRenamingNexus] = useState(false);
   const [renameValue, setRenameValue] = useState(nexus.name);
   const [isSavingNexusName, setIsSavingNexusName] = useState(false);
-  const [toast, setToast] = useState<ToastMessage | null>(null);
+  const showToastGlobal = useToast();
   const queryClient = useQueryClient();
   const { data: galaxyEvents = [] } = useQuery({
     queryKey: ['galaxyEvents'],
@@ -501,7 +497,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   const dismissTip = (id: string) => setDismissedTips((prev) => new Set(prev).add(id));
 
   const showToast = (message: string, type: 'success' | 'error' | 'info') => {
-    setToast({ message, type });
+    showToastGlobal(message, type);
   };
 
   const handleInfoTap = (title: string, description: string) => {
@@ -2328,7 +2324,6 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
           </div>
         )}
       </div>
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
       {showSpecModal && (
         <div className="attack-modal-overlay" onClick={() => setShowSpecModal(false)}>

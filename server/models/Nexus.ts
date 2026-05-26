@@ -326,12 +326,13 @@ export async function applyCompletedQueues(nexus: Nexus): Promise<Nexus> {
     const build = buildQueue.shift()!;
     updates[build.building] = build.targetLevel;
     if (build.building === 'lifeSupport') updates['populationMax'] = getPopulationMax(build.targetLevel);
-    // When Command Core hits 15 on a nexus that already has a type (conquered NPC),
-    // unlock the doubled bonus tier automatically — no separate specialization choice needed.
+    // Conquered NPC nexuses (pre-typed, nexusTypeLockedAt null) double their bonus when CC hits 15.
+    // Player-specialized nexuses (nexusTypeLockedAt set) never get doubled.
     if (
       build.building === 'commandCore' &&
       build.targetLevel >= 15 &&
       nexus.nexusType &&
+      !(nexus as unknown as { nexusTypeLockedAt?: Date | null }).nexusTypeLockedAt &&
       !(nexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled
     ) {
       updates['nexusTypeDoubled'] = true;

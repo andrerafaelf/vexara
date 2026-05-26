@@ -72,6 +72,37 @@ export async function listPlayersInGalaxy(req: AuthRequest, res: Response): Prom
   }
 }
 
+export async function getMe(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        isSupporter: true,
+        supporterTier: true,
+        isFounder: true,
+      },
+    });
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    res.json({
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      isSupporter: user.isSupporter,
+      supporterTier: user.supporterTier ?? null,
+      isFounder: user.isFounder ?? false,
+    });
+  } catch (error) {
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'usersController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 export async function changePassword(req: AuthRequest, res: Response): Promise<void> {
   try {
     const { currentPassword, newPassword } = (req.body ?? {}) as { currentPassword?: string; newPassword?: string };

@@ -337,6 +337,8 @@ export const removeFriend = (friendId: string) =>
   apiRequest(`/friends/${friendId}`, { method: 'DELETE' });
 
 // Users (public profile)
+export const getMe = () => apiRequest('/users/me');
+
 export const getPublicProfile = (username: string) =>
   apiRequest(`/users/${encodeURIComponent(username)}/profile`);
 

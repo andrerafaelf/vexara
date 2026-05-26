@@ -1,7 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '../types/game';
+import { getMe } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
@@ -30,6 +31,30 @@ function readStoredAuth(): { token: string | null; user: User | null } {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(() => readStoredAuth().user);
   const [token, setToken] = useState<string | null>(() => readStoredAuth().token);
+
+  // Refresh user from server on mount when a token exists, so fields like
+  // supporterTier / isFounder reflect current state instead of whatever was
+  // cached in localStorage at login time.
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+    getMe()
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        setUser((prev) => {
+          const merged = { ...(prev ?? {}), ...data } as User;
+          localStorage.setItem('user', JSON.stringify(merged));
+          return merged;
+        });
+      })
+      .catch(() => {
+        // 401 is handled by the api layer (clears storage + redirects).
+        // Other errors leave the cached user in place.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
 
   const login = (newToken: string, newUser: User) => {
     localStorage.setItem('token', newToken);
