@@ -14,38 +14,38 @@ export type TroopKey =
   | 'interceptorBike' | 'siegeMech' | 'annihilatorPlatform'
   | 'voidStalker' | 'plasmaTurret' | 'overseer';
 
-export type TroopClass = 'light' | 'heavy' | 'ranged' | 'special';
+export type TroopClass = 'mobile' | 'armor' | 'fire' | 'special';
 
 export const TROOP_CLASS: Record<TroopKey, TroopClass> = {
-  lancerDrone: 'ranged', assaultTrooper: 'heavy', breakerUnit: 'light',
-  reconOperative: 'special', skimmerBike: 'light', bulwarkGuard: 'heavy',
-  suppressorTeam: 'ranged', disruptorUnit: 'ranged', interceptorBike: 'light',
-  siegeMech: 'heavy', annihilatorPlatform: 'ranged',
-  voidStalker: 'light', plasmaTurret: 'ranged', overseer: 'special',
+  lancerDrone: 'fire', assaultTrooper: 'armor', breakerUnit: 'mobile',
+  reconOperative: 'special', skimmerBike: 'mobile', bulwarkGuard: 'armor',
+  suppressorTeam: 'fire', disruptorUnit: 'fire', interceptorBike: 'mobile',
+  siegeMech: 'armor', annihilatorPlatform: 'fire',
+  voidStalker: 'mobile', plasmaTurret: 'fire', overseer: 'special',
 };
 
 export const TROOP_STATS: Record<TroopKey, { attack: number; defense: number; speed: number }> = {
-  lancerDrone:          { attack: 15,  defense: 28,  speed: 20 },
-  assaultTrooper:       { attack: 30,  defense: 45,  speed: 18 },
-  breakerUnit:          { attack: 55,  defense: 15,  speed: 16 },
+  lancerDrone:          { attack: 12,  defense: 22,  speed: 20 },
+  assaultTrooper:       { attack: 18,  defense: 45,  speed: 18 },
+  breakerUnit:          { attack: 55,  defense: 10,  speed: 16 },
   reconOperative:       { attack: 5,   defense: 20,  speed: 25 },
-  skimmerBike:          { attack: 80,  defense: 65,  speed: 22 },
-  bulwarkGuard:         { attack: 20,  defense: 130, speed: 12 },
-  suppressorTeam:       { attack: 65,  defense: 45,  speed: 15 },
-  disruptorUnit:        { attack: 75,  defense: 55,  speed: 17 },
-  interceptorBike:      { attack: 95,  defense: 75,  speed: 28 },
-  siegeMech:            { attack: 150, defense: 210, speed: 10 },
-  annihilatorPlatform:  { attack: 210, defense: 140, speed: 8  },
-  voidStalker:          { attack: 110, defense: 50,  speed: 32 },
-  plasmaTurret:         { attack: 180, defense: 90,  speed: 0  },
+  skimmerBike:          { attack: 80,  defense: 40,  speed: 22 },
+  bulwarkGuard:         { attack: 10,  defense: 130, speed: 12 },
+  suppressorTeam:       { attack: 65,  defense: 30,  speed: 15 },
+  disruptorUnit:        { attack: 75,  defense: 35,  speed: 17 },
+  interceptorBike:      { attack: 95,  defense: 50,  speed: 28 },
+  siegeMech:            { attack: 80,  defense: 210, speed: 10 },
+  annihilatorPlatform:  { attack: 210, defense: 80,  speed: 8  },
+  voidStalker:          { attack: 110, defense: 32,  speed: 32 },
+  plasmaTurret:         { attack: 0,   defense: 160, speed: 0  },
   overseer:             { attack: 0,   defense: 30,  speed: 15 },
 };
 
 export const CLASS_COUNTERS: Record<TroopClass, Record<TroopClass, number>> = {
-  light:   { light: 1.0, heavy: 1.35, ranged: 0.75, special: 1.0 },
-  heavy:   { light: 0.75, heavy: 1.0, ranged: 1.0,  special: 1.35 },
-  ranged:  { light: 1.35, heavy: 0.80, ranged: 1.0,  special: 1.0 },
-  special: { light: 1.0, heavy: 1.0,  ranged: 1.0,  special: 1.0 },
+  mobile:  { mobile: 1.0,  armor: 1.35, fire: 0.75,  special: 1.0 },
+  armor:   { mobile: 0.75, armor: 1.0,  fire: 1.35,  special: 1.0 },
+  fire:    { mobile: 1.35, armor: 0.75, fire: 1.0,   special: 1.0 },
+  special: { mobile: 1.0,  armor: 1.0,  fire: 1.0,   special: 1.0 },
 };
 
 export const TROOP_KEYS = Object.keys(TROOP_STATS) as TroopKey[];
@@ -89,14 +89,14 @@ export function cloneForce(force: Force): Force {
 
 // Class composition: returns ratio of total units in each class.
 export function classComposition(force: Force): Record<TroopClass, number> {
-  const counts: Record<TroopClass, number> = { light: 0, heavy: 0, ranged: 0, special: 0 };
+  const counts: Record<TroopClass, number> = { mobile: 0, armor: 0, fire: 0, special: 0 };
   let total = 0;
   for (const k of TROOP_KEYS) {
     const n = force[k] || 0;
     if (n > 0) { counts[TROOP_CLASS[k]] += n; total += n; }
   }
   if (total === 0) return counts;
-  for (const c of ['light', 'heavy', 'ranged', 'special'] as TroopClass[]) counts[c] /= total;
+  for (const c of ['mobile', 'armor', 'fire', 'special'] as TroopClass[]) counts[c] /= total;
   return counts;
 }
 

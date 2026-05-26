@@ -47,19 +47,16 @@ const TROOP_COSTS: Record<string, { biomass: number; alloy: number; ore: number;
   assaultTrooper:       { biomass: 150,    alloy: 150,    ore: 350,    population: 1, time: 79    },
   breakerUnit:          { biomass: 250,    alloy: 150,    ore: 300,    population: 1, time: 160   },
   reconOperative:       { biomass: 400,    alloy: 150,    ore: 400,    population: 1, time: 180   },
-  skimmerBike:          { biomass: 625,    alloy: 500,    ore: 750,    population: 3, time: 600   },
-  bulwarkGuard:         { biomass: 400,    alloy: 600,    ore: 500,    population: 2, time: 480   },
-  suppressorTeam:       { biomass: 450,    alloy: 400,    ore: 450,    population: 2, time: 480   },
-  disruptorUnit:        { biomass: 550,    alloy: 750,    ore: 650,    population: 2, time: 660   },
-  interceptorBike:      { biomass: 750,    alloy: 600,    ore: 900,    population: 3, time: 900   },
-  siegeMech:            { biomass: 1250,   alloy: 1000,   ore: 2000,   population: 4, time: 3600  },
-  annihilatorPlatform:  { biomass: 2000,   alloy: 1750,   ore: 3000,   population: 5, time: 7200  },
-  // Void Stalker: fastest light cavalry; counters Heavy (Light is itself countered by Ranged)
-  voidStalker:          { biomass: 900,    alloy: 700,    ore: 1100,   population: 3, time: 1200  },
-  // Plasma Turret: immobile ranged emplacement, can train but cannot be sent on attacks.
-  // Pop cost 2 (down from 4): turret is locked to its home nexus and can't transfer, so it pays a
-  // lighter pop tax than mobile units of similar power. Existing turrets keep their old charge.
-  plasmaTurret:         { biomass: 1500,   alloy: 1200,   ore: 2500,   population: 2, time: 5400  },
+  suppressorTeam:       { biomass: 450,    alloy: 400,    ore: 450,    population: 2, time: 540   },
+  skimmerBike:          { biomass: 625,    alloy: 500,    ore: 750,    population: 3, time: 720   },
+  bulwarkGuard:         { biomass: 400,    alloy: 600,    ore: 500,    population: 2, time: 720   },
+  disruptorUnit:        { biomass: 550,    alloy: 750,    ore: 650,    population: 2, time: 840   },
+  interceptorBike:      { biomass: 750,    alloy: 600,    ore: 900,    population: 3, time: 1080  },
+  voidStalker:          { biomass: 900,    alloy: 700,    ore: 1100,   population: 3, time: 1440  },
+  siegeMech:            { biomass: 1250,   alloy: 1000,   ore: 2000,   population: 4, time: 2400  },
+  // Plasma Turret: immobile fire emplacement, locked to home nexus.
+  plasmaTurret:         { biomass: 1500,   alloy: 1200,   ore: 2500,   population: 2, time: 3000  },
+  annihilatorPlatform:  { biomass: 2000,   alloy: 1750,   ore: 3000,   population: 5, time: 5400  },
   overseer:             { biomass: 180000, alloy: 140000, ore: 120000, population: 5, time: 14400 },
 };
 

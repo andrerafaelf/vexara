@@ -1,53 +1,52 @@
 import type { TroopKey, TroopStat } from '../types/index.js';
 
 // Unit classes drive the rock-paper-scissors counter system.
-// light  → beats heavy  (mobility exploits armor gaps)
-// heavy  → beats ranged (brute force closes distance, suppresses emplacements)
-// ranged → beats light  (suppression fire pins fast movers)
+// mobile → beats armor  (fast assault forces exploit armor gaps)
+// armor  → beats fire   (armored units close distance and suppress emplacements)
+// fire   → beats mobile (suppression fire pins fast movers)
 // special → no combat advantage (recon/overseer roles — they don't fight)
-export type TroopClass = 'light' | 'heavy' | 'ranged' | 'special';
+export type TroopClass = 'mobile' | 'armor' | 'fire' | 'special';
 
 export const TROOP_CLASS: Record<TroopKey, TroopClass> = {
-  lancerDrone:          'ranged',
-  assaultTrooper:       'heavy',
-  breakerUnit:          'light',
+  lancerDrone:          'fire',
+  assaultTrooper:       'armor',
+  breakerUnit:          'mobile',
   reconOperative:       'special',
-  skimmerBike:          'light',
-  bulwarkGuard:         'heavy',
-  suppressorTeam:       'ranged',
-  disruptorUnit:        'ranged',
-  interceptorBike:      'light',
-  siegeMech:            'heavy',
-  annihilatorPlatform:  'ranged',
-  voidStalker:          'light',
-  plasmaTurret:         'ranged',
+  skimmerBike:          'mobile',
+  bulwarkGuard:         'armor',
+  suppressorTeam:       'fire',
+  disruptorUnit:        'fire',
+  interceptorBike:      'mobile',
+  siegeMech:            'armor',
+  annihilatorPlatform:  'fire',
+  voidStalker:          'mobile',
+  plasmaTurret:         'fire',
   overseer:             'special',
 };
 
 // Counter matrix: CLASS_COUNTERS[attackerClass][defenderClass] = damage multiplier.
 // 1.0 = neutral, 1.35 = advantage, 0.75 = disadvantage.
-// Triangle: light > heavy > ranged > light. Special is neutral in all matchups.
+// Triangle: mobile > armor > fire > mobile. Special is neutral in all matchups.
 export const CLASS_COUNTERS: Record<TroopClass, Record<TroopClass, number>> = {
-  light:   { light: 1.0,  heavy: 1.35, ranged: 0.75, special: 1.0 },
-  heavy:   { light: 0.75, heavy: 1.0,  ranged: 1.35, special: 1.0 },
-  ranged:  { light: 1.35, heavy: 0.75, ranged: 1.0,  special: 1.0 },
-  special: { light: 1.0,  heavy: 1.0,  ranged: 1.0,  special: 1.0 },
+  mobile:  { mobile: 1.0,  armor: 1.35, fire: 0.75,  special: 1.0 },
+  armor:   { mobile: 0.75, armor: 1.0,  fire: 1.35,  special: 1.0 },
+  fire:    { mobile: 1.35, armor: 0.75, fire: 1.0,   special: 1.0 },
+  special: { mobile: 1.0,  armor: 1.0,  fire: 1.0,   special: 1.0 },
 };
 
 export const TROOP_STATS: Record<TroopKey, TroopStat> = {
-  lancerDrone:          { attack: 15,  defense: 28,  speed: 20, carry: 30  },
-  assaultTrooper:       { attack: 30,  defense: 45,  speed: 18, carry: 60  },
-  breakerUnit:          { attack: 55,  defense: 15,  speed: 16, carry: 60  },
+  lancerDrone:          { attack: 12,  defense: 22,  speed: 20, carry: 30  },
+  assaultTrooper:       { attack: 18,  defense: 45,  speed: 18, carry: 60  },
+  breakerUnit:          { attack: 55,  defense: 10,  speed: 16, carry: 60  },
   reconOperative:       { attack: 5,   defense: 20,  speed: 25, carry: 10  },
-  skimmerBike:          { attack: 80,  defense: 65,  speed: 22, carry: 80  },
-  bulwarkGuard:         { attack: 20,  defense: 130, speed: 12, carry: 25  },
-  suppressorTeam:       { attack: 65,  defense: 45,  speed: 15, carry: 20  },
-  disruptorUnit:        { attack: 75,  defense: 55,  speed: 17, carry: 25  },
-  interceptorBike:      { attack: 95,  defense: 75,  speed: 28, carry: 100 },
-  siegeMech:            { attack: 150, defense: 210, speed: 10, carry: 20  },
-  annihilatorPlatform:  { attack: 210, defense: 140, speed: 8,  carry: 160 },
-  // New troops
-  voidStalker:          { attack: 110, defense: 50,  speed: 32, carry: 40  },
+  skimmerBike:          { attack: 80,  defense: 40,  speed: 22, carry: 80  },
+  bulwarkGuard:         { attack: 10,  defense: 130, speed: 12, carry: 25  },
+  suppressorTeam:       { attack: 65,  defense: 30,  speed: 15, carry: 20  },
+  disruptorUnit:        { attack: 75,  defense: 35,  speed: 17, carry: 25  },
+  interceptorBike:      { attack: 95,  defense: 50,  speed: 28, carry: 100 },
+  siegeMech:            { attack: 80,  defense: 210, speed: 10, carry: 20  },
+  annihilatorPlatform:  { attack: 210, defense: 80,  speed: 8,  carry: 160 },
+  voidStalker:          { attack: 110, defense: 32,  speed: 32, carry: 40  },
   plasmaTurret:         { attack: 0,   defense: 160, speed: 0,  carry: 0   },
   overseer:             { attack: 0,   defense: 30,  speed: 15, carry: 0   },
 };
@@ -74,7 +73,7 @@ export function computeClassWeightedAttack(
   armoryLevel: number = 0,
 ): number {
   // Build defender class composition ratios
-  const defenderClassCounts: Record<TroopClass, number> = { light: 0, heavy: 0, ranged: 0, special: 0 };
+  const defenderClassCounts: Record<TroopClass, number> = { mobile: 0, armor: 0, fire: 0, special: 0 };
   for (const key of TROOP_KEYS) {
     const count = Number((defenders as Record<string, unknown>)[key] || 0);
     if (count > 0) defenderClassCounts[TROOP_CLASS[key]] += count;
@@ -94,7 +93,7 @@ export function computeClassWeightedAttack(
     let effectiveMultiplier = 1.0;
     if (totalDefenders > 0) {
       let weightedMult = 0;
-      for (const defClass of ['light', 'heavy', 'ranged', 'special'] as TroopClass[]) {
+      for (const defClass of ['mobile', 'armor', 'fire', 'special'] as TroopClass[]) {
         const ratio = defenderClassCounts[defClass] / totalDefenders;
         const baseMult = CLASS_COUNTERS[attackerClass][defClass];
         // Amplify counter advantage/disadvantage with armory bonus

@@ -10,10 +10,10 @@ Every unit belongs to a class. Classes form a counter triangle:
 
 | Attacker Class | Counters | Multiplier |
 |---------------|----------|------------|
-| Light         | Heavy    | ×1.35 dmg  |
-| Heavy         | Special  | ×1.35 dmg  |
-| Ranged        | Light    | ×1.35 dmg  |
-| (any)         | Countered-by class | ×0.70–0.80 dmg |
+| Mobile        | Armor    | ×1.35 dmg  |
+| Armor         | Fire     | ×1.35 dmg  |
+| Fire          | Mobile   | ×1.35 dmg  |
+| (any)         | Countered-by class | ×0.75 dmg |
 
 The **Armory** building amplifies counter bonuses by +1.5% per level (max +30% at Lv20). Mixed compositions that match your counters against the enemy's class split are optimal.
 
@@ -24,7 +24,15 @@ The **Armory** building amplifies counter bonuses by +1.5% per level (max +30% a
 - Shield Grid provides +2% total defense per level
 - Casualties scale with power ratio; variance is smaller for large stacks (±4%) than small (<20 units, ±15%)
 - All losses are seeded deterministically per battle, replays are reproducible
-- Overseers reduce enemy control by 50 on a successful attack if they survive
+- Overseers reduce enemy control by 34 on a successful attack if they survive
+
+## Stat Identity
+
+Units are designed with a clear offense/defense identity — not all-rounders:
+
+- **Offensive units** (Mobile/Fire focused): high attack, low defense. They deal damage but take disproportionate casualties when caught in the open.
+- **Defensive units** (Armor focused): high defense, reduced attack. They survive sustained fire and hold lines, relying on escort damage dealers.
+- **Mixed units**: moderate in both — typically represent early-tier flexible generalists before specialization becomes available.
 
 ## Recruitment Core Training-Time Reduction
 
@@ -40,34 +48,36 @@ wait behind it (and vice versa).
 
 ## Troop Catalog
 
-### Assault Trooper
-
-- Role: Heavy frontline infantry, counters Special units
-- Class: Heavy
-- Stats: Attack 30, Defense 45, Speed 18, Carry 60
-- Cost: Biomass 150, Alloy 150, Ore 350
-- Population: 1
-- Training Time: 1m 19s
-- Requirements: Recruitment Core Lv1
+_Ordered weakest → strongest by overall combat value._
 
 ### Lancer Drone
 
-- Role: Ranged interceptor, counters Light units
-- Class: Ranged
-- Stats: Attack 15, Defense 28, Speed 20, Carry 30
+- Role: Fire interceptor, counters Mobile units
+- Class: Fire
+- Stats: Attack 12, Defense 22, Speed 20, Carry 30
 - Cost: Biomass 150, Alloy 150, Ore 200
 - Population: 1
 - Training Time: 53s
 - Requirements: Recruitment Core Lv2
 
+### Assault Trooper
+
+- Role: Armor frontline infantry, counters Fire units
+- Class: Armor
+- Stats: Attack 18, Defense 45, Speed 18, Carry 60
+- Cost: Biomass 150, Alloy 150, Ore 350
+- Population: 1
+- Training Time: 1m 19s
+- Requirements: Recruitment Core Lv1
+
 ### Breaker Unit
 
-- Role: Light assault breacher, counters Heavy units
-- Class: Light
-- Stats: Attack 55, Defense 15, Speed 16, Carry 50
+- Role: Mobile assault breacher, counters Armor units
+- Class: Mobile
+- Stats: Attack 55, Defense 10, Speed 16, Carry 60
 - Cost: Biomass 250, Alloy 150, Ore 300
 - Population: 1
-- Training Time: 1m 14s
+- Training Time: 2m 40s
 - Requirements:
   - Recruitment Core Lv3
   - Ore Extractor Lv3
@@ -86,116 +96,103 @@ wait behind it (and vice versa).
 - Notes:
   - Primary scouting unit
 
+### Suppressor Team
+
+- Role: Fire support, counters Mobile units
+- Class: Fire
+- Stats: Attack 65, Defense 30, Speed 15, Carry 20
+- Cost: Biomass 450, Alloy 400, Ore 450
+- Population: 2
+- Training Time: 9m 0s
+- Requirements:
+  - Recruitment Core Lv7
+  - Command Core Lv6
+
 ### Skimmer Bike
 
-- Role: Fast light raider, counters Heavy units
-- Class: Light
-- Stats: Attack 80, Defense 65, Speed 22, Carry 60
+- Role: Fast mobile raider, counters Armor units
+- Class: Mobile
+- Stats: Attack 80, Defense 40, Speed 22, Carry 80
 - Cost: Biomass 625, Alloy 500, Ore 750
 - Population: 3
-- Training Time: 10m 0s
+- Training Time: 12m 0s
 - Requirements:
   - Recruitment Core Lv5
   - Alloy Forge Lv4
 
 ### Bulwark Guard
 
-- Role: Elite heavy defender, counters Special units
-- Class: Heavy
-- Stats: Attack 20, Defense 130, Speed 12, Carry 25
+- Role: Elite armor defender, counters Fire units
+- Class: Armor
+- Stats: Attack 10, Defense 130, Speed 12, Carry 25
 - Cost: Biomass 400, Alloy 600, Ore 500
 - Population: 2
-- Training Time: 8m 0s
+- Training Time: 12m 0s
 - Requirements:
   - Recruitment Core Lv5
   - Life Support Lv5
 
-### Suppressor Team
-
-- Role: Ranged suppressor, counters Light units
-- Class: Ranged
-- Stats: Attack 65, Defense 45, Speed 15, Carry 20
-- Cost: Biomass 450, Alloy 400, Ore 450
-- Population: 2
-- Training Time: 8m 0s
-- Requirements:
-  - Recruitment Core Lv7
-  - Command Core Lv6
-
 ### Disruptor Unit
 
-- Role: Ranged anti-armor, counters Light units
-- Class: Ranged
-- Stats: Attack 75, Defense 55, Speed 17, Carry 25
+- Role: Fire EMP specialist, counters Mobile units
+- Class: Fire
+- Stats: Attack 75, Defense 35, Speed 17, Carry 25
 - Cost: Biomass 550, Alloy 750, Ore 650
 - Population: 2
-- Training Time: 11m 0s
+- Training Time: 14m 0s
 - Requirements:
   - Recruitment Core Lv7
   - Ore Extractor Lv6
 
 ### Interceptor Bike
 
-- Role: Light rapid-response cavalry, counters Heavy units
-- Class: Light
-- Stats: Attack 95, Defense 75, Speed 28, Carry 50
+- Role: Mobile rapid-response cavalry, counters Armor units
+- Class: Mobile
+- Stats: Attack 95, Defense 50, Speed 28, Carry 100
 - Cost: Biomass 750, Alloy 600, Ore 900
 - Population: 3
-- Training Time: 15m 0s
+- Training Time: 18m 0s
 - Requirements:
   - Recruitment Core Lv8
   - Alloy Forge Lv7
 
-### Siege Mech
-
-- Role: Heavy siege anchor, counters Special units
-- Class: Heavy
-- Stats: Attack 150, Defense 210, Speed 10, Carry 80
-- Cost: Biomass 1250, Alloy 1000, Ore 2000
-- Population: 4
-- Training Time: 1h 0m
-- Requirements:
-  - Recruitment Core Lv10
-  - Ore Extractor Lv9
-  - Command Core Lv8
-
-### Annihilator Platform
-
-- Role: Heavy ranged artillery, counters light units
-- Class: Ranged
-- Stats: Attack 210, Defense 140, Speed 8, Carry 100
-- Cost: Biomass 2000, Alloy 1750, Ore 3000
-- Population: 5
-- Training Time: 2h 0m
-- Requirements:
-  - Recruitment Core Lv12
-  - Command Core Lv10
-  - Shield Grid Lv10
-
 ### Void Stalker
 
-- Role: Ultra-fast light cavalry, counters Heavy units (and is itself countered by Ranged)
-- Class: Light
-- Stats: Attack 110, Defense 50, Speed 32, Carry 40
+- Role: Ultra-fast mobile cavalry, counters Armor units (and is itself countered by Fire)
+- Class: Mobile
+- Stats: Attack 110, Defense 32, Speed 32, Carry 40
 - Cost: Biomass 900, Alloy 700, Ore 1100
 - Population: 3
-- Training Time: 20m 0s
+- Training Time: 24m 0s
 - Requirements:
   - Recruitment Core Lv9
   - Alloy Forge Lv8
   - Armory Lv3
 - Notes:
   - Fastest unit in the game (speed 32)
-  - Excellent counter vs Suppressor Team, Lancer Drone, Disruptor Unit, Annihilator Platform
+  - Hard countered by Fire class (Suppressor Team, Lancer Drone, Disruptor Unit, Annihilator Platform, Plasma Turret)
+
+### Siege Mech
+
+- Role: Armor siege anchor, counters Fire units
+- Class: Armor
+- Stats: Attack 80, Defense 210, Speed 10, Carry 20
+- Cost: Biomass 1250, Alloy 1000, Ore 2000
+- Population: 4
+- Training Time: 40m 0s
+- Requirements:
+  - Recruitment Core Lv10
+  - Ore Extractor Lv9
+  - Command Core Lv8
 
 ### Plasma Turret
 
-- Role: Immobile ranged emplacement, cannot attack, defends nexus only
-- Class: Ranged
-- Stats: Attack 180, Defense 90, Speed 0, Carry 0
+- Role: Immobile fire emplacement, cannot attack, defends nexus only
+- Class: Fire
+- Stats: Attack 0, Defense 160, Speed 0, Carry 0
 - Cost: Biomass 1500, Alloy 1200, Ore 2500
 - Population: 2 (lighter pop tax than mobile units — turret can't transfer between nexuses)
-- Training Time: 1h 30m
+- Training Time: 50m 0s
 - Requirements:
   - Recruitment Core Lv11
   - Command Core Lv9
@@ -203,11 +200,25 @@ wait behind it (and vice versa).
 - Notes:
   - Speed 0, cannot be sent on attacks or transfers; stripped from raiding armies
   - Remains on nexus and participates in defense when attacked
-  - Counters light cavalry (Void Stalker, Skimmer Bike, Interceptor Bike, Breaker Unit)
+  - Counters mobile forces (Void Stalker, Skimmer Bike, Interceptor Bike, Breaker Unit)
+
+### Annihilator Platform
+
+- Role: Fire artillery, counters Mobile units
+- Class: Fire
+- Stats: Attack 210, Defense 80, Speed 8, Carry 160
+- Cost: Biomass 2000, Alloy 1750, Ore 3000
+- Population: 5
+- Training Time: 1h 30m
+- Requirements:
+  - Recruitment Core Lv12
+  - Command Core Lv10
+  - Shield Grid Lv10
 
 ### Overseer
 
-- Role: Conquest / control unit
+- Role: Conquest / control unit (Special — no counter in either direction)
+- Class: Special
 - Stats: Attack 0, Defense 30, Speed 15, Carry 0
 - Cost: Biomass 180000, Alloy 140000, Ore 120000
 - Population: 5
@@ -222,7 +233,7 @@ wait behind it (and vice versa).
 - Notes:
   - Does not contribute attack damage
   - If all non-overseer units are destroyed, the overseer is destroyed as well
-  - Each successful overseer strike reduces enemy control by 50
+  - Each successful overseer strike reduces enemy control by 34; three strikes conquer any nexus
   - Overseers are consumed when a conquest is completed (enemy control reaches 0)
 
 ## Conquest Flow
@@ -230,8 +241,8 @@ wait behind it (and vice versa).
 1. Train an Overseer
 2. Send the Overseer with escort troops
 3. Win the battle while the Overseer survives
-4. Enemy control is reduced by 50
-5. At 0 control, ownership transfers
+4. Enemy control is reduced by 34
+5. Repeat for a total of three successful strikes; at 0 control, ownership transfers
 
 ## Quick Recommendations
 
@@ -245,6 +256,6 @@ wait behind it (and vice versa).
   - Skimmer Bike + Recon Operative
 
 - Heavy Assault:
-  - Siege Mech + Annihilator Platform + escort support
+  - Annihilator Platform + Siege Mech escort
 
 _Last Updated: May 2026_

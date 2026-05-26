@@ -1,4 +1,4 @@
-export type TroopClass = 'light' | 'heavy' | 'ranged' | 'special';
+export type TroopClass = 'mobile' | 'armor' | 'fire' | 'special';
 
 export type TroopDoc = {
   key: string;
@@ -13,50 +13,50 @@ export type TroopDoc = {
 };
 
 // Counter matrix: attacker class deals extra damage to the listed defender class.
-// Triangle: light > heavy > ranged > light. Special is neutral everywhere.
+// Triangle: mobile > armor > fire > mobile. Special is neutral everywhere.
 // (Pulled from server/utils/combatMath.ts; if you change one, change the other.)
 export const CLASS_COUNTERS: Array<{ attacker: TroopClass; beats: TroopClass; multiplier: number }> = [
-  { attacker: 'light',  beats: 'heavy',  multiplier: 1.35 },
-  { attacker: 'heavy',  beats: 'ranged', multiplier: 1.35 },
-  { attacker: 'ranged', beats: 'light',  multiplier: 1.35 },
+  { attacker: 'mobile', beats: 'armor', multiplier: 1.35 },
+  { attacker: 'armor',  beats: 'fire',  multiplier: 1.35 },
+  { attacker: 'fire',   beats: 'mobile', multiplier: 1.35 },
 ];
 
 export const CLASS_COUNTERED_BY: Record<TroopClass, TroopClass | null> = {
-  heavy:   'light',
-  ranged:  'heavy',
-  light:   'ranged',
+  armor:   'mobile',
+  fire:    'armor',
+  mobile:  'fire',
   special: null, // special units (Overseer, Recon Operative) have no counter — they don't fight
 };
 
 // How the counter system works in mixed engagements:
 // The attacker force's damage is computed per unit. Each unit's attack stat is
 // multiplied by a weighted-average counter multiplier against the DEFENDER'S
-// class composition. If half the defenders are heavy and half are ranged, a
-// light attacker gets roughly 50% of the 1.35 bonus (since it only counters the
-// heavy half) — not the full bonus. The counter activates proportionally to
+// class composition. If half the defenders are armor and half are fire, a
+// mobile attacker gets roughly 50% of the 1.35 bonus (since it only counters the
+// armor half) — not the full bonus. The counter activates proportionally to
 // how much of the enemy force it actually counters.
 //
-// Example: 10 Ranged vs 5 Heavy + 5 Light
-// Ranged counters Light (1.35x) and is countered by Heavy (0.75x).
-// Defender composition: 50% Light, 50% Heavy.
-// Effective ranged multiplier: (0.5 × 1.35) + (0.5 × 0.75) = 0.675 + 0.375 = 1.05
-// Result: ranged gets a slight edge — partial counter, not full.
+// Example: 10 Fire vs 5 Armor + 5 Mobile
+// Fire counters Mobile (1.35x) and is countered by Armor (0.75x).
+// Defender composition: 50% Mobile, 50% Armor.
+// Effective fire multiplier: (0.5 × 1.35) + (0.5 × 0.75) = 0.675 + 0.375 = 1.05
+// Result: fire gets a slight edge — partial counter, not full.
 //
 // Full counter only applies when 100% of defenders are of the countered class.
 export const CLASS_COUNTER_CODEX = `
 **Class Counter System**
 
-Vexara uses a rock-paper-scissors class triangle: Light beats Heavy, Heavy beats Ranged, Ranged beats Light. Special units (Overseer, Recon Operative) are neutral — they have no counter advantage or vulnerability because they do not fight.
+Vexara uses a rock-paper-scissors class triangle: Mobile beats Armor, Armor beats Fire, Fire beats Mobile. Special units (Overseer, Recon Operative) are neutral — they have no counter advantage or vulnerability because they do not fight.
 
 **The triangle:**
-- Light (Breaker Unit, Skimmer Bike, Interceptor Bike, Void Stalker) — counters Heavy
-- Heavy (Assault Trooper, Bulwark Guard, Siege Mech) — counters Ranged
-- Ranged (Lancer Drone, Suppressor Team, Disruptor Unit, Annihilator Platform, Plasma Turret) — counters Light
+- Mobile (Breaker Unit, Skimmer Bike, Interceptor Bike, Void Stalker) — fast assault forces that exploit armor gaps and overwhelm armored units
+- Armor (Assault Trooper, Bulwark Guard, Siege Mech) — armored units that close distance and suppress fire emplacements
+- Fire (Lancer Drone, Suppressor Team, Disruptor Unit, Annihilator Platform, Plasma Turret) — fire support that pins down fast-moving mobile forces
 - Special (Overseer, Recon Operative) — no counter in either direction
 
 **Multipliers:** A class that counters the opposing class deals ×1.35 damage. A class being countered receives ×0.75 effective damage (its attacks are weakened). Neutral matchups are ×1.0.
 
-**Partial counters in mixed engagements:** The counter bonus is proportional to how much of the enemy force your class actually counters. If you send 10 Ranged units against a mix of 5 Light + 5 Heavy defenders, Ranged counters the Light half (×1.35) but is countered by the Heavy half (×0.75). Your effective multiplier is the weighted average: (0.5 × 1.35) + (0.5 × 0.75) = 1.05 — a small edge, not the full bonus. You only get the full ×1.35 if 100% of defenders are of the class you counter.
+**Partial counters in mixed engagements:** The counter bonus is proportional to how much of the enemy force your class actually counters. If you send 10 Fire units against a mix of 5 Mobile + 5 Armor defenders, Fire counters the Mobile half (×1.35) but is countered by the Armor half (×0.75). Your effective multiplier is the weighted average: (0.5 × 1.35) + (0.5 × 0.75) = 1.05 — a small edge, not the full bonus. You only get the full ×1.35 if 100% of defenders are of the class you counter.
 
 **Armory amplification:** Each level of Armory (+1.5%, cap +30% at Lv20) amplifies counter bonuses above 1.0 and slightly deepens disadvantage penalties. A Lv20 Armory turns a ×1.35 counter into ×1.65 — a significant force multiplier for well-composed attacks.
 
@@ -77,32 +77,32 @@ export type BuildingDoc = {
 
 export const TROOPS_DOC: TroopDoc[] = [
   {
-    key: 'assaultTrooper',
-    name: 'Assault Trooper',
-    role: 'Heavy frontline infantry — counters Ranged',
-    description: 'Solid all-rounder that holds the line and closes distance on ranged emplacements.',
-    unitClass: 'heavy',
-    stats: { attack: 30, defense: 45, speed: 18, carry: 60 },
-    cost: { biomass: 150, alloy: 150, ore: 350, population: 1, time: '1m 19s' },
-    requirements: ['Recruitment Core Lv1'],
-  },
-  {
     key: 'lancerDrone',
     name: 'Lancer Drone',
-    role: 'Ranged interceptor — counters Light',
-    description: 'Cheap suppression drone that pins down early light raiders.',
-    unitClass: 'ranged',
-    stats: { attack: 15, defense: 28, speed: 20, carry: 30 },
+    role: 'Fire interceptor — counters Mobile',
+    description: 'Cheap suppression drone that pins down early mobile raiders.',
+    unitClass: 'fire',
+    stats: { attack: 12, defense: 22, speed: 20, carry: 30 },
     cost: { biomass: 150, alloy: 150, ore: 200, population: 1, time: '53s' },
     requirements: ['Recruitment Core Lv2'],
   },
   {
+    key: 'assaultTrooper',
+    name: 'Assault Trooper',
+    role: 'Armor frontline infantry — counters Fire',
+    description: 'Durable frontline unit built to hold ground and close distance on fire emplacements. Low attack — its job is to survive and keep the line.',
+    unitClass: 'armor',
+    stats: { attack: 18, defense: 45, speed: 18, carry: 60 },
+    cost: { biomass: 150, alloy: 150, ore: 350, population: 1, time: '1m 19s' },
+    requirements: ['Recruitment Core Lv1'],
+  },
+  {
     key: 'breakerUnit',
     name: 'Breaker Unit',
-    role: 'Light assault breacher — counters Heavy',
-    description: 'High attack unit that exploits armor gaps and cracks heavy defensive lines.',
-    unitClass: 'light',
-    stats: { attack: 55, defense: 15, speed: 16, carry: 60 },
+    role: 'Mobile assault breacher — counters Armor',
+    description: 'Pure attack unit. Cracks armored defensive lines with high damage output but almost no survivability — expect heavy losses.',
+    unitClass: 'mobile',
+    stats: { attack: 55, defense: 10, speed: 16, carry: 60 },
     cost: { biomass: 250, alloy: 150, ore: 300, population: 1, time: '2m 40s' },
     requirements: ['Recruitment Core Lv3', 'Ore Extractor Lv3'],
   },
@@ -119,92 +119,92 @@ export const TROOPS_DOC: TroopDoc[] = [
     notes: ['This is the unit used for scouting and espionage missions.'],
   },
   {
+    key: 'suppressorTeam',
+    name: 'Suppressor Team',
+    role: 'Fire support — counters Mobile',
+    description: 'Aggressive fire support that pins down mobile forces. High attack for its tier but fragile — keep it behind your armor.',
+    unitClass: 'fire',
+    stats: { attack: 65, defense: 30, speed: 15, carry: 20 },
+    cost: { biomass: 450, alloy: 400, ore: 450, population: 2, time: '9m 0s' },
+    requirements: ['Recruitment Core Lv7', 'Command Core Lv6'],
+  },
+  {
     key: 'skimmerBike',
     name: 'Skimmer Bike',
-    role: 'Fast light raider — counters Heavy',
-    description: 'High mobility raider with strong carry for quick hit-and-run farming.',
-    unitClass: 'light',
-    stats: { attack: 80, defense: 65, speed: 22, carry: 80 },
-    cost: { biomass: 625, alloy: 500, ore: 750, population: 3, time: '10m 0s' },
+    role: 'Fast mobile raider — counters Armor',
+    description: 'High mobility raider with strong carry. Good attack, mediocre defense — trades hits for resource hauls and speed.',
+    unitClass: 'mobile',
+    stats: { attack: 80, defense: 40, speed: 22, carry: 80 },
+    cost: { biomass: 625, alloy: 500, ore: 750, population: 3, time: '12m 0s' },
     requirements: ['Recruitment Core Lv5', 'Alloy Forge Lv4'],
   },
   {
     key: 'bulwarkGuard',
     name: 'Bulwark Guard',
-    role: 'Elite heavy defender — counters Ranged',
-    description: 'One of the strongest dedicated defensive units in midgame. Anchors a defending stack and suppresses ranged attackers.',
-    unitClass: 'heavy',
-    stats: { attack: 20, defense: 130, speed: 12, carry: 25 },
-    cost: { biomass: 400, alloy: 600, ore: 500, population: 2, time: '8m 0s' },
+    role: 'Elite armor defender — counters Fire',
+    description: 'Defensive anchor of any mid-game garrison. Exceptional survivability, minimal attack — it holds the line while your fire units deal damage.',
+    unitClass: 'armor',
+    stats: { attack: 10, defense: 130, speed: 12, carry: 25 },
+    cost: { biomass: 400, alloy: 600, ore: 500, population: 2, time: '12m 0s' },
     requirements: ['Recruitment Core Lv5', 'Life Support Lv5'],
-  },
-  {
-    key: 'suppressorTeam',
-    name: 'Suppressor Team',
-    role: 'Ranged fire support — counters Light',
-    description: 'Flexible ranged support that pins down light cavalry pushing your line.',
-    unitClass: 'ranged',
-    stats: { attack: 65, defense: 45, speed: 15, carry: 20 },
-    cost: { biomass: 450, alloy: 400, ore: 450, population: 2, time: '8m 0s' },
-    requirements: ['Recruitment Core Lv7', 'Command Core Lv6'],
   },
   {
     key: 'disruptorUnit',
     name: 'Disruptor Unit',
-    role: 'Ranged EMP specialist — counters Light',
-    description: 'Aggressive ranged specialist that suppresses light skirmishers on the offensive.',
-    unitClass: 'ranged',
-    stats: { attack: 75, defense: 55, speed: 17, carry: 25 },
-    cost: { biomass: 550, alloy: 750, ore: 650, population: 2, time: '11m 0s' },
+    role: 'Fire EMP specialist — counters Mobile',
+    description: 'Aggressive fire specialist that suppresses mobile skirmishers on the offensive. Strong damage, low defense — commit it to attacks, not defense.',
+    unitClass: 'fire',
+    stats: { attack: 75, defense: 35, speed: 17, carry: 25 },
+    cost: { biomass: 550, alloy: 750, ore: 650, population: 2, time: '14m 0s' },
     requirements: ['Recruitment Core Lv7', 'Ore Extractor Lv6'],
     notes: ['No special anti-mech multiplier is currently applied in combat code.'],
   },
   {
     key: 'interceptorBike',
     name: 'Interceptor Bike',
-    role: 'Light rapid-response cavalry — counters Heavy',
-    description: 'Very fast light raider, ideal for rapid redeploy and cracking heavy defenders.',
-    unitClass: 'light',
-    stats: { attack: 95, defense: 75, speed: 28, carry: 100 },
-    cost: { biomass: 750, alloy: 600, ore: 900, population: 3, time: '15m 0s' },
+    role: 'Mobile rapid-response cavalry — counters Armor',
+    description: 'Very fast mobile raider, ideal for rapid redeploy and cracking armored defenders. High attack and carry, moderate defense.',
+    unitClass: 'mobile',
+    stats: { attack: 95, defense: 50, speed: 28, carry: 100 },
+    cost: { biomass: 750, alloy: 600, ore: 900, population: 3, time: '18m 0s' },
     requirements: ['Recruitment Core Lv8', 'Alloy Forge Lv7'],
   },
   {
     key: 'voidStalker',
     name: 'Void Stalker',
-    role: 'Light stealth cavalry — counters Heavy',
+    role: 'Mobile stealth cavalry — counters Armor',
     description:
-      'Fastest unit in the game. A light raider that excels at cracking heavy defensive lines — but is itself suppressed by ranged emplacements.',
-    unitClass: 'light',
-    stats: { attack: 110, defense: 50, speed: 32, carry: 40 },
-    cost: { biomass: 900, alloy: 700, ore: 1100, population: 3, time: '20m 0s' },
+      'Fastest unit in the game. A mobile raider that excels at cracking armored defensive lines — nearly no defense, so it relies on speed and shock value.',
+    unitClass: 'mobile',
+    stats: { attack: 110, defense: 32, speed: 32, carry: 40 },
+    cost: { biomass: 900, alloy: 700, ore: 1100, population: 3, time: '24m 0s' },
     requirements: ['Recruitment Core Lv9', 'Alloy Forge Lv8', 'Armory Lv3'],
     notes: [
       'Speed 32 — the fastest unit in the roster.',
-      'Light class is countered BY Ranged (Suppressor / Lancer / Disruptor / Annihilator / Plasma Turret).',
-      'Ranged class is countered BY Heavy (Assault Trooper / Bulwark Guard / Siege Mech).',
+      'Mobile class is countered BY Fire (Suppressor / Lancer / Disruptor / Annihilator / Plasma Turret).',
+      'Fire class is countered BY Armor (Assault Trooper / Bulwark Guard / Siege Mech).',
     ],
   },
   {
     key: 'siegeMech',
     name: 'Siege Mech',
-    role: 'Heavy siege anchor — counters Ranged',
+    role: 'Armor siege anchor — counters Fire',
     description:
-      'Towering heavy platform with exceptional durability and crushing attack. Slow but nearly immovable when holding ground — excels at eliminating ranged emplacements.',
-    unitClass: 'heavy',
-    stats: { attack: 150, defense: 210, speed: 10, carry: 20 },
-    cost: { biomass: 1250, alloy: 1000, ore: 2000, population: 4, time: '1h 0m' },
+      'Towering armored platform built for survival, not offense. Exceptional durability lets it absorb punishment while your fire support does the killing — slow but nearly impossible to dislodge.',
+    unitClass: 'armor',
+    stats: { attack: 80, defense: 210, speed: 10, carry: 20 },
+    cost: { biomass: 1250, alloy: 1000, ore: 2000, population: 4, time: '40m 0s' },
     requirements: ['Recruitment Core Lv10', 'Ore Extractor Lv9', 'Command Core Lv8'],
   },
   {
     key: 'plasmaTurret',
     name: 'Plasma Turret',
-    role: 'Static ranged emplacement — counters Light',
+    role: 'Static fire emplacement — counters Mobile',
     description:
-      'Immobile defensive emplacement. Cannot be sent on attacks, transfers, or raids — it always defends the nexus that built it. Decimates light cavalry that tries to rush you.',
-    unitClass: 'ranged',
+      'Immobile defensive emplacement. Cannot be sent on attacks, transfers, or raids — it always defends the nexus that built it. Decimates mobile forces that try to rush you.',
+    unitClass: 'fire',
     stats: { attack: 0, defense: 160, speed: 0, carry: 0 },
-    cost: { biomass: 1500, alloy: 1200, ore: 2500, population: 2, time: '1h 30m' },
+    cost: { biomass: 1500, alloy: 1200, ore: 2500, population: 2, time: '50m 0s' },
     requirements: ['Recruitment Core Lv11', 'Command Core Lv9', 'Armory Lv5'],
     notes: [
       'Speed 0 — stripped from any outgoing strike or transfer.',
@@ -214,11 +214,11 @@ export const TROOPS_DOC: TroopDoc[] = [
   {
     key: 'annihilatorPlatform',
     name: 'Annihilator Platform',
-    role: 'Heavy ranged artillery — counters Light',
-    description: 'Top-end ranged platform for heavy assaults and sieges. Suppresses light raiders at range.',
-    unitClass: 'ranged',
-    stats: { attack: 210, defense: 140, speed: 8, carry: 160 },
-    cost: { biomass: 2000, alloy: 1750, ore: 3000, population: 5, time: '2h 0m' },
+    role: 'Fire artillery — counters Mobile',
+    description: 'Top-end fire platform for heavy assaults and sieges. Enormous attack power but lightly armored — protect it with Siege Mechs and Bulwark Guards.',
+    unitClass: 'fire',
+    stats: { attack: 210, defense: 80, speed: 8, carry: 160 },
+    cost: { biomass: 2000, alloy: 1750, ore: 3000, population: 5, time: '1h 30m' },
     requirements: ['Recruitment Core Lv12', 'Command Core Lv10', 'Shield Grid Lv10'],
   },
   {

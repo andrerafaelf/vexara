@@ -608,9 +608,9 @@
   white-space: nowrap;
 }
 
-.cx-class-chip-light   { color: #7dd3fc; background: rgba(125, 211, 252, 0.08); }
-.cx-class-chip-heavy   { color: #fca5a5; background: rgba(252, 165, 165, 0.08); }
-.cx-class-chip-ranged  { color: #fcd34d; background: rgba(252, 211, 77, 0.08); }
+.cx-class-chip-mobile  { color: #7dd3fc; background: rgba(125, 211, 252, 0.08); }
+.cx-class-chip-armor   { color: #fca5a5; background: rgba(252, 165, 165, 0.08); }
+.cx-class-chip-fire    { color: #fcd34d; background: rgba(252, 211, 77, 0.08); }
 .cx-class-chip-special { color: #c4b5fd; background: rgba(196, 181, 253, 0.08); }
 
 .cx-class-counters {

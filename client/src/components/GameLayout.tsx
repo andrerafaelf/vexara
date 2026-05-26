@@ -13,7 +13,7 @@ import { useUnreadReports } from '@/hooks/useUnreadReports';
 import '@/styles/Game.css';
 import '@/styles/InGameIdentity.css';
 import { Nexus } from '@/types/game';
-import { Building2, Menu } from 'lucide-react';
+import { Building2, BookOpen, Menu } from 'lucide-react';
 import SupportTiersCard from '@/components/SupportTiersCard';
 import { usePathname, useRouter } from 'next/navigation';
 import { startTransition, useCallback, useEffect, useMemo, useState } from 'react';
@@ -183,6 +183,16 @@ export default function GameLayout({
         </div>
 
         <div className="header-right">
+          <a
+            href="/codex"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="nexus-drawer-toggle"
+            aria-label="Open Codex"
+            title="Codex"
+          >
+            <BookOpen size={18} />
+          </a>
           <button
             className={`nexus-drawer-toggle${isNexusDrawerOpen ? ' active' : ''}`}
             onClick={() => setIsNexusDrawerOpen((v) => !v)}
@@ -262,6 +272,9 @@ export default function GameLayout({
           <button className={`nav-btn${is('profile') ? ' active' : ''}`} onClick={nav('/profile')}>
             Profile
           </button>
+          <a href="/codex" target="_blank" rel="noopener noreferrer" className="nav-btn">
+            Codex
+          </a>
           <SupportTiersCard
             variant="compact"
             currentTier={user?.supporterTier ?? null}

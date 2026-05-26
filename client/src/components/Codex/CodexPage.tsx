@@ -135,18 +135,29 @@ export default function CodexPage() {
 /* ────────────────────────────────────────────────────── NAV / HEADER === */
 
 function CodexNav() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  useEffect(() => {
+    setIsLoggedIn(!!localStorage.getItem('token'));
+  }, []);
+
   return (
     <header className="cx-nav">
-      <Link href="/" className="cx-nav-mark" aria-label="Vexara home">
+      <Link href={isLoggedIn ? '/play' : '/'} className="cx-nav-mark" aria-label="Vexara home">
         <Image src="/vexara-logo.png" alt="" width={26} height={26} priority />
         <span>Vexara</span>
         <span className="cx-nav-sep">/</span>
         <span className="cx-nav-loc">Codex</span>
       </Link>
       <nav className="cx-nav-links" aria-label="Primary">
-        <Link href="/" className="cx-nav-link-quiet">Home</Link>
-        <Link href="/login" className="cx-nav-link-login">Login</Link>
-        <Link href="/register" className="cx-nav-cta">Enlist</Link>
+        {isLoggedIn ? (
+          <Link href="/play" className="cx-nav-cta">Play</Link>
+        ) : (
+          <>
+            <Link href="/" className="cx-nav-link-quiet">Home</Link>
+            <Link href="/login" className="cx-nav-link-login">Login</Link>
+            <Link href="/register" className="cx-nav-cta">Enlist</Link>
+          </>
+        )}
       </nav>
     </header>
   );
@@ -592,9 +603,9 @@ function TroopEntry({ doc, index }: { doc: typeof TROOPS_DOC[number]; index: num
 }
 
 const CLASS_LABELS: Record<TroopClass, string> = {
-  light:   'LIGHT',
-  heavy:   'HEAVY',
-  ranged:  'RANGED',
+  mobile:  'MOBILE',
+  armor:   'ARMOR',
+  fire:    'FIRE',
   special: 'SPECIAL',
 };
 
