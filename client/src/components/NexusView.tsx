@@ -112,12 +112,14 @@ type NexusTab = 'overview' | 'buildings' | 'troops' | 'map' | 'espionage';
 const MAX_BUILD_QUEUE = 5;
 const MAX_TRAINING_QUEUE = 5;
 
-const NEXUS_TYPE_BUFFS: Record<string, { label: string; doubledLabel: string }> = {
-  'Resource Depot': { label: '2x Resource Production', doubledLabel: '3x Resource Production' },
-  'Supply Cache': { label: '2x Storage · 40% Loot Protection', doubledLabel: '3x Storage · 60% Loot Protection' },
-  'Military Outpost': { label: '2x Shield Efficiency · 2x Training Speed', doubledLabel: '3x Shield Efficiency · 4x Training Speed' },
-  'Reclaimed Outpost': { label: '20% Faster Construction', doubledLabel: '36% Faster Construction' },
-};
+// Gate for the buff banner — labels are derived per-type inline so this
+// only needs to know which types render a banner.
+const NEXUS_TYPES_WITH_BUFF = new Set([
+  'Resource Depot',
+  'Supply Cache',
+  'Military Outpost',
+  'Reclaimed Outpost',
+]);
 
 const BUILDING_NAMES: { [key: string]: string } = {
   commandCore: 'Command Core',
@@ -1509,73 +1511,71 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
             </>
           )}
         </div>
-        {nexus.nexusType && NEXUS_TYPE_BUFFS[nexus.nexusType] && (
-          <div className={`nexus-type-buff-banner${nexus.nexusTypeDoubled ? ' nexus-type-buff-banner--doubled' : ''}`}>
-            <NexusTypeBadge type={nexus.nexusType} doubled={nexus.nexusTypeDoubled} size={14} />
-            <span className="nexus-type-buff-label">
-              {nexus.nexusType} · {nexus.nexusTypeDoubled
-                ? NEXUS_TYPE_BUFFS[nexus.nexusType].doubledLabel
-                : NEXUS_TYPE_BUFFS[nexus.nexusType].label}
-            </span>
-            {nexus.nexusTypeDoubled && (
-              <span className="nexus-type-buff-doubled-badge" title="Tier II: specialization bonus fully unlocked at Command Core 15">
-                T2
+        {nexus.nexusType && NEXUS_TYPES_WITH_BUFF.has(nexus.nexusType) && (() => {
+          // Single-row banner. Three slots: [icon + name + tier], [bonus math].
+          // The label is just the type name — the numbers live in the math slot,
+          // so we never repeat ourselves like the old layout did.
+          const doubled = !!nexus.nexusTypeDoubled;
+          let math: React.ReactNode = null;
+          if (nexus.nexusType === 'Resource Depot') {
+            const mult = doubled ? 3 : 2;
+            math = (
+              <>
+                Production
+                {' '}
+                <span className="nexus-type-buff-base">{fmtNum(Math.floor(production.biomass / mult))}/h</span>
+                {' → '}
+                <strong>{fmtNum(production.biomass)}/h</strong>
+                <span className="nexus-type-buff-suffix"> per resource</span>
+              </>
+            );
+          } else if (nexus.nexusType === 'Supply Cache') {
+            const mult = doubled ? 3 : 2;
+            const lootProt = doubled ? 60 : 40;
+            math = (
+              <>
+                Storage
+                {' '}
+                <span className="nexus-type-buff-base">{fmtNum(Math.floor(storageCapacity / mult))}</span>
+                {' → '}
+                <strong>{fmtNum(Math.floor(storageCapacity))}</strong>
+                <span className="nexus-type-buff-sep"> · </span>
+                <strong>{lootProt}%</strong> loot protection
+              </>
+            );
+          } else if (nexus.nexusType === 'Military Outpost') {
+            math = (
+              <>
+                Training <strong>{doubled ? '4×' : '2×'} faster</strong>
+                <span className="nexus-type-buff-sep"> · </span>
+                Shield efficiency <strong>{doubled ? '3×' : '2×'}</strong>
+              </>
+            );
+          } else if (nexus.nexusType === 'Reclaimed Outpost') {
+            math = (
+              <>
+                Construction <strong>{doubled ? '36%' : '20%'} faster</strong>
+              </>
+            );
+          }
+          return (
+            <div className={`nexus-type-buff-banner${doubled ? ' nexus-type-buff-banner--doubled' : ''}`}>
+              <span className="nexus-type-buff-head">
+                <NexusTypeBadge type={nexus.nexusType} doubled={nexus.nexusTypeDoubled} size={14} />
+                <span className="nexus-type-buff-name">{nexus.nexusType}</span>
+                <span
+                  className={`nexus-type-tier-chip${doubled ? ' nexus-type-tier-chip--ii' : ''}`}
+                  title={doubled
+                    ? 'Tier II — specialization bonus fully unlocked at Command Core 15'
+                    : 'Tier I — base specialization bonus'}
+                >
+                  Tier {doubled ? 'II' : 'I'}
+                </span>
               </span>
-            )}
-            {(() => {
-              // Show the live before/after numbers for the active bonus, so the
-              // player can see the math without having to recompute it.
-              const doubled = !!nexus.nexusTypeDoubled;
-              if (nexus.nexusType === 'Resource Depot') {
-                const mult = doubled ? 3 : 2;
-                const baseBio = production.biomass / mult;
-                const baseAlloy = production.alloy / mult;
-                const baseOre = production.ore / mult;
-                return (
-                  <span className="nexus-type-buff-math">
-                    Production:{' '}
-                    <span className="nexus-type-buff-base">{fmtNum(Math.floor(baseBio))}/{fmtNum(Math.floor(baseAlloy))}/{fmtNum(Math.floor(baseOre))} per h</span>
-                    {' → '}
-                    <strong>{fmtNum(production.biomass)}/{fmtNum(production.alloy)}/{fmtNum(production.ore)} per h</strong>
-                  </span>
-                );
-              }
-              if (nexus.nexusType === 'Supply Cache') {
-                const mult = doubled ? 3 : 2;
-                const baseStorage = storageCapacity / mult;
-                const lootProt = doubled ? 60 : 40;
-                return (
-                  <span className="nexus-type-buff-math">
-                    Storage:{' '}
-                    <span className="nexus-type-buff-base">{fmtNum(Math.floor(baseStorage))}</span>
-                    {' → '}
-                    <strong>{fmtNum(Math.floor(storageCapacity))}</strong>
-                    {' · '}
-                    <strong>{lootProt}%</strong> of resources protected from loot
-                  </span>
-                );
-              }
-              if (nexus.nexusType === 'Military Outpost') {
-                const trainMult = doubled ? '4×' : '2×';
-                const shieldMult = doubled ? '3×' : '2×';
-                return (
-                  <span className="nexus-type-buff-math">
-                    Training <strong>{trainMult} faster</strong> · Shield efficiency <strong>{shieldMult}</strong>
-                  </span>
-                );
-              }
-              if (nexus.nexusType === 'Reclaimed Outpost') {
-                const buildPct = doubled ? 36 : 20;
-                return (
-                  <span className="nexus-type-buff-math">
-                    Construction <strong>{buildPct}% faster</strong>
-                  </span>
-                );
-              }
-              return null;
-            })()}
-          </div>
-        )}
+              {math && <span className="nexus-type-buff-math">{math}</span>}
+            </div>
+          );
+        })()}
         <LiveResourceStrip
           baseResources={nexus.resources}
           production={production}
