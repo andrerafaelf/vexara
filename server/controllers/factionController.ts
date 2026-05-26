@@ -10,6 +10,7 @@ import type { AuthRequest } from '../types/index.js';
 import { logError } from '../utils/logger.js';
 import { containsBlockedChatWord } from '../utils/profanity.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
+import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
 
 const FACTION_NAME_MIN = 3;
 const FACTION_NAME_MAX = 32;
@@ -63,7 +64,7 @@ export async function getMyFaction(req: AuthRequest, res: Response): Promise<voi
             motd: true,
             createdAt: true,
             members: {
-              select: { id: true, userId: true, role: true, user: { select: { username: true, isSupporter: true, supporterTier: true } } },
+              select: { id: true, userId: true, role: true, user: { select: { id: true, username: true, isSupporter: true, supporterTier: true, avatarKey: true } } },
             },
           },
         },
@@ -85,6 +86,8 @@ export async function getMyFaction(req: AuthRequest, res: Response): Promise<voi
           username: m.user.username,
           isSupporter: m.user.isSupporter,
           supporterTier: m.user.supporterTier,
+          avatarUrl: avatarUrl(m.user.id, m.user.avatarKey),
+          avatarUrlSm: avatarUrlSm(m.user.id, m.user.avatarKey),
           role: m.role,
         })),
       },
@@ -113,7 +116,7 @@ export async function getFaction(req: AuthRequest, res: Response): Promise<void>
         createdAt: true,
         galaxyId: true,
         members: {
-          select: { id: true, userId: true, role: true, user: { select: { username: true, isSupporter: true, supporterTier: true } } },
+          select: { id: true, userId: true, role: true, user: { select: { id: true, username: true, isSupporter: true, supporterTier: true, avatarKey: true } } },
         },
       },
     });
@@ -125,7 +128,7 @@ export async function getFaction(req: AuthRequest, res: Response): Promise<void>
 
     res.json({
       ...faction,
-      members: faction.members.map((m: any) => ({ id: m.id, userId: m.userId, username: m.user.username, isSupporter: m.user.isSupporter, supporterTier: m.user.supporterTier, role: m.role })),
+      members: faction.members.map((m: any) => ({ id: m.id, userId: m.userId, username: m.user.username, isSupporter: m.user.isSupporter, supporterTier: m.user.supporterTier, avatarUrl: avatarUrl(m.user.id, m.user.avatarKey), avatarUrlSm: avatarUrlSm(m.user.id, m.user.avatarKey), role: m.role })),
     });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
@@ -937,7 +940,7 @@ export async function getJoinRequests(req: AuthRequest, res: Response): Promise<
         id: true,
         message: true,
         createdAt: true,
-        user: { select: { id: true, username: true, isSupporter: true, supporterTier: true } },
+        user: { select: { id: true, username: true, isSupporter: true, supporterTier: true, avatarKey: true } },
       },
       orderBy: { createdAt: 'asc' },
     });
@@ -948,6 +951,8 @@ export async function getJoinRequests(req: AuthRequest, res: Response): Promise<
       username: r.user.username,
       isSupporter: r.user.isSupporter,
       supporterTier: r.user.supporterTier,
+      avatarUrl: avatarUrl(r.user.id, r.user.avatarKey),
+      avatarUrlSm: avatarUrlSm(r.user.id, r.user.avatarKey),
       message: r.message,
       createdAt: r.createdAt,
     })));
@@ -1163,13 +1168,27 @@ export async function getChatMessages(req: AuthRequest, res: Response): Promise<
         id: true,
         content: true,
         createdAt: true,
-        user: { select: { id: true, username: true, isSupporter: true, supporterTier: true } },
+        user: { select: { id: true, username: true, isSupporter: true, supporterTier: true, avatarKey: true } },
       },
       orderBy: { id: 'desc' },
       take: CHAT_PAGE_SIZE,
     });
 
-    res.json(messages.reverse());
+    res.json(
+      messages.reverse().map((m: any) => ({
+        id: m.id,
+        content: m.content,
+        createdAt: m.createdAt,
+        user: {
+          id: m.user.id,
+          username: m.user.username,
+          isSupporter: m.user.isSupporter,
+          supporterTier: m.user.supporterTier,
+          avatarUrl: avatarUrl(m.user.id, m.user.avatarKey),
+          avatarUrlSm: avatarUrlSm(m.user.id, m.user.avatarKey),
+        },
+      })),
+    );
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
     res.status(500).json({ error: 'Internal server error' });
@@ -1212,12 +1231,25 @@ export async function sendChatMessage(req: AuthRequest, res: Response): Promise<
         id: true,
         content: true,
         createdAt: true,
-        user: { select: { id: true, username: true, isSupporter: true, supporterTier: true } },
+        user: { select: { id: true, username: true, isSupporter: true, supporterTier: true, avatarKey: true } },
       },
     });
 
-    notifyFactionChat(factionId, message);
-    res.status(201).json(message);
+    const serialized = {
+      id: message.id,
+      content: message.content,
+      createdAt: message.createdAt,
+      user: {
+        id: message.user.id,
+        username: message.user.username,
+        isSupporter: message.user.isSupporter,
+        supporterTier: message.user.supporterTier,
+        avatarUrl: avatarUrl(message.user.id, message.user.avatarKey),
+        avatarUrlSm: avatarUrlSm(message.user.id, message.user.avatarKey),
+      },
+    };
+    notifyFactionChat(factionId, serialized);
+    res.status(201).json(serialized);
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
     res.status(500).json({ error: 'Internal server error' });

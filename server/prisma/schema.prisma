@@ -17,6 +17,7 @@ model User {
   supporterTier  String?   @db.VarChar(16)
   supporterTierSince DateTime?
   isFounder      Boolean   @default(false)
+  avatarKey      String?   @db.VarChar(64)
   createdAt      DateTime  @default(now())
 
   emailVerifiedAt                   DateTime?

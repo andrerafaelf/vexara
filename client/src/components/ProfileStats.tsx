@@ -13,6 +13,8 @@ import { usePageReady } from './NavigationProgress';
 import PageSkeleton from './PageSkeleton';
 import SupportTiersCard from './SupportTiersCard';
 import Username from './Username';
+import Avatar from './Avatar';
+import AvatarUpload from './AvatarUpload';
 
 function fmt(n: number): string {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
@@ -40,7 +42,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 export default function ProfileStats() {
-  const { logout } = useAuth();
+  const { logout, updateUser } = useAuth();
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -198,11 +200,14 @@ export default function ProfileStats() {
 
       {tab === 'stats' && <>
       <div className="ps-header">
-        <div
+        <Avatar
+          username={stats.username}
+          avatarUrl={stats.avatarUrl ?? null}
+          avatarUrlSm={stats.avatarUrlSm ?? null}
+          size="lg"
           className={`ps-avatar${stats.supporterTier === 'officer' ? ' supporter-border supporter-border-officer' : ''}${stats.supporterTier === 'commander' ? ' supporter-border supporter-border-commander' : ''}`}
-        >
-          {stats.username.charAt(0).toUpperCase()}
-        </div>
+          ariaHidden
+        />
         <div className="ps-header-info">
           <h2 className="ps-username">
             <Username
@@ -225,6 +230,19 @@ export default function ProfileStats() {
           </Link>
         </div>
       </div>
+
+      {(stats.supporterTier === 'officer' || stats.supporterTier === 'commander') && (
+        <AvatarUpload
+          username={stats.username}
+          avatarUrl={stats.avatarUrl ?? null}
+          avatarUrlSm={stats.avatarUrlSm ?? null}
+          onChange={(next) => {
+            setStats((prev) => (prev ? { ...prev, avatarUrl: next.avatarUrl, avatarUrlSm: next.avatarUrlSm } : prev));
+            // Mirror the new URLs into AuthContext so the sidebar updates immediately.
+            updateUser({ avatarUrl: next.avatarUrl, avatarUrlSm: next.avatarUrlSm });
+          }}
+        />
+      )}
 
       <Section title="Resources">
         <div className="ps-cards">

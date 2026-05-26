@@ -4,6 +4,28 @@ import type { AuthRequest } from '../types/index.js';
 import { logError } from '../utils/logger.js';
 import { containsBlockedChatWord } from '../utils/profanity.js';
 import { notifyDiplomacyChat } from '../services/warRoomSocket.js';
+import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
+
+function serializeDiplomacyMessage(m: {
+  id: number;
+  content: string;
+  createdAt: Date;
+  user: { id: number; username: string; isSupporter: boolean; supporterTier: string | null; avatarKey: string | null };
+}) {
+  return {
+    id: m.id,
+    content: m.content,
+    createdAt: m.createdAt,
+    user: {
+      id: m.user.id,
+      username: m.user.username,
+      isSupporter: m.user.isSupporter,
+      supporterTier: m.user.supporterTier,
+      avatarUrl: avatarUrl(m.user.id, m.user.avatarKey),
+      avatarUrlSm: avatarUrlSm(m.user.id, m.user.avatarKey),
+    },
+  };
+}
 
 const CHAT_PAGE_SIZE = 50;
 const MSG_MAX = 1000;
@@ -49,13 +71,13 @@ export async function getDiplomacyMessages(req: AuthRequest, res: Response): Pro
         id: true,
         content: true,
         createdAt: true,
-        user: { select: { id: true, username: true, isSupporter: true, supporterTier: true } },
+        user: { select: { id: true, username: true, isSupporter: true, supporterTier: true, avatarKey: true } },
       },
       orderBy: { id: 'desc' },
       take: CHAT_PAGE_SIZE,
     });
 
-    res.json(messages.reverse());
+    res.json(messages.reverse().map(serializeDiplomacyMessage));
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'diplomacyChatController.ts' });
     res.status(500).json({ error: 'Internal server error' });
@@ -90,14 +112,15 @@ export async function sendDiplomacyMessage(req: AuthRequest, res: Response): Pro
         id: true,
         content: true,
         createdAt: true,
-        user: { select: { id: true, username: true, isSupporter: true, supporterTier: true } },
+        user: { select: { id: true, username: true, isSupporter: true, supporterTier: true, avatarKey: true } },
       },
     });
 
+    const serialized = serializeDiplomacyMessage(message);
     // Push to both faction rooms involved in the treaty.
-    notifyDiplomacyChat(treaty.proposerFactionId, treaty.targetFactionId, treatyId, message);
+    notifyDiplomacyChat(treaty.proposerFactionId, treaty.targetFactionId, treatyId, serialized);
 
-    res.status(201).json(message);
+    res.status(201).json(serialized);
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'diplomacyChatController.ts' });
     res.status(500).json({ error: 'Internal server error' });

@@ -6,9 +6,19 @@ import { notifyBadgeUpdate, notifyFriendsUpdate } from '../services/warRoomSocke
 import type { AuthRequest } from '../types/index.js';
 import { logError } from '../utils/logger.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
+import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
 
-function serializeFriend(user: { id: number; username: string; isSupporter: boolean; supporterTier?: string | null }, friendshipCreatedAt: Date, points: number | undefined) {
-  return { id: String(user.id), username: user.username, isSupporter: user.isSupporter, supporterTier: user.supporterTier ?? null, points: points ?? 0, friendsSince: friendshipCreatedAt };
+function serializeFriend(user: { id: number; username: string; isSupporter: boolean; supporterTier?: string | null; avatarKey?: string | null }, friendshipCreatedAt: Date, points: number | undefined) {
+  return {
+    id: String(user.id),
+    username: user.username,
+    isSupporter: user.isSupporter,
+    supporterTier: user.supporterTier ?? null,
+    avatarUrl: avatarUrl(user.id, user.avatarKey ?? null),
+    avatarUrlSm: avatarUrlSm(user.id, user.avatarKey ?? null),
+    points: points ?? 0,
+    friendsSince: friendshipCreatedAt,
+  };
 }
 
 export async function listFriends(req: AuthRequest, res: Response): Promise<void> {
@@ -87,8 +97,8 @@ export async function listRequests(req: AuthRequest, res: Response): Promise<voi
   try {
     const [incoming, outgoing] = await friendsService.getPendingRequests(req.userId);
     res.json({
-      incoming: incoming.map((r) => ({ id: String(r.id), userId: String(r.sender.id), username: r.sender.username, isSupporter: r.sender.isSupporter, supporterTier: r.sender.supporterTier ?? null, createdAt: r.createdAt })),
-      outgoing: outgoing.map((r) => ({ id: String(r.id), userId: String(r.receiver.id), username: r.receiver.username, isSupporter: r.receiver.isSupporter, supporterTier: r.receiver.supporterTier ?? null, createdAt: r.createdAt })),
+      incoming: incoming.map((r) => ({ id: String(r.id), userId: String(r.sender.id), username: r.sender.username, isSupporter: r.sender.isSupporter, supporterTier: r.sender.supporterTier ?? null, avatarUrl: avatarUrl(r.sender.id, r.sender.avatarKey), avatarUrlSm: avatarUrlSm(r.sender.id, r.sender.avatarKey), createdAt: r.createdAt })),
+      outgoing: outgoing.map((r) => ({ id: String(r.id), userId: String(r.receiver.id), username: r.receiver.username, isSupporter: r.receiver.isSupporter, supporterTier: r.receiver.supporterTier ?? null, avatarUrl: avatarUrl(r.receiver.id, r.receiver.avatarKey), avatarUrlSm: avatarUrlSm(r.receiver.id, r.receiver.avatarKey), createdAt: r.createdAt })),
     });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'friendsController.ts' });

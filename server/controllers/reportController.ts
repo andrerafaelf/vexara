@@ -4,6 +4,7 @@ import prisma from '../lib/prisma.js';
 import * as reportService from '../services/reportService.js';
 import type { AuthRequest } from '../types/index.js';
 import { logError } from '../utils/logger.js';
+import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
 
 export async function getReports(req: AuthRequest, res: Response): Promise<void> {
   try {
@@ -18,9 +19,21 @@ export async function getReports(req: AuthRequest, res: Response): Promise<void>
         const [attackerUser, defenderUser] = await Promise.all([
           r.attackerUserId ? reportService.getUserById(r.attackerUserId) : null,
           r.defenderUserId ? reportService.getUserById(r.defenderUserId) : null,
-        ]) as [{ username: string; isSupporter: boolean; supporterTier: string | null } | null, { username: string; isSupporter: boolean; supporterTier: string | null } | null];
+        ]) as [{ username: string; isSupporter: boolean; supporterTier: string | null; avatarKey: string | null } | null, { username: string; isSupporter: boolean; supporterTier: string | null; avatarKey: string | null } | null];
         const attackerUsername = attackerUser?.username ?? (r.attackerUserId == null ? 'Rogue AI' : undefined);
-        return serializeAttack({ ...r, attackerUsername, attackerIsSupporter: attackerUser?.isSupporter, attackerSupporterTier: attackerUser?.supporterTier, defenderUsername: defenderUser?.username, defenderIsSupporter: defenderUser?.isSupporter, defenderSupporterTier: defenderUser?.supporterTier });
+        return serializeAttack({
+          ...r,
+          attackerUsername,
+          attackerIsSupporter: attackerUser?.isSupporter,
+          attackerSupporterTier: attackerUser?.supporterTier,
+          attackerAvatarUrl: r.attackerUserId != null ? avatarUrl(r.attackerUserId, attackerUser?.avatarKey ?? null) : null,
+          attackerAvatarUrlSm: r.attackerUserId != null ? avatarUrlSm(r.attackerUserId, attackerUser?.avatarKey ?? null) : null,
+          defenderUsername: defenderUser?.username,
+          defenderIsSupporter: defenderUser?.isSupporter,
+          defenderSupporterTier: defenderUser?.supporterTier,
+          defenderAvatarUrl: r.defenderUserId != null ? avatarUrl(r.defenderUserId, defenderUser?.avatarKey ?? null) : null,
+          defenderAvatarUrlSm: r.defenderUserId != null ? avatarUrlSm(r.defenderUserId, defenderUser?.avatarKey ?? null) : null,
+        });
       }),
     );
     res.json(enriched);

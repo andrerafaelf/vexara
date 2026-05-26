@@ -7,6 +7,8 @@ export interface User {
   isSupporter?: boolean;
   supporterTier?: SupporterTier | null;
   isFounder?: boolean;
+  avatarUrl?: string | null;
+  avatarUrlSm?: string | null;
 }
 
 export interface TimelineDay {
@@ -27,6 +29,8 @@ export interface UserStats {
   isSupporter?: boolean;
   supporterTier?: SupporterTier | null;
   isFounder?: boolean;
+  avatarUrl?: string | null;
+  avatarUrlSm?: string | null;
   points: number;
   accountAgeDays: number;
   nexusCount: number;

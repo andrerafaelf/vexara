@@ -13,6 +13,7 @@ import { Nexus, NexusGroup, User } from '../types/game';
 import GalaxyChip from './GalaxyChip';
 import NexusTypeBadge from './NexusTypeBadge';
 import SupportTiersCard from './SupportTiersCard';
+import Avatar from './Avatar';
 
 export const NEXUS_GROUPS_KEY = ['nexusGroups'] as const;
 
@@ -73,7 +74,6 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
     });
   })();
 
-  const commanderInitial = (user?.username ?? '?').slice(0, 1).toUpperCase();
   const totalPoints = nexuses.reduce((sum, n) => sum + (n.points ?? 0), 0);
 
   return (
@@ -149,12 +149,14 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
 
         {user && (
           <div className="commander-card" aria-label="Commander summary">
-            <div
+            <Avatar
+              username={user.username}
+              avatarUrl={user.avatarUrl ?? null}
+              avatarUrlSm={user.avatarUrlSm ?? null}
+              size="md"
               className={`commander-avatar${user.supporterTier === 'officer' ? ' supporter-border supporter-border-officer' : ''}${user.supporterTier === 'commander' ? ' supporter-border supporter-border-commander' : ''}`}
-              aria-hidden="true"
-            >
-              {commanderInitial}
-            </div>
+              ariaHidden
+            />
             <div className="commander-info">
               <div className="commander-name-row">
                 <span

@@ -8,6 +8,7 @@ import {
   broadcastOperationUpdate,
   broadcastThreadMessage,
 } from '../services/warRoomSocket.js';
+import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
 
 const NAME_MAX = 64;
 const MESSAGE_MAX = 1000;
@@ -90,7 +91,7 @@ async function serializeOperation(operationId: number) {
     ? []
     : await prisma.user.findMany({
         where: { id: { in: Array.from(userIds) } },
-        select: { id: true, username: true, isSupporter: true, supporterTier: true },
+        select: { id: true, username: true, isSupporter: true, supporterTier: true, avatarKey: true },
       });
   const userById = new Map(users.map((u) => [u.id, u] as const));
   const usernameById = new Map(users.map((u) => [u.id, u.username] as const));
@@ -135,6 +136,8 @@ async function serializeOperation(operationId: number) {
           username: usernameById.get(s.userId) ?? '.',
           isSupporter: userById.get(s.userId)?.isSupporter ?? false,
           supporterTier: userById.get(s.userId)?.supporterTier ?? null,
+          avatarUrl: avatarUrl(s.userId, userById.get(s.userId)?.avatarKey ?? null),
+          avatarUrlSm: avatarUrlSm(s.userId, userById.get(s.userId)?.avatarKey ?? null),
           fromNexusId: s.fromNexusId,
           fromNexusName: nx?.name ?? `Nexus #${s.fromNexusId}`,
           fromNexusX: nx?.x ?? null,
@@ -155,6 +158,8 @@ async function serializeOperation(operationId: number) {
         username: usernameById.get(m.userId) ?? '.',
         isSupporter: userById.get(m.userId)?.isSupporter ?? false,
         supporterTier: userById.get(m.userId)?.supporterTier ?? null,
+        avatarUrl: avatarUrl(m.userId, userById.get(m.userId)?.avatarKey ?? null),
+        avatarUrlSm: avatarUrlSm(m.userId, userById.get(m.userId)?.avatarKey ?? null),
         content: m.content,
         kind: m.kind,
         createdAt: m.createdAt.toISOString(),
@@ -703,13 +708,15 @@ export async function postThreadMessage(req: AuthRequest, res: Response): Promis
     const msg = await prisma.warOperationMessage.create({
       data: { operationId, userId: req.userId, content, kind: 'chat' },
     });
-    const user = await prisma.user.findUnique({ where: { id: req.userId }, select: { username: true, isSupporter: true, supporterTier: true } });
+    const user = await prisma.user.findUnique({ where: { id: req.userId }, select: { username: true, isSupporter: true, supporterTier: true, avatarKey: true } });
     const out = {
       id: msg.id,
       userId: msg.userId,
       username: user?.username ?? '.',
       isSupporter: user?.isSupporter ?? false,
       supporterTier: user?.supporterTier ?? null,
+      avatarUrl: avatarUrl(req.userId, user?.avatarKey ?? null),
+      avatarUrlSm: avatarUrlSm(req.userId, user?.avatarKey ?? null),
       content: msg.content,
       kind: msg.kind,
       createdAt: msg.createdAt.toISOString(),
@@ -748,7 +755,7 @@ export async function getThread(req: AuthRequest, res: Response): Promise<void> 
     const userIds = Array.from(new Set(messages.map((m) => m.userId)));
     const users = await prisma.user.findMany({
       where: { id: { in: userIds } },
-      select: { id: true, username: true, isSupporter: true, supporterTier: true },
+      select: { id: true, username: true, isSupporter: true, supporterTier: true, avatarKey: true },
     });
     const userById2 = new Map(users.map((u) => [u.id, u] as const));
     res.json({
@@ -758,6 +765,8 @@ export async function getThread(req: AuthRequest, res: Response): Promise<void> 
         username: userById2.get(m.userId)?.username ?? '.',
         isSupporter: userById2.get(m.userId)?.isSupporter ?? false,
         supporterTier: userById2.get(m.userId)?.supporterTier ?? null,
+        avatarUrl: avatarUrl(m.userId, userById2.get(m.userId)?.avatarKey ?? null),
+        avatarUrlSm: avatarUrlSm(m.userId, userById2.get(m.userId)?.avatarKey ?? null),
         content: m.content,
         kind: m.kind,
         createdAt: m.createdAt.toISOString(),
@@ -806,7 +815,7 @@ export async function getGalaxyStarfield(req: AuthRequest, res: Response): Promi
 
     const ownerIds = Array.from(new Set(nexuses.map((n) => n.ownerId).filter((v): v is number => v != null)));
     const owners = ownerIds.length
-      ? await prisma.user.findMany({ where: { id: { in: ownerIds } }, select: { id: true, username: true, isSupporter: true, supporterTier: true } })
+      ? await prisma.user.findMany({ where: { id: { in: ownerIds } }, select: { id: true, username: true, isSupporter: true, supporterTier: true, avatarKey: true } })
       : [];
     const ownerById = new Map(owners.map((u) => [u.id, u] as const));
     const usernameById = new Map(owners.map((u) => [u.id, u.username] as const));
@@ -831,6 +840,8 @@ export async function getGalaxyStarfield(req: AuthRequest, res: Response): Promi
         ownerName: n.ownerId != null ? (usernameById.get(n.ownerId) ?? null) : null,
         ownerIsSupporter: n.ownerId != null ? (ownerById.get(n.ownerId)?.isSupporter ?? false) : false,
         ownerSupporterTier: n.ownerId != null ? (ownerById.get(n.ownerId)?.supporterTier ?? null) : null,
+        ownerAvatarUrl: n.ownerId != null ? avatarUrl(n.ownerId, ownerById.get(n.ownerId)?.avatarKey ?? null) : null,
+        ownerAvatarUrlSm: n.ownerId != null ? avatarUrlSm(n.ownerId, ownerById.get(n.ownerId)?.avatarKey ?? null) : null,
         relationship: rel,
       };
     });

@@ -6,6 +6,7 @@ import { sendPasswordChanged } from '../services/emailService.js';
 import type { AuthRequest } from '../types/index.js';
 import { validatePassword } from '../utils/validation.js';
 import { logError } from '../utils/logger.js';
+import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
 
 type FriendshipStatus = 'self' | 'none' | 'pending_outgoing' | 'pending_incoming' | 'friends';
 
@@ -24,7 +25,7 @@ export async function listPlayersInGalaxy(req: AuthRequest, res: Response): Prom
           userId: true,
           points: true,
           joinedAt: true,
-          user: { select: { username: true, isSupporter: true, supporterTier: true, isFounder: true } },
+          user: { select: { username: true, isSupporter: true, supporterTier: true, isFounder: true, avatarKey: true } },
         },
         orderBy: { points: 'desc' },
       }),
@@ -53,6 +54,8 @@ export async function listPlayersInGalaxy(req: AuthRequest, res: Response): Prom
         isSupporter: p.user?.isSupporter ?? false,
         supporterTier: p.user?.supporterTier ?? null,
         isFounder: p.user?.isFounder ?? false,
+        avatarUrl: avatarUrl(p.userId, p.user?.avatarKey ?? null),
+        avatarUrlSm: avatarUrlSm(p.userId, p.user?.avatarKey ?? null),
         points: p.points,
         joinedAt: p.joinedAt,
         nexuses: nexusByOwner.get(p.userId) || 0,
@@ -83,6 +86,7 @@ export async function getMe(req: AuthRequest, res: Response): Promise<void> {
         isSupporter: true,
         supporterTier: true,
         isFounder: true,
+        avatarKey: true,
       },
     });
     if (!user) {
@@ -96,6 +100,8 @@ export async function getMe(req: AuthRequest, res: Response): Promise<void> {
       isSupporter: user.isSupporter,
       supporterTier: user.supporterTier ?? null,
       isFounder: user.isFounder ?? false,
+      avatarUrl: avatarUrl(user.id, user.avatarKey),
+      avatarUrlSm: avatarUrlSm(user.id, user.avatarKey),
     });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'usersController.ts' });
@@ -149,7 +155,7 @@ export async function getPublicProfile(req: AuthRequest, res: Response): Promise
 
     const user = await prisma.user.findUnique({
       where: { username },
-      select: { id: true, username: true, isSupporter: true, supporterTier: true, isFounder: true, createdAt: true, activeGalaxyId: true },
+      select: { id: true, username: true, isSupporter: true, supporterTier: true, isFounder: true, avatarKey: true, createdAt: true, activeGalaxyId: true },
     });
     if (!user) { res.status(404).json({ error: 'User not found' }); return; }
 
@@ -241,6 +247,8 @@ export async function getPublicProfile(req: AuthRequest, res: Response): Promise
       isSupporter: user.isSupporter,
       supporterTier: user.supporterTier ?? null,
       isFounder: user.isFounder ?? false,
+      avatarUrl: avatarUrl(user.id, user.avatarKey),
+      avatarUrlSm: avatarUrlSm(user.id, user.avatarKey),
       createdAt: user.createdAt,
       accountAgeDays,
       totalInfluence,

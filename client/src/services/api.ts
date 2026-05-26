@@ -339,6 +339,35 @@ export const removeFriend = (friendId: string) =>
 // Users (public profile)
 export const getMe = () => apiRequest('/users/me');
 
+export const uploadAvatar = async (
+  file: Blob,
+): Promise<{ data: { avatarKey: string; avatarUrl: string | null; avatarUrlSm: string | null } }> => {
+  const token = localStorage.getItem('token');
+  const fd = new FormData();
+  fd.append('avatar', file);
+  const res = await fetch(`${API_URL}/users/me/avatar`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    body: fd,
+  });
+  const raw = await res.text();
+  let data: { avatarKey?: string; avatarUrl?: string | null; avatarUrlSm?: string | null; error?: string } = {};
+  try {
+    data = raw ? JSON.parse(raw) : {};
+  } catch {
+    data = { error: raw };
+  }
+  if (!res.ok) {
+    const error = new Error(data.error || 'Upload failed');
+    (error as Error & { response?: { data: unknown; status: number } }).response = { data, status: res.status };
+    throw error;
+  }
+  return { data: data as { avatarKey: string; avatarUrl: string | null; avatarUrlSm: string | null } };
+};
+
+export const deleteAvatar = () =>
+  apiRequest('/users/me/avatar', { method: 'DELETE' });
+
 export const getPublicProfile = (username: string) =>
   apiRequest(`/users/${encodeURIComponent(username)}/profile`);
 

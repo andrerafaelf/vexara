@@ -6,6 +6,7 @@ import type { AuthRequest } from '../types/index.js';
 import { logError } from '../utils/logger.js';
 import { containsBlockedChatWord } from '../utils/profanity.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
+import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
 
 const MAX_MESSAGE_LENGTH = 2000;
 const DEFAULT_PAGE_SIZE = 50;
@@ -28,6 +29,8 @@ export async function listConversations(req: AuthRequest, res: Response): Promis
         username: friend.username,
         isSupporter: friend.isSupporter,
         supporterTier: friend.supporterTier,
+        avatarUrl: avatarUrl(friend.id, friend.avatarKey),
+        avatarUrlSm: avatarUrlSm(friend.id, friend.avatarKey),
         lastMessage: s?.lastMessage ? serializeMessage(s.lastMessage) : null,
         unreadCount: s?.unreadCount ?? 0,
       };

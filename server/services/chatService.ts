@@ -13,7 +13,7 @@ export function assertFriendship(userId: number, friendId: number) {
 export function getFriendships(userId: number) {
   return prisma.friendship.findMany({
     where: { OR: [{ userAId: userId }, { userBId: userId }] },
-    include: { userA: { select: { id: true, username: true, isSupporter: true, supporterTier: true } }, userB: { select: { id: true, username: true, isSupporter: true, supporterTier: true } } },
+    include: { userA: { select: { id: true, username: true, isSupporter: true, supporterTier: true, avatarKey: true } }, userB: { select: { id: true, username: true, isSupporter: true, supporterTier: true, avatarKey: true } } },
   });
 }
 

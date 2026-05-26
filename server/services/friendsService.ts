@@ -10,8 +10,8 @@ export function getFriendships(userId: number) {
   return prisma.friendship.findMany({
     where: { OR: [{ userAId: userId }, { userBId: userId }] },
     include: {
-      userA: { select: { id: true, username: true, isSupporter: true, supporterTier: true } },
-      userB: { select: { id: true, username: true, isSupporter: true, supporterTier: true } },
+      userA: { select: { id: true, username: true, isSupporter: true, supporterTier: true, avatarKey: true } },
+      userB: { select: { id: true, username: true, isSupporter: true, supporterTier: true, avatarKey: true } },
     },
     orderBy: { createdAt: 'desc' },
   });
@@ -47,8 +47,8 @@ export function createFriendRequest(senderId: number, receiverId: number) {
 
 export function getPendingRequests(userId: number) {
   return Promise.all([
-    prisma.friendRequest.findMany({ where: { receiverId: userId, status: 'pending' }, include: { sender: { select: { id: true, username: true, isSupporter: true, supporterTier: true } } }, orderBy: { createdAt: 'desc' } }),
-    prisma.friendRequest.findMany({ where: { senderId: userId, status: 'pending' }, include: { receiver: { select: { id: true, username: true, isSupporter: true, supporterTier: true } } }, orderBy: { createdAt: 'desc' } }),
+    prisma.friendRequest.findMany({ where: { receiverId: userId, status: 'pending' }, include: { sender: { select: { id: true, username: true, isSupporter: true, supporterTier: true, avatarKey: true } } }, orderBy: { createdAt: 'desc' } }),
+    prisma.friendRequest.findMany({ where: { senderId: userId, status: 'pending' }, include: { receiver: { select: { id: true, username: true, isSupporter: true, supporterTier: true, avatarKey: true } } }, orderBy: { createdAt: 'desc' } }),
   ]);
 }
 

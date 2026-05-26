@@ -4,6 +4,7 @@ import prisma from '../lib/prisma.js';
 import * as referralService from '../services/referralService.js';
 import type { AuthRequest } from '../types/index.js';
 import { logError } from '../utils/logger.js';
+import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
 
 const BUILDINGS = ['commandCore', 'recruitmentCore', 'lifeSupport', 'storageVault', 'biomassFarm', 'alloyForge', 'oreExtractor', 'shieldGrid', 'armory', 'stealthArray'] as const;
 
@@ -288,7 +289,7 @@ export async function getMyReferrer(req: AuthRequest, res: Response): Promise<vo
   try {
     const me = await prisma.user.findUnique({
       where: { id: req.userId! },
-      select: { referredById: true, referredBy: { select: { username: true, isSupporter: true, supporterTier: true } } },
+      select: { referredById: true, referredBy: { select: { id: true, username: true, isSupporter: true, supporterTier: true, avatarKey: true } } },
     });
     if (!me?.referredById) {
       res.json({ referrer: null }); return;
@@ -320,6 +321,8 @@ export async function getMyReferrer(req: AuthRequest, res: Response): Promise<vo
         username: me.referredBy?.username,
         isSupporter: me.referredBy?.isSupporter ?? false,
         supporterTier: me.referredBy?.supporterTier ?? null,
+        avatarUrl: me.referredBy ? avatarUrl(me.referredBy.id, me.referredBy.avatarKey) : null,
+        avatarUrlSm: me.referredBy ? avatarUrlSm(me.referredBy.id, me.referredBy.avatarKey) : null,
         thresholdMet: tokenCount > 0,
         referrerPoints,
         myPoints,

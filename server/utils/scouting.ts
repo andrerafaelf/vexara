@@ -1,6 +1,7 @@
 import type { Nexus } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 import type { BuildingLevels, ResourceAmounts, TroopCounts } from '../types/index.js';
+import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
 // BuildingLevels and TroopCounts are extended via their interfaces to include armory/voidStalker/plasmaTurret
 
 interface PublicNexusData {
@@ -10,7 +11,7 @@ interface PublicNexusData {
   x: number;
   y: number;
   points: number;
-  owner: { _id: number; id: number; username: string; isSupporter: boolean; supporterTier: string | null; points: number } | null;
+  owner: { _id: number; id: number; username: string; isSupporter: boolean; supporterTier: string | null; avatarUrl: string | null; avatarUrlSm: string | null; points: number } | null;
   intelLevel: string;
 }
 
@@ -26,7 +27,7 @@ export interface ScoutIntel {
 }
 
 function buildPublicNexusData(
-  nexus: Nexus & { owner?: { id: number; username: string; isSupporter: boolean; supporterTier: string | null } | null },
+  nexus: Nexus & { owner?: { id: number; username: string; isSupporter: boolean; supporterTier: string | null; avatarKey?: string | null } | null },
   ownerPoints?: number | null,
 ): PublicNexusData {
   return {
@@ -37,7 +38,16 @@ function buildPublicNexusData(
     y: nexus.y,
     points: nexus.points,
     owner: nexus.owner
-      ? { _id: nexus.owner.id, id: nexus.owner.id, username: nexus.owner.username, isSupporter: nexus.owner.isSupporter, supporterTier: nexus.owner.supporterTier, points: ownerPoints ?? 0 }
+      ? {
+          _id: nexus.owner.id,
+          id: nexus.owner.id,
+          username: nexus.owner.username,
+          isSupporter: nexus.owner.isSupporter,
+          supporterTier: nexus.owner.supporterTier,
+          avatarUrl: avatarUrl(nexus.owner.id, nexus.owner.avatarKey ?? null),
+          avatarUrlSm: avatarUrlSm(nexus.owner.id, nexus.owner.avatarKey ?? null),
+          points: ownerPoints ?? 0,
+        }
       : null,
     intelLevel: 'public',
   };
@@ -118,7 +128,7 @@ export async function getNexusIntelForUser(
 ): Promise<(PublicNexusData & Partial<ScoutIntel> & { intelLevel: string; scoutedAt?: unknown; isFriendly?: boolean; relation?: FriendlyRelation; newbieProtectionEndsAt?: string | null }) | null> {
   const nexus = await prisma.nexus.findUnique({
     where: { id: nexusId },
-    include: { owner: { select: { id: true, username: true, isSupporter: true, supporterTier: true } } },
+    include: { owner: { select: { id: true, username: true, isSupporter: true, supporterTier: true, avatarKey: true } } },
   });
 
   if (!nexus) return null;

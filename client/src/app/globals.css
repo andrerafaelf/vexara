@@ -619,3 +619,148 @@ a:focus-visible,
 .alpha-commander-badge--compact > span {
   display: none;
 }
+
+/* ── <Avatar> component ─────────────────────────────────────
+   Square tile, accent fill, centred initial. Image variant
+   reuses the same box so swapping img/div doesn't shift layout. */
+.vx-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background: var(--color-cyan-500);
+  color: var(--text-on-accent);
+  font-weight: 700;
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-select: none;
+}
+img.vx-avatar {
+  /* When the avatar is a real image, drop the accent background entirely
+     so corner cuts / clip-paths from parent themes don't show amber edges. */
+  background: transparent;
+  display: inline-block;
+}
+
+/* ── <AvatarUpload> (Officer/Commander only) ─────────────── */
+.vx-avatar-upload {
+  margin: 16px 0;
+  padding: 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+.vx-avatar-upload__row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.vx-avatar-upload__info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+.vx-avatar-upload__title {
+  color: var(--text-strong);
+  font-weight: 600;
+}
+.vx-avatar-upload__desc {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+}
+.vx-avatar-upload__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+.vx-avatar-upload__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--bg-surface);
+  color: var(--text-strong);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out);
+}
+.vx-avatar-upload__btn:hover:not(:disabled) {
+  border-color: var(--border-strong);
+}
+.vx-avatar-upload__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.vx-avatar-upload__btn--primary {
+  background: var(--color-cyan-500);
+  color: var(--text-on-accent);
+  border-color: var(--color-cyan-500);
+}
+.vx-avatar-upload__btn--primary:hover:not(:disabled) {
+  background: var(--color-cyan-600, var(--color-cyan-500));
+  border-color: var(--color-cyan-600, var(--color-cyan-500));
+}
+.vx-avatar-upload__btn--danger {
+  color: #ff6b6b;
+  border-color: rgba(255, 107, 107, 0.4);
+}
+.vx-avatar-upload__btn--danger:hover:not(:disabled) {
+  border-color: rgba(255, 107, 107, 0.8);
+}
+.vx-avatar-upload__err {
+  margin-top: 6px;
+  padding: 6px 10px;
+  background: rgba(255, 107, 107, 0.08);
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+}
+
+.vx-avatar-upload__modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 16px;
+}
+.vx-avatar-upload__modal-inner {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  max-width: min(720px, 100%);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow: hidden;
+}
+.vx-avatar-upload__modal-title {
+  color: var(--text-strong);
+  font-weight: 600;
+  font-size: var(--text-lg);
+}
+.vx-avatar-upload__crop {
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+}
+.vx-avatar-upload__modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}

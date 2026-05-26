@@ -3,6 +3,7 @@ import * as statsService from '../services/statsService.js';
 import type { AuthRequest } from '../types/index.js';
 import { getResourceProduction } from '../utils/economy.js';
 import { logError } from '../utils/logger.js';
+import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
 
 const TROOP_KEYS = [
   'lancerDrone', 'assaultTrooper', 'breakerUnit', 'reconOperative',
@@ -68,7 +69,7 @@ export async function getMyStats(req: AuthRequest, res: Response): Promise<void>
     const accountAgeDays = Math.max(1, Math.floor((Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24)));
 
     res.json({
-      username: user.username, isSupporter: user.isSupporter, supporterTier: user.supporterTier ?? null, isFounder: user.isFounder ?? false, points: player?.points ?? 0, accountAgeDays, nexusCount: nexuses.length, totalTroops,
+      username: user.username, isSupporter: user.isSupporter, supporterTier: user.supporterTier ?? null, isFounder: user.isFounder ?? false, avatarUrl: avatarUrl(user.id, user.avatarKey), avatarUrlSm: avatarUrlSm(user.id, user.avatarKey), points: player?.points ?? 0, accountAgeDays, nexusCount: nexuses.length, totalTroops,
       combat: { attacksLaunched, attacksDefended, victories, defeats, troopsLost, troopsKilled, resourcesStolen, resourcesLost },
       resources: {
         current: totalCurrentResources,

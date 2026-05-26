@@ -340,6 +340,11 @@ jobs:
             RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
             KOFI_VERIFICATION_TOKEN=${{ secrets.KOFI_VERIFICATION_TOKEN }}
             ALPHA_ACTIVE=${{ vars.ALPHA_ACTIVE }}
+            R2_ACCOUNT_ID=${{ vars.R2_ACCOUNT_ID }}
+            R2_ACCESS_KEY_ID=${{ secrets.R2_ACCESS_KEY_ID }}
+            R2_SECRET_ACCESS_KEY=${{ secrets.R2_SECRET_ACCESS_KEY }}
+            R2_BUCKET=${{ vars.R2_BUCKET }}
+            R2_PUBLIC_URL=${{ vars.R2_PUBLIC_URL }}
             ENVEOF
 
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin

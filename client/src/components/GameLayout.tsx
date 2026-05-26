@@ -15,6 +15,7 @@ import '@/styles/InGameIdentity.css';
 import { Nexus } from '@/types/game';
 import { Building2, Menu } from 'lucide-react';
 import SupportTiersCard from '@/components/SupportTiersCard';
+import Avatar from '@/components/Avatar';
 import { usePathname, useRouter } from 'next/navigation';
 import { startTransition, useCallback, useEffect, useMemo, useState } from 'react';
 import { useStartProgress } from './NavigationProgress';
@@ -220,9 +221,14 @@ export default function GameLayout({
       <aside className={`mobile-drawer ${isMobileMenuOpen ? 'open' : ''}`}>
         {user && (
           <div className="commander-card commander-card-mobile">
-            <div className="commander-avatar" aria-hidden="true">
-              {(user.username ?? '?').slice(0, 1).toUpperCase()}
-            </div>
+            <Avatar
+              username={user.username}
+              avatarUrl={user.avatarUrl ?? null}
+              avatarUrlSm={user.avatarUrlSm ?? null}
+              size="md"
+              className={`commander-avatar${user.supporterTier === 'officer' ? ' supporter-border supporter-border-officer' : ''}${user.supporterTier === 'commander' ? ' supporter-border supporter-border-commander' : ''}`}
+              ariaHidden
+            />
             <div className="commander-info">
               <div className={`commander-name${user.isSupporter ? ' supporter-name' : ''}`}>{user.username}</div>
               <div className="commander-meta">
