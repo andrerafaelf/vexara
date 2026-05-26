@@ -1,10 +1,36 @@
 import type { Response } from 'express';
-import { applyCompletedQueues, serializeNexus } from '../models/Nexus.js';
+import { applyCompletedQueues, serializeNexus, normalizeBuildQueue, queueToJson } from '../models/Nexus.js';
+import type { BuildQueueEntry } from '../models/Nexus.js';
 import prisma from '../lib/prisma.js';
 import * as referralService from '../services/referralService.js';
 import type { AuthRequest } from '../types/index.js';
 import { logError } from '../utils/logger.js';
 import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
+
+// Shift any queued upgrades for `building` up by `levelsGained` so the in-flight
+// queue doesn't overwrite the boosted level when it completes. Caps at maxLevel
+// and drops entries that would no-op (queued target ≤ current level after boost).
+function absorbBoostIntoBuildQueue(
+  queue: BuildQueueEntry[],
+  building: string,
+  newCurrentLevel: number,
+  levelsGained: number,
+  maxLevel: number,
+): BuildQueueEntry[] {
+  let lastLevelForBuilding = newCurrentLevel;
+  const result: BuildQueueEntry[] = [];
+  for (const entry of queue) {
+    if (entry.building !== building) {
+      result.push(entry);
+      continue;
+    }
+    const shifted = Math.min(entry.targetLevel + levelsGained, maxLevel);
+    if (shifted <= lastLevelForBuilding) continue;
+    lastLevelForBuilding = shifted;
+    result.push({ ...entry, targetLevel: shifted });
+  }
+  return result;
+}
 
 const BUILDINGS = ['commandCore', 'recruitmentCore', 'lifeSupport', 'storageVault', 'biomassFarm', 'alloyForge', 'oreExtractor', 'shieldGrid', 'armory', 'stealthArray'] as const;
 
@@ -122,17 +148,23 @@ export async function redeemToken(req: AuthRequest, res: Response): Promise<void
         res.status(400).json({ error: `${BUILDING_NAMES[building]} is already at max level (${maxLevel})` }); return;
       }
       const targetLevel = Math.min(currentLevel + 2, maxLevel);
+      const levelsGained = targetLevel - currentLevel;
+
+      const existingQueue = normalizeBuildQueue(nexus.buildQueue);
+      const newQueue = absorbBoostIntoBuildQueue(existingQueue, building, targetLevel, levelsGained, maxLevel);
 
       const updated = await prisma.nexus.update({
         where: { id: nexus.id },
-        data: { [building]: targetLevel },
+        data: {
+          [building]: targetLevel,
+          buildQueue: queueToJson(newQueue),
+        },
       });
 
       await referralService.markTokenRedeemed(tokenId, 'building_instant', {
         building, fromLevel: currentLevel, toLevel: targetLevel, nexusId: nexus.id,
       });
 
-      const levelsGained = targetLevel - currentLevel;
       res.json({
         success: true,
         message: `${BUILDING_NAMES[building]} instantly upgraded by ${levelsGained} level${levelsGained > 1 ? 's' : ''} to level ${targetLevel} at ${nexus.name}.`,
@@ -223,11 +255,21 @@ export async function redeemMilestoneToken(req: AuthRequest, res: Response): Pro
         res.status(400).json({ error: `${BUILDING_NAMES[building]} is already at max level (${maxLevel})` }); return;
       }
       const targetLevel = Math.min(currentLevel + 2, maxLevel);
-      const updated = await prisma.nexus.update({ where: { id: nexus.id }, data: { [building]: targetLevel } });
+      const levelsGained = targetLevel - currentLevel;
+
+      const existingQueue = normalizeBuildQueue(nexus.buildQueue);
+      const newQueue = absorbBoostIntoBuildQueue(existingQueue, building, targetLevel, levelsGained, maxLevel);
+
+      const updated = await prisma.nexus.update({
+        where: { id: nexus.id },
+        data: {
+          [building]: targetLevel,
+          buildQueue: queueToJson(newQueue),
+        },
+      });
       await referralService.markMilestoneTokenRedeemed(tokenId, 'building_instant', {
         building, fromLevel: currentLevel, toLevel: targetLevel, nexusId: nexus.id,
       });
-      const levelsGained = targetLevel - currentLevel;
       res.json({
         success: true,
         message: `${BUILDING_NAMES[building]} instantly upgraded by ${levelsGained} level${levelsGained > 1 ? 's' : ''} to level ${targetLevel} at ${nexus.name}.`,

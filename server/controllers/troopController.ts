@@ -3,7 +3,8 @@ import { applyCompletedQueues, applyQuestRewards, computeResourceUpdate, mergeTr
 import * as troopService from '../services/troopService.js';
 import { atomicUpdateNexusResources, ResourceConflictError } from '../services/nexusService.js';
 import type { AuthRequest } from '../types/index.js';
-import { NEXUS_TYPE_BONUSES, getMaxStorage, getResourceProduction } from '../utils/economy.js';
+import { getMaxStorage, getResourceProduction } from '../utils/economy.js';
+import { TROOP_COSTS, getEffectiveTrainTimeSeconds, getTrainTimeSeconds } from '../utils/gameConstants.js';
 import { parsePositiveInt } from '../utils/validation.js';
 import { logError } from '../utils/logger.js';
 import { notifyNexusResources } from '../services/warRoomSocket.js';
@@ -41,25 +42,6 @@ function emitResourceSnapshot(userId: number, nexus: {
 }
 
 const MAX_TRAINING_QUEUE = 5;
-const RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL = 0.92;
-
-const TROOP_COSTS: Record<string, { biomass: number; alloy: number; ore: number; population: number; time: number }> = {
-  lancerDrone:          { biomass: 150,    alloy: 150,    ore: 200,    population: 1, time: 53    },
-  assaultTrooper:       { biomass: 150,    alloy: 150,    ore: 350,    population: 1, time: 79    },
-  breakerUnit:          { biomass: 250,    alloy: 150,    ore: 300,    population: 1, time: 160   },
-  reconOperative:       { biomass: 400,    alloy: 150,    ore: 400,    population: 1, time: 180   },
-  suppressorTeam:       { biomass: 450,    alloy: 400,    ore: 450,    population: 2, time: 540   },
-  skimmerBike:          { biomass: 625,    alloy: 500,    ore: 750,    population: 3, time: 720   },
-  bulwarkGuard:         { biomass: 400,    alloy: 600,    ore: 500,    population: 2, time: 720   },
-  disruptorUnit:        { biomass: 550,    alloy: 750,    ore: 650,    population: 2, time: 840   },
-  interceptorBike:      { biomass: 750,    alloy: 600,    ore: 900,    population: 3, time: 1080  },
-  voidStalker:          { biomass: 900,    alloy: 700,    ore: 1100,   population: 3, time: 1440  },
-  siegeMech:            { biomass: 1250,   alloy: 1000,   ore: 2000,   population: 4, time: 2400  },
-  // Plasma Turret: immobile fire emplacement, locked to home nexus.
-  plasmaTurret:         { biomass: 1500,   alloy: 1200,   ore: 2500,   population: 2, time: 3000  },
-  annihilatorPlatform:  { biomass: 2000,   alloy: 1750,   ore: 3000,   population: 5, time: 5400  },
-  overseer:             { biomass: 180000, alloy: 140000, ore: 120000, population: 5, time: 14400 },
-};
 
 const TROOP_REQUIREMENTS: Record<string, { buildings: Record<string, number>; maxPerNexus?: number }> = {
   assaultTrooper:      { buildings: { recruitmentCore: 1 } },
@@ -92,13 +74,6 @@ const TROOP_NAMES: Record<string, string> = {
   voidStalker: 'Void Stalker', plasmaTurret: 'Plasma Turret',
   overseer: 'Overseer',
 };
-
-function getTrainTimeSeconds(troopType: string, recruitmentLevel: number) {
-  const baseTime = TROOP_COSTS[troopType].time;
-  if (troopType === 'overseer') return baseTime;
-  const factor = Math.pow(RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL, Math.max(0, recruitmentLevel || 0));
-  return Math.max(1, Math.floor(baseTime * factor));
-}
 
 export async function trainTroops(req: AuthRequest, res: Response): Promise<void> {
   try {
@@ -161,13 +136,8 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
       res.status(400).json({ error: `Training queue is full (${MAX_TRAINING_QUEUE}/${MAX_TRAINING_QUEUE})` }); return;
     }
 
-    const baseTrainMult = (NEXUS_TYPE_BONUSES as Record<string, { trainingTimeMultiplier?: number }>)[nexus.nexusType as string]?.trainingTimeMultiplier;
     const doubled = (nexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled ?? false;
-    const effectiveTrainMult = baseTrainMult !== undefined && doubled
-      ? Math.pow(baseTrainMult, 2)
-      : (baseTrainMult ?? 1);
-    const nexusTimeFactor = troopType === 'overseer' ? 1 : effectiveTrainMult;
-    const perUnitSeconds = Math.max(1, Math.floor(getTrainTimeSeconds(troopType, nexus.recruitmentCore) * nexusTimeFactor));
+    const perUnitSeconds = getEffectiveTrainTimeSeconds(troopType, nexus.recruitmentCore, nexus.nexusType, doubled);
     const queueStart = sameChainQueue.length > 0
       ? new Date(sameChainQueue[sameChainQueue.length - 1].completesAt as string).getTime()
       : Date.now();

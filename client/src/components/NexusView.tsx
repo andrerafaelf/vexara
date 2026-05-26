@@ -52,6 +52,16 @@ const StarfieldMap = dynamic(() => import('./Map'), {
 import NexusMap from './NexusMap';
 import NexusTypeBadge from './NexusTypeBadge';
 import ResourceIcon from './ResourceIcon';
+// Shared source of truth with server/utils/gameConstants.ts.
+// If you change any number or formula here, change the server mirror in the same commit.
+import {
+  BUILDING_COSTS,
+  TROOP_COSTS,
+  getBuildingCost as getSharedBuildingCost,
+  getEffectiveBuildTimeSeconds,
+  getEffectiveTrainTimeSeconds,
+  getTrainTimeSeconds as getRecruitDiscountedTrainSeconds,
+} from '../realtime/gameConstants.shared';
 import { useToast } from '../context/ToastContext';
 import { Countdown } from './Countdown';
 import { QueueCountdown } from './QueueCountdown';
@@ -135,18 +145,6 @@ const BUILDING_DESCRIPTIONS: { [key: string]: string } = {
   stealthArray: 'Reduces enemy spy success rate and boosts your operative effectiveness (+2% per level). Requires Armory Lv3.',
 };
 
-const BUILDING_COSTS: { [key: string]: any } = {
-  commandCore:     { biomass: 90,  alloy: 80,  ore: 70,  time: 120 },
-  recruitmentCore: { biomass: 180, alloy: 150, ore: 80,  time: 180 },
-  lifeSupport:     { biomass: 80,  alloy: 100, ore: 70,  time: 150 },
-  storageVault:    { biomass: 60,  alloy: 50,  ore: 70,  time: 120 },
-  biomassFarm:     { biomass: 50,  alloy: 60,  ore: 60,  time: 120 },
-  alloyForge:      { biomass: 65,  alloy: 40,  ore: 60,  time: 120 },
-  oreExtractor:    { biomass: 75,  alloy: 65,  ore: 70,  time: 150 },
-  shieldGrid:      { biomass: 50,  alloy: 100, ore: 60,  time: 180 },
-  armory:          { biomass: 120, alloy: 180, ore: 140, time: 210 },
-  stealthArray:    { biomass: 100, alloy: 150, ore: 180, time: 210 },
-};
 
 const BUILDING_RULES: {
   [key: string]: {
@@ -238,41 +236,6 @@ const BUILDING_RULES: {
   },
 };
 
-const COST_SCALING = {
-  early: 1.5,
-  mid: 1.65,
-  late: 1.8,
-};
-
-const TIME_SCALING = {
-  early: 1.25,
-  mid: 1.35,
-  late: 1.45,
-};
-
-// Command Core reduces building time by 5% per level (compounding).
-const COMMAND_BUILD_TIME_FACTOR_PER_LEVEL = 0.95;
-// Recruitment Core reduces training time by 8% per level (compounding). Overseer is exempt.
-const RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL = 0.92;
-
-const getCommandTimeFactor = (commandLevel: number) =>
-  Math.pow(COMMAND_BUILD_TIME_FACTOR_PER_LEVEL, Math.max(0, commandLevel || 0));
-
-const NEXUS_TYPE_TRAINING_MULTIPLIERS: Record<string, number> = {
-  'Military Outpost': 0.5,
-};
-
-const getTroopTrainSeconds = (
-  troopType: string,
-  baseTime: number,
-  recruitmentLevel: number,
-  nexusType?: string | null,
-) => {
-  if (troopType === 'overseer') return baseTime;
-  const recruitFactor = Math.pow(RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL, Math.max(0, recruitmentLevel || 0));
-  const nexusFactor = NEXUS_TYPE_TRAINING_MULTIPLIERS[nexusType ?? ''] ?? 1;
-  return Math.max(1, Math.floor(baseTime * recruitFactor * nexusFactor));
-};
 
 const BUILDING_IMAGES: { [key: string]: any } = {
   commandCore: commandcoreImg,
@@ -374,23 +337,6 @@ const POPULATION_GROWTH = 1.28;
 const STORAGE_BASE = 1500;
 const STORAGE_GROWTH = 1.5;
 const SHIELD_BONUS_PER_LEVEL = 0.02;
-
-const TROOP_COSTS: { [key: string]: any } = {
-  assaultTrooper: { biomass: 150, alloy: 150, ore: 350, population: 1, time: 79 },
-  lancerDrone: { biomass: 150, alloy: 150, ore: 200, population: 1, time: 53 },
-  breakerUnit: { biomass: 250, alloy: 150, ore: 300, population: 1, time: 74 },
-  reconOperative: { biomass: 400, alloy: 150, ore: 400, population: 1, time: 180 },
-  skimmerBike: { biomass: 625, alloy: 500, ore: 750, population: 3, time: 600 },
-  bulwarkGuard: { biomass: 400, alloy: 600, ore: 500, population: 2, time: 480 },
-  suppressorTeam: { biomass: 450, alloy: 400, ore: 450, population: 2, time: 480 },
-  disruptorUnit: { biomass: 550, alloy: 750, ore: 650, population: 2, time: 660 },
-  interceptorBike: { biomass: 750, alloy: 600, ore: 900, population: 3, time: 900 },
-  siegeMech: { biomass: 1250, alloy: 1000, ore: 2000, population: 4, time: 3600 },
-  annihilatorPlatform: { biomass: 2000, alloy: 1750, ore: 3000, population: 5, time: 7200 },
-  voidStalker: { biomass: 900, alloy: 700, ore: 1100, population: 3, time: 1200 },
-  plasmaTurret: { biomass: 1500, alloy: 1200, ore: 2500, population: 2, time: 5400 },
-  overseer: { biomass: 180000, alloy: 140000, ore: 120000, population: 5, time: 14400 },
-};
 
 const TROOP_CATEGORIES: Record<string, 'offense' | 'defense'> = {
   breakerUnit: 'offense',
@@ -1028,9 +974,13 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   };
 
   const calculateProduction = () => {
+    // Server uses NEXUS_TYPE_BONUSES.productionMultiplier (2x for Resource Depot)
+    // and applies 1 + (mult - 1) * (doubled ? 2 : 1), giving 3x when doubled.
+    // See server/utils/economy.ts getResourceProduction and the mirrored
+    // client/src/realtime/economy.shared.ts.
     const baseProduction = 800;
-    const NEXUS_PRODUCTION_MULTIPLIERS: Record<string, number> = { 'Resource Depot': 2 };
-    const productionMult = NEXUS_PRODUCTION_MULTIPLIERS[nexus.nexusType ?? ''] ?? 1;
+    const rawMult = nexus.nexusType === 'Resource Depot' ? 2 : 1;
+    const productionMult = rawMult === 1 ? 1 : 1 + (rawMult - 1) * (nexus.nexusTypeDoubled ? 2 : 1);
     const prod = (level: number) => (level <= 0 ? 0 : Math.floor(baseProduction * Math.pow(1.35, level - 1) * productionMult));
     return {
       biomass: prod(nexus.buildings.biomassFarm),
@@ -1072,36 +1022,30 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   };
 
   const getBuildingCost = (building: string, currentLevel: number) => {
-    const base = BUILDING_COSTS[building];
-    const targetLevel = currentLevel + 1;
-
-    let biomass = base.biomass;
-    let alloy = base.alloy;
-    let ore = base.ore;
-    let time = base.time;
-
-    for (let level = 2; level <= targetLevel; level += 1) {
-      const costMultiplier = level <= 5 ? COST_SCALING.early : level <= 10 ? COST_SCALING.mid : COST_SCALING.late;
-      const timeMultiplier = level <= 5 ? TIME_SCALING.early : level <= 10 ? TIME_SCALING.mid : TIME_SCALING.late;
-      biomass *= costMultiplier;
-      alloy *= costMultiplier;
-      ore *= costMultiplier;
-      time *= timeMultiplier;
-    }
-
-    const NEXUS_BUILD_TIME_MULTIPLIERS: Record<string, number> = { 'Reclaimed Outpost': 0.8 };
-    const nexusBuildFactor = NEXUS_BUILD_TIME_MULTIPLIERS[nexus.nexusType ?? ''] ?? 1;
-    const reducedTime = Math.max(
-      1,
-      Math.floor(time * getCommandTimeFactor(nexus.buildings.commandCore) * nexusBuildFactor),
+    // Resources come from the shared cost helper. The shared `time` is the
+    // un-discounted base; we display the discounted wall-clock time, so swap
+    // it for the effective build seconds (Command Core + Nexus type applied).
+    const baseCost = getSharedBuildingCost(building, currentLevel);
+    const time = getEffectiveBuildTimeSeconds(
+      building,
+      currentLevel,
+      nexus.buildings.commandCore,
+      nexus.nexusType,
+      nexus.nexusTypeDoubled ?? false,
     );
+    return { biomass: baseCost.biomass, alloy: baseCost.alloy, ore: baseCost.ore, time };
+  };
 
-    return {
-      biomass: Math.floor(biomass),
-      alloy: Math.floor(alloy),
-      ore: Math.floor(ore),
-      time: reducedTime,
-    };
+  // Build time with Command Core discount but WITHOUT the Nexus-type modifier.
+  // Used by BuildingCard to render a "base → buffed" comparison on Reclaimed Outpost.
+  const getPreNexusBuildTime = (building: string, currentLevel: number) => {
+    return getEffectiveBuildTimeSeconds(
+      building,
+      currentLevel,
+      nexus.buildings.commandCore,
+      null,
+      false,
+    );
   };
 
   const formatList = (items: string[]) => {
@@ -1277,17 +1221,18 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   // identical for the lifetime of the component. This is the same pattern
   // already used for handleTrainTroops below.
   const helpersRef = useRef({
-    getBuildingCost, getBuildingUpgradeBenefit, checkBuildingRequirements,
+    getBuildingCost, getPreNexusBuildTime, getBuildingUpgradeBenefit, checkBuildingRequirements,
     getPrevBuildEnd, getTimeUntilAffordable, fmtNum, formatDurationSeconds,
     handleUpgrade, handleInfoTap,
   });
   helpersRef.current = {
-    getBuildingCost, getBuildingUpgradeBenefit, checkBuildingRequirements,
+    getBuildingCost, getPreNexusBuildTime, getBuildingUpgradeBenefit, checkBuildingRequirements,
     getPrevBuildEnd, getTimeUntilAffordable, fmtNum, formatDurationSeconds,
     handleUpgrade, handleInfoTap,
   };
   const stableHelpers = useRef({
     getBuildingCost: (k: string, l: number) => helpersRef.current.getBuildingCost(k, l),
+    getPreNexusBuildTime: (k: string, l: number) => helpersRef.current.getPreNexusBuildTime(k, l),
     getBuildingUpgradeBenefit: (k: string, l: number) => helpersRef.current.getBuildingUpgradeBenefit(k, l),
     checkBuildingRequirements: (k: string) => helpersRef.current.checkBuildingRequirements(k),
     getPrevBuildEnd: (i: number) => helpersRef.current.getPrevBuildEnd(i),
@@ -1577,6 +1522,58 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                 T2
               </span>
             )}
+            {(() => {
+              // Show the live before/after numbers for the active bonus, so the
+              // player can see the math without having to recompute it.
+              const doubled = !!nexus.nexusTypeDoubled;
+              if (nexus.nexusType === 'Resource Depot') {
+                const mult = doubled ? 3 : 2;
+                const baseBio = production.biomass / mult;
+                const baseAlloy = production.alloy / mult;
+                const baseOre = production.ore / mult;
+                return (
+                  <span className="nexus-type-buff-math">
+                    Production:{' '}
+                    <span className="nexus-type-buff-base">{fmtNum(Math.floor(baseBio))}/{fmtNum(Math.floor(baseAlloy))}/{fmtNum(Math.floor(baseOre))} per h</span>
+                    {' → '}
+                    <strong>{fmtNum(production.biomass)}/{fmtNum(production.alloy)}/{fmtNum(production.ore)} per h</strong>
+                  </span>
+                );
+              }
+              if (nexus.nexusType === 'Supply Cache') {
+                const mult = doubled ? 3 : 2;
+                const baseStorage = storageCapacity / mult;
+                const lootProt = doubled ? 60 : 40;
+                return (
+                  <span className="nexus-type-buff-math">
+                    Storage:{' '}
+                    <span className="nexus-type-buff-base">{fmtNum(Math.floor(baseStorage))}</span>
+                    {' → '}
+                    <strong>{fmtNum(Math.floor(storageCapacity))}</strong>
+                    {' · '}
+                    <strong>{lootProt}%</strong> of resources protected from loot
+                  </span>
+                );
+              }
+              if (nexus.nexusType === 'Military Outpost') {
+                const trainMult = doubled ? '4×' : '2×';
+                const shieldMult = doubled ? '3×' : '2×';
+                return (
+                  <span className="nexus-type-buff-math">
+                    Training <strong>{trainMult} faster</strong> · Shield efficiency <strong>{shieldMult}</strong>
+                  </span>
+                );
+              }
+              if (nexus.nexusType === 'Reclaimed Outpost') {
+                const buildPct = doubled ? 36 : 20;
+                return (
+                  <span className="nexus-type-buff-math">
+                    Construction <strong>{buildPct}% faster</strong>
+                  </span>
+                );
+              }
+              return null;
+            })()}
           </div>
         )}
         <LiveResourceStrip
@@ -2050,6 +2047,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                       queuedCount={stats?.count ?? 0}
                       firstQueuedIndex={stats?.firstIndex ?? -1}
                       getBuildingCost={stableHelpers.getBuildingCost}
+                      getPreNexusBuildTime={stableHelpers.getPreNexusBuildTime}
                       getBuildingUpgradeBenefit={stableHelpers.getBuildingUpgradeBenefit}
                       checkBuildingRequirements={stableHelpers.checkBuildingRequirements}
                       getPrevBuildEnd={stableHelpers.getPrevBuildEnd}
@@ -2141,8 +2139,21 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                             const { canTrain, missingRequirements } = checkTroopRequirements(type);
                             const { maxTrainable, shortageReasons } = getMaxTrainableAmount(type, costs, canTrain);
                             const trainSeconds = canTrain
-                              ? getTroopTrainSeconds(type, costs.time, nexus.buildings.recruitmentCore, nexus.nexusType)
+                              ? getEffectiveTrainTimeSeconds(type, nexus.buildings.recruitmentCore, nexus.nexusType, nexus.nexusTypeDoubled ?? false)
                               : costs.time;
+                            // Pre-bonus time (Recruitment Core discount applied, Nexus type NOT applied).
+                            // Shown as strikethrough next to the actual time when Military Outpost is active,
+                            // so the player can see the bonus working.
+                            const preBonusTrainSeconds = canTrain
+                              ? getRecruitDiscountedTrainSeconds(type, nexus.buildings.recruitmentCore)
+                              : costs.time;
+                            const militaryBonusActive =
+                              nexus.nexusType === 'Military Outpost' &&
+                              type !== 'overseer' &&
+                              preBonusTrainSeconds !== trainSeconds;
+                            const militaryBonusLabel = nexus.nexusTypeDoubled
+                              ? '4× faster · Military Outpost T2'
+                              : '2× faster · Military Outpost';
                             const isOverseerTrack = type === 'overseer';
                             const sameChainQueueLength = nexus.trainingQueue.filter((entry: any) =>
                               isOverseerTrack ? entry.troopType === 'overseer' : entry.troopType !== 'overseer',
@@ -2186,11 +2197,21 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                                   <span className="cost-pill"><span className="cost-pill-label">Ore</span>{costs.ore}</span>
                                   <span className="cost-pill"><span className="cost-pill-label">Pop</span>{costs.population}</span>
                                   <p className="train-time">
-                                    {trainSeconds >= 3600
-                                      ? `${Math.floor(trainSeconds / 3600)}h ${Math.floor((trainSeconds % 3600) / 60)}m ${trainSeconds % 60}s`
-                                      : `${Math.floor(trainSeconds / 60)}m ${trainSeconds % 60}s`}
+                                    {militaryBonusActive && (
+                                      <span className="train-time-base" aria-label="without bonus">
+                                        {formatDurationSeconds(preBonusTrainSeconds)}
+                                      </span>
+                                    )}
+                                    <span className="train-time-effective">
+                                      {formatDurationSeconds(trainSeconds)}
+                                    </span>
                                   </p>
                                 </div>
+                                {militaryBonusActive && (
+                                  <p className="nexus-type-bonus-tag" title={`Base ${formatDurationSeconds(preBonusTrainSeconds)} → ${formatDurationSeconds(trainSeconds)} after ${militaryBonusLabel}`}>
+                                    {militaryBonusLabel}
+                                  </p>
+                                )}
                                 {isTrainingQueueFull && (
                                   <div className="requirements-missing">
                                     <p className="requires-label">Queue full</p>

@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import '../styles/Admin.css';
 import type { AllUser, Attack, Galaxy, GalaxyStats, GalaxyUser } from '../types/admin';
-import AlphaSignupsTab from './AlphaSignupsTab';
 import GalaxyTab from './GalaxyTab';
 import Toast from './Toast';
 import UsersTab from './UsersTab';
 
 const ADMIN_API_URL = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:3002/api/admin';
 
-type Tab = 'galaxy' | 'users' | 'alpha';
+type Tab = 'galaxy' | 'users';
 type AddUserModal = { open: true } | null;
 
 interface ToastMessage {
@@ -197,12 +196,6 @@ const Admin: React.FC = () => {
                 <span className="admin-tab-badge">{allUsers.filter((u) => !u.emailVerified).length}</span>
               )}
             </button>
-            <button
-              className={`admin-tab${tab === 'alpha' ? ' admin-tab-active' : ''}`}
-              onClick={() => setTab('alpha')}
-            >
-              Alpha Signups
-            </button>
           </div>
         </div>
         <button className="btn-primary" onClick={() => setAddUserModal({ open: true })}>
@@ -229,7 +222,6 @@ const Admin: React.FC = () => {
       {tab === 'users' && (
         <UsersTab users={allUsers} adminFetch={adminFetch} showToast={showToast} onUserChanged={reloadAll} />
       )}
-      {tab === 'alpha' && <AlphaSignupsTab showToast={showToast} adminFetch={adminFetch} />}
 
       {/* Add user modal */}
       {addUserModal && (

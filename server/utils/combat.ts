@@ -523,14 +523,13 @@ export async function processArrivedTransfers(): Promise<void> {
   for (const transfer of arriving) {
     try {
       const troops = transfer.troops as Record<TroopKey, number>;
-      const addData: Record<string, number> = {};
-      for (const field of TRANSFER_TROOP_FIELDS) {
-        if (troops[field] > 0) addData[field] = ((transfer.hostNexus as unknown as Record<TroopKey, number>)[field] ?? 0) + troops[field];
-      }
-      await prisma.$transaction([
-        prisma.nexus.update({ where: { id: transfer.hostNexusId }, data: addData }),
-        prisma.troopTransfer.update({ where: { id: transfer.id }, data: { status: 'stationed', arrivesAt: null } }),
-      ]);
+      // Stationed troops live on the transfer record only, not in host nexus columns.
+      // Combat aggregates them from troopTransfer (status='stationed') alongside the host's garrison.
+      // Writing to host columns here previously caused duplication (visible in train UI + double-counted in combat + cloned on recall).
+      await prisma.troopTransfer.update({
+        where: { id: transfer.id },
+        data: { status: 'stationed', arrivesAt: null },
+      });
 
       const ownerId = (transfer.ownerNexus as unknown as { owner?: { id: number } })?.owner?.id;
       if (ownerId) {

@@ -326,17 +326,20 @@ export async function applyCompletedQueues(nexus: Nexus): Promise<Nexus> {
     const build = buildQueue.shift()!;
     updates[build.building] = build.targetLevel;
     if (build.building === 'lifeSupport') updates['populationMax'] = getPopulationMax(build.targetLevel);
-    // Conquered NPC nexuses (pre-typed, nexusTypeLockedAt null) double their bonus when CC hits 15.
-    // Player-specialized nexuses (nexusTypeLockedAt set) never get doubled.
-    if (
-      build.building === 'commandCore' &&
-      build.targetLevel >= 15 &&
-      nexus.nexusType &&
-      !(nexus as unknown as { nexusTypeLockedAt?: Date | null }).nexusTypeLockedAt &&
-      !(nexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled
-    ) {
-      updates['nexusTypeDoubled'] = true;
-    }
+  }
+
+  // State-driven self-heal: a conquered NPC nexus (nexusType set, nexusTypeLockedAt null)
+  // earns the doubled bonus whenever its effective CC is >= 15. This catches conquest of
+  // an already-CC15 neutral and any other path that bypasses the build-completion queue.
+  // Player-specialized nexuses (nexusTypeLockedAt set) are intentionally excluded.
+  const effectiveCommandCore = (updates['commandCore'] as number | undefined) ?? nexus.commandCore;
+  if (
+    effectiveCommandCore >= 15 &&
+    nexus.nexusType &&
+    !(nexus as unknown as { nexusTypeLockedAt?: Date | null }).nexusTypeLockedAt &&
+    !(nexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled
+  ) {
+    updates['nexusTypeDoubled'] = true;
   }
 
   const effectiveLifeSupport = (updates['lifeSupport'] as number | undefined) ?? nexus.lifeSupport;

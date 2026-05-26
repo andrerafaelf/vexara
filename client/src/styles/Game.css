@@ -1816,7 +1816,7 @@ label {
   color: var(--accent);
   text-transform: uppercase;
   position: relative;
-  padding-left: 14px;
+  padding-left: 20px;
 }
 
 .nexus-nav h3::before {

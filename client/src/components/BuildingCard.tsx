@@ -32,6 +32,10 @@ export interface BuildingCardProps {
   firstQueuedIndex: number;
   // Helpers from NexusView (kept as closures for this step; lift to module scope later).
   getBuildingCost: (key: string, currentLevel: number) => { biomass: number; alloy: number; ore: number; time: number };
+  // Pre-Nexus-type build time (Command Core discount applied only). Used to render
+  // a strikethrough "base → buffed" comparison on Reclaimed Outpost nexuses so
+  // the player can see the bonus is actually working.
+  getPreNexusBuildTime: (key: string, currentLevel: number) => number;
   getBuildingUpgradeBenefit: (key: string, currentLevel: number) => string;
   checkBuildingRequirements: (key: string) => { canUpgrade: boolean; missingRequirements: string[]; atMax: boolean };
   getPrevBuildEnd: (queueIndex: number) => string | Date | undefined;
@@ -57,6 +61,7 @@ function BuildingCardInner(props: BuildingCardProps) {
     queuedCount,
     firstQueuedIndex,
     getBuildingCost,
+    getPreNexusBuildTime,
     getBuildingUpgradeBenefit,
     checkBuildingRequirements,
     getPrevBuildEnd,
@@ -77,6 +82,12 @@ function BuildingCardInner(props: BuildingCardProps) {
   const isUpgrading = queuedCount > 0;
   const isAtMax = plannedLevel >= maxLevel;
   const cost = isAtMax ? null : getBuildingCost(key, plannedLevel);
+  const preNexusBuildTime = isAtMax ? 0 : getPreNexusBuildTime(key, plannedLevel);
+  const reclaimedBonusActive =
+    !!cost && nexus.nexusType === 'Reclaimed Outpost' && preNexusBuildTime !== cost.time;
+  const reclaimedBonusLabel = nexus.nexusTypeDoubled
+    ? '36% faster · Reclaimed Outpost T2'
+    : '20% faster · Reclaimed Outpost';
   const upgradeBenefit = isAtMax ? 'Maximum level reached' : getBuildingUpgradeBenefit(key, plannedLevel);
   const { canUpgrade, missingRequirements, atMax } = checkBuildingRequirements(key);
   const isBuildQueueFull = buildQueueLength >= maxBuildQueue;
@@ -177,10 +188,20 @@ function BuildingCardInner(props: BuildingCardProps) {
             <span className="cost-pill"><span className="cost-pill-label">Ore</span>{fmtNum(cost.ore)}</span>
           </div>
           <p className="build-time">
-            {cost.time >= 3600
-              ? `${Math.floor(cost.time / 3600)}h ${Math.floor((cost.time % 3600) / 60)}m ${cost.time % 60}s`
-              : `${Math.floor(cost.time / 60)}m ${cost.time % 60}s`}
+            {reclaimedBonusActive && (
+              <span className="build-time-base" aria-label="without bonus">
+                {formatDurationSeconds(preNexusBuildTime)}
+              </span>
+            )}
+            <span className="build-time-effective">
+              {formatDurationSeconds(cost.time)}
+            </span>
           </p>
+          {reclaimedBonusActive && (
+            <p className="nexus-type-bonus-tag" title={`Base ${formatDurationSeconds(preNexusBuildTime)} → ${formatDurationSeconds(cost.time)} after ${reclaimedBonusLabel}`}>
+              {reclaimedBonusLabel}
+            </p>
+          )}
         </div>
       ) : (
         <div className="building-maxed-banner">

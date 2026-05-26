@@ -3,30 +3,13 @@ import { applyCompletedQueues, applyQuestRewards, computeResourceUpdate, normali
 import * as buildingService from '../services/buildingService.js';
 import { atomicUpdateNexusResources, ResourceConflictError } from '../services/nexusService.js';
 import type { AuthRequest } from '../types/index.js';
-import { NEXUS_TYPE_BONUSES, getMaxStorage, getResourceProduction } from '../utils/economy.js';
+import { getMaxStorage, getResourceProduction } from '../utils/economy.js';
+import { BUILDING_COSTS, getBuildingCost, getEffectiveBuildTimeSeconds } from '../utils/gameConstants.js';
 import { notifyNexusResources } from '../services/warRoomSocket.js';
 import { getPopulationMax } from '../utils/population.js';
 import { logError } from '../utils/logger.js';
 
 const MAX_BUILD_QUEUE = 5;
-
-// Times are Lv1 construction in seconds. Early builds intentionally take ~2-3
-// minutes so the player has resources tick in during the build, instead of
-// hitting "wait for resources" walls between near-instant upgrades.
-const BUILDING_COSTS: Record<string, { biomass: number; alloy: number; ore: number; time: number }> = {
-  commandCore:     { biomass: 90,  alloy: 80,  ore: 70,  time: 120 },
-  recruitmentCore: { biomass: 180, alloy: 150, ore: 80,  time: 180 },
-  lifeSupport:     { biomass: 80,  alloy: 100, ore: 70,  time: 150 },
-  storageVault:    { biomass: 60,  alloy: 50,  ore: 70,  time: 120 },
-  biomassFarm:     { biomass: 50,  alloy: 60,  ore: 60,  time: 120 },
-  alloyForge:      { biomass: 65,  alloy: 40,  ore: 60,  time: 120 },
-  oreExtractor:    { biomass: 75,  alloy: 65,  ore: 70,  time: 150 },
-  shieldGrid:      { biomass: 50,  alloy: 100, ore: 60,  time: 180 },
-  // Armory: amplifies unit class-counter bonuses and unlocks Void Stalker / Plasma Turret
-  armory:          { biomass: 120, alloy: 180, ore: 140, time: 210 },
-  // Stealth Array: reduces enemy spy success and boosts operative effectiveness
-  stealthArray:    { biomass: 100, alloy: 150, ore: 180, time: 210 },
-};
 
 const BUILDING_RULES: Record<string, {
   maxLevel: number;
@@ -107,43 +90,11 @@ const BUILDING_RULES: Record<string, {
   },
 };
 
-const COST_SCALING = { early: 1.5, mid: 1.65, late: 1.8 };
-const TIME_SCALING = { early: 1.25, mid: 1.35, late: 1.45 };
-const COMMAND_BUILD_TIME_FACTOR_PER_LEVEL = 0.95;
-
 const BUILDING_NAMES: Record<string, string> = {
   commandCore: 'Command Core', recruitmentCore: 'Recruitment Core', lifeSupport: 'Life Support',
   storageVault: 'Storage Vault', biomassFarm: 'Biomass Farm', alloyForge: 'Alloy Forge',
   oreExtractor: 'Ore Extractor', shieldGrid: 'Shield Grid', armory: 'Armory', stealthArray: 'Stealth Array',
 };
-
-function getCommandTimeFactor(commandLevel: number) {
-  return Math.pow(COMMAND_BUILD_TIME_FACTOR_PER_LEVEL, Math.max(0, commandLevel || 0));
-}
-
-function getCostMultiplierForLevel(level: number) {
-  if (level <= 5) return COST_SCALING.early;
-  if (level <= 10) return COST_SCALING.mid;
-  return COST_SCALING.late;
-}
-
-function getTimeMultiplierForLevel(level: number) {
-  if (level <= 5) return TIME_SCALING.early;
-  if (level <= 10) return TIME_SCALING.mid;
-  return TIME_SCALING.late;
-}
-
-function getBuildingCost(building: string, currentLevel: number) {
-  const base = BUILDING_COSTS[building];
-  const targetLevel = currentLevel + 1;
-  let { biomass, alloy, ore, time } = base;
-  for (let level = 2; level <= targetLevel; level++) {
-    const cm = getCostMultiplierForLevel(level);
-    const tm = getTimeMultiplierForLevel(level);
-    biomass *= cm; alloy *= cm; ore *= cm; time *= tm;
-  }
-  return { biomass: Math.floor(biomass), alloy: Math.floor(alloy), ore: Math.floor(ore), time: Math.floor(time) };
-}
 
 function getRequirementsForTargetLevel(building: string, targetLevel: number) {
   const rule = BUILDING_RULES[building];
@@ -226,12 +177,8 @@ export async function upgradeBuilding(req: AuthRequest, res: Response): Promise<
     const queueStart = buildQueue.length > 0
       ? new Date(buildQueue[buildQueue.length - 1].completesAt as string).getTime()
       : Date.now();
-    const baseBuildMult = (NEXUS_TYPE_BONUSES as Record<string, { buildTimeMultiplier?: number }>)[nexus.nexusType as string]?.buildTimeMultiplier;
     const buildDoubled = (nexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled ?? false;
-    const nexusBuildTimeFactor = baseBuildMult !== undefined && buildDoubled
-      ? Math.pow(baseBuildMult, 2)
-      : (baseBuildMult ?? 1);
-    const buildSeconds = Math.max(1, Math.floor(cost.time * getCommandTimeFactor(nexus.commandCore) * nexusBuildTimeFactor));
+    const buildSeconds = getEffectiveBuildTimeSeconds(building, currentLevel, nexus.commandCore, nexus.nexusType, buildDoubled);
     const completesAt = new Date(queueStart + buildSeconds * 1000);
     const newQueue = [...buildQueue, { building, targetLevel: currentLevel + 1, completesAt }];
     let updated;

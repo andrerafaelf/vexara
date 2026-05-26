@@ -1341,3 +1341,248 @@
   }
   .editor-row-arrow { display: none; }
 }
+
+/* ── Mobile (≤ 760px) ────────────────────────────────────────────────────── */
+@media (max-width: 760px) {
+  /* Page chrome */
+  .admin-page-header {
+    padding: 10px 14px;
+  }
+  .admin-page-mark {
+    width: 30px;
+    height: 30px;
+    font-size: 12px;
+  }
+  .admin-page-title {
+    font-size: var(--text-base);
+  }
+  .admin-page-subtitle {
+    font-size: 10px;
+  }
+  .admin-page-body {
+    padding: var(--space-4) var(--space-3) var(--space-6);
+  }
+  .admin-logout-btn {
+    padding: 6px 10px;
+    font-size: var(--text-xs);
+  }
+
+  /* Top bar: stack title row + Add User */
+  .admin-top-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: var(--space-4);
+  }
+  .admin-top-bar > div:first-child {
+    flex-wrap: wrap;
+    gap: 10px !important;
+  }
+  .admin-title {
+    font-size: var(--text-xl);
+  }
+
+  /* Tabs: horizontal scroll, smaller */
+  .admin-tabs {
+    overflow-x: auto;
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .admin-tabs::-webkit-scrollbar { display: none; }
+  .admin-tab {
+    padding: 6px 12px;
+    font-size: var(--text-xs);
+    flex-shrink: 0;
+  }
+
+  /* Section header: stack heading and trailing controls */
+  .admin-section-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+  .admin-section-header > div:last-child {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  .admin-section-header .galaxy-name-input,
+  .admin-section-header input[type="datetime-local"] {
+    flex: 1 1 100%;
+    max-width: 100% !important;
+  }
+  .admin-section-header .btn-primary {
+    flex: 1 1 100%;
+  }
+
+  /* Stats: single column, tighter padding */
+  .admin-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+  .stat-card-icon {
+    width: 30px;
+    height: 30px;
+  }
+  .stat-card-body h3 {
+    font-size: var(--text-lg);
+  }
+  .stat-card-body p {
+    font-size: 10px;
+  }
+
+  /* Galaxy row: stack meta + delete */
+  .galaxy-row {
+    flex-wrap: wrap;
+    padding: 12px 14px;
+    gap: 8px;
+  }
+  .galaxy-row > div:first-child {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+  .galaxy-row-name,
+  .galaxy-row-status,
+  .galaxy-row-meta {
+    word-break: break-word;
+  }
+  .galaxy-row .btn-action {
+    flex: 0 0 auto;
+  }
+
+  /* User cards: stack info above actions */
+  .user-card {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+  .user-card-meta {
+    gap: 8px;
+    row-gap: 4px;
+  }
+  .user-actions {
+    justify-content: flex-start;
+    gap: 6px;
+  }
+  .user-actions .action-divider {
+    display: none;
+  }
+  .btn-action {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  /* Leaderboard */
+  .leaderboard-row {
+    padding: 9px 14px;
+    gap: 10px;
+  }
+
+  /* Attacks table → switch to card layout */
+  .attacks-table table,
+  .attacks-table thead,
+  .attacks-table tbody,
+  .attacks-table tr,
+  .attacks-table td {
+    display: block;
+    width: 100%;
+  }
+  .attacks-table thead {
+    display: none;
+  }
+  .attacks-table tr {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-default);
+  }
+  .attacks-table tr:last-child {
+    border-bottom: none;
+  }
+  .attacks-table td {
+    padding: 3px 0;
+    border-bottom: none;
+    font-size: var(--text-sm);
+  }
+  .attacks-table td:not(:last-child)::before {
+    content: attr(data-label);
+    color: var(--text-muted);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-right: 6px;
+  }
+
+  /* Users tab: scrollable table, tighter toolbar */
+  .users-tab-toolbar {
+    padding: 12px 14px;
+    gap: 8px;
+  }
+  .users-tab-search {
+    flex: 1 1 100%;
+  }
+  .users-tab-table th,
+  .users-tab-table td {
+    padding: 8px 10px;
+  }
+  .filter-chip {
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+
+  /* Modal: full-width with safe padding */
+  .modal-content {
+    width: 95%;
+    max-width: 95%;
+    max-height: 92vh;
+  }
+  .modal-header {
+    padding: 14px 16px;
+  }
+  .modal-body {
+    padding: 16px;
+  }
+  .modal-footer {
+    padding: 14px 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .modal-footer .btn-primary,
+  .modal-footer .btn-secondary,
+  .modal-footer .btn-danger {
+    flex: 1 1 auto;
+    padding: 10px 14px;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  /* Player editor toolbar */
+  .player-editor-toolbar {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+  .player-editor-search {
+    flex: 1 1 100%;
+  }
+  .player-editor-pop {
+    flex: 1 1 100%;
+    text-align: center;
+  }
+}
+
+/* Extra-tight (≤ 380px) — phones in portrait */
+@media (max-width: 380px) {
+  .admin-stats {
+    grid-template-columns: 1fr;
+  }
+  .admin-title {
+    font-size: var(--text-lg);
+  }
+}
