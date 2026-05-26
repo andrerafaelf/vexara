@@ -6,6 +6,7 @@ import { listPlayersInGalaxy } from '../services/api';
 import { usePageReady } from './NavigationProgress';
 import PageSkeleton from './PageSkeleton';
 import Username from './Username';
+import Avatar from './Avatar';
 import type { SupporterTier } from '@/types/game';
 import '../styles/Factions.css';
 
@@ -15,6 +16,8 @@ interface GalaxyPlayer {
   isSupporter: boolean;
   supporterTier?: SupporterTier | null;
   isFounder?: boolean;
+  avatarUrl?: string | null;
+  avatarUrlSm?: string | null;
   points: number;
   joinedAt: string;
   nexuses: number;
@@ -111,6 +114,14 @@ export default function PlayersView() {
                 <div className="factions-browser-card-header">
                   <div className="factions-browser-card-identity">
                     <span className="players-card-rank">#{idx + 1}</span>
+                    <Avatar
+                      username={p.username}
+                      avatarUrl={p.avatarUrl ?? null}
+                      avatarUrlSm={p.avatarUrlSm ?? null}
+                      size="sm"
+                      className="players-card-avatar"
+                      ariaHidden
+                    />
                     <Username
                       name={p.username}
                       isSupporter={p.isSupporter}
