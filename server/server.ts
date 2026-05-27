@@ -213,6 +213,7 @@ prisma.$connect()
     setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.processTransfers, 'process_transfers', () => processArrivedTransfers()); }, 10000);
     setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.processQueues, 'process_queues', () => processCompletedQueuesAndNotify()); }, 15000);
     setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.syncNeutralPool, 'sync_neutral_pool', async () => { await ensureNeutralNexusPool(); }); }, 60000);
+    void runWithPgAdvisoryLock(JOB_LOCKS.recoverControl, 'recover_control', () => recoverControlLevels());
     setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.recoverControl, 'recover_control', () => recoverControlLevels()); }, 60 * 60 * 1000);
     setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.levelNeutralNexuses, 'level_neutral_nexuses', () => levelUpNeutralNexuses()); }, 60 * 60 * 1000);
     setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.dailyNexusGrowth, 'daily_nexus_growth', async () => { const r = await dailyNexusGrowth(); if (r.created > 0) logInfo('daily_nexus_growth', { created: r.created }); }); }, 24 * 60 * 60 * 1000);
