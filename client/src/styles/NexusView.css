@@ -648,7 +648,6 @@
 /* Overview Tab */
 .overview-tab h3 {
   color: var(--accent);
-  margin-bottom: 15px;
 }
 
 /* ── Overview resource strip, always visible, reuses header-res classes ── */
