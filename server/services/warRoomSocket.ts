@@ -196,6 +196,11 @@ export function notifyFriendsUpdate(userId: number) {
   emitToUser(userId, 'friends:updated', { at: Date.now() });
 }
 
+/** Notify defender that their nexus was conquered. */
+export function notifyNexusConquered(userId: number, nexusName: string, attackerName: string) {
+  emitToUser(userId, 'nexus:conquered', { nexusName, attackerName, at: Date.now() });
+}
+
 /** Market listings changed (new listing, buy, cancel). Broadcast to all sockets in /game. */
 export function notifyMarketUpdated() {
   if (!_io) return;

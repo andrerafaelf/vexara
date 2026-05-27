@@ -5,6 +5,7 @@ import type { AuthRequest } from '../types/index.js';
 import { parsePositiveInt } from '../utils/validation.js';
 import { TROOP_STATS } from '../utils/combatMath.js';
 import { logError } from '../utils/logger.js';
+import { NOTIF, sendPushToUser } from '../utils/push.js';
 
 // ---- constants ----
 const EMBED_BASE_COST = { biomass: 400, alloy: 200 };
@@ -294,6 +295,19 @@ export async function processArrivedSpyMissions(): Promise<void> {
             sabotageOps.push(prisma.nexus.update({ where: { id: mission.toNexusId }, data: defenderNexusData }));
           }
           await prisma.$transaction(sabotageOps);
+
+          if (defender.ownerId) {
+            const targetLabel = target === 'troops' ? 'training queue' : 'build queue';
+            const delayMins = (result as any).delayMinutes;
+            void sendPushToUser(defender.ownerId, NOTIF.ATTACK_INCOMING, {
+              title: 'Sabotage detected!',
+              body: delayMins
+                ? `Your ${targetLabel} at ${defender.name} was sabotaged — delayed by ${delayMins} minutes.`
+                : `A sabotage attempt hit your nexus ${defender.name} but had no active queues to disrupt.`,
+              tag: `sabotage-${mission.id}`,
+              data: { url: `/nexus/${defender.id}` },
+            });
+          }
           continue;
         } else {
           operativesReturning = 0; // all lost on sabotage failure
@@ -429,6 +443,50 @@ export async function getSpyAssets(req: AuthRequest, res: Response): Promise<voi
         return { ...a, targetName: target?.name, targetX: target?.x, targetY: target?.y };
       }),
     );
+
+    res.json(enriched);
+  } catch (error) {
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'spyController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+// ---- getAllEspionageLogs ----
+// Returns completed spy missions across all of a user's nexuses for the espionage tab.
+export async function getAllEspionageLogs(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const missions = await prisma.spyMission.findMany({
+      where: { ownerUserId: req.userId, galaxyId: req.galaxyId, status: 'completed' },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+
+    const nexusIds = [...new Set(missions.flatMap((m) => [m.fromNexusId, m.toNexusId]))];
+    const nexuses = await prisma.nexus.findMany({
+      where: { id: { in: nexusIds } },
+      select: { id: true, name: true, x: true, y: true, ownerId: true },
+    });
+    const nexusMap = new Map(nexuses.map((n) => [n.id, n]));
+
+    const userIds = [...new Set(nexuses.filter((n) => n.ownerId).map((n) => n.ownerId!))];
+    const users = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, username: true },
+    });
+    const userMap = new Map(users.map((u) => [u.id, u.username]));
+
+    const enriched = missions.map((m) => {
+      const from = nexusMap.get(m.fromNexusId);
+      const to = nexusMap.get(m.toNexusId);
+      return {
+        ...m,
+        fromNexusName: from?.name ?? 'Unknown',
+        targetName: to?.name ?? 'Unknown',
+        targetX: to?.x,
+        targetY: to?.y,
+        targetOwnerUsername: to?.ownerId ? userMap.get(to.ownerId) ?? null : null,
+      };
+    });
 
     res.json(enriched);
   } catch (error) {

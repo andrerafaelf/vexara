@@ -44,6 +44,17 @@ import { usePageReady } from './NavigationProgress';
 import PageSkeleton from './PageSkeleton';
 import '../styles/Factions.css';
 
+function formatRelativeTime(dateStr: string): string {
+  const ms = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(ms / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
 interface Faction {
   id: number;
   name: string;
@@ -52,7 +63,7 @@ interface Faction {
   motd?: string;
   createdAt: string;
   myRole?: string;
-  members?: Array<{ id: number; userId: number; username: string; isSupporter?: boolean; supporterTier?: string | null; role: string }>;
+  members?: Array<{ id: number; userId: number; username: string; isSupporter?: boolean; supporterTier?: string | null; role: string; lastPlayedAt?: string | null }>;
 }
 
 interface FactionInvite {
@@ -972,6 +983,11 @@ export default function FactionsView() {
                 <div className="factions-member-info">
                   <span className="factions-member-name"><Username name={member.username} isSupporter={member.isSupporter} supporterTier={member.supporterTier as any} linkToProfile /></span>
                   <span className={`factions-member-role factions-member-role--${member.role}`}>{member.role}</span>
+                  {member.lastPlayedAt && (myFaction.myRole === 'leader' || myFaction.myRole === 'officer') && (
+                    <span className="factions-member-last-played" title={new Date(member.lastPlayedAt).toLocaleString()}>
+                      Last seen: {formatRelativeTime(member.lastPlayedAt)}
+                    </span>
+                  )}
                 </div>
                 {myFaction.myRole === 'leader' && member.role !== 'leader' && (
                   <div className="factions-member-actions">

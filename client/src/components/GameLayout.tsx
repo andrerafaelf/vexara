@@ -1,6 +1,7 @@
 'use client';
 
 import ConnectionStatusBar from '@/components/ConnectionStatusBar';
+import ConqueredModal from '@/components/ConqueredModal';
 import DominanceBar from '@/components/DominanceBar';
 import '@/styles/ConnectionStatusBar.css';
 import MobileNexusDrawer from '@/components/MobileNexusDrawer';
@@ -201,6 +202,7 @@ export default function GameLayout({
 
       <ConnectionStatusBar />
       <DominanceBar />
+      <ConqueredModal />
 
       <MobileNexusDrawer
         nexuses={nexuses}

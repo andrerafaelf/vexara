@@ -1,11 +1,12 @@
 'use client';
 
 import { useAuth } from '@/context/AuthContext';
-import { getUserStats, changePassword } from '@/services/api';
-import { UserStats } from '@/types/game';
-import { Bell, ExternalLink, Lock, LogOut, User as UserIcon } from 'lucide-react';
+import { getUserStats, changePassword, getMyNexuses, getDailyStreak } from '@/services/api';
+import { Nexus, UserStats } from '@/types/game';
+import { Bell, ExternalLink, Flame, Lock, LogOut, MapPin, User as UserIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import '../styles/ProfileStats.css';
 import NotificationSettings from './NotificationSettings';
 import StatsChart from './StatsChart';
@@ -43,7 +44,10 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export default function ProfileStats() {
   const { logout, updateUser } = useAuth();
+  const router = useRouter();
   const [stats, setStats] = useState<UserStats | null>(null);
+  const [nexuses, setNexuses] = useState<Nexus[]>([]);
+  const [streak, setStreak] = useState<{ currentStreak: number; longestStreak: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<'stats' | 'notifications' | 'security'>('stats');
@@ -76,8 +80,11 @@ export default function ProfileStats() {
   }
 
   useEffect(() => {
-    getUserStats()
-      .then((res) => setStats(res.data))
+    Promise.all([
+      getUserStats().then((res) => setStats(res.data)),
+      getMyNexuses().then((res) => setNexuses(res.data)).catch(() => {}),
+      getDailyStreak().then((res) => setStreak(res.data)).catch(() => {}),
+    ])
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
@@ -244,6 +251,25 @@ export default function ProfileStats() {
         />
       )}
 
+      {streak && streak.currentStreak > 0 && (
+        <div className="ps-streak-card">
+          <div className="ps-streak-fire-bg" />
+          <div className="ps-streak-content">
+            <Flame size={20} className="ps-streak-icon" aria-hidden="true" />
+            <div className="ps-streak-info">
+              <span className="ps-streak-label">Current Streak</span>
+              <span className="ps-streak-value">{streak.currentStreak} day{streak.currentStreak !== 1 ? 's' : ''}</span>
+            </div>
+            {streak.longestStreak > streak.currentStreak && (
+              <div className="ps-streak-best">
+                <span className="ps-streak-best-label">Best</span>
+                <span className="ps-streak-best-value">{streak.longestStreak}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <Section title="Resources">
         <div className="ps-cards">
           <StatCard
@@ -312,6 +338,37 @@ export default function ProfileStats() {
           <StatCard label="Account Age" value={`${stats.accountAgeDays}d`} />
         </div>
       </Section>
+
+      {nexuses.length > 0 && (
+        <Section title="Your Nexuses">
+          <div className="ps-nexus-list">
+            {nexuses.map((n: any) => (
+              <div key={n.id ?? n._id} className="ps-nexus-row">
+                <div className="ps-nexus-info">
+                  <button
+                    className="ps-nexus-name"
+                    onClick={() => router.push(`/nexus/${n.id ?? n._id}`)}
+                  >
+                    {n.name}
+                  </button>
+                  <span className="ps-nexus-meta">
+                    {n.nexusType && <span className="ps-nexus-type">{n.nexusType}</span>}
+                    {n.points != null && <span>{n.points} pts</span>}
+                  </span>
+                </div>
+                <button
+                  className="ps-nexus-coords"
+                  onClick={() => router.push(`/nexus/${n.id ?? n._id}?tab=map&cx=${n.x}&cy=${n.y}`)}
+                  title="Open on Starfield map"
+                >
+                  <MapPin size={12} aria-hidden="true" />
+                  {n.x}|{n.y}
+                </button>
+              </div>
+            ))}
+          </div>
+        </Section>
+      )}
 
       <div className="ps-section">
         <h3 className="ps-section-title">Activity Graph</h3>

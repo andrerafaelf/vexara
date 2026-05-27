@@ -25,6 +25,8 @@ export interface QueueCompletionPayload {
   trainings: Array<{ troopType: string; amount: number }>;
 }
 type QueueCompletedHandler = (payload: QueueCompletionPayload) => void;
+export interface NexusConqueredPayload { nexusName: string; attackerName: string }
+type NexusConqueredHandler = (payload: NexusConqueredPayload) => void;
 
 interface GameSocketHandlers {
   onFactionChat?: ChatHandler;
@@ -33,6 +35,7 @@ interface GameSocketHandlers {
   onAttacksRefresh?: AttacksRefreshHandler;
   onTransfersRefresh?: TransfersRefreshHandler;
   onQueueCompleted?: QueueCompletedHandler;
+  onNexusConquered?: NexusConqueredHandler;
 }
 
 // Module-level singleton, one socket shared across all hook instances.
@@ -46,6 +49,7 @@ const _badgeHandlers = new Set<BadgeHandler>();
 const _attacksHandlers = new Set<AttacksRefreshHandler>();
 const _transfersHandlers = new Set<TransfersRefreshHandler>();
 const _queueCompletedHandlers = new Set<QueueCompletedHandler>();
+const _nexusConqueredHandlers = new Set<NexusConqueredHandler>();
 const _factionUpdateHandlers = new Set<() => void>();
 const _factionInvitesHandlers = new Set<() => void>();
 const _friendsUpdateHandlers = new Set<() => void>();
@@ -167,6 +171,10 @@ function getSocket(): Socket {
     for (const h of _queueCompletedHandlers) h(data);
   });
 
+  socket.on('nexus:conquered', (data: NexusConqueredPayload) => {
+    for (const h of _nexusConqueredHandlers) h(data);
+  });
+
   // Faction / friends / market refresh signals. No payload data - handlers
   // invalidate the relevant React Query keys and let normal refetch handle it.
   socket.on('faction:updated', () => { for (const h of _factionUpdateHandlers) h(); });
@@ -279,11 +287,12 @@ export function useGameSocket(handlers?: GameSocketHandlers) {
     const transfersHandler: TransfersRefreshHandler = (nexusId) =>
       handlersRef.current?.onTransfersRefresh?.(nexusId);
     const queueCompletedHandler: QueueCompletedHandler = (payload) => {
-      // Always invalidate the nexus list so the new building level / troop
-      // count surfaces immediately; consumers get a chance to show their own
-      // toast/sound via the optional onQueueCompleted handler.
       qc.invalidateQueries({ queryKey: MY_NEXUSES_KEY });
       handlersRef.current?.onQueueCompleted?.(payload);
+    };
+    const nexusConqueredHandler: NexusConqueredHandler = (payload) => {
+      qc.invalidateQueries({ queryKey: MY_NEXUSES_KEY });
+      handlersRef.current?.onNexusConquered?.(payload);
     };
 
     // Faction / friends / market handlers invalidate their respective React
@@ -313,6 +322,7 @@ export function useGameSocket(handlers?: GameSocketHandlers) {
     _attacksHandlers.add(attacksHandler);
     _transfersHandlers.add(transfersHandler);
     _queueCompletedHandlers.add(queueCompletedHandler);
+    _nexusConqueredHandlers.add(nexusConqueredHandler);
     _factionUpdateHandlers.add(onFactionUpdate);
     _factionInvitesHandlers.add(onFactionInvites);
     _friendsUpdateHandlers.add(onFriendsUpdate);
@@ -330,6 +340,7 @@ export function useGameSocket(handlers?: GameSocketHandlers) {
       _attacksHandlers.delete(attacksHandler);
       _transfersHandlers.delete(transfersHandler);
       _queueCompletedHandlers.delete(queueCompletedHandler);
+      _nexusConqueredHandlers.delete(nexusConqueredHandler);
       _factionUpdateHandlers.delete(onFactionUpdate);
       _factionInvitesHandlers.delete(onFactionInvites);
       _friendsUpdateHandlers.delete(onFriendsUpdate);

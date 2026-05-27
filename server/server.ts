@@ -201,6 +201,12 @@ prisma.$connect()
     } catch (err) {
       logError('backfill_resource_buildings_error', { message: (err as Error).message });
     }
+    try {
+      const { trimOversizedFactions } = await import('./controllers/factionController.js');
+      await trimOversizedFactions();
+    } catch (err) {
+      logError('trim_oversized_factions_error', { message: (err as Error).message });
+    }
     setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.updateResources, 'update_resources', () => updateAllResources()); }, 60000);
     setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.processCombat, 'process_combat', () => processArrivedAttacks()); }, 10000);
     setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.processSpyMissions, 'process_spy_missions', () => processArrivedSpyMissions()); }, 10000);

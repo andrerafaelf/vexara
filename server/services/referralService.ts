@@ -190,6 +190,7 @@ export async function checkAndGrantMilestoneToken(userId: number, currentPoints:
 export function getPendingMilestoneTokens(userId: number) {
   return prisma.milestoneToken.findMany({
     where: { userId, redeemedAt: null },
+    select: { id: true, userId: true, milestone: true, redeemedAt: true, rewardType: true, rewardMeta: true, kofiTransactionId: true },
   });
 }
 

@@ -249,11 +249,26 @@ export default function UsersTab({ users, adminFetch, showToast, onUserChanged }
                 </div>
                 <div className="form-group">
                   <label>Reason</label>
-                  <input
-                    value={tokenReason}
-                    onChange={(e) => setTokenReason(e.target.value)}
-                    placeholder="e.g. commander, contest, compensation"
-                  />
+                  <select
+                    value={['manual', 'compensation', 'contest', 'supporter', 'bug_fix'].includes(tokenReason) ? tokenReason : '__custom'}
+                    onChange={(e) => setTokenReason(e.target.value === '__custom' ? '' : e.target.value)}
+                  >
+                    <option value="manual">Manual grant</option>
+                    <option value="compensation">Compensation</option>
+                    <option value="contest">Contest reward</option>
+                    <option value="supporter">Supporter bonus</option>
+                    <option value="bug_fix">Bug fix / make-good</option>
+                    <option value="__custom">Custom reason…</option>
+                  </select>
+                  {!['manual', 'compensation', 'contest', 'supporter', 'bug_fix'].includes(tokenReason) && (
+                    <input
+                      style={{ marginTop: 6 }}
+                      value={tokenReason}
+                      onChange={(e) => setTokenReason(e.target.value)}
+                      placeholder="Enter custom reason"
+                      autoFocus
+                    />
+                  )}
                 </div>
               </div>
             </div>

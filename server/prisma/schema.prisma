@@ -751,6 +751,21 @@ model WarOperationSlot {
   @@index([waveId])
 }
 
+model DailyStreak {
+  id             Int       @id @default(autoincrement())
+  userId         Int
+  galaxyId       Int
+  currentStreak  Int       @default(0)
+  longestStreak  Int       @default(0)
+  lastClaimedAt  DateTime?
+  questsSeed     String?   @db.VarChar(32)
+  questsProgress Json      @default("{}")
+  questsClaimed  Boolean   @default(false)
+
+  @@unique([userId, galaxyId])
+  @@index([userId])
+}
+
 model WarOperationMessage {
   id          Int      @id @default(autoincrement())
   operationId Int

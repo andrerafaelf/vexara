@@ -16,9 +16,7 @@ export function getReportsForNexus(nexusId: number) {
   return prisma.attack.findMany({
     where: {
       OR: [
-        { attackerNexusId: nexusId, status: 'completed' },
-        // Defenders see the report as soon as combat resolves, without waiting
-        // for the attacker's troops to return home.
+        { attackerNexusId: nexusId, status: { in: ['returning', 'completed'] } },
         { defenderNexusId: nexusId, status: { in: ['returning', 'completed'] } },
       ],
     },
@@ -47,7 +45,7 @@ export function getCompletedAttacksForNexus(nexusId: number, galaxyId: number) {
     where: {
       galaxyId,
       OR: [
-        { attackerNexusId: nexusId, status: 'completed' },
+        { attackerNexusId: nexusId, status: { in: ['returning', 'completed'] } },
         { defenderNexusId: nexusId, status: { in: ['returning', 'completed'] } },
       ],
     },
@@ -86,7 +84,7 @@ export async function getUnreadNexusIds(userId: number, galaxyId: number): Promi
       where: {
         galaxyId,
         OR: [
-          { attackerNexusId: { in: nexusIds }, status: 'completed' },
+          { attackerNexusId: { in: nexusIds }, status: { in: ['returning', 'completed'] } },
           { defenderNexusId: { in: nexusIds }, status: { in: ['returning', 'completed'] } },
         ],
       },

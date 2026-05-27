@@ -10,18 +10,21 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
+    setError('');
     setSubmitting(true);
     try {
       await requestPasswordReset(email.trim());
-    } catch {
-      // Endpoint always returns 200; even if it didn't, we show the same message to avoid leaking.
+      setSubmitted(true);
+    } catch (err: any) {
+      const msg = err?.response?.data?.error || err?.message;
+      setError(msg || 'Something went wrong. Please try again.');
     } finally {
       setSubmitting(false);
-      setSubmitted(true);
     }
   };
 
@@ -56,7 +59,7 @@ export default function ForgotPasswordPage() {
                     type="email"
                     placeholder="you@example.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => { setEmail(e.target.value); setError(''); }}
                     autoCapitalize="none"
                     autoCorrect="off"
                     autoComplete="email"
@@ -64,6 +67,8 @@ export default function ForgotPasswordPage() {
                     required
                   />
                 </label>
+
+                {error && <p className="auth-error" style={{ color: '#ef4444', fontSize: '0.875rem', margin: '0 0 8px' }}>{error}</p>}
 
                 <button type="submit" className="auth-submit" disabled={submitting}>
                   {submitting ? 'Sending…' : 'Send reset link'}

@@ -389,6 +389,8 @@ export const changePassword = (currentPassword: string, newPassword: string) =>
 // Stats
 export const getUserStats = () => apiRequest('/stats/me');
 export const getStatsTimeline = (days: number) => apiRequest(`/stats/timeline?days=${days}`);
+export const getDailyStreak = () => apiRequest('/stats/daily-streak');
+export const claimDailyStreak = () => apiRequest('/stats/daily-streak/claim', { method: 'POST' });
 
 // Chat
 export const getConversations = () => apiRequest('/chat/conversations');
@@ -467,6 +469,9 @@ export const sendSpyMission = (fromNexusId: string, toNexusId: string, type: 'sa
     method: 'POST',
     body: JSON.stringify({ fromNexusId, toNexusId, type, operatives, sabotageTarget }),
   });
+
+export const getAllEspionageLogs = () =>
+  apiRequest('/attack/spy/logs');
 
 export const getSpyMissions = (nexusId: string) =>
   apiRequest(`/attack/spy/missions/${nexusId}`);

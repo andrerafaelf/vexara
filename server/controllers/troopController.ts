@@ -161,6 +161,10 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
     const rewardApplied = await applyQuestRewards(updated);
     try { emitResourceSnapshot(req.userId!, rewardApplied); }
     catch (e) { logError('nexus_resources_emit_failed', { message: (e as Error).message, file: 'troopController.ts', op: 'trainTroops' }); }
+    try {
+      const { incrementQuestProgress } = await import('../services/dailyStreakService.js');
+      void incrementQuestProgress(req.userId, req.galaxyId, amount >= 15 ? 'train_15' : 'train_5', amount);
+    } catch {}
     res.json({ success: true, completesAt, nexus: serializeNexus(rewardApplied) });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'troopController.ts' });

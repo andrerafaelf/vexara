@@ -126,8 +126,7 @@ export async function getActivitySummary(req: AuthRequest, res: Response): Promi
       prisma.attack.findMany({
         where: {
           galaxyId,
-          status: 'completed',
-          returnsAt: { gte: since },
+          status: { in: ['returning', 'completed'] },
           OR: [{ attackerUserId: req.userId }, { defenderUserId: req.userId }],
         },
         select: {
@@ -209,7 +208,7 @@ export async function getNexusHistory(req: AuthRequest, res: Response): Promise<
           { defenderNexusId: nexusId, attackerUserId: req.userId },
           { attackerNexusId: nexusId, defenderUserId: req.userId },
         ],
-        status: 'completed',
+        status: { in: ['returning', 'completed'] },
         type: { not: 'support' },
       },
       orderBy: { createdAt: 'desc' },

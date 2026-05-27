@@ -75,7 +75,7 @@ interface ReferralRow {
   rewardMeta: Record<string, unknown> | null;
 }
 
-interface PendingToken { id: number; refereeId?: number; userId?: number; milestone?: number; }
+interface PendingToken { id: number; refereeId?: number; userId?: number; milestone?: number; rewardType?: string | null; rewardMeta?: Record<string, unknown> | null; kofiTransactionId?: string | null; }
 
 interface ReferrerInfo {
   username: string;
@@ -333,23 +333,59 @@ export default function ReferralsTab() {
   return (
     <div className="referrals-tab">
 
-      {/* Milestone token, everyone gets 1 at 500 pts */}
-      {pendingMilestoneTokens.length > 0 && (
+      {/* Milestone tokens (actual 500-pt milestone) */}
+      {pendingMilestoneTokens.filter((t) => (t.milestone ?? 0) > 0).length > 0 && (
         <section className="referrals-section">
           <h3 className="referrals-section-title">
             Milestone Reward
-            <span className="referrals-count-badge">{pendingMilestoneTokens.length}</span>
+            <span className="referrals-count-badge">{pendingMilestoneTokens.filter((t) => (t.milestone ?? 0) > 0).length}</span>
           </h3>
           <p className="referrals-hint">
             You reached {MILESTONE_THRESHOLD} influence points. Claim your reward token.
           </p>
           {redeemState?.kind === 'milestone' ? redeemForm : (
             <div className="referrals-token-list">
-              {pendingMilestoneTokens.map((t) => (
+              {pendingMilestoneTokens.filter((t) => (t.milestone ?? 0) > 0).map((t) => (
                 <div key={t.id} className="referrals-token-card">
                   <div className="referrals-token-info">
-                    <span className="referrals-token-label">500 Influence Milestone</span>
-                    <span className="referrals-token-meta">One-time reward for reaching {MILESTONE_THRESHOLD} pts</span>
+                    <span className="referrals-token-label">{t.milestone} Influence Milestone</span>
+                    <span className="referrals-token-meta">One-time reward for reaching {t.milestone} pts</span>
+                  </div>
+                  <button className="referrals-btn primary" onClick={() => openRedeem(t.id, 'milestone')}>
+                    Claim
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Admin-granted / Ko-fi / bonus tokens */}
+      {pendingMilestoneTokens.filter((t) => (t.milestone ?? 0) === 0).length > 0 && (
+        <section className="referrals-section">
+          <h3 className="referrals-section-title">
+            Bonus Reward
+            <span className="referrals-count-badge">{pendingMilestoneTokens.filter((t) => (t.milestone ?? 0) === 0).length}</span>
+          </h3>
+          <p className="referrals-hint">
+            {pendingMilestoneTokens.some((t) => (t.milestone ?? 0) === 0 && t.kofiTransactionId) ? 'Thank you for your support!' : 'You have bonus tokens to redeem.'}
+          </p>
+          {redeemState?.kind === 'milestone' ? redeemForm : (
+            <div className="referrals-token-list">
+              {pendingMilestoneTokens.filter((t) => (t.milestone ?? 0) === 0).map((t) => (
+                <div key={t.id} className="referrals-token-card">
+                  <div className="referrals-token-info">
+                    <span className="referrals-token-label">
+                      {t.kofiTransactionId ? 'Supporter Reward' : 'Bonus Token'}
+                    </span>
+                    <span className="referrals-token-meta">
+                      {t.kofiTransactionId
+                        ? 'Token earned through Ko-fi support'
+                        : (t.rewardMeta as any)?.reason
+                          ? `Granted: ${(t.rewardMeta as any).reason}`
+                          : 'Granted by admin'}
+                    </span>
                   </div>
                   <button className="referrals-btn primary" onClick={() => openRedeem(t.id, 'milestone')}>
                     Claim

@@ -28,6 +28,7 @@
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0%, rgba(255, 255, 255, 0) 100%), rgba(11, 15, 35, 0.85);
   padding: 10px 24px;
+  padding-top: max(10px, env(safe-area-inset-top, 10px));
   padding-left: calc(24px + env(safe-area-inset-left));
   padding-right: calc(24px + env(safe-area-inset-right));
   display: flex;

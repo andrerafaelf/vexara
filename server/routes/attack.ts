@@ -13,6 +13,7 @@ router.get('/outgoing/:nexusId', auth, (req, res) => attackController.getOutgoin
 
 // Espionage
 router.post('/spy', auth, (req, res) => spyController.sendSpyMission(req as AuthRequest, res as Response));
+router.get('/spy/logs', auth, (req, res) => spyController.getAllEspionageLogs(req as AuthRequest, res as Response));
 router.get('/spy/missions/:nexusId', auth, (req, res) => spyController.getSpyMissions(req as AuthRequest, res as Response));
 router.get('/spy/missions/:nexusId/completed', auth, (req, res) => spyController.getCompletedSpyMissions(req as AuthRequest, res as Response));
 router.get('/spy/assets/:nexusId', auth, (req, res) => spyController.getSpyAssets(req as AuthRequest, res as Response));

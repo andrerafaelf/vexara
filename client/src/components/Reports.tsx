@@ -1,6 +1,6 @@
-import { Coins, Share2, Skull, Swords, Trophy } from 'lucide-react';
+import { Coins, Eye, Share2, Skull, Swords, Trophy } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { getReadReportIds, getReports, markAllReportsRead, markReportRead, sendAttack, sendFactionMessage } from '../services/api';
+import { getAllEspionageLogs, getReadReportIds, getReports, markAllReportsRead, markReportRead, sendAttack, sendFactionMessage } from '../services/api';
 import '../styles/Reports.css';
 import { useToast } from '../context/ToastContext';
 import { Attack, Nexus } from '../types/game';
@@ -49,10 +49,30 @@ const troopNames: Record<string, string> = {
   overseer: 'Overseer',
 };
 
+type ReportsTab = 'combat' | 'espionage';
+
+interface SpyLog {
+  id: number;
+  type: string;
+  operatives: number;
+  sabotageTarget?: string;
+  status: string;
+  result: any;
+  createdAt: string;
+  fromNexusName: string;
+  targetName: string;
+  targetX?: number;
+  targetY?: number;
+  targetOwnerUsername?: string | null;
+}
+
 const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, currentUserId }) => {
   const toast = useToast();
+  const [activeReportsTab, setActiveReportsTab] = useState<ReportsTab>('combat');
   const [reports, setReports] = useState<Attack[]>([]);
+  const [spyLogs, setSpyLogs] = useState<SpyLog[]>([]);
   const [selectedReport, setSelectedReport] = useState<Attack | null>(null);
+  const [selectedSpyLog, setSelectedSpyLog] = useState<SpyLog | null>(null);
   const [loading, setLoading] = useState(true);
   usePageReady(!loading, 'reports');
   const [showAttackForm, setShowAttackForm] = useState(false);
@@ -259,8 +279,12 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
   const loadReports = async () => {
     try {
       setLoading(true);
-      const response = await getReports(nexus._id);
-      setReports(response.data);
+      const [reportsRes, spyRes] = await Promise.all([
+        getReports(nexus._id),
+        getAllEspionageLogs().catch(() => ({ data: [] })),
+      ]);
+      setReports(reportsRes.data);
+      setSpyLogs(spyRes.data ?? []);
     } catch (err) {
       console.error('Error loading reports:', err);
     } finally {
@@ -663,25 +687,169 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
   );
   }
 
+  const buildSpyShareText = (log: SpyLog): string => {
+    const lines: string[] = [];
+    const sep = '--------------------------------';
+    const isEmbed = log.type === 'embed';
+    const success = log.result?.success;
+    lines.push(`[ ESPIONAGE LOG — ${isEmbed ? 'EMBED' : 'SABOTAGE'} ${success ? 'SUCCESS' : 'FAILED'} ]`);
+    lines.push(sep);
+    lines.push(`Date:     ${formatDate(log.createdAt)}`);
+    lines.push(`Origin:   ${log.fromNexusName}`);
+    lines.push(`Target:   ${log.targetName}${log.targetX != null ? ` (${log.targetX}|${log.targetY})` : ''}`);
+    if (log.targetOwnerUsername) lines.push(`Owner:    ${log.targetOwnerUsername}`);
+    lines.push(`Type:     ${isEmbed ? 'Embed Operative' : `Sabotage (${log.sabotageTarget})`}`);
+    lines.push(`Ops:      ${log.operatives}`);
+    lines.push(`Result:   ${success ? 'Success' : 'Failed'}${log.result?.detected ? ' (detected)' : ''}`);
+    if (log.result?.delayMinutes) lines.push(`Delay:    ${log.result.delayMinutes} minutes`);
+    lines.push(sep);
+    return lines.join('\n');
+  };
+
+  const handleShareSpyLog = async (log: SpyLog) => {
+    if (!factionId) return;
+    const text = buildSpyShareText(log);
+    setSharing(true);
+    try {
+      await sendFactionMessage(factionId, text);
+      toast('Espionage log shared to faction chat', 'success');
+    } catch {
+      toast('Failed to share to chat', 'error');
+    } finally {
+      setSharing(false);
+    }
+  };
+
+  if (selectedSpyLog) {
+    const log = selectedSpyLog;
+    const isEmbed = log.type === 'embed';
+    const success = log.result?.success;
+    return (
+      <div className="reports-container">
+        <div className="reports-header">
+          <div className="reports-detail-nav">
+            <button onClick={() => setSelectedSpyLog(null)} className="btn-back">← Back</button>
+            {factionId && (
+              <button className="btn-share-chat" onClick={() => handleShareSpyLog(log)} disabled={sharing}>
+                <Share2 size={13} aria-hidden="true" /> {sharing ? 'Sharing…' : 'Share to Chat'}
+              </button>
+            )}
+          </div>
+          <h2>Espionage Report</h2>
+        </div>
+        <div className="report-detail">
+          <div className={`report-result ${success ? 'victory' : 'defeat'}`}>
+            <span>{isEmbed ? 'Embed Mission' : 'Sabotage Mission'} — {success ? 'Success' : 'Failed'}{log.result?.detected ? ' (Detected)' : ''}</span>
+          </div>
+          <div className="report-section">
+            <h3>Mission Details</h3>
+            <p><strong>Date:</strong> {formatDate(log.createdAt)}</p>
+            <p><strong>Origin:</strong> {log.fromNexusName}</p>
+            <p><strong>Target:</strong> {log.targetName}{log.targetX != null ? ` (${log.targetX}|${log.targetY})` : ''}</p>
+            {log.targetOwnerUsername && <p><strong>Owner:</strong> {log.targetOwnerUsername}</p>}
+            <p><strong>Type:</strong> {isEmbed ? 'Embed Operative' : `Sabotage — ${log.sabotageTarget}`}</p>
+            <p><strong>Operatives:</strong> {log.operatives}</p>
+            {log.result?.delayMinutes && <p><strong>Queue Delayed:</strong> {log.result.delayMinutes} minutes</p>}
+          </div>
+          {success && isEmbed && log.result?.intel && (
+            <div className="report-section">
+              <h3>Intelligence Gathered</h3>
+              {log.result.intel.troops && (
+                <table className="report-table">
+                  <thead><tr><th>Unit</th><th>Count</th></tr></thead>
+                  <tbody>
+                    {Object.entries(log.result.intel.troops).filter(([,c]) => Number(c) > 0).map(([type, count]) => (
+                      <tr key={type}><td>{troopNames[type] ?? type}</td><td>{String(count)}</td></tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+              {log.result.intel.resources && (
+                <div className="resources-stolen" style={{ marginTop: 12 }}>
+                  <div className="resource-item"><span>Biomass:</span> {log.result.intel.resources.biomass}</div>
+                  <div className="resource-item"><span>Alloy:</span> {log.result.intel.resources.alloy}</div>
+                  <div className="resource-item"><span>Ore:</span> {log.result.intel.resources.ore}</div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="reports-container">
       <div className="reports-header">
         <div className="reports-header-row">
           <h2>Combat Logs</h2>
-          {unreadCount > 0 && (
+          {activeReportsTab === 'combat' && unreadCount > 0 && (
             <button className="btn-read-all" onClick={handleMarkAllRead}>
               Mark all read ({unreadCount})
             </button>
           )}
         </div>
-        <p>All reports for {nexus.name}</p>
+        <div className="reports-tabs">
+          <button
+            className={`reports-tab ${activeReportsTab === 'combat' ? 'reports-tab--active' : ''}`}
+            onClick={() => setActiveReportsTab('combat')}
+          >
+            <Swords size={14} aria-hidden="true" /> Combat
+          </button>
+          <button
+            className={`reports-tab ${activeReportsTab === 'espionage' ? 'reports-tab--active' : ''}`}
+            onClick={() => setActiveReportsTab('espionage')}
+          >
+            <Eye size={14} aria-hidden="true" /> Espionage {spyLogs.length > 0 && <span className="reports-tab-count">{spyLogs.length}</span>}
+          </button>
+        </div>
       </div>
 
-      {reports.length === 0 ? (
+      {activeReportsTab === 'espionage' && (
+        <>
+          {spyLogs.length === 0 ? (
+            <div className="no-reports">
+              <p>No espionage reports yet. Send spy missions from the Espionage tab on your nexus.</p>
+            </div>
+          ) : (
+            <div className="reports-list">
+              {spyLogs.map((log) => {
+                const isEmbed = log.type === 'embed';
+                const success = log.result?.success;
+                return (
+                  <div
+                    key={log.id}
+                    className={`report-item ${success ? 'won' : 'lost'}`}
+                    onClick={() => setSelectedSpyLog(log)}
+                  >
+                    <div className="report-icon" aria-hidden="true">
+                      <Eye size={18} />
+                    </div>
+                    <div className="report-info">
+                      <div className="report-title">
+                        {isEmbed ? 'Embed' : 'Sabotage'} — {log.targetName}
+                        {log.targetX != null && ` (${log.targetX}|${log.targetY})`}
+                      </div>
+                      <div className="report-meta">
+                        <span className={success ? 'victory' : 'defeat'}>{success ? 'Success' : 'Failed'}</span>
+                        <span className="report-date">{formatDate(log.createdAt)}</span>
+                        {!isEmbed && log.sabotageTarget && <span>{log.sabotageTarget}</span>}
+                      </div>
+                    </div>
+                    <div className="report-arrow">→</div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
+      )}
+
+      {activeReportsTab === 'combat' && reports.length === 0 ? (
         <div className="no-reports">
           <p>No combat reports yet. Strike other nexuses or defend yours to see reports here!</p>
         </div>
-      ) : (
+      ) : activeReportsTab === 'combat' && (
         <div className="reports-list">
           {reports.map((report) => {
             const isMyAttack = isAttacker(report);

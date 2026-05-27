@@ -206,6 +206,11 @@ export async function upgradeBuilding(req: AuthRequest, res: Response): Promise<
     } catch (emitErr) {
       logError('nexus_resources_emit_failed', { message: (emitErr as Error).message, file: 'buildingController.ts' });
     }
+    try {
+      const { incrementQuestProgress } = await import('../services/dailyStreakService.js');
+      void incrementQuestProgress(req.userId, req.galaxyId, 'upgrade_1', 1);
+      void incrementQuestProgress(req.userId, req.galaxyId, 'upgrade_2', 1);
+    } catch {}
     res.json({ success: true, completesAt, nexus: serializeNexus(rewardApplied) });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'buildingController.ts' });

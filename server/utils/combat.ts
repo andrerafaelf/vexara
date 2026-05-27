@@ -10,7 +10,7 @@ import {
 import { buildDetailedScoutIntel } from './scouting.js';
 import { NOTIF, sendPushToUser } from './push.js';
 import { resolveEventForNexus } from './galaxyEvents.js';
-import { notifyAttackUpdate, notifyTransferUpdate, notifyReportUpdate } from '../services/warRoomSocket.js';
+import { notifyAttackUpdate, notifyTransferUpdate, notifyReportUpdate, notifyNexusConquered } from '../services/warRoomSocket.js';
 import { getNexusTypeEffectiveMultipliers } from './economy.js';
 import type { TroopKey } from '../types/index.js';
 
@@ -483,6 +483,14 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
     notifyAttackUpdate(attack.attackerUserId, attack.defenderUserId, attack.defenderNexusId!);
     if (attack.attackerUserId) notifyReportUpdate(attack.attackerUserId);
     if (attack.defenderUserId) notifyReportUpdate(attack.defenderUserId);
+
+    if (conquered && attack.defenderUserId) {
+      notifyNexusConquered(
+        attack.defenderUserId,
+        defenderNexusForNotif?.name || 'Unknown Nexus',
+        attackerNexusForNotif?.name || 'Unknown',
+      );
+    }
 
     console.log(`Combat resolved: Attack ${attack.id} - ${attackerWins ? 'Attacker' : 'Defender'} wins${conquered ? ' - NEXUS CONQUERED!' : ''}`);
   } catch (err) {

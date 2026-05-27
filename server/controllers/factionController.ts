@@ -22,6 +22,7 @@ const FACTION_MSG_MAX = 1000;
 const CHAT_PAGE_SIZE = 50;
 const EVENTS_PAGE_SIZE = 50;
 const INVITE_EXPIRY_HOURS = 48;
+const FACTION_MAX_MEMBERS = 10;
 
 async function logEvent(factionId: number, type: string, actorName?: string, targetName?: string, meta?: string) {
   await prisma.factionEvent.create({ data: { factionId, type, actorName, targetName, meta } });
@@ -64,7 +65,7 @@ export async function getMyFaction(req: AuthRequest, res: Response): Promise<voi
             motd: true,
             createdAt: true,
             members: {
-              select: { id: true, userId: true, role: true, user: { select: { id: true, username: true, isSupporter: true, supporterTier: true, avatarKey: true } } },
+              select: { id: true, userId: true, role: true, user: { select: { id: true, username: true, isSupporter: true, supporterTier: true, avatarKey: true, lastPlayedAt: true } } },
             },
           },
         },
@@ -76,6 +77,7 @@ export async function getMyFaction(req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
+    const showLastPlayed = member.role === 'leader' || member.role === 'officer';
     res.json({
       faction: {
         ...member.faction,
@@ -89,6 +91,7 @@ export async function getMyFaction(req: AuthRequest, res: Response): Promise<voi
           avatarUrl: avatarUrl(m.user.id, m.user.avatarKey),
           avatarUrlSm: avatarUrlSm(m.user.id, m.user.avatarKey),
           role: m.role,
+          ...(showLastPlayed ? { lastPlayedAt: m.user.lastPlayedAt } : {}),
         })),
       },
     });
@@ -292,6 +295,11 @@ export async function inviteToFaction(req: AuthRequest, res: Response): Promise<
       return;
     }
 
+    if (faction.members.length >= FACTION_MAX_MEMBERS) {
+      res.status(400).json({ error: `Faction is at the maximum of ${FACTION_MAX_MEMBERS} members` });
+      return;
+    }
+
     const invitedUser = await prisma.user.findFirst({
       where: { username: { equals: username.trim(), mode: 'insensitive' } },
       select: { id: true },
@@ -415,6 +423,12 @@ export async function acceptInvite(req: AuthRequest, res: Response): Promise<voi
     });
     if (existing) {
       res.status(400).json({ error: 'You are already in a faction in this galaxy' });
+      return;
+    }
+
+    const memberCount = await prisma.factionMember.count({ where: { factionId: invite.factionId } });
+    if (memberCount >= FACTION_MAX_MEMBERS) {
+      res.status(400).json({ error: `This faction is at the maximum of ${FACTION_MAX_MEMBERS} members` });
       return;
     }
 
@@ -1004,6 +1018,11 @@ export async function approveJoinRequest(req: AuthRequest, res: Response): Promi
       return;
     }
 
+    if (faction.members.length >= FACTION_MAX_MEMBERS) {
+      res.status(400).json({ error: `Faction is at the maximum of ${FACTION_MAX_MEMBERS} members` });
+      return;
+    }
+
     const joiner = await prisma.user.findUnique({ where: { id: joinRequest.userId }, select: { username: true } });
 
     await prisma.$transaction([
@@ -1092,6 +1111,44 @@ export async function getMyJoinRequests(req: AuthRequest, res: Response): Promis
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
     res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+// ── ENFORCE MEMBER CAP ──────────────────────────────────────────────────────
+// One-time startup task: trim any existing factions that exceed the cap.
+// Removes lowest-influence players until the faction is at the limit.
+
+export async function trimOversizedFactions(): Promise<void> {
+  const factions = await prisma.faction.findMany({
+    select: { id: true, galaxyId: true, name: true, _count: { select: { members: true } } },
+  });
+
+  for (const faction of factions) {
+    if (faction._count.members <= FACTION_MAX_MEMBERS) continue;
+
+    const members = await prisma.factionMember.findMany({
+      where: { factionId: faction.id },
+      select: { id: true, userId: true, role: true },
+    });
+
+    const gpRows = await prisma.galaxyPlayer.findMany({
+      where: { galaxyId: faction.galaxyId, userId: { in: members.map((m) => m.userId) } },
+      select: { userId: true, points: true },
+    });
+    const pointsMap = new Map(gpRows.map((g) => [g.userId, g.points]));
+
+    const sorted = members
+      .filter((m) => m.role !== 'leader')
+      .sort((a, b) => (pointsMap.get(a.userId) ?? 0) - (pointsMap.get(b.userId) ?? 0));
+
+    const toRemove = sorted.slice(0, faction._count.members - FACTION_MAX_MEMBERS);
+    if (toRemove.length > 0) {
+      await prisma.factionMember.deleteMany({ where: { id: { in: toRemove.map((m) => m.id) } } });
+      for (const removed of toRemove) {
+        const user = await prisma.user.findUnique({ where: { id: removed.userId }, select: { username: true } });
+        await logEvent(faction.id, 'member_removed_cap', user?.username ?? 'Unknown', undefined, `Faction cap enforced (${FACTION_MAX_MEMBERS} max)`);
+      }
+    }
   }
 }
 

@@ -269,9 +269,8 @@ export async function resendVerification(req: Request, res: Response): Promise<v
 export async function requestPasswordReset(req: Request, res: Response): Promise<void> {
   try {
     const email = normalizeEmail(req.body?.email);
-    // Always return 200 to avoid leaking whether the email exists.
     if (!email) {
-      res.json({ ok: true });
+      res.status(400).json({ error: 'Please enter a valid email address.' });
       return;
     }
 
@@ -280,24 +279,22 @@ export async function requestPasswordReset(req: Request, res: Response): Promise
       select: { id: true, username: true, email: true, emailVerifiedAt: true },
     });
 
-    // We deliberately do NOT gate on emailVerifiedAt here. A user who can
-    // receive the reset email is proving control of the address, which is
-    // exactly what verification proves - gating the two against each other
-    // just locked unverified users out of recovering their accounts. The
-    // outer "user exists?" check still prevents fan-out to arbitrary inboxes.
-    if (user) {
-      const token = generateToken();
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          passwordResetToken: token,
-          passwordResetTokenExpiresAt: new Date(Date.now() + RESET_TOKEN_TTL_MS),
-        },
-      });
-      sendPasswordReset(user.email, user.username, token).catch((err) =>
-        console.error('[emailService] sendPasswordReset failed:', err),
-      );
+    if (!user) {
+      res.status(404).json({ error: 'No account found with that email address.' });
+      return;
     }
+
+    const token = generateToken();
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordResetToken: token,
+        passwordResetTokenExpiresAt: new Date(Date.now() + RESET_TOKEN_TTL_MS),
+      },
+    });
+    sendPasswordReset(user.email, user.username, token).catch((err) =>
+      console.error('[emailService] sendPasswordReset failed:', err),
+    );
 
     res.json({ ok: true });
   } catch (error) {
@@ -437,6 +434,14 @@ export async function login(req: Request, res: Response): Promise<void> {
     }
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
+
+    if (user.activeGalaxyId) {
+      try {
+        const { incrementQuestProgress } = await import('../services/dailyStreakService.js');
+        void incrementQuestProgress(user.id, user.activeGalaxyId, 'login', 1);
+      } catch {}
+    }
+
     res.json({
       token,
       user: { id: user.id, username: user.username, email: user.email, isSupporter: user.isSupporter, supporterTier: user.supporterTier ?? null, isFounder: user.isFounder ?? false },

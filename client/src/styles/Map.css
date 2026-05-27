@@ -834,6 +834,24 @@
   color: var(--accent);
 }
 
+.attack-travel-estimate {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+  background: rgba(255, 158, 61, 0.08);
+  border: 1px solid rgba(255, 158, 61, 0.2);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+}
+
+.attack-travel-estimate strong {
+  color: var(--text-strong);
+}
+
 .attack-form-actions {
   display: flex;
   gap: 8px;

@@ -1,4 +1,5 @@
-import { AlertTriangle, Building, Home, Info, Shield, Sparkles, Star, Swords, Waves, Zap } from 'lucide-react';
+import { AlertTriangle, Building, Clock, Home, Info, Shield, Sparkles, Star, Swords, Waves, Zap } from 'lucide-react';
+import { TROOP_STATS } from '../utils/combatSim';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
@@ -721,6 +722,41 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
     });
   };
 
+  const estimateTravelTime = (): string | null => {
+    if (!selectedNexus) return null;
+    const totalTroops = Object.values(attackTroops).reduce((a, b) => a + b, 0);
+    if (totalTroops === 0) return null;
+    const dx = selectedNexus.x - currentNexus.x;
+    const dy = selectedNexus.y - currentNexus.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    if (attackMissionType === 'support') {
+      const mins = distance * (4 + (28 - 18) / 10);
+      return formatTravelMinutes(mins);
+    }
+    const OVERSEER_EFFECTIVE_SPEED = 6;
+    let minSpeed = Infinity;
+    for (const [type, amount] of Object.entries(attackTroops)) {
+      if (amount > 0 && (TROOP_STATS as Record<string, { speed: number }>)[type]) {
+        const speed = type === 'overseer' ? OVERSEER_EFFECTIVE_SPEED : (TROOP_STATS as Record<string, { speed: number }>)[type].speed;
+        if (speed < minSpeed) minSpeed = speed;
+      }
+    }
+    if (!isFinite(minSpeed)) return null;
+    const hasOverseer = (attackTroops.overseer || 0) > 0;
+    const mins = distance * (4 + (28 - minSpeed) / 10) * (hasOverseer ? 3 : 1);
+    return formatTravelMinutes(mins);
+  };
+
+  const formatTravelMinutes = (mins: number): string => {
+    if (mins < 1) return '< 1m';
+    const h = Math.floor(mins / 60);
+    const m = Math.floor(mins % 60);
+    const s = Math.floor((mins * 60) % 60);
+    if (h > 0) return `${h}h ${m}m`;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
+  };
+
   const formatTime = (date: Date) => {
     const diff = new Date(date).getTime() - currentTimeRef.current.getTime();
     if (diff <= 0) return 'Arriving...';
@@ -1095,6 +1131,15 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
                     );
                   })}
                 </div>
+                {(() => {
+                  const travel = estimateTravelTime();
+                  return travel ? (
+                    <div className="attack-travel-estimate">
+                      <Clock size={12} aria-hidden="true" />
+                      <span>Travel time: <strong>{travel}</strong></span>
+                    </div>
+                  ) : null;
+                })()}
                 <div className="attack-form-actions">
                   <button
                     className="send-all-btn"

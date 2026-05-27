@@ -140,6 +140,12 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
       });
     }
 
+    try {
+      const { incrementQuestProgress } = await import('../services/dailyStreakService.js');
+      const questId = type === 'scout' ? 'scout_1' : 'attack_1';
+      void incrementQuestProgress(req.userId, req.galaxyId, questId, 1);
+      void incrementQuestProgress(req.userId, req.galaxyId, 'login', 1);
+    } catch {}
     res.json({ success: true, attack: serializeAttack(attack) });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'attackController.ts' });

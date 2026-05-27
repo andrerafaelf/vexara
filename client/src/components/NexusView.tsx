@@ -49,6 +49,7 @@ const StarfieldMap = dynamic(() => import('./Map'), {
   ssr: false,
   loading: () => null,
 });
+import DailyStreaks from './DailyStreaks';
 import NexusMap from './NexusMap';
 import NexusTypeBadge from './NexusTypeBadge';
 import ResourceIcon from './ResourceIcon';
@@ -108,7 +109,7 @@ interface NexusViewProps {
   onTabChange?: (tab: NexusTab) => void;
 }
 
-type NexusTab = 'overview' | 'buildings' | 'troops' | 'map' | 'espionage';
+type NexusTab = 'overview' | 'buildings' | 'troops' | 'deployed' | 'map' | 'espionage';
 
 const MAX_BUILD_QUEUE = 5;
 const MAX_TRAINING_QUEUE = 5;
@@ -1617,6 +1618,15 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
         </button>
         <button
           type="button"
+          className={`nexus-tab-btn${activeTab === 'deployed' ? ' active' : ''}`}
+          onClick={() => setActiveTab('deployed')}
+        >
+          <ArrowDownLeft size={14} aria-hidden="true" />
+          <span>Deployed</span>
+          {(troopTransfers.length > 0 || outgoingAttacks.length > 0) && <span className="nexus-tab-badge" />}
+        </button>
+        <button
+          type="button"
           className={`nexus-tab-btn${activeTab === 'espionage' ? ' active' : ''}`}
           onClick={() => setActiveTab('espionage')}
         >
@@ -1627,6 +1637,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
 
       <div className="tab-content">
         <div className="overview-tab" style={activeTab !== 'overview' ? { display: 'none' } : undefined}>
+            <DailyStreaks />
             {nexus.newbieProtectionEndsAt && (
               <NewbieProtectionBanner endsAt={nexus.newbieProtectionEndsAt} />
             )}
@@ -2272,70 +2283,120 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                   })}
                 </div>
 
-                {/* Troop transfers display */}
-                {troopTransfers.length > 0 && (
-                  <div className="borrowed-troops-section">
-                    <h4>Troop Transfers</h4>
-                    {troopTransfers.map((t) => {
-                      const isOwner = t.ownerNexusId === nexus._id;
-                      const troopEntries = Object.entries(t.troops).filter(([, v]) => Number(v) > 0);
-
-                      let statusLabel: string;
-                      let countdownEndAt: string | null = null;
-                      if (t.status === 'traveling' && t.arrivesAt) {
-                        statusLabel = isOwner
-                          ? `→ ${t.hostNexus?.name ?? '?'}`
-                          : `From ${t.ownerNexus?.name ?? '?'} arriving`;
-                        countdownEndAt = t.arrivesAt;
-                      } else if (t.status === 'returning' && t.returnsAt) {
-                        statusLabel = isOwner
-                          ? `← Returning from ${t.hostNexus?.name ?? '?'}`
-                          : `Returning to ${t.ownerNexus?.name ?? '?'}`;
-                        countdownEndAt = t.returnsAt;
-                      } else {
-                        statusLabel = isOwner
-                          ? `Stationed at ${t.hostNexus?.name ?? '?'}`
-                          : `From ${t.ownerNexus?.name ?? '?'}`;
-                      }
-
-                      return (
-                        <div key={t._id} className={`borrowed-entry borrowed-entry-${t.status}`}>
-                          <div className="borrowed-label">
-                            {statusLabel}
-                            {countdownEndAt && (
-                              <span className="borrowed-countdown">
-                                {' · '}
-                                <Countdown endAt={countdownEndAt} />
-                              </span>
-                            )}
-                          </div>
-                          <div className="borrowed-troops">
-                            {troopEntries.map(([type, count]) => (
-                              <span key={type} className="borrowed-troop-chip">
-                                {TROOP_NAMES[type] || type}: {count}
-                              </span>
-                            ))}
-                          </div>
-                          <div className="borrowed-actions">
-                            {isOwner && t.status !== 'returning' && (
-                              <button type="button" className="borrow-action-btn" onClick={() => handleRecall(t._id)}>
-                                {t.status === 'traveling' ? 'Turn Back' : 'Recall'}
-                              </button>
-                            )}
-                            {!isOwner && t.status === 'stationed' && (
-                              <button type="button" className="borrow-action-btn" onClick={() => handleSendBack(t._id)}>
-                                Send Back
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
               </>
             )}
           </div>
+
+        {/* ── Deployed Forces Tab ── */}
+        <div className="deployed-tab" style={activeTab !== 'deployed' ? { display: 'none' } : undefined}>
+          <h3 className="section-title">Deployed Forces</h3>
+
+          {/* Outgoing attacks (troops in combat) */}
+          {outgoingAttacks.length > 0 && (
+            <div className="borrowed-troops-section">
+              <h4>Troops in Combat</h4>
+              {outgoingAttacks.map((atk: any) => {
+                const troopEntries = Object.entries(atk.troops || {}).filter(([, v]) => Number(v) > 0);
+                const statusLabel = atk.status === 'traveling'
+                  ? `→ Attacking ${atk.defender?.nexus?.name ?? '?'} (${atk.defender?.nexus?.x ?? '?'}|${atk.defender?.nexus?.y ?? '?'})`
+                  : `← Returning from ${atk.defender?.nexus?.name ?? '?'}`;
+                const countdownEndAt = atk.status === 'traveling' ? atk.arrivesAt : atk.returnsAt;
+                return (
+                  <div key={atk._id} className={`borrowed-entry borrowed-entry-${atk.status}`}>
+                    <div className="borrowed-label">
+                      <Swords size={12} aria-hidden="true" style={{ marginRight: 4 }} />
+                      {statusLabel}
+                      {countdownEndAt && (
+                        <span className="borrowed-countdown">
+                          {' · '}
+                          <Countdown endAt={countdownEndAt} />
+                        </span>
+                      )}
+                    </div>
+                    <div className="borrowed-troops">
+                      {troopEntries.map(([type, count]) => (
+                        <span key={type} className="borrowed-troop-chip">
+                          {TROOP_NAMES[type] || type}: {count}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="borrowed-meta">
+                      {atk.type === 'scout' && <span className="borrowed-type-badge">Scout</span>}
+                      {atk.type === 'attack' && <span className="borrowed-type-badge">Attack</span>}
+                      {atk.type === 'support' && <span className="borrowed-type-badge">Support</span>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Troop transfers */}
+          {troopTransfers.length > 0 && (
+            <div className="borrowed-troops-section">
+              <h4>Troop Transfers</h4>
+              {troopTransfers.map((t) => {
+                const isOwner = t.ownerNexusId === nexus._id;
+                const troopEntries = Object.entries(t.troops).filter(([, v]) => Number(v) > 0);
+                let statusLabel: string;
+                let countdownEndAt: string | null = null;
+                if (t.status === 'traveling' && t.arrivesAt) {
+                  statusLabel = isOwner
+                    ? `→ ${t.hostNexus?.name ?? '?'}`
+                    : `From ${t.ownerNexus?.name ?? '?'} arriving`;
+                  countdownEndAt = t.arrivesAt;
+                } else if (t.status === 'returning' && t.returnsAt) {
+                  statusLabel = isOwner
+                    ? `← Returning from ${t.hostNexus?.name ?? '?'}`
+                    : `Returning to ${t.ownerNexus?.name ?? '?'}`;
+                  countdownEndAt = t.returnsAt;
+                } else {
+                  statusLabel = isOwner
+                    ? `Stationed at ${t.hostNexus?.name ?? '?'}`
+                    : `From ${t.ownerNexus?.name ?? '?'}`;
+                }
+                return (
+                  <div key={t._id} className={`borrowed-entry borrowed-entry-${t.status}`}>
+                    <div className="borrowed-label">
+                      {statusLabel}
+                      {countdownEndAt && (
+                        <span className="borrowed-countdown">
+                          {' · '}
+                          <Countdown endAt={countdownEndAt} />
+                        </span>
+                      )}
+                    </div>
+                    <div className="borrowed-troops">
+                      {troopEntries.map(([type, count]) => (
+                        <span key={type} className="borrowed-troop-chip">
+                          {TROOP_NAMES[type] || type}: {count}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="borrowed-actions">
+                      {isOwner && t.status !== 'returning' && (
+                        <button type="button" className="borrow-action-btn" onClick={() => handleRecall(t._id)}>
+                          {t.status === 'traveling' ? 'Turn Back' : 'Recall'}
+                        </button>
+                      )}
+                      {!isOwner && t.status === 'stationed' && (
+                        <button type="button" className="borrow-action-btn" onClick={() => handleSendBack(t._id)}>
+                          Send Back
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {outgoingAttacks.length === 0 && troopTransfers.length === 0 && (
+            <div className="no-deployed">
+              <p>No deployed forces. Send troops on attacks or transfer them to another nexus.</p>
+            </div>
+          )}
+        </div>
 
         {(activeTab === 'map' || mapEverVisited) && (
           <div className="map-tab" style={activeTab !== 'map' ? { display: 'none' } : undefined}>
