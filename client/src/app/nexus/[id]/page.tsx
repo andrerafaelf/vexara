@@ -19,7 +19,7 @@ const PWA_GUIDE_SEEN_KEY = 'pwa_guide_seen';
 const WYWA_SESSION_KEY = 'wywa_shown_session';
 const SELECTED_NEXUS_KEY = 'selectedNexusId';
 
-type NexusTab = 'overview' | 'buildings' | 'troops' | 'map' | 'espionage';
+type NexusTab = 'overview' | 'buildings' | 'troops' | 'deployed' | 'map' | 'espionage';
 
 function parseTab(value: string | null): NexusTab {
   if (value === 'buildings' || value === 'troops' || value === 'map' || value === 'espionage') return value;

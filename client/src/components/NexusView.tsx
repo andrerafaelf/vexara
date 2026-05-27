@@ -2316,7 +2316,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                     <div className="borrowed-troops">
                       {troopEntries.map(([type, count]) => (
                         <span key={type} className="borrowed-troop-chip">
-                          {TROOP_NAMES[type] || type}: {count}
+                          {TROOP_NAMES[type] || type}: {String(count)}
                         </span>
                       ))}
                     </div>
