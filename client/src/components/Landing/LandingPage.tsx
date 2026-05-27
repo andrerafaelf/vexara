@@ -10,22 +10,22 @@ import SiteFooter from '@/components/SiteFooter';
 import '@/styles/Landing.css';
 
 const FOOTAGE: { src: string; label: string; code: string; caption: string }[] = [
-  { src: '/vexara-overview.png',     code: 'VX-01', label: 'Overview',       caption: 'Your nexus at a glance — resources, buildings, queues.' },
+  { src: '/vexara-overview.png',     code: 'VX-01', label: 'Overview',       caption: 'Your nexus at a glance - resources, buildings, queues.' },
   { src: '/vexara-starfield.png',    code: 'VX-02', label: 'Galaxy Map',     caption: 'A living galaxy shared by real players, running 24/7.' },
   { src: '/vexara-factions.png',     code: 'VX-03', label: 'Factions',       caption: 'Join a faction. Climb. Wage galaxy-wide war.' },
   { src: '/vexara-diplomacy.png',    code: 'VX-04', label: 'Diplomacy',      caption: 'Treaties, vassal contracts, declarations of war.' },
   { src: '/vexara-combatreport.png', code: 'VX-05', label: 'Combat Report',  caption: 'Blow-by-blow after every raid, strike, or conquest.' },
-  { src: '/vexara-troops.png',       code: 'VX-06', label: 'Troops',         caption: 'Twelve unit types — composition wins fights, not numbers.' },
+  { src: '/vexara-troops.png',       code: 'VX-06', label: 'Troops',         caption: 'Twelve unit types - composition wins fights, not numbers.' },
   { src: '/vexara-buildings.png',    code: 'VX-07', label: 'Buildings',      caption: 'Eight core structures drive your economy and military.' },
   { src: '/vexara-market.png',       code: 'VX-08', label: 'Market',         caption: 'Trade with players at dynamic exchange rates.' },
   { src: '/vexara-profile.png',      code: 'VX-09', label: 'Profile',        caption: 'Track your stats, badges, and founder status.' },
 ];
 
 const PILLARS = [
-  { idx: '01', title: 'Run a three-resource economy', body: 'Biomass, alloy, and ore tick 24/7. Storage and production scale per building level. Capture a Resource Depot — double your output overnight.' },
+  { idx: '01', title: 'Run a three-resource economy', body: 'Biomass, alloy, and ore tick 24/7. Storage and production scale per building level. Capture a Resource Depot - double your output overnight.' },
   { idx: '02', title: 'Train twelve unit types',        body: 'From 53s Lancer Drones to 2h Annihilator Platforms. Each unit has attack, defense, speed, and carry. Composition wins fights, not raw numbers.' },
   { idx: '03', title: 'Scout, raid, intercept in real time', body: 'Travel times are real. Send Recon Operatives to map a target, then commit a strike fleet. Or embed an operative inside their walls.' },
-  { idx: '04', title: 'Conquer with Overseers',         body: 'Train an Overseer (4h, max 3 per nexus). Each surviving strike drops enemy control by 50. Hit zero — the nexus is yours.' },
+  { idx: '04', title: 'Conquer with Overseers',         body: 'Train an Overseer (4h, max 3 per nexus). Each surviving strike drops enemy control by 34. Hit zero - the nexus is yours.' },
   { idx: '05', title: 'Run covert operations',          body: 'Sabotage troops and build queues. Embed operatives for live intel. Counter enemy spies with a fortified Shield Grid. Every move carries risk.' },
   { idx: '06', title: 'Faction diplomacy and wars',     body: 'Declare war on rivals or sign non-aggression pacts, trade agreements, and vassal treaties. Every alliance is public.' },
 ];
@@ -335,7 +335,7 @@ function Founder() {
           <li><span className="lp-founder-bullet">◆</span><span><strong>Leaderboard mark</strong> on all rankings.</span></li>
           <li><span className="lp-founder-bullet">◆</span><span><strong>Hall of fame</strong> entry with join date.</span></li>
           <li><span className="lp-founder-bullet">◆</span><span><strong>Naming rights</strong> if your faction wins.</span></li>
-          <li><span className="lp-founder-bullet">◆</span><span><strong>Referral rewards.</strong> Invite players — each that reaches 1,000 influence earns you 2 tokens for instant building levels or troop grants.</span></li>
+          <li><span className="lp-founder-bullet">◆</span><span><strong>Referral rewards.</strong> Invite players - each that reaches 1,000 influence earns you 2 tokens for instant building levels or troop grants.</span></li>
         </ul>
 
         <div className="lp-founder-stamp" aria-hidden="true">
@@ -364,7 +364,7 @@ function BuiltBy() {
         </p>
         <p className="lp-builtby-sig">
           <span className="lp-builtby-sig-line" aria-hidden="true" />
-          <span>— andre, sole dev</span>
+          <span>- andre, sole dev</span>
         </p>
         <a
           href="https://discord.gg/D858rzCHP7"

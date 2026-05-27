@@ -230,7 +230,13 @@ export default function GameLayout({
               ariaHidden
             />
             <div className="commander-info">
-              <div className={`commander-name${user.isSupporter ? ' supporter-name' : ''}`}>{user.username}</div>
+              <div className={[
+                'commander-name',
+                user.isSupporter ? 'supporter-name' : null,
+                user.supporterTier === 'recruit' ? 'supporter-tier-recruit' : null,
+                user.supporterTier === 'officer' ? 'supporter-tier-officer' : null,
+                user.supporterTier === 'commander' ? 'supporter-tier-commander' : null,
+              ].filter(Boolean).join(' ')}>{user.username}</div>
               <div className="commander-meta">
                 Commander · {nexuses.reduce((s, n) => s + (n.points ?? 0), 0).toLocaleString()} inf
               </div>

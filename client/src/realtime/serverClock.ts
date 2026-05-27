@@ -1,6 +1,6 @@
 // Server clock offset. The browser clock can drift (especially on phones and
 // Windows machines without NTP), which makes every server-issued `completesAt`
-// timestamp read inaccurately on the client — countdowns appear shorter or
+// timestamp read inaccurately on the client - countdowns appear shorter or
 // longer than they really are. We sample the server's clock from the `Date`
 // HTTP response header on every API request and expose the average offset.
 //

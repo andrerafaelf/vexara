@@ -14,7 +14,14 @@ export function getUserById(id: number) {
 
 export function getReportsForNexus(nexusId: number) {
   return prisma.attack.findMany({
-    where: { OR: [{ attackerNexusId: nexusId }, { defenderNexusId: nexusId }], status: 'completed' },
+    where: {
+      OR: [
+        { attackerNexusId: nexusId, status: 'completed' },
+        // Defenders see the report as soon as combat resolves, without waiting
+        // for the attacker's troops to return home.
+        { defenderNexusId: nexusId, status: { in: ['returning', 'completed'] } },
+      ],
+    },
     orderBy: { createdAt: 'desc' },
     include: {
       attackerNexus: { select: { id: true, name: true, x: true, y: true } },
@@ -37,7 +44,13 @@ export function upsertReportRead(userId: number, attackId: number, galaxyId: num
 
 export function getCompletedAttacksForNexus(nexusId: number, galaxyId: number) {
   return prisma.attack.findMany({
-    where: { galaxyId, OR: [{ attackerNexusId: nexusId }, { defenderNexusId: nexusId }], status: 'completed' },
+    where: {
+      galaxyId,
+      OR: [
+        { attackerNexusId: nexusId, status: 'completed' },
+        { defenderNexusId: nexusId, status: { in: ['returning', 'completed'] } },
+      ],
+    },
     select: { id: true },
   });
 }
@@ -72,8 +85,10 @@ export async function getUnreadNexusIds(userId: number, galaxyId: number): Promi
     prisma.attack.findMany({
       where: {
         galaxyId,
-        status: 'completed',
-        OR: [{ attackerNexusId: { in: nexusIds } }, { defenderNexusId: { in: nexusIds } }],
+        OR: [
+          { attackerNexusId: { in: nexusIds }, status: 'completed' },
+          { defenderNexusId: { in: nexusIds }, status: { in: ['returning', 'completed'] } },
+        ],
       },
       select: { id: true, attackerNexusId: true, defenderNexusId: true },
     }),

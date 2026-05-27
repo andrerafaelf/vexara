@@ -1083,7 +1083,7 @@ function ClaimForm({
 
   // Feasibility check: would these troops physically arrive on time from this nexus?
   // Annihilator/Turret/Overseer move at speed 6-8, so even short distances can be
-  // hours of travel — easy to pledge a composition that can never make impact.
+  // hours of travel - easy to pledge a composition that can never make impact.
   const waveArrivalMs = new Date(op.arrivalAt).getTime() + (wave.arrivalOffsetMs ?? 0);
   const launchAt = selectedNexus && total > 0
     ? waveArrivalMs - travelMinutes(
@@ -1093,7 +1093,7 @@ function ClaimForm({
       ) * 60 * 1000
     : null;
   // launchAt is derived from a server-anchored arrival timestamp, so compare
-  // against the server clock — a skewed local clock would otherwise show
+  // against the server clock - a skewed local clock would otherwise show
   // "too late" warnings for launches that are actually still in time.
   const tooLate = launchAt != null && launchAt < serverNow();
   const lateBy = tooLate && launchAt != null ? serverNow() - launchAt : 0;
@@ -1193,7 +1193,7 @@ function ClaimForm({
           className="warroom-primary-btn"
           onClick={handleSubmit}
           disabled={submitting || total === 0 || tooLate}
-          title={tooLate ? `Too slow — would arrive ${formatCountdown(lateBy)} after impact` : undefined}
+          title={tooLate ? `Too slow - would arrive ${formatCountdown(lateBy)} after impact` : undefined}
         >
           {submitting ? 'Pledging…' : tooLate ? 'Too slow to make it' : 'Pledge'}
         </button>
@@ -1203,7 +1203,7 @@ function ClaimForm({
         tooLate ? (
           <div className="warroom-claim-launch-hint warroom-claim-launch-hint--late">
             <AlertCircle size={12} />
-            Too slow — would arrive <strong>{formatCountdown(lateBy)}</strong> after impact. Try faster units or a closer nexus.
+            Too slow - would arrive <strong>{formatCountdown(lateBy)}</strong> after impact. Try faster units or a closer nexus.
           </div>
         ) : (
           <div className="warroom-claim-launch-hint">

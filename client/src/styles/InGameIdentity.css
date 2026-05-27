@@ -213,7 +213,7 @@
    - top-tick (3px amber top accent on the leading row)
    ════════════════════════════════════════════════════════════════ */
 
-/* Amber 3px left-rule — used on the most "anchored" panels */
+/* Amber 3px left-rule - used on the most "anchored" panels */
 .vx-rule-l {
   border-left: 3px solid var(--accent) !important;
 }
@@ -235,7 +235,7 @@
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
 }
 
-/* Top amber tick — 3px stripe across the top of a panel */
+/* Top amber tick - 3px stripe across the top of a panel */
 .vx-tick-t {
   border-top: 3px solid var(--accent) !important;
 }
@@ -261,7 +261,7 @@
 }
 
 /* ════════════════════════════════════════════════════════════════
-   Global card sharpening — soft kill-list applied to every card-like
+   Global card sharpening - soft kill-list applied to every card-like
    surface in the authed UI so we don't have to find and edit each one
    individually. Targets only selectors that universally describe cards.
    ════════════════════════════════════════════════════════════════ */

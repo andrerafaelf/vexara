@@ -173,7 +173,7 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
                 {user.isFounder && (
                   <span
                     className="alpha-commander-badge alpha-commander-badge--compact"
-                    title="Alpha Commander — Vexara founding supporter"
+                    title="Alpha Commander - Vexara founding supporter"
                     aria-label="Alpha Commander"
                   >
                     <span>Alpha Commander</span>

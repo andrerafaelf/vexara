@@ -43,7 +43,7 @@ interface QuestBatch {
   };
 }
 
-// Lifetime trained count for a troop type — survives combat losses so that
+// Lifetime trained count for a troop type - survives combat losses so that
 // "train N units" quests don't regress when troops die. Falls back to the
 // current alive count if no counter exists yet (e.g. legacy nexus row that
 // predates the troopsTrained column or skipped the backfill), so a player
@@ -607,7 +607,7 @@ export async function updateAllResources(): Promise<void> {
     // so their live interpolation re-anchors against the server baseline.
     // We skip neutral nexuses (ownerId null) and offline owners (no socket
     // joined to user:{ownerId}) so we don't build payloads no one will read.
-    // The per-row emit is intentionally trivial — payload is ~120 bytes JSON.
+    // The per-row emit is intentionally trivial - payload is ~120 bytes JSON.
     try {
       const onlineCache = new Map<number, boolean>();
       for (let i = 0; i < rows.length; i++) {

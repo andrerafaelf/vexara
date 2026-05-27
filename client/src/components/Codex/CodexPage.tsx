@@ -521,8 +521,8 @@ function TroopEntry({ doc, index }: { doc: typeof TROOPS_DOC[number]; index: num
               className={`cx-class-chip cx-class-chip-${doc.unitClass}`}
               title={
                 CLASS_COUNTERED_BY[doc.unitClass]
-                  ? `${CLASS_LABELS[doc.unitClass]} — countered by ${CLASS_LABELS[CLASS_COUNTERED_BY[doc.unitClass]!]}`
-                  : `${CLASS_LABELS[doc.unitClass]} — neutral matchup`
+                  ? `${CLASS_LABELS[doc.unitClass]} - countered by ${CLASS_LABELS[CLASS_COUNTERED_BY[doc.unitClass]!]}`
+                  : `${CLASS_LABELS[doc.unitClass]} - neutral matchup`
               }
             >
               {CLASS_LABELS[doc.unitClass]}
@@ -643,10 +643,10 @@ function ClassCountersPanel() {
 }
 
 const STAT_TOOLTIPS: Record<string, string> = {
-  attack: 'Attack — damage output in combat',
-  defense: 'Defense — damage absorbed before casualties',
-  speed: 'Speed — movement rate on the map (higher = faster travel)',
-  carry: 'Cargo — resources this unit can haul home as loot per raid',
+  attack: 'Attack - damage output in combat',
+  defense: 'Defense - damage absorbed before casualties',
+  speed: 'Speed - movement rate on the map (higher = faster travel)',
+  carry: 'Cargo - resources this unit can haul home as loot per raid',
 };
 
 function StatBar({

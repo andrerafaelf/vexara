@@ -143,7 +143,7 @@ export default function DiplomacyChat({ treatyId, currentUserId, partnerFactionN
   return (
     <div className="diplomacy-chat">
       <div className="diplomacy-chat-header">
-        <span className="diplomacy-chat-title">Diplomatic Channel — {partnerFactionName}</span>
+        <span className="diplomacy-chat-title">Diplomatic Channel - {partnerFactionName}</span>
         <button className="diplomacy-chat-close" onClick={onClose} title="Close">✕</button>
       </div>
 

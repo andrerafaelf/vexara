@@ -282,7 +282,7 @@ export async function requestPasswordReset(req: Request, res: Response): Promise
 
     // We deliberately do NOT gate on emailVerifiedAt here. A user who can
     // receive the reset email is proving control of the address, which is
-    // exactly what verification proves — gating the two against each other
+    // exactly what verification proves - gating the two against each other
     // just locked unverified users out of recovering their accounts. The
     // outer "user exists?" check still prevents fan-out to arbitrary inboxes.
     if (user) {

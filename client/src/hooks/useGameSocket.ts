@@ -56,7 +56,7 @@ const _marketUpdateHandlers = new Set<() => void>();
 // reflect socket health. 'connected' is the happy path, 'reconnecting' is the
 // transient (most user-visible) state, 'disconnected' is the give-up state
 // (after socket.io's reconnectionAttempts is exhausted). 'idle' is pre-connect
-// — never shown to the user but lets the first render avoid a misleading flash.
+// - never shown to the user but lets the first render avoid a misleading flash.
 
 export type GameConnectionStatus = 'idle' | 'connected' | 'reconnecting' | 'disconnected';
 
@@ -75,7 +75,7 @@ function subscribeConnectionStatus(listener: () => void): () => void {
 }
 
 // SSR + first-render snapshot: 'idle' so the banner never flashes before the
-// socket has had a chance to connect. Don't return 'connected' here — that
+// socket has had a chance to connect. Don't return 'connected' here - that
 // would lie if the socket is mid-handshake.
 const getConnectionStatusSnapshot = () => _connectionStatus;
 const getConnectionStatusServerSnapshot = (): GameConnectionStatus => 'idle';
@@ -103,7 +103,7 @@ function getSocket(): Socket {
   });
 
   // Drive the public connection-status pub-sub from socket.io's lifecycle.
-  // 'reconnecting' is the user-visible failure state — set it on disconnect
+  // 'reconnecting' is the user-visible failure state - set it on disconnect
   // immediately rather than waiting for the first failed reconnection_attempt,
   // so the banner appears within ~1s of a network drop, not 2s+ in.
   socket.on('connect', () => setConnectionStatus('connected'));
@@ -167,7 +167,7 @@ function getSocket(): Socket {
     for (const h of _queueCompletedHandlers) h(data);
   });
 
-  // Faction / friends / market refresh signals. No payload data — handlers
+  // Faction / friends / market refresh signals. No payload data - handlers
   // invalidate the relevant React Query keys and let normal refetch handle it.
   socket.on('faction:updated', () => { for (const h of _factionUpdateHandlers) h(); });
   socket.on('faction:invites:updated', () => { for (const h of _factionInvitesHandlers) h(); });
@@ -244,7 +244,7 @@ export function useGameSocket(handlers?: GameSocketHandlers) {
     // Reconnect handler: on the *second and later* connect events for this
     // subscription, refetch the queries that the server may have pushed updates
     // to while the socket was offline. The first connect is the initial one
-    // and the component is already fetching — invalidating then would trigger
+    // and the component is already fetching - invalidating then would trigger
     // a redundant duplicate request.
     let sawFirstConnect = socket.connected;
     const onReconnect = () => {
@@ -346,7 +346,7 @@ export function useGameSocket(handlers?: GameSocketHandlers) {
 
 /**
  * Read the current game-socket connection state. Re-renders on transitions.
- * Calling this hook does *not* open a connection — use useGameSocket() for
+ * Calling this hook does *not* open a connection - use useGameSocket() for
  * that. This is for layout-level indicators (banner, status dot) that should
  * reflect the socket health regardless of which page is mounted.
  */

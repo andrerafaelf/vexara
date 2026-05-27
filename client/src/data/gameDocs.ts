@@ -25,7 +25,7 @@ export const CLASS_COUNTERED_BY: Record<TroopClass, TroopClass | null> = {
   armor:   'mobile',
   fire:    'armor',
   mobile:  'fire',
-  special: null, // special units (Overseer, Recon Operative) have no counter — they don't fight
+  special: null, // special units (Overseer, Recon Operative) have no counter - they don't fight
 };
 
 // How the counter system works in mixed engagements:
@@ -33,32 +33,32 @@ export const CLASS_COUNTERED_BY: Record<TroopClass, TroopClass | null> = {
 // multiplied by a weighted-average counter multiplier against the DEFENDER'S
 // class composition. If half the defenders are armor and half are fire, a
 // mobile attacker gets roughly 50% of the 1.35 bonus (since it only counters the
-// armor half) — not the full bonus. The counter activates proportionally to
+// armor half) - not the full bonus. The counter activates proportionally to
 // how much of the enemy force it actually counters.
 //
 // Example: 10 Fire vs 5 Armor + 5 Mobile
 // Fire counters Mobile (1.35x) and is countered by Armor (0.75x).
 // Defender composition: 50% Mobile, 50% Armor.
 // Effective fire multiplier: (0.5 × 1.35) + (0.5 × 0.75) = 0.675 + 0.375 = 1.05
-// Result: fire gets a slight edge — partial counter, not full.
+// Result: fire gets a slight edge - partial counter, not full.
 //
 // Full counter only applies when 100% of defenders are of the countered class.
 export const CLASS_COUNTER_CODEX = `
 **Class Counter System**
 
-Vexara uses a rock-paper-scissors class triangle: Mobile beats Armor, Armor beats Fire, Fire beats Mobile. Special units (Overseer, Recon Operative) are neutral — they have no counter advantage or vulnerability because they do not fight.
+Vexara uses a rock-paper-scissors class triangle: Mobile beats Armor, Armor beats Fire, Fire beats Mobile. Special units (Overseer, Recon Operative) are neutral - they have no counter advantage or vulnerability because they do not fight.
 
 **The triangle:**
-- Mobile (Breaker Unit, Skimmer Bike, Interceptor Bike, Void Stalker) — fast assault forces that exploit armor gaps and overwhelm armored units
-- Armor (Assault Trooper, Bulwark Guard, Siege Mech) — armored units that close distance and suppress fire emplacements
-- Fire (Lancer Drone, Suppressor Team, Disruptor Unit, Annihilator Platform, Plasma Turret) — fire support that pins down fast-moving mobile forces
-- Special (Overseer, Recon Operative) — no counter in either direction
+- Mobile (Breaker Unit, Skimmer Bike, Interceptor Bike, Void Stalker) - fast assault forces that exploit armor gaps and overwhelm armored units
+- Armor (Assault Trooper, Bulwark Guard, Siege Mech) - armored units that close distance and suppress fire emplacements
+- Fire (Lancer Drone, Suppressor Team, Disruptor Unit, Annihilator Platform, Plasma Turret) - fire support that pins down fast-moving mobile forces
+- Special (Overseer, Recon Operative) - no counter in either direction
 
 **Multipliers:** A class that counters the opposing class deals ×1.35 damage. A class being countered receives ×0.75 effective damage (its attacks are weakened). Neutral matchups are ×1.0.
 
-**Partial counters in mixed engagements:** The counter bonus is proportional to how much of the enemy force your class actually counters. If you send 10 Fire units against a mix of 5 Mobile + 5 Armor defenders, Fire counters the Mobile half (×1.35) but is countered by the Armor half (×0.75). Your effective multiplier is the weighted average: (0.5 × 1.35) + (0.5 × 0.75) = 1.05 — a small edge, not the full bonus. You only get the full ×1.35 if 100% of defenders are of the class you counter.
+**Partial counters in mixed engagements:** The counter bonus is proportional to how much of the enemy force your class actually counters. If you send 10 Fire units against a mix of 5 Mobile + 5 Armor defenders, Fire counters the Mobile half (×1.35) but is countered by the Armor half (×0.75). Your effective multiplier is the weighted average: (0.5 × 1.35) + (0.5 × 0.75) = 1.05 - a small edge, not the full bonus. You only get the full ×1.35 if 100% of defenders are of the class you counter.
 
-**Armory amplification:** Each level of Armory (+1.5%, cap +30% at Lv20) amplifies counter bonuses above 1.0 and slightly deepens disadvantage penalties. A Lv20 Armory turns a ×1.35 counter into ×1.65 — a significant force multiplier for well-composed attacks.
+**Armory amplification:** Each level of Armory (+1.5%, cap +30% at Lv20) amplifies counter bonuses above 1.0 and slightly deepens disadvantage penalties. A Lv20 Armory turns a ×1.35 counter into ×1.65 - a significant force multiplier for well-composed attacks.
 
 **Defender advantage:** The defender's Shield Grid multiplies total defensive power on top of all class counters. The attacker never gets the Shield Grid bonus, so pure defensive nexuses with high Shield Grid levels are always harder to break than their raw troop count suggests.
 `;
@@ -79,7 +79,7 @@ export const TROOPS_DOC: TroopDoc[] = [
   {
     key: 'lancerDrone',
     name: 'Lancer Drone',
-    role: 'Fire interceptor — counters Mobile',
+    role: 'Fire interceptor - counters Mobile',
     description: 'Cheap suppression drone that pins down early mobile raiders.',
     unitClass: 'fire',
     stats: { attack: 12, defense: 22, speed: 20, carry: 30 },
@@ -89,8 +89,8 @@ export const TROOPS_DOC: TroopDoc[] = [
   {
     key: 'assaultTrooper',
     name: 'Assault Trooper',
-    role: 'Armor frontline infantry — counters Fire',
-    description: 'Durable frontline unit built to hold ground and close distance on fire emplacements. Low attack — its job is to survive and keep the line.',
+    role: 'Armor frontline infantry - counters Fire',
+    description: 'Durable frontline unit built to hold ground and close distance on fire emplacements. Low attack - its job is to survive and keep the line.',
     unitClass: 'armor',
     stats: { attack: 18, defense: 45, speed: 18, carry: 60 },
     cost: { biomass: 150, alloy: 150, ore: 350, population: 1, time: '1m 19s' },
@@ -99,8 +99,8 @@ export const TROOPS_DOC: TroopDoc[] = [
   {
     key: 'breakerUnit',
     name: 'Breaker Unit',
-    role: 'Mobile assault breacher — counters Armor',
-    description: 'Pure attack unit. Cracks armored defensive lines with high damage output but almost no survivability — expect heavy losses.',
+    role: 'Mobile assault breacher - counters Armor',
+    description: 'Pure attack unit. Cracks armored defensive lines with high damage output but almost no survivability - expect heavy losses.',
     unitClass: 'mobile',
     stats: { attack: 55, defense: 10, speed: 16, carry: 60 },
     cost: { biomass: 250, alloy: 150, ore: 300, population: 1, time: '2m 40s' },
@@ -109,7 +109,7 @@ export const TROOPS_DOC: TroopDoc[] = [
   {
     key: 'reconOperative',
     name: 'Recon Operative',
-    role: 'Scout / intel gatherer (Special — no counter in either direction)',
+    role: 'Scout / intel gatherer (Special - no counter in either direction)',
     description:
       'Lightly armed intel gatherer that reveals enemy nexus resources, troops, and defenses. Not a frontline fighter.',
     unitClass: 'special',
@@ -121,8 +121,8 @@ export const TROOPS_DOC: TroopDoc[] = [
   {
     key: 'suppressorTeam',
     name: 'Suppressor Team',
-    role: 'Fire support — counters Mobile',
-    description: 'Aggressive fire support that pins down mobile forces. High attack for its tier but fragile — keep it behind your armor.',
+    role: 'Fire support - counters Mobile',
+    description: 'Aggressive fire support that pins down mobile forces. High attack for its tier but fragile - keep it behind your armor.',
     unitClass: 'fire',
     stats: { attack: 65, defense: 30, speed: 15, carry: 20 },
     cost: { biomass: 450, alloy: 400, ore: 450, population: 2, time: '9m 0s' },
@@ -131,8 +131,8 @@ export const TROOPS_DOC: TroopDoc[] = [
   {
     key: 'skimmerBike',
     name: 'Skimmer Bike',
-    role: 'Fast mobile raider — counters Armor',
-    description: 'High mobility raider with strong carry. Good attack, mediocre defense — trades hits for resource hauls and speed.',
+    role: 'Fast mobile raider - counters Armor',
+    description: 'High mobility raider with strong carry. Good attack, mediocre defense - trades hits for resource hauls and speed.',
     unitClass: 'mobile',
     stats: { attack: 80, defense: 40, speed: 22, carry: 80 },
     cost: { biomass: 625, alloy: 500, ore: 750, population: 3, time: '12m 0s' },
@@ -141,8 +141,8 @@ export const TROOPS_DOC: TroopDoc[] = [
   {
     key: 'bulwarkGuard',
     name: 'Bulwark Guard',
-    role: 'Elite armor defender — counters Fire',
-    description: 'Defensive anchor of any mid-game garrison. Exceptional survivability, minimal attack — it holds the line while your fire units deal damage.',
+    role: 'Elite armor defender - counters Fire',
+    description: 'Defensive anchor of any mid-game garrison. Exceptional survivability, minimal attack - it holds the line while your fire units deal damage.',
     unitClass: 'armor',
     stats: { attack: 10, defense: 130, speed: 12, carry: 25 },
     cost: { biomass: 400, alloy: 600, ore: 500, population: 2, time: '12m 0s' },
@@ -151,8 +151,8 @@ export const TROOPS_DOC: TroopDoc[] = [
   {
     key: 'disruptorUnit',
     name: 'Disruptor Unit',
-    role: 'Fire EMP specialist — counters Mobile',
-    description: 'Aggressive fire specialist that suppresses mobile skirmishers on the offensive. Strong damage, low defense — commit it to attacks, not defense.',
+    role: 'Fire EMP specialist - counters Mobile',
+    description: 'Aggressive fire specialist that suppresses mobile skirmishers on the offensive. Strong damage, low defense - commit it to attacks, not defense.',
     unitClass: 'fire',
     stats: { attack: 75, defense: 35, speed: 17, carry: 25 },
     cost: { biomass: 550, alloy: 750, ore: 650, population: 2, time: '14m 0s' },
@@ -162,7 +162,7 @@ export const TROOPS_DOC: TroopDoc[] = [
   {
     key: 'interceptorBike',
     name: 'Interceptor Bike',
-    role: 'Mobile rapid-response cavalry — counters Armor',
+    role: 'Mobile rapid-response cavalry - counters Armor',
     description: 'Very fast mobile raider, ideal for rapid redeploy and cracking armored defenders. High attack and carry, moderate defense.',
     unitClass: 'mobile',
     stats: { attack: 95, defense: 50, speed: 28, carry: 100 },
@@ -172,15 +172,15 @@ export const TROOPS_DOC: TroopDoc[] = [
   {
     key: 'voidStalker',
     name: 'Void Stalker',
-    role: 'Mobile stealth cavalry — counters Armor',
+    role: 'Mobile stealth cavalry - counters Armor',
     description:
-      'Fastest unit in the game. A mobile raider that excels at cracking armored defensive lines — nearly no defense, so it relies on speed and shock value.',
+      'Fastest unit in the game. A mobile raider that excels at cracking armored defensive lines - nearly no defense, so it relies on speed and shock value.',
     unitClass: 'mobile',
     stats: { attack: 110, defense: 32, speed: 32, carry: 40 },
     cost: { biomass: 900, alloy: 700, ore: 1100, population: 3, time: '24m 0s' },
     requirements: ['Recruitment Core Lv9', 'Alloy Forge Lv8', 'Armory Lv3'],
     notes: [
-      'Speed 32 — the fastest unit in the roster.',
+      'Speed 32 - the fastest unit in the roster.',
       'Mobile class is countered BY Fire (Suppressor / Lancer / Disruptor / Annihilator / Plasma Turret).',
       'Fire class is countered BY Armor (Assault Trooper / Bulwark Guard / Siege Mech).',
     ],
@@ -188,9 +188,9 @@ export const TROOPS_DOC: TroopDoc[] = [
   {
     key: 'siegeMech',
     name: 'Siege Mech',
-    role: 'Armor siege anchor — counters Fire',
+    role: 'Armor siege anchor - counters Fire',
     description:
-      'Towering armored platform built for survival, not offense. Exceptional durability lets it absorb punishment while your fire support does the killing — slow but nearly impossible to dislodge.',
+      'Towering armored platform built for survival, not offense. Exceptional durability lets it absorb punishment while your fire support does the killing - slow but nearly impossible to dislodge.',
     unitClass: 'armor',
     stats: { attack: 80, defense: 210, speed: 10, carry: 20 },
     cost: { biomass: 1250, alloy: 1000, ore: 2000, population: 4, time: '40m 0s' },
@@ -199,23 +199,23 @@ export const TROOPS_DOC: TroopDoc[] = [
   {
     key: 'plasmaTurret',
     name: 'Plasma Turret',
-    role: 'Static fire emplacement — counters Mobile',
+    role: 'Static fire emplacement - counters Mobile',
     description:
-      'Immobile defensive emplacement. Cannot be sent on attacks, transfers, or raids — it always defends the nexus that built it. Decimates mobile forces that try to rush you.',
+      'Immobile defensive emplacement. Cannot be sent on attacks, transfers, or raids - it always defends the nexus that built it. Decimates mobile forces that try to rush you.',
     unitClass: 'fire',
     stats: { attack: 0, defense: 160, speed: 0, carry: 0 },
     cost: { biomass: 1500, alloy: 1200, ore: 2500, population: 2, time: '50m 0s' },
     requirements: ['Recruitment Core Lv11', 'Command Core Lv9', 'Armory Lv5'],
     notes: [
-      'Speed 0 — stripped from any outgoing strike or transfer.',
+      'Speed 0 - stripped from any outgoing strike or transfer.',
       'Hard counters Void Stalker, Skimmer Bike, Interceptor Bike, and Breaker Unit.',
     ],
   },
   {
     key: 'annihilatorPlatform',
     name: 'Annihilator Platform',
-    role: 'Fire artillery — counters Mobile',
-    description: 'Top-end fire platform for heavy assaults and sieges. Enormous attack power but lightly armored — protect it with Siege Mechs and Bulwark Guards.',
+    role: 'Fire artillery - counters Mobile',
+    description: 'Top-end fire platform for heavy assaults and sieges. Enormous attack power but lightly armored - protect it with Siege Mechs and Bulwark Guards.',
     unitClass: 'fire',
     stats: { attack: 210, defense: 80, speed: 8, carry: 160 },
     cost: { biomass: 2000, alloy: 1750, ore: 3000, population: 5, time: '1h 30m' },
@@ -224,16 +224,16 @@ export const TROOPS_DOC: TroopDoc[] = [
   {
     key: 'overseer',
     name: 'Overseer',
-    role: 'Conquest / control unit (Special — no counter in either direction)',
+    role: 'Conquest / control unit (Special - no counter in either direction)',
     description:
-      'The Overseer is a high-value command unit that enables nexus conquest. It does not fight — it administers. Sending an Overseer on a successful strike reduces the target\'s Control Level by 34. Control starts at 100; once it reaches 0, the nexus is conquered and changes ownership to you. Three successful strikes with an Overseer will conquer any nexus. Overseer strikes travel 3× slower than standard attacks — giving defenders time to react. The Overseer is only useful if the attack wins — if the attack fails, the Overseer is not used and survives the defeat alongside its escort. If every non-Overseer troop in the strike is killed, the Overseer dies too. On conquest, the Overseer is consumed — it does not return home. The conquered nexus keeps its type (Resource Depot, Military Outpost, etc.) and retains its current building levels, but its name resets to "Conquered Nexus." If you conquer a special NPC nexus (any type except Neutral Settlement), all type bonuses on that nexus are permanently doubled.',
+      'The Overseer is a high-value command unit that enables nexus conquest. It does not fight - it administers. Sending an Overseer on a successful strike reduces the target\'s Control Level by 34. Control starts at 100; once it reaches 0, the nexus is conquered and changes ownership to you. Three successful strikes with an Overseer will conquer any nexus. Overseer strikes travel 3x slower than standard attacks - giving defenders time to react. The Overseer is only useful if the attack wins - if the attack fails, the Overseer is not used and survives the defeat alongside its escort. If every non-Overseer troop in the strike is killed, the Overseer dies too. On conquest, the Overseer is consumed - it does not return home. The conquered nexus keeps its type (Resource Depot, Military Outpost, etc.) and retains its current building levels, but its name resets to "Conquered Nexus." If you conquer a special NPC nexus (any type except Neutral Settlement), all type bonuses on that nexus are permanently doubled.',
     unitClass: 'special',
     stats: { attack: 0, defense: 30, speed: 15, carry: 0 },
     cost: { biomass: 180000, alloy: 140000, ore: 120000, population: 5, time: '4h 0m' },
     requirements: ['Recruitment Core Lv14', 'Command Core Lv14', 'Shield Grid Lv13'],
     notes: [
       'Maximum 3 per nexus at any time; maximum 1 per strike.',
-      'Trains in an independent queue — does not block other troop training.',
+      'Trains in an independent queue - does not block other troop training.',
       'Control reduction: –34 per successful strike with a surviving Overseer. Three strikes conquer any nexus.',
       'Overseer survives a failed attack (as long as its escort is not completely wiped).',
       'On conquest: the Overseer is consumed and does NOT return home.',
@@ -346,7 +346,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
     name: 'Shield Grid',
     role: 'Defensive multiplier',
     description:
-      'How defense works: when an enemy attack arrives, every defending troop contributes its Defense stat to the total defending force power. That power is then multiplied by (1 + shieldGrid × 0.02) — so each Shield Grid level is worth +2% of your entire garrison\'s HP-equivalent. The defending power is then compared against the attacker\'s class-weighted attack power. The side with higher power wins. Losers take heavy losses (~50–90% depending on the power gap); winners take light losses (~0–18% depending on how close the fight was). Your Shield Grid bonus stacks with allied support troops stationed at your nexus and with the class-counter system. Military Outpost nexus type multiplies shield efficiency by 2x (3x if doubled at CC15).',
+      'How defense works: when an enemy attack arrives, every defending troop contributes its Defense stat to the total defending force power. That power is then multiplied by (1 + shieldGrid × 0.02) - so each Shield Grid level is worth +2% of your entire garrison\'s HP-equivalent. The defending power is then compared against the attacker\'s class-weighted attack power. The side with higher power wins. Losers take heavy losses (~50–90% depending on the power gap); winners take light losses (~0–18% depending on how close the fight was). Your Shield Grid bonus stacks with allied support troops stationed at your nexus and with the class-counter system. Military Outpost nexus type multiplies shield efficiency by 2x (3x if doubled at CC15).',
     baseCost: { biomass: 50, alloy: 100, ore: 60, timeSeconds: 180 },
     maxLevel: 15,
     unlock: 'Command Core Lv3',
@@ -435,16 +435,16 @@ export const ESPIONAGE_DOC: {
   tips: string[];
 } = {
   overview:
-    'Espionage is the off-the-battlefield arm of Vexara. Two mission types — Embed and Sabotage — both dispatched as Recon Operatives from your Nexus to an enemy one. Embed installs a long-term asset that streams intel back. Sabotage is a one-shot strike that hurts the defender directly if you bring enough operatives to overwhelm theirs.',
+    'Espionage is the off-the-battlefield arm of Vexara. Two mission types - Embed and Sabotage - both dispatched as Recon Operatives from your Nexus to an enemy one. Embed installs a long-term asset that streams intel back. Sabotage is a one-shot strike that hurts the defender directly if you bring enough operatives to overwhelm theirs.',
 
   missions: [
     {
       key: 'embed',
       name: 'Embed',
       oneLiner: 'Insert one operative as a long-term asset for repeatable intel.',
-      intent: 'Use embed to monitor a high-value target — a feeder farm, a rival hub, a coalition member you want to keep tabs on. Once installed, intel refreshes are instant and free; the asset only consumes a slot until detected.',
+      intent: 'Use embed to monitor a high-value target - a feeder farm, a rival hub, a coalition member you want to keep tabs on. Once installed, intel refreshes are instant and free; the asset only consumes a slot until detected.',
       cost: { biomass: 400, secondary: { name: 'alloy', amount: 200 }, perOperative: false },
-      operatives: 'Flat 1-operative cost regardless of how many you send. Sending extras does NOT increase success chance — embed is a stealth roll, not a numbers contest. Send only 1.',
+      operatives: 'Flat 1-operative cost regardless of how many you send. Sending extras does NOT increase success chance - embed is a stealth roll, not a numbers contest. Send only 1.',
       resolution: [
         'On arrival, a single detection roll fires.',
         'Detection chance = 5% base + 2% per defender Stealth Array level, capped at 15%.',
@@ -454,7 +454,7 @@ export const ESPIONAGE_DOC: {
       successEffect: [
         'Persistent SpyAsset linked to the target Nexus.',
         'Immediate intel snapshot: troops, resources, key buildings, queues, nexus type.',
-        'Asset can be polled later via Refresh Intel — instant, no travel.',
+        'Asset can be polled later via Refresh Intel - instant, no travel.',
         'Each refresh re-rolls discovery: 4% base + 1.5% per Stealth Array level, capped at 12%.',
         'You can manually recall an asset at any time (no penalty, no operatives recovered).',
       ],
@@ -467,12 +467,12 @@ export const ESPIONAGE_DOC: {
       key: 'sabotage',
       name: 'Sabotage',
       oneLiner: 'Overwhelm the defender\'s Recon Operatives to delay training or stall construction.',
-      intent: 'Use sabotage to stall a rival\'s production — delay their training queue before a raid, or grief their build timing mid-campaign. Effect scales with how badly you outnumber their stationed Recon Operatives.',
+      intent: 'Use sabotage to stall a rival\'s production - delay their training queue before a raid, or grief their build timing mid-campaign. Effect scales with how badly you outnumber their stationed Recon Operatives.',
       cost: { biomass: 300, secondary: { name: 'ore', amount: 300 }, perOperative: true },
       operatives: 'Numbers matter. You MUST send strictly more operatives than the defender has stationed. Cost scales linearly per operative sent.',
       resolution: [
         'Deterministic: success ⇔ operatives_sent > defender.reconOperative.',
-        'No randomness — scout first if you can, or assume the worst.',
+        'No randomness - scout first if you can, or assume the worst.',
         'Excess ratio = (sent − defenderRecon) / sent. Bigger overkill, bigger effect.',
       ],
       successEffect: [
@@ -493,31 +493,31 @@ export const ESPIONAGE_DOC: {
   travel: [
     'Both mission types use Recon Operative travel speed (25), same formula as the scout mission in the attack system.',
     'Travel time (minutes) = distance × (4 + (28 − 25) / 10) = distance × 4.3.',
-    'Operatives and resources are deducted immediately on dispatch — they cannot be re-spent while the mission is in flight.',
+    'Operatives and resources are deducted immediately on dispatch - they cannot be re-spent while the mission is in flight.',
     'After resolution, surviving operatives spend the same travel time returning home before they re-enter your garrison.',
   ],
 
   intelScope: [
-    'Troops — every unit count (all 12 types including Overseer and Recon Operative).',
-    'Resources — biomass, alloy, ore (floored to whole numbers).',
-    'Buildings — Command Core, Shield Grid, Recruitment Core levels.',
-    'Nexus type — capital, outpost, etc.',
-    'Build queue — every queued building, target level, and completion timestamp.',
-    'Training queue — every queued troop batch.',
+    'Troops - every unit count (all 12 types including Overseer and Recon Operative).',
+    'Resources - biomass, alloy, ore (floored to whole numbers).',
+    'Buildings - Command Core, Shield Grid, Recruitment Core levels.',
+    'Nexus type - capital, outpost, etc.',
+    'Build queue - every queued building, target level, and completion timestamp.',
+    'Training queue - every queued troop batch.',
     'Note: scout missions (from the attack system) give a similar one-shot snapshot. Embed gives the same snapshot but lets you refresh on demand.',
   ],
 
   embedAsset: [
     'Status lifecycle: active → discovered (defender catches a refresh), recalled (you pulled out), or lost (target nexus destroyed).',
-    'Multiple embed missions against the same target do NOT stack — a second successful insert just refreshes the existing asset\'s timestamp.',
+    'Multiple embed missions against the same target do NOT stack - a second successful insert just refreshes the existing asset\'s timestamp.',
     'Active assets persist across sessions until discovered or recalled.',
-    'Refresh discovery is per-poll, not cumulative — spamming refreshes increases your odds of getting caught.',
+    'Refresh discovery is per-poll, not cumulative - spamming refreshes increases your odds of getting caught.',
   ],
 
   defense: [
-    'Stealth Array (Command Core Lv7) — raises both embed-detection chance (up to 15%) and refresh-discovery chance (up to 12%). The ONLY building-based counter-intel.',
-    'Stationed Recon Operatives — the only defense against sabotage. The defender needs ≥ sent operatives to fully block a sabotage attempt.',
-    'Sabotage success wipes your stationed Recon Operatives to 0 — re-garrison fast if you survived an attempt and expect another.',
+    'Stealth Array (Command Core Lv7) - raises both embed-detection chance (up to 15%) and refresh-discovery chance (up to 12%). The ONLY building-based counter-intel.',
+    'Stationed Recon Operatives - the only defense against sabotage. The defender needs >= sent operatives to fully block a sabotage attempt.',
+    'Sabotage success wipes your stationed Recon Operatives to 0 - re-garrison fast if you survived an attempt and expect another.',
     'There is no early-warning system: you only learn an embed exists if your Stealth Array discovers it during a refresh.',
   ],
 
@@ -530,10 +530,10 @@ export const ESPIONAGE_DOC: {
   ],
 
   tips: [
-    'ALWAYS scout before sabotaging — sending one operative short of the defender\'s count means losing every operative you sent.',
+    'ALWAYS scout before sabotaging - sending one operative short of the defender\'s count means losing every operative you sent.',
     'Embed is cheap insurance against a single rival. Sabotage is a tool for active campaigns, not exploration.',
     'For sabotage, overkill is efficient: the more excess operatives, the more minutes of delay per queue entry (30 min per excess op).',
-    'Building a Stealth Array on outpost Nexuses costs the same as on your capital but defends them just as well — don\'t leave outposts blind.',
+    'Building a Stealth Array on outpost Nexuses costs the same as on your capital but defends them just as well - don\'t leave outposts blind.',
     'Refresh an embed only when you actually need fresh intel. Each refresh is a discovery roll.',
   ],
 };

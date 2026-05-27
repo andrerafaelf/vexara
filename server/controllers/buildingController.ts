@@ -191,7 +191,7 @@ export async function upgradeBuilding(req: AuthRequest, res: Response): Promise<
         buildQueue: queueToJson(newQueue),
       });
     } catch (e) {
-      if (e instanceof ResourceConflictError) { res.status(409).json({ error: 'Resources updated simultaneously — please retry' }); return; }
+      if (e instanceof ResourceConflictError) { res.status(409).json({ error: 'Resources updated simultaneously - please retry' }); return; }
       throw e;
     }
     const rewardApplied = await applyQuestRewards(updated);
@@ -262,7 +262,7 @@ export async function cancelBuildQueue(req: AuthRequest, res: Response): Promise
         buildQueue: queueToJson(newQueue),
       });
     } catch (e) {
-      if (e instanceof ResourceConflictError) { res.status(409).json({ error: 'Resources updated simultaneously — please retry' }); return; }
+      if (e instanceof ResourceConflictError) { res.status(409).json({ error: 'Resources updated simultaneously - please retry' }); return; }
       throw e;
     }
     try {

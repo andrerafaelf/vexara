@@ -50,7 +50,7 @@ export async function getMyNexuses(req: AuthRequest, res: Response): Promise<voi
     // the initial roster while traveling) still count; losses on a completed
     // 'returning' attack are excluded so influence drops only on combat end.
     // The bump is attributed back to the originating nexus so the per-nexus
-    // .points field — which the client sums for the header influence — also
+    // .points field - which the client sums for the header influence - also
     // reflects in-flight troops, not just the GalaxyPlayer total.
     const inFlightAttacks = await prisma.attack.findMany({
       where: {

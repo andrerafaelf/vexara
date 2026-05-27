@@ -4,7 +4,7 @@ import type { TroopKey, TroopStat } from '../types/index.js';
 // mobile → beats armor  (fast assault forces exploit armor gaps)
 // armor  → beats fire   (armored units close distance and suppress emplacements)
 // fire   → beats mobile (suppression fire pins fast movers)
-// special → no combat advantage (recon/overseer roles — they don't fight)
+// special → no combat advantage (recon/overseer roles - they don't fight)
 export type TroopClass = 'mobile' | 'armor' | 'fire' | 'special';
 
 export const TROOP_CLASS: Record<TroopKey, TroopClass> = {
@@ -163,7 +163,7 @@ export function computeLossesForWinner(
   };
 
   // When powerRatio is 0 (defender had no troops), the attacker walked in
-  // unopposed — they lose nothing. Scale linearly from 0 up to a meaningful cap.
+  // unopposed - they lose nothing. Scale linearly from 0 up to a meaningful cap.
   // baseLossRate: 0% at ratio=0, up to ~30% at ratio=1 (evenly matched win).
   // 30% makes a coin-flip victory feel genuinely costly without punishing dominant wins.
   const baseLossRate = Math.min(0.30, powerRatio * 0.30);
@@ -177,7 +177,7 @@ export function computeLossesForWinner(
     const variance = (lcg() - 0.5) * 2 * varianceMagnitude;
 
     // Higher defense stat = more survivable; scale loss down proportionally.
-    // Using /1200 (half-weight) so tanky units still benefit but not excessively —
+    // Using /1200 (half-weight) so tanky units still benefit but not excessively -
     // a Siege Mech (def 210) reduces its loss rate by ~17% rather than ~35%.
     const defFactor = 1 - (TROOP_STATS[key].defense / 1200);
     const rawRate = Math.min(0.50, Math.max(0, baseLossRate * defFactor + variance));

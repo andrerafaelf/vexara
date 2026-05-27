@@ -182,7 +182,7 @@ export async function processArrivedSpyMissions(): Promise<void> {
       ]);
 
       if (!defender) {
-        // Target nexus gone — complete mission and return operatives atomically
+        // Target nexus gone - complete mission and return operatives atomically
         const ops: Prisma.PrismaPromise<unknown>[] = [
           prisma.spyMission.update({
             where: { id: mission.id },

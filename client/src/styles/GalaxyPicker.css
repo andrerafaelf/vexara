@@ -1,6 +1,6 @@
 /* ==========================================================================
    Vexara · GalaxyPicker
-   Industrial modal — left amber rule, clipped corner, mono labels.
+   Industrial modal - left amber rule, clipped corner, mono labels.
    Matches the landing/codex/in-game identity system.
    ========================================================================== */
 
@@ -292,7 +292,7 @@
 
 .gp-btn:disabled { cursor: not-allowed; opacity: 0.6; }
 
-/* Primary — clipped amber with hover sweep */
+/* Primary - clipped amber with hover sweep */
 .gp-btn-primary {
   background: var(--accent);
   color: var(--text-on-accent);
@@ -327,7 +327,7 @@
 
 .gp-btn-pending:hover { transform: none; background: transparent; }
 
-/* Ghost — outline */
+/* Ghost - outline */
 .gp-btn-ghost {
   background: transparent;
   color: var(--text-default);
@@ -340,7 +340,7 @@
   background: rgba(255, 255, 255, 0.03);
 }
 
-/* Danger ghost — leave / destructive */
+/* Danger ghost - leave / destructive */
 .gp-btn-danger-ghost {
   background: transparent;
   color: var(--danger);
@@ -352,7 +352,7 @@
   border-color: var(--danger);
 }
 
-/* Solid danger — final leave action */
+/* Solid danger - final leave action */
 .gp-btn-danger {
   background: var(--danger);
   color: #fff;
@@ -364,7 +364,7 @@
   transform: translateY(-1px);
 }
 
-/* Results — amber on ended */
+/* Results - amber on ended */
 .gp-btn-results {
   background: transparent;
   color: var(--warning);

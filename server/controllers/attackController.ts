@@ -100,7 +100,7 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
     if (attackType === 'scout') {
       travelTimeMinutes = distance * 4;
     } else {
-      // Overseer strikes use the slowest-troop formula then get a 3x surcharge —
+      // Overseer strikes use the slowest-troop formula then get a 3x surcharge -
       // making conquest trains clearly distinct (and giving defenders time to react).
       const OVERSEER_EFFECTIVE_SPEED = 6;
       const OVERSEER_TRAVEL_MULTIPLIER = 3;
@@ -128,7 +128,7 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
     await applyQuestRewards(updatedAttackerNexus, { hasOutgoingStrike: true });
 
     // Notify the defender immediately that an attack is inbound.
-    // Scout missions are intentionally excluded — stealth is part of the mechanic.
+    // Scout missions are intentionally excluded - stealth is part of the mechanic.
     if (defenderNexus.ownerId && attackType === 'attack') {
       const etaMinutes = Math.round(travelTimeMinutes);
       const etaStr = etaMinutes < 60 ? `${etaMinutes}m` : `${Math.floor(etaMinutes / 60)}h ${etaMinutes % 60}m`;

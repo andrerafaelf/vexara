@@ -1,5 +1,5 @@
 // Single source of truth for building / troop costs and time math.
-// Mirrored verbatim in client/src/realtime/gameConstants.shared.ts —
+// Mirrored verbatim in client/src/realtime/gameConstants.shared.ts -
 // same convention as economy.ts / economy.shared.ts. If you change a
 // number or formula here, change it in the client mirror in the same commit.
 

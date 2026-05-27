@@ -379,7 +379,7 @@
     0 0 24px rgba(248, 81, 73,0.14);
 }
 
-/* Same-faction members: cyan/blue — clearly "with you", distinct from your own (green) */
+/* Same-faction members: cyan/blue - clearly "with you", distinct from your own (green) */
 .map-cell.faction-nexus {
   background: rgba(86, 156, 214, 0.20);
   border: 2px solid #5a9ee6;
@@ -389,7 +389,7 @@
     0 0 24px rgba(86, 156, 214, 0.15);
 }
 
-/* Individual allies / friends list: violet — friendly but not in your faction */
+/* Individual allies / friends list: violet - friendly but not in your faction */
 .map-cell.ally-nexus {
   background: rgba(168, 119, 232, 0.18);
   border: 2px solid #a877e8;
@@ -399,7 +399,7 @@
     0 0 24px rgba(168, 119, 232, 0.14);
 }
 
-/* Resource storm zone — teal/green tint over every cell in the affected quadrant */
+/* Resource storm zone - teal/green tint over every cell in the affected quadrant */
 .map-cell.resource-storm-zone {
   background: rgba(86, 211, 100, 0.08);
   border-color: rgba(86, 211, 100, 0.22);
@@ -1390,7 +1390,7 @@
    ║ Pass C · Map industrial restyle
    ╚══════════════════════════════════════════════════════════════════╝ */
 
-/* Map UI chrome — sharpen everything but leave the grid cells alone
+/* Map UI chrome - sharpen everything but leave the grid cells alone
    (they're game terrain; rounded corners on cells would look wrong). */
 [class*='map-'][class*='-card'],
 [class*='map-'][class*='-panel'],

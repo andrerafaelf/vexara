@@ -26,7 +26,7 @@ function unsubscribeLinkFor(token: string): string {
  * old `?email=` lookup so an unsubscribe link only works for the address it
  * was issued to. The AlphaSignup row is the single source of truth for
  * email opt-outs (both alpha announcements and post-launch player emails), so
- * we upsert it on demand — registered players who never went through the
+ * we upsert it on demand - registered players who never went through the
  * waitlist still get a working unsubscribe link.
  */
 async function getOrCreateUnsubscribeToken(email: string): Promise<string> {
@@ -448,7 +448,7 @@ function tplPasswordChanged(email: string, username: string): RenderedEmail {
       If you didn't do this, your account may be compromised. Reset your password immediately:
     </p>
     <div style="text-align:center;">${buttonHtml(resetUrl, 'Reset password now', '#ef4444')}</div>
-    <p style="margin:0;font-size:13px;line-height:1.6;color:#8a90a0;">If you have any questions, reply to this email — it reaches a real person.</p>
+    <p style="margin:0;font-size:13px;line-height:1.6;color:#8a90a0;">If you have any questions, reply to this email - it reaches a real person.</p>
   `;
   const text = [
     'Your Vexara password was changed',
@@ -460,7 +460,7 @@ function tplPasswordChanged(email: string, username: string): RenderedEmail {
     "If you didn't do this, your account may be compromised. Reset your password immediately:",
     `Reset: ${resetUrl}`,
     '',
-    "If you have any questions, reply to this email — it reaches a real person.",
+    "If you have any questions, reply to this email - it reaches a real person.",
     ...renderTextFooter(false),
   ].join('\n');
   void email;

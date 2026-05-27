@@ -97,7 +97,7 @@ export async function uploadAvatar(req: AuthRequest, res: Response): Promise<voi
     });
 
     // Best-effort cleanup of the old avatar objects. Don't fail the request if
-    // R2 hiccups — the stale objects are harmless and a later upload will hash
+    // R2 hiccups - the stale objects are harmless and a later upload will hash
     // to a new key anyway.
     if (existing?.avatarKey && existing.avatarKey !== processed.avatarKey) {
       deleteAvatarObjects(userId, existing.avatarKey).catch((err) => {

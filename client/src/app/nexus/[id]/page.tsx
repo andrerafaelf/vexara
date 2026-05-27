@@ -196,9 +196,9 @@ export default function NexusPage() {
             <div className="eliminated-card">
               <div className="eliminated-icon">💀</div>
               <h2 className="eliminated-title">Eliminated</h2>
-              <p className="eliminated-subtitle">All your nexuses have been conquered. Rise from the ashes — your comeback starts now.</p>
+              <p className="eliminated-subtitle">All your nexuses have been conquered. Rise from the ashes - your comeback starts now.</p>
               <ul className="eliminated-perks">
-                <li>Level 10 resource buildings — hit the ground running</li>
+                <li>Level 10 resource buildings - hit the ground running</li>
                 <li>100,000 of each resource to rebuild fast</li>
                 <li>24 hours of attack protection</li>
               </ul>

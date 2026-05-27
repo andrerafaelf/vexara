@@ -113,7 +113,7 @@ type NexusTab = 'overview' | 'buildings' | 'troops' | 'map' | 'espionage';
 const MAX_BUILD_QUEUE = 5;
 const MAX_TRAINING_QUEUE = 5;
 
-// Gate for the buff banner — labels are derived per-type inline so this
+// Gate for the buff banner - labels are derived per-type inline so this
 // only needs to know which types render a banner.
 const NEXUS_TYPES_WITH_BUFF = new Set([
   'Resource Depot',
@@ -311,11 +311,11 @@ const TROOP_DESCRIPTIONS: { [key: string]: string } = {
   annihilatorPlatform:
     'Heavy artillery. Slow but devastating ranged platform that suppresses light units. Requires Lv12 Recruitment Core, Lv10 Command Core, Lv10 Shield Grid.',
   voidStalker:
-    'Light stealth cavalry. Fastest unit in the game; hard-counters heavy armor — but is itself suppressed by ranged emplacements. Requires Lv9 Recruitment Core, Lv8 Alloy Forge, Lv3 Armory.',
+    'Light stealth cavalry. Fastest unit in the game; hard-counters heavy armor - but is itself suppressed by ranged emplacements. Requires Lv9 Recruitment Core, Lv8 Alloy Forge, Lv3 Armory.',
   plasmaTurret:
     'Ranged static emplacement. Cannot be sent on attacks, defends from the nexus. Decimates light cavalry. Requires Lv11 Recruitment Core, Lv9 Command Core, Lv5 Armory.',
   overseer:
-    'Conquest unit. Reduces enemy Control by 50 per successful strike. Requires Lv14 Recruitment Core, Lv14 Command Core, Lv13 Shield Grid. Up to 3 per nexus.',
+    'Conquest unit. Reduces enemy Control by 34 per successful strike. Requires Lv14 Recruitment Core, Lv14 Command Core, Lv13 Shield Grid. Up to 3 per nexus.',
 };
 
 const TROOP_REQUIREMENTS: { [key: string]: any } = {
@@ -366,14 +366,14 @@ interface IntroQuest {
   completed: boolean;
   tab: 'buildings' | 'troops' | 'map';
   // Optional inline "Next up" tooltip copy for the tab where this quest runs.
-  // Only present on chapters 1-3 quests — later chapters don't render tooltips.
+  // Only present on chapters 1-3 quests - later chapters don't render tooltips.
   // Rendered as raw JSX inside <span className="noob-tip-text">, so HTML-safe
   // strings only (no user input).
   tip?: React.ReactNode;
 }
 
 // Quest batch IDs are the canonical server identifiers from
-// server/models/Nexus.ts QUEST_REWARD_BATCHES. Keep this union in lockstep —
+// server/models/Nexus.ts QUEST_REWARD_BATCHES. Keep this union in lockstep -
 // the server is what actually writes claimedRewards/completedQuestIds, so any
 // drift means rewards never fire (the UI shows quests as "done" while the
 // server still doesn't recognize the batch).
@@ -935,7 +935,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     if (!canTrain) return { maxTrainable: 0, shortageReasons: [] };
 
     // Interpolate from the server snapshot at this render. This does NOT
-    // tick — values only refresh when the snapshot does (refetch or push).
+    // tick - values only refresh when the snapshot does (refetch or push).
     // Real-time ticking for the troop cards lives in a future <TroopCard>
     // extraction (parallel to BuildingCard) so this parent component doesn't
     // re-render every second on the buildings tab too.
@@ -1303,10 +1303,10 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
       {
         id: 'raise-force',
         title: 'Train Your First Troops',
-        description: 'Train 5 Assault Troopers — your first strike force.',
+        description: 'Train 5 Assault Troopers - your first strike force.',
         completed: done('intro', 'train_assault_trooper_5', assaultTroopers >= 5),
         tab: 'troops',
-        tip: <><strong>Next up:</strong> Train 5 <em>Assault Troopers</em> — your first strike force.</>,
+        tip: <><strong>Next up:</strong> Train 5 <em>Assault Troopers</em> - your first strike force.</>,
       },
       {
         id: 'first-loot',
@@ -1368,7 +1368,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
       { id: 'shadow-network',   title: 'Shadow Network',   description: 'Upgrade Stealth Array to Lv3.', completed: done('veteran', 'build_stealth_array_3', (nexus.buildings.stealthArray || 0) >= 3), tab: 'buildings' },
       { id: 'disruptor-corps',  title: 'Disruptor Corps',  description: 'Train 10 Disruptor Units.',     completed: done('veteran', 'train_disruptor_10',    disruptorUnits >= 10),                     tab: 'troops' },
       // `complete_attack` is server-driven (set when an attack resolves), so the
-      // live fallback is false — done() picks it up from completedQuestIds.
+      // live fallback is false - done() picks it up from completedQuestIds.
       { id: 'proven-in-battle', title: 'Proven In Battle', description: 'Complete an attack.',            completed: done('veteran', 'complete_attack',       false),                                    tab: 'map' },
     ];
     const veteranComplete = claimedBatches.has('veteran') || veteranQuests.every((quest) => quest.completed);
@@ -1426,12 +1426,12 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   };
   const { batches: questBatches, allQuestsComplete } = getQuestBatches();
 
-  // Inline "Next up" tooltip — only renders for the first 3 quest chapters
+  // Inline "Next up" tooltip - only renders for the first 3 quest chapters
   // (intro / expansion / first_blood). Picks the first incomplete quest in
   // the earliest unclaimed batch that matches the requested tab. The tip ID
   // doubles as the dismiss key so each step can be dismissed independently.
   // 'map' quests fall back to the buildings tab since the Starfield isn't a
-  // NexusView tab — without this, the player would lose the nudge after
+  // NexusView tab - without this, the player would lose the nudge after
   // they're ready to launch their first raid.
   const TIP_BATCH_IDS = ['intro', 'expansion', 'first_blood'] as const;
   const getNextTip = (tab: IntroQuest['tab']): { id: string; tip: React.ReactNode } | null => {
@@ -1442,7 +1442,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
       const matchesTab = (q: IntroQuest) => q.tab === tab || (tab === 'buildings' && q.tab === 'map');
       const quest = batch.quests.find((q) => !q.completed && matchesTab(q) && q.tip);
       if (quest) return { id: `tip-${batchId}-${quest.id}`, tip: quest.tip! };
-      // If this batch has any incomplete quest for any tab, stop — we don't
+      // If this batch has any incomplete quest for any tab, stop - we don't
       // want to leak tooltips from a later batch while an earlier one is
       // still incomplete on a different tab.
       if (batch.quests.some((q) => !q.completed)) return null;
@@ -1517,7 +1517,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
         </div>
         {nexus.nexusType && NEXUS_TYPES_WITH_BUFF.has(nexus.nexusType) && (() => {
           // Single-row banner. Three slots: [icon + name + tier], [bonus math].
-          // The label is just the type name — the numbers live in the math slot,
+          // The label is just the type name - the numbers live in the math slot,
           // so we never repeat ourselves like the old layout did.
           const doubled = !!nexus.nexusTypeDoubled;
           let math: React.ReactNode = null;
@@ -1570,8 +1570,8 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                 <span
                   className={`nexus-type-tier-chip${doubled ? ' nexus-type-tier-chip--ii' : ''}`}
                   title={doubled
-                    ? 'Tier II — specialization bonus fully unlocked at Command Core 15'
-                    : 'Tier I — base specialization bonus'}
+                    ? 'Tier II - specialization bonus fully unlocked at Command Core 15'
+                    : 'Tier I - base specialization bonus'}
                 >
                   Tier {doubled ? 'II' : 'I'}
                 </span>
@@ -3023,7 +3023,7 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
         </div>
       )}
 
-      {/* Active embedded assets — placed above mission history so the most
+      {/* Active embedded assets - placed above mission history so the most
           actionable surface (Refresh Intel / Recall) sits up top. */}
       <div className="espionage-assets">
         <div className="espionage-assets-heading">Active Embedded Operatives</div>
@@ -3061,7 +3061,7 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
       </div>
 
       {/* Completed mission results (last 10, newest first). Collapsed by
-          default — the tab opens with these furled and only the actionable
+          default - the tab opens with these furled and only the actionable
           assets list expanded. Toggling is per-row. */}
       {completedMissions.length > 0 && (
         <div className="espionage-completed">

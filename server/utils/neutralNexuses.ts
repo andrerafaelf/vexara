@@ -17,7 +17,7 @@ const NPC_MAX_LEVELS: Record<LevelableBuilding, number> = {
 const MAP_SIZE = 50;
 // Minimum gap (Chebyshev distance) between any two nexuses.
 // Distance 2 means no nexus can be placed in the 3x3 ring around an
-// existing one — visually they always have at least one empty cell between
+// existing one - visually they always have at least one empty cell between
 // them, so the map never looks like a solid wall of icons.
 const MIN_NEXUS_SPACING = 2;
 // Hard cap: at spacing=2 each nexus "owns" a 5×5 footprint, so the
@@ -180,7 +180,7 @@ const NPC_TROOP_TRAINING: Array<{
   perTick: number;
   cap: number;
 }> = [
-  // Basic line — always recruited once RC is up.
+  // Basic line - always recruited once RC is up.
   { key: 'assaultTrooper',      rcMin: 1,  perTick: 12, cap: 220 },
   { key: 'lancerDrone',         rcMin: 2,  perTick: 8,  cap: 160 },
   { key: 'breakerUnit',         rcMin: 3,  perTick: 5,  cap: 110 },
@@ -222,7 +222,7 @@ export async function levelUpNeutralNexuses() {
     // Each tick the NPC picks up to NPC_BUILDS_PER_TICK building levels
     // (chosen by widest gap to its difficulty-scaled target). Without this,
     // a single building per 6h tick meant a fresh neutral took weeks to
-    // become a real threat — players reported they "weren't evolving".
+    // become a real threat - players reported they "weren't evolving".
     const buildingLevels: Record<string, number> = {};
     for (const b of NPC_LEVELABLE_BUILDINGS) {
       buildingLevels[b] = (nexus as Record<string, unknown>)[b] as number ?? 0;
@@ -256,7 +256,7 @@ export async function levelUpNeutralNexuses() {
     const populationMax = getPopulationMax(lifeSupport);
     let populationCurrent = nexus.populationCurrent ?? 0;
 
-    // Difficulty scales recruitment count — early galaxies grow slowly,
+    // Difficulty scales recruitment count - early galaxies grow slowly,
     // late galaxies fill fast. (0.5x..1.5x roughly)
     const trainScale = 0.5 + difficultyRatio;
 

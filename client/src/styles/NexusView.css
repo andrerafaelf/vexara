@@ -14,7 +14,7 @@
 /* The <h2> renders a "// NEXUS · COMMAND" pseudo-label above the title text
  * (see .nexus-header h2::before below). That makes the heading a two-line
  * stacked block. Centering against that block visually pushes the rename
- * button up out of line with the title, so align to the bottom of the row —
+ * button up out of line with the title, so align to the bottom of the row -
  * the title sits at the bottom of its own stacked block, putting the button
  * on the title's baseline. */
 .nexus-title-row {
@@ -251,7 +251,7 @@
   text-overflow: ellipsis;
 }
 
-/* Tier chip — sits next to the name as part of the identity, NOT a separate
+/* Tier chip - sits next to the name as part of the identity, NOT a separate
  * floating badge. Tier I is muted amber outline, Tier II is filled cyan to
  * reinforce the doubled-state colour the banner itself switches to. */
 .nexus-type-tier-chip {
@@ -3554,7 +3554,7 @@
 
 /* The "// COMBAT · ENGAGEMENT" eyebrow is specific to the strike modal.
  * The generic .info-modal (troop / building tooltips) shares .attack-modal
- * markup but is not a combat dialog — exclude it so its header doesn't pick
+ * markup but is not a combat dialog - exclude it so its header doesn't pick
  * up the eyebrow line. */
 .attack-modal:not(.info-modal) .attack-modal-header h3::before {
   content: '// COMBAT · ENGAGEMENT';
@@ -3956,7 +3956,7 @@
   /* Force the overlay to be a fresh containing block at the viewport.
    * Rendered via React portal to <body>, so no ancestor transform can
    * break position: fixed. Override the base .attack-modal-overlay rules
-   * that allow scrolling — the info modal is small, never needs scroll. */
+   * that allow scrolling - the info modal is small, never needs scroll. */
   position: fixed !important;
   inset: 0 !important;
   overflow: hidden !important;
@@ -3979,7 +3979,7 @@
 
 @media (max-width: 768px) {
   .attack-modal-overlay {
-    /* Prevent the overlay from scrolling — the modal scrolls internally */
+    /* Prevent the overlay from scrolling - the modal scrolls internally */
     overflow-y: hidden;
     align-items: center;
     padding: 12px;

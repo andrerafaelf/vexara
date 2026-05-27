@@ -155,7 +155,7 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
         trainingQueue: queueToJson(newQueue),
       });
     } catch (e) {
-      if (e instanceof ResourceConflictError) { res.status(409).json({ error: 'Resources updated simultaneously — please retry' }); return; }
+      if (e instanceof ResourceConflictError) { res.status(409).json({ error: 'Resources updated simultaneously - please retry' }); return; }
       throw e;
     }
     const rewardApplied = await applyQuestRewards(updated);
@@ -223,7 +223,7 @@ export async function cancelTrainingQueue(req: AuthRequest, res: Response): Prom
         trainingQueue: queueToJson(newQueue),
       });
     } catch (e) {
-      if (e instanceof ResourceConflictError) { res.status(409).json({ error: 'Resources updated simultaneously — please retry' }); return; }
+      if (e instanceof ResourceConflictError) { res.status(409).json({ error: 'Resources updated simultaneously - please retry' }); return; }
       throw e;
     }
     try { emitResourceSnapshot(req.userId!, updated); }

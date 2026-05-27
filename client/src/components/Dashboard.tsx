@@ -213,7 +213,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 
     // Chapter 1: Establishing the Nexus
     // Quest IDs and conditions are kept in sync with server/models/Nexus.ts QUEST_REWARD_BATCHES
-    // and the intro list rendered in NexusView.tsx — diverging here means the dashboard will
+    // and the intro list rendered in NexusView.tsx - diverging here means the dashboard will
     // disagree with what the server actually credits the player for.
     const introQuests: DashboardQuest[] = [
       { id: 'command-core-online', title: 'Power The Nexus',     description: 'Upgrade Command Core to Lv1.',                            completed: done('intro', 'build_command_core_1',    b.commandCore >= 1) },

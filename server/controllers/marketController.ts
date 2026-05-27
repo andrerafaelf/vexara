@@ -174,7 +174,7 @@ export async function cancelListing(req: AuthRequest, res: Response): Promise<vo
       res.status(403).json({ error: 'Not authorized' }); return;
     }
     // Refresh seller nexus so the refund lands on a fresh snapshot and we
-    // can persist lastResourceUpdate atomically — otherwise the next tick
+    // can persist lastResourceUpdate atomically - otherwise the next tick
     // would replay production over the refunded balance.
     const refreshedSeller = await refreshResources(listing.sellerNexus);
     const sellerRecord = refreshedSeller as unknown as Record<string, number>;

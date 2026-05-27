@@ -406,7 +406,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
         }
       } else if (e.touches.length === 1) {
         // Prevent page scroll while panning the map with one finger.
-        // This must be in the non-passive listener (passive: false above) —
+        // This must be in the non-passive listener (passive: false above) -
         // React's synthetic onTouchMove is passive and ignores preventDefault.
         e.preventDefault();
       }

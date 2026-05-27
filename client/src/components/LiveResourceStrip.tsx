@@ -41,7 +41,7 @@ function LiveResourceStripInner({
     : now;
   // Flash whenever a fresh server snapshot lands. anchorMs is the server
   // timestamp the baseline values were computed at, so it only changes on
-  // a real push/refetch — not on every interpolation tick.
+  // a real push/refetch - not on every interpolation tick.
   const flashFresh = useFlashOnChange(anchorMs, 700);
   const elapsedHours = Math.max(0, (now - anchorMs) / 3600000);
   const live = {

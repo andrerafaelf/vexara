@@ -66,7 +66,7 @@ export default function SupportTiersCard({ variant, currentTier, isFounder, isSu
         </div>
         <div className="vx-support-card-pitch">
           Alpha is funded by donors. Tiers unlock glow, borders, and{' '}
-          <span className="vx-support-tier-cmd">ALPHA COMMANDER</span> — only available now.
+          <span className="vx-support-tier-cmd">ALPHA COMMANDER</span> - only available now.
         </div>
         <ul className="vx-support-card-tier-list">
           <li><strong>€5</strong> Recruit · 1 token + glow</li>
@@ -96,7 +96,7 @@ export default function SupportTiersCard({ variant, currentTier, isFounder, isSu
             {isFounder && (
               <span
                 className="alpha-commander-badge"
-                title="Alpha Commander — granted for €25+ donations during alpha. Permanent."
+                title="Alpha Commander - granted for €25+ donations during alpha. Permanent."
               >
                 <span>Alpha Commander</span>
               </span>
@@ -104,7 +104,7 @@ export default function SupportTiersCard({ variant, currentTier, isFounder, isSu
           </div>
           <div className="vx-support-card-subtitle">
             {isSupporter
-              ? 'Pick a higher tier any time — your highest tier sticks forever, and tokens always stack.'
+              ? 'Pick a higher tier any time - your highest tier sticks forever, and tokens always stack.'
               : 'Vexara is in alpha and runs on a small server. Donations keep the lights on and unlock supporter perks.'}
           </div>
         </div>
@@ -158,7 +158,7 @@ export default function SupportTiersCard({ variant, currentTier, isFounder, isSu
       </div>
 
       <p className="vx-support-card-footnote">
-        ALPHA COMMANDER badge can only be earned during alpha — it disappears at launch. After that, €25 donations still grant Commander cosmetics, but the Founder mark is locked forever.
+        ALPHA COMMANDER badge can only be earned during alpha - it disappears at launch. After that, €25 donations still grant Commander cosmetics, but the Founder mark is locked forever.
       </p>
     </div>
   );

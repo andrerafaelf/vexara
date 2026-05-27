@@ -33,7 +33,7 @@
   gap: 10px;
 }
 
-/* Amber tick that sits before every panel h2 — quiet, repeated detail */
+/* Amber tick that sits before every panel h2 - quiet, repeated detail */
 .factions-panel h2::before {
   content: '';
   width: 6px;

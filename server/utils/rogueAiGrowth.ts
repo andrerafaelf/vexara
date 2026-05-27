@@ -75,7 +75,7 @@ export async function processRogueAiGrowth(): Promise<void> {
           eventId: event.id, coreNexusId: core.id, ageDays: Math.round(ageDays * 10) / 10, totalAdded,
         });
       } else {
-        // At cap — still bump the timestamp so we don't re-evaluate every cron.
+        // At cap - still bump the timestamp so we don't re-evaluate every cron.
         await prisma.galaxyEvent.update({
           where: { id: event.id },
           data: { meta: { ...meta, lastGrowthAt: now.toISOString() } },

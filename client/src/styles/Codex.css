@@ -593,7 +593,7 @@
   font-family: var(--font-sans);
 }
 
-/* Class chip — used both on troop entry meta and in the class counters panel. */
+/* Class chip - used both on troop entry meta and in the class counters panel. */
 .cx-class-chip {
   display: inline-block;
   padding: 3px 8px;

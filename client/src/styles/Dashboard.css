@@ -34,7 +34,7 @@
   position: relative;
 }
 
-/* Notch in the top-right corner — industrial chrome detail */
+/* Notch in the top-right corner - industrial chrome detail */
 .cc-hero::before {
   content: '';
   position: absolute;
@@ -117,7 +117,7 @@
               background var(--duration-base) var(--ease-out);
 }
 
-/* Hover sweep — same idiom as the landing's primary CTA */
+/* Hover sweep - same idiom as the landing's primary CTA */
 .cc-manage-btn::before {
   content: '';
   position: absolute;
@@ -1375,7 +1375,7 @@
   font-size: 11px;
 }
 
-/* ── Group tabs / Nexus tabs — flat pills become flat chiclets ── */
+/* -- Group tabs / Nexus tabs - flat pills become flat chiclets -- */
 .cc-group-tab,
 .cc-nexus-tab {
   border-radius: 0;
@@ -1441,7 +1441,7 @@
   text-transform: uppercase;
 }
 
-/* ── Shared card base — drop the gradient + radius, add left rule ── */
+/* -- Shared card base - drop the gradient + radius, add left rule -- */
 .cc-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-default);

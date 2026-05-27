@@ -4,8 +4,8 @@
 //
 // Why not Zustand: TanStack Query already owns server cache. A second store
 // would create two sources of truth for the same data. This store holds only
-// the *ticking-between-snapshots* part — current resource baseline plus
-// production rate — and is the single source of truth for buttons that need
+// the *ticking-between-snapshots* part - current resource baseline plus
+// production rate - and is the single source of truth for buttons that need
 // to react to the live tick.
 
 import type { ResourceAmounts } from './economy.shared';

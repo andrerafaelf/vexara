@@ -42,7 +42,7 @@ export default function Username({
   const resolvedTitle =
     title ??
     (isFounder
-      ? 'Alpha Commander — Vexara founding supporter'
+      ? 'Alpha Commander - Vexara founding supporter'
       : supporterTier === 'commander'
         ? 'Commander supporter'
         : supporterTier === 'officer'
@@ -54,7 +54,7 @@ export default function Username({
   const founderBadge = showFounderBadge && isFounder ? (
     <span
       className={`alpha-commander-badge${compactBadge ? ' alpha-commander-badge--compact' : ''}`}
-      title="Alpha Commander — granted during alpha for €25+ donation"
+      title="Alpha Commander - granted during alpha for €25+ donation"
       aria-label="Alpha Commander badge"
     >
       <span>Alpha Commander</span>
@@ -62,18 +62,30 @@ export default function Username({
   ) : null;
 
   if (linkToProfile && name) {
+    if (founderBadge) {
+      return (
+        <span style={{ display: 'inline-flex', alignItems: 'center', minWidth: 0 }}>
+          <Link
+            href={`/u/${encodeURIComponent(name)}`}
+            className={classes || undefined}
+            title={resolvedTitle}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {name}
+          </Link>
+          {founderBadge}
+        </span>
+      );
+    }
     return (
-      <>
-        <Link
-          href={`/u/${encodeURIComponent(name)}`}
-          className={classes || undefined}
-          title={resolvedTitle}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {name}
-        </Link>
-        {founderBadge}
-      </>
+      <Link
+        href={`/u/${encodeURIComponent(name)}`}
+        className={classes || undefined}
+        title={resolvedTitle}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {name}
+      </Link>
     );
   }
 

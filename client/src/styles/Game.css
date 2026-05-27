@@ -325,7 +325,7 @@
 }
 
 /* Brief flash when a fresh server snapshot lands, signals "live" without
-   being noisy. Background pulse only — keeps the value color (which already
+   being noisy. Background pulse only - keeps the value color (which already
    conveys resource type / capacity state) untouched. */
 .header-res.header-res-flash {
   animation: header-res-flash 700ms ease-out;
@@ -1741,7 +1741,7 @@ label {
     linear-gradient(180deg, rgba(255, 158, 61, 0.025) 0%, transparent 30%),
     var(--color-navy-900);
   border-bottom: 1px solid var(--border-default);
-  position: relative;
+  position: sticky;
 }
 
 /* Amber under-rule when scrolling content sits beneath the header */
@@ -2085,7 +2085,7 @@ label {
   border-radius: 0;
 }
 
-/* ── Ad banners (reduce visual chrome — they're already plain) ── */
+/* -- Ad banners (reduce visual chrome - they're already plain) -- */
 .ad-banner-top,
 .ad-banner-bottom {
   background: var(--color-navy-900);

@@ -332,7 +332,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
         const NPC_TYPE_NAMES = ['Resource Depot', 'Military Outpost', 'Supply Cache', 'Neutral Settlement', 'Reclaimed Outpost'];
         const preservedType = defenderNexus.nexusType ?? (NPC_TYPE_NAMES.includes(defenderNexus.name) ? defenderNexus.name : null);
         defenderTroopUpdates['nexusType'] = preservedType;
-        // Conquest always resets to base tier — nexusTypeDoubled is never inherited.
+        // Conquest always resets to base tier - nexusTypeDoubled is never inherited.
         // Player specialization (CC15) is the only path that grants doubled bonuses.
         defenderTroopUpdates['nexusTypeDoubled'] = false;
         defenderTroopUpdates['conqueredAt'] = new Date();
@@ -405,10 +405,14 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
       if (n > 0) defenderInitial[k] = n;
     }
 
+    // Conquest attacks complete immediately: the overseer settled into the
+    // captured nexus so there are no troops returning and no return trip needed.
+    const resolvedStatus = conquered ? 'completed' : 'returning';
+
     await prisma.attack.update({
       where: { id: attack.id },
       data: {
-        status: 'returning', returnsAt,
+        status: resolvedStatus, returnsAt: conquered ? null : returnsAt,
         result: {
           attackerLosses, defenderLosses, resourcesStolen, survivingTroops,
           victory: attackerWins, conquered, remainingControl: newControlLevel,

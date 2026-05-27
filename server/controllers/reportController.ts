@@ -190,7 +190,7 @@ export async function getActivitySummary(req: AuthRequest, res: Response): Promi
   }
 }
 
-// Battle log for a nexus — last 5 completed attacks the requesting user was personally involved in.
+// Battle log for a nexus - last 5 completed attacks the requesting user was personally involved in.
 export async function getNexusHistory(req: AuthRequest, res: Response): Promise<void> {
   try {
     const nexusId = parseInt(req.params.nexusId);

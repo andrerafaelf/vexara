@@ -270,7 +270,7 @@ export async function processGalaxyEvents(): Promise<void> {
           await notifyOwnersNearEvent(
             galaxy.id, created.x, created.y,
             created.title,
-            `${created.title} at (${created.x}|${created.y}) — check the galaxy map.`,
+            `${created.title} at (${created.x}|${created.y}) - check the galaxy map.`,
             `galaxy-event-${created.id}`,
           );
         }

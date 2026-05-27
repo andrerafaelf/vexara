@@ -1616,7 +1616,7 @@ body:has(.warroom-modal-overlay) { overflow: hidden; }
   .warroom-rail { grid-row: 1 / span 2; }
   .warroom-body--tab-board .warroom-thread { display: none; }
   .warroom-body--tab-thread .warroom-main { display: none; }
-  /* If no operation is selected, no tabs render — main pane should still
+  /* If no operation is selected, no tabs render - main pane should still
      fill, so collapse the empty tab row by selecting only when tabs exist. */
   .warroom-body:not(:has(.warroom-mobile-tabs)) {
     grid-template-rows: 1fr;

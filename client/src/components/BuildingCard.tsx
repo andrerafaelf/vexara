@@ -10,7 +10,7 @@ import type { Nexus } from '@/types/game';
 // Per-card props. The closure-bound helpers from NexusView are passed in as
 // props rather than reimplemented here, so this extraction is purely a JSX
 // move with zero behavior change. A future PR can lift the helpers to module
-// scope and shrink this prop list — out of scope for now.
+// scope and shrink this prop list - out of scope for now.
 export interface BuildingCardProps {
   buildingKey: string;
   level: number;
@@ -19,7 +19,7 @@ export interface BuildingCardProps {
   // free of the 1Hz clock subscription is the whole reason the card subscribes
   // itself: NexusView is too large to re-render every second.
   nexusId: string;
-  // Static label / image dictionaries — looked up by buildingKey.
+  // Static label / image dictionaries - looked up by buildingKey.
   buildingName: string;
   buildingDescription: string;
   buildingImage?: { src?: string } | unknown;
@@ -75,7 +75,7 @@ function BuildingCardInner(props: BuildingCardProps) {
   // Compute static gates first using the snapshot (no 1Hz subscription) so we
   // can decide whether the per-second clock subscription is even worth it.
   // If the card is at max, has no cost, is queue-blocked, or fails the
-  // prerequisites check, the affordability state doesn't matter — ticking
+  // prerequisites check, the affordability state doesn't matter - ticking
   // would just waste a render per second.
   const firstQueuedForBuilding = firstQueuedIndex >= 0 ? nexus.buildQueue[firstQueuedIndex] : undefined;
   const plannedLevel = level + queuedCount;

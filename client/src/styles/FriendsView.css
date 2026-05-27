@@ -457,7 +457,7 @@
   letter-spacing: 0.08em;
 }
 
-/* Chat bubbles: keep them sharp, but they're chat bubbles —
+/* Chat bubbles: keep them sharp, but they're chat bubbles -
    allow a tiny radius for visual difference between sender/recipient.
    Pass C otherwise = zero. */
 .friends-chat-bubble {

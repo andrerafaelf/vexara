@@ -79,8 +79,8 @@ export async function checkAndGrantToken(refereeId: number, currentPoints: numbe
       data: { referrerId: referee.referredById, refereeId, galaxyId: -galaxyId },
     });
     void sendPushToUser(referee.referredById, NOTIF.TOKEN_GRANTED, {
-      title: 'Referral reward — Early Scout',
-      body: `${refName} is active — you earned 1 token. Keep an eye out: 2 more coming when they hit ${REFERRAL_THRESHOLD} pts.`,
+      title: 'Referral reward - Early Scout',
+      body: `${refName} is active - you earned 1 token. Keep an eye out: 2 more coming when they hit ${REFERRAL_THRESHOLD} pts.`,
       tag: `token-referral-early-${refereeId}-${galaxyId}`,
       data: { url: '/profile' },
     });
@@ -106,7 +106,7 @@ export async function checkAndGrantToken(refereeId: number, currentPoints: numbe
   });
 
   void sendPushToUser(referee.referredById, NOTIF.TOKEN_GRANTED, {
-    title: "Commander's Cache — 2 tokens earned",
+    title: "Commander's Cache - 2 tokens earned",
     body: `${refName} hit ${REFERRAL_THRESHOLD} points. Spend your tokens on instant building levels or free troops.`,
     tag: `token-referral-${refereeId}-${galaxyId}`,
     data: { url: '/profile' },

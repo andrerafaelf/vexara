@@ -29,7 +29,7 @@ export function useCanAfford(
   const live = useLiveResources(nexusId);
 
   if (!cost) {
-    // No cost (e.g. building at max level) — treat as "always affordable" so
+    // No cost (e.g. building at max level) - treat as "always affordable" so
     // callers can compose this with their own atMax / queueFull gates.
     return { canAfford: true, secondsUntilAffordable: 0 };
   }

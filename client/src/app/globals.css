@@ -74,7 +74,7 @@
   --danger: var(--color-rose-500);
   --danger-soft: rgba(248, 81, 73, 0.14);
 
-  /* ── Radii (sharpened for industrial look — Pass C: near-zero) ── */
+  /* -- Radii (sharpened for industrial look - Pass C: near-zero) -- */
   --radius-xs: 0;
   --radius-sm: 0;
   --radius-md: 0;
@@ -178,7 +178,7 @@ body {
   position: relative;
 }
 
-/* Global grain — very subtle, applied once at the body level so every
+/* Global grain - very subtle, applied once at the body level so every
    screen (landing, codex, in-game) shares the same hand-built texture.
    Keep opacity low; this is a finish, not a feature. */
 body::before {
@@ -488,12 +488,12 @@ a:focus-visible,
   animation: vx-supporter-pulse 3s ease-in-out infinite;
 }
 
-/* Recruit: soft amber — the original glow, slightly dimmer */
+/* Recruit: soft amber - the original glow, slightly dimmer */
 .supporter-name.supporter-tier-recruit {
   animation: vx-supporter-pulse-recruit 3s ease-in-out infinite;
 }
 
-/* Officer: bright amber/gold — the original pulse, undimmed */
+/* Officer: bright amber/gold - the original pulse, undimmed */
 .supporter-name.supporter-tier-officer {
   animation: vx-supporter-pulse 3s ease-in-out infinite;
 }

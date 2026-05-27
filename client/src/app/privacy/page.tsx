@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy — Vexara',
+  title: 'Privacy Policy - Vexara',
   description: 'How Vexara collects, uses, and protects your data. No advertising trackers, no third-party analytics, no data sales.',
   alternates: { canonical: '/privacy' },
   robots: { index: true, follow: true },
@@ -18,7 +18,7 @@ export default function PrivacyPage() {
       <h2 style={{ color: '#fff', fontSize: 18, marginTop: 32 }}>What we collect</h2>
       <ul style={{ paddingLeft: 20 }}>
         <li><strong>Account data:</strong> username, email address, hashed password.</li>
-        <li><strong>Gameplay data:</strong> nexus state, troop counts, attack logs, market activity — all necessary for the game to function.</li>
+        <li><strong>Gameplay data:</strong> nexus state, troop counts, attack logs, market activity - all necessary for the game to function.</li>
         <li><strong>Technical data:</strong> IP address at registration (for spam prevention), browser/device type via User-Agent.</li>
         <li><strong>Optional attribution:</strong> UTM parameters if you arrived via a referral link (source, medium, campaign).</li>
       </ul>
@@ -35,8 +35,8 @@ export default function PrivacyPage() {
 
       <h2 style={{ color: '#fff', fontSize: 18, marginTop: 32 }}>Third-party services</h2>
       <ul style={{ paddingLeft: 20 }}>
-        <li><strong>Resend</strong> — used to send emails. Your email address is transmitted to their service for delivery.</li>
-        <li><strong>Ko-fi</strong> — if you make a voluntary donation, Ko-fi processes the payment. We receive a webhook with your public Ko-fi profile name and email.</li>
+        <li><strong>Resend</strong> - used to send emails. Your email address is transmitted to their service for delivery.</li>
+        <li><strong>Ko-fi</strong> - if you make a voluntary donation, Ko-fi processes the payment. We receive a webhook with your public Ko-fi profile name and email.</li>
       </ul>
 
       <h2 style={{ color: '#fff', fontSize: 18, marginTop: 32 }}>Data retention and deletion</h2>

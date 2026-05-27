@@ -234,7 +234,7 @@
   50%      { opacity: 0.4; transform: scale(0.85); }
 }
 
-/* Title — three lines, mixed weight, asymmetric tracking */
+/* Title - three lines, mixed weight, asymmetric tracking */
 .lp-hero-title {
   grid-column: 1 / 2;
   min-width: 0;
@@ -1005,7 +1005,7 @@
   transform: translateY(4px);
 }
 
-/* The "stamp" — circular notarised mark */
+/* The "stamp" - circular notarised mark */
 .lp-founder-stamp {
   display: flex;
   justify-content: center;

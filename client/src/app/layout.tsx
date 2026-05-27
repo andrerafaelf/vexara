@@ -9,7 +9,7 @@ import './globals.css';
 
 const SITE_URL = 'https://vexara.world';
 const SITE_NAME = 'Vexara';
-const DEFAULT_TITLE = 'Vexara — Free Browser-Based 4X Strategy Game';
+const DEFAULT_TITLE = 'Vexara - Free Browser-Based 4X Strategy Game';
 const DEFAULT_DESCRIPTION =
   'Vexara is a free browser-based 4X strategy game set in a persistent sci-fi galaxy. Build your nexus, command 12 unit types, forge alliances, and wage real-time war with players worldwide. No resets. No pay-to-win. Play in your browser.';
 const DEFAULT_OG_IMAGE = `${SITE_URL}/vexara-overview.png`;
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
         url: DEFAULT_OG_IMAGE,
         width: 1280,
         height: 720,
-        alt: 'Vexara — a persistent sci-fi 4X galaxy',
+        alt: 'Vexara - a persistent sci-fi 4X galaxy',
         type: 'image/png',
       },
     ],

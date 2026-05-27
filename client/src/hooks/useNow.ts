@@ -75,7 +75,7 @@ export function useNow(): number {
 }
 
 // Stable no-op subscribe used by useGatedNow when disabled, so the calling
-// component is wired to a store that *never* notifies — re-renders only when
+// component is wired to a store that *never* notifies - re-renders only when
 // `enabled` itself flips.
 function noopSubscribe(): () => void {
   return () => {};

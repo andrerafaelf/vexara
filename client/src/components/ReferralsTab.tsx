@@ -366,7 +366,7 @@ export default function ReferralsTab() {
         <section className="referrals-section">
           <h3 className="referrals-section-title">Invite a Friend</h3>
           <p className="referrals-hint">
-            Share your invite link. Your recruit gets a resource head-start on day one. You earn tokens you can cash in for instant building levels or free troops — at two points in their journey.
+            Share your invite link. Your recruit gets a resource head-start on day one. You earn tokens you can cash in for instant building levels or free troops - at two points in their journey.
           </p>
           <div className="referrals-invite-block">
             <div className="referrals-invite-row">
@@ -395,12 +395,12 @@ export default function ReferralsTab() {
           </div>
           <div className="referrals-reward-explainer">
             <div className="referrals-reward-explainer-item">
-              <span className="referrals-reward-explainer-you">You — 100 pts</span>
-              <span>1 token (Early Scout) — they survived their first day, you get rewarded</span>
+              <span className="referrals-reward-explainer-you">You - 100 pts</span>
+              <span>1 token (Early Scout) - they survived their first day, you get rewarded</span>
             </div>
             <div className="referrals-reward-explainer-item">
-              <span className="referrals-reward-explainer-you">You — 1,000 pts</span>
-              <span>Commander's Cache — 2 tokens for instant building upgrades or troops</span>
+              <span className="referrals-reward-explainer-you">You - 1,000 pts</span>
+              <span>Commander's Cache - 2 tokens for instant building upgrades or troops</span>
             </div>
             <div className="referrals-reward-explainer-item">
               <span className="referrals-reward-explainer-them">They get</span>

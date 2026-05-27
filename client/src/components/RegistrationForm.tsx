@@ -119,12 +119,12 @@ function captureUtm(): Utm {
 }
 
 const SCREENSHOTS: { src: string; label: string; caption: string }[] = [
-  { src: '/vexara-overview.png',      label: 'Overview',       caption: 'Your nexus at a glance — resources, buildings, and queues' },
+  { src: '/vexara-overview.png',      label: 'Overview',       caption: 'Your nexus at a glance - resources, buildings, and queues' },
   { src: '/vexara-starfield.png',     label: 'Galaxy Map',     caption: 'A living galaxy shared by real players, running 24/7' },
   { src: '/vexara-factions.png',      label: 'Factions',       caption: 'Join a faction, climb the leaderboard, and wage galaxy-wide wars' },
   { src: '/vexara-diplomacy.png',     label: 'Diplomacy',      caption: 'Sign treaties, declare war, or negotiate vassal terms in real time' },
   { src: '/vexara-combatreport.png',  label: 'Combat Report',  caption: 'Detailed blow-by-blow after every raid, strike, or conquest' },
-  { src: '/vexara-troops.png',        label: 'Troops',         caption: 'Twelve unit types — each with attack, defense, speed, and carry' },
+  { src: '/vexara-troops.png',        label: 'Troops',         caption: 'Twelve unit types - each with attack, defense, speed, and carry' },
   { src: '/vexara-buildings.png',     label: 'Buildings',      caption: 'Eight core buildings drive your economy and military' },
   { src: '/vexara-market.png',        label: 'Market',         caption: 'Trade resources with other players at dynamic exchange rates' },
   { src: '/vexara-profile.png',       label: 'Profile',        caption: 'Track your stats, badges, and founder status' },
@@ -241,7 +241,7 @@ const RegistrationForm: React.FC = () => {
   return (
     <div className="auth-container">
       <div className="auth-panel-left">
-        {/* Screenshot carousel — images shown in full, no cropping */}
+        {/* Screenshot carousel - images shown in full, no cropping */}
         <div
           className="lp-carousel"
           onMouseEnter={() => setPaused(true)}
@@ -484,7 +484,7 @@ const RegistrationForm: React.FC = () => {
           )}
         </div>
 
-        {/* Mobile-only screenshot carousel — below the form, hidden on desktop */}
+        {/* Mobile-only screenshot carousel - below the form, hidden on desktop */}
         <div
           className="mobile-carousel"
           onMouseEnter={() => setPaused(true)}

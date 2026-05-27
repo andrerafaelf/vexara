@@ -3,7 +3,7 @@ import prisma from '../lib/prisma.js';
 import { checkAndGrantMilestoneToken, checkAndGrantToken } from './referralService.js';
 
 export class ResourceConflictError extends Error {
-  constructor() { super('Resource state changed — please retry'); this.name = 'ResourceConflictError'; }
+  constructor() { super('Resource state changed - please retry'); this.name = 'ResourceConflictError'; }
 }
 
 /**
