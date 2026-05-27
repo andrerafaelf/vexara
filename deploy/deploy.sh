@@ -115,25 +115,17 @@ fi
 echo "[deploy] Pulling images..."
 $COMPOSE pull --quiet
 
-# Rolling restart: database first, then backends, then frontends
-# Each service is restarted individually so the others stay up.
+# Rolling restart: database first, then backends, then frontends, nginx last.
+# nginx is handled specially: if the container is already running we reload its
+# config in-place (nginx -s reload) so port 443 is never closed — zero downtime.
+# A full recreate only happens when the container does not yet exist.
 SERVICES_ORDER="postgres server admin-server client admin-client loki promtail grafana pgadmin nginx"
 
-for SERVICE in $SERVICES_ORDER; do
-  echo "[deploy] Updating $SERVICE..."
-
-  # For nginx, force recreate so config file changes are picked up and
-  # any stale mount from a previous (broken) deploy is discarded.
-  if [ "$SERVICE" = "nginx" ]; then
-    $COMPOSE up -d --no-deps --force-recreate "$SERVICE"
-  else
-    $COMPOSE up -d --no-deps "$SERVICE"
-  fi
-
-  SERVICE_TIMEOUT=$TIMEOUT
-  [ "$SERVICE" = "grafana" ] && SERVICE_TIMEOUT=$GRAFANA_TIMEOUT
-
-  ELAPSED=0
+wait_healthy() {
+  local SERVICE="$1"
+  local SERVICE_TIMEOUT="$2"
+  local ELAPSED=0
+  local HEALTH RUNNING
   while true; do
     HEALTH=$($COMPOSE ps -q "$SERVICE" | xargs docker inspect --format='{{.State.Health.Status}}' 2>/dev/null || echo '')
     case "$HEALTH" in
@@ -143,7 +135,6 @@ for SERVICE in $SERVICES_ORDER; do
         $COMPOSE logs --tail=50 "$SERVICE"
         exit 1
         ;;
-      # empty string = no healthcheck defined, container is running
       '')
         RUNNING=$($COMPOSE ps -q "$SERVICE" | xargs docker inspect --format='{{.State.Running}}' 2>/dev/null || echo 'false')
         [ "$RUNNING" = "true" ] && break
@@ -157,8 +148,38 @@ for SERVICE in $SERVICES_ORDER; do
     sleep 5
     ELAPSED=$((ELAPSED + 5))
   done
-
   echo "[deploy] $SERVICE is up (health: ${HEALTH:-none})"
+}
+
+for SERVICE in $SERVICES_ORDER; do
+  echo "[deploy] Updating $SERVICE..."
+
+  SERVICE_TIMEOUT=$TIMEOUT
+  [ "$SERVICE" = "grafana" ] && SERVICE_TIMEOUT=$GRAFANA_TIMEOUT
+
+  if [ "$SERVICE" = "nginx" ]; then
+    NGINX_ID=$($COMPOSE ps -q nginx 2>/dev/null || true)
+    if [ -n "$NGINX_ID" ] && [ "$(docker inspect --format='{{.State.Running}}' "$NGINX_ID" 2>/dev/null)" = "true" ]; then
+      # Container is running: test the new config then reload in-place.
+      # nginx -t runs inside the container against the already-mounted config
+      # files (written above). If the test fails we abort before touching traffic.
+      echo "[deploy] nginx already running — testing config before reload..."
+      if docker exec "$NGINX_ID" nginx -t 2>&1; then
+        docker exec "$NGINX_ID" nginx -s reload
+        echo "[deploy] nginx config reloaded (no downtime)"
+      else
+        echo "[deploy] ERROR: nginx config test failed — aborting to avoid outage" >&2
+        exit 1
+      fi
+    else
+      # First deploy or container was stopped — do a normal start.
+      $COMPOSE up -d --no-deps --force-recreate nginx
+      wait_healthy nginx $SERVICE_TIMEOUT
+    fi
+  else
+    $COMPOSE up -d --no-deps "$SERVICE"
+    wait_healthy "$SERVICE" $SERVICE_TIMEOUT
+  fi
 done
 
 # Remove dangling images to recover disk space

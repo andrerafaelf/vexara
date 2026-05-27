@@ -318,7 +318,7 @@ export async function transferResources(req: AuthRequest, res: Response): Promis
       return;
     }
 
-    const [from, to] = await Promise.all([
+    let [from, to] = await Promise.all([
       nexusService.getNexusById(parseInt(String(fromNexusId))),
       nexusService.getNexusById(parseInt(String(toNexusId))),
     ]);
@@ -335,6 +335,10 @@ export async function transferResources(req: AuthRequest, res: Response): Promis
       res.status(403).json({ error: 'Nexus is in a different galaxy' });
       return;
     }
+
+    // Accumulate pending production before reading resource values so the
+    // stale DB baseline doesn't cause resources to vanish on transfer.
+    [from, to] = await Promise.all([refreshResources(from), refreshResources(to)]);
 
     const sendBiomass = Math.min(Math.max(0, Math.floor(Number(biomass))), Math.floor(from.biomass));
     const sendAlloy = Math.min(Math.max(0, Math.floor(Number(alloy))), Math.floor(from.alloy));
