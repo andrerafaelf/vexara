@@ -52,7 +52,6 @@ export const TROOP_STATS: Record<TroopKey, TroopStat> = {
 };
 
 const TROOP_KEYS = Object.keys(TROOP_STATS) as TroopKey[];
-export const DECISIVE_WIPE_POWER_RATIO = 8;
 
 export function computeTroopTotal(force: Partial<Record<TroopKey, number>>, includeOverseer = true): number {
   return TROOP_KEYS
@@ -134,39 +133,12 @@ export function computeClassWeightedAttack(
 // Variance shrinks as stack size grows (law of large numbers feel).
 export function computeLossesForLoser(
   force: Partial<Record<TroopKey, number>> | Record<string, unknown>,
-  powerRatio: number, // winner_power / loser_power, always >= 1
-  seed: number,       // deterministic seed for reproducibility
 ): Partial<Record<TroopKey, number>> {
   const losses: Partial<Record<TroopKey, number>> = {};
-  let prng = seed;
-  const lcg = () => {
-    prng = (prng * 1664525 + 1013904223) & 0xffffffff;
-    return (prng >>> 0) / 4294967296;
-  };
-
-  // Base loss rate scales with how badly they lost. At powerRatio=1 (evenly
-  // matched loss) ~50%; at ratio=2 (badly outmatched) ~75%; capped at 90%.
-  const baseLossRate = Math.min(0.90, 0.50 + (powerRatio - 1) * 0.20);
-
   for (const key of TROOP_KEYS) {
     if (key === 'overseer') continue;
     const count = Number((force as Record<string, unknown>)[key] || 0);
-    if (count <= 0) continue;
-
-    if (powerRatio >= DECISIVE_WIPE_POWER_RATIO) {
-      losses[key] = count;
-      continue;
-    }
-
-    // Variance: ±10% for small stacks (<20), ±5% for large stacks (>200)
-    const varianceMagnitude = count < 20 ? 0.10 : count < 200 ? 0.06 : 0.03;
-    const variance = (lcg() - 0.5) * 2 * varianceMagnitude;
-
-    // Higher defense stat = more survivable; higher defense → lower loss rate.
-    // defSurvivalBonus ranges 0..0.35 (max defense 210 of 600 scale).
-    const defSurvivalBonus = TROOP_STATS[key].defense / 600;
-    const rawRate = Math.min(0.95, Math.max(0.05, baseLossRate * (1 - defSurvivalBonus * 0.5) + variance));
-    losses[key] = Math.max(0, Math.ceil(count * rawRate));
+    if (count > 0) losses[key] = count;
   }
   return losses;
 }

@@ -694,21 +694,15 @@ function EspionagePanel() {
 
       <article id="espionage-defense" className="cx-entry">
         <div className="cx-entry-head">
+          <div className="cx-entry-icon">
+            <span className="cx-rail-link-icon-text" style={{ fontSize: 48, lineHeight: '72px' }}>⛨</span>
+          </div>
           <div className="cx-entry-titleblock">
             <span className="cx-entry-idx">№ 03 / ESP</span>
             <h3 className="cx-entry-title">Counter-intelligence</h3>
             <p className="cx-entry-role">What you can do when the operatives are pointed at YOU.</p>
           </div>
         </div>
-
-        <aside className="cx-callout">
-          <span className="cx-callout-tag">DEFENSE</span>
-          <ul>
-            {ESPIONAGE_DOC.defense.map((line, i) => (
-              <li key={i}>{line}</li>
-            ))}
-          </ul>
-        </aside>
 
         <div className="cx-entry-grid">
           <div className="cx-block">
@@ -728,6 +722,15 @@ function EspionagePanel() {
             </ul>
           </div>
         </div>
+
+        <aside className="cx-callout">
+          <span className="cx-callout-tag">DEFENSE</span>
+          <ul>
+            {ESPIONAGE_DOC.defense.map((line, i) => (
+              <li key={i}>{line}</li>
+            ))}
+          </ul>
+        </aside>
 
         <span className="cx-entry-divider" aria-hidden="true" />
       </article>

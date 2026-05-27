@@ -415,7 +415,7 @@ export async function specializeNexus(req: AuthRequest, res: Response): Promise<
     if (nexus.commandCore < COMMAND_CORE_SPECIALIZE_LEVEL) {
       res.status(400).json({ error: `Command Core must be level ${COMMAND_CORE_SPECIALIZE_LEVEL} or higher to specialize` }); return;
     }
-    if (nexus.nexusType || (nexus as unknown as { nexusTypeLockedAt?: Date | null }).nexusTypeLockedAt) {
+    if ((nexus as unknown as { nexusTypeLockedAt?: Date | null }).nexusTypeLockedAt) {
       res.status(400).json({ error: 'This nexus is already specialized' }); return;
     }
 

@@ -17,7 +17,7 @@ export function getInFlightTroops(nexusId: number) {
 
 export function getOutboundTransferTroops(nexusId: number) {
   return prisma.troopTransfer.findMany({
-    where: { ownerNexusId: nexusId },
+    where: { ownerNexusId: nexusId, status: 'traveling' },
     select: { troops: true },
   });
 }
