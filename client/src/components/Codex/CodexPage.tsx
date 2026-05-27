@@ -25,6 +25,7 @@ export default function CodexPage() {
     const observers: IntersectionObserver[] = [];
     const seen = new Map<string, number>();
 
+    // Observe each entry and track its intersection ratio. On change, pick the most visible entry to set as active.
     entries.forEach((id) => {
       const el = document.getElementById(id);
       if (!el) return;
