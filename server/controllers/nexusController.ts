@@ -418,6 +418,9 @@ export async function specializeNexus(req: AuthRequest, res: Response): Promise<
     if ((nexus as unknown as { nexusTypeLockedAt?: Date | null }).nexusTypeLockedAt) {
       res.status(400).json({ error: 'This nexus is already specialized' }); return;
     }
+    if (nexus.nexusType && nexus.nexusType !== 'Neutral Settlement') {
+      res.status(400).json({ error: 'This nexus already has a type assigned' }); return;
+    }
 
     const updated = await prisma.nexus.update({
       where: { id: nexusId },

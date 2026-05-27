@@ -1961,7 +1961,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
         <div className="buildings-tab" style={activeTab !== 'buildings' ? { display: 'none' } : undefined}>
             <h3>Buildings</h3>
 
-            {nexus.buildings.commandCore >= 15 && !nexus.nexusTypeLockedAt && (
+            {nexus.buildings.commandCore >= 15 && !nexus.nexusTypeLockedAt && (!nexus.nexusType || nexus.nexusType === 'Neutral Settlement') && (
               <div className="nexus-spec-prompt" role="alert">
                 <span className="nexus-spec-prompt-icon" aria-hidden="true">
                   <Zap size={16} />
