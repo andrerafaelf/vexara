@@ -2020,7 +2020,6 @@
 /* Username's outer wrapper (inline-flex span without a class) must also shrink */
 .players-card .factions-browser-card-identity > span {
   min-width: 0;
-  overflow: hidden;
 }
 
 /* The link or text-span carrying the name class truncates */

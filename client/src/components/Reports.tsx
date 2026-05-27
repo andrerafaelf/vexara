@@ -57,6 +57,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
   usePageReady(!loading, 'reports');
   const [showAttackForm, setShowAttackForm] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [sharePreview, setSharePreview] = useState<string | null>(null);
   const [attackTroops, setAttackTroops] = useState({
     lancerDrone: 0,
     assaultTrooper: 0,
@@ -107,43 +108,117 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
     });
   }, [selectedReport?._id]);
 
-  const handleShareToChat = async (report: Attack) => {
-    if (!factionId) return;
-    setSharing(true);
-    try {
-      const isMyAttack = isAttacker(report);
-      const scoutReport = isScoutReport(report);
-      const won = isMyAttack ? report.result.victory : !report.result.victory;
-      const outcome = scoutReport ? 'SCOUT' : won ? 'VICTORY' : 'DEFEAT';
-      const attacker = report.attacker.user?.username ?? 'Unknown';
-      const defender = report.defender.user?.username ?? 'Unknown';
-      const defNexus = report.defender.nexus?.name ?? 'Unknown';
-      const defCoords = `${report.defender.nexus?.x ?? '?'}|${report.defender.nexus?.y ?? '?'}`;
+  const buildShareText = (report: Attack): string => {
+    const myAttack = isAttacker(report);
+    const scout = isScoutReport(report);
+    const won = myAttack ? report.result.victory : !report.result.victory;
+    const outcome = scout ? 'SCOUT REPORT' : won ? 'VICTORY' : 'DEFEAT';
 
-      const lines: string[] = [];
-      lines.push(`⚔ COMBAT REPORT — ${outcome}`);
-      lines.push(`${attacker} → ${defender} (${defNexus} ${defCoords})`);
+    const attackerName = report.attacker.user?.username ?? 'Unknown';
+    const defenderName = report.defender.user?.username ?? 'Unknown';
+    const atkNexus = `${report.attacker.nexus?.name ?? 'Unknown'} (${report.attacker.nexus?.x ?? '?'}|${report.attacker.nexus?.y ?? '?'})`;
+    const defNexus = `${report.defender.nexus?.name ?? 'Unknown'} (${report.defender.nexus?.x ?? '?'}|${report.defender.nexus?.y ?? '?'})`;
 
-      if (!scoutReport) {
-        const totalSent = Object.values(report.troops ?? {}).reduce((a: number, b) => a + (b as number), 0);
-        const attackerLost = Object.values(report.result?.attackerLosses ?? {}).reduce((a: number, b) => a + (b as number), 0);
-        const defenderLost = Object.values(report.result?.defenderLosses ?? {}).reduce((a: number, b) => a + (b as number), 0);
-        lines.push(`Attacker: ${totalSent} sent, ${attackerLost} lost`);
-        lines.push(`Defender: ${defenderLost} lost`);
+    const lines: string[] = [];
+    const sep = '--------------------------------';
 
-        const loot = report.result?.resourcesStolen;
-        if (loot && (loot.biomass > 0 || loot.alloy > 0 || loot.ore > 0)) {
-          const parts: string[] = [];
-          if (loot.biomass > 0) parts.push(`${loot.biomass} biomass`);
-          if (loot.alloy > 0) parts.push(`${loot.alloy} alloy`);
-          if (loot.ore > 0) parts.push(`${loot.ore} ore`);
-          lines.push(`Plundered: ${parts.join(', ')}`);
-        }
-        if (report.result?.conquered) lines.push('🏴 NEXUS CONQUERED');
+    lines.push(`[ COMBAT LOG — ${outcome} ]`);
+    lines.push(sep);
+    lines.push(`Date:     ${formatDate(report.arrivesAt)}`);
+    lines.push(`Striker:  ${attackerName} from ${atkNexus}`);
+    lines.push(`Defender: ${defenderName} from ${defNexus}`);
+
+    if (!scout) {
+      if (report.result?.remainingControl !== undefined && report.result.remainingControl !== null) {
+        lines.push(`Control:  ${report.result.remainingControl}/100${report.result.conquered ? ' (CONQUERED)' : ''}`);
+      }
+      if (report.result?.remainingNexusLife !== undefined && report.result.remainingNexusLife !== null) {
+        lines.push(`Nexus Life: ${report.result.remainingNexusLife}/100`);
+      }
+    }
+
+    if (!scout) {
+      const atkLosses: Record<string, number> = Object.fromEntries(
+        Object.entries(report.result?.attackerLosses ?? {}).map(([k, v]) => [k, v ?? 0])
+      );
+      if (report.result?.conquered && (report.troops?.overseer ?? 0) > 0) {
+        atkLosses.overseer = report.troops.overseer ?? 0;
       }
 
-      await sendFactionMessage(factionId, lines.join('\n'));
+      lines.push('');
+      lines.push('[ ATTACKER FORCES ]');
+      const atkRows = Object.entries(report.troops ?? {}).filter(([, c]) => Number(c) > 0);
+      if (atkRows.length === 0) {
+        lines.push('  (none)');
+      } else {
+        lines.push(`  ${'Unit'.padEnd(24)}${'Sent'.padStart(6)}${'Lost'.padStart(6)}${'Surv'.padStart(6)}`);
+        for (const [type, count] of atkRows) {
+          const lost = atkLosses[type] ?? 0;
+          const surv = Number(count) - lost;
+          lines.push(`  ${(troopNames[type] ?? type).padEnd(24)}${String(count).padStart(6)}${String(lost).padStart(6)}${String(surv).padStart(6)}`);
+        }
+      }
+
+      lines.push('');
+      lines.push('[ DEFENDER FORCES ]');
+      const defRows = Object.entries(report.result?.defenderLosses ?? {}).filter(([, v]) => Number(v) > 0);
+      if (defRows.length === 0) {
+        lines.push('  (no losses recorded)');
+      } else {
+        lines.push(`  ${'Unit'.padEnd(24)}${'Lost'.padStart(6)}`);
+        for (const [type, lost] of defRows) {
+          lines.push(`  ${(troopNames[type] ?? type).padEnd(24)}${String(lost).padStart(6)}`);
+        }
+      }
+
+      const loot = report.result?.resourcesStolen;
+      if (loot && (loot.biomass > 0 || loot.alloy > 0 || loot.ore > 0)) {
+        lines.push('');
+        lines.push('[ RESOURCES PLUNDERED ]');
+        if (loot.biomass > 0) lines.push(`  Biomass: ${loot.biomass}`);
+        if (loot.alloy > 0)   lines.push(`  Alloy:   ${loot.alloy}`);
+        if (loot.ore > 0)     lines.push(`  Ore:     ${loot.ore}`);
+      }
+
+      if (report.result?.buildingDamage && report.result.buildingDamage.length > 0) {
+        lines.push('');
+        lines.push('[ BUILDINGS DAMAGED ]');
+        lines.push(`  ${'Building'.padEnd(22)}${'Before'.padStart(8)}${'After'.padStart(8)}`);
+        for (const d of report.result.buildingDamage) {
+          lines.push(`  ${(buildingNames[d.building] ?? d.building).padEnd(22)}${`Lv ${d.from}`.padStart(8)}${`Lv ${d.to}`.padStart(8)}`);
+        }
+      }
+    }
+
+    if (scout && report.result?.intel) {
+      const troops = report.result.intel.troops ?? {};
+      const detected = Object.entries(troops).filter(([, c]) => Number(c) > 0);
+      lines.push('');
+      lines.push('[ ENEMY TROOPS DETECTED ]');
+      if (detected.length === 0) {
+        lines.push('  No enemy troops detected.');
+      } else {
+        for (const [type, count] of detected) {
+          lines.push(`  ${(troopNames[type] ?? type).padEnd(24)}${String(count).padStart(6)}`);
+        }
+      }
+    }
+
+    lines.push(sep);
+    return lines.join('\n');
+  };
+
+  const handleOpenSharePreview = (report: Attack) => {
+    setSharePreview(buildShareText(report));
+  };
+
+  const handleConfirmShare = async () => {
+    if (!factionId || !sharePreview) return;
+    setSharing(true);
+    try {
+      await sendFactionMessage(factionId, sharePreview);
       toast('Combat log shared to faction chat', 'success');
+      setSharePreview(null);
     } catch {
       toast('Failed to share to chat', 'error');
     } finally {
@@ -270,7 +345,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
             {factionId && (
               <button
                 className="btn-share-chat"
-                onClick={() => handleShareToChat(selectedReport)}
+                onClick={() => handleOpenSharePreview(selectedReport)}
                 disabled={sharing}
                 title="Share this report to faction chat"
               >
@@ -561,8 +636,31 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
             </div>
           )}
         </div>
-      </div>
-    );
+
+      {sharePreview !== null && (
+        <div className="share-modal-backdrop" onClick={() => setSharePreview(null)}>
+          <div className="share-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="share-modal-header">
+              <span className="share-modal-title">Preview — Post to Faction Chat</span>
+              <button className="share-modal-close" onClick={() => setSharePreview(null)} aria-label="Close">✕</button>
+            </div>
+            <div className="share-modal-body">
+              <pre className="share-modal-preview">{sharePreview}</pre>
+            </div>
+            <div className="share-modal-footer">
+              <button className="share-modal-cancel" onClick={() => setSharePreview(null)} disabled={sharing}>
+                Cancel
+              </button>
+              <button className="share-modal-confirm" onClick={handleConfirmShare} disabled={sharing}>
+                <Share2 size={13} aria-hidden="true" />
+                {sharing ? 'Posting…' : 'Post to Faction Chat'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
   }
 
   return (

@@ -64,7 +64,7 @@ export default function Username({
   if (linkToProfile && name) {
     if (founderBadge) {
       return (
-        <span style={{ display: 'inline-flex', alignItems: 'center', minWidth: 0 }}>
+        <span style={{ display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center', minWidth: 0, gap: '4px' }}>
           <Link
             href={`/u/${encodeURIComponent(name)}`}
             className={classes || undefined}
