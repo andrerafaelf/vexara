@@ -489,7 +489,8 @@
   font-variant-numeric: tabular-nums;
 }
 
-.ps-streak-best {
+.ps-streak-best,
+.ps-streak-bonus {
   display: flex;
   flex-direction: column;
   align-items: center;

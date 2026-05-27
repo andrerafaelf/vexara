@@ -81,6 +81,11 @@ function fmt(n: number): string {
   return String(Math.round(n));
 }
 
+function getStreakMultiplier(streak: number): number {
+  const bonuses = [1, 1, 1.1, 1.2, 1.3, 1.5, 1.75, 2.0];
+  return bonuses[Math.min(streak, bonuses.length - 1)];
+}
+
 function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
     <div className="ps-card">
@@ -256,11 +261,15 @@ export default function PublicProfilePage() {
 
         {profile.streak && profile.streak.currentStreak > 0 && (
           <div className="ps-streak-card">
-            <div className="ps-streak-fire-bg" />
+            {profile.streak.currentStreak > 3 && <div className="ps-streak-fire-bg" />}
             <div className="ps-streak-content">
               <div className="ps-streak-info">
                 <span className="ps-streak-label">Current Streak</span>
                 <span className="ps-streak-value">{profile.streak.currentStreak} day{profile.streak.currentStreak !== 1 ? 's' : ''}</span>
+              </div>
+              <div className="ps-streak-bonus">
+                <span className="ps-streak-best-label">Bonus</span>
+                <span className="ps-streak-best-value">x{getStreakMultiplier(profile.streak.currentStreak).toFixed(1)}</span>
               </div>
               {profile.streak.longestStreak > profile.streak.currentStreak && (
                 <div className="ps-streak-best">

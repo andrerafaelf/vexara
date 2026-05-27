@@ -543,6 +543,8 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
 
   useEffect(() => {
     setActiveTabState(initialTab);
+    if (initialTab === 'map') setMapEverVisited(true);
+    if (initialTab === 'espionage') setEspionageEverVisited(true);
   }, [initialTab]);
 
   useEffect(() => {

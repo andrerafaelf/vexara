@@ -69,17 +69,17 @@ export default function DailyStreaks() {
 
   return (
     <div className="daily-streaks">
-      <div className="daily-streaks-fire-bg" />
       <div className="daily-streaks-header">
+        {data.currentStreak > 3 && <div className="daily-streaks-fire-bg" />}
         <div className="daily-streaks-title-row">
           <h3 className="daily-streaks-title">Daily Quests</h3>
           {data.currentStreak > 0 && (
             <span className="daily-streaks-badge">{data.currentStreak} day streak</span>
           )}
+          {data.currentStreak > 0 && (
+            <span className="daily-streaks-bonus">x{data.streakMultiplier.toFixed(1)} bonus</span>
+          )}
         </div>
-        {data.streakMultiplier > 1 && (
-          <span className="daily-streaks-bonus">x{data.streakMultiplier.toFixed(1)} reward bonus</span>
-        )}
       </div>
 
       {data.streakAboutToExpire && !data.claimed && (

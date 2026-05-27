@@ -273,6 +273,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
   // Pre-select current nexus on mount (desktop only, on mobile this would
   // immediately pop the modal open before the user has interacted)
   useEffect(() => {
+    if (mode !== 'normal') return;
     if (isMobile) return;
     const selectCurrentNexus = async () => {
       try {
@@ -283,7 +284,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
       }
     };
     selectCurrentNexus();
-  }, [currentNexus._id, isMobile]);
+  }, [currentNexus._id, isMobile, mode]);
 
   // When arriving with ?attack=<nexusId> (from Reports / Espionage "Attack Again"),
   // jump to that target, select it, and open the attack form.
@@ -465,10 +466,11 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
   }, [currentNexus._id]);
 
   useEffect(() => {
+    if (mode !== 'normal') return;
     loadAttacks();
-  }, [loadAttacks]);
+  }, [loadAttacks, mode]);
 
-  useGameSocket({ onAttacksRefresh: () => loadAttacks() });
+  useGameSocket({ onAttacksRefresh: () => { if (mode === 'normal') loadAttacks(); } });
 
   useEffect(() => {
     getMyNexuses().then((r) => setOwnNexuses(r.data)).catch(() => {});

@@ -13,7 +13,7 @@ import '@/styles/Game.css';
 import { Nexus } from '@/types/game';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { startTransition, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const PWA_GUIDE_SEEN_KEY = 'pwa_guide_seen';
 const WYWA_SESSION_KEY = 'wywa_shown_session';
@@ -22,7 +22,13 @@ const SELECTED_NEXUS_KEY = 'selectedNexusId';
 type NexusTab = 'overview' | 'buildings' | 'troops' | 'deployed' | 'map' | 'espionage';
 
 function parseTab(value: string | null): NexusTab {
-  if (value === 'buildings' || value === 'troops' || value === 'map' || value === 'espionage') return value;
+  if (
+    value === 'buildings' ||
+    value === 'troops' ||
+    value === 'deployed' ||
+    value === 'map' ||
+    value === 'espionage'
+  ) return value;
   return 'overview';
 }
 
@@ -135,10 +141,8 @@ export default function NexusPage() {
   };
 
   const handleTabChange = (tab: NexusTab) => {
-    startTransition(() => {
-      const query = tab === 'overview' ? '' : `?tab=${tab}`;
-      router.replace(`/nexus/${nexusId}${query}`);
-    });
+    const query = tab === 'overview' ? '' : `?tab=${tab}`;
+    router.replace(`/nexus/${nexusId}${query}`, { scroll: false });
   };
 
   const handleUpdate = () => {
