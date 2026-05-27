@@ -154,7 +154,7 @@ jobs:
   build-admin-server:
     name: Build admin-server
     runs-on: ubuntu-latest
-    needs: [test-server, changes]
+    needs: [changes]
     if: github.ref == 'refs/heads/main' && needs.changes.outputs.admin-server == 'true'
     permissions:
       contents: read
@@ -227,7 +227,7 @@ jobs:
   build-admin-client:
     name: Build admin-client
     runs-on: ubuntu-latest
-    needs: [typecheck-client, changes]
+    needs: [changes]
     if: github.ref == 'refs/heads/main' && needs.changes.outputs.admin-client == 'true'
     permissions:
       contents: read
