@@ -337,11 +337,9 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
         defenderTroopUpdates['nexusTypeDoubled'] = false;
         defenderTroopUpdates['conqueredAt'] = new Date();
         conquered = true;
-        // The conquering overseer governs the new nexus rather than dying. It
-        // settles in at the conquered nexus and is removed from the returning
-        // force, so the attacker doesn't get a duplicate back home.
+        // Overseer survives conquest. Zero out the loss so survivingTroops
+        // includes it, and a stationed TroopTransfer is created below.
         attackerLosses.overseer = 0;
-        defenderTroopUpdates['overseer'] = overseerSent;
       }
     }
 
@@ -405,9 +403,23 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
       if (n > 0) defenderInitial[k] = n;
     }
 
-    // Conquest attacks complete immediately: the overseer settled into the
-    // captured nexus so there are no troops returning and no return trip needed.
+    // Conquest attacks complete immediately. Surviving troops are handled via
+    // a stationed TroopTransfer (created above) so the player can recall them.
     const resolvedStatus = conquered ? 'completed' : 'returning';
+
+    if (conquered && Object.keys(survivingTroops).length > 0) {
+      await prisma.troopTransfer.create({
+        data: {
+          galaxyId: attack.galaxyId,
+          ownerNexusId: attack.attackerNexusId!,
+          hostNexusId: attack.defenderNexusId!,
+          troops: survivingTroops,
+          status: 'stationed',
+          arrivesAt: null,
+          returnsAt: null,
+        },
+      });
+    }
 
     await prisma.attack.update({
       where: { id: attack.id },
