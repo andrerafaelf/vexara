@@ -5,6 +5,8 @@ import {
   computeClassWeightedAttack,
   computeLossesForLoser,
   computeLossesForWinner,
+  computeTroopTotal,
+  areAllDefendingTroopsEliminated,
   TROOP_STATS,
 } from './combatMath.js';
 import { buildDetailedScoutIntel } from './scouting.js';
@@ -13,6 +15,7 @@ import { resolveEventForNexus } from './galaxyEvents.js';
 import { notifyAttackUpdate, notifyTransferUpdate, notifyReportUpdate, notifyNexusConquered } from '../services/warRoomSocket.js';
 import { getNexusTypeEffectiveMultipliers } from './economy.js';
 import type { TroopKey } from '../types/index.js';
+import { logInfo, logWarn } from './logger.js';
 
 async function logFactionEvent(userId: number, galaxyId: number, type: string, actorName?: string, targetName?: string, meta?: string) {
   const membership = await prisma.factionMember.findUnique({
@@ -34,6 +37,137 @@ const TROOP_POPULATION_COST: Record<TroopKey, number> = {
 };
 
 type AttackWithNexuses = Attack & { attackerNexus: Nexus | null; defenderNexus: Nexus | null };
+
+function countTroops(troops: unknown): number {
+  const source = troops && typeof troops === 'object' ? troops as Partial<Record<TroopKey, number>> : {};
+  return TROOP_KEYS.reduce((sum, key) => sum + Math.max(0, Number(source[key] || 0)), 0);
+}
+
+function troopPopulationCost(troops: unknown): number {
+  const source = troops && typeof troops === 'object' ? troops as Partial<Record<TroopKey, number>> : {};
+  return TROOP_KEYS.reduce((sum, key) => sum + Math.max(0, Number(source[key] || 0)) * (TROOP_POPULATION_COST[key] || 1), 0);
+}
+
+async function freePopulationForDestroyedTroops(
+  nexusId: number,
+  troops: unknown,
+  context: Record<string, unknown>,
+): Promise<void> {
+  const populationFreed = troopPopulationCost(troops);
+  if (populationFreed <= 0) return;
+
+  const nexus = await prisma.nexus.findUnique({ where: { id: nexusId }, select: { populationCurrent: true } });
+  if (!nexus) return;
+
+  await prisma.nexus.update({
+    where: { id: nexusId },
+    data: { populationCurrent: Math.max(0, nexus.populationCurrent - populationFreed) },
+  });
+  logInfo('destroyed_troops_population_freed', {
+    nexusId,
+    populationFreed,
+    ...context,
+  });
+}
+
+async function destroyInvalidInboundSupport(
+  nexusId: number,
+  galaxyId: number,
+  newOwnerId: number | null,
+  capturedByAttackId: number,
+): Promise<number> {
+  const supportAttacks = await prisma.attack.findMany({
+    where: {
+      galaxyId,
+      defenderNexusId: nexusId,
+      status: 'traveling',
+      type: 'support',
+    },
+    select: { id: true, attackerUserId: true, attackerNexusId: true, defenderUserId: true, troops: true },
+  });
+
+  const invalidSupport = supportAttacks.filter((support) => support.defenderUserId !== newOwnerId);
+  if (invalidSupport.length === 0) return 0;
+
+  await prisma.attack.updateMany({
+    where: { id: { in: invalidSupport.map((support) => support.id) } },
+    data: {
+      status: 'completed',
+      result: {
+        mission: 'support',
+        victory: false,
+        destroyed: true,
+        reason: 'host_conquered',
+        troopsDestroyed: true,
+        attackerLosses: {},
+        defenderLosses: {},
+        resourcesStolen: { biomass: 0, alloy: 0, ore: 0 },
+      } as Prisma.InputJsonObject,
+    },
+  });
+
+  logWarn('conquest_destroyed_inbound_support', {
+    nexusId,
+    galaxyId,
+    newOwnerId,
+    capturedByAttackId,
+    supportAttackIds: invalidSupport.map((support) => support.id),
+    troopsDestroyed: invalidSupport.reduce((sum, support) => sum + countTroops(support.troops), 0),
+  });
+
+  for (const support of invalidSupport) {
+    await freePopulationForDestroyedTroops(support.attackerNexusId, support.troops, {
+      reason: 'inbound_support_destroyed_by_conquest',
+      supportAttackId: support.id,
+      conqueredNexusId: nexusId,
+      capturedByAttackId,
+    });
+    notifyAttackUpdate(support.attackerUserId, support.defenderUserId, nexusId);
+    if (support.attackerUserId) notifyReportUpdate(support.attackerUserId);
+  }
+
+  return invalidSupport.length;
+}
+
+async function destroyForeignTransfersAtConqueredNexus(
+  nexusId: number,
+  galaxyId: number,
+  newOwnerId: number | null,
+  capturedByAttackId: number,
+): Promise<number> {
+  const transfers = await prisma.troopTransfer.findMany({
+    where: {
+      galaxyId,
+      hostNexusId: nexusId,
+      status: { in: ['traveling', 'stationed'] },
+    },
+    include: { ownerNexus: { select: { ownerId: true } } },
+  });
+  const foreignTransfers = transfers.filter((transfer) => transfer.ownerNexus.ownerId !== newOwnerId);
+  if (foreignTransfers.length === 0) return 0;
+
+  await prisma.troopTransfer.deleteMany({ where: { id: { in: foreignTransfers.map((transfer) => transfer.id) } } });
+  logWarn('conquest_destroyed_foreign_transfers', {
+    nexusId,
+    galaxyId,
+    newOwnerId,
+    capturedByAttackId,
+    transferIds: foreignTransfers.map((transfer) => transfer.id),
+    troopsDestroyed: foreignTransfers.reduce((sum, transfer) => sum + countTroops(transfer.troops), 0),
+  });
+
+  for (const transfer of foreignTransfers) {
+    await freePopulationForDestroyedTroops(transfer.ownerNexusId, transfer.troops, {
+      reason: 'foreign_transfer_destroyed_by_conquest',
+      transferId: transfer.id,
+      conqueredNexusId: nexusId,
+      capturedByAttackId,
+    });
+    if (transfer.ownerNexus.ownerId) notifyTransferUpdate(transfer.ownerNexus.ownerId, transfer.ownerNexusId);
+  }
+
+  return foreignTransfers.length;
+}
 
 export async function processArrivedAttacks(): Promise<void> {
   try {
@@ -64,6 +198,40 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
     let attackTroops = attack.troops as Record<TroopKey, number>;
 
     if (attack.type === 'support') {
+      if (!defenderNexus || defenderNexus.ownerId !== attack.defenderUserId) {
+        await prisma.attack.update({
+          where: { id: attack.id },
+          data: {
+            status: 'completed',
+            result: {
+              mission: 'support',
+              victory: false,
+              destroyed: true,
+              reason: 'host_owner_changed',
+              troopsDestroyed: attackTroops,
+              attackerLosses: {},
+              defenderLosses: {},
+              resourcesStolen: { biomass: 0, alloy: 0, ore: 0 },
+            } as Prisma.InputJsonObject,
+          },
+        });
+        logWarn('support_destroyed_host_owner_changed', {
+          attackId: attack.id,
+          hostNexusId: attack.defenderNexusId,
+          expectedOwnerId: attack.defenderUserId,
+          currentOwnerId: defenderNexus?.ownerId ?? null,
+          troopsDestroyed: countTroops(attackTroops),
+        });
+        await freePopulationForDestroyedTroops(attack.attackerNexusId!, attackTroops, {
+          reason: 'support_host_owner_changed',
+          attackId: attack.id,
+          hostNexusId: attack.defenderNexusId,
+        });
+        notifyAttackUpdate(attack.attackerUserId, attack.defenderUserId, attack.defenderNexusId!);
+        if (attack.attackerUserId) notifyReportUpdate(attack.attackerUserId);
+        return;
+      }
+
       // Station the troops at the defender nexus via TroopTransfer
       await prisma.$transaction([
         prisma.troopTransfer.create({
@@ -224,7 +392,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
     const defenderOverseerCount = mergedDefenderForce.overseer || 0;
     const garrisonOverseerCount = (defenderNexus as unknown as Record<TroopKey, number>).overseer || 0;
     if (defenderOverseerCount > 0) {
-      if (totalDefenderNonOverseer > 0 && totalDefenderNonOverseerLost >= totalDefenderNonOverseer) {
+      if (attackerWins && totalDefenderNonOverseerLost >= totalDefenderNonOverseer) {
         defenderLosses.overseer = defenderOverseerCount;
         defenderTroopUpdates['overseer'] = 0;
         defenderPopLost += garrisonOverseerCount * (TROOP_POPULATION_COST.overseer ?? 5);
@@ -248,11 +416,17 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
       for (const transfer of supportTransfers) {
         const t = transfer.troops as Record<TroopKey, number>;
         const updatedTroops: Record<string, number> = {};
+        const lostTroops: Partial<Record<TroopKey, number>> = {};
         let anyRemain = false;
+        let anyLost = false;
         for (const key of TROOP_KEYS) {
           const inTransfer = t[key] || 0;
           const lost = Math.min(inTransfer, remainingSupportLosses[key] || 0);
           remainingSupportLosses[key] = (remainingSupportLosses[key] || 0) - lost;
+          if (lost > 0) {
+            lostTroops[key] = lost;
+            anyLost = true;
+          }
           const remaining = inTransfer - lost;
           updatedTroops[key] = remaining;
           if (remaining > 0) anyRemain = true;
@@ -262,16 +436,25 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
         } else {
           await prisma.troopTransfer.update({ where: { id: transfer.id }, data: { troops: updatedTroops as unknown as Prisma.InputJsonObject } });
         }
+        if (anyLost) {
+          await freePopulationForDestroyedTroops(transfer.ownerNexusId, lostTroops, {
+            reason: 'support_transfer_combat_losses',
+            transferId: transfer.id,
+            attackId: attack.id,
+            defenderNexusId: defenderNexus.id,
+          });
+        }
       }
     }
 
     // Building damage: if attacker wins and all defender troops are wiped, overflow attack damages buildings.
     // shieldGrid is always hit first (it's the wall). Each "hit" reduces one building by 1 level.
     const buildingDamageUpdates: Record<string, number> = {};
-    const totalDefenderTroopsInForce = TROOP_KEYS.filter((t) => t !== 'overseer').reduce((s, t) => s + (mergedDefenderForce[t] || 0), 0);
-    const totalDefenderTroopsLost = TROOP_KEYS.filter((t) => t !== 'overseer').reduce((s, t) => s + (defenderLosses[t] || 0), 0);
+    const totalDefenderTroopsInForce = computeTroopTotal(mergedDefenderForce, true);
+    const totalDefenderTroopsLost = TROOP_KEYS.reduce((s, t) => s + Math.min(mergedDefenderForce[t] || 0, defenderLosses[t] || 0), 0);
+    const allDefenderTroopsWiped = areAllDefendingTroopsEliminated(mergedDefenderForce, defenderLosses);
     const buildingDamageLog: { building: string; from: number; to: number }[] = [];
-    if (attackerWins && (totalDefenderTroopsInForce === 0 || totalDefenderTroopsLost >= totalDefenderTroopsInForce)) {
+    if (attackerWins && allDefenderTroopsWiped) {
       // Number of building levels reduced is proportional to how dominant the attack was
       const overflowRatio = Math.min(1, defensePower > 0 ? (attackPower - defensePower) / Math.max(1, attackPower) : 0.5);
       const maxHits = Math.max(1, Math.floor(overflowRatio * 5)); // 1–5 levels total
@@ -325,16 +508,32 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
       defenderResourceUpdates.ore     = defenderNexus.ore     - resourcesStolen.ore;
     }
 
+    const remainingResources = {
+      biomass: Math.max(0, defenderResourceUpdates.biomass ?? defenderNexus.biomass),
+      alloy: Math.max(0, defenderResourceUpdates.alloy ?? defenderNexus.alloy),
+      ore: Math.max(0, defenderResourceUpdates.ore ?? defenderNexus.ore),
+    };
+
     let newControlLevel = defenderNexus.controlLevel ?? 100;
     const overseerSent = attackTroops.overseer || 0;
-    const allDefenderTroopsWiped = totalDefenderTroopsInForce === 0 || totalDefenderTroopsLost >= totalDefenderTroopsInForce;
     const overseerCanAct = attackerWins && overseerSent > 0 && attackerLosses.overseer === 0 && allDefenderTroopsWiped;
+
+    if (attackerWins && overseerSent > 0 && !allDefenderTroopsWiped) {
+      logWarn('conquest_blocked_defenders_remaining', {
+        attackId: attack.id,
+        defenderNexusId: defenderNexus.id,
+        totalDefenderTroopsInForce,
+        totalDefenderTroopsLost,
+        supportTransferCount: supportTransfers.length,
+      });
+    }
 
     if (overseerCanAct) {
       newControlLevel = Math.max(0, newControlLevel - 34);
       if (newControlLevel <= 0) {
         const attackerNexus = await prisma.nexus.findUnique({ where: { id: attack.attackerNexusId! } });
-        defenderTroopUpdates['ownerId'] = attackerNexus!.ownerId;
+        const newOwnerId = attackerNexus!.ownerId;
+        defenderTroopUpdates['ownerId'] = newOwnerId;
         defenderTroopUpdates['name'] = 'Conquered Nexus';
         const NPC_TYPE_NAMES = ['Resource Depot', 'Military Outpost', 'Supply Cache', 'Neutral Settlement', 'Reclaimed Outpost'];
         const preservedType = defenderNexus.nexusType ?? (NPC_TYPE_NAMES.includes(defenderNexus.name) ? defenderNexus.name : null);
@@ -344,10 +543,15 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
         defenderTroopUpdates['nexusTypeDoubled'] = false;
         defenderTroopUpdates['conqueredAt'] = new Date();
         conquered = true;
-        // Delete all remaining stationed transfers at the conquered nexus — any
-        // allied troops still there are destroyed when the nexus falls.
-        await prisma.troopTransfer.deleteMany({
-          where: { hostNexusId: defenderNexus.id, status: 'stationed' },
+        await destroyForeignTransfersAtConqueredNexus(defenderNexus.id, attack.galaxyId, newOwnerId, attack.id);
+        await destroyInvalidInboundSupport(defenderNexus.id, attack.galaxyId, newOwnerId, attack.id);
+        logInfo('nexus_conquest_owner_changed', {
+          attackId: attack.id,
+          defenderNexusId: defenderNexus.id,
+          previousOwnerId: defenderNexus.ownerId,
+          newOwnerId,
+          totalDefenderTroopsInForce,
+          totalDefenderTroopsLost,
         });
         // Overseer survives conquest. Zero out the loss so survivingTroops
         // includes it, and a stationed TroopTransfer is created below.
@@ -410,9 +614,12 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
     // reproducible. Without this, an observer only knows defender *losses*, not
     // who survived, which would make the replay underwhelming.
     const defenderInitial: Record<string, number> = {};
+    const defenderSurvivors: Record<string, number> = {};
     for (const k of TROOP_KEYS) {
       const n = mergedDefenderForce[k] || 0;
       if (n > 0) defenderInitial[k] = n;
+      const survived = Math.max(0, n - (defenderLosses[k] || 0));
+      if (survived > 0) defenderSurvivors[k] = survived;
     }
 
     // Conquest attacks complete immediately. Surviving troops are handled via
@@ -438,7 +645,8 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
       data: {
         status: resolvedStatus, returnsAt: conquered ? null : returnsAt,
         result: {
-          attackerLosses, defenderLosses, resourcesStolen, survivingTroops,
+          attackerLosses, defenderLosses, resourcesStolen, remainingResources, survivingTroops,
+          defenderSurvivors,
           victory: attackerWins, conquered, remainingControl: newControlLevel,
           combatSeed: seed,
           attackerInitial: attackTroops,
@@ -563,6 +771,33 @@ export async function processArrivedTransfers(): Promise<void> {
   for (const transfer of arriving) {
     try {
       const troops = transfer.troops as Record<TroopKey, number>;
+      const ownerId = transfer.ownerNexus.ownerId;
+      if (!ownerId || transfer.hostNexus.ownerId !== ownerId) {
+        await prisma.troopTransfer.delete({ where: { id: transfer.id } });
+        await freePopulationForDestroyedTroops(transfer.ownerNexusId, troops, {
+          reason: 'transfer_host_owner_changed',
+          transferId: transfer.id,
+          hostNexusId: transfer.hostNexusId,
+        });
+        logWarn('transfer_destroyed_host_owner_changed', {
+          transferId: transfer.id,
+          hostNexusId: transfer.hostNexusId,
+          ownerNexusId: transfer.ownerNexusId,
+          expectedOwnerId: ownerId,
+          currentHostOwnerId: transfer.hostNexus.ownerId,
+          troopsDestroyed: countTroops(troops),
+        });
+        if (ownerId) {
+          notifyTransferUpdate(ownerId, transfer.ownerNexusId);
+          void sendPushToUser(ownerId, NOTIF.TROOP_TRANSFER, {
+            title: 'Troops Lost',
+            body: `Troops en route to ${transfer.hostNexus.name} were destroyed after the nexus changed hands.`,
+            tag: `transfer-destroyed-${transfer.id}`, data: { url: '/' },
+          });
+        }
+        continue;
+      }
+
       // Stationed troops live on the transfer record only, not in host nexus columns.
       // Combat aggregates them from troopTransfer (status='stationed') alongside the host's garrison.
       // Writing to host columns here previously caused duplication (visible in train UI + double-counted in combat + cloned on recall).
@@ -571,7 +806,6 @@ export async function processArrivedTransfers(): Promise<void> {
         data: { status: 'stationed', arrivesAt: null },
       });
 
-      const ownerId = (transfer.ownerNexus as unknown as { owner?: { id: number } })?.owner?.id;
       if (ownerId) {
         const total = TRANSFER_TROOP_FIELDS.reduce((s, f) => s + (troops[f] || 0), 0);
         void sendPushToUser(ownerId, NOTIF.TROOP_TRANSFER, {

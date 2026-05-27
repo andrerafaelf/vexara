@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { claimDailyStreak, getDailyStreak } from '../services/api';
 import { useToast } from '../context/ToastContext';
-import { Flame, Gift, AlertTriangle } from 'lucide-react';
+import { Gift, AlertTriangle } from 'lucide-react';
 import '../styles/DailyStreaks.css';
 
 interface DailyQuest {
@@ -71,7 +71,6 @@ export default function DailyStreaks() {
     <div className="daily-streaks">
       <div className="daily-streaks-header">
         <div className="daily-streaks-title-row">
-          <Flame size={18} className="daily-streaks-flame" aria-hidden="true" />
           <h3 className="daily-streaks-title">Daily Quests</h3>
           {data.currentStreak > 0 && (
             <span className="daily-streaks-badge">{data.currentStreak} day streak</span>
@@ -106,9 +105,9 @@ export default function DailyStreaks() {
               <span className="daily-quest-count">{Math.min(q.progress, q.target)}/{q.target}</span>
             </div>
             <div className="daily-quest-reward">
-              <span className="daily-quest-reward-amount">
-                +{(q.reward.biomass + q.reward.alloy + q.reward.ore).toLocaleString()}
-              </span>
+              <span className="daily-quest-reward-amount">+{q.reward.biomass.toLocaleString()} Biomass</span>
+              <span className="daily-quest-reward-amount">+{q.reward.alloy.toLocaleString()} Alloy</span>
+              <span className="daily-quest-reward-amount">+{q.reward.ore.toLocaleString()} Ore</span>
             </div>
           </div>
         ))}

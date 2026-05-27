@@ -405,9 +405,9 @@ export async function getCompletedSpyMissions(req: AuthRequest, res: Response): 
       missions.map(async (m) => {
         const target = await prisma.nexus.findUnique({
           where: { id: m.toNexusId },
-          select: { name: true },
+          select: { name: true, x: true, y: true },
         });
-        return { ...m, targetName: target?.name };
+        return { ...m, targetName: target?.name, targetX: target?.x, targetY: target?.y };
       }),
     );
 

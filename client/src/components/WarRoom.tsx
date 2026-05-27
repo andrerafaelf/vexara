@@ -128,7 +128,7 @@ interface Props {
 const TROOP_KEYS = [
   'lancerDrone','assaultTrooper','breakerUnit','reconOperative','skimmerBike',
   'siegeMech','bulwarkGuard','suppressorTeam','disruptorUnit','interceptorBike',
-  'annihilatorPlatform','voidStalker','plasmaTurret','overseer',
+  'annihilatorPlatform','voidStalker','overseer',
 ] as const;
 
 const TROOP_LABELS: Record<string, string> = {
@@ -136,14 +136,14 @@ const TROOP_LABELS: Record<string, string> = {
   reconOperative:'Recon', skimmerBike:'Skimmer', siegeMech:'Siege',
   bulwarkGuard:'Bulwark', suppressorTeam:'Suppressor', disruptorUnit:'Disruptor',
   interceptorBike:'Interceptor', annihilatorPlatform:'Annihilator',
-  voidStalker:'Stalker', plasmaTurret:'Turret', overseer:'Overseer',
+  voidStalker:'Stalker', overseer:'Overseer',
 };
 
 const TROOP_SPEED: Record<string, number> = {
   lancerDrone:20, assaultTrooper:18, breakerUnit:16, reconOperative:25,
   skimmerBike:22, siegeMech:10, bulwarkGuard:12, suppressorTeam:15,
   disruptorUnit:17, interceptorBike:28, annihilatorPlatform:8,
-  voidStalker:18, plasmaTurret:6, overseer:6,
+  voidStalker:32, overseer:6,
 };
 
 // Distance/speed model lifted from WavePlanner.tsx so launch times stay in sync.

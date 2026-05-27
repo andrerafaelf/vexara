@@ -932,7 +932,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
       selectedNexus.name.includes('Abandoned Base') ||
       selectedNexus.name.includes('Neutral Settlement');
 
-    const attackTroopRows = Object.entries(availableTroops).filter(([type]) => type !== 'reconOperative');
+    const attackTroopRows = Object.entries(availableTroops).filter(([type]) => type !== 'reconOperative' && type !== 'plasmaTurret');
     const attackAvailableTroopTotal = attackTroopRows.reduce((sum, [, count]) => sum + Number(count || 0), 0);
 
     return (

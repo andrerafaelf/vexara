@@ -6,6 +6,7 @@ export interface DailyQuest {
   title: string;
   description: string;
   target: number;
+  category: string;
   reward: { type: 'resources'; biomass: number; alloy: number; ore: number };
 }
 
@@ -14,16 +15,17 @@ const QUEST_TEMPLATES: Array<{
   title: string;
   description: string;
   target: number;
+  category: string;
   reward: { type: 'resources'; biomass: number; alloy: number; ore: number };
 }> = [
-  { id: 'train_5', title: 'Train Troops', description: 'Train 5 troops of any type', target: 5, reward: { type: 'resources', biomass: 2000, alloy: 2000, ore: 2000 } },
-  { id: 'train_15', title: 'Train Squad', description: 'Train 15 troops of any type', target: 15, reward: { type: 'resources', biomass: 5000, alloy: 5000, ore: 5000 } },
-  { id: 'upgrade_1', title: 'Builder', description: 'Start 1 building upgrade', target: 1, reward: { type: 'resources', biomass: 3000, alloy: 3000, ore: 3000 } },
-  { id: 'upgrade_2', title: 'Constructor', description: 'Start 2 building upgrades', target: 2, reward: { type: 'resources', biomass: 6000, alloy: 6000, ore: 6000 } },
-  { id: 'attack_1', title: 'First Strike', description: 'Launch 1 attack', target: 1, reward: { type: 'resources', biomass: 4000, alloy: 4000, ore: 4000 } },
-  { id: 'scout_1', title: 'Reconnaissance', description: 'Send 1 scout mission', target: 1, reward: { type: 'resources', biomass: 2500, alloy: 2500, ore: 2500 } },
-  { id: 'market_1', title: 'Trader', description: 'Create 1 market listing', target: 1, reward: { type: 'resources', biomass: 3000, alloy: 3000, ore: 3000 } },
-  { id: 'login', title: 'Report In', description: 'Log in to the game today', target: 1, reward: { type: 'resources', biomass: 1500, alloy: 1500, ore: 1500 } },
+  { id: 'train_5',   title: 'Train Troops',      description: 'Train 5 troops of any type',    target: 5,  category: 'train',   reward: { type: 'resources', biomass: 2000, alloy: 2000, ore: 2000 } },
+  { id: 'train_15',  title: 'Train Squad',        description: 'Train 15 troops of any type',   target: 15, category: 'train',   reward: { type: 'resources', biomass: 5000, alloy: 5000, ore: 5000 } },
+  { id: 'upgrade_1', title: 'Builder',            description: 'Start 1 building upgrade',      target: 1,  category: 'upgrade', reward: { type: 'resources', biomass: 3000, alloy: 3000, ore: 3000 } },
+  { id: 'upgrade_2', title: 'Constructor',        description: 'Start 2 building upgrades',     target: 2,  category: 'upgrade', reward: { type: 'resources', biomass: 6000, alloy: 6000, ore: 6000 } },
+  { id: 'attack_1',  title: 'First Strike',       description: 'Launch 1 attack',               target: 1,  category: 'attack',  reward: { type: 'resources', biomass: 4000, alloy: 4000, ore: 4000 } },
+  { id: 'scout_1',   title: 'Reconnaissance',     description: 'Send 1 scout mission',          target: 1,  category: 'scout',   reward: { type: 'resources', biomass: 2500, alloy: 2500, ore: 2500 } },
+  { id: 'market_1',  title: 'Trader',             description: 'Create 1 market listing',       target: 1,  category: 'market',  reward: { type: 'resources', biomass: 3000, alloy: 3000, ore: 3000 } },
+  { id: 'login',     title: 'Report In',          description: 'Log in to the game today',      target: 1,  category: 'login',   reward: { type: 'resources', biomass: 1500, alloy: 1500, ore: 1500 } },
 ];
 
 const STREAK_BONUS_MULT = [1, 1, 1.1, 1.2, 1.3, 1.5, 1.75, 2.0];
@@ -33,21 +35,29 @@ function getStreakMultiplier(streak: number): number {
   return STREAK_BONUS_MULT[idx];
 }
 
-function getTodaySeed(userId: number, galaxyId: number): string {
+export function getTodaySeed(userId: number, galaxyId: number): string {
   const date = new Date().toISOString().slice(0, 10);
   return createHash('md5').update(`${date}-${userId}-${galaxyId}`).digest('hex').slice(0, 16);
 }
 
-function selectDailyQuests(seed: string): DailyQuest[] {
+export function selectDailyQuests(seed: string): DailyQuest[] {
   const hash = createHash('md5').update(seed).digest();
   const indices: number[] = [];
+  const usedCategories = new Set<string>();
   for (let i = 0; i < hash.length && indices.length < 3; i++) {
     const idx = hash[i] % QUEST_TEMPLATES.length;
-    if (!indices.includes(idx)) indices.push(idx);
+    const cat = QUEST_TEMPLATES[idx].category;
+    if (!indices.includes(idx) && !usedCategories.has(cat)) {
+      indices.push(idx);
+      usedCategories.add(cat);
+    }
   }
-  while (indices.length < 3) {
-    for (let i = 0; i < QUEST_TEMPLATES.length && indices.length < 3; i++) {
-      if (!indices.includes(i)) indices.push(i);
+  // fallback: fill remaining slots avoiding used categories
+  for (let i = 0; i < QUEST_TEMPLATES.length && indices.length < 3; i++) {
+    const cat = QUEST_TEMPLATES[i].category;
+    if (!indices.includes(i) && !usedCategories.has(cat)) {
+      indices.push(i);
+      usedCategories.add(cat);
     }
   }
   return indices.map((i) => ({ ...QUEST_TEMPLATES[i] }));
@@ -152,7 +162,7 @@ export async function claimDailyRewards(userId: number, galaxyId: number) {
 
   const nexus = await prisma.nexus.findFirst({
     where: { ownerId: userId, galaxyId },
-    orderBy: { points: 'desc' },
+    orderBy: [{ points: 'desc' }, { id: 'asc' }],
   });
   if (!nexus) return { error: 'No nexus found' };
 

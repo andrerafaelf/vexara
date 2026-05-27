@@ -23,20 +23,20 @@ interface WavePlanner_Props {
 const TROOP_KEYS = [
   'lancerDrone','assaultTrooper','breakerUnit','reconOperative','skimmerBike',
   'siegeMech','bulwarkGuard','suppressorTeam','disruptorUnit','interceptorBike',
-  'annihilatorPlatform','overseer',
+  'annihilatorPlatform','voidStalker','overseer',
 ] as const;
 
 const TROOP_LABELS: Record<string, string> = {
   lancerDrone:'Lancer Drone', assaultTrooper:'Assault Trooper', breakerUnit:'Breaker Unit',
   reconOperative:'Recon Operative', skimmerBike:'Skimmer Bike', siegeMech:'Siege Mech',
   bulwarkGuard:'Bulwark Guard', suppressorTeam:'Suppressor Team', disruptorUnit:'Disruptor Unit',
-  interceptorBike:'Interceptor Bike', annihilatorPlatform:'Annihilator Platform', overseer:'Overseer',
+  interceptorBike:'Interceptor Bike', annihilatorPlatform:'Annihilator Platform', voidStalker:'Void Stalker', overseer:'Overseer',
 };
 
 const TROOP_SPEED: Record<string, number> = {
   lancerDrone:20, assaultTrooper:18, breakerUnit:16, reconOperative:25,
   skimmerBike:22, siegeMech:10, bulwarkGuard:12, suppressorTeam:15,
-  disruptorUnit:17, interceptorBike:28, annihilatorPlatform:8, overseer:6,
+  disruptorUnit:17, interceptorBike:28, annihilatorPlatform:8, voidStalker:32, overseer:6,
 };
 
 type TroopMap = Record<string, number>;

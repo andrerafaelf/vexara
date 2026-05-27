@@ -2790,6 +2790,41 @@ function formatCountdown(ms: number): string {
   return `${s}s`;
 }
 
+function getSpyKindLabel(mission: Record<string, unknown>): string {
+  return mission.type === 'embed' ? 'Embed Operative' : 'Sabotage';
+}
+
+function getSpyTargetLabel(mission: Record<string, unknown>): string {
+  const name = (mission.targetName as string) ?? `Nexus #${mission.toNexusId}`;
+  if (mission.targetX != null && mission.targetY != null) {
+    return `${name} (${mission.targetX}|${mission.targetY})`;
+  }
+  return name;
+}
+
+function getSpyResultSummary(report: Record<string, unknown> | null, mission: Record<string, unknown>): string {
+  if (!report) return 'No result payload recorded.';
+  const success = report.success !== false;
+  if (!success) return report.detected ? 'Failed and detected by the target.' : 'Failed without useful intelligence.';
+  if (mission.type === 'embed') {
+    if (report.refreshed) return 'Embedded operative refreshed existing intel.';
+    return 'Intel package gathered from the target nexus.';
+  }
+  if (report.message) return String(report.message);
+  if (report.target === 'troops' && report.field) {
+    return `Eliminated ${Number(report.loss ?? 0).toLocaleString()} ${humanizeTroopKey(String(report.field))}.`;
+  }
+  if (report.target === 'building') {
+    return `Build queue delayed by ${Number(report.delayMinutes ?? 0).toLocaleString()} minutes.`;
+  }
+  return 'Sabotage completed successfully.';
+}
+
+function formatMissionDate(value: unknown): string {
+  if (!value) return 'Unknown time';
+  return new Date(value as string).toLocaleString();
+}
+
 function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string, t: 'success' | 'error' | 'info') => void }) {
   const router = useRouter();
   const [mode, setMode] = useState<SpyMissionMode>('embed');
@@ -2924,34 +2959,52 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
   const cost = mode === 'embed' ? embedCost : sabotCost;
   const maxOps = reconCount;
   const selectedSabTarget = SABOTAGE_TARGETS.find(t => t.key === sabotageTarget)!;
+  const successfulMissions = completedMissions.filter((m) => (m.result as Record<string, unknown> | null)?.success !== false).length;
+  const sabotageMissions = completedMissions.filter((m) => m.type === 'sabotage').length;
 
   return (
     <div className="espionage-tab">
-      {/* Header */}
-      <div className="espionage-intro">
-        <Eye size={16} />
-        <div>
-          <strong>Espionage Operations</strong>
-          <span className="espionage-intro-sub">
-            You have <strong>{reconCount}</strong> Recon Operative{reconCount !== 1 ? 's' : ''} available.
-          </span>
+      <div className="espionage-command">
+        <div className="espionage-command-main">
+          <span className="espionage-eyebrow">Shadow Operations</span>
+          <h3>Espionage</h3>
+          <p>Pick a target, dispatch operatives, then track embeds, sabotage and mission results from one clean timeline.</p>
+        </div>
+        <div className="espionage-command-stats">
+          <div className="espionage-stat">
+            <span>Recon Ready</span>
+            <strong>{reconCount.toLocaleString()}</strong>
+          </div>
+          <div className="espionage-stat">
+            <span>In Transit</span>
+            <strong>{missions.length.toLocaleString()}</strong>
+          </div>
+          <div className="espionage-stat">
+            <span>Embedded</span>
+            <strong>{assets.length.toLocaleString()}</strong>
+          </div>
+          <div className="espionage-stat">
+            <span>Successes</span>
+            <strong>{successfulMissions.toLocaleString()}</strong>
+          </div>
         </div>
       </div>
 
-      {/* Mission type switcher */}
-      <div className="espionage-mode-row">
+      <div className="espionage-mode-row" role="group" aria-label="Mission type">
         <button
           className={`espionage-mode-btn${mode === 'embed' ? ' active' : ''}`}
           onClick={() => handleModeSwitch('embed')}
         >
-          Embed Operative
+          <Eye size={15} aria-hidden="true" />
+          <span>Embed Operative</span>
           <span className="espionage-mode-desc">Gather intel on troops &amp; resources</span>
         </button>
         <button
           className={`espionage-mode-btn${mode === 'sabotage' ? ' active' : ''}`}
           onClick={() => handleModeSwitch('sabotage')}
         >
-          Sabotage
+          <Zap size={15} aria-hidden="true" />
+          <span>Sabotage</span>
           <span className="espionage-mode-desc">Destroy troops or delay construction</span>
         </button>
       </div>
@@ -2959,7 +3012,13 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
       {/* In-flight missions */}
       {missions.length > 0 && (
         <div className="espionage-missions">
-          <div className="espionage-assets-heading">Missions in Transit</div>
+          <div className="espionage-section-head">
+            <div>
+              <span className="espionage-section-kicker">Live Operations</span>
+              <h4>Missions in Transit</h4>
+            </div>
+            <span className="espionage-section-count">{missions.length}</span>
+          </div>
           {missions.map((m) => {
             const isReturning = m.status === 'returning';
             const targetTime = isReturning
@@ -2968,9 +3027,13 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
             const msLeft = targetTime - now;
             return (
               <div key={String(m.id)} className="espionage-mission-row">
+                <span className={`espionage-mission-icon espionage-mission-icon--${m.type === 'embed' ? 'embed' : 'sabotage'}`}>
+                  {m.type === 'embed' ? <Eye size={14} aria-hidden="true" /> : <Zap size={14} aria-hidden="true" />}
+                </span>
                 <div className="espionage-mission-info">
                   <span className="espionage-mission-label">
-                    {m.type === 'embed' ? 'Embed' : 'Sabotage'} &rarr; {(m.targetName as string) ?? `Nexus #${m.toNexusId}`}
+                    {getSpyKindLabel(m)}
+                    <span className="espionage-mission-route"> to {getSpyTargetLabel(m)}</span>
                   </span>
                   <span className="espionage-mission-status">
                     {isReturning ? 'Returning' : 'Traveling'} &middot; {formatCountdown(msLeft)}
@@ -2998,7 +3061,7 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
         <div className="espionage-target-bar" ref={targetBarRef}>
           <Eye size={13} />
           <span>Target: <strong>{spyTarget.name}</strong> <span className="espionage-target-coords">({spyTarget.x}|{spyTarget.y})</span></span>
-          <button className="espionage-target-clear" onClick={() => setSpyTarget(null)}>✕</button>
+          <button className="espionage-target-clear" onClick={() => setSpyTarget(null)}>X</button>
         </div>
       ) : (
         <div className="espionage-target-hint">
@@ -3031,7 +3094,7 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
             <div className="espionage-form-row">
               <label className="espionage-label">Recon Operatives</label>
               <div className="espionage-ops-controls">
-                <button className="espionage-ops-step" onClick={() => setOperatives(o => Math.max(1, o - 1))} disabled={operatives <= 1}>−</button>
+                <button className="espionage-ops-step" onClick={() => setOperatives(o => Math.max(1, o - 1))} disabled={operatives <= 1}>-</button>
                 <input
                   className="espionage-input espionage-input--narrow"
                   type="number" min={1} max={maxOps} value={operatives}
@@ -3087,14 +3150,28 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
       {/* Active embedded assets - placed above mission history so the most
           actionable surface (Refresh Intel / Recall) sits up top. */}
       <div className="espionage-assets">
-        <div className="espionage-assets-heading">Active Embedded Operatives</div>
+        <div className="espionage-section-head">
+          <div>
+            <span className="espionage-section-kicker">Stationed Assets</span>
+            <h4>Active Embedded Operatives</h4>
+          </div>
+          <span className="espionage-section-count">{assets.length}</span>
+        </div>
         {assetsLoading ? null : assets.length === 0 ? (
           <div className="espionage-assets-empty">No operatives currently embedded at enemy nexuses.</div>
         ) : (
           assets.map((a) => (
             <div key={String(a.id)} className="espionage-asset-row">
+              <span className="espionage-mission-icon espionage-mission-icon--embed">
+                <Eye size={14} aria-hidden="true" />
+              </span>
               <div className="espionage-asset-info">
-                <span className="espionage-asset-target">{(a.targetName as string) ?? `Nexus #${a.targetNexusId}`}</span>
+                <span className="espionage-asset-target">
+                  {(a.targetName as string) ?? `Nexus #${a.targetNexusId}`}
+                  {a.targetX != null && a.targetY != null && (
+                    <span className="espionage-target-coords"> ({a.targetX as number}|{a.targetY as number})</span>
+                  )}
+                </span>
                 <span className="espionage-asset-last">
                   {a.lastReportAt != null
                     ? `Last report: ${new Date(a.lastReportAt as string).toLocaleString()}`
@@ -3126,7 +3203,16 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
           assets list expanded. Toggling is per-row. */}
       {completedMissions.length > 0 && (
         <div className="espionage-completed">
-          <div className="espionage-assets-heading">Recent Mission Results</div>
+          <div className="espionage-section-head">
+            <div>
+              <span className="espionage-section-kicker">Chronological Log</span>
+              <h4>Recent Mission Results</h4>
+            </div>
+            <div className="espionage-history-summary">
+              <span>{completedMissions.length} total</span>
+              <span>{sabotageMissions} sabotage</span>
+            </div>
+          </div>
           {completedMissions.map((m) => {
             const r = m.result as Record<string, unknown> | null;
             const success = r?.success as boolean | undefined;
@@ -3149,13 +3235,21 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
                     aria-expanded={isOpen}
                     aria-label={isOpen ? 'Collapse mission details' : 'Expand mission details'}
                   >
-                    <span className="espionage-mission-toggle-icon" aria-hidden="true">{isOpen ? '−' : '+'}</span>
-                    <span className="espionage-mission-label">
-                      {m.type === 'embed' ? 'Embed' : 'Sabotage'} &rarr; {(m.targetName as string) ?? `Nexus #${m.toNexusId}`}
+                    <span className={`espionage-mission-icon espionage-mission-icon--${m.type === 'embed' ? 'embed' : 'sabotage'}`}>
+                      {m.type === 'embed' ? <Eye size={14} aria-hidden="true" /> : <Zap size={14} aria-hidden="true" />}
                     </span>
-                    <span className="espionage-mission-status">
+                    <span className="espionage-history-copy">
+                      <span className="espionage-mission-label">
+                        {getSpyKindLabel(m)}
+                        <span className="espionage-mission-route"> to {getSpyTargetLabel(m)}</span>
+                      </span>
+                      <span className="espionage-history-result">{getSpyResultSummary(r, m)}</span>
+                      <span className="espionage-history-time">{formatMissionDate(m.createdAt)}</span>
+                    </span>
+                    <span className={`espionage-mission-status ${success === false ? 'is-fail' : 'is-success'}`}>
                       {success === false ? 'Failed' : 'Succeeded'}
                     </span>
+                    <span className="espionage-mission-toggle-icon" aria-hidden="true">{isOpen ? '-' : '+'}</span>
                   </button>
                   {m.toNexusId != null && (
                     <button

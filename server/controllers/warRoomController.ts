@@ -19,7 +19,7 @@ const MAX_ACTIVE_OPS_PER_FACTION = 12;
 const TROOP_KEYS: ReadonlyArray<keyof TroopCounts> = [
   'lancerDrone', 'assaultTrooper', 'breakerUnit', 'reconOperative', 'skimmerBike',
   'siegeMech', 'bulwarkGuard', 'suppressorTeam', 'disruptorUnit', 'interceptorBike',
-  'annihilatorPlatform', 'voidStalker', 'plasmaTurret', 'overseer',
+  'annihilatorPlatform', 'voidStalker', 'overseer',
 ];
 
 function sanitizeTroopMap(input: unknown): Record<string, number> {

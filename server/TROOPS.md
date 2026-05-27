@@ -24,7 +24,7 @@ The **Armory** building amplifies counter bonuses by +1.5% per level (max +30% a
 - Shield Grid provides +2% total defense per level
 - Casualties scale with power ratio; variance is smaller for large stacks (±4%) than small (<20 units, ±15%)
 - All losses are seeded deterministically per battle, replays are reproducible
-- Overseers reduce enemy control by 34 on a successful attack if they survive
+- Overseers reduce enemy control by 34 on a successful attack if they survive and the defending force is cleared
 
 ## Stat Identity
 
@@ -233,14 +233,14 @@ _Ordered weakest → strongest by overall combat value._
 - Notes:
   - Does not contribute attack damage
   - If all non-overseer units are destroyed, the overseer is destroyed as well
-  - Each successful overseer strike reduces enemy control by 34; three strikes conquer any nexus
-  - Overseers are consumed when a conquest is completed (enemy control reaches 0)
+  - Each successful overseer strike that clears the defending force reduces enemy control by 34; three strikes conquer any nexus
+  - Overseers are stationed at the captured nexus when conquest is completed
 
 ## Conquest Flow
 
 1. Train an Overseer
 2. Send the Overseer with escort troops
-3. Win the battle while the Overseer survives
+3. Win the battle, clear the defending force, and keep the Overseer alive
 4. Enemy control is reduced by 34
 5. Repeat for a total of three successful strikes; at 0 control, ownership transfers
 

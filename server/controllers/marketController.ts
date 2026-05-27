@@ -74,6 +74,10 @@ export async function createListing(req: AuthRequest, res: Response): Promise<vo
       },
     );
     emitMarket();
+    try {
+      const { incrementQuestProgress } = await import('../services/dailyStreakService.js');
+      void incrementQuestProgress(req.userId, req.galaxyId, 'market_1', 1);
+    } catch {}
     res.json({ success: true, listing });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'marketController.ts' });

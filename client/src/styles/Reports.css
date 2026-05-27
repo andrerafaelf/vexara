@@ -375,6 +375,69 @@
   font-weight: 600;
 }
 
+.report-table .survived {
+  color: var(--success);
+  font-weight: 700;
+}
+
+.report-aftermath-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.report-aftermath-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  min-width: 0;
+}
+
+.report-aftermath-card--troops {
+  border-left-color: var(--success);
+}
+
+.report-aftermath-card--resources {
+  border-left-color: var(--warning);
+}
+
+.report-aftermath-kicker {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.report-aftermath-value {
+  color: var(--text-strong);
+  font-family: var(--font-mono);
+  font-size: clamp(24px, 4vw, 34px);
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+
+.report-aftermath-list,
+.report-aftermath-resources {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 12px;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.report-aftermath-list strong,
+.report-aftermath-resources strong {
+  color: var(--text-strong);
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
 /* ── Resources stolen ── */
 .resources-stolen {
   display: flex;
@@ -787,6 +850,15 @@
   .report-table thead th,
   .report-table tbody td {
     padding: 8px;
+  }
+
+  .report-aftermath-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .report-aftermath-list,
+  .report-aftermath-resources {
+    grid-template-columns: 1fr;
   }
 }
 

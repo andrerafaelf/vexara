@@ -255,6 +255,17 @@ export interface Attack {
       alloy: number;
       ore: number;
     };
+    remainingResources?: {
+      biomass: number;
+      alloy: number;
+      ore: number;
+    };
+    attackerInitial?: Record<string, number>;
+    defenderInitial?: Record<string, number>;
+    defenderSurvivors?: Record<string, number>;
+    attackerPower?: number;
+    defenderPower?: number;
+    combatSeed?: number;
     victory: boolean;
     conquered?: boolean;
     controlReduced?: boolean;

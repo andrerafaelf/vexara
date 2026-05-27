@@ -24,36 +24,36 @@ export interface CombatReplay {
 }
 
 const TROOP_ATTACK: Record<string, number> = {
-  lancerDrone: 15,
-  assaultTrooper: 30,
+  lancerDrone: 12,
+  assaultTrooper: 18,
   breakerUnit: 55,
   reconOperative: 5,
   skimmerBike: 80,
-  bulwarkGuard: 20,
+  bulwarkGuard: 10,
   suppressorTeam: 65,
   disruptorUnit: 75,
   interceptorBike: 95,
-  siegeMech: 150,
+  siegeMech: 80,
   annihilatorPlatform: 210,
   voidStalker: 110,
-  plasmaTurret: 180,
+  plasmaTurret: 0,
   overseer: 0,
 };
 
 const TROOP_DEFENSE: Record<string, number> = {
-  lancerDrone: 28,
+  lancerDrone: 22,
   assaultTrooper: 45,
-  breakerUnit: 15,
+  breakerUnit: 10,
   reconOperative: 20,
-  skimmerBike: 65,
+  skimmerBike: 40,
   bulwarkGuard: 130,
-  suppressorTeam: 45,
-  disruptorUnit: 55,
-  interceptorBike: 75,
+  suppressorTeam: 30,
+  disruptorUnit: 35,
+  interceptorBike: 50,
   siegeMech: 210,
-  annihilatorPlatform: 140,
-  voidStalker: 50,
-  plasmaTurret: 90,
+  annihilatorPlatform: 80,
+  voidStalker: 32,
+  plasmaTurret: 160,
   overseer: 30,
 };
 
@@ -63,6 +63,20 @@ function forcePower(troops: Record<string, number>, stat: Record<string, number>
 
 function clone(obj: Record<string, number>): Record<string, number> {
   return { ...obj };
+}
+
+function positiveForce(source: Record<string, number | undefined> | undefined): Record<string, number> {
+  const out: Record<string, number> = {};
+  if (!source) return out;
+  for (const [type, value] of Object.entries(source)) {
+    const count = Number(value ?? 0);
+    if (Number.isFinite(count) && count > 0) out[type] = count;
+  }
+  return out;
+}
+
+function hasForce(source: Record<string, number>): boolean {
+  return Object.values(source).some((count) => count > 0);
 }
 
 function distributeOverRounds(
@@ -90,39 +104,38 @@ export function deriveReplay(report: Attack): CombatReplay | null {
   if (report.type === 'scout' || report.result?.mission === 'scout') return null;
   if (!report.result?.attackerLosses || !report.result?.defenderLosses) return null;
 
-  const attackerInitial: Record<string, number> = {};
-  for (const [k, v] of Object.entries(report.troops)) {
-    if (v > 0) attackerInitial[k] = v;
-  }
+  const attackerInitial = positiveForce(
+    hasForce(positiveForce(report.result.attackerInitial))
+      ? report.result.attackerInitial
+      : report.troops,
+  );
 
-  // Defender initial = their final survivors + what they lost
-  const defenderLosses = report.result.defenderLosses;
-  // We don't know exact defender starting counts, but we know losses and result.
-  // Estimate defender initial from losses, if defender won, they kept most troops.
-  // We can only reconstruct losses, so defender initial is losses (minimum visible force).
-  const defenderInitial: Record<string, number> = {};
-  for (const [k, v] of Object.entries(defenderLosses)) {
-    if ((v ?? 0) > 0) defenderInitial[k] = v as number;
-  }
+  const defenderLosses = positiveForce(report.result.defenderLosses);
+  const reportedDefenderInitial = positiveForce(report.result.defenderInitial);
+  const defenderInitial = hasForce(reportedDefenderInitial)
+    ? reportedDefenderInitial
+    : defenderLosses;
 
   const attackerLosses: Record<string, number> = {};
   for (const [k, v] of Object.entries(report.result.attackerLosses ?? {})) {
     if ((v ?? 0) > 0) attackerLosses[k] = v as number;
-    else if (report.result.conquered && k === 'overseer' && (report.troops.overseer ?? 0) > 0) {
-      attackerLosses[k] = report.troops.overseer;
-    }
-  }
-  if (report.result.conquered && (report.troops.overseer ?? 0) > 0 && !attackerLosses.overseer) {
-    attackerLosses.overseer = report.troops.overseer;
   }
 
   const ROUNDS = 5;
 
   const attackerLossPerRound = distributeOverRounds(attackerLosses, ROUNDS);
-  const defenderLossPerRound = distributeOverRounds(defenderLosses as Record<string, number>, ROUNDS);
+  const defenderLossPerRound = distributeOverRounds(defenderLosses, ROUNDS);
 
   const attackerCurrent = clone(attackerInitial);
   const defenderCurrent = clone(defenderInitial);
+  const attackerPowerBase = forcePower(attackerInitial, TROOP_ATTACK);
+  const defenderPowerBase = forcePower(defenderInitial, TROOP_DEFENSE);
+  const attackerPowerScale = attackerPowerBase > 0 && report.result.attackerPower
+    ? report.result.attackerPower / attackerPowerBase
+    : 1;
+  const defenderPowerScale = defenderPowerBase > 0 && report.result.defenderPower
+    ? report.result.defenderPower / defenderPowerBase
+    : 1;
 
   const rounds: CombatRound[] = [];
 
@@ -138,8 +151,8 @@ export function deriveReplay(report: Attack): CombatReplay | null {
       defenderCurrent[type] = Math.max(0, (defenderCurrent[type] ?? 0) - lost);
     }
 
-    const aPow = forcePower(attackerCurrent, TROOP_ATTACK);
-    const dPow = forcePower(defenderCurrent, TROOP_DEFENSE);
+    const aPow = forcePower(attackerCurrent, TROOP_ATTACK) * attackerPowerScale;
+    const dPow = forcePower(defenderCurrent, TROOP_DEFENSE) * defenderPowerScale;
 
     let event: string | null = null;
     if (i === ROUNDS - 1) {
@@ -169,16 +182,17 @@ export function deriveReplay(report: Attack): CombatReplay | null {
   }
 
   const attackerFinal: Record<string, number> = {};
-  for (const [k, v] of Object.entries(report.troops)) {
+  for (const [k, v] of Object.entries(attackerInitial)) {
     const lost = (report.result.attackerLosses?.[k] ?? 0) as number;
     const survived = v - lost;
     if (survived > 0) attackerFinal[k] = survived;
   }
 
   const defenderFinal: Record<string, number> = {};
-  // Defender final = we only know losses; survivors are unknown
-  for (const [k, v] of Object.entries(defenderLosses)) {
-    defenderFinal[k] = 0; // show as depleted
+  for (const [k, v] of Object.entries(defenderInitial)) {
+    const lost = defenderLosses[k] ?? 0;
+    const survived = v - lost;
+    if (survived > 0) defenderFinal[k] = survived;
   }
 
   return {

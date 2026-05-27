@@ -50,6 +50,9 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
 
     const totalTroopsRequested = Object.values(normalizedTroops).reduce((sum, a) => sum + a, 0);
     if (totalTroopsRequested <= 0) { res.status(400).json({ error: 'Select at least one troop' }); return; }
+    if ((normalizedTroops.plasmaTurret || 0) > 0) {
+      res.status(400).json({ error: 'Plasma Turrets cannot leave their nexus' }); return;
+    }
 
     if (attackType === 'scout') {
       const reconOperatives = normalizedTroops.reconOperative || 0;

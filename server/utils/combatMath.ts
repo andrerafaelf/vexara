@@ -53,6 +53,22 @@ export const TROOP_STATS: Record<TroopKey, TroopStat> = {
 
 const TROOP_KEYS = Object.keys(TROOP_STATS) as TroopKey[];
 
+export function computeTroopTotal(force: Partial<Record<TroopKey, number>>, includeOverseer = true): number {
+  return TROOP_KEYS
+    .filter((t) => includeOverseer || t !== 'overseer')
+    .reduce((sum, t) => sum + (force[t] || 0), 0);
+}
+
+export function areAllDefendingTroopsEliminated(
+  defenderForce: Partial<Record<TroopKey, number>>,
+  defenderLosses: Partial<Record<TroopKey, number>>,
+): boolean {
+  const totalDefenders = computeTroopTotal(defenderForce, true);
+  if (totalDefenders === 0) return true;
+  const totalLost = TROOP_KEYS.reduce((sum, t) => sum + Math.min(defenderForce[t] || 0, defenderLosses[t] || 0), 0);
+  return totalLost >= totalDefenders;
+}
+
 // Compute raw force power (attack or defense), used for outcome determination.
 export function computeForcePower(
   forceTroops: Partial<Record<TroopKey, number>> | Record<string, unknown>,

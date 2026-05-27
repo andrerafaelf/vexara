@@ -1,6 +1,6 @@
 import { Coins, Eye, Share2, Skull, Swords, Trophy } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { getAllEspionageLogs, getReadReportIds, getReports, markAllReportsRead, markReportRead, sendAttack, sendFactionMessage } from '../services/api';
+import { getReadReportIds, getReports, markAllReportsRead, markReportRead, sendAttack, sendFactionMessage } from '../services/api';
 import '../styles/Reports.css';
 import { useToast } from '../context/ToastContext';
 import { Attack, Nexus } from '../types/game';
@@ -49,14 +49,47 @@ const troopNames: Record<string, string> = {
   overseer: 'Overseer',
 };
 
-type ReportsTab = 'combat' | 'espionage';
+const ATTACKABLE_TROOP_TYPES = new Set(Object.keys(troopNames).filter((type) => type !== 'plasmaTurret'));
+
+function clampAttackAmount(type: string, available: number): number {
+  if (type === 'plasmaTurret') return 0;
+  if (type === 'overseer') return Math.min(available, 1);
+  return available;
+}
+
+function formatNumber(value: unknown): string {
+  const n = Number(value ?? 0);
+  return Number.isFinite(n) ? Math.floor(n).toLocaleString() : '0';
+}
+
+function resourceTotal(resources?: Partial<ResourceSnapshot> | null): number {
+  if (!resources) return 0;
+  return RESOURCE_KEYS.reduce((sum, key) => sum + Math.max(0, Number(resources[key] ?? 0)), 0);
+}
+
+function getDefenderSurvivors(report: Attack): Record<string, number> {
+  if (report.result?.defenderSurvivors) return report.result.defenderSurvivors;
+  const defenderInitial = report.result?.defenderInitial ?? {};
+  const defenderLosses = report.result?.defenderLosses ?? {};
+  return Object.fromEntries(
+    Object.entries(defenderInitial)
+      .map(([troop, initial]) => [troop, Math.max(0, Number(initial) - Number(defenderLosses[troop] ?? 0))])
+      .filter(([, survived]) => Number(survived) > 0),
+  ) as Record<string, number>;
+}
+
+function getTroopEntries(troops?: Record<string, number> | null) {
+  return Object.entries(troops ?? {}).filter(([, count]) => Number(count) > 0);
+}
+
+type ResourceSnapshot = { biomass: number; alloy: number; ore: number };
+const RESOURCE_KEYS = ['biomass', 'alloy', 'ore'] as const;
 
 interface SpyLog {
   id: number;
   type: string;
   operatives: number;
   sabotageTarget?: string;
-  status: string;
   result: any;
   createdAt: string;
   fromNexusName: string;
@@ -68,9 +101,8 @@ interface SpyLog {
 
 const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, currentUserId }) => {
   const toast = useToast();
-  const [activeReportsTab, setActiveReportsTab] = useState<ReportsTab>('combat');
   const [reports, setReports] = useState<Attack[]>([]);
-  const [spyLogs, setSpyLogs] = useState<SpyLog[]>([]);
+  const spyLogs: SpyLog[] = [];
   const [selectedReport, setSelectedReport] = useState<Attack | null>(null);
   const [selectedSpyLog, setSelectedSpyLog] = useState<SpyLog | null>(null);
   const [loading, setLoading] = useState(true);
@@ -90,6 +122,8 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
     disruptorUnit: 0,
     interceptorBike: 0,
     annihilatorPlatform: 0,
+    voidStalker: 0,
+    plasmaTurret: 0,
     overseer: 0,
   });
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
@@ -124,6 +158,8 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
       disruptorUnit: 0,
       interceptorBike: 0,
       annihilatorPlatform: 0,
+      voidStalker: 0,
+      plasmaTurret: 0,
       overseer: 0,
     });
   }, [selectedReport?._id]);
@@ -142,7 +178,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
     const lines: string[] = [];
     const sep = '--------------------------------';
 
-    lines.push(`[ COMBAT LOG — ${outcome} ]`);
+    lines.push(`[ COMBAT LOG - ${outcome} ]`);
     lines.push(sep);
     lines.push(`Date:     ${formatDate(report.arrivesAt)}`);
     lines.push(`Striker:  ${attackerName} from ${atkNexus}`);
@@ -161,9 +197,6 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
       const atkLosses: Record<string, number> = Object.fromEntries(
         Object.entries(report.result?.attackerLosses ?? {}).map(([k, v]) => [k, v ?? 0])
       );
-      if (report.result?.conquered && (report.troops?.overseer ?? 0) > 0) {
-        atkLosses.overseer = report.troops.overseer ?? 0;
-      }
 
       lines.push('');
       lines.push('[ ATTACKER FORCES ]');
@@ -180,15 +213,24 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
       }
 
       lines.push('');
-      lines.push('[ DEFENDER FORCES ]');
-      const defRows = Object.entries(report.result?.defenderLosses ?? {}).filter(([, v]) => Number(v) > 0);
+      lines.push('[ DEFENDER FORCES LEFT ]');
+      const defenderSurvivors = getDefenderSurvivors(report);
+      const defRows = Object.entries(defenderSurvivors).filter(([, v]) => Number(v) > 0);
       if (defRows.length === 0) {
-        lines.push('  (no losses recorded)');
+        lines.push('  No defending troops survived.');
       } else {
-        lines.push(`  ${'Unit'.padEnd(24)}${'Lost'.padStart(6)}`);
-        for (const [type, lost] of defRows) {
-          lines.push(`  ${(troopNames[type] ?? type).padEnd(24)}${String(lost).padStart(6)}`);
+        lines.push(`  ${'Unit'.padEnd(24)}${'Surv'.padStart(6)}`);
+        for (const [type, survived] of defRows) {
+          lines.push(`  ${(troopNames[type] ?? type).padEnd(24)}${String(survived).padStart(6)}`);
         }
+      }
+
+      if (report.result?.remainingResources) {
+        lines.push('');
+        lines.push('[ RESOURCES LEFT ON DEFENDER NEXUS ]');
+        lines.push(`  Biomass: ${formatNumber(report.result.remainingResources.biomass)}`);
+        lines.push(`  Alloy:   ${formatNumber(report.result.remainingResources.alloy)}`);
+        lines.push(`  Ore:     ${formatNumber(report.result.remainingResources.ore)}`);
       }
 
       const loot = report.result?.resourcesStolen;
@@ -269,6 +311,8 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
         disruptorUnit: 0,
         interceptorBike: 0,
         annihilatorPlatform: 0,
+        voidStalker: 0,
+        plasmaTurret: 0,
         overseer: 0,
       });
     } catch (err: any) {
@@ -279,12 +323,8 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
   const loadReports = async () => {
     try {
       setLoading(true);
-      const [reportsRes, spyRes] = await Promise.all([
-        getReports(nexus._id),
-        getAllEspionageLogs().catch(() => ({ data: [] })),
-      ]);
+      const reportsRes = await getReports(nexus._id);
       setReports(reportsRes.data);
-      setSpyLogs(spyRes.data ?? []);
     } catch (err) {
       console.error('Error loading reports:', err);
     } finally {
@@ -328,15 +368,15 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
 
     const isMyAttack = isAttacker(selectedReport);
     const myRole = isMyAttack ? 'attacker' : 'defender';
-    const enemyRole = isMyAttack ? 'defender' : 'attacker';
     const scoutReport = isScoutReport(selectedReport);
     const attackerLossesForDisplay = {
       ...(selectedReport.result?.attackerLosses || {}),
     } as Record<string, number>;
-
-    if (selectedReport.result?.conquered && (selectedReport.troops?.overseer || 0) > 0) {
-      attackerLossesForDisplay.overseer = selectedReport.troops.overseer || 0;
-    }
+    const defenderSurvivors = getDefenderSurvivors(selectedReport);
+    const defenderSurvivorEntries = getTroopEntries(defenderSurvivors);
+    const defenderInitialEntries = getTroopEntries(selectedReport.result?.defenderInitial);
+    const remainingResources = selectedReport.result?.remainingResources;
+    const remainingResourceTotal = resourceTotal(remainingResources);
 
     return (
       <div className="reports-container">
@@ -430,19 +470,19 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
               {showAttackForm && (
                 <div className="scout-attack-form">
                   <div className="scout-troop-list">
-                    {Object.entries(nexus.troops).map(([type, available]) => (
+                    {Object.entries(nexus.troops).filter(([type]) => ATTACKABLE_TROOP_TYPES.has(type)).map(([type, available]) => (
                       <div key={type} className="scout-troop-row">
                         <span className="scout-troop-label">{troopNames[type] || type}</span>
                         <input
                           type="number"
                           min={0}
-                          max={available}
+                          max={clampAttackAmount(type, available)}
                           value={attackTroops[type as keyof typeof attackTroops]}
-                          disabled={available <= 0}
+                          disabled={clampAttackAmount(type, available) <= 0}
                           onChange={(e) =>
                             setAttackTroops((prev) => ({
                               ...prev,
-                              [type]: Math.min(Number(e.target.value), available),
+                              [type]: Math.min(Number(e.target.value), clampAttackAmount(type, available)),
                             }))
                           }
                         />
@@ -451,7 +491,13 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
                     ))}
                   </div>
                   <div className="scout-attack-actions">
-                    <button className="scout-send-all-btn" onClick={() => setAttackTroops({ ...nexus.troops })}>
+                    <button className="scout-send-all-btn" onClick={() => setAttackTroops((prev) => {
+                      const next = { ...prev };
+                      for (const [type, available] of Object.entries(nexus.troops)) {
+                        next[type as keyof typeof next] = clampAttackAmount(type, available);
+                      }
+                      return next;
+                    })}>
                       Send All
                     </button>
                     <button className="scout-send-btn" onClick={handleSendAttack}>
@@ -476,6 +522,44 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
 
           {!scoutReport && (
             <>
+              <div className="report-aftermath-grid">
+                <div className="report-aftermath-card report-aftermath-card--troops">
+                  <div className="report-aftermath-kicker">Defender Survivors</div>
+                  <div className="report-aftermath-value">
+                    {defenderSurvivorEntries.reduce((sum, [, count]) => sum + Number(count), 0).toLocaleString()}
+                  </div>
+                  <div className="report-aftermath-list">
+                    {defenderSurvivorEntries.length === 0 ? (
+                      <span>No defending troops survived.</span>
+                    ) : (
+                      defenderSurvivorEntries.slice(0, 4).map(([troop, count]) => (
+                        <span key={troop}>
+                          {troopNames[troop] || troop}: <strong>{formatNumber(count)}</strong>
+                        </span>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                <div className="report-aftermath-card report-aftermath-card--resources">
+                  <div className="report-aftermath-kicker">Resources Left on Defender Nexus</div>
+                  <div className="report-aftermath-value">
+                    {remainingResources ? remainingResourceTotal.toLocaleString() : 'Unknown'}
+                  </div>
+                  <div className="report-aftermath-resources">
+                    {remainingResources ? (
+                      RESOURCE_KEYS.map((key) => (
+                        <span key={key}>
+                          {key[0].toUpperCase() + key.slice(1)} <strong>{formatNumber(remainingResources[key])}</strong>
+                        </span>
+                      ))
+                    ) : (
+                      <span>Only new combat reports include post-battle resources.</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               {selectedReport.result.controlReduced && !selectedReport.result.conquered && (
                 <div className="control-notice">Control reduced! Remaining: {selectedReport.result.remainingControl}/100
                 </div>
@@ -563,12 +647,20 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
           )}
 
           <div className="report-section">
-            <h3>Enemy Forces</h3>
+            <h3>{scoutReport ? 'Enemy Forces' : 'Defender Forces'}</h3>
             <table className="report-table">
               <thead>
                 <tr>
                   <th>Unit</th>
-                  <th>{scoutReport ? 'Detected' : 'Lost'}</th>
+                  {scoutReport ? (
+                    <th>Detected</th>
+                  ) : (
+                    <>
+                      <th>Present</th>
+                      <th>Lost</th>
+                      <th>Survived</th>
+                    </>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -582,29 +674,24 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
                         </tr>
                       ),
                   )}
-                {enemyRole === 'attacker' &&
-                  !scoutReport &&
-                  Object.entries(attackerLossesForDisplay).map(
-                    ([troop, lost]) =>
-                      Number(lost) > 0 && (
-                        <tr key={troop}>
-                          <td>{troopNames[troop] || troop}</td>
-                          <td className="losses">{lost}</td>
-                        </tr>
-                      ),
-                  )}
-                {enemyRole === 'defender' &&
-                  !scoutReport &&
-                  selectedReport.result?.defenderLosses &&
-                  Object.entries(selectedReport.result.defenderLosses).map(
-                    ([troop, lost]) =>
-                      Number(lost) > 0 && (
-                        <tr key={troop}>
-                          <td>{troopNames[troop] || troop}</td>
-                          <td className="losses">{lost}</td>
-                        </tr>
-                      ),
-                  )}
+                {!scoutReport &&
+                  defenderInitialEntries.map(([troop, initial]) => {
+                    const lost = Number(selectedReport.result?.defenderLosses?.[troop] ?? 0);
+                    const survived = Number(defenderSurvivors[troop] ?? 0);
+                    return (
+                      <tr key={troop}>
+                        <td>{troopNames[troop] || troop}</td>
+                        <td>{formatNumber(initial)}</td>
+                        <td className={lost > 0 ? 'losses' : undefined}>{formatNumber(lost)}</td>
+                        <td className={survived > 0 ? 'survived' : undefined}>{formatNumber(survived)}</td>
+                      </tr>
+                    );
+                  })}
+                {!scoutReport && defenderInitialEntries.length === 0 && (
+                  <tr>
+                    <td colSpan={4}>No defending troops recorded.</td>
+                  </tr>
+                )}
                 {scoutReport &&
                   Object.values(selectedReport.result?.intel?.troops || {}).every((count) => Number(count) <= 0) && (
                     <tr>
@@ -640,6 +727,18 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
                 </div>
               </div>
             )}
+          {!scoutReport && remainingResources && (
+            <div className="report-section">
+              <h3>Resources Remaining on Defender Nexus</h3>
+              <div className="resources-stolen resources-stolen--remaining">
+                {RESOURCE_KEYS.map((key) => (
+                  <div className="resource-item" key={key}>
+                    <span>{key[0].toUpperCase() + key.slice(1)}:</span> {formatNumber(remainingResources[key])}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {selectedReport.result.buildingDamage && selectedReport.result.buildingDamage.length > 0 && (
             <div className="report-section">
               <h3>Buildings Damaged {isMyAttack ? '(Enemy)' : '(Your Nexus)'}</h3>
@@ -665,8 +764,8 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
         <div className="share-modal-backdrop" onClick={() => setSharePreview(null)}>
           <div className="share-modal" onClick={(e) => e.stopPropagation()}>
             <div className="share-modal-header">
-              <span className="share-modal-title">Preview — Post to Faction Chat</span>
-              <button className="share-modal-close" onClick={() => setSharePreview(null)} aria-label="Close">✕</button>
+              <span className="share-modal-title">Preview - Post to Faction Chat</span>
+              <button className="share-modal-close" onClick={() => setSharePreview(null)} aria-label="Close">X</button>
             </div>
             <div className="share-modal-body">
               <pre className="share-modal-preview">{sharePreview}</pre>
@@ -692,7 +791,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
     const sep = '--------------------------------';
     const isEmbed = log.type === 'embed';
     const success = log.result?.success;
-    lines.push(`[ ESPIONAGE LOG — ${isEmbed ? 'EMBED' : 'SABOTAGE'} ${success ? 'SUCCESS' : 'FAILED'} ]`);
+    lines.push(`[ ESPIONAGE LOG - ${isEmbed ? 'EMBED' : 'SABOTAGE'} ${success ? 'SUCCESS' : 'FAILED'} ]`);
     lines.push(sep);
     lines.push(`Date:     ${formatDate(log.createdAt)}`);
     lines.push(`Origin:   ${log.fromNexusName}`);
@@ -739,7 +838,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
         </div>
         <div className="report-detail">
           <div className={`report-result ${success ? 'victory' : 'defeat'}`}>
-            <span>{isEmbed ? 'Embed Mission' : 'Sabotage Mission'} — {success ? 'Success' : 'Failed'}{log.result?.detected ? ' (Detected)' : ''}</span>
+            <span>{isEmbed ? 'Embed Mission' : 'Sabotage Mission'} - {success ? 'Success' : 'Failed'}{log.result?.detected ? ' (Detected)' : ''}</span>
           </div>
           <div className="report-section">
             <h3>Mission Details</h3>
@@ -747,7 +846,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
             <p><strong>Origin:</strong> {log.fromNexusName}</p>
             <p><strong>Target:</strong> {log.targetName}{log.targetX != null ? ` (${log.targetX}|${log.targetY})` : ''}</p>
             {log.targetOwnerUsername && <p><strong>Owner:</strong> {log.targetOwnerUsername}</p>}
-            <p><strong>Type:</strong> {isEmbed ? 'Embed Operative' : `Sabotage — ${log.sabotageTarget}`}</p>
+            <p><strong>Type:</strong> {isEmbed ? 'Embed Operative' : `Sabotage - ${log.sabotageTarget}`}</p>
             <p><strong>Operatives:</strong> {log.operatives}</p>
             {log.result?.delayMinutes && <p><strong>Queue Delayed:</strong> {log.result.delayMinutes} minutes</p>}
           </div>
@@ -783,29 +882,15 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
       <div className="reports-header">
         <div className="reports-header-row">
           <h2>Combat Logs</h2>
-          {activeReportsTab === 'combat' && unreadCount > 0 && (
+          {unreadCount > 0 && (
             <button className="btn-read-all" onClick={handleMarkAllRead}>
               Mark all read ({unreadCount})
             </button>
           )}
         </div>
-        <div className="reports-tabs">
-          <button
-            className={`reports-tab ${activeReportsTab === 'combat' ? 'reports-tab--active' : ''}`}
-            onClick={() => setActiveReportsTab('combat')}
-          >
-            <Swords size={14} aria-hidden="true" /> Combat
-          </button>
-          <button
-            className={`reports-tab ${activeReportsTab === 'espionage' ? 'reports-tab--active' : ''}`}
-            onClick={() => setActiveReportsTab('espionage')}
-          >
-            <Eye size={14} aria-hidden="true" /> Espionage {spyLogs.length > 0 && <span className="reports-tab-count">{spyLogs.length}</span>}
-          </button>
-        </div>
       </div>
 
-      {activeReportsTab === 'espionage' && (
+      {false && (
         <>
           {spyLogs.length === 0 ? (
             <div className="no-reports">
@@ -827,7 +912,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
                     </div>
                     <div className="report-info">
                       <div className="report-title">
-                        {isEmbed ? 'Embed' : 'Sabotage'} — {log.targetName}
+                        {isEmbed ? 'Embed' : 'Sabotage'} - {log.targetName}
                         {log.targetX != null && ` (${log.targetX}|${log.targetY})`}
                       </div>
                       <div className="report-meta">
@@ -836,7 +921,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
                         {!isEmbed && log.sabotageTarget && <span>{log.sabotageTarget}</span>}
                       </div>
                     </div>
-                    <div className="report-arrow">→</div>
+                    <div className="report-arrow">-&gt;</div>
                   </div>
                 );
               })}
@@ -845,11 +930,11 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
         </>
       )}
 
-      {activeReportsTab === 'combat' && reports.length === 0 ? (
+      {reports.length === 0 ? (
         <div className="no-reports">
           <p>No combat reports yet. Strike other nexuses or defend yours to see reports here!</p>
         </div>
-      ) : activeReportsTab === 'combat' && (
+      ) : (
         <div className="reports-list">
           {reports.map((report) => {
             const isMyAttack = isAttacker(report);
@@ -910,7 +995,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
                     )}
                   </div>
                 </div>
-                <div className="report-arrow">→</div>
+                <div className="report-arrow">-&gt;</div>
               </div>
             );
           })}
