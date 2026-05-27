@@ -180,6 +180,11 @@ export interface Attack {
       buildings?: {
         shieldGrid?: number;
       };
+      resources?: {
+        biomass: number;
+        alloy: number;
+        ore: number;
+      };
     };
   };
   defender: {
@@ -196,6 +201,11 @@ export interface Attack {
       y: number;
       buildings?: {
         shieldGrid?: number;
+      };
+      resources?: {
+        biomass: number;
+        alloy: number;
+        ore: number;
       };
     };
   };

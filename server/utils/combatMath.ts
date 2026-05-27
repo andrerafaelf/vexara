@@ -52,6 +52,7 @@ export const TROOP_STATS: Record<TroopKey, TroopStat> = {
 };
 
 const TROOP_KEYS = Object.keys(TROOP_STATS) as TroopKey[];
+export const DECISIVE_WIPE_POWER_RATIO = 8;
 
 export function computeTroopTotal(force: Partial<Record<TroopKey, number>>, includeOverseer = true): number {
   return TROOP_KEYS
@@ -151,6 +152,11 @@ export function computeLossesForLoser(
     if (key === 'overseer') continue;
     const count = Number((force as Record<string, unknown>)[key] || 0);
     if (count <= 0) continue;
+
+    if (powerRatio >= DECISIVE_WIPE_POWER_RATIO) {
+      losses[key] = count;
+      continue;
+    }
 
     // Variance: ±10% for small stacks (<20), ±5% for large stacks (>200)
     const varianceMagnitude = count < 20 ? 0.10 : count < 200 ? 0.06 : 0.03;

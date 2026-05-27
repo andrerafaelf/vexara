@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { computeForcePower } from '../utils/combatMath.js';
+import {
+  DECISIVE_WIPE_POWER_RATIO,
+  computeForcePower,
+  computeLossesForLoser,
+} from '../utils/combatMath.js';
 import { calculatePoints, computeResourceUpdate } from '../utils/economy.js';
 
 test('computeResourceUpdate increases resources over elapsed time', () => {
@@ -56,4 +60,34 @@ test('computeForcePower sums troop stats for selected power type', () => {
   assert.ok(attackPower > 0);
   assert.ok(defensePower > 0);
   assert.notEqual(attackPower, defensePower);
+});
+
+test('computeLossesForLoser wipes non-overseer troops at decisive power ratio', () => {
+  const troops = {
+    assaultTrooper: 62,
+    lancerDrone: 25,
+    breakerUnit: 3,
+    overseer: 1,
+  };
+
+  const losses = computeLossesForLoser(troops, DECISIVE_WIPE_POWER_RATIO, 12345);
+
+  assert.equal(losses.assaultTrooper, troops.assaultTrooper);
+  assert.equal(losses.lancerDrone, troops.lancerDrone);
+  assert.equal(losses.breakerUnit, troops.breakerUnit);
+  assert.equal(losses.overseer, undefined);
+});
+
+test('computeLossesForLoser remains attritional below decisive power ratio', () => {
+  const troops = {
+    assaultTrooper: 62,
+    lancerDrone: 25,
+  };
+
+  const losses = computeLossesForLoser(troops, DECISIVE_WIPE_POWER_RATIO - 0.01, 12345);
+
+  assert.ok((losses.assaultTrooper ?? 0) > 0);
+  assert.ok((losses.lancerDrone ?? 0) > 0);
+  assert.ok((losses.assaultTrooper ?? 0) < troops.assaultTrooper);
+  assert.ok((losses.lancerDrone ?? 0) < troops.lancerDrone);
 });

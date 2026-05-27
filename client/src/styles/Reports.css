@@ -438,6 +438,12 @@
   font-weight: 700;
 }
 
+.report-aftermath-note {
+  margin-top: 10px;
+  color: var(--text-faint);
+  font-size: var(--text-xs);
+}
+
 /* ── Resources stolen ── */
 .resources-stolen {
   display: flex;

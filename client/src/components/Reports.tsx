@@ -1,4 +1,4 @@
-import { Coins, Eye, Share2, Skull, Swords, Trophy } from 'lucide-react';
+import { Coins, Share2, Skull, Swords, Trophy } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { getReadReportIds, getReports, markAllReportsRead, markReportRead, sendAttack, sendFactionMessage } from '../services/api';
 import '../styles/Reports.css';
@@ -67,6 +67,10 @@ function resourceTotal(resources?: Partial<ResourceSnapshot> | null): number {
   return RESOURCE_KEYS.reduce((sum, key) => sum + Math.max(0, Number(resources[key] ?? 0)), 0);
 }
 
+function getRemainingResources(report: Attack): ResourceSnapshot | null {
+  return report.result?.remainingResources ?? report.defender.nexus?.resources ?? null;
+}
+
 function getDefenderSurvivors(report: Attack): Record<string, number> {
   if (report.result?.defenderSurvivors) return report.result.defenderSurvivors;
   const defenderInitial = report.result?.defenderInitial ?? {};
@@ -85,26 +89,10 @@ function getTroopEntries(troops?: Record<string, number> | null) {
 type ResourceSnapshot = { biomass: number; alloy: number; ore: number };
 const RESOURCE_KEYS = ['biomass', 'alloy', 'ore'] as const;
 
-interface SpyLog {
-  id: number;
-  type: string;
-  operatives: number;
-  sabotageTarget?: string;
-  result: any;
-  createdAt: string;
-  fromNexusName: string;
-  targetName: string;
-  targetX?: number;
-  targetY?: number;
-  targetOwnerUsername?: string | null;
-}
-
 const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, currentUserId }) => {
   const toast = useToast();
   const [reports, setReports] = useState<Attack[]>([]);
-  const spyLogs: SpyLog[] = [];
   const [selectedReport, setSelectedReport] = useState<Attack | null>(null);
-  const [selectedSpyLog, setSelectedSpyLog] = useState<SpyLog | null>(null);
   const [loading, setLoading] = useState(true);
   usePageReady(!loading, 'reports');
   const [showAttackForm, setShowAttackForm] = useState(false);
@@ -225,12 +213,13 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
         }
       }
 
-      if (report.result?.remainingResources) {
+      const remainingResources = getRemainingResources(report);
+      if (remainingResources) {
         lines.push('');
         lines.push('[ RESOURCES LEFT ON DEFENDER NEXUS ]');
-        lines.push(`  Biomass: ${formatNumber(report.result.remainingResources.biomass)}`);
-        lines.push(`  Alloy:   ${formatNumber(report.result.remainingResources.alloy)}`);
-        lines.push(`  Ore:     ${formatNumber(report.result.remainingResources.ore)}`);
+        lines.push(`  Biomass: ${formatNumber(remainingResources.biomass)}`);
+        lines.push(`  Alloy:   ${formatNumber(remainingResources.alloy)}`);
+        lines.push(`  Ore:     ${formatNumber(remainingResources.ore)}`);
       }
 
       const loot = report.result?.resourcesStolen;
@@ -375,7 +364,8 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
     const defenderSurvivors = getDefenderSurvivors(selectedReport);
     const defenderSurvivorEntries = getTroopEntries(defenderSurvivors);
     const defenderInitialEntries = getTroopEntries(selectedReport.result?.defenderInitial);
-    const remainingResources = selectedReport.result?.remainingResources;
+    const remainingResources = getRemainingResources(selectedReport);
+    const hasRecordedRemainingResources = Boolean(selectedReport.result?.remainingResources);
     const remainingResourceTotal = resourceTotal(remainingResources);
 
     return (
@@ -383,7 +373,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
         <div className="reports-header">
           <div className="reports-detail-nav">
             <button onClick={() => setSelectedReport(null)} className="btn-back">
-              ← Back
+              Back
             </button>
             <div className="reports-nav-arrows">
               <button
@@ -392,7 +382,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
                 disabled={!prevReport}
                 title="Previous report"
               >
-                ‹
+                &lt;
               </button>
               <span className="reports-nav-count">
                 {currentIndex + 1} / {reports.length}
@@ -403,7 +393,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
                 disabled={!nextReport}
                 title="Next report"
               >
-                ›
+                &gt;
               </button>
             </div>
             {factionId && (
@@ -414,7 +404,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
                 title="Share this report to faction chat"
               >
                 <Share2 size={13} aria-hidden="true" />
-                {sharing ? 'Sharing…' : 'Share to Chat'}
+                {sharing ? 'Sharing...' : 'Share to Chat'}
               </button>
             )}
           </div>
@@ -544,7 +534,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
                 <div className="report-aftermath-card report-aftermath-card--resources">
                   <div className="report-aftermath-kicker">Resources Left on Defender Nexus</div>
                   <div className="report-aftermath-value">
-                    {remainingResources ? remainingResourceTotal.toLocaleString() : 'Unknown'}
+                    {remainingResources ? remainingResourceTotal.toLocaleString() : '0'}
                   </div>
                   <div className="report-aftermath-resources">
                     {remainingResources ? (
@@ -554,9 +544,12 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
                         </span>
                       ))
                     ) : (
-                      <span>Only new combat reports include post-battle resources.</span>
+                      <span>No resource data recorded.</span>
                     )}
                   </div>
+                  {!hasRecordedRemainingResources && remainingResources && (
+                    <div className="report-aftermath-note">Legacy log: showing current defender resources.</div>
+                  )}
                 </div>
               </div>
 
@@ -776,7 +769,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
               </button>
               <button className="share-modal-confirm" onClick={handleConfirmShare} disabled={sharing}>
                 <Share2 size={13} aria-hidden="true" />
-                {sharing ? 'Posting…' : 'Post to Faction Chat'}
+                {sharing ? 'Posting...' : 'Post to Faction Chat'}
               </button>
             </div>
           </div>
@@ -784,97 +777,6 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
       )}
     </div>
   );
-  }
-
-  const buildSpyShareText = (log: SpyLog): string => {
-    const lines: string[] = [];
-    const sep = '--------------------------------';
-    const isEmbed = log.type === 'embed';
-    const success = log.result?.success;
-    lines.push(`[ ESPIONAGE LOG - ${isEmbed ? 'EMBED' : 'SABOTAGE'} ${success ? 'SUCCESS' : 'FAILED'} ]`);
-    lines.push(sep);
-    lines.push(`Date:     ${formatDate(log.createdAt)}`);
-    lines.push(`Origin:   ${log.fromNexusName}`);
-    lines.push(`Target:   ${log.targetName}${log.targetX != null ? ` (${log.targetX}|${log.targetY})` : ''}`);
-    if (log.targetOwnerUsername) lines.push(`Owner:    ${log.targetOwnerUsername}`);
-    lines.push(`Type:     ${isEmbed ? 'Embed Operative' : `Sabotage (${log.sabotageTarget})`}`);
-    lines.push(`Ops:      ${log.operatives}`);
-    lines.push(`Result:   ${success ? 'Success' : 'Failed'}${log.result?.detected ? ' (detected)' : ''}`);
-    if (log.result?.delayMinutes) lines.push(`Delay:    ${log.result.delayMinutes} minutes`);
-    lines.push(sep);
-    return lines.join('\n');
-  };
-
-  const handleShareSpyLog = async (log: SpyLog) => {
-    if (!factionId) return;
-    const text = buildSpyShareText(log);
-    setSharing(true);
-    try {
-      await sendFactionMessage(factionId, text);
-      toast('Espionage log shared to faction chat', 'success');
-    } catch {
-      toast('Failed to share to chat', 'error');
-    } finally {
-      setSharing(false);
-    }
-  };
-
-  if (selectedSpyLog) {
-    const log = selectedSpyLog;
-    const isEmbed = log.type === 'embed';
-    const success = log.result?.success;
-    return (
-      <div className="reports-container">
-        <div className="reports-header">
-          <div className="reports-detail-nav">
-            <button onClick={() => setSelectedSpyLog(null)} className="btn-back">← Back</button>
-            {factionId && (
-              <button className="btn-share-chat" onClick={() => handleShareSpyLog(log)} disabled={sharing}>
-                <Share2 size={13} aria-hidden="true" /> {sharing ? 'Sharing…' : 'Share to Chat'}
-              </button>
-            )}
-          </div>
-          <h2>Espionage Report</h2>
-        </div>
-        <div className="report-detail">
-          <div className={`report-result ${success ? 'victory' : 'defeat'}`}>
-            <span>{isEmbed ? 'Embed Mission' : 'Sabotage Mission'} - {success ? 'Success' : 'Failed'}{log.result?.detected ? ' (Detected)' : ''}</span>
-          </div>
-          <div className="report-section">
-            <h3>Mission Details</h3>
-            <p><strong>Date:</strong> {formatDate(log.createdAt)}</p>
-            <p><strong>Origin:</strong> {log.fromNexusName}</p>
-            <p><strong>Target:</strong> {log.targetName}{log.targetX != null ? ` (${log.targetX}|${log.targetY})` : ''}</p>
-            {log.targetOwnerUsername && <p><strong>Owner:</strong> {log.targetOwnerUsername}</p>}
-            <p><strong>Type:</strong> {isEmbed ? 'Embed Operative' : `Sabotage - ${log.sabotageTarget}`}</p>
-            <p><strong>Operatives:</strong> {log.operatives}</p>
-            {log.result?.delayMinutes && <p><strong>Queue Delayed:</strong> {log.result.delayMinutes} minutes</p>}
-          </div>
-          {success && isEmbed && log.result?.intel && (
-            <div className="report-section">
-              <h3>Intelligence Gathered</h3>
-              {log.result.intel.troops && (
-                <table className="report-table">
-                  <thead><tr><th>Unit</th><th>Count</th></tr></thead>
-                  <tbody>
-                    {Object.entries(log.result.intel.troops).filter(([,c]) => Number(c) > 0).map(([type, count]) => (
-                      <tr key={type}><td>{troopNames[type] ?? type}</td><td>{String(count)}</td></tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-              {log.result.intel.resources && (
-                <div className="resources-stolen" style={{ marginTop: 12 }}>
-                  <div className="resource-item"><span>Biomass:</span> {log.result.intel.resources.biomass}</div>
-                  <div className="resource-item"><span>Alloy:</span> {log.result.intel.resources.alloy}</div>
-                  <div className="resource-item"><span>Ore:</span> {log.result.intel.resources.ore}</div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-    );
   }
 
   return (
@@ -889,46 +791,6 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
           )}
         </div>
       </div>
-
-      {false && (
-        <>
-          {spyLogs.length === 0 ? (
-            <div className="no-reports">
-              <p>No espionage reports yet. Send spy missions from the Espionage tab on your nexus.</p>
-            </div>
-          ) : (
-            <div className="reports-list">
-              {spyLogs.map((log) => {
-                const isEmbed = log.type === 'embed';
-                const success = log.result?.success;
-                return (
-                  <div
-                    key={log.id}
-                    className={`report-item ${success ? 'won' : 'lost'}`}
-                    onClick={() => setSelectedSpyLog(log)}
-                  >
-                    <div className="report-icon" aria-hidden="true">
-                      <Eye size={18} />
-                    </div>
-                    <div className="report-info">
-                      <div className="report-title">
-                        {isEmbed ? 'Embed' : 'Sabotage'} - {log.targetName}
-                        {log.targetX != null && ` (${log.targetX}|${log.targetY})`}
-                      </div>
-                      <div className="report-meta">
-                        <span className={success ? 'victory' : 'defeat'}>{success ? 'Success' : 'Failed'}</span>
-                        <span className="report-date">{formatDate(log.createdAt)}</span>
-                        {!isEmbed && log.sabotageTarget && <span>{log.sabotageTarget}</span>}
-                      </div>
-                    </div>
-                    <div className="report-arrow">-&gt;</div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </>
-      )}
 
       {reports.length === 0 ? (
         <div className="no-reports">

@@ -23,7 +23,7 @@ export function getReportsForNexus(nexusId: number) {
     orderBy: { createdAt: 'desc' },
     include: {
       attackerNexus: { select: { id: true, name: true, x: true, y: true } },
-      defenderNexus: { select: { id: true, name: true, x: true, y: true } },
+      defenderNexus: { select: { id: true, name: true, x: true, y: true, biomass: true, alloy: true, ore: true } },
     },
   });
 }

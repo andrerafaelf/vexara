@@ -700,7 +700,7 @@ interface AttackWithNexuses {
   defenderAvatarUrl?: string | null;
   defenderAvatarUrlSm?: string | null;
   defenderNexusId: number | null;
-  defenderNexus?: { id: number; name: string; x: number; y: number; shieldGrid?: number } | null;
+  defenderNexus?: { id: number; name: string; x: number; y: number; shieldGrid?: number; biomass?: number; alloy?: number; ore?: number } | null;
   troops: unknown;
   arrivesAt: Date | null;
   returnsAt: Date | null;
@@ -742,7 +742,10 @@ export function serializeAttack(a: AttackWithNexuses) {
       },
       nexus: a.defenderNexus
         ? { _id: String(a.defenderNexus.id), id: String(a.defenderNexus.id), name: a.defenderNexus.name, x: a.defenderNexus.x, y: a.defenderNexus.y,
-            buildings: a.defenderNexus.shieldGrid !== undefined ? { shieldGrid: a.defenderNexus.shieldGrid } : undefined }
+            buildings: a.defenderNexus.shieldGrid !== undefined ? { shieldGrid: a.defenderNexus.shieldGrid } : undefined,
+            resources: a.defenderNexus.biomass !== undefined
+              ? { biomass: a.defenderNexus.biomass, alloy: a.defenderNexus.alloy, ore: a.defenderNexus.ore }
+              : undefined }
         : { _id: a.defenderNexusId != null ? String(a.defenderNexusId) : a.defenderNexusId, id: a.defenderNexusId != null ? String(a.defenderNexusId) : a.defenderNexusId },
     },
     troops: a.troops,
