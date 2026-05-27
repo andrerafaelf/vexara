@@ -65,9 +65,6 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 
     if (attack.type === 'support') {
       // Station the troops at the defender nexus via TroopTransfer
-      const travelMs = attack.arrivesAt!.getTime() - attack.createdAt.getTime();
-      const returnsAt = new Date(Date.now() + travelMs);
-
       await prisma.$transaction([
         prisma.troopTransfer.create({
           data: {
@@ -168,7 +165,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
     }
 
     // Attacker armory level amplifies class-counter bonuses
-    const attackerNexusForArmory = await prisma.nexus.findUnique({ where: { id: attack.attackerNexusId! }, select: { armory: true } });
+    const attackerNexusForArmory = await prisma.nexus.findUnique({ where: { id: attack.attackerNexusId! } });
     const attackerArmoryLevel = (attackerNexusForArmory as unknown as { armory?: number } | null)?.armory ?? 0;
 
     // Class-weighted attack power vs raw defense power
@@ -236,18 +233,27 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
       }
     }
 
-    // Remove destroyed support troops from their TroopTransfer records
+    // Remove destroyed support troops from their TroopTransfer records.
+    // Losses are applied garrison-first; the remainder is spread across transfers
+    // in order. remainingSupportLosses tracks how many per-type losses are still
+    // unallocated so each transfer only absorbs its fair share.
     if (supportTransfers.length > 0) {
+      const remainingSupportLosses: Record<string, number> = {};
+      for (const key of TROOP_KEYS) {
+        const garrisonCount = (defenderNexus as unknown as Record<TroopKey, number>)[key] || 0;
+        const totalLost = defenderLosses[key] || 0;
+        remainingSupportLosses[key] = Math.max(0, totalLost - garrisonCount);
+      }
+
       for (const transfer of supportTransfers) {
         const t = transfer.troops as Record<TroopKey, number>;
         const updatedTroops: Record<string, number> = {};
         let anyRemain = false;
         for (const key of TROOP_KEYS) {
           const inTransfer = t[key] || 0;
-          const totalLost = defenderLosses[key] || 0;
-          const garrisonCount = (defenderNexus as unknown as Record<TroopKey, number>)[key] || 0;
-          const supportLost = Math.max(0, totalLost - garrisonCount);
-          const remaining = Math.max(0, inTransfer - supportLost);
+          const lost = Math.min(inTransfer, remainingSupportLosses[key] || 0);
+          remainingSupportLosses[key] = (remainingSupportLosses[key] || 0) - lost;
+          const remaining = inTransfer - lost;
           updatedTroops[key] = remaining;
           if (remaining > 0) anyRemain = true;
         }
@@ -321,7 +327,8 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 
     let newControlLevel = defenderNexus.controlLevel ?? 100;
     const overseerSent = attackTroops.overseer || 0;
-    const overseerCanAct = attackerWins && overseerSent > 0 && attackerLosses.overseer === 0;
+    const allDefenderTroopsWiped = totalDefenderTroopsInForce === 0 || totalDefenderTroopsLost >= totalDefenderTroopsInForce;
+    const overseerCanAct = attackerWins && overseerSent > 0 && attackerLosses.overseer === 0 && allDefenderTroopsWiped;
 
     if (overseerCanAct) {
       newControlLevel = Math.max(0, newControlLevel - 34);
@@ -337,6 +344,11 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
         defenderTroopUpdates['nexusTypeDoubled'] = false;
         defenderTroopUpdates['conqueredAt'] = new Date();
         conquered = true;
+        // Delete all remaining stationed transfers at the conquered nexus — any
+        // allied troops still there are destroyed when the nexus falls.
+        await prisma.troopTransfer.deleteMany({
+          where: { hostNexusId: defenderNexus.id, status: 'stationed' },
+        });
         // Overseer survives conquest. Zero out the loss so survivingTroops
         // includes it, and a stationed TroopTransfer is created below.
         attackerLosses.overseer = 0;

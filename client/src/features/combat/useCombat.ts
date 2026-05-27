@@ -13,6 +13,7 @@ import {
   sendBackTroops,
   getNexusTroopTransfers,
 } from '../../services/api';
+import { NOTIFICATION_BADGES_KEY } from '../../hooks/useNotificationBadges';
 
 export const combatKeys = {
   incoming: (nexusId: string) => ['attacks', 'incoming', nexusId] as const,
@@ -84,6 +85,7 @@ export function useMarkReportRead() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: combatKeys.readIds() });
       qc.invalidateQueries({ queryKey: combatKeys.unreadNexusIds() });
+      qc.invalidateQueries({ queryKey: NOTIFICATION_BADGES_KEY });
     },
   });
 }
@@ -96,6 +98,7 @@ export function useMarkAllReportsRead() {
       qc.invalidateQueries({ queryKey: combatKeys.reports(nexusId) });
       qc.invalidateQueries({ queryKey: combatKeys.readIds() });
       qc.invalidateQueries({ queryKey: combatKeys.unreadNexusIds() });
+      qc.invalidateQueries({ queryKey: NOTIFICATION_BADGES_KEY });
     },
   });
 }

@@ -52,14 +52,23 @@ export async function getMyNexuses(req: AuthRequest, res: Response): Promise<voi
     // The bump is attributed back to the originating nexus so the per-nexus
     // .points field - which the client sums for the header influence - also
     // reflects in-flight troops, not just the GalaxyPlayer total.
-    const inFlightAttacks = await prisma.attack.findMany({
-      where: {
-        attackerUserId: req.userId,
-        galaxyId: req.galaxyId,
-        status: { in: ['traveling', 'returning'] },
-      },
-      select: { attackerNexusId: true, troops: true, result: true, status: true },
-    });
+    const [inFlightAttacks, outboundTransfers] = await Promise.all([
+      prisma.attack.findMany({
+        where: {
+          attackerUserId: req.userId,
+          galaxyId: req.galaxyId,
+          status: { in: ['traveling', 'returning'] },
+        },
+        select: { attackerNexusId: true, troops: true, result: true, status: true },
+      }),
+      prisma.troopTransfer.findMany({
+        where: {
+          ownerNexus: { ownerId: req.userId, galaxyId: req.galaxyId },
+          status: { in: ['traveling', 'stationed', 'returning'] },
+        },
+        select: { ownerNexusId: true, troops: true },
+      }),
+    ]);
     const inFlightByNexus = new Map<number, number>();
     for (const a of inFlightAttacks) {
       if (a.attackerNexusId == null) continue;
@@ -74,6 +83,11 @@ export async function getMyNexuses(req: AuthRequest, res: Response): Promise<voi
       }
       const inf = calculateTroopInfluence(live);
       inFlightByNexus.set(a.attackerNexusId, (inFlightByNexus.get(a.attackerNexusId) ?? 0) + inf);
+    }
+    for (const t of outboundTransfers) {
+      const troops = (t.troops as Record<string, number> | null) || {};
+      const inf = calculateTroopInfluence(troops);
+      inFlightByNexus.set(t.ownerNexusId, (inFlightByNexus.get(t.ownerNexusId) ?? 0) + inf);
     }
 
     const withInFlight = updated.map((v) => {

@@ -1,6 +1,6 @@
-import { Coins, Skull, Swords, Trophy } from 'lucide-react';
+import { Coins, Share2, Skull, Swords, Trophy } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { getReadReportIds, getReports, markAllReportsRead, markReportRead, sendAttack } from '../services/api';
+import { getReadReportIds, getReports, markAllReportsRead, markReportRead, sendAttack, sendFactionMessage } from '../services/api';
 import '../styles/Reports.css';
 import { useToast } from '../context/ToastContext';
 import { Attack, Nexus } from '../types/game';
@@ -15,6 +15,8 @@ import PageSkeleton from './PageSkeleton';
 interface ReportsProps {
   nexus: Nexus;
   onReadStateChange?: () => void;
+  factionId?: number;
+  currentUserId?: number;
 }
 
 const buildingNames: Record<string, string> = {
@@ -47,13 +49,14 @@ const troopNames: Record<string, string> = {
   overseer: 'Overseer',
 };
 
-const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
+const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, currentUserId }) => {
   const toast = useToast();
   const [reports, setReports] = useState<Attack[]>([]);
   const [selectedReport, setSelectedReport] = useState<Attack | null>(null);
   const [loading, setLoading] = useState(true);
   usePageReady(!loading, 'reports');
   const [showAttackForm, setShowAttackForm] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const [attackTroops, setAttackTroops] = useState({
     lancerDrone: 0,
     assaultTrooper: 0,
@@ -103,6 +106,50 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
       overseer: 0,
     });
   }, [selectedReport?._id]);
+
+  const handleShareToChat = async (report: Attack) => {
+    if (!factionId) return;
+    setSharing(true);
+    try {
+      const isMyAttack = isAttacker(report);
+      const scoutReport = isScoutReport(report);
+      const won = isMyAttack ? report.result.victory : !report.result.victory;
+      const outcome = scoutReport ? 'SCOUT' : won ? 'VICTORY' : 'DEFEAT';
+      const attacker = report.attacker.user?.username ?? 'Unknown';
+      const defender = report.defender.user?.username ?? 'Unknown';
+      const defNexus = report.defender.nexus?.name ?? 'Unknown';
+      const defCoords = `${report.defender.nexus?.x ?? '?'}|${report.defender.nexus?.y ?? '?'}`;
+
+      const lines: string[] = [];
+      lines.push(`⚔ COMBAT REPORT — ${outcome}`);
+      lines.push(`${attacker} → ${defender} (${defNexus} ${defCoords})`);
+
+      if (!scoutReport) {
+        const totalSent = Object.values(report.troops ?? {}).reduce((a: number, b) => a + (b as number), 0);
+        const attackerLost = Object.values(report.result?.attackerLosses ?? {}).reduce((a: number, b) => a + (b as number), 0);
+        const defenderLost = Object.values(report.result?.defenderLosses ?? {}).reduce((a: number, b) => a + (b as number), 0);
+        lines.push(`Attacker: ${totalSent} sent, ${attackerLost} lost`);
+        lines.push(`Defender: ${defenderLost} lost`);
+
+        const loot = report.result?.resourcesStolen;
+        if (loot && (loot.biomass > 0 || loot.alloy > 0 || loot.ore > 0)) {
+          const parts: string[] = [];
+          if (loot.biomass > 0) parts.push(`${loot.biomass} biomass`);
+          if (loot.alloy > 0) parts.push(`${loot.alloy} alloy`);
+          if (loot.ore > 0) parts.push(`${loot.ore} ore`);
+          lines.push(`Plundered: ${parts.join(', ')}`);
+        }
+        if (report.result?.conquered) lines.push('🏴 NEXUS CONQUERED');
+      }
+
+      await sendFactionMessage(factionId, lines.join('\n'));
+      toast('Combat log shared to faction chat', 'success');
+    } catch {
+      toast('Failed to share to chat', 'error');
+    } finally {
+      setSharing(false);
+    }
+  };
 
   const handleSendAttack = async () => {
     if (!selectedReport) return;
@@ -220,6 +267,17 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange }) => {
                 ›
               </button>
             </div>
+            {factionId && (
+              <button
+                className="btn-share-chat"
+                onClick={() => handleShareToChat(selectedReport)}
+                disabled={sharing}
+                title="Share this report to faction chat"
+              >
+                <Share2 size={13} aria-hidden="true" />
+                {sharing ? 'Sharing…' : 'Share to Chat'}
+              </button>
+            )}
           </div>
           <h2>{scoutReport ? 'Scout Report' : 'Combat Report'}</h2>
         </div>

@@ -1492,18 +1492,25 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
+  min-width: 0;
 }
 
 .factions-browser-card-identity {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  min-width: 0;
+  flex: 1;
 }
 
 .factions-browser-card-name {
   font-weight: 700;
   color: var(--text-strong);
   font-size: var(--text-base);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .factions-browser-card-name-button {
@@ -1573,6 +1580,10 @@
   font-size: var(--text-xs);
   color: var(--text-muted);
   white-space: nowrap;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
 }
 
 .factions-browser-card-desc {
@@ -1997,6 +2008,30 @@
   border-radius: 0;
 }
 
+/* ── Players card: keep rank + avatar fixed-width, let name shrink ───────── */
+.players-card .factions-browser-card-identity {
+  flex-wrap: nowrap;
+}
+
+.players-card-avatar {
+  flex-shrink: 0;
+}
+
+/* Username's outer wrapper (inline-flex span without a class) must also shrink */
+.players-card .factions-browser-card-identity > span {
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* The link or text-span carrying the name class truncates */
+.players-card .factions-browser-card-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  display: block;
+}
+
 /* ── Players list (shares faction-browser visual language) ───────────────── */
 .players-toolbar {
   display: flex;
@@ -2054,6 +2089,7 @@
   font-size: var(--text-xs);
   letter-spacing: 0.05em;
   margin-right: var(--space-2);
+  flex-shrink: 0;
 }
 
 .players-card-meta {
