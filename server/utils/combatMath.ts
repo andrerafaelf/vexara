@@ -168,6 +168,9 @@ export function computeLossesForWinner(
   // 30% makes a coin-flip victory feel genuinely costly without punishing dominant wins.
   const baseLossRate = Math.min(0.30, powerRatio * 0.30);
 
+  // No resistance at all — skip variance so positive noise can't manufacture losses.
+  if (powerRatio === 0) return losses;
+
   for (const key of TROOP_KEYS) {
     if (key === 'overseer') continue;
     const count = Number((force as Record<string, unknown>)[key] || 0);

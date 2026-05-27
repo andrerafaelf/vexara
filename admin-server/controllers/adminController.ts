@@ -142,6 +142,7 @@ export async function listGalaxies(req: Request, res: Response): Promise<void> {
 
 export async function createGalaxy(req: Request, res: Response): Promise<void> {
   try {
+    // Basic validation for galaxy name and start date, more can be added as needed
     const rawName = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
     if (rawName.length < 3 || rawName.length > 40) {
       res.status(400).json({ error: 'Galaxy name must be between 3 and 40 characters' });
