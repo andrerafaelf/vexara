@@ -790,6 +790,46 @@ export async function resendVerificationEmail(req: Request, res: Response): Prom
   }
 }
 
+export async function grantTokens(req: Request, res: Response): Promise<void> {
+  try {
+    const userId = adminService.toInt(req.params.userId);
+    const count = adminService.toInt(req.body?.count);
+    const reason = typeof req.body?.reason === 'string' ? req.body.reason.trim() : 'admin_grant';
+    if (!Number.isFinite(userId) || userId <= 0) {
+      res.status(400).json({ error: 'Invalid userId' });
+      return;
+    }
+    if (!Number.isFinite(count) || count < 1 || count > 50) {
+      res.status(400).json({ error: 'count must be 1-50' });
+      return;
+    }
+    const user = await adminService.getUserById(userId);
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    const { default: prisma } = await import('../../server/lib/prisma.js');
+    const now = Date.now();
+    const safeReason = reason.slice(0, 20);
+    await Promise.all(
+      Array.from({ length: count }, (_, i) =>
+        prisma.milestoneToken.create({
+          data: {
+            userId,
+            milestone: 0,
+            rewardType: 'admin',
+            rewardMeta: { reason, tokenIndex: i, tokenCount: count },
+            kofiTransactionId: `admin-${safeReason}-${userId}-${now}-${i}`,
+          },
+        }),
+      ),
+    );
+    res.json({ success: true, granted: count });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
 export async function testNotification(req: Request, res: Response): Promise<void> {
   const userId = adminService.toInt(req.params.userId);
   try {
