@@ -717,8 +717,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
       const next = { ...prev };
       for (const [type, count] of Object.entries(availableTroops)) {
         if (attackMissionType === 'support') {
-          // Support: send all non-overseer troops
-          if (type !== 'overseer') {
+          if (!OFFENSE_TROOPS.has(type) && type !== 'reconOperative' && type !== 'plasmaTurret') {
             (next as Record<string, number>)[type] = Number(count);
           }
         } else if (OFFENSE_TROOPS.has(type)) {
@@ -939,7 +938,11 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
       selectedNexus.name.includes('Abandoned Base') ||
       selectedNexus.name.includes('Neutral Settlement');
 
-    const attackTroopRows = Object.entries(availableTroops).filter(([type]) => type !== 'reconOperative' && type !== 'plasmaTurret');
+    const attackTroopRows = Object.entries(availableTroops).filter(([type]) => {
+      if (type === 'reconOperative' || type === 'plasmaTurret') return false;
+      if (attackMissionType === 'support') return !OFFENSE_TROOPS.has(type);
+      return true;
+    });
     const attackAvailableTroopTotal = attackTroopRows.reduce((sum, [, count]) => sum + Number(count || 0), 0);
 
     return (
