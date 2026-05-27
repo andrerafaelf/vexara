@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import * as adminController from '../controllers/adminController.js';
+
 const router = Router();
 
 // Alpha signups admin endpoints
