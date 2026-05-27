@@ -1,8 +1,7 @@
 ## Vexara — Alpha Patch Notes v0.8
 
 Daily quests and streaks. Faction cap at 10. New Deployed Forces tab.
-Espionage reports overhauled and moved into Combat Logs. Conquered nexus
-alert. Travel time shown before you send. Combat reports now appear the
+Conquered nexus alert. Travel time shown before you send. Combat reports now appear the
 moment the strike lands, not when troops walk home.
 
 ---
@@ -41,21 +40,6 @@ New tab on every nexus. Shows two things in one place:
   recall and send-back actions.
 
 Transferred troops no longer clutter the bottom of the Troops tab.
-
----
-
-### Espionage reports in Combat Logs
-
-Combat Logs now has two tabs: Combat and Espionage.
-
-The Espionage tab lists every completed spy mission across all your
-nexuses — embed and sabotage — with the same card layout as combat
-reports. Click into any entry for a full detail view showing mission
-type, operative count, result, intel gathered (for successful embeds),
-and queue delays (for successful sabotages).
-
-Espionage logs can be shared to faction chat the same way combat logs
-can.
 
 ---
 

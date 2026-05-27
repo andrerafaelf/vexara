@@ -273,6 +273,9 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
           tag: `support-received-${attack.id}`, data: { url: '/' },
         });
       }
+      notifyAttackUpdate(attack.attackerUserId, attack.defenderUserId, attack.defenderNexusId!);
+      if (attack.attackerUserId) notifyReportUpdate(attack.attackerUserId);
+      if (attack.defenderUserId) notifyReportUpdate(attack.defenderUserId);
       return;
     }
 
@@ -302,6 +305,8 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
           tag: `scout-${attack.id}`, data: { url: '/combat-logs' },
         });
       }
+      notifyAttackUpdate(attack.attackerUserId, null, attack.attackerNexusId!);
+      if (attack.attackerUserId) notifyReportUpdate(attack.attackerUserId);
       return;
     }
 
@@ -737,10 +742,10 @@ async function processReturnedTroops(attack: Attack): Promise<void> {
 
     if (attack.attackerUserId) {
       void sendPushToUser(attack.attackerUserId, NOTIF.TROOPS_RETURNED, {
-        title: '🪖 Troops Returned',
+        title: 'Troops Returned',
         body: totalReturned > 0
-          ? `🎖️ ${totalReturned} troop${totalReturned !== 1 ? 's' : ''} returned${hasLoot ? ' with loot 💰' : ''}. Combat report ready!`
-          : '💔 Your troops have returned (no survivors). Combat report ready.',
+          ? `${totalReturned} troop${totalReturned !== 1 ? 's' : ''} returned${hasLoot ? ' with loot' : ''}.`
+          : 'Your troops have returned (no survivors).',
         tag: `returned-${attack.id}`, data: { url: '/combat-logs' },
       });
     }

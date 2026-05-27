@@ -256,6 +256,7 @@ export default function PublicProfilePage() {
 
         {profile.streak && profile.streak.currentStreak > 0 && (
           <div className="ps-streak-card">
+            <div className="ps-streak-fire-bg" />
             <div className="ps-streak-content">
               <div className="ps-streak-info">
                 <span className="ps-streak-label">Current Streak</span>

@@ -69,6 +69,7 @@ export default function DailyStreaks() {
 
   return (
     <div className="daily-streaks">
+      <div className="daily-streaks-fire-bg" />
       <div className="daily-streaks-header">
         <div className="daily-streaks-title-row">
           <h3 className="daily-streaks-title">Daily Quests</h3>

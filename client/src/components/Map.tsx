@@ -1,7 +1,7 @@
 import { AlertTriangle, Building, Clock, Home, Info, Shield, Sparkles, Star, Swords, Waves, Zap } from 'lucide-react';
 import { TROOP_STATS } from '../utils/combatSim';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useGameSocket } from '../hooks/useGameSocket';
@@ -140,6 +140,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
   const toast = useToast();
   const isMobile = useIsMobile();
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const [nexuses, setVillages] = useState<MapNexus[]>([]);
   const [selectedNexus, setSelectedNexus] = useState<MapNexus | null>(null);
@@ -287,6 +288,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
   // When arriving with ?attack=<nexusId> (from Reports / Espionage "Attack Again"),
   // jump to that target, select it, and open the attack form.
   useEffect(() => {
+    if (mode !== 'normal') return;
     const attackId = searchParams?.get('attack');
     if (!attackId) return;
     let cancelled = false;
@@ -303,12 +305,15 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
         toast('Could not load target nexus', 'error');
       } finally {
         // Clear the param so a refresh doesn't re-trigger.
-        router.replace('/starfield');
+        const nextParams = new URLSearchParams(searchParams.toString());
+        nextParams.delete('attack');
+        const query = nextParams.toString();
+        router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
       }
     })();
     return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  }, [mode, pathname, searchParams]);
 
   useEffect(() => {
     setTargetX(String(centerX));
