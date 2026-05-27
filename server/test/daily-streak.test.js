@@ -27,6 +27,7 @@ test('claimDailyRewards deposits the summed reward into the strongest owned nexu
     dailyFindUnique: prisma.dailyStreak.findUnique,
     dailyCreate: prisma.dailyStreak.create,
     dailyUpdate: prisma.dailyStreak.update,
+    nexusAggregate: prisma.nexus.aggregate,
     nexusFindFirst: prisma.nexus.findFirst,
     nexusUpdate: prisma.nexus.update,
     transaction: prisma.$transaction,
@@ -35,6 +36,7 @@ test('claimDailyRewards deposits the summed reward into the strongest owned nexu
     prisma.dailyStreak.findUnique = originals.dailyFindUnique;
     prisma.dailyStreak.create = originals.dailyCreate;
     prisma.dailyStreak.update = originals.dailyUpdate;
+    prisma.nexus.aggregate = originals.nexusAggregate;
     prisma.nexus.findFirst = originals.nexusFindFirst;
     prisma.nexus.update = originals.nexusUpdate;
     prisma.$transaction = originals.transaction;
@@ -48,6 +50,10 @@ test('claimDailyRewards deposits the summed reward into the strongest owned nexu
   prisma.dailyStreak.update = async (args) => {
     calls.dailyUpdate = args;
     return { ...calls.streak, ...args.data };
+  };
+  prisma.nexus.aggregate = async (args) => {
+    calls.nexusAggregate = args;
+    return { _max: { commandCore: calls.highestCommandCore ?? null } };
   };
   prisma.nexus.findFirst = async (args) => {
     calls.nexusFindFirst = args;
@@ -64,11 +70,12 @@ test('claimDailyRewards deposits the summed reward into the strongest owned nexu
   const seed = getTodaySeed(userId, galaxyId);
   const quests = selectDailyQuests(seed);
   const progress = Object.fromEntries(quests.map((q) => [q.id, q.target]));
+  const highestCommandCore = 8;
   const expectedReward = quests.reduce(
     (sum, quest) => ({
-      biomass: sum.biomass + quest.reward.biomass,
-      alloy: sum.alloy + quest.reward.alloy,
-      ore: sum.ore + quest.reward.ore,
+      biomass: sum.biomass + quest.reward.biomass * highestCommandCore,
+      alloy: sum.alloy + quest.reward.alloy * highestCommandCore,
+      ore: sum.ore + quest.reward.ore * highestCommandCore,
     }),
     { biomass: 0, alloy: 0, ore: 0 },
   );
@@ -83,10 +90,15 @@ test('claimDailyRewards deposits the summed reward into the strongest owned nexu
     questsProgress: progress,
     questsClaimed: false,
   };
+  calls.highestCommandCore = highestCommandCore;
   calls.rewardNexus = { id: 77, name: 'Stronghold', points: 1200 };
 
   const result = await claimDailyRewards(userId, galaxyId);
 
+  assert.deepEqual(calls.nexusAggregate, {
+    where: { ownerId: userId, galaxyId },
+    _max: { commandCore: true },
+  });
   assert.deepEqual(calls.nexusFindFirst, {
     where: { ownerId: userId, galaxyId },
     orderBy: [{ points: 'desc' }, { id: 'asc' }],

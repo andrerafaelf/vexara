@@ -432,20 +432,13 @@
   position: relative;
   overflow: hidden;
   border-radius: var(--radius-sm);
-  border: 1px solid rgba(255, 120, 20, 0.3);
+  background: rgba(255, 255, 255, 0.018);
+  border: 1px solid var(--border-default);
   margin-bottom: 16px;
 }
 
 .ps-streak-fire-bg {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 80% 60% at 20% 100%, rgba(255, 80, 0, 0.18) 0%, transparent 70%),
-    radial-gradient(ellipse 60% 50% at 80% 100%, rgba(255, 140, 0, 0.12) 0%, transparent 60%),
-    radial-gradient(ellipse 100% 40% at 50% 110%, rgba(255, 60, 0, 0.15) 0%, transparent 80%),
-    linear-gradient(180deg, rgba(255, 100, 0, 0.04) 0%, rgba(255, 60, 0, 0.08) 100%);
-  animation: ps-fire-pulse 3s ease-in-out infinite alternate;
-  pointer-events: none;
+  display: none;
 }
 
 @keyframes ps-fire-pulse {
@@ -458,11 +451,11 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 16px;
+  padding: 10px 14px;
 }
 
 .ps-streak-icon {
-  color: #FF6B1A;
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 
@@ -478,12 +471,12 @@
   font-size: 10px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(255, 158, 61, 0.8);
+  color: var(--text-faint);
 }
 
 .ps-streak-value {
   color: var(--text-strong);
-  font-size: var(--text-lg);
+  font-size: var(--text-base);
   font-weight: 800;
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
@@ -506,6 +499,70 @@
   letter-spacing: 0.1em;
   color: var(--text-muted);
   font-family: var(--font-mono);
+}
+
+.pp-friend-actions {
+  margin-left: auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.pp-galaxy-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pp-galaxy-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.pp-galaxy-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pp-galaxy-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pp-winner {
+  color: var(--accent) !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pp-galaxy-points {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .pp-friend-actions {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .pp-galaxy-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .pp-galaxy-points {
+    text-align: left;
+  }
 }
 
 .ps-streak-best-value {

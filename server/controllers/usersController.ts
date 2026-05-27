@@ -7,8 +7,20 @@ import type { AuthRequest } from '../types/index.js';
 import { validatePassword } from '../utils/validation.js';
 import { logError } from '../utils/logger.js';
 import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
+import { getResourceProduction } from '../utils/economy.js';
 
 type FriendshipStatus = 'self' | 'none' | 'pending_outgoing' | 'pending_incoming' | 'friends';
+
+const TROOP_KEYS = [
+  'lancerDrone', 'assaultTrooper', 'breakerUnit', 'reconOperative',
+  'skimmerBike', 'siegeMech', 'bulwarkGuard', 'suppressorTeam',
+  'disruptorUnit', 'interceptorBike', 'annihilatorPlatform', 'overseer',
+];
+
+function sumTroops(troopObj: unknown): number {
+  if (!troopObj || typeof troopObj !== 'object') return 0;
+  return TROOP_KEYS.reduce((sum, k) => sum + (Number((troopObj as Record<string, unknown>)[k]) || 0), 0);
+}
 
 export async function listPlayersInGalaxy(req: AuthRequest, res: Response): Promise<void> {
   try {
@@ -159,7 +171,8 @@ export async function getPublicProfile(req: AuthRequest, res: Response): Promise
     });
     if (!user) { res.status(404).json({ error: 'User not found' }); return; }
 
-    const players = await prisma.galaxyPlayer.findMany({
+    const [players, activePlayer, activeNexuses, completedAttacks, streak] = await Promise.all([
+      prisma.galaxyPlayer.findMany({
       where: { userId: user.id },
       select: {
         points: true,
@@ -178,7 +191,25 @@ export async function getPublicProfile(req: AuthRequest, res: Response): Promise
         },
       },
       orderBy: { joinedAt: 'desc' },
-    });
+      }),
+      prisma.galaxyPlayer.findUnique({
+        where: { userId_galaxyId: { userId: user.id, galaxyId: req.galaxyId } },
+        select: { points: true },
+      }),
+      prisma.nexus.findMany({ where: { ownerId: user.id, galaxyId: req.galaxyId } }),
+      prisma.attack.findMany({
+        where: {
+          galaxyId: req.galaxyId,
+          status: 'completed',
+          OR: [{ attackerUserId: user.id }, { defenderUserId: user.id }],
+        },
+        select: { attackerUserId: true, defenderUserId: true, result: true },
+      }),
+      prisma.dailyStreak.findUnique({
+        where: { userId_galaxyId: { userId: user.id, galaxyId: req.galaxyId } },
+        select: { currentStreak: true, longestStreak: true },
+      }),
+    ]);
 
     const factionMemberships = await prisma.factionMember.findMany({
       where: { userId: user.id },
@@ -241,6 +272,55 @@ export async function getPublicProfile(req: AuthRequest, res: Response): Promise
 
     const accountAgeDays = Math.max(1, Math.floor((Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24)));
 
+    let attacksLaunched = 0, attacksDefended = 0, victories = 0, defeats = 0;
+    let troopsLost = 0, troopsKilled = 0;
+    const resourcesStolen = { biomass: 0, alloy: 0, ore: 0 };
+    const resourcesLost = { biomass: 0, alloy: 0, ore: 0 };
+    for (const attack of completedAttacks) {
+      const result = attack.result as Record<string, unknown> | null;
+      if (!result) continue;
+      const isAttacker = attack.attackerUserId === user.id;
+      const isDefender = attack.defenderUserId === user.id;
+      const won = result.victory === true;
+      const stolen = result.resourcesStolen as { biomass?: number; alloy?: number; ore?: number } | undefined;
+      if (isAttacker) {
+        attacksLaunched++;
+        if (won) victories++; else defeats++;
+        troopsLost += sumTroops(result.attackerLosses);
+        troopsKilled += sumTroops(result.defenderLosses);
+        if (won && stolen) {
+          resourcesStolen.biomass += stolen.biomass || 0;
+          resourcesStolen.alloy += stolen.alloy || 0;
+          resourcesStolen.ore += stolen.ore || 0;
+        }
+      }
+      if (isDefender) {
+        attacksDefended++;
+        troopsLost += sumTroops(result.defenderLosses);
+        troopsKilled += sumTroops(result.attackerLosses);
+        if (!won && stolen) {
+          resourcesLost.biomass += stolen.biomass || 0;
+          resourcesLost.alloy += stolen.alloy || 0;
+          resourcesLost.ore += stolen.ore || 0;
+        }
+      }
+    }
+
+    let totalProductionPerHour = { biomass: 0, alloy: 0, ore: 0 };
+    let totalCurrentResources = { biomass: 0, alloy: 0, ore: 0 };
+    let totalTroops = 0;
+    for (const nexus of activeNexuses) {
+      const prod = getResourceProduction(nexus);
+      totalProductionPerHour.biomass += prod.biomass;
+      totalProductionPerHour.alloy += prod.alloy;
+      totalProductionPerHour.ore += prod.ore;
+      totalCurrentResources.biomass += nexus.biomass;
+      totalCurrentResources.alloy += nexus.alloy;
+      totalCurrentResources.ore += nexus.ore;
+      const nexusRecord = nexus as unknown as Record<string, number>;
+      for (const k of TROOP_KEYS) totalTroops += nexusRecord[k] || 0;
+    }
+
     res.json({
       userId: user.id,
       username: user.username,
@@ -255,6 +335,33 @@ export async function getPublicProfile(req: AuthRequest, res: Response): Promise
       bestSingleGalaxy,
       galaxiesWon,
       galaxiesPlayed: galaxies.length,
+      points: activePlayer?.points ?? 0,
+      nexusCount: activeNexuses.length,
+      totalTroops,
+      combat: { attacksLaunched, attacksDefended, victories, defeats, troopsLost, troopsKilled, resourcesStolen, resourcesLost },
+      resources: {
+        current: totalCurrentResources,
+        productionPerHour: {
+          biomass: Math.round(totalProductionPerHour.biomass),
+          alloy: Math.round(totalProductionPerHour.alloy),
+          ore: Math.round(totalProductionPerHour.ore),
+        },
+        avgPerDay: {
+          biomass: Math.round(totalProductionPerHour.biomass * 24),
+          alloy: Math.round(totalProductionPerHour.alloy * 24),
+          ore: Math.round(totalProductionPerHour.ore * 24),
+        },
+      },
+      streak: streak ? { currentStreak: streak.currentStreak, longestStreak: streak.longestStreak } : null,
+      nexuses: activeNexuses.map((n) => ({
+        _id: String(n.id),
+        id: n.id,
+        name: n.name,
+        x: n.x,
+        y: n.y,
+        nexusType: n.nexusType,
+        points: n.points,
+      })),
       galaxies,
       friendship,
     });

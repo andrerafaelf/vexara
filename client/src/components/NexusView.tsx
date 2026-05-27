@@ -1637,11 +1637,11 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
 
       <div className="tab-content">
         <div className="overview-tab" style={activeTab !== 'overview' ? { display: 'none' } : undefined}>
-            <DailyStreaks />
             {nexus.newbieProtectionEndsAt && (
               <NewbieProtectionBanner endsAt={nexus.newbieProtectionEndsAt} />
             )}
             <NexusMap nexus={nexus} onClickBuilding={() => setActiveTab('buildings')} />
+            <DailyStreaks />
 
             <div className="nexus-stats-row" aria-label="Nexus key stats">
               <div className="nexus-stat">

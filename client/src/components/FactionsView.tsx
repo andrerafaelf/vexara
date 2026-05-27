@@ -186,7 +186,7 @@ export default function FactionsView() {
 
   // Click-to-expand on faction names: fetch the member list lazily and cache it.
   const [expandedFactionId, setExpandedFactionId] = useState<number | null>(null);
-  const [factionMemberCache, setFactionMemberCache] = useState<Record<number, Array<{ userId: number; username: string; isSupporter: boolean; supporterTier?: string | null; role: string }> | 'loading' | 'error'>>({});
+  const [factionMemberCache, setFactionMemberCache] = useState<Record<number, Array<{ userId: number; username: string; isSupporter: boolean; supporterTier?: string | null; role: string; points?: number; nexusCount?: number; joinedAt?: string | null }> | 'loading' | 'error'>>({});
 
   const toggleFactionExpanded = useCallback(async (factionId: number) => {
     setExpandedFactionId((prev) => (prev === factionId ? null : factionId));
@@ -194,12 +194,15 @@ export default function FactionsView() {
     setFactionMemberCache((prev) => ({ ...prev, [factionId]: 'loading' }));
     try {
       const res = await getFaction(factionId);
-      const members = (res.data?.members ?? []).map((m: { userId: number; username: string; isSupporter?: boolean; supporterTier?: string | null; role: string }) => ({
+      const members = (res.data?.members ?? []).map((m: { userId: number; username: string; isSupporter?: boolean; supporterTier?: string | null; role: string; points?: number; nexusCount?: number; joinedAt?: string | null }) => ({
         userId: m.userId,
         username: m.username,
         isSupporter: !!m.isSupporter,
         supporterTier: m.supporterTier ?? null,
         role: m.role,
+        points: m.points ?? 0,
+        nexusCount: m.nexusCount ?? 0,
+        joinedAt: m.joinedAt ?? null,
       }));
       setFactionMemberCache((prev) => ({ ...prev, [factionId]: members }));
     } catch {
@@ -689,8 +692,14 @@ export default function FactionsView() {
                           <ul className="factions-browser-card-members-list">
                             {cachedMembers.map((m) => (
                               <li key={m.userId} className="factions-browser-card-members-item">
-                                <Username name={m.username} isSupporter={m.isSupporter} supporterTier={m.supporterTier as any} linkToProfile />
-                                <span className={`factions-role-badge factions-role-badge--${m.role}`}>{m.role}</span>
+                                <div className="factions-browser-card-member-main">
+                                  <Username name={m.username} isSupporter={m.isSupporter} supporterTier={m.supporterTier as any} linkToProfile />
+                                  <span className={`factions-role-badge factions-role-badge--${m.role}`}>{m.role}</span>
+                                </div>
+                                <div className="factions-browser-card-member-stats">
+                                  <span>{(m.points ?? 0).toLocaleString()} inf</span>
+                                  <span>{m.nexusCount ?? 0} nexus{(m.nexusCount ?? 0) !== 1 ? 'es' : ''}</span>
+                                </div>
                               </li>
                             ))}
                           </ul>
@@ -1073,8 +1082,14 @@ export default function FactionsView() {
                           <ul className="factions-browser-card-members-list">
                             {cachedMembers.map((m) => (
                               <li key={m.userId} className="factions-browser-card-members-item">
-                                <Username name={m.username} isSupporter={m.isSupporter} supporterTier={m.supporterTier as any} linkToProfile />
-                                <span className={`factions-role-badge factions-role-badge--${m.role}`}>{m.role}</span>
+                                <div className="factions-browser-card-member-main">
+                                  <Username name={m.username} isSupporter={m.isSupporter} supporterTier={m.supporterTier as any} linkToProfile />
+                                  <span className={`factions-role-badge factions-role-badge--${m.role}`}>{m.role}</span>
+                                </div>
+                                <div className="factions-browser-card-member-stats">
+                                  <span>{(m.points ?? 0).toLocaleString()} inf</span>
+                                  <span>{m.nexusCount ?? 0} nexus{(m.nexusCount ?? 0) !== 1 ? 'es' : ''}</span>
+                                </div>
                               </li>
                             ))}
                           </ul>

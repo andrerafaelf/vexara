@@ -3,7 +3,7 @@
 import { useAuth } from '@/context/AuthContext';
 import { getUserStats, changePassword, getMyNexuses, getDailyStreak } from '@/services/api';
 import { Nexus, UserStats } from '@/types/game';
-import { Bell, ExternalLink, Flame, Lock, LogOut, MapPin, User as UserIcon } from 'lucide-react';
+import { Bell, ExternalLink, Lock, LogOut, MapPin, User as UserIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -253,9 +253,7 @@ export default function ProfileStats() {
 
       {streak && streak.currentStreak > 0 && (
         <div className="ps-streak-card">
-          <div className="ps-streak-fire-bg" />
           <div className="ps-streak-content">
-            <Flame size={20} className="ps-streak-icon" aria-hidden="true" />
             <div className="ps-streak-info">
               <span className="ps-streak-label">Current Streak</span>
               <span className="ps-streak-value">{streak.currentStreak} day{streak.currentStreak !== 1 ? 's' : ''}</span>

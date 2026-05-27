@@ -35,6 +35,10 @@ function getStreakMultiplier(streak: number): number {
   return STREAK_BONUS_MULT[idx];
 }
 
+function getNexusLevelMultiplier(level: number | null | undefined): number {
+  return Math.max(1, Math.floor(Number(level) || 0));
+}
+
 export function getTodaySeed(userId: number, galaxyId: number): string {
   const date = new Date().toISOString().slice(0, 10);
   return createHash('md5').update(`${date}-${userId}-${galaxyId}`).digest('hex').slice(0, 16);
@@ -61,6 +65,14 @@ export function selectDailyQuests(seed: string): DailyQuest[] {
     }
   }
   return indices.map((i) => ({ ...QUEST_TEMPLATES[i] }));
+}
+
+async function getHighestNexusLevel(userId: number, galaxyId: number): Promise<number> {
+  const result = await prisma.nexus.aggregate({
+    where: { ownerId: userId, galaxyId },
+    _max: { commandCore: true },
+  });
+  return getNexusLevelMultiplier(result._max.commandCore);
 }
 
 function isSameDay(d1: Date, d2: Date): boolean {
@@ -105,6 +117,8 @@ export async function getDailyStreakData(userId: number, galaxyId: number) {
   const quests = selectDailyQuests(todaySeed);
   const progress = (streak.questsProgress ?? {}) as Record<string, number>;
   const mult = getStreakMultiplier(streak.currentStreak);
+  const nexusLevelMult = await getHighestNexusLevel(userId, galaxyId);
+  const rewardMult = mult * nexusLevelMult;
 
   const streakAboutToExpire = streak.lastClaimedAt
     && !isSameDay(streak.lastClaimedAt, new Date())
@@ -122,9 +136,9 @@ export async function getDailyStreakData(userId: number, galaxyId: number) {
       completed: (progress[q.id] ?? 0) >= q.target,
       reward: {
         ...q.reward,
-        biomass: Math.floor(q.reward.biomass * mult),
-        alloy: Math.floor(q.reward.alloy * mult),
-        ore: Math.floor(q.reward.ore * mult),
+        biomass: Math.floor(q.reward.biomass * rewardMult),
+        alloy: Math.floor(q.reward.alloy * rewardMult),
+        ore: Math.floor(q.reward.ore * rewardMult),
       },
     })),
   };

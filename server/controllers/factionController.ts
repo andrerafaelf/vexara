@@ -129,9 +129,39 @@ export async function getFaction(req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
+    const userIds = faction.members.map((m: any) => m.userId);
+    const [players, nexusCounts] = await Promise.all([
+      prisma.galaxyPlayer.findMany({
+        where: { galaxyId: faction.galaxyId, userId: { in: userIds } },
+        select: { userId: true, points: true, joinedAt: true },
+      }),
+      prisma.nexus.groupBy({
+        by: ['ownerId'],
+        where: { galaxyId: faction.galaxyId, ownerId: { in: userIds } },
+        _count: { id: true },
+      }),
+    ]);
+    const playerByUserId = new Map(players.map((p: any) => [p.userId, p]));
+    const nexusCountByUserId = new Map(nexusCounts.map((n: any) => [n.ownerId, n._count.id]));
+
     res.json({
       ...faction,
-      members: faction.members.map((m: any) => ({ id: m.id, userId: m.userId, username: m.user.username, isSupporter: m.user.isSupporter, supporterTier: m.user.supporterTier, avatarUrl: avatarUrl(m.user.id, m.user.avatarKey), avatarUrlSm: avatarUrlSm(m.user.id, m.user.avatarKey), role: m.role })),
+      members: faction.members.map((m: any) => {
+        const player = playerByUserId.get(m.userId);
+        return {
+          id: m.id,
+          userId: m.userId,
+          username: m.user.username,
+          isSupporter: m.user.isSupporter,
+          supporterTier: m.user.supporterTier,
+          avatarUrl: avatarUrl(m.user.id, m.user.avatarKey),
+          avatarUrlSm: avatarUrlSm(m.user.id, m.user.avatarKey),
+          role: m.role,
+          points: player?.points ?? 0,
+          nexusCount: nexusCountByUserId.get(m.userId) ?? 0,
+          joinedAt: player?.joinedAt ?? null,
+        };
+      }),
     });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });

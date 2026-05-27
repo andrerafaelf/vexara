@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { getFactionLeaderboard } from '../services/api';
+import { getFaction, getFactionLeaderboard } from '../services/api';
 import { serverNow } from '../realtime/serverClock';
+import Username from './Username';
 
 interface LeaderboardRow {
   id: number;
@@ -28,6 +29,17 @@ interface LeaderboardData {
   dominanceMinFactions: number;
 }
 
+interface FactionMemberDetails {
+  userId: number;
+  username: string;
+  isSupporter: boolean;
+  supporterTier?: string | null;
+  role: string;
+  points: number;
+  nexusCount: number;
+  joinedAt?: string | null;
+}
+
 const DOMINANCE_SUSTAIN_MS = 36 * 60 * 60 * 1000;
 
 function formatDominanceCountdown(dominanceSince: string): string {
@@ -42,6 +54,8 @@ export default function FactionLeaderboard({ myFactionId }: { myFactionId?: numb
   const [data, setData] = useState<LeaderboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [expandedFactionId, setExpandedFactionId] = useState<number | null>(null);
+  const [memberCache, setMemberCache] = useState<Record<number, FactionMemberDetails[] | 'loading' | 'error'>>({});
 
   const load = useCallback(async () => {
     try {
@@ -59,6 +73,29 @@ export default function FactionLeaderboard({ myFactionId }: { myFactionId?: numb
     const interval = setInterval(load, 30000);
     return () => clearInterval(interval);
   }, [load]);
+
+  const toggleFaction = useCallback(async (factionId: number) => {
+    setExpandedFactionId((prev) => (prev === factionId ? null : factionId));
+    if (memberCache[factionId] !== undefined) return;
+    setMemberCache((prev) => ({ ...prev, [factionId]: 'loading' }));
+    try {
+      const res = await getFaction(factionId);
+      const members = (res.data?.members ?? []).map((m: Partial<FactionMemberDetails> & { userId: number; username: string; role: string }) => ({
+        userId: m.userId,
+        username: m.username,
+        isSupporter: !!m.isSupporter,
+        supporterTier: m.supporterTier ?? null,
+        role: m.role,
+        points: m.points ?? 0,
+        nexusCount: m.nexusCount ?? 0,
+        joinedAt: m.joinedAt ?? null,
+      }));
+      members.sort((a: FactionMemberDetails, b: FactionMemberDetails) => b.points - a.points);
+      setMemberCache((prev) => ({ ...prev, [factionId]: members }));
+    } catch {
+      setMemberCache((prev) => ({ ...prev, [factionId]: 'error' }));
+    }
+  }, [memberCache]);
 
   if (loading) return null;
   if (error) return <div className="flb-error">{error}</div>;
@@ -119,39 +156,75 @@ export default function FactionLeaderboard({ myFactionId }: { myFactionId?: numb
           const isMe = row.id === myFactionId;
           const barPct = Math.min((row.pct / dominanceThresholdPct) * 100, 100);
           const overThreshold = !dominanceLocked && row.pct >= dominanceThresholdPct;
+          const isExpanded = expandedFactionId === row.id;
+          const cachedMembers = memberCache[row.id];
 
           return (
-            <div key={row.id} className={`flb-row${isMe ? ' flb-row--mine' : ''}${overThreshold ? ' flb-row--dominating' : ''}`}>
-              <span className="flb-td flb-td--rank">{i + 1}</span>
+            <React.Fragment key={row.id}>
+              <div className={`flb-row${isMe ? ' flb-row--mine' : ''}${overThreshold ? ' flb-row--dominating' : ''}${isExpanded ? ' flb-row--expanded' : ''}`}>
+                <span className="flb-td flb-td--rank">{i + 1}</span>
 
-              <span className="flb-td flb-td--name">
-                <span className="flb-faction-name">{row.name}</span>
-                <span className="flb-faction-tag">[{row.tag}]</span>
-                {isMe && <span className="flb-mine-badge">you</span>}
-              </span>
-
-              <span className="flb-td flb-td--nexus">
-                <span className="flb-nexus-count">{row.nexusCount}</span>
-                <span className="flb-nexus-pct">{row.pct.toFixed(1)}%</span>
-              </span>
-
-              {!dominanceLocked && (
-                <span className="flb-td flb-td--bar">
-                  <div className="flb-bar-track">
-                    <div
-                      className={`flb-bar-fill${overThreshold ? ' flb-bar-fill--over' : ''}`}
-                      style={{ width: `${barPct}%` }}
-                    />
-                    <div className="flb-bar-threshold-line" style={{ left: '100%' }} />
-                  </div>
-                  {overThreshold && row.dominanceSince && (
-                    <span className="flb-hold-time">{formatDominanceCountdown(row.dominanceSince)} left</span>
-                  )}
+                <span className="flb-td flb-td--name">
+                  <button
+                    type="button"
+                    className="flb-faction-name flb-faction-name-button"
+                    onClick={() => toggleFaction(row.id)}
+                    aria-expanded={isExpanded}
+                    aria-controls={`flb-members-${row.id}`}
+                  >
+                    {row.name}
+                  </button>
+                  <span className="flb-faction-tag">[{row.tag}]</span>
+                  {isMe && <span className="flb-mine-badge">you</span>}
                 </span>
-              )}
 
-              <span className="flb-td flb-td--members">{row.memberCount}</span>
-            </div>
+                <span className="flb-td flb-td--nexus">
+                  <span className="flb-nexus-count">{row.nexusCount}</span>
+                  <span className="flb-nexus-pct">{row.pct.toFixed(1)}%</span>
+                </span>
+
+                {!dominanceLocked && (
+                  <span className="flb-td flb-td--bar">
+                    <div className="flb-bar-track">
+                      <div
+                        className={`flb-bar-fill${overThreshold ? ' flb-bar-fill--over' : ''}`}
+                        style={{ width: `${barPct}%` }}
+                      />
+                      <div className="flb-bar-threshold-line" style={{ left: '100%' }} />
+                    </div>
+                    {overThreshold && row.dominanceSince && (
+                      <span className="flb-hold-time">{formatDominanceCountdown(row.dominanceSince)} left</span>
+                    )}
+                  </span>
+                )}
+
+                <span className="flb-td flb-td--members">{row.memberCount}</span>
+              </div>
+              {isExpanded && (
+                <div className="flb-member-panel" id={`flb-members-${row.id}`}>
+                  {cachedMembers === 'loading' && <span className="flb-member-status">Loading members...</span>}
+                  {cachedMembers === 'error' && <span className="flb-member-status flb-error">Failed to load members.</span>}
+                  {Array.isArray(cachedMembers) && cachedMembers.length === 0 && <span className="flb-member-status">This faction has no members.</span>}
+                  {Array.isArray(cachedMembers) && cachedMembers.length > 0 && (
+                    <div className="flb-member-list">
+                      {cachedMembers.map((member) => (
+                        <div key={member.userId} className="flb-member-item">
+                          <div className="flb-member-main">
+                            <Username name={member.username} isSupporter={member.isSupporter} supporterTier={member.supporterTier as any} linkToProfile />
+                            <span className={`factions-role-badge factions-role-badge--${member.role}`}>{member.role}</span>
+                          </div>
+                          <div className="flb-member-stats">
+                            <span>{member.points.toLocaleString()} inf</span>
+                            <span>{member.nexusCount} nexus{member.nexusCount !== 1 ? 'es' : ''}</span>
+                            {member.joinedAt && <span>Joined {new Date(member.joinedAt).toLocaleDateString()}</span>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </React.Fragment>
           );
         })}
       </div>
