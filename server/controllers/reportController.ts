@@ -126,6 +126,7 @@ export async function getActivitySummary(req: AuthRequest, res: Response): Promi
       prisma.attack.findMany({
         where: {
           galaxyId,
+          type: { not: 'support' },
           status: { in: ['returning', 'completed'] },
           OR: [{ attackerUserId: req.userId }, { defenderUserId: req.userId }],
         },

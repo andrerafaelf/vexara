@@ -226,7 +226,7 @@ export const TROOPS_DOC: TroopDoc[] = [
     name: 'Overseer',
     role: 'Conquest / control unit (Special - no counter in either direction)',
     description:
-      'The Overseer is a high-value command unit that enables nexus conquest. It does not fight - it administers. Sending an Overseer on a successful strike that clears the defending force reduces the target\'s Control Level by 34. Control starts at 100; once it reaches 0, the nexus is conquered and changes ownership to you. Three successful control strikes with an Overseer will conquer any nexus. Overseer strikes travel 3x slower than standard attacks - giving defenders time to react. The Overseer is only useful if the attack wins - if the attack fails, the Overseer is not used and survives the defeat alongside its escort. If every non-Overseer troop in the strike is killed, the Overseer dies too. On conquest, surviving attackers, including the Overseer, are stationed at the newly captured nexus. The conquered nexus keeps its type (Resource Depot, Military Outpost, etc.) and retains its current building levels, but its name resets to "Conquered Nexus." NPC nexus bonuses are acquired at base tier; the doubled tier unlocks when the new owner reaches Command Core 15.',
+      'The Overseer is a high-value command unit that enables nexus conquest. It does not fight - it administers. Sending an Overseer on a successful strike that clears the defending force reduces the target\'s Control Level by 34. Control starts at 100; once it reaches 0, the nexus is conquered and changes ownership to you. Three successful control strikes with an Overseer will conquer any nexus. Overseer strikes travel 3x slower than standard attacks - giving defenders time to react. The Overseer is only useful if the attack wins - if the attack fails, the Overseer is not used and survives the defeat alongside its escort. If every non-Overseer troop in the strike is killed, the Overseer dies too. On the final conquering strike (the one that brings Control to 0), the Overseer is consumed - it does not return. The other surviving attackers are stationed at the newly captured nexus. The conquered nexus keeps its type (Resource Depot, Military Outpost, etc.) and retains its current building levels, but its name resets to "Conquered Nexus." NPC nexus bonuses are acquired at base tier; the doubled tier unlocks when the new owner reaches Command Core 15.',
     unitClass: 'special',
     stats: { attack: 0, defense: 30, speed: 15, carry: 0 },
     cost: { biomass: 180000, alloy: 140000, ore: 120000, population: 5, time: '4h 0m' },
@@ -236,7 +236,8 @@ export const TROOPS_DOC: TroopDoc[] = [
       'Trains in an independent queue - does not block other troop training.',
       'Control reduction: -34 per successful strike with a surviving Overseer after the defending force is cleared. Three strikes conquer any nexus.',
       'Overseer survives a failed attack (as long as its escort is not completely wiped).',
-      'On conquest: the Overseer is stationed at the captured nexus with the surviving attackers.',
+      'Overseer survives non-conquering control strikes (control reduced but nexus not taken).',
+      'On conquest: the Overseer is consumed. Other surviving attackers are stationed at the captured nexus.',
       'The conquered nexus retains its type and building levels; enemy support stationed there is destroyed.',
       'Conquered NPC nexus bonuses start at base tier and double when Command Core reaches 15.',
     ],

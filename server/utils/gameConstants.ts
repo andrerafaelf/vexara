@@ -101,7 +101,7 @@ export function getEffectiveTrainTimeSeconds(
   return Math.max(1, Math.floor(perUnit * effective));
 }
 
-// Applies the Nexus-type build multiplier (Reclaimed Outpost = 0.8x base / 0.64x doubled)
+// Applies the Nexus-type build multiplier (Forward Base = 0.8x base / 0.64x doubled)
 // on top of the level-scaled build cost and Command Core discount.
 export function getEffectiveBuildTimeSeconds(
   building: string,
@@ -126,5 +126,5 @@ export const NEXUS_TYPE_TRAINING_MULTIPLIERS: Record<string, number> = {
 };
 
 export const NEXUS_TYPE_BUILD_TIME_MULTIPLIERS: Record<string, number> = {
-  'Reclaimed Outpost': 0.8,
+  'Forward Base': 0.80,
 };

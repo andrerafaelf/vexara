@@ -393,7 +393,7 @@ export async function transferResources(req: AuthRequest, res: Response): Promis
   }
 }
 
-const VALID_SPEC_TYPES = ['Resource Depot', 'Supply Cache', 'Military Outpost', 'Reclaimed Outpost'] as const;
+const VALID_SPEC_TYPES = ['Resource Depot', 'Supply Cache', 'Military Outpost', 'Forward Base'] as const;
 const COMMAND_CORE_SPECIALIZE_LEVEL = 15;
 
 export async function specializeNexus(req: AuthRequest, res: Response): Promise<void> {

@@ -15,6 +15,7 @@ export function getUserById(id: number) {
 export function getReportsForNexus(nexusId: number) {
   return prisma.attack.findMany({
     where: {
+      type: { not: 'support' },
       OR: [
         { attackerNexusId: nexusId, status: { in: ['returning', 'completed'] } },
         { defenderNexusId: nexusId, status: { in: ['returning', 'completed'] } },
@@ -44,6 +45,7 @@ export function getCompletedAttacksForNexus(nexusId: number, galaxyId: number) {
   return prisma.attack.findMany({
     where: {
       galaxyId,
+      type: { not: 'support' },
       OR: [
         { attackerNexusId: nexusId, status: { in: ['returning', 'completed'] } },
         { defenderNexusId: nexusId, status: { in: ['returning', 'completed'] } },
@@ -83,6 +85,7 @@ export async function getUnreadNexusIds(userId: number, galaxyId: number): Promi
     prisma.attack.findMany({
       where: {
         galaxyId,
+        type: { not: 'support' },
         OR: [
           { attackerNexusId: { in: nexusIds }, status: { in: ['returning', 'completed'] } },
           { defenderNexusId: { in: nexusIds }, status: { in: ['returning', 'completed'] } },

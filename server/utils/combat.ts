@@ -540,7 +540,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
         const newOwnerId = attackerNexus!.ownerId;
         defenderTroopUpdates['ownerId'] = newOwnerId;
         defenderTroopUpdates['name'] = 'Conquered Nexus';
-        const NPC_TYPE_NAMES = ['Resource Depot', 'Military Outpost', 'Supply Cache', 'Neutral Settlement', 'Reclaimed Outpost'];
+        const NPC_TYPE_NAMES = ['Resource Depot', 'Military Outpost', 'Supply Cache', 'Neutral Settlement', 'Forward Base'];
         const preservedType = defenderNexus.nexusType ?? (NPC_TYPE_NAMES.includes(defenderNexus.name) ? defenderNexus.name : null);
         defenderTroopUpdates['nexusType'] = preservedType;
         // Conquest always resets to base tier - nexusTypeDoubled is never inherited.
@@ -558,9 +558,10 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
           totalDefenderTroopsInForce,
           totalDefenderTroopsLost,
         });
-        // Overseer survives conquest. Zero out the loss so survivingTroops
-        // includes it, and a stationed TroopTransfer is created below.
-        attackerLosses.overseer = 0;
+        // Overseer is consumed on the final conquering strike.
+        // Mark it as lost so it is excluded from survivingTroops and the
+        // stationed TroopTransfer, and its population slot is freed.
+        attackerLosses.overseer = overseerSent;
       }
     }
 

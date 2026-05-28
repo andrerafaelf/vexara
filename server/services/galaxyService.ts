@@ -37,7 +37,7 @@ export function leaveGalaxy(userId: number, galaxyId: number) {
       await tx.troopTransfer.deleteMany({ where: { galaxyId, ownerNexusId: { in: nexusIds } } });
       await tx.troopTransfer.deleteMany({ where: { galaxyId, hostNexusId: { in: nexusIds } } });
       await tx.marketListing.deleteMany({ where: { galaxyId, sellerNexusId: { in: nexusIds } } });
-      await tx.nexus.updateMany({ where: { id: { in: nexusIds } }, data: { ownerId: null, nexusType: 'Reclaimed Outpost' } });
+      await tx.nexus.updateMany({ where: { id: { in: nexusIds } }, data: { ownerId: null, nexusType: 'Forward Base' } });
     }
     await tx.galaxyPlayer.delete({ where: { id: player.id } });
     await tx.user.updateMany({ where: { id: userId, activeGalaxyId: galaxyId }, data: { activeGalaxyId: null } });

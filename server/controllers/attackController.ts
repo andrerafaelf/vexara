@@ -9,6 +9,7 @@ import { normalizeTroopPayload, parsePositiveInt } from '../utils/validation.js'
 import { logError } from '../utils/logger.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
 import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
+import { getNexusTypeEffectiveMultipliers } from '../utils/economy.js';
 
 const TROOP_KEYS: TroopKey[] = [
   'lancerDrone', 'assaultTrooper', 'breakerUnit', 'reconOperative', 'skimmerBike',
@@ -99,9 +100,11 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
     }
 
     const distance = Math.sqrt(Math.pow(defenderNexus.x - attackerNexus.x, 2) + Math.pow(defenderNexus.y - attackerNexus.y, 2));
+    const attackerBonuses = getNexusTypeEffectiveMultipliers(attackerNexus as Parameters<typeof getNexusTypeEffectiveMultipliers>[0]);
+    const travelSpeedMultiplier = attackerBonuses?.travelTimeMultiplier ?? 1;
     let travelTimeMinutes: number;
     if (attackType === 'scout') {
-      travelTimeMinutes = distance * 4;
+      travelTimeMinutes = distance * 4 * travelSpeedMultiplier;
     } else {
       // Overseer strikes use the slowest-troop formula then get a 3x surcharge -
       // making conquest trains clearly distinct (and giving defenders time to react).
@@ -115,7 +118,7 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
         }
       }
       const hasOverseer = (normalizedTroops.overseer || 0) > 0;
-      travelTimeMinutes = distance * (4 + (28 - minSpeed) / 10) * (hasOverseer ? OVERSEER_TRAVEL_MULTIPLIER : 1);
+      travelTimeMinutes = distance * (4 + (28 - minSpeed) / 10) * (hasOverseer ? OVERSEER_TRAVEL_MULTIPLIER : 1) * travelSpeedMultiplier;
     }
     const arrivesAt = new Date(Date.now() + travelTimeMinutes * 60 * 1000);
 

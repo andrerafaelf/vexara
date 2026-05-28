@@ -15,7 +15,7 @@ const TYPE_META: Record<string, {
   'Resource Depot':    { Icon: Zap,        tooltip: 'Resource Depot · 2x Production',                     tooltipDoubled: 'Resource Depot · 3x Production' },
   'Supply Cache':      { Icon: PackagePlus, tooltip: 'Supply Cache · 2x Storage, 40% Loot Protection',     tooltipDoubled: 'Supply Cache · 3x Storage, 60% Loot Protection' },
   'Military Outpost':  { Icon: Shield,      tooltip: 'Military Outpost · +100% Shield, 2x Training Speed', tooltipDoubled: 'Military Outpost · +200% Shield, 4x Training Speed' },
-  'Reclaimed Outpost': { Icon: Hammer,      tooltip: 'Reclaimed Outpost · 20% Faster Construction',         tooltipDoubled: 'Reclaimed Outpost · 36% Faster Construction' },
+  'Forward Base':      { Icon: Hammer,      tooltip: 'Forward Base · 25% Faster Travel · 20% Faster Construction',     tooltipDoubled: 'Forward Base · ~44% Faster Travel · 36% Faster Construction' },
 };
 
 const NexusTypeBadge: React.FC<NexusTypeBadgeProps> = ({ type, doubled = false, size = 12 }) => {

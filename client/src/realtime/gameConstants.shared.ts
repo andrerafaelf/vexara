@@ -111,5 +111,5 @@ export const NEXUS_TYPE_TRAINING_MULTIPLIERS: Record<string, number> = {
 };
 
 export const NEXUS_TYPE_BUILD_TIME_MULTIPLIERS: Record<string, number> = {
-  'Reclaimed Outpost': 0.8,
+  'Forward Base': 0.80,
 };

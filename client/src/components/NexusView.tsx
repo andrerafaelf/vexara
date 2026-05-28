@@ -120,7 +120,7 @@ const NEXUS_TYPES_WITH_BUFF = new Set([
   'Resource Depot',
   'Supply Cache',
   'Military Outpost',
-  'Reclaimed Outpost',
+  'Forward Base',
 ]);
 
 const BUILDING_NAMES: { [key: string]: string } = {
@@ -1045,17 +1045,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     return { biomass: baseCost.biomass, alloy: baseCost.alloy, ore: baseCost.ore, time };
   };
 
-  // Build time with Command Core discount but WITHOUT the Nexus-type modifier.
-  // Used by BuildingCard to render a "base → buffed" comparison on Reclaimed Outpost.
-  const getPreNexusBuildTime = (building: string, currentLevel: number) => {
-    return getEffectiveBuildTimeSeconds(
-      building,
-      currentLevel,
-      nexus.buildings.commandCore,
-      null,
-      false,
-    );
-  };
+
 
   const formatList = (items: string[]) => {
     if (items.length === 0) {
@@ -1230,18 +1220,17 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   // identical for the lifetime of the component. This is the same pattern
   // already used for handleTrainTroops below.
   const helpersRef = useRef({
-    getBuildingCost, getPreNexusBuildTime, getBuildingUpgradeBenefit, checkBuildingRequirements,
+    getBuildingCost, getBuildingUpgradeBenefit, checkBuildingRequirements,
     getPrevBuildEnd, getTimeUntilAffordable, fmtNum, formatDurationSeconds,
     handleUpgrade, handleInfoTap,
   });
   helpersRef.current = {
-    getBuildingCost, getPreNexusBuildTime, getBuildingUpgradeBenefit, checkBuildingRequirements,
+    getBuildingCost, getBuildingUpgradeBenefit, checkBuildingRequirements,
     getPrevBuildEnd, getTimeUntilAffordable, fmtNum, formatDurationSeconds,
     handleUpgrade, handleInfoTap,
   };
   const stableHelpers = useRef({
     getBuildingCost: (k: string, l: number) => helpersRef.current.getBuildingCost(k, l),
-    getPreNexusBuildTime: (k: string, l: number) => helpersRef.current.getPreNexusBuildTime(k, l),
     getBuildingUpgradeBenefit: (k: string, l: number) => helpersRef.current.getBuildingUpgradeBenefit(k, l),
     checkBuildingRequirements: (k: string) => helpersRef.current.checkBuildingRequirements(k),
     getPrevBuildEnd: (i: number) => helpersRef.current.getPrevBuildEnd(i),
@@ -1558,9 +1547,11 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                 Shield efficiency <strong>{doubled ? '3×' : '2×'}</strong>
               </>
             );
-          } else if (nexus.nexusType === 'Reclaimed Outpost') {
+          } else if (nexus.nexusType === 'Forward Base') {
             math = (
               <>
+                Troop travel <strong>{doubled ? '~44%' : '25%'} faster</strong>
+                <span className="nexus-type-buff-sep"> · </span>
                 Construction <strong>{doubled ? '36%' : '20%'} faster</strong>
               </>
             );
@@ -2064,7 +2055,6 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                       queuedCount={stats?.count ?? 0}
                       firstQueuedIndex={stats?.firstIndex ?? -1}
                       getBuildingCost={stableHelpers.getBuildingCost}
-                      getPreNexusBuildTime={stableHelpers.getPreNexusBuildTime}
                       getBuildingUpgradeBenefit={stableHelpers.getBuildingUpgradeBenefit}
                       checkBuildingRequirements={stableHelpers.checkBuildingRequirements}
                       getPrevBuildEnd={stableHelpers.getPrevBuildEnd}
@@ -2431,7 +2421,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                   { type: 'Resource Depot', label: '3x Resource Production', desc: 'Triple the output of all three resource buildings. Best for a dedicated economic nexus.' },
                   { type: 'Supply Cache', label: '3x Storage · 60% Loot Protection', desc: 'Triple your storage cap and reduce loot stolen in raids by 60%. The best nexus for holding a large stockpile safely.' },
                   { type: 'Military Outpost', label: '3x Shield Efficiency · 4x Training Speed', desc: 'Triple shield defense and quadruple training speed. The strongest frontline base.' },
-                  { type: 'Reclaimed Outpost', label: '36% Faster Construction', desc: 'All build times cut significantly. Fastest expansion and rebuilding of any nexus type.' },
+                  { type: 'Forward Base', label: '~44% Faster Travel · 36% Faster Construction', desc: 'Troops and transfers launch faster, and all buildings construct faster. Best for a front-line staging point deep in enemy territory.' },
                 ].map(({ type, label, desc }) => (
                   <button
                     key={type}

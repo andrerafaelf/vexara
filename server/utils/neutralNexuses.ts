@@ -44,7 +44,7 @@ const NEXUS_TYPES = [
   { name: 'Resource Depot',     weight: 20, resourceBonus: true },
   { name: 'Military Outpost',   weight: 15, troopBonus: true },
   { name: 'Supply Cache',       weight: 15, highResources: true },
-  { name: 'Reclaimed Outpost',  weight: 10 },
+  { name: 'Forward Base',  weight: 10 },
 ] as const;
 
 type NexusTypeConfig = { name: string; weight: number; resourceBonus?: boolean; troopBonus?: boolean; highResources?: boolean };

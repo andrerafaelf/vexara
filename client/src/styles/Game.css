@@ -1,9 +1,9 @@
 .game-container {
-  height: 100%;
-  min-height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   background: var(--bg-app);
+  overflow: hidden;
 }
 
 .ad-banner-top,
