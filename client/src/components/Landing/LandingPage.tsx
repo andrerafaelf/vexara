@@ -219,22 +219,21 @@ function Footage({ items }: { items: typeof FOOTAGE }) {
           <p className="lp-footage-caption">{current.caption}</p>
         </div>
 
-        <ol className="lp-footage-list" role="tablist" aria-label="Footage selection">
+        <div className="lp-footage-list" role="tablist" aria-label="Footage selection">
           {items.map((s, i) => (
-            <li key={s.src}>
-              <button
-                role="tab"
-                aria-selected={i === active}
-                className={`lp-footage-item ${i === active ? 'is-active' : ''}`}
-                onClick={() => setActive(i)}
-              >
-                <span className="lp-footage-item-code">{s.code}</span>
-                <span className="lp-footage-item-label">{s.label}</span>
-                <span className="lp-footage-item-cursor" aria-hidden="true" />
-              </button>
-            </li>
+            <button
+              key={s.src}
+              role="tab"
+              aria-selected={i === active}
+              className={`lp-footage-item ${i === active ? 'is-active' : ''}`}
+              onClick={() => setActive(i)}
+            >
+              <span className="lp-footage-item-code">{s.code}</span>
+              <span className="lp-footage-item-label">{s.label}</span>
+              <span className="lp-footage-item-cursor" aria-hidden="true" />
+            </button>
           ))}
-        </ol>
+        </div>
       </div>
     </section>
   );
