@@ -46,7 +46,7 @@ export function getAllAttacksForUser(nexusIds: number[]) {
   if (nexusIds.length === 0) return Promise.resolve({ incoming: [], outgoing: [] });
   return Promise.all([
     prisma.attack.findMany({
-      where: { defenderNexusId: { in: nexusIds }, status: 'traveling' },
+      where: { defenderNexusId: { in: nexusIds }, status: 'traveling', type: { in: ['attack', 'scout'] } },
       include: {
         attackerNexus: { select: { id: true, name: true, x: true, y: true } },
         defenderNexus: { select: { id: true, name: true, x: true, y: true } },

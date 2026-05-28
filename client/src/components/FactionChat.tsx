@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { getFactionChat, markFactionChatRead, sendFactionMessage } from '../services/api';
 import { useGameSocket } from '../hooks/useGameSocket';
 import Username from './Username';
@@ -16,6 +17,183 @@ interface Props {
   factionId: number;
   currentUserId?: number;
 }
+
+// ── Combat log parsing ────────────────────────────────────────────────────────
+
+interface ParsedCombatLog {
+  outcome: string;         // 'VICTORY' | 'DEFEAT' | 'SCOUT REPORT'
+  date: string;
+  striker: string;
+  defender: string;
+  control?: string;
+  nexusLife?: string;
+  attackerForces: string;
+  defenderForces: string;
+  resourcesLeft?: string;
+  resourcesPlundered?: string;
+  buildingsDamaged?: string;
+  raw: string;
+}
+
+function parseCombatLog(text: string): ParsedCombatLog | null {
+  if (!text.startsWith('[ COMBAT LOG -')) return null;
+
+  const lines = text.split('\n');
+
+  const headerMatch = lines[0].match(/\[ COMBAT LOG - (.+?) \]/);
+  if (!headerMatch) return null;
+  const outcome = headerMatch[1];
+
+  const get = (prefix: string) => {
+    const line = lines.find((l) => l.startsWith(prefix));
+    return line ? line.slice(prefix.length).trim() : '';
+  };
+
+  const getSection = (header: string): string => {
+    const start = lines.findIndex((l) => l.trim() === header);
+    if (start === -1) return '';
+    const end = lines.findIndex((l, i) => i > start && l.startsWith('[') && l.trim().endsWith(']'));
+    const sectionLines = (end === -1 ? lines.slice(start + 1) : lines.slice(start + 1, end))
+      .map((l) => l.replace(/^  /, ''))
+      .filter((l) => l && l !== '--------------------------------');
+    return sectionLines.join('\n');
+  };
+
+  return {
+    outcome,
+    date: get('Date:'),
+    striker: get('Striker:'),
+    defender: get('Defender:'),
+    control: get('Control:') || undefined,
+    nexusLife: get('Nexus Life:') || undefined,
+    attackerForces: getSection('[ ATTACKER FORCES ]'),
+    defenderForces: getSection('[ DEFENDER FORCES LEFT ]'),
+    resourcesLeft: getSection('[ RESOURCES LEFT ON DEFENDER NEXUS ]') || undefined,
+    resourcesPlundered: getSection('[ RESOURCES PLUNDERED ]') || undefined,
+    buildingsDamaged: getSection('[ BUILDINGS DAMAGED ]') || undefined,
+    raw: text,
+  };
+}
+
+// ── Combat log modal ──────────────────────────────────────────────────────────
+
+function CombatLogModal({ log, onClose }: { log: ParsedCombatLog; onClose: () => void }) {
+  const isVictory = log.outcome === 'VICTORY';
+  const isDefeat = log.outcome === 'DEFEAT';
+  const isScout = log.outcome === 'SCOUT REPORT';
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const content = (
+    <div
+      className="clm-backdrop"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Combat Report"
+    >
+      <div className="clm-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="clm-header">
+          <h2 className="clm-title">{isScout ? 'Scout Report' : 'Combat Report'}</h2>
+          <button className="clm-close" onClick={onClose} aria-label="Close">✕</button>
+        </div>
+
+        <div className="clm-body">
+          {!isScout && (
+            <div className={`clm-result${isVictory ? ' clm-result--victory' : isDefeat ? ' clm-result--defeat' : ''}`}>
+              {log.outcome}
+            </div>
+          )}
+
+          <div className="clm-section clm-section--meta">
+            <div className="clm-row"><span className="clm-label">Date</span><span className="clm-value">{log.date}</span></div>
+            <div className="clm-row"><span className="clm-label">Striker</span><span className="clm-value">{log.striker}</span></div>
+            <div className="clm-row"><span className="clm-label">Defender</span><span className="clm-value">{log.defender}</span></div>
+            {log.control && <div className="clm-row"><span className="clm-label">Control</span><span className="clm-value">{log.control}</span></div>}
+            {log.nexusLife && <div className="clm-row"><span className="clm-label">Nexus Life</span><span className="clm-value">{log.nexusLife}</span></div>}
+          </div>
+
+          {log.attackerForces && (
+            <div className="clm-section">
+              <h3 className="clm-section-title">Attacker Forces</h3>
+              <pre className="clm-pre">{log.attackerForces}</pre>
+            </div>
+          )}
+
+          {log.defenderForces && (
+            <div className="clm-section">
+              <h3 className="clm-section-title">Defender Forces Left</h3>
+              <pre className="clm-pre">{log.defenderForces}</pre>
+            </div>
+          )}
+
+          {log.resourcesPlundered && (
+            <div className="clm-section clm-section--loot">
+              <h3 className="clm-section-title">Resources Plundered</h3>
+              <pre className="clm-pre clm-pre--loot">{log.resourcesPlundered}</pre>
+            </div>
+          )}
+
+          {log.resourcesLeft && (
+            <div className="clm-section">
+              <h3 className="clm-section-title">Resources Left on Defender Nexus</h3>
+              <pre className="clm-pre">{log.resourcesLeft}</pre>
+            </div>
+          )}
+
+          {log.buildingsDamaged && (
+            <div className="clm-section clm-section--damage">
+              <h3 className="clm-section-title">Buildings Damaged</h3>
+              <pre className="clm-pre clm-pre--damage">{log.buildingsDamaged}</pre>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  return createPortal(content, document.body);
+}
+
+// ── Combat log chat card ──────────────────────────────────────────────────────
+
+function CombatLogCard({ log }: { log: ParsedCombatLog }) {
+  const [open, setOpen] = useState(false);
+  const isVictory = log.outcome === 'VICTORY';
+  const isDefeat = log.outcome === 'DEFEAT';
+  const isScout = log.outcome === 'SCOUT REPORT';
+
+  return (
+    <>
+      <button
+        type="button"
+        className={`clm-card${isVictory ? ' clm-card--victory' : isDefeat ? ' clm-card--defeat' : ' clm-card--scout'}`}
+        onClick={() => setOpen(true)}
+        title="Click to view full combat report"
+      >
+        <div className="clm-card-header">
+          <span className="clm-card-outcome">{isScout ? '🔍 Scout Report' : isVictory ? '⚔ Victory' : '💀 Defeat'}</span>
+          <span className="clm-card-hint">View report →</span>
+        </div>
+        <div className="clm-card-meta">
+          <span className="clm-card-striker">{log.striker}</span>
+          <span className="clm-card-vs">vs</span>
+          <span className="clm-card-defender">{log.defender}</span>
+        </div>
+        {log.resourcesPlundered && (
+          <div className="clm-card-loot">{log.resourcesPlundered.replace(/\n/g, '  ')}</div>
+        )}
+      </button>
+      {open && <CombatLogModal log={log} onClose={() => setOpen(false)} />}
+    </>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 
 export default function FactionChat({ factionId, currentUserId }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -58,7 +236,6 @@ export default function FactionChat({ factionId, currentUserId }: Props) {
     fetchInitial();
   }, [fetchInitial]);
 
-  // auto-scroll only on first load and when user sends
   useEffect(() => {
     if (isFirstLoad.current && messages.length > 0) {
       bottomRef.current?.scrollIntoView({ behavior: 'instant' });
@@ -94,7 +271,6 @@ export default function FactionChat({ factionId, currentUserId }: Props) {
       const older: ChatMessage[] = res.data;
       if (older.length < 50) setHasOlder(false);
       setMessages((prev) => [...older, ...prev]);
-      // preserve scroll position
       requestAnimationFrame(() => {
         if (list) list.scrollTop = list.scrollHeight - prevScrollHeight;
       });
@@ -151,7 +327,6 @@ export default function FactionChat({ factionId, currentUserId }: Props) {
     return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
   };
 
-  // group messages by date
   const grouped: { date: string; messages: ChatMessage[] }[] = [];
   for (const msg of messages) {
     const label = formatDate(msg.createdAt);
@@ -188,6 +363,7 @@ export default function FactionChat({ factionId, currentUserId }: Props) {
               const isMine = msg.user.id === currentUserId;
               const prev = group.messages[i - 1];
               const showAuthor = !prev || prev.user.id !== msg.user.id;
+              const combatLog = parseCombatLog(msg.content);
               return (
                 <div key={msg.id} className={`faction-chat-msg${isMine ? ' faction-chat-msg--mine' : ''}`}>
                   {showAuthor && (
@@ -201,7 +377,11 @@ export default function FactionChat({ factionId, currentUserId }: Props) {
                       <span className="faction-chat-time">{formatTime(msg.createdAt)}</span>
                     </div>
                   )}
-                  <div className="faction-chat-bubble">{msg.content}</div>
+                  {combatLog ? (
+                    <CombatLogCard log={combatLog} />
+                  ) : (
+                    <div className="faction-chat-bubble">{msg.content}</div>
+                  )}
                 </div>
               );
             })}
