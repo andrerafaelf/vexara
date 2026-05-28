@@ -218,7 +218,7 @@ export const TROOPS_DOC: TroopDoc[] = [
     description: 'Top-end fire platform for heavy assaults and sieges. Enormous attack power but lightly armored - protect it with Siege Mechs and Bulwark Guards.',
     unitClass: 'fire',
     stats: { attack: 210, defense: 80, speed: 8, carry: 160 },
-    cost: { biomass: 2000, alloy: 1750, ore: 3000, population: 5, time: '1h 30m' },
+    cost: { biomass: 2000, alloy: 1750, ore: 3000, population: 5, time: '1h 8m' },
     requirements: ['Recruitment Core Lv12', 'Command Core Lv10', 'Shield Grid Lv10'],
   },
   {

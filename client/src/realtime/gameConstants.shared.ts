@@ -44,7 +44,7 @@ export const TROOP_COSTS: Record<string, TroopCost> = {
   voidStalker:          { biomass: 900,    alloy: 700,    ore: 1100,   population: 3, time: 1440  },
   siegeMech:            { biomass: 1250,   alloy: 1000,   ore: 2000,   population: 4, time: 2400  },
   plasmaTurret:         { biomass: 1500,   alloy: 1200,   ore: 2500,   population: 2, time: 3000  },
-  annihilatorPlatform:  { biomass: 2000,   alloy: 1750,   ore: 3000,   population: 5, time: 5400  },
+  annihilatorPlatform:  { biomass: 2000,   alloy: 1750,   ore: 3000,   population: 5, time: 4080  },
   overseer:             { biomass: 180000, alloy: 140000, ore: 120000, population: 5, time: 14400 },
 };
 
@@ -52,7 +52,7 @@ export const COST_SCALING = { early: 1.5, mid: 1.65, late: 1.8 };
 export const TIME_SCALING = { early: 1.25, mid: 1.35, late: 1.45 };
 
 export const COMMAND_BUILD_TIME_FACTOR_PER_LEVEL = 0.95;
-export const RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL = 0.92;
+export const RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL = 0.91;
 
 export function getCommandTimeFactor(commandLevel: number): number {
   return Math.pow(COMMAND_BUILD_TIME_FACTOR_PER_LEVEL, Math.max(0, commandLevel || 0));

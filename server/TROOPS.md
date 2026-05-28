@@ -36,7 +36,7 @@ Units are designed with a clear offense/defense identity — not all-rounders:
 
 ## Recruitment Core Training-Time Reduction
 
-Each level of Recruitment Core multiplies training time by 0.92 (compounding)
+Each level of Recruitment Core multiplies training time by 0.91 (compounding)
 for every troop **except Overseer**, which always trains in 4h. The Overseer
 also has its own independent training queue, so non-Overseer training does not
 wait behind it (and vice versa).
@@ -209,7 +209,7 @@ _Ordered weakest → strongest by overall combat value._
 - Stats: Attack 210, Defense 80, Speed 8, Carry 160
 - Cost: Biomass 2000, Alloy 1750, Ore 3000
 - Population: 5
-- Training Time: 1h 30m
+- Training Time: 1h 8m
 - Requirements:
   - Recruitment Core Lv12
   - Command Core Lv10

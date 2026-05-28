@@ -24,7 +24,7 @@ const FOOTAGE: { src: string; label: string; code: string; caption: string }[] =
 
 const PILLARS = [
   { idx: '01', title: 'Run a three-resource economy', body: 'Biomass, alloy, and ore tick 24/7. Storage and production scale per building level. Capture a Resource Depot - double your output overnight.' },
-  { idx: '02', title: 'Train twelve unit types',        body: 'From 53s Lancer Drones to 2h Annihilator Platforms. Each unit has attack, defense, speed, and carry. Composition wins fights, not raw numbers.' },
+  { idx: '02', title: 'Train twelve unit types',        body: 'From 53s Lancer Drones to 4h Overseers. Each unit has attack, defense, speed, and carry. Composition wins fights, not raw numbers.' },
   { idx: '03', title: 'Scout, raid, intercept in real time', body: 'Travel times are real. Send Recon Operatives to map a target, then commit a strike fleet. Or embed an operative inside their walls.' },
   { idx: '04', title: 'Conquer with Overseers',         body: 'Train an Overseer (4h, max 3 per nexus). Each surviving strike drops enemy control by 34. Hit zero - the nexus is yours.' },
   { idx: '05', title: 'Run covert operations',          body: 'Sabotage troops and build queues. Embed operatives for live intel. Counter enemy spies with a fortified Shield Grid. Every move carries risk.' },
