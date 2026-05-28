@@ -2334,8 +2334,13 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
               <h4>Troops in Combat</h4>
               {outgoingAttacks.map((atk: any) => {
                 const troopEntries = Object.entries(atk.troops || {}).filter(([, v]) => Number(v) > 0);
+                const travelVerb = atk.type === 'support'
+                  ? 'Supporting'
+                  : atk.type === 'scout'
+                    ? 'Scouting'
+                    : 'Attacking';
                 const statusLabel = atk.status === 'traveling'
-                  ? `→ Attacking ${atk.defender?.nexus?.name ?? '?'} (${atk.defender?.nexus?.x ?? '?'}|${atk.defender?.nexus?.y ?? '?'})`
+                  ? `→ ${travelVerb} ${atk.defender?.nexus?.name ?? '?'} (${atk.defender?.nexus?.x ?? '?'}|${atk.defender?.nexus?.y ?? '?'})`
                   : `← Returning from ${atk.defender?.nexus?.name ?? '?'}`;
                 const countdownEndAt = atk.status === 'traveling' ? atk.arrivesAt : atk.returnsAt;
                 return (

@@ -1,4 +1,5 @@
 import prisma from '../lib/prisma.js';
+import { sortOwnedNexuses } from './nexusService.js';
 
 export function getUserById(userId: number) {
   return prisma.user.findUnique({ where: { id: userId }, select: { id: true, username: true, createdAt: true, isSupporter: true, supporterTier: true, isFounder: true, avatarKey: true } });
@@ -9,7 +10,7 @@ export function getGalaxyPlayer(userId: number, galaxyId: number) {
 }
 
 export function getUserNexuses(userId: number, galaxyId: number) {
-  return prisma.nexus.findMany({ where: { ownerId: userId, galaxyId } });
+  return prisma.nexus.findMany({ where: { ownerId: userId, galaxyId } }).then(sortOwnedNexuses);
 }
 
 export function getCompletedAttacks(userId: number, galaxyId: number) {

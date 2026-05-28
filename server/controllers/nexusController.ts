@@ -23,10 +23,7 @@ export async function getMyNexuses(req: AuthRequest, res: Response): Promise<voi
       }),
     ]);
 
-    const nexuses = [
-      ...nexusesRaw.filter((n) => n.nexusType === null),
-      ...nexusesRaw.filter((n) => n.nexusType !== null),
-    ];
+    const nexuses = nexusesRaw;
 
     const attacks = await nexusService.getOutgoingAttacks(nexuses.map((n) => n.id));
     const nexusesWithOutgoingAttacks = new Set(attacks.map((a) => a.attackerNexusId));

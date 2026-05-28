@@ -46,18 +46,11 @@ const MobileNexusDrawer: React.FC<MobileNexusDrawerProps> = ({
   });
 
   const visibleNexuses = (() => {
-    const filtered =
+    return (
       activeGroupId !== null
         ? nexuses.filter((n) => groups.find((g) => g.id === activeGroupId)?.nexusIds.includes(n._id))
-        : nexuses;
-    return [...filtered].sort((a, b) => {
-      const aIsUserCreated = a.nexusType === null;
-      const bIsUserCreated = b.nexusType === null;
-      if (aIsUserCreated !== bIsUserCreated) return aIsUserCreated ? -1 : 1;
-      const aDate = a.conqueredAt ? new Date(a.conqueredAt).getTime() : 0;
-      const bDate = b.conqueredAt ? new Date(b.conqueredAt).getTime() : 0;
-      return aDate - bDate;
-    });
+        : nexuses
+    );
   })();
 
   const handleSelect = (nexus: Nexus) => {

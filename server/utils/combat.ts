@@ -329,7 +329,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
     const supportTransfers = await prisma.troopTransfer.findMany({
       where: { hostNexusId: defenderNexus.id, status: 'stationed' },
       include: {
-        ownerNexus: { select: { ownerId: true, name: true } },
+        ownerNexus: { select: { ownerId: true, name: true, owner: { select: { username: true } } } },
         hostNexus:  { select: { name: true } },
       },
     });
@@ -340,6 +340,29 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
         supportTroops[key] = (supportTroops[key] || 0) + (t[key] || 0);
       }
     }
+
+    // Diagnostic: capture which support records (if any) were considered, plus
+    // any in-flight support attacks that arrived too late to be stationed.
+    // Lets us reconstruct disputes like "my ally's stationed troops didn't help".
+    const inFlightSupport = await prisma.attack.findMany({
+      where: {
+        defenderNexusId: defenderNexus.id,
+        type: 'support',
+        status: 'traveling',
+      },
+      select: { id: true, attackerNexusId: true, arrivesAt: true, troops: true },
+    });
+    logInfo('combat_defender_aggregation', {
+      attackId: attack.id,
+      defenderNexusId: defenderNexus.id,
+      defenderOwnerId: defenderNexus.ownerId,
+      garrisonTotal: TROOP_KEYS.reduce((s, k) => s + ((defenderNexus as unknown as Record<TroopKey, number>)[k] || 0), 0),
+      supportTransferCount: supportTransfers.length,
+      supportTransferIds: supportTransfers.map((t) => t.id),
+      supportTroopsTotal: TROOP_KEYS.reduce((s, k) => s + (supportTroops[k] || 0), 0),
+      inFlightSupportAttackIds: inFlightSupport.map((a) => a.id),
+      inFlightSupportArrivesAt: inFlightSupport.map((a) => a.arrivesAt?.toISOString() ?? null),
+    });
 
     // Merged defender force (garrison + support)
     const mergedDefenderForce: Record<string, number> = {};
@@ -422,6 +445,18 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
     // unallocated so each transfer only absorbs its fair share.
     // Per-owner loss totals are accumulated so each owner receives one
     // consolidated push notification after all transfers are processed.
+    // alliedContributions is keyed by ownerNexusId so multiple transfers from the
+    // same ally are merged into one entry for the combat log.
+    type AlliedContribution = {
+      ownerNexusId: number;
+      ownerNexusName: string;
+      ownerUsername: string | null;
+      initial: Partial<Record<TroopKey, number>>;
+      losses: Partial<Record<TroopKey, number>>;
+      survivors: Partial<Record<TroopKey, number>>;
+    };
+    const alliedContribMap = new Map<number, AlliedContribution>();
+
     if (supportTransfers.length > 0) {
       const remainingSupportLosses: Record<string, number> = {};
       for (const key of TROOP_KEYS) {
@@ -454,6 +489,40 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
           updatedTroops[key] = remaining;
           if (remaining > 0) anyRemain = true;
         }
+
+        // Accumulate per-nexus allied contribution for the combat log.
+        const existingContrib = alliedContribMap.get(transfer.ownerNexusId);
+        if (existingContrib) {
+          for (const key of TROOP_KEYS) {
+            const init = t[key] || 0;
+            if (init > 0) existingContrib.initial[key] = (existingContrib.initial[key] || 0) + init;
+            const lost = lostTroops[key] || 0;
+            if (lost > 0) existingContrib.losses[key] = (existingContrib.losses[key] || 0) + lost;
+            const surv = updatedTroops[key] || 0;
+            if (surv > 0) existingContrib.survivors[key] = (existingContrib.survivors[key] || 0) + surv;
+          }
+        } else {
+          const initial: Partial<Record<TroopKey, number>> = {};
+          const losses: Partial<Record<TroopKey, number>> = {};
+          const survivors: Partial<Record<TroopKey, number>> = {};
+          for (const key of TROOP_KEYS) {
+            const init = t[key] || 0;
+            if (init > 0) initial[key] = init;
+            const lost = lostTroops[key] || 0;
+            if (lost > 0) losses[key] = lost;
+            const surv = updatedTroops[key] || 0;
+            if (surv > 0) survivors[key] = surv;
+          }
+          alliedContribMap.set(transfer.ownerNexusId, {
+            ownerNexusId: transfer.ownerNexusId,
+            ownerNexusName: transfer.ownerNexus.name,
+            ownerUsername: (transfer.ownerNexus as unknown as { owner?: { username: string } | null }).owner?.username ?? null,
+            initial,
+            losses,
+            survivors,
+          });
+        }
+
         if (!anyRemain) {
           await prisma.troopTransfer.delete({ where: { id: transfer.id } });
         } else {
@@ -718,6 +787,8 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
           attackerPower: Math.round(attackPower),
           defenderPower: Math.round(defensePower),
           buildingDamage: buildingDamageLog.length > 0 ? buildingDamageLog : undefined,
+          alliedContributions: alliedContribMap.size > 0 ? [...alliedContribMap.values()] : undefined,
+          alliedNexusIds: alliedContribMap.size > 0 ? [...alliedContribMap.keys()] : undefined,
         },
       },
     });
@@ -755,6 +826,11 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
     notifyAttackUpdate(attack.attackerUserId, attack.defenderUserId, attack.defenderNexusId!);
     if (attack.attackerUserId) notifyReportUpdate(attack.attackerUserId);
     if (attack.defenderUserId) notifyReportUpdate(attack.defenderUserId);
+    // Notify each ally whose troops participated so their Reports page updates.
+    for (const contrib of alliedContribMap.values()) {
+      const ownerId = supportTransfers.find((t) => t.ownerNexusId === contrib.ownerNexusId)?.ownerNexus.ownerId;
+      if (ownerId && ownerId !== attack.defenderUserId) notifyReportUpdate(ownerId);
+    }
 
     if (conquered && attack.defenderUserId) {
       notifyNexusConquered(

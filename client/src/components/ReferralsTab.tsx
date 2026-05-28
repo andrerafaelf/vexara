@@ -114,6 +114,7 @@ interface NexusSummary {
 
 type RewardType = 'building_instant' | 'troop_grant';
 type TokenKind = 'referral' | 'milestone';
+type ReferralsTabMode = 'referrals' | 'tokens';
 
 interface RedeemState {
   tokenId: number;
@@ -124,7 +125,48 @@ interface RedeemState {
   troopType: string;
 }
 
-export default function ReferralsTab() {
+interface ReferralsTabProps {
+  mode?: ReferralsTabMode;
+}
+
+const ADMIN_REASON_COPY: Record<string, { label: string; meta: string }> = {
+  manual: { label: 'Manual Grant', meta: 'Token granted by Vexara staff' },
+  admin_grant: { label: 'Manual Grant', meta: 'Token granted by Vexara staff' },
+  compensation: { label: 'Compensation', meta: 'Token granted as compensation' },
+  contest: { label: 'Contest Reward', meta: 'Token earned through a contest reward' },
+  supporter: { label: 'Supporter Bonus', meta: 'Token granted as a supporter bonus' },
+  bug_fix: { label: 'Bug Fix / Make-good', meta: 'Token granted as a make-good' },
+  downtime_2026_05_23: { label: 'Downtime Compensation', meta: 'Token granted for the May 23 downtime' },
+};
+
+function prettifyReason(reason: string): string {
+  return reason
+    .replace(/[_-]+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function getTokenDisplay(token: PendingToken): { label: string; meta: string } {
+  const reason = typeof token.rewardMeta?.reason === 'string' ? token.rewardMeta.reason.trim() : '';
+  const reasonCopy = reason ? ADMIN_REASON_COPY[reason] : null;
+
+  if (token.rewardType === 'kofi') {
+    return { label: 'Supporter Reward', meta: 'Token earned through Ko-fi support' };
+  }
+
+  if (token.rewardType === 'admin' || token.kofiTransactionId?.startsWith('admin-')) {
+    if (reasonCopy) return reasonCopy;
+    if (reason) return { label: prettifyReason(reason), meta: `Granted: ${reason}` };
+    return ADMIN_REASON_COPY.admin_grant;
+  }
+
+  if (reasonCopy) return reasonCopy;
+  if (reason) return { label: prettifyReason(reason), meta: `Granted: ${reason}` };
+  if (token.kofiTransactionId) return { label: 'Supporter Reward', meta: 'Token earned through Ko-fi support' };
+  return { label: 'Bonus Token', meta: 'One-time reward token' };
+}
+
+export default function ReferralsTab({ mode = 'referrals' }: ReferralsTabProps) {
   const [refereeRows, setRefereeRows] = useState<RefereeRow[]>([]);
   const [referrals, setReferrals] = useState<ReferralRow[]>([]);
   const [pendingReferralTokens, setPendingReferralTokens] = useState<PendingToken[]>([]);
@@ -241,6 +283,15 @@ export default function ReferralsTab() {
 
   if (loading) return null;
 
+  const pointMilestoneTokens = pendingMilestoneTokens.filter((t) => (t.milestone ?? 0) > 0);
+  const bonusTokens = pendingMilestoneTokens.filter((t) => (t.milestone ?? 0) <= 0);
+  const isRedeemingPointMilestone = redeemState?.kind === 'milestone'
+    && pointMilestoneTokens.some((t) => t.id === redeemState.tokenId);
+  const isRedeemingBonus = redeemState?.kind === 'milestone'
+    && bonusTokens.some((t) => t.id === redeemState.tokenId);
+  const isRedeemingReferral = redeemState?.kind === 'referral'
+    && pendingReferralTokens.some((t) => t.id === redeemState.tokenId);
+
   const redeemForm = (
     <form className="referrals-redeem-form" onSubmit={handleRedeem}>
       <label className="referrals-field">
@@ -334,18 +385,18 @@ export default function ReferralsTab() {
     <div className="referrals-tab">
 
       {/* Milestone tokens (actual 500-pt milestone) */}
-      {pendingMilestoneTokens.filter((t) => (t.milestone ?? 0) > 0).length > 0 && (
+      {mode === 'tokens' && pointMilestoneTokens.length > 0 && (
         <section className="referrals-section">
           <h3 className="referrals-section-title">
             Milestone Reward
-            <span className="referrals-count-badge">{pendingMilestoneTokens.filter((t) => (t.milestone ?? 0) > 0).length}</span>
+            <span className="referrals-count-badge">{pointMilestoneTokens.length}</span>
           </h3>
           <p className="referrals-hint">
             You reached {MILESTONE_THRESHOLD} influence points. Claim your reward token.
           </p>
-          {redeemState?.kind === 'milestone' ? redeemForm : (
+          {isRedeemingPointMilestone ? redeemForm : (
             <div className="referrals-token-list">
-              {pendingMilestoneTokens.filter((t) => (t.milestone ?? 0) > 0).map((t) => (
+              {pointMilestoneTokens.map((t) => (
                 <div key={t.id} className="referrals-token-card">
                   <div className="referrals-token-info">
                     <span className="referrals-token-label">{t.milestone} Influence Milestone</span>
@@ -362,43 +413,45 @@ export default function ReferralsTab() {
       )}
 
       {/* Admin-granted / Ko-fi / bonus tokens */}
-      {pendingMilestoneTokens.filter((t) => (t.milestone ?? 0) === 0).length > 0 && (
+      {mode === 'tokens' && bonusTokens.length > 0 && (
         <section className="referrals-section">
           <h3 className="referrals-section-title">
             Bonus Reward
-            <span className="referrals-count-badge">{pendingMilestoneTokens.filter((t) => (t.milestone ?? 0) === 0).length}</span>
+            <span className="referrals-count-badge">{bonusTokens.length}</span>
           </h3>
           <p className="referrals-hint">
-            {pendingMilestoneTokens.some((t) => (t.milestone ?? 0) === 0 && t.kofiTransactionId) ? 'Thank you for your support!' : 'You have bonus tokens to redeem.'}
+            You have one-time tokens to redeem for instant building levels or free troops.
           </p>
-          {redeemState?.kind === 'milestone' ? redeemForm : (
+          {isRedeemingBonus ? redeemForm : (
             <div className="referrals-token-list">
-              {pendingMilestoneTokens.filter((t) => (t.milestone ?? 0) === 0).map((t) => (
-                <div key={t.id} className="referrals-token-card">
-                  <div className="referrals-token-info">
-                    <span className="referrals-token-label">
-                      {t.kofiTransactionId ? 'Supporter Reward' : 'Bonus Token'}
-                    </span>
-                    <span className="referrals-token-meta">
-                      {t.kofiTransactionId
-                        ? 'Token earned through Ko-fi support'
-                        : (t.rewardMeta as any)?.reason
-                          ? `Granted: ${(t.rewardMeta as any).reason}`
-                          : 'Granted by admin'}
-                    </span>
+              {bonusTokens.map((t) => {
+                const display = getTokenDisplay(t);
+                return (
+                  <div key={t.id} className="referrals-token-card">
+                    <div className="referrals-token-info">
+                      <span className="referrals-token-label">{display.label}</span>
+                      <span className="referrals-token-meta">{display.meta}</span>
+                    </div>
+                    <button className="referrals-btn primary" onClick={() => openRedeem(t.id, 'milestone')}>
+                      Claim
+                    </button>
                   </div>
-                  <button className="referrals-btn primary" onClick={() => openRedeem(t.id, 'milestone')}>
-                    Claim
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
       )}
 
+      {mode === 'tokens' && pointMilestoneTokens.length === 0 && bonusTokens.length === 0 && pendingReferralTokens.length === 0 && (
+        <section className="referrals-section">
+          <h3 className="referrals-section-title">Tokens</h3>
+          <p className="referrals-hint">No tokens waiting to redeem right now.</p>
+        </section>
+      )}
+
       {/* Your referral code, account-bound, unique across galaxies */}
-      {myReferralCode && (
+      {mode === 'referrals' && myReferralCode && (
         <section className="referrals-section">
           <h3 className="referrals-section-title">Invite a Friend</h3>
           <p className="referrals-hint">
@@ -447,7 +500,7 @@ export default function ReferralsTab() {
       )}
 
       {/* Referrer section, read-only display of who referred you at signup */}
-      {referrer && (
+      {mode === 'referrals' && referrer && (
         <section className="referrals-section">
           <h3 className="referrals-section-title">Referred By</h3>
           <div className="referrals-referrer-card">
@@ -478,14 +531,14 @@ export default function ReferralsTab() {
       )}
 
       {/* Pending referral redemptions (earned by inviting others) */}
-      {pendingReferralTokens.length > 0 && (
+      {mode === 'tokens' && pendingReferralTokens.length > 0 && (
         <section className="referrals-section">
           <h3 className="referrals-section-title">
             Referral Tokens
             <span className="referrals-count-badge">{pendingReferralTokens.length}</span>
           </h3>
           <p className="referrals-hint">Someone you referred reached {REFERRAL_THRESHOLD} influence points. Each token is a one-time reward.</p>
-          {redeemState?.kind === 'referral' ? redeemForm : (
+          {isRedeemingReferral ? redeemForm : (
             <div className="referrals-token-list">
               {pendingReferralTokens.map((t) => {
                 const row = referrals.find((r) => r.tokenId === t.id);
@@ -507,7 +560,7 @@ export default function ReferralsTab() {
       )}
 
       {/* Referral list, who you've referred */}
-      <section className="referrals-section">
+      {mode === 'referrals' && <section className="referrals-section">
         <h3 className="referrals-section-title">Your Referrals</h3>
         {refereeRows.length === 0 ? (
           <p className="referrals-hint">
@@ -547,7 +600,7 @@ export default function ReferralsTab() {
             })}
           </ul>
         )}
-      </section>
+      </section>}
     </div>
   );
 }

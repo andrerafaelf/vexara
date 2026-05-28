@@ -12,21 +12,50 @@ export function getUserById(id: number) {
   return prisma.user.findUnique({ where: { id }, select: { id: true, username: true, isSupporter: true, supporterTier: true, avatarKey: true } });
 }
 
-export function getReportsForNexus(nexusId: number) {
-  return prisma.attack.findMany({
-    where: {
-      type: { not: 'support' },
-      OR: [
-        { attackerNexusId: nexusId, status: { in: ['returning', 'completed'] } },
-        { defenderNexusId: nexusId, status: { in: ['returning', 'completed'] } },
-      ],
-    },
-    orderBy: { createdAt: 'desc' },
-    include: {
-      attackerNexus: { select: { id: true, name: true, x: true, y: true } },
-      defenderNexus: { select: { id: true, name: true, x: true, y: true, biomass: true, alloy: true, ore: true } },
-    },
-  });
+export async function getReportsForNexus(nexusId: number) {
+  const [direct, allied] = await Promise.all([
+    prisma.attack.findMany({
+      where: {
+        type: { not: 'support' },
+        OR: [
+          { attackerNexusId: nexusId, status: { in: ['returning', 'completed'] } },
+          { defenderNexusId: nexusId, status: { in: ['returning', 'completed'] } },
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        attackerNexus: { select: { id: true, name: true, x: true, y: true } },
+        defenderNexus: { select: { id: true, name: true, x: true, y: true, biomass: true, alloy: true, ore: true } },
+      },
+    }),
+    // Attacks where this nexus contributed allied troops (stored in result.alliedNexusIds JSON array).
+    prisma.$queryRaw<{ id: number }[]>`
+      SELECT id FROM "Attack"
+      WHERE status IN ('returning', 'completed')
+        AND type != 'support'
+        AND result->'alliedNexusIds' @> ${JSON.stringify([nexusId])}::jsonb
+    `.then((rows) =>
+      rows.length > 0
+        ? prisma.attack.findMany({
+            where: { id: { in: rows.map((r) => r.id) } },
+            orderBy: { createdAt: 'desc' },
+            include: {
+              attackerNexus: { select: { id: true, name: true, x: true, y: true } },
+              defenderNexus: { select: { id: true, name: true, x: true, y: true, biomass: true, alloy: true, ore: true } },
+            },
+          })
+        : []
+    ),
+  ]);
+
+  // Merge and deduplicate, preserving newest-first order.
+  const seen = new Set<number>();
+  const merged = [];
+  for (const a of [...direct, ...allied]) {
+    if (!seen.has(a.id)) { seen.add(a.id); merged.push(a); }
+  }
+  merged.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  return merged;
 }
 
 export function getOwnedNexusIds(userId: number, galaxyId: number) {

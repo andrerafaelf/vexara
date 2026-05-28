@@ -2347,6 +2347,24 @@
   justify-content: flex-end;
 }
 
+.borrowed-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.borrowed-type-badge {
+  background: var(--color-navy-900);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .borrow-action-btn {
   background: transparent;
   color: var(--text-muted);
@@ -3882,6 +3900,11 @@
 }
 
 .borrowed-troop-chip {
+  border-radius: 0;
+  font-family: var(--font-mono);
+}
+
+.borrowed-type-badge {
   border-radius: 0;
   font-family: var(--font-mono);
 }

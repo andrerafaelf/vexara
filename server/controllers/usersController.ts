@@ -8,6 +8,7 @@ import { validatePassword } from '../utils/validation.js';
 import { logError } from '../utils/logger.js';
 import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
 import { getResourceProduction } from '../utils/economy.js';
+import { sortOwnedNexuses } from '../services/nexusService.js';
 
 type FriendshipStatus = 'self' | 'none' | 'pending_outgoing' | 'pending_incoming' | 'friends';
 
@@ -196,7 +197,7 @@ export async function getPublicProfile(req: AuthRequest, res: Response): Promise
         where: { userId_galaxyId: { userId: user.id, galaxyId: req.galaxyId } },
         select: { points: true },
       }),
-      prisma.nexus.findMany({ where: { ownerId: user.id, galaxyId: req.galaxyId } }),
+      prisma.nexus.findMany({ where: { ownerId: user.id, galaxyId: req.galaxyId } }).then(sortOwnedNexuses),
       prisma.attack.findMany({
         where: {
           galaxyId: req.galaxyId,

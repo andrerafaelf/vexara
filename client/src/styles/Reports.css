@@ -979,3 +979,22 @@
   border-left: 3px solid var(--text-faint);
   background: var(--bg-surface);
 }
+
+
+/* Allied contributions in combat log */
+.allied-contrib {
+  margin-bottom: 1rem;
+}
+
+.allied-contrib-header {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.35rem;
+}
+
+.allied-contrib-nexus {
+  color: var(--text-faint);
+}

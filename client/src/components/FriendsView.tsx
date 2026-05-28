@@ -16,14 +16,14 @@ import {
 } from '@/services/api';
 import '@/styles/FriendsView.css';
 import { formatDate, formatTimeOfDay } from '@/utils/date';
-import { MessageSquare, Users, UserPlus, GitBranch } from 'lucide-react';
+import { Gift, GitBranch, MessageSquare, Users, UserPlus } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReferralsTab from './ReferralsTab';
 import Username from './Username';
 import { usePageReady } from './NavigationProgress';
 import { useNotificationBadges } from '@/hooks/useNotificationBadges';
 
-type TabId = 'friends' | 'requests' | 'chat' | 'referrals';
+type TabId = 'friends' | 'requests' | 'chat' | 'tokens' | 'referrals';
 
 interface Friend {
   id: string;
@@ -329,12 +329,19 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
           )}
         </button>
         <button
+          className={`friends-tab ${tab === 'tokens' ? 'active' : ''}`}
+          onClick={() => setTab('tokens')}
+        >
+          <Gift size={14} aria-hidden="true" />
+          <span>Tokens</span>
+          {hasTokens && <span className="friends-tab-dot" aria-label="Tokens available to redeem" />}
+        </button>
+        <button
           className={`friends-tab ${tab === 'referrals' ? 'active' : ''}`}
           onClick={() => setTab('referrals')}
         >
           <GitBranch size={14} aria-hidden="true" />
           <span>Referrals</span>
-          {hasTokens && <span className="friends-tab-dot" aria-label="Tokens available to redeem" />}
         </button>
       </div>
 
@@ -527,9 +534,15 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
         </div>
       )}
 
+      {tab === 'tokens' && (
+        <div className="friends-panel">
+          <ReferralsTab mode="tokens" />
+        </div>
+      )}
+
       {tab === 'referrals' && (
         <div className="friends-panel">
-          <ReferralsTab />
+          <ReferralsTab mode="referrals" />
         </div>
       )}
     </div>

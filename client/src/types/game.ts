@@ -283,6 +283,15 @@ export interface Attack {
     nexusLifeReduced?: boolean;
     remainingNexusLife?: number;
     buildingDamage?: { building: string; from: number; to: number }[];
+    alliedContributions?: {
+      ownerNexusId: number;
+      ownerNexusName: string;
+      ownerUsername: string | null;
+      initial: Record<string, number>;
+      losses: Record<string, number>;
+      survivors: Record<string, number>;
+    }[];
+    alliedNexusIds?: number[];
     mission?: 'scout';
     intel?: {
       resources: {

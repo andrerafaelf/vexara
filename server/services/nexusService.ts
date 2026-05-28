@@ -27,11 +27,36 @@ export async function atomicUpdateNexusResources(
   return prisma.nexus.findUniqueOrThrow({ where: { id } });
 }
 
+type OwnedNexusOrderFields = {
+  id: number;
+  createdAt?: Date | null;
+  conqueredAt?: Date | null;
+};
+
+function time(value: Date | string | null | undefined): number {
+  if (!value) return 0;
+  return value instanceof Date ? value.getTime() : new Date(value).getTime();
+}
+
+export function sortOwnedNexuses<T extends OwnedNexusOrderFields>(nexuses: T[]): T[] {
+  return [...nexuses].sort((a, b) => {
+    const aOriginal = a.conqueredAt == null;
+    const bOriginal = b.conqueredAt == null;
+    if (aOriginal !== bOriginal) return aOriginal ? -1 : 1;
+
+    if (aOriginal && bOriginal) {
+      return time(a.createdAt) - time(b.createdAt) || a.id - b.id;
+    }
+
+    return time(a.conqueredAt) - time(b.conqueredAt) || a.id - b.id;
+  });
+}
+
 export function getNexusByOwner(userId: number, galaxyId: number) {
   return prisma.nexus.findMany({
     where: { ownerId: userId, galaxyId },
     orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-  });
+  }).then(sortOwnedNexuses);
 }
 
 export function getNexusById(nexusId: number) {
