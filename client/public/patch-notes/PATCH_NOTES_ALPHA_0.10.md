@@ -32,16 +32,6 @@ when several waves are stacked.
 
 ---
 
-### Faction management tools
-
-Faction leaders can browse the full faction list, promote and demote
-members through the roles UI, and disband a faction when needed. Members
-see role changes immediately and the badge system flags pending
-faction-attention items (unread chats, pending join requests, unseen
-war declarations) directly on the nav bar.
-
----
-
 ### Faction chat shares combat logs
 
 A "Share to Chat" button on every combat report posts a formatted log
