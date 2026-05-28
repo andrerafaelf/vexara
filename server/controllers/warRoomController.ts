@@ -33,6 +33,10 @@ function sanitizeTroopMap(input: unknown): Record<string, number> {
   return out;
 }
 
+function sumTroops(troops: Record<string, number>): number {
+  return Object.values(troops).reduce((acc, n) => acc + Math.max(0, n || 0), 0);
+}
+
 interface MembershipContext {
   factionId: number;
   role: 'leader' | 'officer' | 'member';
@@ -103,7 +107,7 @@ async function serializeOperation(operationId: number) {
     ? []
     : await prisma.nexus.findMany({
         where: { id: { in: Array.from(nexusIds) } },
-        select: { id: true, name: true, x: true, y: true },
+        select: { id: true, name: true, x: true, y: true, nexusType: true, nexusTypeDoubled: true },
       });
   const nexusById = new Map(nexuses.map((n) => [n.id, n] as const));
 
@@ -142,6 +146,8 @@ async function serializeOperation(operationId: number) {
           fromNexusName: nx?.name ?? `Nexus #${s.fromNexusId}`,
           fromNexusX: nx?.x ?? null,
           fromNexusY: nx?.y ?? null,
+          fromNexusType: nx?.nexusType ?? null,
+          fromNexusTypeDoubled: nx?.nexusTypeDoubled ?? false,
           troops: (s.troops ?? {}) as Record<string, number>,
           note: s.note ?? null,
           sentAttackId: s.sentAttackId ?? null,
@@ -310,6 +316,10 @@ export async function createOperation(req: AuthRequest, res: Response): Promise<
       res.status(400).json({ error: 'Invalid arrival time' });
       return;
     }
+    if (arrivalAt.getTime() <= Date.now() + 60_000) {
+      res.status(400).json({ error: 'Arrival must be at least 1 minute in the future' });
+      return;
+    }
 
     const target = await prisma.nexus.findUnique({
       where: { id: targetNexusId },
@@ -386,6 +396,10 @@ export async function updateOperation(req: AuthRequest, res: Response): Promise<
       const t = new Date(body.arrivalAt);
       if (isNaN(t.getTime())) {
         res.status(400).json({ error: 'Invalid arrival time' });
+        return;
+      }
+      if (t.getTime() <= Date.now() + 60_000) {
+        res.status(400).json({ error: 'Arrival must be at least 1 minute in the future' });
         return;
       }
       data.arrivalAt = t;
@@ -474,6 +488,10 @@ export async function addWave(req: AuthRequest, res: Response): Promise<void> {
     const label = typeof body.label === 'string' ? body.label.trim().slice(0, 48) : null;
     const offset = Number.isFinite(Number(body.arrivalOffsetMs)) ? Math.floor(Number(body.arrivalOffsetMs)) : 0;
     const troops = sanitizeTroopMap(body.troops);
+    if (sumTroops(troops) <= 0) {
+      res.status(400).json({ error: 'Add at least one troop to the wave target' });
+      return;
+    }
 
     await prisma.warOperationWave.create({
       data: { operationId, ordinal, label, arrivalOffsetMs: offset, troops },
@@ -517,6 +535,10 @@ export async function updateWave(req: AuthRequest, res: Response): Promise<void>
     if (typeof body.label === 'string') data.label = body.label.trim().slice(0, 48) || null;
     if (Number.isFinite(Number(body.arrivalOffsetMs))) data.arrivalOffsetMs = Math.floor(Number(body.arrivalOffsetMs));
     if (body.troops !== undefined) data.troops = sanitizeTroopMap(body.troops);
+    if (data.troops !== undefined && sumTroops(data.troops) <= 0) {
+      res.status(400).json({ error: 'Add at least one troop to the wave target' });
+      return;
+    }
 
     await prisma.warOperationWave.update({ where: { id: waveId }, data });
     await bumpRev(wave.operation.id);
@@ -613,6 +635,10 @@ export async function claimSlot(req: AuthRequest, res: Response): Promise<void> 
       return;
     }
     const troops = sanitizeTroopMap(body?.troops);
+    if (sumTroops(troops) <= 0) {
+      res.status(400).json({ error: 'Pledge at least one troop' });
+      return;
+    }
     const note = typeof body?.note === 'string' ? body.note.trim().slice(0, 128) : null;
 
     const slot = await prisma.warOperationSlot.upsert({
@@ -668,6 +694,79 @@ export async function releaseSlot(req: AuthRequest, res: Response): Promise<void
     broadcastOperationUpdate(ctx.factionId, slot.wave.operationId, 'slot_released', req.userId);
     const full = await serializeOperation(slot.wave.operationId);
     res.json({ operation: full });
+  } catch (error) {
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'warRoomController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+export async function markSlotSent(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const ctx = await loadMembership(req);
+    if (!ctx) {
+      res.status(403).json({ error: 'You are not in a faction' });
+      return;
+    }
+    const slotId = parseInt(req.params.slotId, 10);
+    const attackId = Number((req.body as { attackId?: unknown })?.attackId);
+    if (!Number.isFinite(slotId) || !Number.isFinite(attackId) || attackId <= 0) {
+      res.status(400).json({ error: 'Invalid launch record' });
+      return;
+    }
+
+    const slot = await prisma.warOperationSlot.findUnique({
+      where: { id: slotId },
+      include: {
+        wave: {
+          include: {
+            operation: { select: { id: true, factionId: true, targetNexusId: true } },
+          },
+        },
+      },
+    });
+    if (!slot || slot.wave.operation.factionId !== ctx.factionId) {
+      res.status(404).json({ error: 'Slot not found' });
+      return;
+    }
+    if (slot.userId !== req.userId) {
+      res.status(403).json({ error: 'You can only mark your own wave as launched' });
+      return;
+    }
+    if (slot.sentAttackId) {
+      const full = await serializeOperation(slot.wave.operation.id);
+      res.json({ operation: full, sentAttackId: slot.sentAttackId });
+      return;
+    }
+
+    const attack = await prisma.attack.findUnique({
+      where: { id: Math.floor(attackId) },
+      select: {
+        id: true,
+        attackerUserId: true,
+        attackerNexusId: true,
+        defenderNexusId: true,
+        status: true,
+      },
+    });
+    if (
+      !attack ||
+      attack.attackerUserId !== req.userId ||
+      attack.attackerNexusId !== slot.fromNexusId ||
+      attack.defenderNexusId !== slot.wave.operation.targetNexusId ||
+      attack.status !== 'traveling'
+    ) {
+      res.status(400).json({ error: 'Attack does not match this wave slot' });
+      return;
+    }
+
+    await prisma.warOperationSlot.update({
+      where: { id: slot.id },
+      data: { sentAttackId: attack.id },
+    });
+    await bumpRev(slot.wave.operation.id);
+    broadcastOperationUpdate(ctx.factionId, slot.wave.operation.id, 'slot_sent', req.userId);
+    const full = await serializeOperation(slot.wave.operation.id);
+    res.json({ operation: full, sentAttackId: attack.id });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'warRoomController.ts' });
     res.status(500).json({ error: 'Internal server error' });

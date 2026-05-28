@@ -5,6 +5,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useToast } from '../context/ToastContext';
 import { getMyNexuses, sendAttack } from '../services/api';
 import { serverNow } from '../realtime/serverClock';
+import { formatDuration, hasOnlyRecon, travelMinutes } from '../utils/travel';
 import '../styles/WavePlanner.css';
 import type { Nexus } from '../types/game';
 
@@ -31,12 +32,6 @@ const TROOP_LABELS: Record<string, string> = {
   reconOperative:'Recon Operative', skimmerBike:'Skimmer Bike', siegeMech:'Siege Mech',
   bulwarkGuard:'Bulwark Guard', suppressorTeam:'Suppressor Team', disruptorUnit:'Disruptor Unit',
   interceptorBike:'Interceptor Bike', annihilatorPlatform:'Annihilator Platform', voidStalker:'Void Stalker', overseer:'Overseer',
-};
-
-const TROOP_SPEED: Record<string, number> = {
-  lancerDrone:20, assaultTrooper:18, breakerUnit:16, reconOperative:25,
-  skimmerBike:22, siegeMech:10, bulwarkGuard:12, suppressorTeam:15,
-  disruptorUnit:17, interceptorBike:28, annihilatorPlatform:8, voidStalker:32, overseer:6,
 };
 
 type TroopMap = Record<string, number>;
@@ -112,10 +107,7 @@ function armStoredScheduledWave(record: ScheduledWaveRecord) {
     if (!current) return;
 
     try {
-      const onlyRecon =
-        current.troops.reconOperative > 0 &&
-        Object.entries(current.troops).every(([t, n]) => t === 'reconOperative' || n === 0);
-      await sendAttack(current.nexusId, current.target._id, current.troops, onlyRecon ? 'scout' : 'attack', current.requestId);
+      await sendAttack(current.nexusId, current.target._id, current.troops, missionForTroops(current.troops), current.requestId);
     } finally {
       scheduledWaveTimers.delete(current.id);
       scheduledWaveRecords.delete(current.id);
@@ -134,18 +126,6 @@ function storeScheduledWave(record: ScheduledWaveRecord) {
   scheduledWaveRecords.set(record.id, record);
   armStoredScheduledWave(record);
   notifyScheduledWaveSubscribers();
-}
-
-function computeTravelMinutes(from: { x: number; y: number }, to: { x: number; y: number }, troops: TroopMap): number {
-  const dist = Math.sqrt(Math.pow(to.x - from.x, 2) + Math.pow(to.y - from.y, 2));
-  let minSpeed = Infinity;
-  for (const [type, count] of Object.entries(troops)) {
-    if (count > 0 && TROOP_SPEED[type]) {
-      minSpeed = Math.min(minSpeed, TROOP_SPEED[type]);
-    }
-  }
-  if (!isFinite(minSpeed)) return 0;
-  return dist * (4 + (28 - minSpeed) / 10);
 }
 
 function formatLaunchTime(arrivalMs: number, travelMinutes: number): string {
@@ -169,10 +149,18 @@ function formatTimeUntil(targetMs: number): string {
   return h > 0 ? `${h}h ${m}m ${s}s` : m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
 
-function formatDuration(minutes: number): string {
-  const h = Math.floor(minutes / 60);
-  const m = Math.round(minutes % 60);
-  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+function toLocalDatetimeValue(ms: number): string {
+  const date = new Date(ms);
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function emptyTroops(): TroopMap {
+  return Object.fromEntries(TROOP_KEYS.map((k) => [k, 0]));
+}
+
+function missionForTroops(troops: TroopMap): 'scout' | 'attack' {
+  return hasOnlyRecon(troops) ? 'scout' : 'attack';
 }
 
 const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
@@ -180,21 +168,19 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
   const [myNexuses, setMyNexuses] = useState<Nexus[]>([]);
   const [waves, setWaves] = useState<Wave[]>([]);
   const [arrivalTime, setArrivalTime] = useState<string>('');
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState(() => serverNow());
   const [sendingAll, setSendingAll] = useState(false);
 
   // Tick `now` every second so countdowns + isPast checks stay live without calling
   // Date.now() from inside render (react-hooks/purity).
   useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 1000);
+    const id = setInterval(() => setNow(serverNow()), 1000);
     return () => clearInterval(id);
   }, []);
 
   // Default arrival time: 30 min from now
   useEffect(() => {
-    const d = new Date(Date.now() + 30 * 60 * 1000);
-    d.setSeconds(0, 0);
-    setArrivalTime(d.toISOString().slice(0, 16));
+    setArrivalTime(toLocalDatetimeValue(serverNow() + 30 * 60 * 1000));
   }, []);
 
   useEffect(() => {
@@ -215,10 +201,18 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
     getMyNexuses()
       .then((r) => {
         const nexuses: Nexus[] = r.data;
-        setMyNexuses(nexuses.filter((n) => n._id !== target._id));
+        setMyNexuses(
+          nexuses
+            .filter((n) => n._id !== target._id)
+            .sort((a, b) => {
+              const da = (target.x - a.x) ** 2 + (target.y - a.y) ** 2;
+              const db = (target.x - b.x) ** 2 + (target.y - b.y) ** 2;
+              return da - db;
+            }),
+        );
       })
       .catch(() => {});
-  }, [target._id]);
+  }, [target._id, target.x, target.y]);
 
   const arrivalMs = arrivalTime ? new Date(arrivalTime).getTime() : 0;
 
@@ -231,7 +225,7 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
         id: `${Date.now()}-${Math.random()}`,
         requestId: `wave:${Date.now()}:${Math.random().toString(36).slice(2)}`,
         nexusId: nexus._id,
-        troops: Object.fromEntries(TROOP_KEYS.map((k) => [k, 0])),
+        troops: emptyTroops(),
         sending: false,
         scheduled: false,
         scheduledLaunchAt: null,
@@ -256,7 +250,16 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
   const updateWaveTroop = (waveId: string, troopType: string, value: number) => {
     setWaves((prev) => {
       const next = prev.map((w) =>
-        w.id !== waveId ? w : { ...w, troops: { ...w.troops, [troopType]: Math.max(0, value) } },
+        w.id !== waveId ? w : {
+          ...w,
+          troops: {
+            ...w.troops,
+            [troopType]: Math.min(
+              ((myNexuses.find((n) => n._id === w.nexusId)?.troops as Record<string, number> | undefined)?.[troopType] ?? value),
+              Math.max(0, value),
+            ),
+          },
+        },
       );
 
       // After updating troops, check if the current arrival time is still
@@ -267,15 +270,13 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
       if (updatedWave) {
         const nexus = myNexuses.find((n) => n._id === updatedWave.nexusId);
         if (nexus) {
-          const travelMin = computeTravelMinutes(nexus, target, updatedWave.troops);
+          const travelMin = travelMinutes(nexus, target, updatedWave.troops, missionForTroops(updatedWave.troops));
           if (travelMin > 0) {
-            const minArrivalMs = Date.now() + travelMin * 60 * 1000 + 60_000;
+            const minArrivalMs = serverNow() + travelMin * 60 * 1000 + 60_000;
             setArrivalTime((prev) => {
               const currentMs = prev ? new Date(prev).getTime() : 0;
               if (currentMs < minArrivalMs) {
-                const d = new Date(minArrivalMs);
-                d.setSeconds(0, 0);
-                return d.toISOString().slice(0, 16);
+                return toLocalDatetimeValue(minArrivalMs);
               }
               return prev;
             });
@@ -289,20 +290,28 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
 
   const updateWaveNexus = (waveId: string, nexusId: string) => {
     setWaves((prev) => {
-      const next = prev.map((w) => w.id !== waveId ? w : { ...w, nexusId });
+      const selected = myNexuses.find((n) => n._id === nexusId);
+      const next = prev.map((w) => {
+        if (w.id !== waveId) return w;
+        const troops = { ...w.troops };
+        if (selected) {
+          for (const key of TROOP_KEYS) {
+            troops[key] = Math.min(troops[key] ?? 0, (selected.troops as Record<string, number>)[key] ?? 0);
+          }
+        }
+        return { ...w, nexusId, troops };
+      });
       const updatedWave = next.find((w) => w.id === waveId);
       if (updatedWave) {
         const nexus = myNexuses.find((n) => n._id === nexusId);
         if (nexus) {
-          const travelMin = computeTravelMinutes(nexus, target, updatedWave.troops);
+          const travelMin = travelMinutes(nexus, target, updatedWave.troops, missionForTroops(updatedWave.troops));
           if (travelMin > 0) {
-            const minArrivalMs = Date.now() + travelMin * 60 * 1000 + 60_000;
+            const minArrivalMs = serverNow() + travelMin * 60 * 1000 + 60_000;
             setArrivalTime((prev) => {
               const currentMs = prev ? new Date(prev).getTime() : 0;
               if (currentMs < minArrivalMs) {
-                const d = new Date(minArrivalMs);
-                d.setSeconds(0, 0);
-                return d.toISOString().slice(0, 16);
+                return toLocalDatetimeValue(minArrivalMs);
               }
               return prev;
             });
@@ -327,7 +336,8 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
       toast('Set an arrival time first', 'error');
       return;
     }
-    const travelMin = computeTravelMinutes(nexus, target, wave.troops);
+    const mission = missionForTroops(wave.troops);
+    const travelMin = travelMinutes(nexus, target, wave.troops, mission);
     const launchMs = arrivalMs - travelMin * 60 * 1000;
     // The setTimeout delay must be measured against the server clock, otherwise
     // a skewed local clock fires the launch early or late.
@@ -338,10 +348,7 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
 
     const doSend = async () => {
       try {
-        const onlyRecon =
-          wave.troops.reconOperative > 0 &&
-          Object.entries(wave.troops).every(([t, n]) => t === 'reconOperative' || n === 0);
-        await sendAttack(nexus._id, target._id, wave.troops, onlyRecon ? 'scout' : 'attack', wave.requestId);
+        await sendAttack(nexus._id, target._id, wave.troops, mission, wave.requestId);
         setWaves((prev) =>
           prev.map((w) =>
             w.id !== wave.id ? w : { ...w, sending: false, scheduled: false, scheduledLaunchAt: null, sent: true },
@@ -370,7 +377,7 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
         troops: wave.troops,
         scheduledLaunchAt: launchMs,
       });
-      toast(`Wave from ${nexus.name} scheduled. Launches in ${formatDuration(travelMin)}`, 'info');
+      toast(`Wave from ${nexus.name} scheduled. Launches in ${formatTimeUntil(launchMs)}`, 'info');
       setWaves((prev) =>
         prev.map((w) =>
           w.id !== wave.id ? w : { ...w, sending: false, scheduled: true, scheduledLaunchAt: launchMs },
@@ -398,7 +405,7 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
             <Clock size={16} className="wplanner-header-icon" />
             <span className="wplanner-title">Wave Planner</span>
             <span className="wplanner-target">
-              → {target.name} ({target.x}|{target.y})
+              to {target.name} ({target.x}|{target.y})
             </span>
           </div>
           <button className="wplanner-close" onClick={onClose} aria-label="Close">
@@ -433,7 +440,7 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
             const nexus = getWaveNexus(wave.nexusId);
             const totalTroops = Object.values(wave.troops).reduce((s, n) => s + n, 0);
             const travelMin = nexus && totalTroops > 0
-              ? computeTravelMinutes(nexus, target, wave.troops)
+              ? travelMinutes(nexus, target, wave.troops, missionForTroops(wave.troops))
               : 0;
             const launchCountdown = nexus && arrivalMs && travelMin > 0
               ? formatLaunchTime(arrivalMs, travelMin)
@@ -487,7 +494,7 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
                 {launchCountdown && !wave.sent && !wave.scheduled && (
                   <div className={`wplanner-countdown ${isPast ? 'wplanner-countdown--past' : ''}`}>
                     {launchCountdown}
-                    {isPast && ' · adjust arrival time'}
+                    {isPast && ' - adjust arrival time'}
                   </div>
                 )}
 
@@ -528,7 +535,7 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
                       disabled={wave.sending || totalTroops === 0 || !arrivalTime}
                     >
                       <Send size={13} />
-                      {wave.sending ? 'Sending…' : isPast ? 'Send Now' : 'Schedule'}
+                      {wave.sending ? 'Sending...' : isPast ? 'Send Now' : 'Schedule'}
                     </button>
                   </div>
                 )}
@@ -545,7 +552,7 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
           {waves.filter((w) => !w.sent && !w.scheduled).length > 1 && (
             <button className="wplanner-send-all-btn" onClick={sendAllWaves} disabled={sendingAll}>
               <Send size={14} />
-              {sendingAll ? 'Sending all…' : `Send all ${waves.filter((w) => !w.sent && !w.scheduled).length} waves`}
+              {sendingAll ? 'Sending all...' : `Send all ${waves.filter((w) => !w.sent && !w.scheduled).length} waves`}
             </button>
           )}
         </div>

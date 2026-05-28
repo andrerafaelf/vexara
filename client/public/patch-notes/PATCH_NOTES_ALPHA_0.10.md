@@ -14,6 +14,24 @@ the new target callouts.
 
 ---
 
+### Wave planner and War Room cleanup
+
+The faction wave planner has been rebuilt around clearer launch timing.
+Travel math now matches the server for Forward Bases, doubled nexus-type
+bonuses, scout-only recon waves, and Overseer strike delays. The planner
+also uses the server clock for countdowns, clamps troop inputs to the
+selected source nexus, and sorts your source nexuses by distance to the
+target so the best launch options appear first.
+
+War Room pledges now behave more reliably too. Empty wave targets and
+empty pledges are rejected, operations must target a future arrival time,
+and launched War Room slots are marked as sent so the same pledge does
+not keep offering a duplicate launch button. The Wave Planner modal was
+restyled for a cleaner layout, better mobile wrapping, and easier scanning
+when several waves are stacked.
+
+---
+
 ### Faction management tools
 
 Faction leaders can browse the full faction list, promote and demote

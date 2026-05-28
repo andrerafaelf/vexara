@@ -554,6 +554,8 @@ export const claimWarRoomSlot = (
   apiRequest(`/warroom/waves/${waveId}/slots`, { method: 'POST', body: JSON.stringify(data) });
 export const releaseWarRoomSlot = (slotId: number) =>
   apiRequest(`/warroom/slots/${slotId}`, { method: 'DELETE' });
+export const markWarRoomSlotSent = (slotId: number, attackId: number | string) =>
+  apiRequest(`/warroom/slots/${slotId}/sent`, { method: 'POST', body: JSON.stringify({ attackId }) });
 export const getWarRoomThread = (operationId: number, before?: number) =>
   apiRequest(`/warroom/operations/${operationId}/thread${before ? `?before=${before}` : ''}`);
 export const postWarRoomThreadMessage = (operationId: number, content: string) =>

@@ -30,12 +30,14 @@ import {
   getMyNexuses,
   getWarRoomOperation,
   listWarRoomOperations,
+  markWarRoomSlotSent,
   postWarRoomThreadMessage,
   releaseWarRoomSlot,
   sendAttack,
   updateWarRoomOperation,
 } from '../services/api';
 import { serverNow } from '../realtime/serverClock';
+import { travelMinutes } from '../utils/travel';
 import '../styles/WarRoom.css';
 import type { Nexus } from '../types/game';
 import StarfieldMap, { type MapNexus } from './Map';
@@ -70,6 +72,8 @@ interface Slot {
   fromNexusName: string;
   fromNexusX: number | null;
   fromNexusY: number | null;
+  fromNexusType?: string | null;
+  fromNexusTypeDoubled?: boolean;
   troops: Record<string, number>;
   note: string | null;
   sentAttackId: number | null;
@@ -139,28 +143,6 @@ const TROOP_LABELS: Record<string, string> = {
   voidStalker:'Stalker', overseer:'Overseer',
 };
 
-const TROOP_SPEED: Record<string, number> = {
-  lancerDrone:20, assaultTrooper:18, breakerUnit:16, reconOperative:25,
-  skimmerBike:22, siegeMech:10, bulwarkGuard:12, suppressorTeam:15,
-  disruptorUnit:17, interceptorBike:28, annihilatorPlatform:8,
-  voidStalker:32, overseer:6,
-};
-
-// Distance/speed model lifted from WavePlanner.tsx so launch times stay in sync.
-function travelMinutes(
-  from: { x: number; y: number },
-  to: { x: number; y: number },
-  troops: Record<string, number>,
-): number {
-  const dist = Math.sqrt((to.x - from.x) ** 2 + (to.y - from.y) ** 2);
-  let minSpeed = Infinity;
-  for (const [t, n] of Object.entries(troops)) {
-    if (n > 0 && TROOP_SPEED[t]) minSpeed = Math.min(minSpeed, TROOP_SPEED[t]);
-  }
-  if (!isFinite(minSpeed)) return 0;
-  return dist * (4 + (28 - minSpeed) / 10);
-}
-
 function formatCountdown(ms: number): string {
   if (ms < 0) return 'past';
   const totalSec = Math.floor(ms / 1000);
@@ -182,6 +164,12 @@ function fmtTime(iso: string): string {
 function fmtShortTime(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function toLocalDatetimeValue(ms: number): string {
+  const date = new Date(ms);
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 function colorForUser(userId: number): string {
@@ -212,7 +200,7 @@ export default function WarRoom({ factionId, myRole }: Props) {
   const [selectedOpId, setSelectedOpId] = useState<number | null>(null);
   const [selectedOp, setSelectedOp] = useState<Operation | null>(null);
   const [opLoading, setOpLoading] = useState(false);
-  const [now, setNow] = useState(Date.now());
+  const [now, setNow] = useState(serverNow());
   const [myNexuses, setMyNexuses] = useState<Nexus[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   // On narrow viewports the board and thread can't both fit, so they share
@@ -232,7 +220,7 @@ export default function WarRoom({ factionId, myRole }: Props) {
 
   // tick every second for countdowns
   useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 1000);
+    const id = setInterval(() => setNow(serverNow()), 1000);
     return () => clearInterval(id);
   }, []);
 
@@ -593,7 +581,7 @@ function OperationsRail({
                 </span>
                 <span className="warroom-rail-item-stats">
                   <span title="waves">{op.waveCount}w</span>
-                  <span className="dot">·</span>
+                  <span className="dot">/</span>
                   <span title="contributors">{op.contributorCount} pledged</span>
                 </span>
               </div>
@@ -773,7 +761,7 @@ function Timeline({
     let bestTravel = 0;
     if (myNexuses.length > 0 && Object.values(wave.troops).some((n) => n > 0)) {
       bestTravel = Math.min(
-        ...myNexuses.map((n) => travelMinutes({ x: n.x, y: n.y }, { x: op.targetX, y: op.targetY }, wave.troops)),
+        ...myNexuses.map((n) => travelMinutes(n, { x: op.targetX, y: op.targetY }, wave.troops)),
       );
     }
     const launchMs = arrivalMs + (wave.arrivalOffsetMs ?? 0) - bestTravel * 60 * 1000;
@@ -991,7 +979,12 @@ function SlotRow({
   let launchAt: number | null = null;
   if (slot.fromNexusX != null && slot.fromNexusY != null) {
     const travel = travelMinutes(
-      { x: slot.fromNexusX, y: slot.fromNexusY },
+      {
+        x: slot.fromNexusX,
+        y: slot.fromNexusY,
+        nexusType: slot.fromNexusType,
+        nexusTypeDoubled: slot.fromNexusTypeDoubled,
+      },
       target,
       slot.troops,
     );
@@ -1001,7 +994,7 @@ function SlotRow({
   const troopSummary = TROOP_KEYS
     .filter((k) => (slot.troops[k] ?? 0) > 0)
     .map((k) => `${slot.troops[k]} ${TROOP_LABELS[k]}`)
-    .join(' · ');
+    .join(' / ');
 
   return (
     <div className={`warroom-slot ${isMine ? 'warroom-slot--mine' : ''} ${slot.sentAttackId ? 'warroom-slot--sent' : ''}`}>
@@ -1087,7 +1080,7 @@ function ClaimForm({
   const waveArrivalMs = new Date(op.arrivalAt).getTime() + (wave.arrivalOffsetMs ?? 0);
   const launchAt = selectedNexus && total > 0
     ? waveArrivalMs - travelMinutes(
-        { x: selectedNexus.x, y: selectedNexus.y },
+        selectedNexus,
         { x: op.targetX, y: op.targetY },
         troops,
       ) * 60 * 1000
@@ -1195,7 +1188,7 @@ function ClaimForm({
           disabled={submitting || total === 0 || tooLate}
           title={tooLate ? `Too slow - would arrive ${formatCountdown(lateBy)} after impact` : undefined}
         >
-          {submitting ? 'Pledging…' : tooLate ? 'Too slow to make it' : 'Pledge'}
+          {submitting ? 'Pledging...' : tooLate ? 'Too slow to make it' : 'Pledge'}
         </button>
       </div>
 
@@ -1236,7 +1229,7 @@ function SendNowBar({
   const [sending, setSending] = useState(false);
   const nexus = myNexuses.find((n) => parseInt(n._id, 10) === slot.fromNexusId);
   if (!nexus) return null;
-  const travel = travelMinutes({ x: nexus.x, y: nexus.y }, { x: op.targetX, y: op.targetY }, slot.troops);
+  const travel = travelMinutes(nexus, { x: op.targetX, y: op.targetY }, slot.troops);
   const launchAt = new Date(op.arrivalAt).getTime() + (wave.arrivalOffsetMs ?? 0) - travel * 60 * 1000;
   const ready = launchAt <= now + 30_000; // within 30s of launch window
   // Past the launch window: these troops physically cannot reach impact on time.
@@ -1249,7 +1242,11 @@ function SendNowBar({
     if (tooLate) return;
     setSending(true);
     try {
-      await sendAttack(nexus._id, String(op.targetNexusId), slot.troops, 'attack');
+      const res = await sendAttack(nexus._id, String(op.targetNexusId), slot.troops, 'attack', `warroom:${slot.id}`);
+      const attackId = res.data?.attack?._id ?? res.data?.attack?.id;
+      if (attackId) {
+        await markWarRoomSlotSent(slot.id, attackId);
+      }
       toast('Wave launched', 'success');
       onSent();
     } catch (err) {
@@ -1270,7 +1267,7 @@ function SendNowBar({
         : ready ? 'Launch your wave now' : 'Will be launchable within window'}
     >
       <Send size={13} />
-      {sending ? 'Launching…'
+      {sending ? 'Launching...'
         : tooLate ? `Too late, would miss impact by ${formatCountdown(lateBy)}`
         : ready ? 'Launch My Wave Now'
         : `Launch in ${formatCountdown(launchAt - now)}`}
@@ -1284,8 +1281,13 @@ function AddWaveForm({ operationId, onAdded }: { operationId: number; onAdded: (
   const [offsetSec, setOffsetSec] = useState(0);
   const [troops, setTroops] = useState<Record<string, number>>({});
   const [submitting, setSubmitting] = useState(false);
+  const total = sumTroops(troops);
 
   const handleAdd = async () => {
+    if (total <= 0) {
+      toast('Add at least one troop to the wave target', 'error');
+      return;
+    }
     setSubmitting(true);
     try {
       await addWarRoomWave(operationId, {
@@ -1356,8 +1358,8 @@ function AddWaveForm({ operationId, onAdded }: { operationId: number; onAdded: (
         ))}
       </div>
       <div className="warroom-add-wave-actions">
-        <button className="warroom-primary-btn" onClick={handleAdd} disabled={submitting}>
-          {submitting ? 'Adding…' : 'Add Wave'}
+        <button className="warroom-primary-btn" onClick={handleAdd} disabled={submitting || total <= 0}>
+          {submitting ? 'Adding...' : 'Add Wave'}
         </button>
       </div>
     </div>
@@ -1449,9 +1451,9 @@ function ThreadPanel({
       {typingPeers.length > 0 && (
         <div className="warroom-typing">
           <span className="warroom-typing-dots"><span /><span /><span /></span>
-          {typingPeers.length === 1 ? `${typingPeers[0]} is typing…` :
-            typingPeers.length === 2 ? `${typingPeers.join(' and ')} are typing…` :
-            `${typingPeers.length} officers typing…`}
+          {typingPeers.length === 1 ? `${typingPeers[0]} is typing...` :
+            typingPeers.length === 2 ? `${typingPeers.join(' and ')} are typing...` :
+            `${typingPeers.length} officers typing...`}
         </div>
       )}
 
@@ -1460,7 +1462,7 @@ function ThreadPanel({
           className="warroom-thread-input"
           value={draft}
           onChange={(e) => handleDraftChange(e.target.value)}
-          placeholder="Message officers in this op…"
+          placeholder="Message officers in this op..."
           maxLength={1000}
           disabled={sending}
         />
@@ -1487,11 +1489,7 @@ function CreateOperationModal({
 }) {
   const [name, setName] = useState('');
   const [target, setTarget] = useState<MapNexus | null>(null);
-  const [arrival, setArrival] = useState(() => {
-    const d = new Date(Date.now() + 60 * 60 * 1000);
-    d.setSeconds(0, 0);
-    return d.toISOString().slice(0, 16);
-  });
+  const [arrival, setArrival] = useState(() => toLocalDatetimeValue(serverNow() + 60 * 60 * 1000));
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -1528,7 +1526,7 @@ function CreateOperationModal({
                 className="warroom-field-input"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Iron Hammer · Crush COBRA-04"
+                placeholder="e.g. Iron Hammer / Crush COBRA-04"
                 maxLength={64}
                 required
                 disabled={submitting}
@@ -1572,7 +1570,7 @@ function CreateOperationModal({
             <div className="warroom-modal-actions">
               <button type="button" className="warroom-ghost-btn" onClick={onClose} disabled={submitting}>Cancel</button>
               <button type="submit" className="warroom-primary-btn" disabled={submitting || !target || !name.trim()}>
-                {submitting ? 'Opening…' : 'Open Operation'}
+                {submitting ? 'Opening...' : 'Open Operation'}
               </button>
             </div>
           </div>

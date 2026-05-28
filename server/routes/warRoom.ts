@@ -19,6 +19,7 @@ router.delete('/waves/:waveId', auth, (req, res) => ctrl.deleteWave(req as AuthR
 
 router.post('/waves/:waveId/slots', auth, (req, res) => ctrl.claimSlot(req as AuthRequest, res as Response));
 router.delete('/slots/:slotId', auth, (req, res) => ctrl.releaseSlot(req as AuthRequest, res as Response));
+router.post('/slots/:slotId/sent', auth, (req, res) => ctrl.markSlotSent(req as AuthRequest, res as Response));
 
 router.get('/operations/:operationId/thread', auth, (req, res) => ctrl.getThread(req as AuthRequest, res as Response));
 router.post('/operations/:operationId/thread', auth, (req, res) => ctrl.postThreadMessage(req as AuthRequest, res as Response));
