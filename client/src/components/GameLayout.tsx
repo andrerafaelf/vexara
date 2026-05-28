@@ -25,6 +25,17 @@ import { useUserStats } from '@/features/social/useSocial';
 
 type ActivePage = 'dashboard' | 'starfield' | 'market' | 'combat-logs' | 'allies' | 'factions' | 'players' | 'profile';
 
+const PAGE_TITLES: Record<ActivePage, string> = {
+  dashboard: 'Dashboard',
+  starfield: 'Starfield',
+  market: 'Market',
+  'combat-logs': 'Combat Logs',
+  allies: 'Allies',
+  factions: 'Factions',
+  players: 'Players',
+  profile: 'Profile',
+};
+
 interface GameLayoutProps {
   children: React.ReactNode;
   activePage?: ActivePage;
@@ -130,6 +141,11 @@ export default function GameLayout({
   const closeNexusDrawer = useCallback(() => setIsNexusDrawerOpen(false), []);
 
   const is = (page: ActivePage) => activePage === page;
+
+  useEffect(() => {
+    const name = activePage ? PAGE_TITLES[activePage] : null;
+    document.title = name ? `Vexara - ${name}` : 'Vexara';
+  }, [activePage]);
 
   return (
     <div className="game-container">
