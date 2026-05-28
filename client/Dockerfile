@@ -10,8 +10,12 @@ COPY . .
 # Build-time env vars must be passed as ARGs so Next.js can embed them
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_APP_URL
+ARG BUILD_ID=dev
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
+# Stamp the service worker cache name with this build's ID so every deploy
+# invalidates the previous cache (see public/sw.js).
+RUN sed -i "s/{{BUILD_ID}}/${BUILD_ID}/g" public/sw.js
 RUN npm run build
 
 FROM base AS runner
