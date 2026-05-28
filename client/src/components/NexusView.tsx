@@ -1806,8 +1806,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                         {incomingAttacks.map((a: any) => {
                           const src = a.attacker?.nexus ?? a.attackerNexus;
                           return (
-                            <div key={a._id} className="strikes-card-entry">
+                            <div key={a._id} className={`strikes-card-entry${a.type === 'support' ? ' strikes-card-entry--support' : ''}`}>
                               <span className="strikes-card-entry-who">
+                                {a.type === 'support' && <span className="strikes-card-support-badge">SUPPORT</span>}
                                 <Username name={a.attacker?.user?.username ?? '?'} isSupporter={a.attacker?.user?.isSupporter} supporterTier={a.attacker?.user?.supporterTier} /> · {src?.name ?? '?'}
                                 {src?.x != null && src?.y != null ? ` (${src.x}|${src.y})` : ''}
                               </span>
