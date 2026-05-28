@@ -4,7 +4,7 @@ import { NOTIF, sendPushToUser } from './push.js';
 const DOMINANCE_THRESHOLD = 0.65;
 const DOMINANCE_SUSTAIN_MS = 36 * 60 * 60 * 1000;
 const DOMINANCE_MIN_PLAYERS = 15;
-const DOMINANCE_MIN_FACTIONS = 3;
+const DOMINANCE_MIN_FACTIONS = 4;
 
 export async function processDominanceVictories(): Promise<void> {
   const activeGalaxies = await prisma.galaxy.findMany({

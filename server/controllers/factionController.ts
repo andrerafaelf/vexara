@@ -776,7 +776,7 @@ export async function disbandFaction(req: AuthRequest, res: Response): Promise<v
 const DOMINANCE_THRESHOLD = 0.65;
 const DOMINANCE_SUSTAIN_MS = 36 * 60 * 60 * 1000;
 const DOMINANCE_MIN_PLAYERS = 10;
-const DOMINANCE_MIN_FACTIONS = 3;
+const DOMINANCE_MIN_FACTIONS = 4;
 
 export async function getLeaderboard(req: AuthRequest, res: Response): Promise<void> {
   try {

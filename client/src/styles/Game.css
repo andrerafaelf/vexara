@@ -117,34 +117,34 @@
   gap: 6px;
 }
 
-.combat-report-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #ff6b57 0%, #ffb25f 100%);
-  border: 1px solid rgba(255, 255, 255, 0.68);
-  box-shadow:
-    0 0 0 3px rgba(255, 107, 87, 0.16),
-    0 0 12px rgba(255, 178, 95, 0.38);
-  animation: reportDotPulse 1.6s ease-in-out infinite;
+.nav-attention-mark {
+  position: relative;
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
 }
 
-@keyframes reportDotPulse {
-  0% {
-    box-shadow:
-      0 0 0 2px rgba(255, 107, 87, 0.2),
-      0 0 10px rgba(255, 178, 95, 0.35);
-  }
-  70% {
-    box-shadow:
-      0 0 0 7px rgba(255, 107, 87, 0),
-      0 0 14px rgba(255, 178, 95, 0.2);
-  }
-  100% {
-    box-shadow:
-      0 0 0 2px rgba(255, 107, 87, 0),
-      0 0 10px rgba(255, 178, 95, 0.35);
-  }
+.nav-attention-mark::before,
+.nav-attention-mark::after {
+  content: '';
+  position: absolute;
+  bottom: 1px;
+  width: 3px;
+  background: var(--accent);
+  box-shadow: 0 0 10px rgba(255, 158, 61, 0.5);
+  transform: skewX(-14deg);
+}
+
+.nav-attention-mark::before {
+  left: 2px;
+  height: 10px;
+}
+
+.nav-attention-mark::after {
+  left: 7px;
+  height: 6px;
+  opacity: 0.72;
 }
 
 .nav-btn:hover:not(:disabled) {

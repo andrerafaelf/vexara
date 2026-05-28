@@ -161,19 +161,19 @@ export default function GameLayout({
           <button className={`nav-btn${is('combat-logs') ? ' active' : ''}`} onClick={nav('/combat-logs')} onMouseEnter={prefetchOnHover('/combat-logs')} onFocus={prefetchOnHover('/combat-logs')}>
             <span className="nav-btn-content">
               Combat Logs
-              {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
+              {hasUnreadReports && <span className="nav-attention-mark" aria-label="Unread combat reports" />}
             </span>
           </button>
           <button className={`nav-btn${is('allies') ? ' active' : ''}`} onClick={nav('/allies')} onMouseEnter={prefetchOnHover('/allies')} onFocus={prefetchOnHover('/allies')}>
             <span className="nav-btn-content">
               Allies
-              {(hasUnreadFriends || hasTokens) && <span className="combat-report-dot" aria-label="Unread ally activity or tokens to redeem" />}
+              {(hasUnreadFriends || hasTokens) && <span className="nav-attention-mark" aria-label="Unread ally activity or tokens to redeem" />}
             </span>
           </button>
           <button className={`nav-btn${is('factions') ? ' active' : ''}`} onClick={nav('/factions')} onMouseEnter={prefetchOnHover('/factions')} onFocus={prefetchOnHover('/factions')}>
             <span className="nav-btn-content">
               Factions
-              {hasFactionAttention && <span className="combat-report-dot" aria-label="Faction action required" />}
+              {hasFactionAttention && <span className="nav-attention-mark" aria-label="Faction action required" />}
             </span>
           </button>
           <button className={`nav-btn${is('players') ? ' active' : ''}`} onClick={nav('/players')} onMouseEnter={prefetchOnHover('/players')} onFocus={prefetchOnHover('/players')}>
@@ -258,19 +258,19 @@ export default function GameLayout({
           <button className={`nav-btn${is('combat-logs') ? ' active' : ''}`} onClick={nav('/combat-logs')}>
             <span className="nav-btn-content">
               Combat Logs
-              {hasUnreadReports && <span className="combat-report-dot" aria-label="Unread combat reports" />}
+              {hasUnreadReports && <span className="nav-attention-mark" aria-label="Unread combat reports" />}
             </span>
           </button>
           <button className={`nav-btn${is('allies') ? ' active' : ''}`} onClick={nav('/allies')}>
             <span className="nav-btn-content">
               Allies
-              {(hasUnreadFriends || hasTokens) && <span className="combat-report-dot" aria-label="Unread ally activity or tokens to redeem" />}
+              {(hasUnreadFriends || hasTokens) && <span className="nav-attention-mark" aria-label="Unread ally activity or tokens to redeem" />}
             </span>
           </button>
           <button className={`nav-btn${is('factions') ? ' active' : ''}`} onClick={nav('/factions')}>
             <span className="nav-btn-content">
               Factions
-              {hasFactionAttention && <span className="combat-report-dot" aria-label="Faction action required" />}
+              {hasFactionAttention && <span className="nav-attention-mark" aria-label="Faction action required" />}
             </span>
           </button>
           <button className={`nav-btn${is('players') ? ' active' : ''}`} onClick={nav('/players')}>

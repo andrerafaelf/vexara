@@ -34,6 +34,7 @@ import {
   getGalaxyDiplomacy,
 } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useBadgesQuery } from '../hooks/useNotificationBadges';
 import FactionChat from './FactionChat';
 import DiplomacyChat from './DiplomacyChat';
 import Username from './Username';
@@ -211,6 +212,7 @@ export default function FactionsView() {
   }, [factionMemberCache]);
 
   const { user: authUser } = useAuth();
+  const badges = useBadgesQuery();
   const currentUserId = authUser ? parseInt(authUser.id, 10) : undefined;
 
   const refreshJoinRequests = useCallback(async (factionId: number) => {
@@ -752,6 +754,12 @@ export default function FactionsView() {
   // ── In a faction ─────────────────────────────────────────────────────────────
 
   const canManage = myFaction.myRole === 'leader' || myFaction.myRole === 'officer';
+  const factionNoticeItems = [
+    badges.factionUnreadChat > 0 ? { key: 'chat', label: 'Chat', count: badges.factionUnreadChat, tab: 'chat' as Tab } : null,
+    canManage && badges.factionPendingJoinRequests > 0 ? { key: 'members', label: 'Requests', count: badges.factionPendingJoinRequests, tab: 'members' as Tab } : null,
+    badges.factionUnseenWars > 0 ? { key: 'wars', label: 'Wars', count: badges.factionUnseenWars, tab: 'wars' as Tab } : null,
+    canManage && badges.factionPendingTreaties > 0 ? { key: 'diplomacy', label: 'Diplomacy', count: badges.factionPendingTreaties, tab: 'diplomacy' as Tab } : null,
+  ].filter(Boolean) as Array<{ key: string; label: string; count: number; tab: Tab }>;
   const sortedMembers = [...(myFaction.members ?? [])].sort(
     (a, b) => (ROLE_ORDER[a.role] ?? 3) - (ROLE_ORDER[b.role] ?? 3)
   );
@@ -809,6 +817,23 @@ export default function FactionsView() {
         )}
       </div>
 
+      {factionNoticeItems.length > 0 && (
+        <div className="factions-notice-strip" aria-label="Faction notifications">
+          {factionNoticeItems.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              className="factions-notice-chip"
+              onClick={() => setActiveTab(item.tab)}
+            >
+              <span className="factions-notice-mark" aria-hidden="true" />
+              <span>{item.label}</span>
+              <span className="factions-notice-count">{item.count}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Tabs */}
       <div className="factions-tabs">
         {(['overview', 'chat', 'warroom', 'members', 'wars', 'diplomacy', 'galaxy', 'activity'] as Tab[]).map((tab) => (
@@ -818,7 +843,14 @@ export default function FactionsView() {
             onClick={() => setActiveTab(tab)}
           >
             {tab === 'overview' && 'Overview'}
-            {tab === 'chat' && 'Chat'}
+            {tab === 'chat' && (
+              <>
+                Chat
+                {badges.factionUnreadChat > 0 && (
+                  <span className="factions-tab-badge factions-tab-badge--alert">{badges.factionUnreadChat}</span>
+                )}
+              </>
+            )}
             {tab === 'warroom' && 'War Room'}
             {tab === 'members' && (
               <>

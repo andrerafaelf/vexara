@@ -156,6 +156,11 @@ export async function getBadges(req: AuthRequest, res: Response): Promise<void> 
     res.json({
       tokensAvailable,
       factionAttention,
+      factionInvites,
+      factionUnreadChat: unreadFactionMessages,
+      factionPendingTreaties: pendingTreaties,
+      factionUnseenWars: unseenWars,
+      factionPendingJoinRequests: pendingJoinRequests,
       friendsIncomingRequests,
       friendsUnreadChat,
       unreadReportNexusIds,

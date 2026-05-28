@@ -10,6 +10,11 @@ export const NOTIFICATION_BADGES_KEY = ['notificationBadges'] as const;
 export interface NotificationBadges {
   tokensAvailable: number;
   factionAttention: number;
+  factionInvites: number;
+  factionUnreadChat: number;
+  factionPendingTreaties: number;
+  factionUnseenWars: number;
+  factionPendingJoinRequests: number;
   friendsIncomingRequests: number;
   friendsUnreadChat: number;
   unreadReportNexusIds: string[];
@@ -18,6 +23,11 @@ export interface NotificationBadges {
 const EMPTY_BADGES: NotificationBadges = {
   tokensAvailable: 0,
   factionAttention: 0,
+  factionInvites: 0,
+  factionUnreadChat: 0,
+  factionPendingTreaties: 0,
+  factionUnseenWars: 0,
+  factionPendingJoinRequests: 0,
   friendsIncomingRequests: 0,
   friendsUnreadChat: 0,
   unreadReportNexusIds: [],
