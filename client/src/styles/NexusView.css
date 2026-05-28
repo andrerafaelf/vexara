@@ -2284,6 +2284,11 @@
   cursor: not-allowed;
 }
 
+/* Deployed Forces tab */
+.deployed-tab {
+  padding: 4px 16px;
+}
+
 /* Borrowed Troops */
 .borrowed-troops-section {
   margin-top: 20px;
@@ -3987,6 +3992,13 @@
 .espionage-intel-row {
   border-radius: 0;
   border-left: 2px solid var(--border-default);
+  padding-left: 12px;
+}
+
+.espionage-intel-heading,
+.espionage-intel-nexustype,
+.espionage-intel-empty {
+  padding-left: 12px;
 }
 
 .espionage-completed-row--fail { border-left-color: var(--danger); }

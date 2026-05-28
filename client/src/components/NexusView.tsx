@@ -2637,11 +2637,12 @@ function EspionageIntelPanel({ report }: { report: Record<string, unknown> }) {
   if (report.type === 'sabotage') {
     if (report.message) return <span className="espionage-result-msg">{report.message as string}</span>;
     const target = report.target as string;
-    if (target === 'troops' && report.field) {
-      return <span className="espionage-result-msg">Eliminated {(report.loss as number).toLocaleString()} {humanizeTroopKey(report.field as string)}.</span>;
+    const delayMinutes = report.delayMinutes as number | undefined;
+    if (target === 'troops' && delayMinutes) {
+      return <span className="espionage-result-msg">Training queue delayed by {delayMinutes} minutes.</span>;
     }
-    if (target === 'building') {
-      return <span className="espionage-result-msg">Build queue delayed by {report.delayMinutes as number} minutes.</span>;
+    if (target === 'building' && delayMinutes) {
+      return <span className="espionage-result-msg">Build queue delayed by {delayMinutes} minutes.</span>;
     }
     return null;
   }
