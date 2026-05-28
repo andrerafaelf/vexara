@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
+import Link from 'next/link';
 import SiteFooter from '@/components/SiteFooter';
 import PublicNav from '@/components/PublicNav';
 import '@/styles/PatchNotes.css';
