@@ -1235,8 +1235,15 @@
     pointer-events: auto;
   }
 
+  .game-container {
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 100dvh;
+  }
+
   .game-content {
     display: block;
+    overflow: visible;
   }
 
   .main-content {
@@ -1244,6 +1251,7 @@
     padding-left: calc(14px + env(safe-area-inset-left));
     padding-right: calc(14px + env(safe-area-inset-right));
     padding-bottom: calc(24px + env(safe-area-inset-bottom));
+    overflow: visible;
   }
 
   /* Nav buttons in mobile drawer: full 44px touch target */
