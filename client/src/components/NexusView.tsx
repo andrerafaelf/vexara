@@ -2862,8 +2862,8 @@ function getSpyResultSummary(report: Record<string, unknown> | null, mission: Re
     return 'Intel package gathered from the target nexus.';
   }
   if (report.message) return String(report.message);
-  if (report.target === 'troops' && report.field) {
-    return `Eliminated ${Number(report.loss ?? 0).toLocaleString()} ${humanizeTroopKey(String(report.field))}.`;
+  if (report.target === 'troops') {
+    return `Training queue delayed by ${Number(report.delayMinutes ?? 0).toLocaleString()} minutes.`;
   }
   if (report.target === 'building') {
     return `Build queue delayed by ${Number(report.delayMinutes ?? 0).toLocaleString()} minutes.`;
@@ -3072,25 +3072,63 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
           </div>
           {missions.map((m) => {
             const isReturning = m.status === 'returning';
+            const result = (m.result as Record<string, unknown> | null) ?? null;
+            const hasArrivedReport = isReturning && !!result;
+            const success = result?.success as boolean | undefined;
+            const id = String(m.id);
+            const liveReportKey = `live:${id}`;
+            const isOpen = expandedMissions.has(liveReportKey);
+            const toggleReport = () =>
+              setExpandedMissions((prev) => {
+                const next = new Set(prev);
+                if (next.has(liveReportKey)) next.delete(liveReportKey);
+                else next.add(liveReportKey);
+                return next;
+              });
             const targetTime = isReturning
               ? new Date(m.returnsAt as string).getTime()
               : new Date(m.arrivesAt as string).getTime();
             const msLeft = targetTime - now;
             return (
-              <div key={String(m.id)} className="espionage-mission-row">
-                <span className={`espionage-mission-icon espionage-mission-icon--${m.type === 'embed' ? 'embed' : 'sabotage'}`}>
-                  {m.type === 'embed' ? <Eye size={14} aria-hidden="true" /> : <Zap size={14} aria-hidden="true" />}
-                </span>
-                <div className="espionage-mission-info">
-                  <span className="espionage-mission-label">
-                    {getSpyKindLabel(m)}
-                    <span className="espionage-mission-route"> to {getSpyTargetLabel(m)}</span>
+              <div
+                key={id}
+                className={`espionage-live-card${hasArrivedReport ? ' espionage-live-card--resolved' : ''}${success === false ? ' espionage-live-card--fail' : ''}`}
+              >
+                <div className="espionage-mission-row">
+                  <span className={`espionage-mission-icon espionage-mission-icon--${m.type === 'embed' ? 'embed' : 'sabotage'}`}>
+                    {m.type === 'embed' ? <Eye size={14} aria-hidden="true" /> : <Zap size={14} aria-hidden="true" />}
                   </span>
-                  <span className="espionage-mission-status">
-                    {isReturning ? 'Returning' : 'Traveling'} &middot; {formatCountdown(msLeft)} @ {formatTimeOfDay(isReturning ? (m.returnsAt as string) : (m.arrivesAt as string), true)}
-                  </span>
+                  <div className="espionage-mission-info">
+                    <span className="espionage-mission-label">
+                      {getSpyKindLabel(m)}
+                      <span className="espionage-mission-route"> to {getSpyTargetLabel(m)}</span>
+                    </span>
+                    <span className={`espionage-mission-status${success === false ? ' is-fail' : hasArrivedReport ? ' is-success' : ''}`}>
+                      {hasArrivedReport ? 'Report received / operatives returning' : isReturning ? 'Returning' : 'Traveling'} &middot; {formatCountdown(msLeft)} @ {formatTimeOfDay(isReturning ? (m.returnsAt as string) : (m.arrivesAt as string), true)}
+                    </span>
+                    {hasArrivedReport && (
+                      <span className="espionage-history-result">
+                        {getSpyResultSummary(result, m)}
+                      </span>
+                    )}
+                  </div>
+                  <span className="espionage-mission-ops">{m.operatives as number} op{(m.operatives as number) !== 1 ? 's' : ''}</span>
+                  {hasArrivedReport && (
+                    <button
+                      type="button"
+                      className="espionage-live-report-toggle"
+                      onClick={toggleReport}
+                      aria-expanded={isOpen}
+                    >
+                      {isOpen ? 'Hide' : 'Report'}
+                    </button>
+                  )}
                 </div>
-                <span className="espionage-mission-ops">{m.operatives as number} op{(m.operatives as number) !== 1 ? 's' : ''}</span>
+                {hasArrivedReport && isOpen && (
+                  <div className="espionage-live-report">
+                    <EspionageIntelPanel report={result} />
+                  </div>
+                )}
               </div>
             );
           })}

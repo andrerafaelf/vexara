@@ -62,6 +62,16 @@ strike at a glance.
 
 ---
 
+### Sabotage reports transmit on arrival
+
+Sabotage results now appear as soon as operatives reach the target and
+the mission resolves. Surviving operatives still have to travel home
+before they rejoin your garrison, but you no longer have to wait for the
+return trip to learn whether the sabotage worked, fizzled, or got
+detected.
+
+---
+
 ### Support missions resolve before attacks
 
 When a support mission and an attack arrive in the same combat tick,

@@ -4241,6 +4241,51 @@
   color: var(--danger);
 }
 
+.espionage-live-card {
+  background: var(--color-navy-900);
+  border: 1px solid var(--border-default);
+}
+
+.espionage-live-card--resolved {
+  border-left: 2px solid var(--success);
+}
+
+.espionage-live-card--fail {
+  border-left-color: var(--danger);
+}
+
+.espionage-live-card > .espionage-mission-row {
+  grid-template-columns: 34px minmax(0, 1fr) auto auto;
+  background: transparent;
+}
+
+.espionage-mission-info {
+  min-width: 0;
+}
+
+.espionage-live-report-toggle {
+  min-height: 28px;
+  padding: 0 10px;
+  color: var(--accent);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-default);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.espionage-live-report-toggle:hover {
+  color: var(--text-strong);
+  border-color: rgba(255, 158, 61, 0.35);
+}
+
+.espionage-live-report {
+  margin: 0 12px 12px 46px;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
 .espionage-completed-row {
   background: var(--color-navy-900);
   border-color: var(--border-default);
@@ -4289,10 +4334,19 @@
     grid-template-columns: 30px minmax(0, 1fr);
   }
 
+  .espionage-live-card > .espionage-mission-row {
+    grid-template-columns: 30px minmax(0, 1fr);
+  }
+
   .espionage-mission-ops,
+  .espionage-live-report-toggle,
   .espionage-asset-actions {
     grid-column: 1 / -1;
     justify-content: flex-start;
+  }
+
+  .espionage-live-report {
+    margin: 0 10px 10px;
   }
 
   .espionage-completed-row .espionage-mission-toggle {

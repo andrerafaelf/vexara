@@ -495,6 +495,7 @@ export const ESPIONAGE_DOC: {
     'Both mission types use Recon Operative travel speed (25), same formula as the scout mission in the attack system.',
     'Travel time (minutes) = distance × (4 + (28 − 25) / 10) = distance × 4.3.',
     'Operatives and resources are deducted immediately on dispatch - they cannot be re-spent while the mission is in flight.',
+    'Mission results transmit on target arrival. Surviving operatives still need the return trip before they re-enter your garrison.',
     'After resolution, surviving operatives spend the same travel time returning home before they re-enter your garrison.',
   ],
 
@@ -524,7 +525,7 @@ export const ESPIONAGE_DOC: {
 
   lifecycle: [
     '1. Dispatch → status: traveling. Operatives and resources deducted immediately.',
-    '2. Arrival → background job (runs every 10 seconds) resolves the mission and sets status: returning.',
+    '2. Arrival → background job (runs every 10 seconds) resolves the mission, reveals the result, and sets status: returning.',
     '3. Return trip → same travel time as the outbound leg.',
     '4. Completion → status: completed. Surviving operatives re-enter the source Nexus garrison.',
     'Mission history (last 10 completed) is retrievable per Nexus so you can review past outcomes.',
