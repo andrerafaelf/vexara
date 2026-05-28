@@ -400,7 +400,7 @@ export default function FactionChat({ factionId, currentUserId }: Props) {
           onKeyDown={handleKeyDown}
           placeholder="Send a message… (Enter to send, Shift+Enter for newline)"
           rows={2}
-          maxLength={1000}
+          maxLength={4000}
           disabled={sending}
         />
         <button

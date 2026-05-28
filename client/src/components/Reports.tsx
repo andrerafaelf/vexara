@@ -438,7 +438,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
 
         <div className="report-detail">
           {(scoutReport || replayComplete) && (
-          <div className={`report-result ${selectedReport.result.victory ? 'victory' : 'defeat'}`}>
+          <div className={`report-result ${(isMyAttack ? selectedReport.result.victory : !selectedReport.result.victory) ? 'victory' : 'defeat'}`}>
             {scoutReport ? (
               <span>Recon complete. Intelligence updated.</span>
             ) : isMyAttack ? (
@@ -452,9 +452,9 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
               )
             ) : amAlly ? (
               selectedReport.result.victory ? (
-                <span>Defence held — your allied troops helped defend</span>
-              ) : (
                 <span>Defence lost — the nexus you supported was raided</span>
+              ) : (
+                <span>Defence held — your allied troops helped defend</span>
               )
             ) : selectedReport.result.victory ? (
               <span>Defeat! Your nexus was raided</span>
