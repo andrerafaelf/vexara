@@ -2,12 +2,12 @@ import type { Metadata } from 'next';
 import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 import SiteFooter from '@/components/SiteFooter';
-import Link from 'next/link';
+import PublicNav from '@/components/PublicNav';
 import '@/styles/PatchNotes.css';
 
 const TITLE = 'Patch Notes - Vexara Alpha Updates';
 const DESCRIPTION =
-  'Full changelog for Vexara — the free browser MMO RTS. Track every balance change, new feature, and bug fix across all alpha releases.';
+  'Full changelog for Vexara - the free browser MMO RTS. Track every balance change, new feature, and bug fix across all alpha releases.';
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -25,9 +25,10 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-// process.cwd() is the client/ directory when Next.js runs.
-// Patch notes live one level up at the repo root (vexara/).
-const PATCH_NOTES_DIR = join(process.cwd(), '..');
+// Patch notes are copied into public/patch-notes/ so Next.js standalone
+// always includes them. process.cwd() resolves correctly in both dev and
+// standalone production (public/ is always co-located with the server).
+const PATCH_NOTES_DIR = join(process.cwd(), 'public', 'patch-notes');
 
 interface PatchNote {
   label: string;   // e.g. "ALPHA v0.9" or "BETA v1.0" or "v1.0"
@@ -78,7 +79,7 @@ function renderMarkdown(raw: string) {
     const line = lines[i];
 
     if (line.startsWith('## ')) {
-      // Top-level version heading — skip, we render version from filename
+      // Top-level version heading - skip, we render version from filename
       i++;
       continue;
     }
@@ -132,16 +133,7 @@ export default function PatchNotesPage() {
 
   return (
     <>
-      <nav className="pn-nav" aria-label="Site navigation">
-        <Link href="/" className="pn-nav-mark">
-          <span className="pn-nav-stamp">VX</span>
-          <span className="pn-nav-wordmark">Vexara</span>
-        </Link>
-        <div className="pn-nav-links">
-          <Link href="/codex">Codex</Link>
-          <Link href="/register" className="pn-nav-cta">Enlist</Link>
-        </div>
-      </nav>
+      <PublicNav />
 
       <main className="pn-root">
         <header className="pn-header">
@@ -149,7 +141,7 @@ export default function PatchNotesPage() {
           <h1 className="pn-title">Patch Notes</h1>
           <p className="pn-subtitle">
             Every change, balance pass, and bug fix since alpha launch.
-            Built by one developer — patches ship when they ship.
+            Built by one developer - patches ship when they ship.
           </p>
         </header>
 
@@ -173,7 +165,7 @@ export default function PatchNotesPage() {
 
         <div className="pn-cta-block">
           <p className="pn-cta-text">Playing since before any of these patches? You helped shape all of this.</p>
-          <Link href="/register" className="pn-cta-btn">Enlist now — free, no download</Link>
+          <Link href="/register" className="pn-cta-btn">Enlist now - free, no download</Link>
         </div>
       </main>
 

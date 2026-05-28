@@ -7,7 +7,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: '*',
-        allow: ['/', '/codex', '/register', '/login', '/patch-notes', '/privacy', '/terms'],
+        allow: ['/', '/codex', '/register', '/login', '/patch-notes', '/how-to-play', '/units', '/buildings', '/privacy', '/terms'],
         disallow: [
           '/api/',
           '/play',

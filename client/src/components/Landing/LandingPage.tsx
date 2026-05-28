@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { TROOPS_DOC, BUILDINGS_DOC } from '@/data/gameDocs';
 import { TROOP_ICONS, BUILDING_ICONS } from '@/data/gameIcons';
 import SiteFooter from '@/components/SiteFooter';
+import PublicNav from '@/components/PublicNav';
 import '@/styles/Landing.css';
 
 const FOOTAGE: { src: string; label: string; code: string; caption: string }[] = [
@@ -46,7 +47,7 @@ export default function LandingPage() {
 
   return (
     <div className="lp-root">
-      <LandingNav />
+      <PublicNav />
       <Hero />
       <Marquee />
       <Pillars />
@@ -57,25 +58,6 @@ export default function LandingPage() {
       <Enlist />
       <SiteFooter />
     </div>
-  );
-}
-
-/* ──────────────────────────────────────────────────────────── */
-
-function LandingNav() {
-  return (
-    <header className="lp-nav">
-      <Link href="/" className="lp-nav-mark" aria-label="Vexara home">
-        <Image src="/vexara-logo.png" alt="" width={28} height={28} priority />
-        <span>Vexara</span>
-      </Link>
-      <nav className="lp-nav-links" aria-label="Primary">
-        <Link href="/codex">Codex</Link>
-        <a href="https://discord.gg/D858rzCHP7" target="_blank" rel="noopener noreferrer">Discord</a>
-        <Link href="/login" className="lp-nav-link-login">Login</Link>
-        <Link href="/register" className="lp-nav-cta">Enlist</Link>
-      </nav>
-    </header>
   );
 }
 
