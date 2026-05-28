@@ -322,6 +322,12 @@ export const approveJoinRequest = (factionId: number, requestId: number) =>
 export const declineJoinRequest = (factionId: number, requestId: number) =>
   apiRequest(`/faction/${factionId}/join-requests/${requestId}`, { method: 'DELETE' });
 
+export const markFactionTarget = (nexusId: string, note?: string) =>
+  apiRequest(`/faction/targets/${nexusId}`, { method: 'POST', body: JSON.stringify({ note }) });
+export const unmarkFactionTarget = (nexusId: string) =>
+  apiRequest(`/faction/targets/${nexusId}`, { method: 'DELETE' });
+export const listFactionTargets = () => apiRequest('/faction/targets');
+
 export const systemBuyResource = (
   nexusId: string,
   receiveResource: string,

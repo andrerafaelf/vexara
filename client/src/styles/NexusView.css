@@ -895,8 +895,20 @@
 }
 
 .strikes-card-entry-time {
-  color: var(--danger);
   font-size: 10px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.strikes-card-entry-arrival {
+  color: var(--danger);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.strikes-card-entry-countdown {
+  color: var(--text-muted);
 }
 
 .strikes-card-entry-troops {

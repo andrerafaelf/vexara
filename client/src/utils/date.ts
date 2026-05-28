@@ -1,4 +1,4 @@
-const LOCALE = 'en-GB';
+const LOCALE = undefined;
 
 export function formatDate(input: string | number | Date): string {
   const d = new Date(input);

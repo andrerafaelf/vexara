@@ -15,10 +15,14 @@ import {
   getNexusHistory,
   getNexusInfo,
   getOutgoingAttacks,
+  markFactionTarget,
+  unmarkFactionTarget,
   sendAttack,
   sendTroops,
   transferResources,
 } from '../services/api';
+import { Countdown } from './Countdown';
+import { useNow } from '@/hooks/useNow';
 import '../styles/Map.css';
 import { Nexus } from '../types/game';
 import { formatDateTime } from '../utils/date';
@@ -178,6 +182,8 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
   const [eventsStartAt, setEventsStartAt] = useState<string | null>(null);
   const [showEventsPanel, setShowEventsPanel] = useState(false);
   const [nexusHistory, setNexusHistory] = useState<any[]>([]);
+  const [factionTargeting, setFactionTargeting] = useState(false);
+  useNow(); // keep component ticking for Countdown leaves
 
   // currentNexus.troops is already the server-authoritative post-deduction
   // count (the server deducts on send). Subtracting outgoing attacks on top
@@ -220,6 +226,8 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
     setCenterY(nextY);
     setTargetX(String(nextX));
     setTargetY(String(nextY));
+    const nexusAtCoords = nexusLookup[`${nextX},${nextY}`];
+    if (nexusAtCoords) handleVillageClick(nexusAtCoords);
   };
 
   const handleResetMap = () => {
@@ -725,6 +733,29 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
     }
   };
 
+  const handleToggleFactionTarget = async () => {
+    if (!selectedNexus) return;
+    setFactionTargeting(true);
+    try {
+      if (selectedNexus.isFactionTarget) {
+        await unmarkFactionTarget(selectedNexus._id);
+        setSelectedNexus((prev) => prev ? { ...prev, isFactionTarget: false } : prev);
+        // update the map cell too
+        setVillages((prev) => prev.map((n) => n._id === selectedNexus._id ? { ...n, isFactionTarget: false } : n));
+        toast('Faction target removed', 'info');
+      } else {
+        await markFactionTarget(selectedNexus._id);
+        setSelectedNexus((prev) => prev ? { ...prev, isFactionTarget: true } : prev);
+        setVillages((prev) => prev.map((n) => n._id === selectedNexus._id ? { ...n, isFactionTarget: true } : n));
+        toast('Marked as faction target', 'success');
+      }
+    } catch (err: any) {
+      toast(err.response?.data?.error || 'Error updating faction target', 'error');
+    } finally {
+      setFactionTargeting(false);
+    }
+  };
+
   const handleSendAllTroops = () => {
     setAttackTroops((prev) => {
       const next = { ...prev };
@@ -1090,6 +1121,20 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
           </div>
         )}
 
+        {!isOwn && !isNpc && (
+          <div className="faction-target-action">
+            <button
+              className={`faction-target-btn${selectedNexus.isFactionTarget ? ' faction-target-btn--active' : ''}`}
+              onClick={handleToggleFactionTarget}
+              disabled={factionTargeting}
+              title={selectedNexus.isFactionTarget ? 'Remove faction target' : 'Mark as faction target for your faction'}
+            >
+              <Crosshair size={13} aria-hidden="true" />
+              {selectedNexus.isFactionTarget ? 'Unmark Target' : 'Mark as Target'}
+            </button>
+          </div>
+        )}
+
         {!isOwn && (
           <div className="nexus-actions">
             {!showAttackForm ? (
@@ -1290,13 +1335,17 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
   };
 
   const renderAttacksPanel = () => {
-    if (incomingAttacks.length === 0 && outgoingAttacks.length === 0) return null;
+    const returning = outgoingAttacks.filter((a: any) => a.status === 'returning');
+    const traveling = outgoingAttacks.filter((a: any) => a.status !== 'returning');
+    const allIncoming = [...incomingAttacks, ...returning];
+
+    if (allIncoming.length === 0 && traveling.length === 0) return null;
 
     return (
       <div className="attacks-panel">
-        {incomingAttacks.length > 0 && (
+        {allIncoming.length > 0 && (
           <div className="attacks-section">
-            <h4>Incoming ({incomingAttacks.length})</h4>
+            <h4>Incoming ({allIncoming.length})</h4>
             {incomingAttacks.map((attack: any) => {
               const isSupport = attack.type === 'support';
               return (
@@ -1305,20 +1354,34 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
                     {isSupport && <span className="support-mission-badge">Support</span>}
                     From: <strong>{attack.attacker?.nexus?.name || 'Unknown'}</strong>
                   </div>
-                  <div className="attack-time">Arrives: {formatTime(attack.arrivesAt)}</div>
+                  <div className="attack-time">
+                    Arrives: <Countdown endAt={attack.arrivesAt} completedLabel="Arriving…" />
+                  </div>
+                </div>
+              );
+            })}
+            {returning.map((attack: any) => {
+              const isSupport = attack.type === 'support';
+              return (
+                <div key={attack._id} className={`attack-item incoming returning${isSupport ? ' support-mission' : ''}`}>
+                  <div className="attack-from">
+                    {isSupport && <span className="support-mission-badge">Support</span>}
+                    Returning from: <strong>{attack.defender?.nexus?.name || 'Unknown'}</strong>
+                  </div>
+                  <div className="attack-time">
+                    Returns: <Countdown endAt={attack.returnsAt} completedLabel="Arriving…" />
+                  </div>
                 </div>
               );
             })}
           </div>
         )}
-        {outgoingAttacks.length > 0 && (
+        {traveling.length > 0 && (
           <div className="attacks-section">
-            <h4>Outgoing ({outgoingAttacks.length})</h4>
-            {outgoingAttacks.map((attack: any) => {
+            <h4>Outgoing ({traveling.length})</h4>
+            {traveling.map((attack: any) => {
               const isSupport = attack.type === 'support';
-              const isReturning = attack.status === 'returning';
-              const label = isSupport ? 'Supporting:' : isReturning ? 'Returning from:' : 'To:';
-              const timeLabel = isReturning ? 'Returns:' : 'Arrives:';
+              const label = isSupport ? 'Supporting:' : 'To:';
               return (
                 <div key={attack._id} className={`attack-item outgoing${isSupport ? ' support-mission' : ''}`}>
                   <div className="attack-to">
@@ -1327,12 +1390,11 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
                     <strong>
                       {attack.defender?.nexus?.name
                         ? `${attack.defender.nexus.name} (${attack.defender.nexus.x}|${attack.defender.nexus.y})`
-                        : `Unknown`}
+                        : 'Unknown'}
                     </strong>
                   </div>
                   <div className="attack-time">
-                    {timeLabel}{' '}
-                    {formatTime(isReturning ? attack.returnsAt : attack.arrivesAt)}
+                    Arrives: <Countdown endAt={attack.arrivesAt} completedLabel="Arriving…" />
                   </div>
                 </div>
               );

@@ -70,6 +70,7 @@ import { QueueCountdown } from './QueueCountdown';
 import { LiveResourceStrip } from './LiveResourceStrip';
 import { BuildingCard } from './BuildingCard';
 import { useNow } from '@/hooks/useNow';
+import { formatTimeOfDay } from '@/utils/date';
 import { useResourceSnapshot } from '@/realtime/useLiveResources';
 import { realtimeStore } from '@/realtime/store';
 import { getMaxStorage, getResourceProduction, interpolateResources } from '@/realtime/economy.shared';
@@ -1779,10 +1780,16 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                               {troopSummary && (
                                 <span className="strikes-card-entry-troops">{troopSummary}</span>
                               )}
-                              <Countdown
-                                endAt={a.status === 'returning' ? a.returnsAt : a.arrivesAt}
-                                className="strikes-card-entry-time"
-                              />
+                              <span className="strikes-card-entry-time">
+                                <span className="strikes-card-entry-arrival">
+                                  @ {formatTimeOfDay(a.status === 'returning' ? a.returnsAt : a.arrivesAt)}
+                                </span>
+                                {' '}
+                                <Countdown
+                                  endAt={a.status === 'returning' ? a.returnsAt : a.arrivesAt}
+                                  className="strikes-card-entry-countdown"
+                                />
+                              </span>
                             </div>
                           );
                         })}
@@ -1804,7 +1811,13 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                                 <Username name={a.attacker?.user?.username ?? '?'} isSupporter={a.attacker?.user?.isSupporter} supporterTier={a.attacker?.user?.supporterTier} /> · {src?.name ?? '?'}
                                 {src?.x != null && src?.y != null ? ` (${src.x}|${src.y})` : ''}
                               </span>
-                              <Countdown endAt={a.arrivesAt} className="strikes-card-entry-time" />
+                              <span className="strikes-card-entry-time">
+                                <span className="strikes-card-entry-arrival">
+                                  @ {formatTimeOfDay(a.arrivesAt)}
+                                </span>
+                                {' '}
+                                <Countdown endAt={a.arrivesAt} className="strikes-card-entry-countdown" />
+                              </span>
                             </div>
                           );
                         })}
