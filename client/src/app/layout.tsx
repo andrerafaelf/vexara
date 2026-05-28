@@ -9,9 +9,9 @@ import './globals.css';
 
 const SITE_URL = 'https://vexara.world';
 const SITE_NAME = 'Vexara';
-const DEFAULT_TITLE = 'Vexara - Free Browser-Based 4X Strategy Game';
+const DEFAULT_TITLE = 'Vexara - Free Browser MMO RTS | 4X Strategy Game';
 const DEFAULT_DESCRIPTION =
-  'Vexara is a free browser-based 4X strategy game set in a persistent sci-fi galaxy. Build your nexus, command 12 unit types, forge alliances, and wage real-time war with players worldwide. No resets. No pay-to-win. Play in your browser.';
+  'Vexara is a free browser MMO RTS set in a persistent sci-fi galaxy. Build your nexus, command 12 unit types, forge alliances, and wage real-time war with players worldwide. No download. No resets. No pay-to-win.';
 const DEFAULT_OG_IMAGE = `${SITE_URL}/vexara-overview.png`;
 
 export const metadata: Metadata = {
@@ -25,18 +25,19 @@ export const metadata: Metadata = {
   generator: 'Next.js',
   keywords: [
     'Vexara',
+    'mmo rts',
+    'browser mmo rts',
     'browser strategy game',
+    'multiplayer rts online',
+    'free browser rts game',
+    'online rts no download',
     'free 4X strategy',
     'sci-fi MMO strategy',
     'persistent galaxy game',
     'browser-based MMO',
-    'space conquest game',
     'real-time strategy browser',
     'no pay-to-win strategy game',
     'multiplayer browser strategy',
-    'PvP strategy game',
-    'galaxy conquest',
-    'online strategy game',
   ],
   authors: [{ name: 'Vexara', url: SITE_URL }],
   creator: 'Vexara',
@@ -164,6 +165,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-561C095VR9" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-561C095VR9');`,
+          }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(videoGameSchema) }}

@@ -472,6 +472,18 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
 
   useGameSocket({ onAttacksRefresh: () => { if (mode === 'normal') loadAttacks(); } });
 
+  // Poll every 2s while any outgoing attack is past its arrival time but not yet resolved,
+  // so the UI clears within ~2s instead of waiting up to 10s for the next server push.
+  useEffect(() => {
+    const now = Date.now();
+    const hasPending = outgoingAttacks.some(
+      (a) => a.status === 'traveling' && new Date(a.arrivesAt).getTime() <= now,
+    );
+    if (!hasPending) return;
+    const id = setInterval(() => { void loadAttacks(); }, 2000);
+    return () => clearInterval(id);
+  }, [outgoingAttacks, loadAttacks]);
+
   useEffect(() => {
     getMyNexuses().then((r) => setOwnNexuses(r.data)).catch(() => {});
   }, [currentNexus._id]);
