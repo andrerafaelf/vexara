@@ -60,7 +60,7 @@ Command Core's own next upgrade) by 0.95. The reduction stacks compoundingly:
   - Lv4 requires Biomass Farm Lv2
   - Lv8 requires Storage Vault Lv4
 - Impact:
-  - Population max formula: floor(100 \* 1.28^level)
+  - Population max formula: floor(100 \* 1.30^level)
 
 ### Storage Vault
 

@@ -104,6 +104,26 @@ gets an additional cut from its base-time reduction.
 
 ---
 
+### Life Support gives more population per level
+
+Population growth per Life Support level went from **1.28** to **1.30**
+compounding. Same base of 100, steeper curve — late-game nexuses get
+the biggest boost, which is where the previous training-time cuts paid
+off and stacks felt pop-capped instead of time-capped.
+
+| Life Support | Old pop cap | New pop cap | Change |
+| ------------ | ----------- | ----------- | ------ |
+| Lv 5         | 343         | 371         | +8%    |
+| Lv 10        | 1,178       | 1,378       | +17%   |
+| Lv 15        | 4,041       | 5,118       | +27%   |
+| Lv 18        | 8,467       | 11,240      | +33%   |
+| Lv 20 (max)  | 13,862      | 19,004      | +37%   |
+
+Existing nexuses recompute their pop max next time the building queue
+processes (or immediately on next Life Support upgrade).
+
+---
+
 ### In-game page titles
 
 Browser tabs now show `Vexara - Dashboard`, `Vexara - Starfield`,
