@@ -2352,6 +2352,8 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                         <span className="borrowed-countdown">
                           {' · '}
                           <Countdown endAt={countdownEndAt} />
+                          {' @ '}
+                          {formatTimeOfDay(countdownEndAt, true)}
                         </span>
                       )}
                     </div>
@@ -2405,6 +2407,8 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                         <span className="borrowed-countdown">
                           {' · '}
                           <Countdown endAt={countdownEndAt} />
+                          {' @ '}
+                          {formatTimeOfDay(countdownEndAt, true)}
                         </span>
                       )}
                     </div>
@@ -2541,7 +2545,11 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
 
               <div className="attack-info-section">
                 <h4>Arrival time</h4>
-                <p className="arrival-countdown"><Countdown endAt={selectedAttack.arrivesAt} /></p>
+                <p className="arrival-countdown">
+                  <Countdown endAt={selectedAttack.arrivesAt} />
+                  {' @ '}
+                  {formatTimeOfDay(selectedAttack.arrivesAt, true)}
+                </p>
               </div>
 
               <div className="attack-info-section">
@@ -3078,7 +3086,7 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
                     <span className="espionage-mission-route"> to {getSpyTargetLabel(m)}</span>
                   </span>
                   <span className="espionage-mission-status">
-                    {isReturning ? 'Returning' : 'Traveling'} &middot; {formatCountdown(msLeft)}
+                    {isReturning ? 'Returning' : 'Traveling'} &middot; {formatCountdown(msLeft)} @ {formatTimeOfDay(isReturning ? (m.returnsAt as string) : (m.arrivesAt as string), true)}
                   </span>
                 </div>
                 <span className="espionage-mission-ops">{m.operatives as number} op{(m.operatives as number) !== 1 ? 's' : ''}</span>

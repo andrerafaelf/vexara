@@ -2,6 +2,7 @@
 
 import { getAllAttacks } from '@/services/api';
 import { Countdown } from './Countdown';
+import { formatTimeOfDay } from '@/utils/date';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { startTransition } from 'react';
@@ -70,6 +71,8 @@ export default function TroopMovementsBar() {
             </span>
             <span className="tmb-countdown">
               <Countdown endAt={attack.arrivesAt} completedLabel="Arriving…" />
+              {' @ '}
+              {formatTimeOfDay(attack.arrivesAt, true)}
             </span>
             {attack.defenderNexus && (
               <button

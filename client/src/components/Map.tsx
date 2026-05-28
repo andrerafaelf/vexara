@@ -25,7 +25,7 @@ import { Countdown } from './Countdown';
 import { useNow } from '@/hooks/useNow';
 import '../styles/Map.css';
 import { Nexus } from '../types/game';
-import { formatDateTime } from '../utils/date';
+import { formatDateTime, formatTimeOfDay } from '../utils/date';
 
 interface GalaxyEvent {
   id: number;
@@ -789,29 +789,31 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
     });
   };
 
-  const estimateTravelTime = (): string | null => {
+  const estimateTravelTime = (): { duration: string; arrivesAt: Date } | null => {
     if (!selectedNexus) return null;
     const totalTroops = Object.values(attackTroops).reduce((a, b) => a + b, 0);
     if (totalTroops === 0) return null;
     const dx = selectedNexus.x - currentNexus.x;
     const dy = selectedNexus.y - currentNexus.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
+    let mins: number;
     if (attackMissionType === 'support') {
-      const mins = distance * (4 + (28 - 18) / 10);
-      return formatTravelMinutes(mins);
-    }
-    const OVERSEER_EFFECTIVE_SPEED = 6;
-    let minSpeed = Infinity;
-    for (const [type, amount] of Object.entries(attackTroops)) {
-      if (amount > 0 && (TROOP_STATS as Record<string, { speed: number }>)[type]) {
-        const speed = type === 'overseer' ? OVERSEER_EFFECTIVE_SPEED : (TROOP_STATS as Record<string, { speed: number }>)[type].speed;
-        if (speed < minSpeed) minSpeed = speed;
+      mins = distance * (4 + (28 - 18) / 10);
+    } else {
+      const OVERSEER_EFFECTIVE_SPEED = 6;
+      let minSpeed = Infinity;
+      for (const [type, amount] of Object.entries(attackTroops)) {
+        if (amount > 0 && (TROOP_STATS as Record<string, { speed: number }>)[type]) {
+          const speed = type === 'overseer' ? OVERSEER_EFFECTIVE_SPEED : (TROOP_STATS as Record<string, { speed: number }>)[type].speed;
+          if (speed < minSpeed) minSpeed = speed;
+        }
       }
+      if (!isFinite(minSpeed)) return null;
+      const hasOverseer = (attackTroops.overseer || 0) > 0;
+      mins = distance * (4 + (28 - minSpeed) / 10) * (hasOverseer ? 3 : 1);
     }
-    if (!isFinite(minSpeed)) return null;
-    const hasOverseer = (attackTroops.overseer || 0) > 0;
-    const mins = distance * (4 + (28 - minSpeed) / 10) * (hasOverseer ? 3 : 1);
-    return formatTravelMinutes(mins);
+    const arrivesAt = new Date(Date.now() + mins * 60_000);
+    return { duration: formatTravelMinutes(mins), arrivesAt };
   };
 
   const formatTravelMinutes = (mins: number): string => {
@@ -1231,7 +1233,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
                   return travel ? (
                     <div className="attack-travel-estimate">
                       <Clock size={12} aria-hidden="true" />
-                      <span>Travel time: <strong>{travel}</strong></span>
+                      <span>Travel time: <strong>{travel.duration}</strong> @ <strong>{formatTimeOfDay(travel.arrivesAt, true)}</strong></span>
                     </div>
                   ) : null;
                 })()}
@@ -1375,7 +1377,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
                     )}
                   </div>
                   <div className="attack-time">
-                    Arrives: <Countdown endAt={attack.arrivesAt} completedLabel="Arriving…" />
+                    Arrives: <Countdown endAt={attack.arrivesAt} completedLabel="Arriving…" /> @ {formatTimeOfDay(attack.arrivesAt, true)}
                   </div>
                 </div>
               );
@@ -1393,7 +1395,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
                     {isSupport ? 'Support returning from:' : 'Returning from:'} <strong>{attack.defender?.nexus?.name || 'Unknown'}</strong>
                   </div>
                   <div className="attack-time">
-                    Returns: <Countdown endAt={attack.returnsAt} completedLabel="Arriving…" />
+                    Returns: <Countdown endAt={attack.returnsAt} completedLabel="Arriving…" /> @ {formatTimeOfDay(attack.returnsAt, true)}
                   </div>
                 </div>
               );
@@ -1417,7 +1419,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
                     </strong>
                   </div>
                   <div className="attack-time">
-                    Arrives: <Countdown endAt={attack.arrivesAt} completedLabel="Arriving…" />
+                    Arrives: <Countdown endAt={attack.arrivesAt} completedLabel="Arriving…" /> @ {formatTimeOfDay(attack.arrivesAt, true)}
                   </div>
                 </div>
               );
