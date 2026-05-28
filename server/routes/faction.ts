@@ -4,6 +4,7 @@ import * as factionController from '../controllers/factionController.js';
 import * as warController from '../controllers/factionWarController.js';
 import * as treatyController from '../controllers/factionTreatyController.js';
 import * as diplomacyChatController from '../controllers/diplomacyChatController.js';
+import * as targetController from '../controllers/factionTargetController.js';
 import auth from '../middleware/auth.js';
 import type { AuthRequest } from '../types/index.js';
 
@@ -11,6 +12,9 @@ const router = Router();
 
 // Static routes first, must precede /:id to avoid param capture
 router.get('/my', auth, (req, res) => factionController.getMyFaction(req as AuthRequest, res as Response));
+router.get('/targets', auth, (req, res) => targetController.listTargets(req as AuthRequest, res as Response));
+router.post('/targets/:nexusId', auth, (req, res) => targetController.markTarget(req as AuthRequest, res as Response));
+router.delete('/targets/:nexusId', auth, (req, res) => targetController.unmarkTarget(req as AuthRequest, res as Response));
 router.get('/galaxy/list', auth, (req, res) => factionController.listFactionsInGalaxy(req as AuthRequest, res as Response));
 router.get('/leaderboard', auth, (req, res) => factionController.getLeaderboard(req as AuthRequest, res as Response));
 router.get('/diplomacy/galaxy', auth, (req, res) => treatyController.getGalaxyDiplomacy(req as AuthRequest, res as Response));

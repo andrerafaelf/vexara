@@ -459,6 +459,22 @@
   color: #a877e8;
 }
 
+/* Faction target — orange crosshair border to distinguish from normal enemy cells */
+.map-cell.faction-target {
+  outline: 2px solid #f97316;
+  outline-offset: -2px;
+}
+
+.faction-target-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  color: #f97316;
+  line-height: 1;
+  filter: drop-shadow(0 0 3px #f97316);
+  z-index: 6;
+}
+
 .nexus-own-actions {
   margin-top: 16px;
   border-top: 1px solid var(--color-navy-700);
@@ -957,11 +973,12 @@
   flex: 0 0 12px;
 }
 
-.legend-row-current::before { background: var(--accent); }
-.legend-row-own::before     { background: var(--success); }
-.legend-row-faction::before { background: #5a9ee6; }
-.legend-row-ally::before    { background: #a877e8; }
-.legend-row-enemy::before   { background: var(--danger); }
+.legend-row-current::before        { background: var(--accent); }
+.legend-row-own::before            { background: var(--success); }
+.legend-row-faction::before        { background: #5a9ee6; }
+.legend-row-ally::before           { background: #a877e8; }
+.legend-row-enemy::before          { background: var(--danger); }
+.legend-row-faction-target::before { background: #f97316; }
 
 .attacks-panel {
   margin-top: var(--space-6);

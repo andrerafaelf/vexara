@@ -433,10 +433,27 @@ model Faction {
   joinRequests     FactionJoinRequest[]
   treatiesProposed FactionTreaty[] @relation("TreatyProposer")
   treatiesReceived FactionTreaty[] @relation("TreatyTarget")
+  targets          FactionTarget[]
 
   @@unique([galaxyId, name])
   @@unique([galaxyId, tag])
   @@index([galaxyId])
+}
+
+model FactionTarget {
+  id          Int      @id @default(autoincrement())
+  factionId   Int
+  galaxyId    Int
+  nexusId     Int
+  markedById  Int
+  note        String?  @db.VarChar(128)
+  createdAt   DateTime @default(now())
+
+  faction  Faction @relation(fields: [factionId], references: [id], onDelete: Cascade)
+
+  @@unique([factionId, nexusId])
+  @@index([factionId, galaxyId])
+  @@index([nexusId])
 }
 
 model FactionMessage {

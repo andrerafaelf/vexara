@@ -680,7 +680,9 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 
     // Conquest attacks complete immediately. Surviving troops are handled via
     // a stationed TroopTransfer (created above) so the player can recall them.
-    const resolvedStatus = conquered ? 'completed' : 'returning';
+    // If no troops survived a regular attack there is nothing to return home.
+    const hasSurvivors = Object.keys(survivingTroops).length > 0;
+    const resolvedStatus = (conquered || !hasSurvivors) ? 'completed' : 'returning';
 
     if (conquered && Object.keys(survivingTroops).length > 0) {
       await prisma.troopTransfer.create({
@@ -699,7 +701,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
     await prisma.attack.update({
       where: { id: attack.id },
       data: {
-        status: resolvedStatus, returnsAt: conquered ? null : returnsAt,
+        status: resolvedStatus, returnsAt: (conquered || !hasSurvivors) ? null : returnsAt,
         result: {
           attackerLosses, defenderLosses, resourcesStolen, remainingResources, survivingTroops,
           defenderSurvivors,

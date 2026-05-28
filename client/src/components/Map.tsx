@@ -1,4 +1,4 @@
-import { AlertTriangle, Building, Clock, Home, Info, Shield, Sparkles, Star, Swords, Waves, Zap } from 'lucide-react';
+import { AlertTriangle, Building, Clock, Crosshair, Home, Info, Shield, Sparkles, Star, Swords, Waves, Zap } from 'lucide-react';
 import { TROOP_STATS } from '../utils/combatSim';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -80,6 +80,7 @@ export interface MapNexus {
    * Used by the map to colour these owners distinctly from neutrals/enemies.
    */
   relation?: 'faction' | 'friend' | null;
+  isFactionTarget?: boolean;
 }
 
 const TROOP_LABELS: Record<string, string> = {
@@ -830,6 +831,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
 
         const isFactionNexus = isEnemyNexus && nexus?.relation === 'faction';
         const isAllyNexus = isEnemyNexus && nexus?.relation === 'friend';
+        const isFactionTarget = !!nexus?.isFactionTarget && !isCurrent && !isOwnNexus;
 
         const cellClasses = ['map-cell'];
         if (isOutOfBounds) cellClasses.push('out-of-bounds');
@@ -841,13 +843,16 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
         else if (isAllyNexus) cellClasses.push('ally-nexus');
         else if (isEnemyNexus) cellClasses.push('enemy-nexus');
         if (isEspionage && nexus && !isCurrent) cellClasses.push('spy-target');
+        if (isFactionTarget) cellClasses.push('faction-target');
 
         const titleText = isOutOfBounds
           ? 'Out of bounds'
           : nexus
             ? nexus.newbieProtectionEndsAt && new Date(nexus.newbieProtectionEndsAt) > currentTimeRef.current
               ? `${nexus.name} (${nexus.x}|${nexus.y}) · Protected`
-              : `${nexus.name} (${nexus.x}|${nexus.y})`
+              : isFactionTarget
+                ? `${nexus.name} (${nexus.x}|${nexus.y}) · Faction Target`
+                : `${nexus.name} (${nexus.x}|${nexus.y})`
             : `(${x}|${y})`;
 
         row.push(
@@ -874,6 +879,11 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
                 aria-hidden="true"
               >
                 {isCurrent ? <Star size={14} /> : isOwnNexus ? <Building size={14} /> : <Home size={14} />}
+              </div>
+            )}
+            {isFactionTarget && (
+              <div className="faction-target-badge" aria-label="Faction target" title="Faction Target">
+                <Crosshair size={10} />
               </div>
             )}
             <div className="cell-coords">{isOutOfBounds ? '.' : `${x}|${y}`}</div>
@@ -934,6 +944,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
             <div className="legend-row legend-row-faction">Faction Member</div>
             <div className="legend-row legend-row-ally">Ally / Friend</div>
             <div className="legend-row legend-row-enemy">Enemy / NPC Nexus</div>
+            <div className="legend-row legend-row-faction-target">Faction Target</div>
           </div>
         </div>
       );

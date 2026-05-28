@@ -51,6 +51,17 @@ export async function getArea(req: AuthRequest, res: Response): Promise<void> {
       return null;
     };
 
+    // Load faction targets so we can flag targeted nexuses for the viewer's faction.
+    const nexusIds = nexuses.map((v) => v.id);
+    const factionTargetSet = new Set<number>();
+    if (myFactionId && nexusIds.length) {
+      const targets = await prisma.factionTarget.findMany({
+        where: { factionId: myFactionId, nexusId: { in: nexusIds } },
+        select: { nexusId: true },
+      });
+      for (const t of targets) factionTargetSet.add(t.nexusId);
+    }
+
     const now = new Date();
     const result = nexuses.map((v) => {
       const relation = relationFor(v.ownerId ?? null);
@@ -63,6 +74,7 @@ export async function getArea(req: AuthRequest, res: Response): Promise<void> {
         newbieProtectionEndsAt: v.newbieProtectionEndsAt && v.newbieProtectionEndsAt > now ? v.newbieProtectionEndsAt : null,
         isFriendly: relation !== null,
         relation,
+        isFactionTarget: factionTargetSet.has(v.id),
       };
     });
     res.json(result);
