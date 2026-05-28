@@ -595,14 +595,24 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
               </div>
 
               <div className="report-section">
-                <h3>Your Forces</h3>
+                <h3>{myRole === 'attacker' ? 'Your Forces (Attacker)' : 'Your Forces (Defender)'}</h3>
                 <table className="report-table">
                   <thead>
                     <tr>
                       <th>Unit</th>
-                      <th>Sent</th>
-                      <th>Lost</th>
-                      <th>Survived</th>
+                      {myRole === 'attacker' ? (
+                        <>
+                          <th>Sent</th>
+                          <th>Lost</th>
+                          <th>Survived</th>
+                        </>
+                      ) : (
+                        <>
+                          <th>Present</th>
+                          <th>Lost</th>
+                          <th>Survived</th>
+                        </>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
@@ -621,18 +631,23 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
                       </>
                     )}
                     {myRole === 'defender' &&
-                      selectedReport.result?.defenderLosses &&
-                      Object.entries(selectedReport.result.defenderLosses).map(
-                        ([troop, lost]) =>
-                          Number(lost) > 0 && (
-                            <tr key={troop}>
-                              <td>{troopNames[troop] || troop}</td>
-                              <td>-</td>
-                              <td className="losses">{lost}</td>
-                              <td>-</td>
-                            </tr>
-                          ),
-                      )}
+                      defenderInitialEntries.map(([troop, initial]) => {
+                        const lost = Number(selectedReport.result?.defenderLosses?.[troop] ?? 0);
+                        const survived = Number(defenderSurvivors[troop] ?? 0);
+                        return (
+                          <tr key={troop}>
+                            <td>{troopNames[troop] || troop}</td>
+                            <td>{formatNumber(initial)}</td>
+                            <td className={lost > 0 ? 'losses' : undefined}>{formatNumber(lost)}</td>
+                            <td className={survived > 0 ? 'survived' : undefined}>{formatNumber(survived)}</td>
+                          </tr>
+                        );
+                      })}
+                    {myRole === 'defender' && defenderInitialEntries.length === 0 && (
+                      <tr>
+                        <td colSpan={4}>No defending troops recorded.</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>

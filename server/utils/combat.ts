@@ -177,7 +177,13 @@ export async function processArrivedAttacks(): Promise<void> {
       where: { status: 'traveling', arrivesAt: { lte: now } },
       include: { attackerNexus: true, defenderNexus: true },
     });
-    for (const attack of arrivedAttacks) {
+    // Support missions must be resolved before attacks so their TroopTransfer
+    // records exist (status='stationed') when combat aggregates defender forces.
+    const sorted = [
+      ...arrivedAttacks.filter((a) => a.type === 'support'),
+      ...arrivedAttacks.filter((a) => a.type !== 'support'),
+    ];
+    for (const attack of sorted) {
       await resolveCombat(attack as AttackWithNexuses);
     }
 
