@@ -16,6 +16,8 @@ const RESERVED_USERNAMES = new Set([
   'root', 'system', 'bot', 'official', 'help', 'info', 'contact', 'security',
   'null', 'undefined', 'anonymous', 'guest', 'superuser', 'sysadmin',
   'webmaster', 'postmaster', 'hostmaster', 'noreply', 'no-reply',
+  // reserved for admins
+  'andre', 'ronaldo', 'cristiano', 'cristiano ronaldo', 'cristiano ronaldo dos santos aveiro'
 ]);
 
 export function parsePositiveInt(value: unknown): number | null {
