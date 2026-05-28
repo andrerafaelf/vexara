@@ -118,8 +118,12 @@ export function computeResourceUpdate(nexus: NexusForEconomy, storm?: StormBonus
 }
 
 export const TROOP_INFLUENCE_POINTS: Record<string, number> = {
-  lancerDrone: 1, assaultTrooper: 2, breakerUnit: 1, reconOperative: 2,
-  skimmerBike: 3, siegeMech: 4, voidStalker: 4, plasmaTurret: 5,
+  lancerDrone: 1, assaultTrooper: 1, breakerUnit: 1, reconOperative: 2,
+  suppressorTeam: 3, bulwarkGuard: 3,
+  skimmerBike: 4, disruptorUnit: 4,
+  interceptorBike: 5, voidStalker: 5,
+  siegeMech: 8, plasmaTurret: 10, annihilatorPlatform: 13,
+  overseer: 50,
 };
 
 export function calculateTroopInfluence(troops: Record<string, number | undefined | null>): number {

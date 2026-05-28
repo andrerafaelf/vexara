@@ -118,3 +118,39 @@ patch notes, terms, privacy) keep their search-optimized titles.
 The nav bar now shows attention badges for unread faction chat messages,
 pending faction join requests, and unseen war declarations. The badge
 clears when you visit the relevant section.
+
+---
+
+### Influence rebalance
+
+Six unit types (Suppressor Team, Bulwark Guard, Disruptor Unit,
+Interceptor Bike, Annihilator Platform, Overseer) were silently giving
+**zero influence** — you could build 100 Annihilators and your dominance
+score wouldn't budge. Meanwhile Assault Troopers were worth 2 influence
+each, the best per-resource return in the game, which made low-tier
+spam the most efficient ranking strategy.
+
+The influence table now covers every unit and scales with real cost.
+Roughly 1 influence per 500 resources of cost, with high-tier units
+weighted slightly above pure cost to reflect their strategic value:
+
+| Unit             | Old | New |
+| ---------------- | --- | --- |
+| Lancer Drone     | 1   | 1   |
+| Assault Trooper  | 2   | 1   |
+| Breaker Unit     | 1   | 1   |
+| Recon Operative  | 2   | 2   |
+| Suppressor Team  | 0   | 3   |
+| Bulwark Guard    | 0   | 3   |
+| Skimmer Bike     | 3   | 4   |
+| Disruptor Unit   | 0   | 4   |
+| Interceptor Bike | 0   | 5   |
+| Void Stalker     | 4   | 5   |
+| Siege Mech       | 4   | 8   |
+| Plasma Turret    | 5   | 10  |
+| Annihilator      | 0   | 13  |
+| Overseer         | 0   | 50  |
+
+A 100-Annihilator stack jumps from 0 influence to 1300. A 1000-Assault
+Trooper army drops from 2000 to 1000. Leaderboard positions will shift
+on the next stats refresh — no manual reset needed.
