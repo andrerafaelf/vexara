@@ -386,6 +386,10 @@ export async function transferResources(req: AuthRequest, res: Response): Promis
       logError('nexus_resources_emit_failed', { message: (emitErr as Error).message, file: 'nexusController.ts', op: 'transferResources' });
     }
 
+    try {
+      const { incrementQuestProgress } = await import('../services/dailyStreakService.js');
+      void incrementQuestProgress(req.userId, req.galaxyId, 'transfer_1', 1);
+    } catch {}
     res.json({ from: serializeNexus(updatedFrom), to: serializeNexus(updatedTo) });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'nexusController.ts' });

@@ -151,6 +151,10 @@ export async function buyListing(req: AuthRequest, res: Response): Promise<void>
       sellerOwner?.username ?? 'Unknown', buyerOwner?.username ?? 'Unknown', req.galaxyId,
     );
     emitMarket();
+    try {
+      const { incrementQuestProgress } = await import('../services/dailyStreakService.js');
+      void incrementQuestProgress(req.userId, req.galaxyId, 'buy_market_1', 1);
+    } catch {}
     res.json({ success: true, commission, hasTreaty: !!treaty });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'marketController.ts' });

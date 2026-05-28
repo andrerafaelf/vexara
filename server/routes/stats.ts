@@ -14,6 +14,8 @@ router.get('/daily-streak', auth, async (req, res) => {
   try {
     const authReq = req as AuthRequest;
     if (!authReq.galaxyId) { res.status(409).json({ error: 'No active galaxy' }); return; }
+    // Tick login quest on every daily-streak fetch — covers session-resume and page refresh.
+    void dailyStreakService.incrementQuestProgress(authReq.userId, authReq.galaxyId, 'login', 1);
     const data = await dailyStreakService.getDailyStreakData(authReq.userId, authReq.galaxyId);
     res.json(data);
   } catch (err) {

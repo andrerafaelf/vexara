@@ -149,8 +149,12 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
 
     try {
       const { incrementQuestProgress } = await import('../services/dailyStreakService.js');
-      const questId = type === 'scout' ? 'scout_1' : 'attack_1';
-      void incrementQuestProgress(req.userId, req.galaxyId, questId, 1);
+      if (attackType === 'attack') {
+        void incrementQuestProgress(req.userId, req.galaxyId, 'attack_1', 1);
+        void incrementQuestProgress(req.userId, req.galaxyId, 'attack_3', 1);
+      } else if (attackType === 'support') {
+        void incrementQuestProgress(req.userId, req.galaxyId, 'support_1', 1);
+      }
       void incrementQuestProgress(req.userId, req.galaxyId, 'login', 1);
     } catch {}
     res.json({ success: true, attack: serializeAttack(attack) });

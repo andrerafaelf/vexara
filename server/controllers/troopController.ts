@@ -165,6 +165,7 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
       const { incrementQuestProgress } = await import('../services/dailyStreakService.js');
       void incrementQuestProgress(req.userId, req.galaxyId, 'train_5', parsedAmount);
       void incrementQuestProgress(req.userId, req.galaxyId, 'train_15', parsedAmount);
+      void incrementQuestProgress(req.userId, req.galaxyId, 'train_30', parsedAmount);
     } catch {}
     res.json({ success: true, completesAt, nexus: serializeNexus(rewardApplied) });
   } catch (error) {

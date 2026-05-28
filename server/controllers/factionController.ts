@@ -1336,6 +1336,10 @@ export async function sendChatMessage(req: AuthRequest, res: Response): Promise<
       },
     };
     notifyFactionChat(factionId, serialized);
+    try {
+      const { incrementQuestProgress } = await import('../services/dailyStreakService.js');
+      void incrementQuestProgress(req.userId, req.galaxyId, 'faction_chat_1', 1);
+    } catch {}
     res.status(201).json(serialized);
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });

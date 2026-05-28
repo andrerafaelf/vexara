@@ -153,6 +153,15 @@ export async function sendSpyMission(req: AuthRequest, res: Response): Promise<v
       prisma.nexus.update({ where: { id: parsedFrom }, data: resourceUpdate }),
     ]);
 
+    try {
+      const { incrementQuestProgress } = await import('../services/dailyStreakService.js');
+      void incrementQuestProgress(req.userId, req.galaxyId, 'scout_1', 1);
+      if (type === 'sabotage') {
+        void incrementQuestProgress(req.userId, req.galaxyId, 'sabotage_1', 1);
+      }
+      void incrementQuestProgress(req.userId, req.galaxyId, 'login', 1);
+    } catch {}
+
     res.json({
       queued: true,
       missionId: mission.id,
