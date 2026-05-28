@@ -102,3 +102,39 @@ export interface Galaxy {
 }
 
 export type AdminFetch = (url: string, options?: RequestInit) => Promise<Response>;
+
+export type FactionRole = 'leader' | 'officer' | 'member';
+
+export interface FactionMember {
+  _id: string;
+  id: number;
+  userId: number;
+  username: string;
+  email: string;
+  role: FactionRole;
+  joinedAt: string;
+  points: number;
+  nexusCount: number;
+}
+
+export interface AdminFaction {
+  _id: string;
+  id: number;
+  galaxyId: number;
+  name: string;
+  tag: string;
+  description: string | null;
+  motd: string | null;
+  createdAt: string;
+  dominanceSince: string | null;
+  memberCount: number;
+  inviteCount: number;
+  joinRequestCount: number;
+  targetCount: number;
+  activeWarCount: number;
+  pendingWarCount: number;
+  activeTreatyCount: number;
+  totalPoints: number;
+  nexusCount: number;
+  members: FactionMember[];
+}

@@ -313,3 +313,175 @@ export function getUserByField(field: string, value: string) {
 export function sendTestNotification(userId: number) {
   return prisma.pushSubscription.count({ where: { userId } });
 }
+
+export async function getFactionsInGalaxy(galaxyId: number) {
+  const factions = await prisma.faction.findMany({
+    where: { galaxyId },
+    include: {
+      members: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              email: true,
+              galaxyPlayers: { where: { galaxyId }, select: { points: true } },
+              nexuses: { where: { galaxyId }, select: { id: true } },
+            },
+          },
+        },
+        orderBy: [{ role: 'asc' }, { joinedAt: 'asc' }],
+      },
+      _count: {
+        select: {
+          members: true,
+          invites: true,
+          joinRequests: true,
+          targets: true,
+        },
+      },
+    },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  const factionIds = factions.map((f) => f.id);
+  const [activeWars, pendingWars, activeTreaties] = await Promise.all([
+    prisma.factionWar.findMany({
+      where: {
+        galaxyId,
+        status: 'active',
+        OR: [{ declarerFactionId: { in: factionIds } }, { targetFactionId: { in: factionIds } }],
+      },
+      select: { declarerFactionId: true, targetFactionId: true },
+    }),
+    prisma.factionWar.findMany({
+      where: {
+        galaxyId,
+        status: { in: ['pending', 'ceasefire_pending'] },
+        OR: [{ declarerFactionId: { in: factionIds } }, { targetFactionId: { in: factionIds } }],
+      },
+      select: { declarerFactionId: true, targetFactionId: true },
+    }),
+    prisma.factionTreaty.findMany({
+      where: {
+        galaxyId,
+        status: 'active',
+        OR: [{ proposerFactionId: { in: factionIds } }, { targetFactionId: { in: factionIds } }],
+      },
+      select: { proposerFactionId: true, targetFactionId: true },
+    }),
+  ]);
+
+  const activeWarCount = new Map<number, number>();
+  for (const war of activeWars) {
+    activeWarCount.set(war.declarerFactionId, (activeWarCount.get(war.declarerFactionId) ?? 0) + 1);
+    activeWarCount.set(war.targetFactionId, (activeWarCount.get(war.targetFactionId) ?? 0) + 1);
+  }
+
+  const pendingWarCount = new Map<number, number>();
+  for (const war of pendingWars) {
+    pendingWarCount.set(war.declarerFactionId, (pendingWarCount.get(war.declarerFactionId) ?? 0) + 1);
+    pendingWarCount.set(war.targetFactionId, (pendingWarCount.get(war.targetFactionId) ?? 0) + 1);
+  }
+
+  const treatyCount = new Map<number, number>();
+  for (const treaty of activeTreaties) {
+    treatyCount.set(treaty.proposerFactionId, (treatyCount.get(treaty.proposerFactionId) ?? 0) + 1);
+    treatyCount.set(treaty.targetFactionId, (treatyCount.get(treaty.targetFactionId) ?? 0) + 1);
+  }
+
+  return factions.map((f) => {
+    const members = f.members.map((m) => ({
+      _id: String(m.id),
+      id: m.id,
+      userId: m.userId,
+      username: m.user.username,
+      email: m.user.email,
+      role: m.role,
+      joinedAt: m.joinedAt,
+      points: m.user.galaxyPlayers[0]?.points ?? 0,
+      nexusCount: m.user.nexuses.length,
+    }));
+    return {
+      _id: String(f.id),
+      id: f.id,
+      galaxyId: f.galaxyId,
+      name: f.name,
+      tag: f.tag,
+      description: f.description,
+      motd: f.motd,
+      createdAt: f.createdAt,
+      dominanceSince: f.dominanceSince,
+      memberCount: f._count.members,
+      inviteCount: f._count.invites,
+      joinRequestCount: f._count.joinRequests,
+      targetCount: f._count.targets,
+      activeWarCount: activeWarCount.get(f.id) ?? 0,
+      pendingWarCount: pendingWarCount.get(f.id) ?? 0,
+      activeTreatyCount: treatyCount.get(f.id) ?? 0,
+      totalPoints: members.reduce((sum, m) => sum + m.points, 0),
+      nexusCount: members.reduce((sum, m) => sum + m.nexusCount, 0),
+      members,
+    };
+  });
+}
+
+export function getFactionById(factionId: number) {
+  return prisma.faction.findUnique({ where: { id: factionId } });
+}
+
+export function updateFactionMemberRole(factionId: number, memberId: number, role: 'leader' | 'officer' | 'member') {
+  return prisma.$transaction(async (tx) => {
+    const member = await tx.factionMember.findFirst({ where: { id: memberId, factionId } });
+    if (!member) throw Object.assign(new Error('Faction member not found'), { status: 404 });
+    if (role === 'leader') {
+      await tx.factionMember.updateMany({ where: { factionId, role: 'leader' }, data: { role: 'officer' } });
+    } else if (member.role === 'leader') {
+      const nextLeader = await tx.factionMember.findFirst({
+        where: { factionId, NOT: { id: memberId } },
+        orderBy: [{ role: 'asc' }, { joinedAt: 'asc' }],
+      });
+      if (!nextLeader) throw Object.assign(new Error('A faction must have at least one leader'), { status: 400 });
+      await tx.factionMember.update({ where: { id: nextLeader.id }, data: { role: 'leader' } });
+    }
+    return tx.factionMember.update({ where: { id: memberId }, data: { role } });
+  });
+}
+
+export function kickFactionMember(factionId: number, memberId: number) {
+  return prisma.$transaction(async (tx) => {
+    const member = await tx.factionMember.findFirst({
+      where: { id: memberId, factionId },
+      include: { user: { select: { username: true } }, faction: { select: { name: true, tag: true } } },
+    });
+    if (!member) throw Object.assign(new Error('Faction member not found'), { status: 404 });
+
+    const remaining = await tx.factionMember.findMany({
+      where: { factionId, NOT: { id: memberId } },
+      orderBy: [{ role: 'asc' }, { joinedAt: 'asc' }],
+    });
+
+    if (remaining.length === 0) {
+      await tx.warOperation.deleteMany({ where: { factionId } });
+      await tx.faction.delete({ where: { id: factionId } });
+      return { disbanded: true, username: member.user.username, factionName: member.faction.name };
+    }
+
+    await tx.factionMember.delete({ where: { id: memberId } });
+    if (member.role === 'leader' && !remaining.some((m) => m.role === 'leader')) {
+      const nextLeader = remaining.find((m) => m.role === 'officer') ?? remaining[0];
+      await tx.factionMember.update({ where: { id: nextLeader.id }, data: { role: 'leader' } });
+    }
+    return { disbanded: false, username: member.user.username, factionName: member.faction.name };
+  });
+}
+
+export function disbandFaction(factionId: number) {
+  return prisma.$transaction(async (tx) => {
+    const faction = await tx.faction.findUnique({ where: { id: factionId }, select: { id: true, name: true, tag: true } });
+    if (!faction) throw Object.assign(new Error('Faction not found'), { status: 404 });
+    await tx.warOperation.deleteMany({ where: { factionId } });
+    await tx.faction.delete({ where: { id: factionId } });
+    return faction;
+  });
+}

@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import '../styles/Admin.css';
-import type { AllUser, Attack, Galaxy, GalaxyStats, GalaxyUser } from '../types/admin';
+import type { AdminFaction, AllUser, Attack, Galaxy, GalaxyStats, GalaxyUser } from '../types/admin';
+import FactionsTab from './FactionsTab';
 import GalaxyTab from './GalaxyTab';
 import Toast from './Toast';
 import UsersTab from './UsersTab';
 
 const ADMIN_API_URL = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:3002/api/admin';
 
-type Tab = 'galaxy' | 'users';
+type Tab = 'galaxy' | 'users' | 'factions';
 type AddUserModal = { open: true } | null;
 
 interface ToastMessage {
@@ -27,6 +28,7 @@ const Admin: React.FC = () => {
   const [galaxyUsers, setGalaxyUsers] = useState<GalaxyUser[]>([]);
   const [stats, setStats] = useState<GalaxyStats | null>(null);
   const [attacks, setAttacks] = useState<Attack[]>([]);
+  const [factions, setFactions] = useState<AdminFaction[]>([]);
 
   // All-users data
   const [allUsers, setAllUsers] = useState<AllUser[]>([]);
@@ -99,15 +101,17 @@ const Admin: React.FC = () => {
 
   const loadGalaxyData = async (galaxyId: number) => {
     try {
-      const [usersRes, statsRes, attacksRes] = await Promise.all([
+      const [usersRes, statsRes, attacksRes, factionsRes] = await Promise.all([
         adminFetch(`${ADMIN_API_URL}/users?galaxyId=${galaxyId}`),
         adminFetch(`${ADMIN_API_URL}/stats?galaxyId=${galaxyId}`),
         adminFetch(`${ADMIN_API_URL}/attacks?galaxyId=${galaxyId}`),
+        adminFetch(`${ADMIN_API_URL}/factions?galaxyId=${galaxyId}`),
       ]);
-      const [usersData, statsData, attacksData] = await Promise.all([
+      const [usersData, statsData, attacksData, factionsData] = await Promise.all([
         usersRes.json().catch(() => null),
         statsRes.json().catch(() => null),
         attacksRes.json().catch(() => null),
+        factionsRes.json().catch(() => null),
       ]);
 
       setGalaxyUsers(
@@ -132,12 +136,24 @@ const Admin: React.FC = () => {
             }
           : null,
       );
+      setFactions(Array.isArray(factionsData) ? factionsData : []);
     } catch {
       setGalaxyUsers([]);
       setStats(null);
       setAttacks([]);
+      setFactions([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadFactions = async (galaxyId: number) => {
+    try {
+      const res = await adminFetch(`${ADMIN_API_URL}/factions?galaxyId=${galaxyId}`);
+      const data = await res.json().catch(() => null);
+      setFactions(Array.isArray(data) ? data : []);
+    } catch {
+      setFactions([]);
     }
   };
 
@@ -147,6 +163,11 @@ const Admin: React.FC = () => {
       loadAllUsers(),
       ...(selectedGalaxyId != null ? [loadGalaxyData(selectedGalaxyId)] : []),
     ]);
+  };
+
+  const reloadFactions = async () => {
+    if (selectedGalaxyId == null) return;
+    await Promise.all([loadFactions(selectedGalaxyId), loadGalaxyData(selectedGalaxyId)]);
   };
 
   const handleAddUser = async () => {
@@ -196,6 +217,13 @@ const Admin: React.FC = () => {
                 <span className="admin-tab-badge">{allUsers.filter((u) => !u.emailVerified).length}</span>
               )}
             </button>
+            <button
+              className={`admin-tab${tab === 'factions' ? ' admin-tab-active' : ''}`}
+              onClick={() => setTab('factions')}
+            >
+              Factions
+              {factions.length > 0 && <span className="admin-tab-badge">{factions.length}</span>}
+            </button>
           </div>
         </div>
         <button className="btn-primary" onClick={() => setAddUserModal({ open: true })}>
@@ -221,6 +249,17 @@ const Admin: React.FC = () => {
       )}
       {tab === 'users' && (
         <UsersTab users={allUsers} adminFetch={adminFetch} showToast={showToast} onUserChanged={reloadAll} />
+      )}
+      {tab === 'factions' && (
+        <FactionsTab
+          galaxies={galaxies}
+          selectedGalaxyId={selectedGalaxyId}
+          onSelectGalaxy={setSelectedGalaxyId}
+          factions={factions}
+          adminFetch={adminFetch}
+          showToast={showToast}
+          onChanged={reloadFactions}
+        />
       )}
 
       {/* Add user modal */}

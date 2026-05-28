@@ -21,6 +21,7 @@ const PREF_LABELS: { key: keyof NotificationPreferences; label: string; descript
   { key: 'factionPromotion', label: 'Faction Promotions', description: 'When you are promoted to officer' },
   { key: 'factionWar', label: 'Faction Wars', description: 'When war is declared on your faction' },
   { key: 'factionDiplomacy', label: 'Faction Diplomacy', description: 'When a treaty is proposed or signed' },
+  { key: 'factionMessage', label: 'Faction Messages', description: 'When a faction member posts in chat' },
   { key: 'nearbyGalaxyEvent', label: 'Nearby Galaxy Events', description: 'When a rogue AI, storm or derelict spawns near your nexuses' },
 ];
 

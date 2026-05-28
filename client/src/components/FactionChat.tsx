@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { getFactionChat, sendFactionMessage } from '../services/api';
+import { getFactionChat, markFactionChatRead, sendFactionMessage } from '../services/api';
 import { useGameSocket } from '../hooks/useGameSocket';
 import Username from './Username';
 
@@ -28,6 +28,19 @@ export default function FactionChat({ factionId, currentUserId }: Props) {
   const listRef = useRef<HTMLDivElement>(null);
   const latestIdRef = useRef<number>(0);
   const isFirstLoad = useRef(true);
+  const markReadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const scheduleMarkRead = useCallback((messageId: number) => {
+    if (!messageId) return;
+    if (markReadTimerRef.current) clearTimeout(markReadTimerRef.current);
+    markReadTimerRef.current = setTimeout(() => {
+      void markFactionChatRead(factionId, messageId).catch(() => {});
+    }, 500);
+  }, [factionId]);
+
+  useEffect(() => () => {
+    if (markReadTimerRef.current) clearTimeout(markReadTimerRef.current);
+  }, []);
 
   const fetchInitial = useCallback(async () => {
     try {
@@ -60,6 +73,7 @@ export default function FactionChat({ factionId, currentUserId }: Props) {
       if (msg.id > latestIdRef.current) latestIdRef.current = msg.id;
       return next;
     });
+    scheduleMarkRead(msg.id);
     const list = listRef.current;
     if (list) {
       const nearBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 120;
@@ -105,6 +119,7 @@ export default function FactionChat({ factionId, currentUserId }: Props) {
         return existingIds.has(msg.id) ? prev : [...prev, msg];
       });
       latestIdRef.current = msg.id;
+      scheduleMarkRead(msg.id);
       setDraft('');
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
     } catch (err) {

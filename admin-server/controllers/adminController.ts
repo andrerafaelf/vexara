@@ -859,3 +859,57 @@ export async function testNotification(req: Request, res: Response): Promise<voi
     res.status(500).json({ error: (error as Error).message });
   }
 }
+
+export async function listFactions(req: Request, res: Response): Promise<void> {
+  try {
+    const galaxyId = requireGalaxyId(req, res);
+    if (galaxyId == null) return;
+    const factions = await adminService.getFactionsInGalaxy(galaxyId);
+    res.json(factions);
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
+export async function setFactionMemberRole(req: Request, res: Response): Promise<void> {
+  try {
+    const factionId = adminService.toInt(req.params.factionId);
+    const memberId = adminService.toInt(req.params.memberId);
+    const role = req.body?.role as 'leader' | 'officer' | 'member' | undefined;
+    if (!['leader', 'officer', 'member'].includes(String(role))) {
+      res.status(400).json({ error: 'Invalid faction role' });
+      return;
+    }
+    const member = await adminService.updateFactionMemberRole(factionId, memberId, role as 'leader' | 'officer' | 'member');
+    res.json({ success: true, member });
+  } catch (error) {
+    res.status((error as { status?: number }).status || 500).json({ error: (error as Error).message });
+  }
+}
+
+export async function kickFactionMember(req: Request, res: Response): Promise<void> {
+  try {
+    const factionId = adminService.toInt(req.params.factionId);
+    const memberId = adminService.toInt(req.params.memberId);
+    const result = await adminService.kickFactionMember(factionId, memberId);
+    res.json({
+      success: true,
+      ...result,
+      message: result.disbanded
+        ? `${result.username} was the last member; faction disbanded`
+        : `${result.username} removed from faction`,
+    });
+  } catch (error) {
+    res.status((error as { status?: number }).status || 500).json({ error: (error as Error).message });
+  }
+}
+
+export async function disbandFaction(req: Request, res: Response): Promise<void> {
+  try {
+    const factionId = adminService.toInt(req.params.factionId);
+    const faction = await adminService.disbandFaction(factionId);
+    res.json({ success: true, faction, message: `Faction [${faction.tag}] ${faction.name} disbanded` });
+  } catch (error) {
+    res.status((error as { status?: number }).status || 500).json({ error: (error as Error).message });
+  }
+}

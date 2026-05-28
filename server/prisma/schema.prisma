@@ -158,6 +158,7 @@ model NotificationPreferences {
   factionPromotion   Boolean @default(true)
   factionWar         Boolean @default(true)
   factionDiplomacy   Boolean @default(true)
+  factionMessage     Boolean @default(true)
   friendRequest      Boolean @default(true)
   friendMessage      Boolean @default(true)
   nearbyGalaxyEvent  Boolean @default(true)
@@ -490,12 +491,14 @@ model FactionMember {
   galaxyId  Int
   role      FactionRole @default(member)
   joinedAt  DateTime    @default(now())
+  lastSeenFactionMessageId Int @default(0)
 
   faction Faction @relation(fields: [factionId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, galaxyId])
   @@index([factionId])
+  @@index([factionId, lastSeenFactionMessageId])
   @@index([galaxyId])
 }
 

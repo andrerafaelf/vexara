@@ -1073,6 +1073,216 @@
   justify-content: flex-end;
 }
 
+/* -- Factions tab -- */
+.factions-toolbar {
+  gap: 14px;
+}
+
+.factions-toolbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.factions-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 260px;
+}
+
+.factions-search svg {
+  position: absolute;
+  left: 10px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.factions-search input {
+  width: 100%;
+  background: var(--color-navy-900);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-strong);
+  padding: 8px 10px 8px 32px;
+  font-size: var(--text-sm);
+}
+
+.faction-admin-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.faction-admin-empty {
+  padding: 28px 18px;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.faction-admin-row {
+  border-bottom: 1px solid var(--border-default);
+}
+
+.faction-admin-row:last-child {
+  border-bottom: none;
+}
+
+.faction-admin-summary {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+  text-align: left;
+  border-left: 2px solid transparent;
+}
+
+.faction-admin-summary:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-left-color: var(--accent);
+}
+
+.faction-admin-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.faction-admin-tag {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.faction-admin-name {
+  color: var(--text-strong);
+  font-weight: 700;
+  font-size: var(--text-base);
+}
+
+.faction-admin-leader {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--warning);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.faction-admin-metrics {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  flex-wrap: wrap;
+}
+
+.faction-admin-metrics span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.faction-admin-details {
+  padding: 0 18px 18px;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.faction-admin-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  padding: 14px 0;
+}
+
+.faction-admin-metric {
+  background: var(--color-navy-800);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+
+.faction-admin-metric span {
+  display: block;
+  color: var(--text-muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+.faction-admin-metric strong {
+  color: var(--text-strong);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.faction-admin-copy {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  padding: 0 0 12px;
+}
+
+.faction-admin-copy p + p {
+  margin-top: 6px;
+}
+
+.faction-member-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+}
+
+.faction-member-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.faction-member-table th {
+  background: var(--color-navy-800);
+  color: var(--text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.faction-member-table td {
+  padding: 10px 12px;
+  border-top: 1px solid var(--border-default);
+  color: var(--text-default);
+  font-size: var(--text-sm);
+  vertical-align: middle;
+}
+
+.faction-role-select {
+  background: var(--color-navy-900);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-strong);
+  padding: 5px 8px;
+  font-size: var(--text-xs);
+}
+
+.faction-danger-zone {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 12px;
+}
+
 /* ── Edit player button ── */
 .btn-edit-player {
   background: linear-gradient(135deg, rgba(122, 162, 255, 0.22), rgba(122, 162, 255, 0.10));
@@ -1533,6 +1743,31 @@
   .filter-chip {
     padding: 4px 10px;
     font-size: 11px;
+  }
+
+  /* Factions tab */
+  .factions-toolbar-controls,
+  .factions-search {
+    width: 100%;
+  }
+  .faction-admin-summary {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+    padding: 12px 14px;
+  }
+  .faction-admin-metrics {
+    justify-content: flex-start;
+    gap: 8px;
+  }
+  .faction-admin-details {
+    padding: 0 14px 14px;
+  }
+  .faction-admin-meta-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .faction-member-table th,
+  .faction-member-table td {
+    padding: 8px 10px;
   }
 
   /* Modal: full-width with safe padding */

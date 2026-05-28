@@ -1782,7 +1782,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                               )}
                               <span className="strikes-card-entry-time">
                                 <span className="strikes-card-entry-arrival">
-                                  @ {formatTimeOfDay(a.status === 'returning' ? a.returnsAt : a.arrivesAt)}
+                                  @ {formatTimeOfDay(a.status === 'returning' ? a.returnsAt : a.arrivesAt, true)}
                                 </span>
                                 {' '}
                                 <Countdown
@@ -1813,7 +1813,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                               </span>
                               <span className="strikes-card-entry-time">
                                 <span className="strikes-card-entry-arrival">
-                                  @ {formatTimeOfDay(a.arrivesAt)}
+                                  @ {formatTimeOfDay(a.arrivesAt, true)}
                                 </span>
                                 {' '}
                                 <Countdown endAt={a.arrivesAt} className="strikes-card-entry-countdown" />

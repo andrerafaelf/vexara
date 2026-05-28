@@ -1261,6 +1261,19 @@ export async function getChatMessages(req: AuthRequest, res: Response): Promise<
       take: CHAT_PAGE_SIZE,
     });
 
+    if (!before && messages.length > 0) {
+      const latestId = Math.max(...messages.map((m: any) => m.id));
+      await prisma.factionMember.updateMany({
+        where: {
+          factionId,
+          userId: req.userId,
+          lastSeenFactionMessageId: { lt: latestId },
+        },
+        data: { lastSeenFactionMessageId: latestId },
+      });
+      notifyBadgeUpdate(req.userId);
+    }
+
     res.json(
       messages.reverse().map((m: any) => ({
         id: m.id,
@@ -1276,6 +1289,33 @@ export async function getChatMessages(req: AuthRequest, res: Response): Promise<
         },
       })),
     );
+  } catch (error) {
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+export async function markChatRead(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const factionId = parseInt(req.params.id, 10);
+    const messageId = Number((req.body as { messageId?: number }).messageId);
+
+    if (!Number.isFinite(factionId) || !Number.isFinite(messageId)) {
+      res.status(400).json({ error: 'Invalid faction or message id' });
+      return;
+    }
+
+    const updated = await prisma.factionMember.updateMany({
+      where: {
+        factionId,
+        userId: req.userId,
+        lastSeenFactionMessageId: { lt: Math.floor(messageId) },
+      },
+      data: { lastSeenFactionMessageId: Math.floor(messageId) },
+    });
+
+    if (updated.count > 0) notifyBadgeUpdate(req.userId);
+    res.json({ success: true });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'factionController.ts' });
     res.status(500).json({ error: 'Internal server error' });
@@ -1336,6 +1376,19 @@ export async function sendChatMessage(req: AuthRequest, res: Response): Promise<
       },
     };
     notifyFactionChat(factionId, serialized);
+    const recipients = await prisma.factionMember.findMany({
+      where: { factionId, userId: { not: req.userId } },
+      select: { userId: true },
+    });
+    for (const recipient of recipients) {
+      notifyBadgeUpdate(recipient.userId);
+      void sendPushToUser(recipient.userId, NOTIF.FACTION_MESSAGE, {
+        title: 'Faction message',
+        body: `${message.user.username}: ${message.content.slice(0, 120)}`,
+        tag: `faction-message-${factionId}`,
+        data: { url: '/factions' },
+      });
+    }
     try {
       const { incrementQuestProgress } = await import('../services/dailyStreakService.js');
       void incrementQuestProgress(req.userId, req.galaxyId, 'faction_chat_1', 1);

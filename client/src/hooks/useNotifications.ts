@@ -21,6 +21,7 @@ export interface NotificationPreferences {
   factionPromotion: boolean;
   factionWar: boolean;
   factionDiplomacy: boolean;
+  factionMessage: boolean;
   friendRequest: boolean;
   friendMessage: boolean;
   nearbyGalaxyEvent: boolean;
@@ -40,6 +41,7 @@ const DEFAULT_PREFS: NotificationPreferences = {
   factionPromotion: true,
   factionWar: true,
   factionDiplomacy: true,
+  factionMessage: true,
   friendRequest: true,
   friendMessage: true,
   nearbyGalaxyEvent: true,

@@ -118,24 +118,32 @@
 }
 
 .combat-report-dot {
-  width: 12px;
-  height: 12px;
+  width: 8px;
+  height: 8px;
   border-radius: 999px;
-  background: var(--danger);
-  border: 2px solid #fff;
-  box-shadow: 0 0 0 4px rgba(248, 81, 73, 0.32);
+  background: linear-gradient(135deg, #ff6b57 0%, #ffb25f 100%);
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  box-shadow:
+    0 0 0 3px rgba(255, 107, 87, 0.16),
+    0 0 12px rgba(255, 178, 95, 0.38);
   animation: reportDotPulse 1.6s ease-in-out infinite;
 }
 
 @keyframes reportDotPulse {
   0% {
-    box-shadow: 0 0 0 3px rgba(248, 81, 73, 0.32);
+    box-shadow:
+      0 0 0 2px rgba(255, 107, 87, 0.2),
+      0 0 10px rgba(255, 178, 95, 0.35);
   }
   70% {
-    box-shadow: 0 0 0 8px rgba(248, 81, 73, 0);
+    box-shadow:
+      0 0 0 7px rgba(255, 107, 87, 0),
+      0 0 14px rgba(255, 178, 95, 0.2);
   }
   100% {
-    box-shadow: 0 0 0 3px rgba(248, 81, 73, 0);
+    box-shadow:
+      0 0 0 2px rgba(255, 107, 87, 0),
+      0 0 10px rgba(255, 178, 95, 0.35);
   }
 }
 

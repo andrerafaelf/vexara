@@ -22,6 +22,7 @@ export const NOTIF = {
   FACTION_PROMOTION:   'factionPromotion',
   FACTION_WAR:         'factionWar',
   FACTION_DIPLOMACY:   'factionDiplomacy',
+  FACTION_MESSAGE:     'factionMessage',
   FRIEND_REQUEST:      'friendRequest',
   FRIEND_MESSAGE:      'friendMessage',
   NEARBY_GALAXY_EVENT: 'nearbyGalaxyEvent',

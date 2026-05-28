@@ -17,9 +17,18 @@ export function formatDateTime(input: string | number | Date): string {
   });
 }
 
-export function formatTimeOfDay(input: string | number | Date): string {
+export function formatTimeOfDay(input: string | number | Date, detail = false): string {
   const d = new Date(input);
-  return d.toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit', hour12: false });
+
+  return d.toLocaleTimeString(LOCALE, {
+    hour: '2-digit',
+    minute: '2-digit',
+    ...(detail && {
+      second: '2-digit',
+      fractionalSecondDigits: 3,
+    }),
+    hour12: false,
+  });
 }
 
 export function formatShortDate(input: string | number | Date): string {

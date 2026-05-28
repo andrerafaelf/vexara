@@ -442,6 +442,12 @@ export const updateNotificationPreferences = (prefs: Partial<Record<string, bool
 
 export const getNotificationBadges = () => apiRequest('/notifications/badges');
 
+export const markFactionChatRead = (factionId: number, messageId: number) =>
+  apiRequest(`/factions/${factionId}/chat/read`, {
+    method: 'POST',
+    body: JSON.stringify({ messageId }),
+  });
+
 // Referrals
 export const getMyReferrals = () => apiRequest('/referral');
 export const getMyPendingTokens = () => apiRequest('/referral/pending');

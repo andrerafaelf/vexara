@@ -41,7 +41,7 @@ export async function unsubscribe(req: AuthRequest, res: Response): Promise<void
 const PREF_KEYS = [
   'attackIncoming', 'attackResolved', 'troopsReturned', 'buildingComplete',
   'troopComplete', 'resourcesFull', 'troopTransfer',
-  'factionInvite', 'factionPromotion', 'factionWar', 'factionDiplomacy',
+  'factionInvite', 'factionPromotion', 'factionWar', 'factionDiplomacy', 'factionMessage',
   'friendRequest', 'friendMessage',
   'nearbyGalaxyEvent', 'protectionExpiring', 'tokenGranted',
 ] as const;
@@ -76,6 +76,7 @@ export async function getBadges(req: AuthRequest, res: Response): Promise<void> 
       friendsIncomingRequests,
       friendsUnreadChat,
       unreadReportNexusIds,
+      factionUnreadChat,
     ] = await Promise.all([
       prisma.referralToken.count({ where: { referrerId: req.userId, redeemedAt: null } }),
       prisma.milestoneToken.count({ where: { userId: req.userId, redeemedAt: null } }),
@@ -94,6 +95,23 @@ export async function getBadges(req: AuthRequest, res: Response): Promise<void> 
       // Mirror /report/unread-nexus-ids: nexus IDs in the active galaxy that own
       // at least one unread completed combat report.
       fetchUnreadNexusIds(req.userId, req.galaxyId),
+      prisma.factionMember.findMany({
+        where: { userId: req.userId },
+        select: {
+          factionId: true,
+          lastSeenFactionMessageId: true,
+          faction: {
+            select: {
+              messages: {
+                where: { userId: { not: req.userId } },
+                select: { id: true },
+                orderBy: { id: 'desc' },
+                take: 1,
+              },
+            },
+          },
+        },
+      }),
     ]);
 
     let pendingTreaties = 0;
@@ -129,7 +147,11 @@ export async function getBadges(req: AuthRequest, res: Response): Promise<void> 
     }
 
     const tokensAvailable = referralTokenCount + milestoneTokenCount;
-    const factionAttention = factionInvites + pendingTreaties + unseenWars + pendingJoinRequests;
+    const unreadFactionMessages = factionUnreadChat.filter((m) => {
+      const latest = m.faction.messages[0]?.id ?? 0;
+      return latest > m.lastSeenFactionMessageId;
+    }).length;
+    const factionAttention = factionInvites + pendingTreaties + unseenWars + pendingJoinRequests + unreadFactionMessages;
 
     res.json({
       tokensAvailable,
