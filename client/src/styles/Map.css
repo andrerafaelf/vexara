@@ -1071,6 +1071,12 @@
   vertical-align: middle;
 }
 
+.attack-username {
+  color: var(--text-muted);
+  font-size: 0.8em;
+  font-weight: 400;
+}
+
 .attack-from,
 .attack-to {
   color: var(--text-strong);

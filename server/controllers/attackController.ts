@@ -164,6 +164,39 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
   }
 }
 
+export async function getAllAttacks(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    if (req.userId == null || req.galaxyId == null) { res.status(401).json({ error: 'Not authenticated' }); return; }
+    const nexuses = await prisma.nexus.findMany({
+      where: { ownerId: req.userId, galaxyId: req.galaxyId },
+      select: { id: true },
+    });
+    const nexusIds = nexuses.map((n) => n.id);
+    const { incoming, outgoing } = await attackService.getAllAttacksForUser(nexusIds);
+
+    const allUserIds = [
+      ...incoming.map((a) => a.attackerUserId),
+      ...outgoing.map((a) => a.defenderUserId),
+    ].filter((id): id is number => id != null);
+    const userMap = await attackService.getUsersByIds([...new Set(allUserIds)]);
+
+    res.json({
+      incoming: incoming.map((a) => {
+        const u = a.attackerUserId != null ? userMap.get(a.attackerUserId) : undefined;
+        const attackerUsername = u?.username ?? (a.attackerUserId == null ? 'Rogue AI' : undefined);
+        return serializeAttack({ ...a, attackerUsername, attackerIsSupporter: u?.isSupporter, attackerSupporterTier: u?.supporterTier, attackerAvatarUrl: a.attackerUserId != null ? avatarUrl(a.attackerUserId, u?.avatarKey ?? null) : null, attackerAvatarUrlSm: a.attackerUserId != null ? avatarUrlSm(a.attackerUserId, u?.avatarKey ?? null) : null });
+      }),
+      outgoing: outgoing.map((a) => {
+        const u = a.defenderUserId != null ? userMap.get(a.defenderUserId) : undefined;
+        return serializeAttack({ ...a, defenderUsername: u?.username, defenderIsSupporter: u?.isSupporter, defenderSupporterTier: u?.supporterTier, defenderAvatarUrl: a.defenderUserId != null ? avatarUrl(a.defenderUserId, u?.avatarKey ?? null) : null, defenderAvatarUrlSm: a.defenderUserId != null ? avatarUrlSm(a.defenderUserId, u?.avatarKey ?? null) : null });
+      }),
+    });
+  } catch (error) {
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'attackController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 export async function getIncomingAttacks(req: AuthRequest, res: Response): Promise<void> {
   try {
     const nexus = await attackService.getNexusById(parseInt(req.params.nexusId));

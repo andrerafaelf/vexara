@@ -221,6 +221,8 @@ export const getIncomingAttacks = (nexusId: string) => apiRequest(`/attack/incom
 
 export const getOutgoingAttacks = (nexusId: string) => apiRequest(`/attack/outgoing/${nexusId}`);
 
+export const getAllAttacks = () => apiRequest('/attack/all');
+
 // Troop transfers
 export const sendTroops = (fromNexusId: string, toNexusId: string, troops: Record<string, number>) =>
   apiRequest('/troop-transfer/send', { method: 'POST', body: JSON.stringify({ fromNexusId, toNexusId, troops }) });

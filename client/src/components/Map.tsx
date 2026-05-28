@@ -325,6 +325,23 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, pathname, searchParams]);
 
+  // When arriving with ?cx=N&cy=N (e.g. from a troop-movement link), center
+  // the map on those coordinates and clear the params so a refresh doesn't re-fire.
+  useEffect(() => {
+    if (mode !== 'normal') return;
+    const rawCx = searchParams?.get('cx');
+    const rawCy = searchParams?.get('cy');
+    if (rawCx == null && rawCy == null) return;
+    if (rawCx != null) setCenterX(clampCoordinate(rawCx, centerX));
+    if (rawCy != null) setCenterY(clampCoordinate(rawCy, centerY));
+    const nextParams = new URLSearchParams(searchParams.toString());
+    nextParams.delete('cx');
+    nextParams.delete('cy');
+    const query = nextParams.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, pathname, searchParams]);
+
   useEffect(() => {
     setTargetX(String(centerX));
     setTargetY(String(centerY));
@@ -1343,16 +1360,19 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
 
     return (
       <div className="attacks-panel">
-        {allIncoming.length > 0 && (
+        {incomingAttacks.length > 0 && (
           <div className="attacks-section">
-            <h4>Incoming ({allIncoming.length})</h4>
+            <h4>Incoming ({incomingAttacks.length})</h4>
             {incomingAttacks.map((attack: any) => {
               const isSupport = attack.type === 'support';
+              const fromLabel = isSupport ? 'Support from:' : attack.type === 'scout' ? 'Scout from:' : 'From:';
               return (
                 <div key={attack._id} className={`attack-item incoming${isSupport ? ' support-mission' : ''}`}>
                   <div className="attack-from">
-                    {isSupport && <span className="support-mission-badge">Support</span>}
-                    From: <strong>{attack.attacker?.nexus?.name || 'Unknown'}</strong>
+                    {fromLabel} <strong>{attack.attacker?.nexus?.name || 'Unknown'}</strong>
+                    {attack.attacker?.user?.username && (
+                      <span className="attack-username"> ({attack.attacker.user.username})</span>
+                    )}
                   </div>
                   <div className="attack-time">
                     Arrives: <Countdown endAt={attack.arrivesAt} completedLabel="Arriving…" />
@@ -1360,13 +1380,17 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
                 </div>
               );
             })}
+          </div>
+        )}
+        {returning.length > 0 && (
+          <div className="attacks-section">
+            <h4>Your returning troops ({returning.length})</h4>
             {returning.map((attack: any) => {
               const isSupport = attack.type === 'support';
               return (
                 <div key={attack._id} className={`attack-item incoming returning${isSupport ? ' support-mission' : ''}`}>
                   <div className="attack-from">
-                    {isSupport && <span className="support-mission-badge">Support</span>}
-                    Returning from: <strong>{attack.defender?.nexus?.name || 'Unknown'}</strong>
+                    {isSupport ? 'Support returning from:' : 'Returning from:'} <strong>{attack.defender?.nexus?.name || 'Unknown'}</strong>
                   </div>
                   <div className="attack-time">
                     Returns: <Countdown endAt={attack.returnsAt} completedLabel="Arriving…" />
@@ -1378,15 +1402,14 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
         )}
         {traveling.length > 0 && (
           <div className="attacks-section">
-            <h4>Outgoing ({traveling.length})</h4>
+            <h4>Your outgoing troops ({traveling.length})</h4>
             {traveling.map((attack: any) => {
               const isSupport = attack.type === 'support';
-              const label = isSupport ? 'Supporting:' : 'To:';
+              const toLabel = isSupport ? 'Supporting:' : attack.type === 'scout' ? 'Scouting:' : 'Attacking:';
               return (
                 <div key={attack._id} className={`attack-item outgoing${isSupport ? ' support-mission' : ''}`}>
                   <div className="attack-to">
-                    {isSupport && <span className="support-mission-badge">Support</span>}
-                    {label}{' '}
+                    {toLabel}{' '}
                     <strong>
                       {attack.defender?.nexus?.name
                         ? `${attack.defender.nexus.name} (${attack.defender.nexus.x}|${attack.defender.nexus.y})`

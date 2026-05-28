@@ -3,6 +3,7 @@
 import ConnectionStatusBar from '@/components/ConnectionStatusBar';
 import ConqueredModal from '@/components/ConqueredModal';
 import DominanceBar from '@/components/DominanceBar';
+import TroopMovementsBar from '@/components/TroopMovementsBar';
 import '@/styles/ConnectionStatusBar.css';
 import MobileNexusDrawer from '@/components/MobileNexusDrawer';
 import NexusSidebar from '@/components/NexusSidebar';
@@ -201,6 +202,7 @@ export default function GameLayout({
       </header>
 
       <ConnectionStatusBar />
+      <TroopMovementsBar />
       <DominanceBar />
       <ConqueredModal />
 

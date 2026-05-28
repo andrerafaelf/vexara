@@ -41,3 +41,23 @@ export function getOutgoingAttacks(nexusId: number) {
     include: { defenderNexus: { select: { id: true, name: true, x: true, y: true } } },
   });
 }
+
+export function getAllAttacksForUser(nexusIds: number[]) {
+  if (nexusIds.length === 0) return Promise.resolve({ incoming: [], outgoing: [] });
+  return Promise.all([
+    prisma.attack.findMany({
+      where: { defenderNexusId: { in: nexusIds }, status: 'traveling' },
+      include: {
+        attackerNexus: { select: { id: true, name: true, x: true, y: true } },
+        defenderNexus: { select: { id: true, name: true, x: true, y: true } },
+      },
+    }),
+    prisma.attack.findMany({
+      where: { attackerNexusId: { in: nexusIds }, status: { in: ['traveling', 'returning'] } },
+      include: {
+        attackerNexus: { select: { id: true, name: true, x: true, y: true } },
+        defenderNexus: { select: { id: true, name: true, x: true, y: true } },
+      },
+    }),
+  ]).then(([incoming, outgoing]) => ({ incoming, outgoing }));
+}
