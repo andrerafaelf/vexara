@@ -43,11 +43,97 @@ type TroopMap = Record<string, number>;
 
 interface Wave {
   id: string;
+  requestId: string;
   nexusId: string;
   troops: TroopMap;
   sending: boolean;
+  scheduled: boolean;
+  scheduledLaunchAt: number | null;
   sent: boolean;
   error: string | null;
+}
+
+interface ScheduledWaveRecord {
+  id: string;
+  requestId: string;
+  target: TargetNexus;
+  nexusId: string;
+  troops: TroopMap;
+  scheduledLaunchAt: number;
+}
+
+const scheduledWaveRecords = new Map<string, ScheduledWaveRecord>();
+const scheduledWaveTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const scheduledWaveSubscribers = new Set<() => void>();
+
+function getScheduledWavesForTarget(targetId: string): Wave[] {
+  return Array.from(scheduledWaveRecords.values())
+    .filter((record) => record.target._id === targetId)
+    .sort((a, b) => a.scheduledLaunchAt - b.scheduledLaunchAt)
+    .map((record) => ({
+      id: record.id,
+      requestId: record.requestId,
+      nexusId: record.nexusId,
+      troops: record.troops,
+      sending: false,
+      scheduled: true,
+      scheduledLaunchAt: record.scheduledLaunchAt,
+      sent: false,
+      error: null,
+    }));
+}
+
+function notifyScheduledWaveSubscribers() {
+  for (const cb of scheduledWaveSubscribers) cb();
+}
+
+function subscribeToScheduledWaves(cb: () => void) {
+  scheduledWaveSubscribers.add(cb);
+  return () => {
+    scheduledWaveSubscribers.delete(cb);
+  };
+}
+
+function cancelStoredScheduledWave(id: string) {
+  const timer = scheduledWaveTimers.get(id);
+  if (timer) clearTimeout(timer);
+  scheduledWaveTimers.delete(id);
+  scheduledWaveRecords.delete(id);
+  notifyScheduledWaveSubscribers();
+}
+
+function armStoredScheduledWave(record: ScheduledWaveRecord) {
+  const existing = scheduledWaveTimers.get(record.id);
+  if (existing) clearTimeout(existing);
+
+  const delay = record.scheduledLaunchAt - serverNow();
+  const launch = async () => {
+    const current = scheduledWaveRecords.get(record.id);
+    if (!current) return;
+
+    try {
+      const onlyRecon =
+        current.troops.reconOperative > 0 &&
+        Object.entries(current.troops).every(([t, n]) => t === 'reconOperative' || n === 0);
+      await sendAttack(current.nexusId, current.target._id, current.troops, onlyRecon ? 'scout' : 'attack', current.requestId);
+    } finally {
+      scheduledWaveTimers.delete(current.id);
+      scheduledWaveRecords.delete(current.id);
+      notifyScheduledWaveSubscribers();
+    }
+  };
+
+  if (delay <= 0) {
+    void launch();
+  } else {
+    scheduledWaveTimers.set(record.id, setTimeout(launch, delay));
+  }
+}
+
+function storeScheduledWave(record: ScheduledWaveRecord) {
+  scheduledWaveRecords.set(record.id, record);
+  armStoredScheduledWave(record);
+  notifyScheduledWaveSubscribers();
 }
 
 function computeTravelMinutes(from: { x: number; y: number }, to: { x: number; y: number }, troops: TroopMap): number {
@@ -72,6 +158,15 @@ function formatLaunchTime(arrivalMs: number, travelMinutes: number): string {
   const s = Math.floor((diff % 60000) / 1000);
   const label = h > 0 ? `${h}h ${m}m ${s}s` : m > 0 ? `${m}m ${s}s` : `${s}s`;
   return `Launch in ${label}`;
+}
+
+function formatTimeUntil(targetMs: number): string {
+  const diff = targetMs - serverNow();
+  if (diff < 0) return 'launching soon';
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+  return h > 0 ? `${h}h ${m}m ${s}s` : m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
 
 function formatDuration(minutes: number): string {
@@ -103,6 +198,20 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
   }, []);
 
   useEffect(() => {
+    const syncScheduled = () => {
+      const scheduled = getScheduledWavesForTarget(target._id);
+      const scheduledIds = new Set(scheduled.map((w) => w.id));
+      setWaves((prev) => [
+        ...prev.filter((w) => !w.scheduled && !scheduledIds.has(w.id)),
+        ...scheduled,
+      ]);
+    };
+
+    syncScheduled();
+    return subscribeToScheduledWaves(syncScheduled);
+  }, [target._id]);
+
+  useEffect(() => {
     getMyNexuses()
       .then((r) => {
         const nexuses: Nexus[] = r.data;
@@ -120,16 +229,29 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
       ...prev,
       {
         id: `${Date.now()}-${Math.random()}`,
+        requestId: `wave:${Date.now()}:${Math.random().toString(36).slice(2)}`,
         nexusId: nexus._id,
         troops: Object.fromEntries(TROOP_KEYS.map((k) => [k, 0])),
         sending: false,
+        scheduled: false,
+        scheduledLaunchAt: null,
         sent: false,
         error: null,
       },
     ]);
   }, [myNexuses]);
 
-  const removeWave = (id: string) => setWaves((prev) => prev.filter((w) => w.id !== id));
+  const cancelScheduledWave = (id: string) => {
+    cancelStoredScheduledWave(id);
+    setWaves((prev) =>
+      prev.map((w) => w.id !== id ? w : { ...w, scheduled: false, scheduledLaunchAt: null, sending: false }),
+    );
+  };
+
+  const removeWave = (id: string) => {
+    cancelScheduledWave(id);
+    setWaves((prev) => prev.filter((w) => w.id !== id));
+  };
 
   const updateWaveTroop = (waveId: string, troopType: string, value: number) => {
     setWaves((prev) => {
@@ -211,6 +333,7 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
     // a skewed local clock fires the launch early or late.
     const delay = launchMs - serverNow();
 
+    cancelScheduledWave(wave.id);
     setWaves((prev) => prev.map((w) => w.id !== wave.id ? w : { ...w, sending: true, error: null }));
 
     const doSend = async () => {
@@ -218,12 +341,20 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
         const onlyRecon =
           wave.troops.reconOperative > 0 &&
           Object.entries(wave.troops).every(([t, n]) => t === 'reconOperative' || n === 0);
-        await sendAttack(nexus._id, target._id, wave.troops, onlyRecon ? 'scout' : 'attack');
-        setWaves((prev) => prev.map((w) => w.id !== wave.id ? w : { ...w, sending: false, sent: true }));
+        await sendAttack(nexus._id, target._id, wave.troops, onlyRecon ? 'scout' : 'attack', wave.requestId);
+        setWaves((prev) =>
+          prev.map((w) =>
+            w.id !== wave.id ? w : { ...w, sending: false, scheduled: false, scheduledLaunchAt: null, sent: true },
+          ),
+        );
         toast(`Wave from ${nexus.name} sent`, 'success');
       } catch (err: any) {
         const msg = err.response?.data?.error || 'Failed to send wave';
-        setWaves((prev) => prev.map((w) => w.id !== wave.id ? w : { ...w, sending: false, error: msg }));
+        setWaves((prev) =>
+          prev.map((w) =>
+            w.id !== wave.id ? w : { ...w, sending: false, scheduled: false, scheduledLaunchAt: null, error: msg },
+          ),
+        );
         toast(msg, 'error');
       }
     };
@@ -231,14 +362,25 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
     if (delay <= 0) {
       await doSend();
     } else {
-      setTimeout(doSend, delay);
+      storeScheduledWave({
+        id: wave.id,
+        requestId: wave.requestId,
+        target,
+        nexusId: nexus._id,
+        troops: wave.troops,
+        scheduledLaunchAt: launchMs,
+      });
       toast(`Wave from ${nexus.name} scheduled. Launches in ${formatDuration(travelMin)}`, 'info');
-      setWaves((prev) => prev.map((w) => w.id !== wave.id ? w : { ...w, sending: false }));
+      setWaves((prev) =>
+        prev.map((w) =>
+          w.id !== wave.id ? w : { ...w, sending: false, scheduled: true, scheduledLaunchAt: launchMs },
+        ),
+      );
     }
   };
 
   const sendAllWaves = async () => {
-    const unsent = waves.filter((w) => !w.sent);
+    const unsent = waves.filter((w) => !w.sent && !w.scheduled);
     if (unsent.length === 0) return;
     setSendingAll(true);
     for (const wave of unsent) {
@@ -307,7 +449,7 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
                     className="wplanner-nexus-select"
                     value={wave.nexusId}
                     onChange={(e) => updateWaveNexus(wave.id, e.target.value)}
-                    disabled={wave.sent}
+                    disabled={wave.sent || wave.scheduled}
                   >
                     {myNexuses.map((n) => (
                       <option key={n._id} value={n._id}>
@@ -322,15 +464,27 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
                     </span>
                   )}
 
-                  {!wave.sent && (
+                  {!wave.sent && !wave.scheduled && (
                     <button className="wplanner-remove-btn" onClick={() => removeWave(wave.id)} title="Remove wave">
                       <Trash2 size={14} />
                     </button>
                   )}
+                  {wave.scheduled && (
+                    <button className="wplanner-remove-btn" onClick={() => cancelScheduledWave(wave.id)} title="Cancel scheduled wave">
+                      <X size={14} />
+                    </button>
+                  )}
                   {wave.sent && <span className="wplanner-sent-badge">Sent</span>}
+                  {wave.scheduled && <span className="wplanner-sent-badge">Scheduled</span>}
                 </div>
 
-                {launchCountdown && !wave.sent && (
+                {wave.scheduled && wave.scheduledLaunchAt && (
+                  <div className="wplanner-countdown">
+                    Scheduled - launches in {formatTimeUntil(wave.scheduledLaunchAt)}
+                  </div>
+                )}
+
+                {launchCountdown && !wave.sent && !wave.scheduled && (
                   <div className={`wplanner-countdown ${isPast ? 'wplanner-countdown--past' : ''}`}>
                     {launchCountdown}
                     {isPast && ' · adjust arrival time'}
@@ -339,7 +493,7 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
 
                 {wave.error && <div className="wplanner-wave-error">{wave.error}</div>}
 
-                {!wave.sent && (
+                {!wave.sent && !wave.scheduled && (
                   <div className="wplanner-troop-grid">
                     {TROOP_KEYS.filter((k) => (nexus?.troops as any)?.[k] > 0).map((troopType) => {
                       const available = (nexus?.troops as any)?.[troopType] ?? 0;
@@ -366,7 +520,7 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
                   </div>
                 )}
 
-                {!wave.sent && (
+                {!wave.sent && !wave.scheduled && (
                   <div className="wplanner-wave-actions">
                     <button
                       className="wplanner-send-wave-btn"
@@ -388,10 +542,10 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
           <button className="wplanner-add-btn" onClick={addWave} disabled={myNexuses.length === 0}>
             <Plus size={14} /> Add Wave
           </button>
-          {waves.filter((w) => !w.sent).length > 1 && (
+          {waves.filter((w) => !w.sent && !w.scheduled).length > 1 && (
             <button className="wplanner-send-all-btn" onClick={sendAllWaves} disabled={sendingAll}>
               <Send size={14} />
-              {sendingAll ? 'Sending all…' : `Send all ${waves.filter((w) => !w.sent).length} waves`}
+              {sendingAll ? 'Sending all…' : `Send all ${waves.filter((w) => !w.sent && !w.scheduled).length} waves`}
             </button>
           )}
         </div>

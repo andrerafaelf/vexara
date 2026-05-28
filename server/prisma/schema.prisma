@@ -406,6 +406,7 @@ model Attack {
   status    AttackStatus @default(traveling)
   result    Json?
 
+  clientRequestId String? @unique
   createdAt DateTime @default(now())
 
   @@index([galaxyId])

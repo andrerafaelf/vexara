@@ -211,10 +211,16 @@ export const getMapArea = (x: number, y: number) => apiRequest(`/map/area/${x}/$
 export const getNexusInfo = (nexusId: string) => apiRequest(`/map/nexus/${nexusId}`);
 
 // Attacks
-export const sendAttack = (fromNexusId: string, toNexusId: string, troops: any, type: string = 'attack') =>
+export const sendAttack = (
+  fromNexusId: string,
+  toNexusId: string,
+  troops: any,
+  type: string = 'attack',
+  clientRequestId?: string,
+) =>
   apiRequest('/attack/send', {
     method: 'POST',
-    body: JSON.stringify({ fromNexusId, toNexusId, troops, type }),
+    body: JSON.stringify({ fromNexusId, toNexusId, troops, type, clientRequestId }),
   });
 
 export const getIncomingAttacks = (nexusId: string) => apiRequest(`/attack/incoming/${nexusId}`);

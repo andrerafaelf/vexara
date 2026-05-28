@@ -22,14 +22,24 @@ const SUPPORTED_ATTACK_TYPES = new Set<AttackType>(['attack', 'scout', 'support'
 // Controller for handling attack-related endpoints: sending attacks, viewing incoming/outgoing attacks, etc.
 export async function sendAttack(req: AuthRequest, res: Response): Promise<void> {
   try {
-    const { fromNexusId, toNexusId, troops, type = 'attack' } = req.body as {
-      fromNexusId?: unknown; toNexusId?: unknown; troops?: unknown; type?: string;
+    const { fromNexusId, toNexusId, troops, type = 'attack', clientRequestId } = req.body as {
+      fromNexusId?: unknown; toNexusId?: unknown; troops?: unknown; type?: string; clientRequestId?: unknown;
     };
     const parsedFromNexusId = parsePositiveInt(fromNexusId);
     const parsedToNexusId = parsePositiveInt(toNexusId);
     if (!parsedFromNexusId || !parsedToNexusId) { res.status(400).json({ error: 'Invalid nexus IDs' }); return; }
     if (!SUPPORTED_ATTACK_TYPES.has(type as AttackType)) { res.status(400).json({ error: 'Unsupported mission type' }); return; }
     const attackType = type as AttackType;
+    const normalizedClientRequestId =
+      typeof clientRequestId === 'string' && clientRequestId.trim().length > 0
+        ? clientRequestId.trim()
+        : null;
+    if (
+      normalizedClientRequestId &&
+      (normalizedClientRequestId.length > 128 || !/^[A-Za-z0-9:_-]+$/.test(normalizedClientRequestId))
+    ) {
+      res.status(400).json({ error: 'Invalid request id' }); return;
+    }
 
     const normalizedPayload = normalizeTroopPayload(troops, TROOP_KEYS);
     if ('error' in normalizedPayload && normalizedPayload.error) { res.status(400).json({ error: normalizedPayload.error }); return; }
@@ -94,11 +104,6 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
       if ((attackerRecord[troopType] || 0) < amount) { res.status(400).json({ error: `Insufficient ${troopType}` }); return; }
     }
 
-    const troopDeductions: Record<string, number> = {};
-    for (const [troopType, amount] of Object.entries(normalizedTroops)) {
-      troopDeductions[troopType] = (attackerRecord[troopType] || 0) - amount;
-    }
-
     const distance = Math.sqrt(Math.pow(defenderNexus.x - attackerNexus.x, 2) + Math.pow(defenderNexus.y - attackerNexus.y, 2));
     const baseTravel = NEXUS_TYPE_BONUSES[(attackerNexus as unknown as { nexusType?: string | null }).nexusType ?? '']?.travelTimeMultiplier ?? 1;
     const nexusDoubledForTravel = (attackerNexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled ?? false;
@@ -123,20 +128,20 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
     }
     const arrivesAt = new Date(Date.now() + travelTimeMinutes * 60 * 1000);
 
-    const [attack, updatedAttackerNexus] = await attackService.createAttackAndDeductTroops(
+    const { attack, updatedAttackerNexus, reused } = await attackService.createAttackAndDeductTroops(
       {
         galaxyId: req.galaxyId, attackerUserId: req.userId, attackerNexusId: parsedFromNexusId,
         defenderUserId: defenderNexus.ownerId ?? null, defenderNexusId: parsedToNexusId,
-        troops: normalizedTroops, arrivesAt, type: attackType,
-      },
+        troops: normalizedTroops, arrivesAt, type: attackType, clientRequestId: normalizedClientRequestId,
+      } as Parameters<typeof prisma.attack.create>[0]['data'],
       attackerNexus.id,
-      troopDeductions,
+      normalizedTroops,
     );
-    await applyQuestRewards(updatedAttackerNexus, { hasOutgoingStrike: true });
+    if (!reused) await applyQuestRewards(updatedAttackerNexus, { hasOutgoingStrike: true });
 
     // Notify the defender immediately that an attack is inbound.
     // Scout missions are intentionally excluded - stealth is part of the mechanic.
-    if (defenderNexus.ownerId && attackType === 'attack') {
+    if (!reused && defenderNexus.ownerId && attackType === 'attack') {
       const etaMinutes = Math.round(travelTimeMinutes);
       const etaStr = etaMinutes < 60 ? `${etaMinutes}m` : `${Math.floor(etaMinutes / 60)}h ${etaMinutes % 60}m`;
       void sendPushToUser(defenderNexus.ownerId, NOTIF.ATTACK_INCOMING, {
@@ -149,16 +154,24 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
 
     try {
       const { incrementQuestProgress } = await import('../services/dailyStreakService.js');
-      if (attackType === 'attack') {
+      if (!reused && attackType === 'attack') {
         void incrementQuestProgress(req.userId, req.galaxyId, 'attack_1', 1);
         void incrementQuestProgress(req.userId, req.galaxyId, 'attack_3', 1);
-      } else if (attackType === 'support') {
+      } else if (!reused && attackType === 'support') {
         void incrementQuestProgress(req.userId, req.galaxyId, 'support_1', 1);
       }
-      void incrementQuestProgress(req.userId, req.galaxyId, 'login', 1);
+      if (!reused) void incrementQuestProgress(req.userId, req.galaxyId, 'login', 1);
     } catch {}
     res.json({ success: true, attack: serializeAttack(attack) });
   } catch (error) {
+    if (error instanceof attackService.InsufficientTroopsError) {
+      res.status(400).json({ error: 'Insufficient troops' });
+      return;
+    }
+    if (error instanceof attackService.DuplicateRequestIdError) {
+      res.status(409).json({ error: 'Request id already used' });
+      return;
+    }
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'attackController.ts' });
     res.status(500).json({ error: 'Internal server error' });
   }
