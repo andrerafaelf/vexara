@@ -322,6 +322,10 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
     // Aggregate support troops stationed at the defending nexus
     const supportTransfers = await prisma.troopTransfer.findMany({
       where: { hostNexusId: defenderNexus.id, status: 'stationed' },
+      include: {
+        ownerNexus: { select: { ownerId: true, name: true } },
+        hostNexus:  { select: { name: true } },
+      },
     });
     const supportTroops: Record<TroopKey, number> = {} as Record<TroopKey, number>;
     for (const transfer of supportTransfers) {
@@ -410,6 +414,8 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
     // Losses are applied garrison-first; the remainder is spread across transfers
     // in order. remainingSupportLosses tracks how many per-type losses are still
     // unallocated so each transfer only absorbs its fair share.
+    // Per-owner loss totals are accumulated so each owner receives one
+    // consolidated push notification after all transfers are processed.
     if (supportTransfers.length > 0) {
       const remainingSupportLosses: Record<string, number> = {};
       for (const key of TROOP_KEYS) {
@@ -417,6 +423,12 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
         const totalLost = defenderLosses[key] || 0;
         remainingSupportLosses[key] = Math.max(0, totalLost - garrisonCount);
       }
+
+      // userId → { totalLost, totalRemaining, ownerNexusId, ownerNexusName, hostNexusName }
+      const lossNotifMap = new Map<number, {
+        totalLost: number; totalRemaining: number;
+        ownerNexusId: number; ownerNexusName: string; hostNexusName: string;
+      }>();
 
       for (const transfer of supportTransfers) {
         const t = transfer.troops as Record<TroopKey, number>;
@@ -448,7 +460,40 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
             attackId: attack.id,
             defenderNexusId: defenderNexus.id,
           });
+
+          const ownerId = transfer.ownerNexus.ownerId;
+          if (ownerId) {
+            const lostCount = Object.values(lostTroops).reduce((s, n) => s + (n || 0), 0);
+            const remainingCount = Object.values(updatedTroops).reduce((s, n) => s + n, 0);
+            const existing = lossNotifMap.get(ownerId);
+            if (existing) {
+              existing.totalLost += lostCount;
+              existing.totalRemaining += remainingCount;
+            } else {
+              lossNotifMap.set(ownerId, {
+                totalLost: lostCount,
+                totalRemaining: remainingCount,
+                ownerNexusId: transfer.ownerNexusId,
+                ownerNexusName: transfer.ownerNexus.name,
+                hostNexusName: transfer.hostNexus.name,
+              });
+            }
+          }
         }
+      }
+
+      // Send one push per affected owner and refresh their transfer view.
+      for (const [ownerId, info] of lossNotifMap) {
+        const body = info.totalRemaining > 0
+          ? `${info.totalLost} troop${info.totalLost !== 1 ? 's' : ''} lost at ${info.hostNexusName}. ${info.totalRemaining} survived.`
+          : `All ${info.totalLost} troop${info.totalLost !== 1 ? 's' : ''} stationed at ${info.hostNexusName} were lost in combat.`;
+        void sendPushToUser(ownerId, NOTIF.TROOP_TRANSFER, {
+          title: '⚠️ Stationed Troops Lost',
+          body,
+          tag: `transfer-loss-${attack.id}-${ownerId}`,
+          data: { url: '/' },
+        });
+        notifyTransferUpdate(ownerId, info.ownerNexusId);
       }
     }
 
@@ -499,9 +544,14 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
       const lootProtection = defenderBonuses?.lootProtection ?? 0;
       const lootableFraction = 1 - lootProtection;
 
-      const totalAvailable = (defenderNexus.biomass + defenderNexus.alloy + defenderNexus.ore) * lootableFraction;
-      if (totalAvailable > 0 && survivingCarry > 0) {
-        const lootRatio = Math.min(survivingCarry / totalAvailable, 1);
+      // Carry is a threshold, not a hard cap against the resource pool.
+      // Any army with survivingCarry >= LOOT_CARRY_THRESHOLD takes 100% of
+      // lootable resources. Smaller raids scale proportionally below the threshold.
+      // This prevents the carry total becoming irrelevant against large late-game vaults.
+      const LOOT_CARRY_THRESHOLD = 8000;
+      const lootRatio = Math.min(survivingCarry / LOOT_CARRY_THRESHOLD, 1);
+
+      if (lootRatio > 0) {
         resourcesStolen = {
           biomass: Math.floor(defenderNexus.biomass * lootableFraction * lootRatio),
           alloy:   Math.floor(defenderNexus.alloy   * lootableFraction * lootRatio),

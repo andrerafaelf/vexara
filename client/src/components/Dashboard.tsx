@@ -294,14 +294,14 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
     ];
 
     const batches: DashboardQuestBatch[] = [
-      { id: 'intro',          title: 'Ch.1. Establishing the Nexus', quests: introQuests,         unlocked: true,                                            reward: '+750 each resource, +10 pop, +10 Assault Troopers' },
-      { id: 'expansion',      title: 'Ch.2. Expansion',              quests: expansionQuests,     unlocked: introComplete,                                   reward: '+1500 each resource, +15 pop, +15 Recon Operatives, +20 Lancer Drones' },
-      { id: 'first_blood',    title: 'Ch.3. First Blood',            quests: firstBloodQuests,    unlocked: expansionComplete,                               reward: '+3500 each resource, +30 pop, +25 Skimmer Bikes, +15 Breaker Units' },
-      { id: 'shadow_ops',     title: 'Ch.4. Shadow Operations',      quests: shadowOpsQuests,     unlocked: firstBloodComplete,                              reward: '+5000 each resource, +25 pop, +25 Recon Operatives, +10 Disruptor Units' },
-      { id: 'arsenal',        title: 'Ch.5. Arsenal',                quests: arsenalQuests,       unlocked: shadowOpsComplete,                               reward: '+8000 each resource, +50 pop, +15 Siege Mechs, +10 Disruptors, +10 Suppressors' },
-      { id: 'veteran',        title: 'Ch.6. Veteran Commander',      quests: veteranQuests,       unlocked: arsenalComplete,                                 reward: '+15000 each resource, +75 pop, +20 Siege Mechs, +15 Interceptors, +5 Void Stalkers' },
-      { id: 'ghost_protocol', title: 'Ch.7. Ghost Protocol',         quests: ghostProtocolQuests, unlocked: veteranComplete,                                 reward: '+25000 each resource, +100 pop, +30 Recon Operatives, +10 Void Stalkers, +5 Plasma Turrets' },
-      { id: 'annihilator',    title: 'Ch.8. Annihilator',            quests: annihilatorQuests,   unlocked: ghostProtocolComplete,                           reward: '+50000 each resource, +150 pop, +3 Annihilator Platforms, +25 Siege Mechs, +10 Plasma Turrets' },
+      { id: 'intro',          title: 'Ch.1. Establishing the Nexus', quests: introQuests,         unlocked: true,                                            reward: '+750 each resource, +10 pop (×CC bonus), +10 Assault Troopers' },
+      { id: 'expansion',      title: 'Ch.2. Expansion',              quests: expansionQuests,     unlocked: introComplete,                                   reward: '+1500 each resource, +15 pop (×CC bonus), +15 Recon Operatives, +20 Lancer Drones' },
+      { id: 'first_blood',    title: 'Ch.3. First Blood',            quests: firstBloodQuests,    unlocked: expansionComplete,                               reward: '+3500 each resource, +30 pop (×CC bonus), +25 Skimmer Bikes, +15 Breaker Units' },
+      { id: 'shadow_ops',     title: 'Ch.4. Shadow Operations',      quests: shadowOpsQuests,     unlocked: firstBloodComplete,                              reward: '+5000 each resource, +25 pop (×CC bonus), +25 Recon Operatives, +10 Disruptor Units' },
+      { id: 'arsenal',        title: 'Ch.5. Arsenal',                quests: arsenalQuests,       unlocked: shadowOpsComplete,                               reward: '+8000 each resource, +50 pop (×CC bonus), +15 Siege Mechs, +10 Disruptors, +10 Suppressors' },
+      { id: 'veteran',        title: 'Ch.6. Veteran Commander',      quests: veteranQuests,       unlocked: arsenalComplete,                                 reward: '+15000 each resource, +75 pop (×CC bonus), +20 Siege Mechs, +15 Interceptors, +5 Void Stalkers' },
+      { id: 'ghost_protocol', title: 'Ch.7. Ghost Protocol',         quests: ghostProtocolQuests, unlocked: veteranComplete,                                 reward: '+25000 each resource, +100 pop (×CC bonus), +30 Recon Operatives, +10 Void Stalkers, +5 Plasma Turrets' },
+      { id: 'annihilator',    title: 'Ch.8. Annihilator',            quests: annihilatorQuests,   unlocked: ghostProtocolComplete,                           reward: '+50000 each resource, +150 pop (×CC bonus), +3 Annihilator Platforms, +25 Siege Mechs, +10 Plasma Turrets' },
     ];
     return batches.filter((batch) => !claimedBatches.has(batch.id));
   };

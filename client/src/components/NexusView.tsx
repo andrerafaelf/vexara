@@ -6,6 +6,7 @@ import {
   cancelTrainingQueueItem,
   checkBuildQueue,
   checkTrainingQueue,
+  claimQuestReward,
   getGalaxyEvents,
   getIncomingAttacks,
   getMyNexuses,
@@ -443,6 +444,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   const submittingRef = useRef<Set<string>>(new Set());
   const [dismissedTips, setDismissedTips] = useState<Set<string>>(new Set());
   const [showSpecModal, setShowSpecModal] = useState(false);
+  const [claimingBatch, setClaimingBatch] = useState<string | null>(null);
 
   const dismissTip = (id: string) => setDismissedTips((prev) => new Set(prev).add(id));
 
@@ -487,6 +489,20 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   const cancelNexusRename = () => {
     setRenameValue(nexus.name);
     setIsRenamingNexus(false);
+  };
+
+  const handleClaimQuestReward = async (batchId: string) => {
+    if (claimingBatch) return;
+    setClaimingBatch(batchId);
+    try {
+      await claimQuestReward(nexus._id, batchId, nexus._id);
+      showToast('Reward claimed!', 'success');
+      onUpdate();
+    } catch (err: any) {
+      showToast(err?.response?.data?.error || err?.message || 'Failed to claim reward', 'error');
+    } finally {
+      setClaimingBatch(null);
+    }
   };
 
   // Countdown components now subscribe to the shared `useNow()` clock directly, so this
@@ -1383,14 +1399,14 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     ];
 
     const allBatches: QuestBatch[] = [
-      { id: 'intro',          title: 'Ch.1. Establishing the Nexus', quests: introQuests,         unlocked: true,                  reward: '+750 each resource, +10 pop, +10 Assault Troopers' },
-      { id: 'expansion',      title: 'Ch.2. Expansion',              quests: expansionQuests,     unlocked: introComplete,         reward: '+1500 each resource, +15 pop, +15 Recon Operatives, +20 Lancer Drones' },
-      { id: 'first_blood',    title: 'Ch.3. First Blood',            quests: firstBloodQuests,    unlocked: expansionComplete,     reward: '+3500 each resource, +30 pop, +25 Skimmer Bikes, +15 Breaker Units' },
-      { id: 'shadow_ops',     title: 'Ch.4. Shadow Operations',      quests: shadowOpsQuests,     unlocked: firstBloodComplete,    reward: '+5000 each resource, +25 pop, +25 Recon Operatives, +10 Disruptor Units' },
-      { id: 'arsenal',        title: 'Ch.5. Arsenal',                quests: arsenalQuests,       unlocked: shadowOpsComplete,     reward: '+8000 each resource, +50 pop, +15 Siege Mechs, +10 Disruptors, +10 Suppressors' },
-      { id: 'veteran',        title: 'Ch.6. Veteran Commander',      quests: veteranQuests,       unlocked: arsenalComplete,       reward: '+15000 each resource, +75 pop, +20 Siege Mechs, +15 Interceptors, +5 Void Stalkers' },
-      { id: 'ghost_protocol', title: 'Ch.7. Ghost Protocol',         quests: ghostProtocolQuests, unlocked: veteranComplete,       reward: '+25000 each resource, +100 pop, +30 Recon Operatives, +10 Void Stalkers, +5 Plasma Turrets' },
-      { id: 'annihilator',    title: 'Ch.8. Annihilator',            quests: annihilatorQuests,   unlocked: ghostProtocolComplete, reward: '+50000 each resource, +150 pop, +3 Annihilator Platforms, +25 Siege Mechs, +10 Plasma Turrets' },
+      { id: 'intro',          title: 'Ch.1. Establishing the Nexus', quests: introQuests,         unlocked: true,                  reward: '+750 each resource, +10 pop (×CC bonus), +10 Assault Troopers' },
+      { id: 'expansion',      title: 'Ch.2. Expansion',              quests: expansionQuests,     unlocked: introComplete,         reward: '+1500 each resource, +15 pop (×CC bonus), +15 Recon Operatives, +20 Lancer Drones' },
+      { id: 'first_blood',    title: 'Ch.3. First Blood',            quests: firstBloodQuests,    unlocked: expansionComplete,     reward: '+3500 each resource, +30 pop (×CC bonus), +25 Skimmer Bikes, +15 Breaker Units' },
+      { id: 'shadow_ops',     title: 'Ch.4. Shadow Operations',      quests: shadowOpsQuests,     unlocked: firstBloodComplete,    reward: '+5000 each resource, +25 pop (×CC bonus), +25 Recon Operatives, +10 Disruptor Units' },
+      { id: 'arsenal',        title: 'Ch.5. Arsenal',                quests: arsenalQuests,       unlocked: shadowOpsComplete,     reward: '+8000 each resource, +50 pop (×CC bonus), +15 Siege Mechs, +10 Disruptors, +10 Suppressors' },
+      { id: 'veteran',        title: 'Ch.6. Veteran Commander',      quests: veteranQuests,       unlocked: arsenalComplete,       reward: '+15000 each resource, +75 pop (×CC bonus), +20 Siege Mechs, +15 Interceptors, +5 Void Stalkers' },
+      { id: 'ghost_protocol', title: 'Ch.7. Ghost Protocol',         quests: ghostProtocolQuests, unlocked: veteranComplete,       reward: '+25000 each resource, +100 pop (×CC bonus), +30 Recon Operatives, +10 Void Stalkers, +5 Plasma Turrets' },
+      { id: 'annihilator',    title: 'Ch.8. Annihilator',            quests: annihilatorQuests,   unlocked: ghostProtocolComplete, reward: '+50000 each resource, +150 pop (×CC bonus), +3 Annihilator Platforms, +25 Siege Mechs, +10 Plasma Turrets' },
     ];
 
     const annihilatorComplete = claimedBatches.has('annihilator') || annihilatorQuests.every((quest) => quest.completed);
@@ -1901,6 +1917,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
 
             {questBatches.map((batch) => {
               const completedCount = batch.quests.filter((quest) => quest.completed).length;
+              const batchComplete = batch.unlocked && completedCount === batch.quests.length;
 
               return (
                 <div key={batch.id} className={`intro-quests ${batch.unlocked ? '' : 'quest-batch-locked'}`}>
@@ -1913,34 +1930,48 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                   <p className="quest-batch-reward">Reward: {batch.reward}</p>
 
                   {batch.unlocked ? (
-                    batch.quests.map((quest) => (
-                      <div
-                        key={quest.id}
-                        className={`intro-quest-item ${quest.completed ? 'completed' : 'quest-actionable'}`}
-                        onClick={() => {
-                          if (quest.completed) return;
-                          if (quest.tab === 'map') {
-                            router.push('/starfield');
-                          } else {
-                            setActiveTab(quest.tab);
-                          }
-                        }}
-                      >
-                        <span className="intro-quest-icon" aria-hidden="true">
-                          {quest.completed ? <Check size={14} /> : null}
-                        </span>
-                        <div className="intro-quest-content">
-                          <p className="intro-quest-title">{quest.title}</p>
-                          <p className="intro-quest-description">{quest.description}</p>
-                        </div>
-                        {!quest.completed && (
-                          <span className="intro-quest-arrow">
-                            →{' '}
-                            {quest.tab === 'buildings' ? 'Buildings' : quest.tab === 'troops' ? 'Troops' : 'Starfield'}
+                    <>
+                      {batch.quests.map((quest) => (
+                        <div
+                          key={quest.id}
+                          className={`intro-quest-item ${quest.completed ? 'completed' : 'quest-actionable'}`}
+                          onClick={() => {
+                            if (quest.completed) return;
+                            if (quest.tab === 'map') {
+                              router.push('/starfield');
+                            } else {
+                              setActiveTab(quest.tab);
+                            }
+                          }}
+                        >
+                          <span className="intro-quest-icon" aria-hidden="true">
+                            {quest.completed ? <Check size={14} /> : null}
                           </span>
-                        )}
-                      </div>
-                    ))
+                          <div className="intro-quest-content">
+                            <p className="intro-quest-title">{quest.title}</p>
+                            <p className="intro-quest-description">{quest.description}</p>
+                          </div>
+                          {!quest.completed && (
+                            <span className="intro-quest-arrow">
+                              →{' '}
+                              {quest.tab === 'buildings' ? 'Buildings' : quest.tab === 'troops' ? 'Troops' : 'Starfield'}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                      {batchComplete && (
+                        <div className="quest-claim-row">
+                          <button
+                            type="button"
+                            className="quest-claim-btn"
+                            onClick={() => handleClaimQuestReward(batch.id)}
+                            disabled={claimingBatch === batch.id}
+                          >
+                            {claimingBatch === batch.id ? 'Claiming…' : 'Claim Reward'}
+                          </button>
+                        </div>
+                      )}
+                    </>
                   ) : (
                     <p className="quest-batch-lock-note">Complete the previous quest batch to unlock this one.</p>
                   )}

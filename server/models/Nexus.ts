@@ -214,6 +214,12 @@ export async function applyQuestRewards(
     if (batch.quests.every((q) => completedQuestIds.has(q.id))) completedBatchIds.add(batch.id);
   }
 
+  // Resources and population scale with the nexus's Command Core level at claim
+  // time: 1x at CC0, up to 2.5x at CC15. Troops are not scaled — they're
+  // already generous in late batches and scaling them would break balance.
+  const ccLevel = Math.min(nexus.commandCore, 15);
+  const rewardMultiplier = 1 + (ccLevel / 15) * 1.5;
+
   const newlyClaimedRewards: string[] = [];
   const data: Record<string, unknown> = {
     biomass: nexus.biomass, alloy: nexus.alloy, ore: nexus.ore, populationCurrent: nexus.populationCurrent,
@@ -222,10 +228,10 @@ export async function applyQuestRewards(
   for (const batch of QUEST_REWARD_BATCHES) {
     if (!batch.isUnlocked({ completedBatchIds, claimedRewards }) || !completedBatchIds.has(batch.id) || claimedRewards.has(batch.id)) continue;
 
-    data['biomass'] = (data['biomass'] as number) + (batch.reward.biomass || 0);
-    data['alloy']   = (data['alloy']   as number) + (batch.reward.alloy   || 0);
-    data['ore']     = (data['ore']     as number) + (batch.reward.ore     || 0);
-    data['populationCurrent'] = (data['populationCurrent'] as number) + (batch.reward.populationCurrent || 0);
+    data['biomass'] = (data['biomass'] as number) + Math.floor((batch.reward.biomass || 0) * rewardMultiplier);
+    data['alloy']   = (data['alloy']   as number) + Math.floor((batch.reward.alloy   || 0) * rewardMultiplier);
+    data['ore']     = (data['ore']     as number) + Math.floor((batch.reward.ore     || 0) * rewardMultiplier);
+    data['populationCurrent'] = (data['populationCurrent'] as number) + Math.floor((batch.reward.populationCurrent || 0) * rewardMultiplier);
 
     for (const [troopType, amount] of Object.entries(batch.reward.troops || {})) {
       data[troopType] = ((data[troopType] as number | undefined) || (nexus as unknown as Record<string, number>)[troopType] || 0) + (amount as number);
@@ -252,6 +258,91 @@ export async function applyQuestRewards(
   const updatedNexus = await prisma.nexus.update({ where: { id: nexus.id }, data });
 
   return { ...updatedNexus, questRewardClaims: updatedClaimedRewards, completedQuestIds: updatedCompletedIds };
+}
+
+// Explicit per-batch claim targeting a specific nexus.
+// The quest completion state lives on the GalaxyPlayer (owner of the quest
+// source nexus), but the reward can be delivered to any nexus the player owns.
+// `rewardNexusId` defaults to the source nexus when omitted.
+export async function claimQuestBatchReward(
+  sourceNexus: Nexus,
+  batchId: string,
+  rewardNexusId: number,
+): Promise<{ rewardNexus: NexusWithQuests; sourceNexus: NexusWithQuests }> {
+  const batch = QUEST_REWARD_BATCHES.find((b) => b.id === batchId);
+  if (!batch) throw new Error(`Unknown quest batch: ${batchId}`);
+  if (!sourceNexus.ownerId) throw new Error('Nexus has no owner');
+
+  const [player, rewardNexusRaw] = await Promise.all([
+    prisma.galaxyPlayer.findUnique({
+      where: { userId_galaxyId: { userId: sourceNexus.ownerId, galaxyId: sourceNexus.galaxyId } },
+      select: { id: true, questRewardClaims: true, completedQuestIds: true },
+    }),
+    rewardNexusId === sourceNexus.id
+      ? Promise.resolve(sourceNexus)
+      : prisma.nexus.findUnique({ where: { id: rewardNexusId } }),
+  ]);
+
+  if (!player) throw new Error('Player record not found');
+  if (!rewardNexusRaw) throw new Error('Target nexus not found');
+  if ((rewardNexusRaw as Nexus).ownerId !== sourceNexus.ownerId) throw new Error('Not authorized');
+
+  const rewardNexus = rewardNexusRaw as Nexus;
+
+  const claimedRewards = new Set<string>(
+    Array.isArray(player.questRewardClaims) ? (player.questRewardClaims as string[]).filter((v) => typeof v === 'string') : [],
+  );
+  const completedQuestIds = new Set<string>(
+    Array.isArray(player.completedQuestIds) ? (player.completedQuestIds as string[]).filter((v) => typeof v === 'string') : [],
+  );
+
+  if (claimedRewards.has(batchId)) throw new Error('Reward already claimed');
+
+  const completedBatchIds = new Set<string>();
+  for (const b of QUEST_REWARD_BATCHES) {
+    if (b.quests.every((q) => completedQuestIds.has(q.id))) completedBatchIds.add(b.id);
+  }
+
+  if (!completedBatchIds.has(batchId)) throw new Error('Quest batch not completed');
+  if (!batch.isUnlocked({ completedBatchIds, claimedRewards })) throw new Error('Quest batch not unlocked');
+
+  // Scale resources/pop with reward nexus CC level; troops are unscaled
+  const ccLevel = Math.min(rewardNexus.commandCore, 15);
+  const mult = 1 + (ccLevel / 15) * 1.5;
+
+  const data: Record<string, unknown> = {
+    biomass: rewardNexus.biomass + Math.floor((batch.reward.biomass || 0) * mult),
+    alloy:   rewardNexus.alloy   + Math.floor((batch.reward.alloy   || 0) * mult),
+    ore:     rewardNexus.ore     + Math.floor((batch.reward.ore     || 0) * mult),
+    populationCurrent: rewardNexus.populationCurrent + Math.floor((batch.reward.populationCurrent || 0) * mult),
+  };
+
+  for (const [troopType, amount] of Object.entries(batch.reward.troops || {})) {
+    data[troopType] = ((rewardNexus as unknown as Record<string, number>)[troopType] || 0) + (amount as number);
+  }
+
+  claimedRewards.add(batchId);
+  const updatedClaimedRewards = Array.from(claimedRewards);
+  const updatedCompletedIds = Array.from(completedQuestIds);
+
+  await prisma.galaxyPlayer.update({
+    where: { id: player.id },
+    data: { questRewardClaims: updatedClaimedRewards },
+  });
+
+  data['points'] = calculatePoints({ ...rewardNexus, ...data } as Nexus & Record<string, unknown>);
+  const updatedRewardNexus = await prisma.nexus.update({ where: { id: rewardNexus.id }, data });
+
+  // Return both nexuses; if they're the same, the source view also needs refreshing
+  const updatedSourceNexus =
+    rewardNexus.id === sourceNexus.id
+      ? { ...updatedRewardNexus, questRewardClaims: updatedClaimedRewards, completedQuestIds: updatedCompletedIds }
+      : { ...sourceNexus, questRewardClaims: updatedClaimedRewards, completedQuestIds: updatedCompletedIds };
+
+  return {
+    rewardNexus: { ...updatedRewardNexus, questRewardClaims: updatedClaimedRewards, completedQuestIds: updatedCompletedIds },
+    sourceNexus: updatedSourceNexus,
+  };
 }
 
 // --- DB helpers ---

@@ -1155,6 +1155,38 @@
   font-size: 13px;
 }
 
+.quest-claim-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+
+.quest-claim-btn {
+  background: var(--success);
+  color: #000;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+}
+
+.quest-claim-btn:hover:not(:disabled) {
+  filter: brightness(1.15);
+}
+
+.quest-claim-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Attack Modal */
 .attack-modal-overlay {
   position: fixed;

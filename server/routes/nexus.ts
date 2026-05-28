@@ -21,6 +21,7 @@ router.delete('/groups/:groupId', auth, (req, res) => nexusController.deleteGrou
 router.put('/groups/:groupId/nexuses', auth, (req, res) => nexusController.setGroupNexuses(req as AuthRequest, res as Response));
 router.patch('/:nexusId/name', auth, (req, res) => nexusController.renameNexus(req as AuthRequest, res as Response));
 router.post('/:nexusId/specialize', auth, (req, res) => nexusController.specializeNexus(req as AuthRequest, res as Response));
+router.post('/:nexusId/quests/:batchId/claim', auth, (req, res) => nexusController.claimQuestReward(req as AuthRequest, res as Response));
 router.get('/:nexusId', auth, (req, res) => nexusController.getNexus(req as AuthRequest, res as Response));
 
 export default router;

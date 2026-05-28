@@ -703,18 +703,21 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
                 <h3>Resources {isMyAttack ? 'Plundered' : 'Lost'}</h3>
                 <div className="resources-stolen">
                   {selectedReport.result.resourcesStolen.biomass > 0 && (
-                    <div className="resource-item">
-                      <span>Biomass:</span> {selectedReport.result.resourcesStolen.biomass}
+                    <div className="resource-item resource-item--biomass">
+                      <span className="resource-item__label">Biomass</span>
+                      <span className="resource-item__value">{formatNumber(selectedReport.result.resourcesStolen.biomass)}</span>
                     </div>
                   )}
                   {selectedReport.result.resourcesStolen.alloy > 0 && (
-                    <div className="resource-item">
-                      <span>Alloy:</span> {selectedReport.result.resourcesStolen.alloy}
+                    <div className="resource-item resource-item--alloy">
+                      <span className="resource-item__label">Alloy</span>
+                      <span className="resource-item__value">{formatNumber(selectedReport.result.resourcesStolen.alloy)}</span>
                     </div>
                   )}
                   {selectedReport.result.resourcesStolen.ore > 0 && (
-                    <div className="resource-item">
-                      <span>Ore:</span> {selectedReport.result.resourcesStolen.ore}
+                    <div className="resource-item resource-item--ore">
+                      <span className="resource-item__label">Ore</span>
+                      <span className="resource-item__value">{formatNumber(selectedReport.result.resourcesStolen.ore)}</span>
                     </div>
                   )}
                 </div>
@@ -725,8 +728,9 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
               <h3>Resources Remaining on Defender Nexus</h3>
               <div className="resources-stolen resources-stolen--remaining">
                 {RESOURCE_KEYS.map((key) => (
-                  <div className="resource-item" key={key}>
-                    <span>{key[0].toUpperCase() + key.slice(1)}:</span> {formatNumber(remainingResources[key])}
+                  <div className={`resource-item resource-item--${key}`} key={key}>
+                    <span className="resource-item__label">{key[0].toUpperCase() + key.slice(1)}</span>
+                    <span className="resource-item__value">{formatNumber(remainingResources[key])}</span>
                   </div>
                 ))}
               </div>

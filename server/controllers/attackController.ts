@@ -9,7 +9,7 @@ import { normalizeTroopPayload, parsePositiveInt } from '../utils/validation.js'
 import { logError } from '../utils/logger.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
 import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
-import { getNexusTypeEffectiveMultipliers } from '../utils/economy.js';
+import { NEXUS_TYPE_BONUSES } from '../utils/economy.js';
 
 const TROOP_KEYS: TroopKey[] = [
   'lancerDrone', 'assaultTrooper', 'breakerUnit', 'reconOperative', 'skimmerBike',
@@ -100,8 +100,9 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
     }
 
     const distance = Math.sqrt(Math.pow(defenderNexus.x - attackerNexus.x, 2) + Math.pow(defenderNexus.y - attackerNexus.y, 2));
-    const attackerBonuses = getNexusTypeEffectiveMultipliers(attackerNexus as Parameters<typeof getNexusTypeEffectiveMultipliers>[0]);
-    const travelSpeedMultiplier = attackerBonuses?.travelTimeMultiplier ?? 1;
+    const baseTravel = NEXUS_TYPE_BONUSES[(attackerNexus as unknown as { nexusType?: string | null }).nexusType ?? '']?.travelTimeMultiplier ?? 1;
+    const nexusDoubledForTravel = (attackerNexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled ?? false;
+    const travelSpeedMultiplier = baseTravel === 1 ? 1 : (nexusDoubledForTravel ? Math.pow(baseTravel, 2) : baseTravel);
     let travelTimeMinutes: number;
     if (attackType === 'scout') {
       travelTimeMinutes = distance * 4 * travelSpeedMultiplier;

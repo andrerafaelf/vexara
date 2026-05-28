@@ -1,5 +1,5 @@
 import type { Response } from 'express';
-import { applyCompletedQueues, applyQuestRewards, refreshResources, serializeNexus } from '../models/Nexus.js';
+import { applyCompletedQueues, applyQuestRewards, claimQuestBatchReward, refreshResources, serializeNexus } from '../models/Nexus.js';
 import prisma from '../lib/prisma.js';
 import * as nexusService from '../services/nexusService.js';
 import type { AuthRequest } from '../types/index.js';
@@ -395,6 +395,60 @@ export async function transferResources(req: AuthRequest, res: Response): Promis
 
 const VALID_SPEC_TYPES = ['Resource Depot', 'Supply Cache', 'Military Outpost', 'Forward Base'] as const;
 const COMMAND_CORE_SPECIALIZE_LEVEL = 15;
+
+export async function claimQuestReward(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const sourceNexusId = parseInt(req.params.nexusId, 10);
+    const { batchId } = req.params;
+    const { rewardNexusId: rawRewardNexusId } = req.body as { rewardNexusId?: unknown };
+
+    if (!Number.isFinite(sourceNexusId) || !batchId) {
+      res.status(400).json({ error: 'Invalid parameters' }); return;
+    }
+
+    const rewardNexusId = rawRewardNexusId != null ? parseInt(String(rawRewardNexusId), 10) : sourceNexusId;
+    if (!Number.isFinite(rewardNexusId)) {
+      res.status(400).json({ error: 'Invalid rewardNexusId' }); return;
+    }
+
+    const sourceNexus = await nexusService.getNexusById(sourceNexusId);
+    if (!sourceNexus || sourceNexus.ownerId !== req.userId || sourceNexus.galaxyId !== req.galaxyId) {
+      res.status(403).json({ error: 'Not authorized' }); return;
+    }
+
+    // Verify reward nexus also belongs to the player (claimQuestBatchReward does the same
+    // check, but we want to give a clean 403 rather than a 500 on ownership mismatch).
+    if (rewardNexusId !== sourceNexusId) {
+      const rn = await nexusService.getNexusById(rewardNexusId);
+      if (!rn || rn.ownerId !== req.userId || rn.galaxyId !== req.galaxyId) {
+        res.status(403).json({ error: 'Target nexus not authorized' }); return;
+      }
+    }
+
+    const { rewardNexus, sourceNexus: updatedSource } = await claimQuestBatchReward(sourceNexus, batchId, rewardNexusId);
+
+    try {
+      notifyNexusResources(req.userId!, {
+        nexusId: rewardNexus.id,
+        base: { biomass: rewardNexus.biomass, alloy: rewardNexus.alloy, ore: rewardNexus.ore },
+        production: getResourceProduction(rewardNexus),
+        storageMax: getMaxStorage(rewardNexus),
+        lastResourceUpdate: rewardNexus.lastResourceUpdate,
+      });
+    } catch (e) {
+      logError('nexus_resources_emit_failed', { message: (e as Error).message, file: 'nexusController.ts', op: 'claimQuestReward' });
+    }
+
+    res.json({ rewardNexus: serializeNexus(rewardNexus), sourceNexus: serializeNexus(updatedSource) });
+  } catch (error) {
+    const msg = (error as Error).message;
+    if (['Reward already claimed', 'Quest batch not completed', 'Quest batch not unlocked', 'Unknown quest batch'].includes(msg)) {
+      res.status(400).json({ error: msg }); return;
+    }
+    logError('unhandled_controller_error', { message: msg, file: 'nexusController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
 
 export async function specializeNexus(req: AuthRequest, res: Response): Promise<void> {
   try {

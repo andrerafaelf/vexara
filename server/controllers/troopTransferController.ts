@@ -3,7 +3,7 @@ import { serializeNexus } from '../models/Nexus.js';
 import * as transferService from '../services/troopTransferService.js';
 import type { AuthRequest } from '../types/index.js';
 import { logError } from '../utils/logger.js';
-import { getNexusTypeEffectiveMultipliers } from '../utils/economy.js';
+import { NEXUS_TYPE_BONUSES } from '../utils/economy.js';
 
 const TROOP_FIELDS = [
   'lancerDrone', 'assaultTrooper', 'breakerUnit', 'reconOperative',
@@ -14,8 +14,8 @@ const TRAVEL_MINUTES_PER_UNIT = 5;
 
 function calcArrivesAt(fromNexus: { x: number; y: number; nexusType?: string | null; nexusTypeDoubled?: boolean }, toNexus: { x: number; y: number }) {
   const distance = Math.sqrt(Math.pow(toNexus.x - fromNexus.x, 2) + Math.pow(toNexus.y - fromNexus.y, 2));
-  const bonuses = getNexusTypeEffectiveMultipliers(fromNexus as Parameters<typeof getNexusTypeEffectiveMultipliers>[0]);
-  const travelMult = bonuses?.travelTimeMultiplier ?? 1;
+  const base = NEXUS_TYPE_BONUSES[fromNexus.nexusType ?? '']?.travelTimeMultiplier ?? 1;
+  const travelMult = base === 1 ? 1 : (fromNexus.nexusTypeDoubled ? Math.pow(base, 2) : base);
   return new Date(Date.now() + distance * TRAVEL_MINUTES_PER_UNIT * travelMult * 60 * 1000);
 }
 

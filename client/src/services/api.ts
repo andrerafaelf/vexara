@@ -161,6 +161,12 @@ export const transferResources = (fromNexusId: string, toNexusId: string, biomas
     body: JSON.stringify({ fromNexusId, toNexusId, biomass, alloy, ore }),
   });
 
+export const claimQuestReward = (sourceNexusId: string, batchId: string, rewardNexusId: string) =>
+  apiRequest(`/nexus/${sourceNexusId}/quests/${batchId}/claim`, {
+    method: 'POST',
+    body: JSON.stringify({ rewardNexusId }),
+  });
+
 // Buildings
 export const upgradeBuilding = (nexusId: string, building: string) =>
   apiRequest('/building/upgrade', {
