@@ -2,8 +2,9 @@
 
 import GameLayout from '@/components/GameLayout';
 import FactionsView from '@/components/FactionsView';
+import PageSkeleton from '@/components/PageSkeleton';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 
 export default function FactionsPage() {
   const router = useRouter();
@@ -17,7 +18,9 @@ export default function FactionsPage() {
 
   return (
     <GameLayout activePage="factions">
-      <FactionsView />
+      <Suspense fallback={<PageSkeleton variant="rows" count={5} />}>
+        <FactionsView />
+      </Suspense>
     </GameLayout>
   );
 }

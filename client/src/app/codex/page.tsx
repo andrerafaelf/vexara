@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import CodexPage from '@/components/Codex/CodexPage';
 
 const TITLE = 'Vexara Codex - Field Manual: Buildings, Units, Stats & Milestones';
@@ -46,5 +47,9 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <CodexPage />;
+  return (
+    <Suspense fallback={null}>
+      <CodexPage />
+    </Suspense>
+  );
 }

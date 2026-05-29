@@ -22,8 +22,10 @@ import ReferralsTab from './ReferralsTab';
 import Username from './Username';
 import { usePageReady } from './NavigationProgress';
 import { useNotificationBadges } from '@/hooks/useNotificationBadges';
+import { useTabParam } from '@/hooks/useTabParam';
 
 type TabId = 'friends' | 'requests' | 'chat' | 'tokens' | 'referrals';
+const ALLIES_TABS: readonly TabId[] = ['friends', 'requests', 'chat', 'tokens', 'referrals'] as const;
 
 interface Friend {
   id: string;
@@ -74,7 +76,7 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
   const { user } = useAuth();
   const myId = user?.id != null ? String(user.id) : '';
 
-  const [tab, setTab] = useState<TabId>(initialTab);
+  const [tab, setTab] = useTabParam<TabId>(ALLIES_TABS, initialTab);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [incoming, setIncoming] = useState<FriendRequestItem[]>([]);
   const [outgoing, setOutgoing] = useState<FriendRequestItem[]>([]);
@@ -189,6 +191,7 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
       setTab('chat');
       setActiveFriendId(initialFriendId);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialFriendId]);
 
   const handleSendRequest = async (e: React.FormEvent) => {

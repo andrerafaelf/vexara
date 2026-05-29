@@ -2,8 +2,9 @@
 
 import GameLayout from '@/components/GameLayout';
 import FriendsView from '@/components/FriendsView';
+import PageSkeleton from '@/components/PageSkeleton';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 
 export default function FriendsPage() {
   const router = useRouter();
@@ -18,7 +19,9 @@ export default function FriendsPage() {
 
   return (
     <GameLayout activePage="allies">
-      <FriendsView />
+      <Suspense fallback={<PageSkeleton variant="rows" count={5} />}>
+        <FriendsView />
+      </Suspense>
     </GameLayout>
   );
 }

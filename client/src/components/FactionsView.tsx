@@ -43,6 +43,7 @@ import FactionLeaderboard from './FactionLeaderboard';
 import WarRoom from './WarRoom';
 import { usePageReady } from './NavigationProgress';
 import PageSkeleton from './PageSkeleton';
+import { useTabParam } from '../hooks/useTabParam';
 import '../styles/Factions.css';
 
 function formatRelativeTime(dateStr: string): string {
@@ -117,6 +118,7 @@ interface MyJoinRequest {
 }
 
 type Tab = 'overview' | 'chat' | 'warroom' | 'members' | 'wars' | 'diplomacy' | 'activity' | 'galaxy';
+const FACTION_TABS: readonly Tab[] = ['overview', 'chat', 'warroom', 'members', 'wars', 'diplomacy', 'activity', 'galaxy'] as const;
 
 interface FactionTreaty {
   id: number;
@@ -139,7 +141,7 @@ export default function FactionsView() {
   const [invites, setInvites] = useState<FactionInvite[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState<Tab>('overview');
+  const [activeTab, setActiveTab] = useTabParam<Tab>(FACTION_TABS, 'overview');
   usePageReady(!loading, 'factions');
 
   const [showCreateForm, setShowCreateForm] = useState(false);

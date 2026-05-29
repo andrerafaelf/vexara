@@ -1,6 +1,7 @@
 'use client';
 
 import Avatar from '@/components/Avatar';
+import BackBar from '@/components/BackBar';
 import GameLayout from '@/components/GameLayout';
 import { usePageReady } from '@/components/NavigationProgress';
 import PageSkeleton from '@/components/PageSkeleton';
@@ -16,9 +17,34 @@ import {
 import '@/styles/ProfileStats.css';
 import type { SupporterTier } from '@/types/game';
 import { Clock, Crown, MapPin, UserCheck, UserMinus, UserPlus } from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+
+// Translate a /pathname[?tab=...] into a human-readable origin label for the
+// back button. Keeps the BackBar specific ("Back to Members") instead of
+// generic ("Back"), so the user always knows where they're going.
+function labelForFrom(from: string | null): string {
+  if (!from) return 'Back';
+  let path = from;
+  let tab: string | null = null;
+  const q = from.indexOf('?');
+  if (q !== -1) {
+    path = from.slice(0, q);
+    const params = new URLSearchParams(from.slice(q + 1));
+    tab = params.get('tab');
+  }
+  const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+  if (path === '/factions') return tab ? `Factions . ${titleCase(tab)}` : 'Factions';
+  if (path === '/allies') return tab ? `Allies . ${titleCase(tab)}` : 'Allies';
+  if (path === '/players') return 'Players';
+  if (path === '/combat-logs') return 'Combat Logs';
+  if (path === '/market') return 'Market';
+  if (path === '/profile') return tab ? `Profile . ${titleCase(tab)}` : 'Profile';
+  if (path.startsWith('/nexus/')) return tab ? `Nexus . ${titleCase(tab)}` : 'Nexus';
+  if (path === '/starfield') return 'Starfield';
+  return 'Back';
+}
 
 type FriendshipStatus = 'self' | 'none' | 'pending_outgoing' | 'pending_incoming' | 'friends';
 
@@ -105,10 +131,17 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-export default function PublicProfilePage() {
+function PublicProfilePageInner() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const username = decodeURIComponent(String(params.username || ''));
+
+  // Captured once at mount: prevents the back target from flickering if some
+  // child component happens to mutate query params while the page is open.
+  const [fromAtMount] = useState<string | null>(() => searchParams?.get('from') ?? null);
+  const backFallback = useMemo(() => fromAtMount ?? '/players', [fromAtMount]);
+  const backLabel = useMemo(() => labelForFrom(fromAtMount), [fromAtMount]);
 
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -167,6 +200,7 @@ export default function PublicProfilePage() {
   if (loading) {
     return (
       <GameLayout activePage="profile">
+        <BackBar fallback={backFallback} fallbackLabel={backLabel} title={username} />
         <PageSkeleton variant="rows" count={5} />
       </GameLayout>
     );
@@ -175,6 +209,7 @@ export default function PublicProfilePage() {
   if (error || !profile) {
     return (
       <GameLayout activePage="profile">
+        <BackBar fallback={backFallback} fallbackLabel={backLabel} title={username} />
         <div className="profile-stats">
           <div className="ps-error">{error || 'User not found'}</div>
         </div>
@@ -199,6 +234,7 @@ export default function PublicProfilePage() {
 
   return (
     <GameLayout activePage="profile">
+      <BackBar fallback={backFallback} fallbackLabel={backLabel} title={profile.username} />
       <div className="profile-stats">
         <div className="ps-header">
           <Avatar
@@ -396,5 +432,17 @@ export default function PublicProfilePage() {
         </Section>
       </div>
     </GameLayout>
+  );
+}
+
+export default function PublicProfilePage() {
+  return (
+    <Suspense fallback={
+      <GameLayout activePage="profile">
+        <PageSkeleton variant="rows" count={5} />
+      </GameLayout>
+    }>
+      <PublicProfilePageInner />
+    </Suspense>
   );
 }

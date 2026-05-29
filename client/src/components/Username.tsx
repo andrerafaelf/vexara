@@ -1,4 +1,8 @@
+'use client';
+
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useCallback, type MouseEvent } from 'react';
 import type { SupporterTier } from '@/types/game';
 
 interface UsernameProps {
@@ -32,6 +36,7 @@ export default function Username({
   showFounderBadge = true,
   compactBadge,
 }: UsernameProps) {
+  const router = useRouter();
   const tierClass = supporterTier ? TIER_CLASS[supporterTier] : null;
   const classes = [
     className,
@@ -61,15 +66,34 @@ export default function Username({
     </span>
   ) : null;
 
+  // Click handler appends ?from=<current location> at click-time and pushes
+  // via the router, bypassing Next/Link's intercept which would otherwise
+  // navigate to the static `href`. Reading window.location.* in the handler
+  // (not via useSearchParams during render) keeps long Username lists
+  // . chat, members, leaderboards . from rerendering on every URL change.
+  const onProfileClick = useCallback(
+    (e: MouseEvent<HTMLAnchorElement>) => {
+      e.stopPropagation();
+      // Let modifier-clicks (new tab/window) follow the static href as-is.
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
+      e.preventDefault();
+      if (typeof window === 'undefined') return;
+      const from = window.location.pathname + window.location.search;
+      router.push(`/u/${encodeURIComponent(name)}?from=${encodeURIComponent(from)}`);
+    },
+    [name, router],
+  );
+
   if (linkToProfile && name) {
+    const baseHref = `/u/${encodeURIComponent(name)}`;
     if (founderBadge) {
       return (
         <span style={{ display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center', minWidth: 0, gap: '4px' }}>
           <Link
-            href={`/u/${encodeURIComponent(name)}`}
+            href={baseHref}
             className={classes || undefined}
             title={resolvedTitle}
-            onClick={(e) => e.stopPropagation()}
+            onClick={onProfileClick}
           >
             {name}
           </Link>
@@ -79,10 +103,10 @@ export default function Username({
     }
     return (
       <Link
-        href={`/u/${encodeURIComponent(name)}`}
+        href={baseHref}
         className={classes || undefined}
         title={resolvedTitle}
-        onClick={(e) => e.stopPropagation()}
+        onClick={onProfileClick}
       >
         {name}
       </Link>

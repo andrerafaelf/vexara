@@ -6,12 +6,14 @@ import Link from 'next/link';
 import { TROOPS_DOC, BUILDINGS_DOC, BUILDING_SCALING_DOC, CLASS_COUNTERS, CLASS_COUNTERED_BY, ESPIONAGE_DOC, type TroopClass } from '@/data/gameDocs';
 import { TROOP_ICONS, BUILDING_ICONS } from '@/data/gameIcons';
 import SiteFooter from '@/components/SiteFooter';
+import { useTabParam } from '@/hooks/useTabParam';
 import '@/styles/Codex.css';
 
 type Tab = 'buildings' | 'troops' | 'espionage' | 'scaling';
+const CODEX_TABS: readonly Tab[] = ['buildings', 'troops', 'espionage', 'scaling'] as const;
 
 export default function CodexPage() {
-  const [tab, setTab] = useState<Tab>('buildings');
+  const [tab, setTab] = useTabParam<Tab>(CODEX_TABS, 'buildings');
   const [activeAnchor, setActiveAnchor] = useState<string>('');
 
   // Track which entry is in view, to highlight in the rail.
@@ -60,6 +62,7 @@ export default function CodexPage() {
       const el = document.getElementById(hash);
       if (el) el.scrollIntoView({ behavior: 'auto', block: 'start' });
     }, 60);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
