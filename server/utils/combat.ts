@@ -432,12 +432,12 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
     const seed = attack.id * 2654435761;
 
     const attackerLosses: Partial<Record<TroopKey, number>> = attackerWins
-      ? computeLossesForWinner(attackTroops, powerRatio, seed)
+      ? computeLossesForWinner(attackTroops, powerRatio, seed, mergedDefenderForce)
       : computeLossesForLoser(attackTroops);
 
     const rawDefenderLosses = attackerWins
       ? computeLossesForLoser(mergedDefenderForce)
-      : computeLossesForWinner(mergedDefenderForce, powerRatio, seed ^ 0xabcd1234);
+      : computeLossesForWinner(mergedDefenderForce, powerRatio, seed ^ 0xabcd1234, attackTroops);
 
     const defenderLosses: Partial<Record<TroopKey, number>> = {};
     const defenderTroopUpdates: Record<string, unknown> = {};

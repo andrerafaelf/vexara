@@ -23,6 +23,7 @@ The **Armory** building amplifies counter bonuses by +1.5% per level (max +30% a
 - Defense Power = sum of (unit defense × unit count), boosted by Shield Grid
 - Shield Grid provides +2% total defense per level
 - Casualties scale with power ratio; variance is smaller for large stacks (±4%) than small (<20 units, ±15%)
+- **Survival rate is shaped by two factors on a winning engagement:** unit defense stat (higher = lower loss rate, with a meaningful spread between glass cannons like Breaker Unit and tanks like Siege Mech) and class matchup against the opposing force (advantage = ~0.85x loss rate, disadvantage = ~1.15x). Losers always lose 100% of their non-Overseer units.
 - All losses are seeded deterministically per battle, replays are reproducible
 - Overseers reduce enemy control by 34 on a successful attack if they survive and the defending force is cleared
 

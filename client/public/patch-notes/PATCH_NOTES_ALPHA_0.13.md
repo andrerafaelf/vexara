@@ -79,6 +79,45 @@ do I switch top-level sections." Same reasoning for not adding a
 custom edge-swipe gesture: iOS PWAs already do edge-swipe back for
 same-origin history for free, and intercepting it would double-fire.
 
+### Combat: defense stat and class matchup actually shape casualties now
+
+A player asked why Assault Troopers were always topping their
+survivor counts despite the in-game role text calling them
+frontline tanks. They aren't cannon fodder . the codex was right
+about that . but tracing the math revealed the survival rate
+spread between a Breaker Unit (def 10) and a Siege Mech (def 210)
+was only about 5 percentage points on a coin-flip victory. The
+defense stat existed on paper but barely budged the loss numbers
+in practice. And class counters affected who *won* the battle but
+not who *survived* it, which made the rock-paper-scissors triangle
+half as useful as it looked.
+
+Two surgical changes to the winner's loss math (loser still loses
+everything . combat already commits hard there):
+
+- **Defense stat divisor steepened from /1200 to /600.** Tank
+  units now feel like tank units. The spread between Breaker and
+  Siege Mech is now about 10 percentage points on a coin-flip win
+  (~70% vs ~80% survival) instead of ~5pp. Assault Trooper sits
+  around 72% survival in the same fight, Bulwark Guard around 77%.
+  Glass cannons still survive when the win is dominant, they just
+  feel the cost when the fight is close.
+- **Class matchup now modulates survival, not just damage.** The
+  same counter triangle that decides combat outcome (Mobile beats
+  Armor beats Fire beats Mobile) now also nudges per-unit
+  casualties. Armor sent into a Fire-heavy enemy takes fewer
+  losses; Armor sent into a Mobile-heavy enemy takes more. The
+  effect is intentionally mild (.85x to 1.15x on loss rate) so
+  matchup is a tilt, not a roulette wheel . a 100-troop wave that
+  would lose 30 might lose 25 with a good matchup or 35 with a bad
+  one. Reuses the same composition-weighting style as the existing
+  attack-power math so both halves of the engagement react to
+  matchup consistently.
+
+The codex troop pages had no language describing how survival rate
+worked. Updated the Class counters panel to spell it out: matchup
+moves both damage dealt and damage taken, not just the former.
+
 ### Standardized back affordance across the app
 
 The new BackBar's visual language now extends to in-page drill-down

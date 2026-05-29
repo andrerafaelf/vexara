@@ -144,10 +144,25 @@ export function computeLossesForLoser(
 }
 
 // Compute per-unit loss count for a force that WON the engagement.
+//
+// Two factors modulate the per-unit loss rate on top of baseLossRate:
+//   1. defFactor . higher defense stat = lower loss rate. /600 divisor makes
+//      the spread between a Breaker Unit (def 10) and a Siege Mech (def 210)
+//      meaningful (~10pp survival difference). The earlier /1200 divisor
+//      compressed every unit into a ~5pp band, so "tank" units didn't feel
+//      meaningfully tankier than glass cannons in reports.
+//   2. matchupFactor . per-unit class advantage against the opposing force's
+//      composition. Armor sent into a Fire-heavy enemy now takes fewer
+//      casualties (the counter triangle helps you survive, not just kill).
+//      Reuses the same composition-weighting style as computeClassWeightedAttack
+//      so attack power and survival both react to class matchup consistently.
+//      The factor is much milder than the attack-side multiplier (.85x to
+//      1.15x) so it nudges feel without dominating the loss math.
 export function computeLossesForWinner(
   force: Partial<Record<TroopKey, number>> | Record<string, unknown>,
   powerRatio: number, // loser_power / winner_power, always <= 1
   seed: number,
+  opposingForce: Partial<Record<TroopKey, number>> | Record<string, unknown> = {},
 ): Partial<Record<TroopKey, number>> {
   const losses: Partial<Record<TroopKey, number>> = {};
   let prng = seed ^ 0xdeadbeef;
@@ -165,6 +180,15 @@ export function computeLossesForWinner(
   // No resistance at all — skip variance so positive noise can't manufacture losses.
   if (powerRatio === 0) return losses;
 
+  // Build opposing-force class composition once so the per-unit loop just looks
+  // up matchupFactor instead of re-summing for every troop type.
+  const opposingClassCounts: Record<TroopClass, number> = { mobile: 0, armor: 0, fire: 0, special: 0 };
+  for (const key of TROOP_KEYS) {
+    const count = Number((opposingForce as Record<string, unknown>)[key] || 0);
+    if (count > 0) opposingClassCounts[TROOP_CLASS[key]] += count;
+  }
+  const totalOpposing = Object.values(opposingClassCounts).reduce((a, b) => a + b, 0);
+
   for (const key of TROOP_KEYS) {
     if (key === 'overseer') continue;
     const count = Number((force as Record<string, unknown>)[key] || 0);
@@ -173,11 +197,27 @@ export function computeLossesForWinner(
     const varianceMagnitude = count < 20 ? 0.10 : count < 200 ? 0.05 : 0.03;
     const variance = (lcg() - 0.5) * 2 * varianceMagnitude;
 
-    // Higher defense stat = more survivable; scale loss down proportionally.
-    // Using /1200 (half-weight) so tanky units still benefit but not excessively -
-    // a Siege Mech (def 210) reduces its loss rate by ~17% rather than ~35%.
-    const defFactor = 1 - (TROOP_STATS[key].defense / 1200);
-    const rawRate = Math.min(0.50, Math.max(0, baseLossRate * defFactor + variance));
+    const defFactor = 1 - (TROOP_STATS[key].defense / 600);
+
+    // Class matchup: weighted average of CLASS_COUNTERS against the opposing
+    // composition, then mapped to a survival modifier centered at 1.0.
+    // counterMult > 1.0 = unit has advantage = survives better = matchupFactor < 1.0
+    // counterMult < 1.0 = unit has disadvantage = takes more losses = matchupFactor > 1.0
+    let matchupFactor = 1.0;
+    if (totalOpposing > 0) {
+      const myClass = TROOP_CLASS[key];
+      let weightedCounter = 0;
+      for (const oppClass of ['mobile', 'armor', 'fire', 'special'] as TroopClass[]) {
+        const ratio = opposingClassCounts[oppClass] / totalOpposing;
+        weightedCounter += ratio * CLASS_COUNTERS[myClass][oppClass];
+      }
+      // weightedCounter sits in roughly [0.75, 1.35]. Invert and dampen so the
+      // survival modifier lands in a controlled [0.85, 1.15] window . class
+      // matchup nudges loss rate without dominating it.
+      matchupFactor = Math.max(0.85, Math.min(1.15, 2.0 - weightedCounter));
+    }
+
+    const rawRate = Math.min(0.50, Math.max(0, baseLossRate * defFactor * matchupFactor + variance));
     losses[key] = Math.max(0, Math.ceil(count * rawRate));
   }
   return losses;
