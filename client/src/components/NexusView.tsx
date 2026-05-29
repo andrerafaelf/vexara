@@ -406,6 +406,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     if (tab === 'espionage') setEspionageEverVisited(true);
     onTabChange?.(tab);
   };
+  const [troopsSubTab, setTroopsSubTab] = useState<'train' | 'stationed'>('train');
   const [isRenamingNexus, setIsRenamingNexus] = useState(false);
   const [renameValue, setRenameValue] = useState(nexus.name);
   const [isSavingNexusName, setIsSavingNexusName] = useState(false);
@@ -1700,7 +1701,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
               <NewbieProtectionBanner endsAt={nexus.newbieProtectionEndsAt} />
             )}
             <NexusMap nexus={nexus} onClickBuilding={() => setActiveTab('buildings')} />
-            <DailyStreaks />
+            <DailyStreaks active={activeTab === 'overview'} />
 
             <div className="nexus-stats-row" aria-label="Nexus key stats">
               <div className="nexus-stat">
@@ -2231,7 +2232,111 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
               <p>Build a Recruitment Core to train troops!</p>
             ) : (
               <>
-                {nexus.trainingQueue.length > 0 && (
+                <div className="troops-subtab-bar" role="tablist" aria-label="Troops view">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={troopsSubTab === 'train'}
+                    className={`troops-subtab-btn${troopsSubTab === 'train' ? ' active' : ''}`}
+                    onClick={() => setTroopsSubTab('train')}
+                  >
+                    <Hammer size={13} aria-hidden="true" />
+                    <span>Train</span>
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={troopsSubTab === 'stationed'}
+                    className={`troops-subtab-btn${troopsSubTab === 'stationed' ? ' active' : ''}`}
+                    onClick={() => setTroopsSubTab('stationed')}
+                  >
+                    <ShieldCheck size={13} aria-hidden="true" />
+                    <span>Stationed</span>
+                    {(() => {
+                      const total = Object.values(nexus.troops || {}).reduce(
+                        (sum: number, v: any) => sum + (Number(v) || 0),
+                        0,
+                      );
+                      return total > 0 ? <span className="troops-subtab-count">{total.toLocaleString()}</span> : null;
+                    })()}
+                  </button>
+                </div>
+
+                {troopsSubTab === 'stationed' && (
+                  <div className="troops-stationed-panel">
+                    {(() => {
+                      const entries = (['offense', 'defense'] as const).map((category) => {
+                        const rows = Object.keys(TROOP_NAMES)
+                          .filter((type) => TROOP_CATEGORIES[type] === category)
+                          .map((type) => ({ type, count: Number((nexus.troops as any)[type]) || 0 }))
+                          .filter((row) => row.count > 0);
+                        return { category, rows };
+                      });
+                      const totalCount = entries.reduce((sum, e) => sum + e.rows.reduce((s, r) => s + r.count, 0), 0);
+                      if (totalCount === 0) {
+                        return (
+                          <div className="troops-stationed-empty">
+                            <p>No troops stationed at this nexus yet.</p>
+                            <button
+                              type="button"
+                              className="troops-stationed-empty-cta"
+                              onClick={() => setTroopsSubTab('train')}
+                            >
+                              Train your first unit
+                            </button>
+                          </div>
+                        );
+                      }
+                      return (
+                        <>
+                          <div className="troops-stationed-summary">
+                            <span className="troops-stationed-summary-label">Total at {nexus.name}</span>
+                            <span className="troops-stationed-summary-value">{totalCount.toLocaleString()}</span>
+                          </div>
+                          {entries.map(({ category, rows }) =>
+                            rows.length === 0 ? null : (
+                              <div key={category} className="troop-category-section">
+                                <h4 className={`troop-category-heading troop-category-${category}`}>
+                                  {category === 'offense' ? 'Offense' : 'Defense'}
+                                </h4>
+                                <div className="troops-stationed-grid">
+                                  {rows.map(({ type, count }) => (
+                                    <div key={type} className="stationed-card">
+                                      {TROOP_IMAGES[type] && (
+                                        <div className="stationed-card-image-wrap">
+                                          <img
+                                            src={TROOP_IMAGES[type].src || TROOP_IMAGES[type]}
+                                            alt={TROOP_NAMES[type]}
+                                            className="stationed-card-image"
+                                          />
+                                        </div>
+                                      )}
+                                      <div className="stationed-card-body">
+                                        <div className="stationed-card-name">{TROOP_NAMES[type]}</div>
+                                        <div className="stationed-card-count">{count.toLocaleString()}</div>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        className="troop-info stationed-card-info"
+                                        title={TROOP_DESCRIPTIONS[type]}
+                                        aria-label={`${TROOP_NAMES[type]} info`}
+                                        onClick={() => handleInfoTap(TROOP_NAMES[type], TROOP_DESCRIPTIONS[type])}
+                                      >
+                                        <Info size={13} />
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ),
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
+
+                {troopsSubTab === 'train' && nexus.trainingQueue.length > 0 && (
                   <div className="queue-section">
                     <h4>Training queue</h4>
                     {nexus.trainingQueue.map((item, idx) => (
@@ -2263,6 +2368,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                   </div>
                 )}
 
+                {troopsSubTab === 'train' && (
                 <div className="troops-train">
                   <h4>Train Troops</h4>
                   {(['offense', 'defense'] as const).map((category) => {
@@ -2446,6 +2552,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                     );
                   })}
                 </div>
+                )}
 
               </>
             )}

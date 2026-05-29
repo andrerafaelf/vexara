@@ -25,7 +25,7 @@ interface StreakData {
   quests: DailyQuest[];
 }
 
-export default function DailyStreaks() {
+export default function DailyStreaks({ active = true }: { active?: boolean }) {
   const [data, setData] = useState<StreakData | null>(null);
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState(false);
@@ -43,7 +43,10 @@ export default function DailyStreaks() {
     }
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  // Refetch when the panel becomes visible — quest progress (e.g. support
+  // missions sent from the Map tab) updates server-side while this component
+  // stays mounted but hidden, so reload on re-entry to avoid stale counts.
+  useEffect(() => { if (active) void load(); }, [active, load]);
 
   useEffect(() => {
     if (data?.claimed) setCollapsed(true);

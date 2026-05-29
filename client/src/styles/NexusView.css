@@ -359,22 +359,27 @@
   display: none;
 }
 
-/* Mobile: pin the tab bar below the sticky game header (56px tall) so the
+/* Mobile: pin the tab bar below the sticky game header so the
    Overview / Buildings / Troops switcher stays one tap away while the user
-   scrolls through long lists. Background matches the page so content
-   scrolling underneath stays cleanly hidden. */
+   scrolls through long lists.
+   - top offset accounts for the 56px header AND the safe-area inset on
+     notched devices (.game-header height is calc(56px + safe-area-inset-top))
+   - z-index must beat the page content but stay below .game-header (1050)
+     so this bar pins right under the header instead of overlapping it. */
 @media (max-width: 768px) {
   .nexus-tab-bar {
     position: sticky;
-    top: 56px;
-    z-index: var(--z-sticky);
-    background: var(--bg-app);
+    top: calc(56px + env(safe-area-inset-top, 0px));
+    z-index: 1040;
+    background: rgba(11, 15, 35, 0.92);
     margin-left: calc(var(--space-3) * -1);
     margin-right: calc(var(--space-3) * -1);
+    margin-bottom: var(--space-3);
     padding-left: var(--space-3);
     padding-right: var(--space-3);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
   }
 }
 
@@ -1737,6 +1742,255 @@
   border-radius: var(--radius-sm);
   min-width: 28px;
   text-align: center;
+}
+
+/* ── Troops tab inner sub-tabs (Train / Stationed) ──
+   Pill-style switcher that sits above either the Train grid or the
+   Stationed roster. Visually distinct from the main nexus tab bar above
+   so the two levels of navigation never feel like the same control. */
+.troops-subtab-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 14px;
+  padding: 4px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+
+.troops-subtab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 7px 14px;
+  border-radius: calc(var(--radius-md) - 3px);
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-out),
+              background var(--duration-fast) var(--ease-out);
+}
+
+.troops-subtab-btn:hover {
+  color: var(--text-strong);
+}
+
+.troops-subtab-btn.active {
+  background: rgba(255, 158, 61, 0.14);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px rgba(255, 158, 61, 0.35);
+}
+
+.troops-subtab-btn svg {
+  flex-shrink: 0;
+}
+
+.troops-subtab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 18px;
+  padding: 0 6px;
+  margin-left: 2px;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text-default);
+  background: rgba(11, 15, 35, 0.6);
+  border: 1px solid var(--border-default);
+  border-radius: 9px;
+}
+
+.troops-subtab-btn.active .troops-subtab-count {
+  color: var(--accent);
+  border-color: rgba(255, 158, 61, 0.4);
+}
+
+/* Stationed panel ─ matches .troops-train framing for visual continuity */
+.troops-stationed-panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  padding: 20px;
+  border-radius: var(--radius-sm);
+}
+
+.troops-stationed-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 10px 14px;
+  margin-bottom: 18px;
+  background: rgba(255, 158, 61, 0.06);
+  border: 1px solid rgba(255, 158, 61, 0.25);
+  border-radius: var(--radius-sm);
+}
+
+.troops-stationed-summary-label {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.troops-stationed-summary-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--accent);
+  font-family: var(--font-mono);
+}
+
+.troops-stationed-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.stationed-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: var(--bg-app);
+  border: 1px solid var(--border-default);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--duration-fast) var(--ease-out),
+              transform var(--duration-fast) var(--ease-out);
+}
+
+.stationed-card:hover {
+  border-color: var(--border-strong);
+  border-left-color: var(--accent);
+}
+
+.stationed-card-image-wrap {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.stationed-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.stationed-card-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.stationed-card-name {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-default);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stationed-card-count {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--accent);
+  line-height: 1.1;
+  margin-top: 2px;
+}
+
+.stationed-card-info {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color var(--duration-fast) var(--ease-out),
+              background var(--duration-fast) var(--ease-out);
+}
+
+.stationed-card-info:hover {
+  color: var(--accent);
+  background: rgba(255, 158, 61, 0.1);
+}
+
+.troops-stationed-empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--text-muted);
+}
+
+.troops-stationed-empty p {
+  margin: 0 0 14px;
+  font-size: var(--text-sm);
+}
+
+.troops-stationed-empty-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  background: rgba(255, 158, 61, 0.14);
+  color: var(--accent);
+  border: 1px solid rgba(255, 158, 61, 0.35);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.troops-stationed-empty-cta:hover {
+  background: rgba(255, 158, 61, 0.22);
+}
+
+@media (max-width: 600px) {
+  .troops-stationed-panel {
+    padding: 14px;
+  }
+
+  .troops-stationed-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+  }
+
+  .stationed-card {
+    padding: 8px;
+    gap: 10px;
+  }
+
+  .stationed-card-image-wrap {
+    width: 46px;
+    height: 46px;
+  }
+
+  .stationed-card-count {
+    font-size: 16px;
+  }
+
+  .troops-stationed-summary-value {
+    font-size: 18px;
+  }
 }
 
 .troops-train {
