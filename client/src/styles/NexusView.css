@@ -359,6 +359,25 @@
   display: none;
 }
 
+/* Mobile: pin the tab bar below the sticky game header (56px tall) so the
+   Overview / Buildings / Troops switcher stays one tap away while the user
+   scrolls through long lists. Background matches the page so content
+   scrolling underneath stays cleanly hidden. */
+@media (max-width: 768px) {
+  .nexus-tab-bar {
+    position: sticky;
+    top: 56px;
+    z-index: var(--z-sticky);
+    background: var(--bg-app);
+    margin-left: calc(var(--space-3) * -1);
+    margin-right: calc(var(--space-3) * -1);
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+}
+
 .nexus-tab-btn {
   position: relative;
   background: transparent;

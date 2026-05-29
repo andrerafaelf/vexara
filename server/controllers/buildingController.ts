@@ -4,12 +4,17 @@ import * as buildingService from '../services/buildingService.js';
 import { atomicUpdateNexusResources, ResourceConflictError } from '../services/nexusService.js';
 import type { AuthRequest } from '../types/index.js';
 import { getMaxStorage, getResourceProduction } from '../utils/economy.js';
-import { BUILDING_COSTS, getBuildingCost, getEffectiveBuildTimeSeconds } from '../utils/gameConstants.js';
+import { BUILDING_COSTS, getBuildingCost, getCommandBuildQueueBonus, getEffectiveBuildTimeSeconds } from '../utils/gameConstants.js';
 import { notifyNexusResources } from '../services/warRoomSocket.js';
 import { getPopulationMax } from '../utils/population.js';
 import { logError } from '../utils/logger.js';
 
-const MAX_BUILD_QUEUE = 5;
+const BASE_MAX_BUILD_QUEUE = 5;
+
+// CC Veteran tier (Lv16-17) adds +1 build queue slot each, capped at +2 (7 total).
+function getMaxBuildQueue(commandCore: number): number {
+  return BASE_MAX_BUILD_QUEUE + getCommandBuildQueueBonus(commandCore);
+}
 
 const BUILDING_RULES: Record<string, {
   maxLevel: number;
@@ -147,8 +152,9 @@ export async function upgradeBuilding(req: AuthRequest, res: Response): Promise<
       return;
     }
     const buildQueue = normalizeBuildQueue(nexus.buildQueue);
-    if (buildQueue.length >= MAX_BUILD_QUEUE) {
-      res.status(400).json({ error: `Build queue is full (${MAX_BUILD_QUEUE}/${MAX_BUILD_QUEUE})` });
+    const maxQueue = getMaxBuildQueue(nexus.commandCore);
+    if (buildQueue.length >= maxQueue) {
+      res.status(400).json({ error: `Build queue is full (${maxQueue}/${maxQueue})` });
       return;
     }
     const plannedLevels = getPlannedBuildingLevels(nexus as unknown as Record<string, unknown>);

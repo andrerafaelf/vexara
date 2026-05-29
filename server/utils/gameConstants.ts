@@ -58,8 +58,29 @@ export const COMMAND_BUILD_TIME_FACTOR_PER_LEVEL = 0.95;
 // Recruitment Core reduces train time 9% per level (compounding). Overseer is exempt.
 export const RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL = 0.91;
 
+// Veteran tier (CC 16-20) grants extra queue slots instead of any combat or
+// economy bonus - pure quality-of-life so late-game CC actually pays rent.
+// CC 16 / 17 each add +1 build queue slot (5 -> 7). CC 18 / 19 each add +1
+// training queue slot (5 -> 7). CC 20 is the cap and grants nothing extra
+// beyond the standard 5%-per-level build-time discount it already gives.
+export const COMMAND_VETERAN_THRESHOLD = 15;
+
 export function getCommandTimeFactor(commandLevel: number): number {
   return Math.pow(COMMAND_BUILD_TIME_FACTOR_PER_LEVEL, Math.max(0, commandLevel || 0));
+}
+
+// Extra build queue slots from the Veteran tier: +1 at CC 16, +1 at CC 17.
+// Capped at +2 so CC 18-20 don't keep stacking.
+export function getCommandBuildQueueBonus(commandLevel: number): number {
+  const veteran = Math.max(0, (commandLevel || 0) - COMMAND_VETERAN_THRESHOLD);
+  return Math.min(2, veteran);
+}
+
+// Extra training queue slots from the Veteran tier: +1 at CC 18, +1 at CC 19.
+// CC 17 still gives 0 (build slots only); CC 20 stays at +2 (cap).
+export function getCommandTrainingQueueBonus(commandLevel: number): number {
+  const veteran = Math.max(0, (commandLevel || 0) - COMMAND_VETERAN_THRESHOLD);
+  return Math.max(0, Math.min(2, veteran - 2));
 }
 
 // Effective per-tier multiplier when a building cost is computed from level 1 → targetLevel.

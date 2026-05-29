@@ -58,6 +58,7 @@ export default function NexusPage() {
     data: selectedNexusData,
     isFetching: nexusFetching,
     isSuccess: nexusSucceeded,
+    error: nexusError,
     refetch: refetchSelectedNexus,
   } = useQuery({
     queryKey: ['nexus', nexusId],
@@ -65,7 +66,18 @@ export default function NexusPage() {
     staleTime: 20 * 1000,
     refetchInterval: (query) => {
       if ((query.state.error as any)?.response?.status === 429) return false;
+      const status = (query.state.error as any)?.response?.status;
+      // A 403/404 on the active nexus means the player has lost it (conquest
+      // wipes ownership). Stop polling so the eliminated screen can take over.
+      if (status === 403 || status === 404) return false;
       return 30_000;
+    },
+    // Don't retry on 403/404 — those are terminal (ownership lost) and
+    // retrying just delays the eliminated screen.
+    retry: (failureCount, err: any) => {
+      const status = err?.response?.status;
+      if (status === 403 || status === 404) return false;
+      return failureCount < 3;
     },
     enabled: !!nexusId && typeof window !== 'undefined' && !!localStorage.getItem('token'),
     // Seed from the nexuses list so NexusView renders immediately without a loading flash
@@ -76,6 +88,15 @@ export default function NexusPage() {
     initialDataUpdatedAt: () => qc.getQueryState(['myNexuses'])?.dataUpdatedAt,
   });
 
+  // Treat a 403/404 on the active nexus as "ownership lost" once the nexus
+  // list has also resolved to zero. This is the path a freshly-conquered
+  // player takes: their stored selectedNexusId still points to the old
+  // nexus, so the page mounts, gets a 403, and would otherwise sit on a
+  // skeleton forever waiting for nexusSucceeded.
+  const nexusOwnershipLost =
+    (nexusError as any)?.response?.status === 403 ||
+    (nexusError as any)?.response?.status === 404;
+
   const selectedNexus: Nexus | null = selectedNexusData ?? null;
 
   // Latch: once we've ever seen nexuses we know the user isn't eliminated, so never show that screen.
@@ -85,7 +106,12 @@ export default function NexusPage() {
   // Page is ready when we have a nexus to render, OR we've confirmed (via a real server response)
   // there are no nexuses. nexusesResolved guards the F5 race where the query is briefly idle
   // with no data, in that window pageReady must stay false to avoid an eliminated-screen flash.
-  const pageReady = !!selectedNexus || (nexusesResolved && nexuses.length === 0);
+  // Ownership-lost (403/404) on the active nexus also makes the page ready -
+  // the eliminated screen renders below once myNexuses confirms zero owned.
+  const pageReady =
+    !!selectedNexus ||
+    (nexusesResolved && nexuses.length === 0) ||
+    (nexusOwnershipLost && nexusesResolved);
   usePageReady(pageReady, 'nexus');
 
   useEffect(() => {
@@ -133,6 +159,14 @@ export default function NexusPage() {
     }
   }, [selectedNexusData]);
 
+  // Clear the stale stored nexusId once we've confirmed ownership is lost so the
+  // /play dispatcher and other entry points don't keep redirecting back here.
+  useEffect(() => {
+    if (nexusOwnershipLost && nexusesResolved && nexuses.length === 0) {
+      localStorage.removeItem(SELECTED_NEXUS_KEY);
+    }
+  }, [nexusOwnershipLost, nexusesResolved, nexuses.length]);
+
   const handleSelectNexus = (nexus: Nexus) => {
     localStorage.setItem(SELECTED_NEXUS_KEY, String(nexus._id));
     const tabParam = searchParams.get('tab');
@@ -167,17 +201,20 @@ export default function NexusPage() {
     }
   };
 
-  // Hard gate: only show eliminated screen after BOTH the myNexuses list AND the per-nexus query
-  // have actually resolved on the server (not just gone idle), and we still see zero nexuses.
+  // Hard gate: show eliminated screen after the myNexuses list resolves to zero AND
+  // either the per-nexus query confirmed empty (new player path) OR returned 403/404
+  // (just-conquered player whose stored selectedNexusId still points at a lost nexus).
   // The everHadNexus latch prevents flashing the create screen during the window between
   // myNexuses resolving and selectedNexus populating from initialData.
   const isEliminated =
     nexusesResolved &&
     nexuses.length === 0 &&
-    nexusSucceeded &&
-    !nexusFetching &&
     !selectedNexus &&
-    !everHadNexus.current;
+    !everHadNexus.current &&
+    (
+      (nexusSucceeded && !nexusFetching) ||
+      nexusOwnershipLost
+    );
 
   return (
     <>
@@ -202,9 +239,9 @@ export default function NexusPage() {
               <h2 className="eliminated-title">Eliminated</h2>
               <p className="eliminated-subtitle">All your nexuses have been conquered. Rise from the ashes - your comeback starts now.</p>
               <ul className="eliminated-perks">
-                <li>Level 10 resource buildings - hit the ground running</li>
-                <li>100,000 of each resource to rebuild fast</li>
-                <li>24 hours of attack protection</li>
+                <li>Lv12 resource buildings, CC Lv12 + RC Lv7 + Shield Grid Lv8 - hit the ground running</li>
+                <li>100,000 of each resource and a 250-troop starter garrison (Trooper, Drone, Breaker, Recon, Suppressor, Bulwark)</li>
+                <li>1.5 days of attack protection</li>
               </ul>
               <input
                 className="eliminated-name-input"

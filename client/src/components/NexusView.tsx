@@ -60,6 +60,8 @@ import {
   BUILDING_COSTS,
   TROOP_COSTS,
   getBuildingCost as getSharedBuildingCost,
+  getCommandBuildQueueBonus,
+  getCommandTrainingQueueBonus,
   getEffectiveBuildTimeSeconds,
   getEffectiveTrainTimeSeconds,
   getTrainTimeSeconds as getRecruitDiscountedTrainSeconds,
@@ -113,8 +115,8 @@ interface NexusViewProps {
 
 type NexusTab = 'overview' | 'buildings' | 'troops' | 'deployed' | 'map' | 'espionage';
 
-const MAX_BUILD_QUEUE = 5;
-const MAX_TRAINING_QUEUE = 5;
+const BASE_MAX_BUILD_QUEUE = 5;
+const BASE_MAX_TRAINING_QUEUE = 5;
 
 // Gate for the buff banner - labels are derived per-type inline so this
 // only needs to know which types render a banner.
@@ -723,8 +725,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     if (submittingRef.current.has(key)) return;
     submittingRef.current.add(key);
 
-    if (nexus.buildQueue.length >= MAX_BUILD_QUEUE) {
-      showToast(`Build queue is full (${MAX_BUILD_QUEUE}/${MAX_BUILD_QUEUE})`, 'error');
+    const maxBuildQueue = BASE_MAX_BUILD_QUEUE + getCommandBuildQueueBonus(nexus.buildings.commandCore);
+    if (nexus.buildQueue.length >= maxBuildQueue) {
+      showToast(`Build queue is full (${maxBuildQueue}/${maxBuildQueue})`, 'error');
       submittingRef.current.delete(key);
       return;
     }
@@ -755,8 +758,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     const sameChainCount = nexus.trainingQueue.filter((entry: any) =>
       troopType === 'overseer' ? entry.troopType === 'overseer' : entry.troopType !== 'overseer',
     ).length;
-    if (sameChainCount >= MAX_TRAINING_QUEUE) {
-      showToast(`Training queue is full (${MAX_TRAINING_QUEUE}/${MAX_TRAINING_QUEUE})`, 'error');
+    const maxTrainingQueue = BASE_MAX_TRAINING_QUEUE + getCommandTrainingQueueBonus(nexus.buildings.commandCore);
+    if (sameChainCount >= maxTrainingQueue) {
+      showToast(`Training queue is full (${maxTrainingQueue}/${maxTrainingQueue})`, 'error');
       submittingRef.current.delete(key);
       return false;
     }
@@ -2164,7 +2168,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                           buildingImage={BUILDING_IMAGES[key]}
                           maxLevel={BUILDING_RULES[key]?.maxLevel || 0}
                           buildQueueLength={nexus.buildQueue.length}
-                          maxBuildQueue={MAX_BUILD_QUEUE}
+                          maxBuildQueue={BASE_MAX_BUILD_QUEUE + getCommandBuildQueueBonus(nexus.buildings.commandCore)}
                           queuedCount={stats?.count ?? 0}
                           firstQueuedIndex={stats?.firstIndex ?? -1}
                           getBuildingCost={stableHelpers.getBuildingCost}
@@ -2306,7 +2310,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                             const sameChainQueueLength = nexus.trainingQueue.filter((entry: any) =>
                               isOverseerTrack ? entry.troopType === 'overseer' : entry.troopType !== 'overseer',
                             ).length;
-                            const isTrainingQueueFull = sameChainQueueLength >= MAX_TRAINING_QUEUE;
+                            const maxTrainingQueueDisplay =
+                              BASE_MAX_TRAINING_QUEUE + getCommandTrainingQueueBonus(nexus.buildings.commandCore);
+                            const isTrainingQueueFull = sameChainQueueLength >= maxTrainingQueueDisplay;
                             const isTrainDisabled = !canTrain || isTrainingQueueFull || maxTrainable <= 0;
                             return (
                               <div key={type} className={`train-card ${isTrainDisabled ? 'disabled' : ''}`}>
@@ -2364,7 +2370,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                                   <div className="requirements-missing">
                                     <p className="requires-label">Queue full</p>
                                     <p className="requirement-item">
-                                      • Training queue limit reached ({MAX_TRAINING_QUEUE})
+                                      • Training queue limit reached ({maxTrainingQueueDisplay})
                                     </p>
                                   </div>
                                 )}

@@ -4,7 +4,7 @@ import * as troopService from '../services/troopService.js';
 import { atomicUpdateNexusResources, ResourceConflictError } from '../services/nexusService.js';
 import type { AuthRequest } from '../types/index.js';
 import { getMaxStorage, getResourceProduction } from '../utils/economy.js';
-import { TROOP_COSTS, getEffectiveTrainTimeSeconds, getTrainTimeSeconds } from '../utils/gameConstants.js';
+import { TROOP_COSTS, getCommandTrainingQueueBonus, getEffectiveTrainTimeSeconds, getTrainTimeSeconds } from '../utils/gameConstants.js';
 import { parsePositiveInt } from '../utils/validation.js';
 import { logError } from '../utils/logger.js';
 import { notifyNexusResources } from '../services/warRoomSocket.js';
@@ -44,7 +44,13 @@ function emitResourceSnapshot(userId: number, nexus: {
   });
 }
 
-const MAX_TRAINING_QUEUE = 5;
+const BASE_MAX_TRAINING_QUEUE = 5;
+
+// CC Veteran tier (Lv18-19) adds +1 training queue slot each, capped at +2 (7 total).
+// Applied to both the regular and overseer sub-chains independently.
+function getMaxTrainingQueue(commandCore: number): number {
+  return BASE_MAX_TRAINING_QUEUE + getCommandTrainingQueueBonus(commandCore);
+}
 
 const TROOP_REQUIREMENTS: Record<string, { buildings: Record<string, number>; maxPerNexus?: number }> = {
   assaultTrooper:      { buildings: { recruitmentCore: 1 } },
@@ -135,8 +141,9 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
     const sameChainQueue = trainingQueue.filter((e: { troopType: string }) =>
       isOverseer ? e.troopType === 'overseer' : e.troopType !== 'overseer',
     );
-    if (sameChainQueue.length >= MAX_TRAINING_QUEUE) {
-      res.status(400).json({ error: `Training queue is full (${MAX_TRAINING_QUEUE}/${MAX_TRAINING_QUEUE})` }); return;
+    const maxTrainingQueue = getMaxTrainingQueue(nexus.commandCore);
+    if (sameChainQueue.length >= maxTrainingQueue) {
+      res.status(400).json({ error: `Training queue is full (${maxTrainingQueue}/${maxTrainingQueue})` }); return;
     }
 
     const doubled = (nexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled ?? false;
@@ -189,48 +196,122 @@ export async function cancelTrainingQueue(req: AuthRequest, res: Response): Prom
     if (isNaN(parsedIndex) || parsedIndex < 0 || parsedIndex >= trainingQueue.length) {
       res.status(400).json({ error: 'Invalid queue index' }); return;
     }
-    const item = trainingQueue[parsedIndex] as { troopType: string; amount: number; completesAt: string | Date };
-    const cost = TROOP_COSTS[item.troopType];
-    if (!cost) { res.status(400).json({ error: 'Invalid troop type in queue' }); return; }
-    const totalCost = { biomass: cost.biomass * item.amount, alloy: cost.alloy * item.amount, ore: cost.ore * item.amount, population: cost.population * item.amount };
-    const refund = { biomass: Math.floor(totalCost.biomass * 0.85), alloy: Math.floor(totalCost.alloy * 0.85), ore: Math.floor(totalCost.ore * 0.85) };
-    const itemCompletesAt = new Date(item.completesAt).getTime();
-    const isOverseerItem = item.troopType === 'overseer';
-    const sameChainPredicate = (entry: { troopType: string }) =>
-      isOverseerItem ? entry.troopType === 'overseer' : entry.troopType !== 'overseer';
-    const newQueue = trainingQueue.filter((_, i) => i !== parsedIndex) as Array<{ troopType: string; amount: number; completesAt: string | Date; perUnitSeconds?: number }>;
-    const sameChainPrevEntry = (() => {
-      for (let i = parsedIndex - 1; i >= 0; i--) {
-        if (sameChainPredicate(trainingQueue[i] as { troopType: string })) return trainingQueue[i] as { completesAt: string | Date };
+
+    // Snapshot the queue entry the client targeted before any mutation, so
+    // post-partial-credit we can re-resolve it by (troopType, completesAt).
+    const originalTargetEntry = trainingQueue[parsedIndex] as { troopType: string; amount: number; completesAt: string | Date };
+
+    // Credit any units already trained in the entry being cancelled (and any
+    // entries ahead of it in the same chain whose timer has elapsed) before
+    // computing the refund. Without this, a cancel on a long-running entry
+    // would silently delete units that the training timer has already produced
+    // but that haven't been flushed to the nexus row yet.
+    const nowMs = Date.now();
+    const trainedDelta: Record<string, number> = {};
+    const advanceChain = (predicate: (e: { troopType: string }) => boolean) => {
+      while (true) {
+        const idx = trainingQueue.findIndex(predicate as (e: unknown) => boolean);
+        if (idx === -1) break;
+        const entry = trainingQueue[idx] as { troopType: string; amount: number; completesAt: string | Date; perUnitSeconds?: number };
+        const tc = TROOP_COSTS[entry.troopType];
+        if (!tc) { trainingQueue.splice(idx, 1); continue; }
+        const completesAtMs = new Date(entry.completesAt).getTime();
+        const perUnitSeconds = entry.perUnitSeconds || getTrainTimeSeconds(entry.troopType, nexus.recruitmentCore);
+        const perUnitMs = perUnitSeconds * 1000;
+        const startedAtMs = completesAtMs - entry.amount * perUnitMs;
+        const elapsedMs = nowMs - startedAtMs;
+        if (elapsedMs < perUnitMs) break;
+        const unitsCompleted = Math.min(entry.amount, Math.floor(elapsedMs / perUnitMs));
+        trainedDelta[entry.troopType] = (trainedDelta[entry.troopType] || 0) + unitsCompleted;
+        if (unitsCompleted >= entry.amount) {
+          trainingQueue.splice(idx, 1);
+        } else {
+          trainingQueue[idx] = { ...entry, amount: entry.amount - unitsCompleted };
+          break;
+        }
       }
-      return null;
-    })();
-    const isHeadOfChain = sameChainPrevEntry === null;
-    const shiftAmount = isHeadOfChain
-      ? Math.max(0, itemCompletesAt - Date.now())
-      : itemCompletesAt - new Date(sameChainPrevEntry!.completesAt).getTime();
-    if (shiftAmount > 0) {
-      for (let i = 0; i < newQueue.length; i++) {
-        const entry = newQueue[i];
-        if (!sameChainPredicate(entry)) continue;
-        const entryOldAt = new Date(entry.completesAt).getTime();
-        const wasAfter = entryOldAt > itemCompletesAt || (isHeadOfChain && entryOldAt >= itemCompletesAt);
-        if (!wasAfter) continue;
-        newQueue[i] = { ...entry, completesAt: new Date(entryOldAt - shiftAmount) };
+    };
+    const isOverseerItem = (trainingQueue[parsedIndex] as { troopType: string } | undefined)?.troopType === 'overseer';
+    advanceChain((e: { troopType: string }) => isOverseerItem ? e.troopType === 'overseer' : e.troopType !== 'overseer');
+
+    // The index the client sent referred to the queue before partial-credit;
+    // re-resolve it by finding the first remaining entry in the same chain that
+    // matches the cancelled troopType + completesAt. If partial-credit already
+    // drained the entry entirely, there's nothing left to refund.
+    const targetTroopType = originalTargetEntry.troopType;
+    const targetCompletesAt = new Date(originalTargetEntry.completesAt).getTime();
+    const refundedIdx = trainingQueue.findIndex(
+      (e) => e.troopType === targetTroopType && new Date(e.completesAt).getTime() === targetCompletesAt,
+    );
+
+    let refund = { biomass: 0, alloy: 0, ore: 0 };
+    let refundedItem: { troopType: string; amount: number; completesAt: string | Date } | null = null;
+    let newQueue = trainingQueue.slice() as Array<{ troopType: string; amount: number; completesAt: string | Date; perUnitSeconds?: number }>;
+    if (refundedIdx !== -1) {
+      const item = trainingQueue[refundedIdx] as { troopType: string; amount: number; completesAt: string | Date };
+      refundedItem = item;
+      const cost = TROOP_COSTS[item.troopType];
+      if (!cost) { res.status(400).json({ error: 'Invalid troop type in queue' }); return; }
+      const totalCost = { biomass: cost.biomass * item.amount, alloy: cost.alloy * item.amount, ore: cost.ore * item.amount };
+      refund = { biomass: Math.floor(totalCost.biomass * 0.85), alloy: Math.floor(totalCost.alloy * 0.85), ore: Math.floor(totalCost.ore * 0.85) };
+      const itemCompletesAt = new Date(item.completesAt).getTime();
+      const sameChainPredicate = (entry: { troopType: string }) =>
+        isOverseerItem ? entry.troopType === 'overseer' : entry.troopType !== 'overseer';
+      newQueue = trainingQueue.filter((_, i) => i !== refundedIdx) as Array<{ troopType: string; amount: number; completesAt: string | Date; perUnitSeconds?: number }>;
+      const sameChainPrevEntry = (() => {
+        for (let i = refundedIdx - 1; i >= 0; i--) {
+          if (sameChainPredicate(trainingQueue[i] as { troopType: string })) return trainingQueue[i] as { completesAt: string | Date };
+        }
+        return null;
+      })();
+      const isHeadOfChain = sameChainPrevEntry === null;
+      const shiftAmount = isHeadOfChain
+        ? Math.max(0, itemCompletesAt - nowMs)
+        : itemCompletesAt - new Date(sameChainPrevEntry!.completesAt).getTime();
+      if (shiftAmount > 0) {
+        for (let i = 0; i < newQueue.length; i++) {
+          const entry = newQueue[i];
+          if (!sameChainPredicate(entry)) continue;
+          const entryOldAt = new Date(entry.completesAt).getTime();
+          const wasAfter = entryOldAt > itemCompletesAt || (isHeadOfChain && entryOldAt >= itemCompletesAt);
+          if (!wasAfter) continue;
+          newQueue[i] = { ...entry, completesAt: new Date(entryOldAt - shiftAmount) };
+        }
       }
     }
+
+    // Population freed = refunded (uncompleted) units' cost only. Partial-credited
+    // units stay alive on the nexus and continue to occupy population, so the
+    // delta is just the cancelled remainder, not the original queue amount.
+    const refundedPopulation = refundedItem
+      ? (TROOP_COSTS[refundedItem.troopType]?.population ?? 0) * refundedItem.amount
+      : 0;
+
+    // Apply trained delta to the nexus troop counts so partial-credit units
+    // actually appear on the row before the refund/dequeue write lands.
+    const troopUpdates: Record<string, number> = {};
+    const nexusRecord = nexus as unknown as Record<string, number>;
+    for (const [troopType, qty] of Object.entries(trainedDelta)) {
+      if (qty > 0) troopUpdates[troopType] = (nexusRecord[troopType] || 0) + qty;
+    }
+
     const resourceUpdate = computeResourceUpdate(nexus);
     const current = { ...nexus, ...resourceUpdate } as unknown as Record<string, number>;
+    const dataUpdate: Record<string, unknown> = {
+      ...resourceUpdate,
+      ...troopUpdates,
+      biomass: current.biomass + refund.biomass,
+      alloy: current.alloy + refund.alloy,
+      ore: current.ore + refund.ore,
+      populationCurrent: Math.max(0, nexus.populationCurrent - refundedPopulation),
+      trainingQueue: queueToJson(newQueue),
+    };
+    if (Object.keys(trainedDelta).length > 0) {
+      dataUpdate.troopsTrained = mergeTroopsTrained((nexus as unknown as Record<string, unknown>)['troopsTrained'], trainedDelta);
+    }
     let updated;
     try {
-      updated = await atomicUpdateNexusResources(nexus.id, nexus.lastResourceUpdate, {
-        ...resourceUpdate,
-        biomass: current.biomass + refund.biomass,
-        alloy: current.alloy + refund.alloy,
-        ore: current.ore + refund.ore,
-        populationCurrent: Math.max(0, nexus.populationCurrent - totalCost.population),
-        trainingQueue: queueToJson(newQueue),
-      });
+      updated = await atomicUpdateNexusResources(nexus.id, nexus.lastResourceUpdate, dataUpdate);
     } catch (e) {
       if (e instanceof ResourceConflictError) { res.status(409).json({ error: 'Resources updated simultaneously - please retry' }); return; }
       throw e;

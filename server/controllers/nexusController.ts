@@ -123,7 +123,26 @@ export async function getNexus(req: AuthRequest, res: Response): Promise<void> {
   }
 }
 
-const ELIMINATED_RESPAWN_PROTECTION_MS = 24 * 60 * 60 * 1000;
+// Eliminated players get a 1.5-day shield - half the 3-day fresh-signup
+// window. The respawn comes with mid-tier buildings, a real garrison, and
+// 100k of each resource, so a full 3 days would be longer than they need
+// to find their footing and would let a respawned player sit untouchable
+// while continuing to interact with the rest of the galaxy.
+const ELIMINATED_RESPAWN_PROTECTION_MS = 36 * 60 * 60 * 1000;
+
+// Garrison handed to an eliminated player so a respawn isn't an open
+// invitation. Sized so a respawned player has real defensive presence
+// the moment shields drop, without crossing into "this is a threat" -
+// the late-tier picks (Suppressor / Skimmer / Bulwark) are gated by
+// the bumped CC-12 / RC-3 setup and provide the bulk of the defense.
+const ELIMINATED_RESPAWN_TROOPS = {
+  assaultTrooper: 100,
+  lancerDrone: 60,
+  breakerUnit: 40,
+  reconOperative: 20,
+  suppressorTeam: 15,
+  bulwarkGuard: 15,
+} as const;
 
 export async function createNexus(req: AuthRequest, res: Response): Promise<void> {
   try {
@@ -145,10 +164,21 @@ export async function createNexus(req: AuthRequest, res: Response): Promise<void
     ]);
 
     // A player with an existing GalaxyPlayer row but zero nexuses is being eliminated-respawned.
-    // Give them level-10 resource buildings, 100k of each resource, and 24h attack protection.
+    // They get a mid-tier nexus (resource and military buildings already up), 100k of each
+    // resource, a small starter garrison, and the full 3-day protection window.
     const isEliminatedRespawn = existingCount === 0 && galaxyPlayer !== null;
 
-    const RESPAWN_LEVEL = 10;
+    // Resource buildings land at Lv12 (up from Lv10) so production matches
+    // the bumped Command Core. CC is set to 12 (gates Resource Depot
+    // specialization-equivalent perks, suppressor unlock, etc.), RC to 7
+    // so the player can train every garrison troop they were spawned with,
+    // and Shield Grid to 8 so a returning player has a real defensive
+    // structure instead of bare ground.
+    const RESPAWN_LEVEL = 12;
+    const RESPAWN_COMMAND_CORE = 12;
+    const RESPAWN_RECRUITMENT_CORE = 7;
+    const RESPAWN_LIFE_SUPPORT = 12;
+    const RESPAWN_SHIELD_GRID = 8;
     const RESPAWN_RESOURCES = 100_000;
     const RESPAWN_PROTECTION_MS = ELIMINATED_RESPAWN_PROTECTION_MS;
 
@@ -156,26 +186,36 @@ export async function createNexus(req: AuthRequest, res: Response): Promise<void
       Date.now() + (isEliminatedRespawn ? RESPAWN_PROTECTION_MS : NEWBIE_PROTECTION_DURATION_MS),
     );
 
-    const nexus = await nexusService.createNexus({
+    const respawnPopulation = Object.values(ELIMINATED_RESPAWN_TROOPS).reduce((sum, n) => sum + n, 0);
+
+    const baseData = {
       name: bodyName || `${userRecord?.username ?? 'Player'}'s Nexus`,
       ownerId: req.userId,
       galaxyId: req.galaxyId,
       x: Math.floor(Math.random() * 35),
       y: Math.floor(Math.random() * 35),
-      commandCore: 0,
-      recruitmentCore: 0,
-      lifeSupport: isEliminatedRespawn ? RESPAWN_LEVEL : 1,
+      commandCore: isEliminatedRespawn ? RESPAWN_COMMAND_CORE : 0,
+      recruitmentCore: isEliminatedRespawn ? RESPAWN_RECRUITMENT_CORE : 0,
+      lifeSupport: isEliminatedRespawn ? RESPAWN_LIFE_SUPPORT : 1,
       storageVault: isEliminatedRespawn ? RESPAWN_LEVEL : 1,
       biomassFarm: isEliminatedRespawn ? RESPAWN_LEVEL : 1,
       alloyForge: isEliminatedRespawn ? RESPAWN_LEVEL : 1,
       oreExtractor: isEliminatedRespawn ? RESPAWN_LEVEL : 1,
-      shieldGrid: 0,
+      shieldGrid: isEliminatedRespawn ? RESPAWN_SHIELD_GRID : 0,
       biomass: isEliminatedRespawn ? RESPAWN_RESOURCES : 1500,
       alloy: isEliminatedRespawn ? RESPAWN_RESOURCES : 1500,
       ore: isEliminatedRespawn ? RESPAWN_RESOURCES : 1500,
-      populationMax: getPopulationMax(isEliminatedRespawn ? RESPAWN_LEVEL : 1),
+      populationMax: getPopulationMax(isEliminatedRespawn ? RESPAWN_LIFE_SUPPORT : 1),
       newbieProtectionEndsAt: protectionEndsAt,
-    });
+    };
+    // Eliminated respawns get a starter garrison + matching populationCurrent.
+    // Fresh signups leave populationCurrent unset so the schema default (5)
+    // applies, preserving prior behaviour for normal nexus creation.
+    const nexus = await nexusService.createNexus(
+      isEliminatedRespawn
+        ? { ...baseData, populationCurrent: respawnPopulation, ...ELIMINATED_RESPAWN_TROOPS }
+        : baseData,
+    );
 
     res.json({ ...serializeNexus(nexus), eliminatedRespawn: isEliminatedRespawn });
   } catch (error) {

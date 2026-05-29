@@ -54,8 +54,23 @@ export const TIME_SCALING = { early: 1.25, mid: 1.35, late: 1.45 };
 export const COMMAND_BUILD_TIME_FACTOR_PER_LEVEL = 0.95;
 export const RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL = 0.91;
 
+// Veteran tier (CC 16-20) grants extra queue slots. CC 16/17 each add +1
+// build slot; CC 18/19 each add +1 training slot. Mirror of
+// server/utils/gameConstants.ts.
+export const COMMAND_VETERAN_THRESHOLD = 15;
+
 export function getCommandTimeFactor(commandLevel: number): number {
   return Math.pow(COMMAND_BUILD_TIME_FACTOR_PER_LEVEL, Math.max(0, commandLevel || 0));
+}
+
+export function getCommandBuildQueueBonus(commandLevel: number): number {
+  const veteran = Math.max(0, (commandLevel || 0) - COMMAND_VETERAN_THRESHOLD);
+  return Math.min(2, veteran);
+}
+
+export function getCommandTrainingQueueBonus(commandLevel: number): number {
+  const veteran = Math.max(0, (commandLevel || 0) - COMMAND_VETERAN_THRESHOLD);
+  return Math.max(0, Math.min(2, veteran - 2));
 }
 
 export function getBuildingCost(building: string, currentLevel: number): BuildingCost {

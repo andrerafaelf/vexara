@@ -258,7 +258,11 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
       { level: 6, requires: ['Shield Grid Lv2'] },
       { level: 10, requires: ['Storage Vault Lv5'] },
     ],
-    impact: ['Primary unlock gate for multiple systems and troop tiers.'],
+    impact: [
+      'Primary unlock gate for multiple systems and troop tiers.',
+      '5% faster construction per level (compounding) - applies to every building.',
+      'Veteran tier: +1 build queue slot at Lv16 and Lv17 (max 7). +1 training queue slot at Lv18 and Lv19 (max 7). Lv20 unlocks no extra slot but keeps the standard build-time discount.',
+    ],
   },
   {
     key: 'recruitmentCore',
