@@ -1,4 +1,4 @@
-import { Coins, Share2, Skull, Swords, Trophy } from 'lucide-react';
+import { ArrowLeft, Coins, Share2, Skull, Swords, Trophy } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { getReadReportIds, getReports, markAllReportsRead, markReportRead, sendAttack, sendFactionMessage } from '../services/api';
 import '../styles/Reports.css';
@@ -397,7 +397,8 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
       <div className="reports-container">
         <div className="reports-header">
           <div className="reports-detail-nav">
-            <button onClick={() => setSelectedReport(null)} className="btn-back">
+            <button onClick={() => setSelectedReport(null)} className="btn-back" aria-label="Back to reports list">
+              <ArrowLeft size={14} aria-hidden="true" />
               Back
             </button>
             <div className="reports-nav-arrows">

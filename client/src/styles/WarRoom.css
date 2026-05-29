@@ -1782,6 +1782,20 @@ body:has(.warroom-modal-overlay) { overflow: hidden; }
   .warroom-starfield { min-height: 240px; }
 }
 
+/* OperationBoard back button: hidden when the rail is visible alongside
+   the board (desktop and tablet). Surfaces on phone where the rail and
+   board share viewport space via mobile tabs and a quick "back to ops"
+   affordance avoids forcing the user to scroll the horizontal rail. */
+.warroom-board-back {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .warroom-board-back {
+    display: inline-flex;
+  }
+}
+
 /* Very small phones: drop chip grids to a single column. */
 @media (max-width: 420px) {
   .warroom-claim-troops,

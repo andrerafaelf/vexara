@@ -86,6 +86,8 @@ const TROOP_KEYS = [
   'suppressorTeam',
   'disruptorUnit',
   'interceptorBike',
+  'voidStalker',
+  'plasmaTurret',
   'annihilatorPlatform',
   'overseer',
 ] as const;
@@ -568,6 +570,8 @@ export async function addTroopsToNexus(req: Request, res: Response): Promise<voi
       suppressorTeam = 0,
       disruptorUnit = 0,
       interceptorBike = 0,
+      voidStalker = 0,
+      plasmaTurret = 0,
       annihilatorPlatform = 0,
       overseer = 0,
     } = req.body as Record<string, number>;
@@ -588,6 +592,8 @@ export async function addTroopsToNexus(req: Request, res: Response): Promise<voi
       suppressorTeam +
       disruptorUnit +
       interceptorBike +
+      voidStalker +
+      plasmaTurret +
       annihilatorPlatform +
       overseer;
     const updated = await adminService.updateNexus(nexus.id, {
@@ -601,6 +607,8 @@ export async function addTroopsToNexus(req: Request, res: Response): Promise<voi
       suppressorTeam: nexus.suppressorTeam + suppressorTeam,
       disruptorUnit: nexus.disruptorUnit + disruptorUnit,
       interceptorBike: nexus.interceptorBike + interceptorBike,
+      voidStalker: nexus.voidStalker + voidStalker,
+      plasmaTurret: nexus.plasmaTurret + plasmaTurret,
       annihilatorPlatform: nexus.annihilatorPlatform + annihilatorPlatform,
       overseer: nexus.overseer + overseer,
       populationCurrent: nexus.populationCurrent + troopsAdded,

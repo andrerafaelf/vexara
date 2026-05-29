@@ -116,10 +116,13 @@
 }
 
 .btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: transparent;
   color: var(--text-muted);
   border: 1px solid var(--border-default);
-  padding: 9px 18px;
+  padding: 9px 16px 9px 12px;
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: var(--text-base);
@@ -129,10 +132,16 @@
               border-color var(--duration-fast) var(--ease-out);
 }
 
-.btn-back:hover {
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--text-strong);
-  border-color: var(--border-strong);
+.btn-back:hover,
+.btn-back:focus-visible {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
+  outline: none;
+}
+
+.btn-back:active {
+  transform: translateY(1px);
 }
 
 .reports-detail-nav {

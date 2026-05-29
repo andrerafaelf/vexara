@@ -33,6 +33,8 @@ export const TROOP_KEYS = [
   'suppressorTeam',
   'disruptorUnit',
   'interceptorBike',
+  'voidStalker',
+  'plasmaTurret',
   'annihilatorPlatform',
   'overseer',
 ] as const;

@@ -18,6 +18,7 @@ import '@/styles/FriendsView.css';
 import { formatDate, formatTimeOfDay } from '@/utils/date';
 import { Gift, GitBranch, MessageSquare, Users, UserPlus } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import InlineBackButton from './InlineBackButton';
 import ReferralsTab from './ReferralsTab';
 import Username from './Username';
 import { usePageReady } from './NavigationProgress';
@@ -485,7 +486,14 @@ export default function FriendsView({ initialTab = 'friends', initialFriendId = 
             ) : (
               <>
                 <header className="friends-chat-header">
-                  <span className="friends-name"><Username name={activeFriend.username} isSupporter={activeFriend.isSupporter} supporterTier={activeFriend.supporterTier as any} linkToProfile /></span>
+                  <div className="friends-chat-header-left">
+                    <InlineBackButton
+                      onBack={() => setActiveFriendId(null)}
+                      label="Allies"
+                      className="friends-chat-back"
+                    />
+                    <span className="friends-name"><Username name={activeFriend.username} isSupporter={activeFriend.isSupporter} supporterTier={activeFriend.supporterTier as any} linkToProfile /></span>
+                  </div>
                   <button
                     className="friends-btn danger"
                     onClick={() => activeFriendId && handleUnfriend(activeFriendId)}

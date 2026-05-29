@@ -18,6 +18,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import InlineBackButton from './InlineBackButton';
 import Username from './Username';
 import { useToast } from '../context/ToastContext';
 import { useWarRoomSocket, type WarRoomEvent } from '../hooks/useWarRoomSocket';
@@ -431,6 +432,7 @@ export default function WarRoom({ factionId, myRole }: Props) {
               onChangeStatus={(s) => handleStatusChange(selectedOp.id, s)}
               onDelete={() => handleDelete(selectedOp.id)}
               onReload={() => loadOperation(selectedOp.id)}
+              onBack={() => { setSelectedOpId(null); setSelectedOp(null); }}
             />
           )}
         </div>
@@ -635,6 +637,7 @@ function OperationBoard({
   onChangeStatus,
   onDelete,
   onReload,
+  onBack,
 }: {
   op: Operation;
   now: number;
@@ -645,6 +648,7 @@ function OperationBoard({
   onChangeStatus: (s: 'planning' | 'locked' | 'cancelled' | 'completed') => void;
   onDelete: () => void;
   onReload: () => void;
+  onBack: () => void;
 }) {
   const arrivalMs = new Date(op.arrivalAt).getTime();
   const ttArrive = arrivalMs - now;
@@ -655,6 +659,11 @@ function OperationBoard({
     <div className="warroom-board">
       <div className="warroom-board-header">
         <div className="warroom-board-title">
+          <InlineBackButton
+            onBack={onBack}
+            label="Operations"
+            className="warroom-board-back"
+          />
           <h2>{op.name}</h2>
           <span className={`warroom-status-pill warroom-status-pill--${op.status}`}>{op.status}</span>
           {otherViewers.length > 0 && (

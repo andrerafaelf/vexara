@@ -74,11 +74,11 @@ export async function giveResources(req: Request, res: Response): Promise<void> 
 
 export async function addTroops(req: Request, res: Response): Promise<void> {
   try {
-    const { lancerDrone = 0, assaultTrooper = 0, breakerUnit = 0, reconOperative = 0, skimmerBike = 0, siegeMech = 0, bulwarkGuard = 0, suppressorTeam = 0, disruptorUnit = 0, interceptorBike = 0, annihilatorPlatform = 0, overseer = 0 } = req.body as Record<string, number>;
+    const { lancerDrone = 0, assaultTrooper = 0, breakerUnit = 0, reconOperative = 0, skimmerBike = 0, siegeMech = 0, bulwarkGuard = 0, suppressorTeam = 0, disruptorUnit = 0, interceptorBike = 0, voidStalker = 0, plasmaTurret = 0, annihilatorPlatform = 0, overseer = 0 } = req.body as Record<string, number>;
     const nexus = await adminService.getNexusById(parseInt(req.params.nexusId));
     if (!nexus) { res.status(404).json({ error: 'Nexus not found' }); return; }
-    const troopsAdded = lancerDrone + assaultTrooper + breakerUnit + reconOperative + skimmerBike + siegeMech + bulwarkGuard + suppressorTeam + disruptorUnit + interceptorBike + annihilatorPlatform + overseer;
-    const updated = await adminService.updateNexus(nexus.id, { lancerDrone: nexus.lancerDrone + lancerDrone, assaultTrooper: nexus.assaultTrooper + assaultTrooper, breakerUnit: nexus.breakerUnit + breakerUnit, reconOperative: nexus.reconOperative + reconOperative, skimmerBike: nexus.skimmerBike + skimmerBike, siegeMech: nexus.siegeMech + siegeMech, bulwarkGuard: nexus.bulwarkGuard + bulwarkGuard, suppressorTeam: nexus.suppressorTeam + suppressorTeam, disruptorUnit: nexus.disruptorUnit + disruptorUnit, interceptorBike: nexus.interceptorBike + interceptorBike, annihilatorPlatform: nexus.annihilatorPlatform + annihilatorPlatform, overseer: nexus.overseer + overseer, populationCurrent: nexus.populationCurrent + troopsAdded });
+    const troopsAdded = lancerDrone + assaultTrooper + breakerUnit + reconOperative + skimmerBike + siegeMech + bulwarkGuard + suppressorTeam + disruptorUnit + interceptorBike + voidStalker + plasmaTurret + annihilatorPlatform + overseer;
+    const updated = await adminService.updateNexus(nexus.id, { lancerDrone: nexus.lancerDrone + lancerDrone, assaultTrooper: nexus.assaultTrooper + assaultTrooper, breakerUnit: nexus.breakerUnit + breakerUnit, reconOperative: nexus.reconOperative + reconOperative, skimmerBike: nexus.skimmerBike + skimmerBike, siegeMech: nexus.siegeMech + siegeMech, bulwarkGuard: nexus.bulwarkGuard + bulwarkGuard, suppressorTeam: nexus.suppressorTeam + suppressorTeam, disruptorUnit: nexus.disruptorUnit + disruptorUnit, interceptorBike: nexus.interceptorBike + interceptorBike, voidStalker: nexus.voidStalker + voidStalker, plasmaTurret: nexus.plasmaTurret + plasmaTurret, annihilatorPlatform: nexus.annihilatorPlatform + annihilatorPlatform, overseer: nexus.overseer + overseer, populationCurrent: nexus.populationCurrent + troopsAdded });
     res.json({ success: true, nexus: serializeNexus(updated) });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'internalAdminController.ts' });
@@ -104,7 +104,7 @@ export async function resetTroops(req: Request, res: Response): Promise<void> {
   try {
     const nexus = await adminService.getNexusById(parseInt(req.params.nexusId));
     if (!nexus) { res.status(404).json({ error: 'Nexus not found' }); return; }
-    const updated = await adminService.updateNexus(nexus.id, { lancerDrone: 0, assaultTrooper: 0, breakerUnit: 0, reconOperative: 0, skimmerBike: 0, siegeMech: 0, bulwarkGuard: 0, suppressorTeam: 0, disruptorUnit: 0, interceptorBike: 0, annihilatorPlatform: 0, overseer: 0, populationCurrent: 0 });
+    const updated = await adminService.updateNexus(nexus.id, { lancerDrone: 0, assaultTrooper: 0, breakerUnit: 0, reconOperative: 0, skimmerBike: 0, siegeMech: 0, bulwarkGuard: 0, suppressorTeam: 0, disruptorUnit: 0, interceptorBike: 0, voidStalker: 0, plasmaTurret: 0, annihilatorPlatform: 0, overseer: 0, populationCurrent: 0 });
     res.json({ success: true, nexus: serializeNexus(updated) });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'internalAdminController.ts' });

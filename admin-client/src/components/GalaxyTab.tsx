@@ -42,6 +42,8 @@ const TROOP_LABELS: Record<TroopKey, string> = {
   suppressorTeam: 'Suppressor Team',
   disruptorUnit: 'Disruptor Unit',
   interceptorBike: 'Interceptor Bike',
+  voidStalker: 'Void Stalker',
+  plasmaTurret: 'Plasma Turret',
   annihilatorPlatform: 'Annihilator Platform',
   overseer: 'Overseer',
 };

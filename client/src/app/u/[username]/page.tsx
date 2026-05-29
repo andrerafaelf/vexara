@@ -200,7 +200,7 @@ function PublicProfilePageInner() {
   if (loading) {
     return (
       <GameLayout activePage="profile">
-        <BackBar fallback={backFallback} fallbackLabel={backLabel} title={username} />
+        <BackBar fallback={backFallback} fallbackLabel={backLabel} />
         <PageSkeleton variant="rows" count={5} />
       </GameLayout>
     );
@@ -209,7 +209,7 @@ function PublicProfilePageInner() {
   if (error || !profile) {
     return (
       <GameLayout activePage="profile">
-        <BackBar fallback={backFallback} fallbackLabel={backLabel} title={username} />
+        <BackBar fallback={backFallback} fallbackLabel={backLabel} />
         <div className="profile-stats">
           <div className="ps-error">{error || 'User not found'}</div>
         </div>
@@ -234,7 +234,7 @@ function PublicProfilePageInner() {
 
   return (
     <GameLayout activePage="profile">
-      <BackBar fallback={backFallback} fallbackLabel={backLabel} title={profile.username} />
+      <BackBar fallback={backFallback} fallbackLabel={backLabel} />
       <div className="profile-stats">
         <div className="ps-header">
           <Avatar

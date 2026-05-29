@@ -1,23 +1,29 @@
+/* Break out of .main-content's horizontal padding (var(--space-7) = 32px)
+   so the bar spans the full width of <main>, with its own internal padding
+   matching the page. Negative top margin pulls it flush against the sticky
+   top stack above (header / connection bar / dominance bar) so there's no
+   dead space between them. */
 .backbar {
   position: sticky;
-  top: 56px;
+  top: 0;
   z-index: var(--z-sticky);
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
+  padding: 10px var(--space-7);
+  margin: calc(var(--space-7) * -1) calc(var(--space-7) * -1) var(--space-5);
   background: var(--bg-app);
   border-bottom: 1px solid var(--border-default);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  min-height: 40px;
+  min-height: 44px;
 }
 
 .backbar-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 10px 6px 8px;
+  padding: 6px 12px 6px 10px;
   background: transparent;
   border: 1px solid var(--border-default);
   border-radius: 6px;
@@ -44,43 +50,14 @@
   line-height: 1;
 }
 
-.backbar-title {
-  flex: 1;
-  min-width: 0;
-  text-align: center;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  padding: 0 var(--space-2);
-}
-
-/* Mirror of the back button width so the centered title stays visually centered
-   instead of being shoved to the right by the button on the left edge. */
-.backbar-spacer {
-  width: 64px;
-  flex-shrink: 0;
-}
-
-@media (max-width: 480px) {
+/* Mobile: keep the breakout but pin below the 56px game header.
+   .main-content padding shrinks to 14px under 768px; mirror those numbers
+   so the back button sits at the same visual edge as page content. */
+@media (max-width: 768px) {
   .backbar {
-    padding: 6px var(--space-2);
-    min-height: 36px;
-  }
-
-  /* Tight viewports: collapse the back button to icon-only so the title gets
-     real estate. We keep the accessible label via aria-label on the button. */
-  .backbar-btn-label {
-    display: none;
-  }
-
-  .backbar-btn {
-    padding: 6px;
-  }
-
-  .backbar-spacer {
-    width: 32px;
+    top: 56px;
+    padding: 8px 14px;
+    margin: -14px -14px var(--space-4);
+    min-height: 40px;
   }
 }

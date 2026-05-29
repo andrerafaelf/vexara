@@ -333,6 +333,26 @@
   gap: var(--space-3);
 }
 
+.friends-chat-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+/* Sidebar + thread are visible together on desktop, so the back button is
+   redundant noise. Hide it above the breakpoint and reveal it on mobile
+   where the thread effectively takes over the visible space. */
+.friends-chat-back {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .friends-chat-back {
+    display: inline-flex;
+  }
+}
+
 .friends-chat-messages {
   flex: 1;
   overflow-y: auto;

@@ -3,6 +3,7 @@
 import ConnectionStatusBar from '@/components/ConnectionStatusBar';
 import ConqueredModal from '@/components/ConqueredModal';
 import DominanceBar from '@/components/DominanceBar';
+import NewPatchToast from '@/components/NewPatchToast';
 import TroopMovementsBar from '@/components/TroopMovementsBar';
 import '@/styles/ConnectionStatusBar.css';
 import MobileNexusDrawer from '@/components/MobileNexusDrawer';
@@ -363,6 +364,7 @@ export default function GameLayout({
       <TroopMovementsBar />
       <DominanceBar />
       <ConqueredModal />
+      <NewPatchToast />
 
       <MobileNexusDrawer
         nexuses={nexuses}
