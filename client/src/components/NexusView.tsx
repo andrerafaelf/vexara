@@ -68,7 +68,7 @@ import { useToast } from '../context/ToastContext';
 import { Countdown } from './Countdown';
 import { QueueCountdown } from './QueueCountdown';
 import { LiveResourceStrip } from './LiveResourceStrip';
-import { BuildingCard } from './BuildingCard';
+import { BuildingCard, LockedBuildingPlot } from './BuildingCard';
 import { useNow } from '@/hooks/useNow';
 import { formatTimeOfDay } from '@/utils/date';
 import { useResourceSnapshot } from '@/realtime/useLiveResources';
@@ -521,6 +521,8 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
       production: getResourceProduction({
         nexusType: nexus.nexusType,
         nexusTypeDoubled: nexus.nexusTypeDoubled,
+        isDerelict: nexus.isDerelict,
+        commandCore: nexus.buildings.commandCore,
         biomassFarm: nexus.buildings.biomassFarm,
         alloyForge: nexus.buildings.alloyForge,
         oreExtractor: nexus.buildings.oreExtractor,
@@ -1000,13 +1002,17 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
   };
 
   const calculateProduction = () => {
-    // Server uses NEXUS_TYPE_BONUSES.productionMultiplier (2x for Resource Depot)
-    // and applies 1 + (mult - 1) * (doubled ? 2 : 1), giving 3x when doubled.
-    // See server/utils/economy.ts getResourceProduction and the mirrored
-    // client/src/realtime/economy.shared.ts.
+    // Mirrors server/utils/economy.ts getResourceProduction and the client mirror in
+    // client/src/realtime/economy.shared.ts. Derelict Ships override the multiplier
+    // entirely (3x base, 4x at Command Core 15) instead of using the doubled formula.
     const baseProduction = 800;
-    const rawMult = nexus.nexusType === 'Resource Depot' ? 2 : 1;
-    const productionMult = rawMult === 1 ? 1 : 1 + (rawMult - 1) * (nexus.nexusTypeDoubled ? 2 : 1);
+    let productionMult: number;
+    if (nexus.isDerelict) {
+      productionMult = nexus.buildings.commandCore >= 15 ? 4 : 3;
+    } else {
+      const rawMult = nexus.nexusType === 'Resource Depot' ? 2 : 1;
+      productionMult = rawMult === 1 ? 1 : 1 + (rawMult - 1) * (nexus.nexusTypeDoubled ? 2 : 1);
+    }
     const prod = (level: number) => (level <= 0 ? 0 : Math.floor(baseProduction * Math.pow(1.35, level - 1) * productionMult));
     return {
       biomass: prod(nexus.buildings.biomassFarm),
@@ -1458,6 +1464,26 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     }
     return null;
   };
+
+  // Single "next action" surfacing across all tabs — finds the first incomplete
+  // intro-chapter quest regardless of which tab it lives on, so the player has
+  // a persistent breadcrumb in the header. The per-tab getNextTip stays for the
+  // inline tab tooltips; this is the global form used by the header chip.
+  // Returns the destination tab so clicking the chip can route the player to
+  // the right place ('map' redirects to Starfield navigation instead).
+  const getNextAction = (): { id: string; title: string; tab: IntroQuest['tab'] } | null => {
+    if (allQuestsComplete) return null;
+    for (const batchId of TIP_BATCH_IDS) {
+      const batch = questBatches.find((b) => b.id === batchId);
+      if (!batch) continue;
+      const quest = batch.quests.find((q) => !q.completed);
+      if (quest) return { id: `next-${batchId}-${quest.id}`, title: quest.title, tab: quest.tab };
+      // Stop at the first batch with any incomplete quests — same reasoning as getNextTip.
+      if (batch.quests.some((q) => !q.completed)) return null;
+    }
+    return null;
+  };
+  const nextAction = getNextAction();
   const activeBuild = nexus.buildQueue[0];
   const activeTraining = nexus.trainingQueue[0];
   // (`activeBuildTimer` and `activeTrainingTimer` were removed, the live countdown labels are
@@ -1524,6 +1550,25 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
             </>
           )}
         </div>
+        {nextAction && (
+          <button
+            type="button"
+            className="next-action-chip"
+            onClick={() => {
+              if (nextAction.tab === 'map') {
+                router.push('/starfield');
+                return;
+              }
+              setActiveTab(nextAction.tab);
+            }}
+            aria-label={`Next action: ${nextAction.title}`}
+          >
+            <Sparkles size={12} aria-hidden="true" />
+            <span className="next-action-chip-label">Next:</span>
+            <span className="next-action-chip-title">{nextAction.title}</span>
+            <span className="next-action-chip-arrow" aria-hidden="true">→</span>
+          </button>
+        )}
         {nexus.nexusType && NEXUS_TYPES_WITH_BUFF.has(nexus.nexusType) && (() => {
           // Single-row banner. Three slots: [icon + name + tier], [bonus math].
           // The label is just the type name - the numbers live in the math slot,
@@ -2082,35 +2127,74 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                     queueIndex.set(item.building, { count: 1, firstIndex: i });
                   }
                 }
-                return Object.entries(nexus.buildings).map(([key, level]) => {
-                  const stats = queueIndex.get(key);
-                  return (
-                    <BuildingCard
-                      key={key}
-                      buildingKey={key}
-                      level={level}
-                      nexus={nexus}
-                      nexusId={String(nexus._id)}
-                      buildingName={BUILDING_NAMES[key]}
-                      buildingDescription={BUILDING_DESCRIPTIONS[key]}
-                      buildingImage={BUILDING_IMAGES[key]}
-                      maxLevel={BUILDING_RULES[key]?.maxLevel || 0}
-                      buildQueueLength={nexus.buildQueue.length}
-                      maxBuildQueue={MAX_BUILD_QUEUE}
-                      queuedCount={stats?.count ?? 0}
-                      firstQueuedIndex={stats?.firstIndex ?? -1}
-                      getBuildingCost={stableHelpers.getBuildingCost}
-                      getBuildingUpgradeBenefit={stableHelpers.getBuildingUpgradeBenefit}
-                      checkBuildingRequirements={stableHelpers.checkBuildingRequirements}
-                      getPrevBuildEnd={stableHelpers.getPrevBuildEnd}
-                      getTimeUntilAffordable={stableHelpers.getTimeUntilAffordable}
-                      fmtNum={stableHelpers.fmtNum}
-                      formatDurationSeconds={stableHelpers.formatDurationSeconds}
-                      onUpgrade={stableHelpers.onUpgrade}
-                      onInfoTap={stableHelpers.onInfoTap}
-                    />
-                  );
-                });
+                // Split into unlocked vs still-locked plots. A "locked plot" is
+                // a level-0 building whose unlock prerequisite isn't met yet —
+                // it's rendered as a quiet placeholder (Travian-style open plot)
+                // so a new player isn't bombarded with detailed cards they can't
+                // act on. Anything they've already built (level >= 1) keeps the
+                // full card even if a milestone is currently gating the *next*
+                // level, because they need to see cost / time / queue status.
+                const buildingEntries = Object.entries(nexus.buildings);
+                const unlockedEntries: Array<[string, number]> = [];
+                const lockedEntries: Array<[string, number]> = [];
+                for (const entry of buildingEntries) {
+                  const [key, level] = entry;
+                  const rule = BUILDING_RULES[key];
+                  const unlock = rule?.unlock;
+                  const isLockedPlot =
+                    level === 0 &&
+                    !!unlock &&
+                    (nexus.buildings[unlock.building as keyof typeof nexus.buildings] || 0) < unlock.level;
+                  if (isLockedPlot) lockedEntries.push(entry);
+                  else unlockedEntries.push(entry);
+                }
+                return (
+                  <>
+                    {unlockedEntries.map(([key, level]) => {
+                      const stats = queueIndex.get(key);
+                      return (
+                        <BuildingCard
+                          key={key}
+                          buildingKey={key}
+                          level={level}
+                          nexus={nexus}
+                          nexusId={String(nexus._id)}
+                          buildingName={BUILDING_NAMES[key]}
+                          buildingDescription={BUILDING_DESCRIPTIONS[key]}
+                          buildingImage={BUILDING_IMAGES[key]}
+                          maxLevel={BUILDING_RULES[key]?.maxLevel || 0}
+                          buildQueueLength={nexus.buildQueue.length}
+                          maxBuildQueue={MAX_BUILD_QUEUE}
+                          queuedCount={stats?.count ?? 0}
+                          firstQueuedIndex={stats?.firstIndex ?? -1}
+                          getBuildingCost={stableHelpers.getBuildingCost}
+                          getBuildingUpgradeBenefit={stableHelpers.getBuildingUpgradeBenefit}
+                          checkBuildingRequirements={stableHelpers.checkBuildingRequirements}
+                          getPrevBuildEnd={stableHelpers.getPrevBuildEnd}
+                          getTimeUntilAffordable={stableHelpers.getTimeUntilAffordable}
+                          fmtNum={stableHelpers.fmtNum}
+                          formatDurationSeconds={stableHelpers.formatDurationSeconds}
+                          onUpgrade={stableHelpers.onUpgrade}
+                          onInfoTap={stableHelpers.onInfoTap}
+                        />
+                      );
+                    })}
+                    {lockedEntries.map(([key]) => {
+                      const unlock = BUILDING_RULES[key]?.unlock;
+                      const unlockLabel = unlock
+                        ? `${BUILDING_NAMES[unlock.building] || unlock.building} Lv${unlock.level}`
+                        : 'higher tech tier';
+                      return (
+                        <LockedBuildingPlot
+                          key={key}
+                          buildingName={BUILDING_NAMES[key]}
+                          buildingImage={BUILDING_IMAGES[key]}
+                          unlockRequirementLabel={unlockLabel}
+                        />
+                      );
+                    })}
+                  </>
+                );
               })()}
             </div>
           </div>
@@ -2181,13 +2265,25 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                     const categoryTroops = Object.entries(TROOP_COSTS).filter(
                       ([type]) => TROOP_CATEGORIES[type] === category,
                     );
+                    // Partition into trainable vs locked. Locked troops collapse
+                    // into a single <details> stub at the bottom of the category —
+                    // a player with Recruitment Core Lv1 used to see 6+ red
+                    // "requires X" cards per category, drowning out the one they
+                    // could actually train. Opt-in disclosure removes that noise
+                    // without hiding the long-term roadmap.
+                    const trainableTroops = categoryTroops.filter(
+                      ([type]) => checkTroopRequirements(type).canTrain,
+                    );
+                    const lockedTroops = categoryTroops.filter(
+                      ([type]) => !checkTroopRequirements(type).canTrain,
+                    );
                     return (
                       <div key={category} className="troop-category-section">
                         <h4 className={`troop-category-heading troop-category-${category}`}>
                           {category === 'offense' ? 'Offense' : 'Defense'}
                         </h4>
                         <div className="train-grid">
-                          {categoryTroops.map(([type, costs]) => {
+                          {trainableTroops.map(([type, costs]) => {
                             const { canTrain, missingRequirements } = checkTroopRequirements(type);
                             const { maxTrainable, shortageReasons } = getMaxTrainableAmount(type, costs, canTrain);
                             const trainSeconds = canTrain
@@ -2314,7 +2410,32 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                               </div>
                             );
                           })}
+                          {trainableTroops.length === 0 && lockedTroops.length > 0 && (
+                            <p className="troop-locked-empty">
+                              No {category} units available yet — upgrade buildings below to unlock.
+                            </p>
+                          )}
                         </div>
+                        {lockedTroops.length > 0 && (
+                          <details className="troop-locked-group">
+                            <summary>
+                              <span>{lockedTroops.length} more {category} unit{lockedTroops.length === 1 ? '' : 's'} (locked)</span>
+                            </summary>
+                            <ul className="troop-locked-list">
+                              {lockedTroops.map(([type]) => {
+                                const { missingRequirements } = checkTroopRequirements(type);
+                                return (
+                                  <li key={type} className="troop-locked-item">
+                                    <span className="troop-locked-name">{TROOP_NAMES[type]}</span>
+                                    <span className="troop-locked-req">
+                                      {missingRequirements.join(' · ')}
+                                    </span>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          </details>
+                        )}
                       </div>
                     );
                   })}
@@ -2590,8 +2711,8 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
 type SpyMissionMode = 'embed' | 'sabotage';
 
 const SABOTAGE_TARGETS: { key: string; label: string; desc: string }[] = [
-  { key: 'troops',   label: 'Sabotage Troops',   desc: 'Eliminate the largest troop group at the target. Send more operatives than the defender has garrisoned to succeed.' },
-  { key: 'building', label: 'Delay Construction', desc: 'Push back the active build queue. Each operative beyond the defender\'s garrison adds 30 minutes of delay.' },
+  { key: 'troops',   label: 'Delay Training',     desc: 'Push back every batch in the defender\'s training queue. Each operative beyond the defender\'s Recon Operative garrison adds 30 minutes of delay. Empty queue = no effect.' },
+  { key: 'building', label: 'Delay Construction', desc: 'Push back every entry in the defender\'s build queue. Each operative beyond the defender\'s Recon Operative garrison adds 30 minutes of delay.' },
 ];
 
 const TROOP_DISPLAY_NAME: Record<string, string> = {

@@ -36,6 +36,8 @@ export const NEXUS_TYPE_BONUSES: Record<string, NexusTypeBonuses> = {
 export interface EconomyNexus {
   nexusType?: string | null;
   nexusTypeDoubled?: boolean;
+  isDerelict?: boolean;
+  commandCore?: number;
   biomassFarm: number;
   alloyForge: number;
   oreExtractor: number;
@@ -46,12 +48,18 @@ function getDoubleScale(nexus: Pick<EconomyNexus, 'nexusTypeDoubled'>): number {
   return nexus.nexusTypeDoubled ? 2 : 1;
 }
 
+function getDerelictMultiplier(nexus: Pick<EconomyNexus, 'commandCore'>): number {
+  return (nexus.commandCore ?? 0) >= 15 ? 4 : 3;
+}
+
 export function getResourceProduction(nexus: EconomyNexus, storm?: StormBonus): ResourceAmounts {
   const baseProduction = 800;
   const rawMultiplier = NEXUS_TYPE_BONUSES[nexus.nexusType ?? '']?.productionMultiplier ?? 1;
-  const productionMultiplier = rawMultiplier === 1
-    ? 1
-    : 1 + (rawMultiplier - 1) * getDoubleScale(nexus);
+  const productionMultiplier = nexus.isDerelict
+    ? getDerelictMultiplier(nexus)
+    : rawMultiplier === 1
+      ? 1
+      : 1 + (rawMultiplier - 1) * getDoubleScale(nexus);
   const prod = (level: number, stormMult: number) =>
     level <= 0 ? 0 : baseProduction * Math.pow(1.35, level - 1) * productionMultiplier * stormMult;
   return {

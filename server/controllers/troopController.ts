@@ -15,12 +15,15 @@ import { notifyNexusResources } from '../services/warRoomSocket.js';
 // normalizes to the economy module's `boolean | undefined` expectation.
 function emitResourceSnapshot(userId: number, nexus: {
   id: number; biomass: number; alloy: number; ore: number; lastResourceUpdate: Date;
-  nexusType?: string | null; nexusTypeDoubled?: boolean | null;
+  nexusType?: string | null; nexusTypeDoubled?: boolean | null; isDerelict?: boolean | null;
+  commandCore?: number;
   biomassFarm: number; alloyForge: number; oreExtractor: number; storageVault: number;
 }) {
   const economyInput = {
     nexusType: nexus.nexusType ?? null,
     nexusTypeDoubled: nexus.nexusTypeDoubled ?? false,
+    isDerelict: nexus.isDerelict ?? false,
+    commandCore: nexus.commandCore,
     biomassFarm: nexus.biomassFarm,
     alloyForge: nexus.alloyForge,
     oreExtractor: nexus.oreExtractor,

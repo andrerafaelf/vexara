@@ -26,6 +26,7 @@ export function getNexusTypeBonuses(nexusType: string | null): NexusTypeBonuses 
 interface NexusForEconomy {
   nexusType?: string | null;
   nexusTypeDoubled?: boolean;
+  isDerelict?: boolean;
   biomassFarm: number;
   alloyForge: number;
   oreExtractor: number;
@@ -46,6 +47,14 @@ function getDoubleScale(nexus: NexusForEconomy): number {
   return nexus.nexusTypeDoubled ? 2 : 1;
 }
 
+// Derelict Ship gives 3x base production, 4x once Command Core reaches 15.
+// Independent of nexusType so it stacks with nothing else (it's the only modifier
+// the derelict multiplier looks at). When the derelict is also nexusTypeDoubled,
+// the doubling rule does not apply — the CC-15 step is the only progression.
+function getDerelictMultiplier(nexus: NexusForEconomy): number {
+  return (nexus.commandCore ?? 0) >= 15 ? 4 : 3;
+}
+
 export interface StormBonus {
   biomass?: number;
   alloy?: number;
@@ -57,9 +66,11 @@ export function getResourceProduction(nexus: NexusForEconomy, storm?: StormBonus
   // sequence (CC Lv1-3 → RC Lv1 → first troops) flows without dead time.
   const baseProduction = 800;
   const rawMultiplier = NEXUS_TYPE_BONUSES[nexus.nexusType ?? '']?.productionMultiplier ?? 1;
-  const productionMultiplier = rawMultiplier === 1
-    ? 1
-    : 1 + (rawMultiplier - 1) * getDoubleScale(nexus);
+  const productionMultiplier = nexus.isDerelict
+    ? getDerelictMultiplier(nexus)
+    : rawMultiplier === 1
+      ? 1
+      : 1 + (rawMultiplier - 1) * getDoubleScale(nexus);
   const prod = (level: number, stormMult: number) =>
     level <= 0 ? 0 : baseProduction * Math.pow(1.35, level - 1) * productionMultiplier * stormMult;
   return {
@@ -82,6 +93,10 @@ export function getMaxStorage(nexus: NexusForEconomy): number {
 export function getNexusTypeEffectiveMultipliers(nexus: NexusForEconomy): NexusTypeBonuses | null {
   const base = NEXUS_TYPE_BONUSES[nexus.nexusType ?? ''];
   if (!base) return null;
+  if (nexus.isDerelict) {
+    const dm = getDerelictMultiplier(nexus);
+    return { ...base, productionMultiplier: dm, label: `${dm}x Resource Production (Derelict Ship)` };
+  }
   if (!nexus.nexusTypeDoubled) return base;
   const scale = getDoubleScale(nexus);
   return {

@@ -281,6 +281,10 @@ model Nexus {
   nexusTypeLockedAt    DateTime?
   nexusTypeDoubled     Boolean   @default(false)
 
+  // Derelict Ship galaxy event capture: grants 3x production (4x at CC15) on top of Resource Depot baseline math.
+  // Permanent flag once captured; persists through renames and ownership changes.
+  isDerelict           Boolean   @default(false)
+
   lastResourceUpdate       DateTime  @default(now())
   points                   Int       @default(5)
   controlLevel             Int       @default(100)

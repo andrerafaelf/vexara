@@ -643,6 +643,32 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
     let conquered = false;
     const defenderResourceUpdates: Record<string, number> = {};
 
+    // Market listings hold resources in escrow off the nexus row. Without this
+    // step, players could trivially shield their stockpile from looting by
+    // listing it. On any resolved attack the defender's active listings are
+    // cancelled and the offered resources returned to the nexus, so combat
+    // sees the full stockpile. The listing delete is folded into the same
+    // transaction as the nexus update at the bottom of this block.
+    const activeListings = await prisma.marketListing.findMany({
+      where: { sellerNexusId: defenderNexus.id },
+      select: { id: true, offerResource: true, offerAmount: true },
+    });
+    let cancelledListings = 0;
+    if (activeListings.length > 0) {
+      const refund: Record<'biomass' | 'alloy' | 'ore', number> = { biomass: 0, alloy: 0, ore: 0 };
+      for (const l of activeListings) {
+        const key = l.offerResource as 'biomass' | 'alloy' | 'ore';
+        if (key === 'biomass' || key === 'alloy' || key === 'ore') {
+          refund[key] += l.offerAmount;
+        }
+      }
+      // Mutate the in-memory defender so the loot math reads the unlocked totals.
+      (defenderNexus as unknown as { biomass: number }).biomass = defenderNexus.biomass + refund.biomass;
+      (defenderNexus as unknown as { alloy:   number }).alloy   = defenderNexus.alloy   + refund.alloy;
+      (defenderNexus as unknown as { ore:     number }).ore     = defenderNexus.ore     + refund.ore;
+      cancelledListings = activeListings.length;
+    }
+
     if (attackerWins) {
       let lootCapacity = 0;
       for (const troopType of TROOP_KEYS) {
@@ -736,7 +762,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
     const nexusTypeDoubled = (defenderNexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled ?? false;
     const shouldRevokeDoubled = damagedCC !== undefined && damagedCC < 15 && nexusTypeDoubled && !nexusTypeLockedAt;
 
-    await prisma.nexus.update({
+    const defenderUpdate = prisma.nexus.update({
       where: { id: defenderNexus.id },
       data: {
         ...defenderTroopUpdates,
@@ -747,6 +773,23 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
         controlLevel: conquered ? 0 : newControlLevel,
       },
     });
+    if (cancelledListings > 0) {
+      // Atomic: delete the escrowed listings together with the resource write
+      // that already includes the refunded amounts (via the refund applied to
+      // defenderNexus.biomass/alloy/ore above). Out-of-band failure here would
+      // otherwise leave listings live with no resources to back them.
+      await prisma.$transaction([
+        prisma.marketListing.deleteMany({ where: { sellerNexusId: defenderNexus.id } }),
+        defenderUpdate,
+      ]);
+      logInfo('combat_cancelled_listings_on_strike', {
+        attackId: attack.id,
+        defenderNexusId: defenderNexus.id,
+        cancelledListings,
+      });
+    } else {
+      await defenderUpdate;
+    }
 
     if (conquered && attack.attackerUserId) {
       const attackerNexusInfo = await prisma.nexus.findUnique({ where: { id: attack.attackerNexusId! }, select: { galaxyId: true, owner: { select: { username: true } } } });

@@ -252,6 +252,11 @@ const Market: React.FC<MarketProps> = ({ nexuses, selectedNexusId, onRefresh }) 
                 </div>
               </div>
             </div>
+            <div className="market-listing-warning">
+              Listings are not safe storage: if this nexus is attacked, all of its
+              listings are cancelled and the escrowed resources return to the nexus
+              before the loot calculation runs.
+            </div>
             {formError && <div className="market-form-error">{formError}</div>}
             <button type="submit" className="market-submit-btn" disabled={submitting}>
               {submitting ? 'Listing...' : 'Post Listing'}

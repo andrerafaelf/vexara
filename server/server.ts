@@ -218,7 +218,7 @@ prisma.$connect()
     setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.levelNeutralNexuses, 'level_neutral_nexuses', () => levelUpNeutralNexuses()); }, 60 * 60 * 1000);
     setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.dailyNexusGrowth, 'daily_nexus_growth', async () => { const r = await dailyNexusGrowth(); if (r.created > 0) logInfo('daily_nexus_growth', { created: r.created }); }); }, 24 * 60 * 60 * 1000);
     setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.processDominance, 'process_dominance', () => processDominanceVictories()); }, 10 * 60 * 1000);
-    setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.galaxyEvents, 'galaxy_events', () => processGalaxyEvents()); }, 4 * 60 * 60 * 1000);
+    setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.galaxyEvents, 'galaxy_events', () => processGalaxyEvents()); }, 24 * 60 * 60 * 1000);
     setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.protectionWarnings, 'protection_warnings', () => sendProtectionExpiringWarnings()); }, 15 * 60 * 1000);
     setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.rogueAiRaids, 'rogue_ai_raids', () => processRogueAiRaids()); }, 30 * 60 * 1000);
     setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.rogueAiGrowth, 'rogue_ai_growth', () => processRogueAiGrowth()); }, 60 * 60 * 1000);

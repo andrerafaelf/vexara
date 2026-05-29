@@ -4401,3 +4401,178 @@
     width: 100%;
   }
 }
+
+/* ── Locked building "open plot" placeholder ──
+   Travian-style empty slot — preserves curiosity ("something will go here")
+   without bombarding a new player with full cost/time/benefit detail. */
+.building-card--locked {
+  opacity: 0.55;
+  filter: grayscale(60%);
+  border-style: dashed;
+  border-color: var(--border-default);
+  background: transparent;
+  min-height: 180px;
+}
+
+.building-card--locked:hover {
+  opacity: 0.75;
+  border-color: var(--border-strong);
+}
+
+.building-card-image--locked {
+  filter: grayscale(80%) brightness(0.6);
+}
+
+.building-card-locked-overlay {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--text-muted);
+  z-index: 2;
+}
+
+.building-card-locked-req {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 0.01em;
+}
+
+.building-card--locked h4 {
+  color: var(--text-muted);
+}
+
+/* ── Collapsed locked-troop disclosure ──
+   Replaces a wall of red "requires X" cards with a single opt-in line per
+   category. The roadmap is still discoverable — just not in the way. */
+.troop-locked-group {
+  margin-top: 10px;
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  padding: 0;
+}
+
+.troop-locked-group > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 8px 12px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+
+.troop-locked-group > summary::-webkit-details-marker {
+  display: none;
+}
+
+.troop-locked-group > summary::before {
+  content: '▸';
+  display: inline-block;
+  transition: transform var(--duration-fast) var(--ease-out);
+  color: var(--text-faint);
+}
+
+.troop-locked-group[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.troop-locked-group > summary:hover {
+  color: var(--text-default);
+}
+
+.troop-locked-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.troop-locked-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 4px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.troop-locked-item:first-child {
+  border-top: none;
+}
+
+.troop-locked-name {
+  color: var(--text-default);
+  font-weight: 500;
+}
+
+.troop-locked-req {
+  color: var(--text-faint);
+  font-size: 11px;
+  text-align: right;
+}
+
+.troop-locked-empty {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin: 4px 0 0;
+  font-style: italic;
+}
+
+/* ── "Next action" chip in nexus header ──
+   Persistent breadcrumb sourced from the active intro-chapter quest. Clicking
+   it switches to the relevant tab (or routes to Starfield for map quests). */
+.next-action-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--success-soft);
+  border: 1px solid rgba(86, 211, 100, 0.30);
+  border-left: 3px solid var(--success);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  margin-top: 8px;
+  color: var(--text-default);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
+  align-self: flex-start;
+}
+
+.next-action-chip:hover {
+  background: rgba(86, 211, 100, 0.12);
+  border-color: rgba(86, 211, 100, 0.55);
+}
+
+.next-action-chip-label {
+  color: var(--success);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+
+.next-action-chip-title {
+  color: var(--text-strong);
+  font-weight: 600;
+}
+
+.next-action-chip-arrow {
+  color: var(--success);
+  font-weight: 700;
+}

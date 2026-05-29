@@ -636,7 +636,7 @@ export async function updateAllResources(): Promise<void> {
     const [nexuses, activeStorms] = await Promise.all([
       prisma.nexus.findMany({
         select: {
-          id: true, ownerId: true, name: true, nexusType: true, nexusTypeDoubled: true,
+          id: true, ownerId: true, name: true, nexusType: true, nexusTypeDoubled: true, isDerelict: true,
           galaxyId: true, x: true, y: true,
           biomassFarm: true, alloyForge: true, oreExtractor: true, storageVault: true,
           biomass: true, alloy: true, ore: true, lastResourceUpdate: true,
@@ -764,6 +764,7 @@ export function serializeNexus(v: NexusWithQuests, opts: { ownerData?: unknown }
     controlLevel: v.controlLevel,
     nexusType: v.nexusType ?? null,
     nexusTypeDoubled: (v as unknown as { nexusTypeDoubled?: boolean | null }).nexusTypeDoubled ?? false,
+    isDerelict: (v as unknown as { isDerelict?: boolean | null }).isDerelict ?? false,
     nexusTypeLockedAt: (v as unknown as { nexusTypeLockedAt?: Date | null }).nexusTypeLockedAt ?? null,
     newbieProtectionEndsAt: v.newbieProtectionEndsAt ?? null,
     createdAt: v.createdAt,

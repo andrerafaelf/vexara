@@ -35,9 +35,9 @@ async function notifyOwnersNearEvent(
 }
 
 // How often events can fire per galaxy (ms between rolls)
-const EVENT_ROLL_INTERVAL_MS = 4 * 60 * 60 * 1000; // 4 hours
+const EVENT_ROLL_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
 // Probability of an event firing each roll (per galaxy)
-const EVENT_FIRE_CHANCE = 0.55;
+const EVENT_FIRE_CHANCE = 0.65;
 // Max active events per galaxy at once
 const MAX_ACTIVE_EVENTS = 3;
 // Event TTL when no nexus involved
@@ -103,7 +103,8 @@ async function spawnDerelictShip(galaxyId: number) {
     where: { id: nexus.id },
     data: {
       name: 'Derelict Ship',
-      nexusType: 'Resource Depot', // whoever captures gets 2x production
+      nexusType: 'Resource Depot', // baseline; derelict flag boosts the multiplier to 3x (4x at Command Core 15)
+      isDerelict: true,
       // Zero most troops, should be easy to take
       lancerDrone: 0, assaultTrooper: 0, breakerUnit: 0,
       reconOperative: randInt(2, 6),
@@ -116,7 +117,7 @@ async function spawnDerelictShip(galaxyId: number) {
       galaxyId,
       type: 'derelict_ship',
       title: 'Derelict Ship Detected',
-      description: `A derelict vessel has drifted into the galaxy at (${nexus.x}|${nexus.y}). The ship's systems are offline but its Resource Depot core is intact. First faction to capture it claims a permanent 2x production bonus.`,
+      description: `A derelict vessel has drifted into the galaxy at (${nexus.x}|${nexus.y}). The ship's systems are offline but its Resource Depot core is intact. First faction to capture it claims a permanent 3x production bonus (4x at Command Core 15).`,
       nexusId: nexus.id,
       x: nexus.x,
       y: nexus.y,

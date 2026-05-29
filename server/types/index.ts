@@ -71,6 +71,7 @@ export interface SerializedNexus {
   controlLevel: number;
   nexusType: string | null;
   nexusTypeDoubled: boolean;
+  isDerelict: boolean;
   nexusTypeLockedAt: Date | null;
   newbieProtectionEndsAt: Date | null;
   createdAt: Date;

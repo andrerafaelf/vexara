@@ -88,6 +88,19 @@
   font-size: var(--text-base);
 }
 
+/* ── Listing escrow warning ── */
+.market-listing-warning {
+  color: var(--text-muted, #b8b8b8);
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.30);
+  border-left: 3px solid #f59e0b;
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  margin: var(--space-3) 0;
+}
+
 /* ── Actions bar ── */
 .market-actions-bar {
   margin-bottom: var(--space-5);

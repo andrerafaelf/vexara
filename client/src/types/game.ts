@@ -125,6 +125,7 @@ export interface Nexus {
   controlLevel?: number;
   nexusType?: string | null;
   nexusTypeDoubled?: boolean;
+  isDerelict?: boolean;
   nexusTypeLockedAt?: string | null;
   newbieProtectionEndsAt?: string | null;
   createdAt?: string;

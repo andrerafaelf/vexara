@@ -1,0 +1,2 @@
+ALTER TABLE "Nexus"
+  ADD COLUMN "isDerelict" BOOLEAN NOT NULL DEFAULT false;

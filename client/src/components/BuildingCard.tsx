@@ -1,11 +1,49 @@
 'use client';
 
 import React from 'react';
-import { Hammer, Info } from 'lucide-react';
+import { Hammer, Info, Lock } from 'lucide-react';
 import { QueueCountdown } from './QueueCountdown';
 import { useFlashOnTrue } from '@/realtime/useFlashOnChange';
 import { useGatedLiveResources, useResourceSnapshot } from '@/realtime/useLiveResources';
 import type { Nexus } from '@/types/game';
+
+// Minimal placeholder rendered for buildings whose unlock prerequisite isn't met
+// and that are still at level 0. The point is to preserve a sense of "something
+// will go here" (Travian-style open plot) without showing cost/time/troop-benefit
+// noise the player can't act on yet.
+export interface LockedBuildingPlotProps {
+  buildingName: string;
+  buildingImage?: { src?: string } | unknown;
+  unlockRequirementLabel: string;
+}
+
+export const LockedBuildingPlot = React.memo(function LockedBuildingPlot({
+  buildingName,
+  buildingImage,
+  unlockRequirementLabel,
+}: LockedBuildingPlotProps) {
+  let imgSrc: string | undefined;
+  if (buildingImage && typeof buildingImage === 'object' && 'src' in buildingImage) {
+    const s = (buildingImage as { src?: unknown }).src;
+    imgSrc = typeof s === 'string' ? s : undefined;
+  } else if (typeof buildingImage === 'string') {
+    imgSrc = buildingImage;
+  }
+  return (
+    <div className="building-card building-card--locked" aria-label={`${buildingName} locked`}>
+      {imgSrc && (
+        <img src={imgSrc} alt="" aria-hidden="true" className="building-card-image building-card-image--locked" />
+      )}
+      <div className="building-card-locked-overlay">
+        <Lock size={16} aria-hidden="true" />
+      </div>
+      <div className="building-header">
+        <h4>{buildingName}</h4>
+      </div>
+      <p className="building-card-locked-req">Requires {unlockRequirementLabel}</p>
+    </div>
+  );
+});
 
 // Per-card props. The closure-bound helpers from NexusView are passed in as
 // props rather than reimplemented here, so this extraction is purely a JSX
