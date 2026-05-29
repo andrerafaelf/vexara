@@ -13,12 +13,19 @@ const STORAGE_KEY = 'lastSeenPatchVersion';
 
 // Lives mounted in GameLayout. Compares the last patch version this browser
 // has acknowledged against LATEST_PATCH_VERSION and surfaces a one-shot prompt
-// when they diverge. Suppressed on the very first session (no stored value)
-// so new players aren't greeted with "new!" UI on day one . we silently
-// initialize the flag to the current version.
+// when they diverge.
+//
+// "New player" detection uses token presence, not the absence of the
+// lastSeenPatchVersion key. Using key-absence breaks the first deploy of this
+// component: every existing player's browser has lastSeenPatchVersion = null
+// because the key never existed before, so the toast would silently
+// initialize the key and never fire for anyone. Token-based detection lines
+// up with the real meaning of "new" . a brand new account that hasn't seen
+// any prior patches yet . regardless of whether this code shipped before
+// or after they signed up.
 //
 // Two ways to clear the toast:
-//   - "View" navigates to /patch-notes#v<version> (new tab so game session
+//   - "Read" navigates to /patch-notes#v<version> (new tab so game session
 //     is preserved) and marks the version seen
 //   - "X" dismisses without navigating, also marks the version seen
 //
@@ -33,11 +40,16 @@ export default function NewPatchToast() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     let stored: string | null = null;
-    try { stored = localStorage.getItem(STORAGE_KEY); } catch { /* private mode / quota */ }
+    let hasToken = false;
+    try {
+      stored = localStorage.getItem(STORAGE_KEY);
+      hasToken = !!localStorage.getItem('token');
+    } catch { /* private mode / quota */ }
     if (stored === LATEST_PATCH_VERSION) return;
-    if (stored === null) {
-      // First-ever visit on this browser . don't startle the user with
-      // a "new patch!" prompt for changes that shipped before they arrived.
+    if (stored === null && !hasToken) {
+      // Brand new visitor with no account yet. Silently stamp the current
+      // version so once they sign up they won't be greeted by a "new!" prompt
+      // for changes that shipped before they arrived.
       try { localStorage.setItem(STORAGE_KEY, LATEST_PATCH_VERSION); } catch { /* ignore */ }
       return;
     }
