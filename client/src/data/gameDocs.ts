@@ -240,6 +240,7 @@ export const TROOPS_DOC: TroopDoc[] = [
       'On conquest: the Overseer is consumed. Other surviving attackers are stationed at the captured nexus.',
       'The conquered nexus retains its type and building levels; enemy support stationed there is destroyed.',
       'Conquered NPC nexus bonuses start at base tier and double when Command Core reaches 15.',
+      'Follow-up waves that land on a nexus you have just conquered bounce back home with no combat - the Overseer is preserved for the next target.',
     ],
   },
 ];

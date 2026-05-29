@@ -234,7 +234,8 @@ _Ordered weakest → strongest by overall combat value._
   - Does not contribute attack damage
   - If all non-overseer units are destroyed, the overseer is destroyed as well
   - Each successful overseer strike that clears the defending force reduces enemy control by 34; three strikes conquer any nexus
-  - Overseers are stationed at the captured nexus when conquest is completed
+  - On the conquering strike (Control reaches 0), the Overseer is consumed; surviving escort troops are stationed at the captured nexus
+  - Follow-up waves that arrive at a nexus the attacker has just conquered bounce back home with no combat — the Overseer is preserved
 
 ## Conquest Flow
 
@@ -242,7 +243,7 @@ _Ordered weakest → strongest by overall combat value._
 2. Send the Overseer with escort troops
 3. Win the battle, clear the defending force, and keep the Overseer alive
 4. Enemy control is reduced by 34
-5. Repeat for a total of three successful strikes; at 0 control, ownership transfers
+5. Repeat for a total of three successful strikes; at 0 control, ownership transfers and the Overseer is consumed
 
 ## Quick Recommendations
 

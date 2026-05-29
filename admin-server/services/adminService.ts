@@ -74,6 +74,7 @@ export function getUsersInGalaxy(galaxyId: number) {
         select: {
           id: true,
           name: true,
+          conqueredAt: true,
           biomass: true,
           alloy: true,
           ore: true,

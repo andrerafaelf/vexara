@@ -69,6 +69,16 @@ type PlayerModal = 'editUser' | 'editPlayer' | null;
 
 type DraftMap = Partial<Record<string, number>>;
 
+// Initial nexus first (conqueredAt == null), the rest by conqueredAt ascending.
+function orderNexuses(nexuses: UserNexus[]): UserNexus[] {
+  return [...nexuses].sort((a, b) => {
+    if (!a.conqueredAt && b.conqueredAt) return -1;
+    if (a.conqueredAt && !b.conqueredAt) return 1;
+    if (!a.conqueredAt && !b.conqueredAt) return 0;
+    return new Date(a.conqueredAt as string).getTime() - new Date(b.conqueredAt as string).getTime();
+  });
+}
+
 interface Props {
   galaxies: Galaxy[];
   selectedGalaxyId: number | null;
@@ -130,7 +140,7 @@ export default function GalaxyTab({
 
   const openEditPlayer = (user: GalaxyUser) => {
     setSelectedUserId(user._id);
-    setEditNexusId(user.nexuses?.[0]?._id ?? '');
+    setEditNexusId(String(orderNexuses(user.nexuses)[0]?._id ?? ''));
     setDrafts({});
     setEditFilter('');
     setModal('editPlayer');
@@ -198,7 +208,7 @@ export default function GalaxyTab({
 
   const handleSavePlayerEdits = async () => {
     if (!selectedUser || !requireGalaxy()) return;
-    const nexus = selectedUser.nexuses.find((n) => n._id === editNexusId);
+    const nexus = selectedUser.nexuses.find((n) => String(n._id) === editNexusId);
     if (!nexus) { showToast('No nexus selected', 'error'); return; }
 
     const dirtyResources: ResourceKey[] = RESOURCE_KEYS.filter(
@@ -356,10 +366,17 @@ export default function GalaxyTab({
 
   // ── Editor helpers ───────────────────────────────────────────────────────
 
+  const orderedNexuses: UserNexus[] = useMemo(
+    () => (selectedUser ? orderNexuses(selectedUser.nexuses) : []),
+    [selectedUser],
+  );
+
   const activeNexus: UserNexus | null = useMemo(() => {
     if (!selectedUser) return null;
-    return selectedUser.nexuses.find((n) => n._id === editNexusId) ?? selectedUser.nexuses[0] ?? null;
-  }, [selectedUser, editNexusId]);
+    return (
+      selectedUser.nexuses.find((n) => String(n._id) === editNexusId) ?? orderedNexuses[0] ?? null
+    );
+  }, [selectedUser, editNexusId, orderedNexuses]);
 
   const draftValueFor = (key: string, current: number): number => {
     const d = drafts[key];
@@ -652,7 +669,7 @@ export default function GalaxyTab({
             </div>
 
             <div className="player-editor-toolbar">
-              {selectedUser.nexuses.length > 1 ? (
+              {orderedNexuses.length > 1 ? (
                 <div className="form-group" style={{ flex: '1 1 280px' }}>
                   <label>Nexus</label>
                   <select
@@ -660,10 +677,10 @@ export default function GalaxyTab({
                     onChange={(e) => { setEditNexusId(e.target.value); setDrafts({}); }}
                     disabled={saving}
                   >
-                    {selectedUser.nexuses.map((n) => {
+                    {orderedNexuses.map((n) => {
                       const coords = n.x != null && n.y != null ? ` (${n.x}|${n.y})` : '';
                       return (
-                        <option key={n._id} value={n._id}>{n.name}{coords} · CC{n.commandCore}</option>
+                        <option key={n._id} value={String(n._id)}>{n.name}{coords} · CC{n.commandCore}</option>
                       );
                     })}
                   </select>

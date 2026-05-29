@@ -318,6 +318,45 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 
     if (!defenderNexus) return;
 
+    // Target became attacker-owned mid-flight (e.g., a prior wave already
+    // conquered it). Skip combat entirely and bounce the troops home — fighting
+    // your own garrison would consume the Overseer and re-trigger conquest on
+    // an already-owned nexus.
+    if (
+      attack.attackerUserId !== null &&
+      defenderNexus.ownerId !== null &&
+      defenderNexus.ownerId === attack.attackerUserId
+    ) {
+      const travelMs = attack.arrivesAt!.getTime() - attack.createdAt.getTime();
+      const returnsAt = new Date(Date.now() + travelMs);
+      await prisma.attack.update({
+        where: { id: attack.id },
+        data: {
+          status: 'returning',
+          returnsAt,
+          result: {
+            mission: 'attack',
+            victory: false,
+            reason: 'target_self_owned',
+            survivingTroops: attackTroops,
+            attackerLosses: {},
+            defenderLosses: {},
+            resourcesStolen: { biomass: 0, alloy: 0, ore: 0 },
+          } as Prisma.InputJsonObject,
+        },
+      });
+      logInfo('attack_bounced_target_self_owned', {
+        attackId: attack.id,
+        attackerNexusId: attack.attackerNexusId,
+        defenderNexusId: defenderNexus.id,
+        attackerUserId: attack.attackerUserId,
+        troopsReturning: countTroops(attackTroops),
+      });
+      notifyAttackUpdate(attack.attackerUserId, null, attack.attackerNexusId!);
+      if (attack.attackerUserId) notifyReportUpdate(attack.attackerUserId);
+      return;
+    }
+
     // Plasma Turrets cannot leave their nexus, strip them from the attacking force.
     // They remain on the nexus and contribute to defense when under attack.
     const plasmaTurretsKept = attackTroops.plasmaTurret || 0;

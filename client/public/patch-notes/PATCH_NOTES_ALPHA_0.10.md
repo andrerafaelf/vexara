@@ -78,6 +78,21 @@ perspective.
 
 ---
 
+### Strikes bounce when the target became yours mid-flight
+
+Stacking 3 conquest waves on an NPC used to consume **all three
+Overseers**. The first strike conquered the nexus and stationed its
+survivors as your new garrison. The next two waves arrived to find a
+nexus you already owned — but combat ran anyway, you "won" against your
+own troops, control re-dropped to 0, and conquest re-fired (burning the
+Overseer each time). You also "looted" yourself.
+
+When an arriving strike lands on a nexus the attacker now owns, the
+troops turn around and travel home with no combat, no loot, and no
+Overseer loss. Send the wave with confidence.
+
+---
+
 ### Arrival timestamps everywhere
 
 Every countdown in the game (deployed forces, troop transfers, incoming

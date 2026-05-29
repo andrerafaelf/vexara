@@ -1658,12 +1658,12 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                 <div className="nexus-stat-label">SHIELD</div>
                 <div className="nexus-stat-value-row">
                   <span className="nexus-stat-value">{nexus.buildings.shieldGrid}</span>
-                  <span className="nexus-stat-max">/ 20</span>
+                  <span className="nexus-stat-max">/ 15</span>
                 </div>
                 <div className="nexus-stat-bar-track">
                   <div
                     className="nexus-stat-bar-fill nexus-stat-bar-fill-cyan"
-                    style={{ width: `${Math.min(100, (nexus.buildings.shieldGrid / 20) * 100)}%` }}
+                    style={{ width: `${Math.min(100, (nexus.buildings.shieldGrid / 15) * 100)}%` }}
                   />
                 </div>
               </div>
