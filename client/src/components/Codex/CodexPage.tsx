@@ -144,17 +144,26 @@ function CodexNav() {
     setIsLoggedIn(!!localStorage.getItem('token'));
   }, []);
 
+  const handleBack = (e: React.MouseEvent) => {
+    if (window.history.length > 1) {
+      e.preventDefault();
+      window.history.back();
+    }
+  };
+
   return (
     <header className="cx-nav">
-      <Link href={isLoggedIn ? '/play' : '/'} className="cx-nav-mark" aria-label="Vexara home">
-        <Image src="/vexara-logo.png" alt="" width={26} height={26} priority />
-        <span>Vexara</span>
-        <span className="cx-nav-sep">/</span>
-        <span className="cx-nav-loc">Codex</span>
-      </Link>
+      <div className="cx-nav-left">
+        <Link href={isLoggedIn ? '/play' : '/'} className="cx-nav-mark" aria-label="Vexara home">
+          <Image src="/vexara-logo.png" alt="" width={26} height={26} priority />
+          <span>Vexara</span>
+          <span className="cx-nav-sep">/</span>
+          <span className="cx-nav-loc">Codex</span>
+        </Link>
+      </div>
       <nav className="cx-nav-links" aria-label="Primary">
         {isLoggedIn ? (
-          <Link href="/play" className="cx-nav-cta">Play</Link>
+          <Link href="/play" className="cx-nav-cta" onClick={handleBack}>← Back to game</Link>
         ) : (
           <>
             <Link href="/" className="cx-nav-link-quiet">Home</Link>

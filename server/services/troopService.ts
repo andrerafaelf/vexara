@@ -21,3 +21,7 @@ export function getOutboundTransferTroops(nexusId: number) {
     select: { troops: true },
   });
 }
+
+export function countOwnedNexuses(userId: number, galaxyId: number): Promise<number> {
+  return prisma.nexus.count({ where: { ownerId: userId, galaxyId } });
+}

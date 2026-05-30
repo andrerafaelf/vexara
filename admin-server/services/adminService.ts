@@ -158,8 +158,13 @@ export function getUserById(id: number) {
   return prisma.user.findUnique({ where: { id } });
 }
 
-export async function updateUserCredentials(userId: number, email?: string, password?: string) {
+export async function updateUserCredentials(userId: number, username?: string, email?: string, password?: string) {
   const data: Record<string, string> = {};
+  if (username) {
+    const usernameOwner = await prisma.user.findFirst({ where: { username: { equals: username, mode: 'insensitive' }, NOT: { id: userId } } });
+    if (usernameOwner) throw Object.assign(new Error('Username is already in use'), { status: 400 });
+    data.username = username;
+  }
   if (email) {
     const normalizedEmail = email.toLowerCase();
     const emailOwner = await prisma.user.findFirst({ where: { email: normalizedEmail, NOT: { id: userId } } });

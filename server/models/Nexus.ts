@@ -27,6 +27,7 @@ interface QuestContext {
   nexus: Nexus & Record<string, unknown>;
   hasOutgoingStrike: boolean;
   hasCompletedAttack: boolean;
+  hasOutgoingSpyMission: boolean;
   claimedRewards?: Set<string>;
 }
 
@@ -110,7 +111,7 @@ export const QUEST_REWARD_BATCHES: QuestBatch[] = [
       { id: 'build_stealth_array_1',     check: ({ nexus }) => (nexus as unknown as Record<string, number>).stealthArray >= 1 },
       { id: 'build_shield_grid_3',       check: ({ nexus }) => nexus.shieldGrid >= 3 },
       { id: 'train_recon_operative_10',  check: ({ nexus }) => trainedCount(nexus, 'reconOperative') >= 10 },
-      { id: 'send_spy_mission',          check: ({ hasOutgoingStrike }) => hasOutgoingStrike },
+      { id: 'send_spy_mission',          check: ({ hasOutgoingSpyMission }) => hasOutgoingSpyMission },
     ],
     reward: { biomass: 5000, alloy: 5000, ore: 5000, populationCurrent: 25, troops: { reconOperative: 25, disruptorUnit: 10 } },
   },
@@ -177,7 +178,7 @@ type GalaxyPlayerForQuests = { id: number; questRewardClaims: unknown; completed
 
 export async function applyQuestRewards(
   nexus: NexusWithQuests,
-  options: { hasOutgoingStrike?: boolean; hasCompletedAttack?: boolean; player?: GalaxyPlayerForQuests } = {},
+  options: { hasOutgoingStrike?: boolean; hasCompletedAttack?: boolean; hasOutgoingSpyMission?: boolean; player?: GalaxyPlayerForQuests } = {},
 ): Promise<NexusWithQuests> {
   if (!nexus.ownerId) return nexus;
 
@@ -200,8 +201,11 @@ export async function applyQuestRewards(
   const hasCompletedAttack =
     options.hasCompletedAttack ??
     Boolean(await prisma.attack.findFirst({ where: { attackerNexusId: nexus.id, status: 'completed' }, select: { id: true } }));
+  const hasOutgoingSpyMission =
+    options.hasOutgoingSpyMission ??
+    Boolean(await prisma.spyMission.findFirst({ where: { fromNexusId: nexus.id }, select: { id: true } }));
 
-  const ctx: QuestContext = { nexus: nexus as Nexus & Record<string, unknown>, hasOutgoingStrike, hasCompletedAttack };
+  const ctx: QuestContext = { nexus: nexus as Nexus & Record<string, unknown>, hasOutgoingStrike, hasCompletedAttack, hasOutgoingSpyMission };
 
   for (const batch of QUEST_REWARD_BATCHES) {
     for (const quest of batch.quests) {

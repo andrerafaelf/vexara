@@ -6,6 +6,7 @@ import { parsePositiveInt } from '../utils/validation.js';
 import { TROOP_STATS } from '../utils/combatMath.js';
 import { logError } from '../utils/logger.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
+import { applyQuestRewards } from '../models/Nexus.js';
 
 // ---- constants ----
 const EMBED_BASE_COST = { biomass: 400, alloy: 200 };
@@ -161,6 +162,7 @@ export async function sendSpyMission(req: AuthRequest, res: Response): Promise<v
       }
       void incrementQuestProgress(req.userId, req.galaxyId, 'login', 1);
     } catch {}
+    void applyQuestRewards(attacker, { hasOutgoingSpyMission: true });
 
     res.json({
       queued: true,

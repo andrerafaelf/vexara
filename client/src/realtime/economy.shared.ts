@@ -61,7 +61,7 @@ export function getResourceProduction(nexus: EconomyNexus, storm?: StormBonus): 
       ? 1
       : 1 + (rawMultiplier - 1) * getDoubleScale(nexus);
   const prod = (level: number, stormMult: number) =>
-    level <= 0 ? 0 : baseProduction * Math.pow(1.35, level - 1) * productionMultiplier * stormMult;
+    level <= 0 ? 0 : baseProduction * Math.pow(1.32, level - 1) * productionMultiplier * stormMult;
   return {
     biomass: prod(nexus.biomassFarm,  storm?.biomass ?? 1),
     alloy:   prod(nexus.alloyForge,   storm?.alloy   ?? 1),

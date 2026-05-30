@@ -4,7 +4,7 @@ import * as troopService from '../services/troopService.js';
 import { atomicUpdateNexusResources, ResourceConflictError } from '../services/nexusService.js';
 import type { AuthRequest } from '../types/index.js';
 import { getMaxStorage, getResourceProduction } from '../utils/economy.js';
-import { TROOP_COSTS, getCommandTrainingQueueBonus, getEffectiveTrainTimeSeconds, getTrainTimeSeconds } from '../utils/gameConstants.js';
+import { TROOP_COSTS, getCommandTrainingQueueBonus, getEffectiveTrainTimeSeconds, getOverseerCost, getTrainTimeSeconds } from '../utils/gameConstants.js';
 import { parsePositiveInt } from '../utils/validation.js';
 import { logError } from '../utils/logger.js';
 import { notifyNexusResources } from '../services/warRoomSocket.js';
@@ -127,7 +127,10 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
 
     const resourceUpdate = computeResourceUpdate(nexus);
     const current = { ...nexus, ...resourceUpdate } as unknown as Record<string, number>;
-    const cost = TROOP_COSTS[troopType];
+    const baseCost = TROOP_COSTS[troopType];
+    const cost = troopType === 'overseer'
+      ? { ...baseCost, ...getOverseerCost(await troopService.countOwnedNexuses(req.userId!, req.galaxyId!)) }
+      : baseCost;
     const totalCost = { biomass: cost.biomass * parsedAmount, alloy: cost.alloy * parsedAmount, ore: cost.ore * parsedAmount, population: cost.population * parsedAmount };
     if (current.biomass < totalCost.biomass || current.alloy < totalCost.alloy || current.ore < totalCost.ore) {
       res.status(400).json({ error: 'Insufficient resources' }); return;
@@ -152,7 +155,10 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
       ? new Date(sameChainQueue[sameChainQueue.length - 1].completesAt as string).getTime()
       : Date.now();
     const completesAt = new Date(queueStart + perUnitSeconds * parsedAmount * 1000);
-    const newQueue = [...trainingQueue, { troopType, amount: parsedAmount, completesAt, perUnitSeconds }];
+    const perUnitCost = troopType === 'overseer'
+      ? { biomass: cost.biomass, alloy: cost.alloy, ore: cost.ore }
+      : undefined;
+    const newQueue = [...trainingQueue, { troopType, amount: parsedAmount, completesAt, perUnitSeconds, perUnitCost }];
 
     let updated;
     try {
@@ -248,11 +254,12 @@ export async function cancelTrainingQueue(req: AuthRequest, res: Response): Prom
     let refundedItem: { troopType: string; amount: number; completesAt: string | Date } | null = null;
     let newQueue = trainingQueue.slice() as Array<{ troopType: string; amount: number; completesAt: string | Date; perUnitSeconds?: number }>;
     if (refundedIdx !== -1) {
-      const item = trainingQueue[refundedIdx] as { troopType: string; amount: number; completesAt: string | Date };
+      const item = trainingQueue[refundedIdx] as { troopType: string; amount: number; completesAt: string | Date; perUnitCost?: { biomass: number; alloy: number; ore: number } };
       refundedItem = item;
-      const cost = TROOP_COSTS[item.troopType];
-      if (!cost) { res.status(400).json({ error: 'Invalid troop type in queue' }); return; }
-      const totalCost = { biomass: cost.biomass * item.amount, alloy: cost.alloy * item.amount, ore: cost.ore * item.amount };
+      const baseTroopCost = TROOP_COSTS[item.troopType];
+      if (!baseTroopCost) { res.status(400).json({ error: 'Invalid troop type in queue' }); return; }
+      const refundCost = item.perUnitCost ?? baseTroopCost;
+      const totalCost = { biomass: refundCost.biomass * item.amount, alloy: refundCost.alloy * item.amount, ore: refundCost.ore * item.amount };
       refund = { biomass: Math.floor(totalCost.biomass * 0.85), alloy: Math.floor(totalCost.alloy * 0.85), ore: Math.floor(totalCost.ore * 0.85) };
       const itemCompletesAt = new Date(item.completesAt).getTime();
       const sameChainPredicate = (entry: { troopType: string }) =>

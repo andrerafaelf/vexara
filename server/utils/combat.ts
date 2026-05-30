@@ -12,7 +12,7 @@ import {
 import { buildDetailedScoutIntel } from './scouting.js';
 import { NOTIF, sendPushToUser } from './push.js';
 import { resolveEventForNexus } from './galaxyEvents.js';
-import { notifyAttackUpdate, notifyTransferUpdate, notifyReportUpdate, notifyNexusConquered } from '../services/warRoomSocket.js';
+import { notifyAttackUpdate, notifyTransferUpdate, notifyReportUpdate, notifyNexusConquered, notifyFactionUpdated } from '../services/warRoomSocket.js';
 import { getNexusTypeEffectiveMultipliers } from './economy.js';
 import type { TroopKey } from '../types/index.js';
 import { logInfo, logWarn } from './logger.js';
@@ -760,6 +760,28 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
         conquered = true;
         await destroyForeignTransfersAtConqueredNexus(defenderNexus.id, attack.galaxyId, newOwnerId, attack.id);
         await destroyInvalidInboundSupport(defenderNexus.id, attack.galaxyId, newOwnerId, attack.id);
+        // Auto-kick the defender from their faction if this was their last nexus.
+        const prevOwnerId = defenderNexus.ownerId;
+        if (prevOwnerId) {
+          const remainingNexuses = await prisma.nexus.count({
+            where: { galaxyId: attack.galaxyId, ownerId: prevOwnerId, id: { not: defenderNexus.id } },
+          });
+          if (remainingNexuses === 0) {
+            const membership = await prisma.factionMember.findUnique({
+              where: { userId_galaxyId: { userId: prevOwnerId, galaxyId: attack.galaxyId } },
+              select: { factionId: true },
+            });
+            if (membership) {
+              await prisma.factionMember.delete({
+                where: { userId_galaxyId: { userId: prevOwnerId, galaxyId: attack.galaxyId } },
+              });
+              await prisma.factionEvent.create({
+                data: { factionId: membership.factionId, type: 'member_removed_no_nexus', actorName: undefined, targetName: undefined },
+              });
+              try { notifyFactionUpdated(membership.factionId); } catch (_) {}
+            }
+          }
+        }
         logInfo('nexus_conquest_owner_changed', {
           attackId: attack.id,
           defenderNexusId: defenderNexus.id,

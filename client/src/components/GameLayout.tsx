@@ -249,7 +249,7 @@ export default function GameLayout({
             <Menu size={18} />
           </button>
           <h1 className="vx-wordmark game-wordmark">
-            <span className="vx-wordmark-stamp" aria-hidden="true">VX</span>
+            <img src="/vexara-logo.png" alt="" aria-hidden="true" className="vx-wordmark-stamp" />
             <span className="vx-wordmark-name">Vexara</span>
           </h1>
         </div>

@@ -302,13 +302,13 @@ export async function createUser(req: Request, res: Response): Promise<void> {
 export async function updateUser(req: Request, res: Response): Promise<void> {
   try {
     const userId = adminService.toInt(req.params.userId);
-    const { email, password } = req.body as { email?: string; password?: string };
+    const { username, email, password } = req.body as { username?: string; email?: string; password?: string };
     const user = await adminService.getUserById(userId);
     if (!user) {
       res.status(404).json({ error: 'User not found' });
       return;
     }
-    const updated = await adminService.updateUserCredentials(userId, email, password);
+    const updated = await adminService.updateUserCredentials(userId, username, email, password);
     res.json({
       success: true,
       user: { _id: updated.id, id: updated.id, username: updated.username, email: updated.email },

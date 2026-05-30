@@ -97,6 +97,22 @@ export function getBuildingCost(building: string, currentLevel: number): Buildin
   return { biomass: Math.floor(biomass), alloy: Math.floor(alloy), ore: Math.floor(ore), time: Math.floor(time) };
 }
 
+// Overseer cost scales 1.5x per nexus owned beyond 3.
+// The first 3 nexuses use the base cost from TROOP_COSTS.
+export const OVERSEER_COST_SCALE_THRESHOLD = 3;
+export const OVERSEER_COST_SCALE_PER_EXTRA = 1.5;
+
+export function getOverseerCost(nexusCount: number): { biomass: number; alloy: number; ore: number } {
+  const base = TROOP_COSTS.overseer;
+  const extra = Math.max(0, nexusCount - OVERSEER_COST_SCALE_THRESHOLD);
+  const multiplier = extra > 0 ? Math.pow(OVERSEER_COST_SCALE_PER_EXTRA, extra) : 1;
+  return {
+    biomass: Math.floor(base.biomass * multiplier),
+    alloy:   Math.floor(base.alloy   * multiplier),
+    ore:     Math.floor(base.ore     * multiplier),
+  };
+}
+
 // Per-unit train time in seconds, before the Nexus-type training multiplier.
 // Overseer trains at base time regardless of Recruitment Core.
 export function getTrainTimeSeconds(troopType: string, recruitmentLevel: number): number {

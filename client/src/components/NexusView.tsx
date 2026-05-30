@@ -66,6 +66,7 @@ import {
   getCommandTrainingQueueBonus,
   getEffectiveBuildTimeSeconds,
   getEffectiveTrainTimeSeconds,
+  getOverseerCost,
   getTrainTimeSeconds as getRecruitDiscountedTrainSeconds,
 } from '../realtime/gameConstants.shared';
 import { useToast } from '../context/ToastContext';
@@ -2415,7 +2416,10 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                           {category === 'offense' ? 'Offense' : 'Defense'}
                         </h4>
                         <div className="train-grid">
-                          {trainableTroops.map(([type, costs]) => {
+                          {trainableTroops.map(([type, baseCosts]) => {
+                            const costs = type === 'overseer'
+                              ? { ...baseCosts, ...getOverseerCost(ownNexuses.length) }
+                              : baseCosts;
                             const { canTrain, missingRequirements } = checkTroopRequirements(type);
                             const { maxTrainable, shortageReasons } = getMaxTrainableAmount(type, costs, canTrain);
                             const trainSeconds = canTrain

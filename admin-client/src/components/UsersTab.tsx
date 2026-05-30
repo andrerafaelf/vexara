@@ -27,13 +27,14 @@ const TROOP_OPTIONS = [
 
 type FilterValue = 'all' | 'unverified' | 'verified';
 type EditModal = { userId: string; username: string; email: string } | null;
+type EditForm = { username: string; email: string; password: string };
 type TokenModal = { userId: string; username: string } | null;
 
 export default function UsersTab({ users, adminFetch, showToast, onUserChanged }: Props) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FilterValue>('all');
   const [editModal, setEditModal] = useState<EditModal>(null);
-  const [editForm, setEditForm] = useState({ email: '', password: '' });
+  const [editForm, setEditForm] = useState<EditForm>({ username: '', email: '', password: '' });
   const [tokenModal, setTokenModal] = useState<TokenModal>(null);
   const [tokenCount, setTokenCount] = useState('1');
   const [tokenReason, setTokenReason] = useState('manual');
@@ -70,17 +71,14 @@ export default function UsersTab({ users, adminFetch, showToast, onUserChanged }
   };
 
   const openEdit = (u: AllUser) => {
-    setEditForm({ email: u.email, password: '' });
+    setEditForm({ username: u.username, email: u.email, password: '' });
     setEditModal({ userId: u._id, username: u.username, email: u.email });
   };
 
   const handleSaveEdit = async () => {
     if (!editModal) return;
-    if (!editForm.email && !editForm.password) {
-      showToast('Provide a new email or password', 'error');
-      return;
-    }
-    const payload: { email?: string; password?: string } = {};
+    const payload: { username?: string; email?: string; password?: string } = {};
+    if (editForm.username && editForm.username !== editModal.username) payload.username = editForm.username;
     if (editForm.email && editForm.email !== editModal.email) payload.email = editForm.email;
     if (editForm.password) payload.password = editForm.password;
     if (!Object.keys(payload).length) {
@@ -290,6 +288,13 @@ export default function UsersTab({ users, adminFetch, showToast, onUserChanged }
             </div>
             <div className="modal-body">
               <div className="form-grid">
+                <div className="form-group">
+                  <label>Username</label>
+                  <input
+                    value={editForm.username}
+                    onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
+                  />
+                </div>
                 <div className="form-group">
                   <label>Email</label>
                   <input

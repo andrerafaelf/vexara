@@ -62,8 +62,6 @@ export interface StormBonus {
 }
 
 export function getResourceProduction(nexus: NexusForEconomy, storm?: StormBonus): ResourceAmounts {
-  // 800/h base lets a Lv1 farm tick about 13/min, enough that the opening
-  // sequence (CC Lv1-3 → RC Lv1 → first troops) flows without dead time.
   const baseProduction = 800;
   const rawMultiplier = NEXUS_TYPE_BONUSES[nexus.nexusType ?? '']?.productionMultiplier ?? 1;
   const productionMultiplier = nexus.isDerelict
@@ -72,7 +70,7 @@ export function getResourceProduction(nexus: NexusForEconomy, storm?: StormBonus
       ? 1
       : 1 + (rawMultiplier - 1) * getDoubleScale(nexus);
   const prod = (level: number, stormMult: number) =>
-    level <= 0 ? 0 : baseProduction * Math.pow(1.35, level - 1) * productionMultiplier * stormMult;
+    level <= 0 ? 0 : baseProduction * Math.pow(1.32, level - 1) * productionMultiplier * stormMult;
   return {
     biomass: prod(nexus.biomassFarm,  storm?.biomass ?? 1),
     alloy:   prod(nexus.alloyForge,   storm?.alloy   ?? 1),

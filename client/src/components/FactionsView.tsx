@@ -694,7 +694,7 @@ export default function FactionsView() {
                         )}
                         {Array.isArray(cachedMembers) && cachedMembers.length > 0 && (
                           <ul className="factions-browser-card-members-list">
-                            {cachedMembers.filter((m) => (m.nexusCount ?? 0) > 0).map((m) => (
+                            {cachedMembers.map((m) => (
                               <li key={m.userId} className="factions-browser-card-members-item">
                                 <div className="factions-browser-card-member-main">
                                   <Username name={m.username} isSupporter={m.isSupporter} supporterTier={m.supporterTier as any} linkToProfile />
@@ -1114,7 +1114,7 @@ export default function FactionsView() {
                         )}
                         {Array.isArray(cachedMembers) && cachedMembers.length > 0 && (
                           <ul className="factions-browser-card-members-list">
-                            {cachedMembers.filter((m) => (m.nexusCount ?? 0) > 0).map((m) => (
+                            {cachedMembers.map((m) => (
                               <li key={m.userId} className="factions-browser-card-members-item">
                                 <div className="factions-browser-card-member-main">
                                   <Username name={m.username} isSupporter={m.isSupporter} supporterTier={m.supporterTier as any} linkToProfile />
