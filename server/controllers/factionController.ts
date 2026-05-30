@@ -1182,6 +1182,33 @@ export async function trimOversizedFactions(): Promise<void> {
   }
 }
 
+// ── PURGE NEXUS-LESS MEMBERS ─────────────────────────────────────────────────
+// Removes any faction member who owns zero nexuses in their galaxy.
+// Runs at startup and periodically so stale memberships don't linger.
+
+export async function purgeNexuslessMembers(): Promise<void> {
+  const members = await prisma.factionMember.findMany({
+    select: { id: true, userId: true, galaxyId: true, factionId: true, role: true },
+  });
+
+  for (const member of members) {
+    // Keep leaders in — they may be building/recovering; they can be manually kicked.
+    if (member.role === 'leader') continue;
+
+    const nexusCount = await prisma.nexus.count({
+      where: { galaxyId: member.galaxyId, ownerId: member.userId },
+    });
+    if (nexusCount > 0) continue;
+
+    await prisma.factionMember.delete({ where: { id: member.id } });
+    const user = await prisma.user.findUnique({ where: { id: member.userId }, select: { username: true } });
+    await prisma.factionEvent.create({
+      data: { factionId: member.factionId, type: 'member_removed_no_nexus', actorName: user?.username, targetName: undefined },
+    });
+    try { notifyFactionUpdated(member.factionId); } catch (_) {}
+  }
+}
+
 // ── MOTD ──────────────────────────────────────────────────────────────────────
 
 export async function updateMotd(req: AuthRequest, res: Response): Promise<void> {

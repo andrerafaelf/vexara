@@ -8,7 +8,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) =>
-      cache.addAll(['/manifest.json', '/logo192.png', '/logo512.png']).catch(() => {}),
+      cache.addAll(['/manifest.json', '/vexara192.png', '/vexara512.png']).catch(() => {}),
     ),
   );
 });
@@ -61,8 +61,8 @@ self.addEventListener('push', (event) => {
   const title = data.title || 'Vexara';
   const options = {
     body: data.body || '',
-    icon: data.icon || '/logo192.png',
-    badge: '/logo192.png',
+    icon: data.icon || '/vexara192.png',
+    badge: '/vexara192.png',
     tag: data.tag || 'vexara',
     data: data.data || { url: '/' },
     requireInteraction: false,

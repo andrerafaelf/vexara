@@ -71,7 +71,13 @@ function loadPatchNotes(): PatchNote[] {
     });
 }
 
-// Minimal markdown renderer: bold, horizontal rules, headings, paragraphs
+function applyInline(text: string): string {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>');
+}
+
+// Renders bold, inline code, bullet lists, headings, and paragraphs from markdown
 function renderMarkdown(raw: string) {
   const lines = raw.split('\n');
   const elements: React.ReactNode[] = [];
@@ -101,17 +107,45 @@ function renderMarkdown(raw: string) {
       continue;
     }
 
-    // Paragraph / list accumulation
+    // Bullet list block
+    if (line.trimStart().startsWith('- ')) {
+      const items: string[] = [];
+      while (i < lines.length && lines[i].trimStart().startsWith('- ')) {
+        // Collect continuation lines (indented, not starting with '- ')
+        let itemText = lines[i].trimStart().slice(2);
+        i++;
+        while (i < lines.length && lines[i] !== '' && !lines[i].trimStart().startsWith('- ') && !lines[i].startsWith('#') && !lines[i].startsWith('---')) {
+          itemText += ' ' + lines[i].trim();
+          i++;
+        }
+        items.push(itemText);
+      }
+      elements.push(
+        <ul key={i} className="pn-entry-list">
+          {items.map((item, idx) => (
+            <li key={idx} dangerouslySetInnerHTML={{ __html: applyInline(item) }} />
+          ))}
+        </ul>,
+      );
+      while (i < lines.length && lines[i] === '') i++;
+      continue;
+    }
+
+    // Paragraph accumulation
     const paraLines: string[] = [];
-    while (i < lines.length && lines[i] !== '' && !lines[i].startsWith('##') && !lines[i].startsWith('---')) {
+    while (
+      i < lines.length &&
+      lines[i] !== '' &&
+      !lines[i].startsWith('##') &&
+      !lines[i].startsWith('---') &&
+      !lines[i].trimStart().startsWith('- ')
+    ) {
       paraLines.push(lines[i]);
       i++;
     }
 
     if (paraLines.length > 0) {
-      const html = paraLines
-        .join('\n')
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      const html = applyInline(paraLines.join('\n'));
       elements.push(
         <p key={i} className="pn-entry-para" dangerouslySetInnerHTML={{ __html: html }} />,
       );

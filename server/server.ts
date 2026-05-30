@@ -153,7 +153,7 @@ app.use('/api/warroom', warRoomRoutes);
 app.use('/api/referral', referralRoutes);
 app.use('/api/users', usersRoutes);
 
-const JOB_LOCKS = { updateResources: 9101, processCombat: 9102, syncNeutralPool: 9103, recoverControl: 9104, processTransfers: 9105, levelNeutralNexuses: 9106, processQueues: 9107, processDominance: 9108, dailyNexusGrowth: 9109, galaxyEvents: 9110, processSpyMissions: 9111, protectionWarnings: 9112, rogueAiRaids: 9113, rogueAiGrowth: 9114 };
+const JOB_LOCKS = { updateResources: 9101, processCombat: 9102, syncNeutralPool: 9103, recoverControl: 9104, processTransfers: 9105, levelNeutralNexuses: 9106, processQueues: 9107, processDominance: 9108, dailyNexusGrowth: 9109, galaxyEvents: 9110, processSpyMissions: 9111, protectionWarnings: 9112, rogueAiRaids: 9113, rogueAiGrowth: 9114, purgeNexuslessMembers: 9115 };
 
 async function runWithPgAdvisoryLock(lockId: number, jobName: string, jobHandler: () => Promise<void>) {
   try {
@@ -202,8 +202,9 @@ prisma.$connect()
       logError('backfill_resource_buildings_error', { message: (err as Error).message });
     }
     try {
-      const { trimOversizedFactions } = await import('./controllers/factionController.js');
+      const { trimOversizedFactions, purgeNexuslessMembers } = await import('./controllers/factionController.js');
       await trimOversizedFactions();
+      await purgeNexuslessMembers();
     } catch (err) {
       logError('trim_oversized_factions_error', { message: (err as Error).message });
     }
@@ -222,6 +223,7 @@ prisma.$connect()
     setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.protectionWarnings, 'protection_warnings', () => sendProtectionExpiringWarnings()); }, 15 * 60 * 1000);
     setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.rogueAiRaids, 'rogue_ai_raids', () => processRogueAiRaids()); }, 30 * 60 * 1000);
     setInterval(() => { void runWithPgAdvisoryLock(JOB_LOCKS.rogueAiGrowth, 'rogue_ai_growth', () => processRogueAiGrowth()); }, 60 * 60 * 1000);
+    setInterval(async () => { const { purgeNexuslessMembers } = await import('./controllers/factionController.js'); void runWithPgAdvisoryLock(JOB_LOCKS.purgeNexuslessMembers, 'purge_nexusless_members', () => purgeNexuslessMembers()); }, 60 * 60 * 1000);
   })
   .catch((err: Error) => logError('postgres_connection_error', { message: err.message }));
 

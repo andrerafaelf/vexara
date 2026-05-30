@@ -1025,7 +1025,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
       const rawMult = nexus.nexusType === 'Resource Depot' ? 2 : 1;
       productionMult = rawMult === 1 ? 1 : 1 + (rawMult - 1) * (nexus.nexusTypeDoubled ? 2 : 1);
     }
-    const prod = (level: number) => (level <= 0 ? 0 : Math.floor(baseProduction * Math.pow(1.35, level - 1) * productionMult));
+    const prod = (level: number) => (level <= 0 ? 0 : Math.floor(baseProduction * Math.pow(1.32, level - 1) * productionMult));
     return {
       biomass: prod(nexus.buildings.biomassFarm),
       alloy: prod(nexus.buildings.alloyForge),
@@ -1435,7 +1435,16 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     return { batches: allBatches.filter((batch) => !claimedBatches.has(batch.id)), allQuestsComplete };
   };
 
-  const production = calculateProduction();
+  const production = getResourceProduction({
+    nexusType: nexus.nexusType,
+    nexusTypeDoubled: nexus.nexusTypeDoubled,
+    isDerelict: nexus.isDerelict,
+    commandCore: nexus.buildings.commandCore,
+    biomassFarm: nexus.buildings.biomassFarm,
+    alloyForge: nexus.buildings.alloyForge,
+    oreExtractor: nexus.buildings.oreExtractor,
+    storageVault: nexus.buildings.storageVault,
+  });
   const storageCapacity = getMaxStorage({
     nexusType: nexus.nexusType,
     nexusTypeDoubled: nexus.nexusTypeDoubled,
