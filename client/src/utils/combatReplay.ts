@@ -110,8 +110,18 @@ export function deriveReplay(report: Attack): CombatReplay | null {
       : report.troops,
   );
 
-  const defenderLosses = positiveForce(report.result.defenderLosses);
-  const reportedDefenderInitial = positiveForce(report.result.defenderInitial);
+  // The replay visualizes the full battle, so the defender side must include
+  // allied support. defenderInitial/defenderLosses on the report are now
+  // garrison-only; prefer the merged figures (garrison + support) when present,
+  // falling back to the garrison-only fields for legacy reports.
+  const mergedDefenderLosses = positiveForce((report.result as { mergedDefenderLosses?: Record<string, number> }).mergedDefenderLosses);
+  const mergedDefenderInitial = positiveForce((report.result as { mergedDefenderInitial?: Record<string, number> }).mergedDefenderInitial);
+  const defenderLosses = hasForce(mergedDefenderLosses)
+    ? mergedDefenderLosses
+    : positiveForce(report.result.defenderLosses);
+  const reportedDefenderInitial = hasForce(mergedDefenderInitial)
+    ? mergedDefenderInitial
+    : positiveForce(report.result.defenderInitial);
   const defenderInitial = hasForce(reportedDefenderInitial)
     ? reportedDefenderInitial
     : defenderLosses;

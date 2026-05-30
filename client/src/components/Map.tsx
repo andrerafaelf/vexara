@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useGameSocket } from '../hooks/useGameSocket';
 import WavePlanner from './WavePlanner';
+import CombatCalculator from './CombatCalculator';
 import Username from './Username';
 import {
   getGalaxyEvents,
@@ -540,10 +541,16 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
     if (biomass === 0 && alloy === 0 && ore === 0) return;
     setTransferring(true);
     try {
-      await transferResources(currentNexus._id, selectedNexus._id, biomass, alloy, ore);
+      const res = await transferResources(currentNexus._id, selectedNexus._id, biomass, alloy, ore);
       setTransferAmounts({ biomass: '', alloy: '', ore: '' });
       setShowTransfer(false);
-      toast(`Resources sent to ${selectedNexus.name}`, 'success');
+      // The server clamps to the destination's remaining storage; warn if some
+      // was held back rather than silently dropping it.
+      if (res?.data?.clamped) {
+        toast(`Partly sent to ${selectedNexus.name} — its storage was nearly full.`, 'info');
+      } else {
+        toast(`Resources sent to ${selectedNexus.name}`, 'success');
+      }
       onRefresh();
     } catch (err: any) {
       toast(err.response?.data?.error || 'Transfer failed', 'error');
@@ -1010,6 +1017,13 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
       selectedNexus.name.includes('Supply Cache') ||
       selectedNexus.name.includes('Abandoned Base') ||
       selectedNexus.name.includes('Neutral Settlement');
+    // While the attacker's OWN nexus is under newbie protection it may only act
+    // offensively against NPCs, never against other players (mirrors the server
+    // rule in attackController). Target is a player when it has an owner / isn't NPC.
+    const targetIsPlayer = !isNpc && !!selectedNexus.owner;
+    const myNexusProtected =
+      !!currentNexus.newbieProtectionEndsAt && new Date(currentNexus.newbieProtectionEndsAt) > currentTimeRef.current;
+    const blockedByMyProtection = myNexusProtected && targetIsPlayer;
 
     const attackTroopRows = Object.entries(availableTroops).filter(([type]) => {
       if (type === 'reconOperative' || type === 'plasmaTurret') return false;
@@ -1161,13 +1175,15 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
                 <button
                   className="attack-btn"
                   onClick={() => { setAttackMissionType('attack'); setShowAttackForm(true); }}
-                  disabled={isConquered || isNewbieProtected}
+                  disabled={isConquered || isNewbieProtected || blockedByMyProtection}
                   title={
                     isConquered
                       ? 'Nexus already conquered'
                       : isNewbieProtected
                         ? `Protected by newbie shield · ${formatTime(new Date(selectedNexus.newbieProtectionEndsAt!))} remaining`
-                        : 'Launch attack'
+                        : blockedByMyProtection
+                          ? 'While under newbie protection you can only attack NPC nexuses, not other players.'
+                          : 'Launch attack'
                   }
                 >
                   <Swords size={14} aria-hidden="true" />{' '}
@@ -1228,6 +1244,20 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
                     );
                   })}
                 </div>
+                {attackMissionType === 'attack' && (
+                  <CombatCalculator
+                    attacker={attackTroops as Record<string, number>}
+                    defender={
+                      selectedNexus.intelLevel === 'scouted' || selectedNexus.intelLevel === 'owned'
+                        ? (selectedNexus.troops as Record<string, number> | undefined) ?? {}
+                        : null
+                    }
+                    defenderShieldGrid={selectedNexus.buildings?.shieldGrid ?? 0}
+                    attackerArmory={Number((currentNexus.buildings as Record<string, number> | undefined)?.armory ?? 0)}
+                    shieldEfficiencyMultiplier={selectedNexus.name?.includes('Military Outpost') ? 2 : 1}
+                    hasIntel={selectedNexus.intelLevel === 'scouted' || selectedNexus.intelLevel === 'owned'}
+                  />
+                )}
                 {(() => {
                   const travel = estimateTravelTime();
                   return travel ? (

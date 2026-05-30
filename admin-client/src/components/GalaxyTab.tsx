@@ -513,7 +513,7 @@ export default function GalaxyTab({
                   <div key={u._id} className="leaderboard-row">
                     <span className={`leaderboard-rank rank-${i + 1}`}>#{i + 1}</span>
                     <span className="leaderboard-name">{u.username}</span>
-                    <span className="leaderboard-pts">{u.points.toLocaleString()} pts</span>
+                    <span className="leaderboard-pts">{(u.points ?? 0).toLocaleString()} pts</span>
                   </div>
                 ))}
               </div>
@@ -703,7 +703,7 @@ export default function GalaxyTab({
                 />
               </div>
               <div className="player-editor-pop">
-                Population <strong>{activeNexus.populationCurrent.toLocaleString()}</strong> / {activeNexus.populationMax.toLocaleString()}
+                Population <strong>{(activeNexus.populationCurrent ?? 0).toLocaleString()}</strong> / {(activeNexus.populationMax ?? 0).toLocaleString()}
               </div>
             </div>
 
@@ -715,7 +715,7 @@ export default function GalaxyTab({
                 accent="rgba(245, 158, 11, 0.6)"
               >
                 {RESOURCE_KEYS.filter((k) => filterMatches(RESOURCE_LABELS[k], k)).map((k) => {
-                  const current = activeNexus[k];
+                  const current = activeNexus[k] ?? 0;
                   const draft = draftValueFor(k, current);
                   const dirty = draft !== current;
                   return (
@@ -740,7 +740,7 @@ export default function GalaxyTab({
                 accent="rgba(122, 162, 255, 0.6)"
               >
                 {BUILDING_KEYS.filter((k) => filterMatches(BUILDING_LABELS[k], k)).map((k) => {
-                  const current = activeNexus[k];
+                  const current = activeNexus[k] ?? 0;
                   const draft = draftValueFor(k, current);
                   const dirty = draft !== current;
                   return (
@@ -766,7 +766,7 @@ export default function GalaxyTab({
                 accent="rgba(239, 68, 68, 0.55)"
               >
                 {TROOP_KEYS.filter((k) => filterMatches(TROOP_LABELS[k], k)).map((k) => {
-                  const current = activeNexus[k];
+                  const current = activeNexus[k] ?? 0;
                   const draft = draftValueFor(k, current);
                   const dirty = draft !== current;
                   return (
@@ -894,12 +894,13 @@ function EditorRow({
   onReset: () => void;
   disabled?: boolean;
 }) {
-  const diff = draft - current;
+  const safeCurrent = Number.isFinite(current) ? current : 0;
+  const diff = draft - safeCurrent;
   return (
     <div className={`editor-row${dirty ? ' editor-row-dirty' : ''}`}>
       <div className="editor-row-label">{label}</div>
       <div className="editor-row-current">
-        <span className="editor-row-current-num">{current.toLocaleString()}</span>
+        <span className="editor-row-current-num">{safeCurrent.toLocaleString()}</span>
         {hint && <span className="editor-row-hint">{hint}</span>}
       </div>
       <div className="editor-row-arrow">→</div>

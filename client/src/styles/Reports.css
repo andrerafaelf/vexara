@@ -1006,4 +1006,12 @@
 
 .allied-contrib-nexus {
   color: var(--text-faint);
+  font-weight: 400;
+}
+
+/* "(You)" marker on whichever force table belongs to the viewer. */
+.report-force-you {
+  color: var(--color-accent, #FF9E3D);
+  font-weight: 700;
+  font-size: 0.85em;
 }

@@ -102,6 +102,8 @@ export function getUsersInGalaxy(galaxyId: number) {
           suppressorTeam: true,
           disruptorUnit: true,
           interceptorBike: true,
+          voidStalker: true,
+          plasmaTurret: true,
           annihilatorPlatform: true,
           overseer: true,
         },

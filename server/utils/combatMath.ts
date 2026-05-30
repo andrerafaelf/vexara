@@ -129,16 +129,39 @@ export function computeClassWeightedAttack(
 }
 
 // Compute per-unit loss count for a force that lost the engagement.
-// Uses the opposing side's attack power distributed against each unit's defense.
-// Variance shrinks as stack size grows (law of large numbers feel).
+//
+// Losing is heavy but no longer all-or-nothing. The loss rate scales with how
+// badly the side lost (powerRatio = loser_power / winner_power, in (0, 1]):
+//   - a blowout (ratio -> 0) wipes essentially the whole force
+//   - a near-even loss (ratio -> 1) still costs ~85%, leaving a real remnant
+// This removes the old cliff where losing by a single power point annihilated
+// the entire army exactly as hard as losing by a mile.
+//
+// powerRatio defaults to 0 so existing callers that don't pass it (and the
+// genuine "no resistance" case) keep the previous total-wipe behaviour.
+export const LOSER_MIN_LOSS_RATE = 0.85; // floor at an even loss
+export const LOSER_MAX_LOSS_RATE = 1.0;  // a blowout
+
+// Winner's loss rate at a coin-flip (powerRatio -> 1); scales down to 0 for a
+// blowout. See computeLossesForWinner for the full rationale.
+export const WINNER_COINFLIP_LOSS_RATE = 0.45;
+
 export function computeLossesForLoser(
   force: Partial<Record<TroopKey, number>> | Record<string, unknown>,
+  powerRatio = 0,
 ): Partial<Record<TroopKey, number>> {
+  const clampedRatio = Math.max(0, Math.min(1, powerRatio));
+  const lossRate =
+    LOSER_MIN_LOSS_RATE + (LOSER_MAX_LOSS_RATE - LOSER_MIN_LOSS_RATE) * (1 - clampedRatio);
+
   const losses: Partial<Record<TroopKey, number>> = {};
   for (const key of TROOP_KEYS) {
     if (key === 'overseer') continue;
     const count = Number((force as Record<string, unknown>)[key] || 0);
-    if (count > 0) losses[key] = count;
+    if (count <= 0) continue;
+    // Ceil so a lost engagement always costs at least one of each present unit;
+    // clamp to the actual count so we never report more losses than exist.
+    losses[key] = Math.min(count, Math.ceil(count * lossRate));
   }
   return losses;
 }
@@ -173,9 +196,16 @@ export function computeLossesForWinner(
 
   // When powerRatio is 0 (defender had no troops), the attacker walked in
   // unopposed - they lose nothing. Scale linearly from 0 up to a meaningful cap.
-  // baseLossRate: 0% at ratio=0, up to ~30% at ratio=1 (evenly matched win).
-  // 30% makes a coin-flip victory feel genuinely costly without punishing dominant wins.
-  const baseLossRate = Math.min(0.30, powerRatio * 0.30);
+  // baseLossRate: 0% at ratio=0, up to ~45% at ratio=1 (evenly matched win).
+  //
+  // The cap was 30%, which made winning a coin-flip nearly as cheap as a
+  // blowout and removed the tension from army-vs-army fights — there was almost
+  // no downside to attacking a force of comparable strength. 45% makes a
+  // near-even victory a genuine Pyrrhic cost (you win, but bleed badly) while
+  // dominant wins (low ratio) stay cheap, preserving the power-advantage
+  // fantasy. Pairs with the softened loser curve so the win/lose gradient is
+  // smooth rather than a "win = safe, lose = dead" cliff.
+  const baseLossRate = Math.min(WINNER_COINFLIP_LOSS_RATE, powerRatio * WINNER_COINFLIP_LOSS_RATE);
 
   // No resistance at all — skip variance so positive noise can't manufacture losses.
   if (powerRatio === 0) return losses;

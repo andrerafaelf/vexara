@@ -59,6 +59,25 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
       res.status(403).json({ error: 'This nexus is under newbie protection and cannot be attacked yet', protectedUntil: defenderNexus.newbieProtectionEndsAt }); return;
     }
 
+    // A still-protected attacker may only act offensively against NPC / unowned
+    // nexuses — they cannot attack or scout other PLAYERS while sheltered. This
+    // is symmetric with being un-attackable: you can't hide behind protection
+    // and still poke real players. Support to friendly players is benign and
+    // stays allowed (it's checked further down). NPC raids are how a protected
+    // newbie grows, so those remain open.
+    if (
+      (attackType === 'attack' || attackType === 'scout') &&
+      defenderNexus.ownerId != null &&
+      attackerNexus.newbieProtectionEndsAt &&
+      new Date(attackerNexus.newbieProtectionEndsAt) > new Date()
+    ) {
+      res.status(403).json({
+        error: 'While under newbie protection you can only attack NPC nexuses, not other players.',
+        protectedUntil: attackerNexus.newbieProtectionEndsAt,
+      });
+      return;
+    }
+
     const totalTroopsRequested = Object.values(normalizedTroops).reduce((sum, a) => sum + a, 0);
     if (totalTroopsRequested <= 0) { res.status(400).json({ error: 'Select at least one troop' }); return; }
     if ((normalizedTroops.plasmaTurret || 0) > 0) {

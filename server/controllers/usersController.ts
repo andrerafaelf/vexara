@@ -61,26 +61,28 @@ export async function listPlayersInGalaxy(req: AuthRequest, res: Response): Prom
     const nexusByOwner = new Map(nexusCounts.map((r) => [r.ownerId!, r._count.id]));
 
     res.json(
-      players.map((p) => ({
-        userId: p.userId,
-        username: p.user?.username ?? 'Unknown',
-        isSupporter: p.user?.isSupporter ?? false,
-        supporterTier: p.user?.supporterTier ?? null,
-        isFounder: p.user?.isFounder ?? false,
-        avatarUrl: avatarUrl(p.userId, p.user?.avatarKey ?? null),
-        avatarUrlSm: avatarUrlSm(p.userId, p.user?.avatarKey ?? null),
-        points: p.points,
-        joinedAt: p.joinedAt,
-        nexuses: nexusByOwner.get(p.userId) || 0,
-        faction: factionByUser.get(p.userId)
-          ? {
-              id: factionByUser.get(p.userId)!.faction.id,
-              name: factionByUser.get(p.userId)!.faction.name,
-              tag: factionByUser.get(p.userId)!.faction.tag,
-              role: factionByUser.get(p.userId)!.role,
-            }
-          : null,
-      })),
+      players
+        .filter((p) => (nexusByOwner.get(p.userId) ?? 0) > 0)
+        .map((p) => ({
+          userId: p.userId,
+          username: p.user?.username ?? 'Unknown',
+          isSupporter: p.user?.isSupporter ?? false,
+          supporterTier: p.user?.supporterTier ?? null,
+          isFounder: p.user?.isFounder ?? false,
+          avatarUrl: avatarUrl(p.userId, p.user?.avatarKey ?? null),
+          avatarUrlSm: avatarUrlSm(p.userId, p.user?.avatarKey ?? null),
+          points: p.points,
+          joinedAt: p.joinedAt,
+          nexuses: nexusByOwner.get(p.userId) || 0,
+          faction: factionByUser.get(p.userId)
+            ? {
+                id: factionByUser.get(p.userId)!.faction.id,
+                name: factionByUser.get(p.userId)!.faction.name,
+                tag: factionByUser.get(p.userId)!.faction.tag,
+                role: factionByUser.get(p.userId)!.role,
+              }
+            : null,
+        })),
     );
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'usersController.ts' });
@@ -271,6 +273,7 @@ export async function getPublicProfile(req: AuthRequest, res: Response): Promise
       }
     }
 
+    const isSelf = user.id === req.userId;
     const accountAgeDays = Math.max(1, Math.floor((Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24)));
 
     let attacksLaunched = 0, attacksDefended = 0, victories = 0, defeats = 0;
@@ -288,7 +291,10 @@ export async function getPublicProfile(req: AuthRequest, res: Response): Promise
         attacksLaunched++;
         if (won) victories++; else defeats++;
         troopsLost += sumTroops(result.attackerLosses);
-        troopsKilled += sumTroops(result.defenderLosses);
+        // Count every defending unit destroyed (garrison + allied support).
+        // defenderLosses is now garrison-only; mergedDefenderLosses includes
+        // allied casualties. Fall back to defenderLosses for legacy reports.
+        troopsKilled += sumTroops(result.mergedDefenderLosses ?? result.defenderLosses);
         if (won && stolen) {
           resourcesStolen.biomass += stolen.biomass || 0;
           resourcesStolen.alloy += stolen.alloy || 0;
@@ -322,9 +328,16 @@ export async function getPublicProfile(req: AuthRequest, res: Response): Promise
       for (const k of TROOP_KEYS) totalTroops += nexusRecord[k] || 0;
     }
 
+    // A public profile must NOT leak operational intel about another player:
+    // current resource stockpile, production rates, total troop count, and
+    // per-nexus names/coordinates/types are all things an attacker would
+    // otherwise have to spend a scout mission to learn. Those are returned only
+    // when the viewer is looking at their OWN profile. Everyone else sees the
+    // reputational stats (influence, win/loss record, galaxies, account age).
     res.json({
       userId: user.id,
       username: user.username,
+      isSelf,
       isSupporter: user.isSupporter,
       supporterTier: user.supporterTier ?? null,
       isFounder: user.isFounder ?? false,
@@ -338,31 +351,38 @@ export async function getPublicProfile(req: AuthRequest, res: Response): Promise
       galaxiesPlayed: galaxies.length,
       points: activePlayer?.points ?? 0,
       nexusCount: activeNexuses.length,
-      totalTroops,
+      // Reputational combat record is public. Resource theft totals stay too —
+      // they're a track record, not live stockpile intel.
       combat: { attacksLaunched, attacksDefended, victories, defeats, troopsLost, troopsKilled, resourcesStolen, resourcesLost },
-      resources: {
-        current: totalCurrentResources,
-        productionPerHour: {
-          biomass: Math.round(totalProductionPerHour.biomass),
-          alloy: Math.round(totalProductionPerHour.alloy),
-          ore: Math.round(totalProductionPerHour.ore),
-        },
-        avgPerDay: {
-          biomass: Math.round(totalProductionPerHour.biomass * 24),
-          alloy: Math.round(totalProductionPerHour.alloy * 24),
-          ore: Math.round(totalProductionPerHour.ore * 24),
-        },
-      },
+      // --- self-only operational data ---
+      totalTroops: isSelf ? totalTroops : null,
+      resources: isSelf
+        ? {
+            current: totalCurrentResources,
+            productionPerHour: {
+              biomass: Math.round(totalProductionPerHour.biomass),
+              alloy: Math.round(totalProductionPerHour.alloy),
+              ore: Math.round(totalProductionPerHour.ore),
+            },
+            avgPerDay: {
+              biomass: Math.round(totalProductionPerHour.biomass * 24),
+              alloy: Math.round(totalProductionPerHour.alloy * 24),
+              ore: Math.round(totalProductionPerHour.ore * 24),
+            },
+          }
+        : null,
       streak: streak ? { currentStreak: streak.currentStreak, longestStreak: streak.longestStreak } : null,
-      nexuses: activeNexuses.map((n) => ({
-        _id: String(n.id),
-        id: n.id,
-        name: n.name,
-        x: n.x,
-        y: n.y,
-        nexusType: n.nexusType,
-        points: n.points,
-      })),
+      nexuses: isSelf
+        ? activeNexuses.map((n) => ({
+            _id: String(n.id),
+            id: n.id,
+            name: n.name,
+            x: n.x,
+            y: n.y,
+            nexusType: n.nexusType,
+            points: n.points,
+          }))
+        : [],
       galaxies,
       friendship,
     });

@@ -109,10 +109,15 @@ export async function getReadIds(req: AuthRequest, res: Response): Promise<void>
 export async function getActivitySummary(req: AuthRequest, res: Response): Promise<void> {
   try {
     const sinceRaw = req.query.since as string | undefined;
-    const since = sinceRaw ? new Date(sinceRaw) : new Date(Date.now() - 24 * 60 * 60 * 1000);
-    if (isNaN(since.getTime())) {
+    const MAX_LOOKBACK_MS = 7 * 24 * 60 * 60 * 1000;
+    const earliest = Date.now() - MAX_LOOKBACK_MS;
+    const requested = sinceRaw ? new Date(sinceRaw) : new Date(Date.now() - 24 * 60 * 60 * 1000);
+    if (isNaN(requested.getTime())) {
       res.status(400).json({ error: 'Invalid since parameter' }); return;
     }
+    // Never look back further than the cap, even if the client sends an ancient
+    // timestamp — keeps the summary scoped to "recent" activity.
+    const since = new Date(Math.max(requested.getTime(), earliest));
 
     const user = await prisma.user.findUnique({ where: { id: req.userId }, select: { activeGalaxyId: true } });
     if (!user?.activeGalaxyId) { res.json({ attacks: [], buildings: [], troops: [], events: [] }); return; }
@@ -128,15 +133,20 @@ export async function getActivitySummary(req: AuthRequest, res: Response): Promi
           galaxyId,
           type: { not: 'support' },
           status: { in: ['returning', 'completed'] },
+          // arrivesAt is the combat-resolution time and is always set, unlike
+          // returnsAt (null for conquests / no-survivor attacks). Scoping to the
+          // away window is the whole point — otherwise the summary surfaced the
+          // last 20 battles ever, regardless of when the player was last on.
+          arrivesAt: { gte: since },
           OR: [{ attackerUserId: req.userId }, { defenderUserId: req.userId }],
         },
         select: {
-          id: true, type: true, result: true, returnsAt: true,
+          id: true, type: true, result: true, arrivesAt: true,
           attackerUserId: true, defenderUserId: true,
           attackerNexus: { select: { name: true } },
           defenderNexus: { select: { name: true } },
         },
-        orderBy: { returnsAt: 'desc' },
+        orderBy: { arrivesAt: 'desc' },
         take: 20,
       }),
     ]);
@@ -179,7 +189,7 @@ export async function getActivitySummary(req: AuthRequest, res: Response): Promi
         attackerNexus: a.attackerNexus?.name,
         defenderNexus: a.defenderNexus?.name,
         result,
-        completedAt: a.returnsAt,
+        completedAt: a.arrivesAt,
       };
     });
 

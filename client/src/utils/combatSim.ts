@@ -50,6 +50,23 @@ export const CLASS_COUNTERS: Record<TroopClass, Record<TroopClass, number>> = {
 
 export const TROOP_KEYS = Object.keys(TROOP_STATS) as TroopKey[];
 
+// Carry capacity per unit — mirrors server combatMath TROOP_STATS.carry. Used by
+// the predictive calculator's loot estimate. Kept here (the replay sim doesn't
+// need carry) so the calculator has a single client-side source.
+export const TROOP_CARRY: Record<TroopKey, number> = {
+  lancerDrone: 30, assaultTrooper: 60, breakerUnit: 60, reconOperative: 10,
+  skimmerBike: 80, bulwarkGuard: 25, suppressorTeam: 20, disruptorUnit: 25,
+  interceptorBike: 100, siegeMech: 20, annihilatorPlatform: 160,
+  voidStalker: 40, plasmaTurret: 0, overseer: 0,
+};
+
+// Mirror of LOOT_CARRY_THRESHOLD / loss-rate constants in server combat.ts +
+// combatMath.ts. If those change, change these in the same commit.
+export const LOOT_CARRY_THRESHOLD = 8000;
+export const WINNER_MAX_LOSS_RATE = 0.45; // coin-flip cap; mirrors server WINNER_COINFLIP_LOSS_RATE
+export const LOSER_MIN_LOSS_RATE = 0.85;
+export const LOSER_MAX_LOSS_RATE = 1.0;
+
 // ─── Deterministic PRNG ───────────────────────────────────────────────────
 // Mulberry32, fast, decent distribution, fully reproducible from a u32 seed.
 export function mulberry32(seed: number) {
@@ -98,6 +115,101 @@ export function classComposition(force: Force): Record<TroopClass, number> {
   if (total === 0) return counts;
   for (const c of ['mobile', 'armor', 'fire', 'special'] as TroopClass[]) counts[c] /= total;
   return counts;
+}
+
+// ─── Class-weighted attack (mirror of server combatMath) ───────────────────
+// armoryLevel amplifies counter advantage above 1.0 (and slightly deepens
+// disadvantage) up to +30% at Lv20. Mirrors computeClassWeightedAttack.
+export function classWeightedAttack(attackers: Force, defenders: Force, armoryLevel = 0): number {
+  const defComp: Record<TroopClass, number> = { mobile: 0, armor: 0, fire: 0, special: 0 };
+  let totalDef = 0;
+  for (const k of TROOP_KEYS) {
+    const n = defenders[k] || 0;
+    if (n > 0) { defComp[TROOP_CLASS[k]] += n; totalDef += n; }
+  }
+  const armoryBonus = Math.min(armoryLevel * 0.015, 0.3);
+  let total = 0;
+  for (const k of TROOP_KEYS) {
+    const n = attackers[k] || 0;
+    if (n <= 0) continue;
+    let mult = 1.0;
+    if (totalDef > 0) {
+      let weighted = 0;
+      for (const dc of ['mobile', 'armor', 'fire', 'special'] as TroopClass[]) {
+        const ratio = defComp[dc] / totalDef;
+        const base = CLASS_COUNTERS[TROOP_CLASS[k]][dc];
+        const amp = base > 1.0 ? base + armoryBonus : base < 1.0 ? base - armoryBonus * 0.5 : 1.0;
+        weighted += ratio * amp;
+      }
+      mult = weighted;
+    }
+    total += n * TROOP_STATS[k].attack * mult;
+  }
+  return total;
+}
+
+export interface CombatPrediction {
+  attackerWins: boolean;
+  conquerCapable: boolean;     // would this strike clear the garrison (enable conquest)?
+  attackPower: number;
+  defensePower: number;
+  powerRatio: number;          // loser/winner, 0..1 — how close it was
+  attackerLossPct: number;     // 0..1 estimated
+  defenderLossPct: number;     // 0..1 estimated
+  estLootCapacity: number;     // surviving carry
+  marginLabel: 'blowout' | 'decisive' | 'close' | 'coinflip';
+}
+
+// Forward prediction mirroring resolveCombat's outcome + loss model. Estimates
+// are deterministic averages (no per-unit variance) so the calculator shows the
+// expected result, not a single rolled outcome.
+export function predictCombat(opts: {
+  attacker: Force;
+  defender: Force;
+  attackerArmory?: number;
+  defenderShieldGrid?: number;
+  shieldEfficiencyMultiplier?: number; // 2 for Military Outpost, etc.
+}): CombatPrediction {
+  const { attacker, defender, attackerArmory = 0, defenderShieldGrid = 0, shieldEfficiencyMultiplier = 1 } = opts;
+
+  const attackPower = classWeightedAttack(attacker, defender, attackerArmory);
+  let defensePower = forcePower(defender, 'defense');
+  defensePower *= 1 + defenderShieldGrid * 0.02 * shieldEfficiencyMultiplier;
+
+  const defenderUnits = totalUnits(defender);
+  const attackerUnits = totalUnits(attacker);
+  const defenderHasNoTroops = defenderUnits === 0;
+  const attackerWins = attackPower > defensePower || (defenderHasNoTroops && attackerUnits > 0);
+
+  const powerRatio = attackerWins
+    ? Math.min(1, defensePower / Math.max(1, attackPower))
+    : Math.min(1, attackPower / Math.max(1, defensePower));
+
+  const winnerLossRate = Math.min(WINNER_MAX_LOSS_RATE, powerRatio * WINNER_MAX_LOSS_RATE);
+  const loserLossRate = LOSER_MIN_LOSS_RATE + (LOSER_MAX_LOSS_RATE - LOSER_MIN_LOSS_RATE) * (1 - powerRatio);
+
+  const attackerLossPct = attackerWins ? winnerLossRate : loserLossRate;
+  const defenderLossPct = attackerWins ? loserLossRate : winnerLossRate;
+
+  // Conquest needs the garrison fully cleared. With the softened cliff that only
+  // happens on a sufficiently decisive win (loserLossRate rounds units to 0).
+  const conquerCapable = attackerWins && (defenderHasNoTroops || defenderLossPct >= 0.999);
+
+  // Loot estimate: surviving carry vs the 8k threshold.
+  let carry = 0;
+  for (const k of TROOP_KEYS) carry += (attacker[k] || 0) * TROOP_CARRY[k];
+  const estLootCapacity = attackerWins ? carry * (1 - attackerLossPct) : 0;
+
+  let marginLabel: CombatPrediction['marginLabel'];
+  if (powerRatio < 0.4) marginLabel = 'blowout';
+  else if (powerRatio < 0.7) marginLabel = 'decisive';
+  else if (powerRatio < 0.9) marginLabel = 'close';
+  else marginLabel = 'coinflip';
+
+  return {
+    attackerWins, conquerCapable, attackPower, defensePower, powerRatio,
+    attackerLossPct, defenderLossPct, estLootCapacity, marginLabel,
+  };
 }
 
 // ─── Round-by-round simulation ────────────────────────────────────────────

@@ -25,6 +25,8 @@ import {
   ArrowDownLeft,
   Building2,
   Check,
+  ChevronDown,
+  ChevronUp,
   Eye,
   Hammer,
   Info,
@@ -393,6 +395,7 @@ interface QuestBatch {
 interface InfoModalState {
   title: string;
   description: string;
+  codexHref?: string;
 }
 
 const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'overview', onTabChange }) => {
@@ -407,6 +410,9 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     onTabChange?.(tab);
   };
   const [troopsSubTab, setTroopsSubTab] = useState<'train' | 'stationed'>('train');
+  // Incoming strikes panel collapse toggle. Defaults expanded so an active
+  // threat is visible without a click, but can be shrunk when it's crowded.
+  const [incomingCollapsed, setIncomingCollapsed] = useState(false);
   const [isRenamingNexus, setIsRenamingNexus] = useState(false);
   const [renameValue, setRenameValue] = useState(nexus.name);
   const [isSavingNexusName, setIsSavingNexusName] = useState(false);
@@ -456,8 +462,8 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     showToastGlobal(message, type);
   };
 
-  const handleInfoTap = (title: string, description: string) => {
-    setInfoModal({ title, description });
+  const handleInfoTap = (title: string, description: string, codexHref?: string) => {
+    setInfoModal({ title, description, codexHref });
   };
 
   const submitNexusRename = async () => {
@@ -1267,7 +1273,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
     fmtNum: (n: number) => helpersRef.current.fmtNum(n),
     formatDurationSeconds: (s: number) => helpersRef.current.formatDurationSeconds(s),
     onUpgrade: (b: string) => helpersRef.current.handleUpgrade(b),
-    onInfoTap: (t: string, d: string) => helpersRef.current.handleInfoTap(t, d),
+    onInfoTap: (t: string, d: string, href?: string) => helpersRef.current.handleInfoTap(t, d, href),
   }).current;
 
   const getQuestBatches = (): { batches: QuestBatch[]; allQuestsComplete: boolean } => {
@@ -1850,31 +1856,47 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                   </div>
                   <div className="strikes-card-divider" />
                   <div className="strikes-card-half">
-                    <span className="strikes-card-label">Incoming</span>
                     {incomingAttacks.length > 0 ? (
-                      <div className="strikes-card-list">
-                        {incomingAttacks.map((a: any) => {
-                          const src = a.attacker?.nexus ?? a.attackerNexus;
-                          return (
-                            <div key={a._id} className={`strikes-card-entry${a.type === 'support' ? ' strikes-card-entry--support' : ''}`}>
-                              <span className="strikes-card-entry-who">
-                                {a.type === 'support' && <span className="strikes-card-support-badge">SUPPORT</span>}
-                                <Username name={a.attacker?.user?.username ?? '?'} isSupporter={a.attacker?.user?.isSupporter} supporterTier={a.attacker?.user?.supporterTier} /> · {src?.name ?? '?'}
-                                {src?.x != null && src?.y != null ? ` (${src.x}|${src.y})` : ''}
-                              </span>
-                              <span className="strikes-card-entry-time">
-                                <span className="strikes-card-entry-arrival">
-                                  @ {formatTimeOfDay(a.arrivesAt, true)}
-                                </span>
-                                {' '}
-                                <Countdown endAt={a.arrivesAt} className="strikes-card-entry-countdown" />
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
+                      <>
+                        <button
+                          type="button"
+                          className="strikes-card-label strikes-card-label--toggle"
+                          onClick={() => setIncomingCollapsed((c) => !c)}
+                          aria-expanded={!incomingCollapsed}
+                          title={incomingCollapsed ? 'Show incoming strikes' : 'Hide incoming strikes'}
+                        >
+                          <span>Incoming ({incomingAttacks.length})</span>
+                          {incomingCollapsed ? <ChevronDown size={13} aria-hidden="true" /> : <ChevronUp size={13} aria-hidden="true" />}
+                        </button>
+                        {!incomingCollapsed && (
+                          <div className="strikes-card-list">
+                            {incomingAttacks.map((a: any) => {
+                              const src = a.attacker?.nexus ?? a.attackerNexus;
+                              return (
+                                <div key={a._id} className={`strikes-card-entry${a.type === 'support' ? ' strikes-card-entry--support' : ''}`}>
+                                  <span className="strikes-card-entry-who">
+                                    {a.type === 'support' && <span className="strikes-card-support-badge">SUPPORT</span>}
+                                    <Username name={a.attacker?.user?.username ?? '?'} isSupporter={a.attacker?.user?.isSupporter} supporterTier={a.attacker?.user?.supporterTier} /> · {src?.name ?? '?'}
+                                    {src?.x != null && src?.y != null ? ` (${src.x}|${src.y})` : ''}
+                                  </span>
+                                  <span className="strikes-card-entry-time">
+                                    <span className="strikes-card-entry-arrival">
+                                      @ {formatTimeOfDay(a.arrivesAt, true)}
+                                    </span>
+                                    {' '}
+                                    <Countdown endAt={a.arrivesAt} className="strikes-card-entry-countdown" />
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </>
                     ) : (
-                      <span className="strikes-card-value">No incoming strikes</span>
+                      <>
+                        <span className="strikes-card-label">Incoming</span>
+                        <span className="strikes-card-value">No incoming strikes</span>
+                      </>
                     )}
                   </div>
                 </div>
@@ -2320,7 +2342,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                                         className="troop-info stationed-card-info"
                                         title={TROOP_DESCRIPTIONS[type]}
                                         aria-label={`${TROOP_NAMES[type]} info`}
-                                        onClick={() => handleInfoTap(TROOP_NAMES[type], TROOP_DESCRIPTIONS[type])}
+                                        onClick={() => handleInfoTap(TROOP_NAMES[type], TROOP_DESCRIPTIONS[type], `/codex?tab=troops#troop-${type}`)}
                                       >
                                         <Info size={13} />
                                       </button>
@@ -2445,7 +2467,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                                       className="troop-info"
                                       title={TROOP_DESCRIPTIONS[type]}
                                       aria-label={`${TROOP_NAMES[type]} info`}
-                                      onClick={() => handleInfoTap(TROOP_NAMES[type], TROOP_DESCRIPTIONS[type])}
+                                      onClick={() => handleInfoTap(TROOP_NAMES[type], TROOP_DESCRIPTIONS[type], `/codex?tab=troops#troop-${type}`)}
                                     >
                                       <Info size={14} />
                                     </button>
@@ -2752,6 +2774,15 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
             <div className="attack-modal-content">
               <div className="attack-info-section info-modal-body">
                 <p>{infoModal.description}</p>
+                {infoModal.codexHref && (
+                  <a
+                    href={infoModal.codexHref}
+                    className="info-modal-codex-link"
+                    onClick={() => setInfoModal(null)}
+                  >
+                    More info in Codex →
+                  </a>
+                )}
               </div>
             </div>
           </div>

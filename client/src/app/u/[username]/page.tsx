@@ -66,6 +66,7 @@ interface GalaxyEntry {
 interface PublicProfile {
   userId: number;
   username: string;
+  isSelf: boolean;
   isSupporter: boolean;
   supporterTier?: SupporterTier | null;
   isFounder?: boolean;
@@ -79,7 +80,8 @@ interface PublicProfile {
   galaxiesPlayed: number;
   points: number;
   nexusCount: number;
-  totalTroops: number;
+  // Self-only operational intel — null when viewing another player's profile.
+  totalTroops: number | null;
   combat: {
     attacksLaunched: number;
     attacksDefended: number;
@@ -94,7 +96,7 @@ interface PublicProfile {
     current: { biomass: number; alloy: number; ore: number };
     productionPerHour: { biomass: number; alloy: number; ore: number };
     avgPerDay: { biomass: number; alloy: number; ore: number };
-  };
+  } | null;
   streak: { currentStreak: number; longestStreak: number } | null;
   nexuses: Array<{ _id?: string; id?: number; name: string; x: number; y: number; nexusType?: string | null; points?: number }>;
   galaxies: GalaxyEntry[];
@@ -230,7 +232,8 @@ function PublicProfilePageInner() {
         : '.';
   const totalStolen = profile.combat.resourcesStolen.biomass + profile.combat.resourcesStolen.alloy + profile.combat.resourcesStolen.ore;
   const totalLost = profile.combat.resourcesLost.biomass + profile.combat.resourcesLost.alloy + profile.combat.resourcesLost.ore;
-  const totalAvgDay = profile.resources.avgPerDay.biomass + profile.resources.avgPerDay.alloy + profile.resources.avgPerDay.ore;
+  const res = profile.resources;
+  const totalAvgDay = res ? res.avgPerDay.biomass + res.avgPerDay.alloy + res.avgPerDay.ore : 0;
 
   return (
     <GameLayout activePage="profile">
@@ -317,31 +320,35 @@ function PublicProfilePageInner() {
           </div>
         )}
 
-        <Section title="Resources">
-          <div className="ps-cards">
-            <StatCard label="Avg Production / Day" value={fmt(totalAvgDay)} sub={`B ${fmt(profile.resources.avgPerDay.biomass)} / A ${fmt(profile.resources.avgPerDay.alloy)} / O ${fmt(profile.resources.avgPerDay.ore)}`} />
-            <StatCard label="Production / Hour" value={fmt(profile.resources.productionPerHour.biomass + profile.resources.productionPerHour.alloy + profile.resources.productionPerHour.ore)} sub={`B ${fmt(profile.resources.productionPerHour.biomass)} / A ${fmt(profile.resources.productionPerHour.alloy)} / O ${fmt(profile.resources.productionPerHour.ore)}`} />
-            <StatCard label="Current Stockpile" value={fmt(profile.resources.current.biomass + profile.resources.current.alloy + profile.resources.current.ore)} sub={`B ${fmt(profile.resources.current.biomass)} / A ${fmt(profile.resources.current.alloy)} / O ${fmt(profile.resources.current.ore)}`} />
-          </div>
+        {/* Resource intel (stockpile, production) is self-only — never exposed on
+            another player's public profile, so it can't be used as a free scout. */}
+        {res && (
+          <Section title="Resources">
+            <div className="ps-cards">
+              <StatCard label="Avg Production / Day" value={fmt(totalAvgDay)} sub={`B ${fmt(res.avgPerDay.biomass)} / A ${fmt(res.avgPerDay.alloy)} / O ${fmt(res.avgPerDay.ore)}`} />
+              <StatCard label="Production / Hour" value={fmt(res.productionPerHour.biomass + res.productionPerHour.alloy + res.productionPerHour.ore)} sub={`B ${fmt(res.productionPerHour.biomass)} / A ${fmt(res.productionPerHour.alloy)} / O ${fmt(res.productionPerHour.ore)}`} />
+              <StatCard label="Current Stockpile" value={fmt(res.current.biomass + res.current.alloy + res.current.ore)} sub={`B ${fmt(res.current.biomass)} / A ${fmt(res.current.alloy)} / O ${fmt(res.current.ore)}`} />
+            </div>
 
-          <div className="ps-resource-bars">
-            {(['biomass', 'alloy', 'ore'] as const).map((r) => {
-              const total = profile.resources.avgPerDay.biomass + profile.resources.avgPerDay.alloy + profile.resources.avgPerDay.ore;
-              const pct = total > 0 ? Math.round((profile.resources.avgPerDay[r] / total) * 100) : 33;
-              const colors = { biomass: '#56D364', alloy: '#FF9E3D', ore: '#D29922' };
-              const labels = { biomass: 'Biomass', alloy: 'Alloy', ore: 'Ore' };
-              return (
-                <div key={r} className="ps-bar-row">
-                  <span className="ps-bar-label" style={{ color: colors[r] }}>{labels[r]}</span>
-                  <div className="ps-bar-track">
-                    <div className="ps-bar-fill" style={{ width: `${pct}%`, background: colors[r] }} />
+            <div className="ps-resource-bars">
+              {(['biomass', 'alloy', 'ore'] as const).map((r) => {
+                const total = res.avgPerDay.biomass + res.avgPerDay.alloy + res.avgPerDay.ore;
+                const pct = total > 0 ? Math.round((res.avgPerDay[r] / total) * 100) : 33;
+                const colors = { biomass: '#56D364', alloy: '#FF9E3D', ore: '#D29922' };
+                const labels = { biomass: 'Biomass', alloy: 'Alloy', ore: 'Ore' };
+                return (
+                  <div key={r} className="ps-bar-row">
+                    <span className="ps-bar-label" style={{ color: colors[r] }}>{labels[r]}</span>
+                    <div className="ps-bar-track">
+                      <div className="ps-bar-fill" style={{ width: `${pct}%`, background: colors[r] }} />
+                    </div>
+                    <span className="ps-bar-pct">{pct}%</span>
                   </div>
-                  <span className="ps-bar-pct">{pct}%</span>
-                </div>
-              );
-            })}
-          </div>
-        </Section>
+                );
+              })}
+            </div>
+          </Section>
+        )}
 
         <Section title="Combat">
           <div className="ps-cards">
@@ -359,7 +366,7 @@ function PublicProfilePageInner() {
         <Section title="Empire">
           <div className="ps-cards">
             <StatCard label="Total Nexuses" value={profile.nexusCount} />
-            <StatCard label="Total Troops" value={fmt(profile.totalTroops)} />
+            {profile.totalTroops != null && <StatCard label="Total Troops" value={fmt(profile.totalTroops)} />}
             <StatCard label="Influence" value={profile.points.toLocaleString()} />
             <StatCard label="Account Age" value={`${profile.accountAgeDays}d`} />
             <StatCard label="Total Influence" value={profile.totalInfluence.toLocaleString()} sub="All galaxies" />

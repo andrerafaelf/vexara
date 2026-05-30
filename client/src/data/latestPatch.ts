@@ -17,4 +17,4 @@
 
 export const LATEST_PATCH_VERSION = '0.15';
 export const LATEST_PATCH_LABEL = 'Alpha v0.15';
-export const LATEST_PATCH_HEADLINE = 'Daily Quests panel refreshes on tab return';
+export const LATEST_PATCH_HEADLINE = 'Combat rebalance, live attack preview, and a stack of fixes';

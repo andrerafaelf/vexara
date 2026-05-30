@@ -77,7 +77,7 @@ export interface BuildingCardProps {
   fmtNum: (n: number) => string;
   formatDurationSeconds: (totalSeconds: number) => string;
   onUpgrade: (buildingKey: string) => void;
-  onInfoTap: (title: string, description: string) => void;
+  onInfoTap: (title: string, description: string, codexHref?: string) => void;
 }
 
 function BuildingCardInner(props: BuildingCardProps) {
@@ -183,7 +183,7 @@ function BuildingCardInner(props: BuildingCardProps) {
           className="building-info"
           title={buildingDescription}
           aria-label={`${buildingName} info`}
-          onClick={() => onInfoTap(buildingName, buildingDescription)}
+          onClick={() => onInfoTap(buildingName, buildingDescription, `/codex?tab=buildings#building-${key}`)}
         >
           <Info size={14} />
         </button>

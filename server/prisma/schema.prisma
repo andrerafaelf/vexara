@@ -101,6 +101,11 @@ model GalaxyPlayer {
   userId      Int
   galaxyId    Int
   points      Int      @default(0)
+  // Highest total influence this player has ever held in this galaxy. Used to
+  // size an eliminated player's respawn nexus to a fraction of their former
+  // strength so a returning veteran isn't reset to a bare starter. Monotonic:
+  // only ever increased, never reset on elimination.
+  peakPoints  Int      @default(0)
   finalPoints Int?
   joinedAt    DateTime @default(now())
 

@@ -890,6 +890,28 @@
   color: var(--text-strong);
 }
 
+/* Clickable Incoming header that collapses its list (issue: expandable strikes).
+   Inherits typography from the .strikes-card-label rules rather than resetting
+   font wholesale, so the mono/uppercase styling from the responsive block is
+   preserved. */
+.strikes-card-label--toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  padding: 2px 0;
+  margin: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.strikes-card-label--toggle:hover {
+  color: var(--color-accent, #FF9E3D);
+}
+
 .strikes-card-value {
   color: var(--text-muted);
   word-break: break-word;
@@ -2310,6 +2332,20 @@
 
 .info-modal-body p {
   line-height: 1.6;
+}
+
+.info-modal-codex-link {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 0.75rem;
+  color: var(--accent, #e8a020);
+  text-decoration: none;
+  opacity: 0.85;
+}
+
+.info-modal-codex-link:hover {
+  opacity: 1;
+  text-decoration: underline;
 }
 
 @media (max-width: 768px) {

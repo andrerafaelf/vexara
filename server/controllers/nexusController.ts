@@ -4,7 +4,7 @@ import prisma from '../lib/prisma.js';
 import * as nexusService from '../services/nexusService.js';
 import type { AuthRequest } from '../types/index.js';
 import { getPopulationMax } from '../utils/population.js';
-import { NEWBIE_PROTECTION_DURATION_MS } from '../utils/starterNexus.js';
+import { NEWBIE_PROTECTION_DURATION_MS, buildRespawnNexusConfig } from '../utils/starterNexus.js';
 import { calculateTroopInfluence, getMaxStorage, getResourceProduction } from '../utils/economy.js';
 import { notifyNexusResources } from '../services/warRoomSocket.js';
 import { logError } from '../utils/logger.js';
@@ -124,25 +124,11 @@ export async function getNexus(req: AuthRequest, res: Response): Promise<void> {
 }
 
 // Eliminated players get a 1.5-day shield - half the 3-day fresh-signup
-// window. The respawn comes with mid-tier buildings, a real garrison, and
-// 100k of each resource, so a full 3 days would be longer than they need
-// to find their footing and would let a respawned player sit untouchable
-// while continuing to interact with the rest of the galaxy.
+// window. The respawn comes with mid-tier+ buildings and a real garrison
+// (scaled to their former peak influence), so a full 3 days would be longer
+// than they need to find their footing and would let a respawned player sit
+// untouchable while continuing to interact with the rest of the galaxy.
 const ELIMINATED_RESPAWN_PROTECTION_MS = 36 * 60 * 60 * 1000;
-
-// Garrison handed to an eliminated player so a respawn isn't an open
-// invitation. Sized so a respawned player has real defensive presence
-// the moment shields drop, without crossing into "this is a threat" -
-// the late-tier picks (Suppressor / Skimmer / Bulwark) are gated by
-// the bumped CC-12 / RC-3 setup and provide the bulk of the defense.
-const ELIMINATED_RESPAWN_TROOPS = {
-  assaultTrooper: 100,
-  lancerDrone: 60,
-  breakerUnit: 40,
-  reconOperative: 20,
-  suppressorTeam: 15,
-  bulwarkGuard: 15,
-} as const;
 
 export async function createNexus(req: AuthRequest, res: Response): Promise<void> {
   try {
@@ -159,65 +145,68 @@ export async function createNexus(req: AuthRequest, res: Response): Promise<void
       prisma.user.findUnique({ where: { id: req.userId } }),
       prisma.galaxyPlayer.findUnique({
         where: { userId_galaxyId: { userId: req.userId, galaxyId: req.galaxyId } },
-        select: { id: true },
+        select: { id: true, peakPoints: true, points: true },
       }),
     ]);
 
     // A player with an existing GalaxyPlayer row but zero nexuses is being eliminated-respawned.
-    // They get a mid-tier nexus (resource and military buildings already up), 100k of each
-    // resource, a small starter garrison, and the full 3-day protection window.
+    // Their nexus is scaled to a fraction of the peak influence they held before
+    // elimination (see buildRespawnNexusConfig), with a mid-tier floor and the
+    // shortened respawn protection window.
     const isEliminatedRespawn = existingCount === 0 && galaxyPlayer !== null;
 
-    // Resource buildings land at Lv12 (up from Lv10) so production matches
-    // the bumped Command Core. CC is set to 12 (gates Resource Depot
-    // specialization-equivalent perks, suppressor unlock, etc.), RC to 7
-    // so the player can train every garrison troop they were spawned with,
-    // and Shield Grid to 8 so a returning player has a real defensive
-    // structure instead of bare ground.
-    const RESPAWN_LEVEL = 12;
-    const RESPAWN_COMMAND_CORE = 12;
-    const RESPAWN_RECRUITMENT_CORE = 7;
-    const RESPAWN_LIFE_SUPPORT = 12;
-    const RESPAWN_SHIELD_GRID = 8;
-    const RESPAWN_RESOURCES = 100_000;
-    const RESPAWN_PROTECTION_MS = ELIMINATED_RESPAWN_PROTECTION_MS;
-
     const protectionEndsAt = new Date(
-      Date.now() + (isEliminatedRespawn ? RESPAWN_PROTECTION_MS : NEWBIE_PROTECTION_DURATION_MS),
+      Date.now() + (isEliminatedRespawn ? ELIMINATED_RESPAWN_PROTECTION_MS : NEWBIE_PROTECTION_DURATION_MS),
     );
 
-    const respawnPopulation = Object.values(ELIMINATED_RESPAWN_TROOPS).reduce((sum, n) => sum + n, 0);
+    if (isEliminatedRespawn) {
+      // Prefer the recorded peak; fall back to current points if peak hasn't
+      // been backfilled/ratcheted yet for this row.
+      const peak = Math.max(galaxyPlayer.peakPoints ?? 0, galaxyPlayer.points ?? 0);
+      const config = buildRespawnNexusConfig(peak);
+      const nexus = await nexusService.createNexus({
+        name: bodyName || `${userRecord?.username ?? 'Player'}'s Nexus`,
+        ownerId: req.userId,
+        galaxyId: req.galaxyId,
+        x: Math.floor(Math.random() * 35),
+        y: Math.floor(Math.random() * 35),
+        ...config.buildings,
+        ...config.troops,
+        biomass: config.resources.biomass,
+        alloy: config.resources.alloy,
+        ore: config.resources.ore,
+        populationCurrent: config.populationCurrent,
+        populationMax: config.populationMax,
+        newbieProtectionEndsAt: protectionEndsAt,
+      });
+      res.json({ ...serializeNexus(nexus), eliminatedRespawn: true });
+      return;
+    }
 
-    const baseData = {
+    // Fresh signup: bare day-one starter. populationCurrent left unset so the
+    // schema default (5) applies, preserving prior behaviour.
+    const nexus = await nexusService.createNexus({
       name: bodyName || `${userRecord?.username ?? 'Player'}'s Nexus`,
       ownerId: req.userId,
       galaxyId: req.galaxyId,
       x: Math.floor(Math.random() * 35),
       y: Math.floor(Math.random() * 35),
-      commandCore: isEliminatedRespawn ? RESPAWN_COMMAND_CORE : 0,
-      recruitmentCore: isEliminatedRespawn ? RESPAWN_RECRUITMENT_CORE : 0,
-      lifeSupport: isEliminatedRespawn ? RESPAWN_LIFE_SUPPORT : 1,
-      storageVault: isEliminatedRespawn ? RESPAWN_LEVEL : 1,
-      biomassFarm: isEliminatedRespawn ? RESPAWN_LEVEL : 1,
-      alloyForge: isEliminatedRespawn ? RESPAWN_LEVEL : 1,
-      oreExtractor: isEliminatedRespawn ? RESPAWN_LEVEL : 1,
-      shieldGrid: isEliminatedRespawn ? RESPAWN_SHIELD_GRID : 0,
-      biomass: isEliminatedRespawn ? RESPAWN_RESOURCES : 1500,
-      alloy: isEliminatedRespawn ? RESPAWN_RESOURCES : 1500,
-      ore: isEliminatedRespawn ? RESPAWN_RESOURCES : 1500,
-      populationMax: getPopulationMax(isEliminatedRespawn ? RESPAWN_LIFE_SUPPORT : 1),
+      commandCore: 0,
+      recruitmentCore: 0,
+      lifeSupport: 1,
+      storageVault: 1,
+      biomassFarm: 1,
+      alloyForge: 1,
+      oreExtractor: 1,
+      shieldGrid: 0,
+      biomass: 1500,
+      alloy: 1500,
+      ore: 1500,
+      populationMax: getPopulationMax(1),
       newbieProtectionEndsAt: protectionEndsAt,
-    };
-    // Eliminated respawns get a starter garrison + matching populationCurrent.
-    // Fresh signups leave populationCurrent unset so the schema default (5)
-    // applies, preserving prior behaviour for normal nexus creation.
-    const nexus = await nexusService.createNexus(
-      isEliminatedRespawn
-        ? { ...baseData, populationCurrent: respawnPopulation, ...ELIMINATED_RESPAWN_TROOPS }
-        : baseData,
-    );
+    });
 
-    res.json({ ...serializeNexus(nexus), eliminatedRespawn: isEliminatedRespawn });
+    res.json({ ...serializeNexus(nexus), eliminatedRespawn: false });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'nexusController.ts' });
     res.status(500).json({ error: 'Internal server error' });
@@ -391,12 +380,35 @@ export async function transferResources(req: AuthRequest, res: Response): Promis
     // stale DB baseline doesn't cause resources to vanish on transfer.
     [from, to] = await Promise.all([refreshResources(from), refreshResources(to)]);
 
-    const sendBiomass = Math.min(Math.max(0, Math.floor(Number(biomass))), Math.floor(from.biomass));
-    const sendAlloy = Math.min(Math.max(0, Math.floor(Number(alloy))), Math.floor(from.alloy));
-    const sendOre = Math.min(Math.max(0, Math.floor(Number(ore))), Math.floor(from.ore));
+    // Cap each resource by what the SENDER actually has...
+    let sendBiomass = Math.min(Math.max(0, Math.floor(Number(biomass))), Math.floor(from.biomass));
+    let sendAlloy = Math.min(Math.max(0, Math.floor(Number(alloy))), Math.floor(from.alloy));
+    let sendOre = Math.min(Math.max(0, Math.floor(Number(ore))), Math.floor(from.ore));
 
-    if (sendBiomass === 0 && sendAlloy === 0 && sendOre === 0) {
+    // ...and by how much storage headroom the RECEIVER has left. Without this,
+    // a transfer would push the destination over its cap and the overflow would
+    // be silently destroyed on the next production tick (computeResourceUpdate
+    // clamps to maxStorage). Clamp here so we only move what fits.
+    const toMaxStorage = getMaxStorage(to as Parameters<typeof getMaxStorage>[0]);
+    const headroom = {
+      biomass: Math.max(0, Math.floor(toMaxStorage - to.biomass)),
+      alloy: Math.max(0, Math.floor(toMaxStorage - to.alloy)),
+      ore: Math.max(0, Math.floor(toMaxStorage - to.ore)),
+    };
+    const requestedTotal = sendBiomass + sendAlloy + sendOre;
+    sendBiomass = Math.min(sendBiomass, headroom.biomass);
+    sendAlloy = Math.min(sendAlloy, headroom.alloy);
+    sendOre = Math.min(sendOre, headroom.ore);
+    const clampedTotal = sendBiomass + sendAlloy + sendOre;
+
+    if (requestedTotal === 0) {
       res.status(400).json({ error: 'Nothing to transfer' });
+      return;
+    }
+    if (clampedTotal === 0) {
+      res.status(400).json({
+        error: `${to.name} has no storage capacity left for these resources. Upgrade its Storage Vault or send less.`,
+      });
       return;
     }
 
@@ -406,6 +418,7 @@ export async function transferResources(req: AuthRequest, res: Response): Promis
       { biomass: from.biomass - sendBiomass, alloy: from.alloy - sendAlloy, ore: from.ore - sendOre },
       { biomass: to.biomass + sendBiomass, alloy: to.alloy + sendAlloy, ore: to.ore + sendOre },
     );
+    const partiallyClamped = clampedTotal < requestedTotal;
 
     // Both nexuses belong to the same owner (verified above), so a single user
     // gets two snapshots. Failures here must not break the HTTP response.
@@ -427,7 +440,14 @@ export async function transferResources(req: AuthRequest, res: Response): Promis
       const { incrementQuestProgress } = await import('../services/dailyStreakService.js');
       void incrementQuestProgress(req.userId, req.galaxyId, 'transfer_1', 1);
     } catch {}
-    res.json({ from: serializeNexus(updatedFrom), to: serializeNexus(updatedTo) });
+    res.json({
+      from: serializeNexus(updatedFrom),
+      to: serializeNexus(updatedTo),
+      // Tells the client some resources were held back because the destination
+      // would have overflowed its storage cap.
+      clamped: partiallyClamped,
+      sent: { biomass: sendBiomass, alloy: sendAlloy, ore: sendOre },
+    });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'nexusController.ts' });
     res.status(500).json({ error: 'Internal server error' });

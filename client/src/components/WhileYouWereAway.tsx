@@ -7,6 +7,14 @@ import { getActivitySummary } from '../services/api';
 import { serverNow } from '../realtime/serverClock';
 
 const LAST_VISIT_KEY = 'wywa_last_visit';
+// Don't summarize further back than this, even if the stored visit is ancient
+// (or absent). Keeps the "Last X of activity" label honest and stops a
+// long-absent player from being shown weeks of stale battles as if they just
+// happened. Mirrors the server's own lookback expectations.
+const MAX_LOOKBACK_MS = 7 * 24 * 60 * 60 * 1000;
+// Below this, there's nothing worth interrupting the player for — treat it as
+// "just reloaded the page" rather than "returned from being away".
+const MIN_AWAY_MS = 10 * 60 * 1000;
 
 interface AttackSummary {
   id: number;
@@ -64,11 +72,13 @@ const TROOP_LABELS: Record<string, string> = {
 };
 
 function formatDuration(since: string) {
-  const ms = serverNow() - new Date(since).getTime();
+  const ms = Math.max(0, serverNow() - new Date(since).getTime());
   const h = Math.floor(ms / 3600000);
   const d = Math.floor(h / 24);
   if (d >= 2) return `${d} days`;
   if (h >= 1) return `${h}h`;
+  const m = Math.floor(ms / 60000);
+  if (m >= 2) return `${m} minutes`;
   return 'a few minutes';
 }
 
@@ -93,17 +103,53 @@ export default function WhileYouWereAway({ onDismiss }: Props) {
   const [data, setData] = useState<ActivityData | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // The displayed window (`data.since`) must match what we actually queried, so
+  // we compute a single `since` up front and reuse it both for the request and
+  // the label. Falling back to a 24h-ago server default (the old behaviour) made
+  // every first-load show "1 day of activity" regardless of how long the player
+  // was really away.
   useEffect(() => {
-    const lastVisit = typeof window !== 'undefined' ? localStorage.getItem(LAST_VISIT_KEY) : null;
-    getActivitySummary(lastVisit ?? undefined)
+    if (typeof window === 'undefined') { setLoading(false); return; }
+
+    const stored = localStorage.getItem(LAST_VISIT_KEY);
+    const now = Date.now();
+
+    // First time this browser ever opens the game: there's no "away" period to
+    // summarize. Stamp the visit and stay silent (matches the NewPatchToast
+    // first-visitor pattern). Without this, a brand-new player is greeted by a
+    // misleading "while you were away" the very first time they log in.
+    if (!stored) {
+      try { localStorage.setItem(LAST_VISIT_KEY, new Date(now).toISOString()); } catch { /* ignore */ }
+      setLoading(false);
+      onDismiss();
+      return;
+    }
+
+    const lastVisitMs = new Date(stored).getTime();
+    const awayMs = Number.isFinite(lastVisitMs) ? now - lastVisitMs : MAX_LOOKBACK_MS;
+
+    // Just reloaded / bounced between pages — nothing to report.
+    if (awayMs < MIN_AWAY_MS) {
+      try { localStorage.setItem(LAST_VISIT_KEY, new Date(now).toISOString()); } catch { /* ignore */ }
+      setLoading(false);
+      onDismiss();
+      return;
+    }
+
+    // Clamp the lookback so an ancient/garbage timestamp can't surface weeks of
+    // stale combat as if it just happened.
+    const sinceMs = Math.max(lastVisitMs, now - MAX_LOOKBACK_MS);
+    const since = new Date(sinceMs).toISOString();
+
+    getActivitySummary(since)
       .then((r: any) => setData(r.data as ActivityData))
       .catch(() => setData(null))
       .finally(() => setLoading(false));
-  }, []);
+  }, [onDismiss]);
 
   const handleDismiss = () => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem(LAST_VISIT_KEY, new Date().toISOString());
+      try { localStorage.setItem(LAST_VISIT_KEY, new Date().toISOString()); } catch { /* ignore */ }
     }
     onDismiss();
   };

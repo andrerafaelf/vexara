@@ -238,7 +238,15 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
         return;
       }
 
-      // Station the troops at the defender nexus via TroopTransfer
+      // Station the troops at the defender nexus via TroopTransfer.
+      //
+      // INVARIANT: a support mission must NOT change the host nexus's
+      // population. Stationed support lives only on the TroopTransfer row, never
+      // on the host's troop columns, and the host's populationCurrent is left
+      // untouched here. The support troops still occupy the *sender's* housing
+      // (population was committed when they were trained and is only released by
+      // freePopulationForDestroyedTroops when they actually die in combat). Do
+      // not add a host populationCurrent write to this branch.
       await prisma.$transaction([
         prisma.troopTransfer.create({
           data: {
@@ -422,7 +430,15 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
     const shieldEfficiencyMultiplier = baseShieldEff === 1 ? 1 : 1 + (baseShieldEff - 1) * (nexusDoubled ? 2 : 1);
     defensePower *= 1 + defenderNexus.shieldGrid * 0.02 * shieldEfficiencyMultiplier;
 
-    const attackerWins = attackPower > defensePower;
+    // An empty nexus (no defending troops) is taken unopposed. Without this an
+    // attack with zero effective attack power — notably a lone follow-up
+    // Overseer strike, since Overseers have 0 attack — would tie 0 vs 0 and
+    // fail the strict `>` check, so sequential Overseer waves could never drive
+    // an undefended nexus's control to 0. A force with any attack/units walking
+    // into nothing should always win.
+    const defenderHasNoTroops = TROOP_KEYS.reduce((s, t) => s + (mergedDefenderForce[t] || 0), 0) === 0;
+    const attackerHasUnits = TROOP_KEYS.reduce((s, t) => s + (attackTroops[t] || 0), 0) > 0;
+    const attackerWins = attackPower > defensePower || (defenderHasNoTroops && attackerHasUnits);
     // powerRatio is always loser/winner (0..1]; used to calibrate losses
     const powerRatio = attackerWins
       ? Math.min(1, defensePower / Math.max(1, attackPower))
@@ -431,12 +447,16 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
     // Deterministic seed from attack id so replays are reproducible
     const seed = attack.id * 2654435761;
 
+    // The loser's losses now scale with powerRatio (how close the fight was) so
+    // a narrow defeat leaves a remnant instead of wiping the whole army. A
+    // decisive win (low powerRatio) still drives the loser to ~0, which is what
+    // lets a dominant strike clear the garrison and enable conquest.
     const attackerLosses: Partial<Record<TroopKey, number>> = attackerWins
       ? computeLossesForWinner(attackTroops, powerRatio, seed, mergedDefenderForce)
-      : computeLossesForLoser(attackTroops);
+      : computeLossesForLoser(attackTroops, powerRatio);
 
     const rawDefenderLosses = attackerWins
-      ? computeLossesForLoser(mergedDefenderForce)
+      ? computeLossesForLoser(mergedDefenderForce, powerRatio)
       : computeLossesForWinner(mergedDefenderForce, powerRatio, seed ^ 0xabcd1234, attackTroops);
 
     const defenderLosses: Partial<Record<TroopKey, number>> = {};
@@ -826,12 +846,25 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
     // Capture the defender's force composition at engagement time so replays are
     // reproducible. Without this, an observer only knows defender *losses*, not
     // who survived, which would make the replay underwhelming.
+    //
+    // These fields describe the DEFENDER'S OWN GARRISON only — allied support is
+    // tracked separately in alliedContributions. Previously they used the merged
+    // force, so a supported defender's troops were double-counted in the combat
+    // log (once mixed into "Defender Forces", once again in "Allied Forces").
+    // Keeping defender* garrison-scoped lets the UI render a clean 2 lists
+    // (attacker + defender) + 1 per supporting ally.
+    const defenderGarrison = defenderNexus as unknown as Record<TroopKey, number>;
     const defenderInitial: Record<string, number> = {};
     const defenderSurvivors: Record<string, number> = {};
+    const defenderGarrisonLosses: Record<string, number> = {};
     for (const k of TROOP_KEYS) {
-      const n = mergedDefenderForce[k] || 0;
-      if (n > 0) defenderInitial[k] = n;
-      const survived = Math.max(0, n - (defenderLosses[k] || 0));
+      const garrisonCount = defenderGarrison[k] || 0;
+      if (garrisonCount > 0) defenderInitial[k] = garrisonCount;
+      // Garrison-only loss = the share of total losses borne by the garrison
+      // (losses are applied garrison-first, same rule used for population/troop updates).
+      const garrisonLoss = Math.min(garrisonCount, defenderLosses[k] || 0);
+      if (garrisonLoss > 0) defenderGarrisonLosses[k] = garrisonLoss;
+      const survived = Math.max(0, garrisonCount - garrisonLoss);
       if (survived > 0) defenderSurvivors[k] = survived;
     }
 
@@ -860,12 +893,23 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
       data: {
         status: resolvedStatus, returnsAt: (conquered || !hasSurvivors) ? null : returnsAt,
         result: {
-          attackerLosses, defenderLosses, resourcesStolen, remainingResources, survivingTroops,
+          attackerLosses,
+          // defenderLosses / defenderInitial / defenderSurvivors are GARRISON-ONLY
+          // (the defender player's own troops). Allied support is reported solely
+          // via alliedContributions, so the UI renders exactly attacker + defender
+          // + one block per supporting ally — no double-counting.
+          defenderLosses: defenderGarrisonLosses,
+          resourcesStolen, remainingResources, survivingTroops,
           defenderSurvivors,
           victory: attackerWins, conquered, remainingControl: newControlLevel,
           combatSeed: seed,
           attackerInitial: attackTroops,
           defenderInitial,
+          // Merged figures (garrison + all support) retained for the battle
+          // replay's power curve and for combat-stat aggregation that must count
+          // allied casualties too.
+          mergedDefenderInitial: (() => { const m: Record<string, number> = {}; for (const k of TROOP_KEYS) { const n = mergedDefenderForce[k] || 0; if (n > 0) m[k] = n; } return m; })(),
+          mergedDefenderLosses: (() => { const m: Record<string, number> = {}; for (const k of TROOP_KEYS) { const l = defenderLosses[k] || 0; if (l > 0) m[k] = l; } return m; })(),
           attackerPower: Math.round(attackPower),
           defenderPower: Math.round(defensePower),
           buildingDamage: buildingDamageLog.length > 0 ? buildingDamageLog : undefined,

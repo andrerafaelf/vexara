@@ -3,8 +3,10 @@ import test from 'node:test';
 import {
   computeForcePower,
   computeLossesForLoser,
+  computeClassWeightedAttack,
 } from '../utils/combatMath.js';
 import { calculatePoints, computeResourceUpdate } from '../utils/economy.js';
+import { buildRespawnNexusConfig, RESPAWN_INFLUENCE_FRACTION } from '../utils/starterNexus.js';
 
 test('computeResourceUpdate increases resources over elapsed time', () => {
   const now = Date.now();
@@ -75,4 +77,54 @@ test('computeLossesForLoser wipes all non-overseer troops', () => {
   assert.equal(losses.lancerDrone, troops.lancerDrone);
   assert.equal(losses.breakerUnit, troops.breakerUnit);
   assert.equal(losses.overseer, undefined);
+});
+
+test('loser losses scale with how close the fight was (no all-or-nothing cliff)', () => {
+  const force = { assaultTrooper: 100, lancerDrone: 100 };
+
+  // Blowout (powerRatio -> 0): essentially wiped.
+  const blowout = computeLossesForLoser(force, 0);
+  assert.equal(blowout.assaultTrooper, 100);
+  assert.equal(blowout.lancerDrone, 100);
+
+  // Near-even loss (powerRatio -> 1): ~85%, leaving a real remnant.
+  const even = computeLossesForLoser(force, 1);
+  assert.ok(even.assaultTrooper < 100, 'a narrow loss leaves survivors');
+  assert.ok(even.assaultTrooper >= 80, 'but still costs the bulk of the army');
+
+  // Default (no ratio passed) preserves the old total-wipe behaviour for callers
+  // that don't supply a ratio.
+  const legacy = computeLossesForLoser(force);
+  assert.equal(legacy.assaultTrooper, 100);
+
+  // Overseer is never counted as a loser-side casualty here.
+  assert.equal(computeLossesForLoser({ ...force, overseer: 1 }, 1).overseer, undefined);
+});
+
+test('a lone Overseer has zero class-weighted attack power', () => {
+  // Regression guard for the empty-nexus conquest fix: an Overseer-only follow-up
+  // strike produces 0 attack power, so combat must rely on the "defender has no
+  // troops -> unopposed win" path (in resolveCombat) rather than attackPower>defensePower.
+  const power = computeClassWeightedAttack({ overseer: 1 }, {});
+  assert.equal(power, 0);
+});
+
+test('respawn config scales to ~55% of peak influence and respects the floor', () => {
+  const floorCfg = buildRespawnNexusConfig(0);
+  const floorPts = calculatePoints({ ...floorCfg.buildings, ...floorCfg.troops });
+  assert.ok(floorPts > 0, 'floor respawn has influence');
+
+  // A small peak still yields at least the floor (never weaker than the template).
+  const tinyCfg = buildRespawnNexusConfig(100);
+  const tinyPts = calculatePoints({ ...tinyCfg.buildings, ...tinyCfg.troops });
+  assert.ok(tinyPts >= floorPts, 'tiny-peak respawn never drops below the floor');
+
+  // A large peak scales up toward the target fraction (well above the floor).
+  const peak = 5000;
+  const bigCfg = buildRespawnNexusConfig(peak);
+  const bigPts = calculatePoints({ ...bigCfg.buildings, ...bigCfg.troops });
+  assert.ok(bigPts > floorPts, 'high-peak respawn scales above the floor');
+  // "Just over half" — within a reasonable band of the target given level rounding/caps.
+  const target = peak * RESPAWN_INFLUENCE_FRACTION;
+  assert.ok(bigPts >= target * 0.6, `respawn influence ${bigPts} is in the neighbourhood of target ${target}`);
 });

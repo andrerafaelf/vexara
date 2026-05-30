@@ -351,9 +351,6 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
     report.defender.nexus._id !== nexus._id &&
     (report.result?.alliedNexusIds ?? []).includes(Number(nexus._id));
 
-  const getMyAlliedContrib = (report: Attack) =>
-    report.result?.alliedContributions?.find((c) => c.ownerNexusId === Number(nexus._id)) ?? null;
-
   const isScoutReport = (report: Attack) => report.type === 'scout' || report.result?.mission === 'scout';
 
   const unreadCount = reports.reduce((acc, r) => (readIds.has(r._id) ? acc : acc + 1), 0);
@@ -381,11 +378,18 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
     const isMyAttack = isAttacker(selectedReport);
     const amAlly = isAlly(selectedReport);
     const myRole = isMyAttack ? 'attacker' : amAlly ? 'ally' : 'defender';
-    const myAlliedContrib = amAlly ? getMyAlliedContrib(selectedReport) : null;
     const scoutReport = isScoutReport(selectedReport);
+    const attackerName = selectedReport.attacker.user?.username || 'Unknown';
+    const defenderName = selectedReport.defender.user?.username || 'Unknown';
     const attackerLossesForDisplay = {
       ...(selectedReport.result?.attackerLosses || {}),
     } as Record<string, number>;
+    // Attacker force prefers the recorded initial composition, falling back to
+    // the dispatched troops for legacy reports that didn't store attackerInitial.
+    const attackerForceEntries = getTroopEntries(
+      (selectedReport.result?.attackerInitial as Record<string, number> | undefined) ??
+        (selectedReport.troops as Record<string, number>),
+    );
     const defenderSurvivors = getDefenderSurvivors(selectedReport);
     const defenderSurvivorEntries = getTroopEntries(defenderSurvivors);
     const defenderInitialEntries = getTroopEntries(selectedReport.result?.defenderInitial);
@@ -626,57 +630,58 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
                   )}
               </div>
 
+              {/*
+                Combat reports always show exactly two force tables — Attacker
+                and Defender, each labelled with the player's username and a
+                "(You)" marker for whichever side the viewer is on — plus one
+                table per supporting ally. The defender table is garrison-only
+                (allied support is reported separately), so a supported defence
+                is no longer double-counted across two tables.
+              */}
               <div className="report-section">
                 <h3>
-                  {myRole === 'attacker' ? 'Your Forces (Attacker)' :
-                   myRole === 'ally' ? `Your Allied Forces (supporting ${selectedReport.defender.nexus?.name || 'defender'})` :
-                   'Your Forces (Defender)'}
+                  Attacker — <Username name={attackerName} isSupporter={selectedReport.attacker.user?.isSupporter} supporterTier={selectedReport.attacker.user?.supporterTier} />
+                  {myRole === 'attacker' && <span className="report-force-you"> (You)</span>}
                 </h3>
                 <table className="report-table">
                   <thead>
-                    <tr>
-                      <th>Unit</th>
-                      <th>Present</th>
-                      <th>Lost</th>
-                      <th>Survived</th>
-                    </tr>
+                    <tr><th>Unit</th><th>Present</th><th>Lost</th><th>Survived</th></tr>
                   </thead>
                   <tbody>
-                    {myRole === 'attacker' && (
-                      <>
-                        {Object.entries(selectedReport.troops).map(([troopType, count]) =>
-                          count > 0 ? (
-                            <tr key={troopType}>
-                              <td>{troopNames[troopType] || troopType}</td>
-                              <td>{count}</td>
-                              <td className="losses">{attackerLossesForDisplay[troopType] || 0}</td>
-                              <td>{count - (attackerLossesForDisplay[troopType] || 0)}</td>
-                            </tr>
-                          ) : null,
-                        )}
-                      </>
+                    {attackerForceEntries.length === 0 && (
+                      <tr><td colSpan={4}>No attacking troops recorded.</td></tr>
                     )}
-                    {myRole === 'defender' &&
-                      defenderInitialEntries.map(([troop, initial]) => {
-                        const lost = Number(selectedReport.result?.defenderLosses?.[troop] ?? 0);
-                        const survived = Number(defenderSurvivors[troop] ?? 0);
-                        return (
-                          <tr key={troop}>
-                            <td>{troopNames[troop] || troop}</td>
-                            <td>{formatNumber(initial)}</td>
-                            <td className={lost > 0 ? 'losses' : undefined}>{formatNumber(lost)}</td>
-                            <td className={survived > 0 ? 'survived' : undefined}>{formatNumber(survived)}</td>
-                          </tr>
-                        );
-                      })}
-                    {myRole === 'defender' && defenderInitialEntries.length === 0 && (
-                      <tr>
-                        <td colSpan={4}>No defending troops recorded.</td>
-                      </tr>
+                    {attackerForceEntries.map(([troopType, count]) => {
+                      const lost = Number(attackerLossesForDisplay[troopType] || 0);
+                      return (
+                        <tr key={troopType}>
+                          <td>{troopNames[troopType] || troopType}</td>
+                          <td>{formatNumber(count)}</td>
+                          <td className={lost > 0 ? 'losses' : undefined}>{formatNumber(lost)}</td>
+                          <td>{formatNumber(Number(count) - lost)}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="report-section">
+                <h3>
+                  Defender — <Username name={defenderName} isSupporter={selectedReport.defender.user?.isSupporter} supporterTier={selectedReport.defender.user?.supporterTier} />
+                  {myRole === 'defender' && <span className="report-force-you"> (You)</span>}
+                </h3>
+                <table className="report-table">
+                  <thead>
+                    <tr><th>Unit</th><th>Present</th><th>Lost</th><th>Survived</th></tr>
+                  </thead>
+                  <tbody>
+                    {defenderInitialEntries.length === 0 && (
+                      <tr><td colSpan={4}>No defending garrison.</td></tr>
                     )}
-                    {myRole === 'ally' && myAlliedContrib && Object.entries(myAlliedContrib.initial).map(([troop, initial]) => {
-                      const lost = Number(myAlliedContrib.losses[troop] ?? 0);
-                      const survived = Number(myAlliedContrib.survivors[troop] ?? 0);
+                    {defenderInitialEntries.map(([troop, initial]) => {
+                      const lost = Number(selectedReport.result?.defenderLosses?.[troop] ?? 0);
+                      const survived = Number(defenderSurvivors[troop] ?? 0);
                       return (
                         <tr key={troop}>
                           <td>{troopNames[troop] || troop}</td>
@@ -686,35 +691,55 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
                         </tr>
                       );
                     })}
-                    {myRole === 'ally' && !myAlliedContrib && (
-                      <tr><td colSpan={4}>No allied troop data recorded.</td></tr>
-                    )}
                   </tbody>
                 </table>
               </div>
+
+              {selectedReport.result?.alliedContributions && selectedReport.result.alliedContributions.length > 0 &&
+                selectedReport.result.alliedContributions.map((contrib) => {
+                  const allyName = contrib.ownerUsername ?? contrib.ownerNexusName;
+                  const isMe = contrib.ownerNexusId === Number(nexus._id);
+                  return (
+                    <div className="report-section" key={contrib.ownerNexusId}>
+                      <h3>
+                        Allied support — {allyName}
+                        {isMe && <span className="report-force-you"> (You)</span>}
+                        <span className="allied-contrib-nexus"> ({contrib.ownerNexusName})</span>
+                      </h3>
+                      <table className="report-table">
+                        <thead>
+                          <tr><th>Unit</th><th>Present</th><th>Lost</th><th>Survived</th></tr>
+                        </thead>
+                        <tbody>
+                          {Object.entries(contrib.initial).map(([troop, initial]) => {
+                            const lost = Number(contrib.losses[troop] ?? 0);
+                            const survived = Number(contrib.survivors[troop] ?? 0);
+                            return (
+                              <tr key={troop}>
+                                <td>{troopNames[troop] || troop}</td>
+                                <td>{formatNumber(initial)}</td>
+                                <td className={lost > 0 ? 'losses' : undefined}>{formatNumber(lost)}</td>
+                                <td className={survived > 0 ? 'survived' : undefined}>{formatNumber(survived)}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                })}
             </>
           )}
 
-          <div className="report-section">
-            <h3>{scoutReport ? 'Enemy Forces' : 'Defender Forces'}</h3>
-            <table className="report-table">
-              <thead>
-                <tr>
-                  <th>Unit</th>
-                  {scoutReport ? (
-                    <th>Detected</th>
-                  ) : (
-                    <>
-                      <th>Present</th>
-                      <th>Lost</th>
-                      <th>Survived</th>
-                    </>
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {scoutReport &&
-                  Object.entries(selectedReport.result?.intel?.troops || {}).map(
+          {scoutReport && (
+            <div className="report-section">
+              <h3>Enemy Forces</h3>
+              <table className="report-table">
+                <thead>
+                  <tr><th>Unit</th><th>Detected</th></tr>
+                </thead>
+                <tbody>
+                  {Object.entries(selectedReport.result?.intel?.troops || {}).map(
                     ([troop, count]) =>
                       Number(count) > 0 && (
                         <tr key={troop}>
@@ -723,63 +748,13 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
                         </tr>
                       ),
                   )}
-                {!scoutReport &&
-                  defenderInitialEntries.map(([troop, initial]) => {
-                    const lost = Number(selectedReport.result?.defenderLosses?.[troop] ?? 0);
-                    const survived = Number(defenderSurvivors[troop] ?? 0);
-                    return (
-                      <tr key={troop}>
-                        <td>{troopNames[troop] || troop}</td>
-                        <td>{formatNumber(initial)}</td>
-                        <td className={lost > 0 ? 'losses' : undefined}>{formatNumber(lost)}</td>
-                        <td className={survived > 0 ? 'survived' : undefined}>{formatNumber(survived)}</td>
-                      </tr>
-                    );
-                  })}
-                {!scoutReport && defenderInitialEntries.length === 0 && (
-                  <tr>
-                    <td colSpan={4}>No defending troops recorded.</td>
-                  </tr>
-                )}
-                {scoutReport &&
-                  Object.values(selectedReport.result?.intel?.troops || {}).every((count) => Number(count) <= 0) && (
+                  {Object.values(selectedReport.result?.intel?.troops || {}).every((count) => Number(count) <= 0) && (
                     <tr>
                       <td colSpan={2}>No enemy troops detected.</td>
                     </tr>
                   )}
-              </tbody>
-            </table>
-          </div>
-
-          {!scoutReport && selectedReport.result?.alliedContributions && selectedReport.result.alliedContributions.length > 0 && (
-            <div className="report-section">
-              <h3>Allied Forces</h3>
-              {selectedReport.result.alliedContributions.map((contrib) => (
-                <div key={contrib.ownerNexusId} className="allied-contrib">
-                  <div className="allied-contrib-header">
-                    {contrib.ownerUsername ?? contrib.ownerNexusName} <span className="allied-contrib-nexus">({contrib.ownerNexusName})</span>
-                  </div>
-                  <table className="report-table">
-                    <thead>
-                      <tr><th>Unit</th><th>Present</th><th>Lost</th><th>Survived</th></tr>
-                    </thead>
-                    <tbody>
-                      {Object.entries(contrib.initial).map(([troop, initial]) => {
-                        const lost = Number(contrib.losses[troop] ?? 0);
-                        const survived = Number(contrib.survivors[troop] ?? 0);
-                        return (
-                          <tr key={troop}>
-                            <td>{troopNames[troop] || troop}</td>
-                            <td>{formatNumber(initial)}</td>
-                            <td className={lost > 0 ? 'losses' : undefined}>{formatNumber(lost)}</td>
-                            <td className={survived > 0 ? 'survived' : undefined}>{formatNumber(survived)}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              ))}
+                </tbody>
+              </table>
             </div>
           )}
 

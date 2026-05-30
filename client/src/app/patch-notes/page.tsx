@@ -4,6 +4,7 @@ import { join } from 'path';
 import Link from 'next/link';
 import SiteFooter from '@/components/SiteFooter';
 import PublicNav from '@/components/PublicNav';
+import PatchNotesBackToGame from '@/components/PatchNotesBackToGame';
 import '@/styles/PatchNotes.css';
 
 const TITLE = 'Patch Notes - Vexara Alpha Updates';
@@ -135,6 +136,7 @@ export default function PatchNotesPage() {
   return (
     <>
       <PublicNav />
+      <PatchNotesBackToGame />
 
       <main className="pn-root">
         <header className="pn-header">

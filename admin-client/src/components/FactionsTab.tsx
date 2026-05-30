@@ -168,7 +168,7 @@ export default function FactionsTab({
                   <div className="faction-admin-metrics">
                     <span><Users size={13} /> {faction.memberCount}</span>
                     <span>{faction.nexusCount} nexuses</span>
-                    <span>{faction.totalPoints.toLocaleString()} pts</span>
+                    <span>{(faction.totalPoints ?? 0).toLocaleString()} pts</span>
                     <span><Swords size={13} /> {faction.activeWarCount}</span>
                     <span>{faction.activeTreatyCount} treaties</span>
                   </div>
@@ -221,7 +221,7 @@ export default function FactionsTab({
                                   ))}
                                 </select>
                               </td>
-                              <td>{member.points.toLocaleString()}</td>
+                              <td>{(member.points ?? 0).toLocaleString()}</td>
                               <td>{member.nexusCount}</td>
                               <td className="cell-date">{new Date(member.joinedAt).toLocaleDateString()}</td>
                               <td>

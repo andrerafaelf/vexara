@@ -79,6 +79,15 @@ export async function updateGalaxyPlayerPoints(userId: number, galaxyId: number,
     where: { userId_galaxyId: { userId, galaxyId } },
     data: { points },
   });
+  // Ratchet peakPoints up to the new high-water mark. A separate conditional
+  // update (rather than read-modify-write) keeps it race-free under the
+  // concurrent point recomputations that getMyNexuses can trigger.
+  if (points > updated.peakPoints) {
+    await prisma.galaxyPlayer.updateMany({
+      where: { userId, galaxyId, peakPoints: { lt: points } },
+      data: { peakPoints: points },
+    });
+  }
   void checkAndGrantToken(userId, points, galaxyId);
   void checkAndGrantMilestoneToken(userId, points);
   return updated;
