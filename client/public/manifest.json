@@ -17,19 +17,19 @@
       "type": "image/x-icon"
     },
     {
-      "src": "vexara192.png",
+      "src": "vexara-icon-v2-192.png",
       "type": "image/png",
       "sizes": "192x192",
       "purpose": "any"
     },
     {
-      "src": "vexara512.png",
+      "src": "vexara-icon-v2-512.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any"
     },
     {
-      "src": "vexara512.png",
+      "src": "vexara-icon-v2-512.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "maskable"

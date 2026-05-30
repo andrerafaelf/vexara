@@ -19,6 +19,7 @@ export default function SiteFooter() {
             <Link href="/register">Enlist</Link>
             <Link href="/login">Sign in</Link>
             <Link href="/codex">Codex</Link>
+            <Link href="/calculator">Calculator</Link>
             <Link href="/patch-notes">Patch Notes</Link>
           </div>
           <div className="site-footer-col">

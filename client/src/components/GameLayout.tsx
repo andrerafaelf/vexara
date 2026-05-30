@@ -299,6 +299,9 @@ export default function GameLayout({
           <a href="/codex" target="_blank" rel="noopener noreferrer" className="nav-btn">
             Codex
           </a>
+          <a href="/calculator" target="_blank" rel="noopener noreferrer" className="nav-btn">
+            Calculator
+          </a>
           {hiddenCount > 0 && (
             <div className="nav-discover-wrap">
               <button
@@ -451,6 +454,9 @@ export default function GameLayout({
           </button>
           <a href="/codex" target="_blank" rel="noopener noreferrer" className="nav-btn">
             Codex
+          </a>
+          <a href="/calculator" target="_blank" rel="noopener noreferrer" className="nav-btn">
+            Calculator
           </a>
           {hiddenCount > 0 && (
             <div className="mobile-drawer-discover">

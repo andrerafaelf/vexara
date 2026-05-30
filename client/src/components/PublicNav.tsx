@@ -13,6 +13,7 @@ export default function PublicNav() {
       </Link>
       <nav className="lp-nav-links" aria-label="Primary">
         <Link href="/codex">Codex</Link>
+        <Link href="/calculator">Calculator</Link>
         <a href="https://discord.gg/D858rzCHP7" target="_blank" rel="noopener noreferrer">Discord</a>
         <Link href="/login" className="lp-nav-link-login">Login</Link>
         <Link href="/register" className="lp-nav-cta">Enlist</Link>
