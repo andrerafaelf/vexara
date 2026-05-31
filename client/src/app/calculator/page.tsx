@@ -480,6 +480,8 @@ export default function CalculatorPage() {
   const swap = () => {
     setAtk(def);
     setDef(atk);
+    setArmory(shieldGrid);
+    setShieldGrid(armory);
   };
 
   return (
