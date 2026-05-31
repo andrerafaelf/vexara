@@ -120,7 +120,7 @@ function requireGalaxyId(req: Request, res: Response): number | null {
 }
 
 // Admin-only controllers for managing galaxies, users, and performing actions on behalf of users
-export async function listGalaxies(req: Request, res: Response): Promise<void> {
+export async function listGalaxies(_req: Request, res: Response): Promise<void> {
   try {
     const galaxies = await adminService.getAllGalaxies();
     res.json(
@@ -211,6 +211,10 @@ export async function listAllUsers(_req: Request, res: Response): Promise<void> 
         emailVerified: !!u.emailVerifiedAt,
         hasPendingToken: !!u.emailVerificationToken,
         galaxyCount: u._count.galaxyPlayers,
+        isFlagged: u.isFlagged ?? false,
+        flagReason: u.flagReason ?? null,
+        flaggedAt: u.flaggedAt ?? null,
+        registrationIp: u.registrationIp ?? null,
       })),
     );
   } catch (error) {
@@ -251,6 +255,7 @@ export async function getStats(req: Request, res: Response): Promise<void> {
       ownedNexuses,
       usersWithNexusCount,
       topUsers,
+      factionCount,
     ] = await adminService.getAdminStatsForGalaxy(galaxyId);
     const totalTroops = (ownedNexuses as unknown as Array<Record<string, number>>).reduce((sum, nexus) => {
       let nexusSum = 0;
@@ -269,6 +274,7 @@ export async function getStats(req: Request, res: Response): Promise<void> {
       totalTroops,
       avgPoints,
       marketCount,
+      factionCount,
       topUsers: (topUsers as Array<{ userId: number; points: number; user: { id: number; username: string } }>).map(
         (gp) => ({ _id: gp.user.id, id: gp.user.id, username: gp.user.username, points: gp.points }),
       ),
@@ -736,7 +742,6 @@ export async function listAttacks(req: Request, res: Response): Promise<void> {
     const galaxyId = requireGalaxyId(req, res);
     if (galaxyId == null) return;
     const attacks = await adminService.getAdminAttacks(galaxyId);
-    const userById = await adminService.getAttackUsernames(null, null);
     const allIds = [
       ...new Set(attacks.flatMap((a) => [a.attackerUserId, a.defenderUserId].filter((id): id is number => id != null))),
     ];
@@ -748,8 +753,9 @@ export async function listAttacks(req: Request, res: Response): Promise<void> {
       attacks.map((a) => ({
         ...a,
         _id: a.id,
-        attacker: { user: { username: byId.get(a.attackerUserId) || 'Unknown' } },
-        defender: { user: { username: byId.get(a.defenderUserId!) || 'Neutral' } },
+        type: a.type,
+        attacker: { user: { username: (a.attackerUserId != null ? byId.get(a.attackerUserId) : null) || 'Unknown' } },
+        defender: { user: { username: (a.defenderUserId != null ? byId.get(a.defenderUserId) : null) || 'Neutral' } },
       })),
     );
   } catch (error) {
@@ -834,6 +840,65 @@ export async function grantTokens(req: Request, res: Response): Promise<void> {
       ),
     );
     res.json({ success: true, granted: count });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
+export async function flagUser(req: Request, res: Response): Promise<void> {
+  try {
+    const userId = adminService.toInt(req.params.userId);
+    const reason = typeof req.body?.reason === 'string' ? req.body.reason.trim().slice(0, 200) : '';
+    if (!reason) {
+      res.status(400).json({ error: 'A reason is required to flag an account' });
+      return;
+    }
+    const user = await adminService.getUserById(userId);
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    const updated = await adminService.flagUser(userId, reason);
+    res.json({ success: true, user: { id: updated.id, username: updated.username, isFlagged: updated.isFlagged, flagReason: updated.flagReason } });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
+export async function unflagUser(req: Request, res: Response): Promise<void> {
+  try {
+    const userId = adminService.toInt(req.params.userId);
+    const user = await adminService.getUserById(userId);
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    const updated = await adminService.unflagUser(userId);
+    res.json({ success: true, user: { id: updated.id, username: updated.username, isFlagged: updated.isFlagged } });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
+export async function listFlaggedUsers(_req: Request, res: Response): Promise<void> {
+  try {
+    const users = await adminService.getFlaggedUsers();
+    res.json(
+      users.map((u) => ({
+        _id: u.id,
+        id: u.id,
+        username: u.username,
+        email: u.email,
+        createdAt: u.createdAt,
+        emailVerified: !!u.emailVerifiedAt,
+        hasPendingToken: !!u.emailVerificationToken,
+        galaxyCount: u._count.galaxyPlayers,
+        isFlagged: u.isFlagged,
+        flagReason: u.flagReason,
+        flaggedAt: u.flaggedAt,
+        registrationIp: u.registrationIp,
+      })),
+    );
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }

@@ -58,6 +58,10 @@ model User {
 
   lastSeenWarsAt   DateTime?
   lastPlayedAt     DateTime?
+
+  isFlagged        Boolean   @default(false)
+  flagReason       String?   @db.VarChar(200)
+  flaggedAt        DateTime?
 }
 
 enum GalaxyStatus {

@@ -6,6 +6,7 @@ import {
   Save,
   ScrollText,
   Search,
+  Shield,
   ShoppingCart,
   Sparkles,
   Swords,
@@ -117,6 +118,11 @@ export default function GalaxyTab({
     () => (selectedUserId == null ? null : users.find((u) => u._id === selectedUserId) ?? null),
     [users, selectedUserId],
   );
+
+  // Quick token grant state (reused from UsersTab pattern)
+  const [tokenModal, setTokenModal] = useState<{ userId: string; username: string } | null>(null);
+  const [tokenCount, setTokenCount] = useState('1');
+  const [tokenReason, setTokenReason] = useState('manual');
 
   const [deleteGalaxyTarget, setDeleteGalaxyTarget] = useState<Galaxy | null>(null);
   const [deleteGalaxyInput, setDeleteGalaxyInput] = useState('');
@@ -358,6 +364,32 @@ export default function GalaxyTab({
     } catch { showToast('Error', 'error'); }
   };
 
+  const handleGrantTokens = async () => {
+    if (!tokenModal) return;
+    const count = parseInt(tokenCount);
+    if (!Number.isFinite(count) || count < 1 || count > 50) {
+      showToast('Count must be 1–50', 'error');
+      return;
+    }
+    try {
+      const res = await adminFetch(`${ADMIN_API_URL}/users/${tokenModal.userId}/tokens`, {
+        method: 'POST',
+        body: JSON.stringify({ count, reason: tokenReason || 'admin_grant' }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(`Granted ${data.granted} token${data.granted !== 1 ? 's' : ''} to ${tokenModal.username}`, 'success');
+        setTokenModal(null);
+        setTokenCount('1');
+        setTokenReason('manual');
+      } else {
+        showToast(data.error || 'Failed to grant tokens', 'error');
+      }
+    } catch {
+      showToast('Error granting tokens', 'error');
+    }
+  };
+
   const handleCompleteAttack = async (attackId: string) => {
     try {
       const res = await adminFetch(`${ADMIN_API_URL}/attacks/${attackId}/complete`, { method: 'POST' });
@@ -485,6 +517,7 @@ export default function GalaxyTab({
             {[
               { icon: <Users size={18} />, value: stats.userCount, label: 'Players' },
               { icon: <Building2 size={18} />, value: stats.villageCount, label: 'Nexuses' },
+              { icon: <Shield size={18} />, value: stats.factionCount ?? 0, label: 'Factions' },
               { icon: <Swords size={18} />, value: stats.travelingAttackCount, label: 'Active Strikes' },
               { icon: <Swords size={18} />, value: stats.totalTroops.toLocaleString(), label: 'World Troops' },
               { icon: <TrendingUp size={18} />, value: stats.avgPoints.toLocaleString(), label: 'Avg Influence' },
@@ -571,6 +604,7 @@ export default function GalaxyTab({
                 <button className="btn-action btn-reset" onClick={() => handleResetUser(user)}>Reset</button>
                 <button className="btn-action btn-notif" onClick={() => handleResendVerification(user)}>Resend verify</button>
                 <button className="btn-action btn-notif" onClick={() => handleTestNotification(user)}>Test notif</button>
+                <button className="btn-action btn-notif" onClick={() => { setTokenModal({ userId: user._id, username: user.username }); setTokenCount('1'); setTokenReason('manual'); }}>Tokens</button>
                 <button className="btn-action btn-delete" onClick={() => handleDeleteUser(user)}>Delete</button>
               </div>
             </div>
@@ -590,6 +624,7 @@ export default function GalaxyTab({
                 <tr>
                   <th>Attacker</th>
                   <th>Defender</th>
+                  <th>Type</th>
                   <th>Troops</th>
                   <th>Arrives In</th>
                   <th>Actions</th>
@@ -603,10 +638,21 @@ export default function GalaxyTab({
                   const h = Math.floor(m / 60);
                   const timeStr = h > 0 ? `${h}h ${m % 60}m ${s % 60}s` : m > 0 ? `${m}m ${s % 60}s` : `${s}s`;
                   const totalTroops = Object.values(attack.troops || {}).reduce((a, b) => a + Number(b || 0), 0);
+                  const typeColors: Record<string, string> = {
+                    attack: 'var(--danger)',
+                    scout: '#7aa2ff',
+                    support: '#7df58c',
+                  };
+                  const attackType = attack.type || 'attack';
                   return (
                     <tr key={attack._id}>
                       <td data-label="Attacker">{attack.attacker?.user?.username || 'Unknown'}</td>
                       <td data-label="Defender">{attack.defender?.user?.username || 'Unknown'}</td>
+                      <td data-label="Type">
+                        <span style={{ color: typeColors[attackType] ?? 'var(--text-muted)', fontWeight: 600, fontSize: '0.8em', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                          {attackType}
+                        </span>
+                      </td>
                       <td data-label="Troops">{totalTroops}</td>
                       <td data-label="Arrives in"><span className={diff <= 10000 ? 'time-urgent' : ''}>{timeStr}</span></td>
                       <td>
@@ -807,6 +853,47 @@ export default function GalaxyTab({
                   {saving ? 'Saving…' : totalDirty === 0 ? 'Save' : `Save ${totalDirty} change${totalDirty === 1 ? '' : 's'}`}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Token grant modal */}
+      {tokenModal && (
+        <div className="modal-overlay" onClick={() => setTokenModal(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Grant tokens: {tokenModal.username}</h3>
+              <button className="modal-close" onClick={() => setTokenModal(null)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="form-grid">
+                <div className="form-group">
+                  <label>Count (1–50)</label>
+                  <input type="number" min={1} max={50} value={tokenCount} onChange={(e) => setTokenCount(e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label>Reason</label>
+                  <select
+                    value={['manual', 'compensation', 'contest', 'supporter', 'bug_fix'].includes(tokenReason) ? tokenReason : '__custom'}
+                    onChange={(e) => setTokenReason(e.target.value === '__custom' ? '' : e.target.value)}
+                  >
+                    <option value="manual">Manual grant</option>
+                    <option value="compensation">Compensation</option>
+                    <option value="contest">Contest reward</option>
+                    <option value="supporter">Supporter bonus</option>
+                    <option value="bug_fix">Bug fix / make-good</option>
+                    <option value="__custom">Custom reason…</option>
+                  </select>
+                  {!['manual', 'compensation', 'contest', 'supporter', 'bug_fix'].includes(tokenReason) && (
+                    <input style={{ marginTop: 6 }} value={tokenReason} onChange={(e) => setTokenReason(e.target.value)} placeholder="Enter custom reason" autoFocus />
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={() => setTokenModal(null)}>Cancel</button>
+              <button className="btn-primary" onClick={handleGrantTokens}>Grant</button>
             </div>
           </div>
         </div>

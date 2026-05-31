@@ -57,6 +57,10 @@ export function getAllUsers() {
       createdAt: true,
       emailVerifiedAt: true,
       emailVerificationToken: true,
+      isFlagged: true,
+      flagReason: true,
+      flaggedAt: true,
+      registrationIp: true,
       _count: { select: { galaxyPlayers: true } },
     },
     orderBy: { createdAt: 'desc' },
@@ -136,6 +140,7 @@ export function getAdminStatsForGalaxy(galaxyId: number) {
       orderBy: { points: 'desc' },
       take: 10,
     }),
+    prisma.faction.count({ where: { galaxyId } }),
   ]);
 }
 
@@ -483,6 +488,40 @@ export function kickFactionMember(factionId: number, memberId: number) {
       await tx.factionMember.update({ where: { id: nextLeader.id }, data: { role: 'leader' } });
     }
     return { disbanded: false, username: member.user.username, factionName: member.faction.name };
+  });
+}
+
+export function flagUser(userId: number, reason: string) {
+  return prisma.user.update({
+    where: { id: userId },
+    data: { isFlagged: true, flagReason: reason, flaggedAt: new Date() },
+  });
+}
+
+export function unflagUser(userId: number) {
+  return prisma.user.update({
+    where: { id: userId },
+    data: { isFlagged: false, flagReason: null, flaggedAt: null },
+  });
+}
+
+export function getFlaggedUsers() {
+  return prisma.user.findMany({
+    where: { isFlagged: true },
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      createdAt: true,
+      isFlagged: true,
+      flagReason: true,
+      flaggedAt: true,
+      emailVerifiedAt: true,
+      emailVerificationToken: true,
+      registrationIp: true,
+      _count: { select: { galaxyPlayers: true } },
+    },
+    orderBy: { flaggedAt: 'desc' },
   });
 }
 

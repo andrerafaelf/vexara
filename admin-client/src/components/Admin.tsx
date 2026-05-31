@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import '../styles/Admin.css';
 import type { AdminFaction, AllUser, Attack, Galaxy, GalaxyStats, GalaxyUser } from '../types/admin';
+import BroadcastTab from './BroadcastTab';
 import FactionsTab from './FactionsTab';
 import GalaxyTab from './GalaxyTab';
 import Toast from './Toast';
@@ -8,7 +9,7 @@ import UsersTab from './UsersTab';
 
 const ADMIN_API_URL = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:3002/api/admin';
 
-type Tab = 'galaxy' | 'users' | 'factions';
+type Tab = 'galaxy' | 'users' | 'factions' | 'broadcast';
 type AddUserModal = { open: true } | null;
 
 interface ToastMessage {
@@ -132,6 +133,7 @@ const Admin: React.FC = () => {
               totalTroops: Number(statsData.totalTroops ?? 0),
               avgPoints: Number(statsData.avgPoints ?? 0),
               marketCount: Number(statsData.marketCount ?? 0),
+              factionCount: Number(statsData.factionCount ?? 0),
               topUsers: Array.isArray(statsData.topUsers) ? statsData.topUsers : [],
             }
           : null,
@@ -216,6 +218,11 @@ const Admin: React.FC = () => {
               {allUsers.filter((u) => !u.emailVerified).length > 0 && (
                 <span className="admin-tab-badge">{allUsers.filter((u) => !u.emailVerified).length}</span>
               )}
+              {allUsers.filter((u) => u.isFlagged).length > 0 && (
+                <span className="admin-tab-badge" style={{ background: 'rgba(245,158,11,0.25)', color: 'var(--warning)' }}>
+                  {allUsers.filter((u) => u.isFlagged).length} flagged
+                </span>
+              )}
             </button>
             <button
               className={`admin-tab${tab === 'factions' ? ' admin-tab-active' : ''}`}
@@ -223,6 +230,12 @@ const Admin: React.FC = () => {
             >
               Factions
               {factions.length > 0 && <span className="admin-tab-badge">{factions.length}</span>}
+            </button>
+            <button
+              className={`admin-tab${tab === 'broadcast' ? ' admin-tab-active' : ''}`}
+              onClick={() => setTab('broadcast')}
+            >
+              Broadcast
             </button>
           </div>
         </div>
@@ -260,6 +273,9 @@ const Admin: React.FC = () => {
           showToast={showToast}
           onChanged={reloadFactions}
         />
+      )}
+      {tab === 'broadcast' && (
+        <BroadcastTab adminFetch={adminFetch} showToast={showToast} />
       )}
 
       {/* Add user modal */}

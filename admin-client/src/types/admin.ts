@@ -6,6 +6,10 @@ export interface AllUser {
   emailVerified: boolean;
   hasPendingToken: boolean;
   galaxyCount: number;
+  isFlagged?: boolean;
+  flagReason?: string | null;
+  flaggedAt?: string | null;
+  registrationIp?: string | null;
 }
 
 export const BUILDING_KEYS = [
@@ -80,8 +84,11 @@ export interface GalaxyStats {
   totalTroops: number;
   avgPoints: number;
   marketCount: number;
+  factionCount: number;
   topUsers: TopUser[];
 }
+
+export type AttackType = 'attack' | 'scout' | 'support';
 
 export interface Attack {
   _id: string;
@@ -89,6 +96,7 @@ export interface Attack {
   defender: { user: { username: string } };
   troops: Record<string, number>;
   arrivesAt: string;
+  type: AttackType;
 }
 
 export interface Galaxy {
