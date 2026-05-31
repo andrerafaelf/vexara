@@ -12,37 +12,34 @@ export default function AuthPage() {
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
-
-    const normalizedUsername = username.trim();
-    if (!normalizedUsername || !password) {
-      setError('Enter username and password');
-      return;
-    }
-
-    sessionStorage.setItem('admin_basic_auth', btoa(`${normalizedUsername}:${password}`));
+    const u = username.trim();
+    if (!u || !password) { setError('Enter username and password'); return; }
+    sessionStorage.setItem('admin_basic_auth', btoa(`${u}:${password}`));
     router.replace('/admin');
   };
 
   return (
-    <main className="admin-auth">
-      <div className="admin-auth-panel-left">
-        <p className="admin-auth-eyebrow">Operations console</p>
-        <h1 className="admin-auth-headline">Vexara Admin</h1>
-        <p className="admin-auth-sub">Galaxy management. Player data. Live game state.</p>
+    <main className="auth-page">
+      <div className="auth-left">
+        <p className="auth-eyebrow">Operations console</p>
+        <h1 className="auth-headline">Vexara Admin</h1>
+        <p className="auth-sub">Galaxy management. Player data. Live game state.</p>
       </div>
 
-      <div className="admin-auth-panel-right">
-        <form className="admin-auth-form" onSubmit={handleSubmit} noValidate>
-          <div className="admin-auth-brand">
-            <span className="admin-auth-mark" aria-hidden="true">VX</span>
+      <div className="auth-right">
+        <form className="auth-form-inner" onSubmit={handleSubmit} noValidate>
+          <div className="auth-brand">
+            <div className="auth-mark">
+              <img src="/vexara-logo.png" alt="Vexara" />
+            </div>
             <div>
-              <p className="admin-auth-title">Vexara</p>
-              <p className="admin-auth-subtitle">Operations console</p>
+              <p className="auth-title-text">Vexara</p>
+              <p className="auth-subtitle-text">Operations console</p>
             </div>
           </div>
 
-          <label className="admin-auth-field">
-            <span className="admin-auth-label">Username</span>
+          <label className="auth-field">
+            <span className="auth-label">Username</span>
             <input
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -52,8 +49,8 @@ export default function AuthPage() {
             />
           </label>
 
-          <label className="admin-auth-field">
-            <span className="admin-auth-label">Password</span>
+          <label className="auth-field">
+            <span className="auth-label">Password</span>
             <input
               type="password"
               value={password}
@@ -62,15 +59,9 @@ export default function AuthPage() {
             />
           </label>
 
-          {error && (
-            <div className="admin-auth-error" role="alert">
-              {error}
-            </div>
-          )}
+          {error && <div className="auth-error" role="alert">{error}</div>}
 
-          <button type="submit" className="admin-auth-submit">
-            Sign in
-          </button>
+          <button type="submit" className="auth-submit">Sign in</button>
         </form>
       </div>
     </main>

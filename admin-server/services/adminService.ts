@@ -28,6 +28,89 @@ const TROOP_KEYS = [
   'overseer',
 ] as const;
 
+export async function getOverviewStats() {
+  const now = new Date();
+  const days = 14;
+  const buckets: { date: string; users: number; attacks: number }[] = [];
+
+  // Build 14-day buckets in parallel
+  const promises = Array.from({ length: days }, (_, i) => {
+    const dayStart = new Date(now);
+    dayStart.setDate(dayStart.getDate() - (days - 1 - i));
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(dayStart);
+    dayEnd.setHours(23, 59, 59, 999);
+    return Promise.all([
+      prisma.user.count({ where: { createdAt: { gte: dayStart, lte: dayEnd } } }),
+      prisma.attack.count({ where: { createdAt: { gte: dayStart, lte: dayEnd } } }),
+      dayStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    ]);
+  });
+
+  const results = await Promise.all(promises);
+  for (const [users, attacks, date] of results) {
+    buckets.push({ date: date as string, users: users as number, attacks: attacks as number });
+  }
+
+  const [
+    totalUsers,
+    totalNexuses,
+    totalAttacks,
+    totalFactions,
+    totalActiveGalaxies,
+    totalMarketListings,
+    totalFlaggedUsers,
+    totalUnverified,
+    totalSpyMissions,
+    totalWarOperations,
+    recentAttacks,
+  ] = await Promise.all([
+    prisma.user.count(),
+    prisma.nexus.count(),
+    prisma.attack.count(),
+    prisma.faction.count(),
+    prisma.galaxy.count({ where: { status: 'active' } }),
+    prisma.marketListing.count(),
+    prisma.user.count({ where: { isFlagged: true } }),
+    prisma.user.count({ where: { emailVerifiedAt: null } }),
+    prisma.spyMission.count({ where: { status: { in: ['traveling', 'returning'] } } }),
+    prisma.warOperation.count({ where: { status: { in: ['planning', 'locked', 'launched'] } } }),
+    prisma.attack.findMany({
+      where: { status: 'traveling' },
+      include: {
+        attackerNexus: { select: { name: true } },
+        defenderNexus: { select: { name: true } },
+      },
+      orderBy: { arrivesAt: 'asc' },
+      take: 10,
+    }),
+  ]);
+
+  return {
+    totals: {
+      users: totalUsers,
+      nexuses: totalNexuses,
+      attacks: totalAttacks,
+      factions: totalFactions,
+      activeGalaxies: totalActiveGalaxies,
+      marketListings: totalMarketListings,
+      flaggedUsers: totalFlaggedUsers,
+      unverifiedUsers: totalUnverified,
+      activeSpyMissions: totalSpyMissions,
+      activeWarOps: totalWarOperations,
+    },
+    activityChart: buckets,
+    recentAttacks: recentAttacks.map((a) => ({
+      id: a.id,
+      type: a.type,
+      status: a.status,
+      attackerNexus: a.attackerNexus?.name ?? 'Unknown',
+      defenderNexus: a.defenderNexus?.name ?? 'Unknown',
+      arrivesAt: a.arrivesAt,
+    })),
+  };
+}
+
 export const toInt = (value: unknown, fallback = 0) => {
   const parsed = Number.parseInt(String(value), 10);
   return Number.isFinite(parsed) ? parsed : fallback;

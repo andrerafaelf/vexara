@@ -12,6 +12,7 @@ router.get('/broadcast/galaxy-live/preview', adminController.previewGalaxyLiveBr
 router.post('/broadcast/galaxy-live/test', adminController.sendGalaxyLiveTest);
 router.post('/broadcast/galaxy-live', adminController.sendGalaxyLiveBroadcast);
 
+router.get('/overview', adminController.getOverview);
 router.get('/galaxies', adminController.listGalaxies);
 router.post('/galaxies', adminController.createGalaxy);
 router.delete('/galaxies/:galaxyId', adminController.deleteGalaxy);

@@ -120,6 +120,15 @@ function requireGalaxyId(req: Request, res: Response): number | null {
 }
 
 // Admin-only controllers for managing galaxies, users, and performing actions on behalf of users
+export async function getOverview(_req: Request, res: Response): Promise<void> {
+  try {
+    const data = await adminService.getOverviewStats();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
 export async function listGalaxies(_req: Request, res: Response): Promise<void> {
   try {
     const galaxies = await adminService.getAllGalaxies();
