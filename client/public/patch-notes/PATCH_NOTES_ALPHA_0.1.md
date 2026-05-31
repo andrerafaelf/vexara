@@ -81,4 +81,4 @@ Legend in the map sidebar updated to match.
 
 ---
 
-See you in the dark. — andre
+See you in the dark. - André

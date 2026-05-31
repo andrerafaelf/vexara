@@ -70,3 +70,7 @@ The in-game header was losing its sticky position on some mobile devices
 after the page content grew past one screen height. The root layout now
 locks to `100dvh` with internal scroll so the header stays anchored at
 the top regardless of content length.
+
+---
+
+See you in the dark. - André

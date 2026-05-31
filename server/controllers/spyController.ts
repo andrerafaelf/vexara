@@ -112,8 +112,8 @@ export async function sendSpyMission(req: AuthRequest, res: Response): Promise<v
     }
     if (!defender || defender.galaxyId !== req.galaxyId) { res.status(404).json({ error: 'Target not found' }); return; }
     if (defender.ownerId === req.userId) { res.status(400).json({ error: 'Cannot spy on your own nexus' }); return; }
-    if (type === 'sabotage' && defender.newbieProtectionEndsAt && new Date(defender.newbieProtectionEndsAt) > new Date()) {
-      res.status(403).json({ error: 'This nexus is under newbie protection and cannot be sabotaged yet', protectedUntil: defender.newbieProtectionEndsAt }); return;
+    if (defender.newbieProtectionEndsAt && new Date(defender.newbieProtectionEndsAt) > new Date()) {
+      res.status(403).json({ error: 'This nexus is under newbie protection and cannot be targeted yet', protectedUntil: defender.newbieProtectionEndsAt }); return;
     }
     if (attacker.reconOperative < opCount) {
       res.status(400).json({ error: `Not enough Recon Operatives (have ${attacker.reconOperative}, need ${opCount})` }); return;

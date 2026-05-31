@@ -57,4 +57,4 @@ at 12%). The Stealth Array is meant to make embedded intel a contested,
 expiring resource — the goal here was to make recovering from a blown
 cover painless, not to remove the risk.
 
-See you in the dark. — andre
+See you in the dark. - André

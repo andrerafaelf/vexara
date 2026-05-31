@@ -116,4 +116,4 @@ The Overseer entry now explains the full conquest loop:
 
 ---
 
-See you in the dark. — andre
+See you in the dark. - André

@@ -3,6 +3,7 @@ import { formatLabel, mergeTroopsTrained, normalizeBuildQueue, serializeNexus } 
 import * as adminService from '../services/internalAdminService.js';
 import { processArrivedAttacks } from '../utils/combat.js';
 import { getPopulationMax } from '../utils/population.js';
+import { TROOP_COSTS } from '../utils/gameConstants.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
 import { logError, logInfo } from '../utils/logger.js';
 import prisma from '../lib/prisma.js';
@@ -74,11 +75,32 @@ export async function giveResources(req: Request, res: Response): Promise<void> 
 
 export async function addTroops(req: Request, res: Response): Promise<void> {
   try {
-    const { lancerDrone = 0, assaultTrooper = 0, breakerUnit = 0, reconOperative = 0, skimmerBike = 0, siegeMech = 0, bulwarkGuard = 0, suppressorTeam = 0, disruptorUnit = 0, interceptorBike = 0, voidStalker = 0, plasmaTurret = 0, annihilatorPlatform = 0, overseer = 0 } = req.body as Record<string, number>;
+    const requested = req.body as Record<string, number>;
     const nexus = await adminService.getNexusById(parseInt(req.params.nexusId));
     if (!nexus) { res.status(404).json({ error: 'Nexus not found' }); return; }
-    const troopsAdded = lancerDrone + assaultTrooper + breakerUnit + reconOperative + skimmerBike + siegeMech + bulwarkGuard + suppressorTeam + disruptorUnit + interceptorBike + voidStalker + plasmaTurret + annihilatorPlatform + overseer;
-    const updated = await adminService.updateNexus(nexus.id, { lancerDrone: nexus.lancerDrone + lancerDrone, assaultTrooper: nexus.assaultTrooper + assaultTrooper, breakerUnit: nexus.breakerUnit + breakerUnit, reconOperative: nexus.reconOperative + reconOperative, skimmerBike: nexus.skimmerBike + skimmerBike, siegeMech: nexus.siegeMech + siegeMech, bulwarkGuard: nexus.bulwarkGuard + bulwarkGuard, suppressorTeam: nexus.suppressorTeam + suppressorTeam, disruptorUnit: nexus.disruptorUnit + disruptorUnit, interceptorBike: nexus.interceptorBike + interceptorBike, voidStalker: nexus.voidStalker + voidStalker, plasmaTurret: nexus.plasmaTurret + plasmaTurret, annihilatorPlatform: nexus.annihilatorPlatform + annihilatorPlatform, overseer: nexus.overseer + overseer, populationCurrent: nexus.populationCurrent + troopsAdded });
+
+    const TROOP_FIELDS = ['lancerDrone', 'assaultTrooper', 'breakerUnit', 'reconOperative', 'skimmerBike', 'siegeMech', 'bulwarkGuard', 'suppressorTeam', 'disruptorUnit', 'interceptorBike', 'voidStalker', 'plasmaTurret', 'annihilatorPlatform', 'overseer'] as const;
+    const popFree = Math.max(0, nexus.populationMax - nexus.populationCurrent);
+    const updates: Record<string, number> = {};
+    let popUsed = 0;
+    let popRemaining = popFree;
+
+    for (const field of TROOP_FIELDS) {
+      const amount = Math.max(0, Math.floor(Number(requested[field] ?? 0)));
+      if (amount === 0) continue;
+      const popPerUnit = TROOP_COSTS[field]?.population ?? 1;
+      const canFit = Math.floor(popRemaining / popPerUnit);
+      const actual = Math.min(amount, canFit);
+      if (actual === 0) continue;
+      updates[field] = (nexus as unknown as Record<string, number>)[field] + actual;
+      popUsed += actual * popPerUnit;
+      popRemaining -= actual * popPerUnit;
+    }
+
+    if (popUsed === 0) { res.status(400).json({ error: 'Not enough population capacity' }); return; }
+    updates['populationCurrent'] = nexus.populationCurrent + popUsed;
+
+    const updated = await adminService.updateNexus(nexus.id, updates);
     res.json({ success: true, nexus: serializeNexus(updated) });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'internalAdminController.ts' });
@@ -153,9 +175,9 @@ export async function completeTraining(req: Request, res: Response): Promise<voi
     if (trainingQueue.length === 0) { res.status(400).json({ error: 'No troops in training' }); return; }
     const [training, ...remainingQueue] = trainingQueue as Array<{ troopType: string; amount: number }>;
     const nexusRecord = nexus as unknown as Record<string, number>;
+    // Population was already charged when the player queued training — no adjustment needed here.
     const updated = await adminService.updateNexus(nexus.id, {
       [training.troopType]: (nexusRecord[training.troopType] || 0) + training.amount,
-      populationCurrent: nexus.populationCurrent + training.amount,
       trainingQueue: remainingQueue,
       troopsTrained: mergeTroopsTrained((nexus as unknown as Record<string, unknown>).troopsTrained, { [training.troopType]: training.amount }),
     });

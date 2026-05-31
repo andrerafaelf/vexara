@@ -85,7 +85,7 @@ export default function NewPatchToast() {
       </div>
       <div className="new-patch-toast-actions">
         <a
-          href={`/patch-notes#v${LATEST_PATCH_VERSION}`}
+          href={`/patch-notes/${LATEST_PATCH_VERSION}`}
           target="_blank"
           rel="noopener noreferrer"
           className="new-patch-toast-cta"

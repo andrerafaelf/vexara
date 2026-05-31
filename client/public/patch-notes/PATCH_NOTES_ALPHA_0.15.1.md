@@ -52,4 +52,4 @@ actually pay at your current empire size. Cancellation refunds
 
 ---
 
-See you in the dark. — andre
+See you in the dark. - André

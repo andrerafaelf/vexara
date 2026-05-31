@@ -49,6 +49,12 @@ const TROOP_GRANTS: Record<string, [number, number, number, number]> = {
   annihilatorPlatform:  [2,   5,   10,  15],
 };
 
+const TROOP_POPULATION: Record<string, number> = {
+  lancerDrone: 1, assaultTrooper: 1, breakerUnit: 1, reconOperative: 1,
+  suppressorTeam: 2, skimmerBike: 3, bulwarkGuard: 2, disruptorUnit: 2,
+  interceptorBike: 3, siegeMech: 4, annihilatorPlatform: 5,
+};
+
 function ccTier(level: number): 0 | 1 | 2 | 3 {
   if (level <= 4) return 0;
   if (level <= 8) return 1;
@@ -260,7 +266,10 @@ export default function ReferralsTab({ mode = 'referrals' }: ReferralsTabProps) 
   const selectedNexus = nexuses.find((n) => n.id === redeemState?.nexusId);
   const ccLevel = selectedNexus?.commandCore ?? 0;
   const tier = ccTier(ccLevel);
-  const troopGrantPreview = redeemState ? (TROOP_GRANTS[redeemState.troopType]?.[tier] ?? 0) : 0;
+  const troopGrantFull = redeemState ? (TROOP_GRANTS[redeemState.troopType]?.[tier] ?? 0) : 0;
+  const popFree = selectedNexus ? Math.max(0, selectedNexus.populationMax - selectedNexus.populationCurrent) : 0;
+  const popPerUnit = redeemState ? (TROOP_POPULATION[redeemState.troopType] ?? 1) : 1;
+  const troopGrantPreview = Math.min(troopGrantFull, Math.floor(popFree / popPerUnit));
 
   const upgradeableBuildings = BUILDING_KEYS.filter((b) => {
     const current = selectedNexus?.buildings[b] ?? 0;
@@ -339,9 +348,11 @@ export default function ReferralsTab({ mode = 'referrals' }: ReferralsTabProps) 
             ))}
           </select>
           {selectedNexus && (
-            <span className="referrals-preview">
-              ~{troopGrantPreview} units (CC {ccLevel}, tier {tier + 1}/4)
-            </span>
+            troopGrantPreview === 0
+              ? <span className="referrals-error">Not enough population capacity — free up space or choose a different nexus.</span>
+              : troopGrantPreview < troopGrantFull
+                ? <span className="referrals-preview referrals-preview--warn">~{troopGrantPreview} of {troopGrantFull} units (CC {ccLevel}, tier {tier + 1}/4) — limited by population capacity</span>
+                : <span className="referrals-preview">~{troopGrantPreview} units (CC {ccLevel}, tier {tier + 1}/4)</span>
           )}
         </label>
       )}
@@ -374,7 +385,7 @@ export default function ReferralsTab({ mode = 'referrals' }: ReferralsTabProps) 
         <button type="button" className="referrals-btn" onClick={() => setRedeemState(null)} disabled={redeemSubmitting}>
           Cancel
         </button>
-        <button type="submit" className="referrals-btn primary" disabled={redeemSubmitting || !redeemState?.nexusId || (redeemState?.rewardType === 'building_instant' && upgradeableBuildings.length === 0)}>
+        <button type="submit" className="referrals-btn primary" disabled={redeemSubmitting || !redeemState?.nexusId || (redeemState?.rewardType === 'building_instant' && upgradeableBuildings.length === 0) || (redeemState?.rewardType === 'troop_grant' && troopGrantPreview === 0)}>
           {redeemSubmitting ? 'Redeeming...' : 'Redeem Token'}
         </button>
       </div>

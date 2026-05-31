@@ -101,3 +101,7 @@ The Login and Enlist buttons on the landing page were partially hidden
 behind the iOS status bar (clock, wifi, battery) when running as a
 home-screen app. Both the landing navbar and the in-game header now
 respect the safe-area inset so nothing overlaps system UI.
+
+---
+
+See you in the dark. - André

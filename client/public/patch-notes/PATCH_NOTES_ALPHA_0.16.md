@@ -122,4 +122,4 @@ toast to a **centred modal**, so it's harder to miss.
 
 ---
 
-See you in the dark. — andre
+See you in the dark. - André

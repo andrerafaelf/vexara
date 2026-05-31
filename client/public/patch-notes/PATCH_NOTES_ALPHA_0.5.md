@@ -119,4 +119,4 @@ no longer scrolls; the modal content scrolls internally.
 
 ---
 
-See you in the dark. — andre
+See you in the dark. - André

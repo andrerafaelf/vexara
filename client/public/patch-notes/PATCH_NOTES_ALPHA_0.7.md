@@ -138,3 +138,7 @@ Embed and sabotage missions in the Espionage tab now show an Attack button
 on each active operative and each completed mission row. Clicking it jumps
 to the Starfield map, selects the target, and opens the attack form
 pre-armed.
+
+---
+
+See you in the dark. - André

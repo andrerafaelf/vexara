@@ -186,4 +186,4 @@ in a new window, the new window inherits the tab state via the URL.
 
 ---
 
-See you in the dark. — andre
+See you in the dark. - André

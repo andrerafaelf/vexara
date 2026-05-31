@@ -77,3 +77,7 @@ button reveals, just always-on as long as the spy is in place.
 
 If the operative is recalled, discovered, or lost, the map falls back to
 the scout report (or "No intel" if you never scouted).
+
+---
+
+See you in the dark. - André

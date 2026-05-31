@@ -1,9 +1,11 @@
 import type { MetadataRoute } from 'next';
+import { loadPatchNotes } from '@/lib/patchNotes';
 
 const SITE_URL = 'https://vexara.world';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
+  const patches = loadPatchNotes();
   return [
     {
       url: `${SITE_URL}/`,
@@ -47,6 +49,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'weekly',
       priority: 0.7,
     },
+    ...patches.map((p, i) => ({
+      url: `${SITE_URL}/patch-notes/${p.slug}`,
+      lastModified: now,
+      changeFrequency: 'never' as const,
+      priority: i === 0 ? 0.7 : 0.5,
+    })),
     {
       url: `${SITE_URL}/login`,
       lastModified: now,

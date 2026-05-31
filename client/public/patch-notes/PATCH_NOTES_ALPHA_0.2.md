@@ -105,4 +105,4 @@ and means players can raid with the troops they already have.
 
 ---
 
-See you in the dark. — andre
+See you in the dark. - André

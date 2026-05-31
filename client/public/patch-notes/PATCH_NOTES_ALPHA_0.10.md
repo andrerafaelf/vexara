@@ -207,3 +207,7 @@ weighted slightly above pure cost to reflect their strategic value:
 A 100-Annihilator stack jumps from 0 influence to 1300. A 1000-Assault
 Trooper army drops from 2000 to 1000. Leaderboard positions will shift
 on the next stats refresh — no manual reset needed.
+
+---
+
+See you in the dark. - André

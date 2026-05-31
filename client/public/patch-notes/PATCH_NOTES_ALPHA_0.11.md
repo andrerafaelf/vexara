@@ -90,3 +90,7 @@ Veterans keep every tab they ever had — the localStorage promotion
 state carries forward from the first matching condition, so the
 collapsed state only affects players who genuinely haven't crossed the
 threshold yet.
+
+---
+
+See you in the dark. - André
