@@ -84,15 +84,24 @@ function formatDuration(since: string) {
 
 function resultLabel(result: string | undefined, isMyAttack: boolean) {
   if (!result) return '';
-  if (result === 'victory') return isMyAttack ? 'Victory' : 'Defeated';
-  if (result === 'defeat') return isMyAttack ? 'Defeat' : 'Repelled';
-  return result;
+  // Server encodes result from the attacker's perspective:
+  //   'victory' = attacker won, 'defeat' = attacker lost.
+  // We map to a viewer-friendly label:
+  //   attacker + victory  → "Victory"
+  //   attacker + defeat   → "Defeat"
+  //   defender + victory  → "Defeated"  (they won, I lost)
+  //   defender + defeat   → "Repelled"  (they lost, I won)
+  const attackerWon = result === 'victory';
+  if (isMyAttack) return attackerWon ? 'Victory' : 'Defeat';
+  return attackerWon ? 'Defeated' : 'Repelled';
 }
 
 function resultClass(result: string | undefined, isMyAttack: boolean) {
   if (!result) return '';
-  const win = (result === 'victory' && isMyAttack) || (result === 'defeat' && !isMyAttack);
-  return win ? 'wywa-result--win' : 'wywa-result--loss';
+  // Good outcome: I attacked and won, or I defended and repelled them.
+  const attackerWon = result === 'victory';
+  const iGoodOutcome = (isMyAttack && attackerWon) || (!isMyAttack && !attackerWon);
+  return iGoodOutcome ? 'wywa-result--win' : 'wywa-result--loss';
 }
 
 interface Props {
@@ -164,8 +173,8 @@ export default function WhileYouWereAway({ onDismiss }: Props) {
   }
 
   const wins = data.attacks.filter((a) => {
-    const w = (a.result === 'victory' && a.isMyAttack) || (a.result === 'defeat' && !a.isMyAttack);
-    return w;
+    const attackerWon = a.result === 'victory';
+    return (a.isMyAttack && attackerWon) || (!a.isMyAttack && !attackerWon);
   }).length;
   const losses = data.attacks.length - wins;
 
