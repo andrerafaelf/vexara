@@ -28,10 +28,12 @@ import {
   ChevronDown,
   ChevronUp,
   Eye,
+  EyeOff,
   Hammer,
   Info,
   LayoutGrid,
   Pencil,
+  RotateCcw,
   ShieldCheck,
   Sparkles,
   Swords,
@@ -3164,6 +3166,8 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
   const [intelResult, setIntelResult] = useState<Record<string, unknown> | null>(null);
   const [assets, setAssets] = useState<Array<Record<string, unknown>>>([]);
   const [assetsLoading, setAssetsLoading] = useState(true);
+  const [discoveredAssets, setDiscoveredAssets] = useState<Array<Record<string, unknown>>>([]);
+  const [reembedId, setReembedId] = useState<number | null>(null);
   const [missions, setMissions] = useState<Array<Record<string, unknown>>>([]);
   const [completedMissions, setCompletedMissions] = useState<Array<Record<string, unknown>>>([]);
   // Per-mission expand state. Collapsed by default; resets on every mount
@@ -3207,10 +3211,11 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
   }, [spyTarget]);
 
   const loadAll = () => {
-    import('../services/api').then(({ getSpyAssets, getSpyMissions, getCompletedSpyMissions }) => {
+    import('../services/api').then(({ getSpyAssets, getSpyMissions, getCompletedSpyMissions, getDiscoveredSpyAssets }) => {
       getSpyAssets(nexus._id).then((r: any) => setAssets(r.data ?? [])).catch(() => {});
       getSpyMissions(nexus._id).then((r: any) => setMissions(r.data ?? [])).catch(() => {});
       getCompletedSpyMissions(nexus._id).then((r: any) => setCompletedMissions(r.data ?? [])).catch(() => {});
+      getDiscoveredSpyAssets(nexus._id).then((r: any) => setDiscoveredAssets(r.data ?? [])).catch(() => {});
     });
   };
 
@@ -3229,6 +3234,9 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
   const handleModeSwitch = (next: SpyMissionMode) => {
     setMode(next);
     setSpyTarget(null);
+    // Embed always uses exactly 1 operative; reset so a leftover sabotage count
+    // (e.g. 4) isn't carried over and silently spend extra recon operatives.
+    setOperatives(1);
   };
 
   const handleSend = async () => {
@@ -3240,7 +3248,8 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
         String(nexus._id),
         spyTarget._id,
         mode,
-        operatives,
+        // Embed only ever stations one operative; never spend more than 1 recon on it.
+        mode === 'embed' ? 1 : operatives,
         mode === 'sabotage' ? sabotageTarget : undefined,
       );
       if (r.data?.queued) {
@@ -3282,6 +3291,26 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
     }
   };
 
+  // Re-dispatch a fresh embed operative at a previously-discovered target,
+  // skipping the map hunt. Uses the same flat 1-operative embed as the form.
+  const handleReembed = async (asset: Record<string, unknown>) => {
+    if (reconCount < 1) { onToast('No Recon Operatives available. Train some at your Recruitment Core.', 'error'); return; }
+    setReembedId(asset.id as number);
+    try {
+      const { sendSpyMission } = await import('../services/api');
+      const r: any = await sendSpyMission(String(nexus._id), String(asset.targetNexusId), 'embed', 1);
+      if (r.data?.queued) {
+        const label = (asset.targetName as string) ?? `Nexus #${asset.targetNexusId}`;
+        onToast(`Operative re-dispatched to ${label}. Arrives in ${formatCountdown(new Date(r.data.arrivesAt).getTime() - serverNow())}`, 'info');
+        loadAll();
+      }
+    } catch (e: any) {
+      onToast(e?.response?.data?.error ?? 'Re-embed failed', 'error');
+    } finally {
+      setReembedId(null);
+    }
+  };
+
   const reconCount = nexus.troops?.reconOperative ?? 0;
   const embedCost = { biomass: 400, secondary: 200, secondaryLabel: 'Alloy' };
   const sabotCost = { biomass: 300 * operatives, secondary: 300 * operatives, secondaryLabel: 'Ore' };
@@ -3290,6 +3319,8 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
   const selectedSabTarget = SABOTAGE_TARGETS.find(t => t.key === sabotageTarget)!;
   const successfulMissions = completedMissions.filter((m) => (m.result as Record<string, unknown> | null)?.success !== false).length;
   const sabotageMissions = completedMissions.filter((m) => m.type === 'sabotage').length;
+  // Embed missions still traveling toward their target (not yet stationed as assets).
+  const inboundEmbeds = missions.filter((m) => m.type === 'embed' && m.status === 'traveling').length;
 
   return (
     <div className="espionage-tab">
@@ -3525,7 +3556,11 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
           <span className="espionage-section-count">{assets.length}</span>
         </div>
         {assetsLoading ? null : assets.length === 0 ? (
-          <div className="espionage-assets-empty">No operatives currently embedded at enemy nexuses.</div>
+          <div className="espionage-assets-empty">
+            {inboundEmbeds > 0
+              ? `${inboundEmbeds} embed operative${inboundEmbeds !== 1 ? 's' : ''} still in transit — they'll appear here once they reach the target.`
+              : 'No operatives currently embedded at enemy nexuses.'}
+          </div>
         ) : (
           assets.map((a) => (
             <div key={String(a.id)} className="espionage-asset-row">
@@ -3564,6 +3599,60 @@ function EspionageTab({ nexus, onToast }: { nexus: Nexus; onToast: (msg: string,
           ))
         )}
       </div>
+
+      {/* Recently discovered operatives - quick re-embed without hunting the
+          map. Surfaces the last 5 blown covers so the user can immediately
+          re-dispatch to a target they were already working. */}
+      {discoveredAssets.length > 0 && (
+        <div className="espionage-discovered">
+          <div className="espionage-section-head">
+            <div>
+              <span className="espionage-section-kicker espionage-section-kicker--alert">Cover Blown</span>
+              <h4>Recently Discovered Operatives</h4>
+            </div>
+            <span className="espionage-section-count">{discoveredAssets.length}</span>
+          </div>
+          <p className="espionage-discovered-hint">
+            These operatives were detected and captured. Re-dispatch a fresh one to the same target in one click.
+          </p>
+          {discoveredAssets.map((a) => {
+            const id = a.id as number;
+            const label = (a.targetName as string) ?? `Nexus #${a.targetNexusId}`;
+            const when = (a.discoveredAt as string | null) ?? (a.createdAt as string | null);
+            const canReembed = a.reembeddable !== false;
+            const isSending = reembedId === id;
+            return (
+              <div key={String(id)} className="espionage-discovered-row">
+                <span className="espionage-mission-icon espionage-mission-icon--discovered">
+                  <EyeOff size={14} aria-hidden="true" />
+                </span>
+                <div className="espionage-asset-info">
+                  <span className="espionage-asset-target">
+                    {label}
+                    {a.targetX != null && a.targetY != null && (
+                      <span className="espionage-target-coords"> ({a.targetX as number}|{a.targetY as number})</span>
+                    )}
+                  </span>
+                  <span className="espionage-asset-last espionage-asset-last--alert">
+                    {when ? `Discovered ${formatMissionDate(when)}` : 'Cover blown'}
+                  </span>
+                </div>
+                <div className="espionage-asset-actions">
+                  <button
+                    className="espionage-asset-btn espionage-asset-btn--reembed"
+                    onClick={() => handleReembed(a)}
+                    disabled={isSending || !canReembed || reconCount < 1}
+                    title={!canReembed ? 'Target no longer available' : reconCount < 1 ? 'No Recon Operatives available' : 'Send a fresh operative to this target'}
+                  >
+                    <RotateCcw size={12} aria-hidden="true" />
+                    {isSending ? 'Dispatching...' : 'Re-embed'}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Completed mission results (last 10, newest first). Collapsed by
           default - the tab opens with these furled and only the actionable

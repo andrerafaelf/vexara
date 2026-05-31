@@ -3112,6 +3112,68 @@
   border-color: var(--danger);
 }
 
+/* ── Recently discovered operatives (quick re-embed) ───────────── */
+.espionage-discovered {
+  background: var(--color-navy-900);
+  border: 1px solid var(--border-default);
+  border-left: 3px solid var(--danger);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.espionage-section-kicker--alert {
+  color: var(--danger);
+}
+
+.espionage-discovered-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.espionage-discovered-row {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  background: var(--color-navy-800);
+  border: 1px solid var(--border-default);
+  border-left: 2px solid var(--danger);
+  border-radius: 0;
+  padding: 10px 12px;
+}
+
+.espionage-mission-icon--discovered {
+  color: var(--danger);
+  background: rgba(248, 81, 73, 0.08);
+  border-color: rgba(248, 81, 73, 0.3);
+}
+
+.espionage-asset-last--alert {
+  color: var(--danger);
+}
+
+.espionage-asset-btn--reembed {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--accent-2);
+  border-color: rgba(88, 166, 255, 0.35);
+}
+
+.espionage-asset-btn--reembed:hover:not(:disabled) {
+  border-color: var(--accent-2);
+  color: var(--accent-2);
+}
+
+.espionage-asset-btn--reembed:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .espionage-map-wrapper {
   border: 1px solid var(--border-default);
   border-radius: var(--radius-sm);
@@ -4643,7 +4705,8 @@
   }
 
   .espionage-mission-row,
-  .espionage-asset-row {
+  .espionage-asset-row,
+  .espionage-discovered-row {
     grid-template-columns: 30px minmax(0, 1fr);
   }
 
