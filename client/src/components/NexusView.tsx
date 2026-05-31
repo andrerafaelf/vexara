@@ -346,7 +346,7 @@ const TROOP_REQUIREMENTS: { [key: string]: any } = {
 };
 
 const POPULATION_BASE = 100;
-const POPULATION_GROWTH = 1.30;
+const POPULATION_GROWTH = 1.15;
 const STORAGE_BASE = 1500;
 const STORAGE_GROWTH = 1.5;
 const SHIELD_BONUS_PER_LEVEL = 0.02;

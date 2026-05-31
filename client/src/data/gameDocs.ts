@@ -295,7 +295,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
       { level: 4, requires: ['Biomass Farm Lv2'] },
       { level: 8, requires: ['Storage Vault Lv4'] },
     ],
-    impact: ['Population max formula: floor(100 * 1.30^level).'],
+    impact: ['Population max formula: floor(100 * 1.15^level).'],
   },
   {
     key: 'storageVault',

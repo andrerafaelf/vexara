@@ -8,6 +8,7 @@ import {
   type StormBonus,
 } from '../utils/economy.js';
 import { getPopulationMax } from '../utils/population.js';
+import { TROOP_COSTS } from '../utils/gameConstants.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
 import { isUserOnline, notifyNexusQueueCompleted, notifyNexusResources } from '../services/warRoomSocket.js';
 import type { SerializedNexus, TroopKey } from '../types/index.js';
@@ -176,6 +177,14 @@ export const QUEST_REWARD_BATCHES: QuestBatch[] = [
 type NexusWithQuests = Nexus & { questRewardClaims?: string[] | null; completedQuestIds?: string[] | null };
 type GalaxyPlayerForQuests = { id: number; questRewardClaims: unknown; completedQuestIds: unknown };
 
+function troopPopCost(troops: Partial<Record<TroopKey, number>>): number {
+  let total = 0;
+  for (const [type, count] of Object.entries(troops)) {
+    total += (TROOP_COSTS[type]?.population ?? 0) * (count ?? 0);
+  }
+  return total;
+}
+
 export async function applyQuestRewards(
   nexus: NexusWithQuests,
   options: { hasOutgoingStrike?: boolean; hasCompletedAttack?: boolean; hasOutgoingSpyMission?: boolean; player?: GalaxyPlayerForQuests } = {},
@@ -235,7 +244,9 @@ export async function applyQuestRewards(
     data['biomass'] = (data['biomass'] as number) + Math.floor((batch.reward.biomass || 0) * rewardMultiplier);
     data['alloy']   = (data['alloy']   as number) + Math.floor((batch.reward.alloy   || 0) * rewardMultiplier);
     data['ore']     = (data['ore']     as number) + Math.floor((batch.reward.ore     || 0) * rewardMultiplier);
-    data['populationCurrent'] = (data['populationCurrent'] as number) + Math.floor((batch.reward.populationCurrent || 0) * rewardMultiplier);
+    data['populationCurrent'] = (data['populationCurrent'] as number)
+      + Math.floor((batch.reward.populationCurrent || 0) * rewardMultiplier)
+      + troopPopCost(batch.reward.troops || {});
 
     for (const [troopType, amount] of Object.entries(batch.reward.troops || {})) {
       data[troopType] = ((data[troopType] as number | undefined) || (nexus as unknown as Record<string, number>)[troopType] || 0) + (amount as number);
@@ -318,7 +329,9 @@ export async function claimQuestBatchReward(
     biomass: rewardNexus.biomass + Math.floor((batch.reward.biomass || 0) * mult),
     alloy:   rewardNexus.alloy   + Math.floor((batch.reward.alloy   || 0) * mult),
     ore:     rewardNexus.ore     + Math.floor((batch.reward.ore     || 0) * mult),
-    populationCurrent: rewardNexus.populationCurrent + Math.floor((batch.reward.populationCurrent || 0) * mult),
+    populationCurrent: rewardNexus.populationCurrent
+      + Math.floor((batch.reward.populationCurrent || 0) * mult)
+      + troopPopCost(batch.reward.troops || {}),
   };
 
   for (const [troopType, amount] of Object.entries(batch.reward.troops || {})) {
