@@ -8,6 +8,7 @@ export default function AdminPage() {
   const router = useRouter();
 
   useEffect(() => {
+    // Check if the admin is authenticated by looking for the basic auth token in session storage
     if (!sessionStorage.getItem('admin_basic_auth')) {
       router.replace('/auth');
     }

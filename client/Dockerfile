@@ -16,10 +16,6 @@ ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 # Stamp the service worker cache name with this build's ID so every deploy
 # invalidates the previous cache (see public/sw.js).
 RUN sed -i "s/{{BUILD_ID}}/${BUILD_ID}/g" public/sw.js
-# Version-stamp icon filenames so existing PWA installs pick up the new icon
-# on next manifest re-read. Change the suffix (v2 → v3) whenever the icon changes.
-RUN cp public/vexara192.png public/vexara-icon-v2-192.png && \
-    cp public/vexara512.png public/vexara-icon-v2-512.png
 RUN npm run build
 
 FROM base AS runner
