@@ -66,6 +66,19 @@ export const LOOT_CARRY_THRESHOLD = 8000;
 export const WINNER_MAX_LOSS_RATE = 0.45; // coin-flip cap; mirrors server WINNER_COINFLIP_LOSS_RATE
 export const LOSER_MIN_LOSS_RATE = 0.85;
 export const LOSER_MAX_LOSS_RATE = 1.0;
+// At or below this loser/winner power ratio the loss is a total wipe (0
+// survivors). Mirrors server combatMath LOSER_WIPE_RATIO — keep in sync.
+export const LOSER_WIPE_RATIO = 0.33;
+
+// Fraction of the losing force destroyed, given the loser/winner power ratio.
+// Mirrors server combatMath loserLossRate so the calculator's prediction matches
+// the resolved battle: a blowout (ratio <= LOSER_WIPE_RATIO) is a 100% wipe.
+export function loserLossRate(powerRatio: number): number {
+  const clamped = Math.max(0, Math.min(1, powerRatio));
+  if (clamped <= LOSER_WIPE_RATIO) return 1.0;
+  const t = (clamped - LOSER_WIPE_RATIO) / (1 - LOSER_WIPE_RATIO);
+  return LOSER_MAX_LOSS_RATE + (LOSER_MIN_LOSS_RATE - LOSER_MAX_LOSS_RATE) * t;
+}
 
 // ─── Deterministic PRNG ───────────────────────────────────────────────────
 // Mulberry32, fast, decent distribution, fully reproducible from a u32 seed.
@@ -186,13 +199,13 @@ export function predictCombat(opts: {
     : Math.min(1, attackPower / Math.max(1, defensePower));
 
   const winnerLossRate = Math.min(WINNER_MAX_LOSS_RATE, powerRatio * WINNER_MAX_LOSS_RATE);
-  const loserLossRate = LOSER_MIN_LOSS_RATE + (LOSER_MAX_LOSS_RATE - LOSER_MIN_LOSS_RATE) * (1 - powerRatio);
+  const loserRate = loserLossRate(powerRatio);
 
-  const attackerLossPct = attackerWins ? winnerLossRate : loserLossRate;
-  const defenderLossPct = attackerWins ? loserLossRate : winnerLossRate;
+  const attackerLossPct = attackerWins ? winnerLossRate : loserRate;
+  const defenderLossPct = attackerWins ? loserRate : winnerLossRate;
 
-  // Conquest needs the garrison fully cleared. With the softened cliff that only
-  // happens on a sufficiently decisive win (loserLossRate rounds units to 0).
+  // Conquest needs the garrison fully cleared. That only happens on a decisive
+  // win — a blowout (ratio <= LOSER_WIPE_RATIO) wipes the defender to 0.
   const conquerCapable = attackerWins && (defenderHasNoTroops || defenderLossPct >= 0.999);
 
   // Loot estimate: surviving carry vs the 8k threshold.

@@ -24,7 +24,7 @@ const QUEST_TEMPLATES: Array<{
   { id: 'upgrade_1',      title: 'Builder',         description: 'Start 1 building upgrade',            target: 1,  category: 'upgrade',      reward: { type: 'resources', biomass: 3000, alloy: 3000, ore: 3000 } },
   { id: 'upgrade_2',      title: 'Constructor',     description: 'Start 2 building upgrades',           target: 2,  category: 'upgrade',      reward: { type: 'resources', biomass: 6000, alloy: 6000, ore: 6000 } },
   { id: 'attack_1',       title: 'First Strike',    description: 'Launch 1 attack',                     target: 1,  category: 'attack',       reward: { type: 'resources', biomass: 4000, alloy: 4000, ore: 4000 } },
-  { id: 'attack_3',       title: 'Aggressor',       description: 'Launch 3 attacks',                    target: 3,  category: 'attack_multi', reward: { type: 'resources', biomass: 9000, alloy: 9000, ore: 9000 } },
+  { id: 'attack_3',       title: 'Aggressor',       description: 'Launch 3 attacks',                    target: 3,  category: 'attack',       reward: { type: 'resources', biomass: 9000, alloy: 9000, ore: 9000 } },
   { id: 'support_1',      title: 'Backbone',        description: 'Send 1 support mission to an ally',   target: 1,  category: 'support',      reward: { type: 'resources', biomass: 3500, alloy: 3500, ore: 3500 } },
   { id: 'scout_1',        title: 'Reconnaissance',  description: 'Send 1 espionage mission',            target: 1,  category: 'scout',        reward: { type: 'resources', biomass: 2500, alloy: 2500, ore: 2500 } },
   { id: 'sabotage_1',     title: 'Saboteur',        description: 'Send 1 sabotage mission',             target: 1,  category: 'sabotage',     reward: { type: 'resources', biomass: 4500, alloy: 4500, ore: 4500 } },

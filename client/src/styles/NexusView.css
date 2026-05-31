@@ -1,5 +1,5 @@
 .nexus-view {
-  background: transparent;
+  background: var(--bg-app);
   border-radius: 0;
   padding: 0;
   min-height: 600px;
@@ -353,6 +353,10 @@
   touch-action: pan-x;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  background: var(--bg-app);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .nexus-tab-bar::-webkit-scrollbar {
@@ -369,9 +373,9 @@
 @media (max-width: 768px) {
   .nexus-tab-bar {
     position: sticky;
-    top: calc(56px + env(safe-area-inset-top, 0px));
+    top: calc(56px + var(--safe-top));
     z-index: 1040;
-    background: rgba(11, 15, 35, 0.92);
+    background: color-mix(in srgb, var(--bg-app) 92%, transparent);
     margin-left: calc(var(--space-3) * -1);
     margin-right: calc(var(--space-3) * -1);
     margin-bottom: var(--space-3);
@@ -3713,7 +3717,7 @@
 }
 
 .nexus-tab-btn.active {
-  background: linear-gradient(180deg, rgba(255, 158, 61, 0.08), transparent 80%);
+  background: linear-gradient(180deg, rgba(255, 158, 61, 0.10), var(--bg-app) 80%);
   color: var(--text-strong);
 }
 

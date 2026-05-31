@@ -32,7 +32,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 14px 28px;
-  padding-top: max(14px, env(safe-area-inset-top, 14px));
+  padding-top: max(14px, var(--safe-top));
   background: rgba(8, 9, 12, 0.72);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -101,7 +101,9 @@
 }
 
 @media (max-width: 640px) {
-  .lp-nav { padding: 12px 16px; }
+  /* Keep the safe-area top padding — a `padding` shorthand here would reset
+     padding-top to 12px and tuck the nav under the PWA status bar. */
+  .lp-nav { padding: 12px 16px; padding-top: max(12px, var(--safe-top)); }
   .lp-nav-links a { padding: 6px 10px; font-size: 12px; }
   .lp-nav-links a:not(.lp-nav-cta):not(.lp-nav-link-login):not([href='/codex']) { display: none; }
 }

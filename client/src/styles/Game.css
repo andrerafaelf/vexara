@@ -28,7 +28,7 @@
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0%, rgba(255, 255, 255, 0) 100%), rgba(11, 15, 35, 0.85);
   padding: 10px 24px;
-  padding-top: max(10px, env(safe-area-inset-top, 10px));
+  padding-top: max(10px, var(--safe-top));
   padding-left: calc(24px + env(safe-area-inset-left));
   padding-right: calc(24px + env(safe-area-inset-right));
   display: flex;
@@ -1159,9 +1159,10 @@
     position: sticky;
     top: 0;
     z-index: 1050;
-    /* Extend background under status bar on notched devices */
-    padding-top: env(safe-area-inset-top);
-    height: calc(56px + env(safe-area-inset-top));
+    /* Extend background under the status bar. var(--safe-top) carries an Android
+       PWA floor so the hamburger/logo don't hide under the clock & battery. */
+    padding-top: var(--safe-top);
+    height: calc(56px + var(--safe-top));
   }
 
   .menu-toggle {
@@ -1203,10 +1204,10 @@
   .mobile-drawer {
     display: block;
     position: fixed;
-    top: calc(56px + env(safe-area-inset-top));
+    top: calc(56px + var(--safe-top));
     left: 0;
     right: 0;
-    max-height: calc(100dvh - 56px - env(safe-area-inset-top));
+    max-height: calc(100dvh - 56px - var(--safe-top));
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     background: var(--color-navy-800);

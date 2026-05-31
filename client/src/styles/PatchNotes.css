@@ -10,7 +10,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 14px 28px;
-  padding-top: max(14px, env(safe-area-inset-top, 14px));
+  padding-top: max(14px, var(--safe-top));
   background: rgba(8, 9, 12, 0.85);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -265,6 +265,106 @@
   color: var(--text-strong);
 }
 
+/* Ordered (numbered) lists */
+.pn-entry-list-ordered {
+  list-style: decimal;
+}
+
+/* Nested bullets under a list item */
+.pn-entry-list-nested {
+  margin-top: 8px;
+  padding-left: 18px;
+  list-style: circle;
+}
+
+.pn-entry-list-nested li {
+  font-size: 13.5px;
+  color: var(--text-muted, #9aa4bd);
+}
+
+/* Sub-heading (#### ) */
+.pn-entry-subtitle {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted, #9aa4bd);
+  margin: 4px 0 6px;
+}
+
+/* Inline links inside patch-note prose, lists, and tables */
+.pn-entry-link {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 158, 61, 0.4);
+  transition: border-color var(--duration-fast, 0.15s) var(--ease-out, ease);
+}
+
+.pn-entry-link:hover {
+  border-bottom-color: var(--accent);
+}
+
+/* ── Tables ── */
+
+.pn-table-wrap {
+  margin: 4px 0;
+  overflow-x: auto;
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.pn-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pn-table th,
+.pn-table td {
+  padding: 8px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-default);
+  white-space: nowrap;
+}
+
+.pn-table thead th {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-strong);
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pn-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.pn-table tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.pn-table td {
+  color: var(--text-default, #c8cfe0);
+}
+
+.pn-table strong {
+  color: var(--text-strong);
+  font-weight: 600;
+}
+
+.pn-table code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 3px;
+  padding: 1px 5px;
+  color: var(--text-strong);
+}
+
 /* ── CTA block ── */
 
 .pn-cta-block {
@@ -302,7 +402,7 @@
 @media (max-width: 600px) {
   .pn-nav {
     padding: 12px 16px;
-    padding-top: max(12px, env(safe-area-inset-top, 12px));
+    padding-top: max(12px, var(--safe-top));
   }
 
   .pn-root {

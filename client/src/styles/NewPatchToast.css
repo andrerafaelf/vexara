@@ -1,96 +1,71 @@
-/* Bottom-right placement to stay clear of the sticky top stack
-   (header / connection bar / troop movements / dominance / back bar)
-   and to avoid covering the right-side nexus drawer trigger. */
+/* Centered modal-style placement — patch notes are worth showing prominently. */
 .new-patch-toast {
   position: fixed;
-  bottom: 16px;
-  right: 16px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   z-index: var(--z-toast);
   display: flex;
-  align-items: stretch;
-  gap: 10px;
-  padding: 12px 14px;
-  min-width: 280px;
-  max-width: 380px;
+  flex-direction: column;
+  gap: 16px;
+  padding: 28px 32px;
+  width: min(520px, calc(100vw - 32px));
   background: var(--bg-surface);
-  border: 1px solid rgba(255, 158, 61, 0.40);
-  border-left: 3px solid var(--accent);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg), var(--glow-accent-soft);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 158, 61, 0.45);
+  border-top: 3px solid var(--accent);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg), var(--glow-accent-soft), 0 0 0 1px rgba(255, 158, 61, 0.08);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   color: var(--text-strong);
-  animation: newPatchSlideIn 280ms var(--ease-out);
+  animation: newPatchSlideIn 320ms var(--ease-out);
+}
+
+/* Backdrop overlay so the toast feels like a modal */
+.new-patch-toast::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: -1;
+  animation: newPatchFadeIn 320ms var(--ease-out);
 }
 
 @keyframes newPatchSlideIn {
-  from { transform: translateY(12px); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
+  from { transform: translate(-50%, calc(-50% + 16px)); opacity: 0; }
+  to   { transform: translate(-50%, -50%);              opacity: 1; }
+}
+
+@keyframes newPatchFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.new-patch-toast-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .new-patch-toast-icon {
   flex-shrink: 0;
   display: flex;
-  align-items: flex-start;
-  padding-top: 2px;
+  align-items: center;
   color: var(--accent);
 }
 
-.new-patch-toast-body {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
 .new-patch-toast-label {
+  flex: 1;
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--accent);
 }
 
-.new-patch-toast-headline {
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.35;
-  color: var(--text-strong);
-  word-break: break-word;
-}
-
-.new-patch-toast-actions {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.new-patch-toast-cta {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 12px;
-  background: var(--accent);
-  color: #0D1117;
-  font-size: 12px;
-  font-weight: 600;
-  text-decoration: none;
-  border-radius: var(--radius-sm);
-  transition: filter 120ms ease, transform 120ms ease;
-}
-
-.new-patch-toast-cta:hover,
-.new-patch-toast-cta:focus-visible {
-  filter: brightness(1.08);
-  outline: none;
-}
-
-.new-patch-toast-cta:active {
-  transform: translateY(1px);
-}
-
 .new-patch-toast-close {
+  flex-shrink: 0;
   background: transparent;
   border: none;
   color: var(--text-muted);
@@ -110,12 +85,84 @@
   outline: none;
 }
 
+.new-patch-toast-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.new-patch-toast-headline {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--text-strong);
+  word-break: break-word;
+  letter-spacing: -0.015em;
+}
+
+.new-patch-toast-subtext {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.new-patch-toast-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.new-patch-toast-cta {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 22px;
+  background: var(--accent);
+  color: #0D1117;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  transition: filter 120ms ease, transform 120ms ease;
+  letter-spacing: 0.02em;
+}
+
+.new-patch-toast-cta:hover,
+.new-patch-toast-cta:focus-visible {
+  filter: brightness(1.08);
+  outline: none;
+}
+
+.new-patch-toast-cta:active {
+  transform: translateY(1px);
+}
+
+.new-patch-toast-dismiss {
+  background: transparent;
+  border: 1px solid var(--border-default);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.new-patch-toast-dismiss:hover,
+.new-patch-toast-dismiss:focus-visible {
+  color: var(--text-strong);
+  border-color: var(--border-strong);
+  background: rgba(255, 255, 255, 0.04);
+  outline: none;
+}
+
 @media (max-width: 480px) {
   .new-patch-toast {
-    left: 12px;
-    right: 12px;
-    bottom: 12px;
-    min-width: 0;
-    max-width: none;
+    padding: 22px 20px;
+  }
+
+  .new-patch-toast-headline {
+    font-size: 17px;
   }
 }

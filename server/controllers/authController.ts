@@ -114,13 +114,33 @@ export async function register(req: Request, res: Response): Promise<void> {
       return;
     }
 
+    // Disposable / throwaway email domain block.
+    // Covers the most common temp-mail providers without maintaining a huge list.
+    const DISPOSABLE_EMAIL_DOMAINS = new Set([
+      'mailinator.com', 'guerrillamail.com', 'guerrillamail.net', 'guerrillamail.org',
+      'guerrillamail.biz', 'guerrillamail.de', 'guerrillamail.info', 'sharklasers.com',
+      'spam4.me', 'yopmail.com', 'yopmail.fr', 'cool.fr.nf', 'jetable.fr.nf',
+      'nospam.ze.tc', 'nomail.xl.cx', 'mega.zik.dj', 'speed.1s.fr', 'courriel.fr.nf',
+      'trashmail.com', 'trashmail.at', 'trashmail.io', 'trashmail.me', 'trashmail.net',
+      'dispostable.com', 'mailnull.com', 'spamgourmet.com', 'tempmail.com', 'temp-mail.org',
+      'throwam.com', 'throwam.net', 'fakeinbox.com', 'maildrop.cc', 'getnada.com',
+      'tempinbox.com', 'throwaway.email', 'throwam.net', 'spambox.us', 'mailevery.com',
+      'burnermail.io', 'mintemail.com', 'moakt.cc', 'mohmal.com', 'owlpic.com',
+      'spamgourmet.net', 'spamgourmet.org', 'spamoff.de', 'trbvm.com',
+    ]);
+    const emailDomain = email.split('@')[1]?.toLowerCase() ?? '';
+    if (DISPOSABLE_EMAIL_DOMAINS.has(emailDomain)) {
+      res.status(400).json({ error: 'Disposable email addresses are not allowed.' });
+      return;
+    }
+
     // Optional referral code
     let referredById: number | null = null;
     if (typeof body.referralCode === 'string' && body.referralCode.trim().length > 0) {
       const code = body.referralCode.trim().toUpperCase();
       const referrer = await prisma.user.findUnique({
         where: { referralCode: code },
-        select: { id: true, email: true },
+        select: { id: true, email: true, createdAt: true },
       });
       if (!referrer) {
         res.status(400).json({ error: 'That referral code is not valid.' });
@@ -131,7 +151,34 @@ export async function register(req: Request, res: Response): Promise<void> {
         res.status(400).json({ error: "You can't use your own referral code." });
         return;
       }
-      referredById = referrer.id;
+      // Normalized email alias check: strip the `+tag` portion and compare base address.
+      // e.g. user+smurf1@gmail.com and user@gmail.com resolve to the same mailbox.
+      const stripAlias = (e: string) => {
+        const [local, domain] = e.split('@');
+        return `${(local ?? '').replace(/\+.*$/, '')}@${domain ?? ''}`.toLowerCase();
+      };
+      if (stripAlias(referrer.email) === stripAlias(email)) {
+        res.status(400).json({ error: 'You cannot use a referral code from the same email account.' });
+        return;
+      }
+      // IP-based smurf guard: cap same-IP referrals at 2 to blunt coordinated
+      // account farming even when different emails are used. Legitimate players
+      // sometimes share a household IP, so a hard limit of 1 would be too strict.
+      const registrationIp = req.ip ?? null;
+      if (registrationIp) {
+        const sameIpReferralCount = await prisma.user.count({
+          where: { referredById: referrer.id, registrationIp },
+        });
+        if (sameIpReferralCount >= 2) {
+          // Silently drop the referral link rather than blocking signup —
+          // the new player shouldn't be punished, but the referrer gets no credit.
+          referredById = null;
+        } else {
+          referredById = referrer.id;
+        }
+      } else {
+        referredById = referrer.id;
+      }
     }
 
     const hashed = await hashPassword(body.password!);

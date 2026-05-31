@@ -55,14 +55,22 @@ export function markTokenRedeemed(tokenId: number, rewardType: string, rewardMet
   });
 }
 
+// Minimum time (ms) a referred account must exist before the referrer earns
+// any tokens. Bots typically hit the threshold within minutes; legitimate
+// players take at least a few hours of actual play.
+const REFERRAL_MIN_AGE_MS = 4 * 60 * 60 * 1000; // 4 hours
+
 export async function checkAndGrantToken(refereeId: number, currentPoints: number, galaxyId: number): Promise<void> {
   if (currentPoints < REFERRAL_EARLY_THRESHOLD) return;
 
   const referee = await prisma.user.findUnique({
     where: { id: refereeId },
-    select: { referredById: true },
+    select: { referredById: true, createdAt: true },
   });
   if (!referee?.referredById) return;
+
+  // Age gate: suppress token grant for accounts that are too new.
+  if (referee.createdAt && Date.now() - referee.createdAt.getTime() < REFERRAL_MIN_AGE_MS) return;
 
   const refereeUser = await prisma.user.findUnique({ where: { id: refereeId }, select: { username: true } });
   const refName = refereeUser?.username ?? 'Your referral';

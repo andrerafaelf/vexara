@@ -118,7 +118,11 @@ const OFFENSE_TROOPS = new Set([
 const VISIBLE_RANGE = 5;
 const MIN_VISIBLE_RANGE = 2;
 const MAX_VISIBLE_RANGE = 10;
-const MAP_SIZE = 35;
+// Must match the `range` the server's /map/area endpoint returns around the
+// requested center (mapController.getArea). The client fetches this radius and
+// reuses it as a pan buffer, only refetching when the viewport nears its edge.
+const SERVER_FETCH_RANGE = 10;
+const MAP_SIZE = 50;
 const MAP_MAX_INDEX = MAP_SIZE - 1;
 const MOBILE_BREAKPOINT = 768;
 
@@ -184,6 +188,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
   const [showEventsPanel, setShowEventsPanel] = useState(false);
   const [nexusHistory, setNexusHistory] = useState<any[]>([]);
   const [factionTargeting, setFactionTargeting] = useState(false);
+  const [mapLoading, setMapLoading] = useState(false);
   useNow(); // keep component ticking for Countdown leaves
 
   // currentNexus.troops is already the server-authoritative post-deduction
@@ -269,16 +274,37 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
   }, []);
 
   const mapDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Center of the most recently fetched area. The server returns a SERVER_FETCH_RANGE
+  // radius around it, so as long as the visible window stays inside that buffer we
+  // can pan without refetching — the nexuses are already in state. This is what
+  // makes panning feel instant instead of blanking + reloading every cell move.
+  const lastFetchRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
+    // Refetch only when the viewport edge approaches the edge of the buffered
+    // area. buffer = how far the center can drift before the visible range would
+    // show cells the last fetch didn't cover (minus a 1-cell safety margin).
+    const last = lastFetchRef.current;
+    const buffer = Math.max(0, SERVER_FETCH_RANGE - visibleRange - 1);
+    const needsFetch =
+      !last ||
+      Math.abs(centerX - last.x) > buffer ||
+      Math.abs(centerY - last.y) > buffer;
+
+    if (!needsFetch) return;
+
     if (mapDebounceRef.current) clearTimeout(mapDebounceRef.current);
+    // Short debounce: long enough to coalesce a fast drag, short enough that the
+    // fetch feels responsive when you stop. The buffer above already absorbs most
+    // small pans, so this only fires on meaningful viewport moves.
     mapDebounceRef.current = setTimeout(() => {
       loadMapArea();
-    }, 450);
+    }, 180);
     return () => {
       if (mapDebounceRef.current) clearTimeout(mapDebounceRef.current);
     };
-  }, [centerX, centerY]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [centerX, centerY, visibleRange]);
 
   // Pre-select current nexus on mount (desktop only, on mobile this would
   // immediately pop the modal open before the user has interacted)
@@ -471,11 +497,19 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
   }, []);
 
   const loadMapArea = async () => {
+    const fetchX = centerX;
+    const fetchY = centerY;
+    setMapLoading(true);
     try {
-      const response = await getMapArea(centerX, centerY);
+      const response = await getMapArea(fetchX, fetchY);
+      // Keep old markers on screen until the new ones arrive (no blank flash),
+      // then record the fetched center so the pan buffer knows what's covered.
       setVillages(response.data);
+      lastFetchRef.current = { x: fetchX, y: fetchY };
     } catch (err) {
       console.error('Error loading map:', err);
+    } finally {
+      setMapLoading(false);
     }
   };
 
@@ -941,6 +975,16 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
             {isFactionTarget && (
               <div className="faction-target-badge" aria-label="Faction target" title="Faction Target">
                 <Crosshair size={10} />
+              </div>
+            )}
+            {isFactionTarget && (
+              <div className="faction-target-label" title="Marked as a target by your faction">
+                Target
+              </div>
+            )}
+            {isEspionage && nexus && !isCurrent && nexus.owner?.username && (
+              <div className="cell-owner-label" title={nexus.owner.username}>
+                {nexus.owner.username}
               </div>
             )}
             <div className="cell-coords">{isOutOfBounds ? '.' : `${x}|${y}`}</div>
@@ -1546,7 +1590,10 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
     <div className="map-container">
       {mode === 'normal' && <div className="map-header">
         <div className="map-info">
-          <span className="map-viewing">({centerX}|{centerY})</span>
+          <span className="map-viewing">
+            ({centerX}|{centerY})
+            {mapLoading && <span className="map-loading-dot" aria-label="Loading sector" />}
+          </span>
           <span className="map-hint">Drag to pan · Ctrl+scroll to zoom</span>
         </div>
         <div className="map-controls">
@@ -1578,6 +1625,28 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
       {mode === 'espionage' && (
         <div className="map-header map-header--espionage">
           <span className="map-hint">{espionageHint ?? 'Click a nexus to select it as your spy target'}</span>
+          <div className="map-coordinate-controls">
+            <input
+              type="number"
+              min={0}
+              max={MAP_MAX_INDEX}
+              value={targetX}
+              onChange={(e) => setTargetX(e.target.value)}
+              onKeyDown={handleCoordinateKeyDown}
+              aria-label="Target X coordinate"
+            />
+            <span>|</span>
+            <input
+              type="number"
+              min={0}
+              max={MAP_MAX_INDEX}
+              value={targetY}
+              onChange={(e) => setTargetY(e.target.value)}
+              onKeyDown={handleCoordinateKeyDown}
+              aria-label="Target Y coordinate"
+            />
+            <button onClick={handleJumpToCoordinates}>Jump</button>
+          </div>
         </div>
       )}
 

@@ -297,8 +297,8 @@
   flex-direction: column;
   background: var(--color-navy-800);
   min-height: 100vh;
-  /* Account for notch/status-bar on PWA standalone mode */
-  padding-top: env(safe-area-inset-top, 0px);
+  /* Account for notch/status-bar on PWA standalone mode (incl. Android floor) */
+  padding-top: var(--safe-top);
 }
 
 .auth-form-wrap {

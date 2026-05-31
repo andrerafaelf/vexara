@@ -130,38 +130,57 @@ export function computeClassWeightedAttack(
 
 // Compute per-unit loss count for a force that lost the engagement.
 //
-// Losing is heavy but no longer all-or-nothing. The loss rate scales with how
-// badly the side lost (powerRatio = loser_power / winner_power, in (0, 1]):
-//   - a blowout (ratio -> 0) wipes essentially the whole force
-//   - a near-even loss (ratio -> 1) still costs ~85%, leaving a real remnant
-// This removes the old cliff where losing by a single power point annihilated
-// the entire army exactly as hard as losing by a mile.
+// The loss rate scales with how badly the side lost (powerRatio =
+// loser_power / winner_power, in (0, 1]):
+//   - a decisive blowout (ratio <= LOSER_WIPE_RATIO) wipes the ENTIRE force —
+//     no survivors. A 15:1 fight leaving a few stragglers alive never made
+//     sense; a crushing victory is now a total annihilation.
+//   - between the wipe threshold and an even fight, losses scale from 100%
+//     down to LOSER_MIN_LOSS_RATE, so only genuinely close fights leave a
+//     remnant.
+//   - a near-even loss (ratio -> 1) still costs LOSER_MIN_LOSS_RATE, leaving a
+//     real remnant that can limp home.
 //
 // powerRatio defaults to 0 so existing callers that don't pass it (and the
-// genuine "no resistance" case) keep the previous total-wipe behaviour.
+// genuine "no resistance" case) keep total-wipe behaviour.
 export const LOSER_MIN_LOSS_RATE = 0.85; // floor at an even loss
 export const LOSER_MAX_LOSS_RATE = 1.0;  // a blowout
+// At or below this loser/winner power ratio the loss is a total wipe (0
+// survivors). 0.33 ≈ a 3:1 power advantage. Anything more lopsided than this
+// annihilates the losing army outright.
+export const LOSER_WIPE_RATIO = 0.33;
 
 // Winner's loss rate at a coin-flip (powerRatio -> 1); scales down to 0 for a
 // blowout. See computeLossesForWinner for the full rationale.
 export const WINNER_COINFLIP_LOSS_RATE = 0.45;
 
+// Map a loser/winner power ratio to the fraction of the losing force destroyed.
+// Shared by server resolution and the client calculator so predictions match.
+export function loserLossRate(powerRatio: number): number {
+  const clampedRatio = Math.max(0, Math.min(1, powerRatio));
+  if (clampedRatio <= LOSER_WIPE_RATIO) return 1.0;
+  // Linearly interpolate from total wipe (at the threshold) up to the even-fight
+  // floor (at ratio = 1).
+  const t = (clampedRatio - LOSER_WIPE_RATIO) / (1 - LOSER_WIPE_RATIO); // 0..1
+  return LOSER_MAX_LOSS_RATE + (LOSER_MIN_LOSS_RATE - LOSER_MAX_LOSS_RATE) * t;
+}
+
 export function computeLossesForLoser(
   force: Partial<Record<TroopKey, number>> | Record<string, unknown>,
   powerRatio = 0,
 ): Partial<Record<TroopKey, number>> {
-  const clampedRatio = Math.max(0, Math.min(1, powerRatio));
-  const lossRate =
-    LOSER_MIN_LOSS_RATE + (LOSER_MAX_LOSS_RATE - LOSER_MIN_LOSS_RATE) * (1 - clampedRatio);
+  const lossRate = loserLossRate(powerRatio);
+  const totalWipe = lossRate >= 1.0;
 
   const losses: Partial<Record<TroopKey, number>> = {};
   for (const key of TROOP_KEYS) {
     if (key === 'overseer') continue;
     const count = Number((force as Record<string, unknown>)[key] || 0);
     if (count <= 0) continue;
-    // Ceil so a lost engagement always costs at least one of each present unit;
-    // clamp to the actual count so we never report more losses than exist.
-    losses[key] = Math.min(count, Math.ceil(count * lossRate));
+    // On a total wipe destroy every unit. Otherwise ceil so a lost engagement
+    // always costs at least one of each present unit; clamp to the actual count
+    // so we never report more losses than exist.
+    losses[key] = totalWipe ? count : Math.min(count, Math.ceil(count * lossRate));
   }
   return losses;
 }

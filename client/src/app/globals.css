@@ -140,7 +140,24 @@
   --z-modal: 1000;
   --z-toast: 10000;
 
+  /* ── Safe-area / status-bar clearance ─────────────────────────
+     In a browser tab this is just the OS notch inset (usually 0).
+     Top bars consume var(--safe-top) so they never sit under the
+     status bar. The standalone override below adds an Android floor. */
+  --safe-top: env(safe-area-inset-top, 0px);
+
   color-scheme: dark;
+}
+
+/* When installed as a PWA (display: standalone), the OS status bar overlays
+   the web content. iOS reports this via env(safe-area-inset-top); Android does
+   NOT — it returns 0 — so a bare env() leaves top bars tucked under the clock,
+   battery, and Wi-Fi icons (the Login button became unreachable). Guarantee a
+   minimum clearance while still honoring a larger notch inset when present. */
+@media (display-mode: standalone) {
+  :root {
+    --safe-top: max(env(safe-area-inset-top, 0px), 28px);
+  }
 }
 
 /* ============================================================

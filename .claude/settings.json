@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx eslint *)",
+      "Bash(echo \"\\(eslint exit $?\\)\")",
+      "Bash(node --import tsx/esm --test test/*.test.js)"
+    ]
+  }
+}

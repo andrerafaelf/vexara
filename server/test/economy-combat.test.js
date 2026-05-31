@@ -101,6 +101,24 @@ test('loser losses scale with how close the fight was (no all-or-nothing cliff)'
   assert.equal(computeLossesForLoser({ ...force, overseer: 1 }, 1).overseer, undefined);
 });
 
+test('a decisive blowout is a TOTAL wipe — no survivors', () => {
+  const force = { assaultTrooper: 100, lancerDrone: 100 };
+
+  // At/under the wipe threshold (~3:1 power, ratio <= 0.33) the losing army is
+  // 100% destroyed. This is the "150k vs 10k should leave nothing" fix: a
+  // crushing victory annihilates the defender instead of leaving stragglers.
+  const lopsided = computeLossesForLoser(force, 0.067); // ~15:1, the reported case
+  assert.equal(lopsided.assaultTrooper, 100, 'blowout wipes the whole force');
+  assert.equal(lopsided.lancerDrone, 100);
+
+  const atThreshold = computeLossesForLoser(force, 0.33);
+  assert.equal(atThreshold.assaultTrooper, 100, 'exactly at the threshold still wipes');
+
+  // Just above the threshold a remnant begins to survive again (gradient intact).
+  const justAbove = computeLossesForLoser(force, 0.5);
+  assert.ok(justAbove.assaultTrooper < 100, 'a non-blowout loss leaves a remnant');
+});
+
 test('a lone Overseer has zero class-weighted attack power', () => {
   // Regression guard for the empty-nexus conquest fix: an Overseer-only follow-up
   // strike produces 0 attack power, so combat must rely on the "defender has no

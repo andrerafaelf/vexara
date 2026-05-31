@@ -64,13 +64,24 @@ export default function NewPatchToast() {
   if (!show) return null;
 
   return (
-    <div className="new-patch-toast" role="status" aria-live="polite">
-      <div className="new-patch-toast-icon" aria-hidden="true">
-        <Sparkles size={18} />
+    <div className="new-patch-toast" role="dialog" aria-modal="true" aria-label="New patch available">
+      <div className="new-patch-toast-header">
+        <div className="new-patch-toast-icon" aria-hidden="true">
+          <Sparkles size={16} />
+        </div>
+        <div className="new-patch-toast-label">{LATEST_PATCH_LABEL} is live</div>
+        <button
+          type="button"
+          className="new-patch-toast-close"
+          onClick={markSeen}
+          aria-label="Dismiss new patch notification"
+        >
+          <X size={16} />
+        </button>
       </div>
       <div className="new-patch-toast-body">
-        <div className="new-patch-toast-label">{LATEST_PATCH_LABEL} is live</div>
         <div className="new-patch-toast-headline">{LATEST_PATCH_HEADLINE}</div>
+        <div className="new-patch-toast-subtext">See what changed in this update.</div>
       </div>
       <div className="new-patch-toast-actions">
         <a
@@ -80,15 +91,14 @@ export default function NewPatchToast() {
           className="new-patch-toast-cta"
           onClick={markSeen}
         >
-          Read
+          Read Patch Notes
         </a>
         <button
           type="button"
-          className="new-patch-toast-close"
+          className="new-patch-toast-dismiss"
           onClick={markSeen}
-          aria-label="Dismiss new patch notification"
         >
-          <X size={16} />
+          Dismiss
         </button>
       </div>
     </div>

@@ -18,7 +18,7 @@ type TxClient = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0];
 export async function findOpenStarterCoordinates(
   tx: TxClient,
   galaxyId: number,
-  { mapSize = 35, maxAttempts = 60 } = {},
+  { mapSize = 50, maxAttempts = 100 } = {},
 ): Promise<{ x: number; y: number } | null> {
   for (let i = 0; i < maxAttempts; i++) {
     const x = Math.floor(Math.random() * mapSize);
@@ -31,16 +31,18 @@ export async function findOpenStarterCoordinates(
 
 export const NEWBIE_PROTECTION_DURATION_MS = 3 * 24 * 60 * 60 * 1000;
 
-// Bonus resources credited to a new player's starter nexus when they joined via a referral link.
-// Enough to feel meaningful on day one without being game-breaking.
-export const REFERRAL_SIGNUP_BONUS = 5_000;
+// Bonus troops credited to a new player's starter nexus when they joined via a referral link.
+// Resources can't exceed day-1 storage (1500 each), so we give troops instead —
+// they're immediately useful and don't silently overflow the storage cap.
+export const REFERRAL_SIGNUP_BONUS = 0; // kept for backward-compat imports
+export const REFERRAL_TROOP_BONUS = { reconOperative: 15, lancerDrone: 10, assaultTrooper: 10 };
 
 export async function createStarterNexus(
   tx: TxClient,
   { userId, username, galaxyId, referredById }: { userId: number; username: string; galaxyId: number; referredById?: number | null },
 ) {
   const coords = (await findOpenStarterCoordinates(tx, galaxyId)) ?? { x: 0, y: 0 };
-  const bonus = referredById ? REFERRAL_SIGNUP_BONUS : 0;
+  const troopBonus = referredById ? REFERRAL_TROOP_BONUS : {};
   return tx.nexus.create({
     data: {
       name: `${username}'s Nexus`,
@@ -49,9 +51,10 @@ export async function createStarterNexus(
       x: coords.x,
       y: coords.y,
       ...STARTER_NEXUS_DEFAULTS,
-      biomass: 1500 + bonus,
-      alloy: 1500 + bonus,
-      ore: 1500 + bonus,
+      ...troopBonus,
+      biomass: 1500,
+      alloy: 1500,
+      ore: 1500,
       populationMax: getPopulationMax(STARTER_NEXUS_DEFAULTS.lifeSupport),
       newbieProtectionEndsAt: new Date(Date.now() + NEWBIE_PROTECTION_DURATION_MS),
     },

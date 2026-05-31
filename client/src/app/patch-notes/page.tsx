@@ -71,13 +71,40 @@ function loadPatchNotes(): PatchNote[] {
     });
 }
 
-function applyInline(text: string): string {
+// Escape HTML before we inject our own safe inline markup. Patch notes are
+// authored in-repo (trusted), but escaping keeps stray `<`/`&` from breaking
+// rendering and avoids surprises if a note ever quotes raw markup.
+function escapeHtml(text: string): string {
   return text
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>');
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
-// Renders bold, inline code, bullet lists, headings, and paragraphs from markdown
+// Inline markdown → HTML: bold, inline code, and links. Run on already-escaped
+// text so the produced tags are the only HTML in the output.
+function applyInline(text: string): string {
+  return escapeHtml(text)
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    // [label](url) → anchor. Restrict to http(s)/relative URLs to avoid
+    // javascript: and other unsafe schemes.
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+|\/[^)\s]*)\)/g,
+      '<a href="$2" class="pn-entry-link" target="_blank" rel="noopener noreferrer">$1</a>');
+}
+
+const isTableSeparator = (line: string) => /^\s*\|?[\s:|-]+\|[\s:|-]*$/.test(line) && line.includes('-');
+const isTableRow = (line: string) => line.trimStart().startsWith('|') || (line.includes('|') && line.trim().length > 0);
+
+function splitTableCells(line: string): string[] {
+  let s = line.trim();
+  if (s.startsWith('|')) s = s.slice(1);
+  if (s.endsWith('|')) s = s.slice(0, -1);
+  return s.split('|').map((c) => c.trim());
+}
+
+// Renders headings, bullet + numbered lists (with nesting), tables, bold,
+// inline code, links, and paragraphs from a trusted markdown patch note.
 function renderMarkdown(raw: string) {
   const lines = raw.split('\n');
   const elements: React.ReactNode[] = [];
@@ -88,6 +115,14 @@ function renderMarkdown(raw: string) {
 
     if (line.startsWith('## ')) {
       // Top-level version heading - skip, we render version from filename
+      i++;
+      continue;
+    }
+
+    if (line.startsWith('#### ')) {
+      elements.push(
+        <h4 key={i} className="pn-entry-subtitle">{line.slice(5).trim()}</h4>,
+      );
       i++;
       continue;
     }
@@ -107,23 +142,98 @@ function renderMarkdown(raw: string) {
       continue;
     }
 
-    // Bullet list block
-    if (line.trimStart().startsWith('- ')) {
-      const items: string[] = [];
-      while (i < lines.length && lines[i].trimStart().startsWith('- ')) {
-        // Collect continuation lines (indented, not starting with '- ')
-        let itemText = lines[i].trimStart().slice(2);
+    // Table block: a row of `| ... |` followed by a `|---|---|` separator.
+    if (isTableRow(line) && i + 1 < lines.length && isTableSeparator(lines[i + 1])) {
+      const headerCells = splitTableCells(lines[i]);
+      i += 2; // skip header + separator
+      const bodyRows: string[][] = [];
+      while (i < lines.length && lines[i].trim() !== '' && isTableRow(lines[i]) && !isTableSeparator(lines[i])) {
+        bodyRows.push(splitTableCells(lines[i]));
         i++;
-        while (i < lines.length && lines[i] !== '' && !lines[i].trimStart().startsWith('- ') && !lines[i].startsWith('#') && !lines[i].startsWith('---')) {
+      }
+      elements.push(
+        <div key={i} className="pn-table-wrap">
+          <table className="pn-table">
+            <thead>
+              <tr>
+                {headerCells.map((c, idx) => (
+                  <th key={idx} dangerouslySetInnerHTML={{ __html: applyInline(c) }} />
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {bodyRows.map((row, rIdx) => (
+                <tr key={rIdx}>
+                  {row.map((c, cIdx) => (
+                    <td key={cIdx} dangerouslySetInnerHTML={{ __html: applyInline(c) }} />
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>,
+      );
+      while (i < lines.length && lines[i] === '') i++;
+      continue;
+    }
+
+    // Ordered (numbered) list block
+    if (/^\s*\d+\.\s/.test(line)) {
+      const items: string[] = [];
+      while (i < lines.length && /^\s*\d+\.\s/.test(lines[i])) {
+        let itemText = lines[i].replace(/^\s*\d+\.\s/, '');
+        i++;
+        while (i < lines.length && lines[i] !== '' && !/^\s*\d+\.\s/.test(lines[i]) && !lines[i].trimStart().startsWith('- ') && !lines[i].startsWith('#') && !lines[i].startsWith('---')) {
           itemText += ' ' + lines[i].trim();
           i++;
         }
         items.push(itemText);
       }
       elements.push(
-        <ul key={i} className="pn-entry-list">
+        <ol key={i} className="pn-entry-list pn-entry-list-ordered">
           {items.map((item, idx) => (
             <li key={idx} dangerouslySetInnerHTML={{ __html: applyInline(item) }} />
+          ))}
+        </ol>,
+      );
+      while (i < lines.length && lines[i] === '') i++;
+      continue;
+    }
+
+    // Bullet list block (supports one level of nesting via indentation)
+    if (line.trimStart().startsWith('- ')) {
+      type Item = { text: string; nested: string[] };
+      const items: Item[] = [];
+      while (i < lines.length && lines[i].trimStart().startsWith('- ')) {
+        const indent = lines[i].length - lines[i].trimStart().length;
+        if (indent >= 2 && items.length > 0) {
+          // Indented bullet → nested child of the previous item.
+          items[items.length - 1].nested.push(lines[i].trimStart().slice(2));
+          i++;
+          continue;
+        }
+        let itemText = lines[i].trimStart().slice(2);
+        i++;
+        // Wrapped continuation lines (not a new bullet / heading / rule).
+        while (i < lines.length && lines[i] !== '' && !lines[i].trimStart().startsWith('- ') && !lines[i].startsWith('#') && !lines[i].startsWith('---')) {
+          itemText += ' ' + lines[i].trim();
+          i++;
+        }
+        items.push({ text: itemText, nested: [] });
+      }
+      elements.push(
+        <ul key={i} className="pn-entry-list">
+          {items.map((item, idx) => (
+            <li key={idx}>
+              <span dangerouslySetInnerHTML={{ __html: applyInline(item.text) }} />
+              {item.nested.length > 0 && (
+                <ul className="pn-entry-list pn-entry-list-nested">
+                  {item.nested.map((n, nIdx) => (
+                    <li key={nIdx} dangerouslySetInnerHTML={{ __html: applyInline(n) }} />
+                  ))}
+                </ul>
+              )}
+            </li>
           ))}
         </ul>,
       );
@@ -138,7 +248,9 @@ function renderMarkdown(raw: string) {
       lines[i] !== '' &&
       !lines[i].startsWith('##') &&
       !lines[i].startsWith('---') &&
-      !lines[i].trimStart().startsWith('- ')
+      !lines[i].trimStart().startsWith('- ') &&
+      !/^\s*\d+\.\s/.test(lines[i]) &&
+      !(isTableRow(lines[i]) && i + 1 < lines.length && isTableSeparator(lines[i + 1]))
     ) {
       paraLines.push(lines[i]);
       i++;
@@ -174,7 +286,7 @@ export default function PatchNotesPage() {
 
       <main className="pn-root">
         <header className="pn-header">
-          <div className="pn-header-label">// TRANSMISSION LOG</div>
+          <div className="pn-header-label">{'// TRANSMISSION LOG'}</div>
           <h1 className="pn-title">Patch Notes</h1>
           <p className="pn-subtitle">
             Every change, balance pass, and bug fix since alpha launch.
