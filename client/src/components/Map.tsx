@@ -6,7 +6,6 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useGameSocket } from '../hooks/useGameSocket';
 import WavePlanner from './WavePlanner';
-import CombatCalculator from './CombatCalculator';
 import Username from './Username';
 import {
   getGalaxyEvents,
@@ -1288,20 +1287,6 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
                     );
                   })}
                 </div>
-                {attackMissionType === 'attack' && (
-                  <CombatCalculator
-                    attacker={attackTroops as Record<string, number>}
-                    defender={
-                      selectedNexus.intelLevel === 'scouted' || selectedNexus.intelLevel === 'owned'
-                        ? (selectedNexus.troops as Record<string, number> | undefined) ?? {}
-                        : null
-                    }
-                    defenderShieldGrid={selectedNexus.buildings?.shieldGrid ?? 0}
-                    attackerArmory={Number((currentNexus.buildings as Record<string, number> | undefined)?.armory ?? 0)}
-                    shieldEfficiencyMultiplier={selectedNexus.name?.includes('Military Outpost') ? 2 : 1}
-                    hasIntel={selectedNexus.intelLevel === 'scouted' || selectedNexus.intelLevel === 'owned'}
-                  />
-                )}
                 {(() => {
                   const travel = estimateTravelTime();
                   return travel ? (
