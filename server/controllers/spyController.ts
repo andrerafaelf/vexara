@@ -87,10 +87,14 @@ export async function sendSpyMission(req: AuthRequest, res: Response): Promise<v
     if (!parsedFrom || !parsedTo) { res.status(400).json({ error: 'Invalid nexus IDs' }); return; }
     if (type !== 'sabotage' && type !== 'embed') { res.status(400).json({ error: 'type must be sabotage or embed' }); return; }
 
-    const opCount = Math.floor(Number(operatives));
-    if (opCount < 1) {
+    const requestedOps = Math.floor(Number(operatives));
+    if (requestedOps < 1) {
       res.status(400).json({ error: 'operatives must be at least 1' }); return;
     }
+    // An embed only ever stations a single operative — its cost and detection are
+    // flat regardless of how many are requested. Clamp to 1 so a stale/over-eager
+    // client can't silently spend extra recon operatives for no benefit.
+    const opCount = type === 'embed' ? 1 : requestedOps;
 
     if (type === 'sabotage') {
       if (!sabotageTarget || !(SABOTAGE_TARGETS as readonly string[]).includes(sabotageTarget)) {
@@ -452,6 +456,44 @@ export async function getSpyAssets(req: AuthRequest, res: Response): Promise<voi
           select: { name: true, x: true, y: true },
         });
         return { ...a, targetName: target?.name, targetX: target?.x, targetY: target?.y };
+      }),
+    );
+
+    res.json(enriched);
+  } catch (error) {
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'spyController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+// ---- getDiscoveredSpyAssets ----
+// Returns the most recent embed assets that are no longer active (discovered or
+// lost), so the frontend can offer a quick "re-embed" without hunting the map.
+export async function getDiscoveredSpyAssets(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const nexusId = parsePositiveInt(req.params.nexusId);
+    if (!nexusId) { res.status(400).json({ error: 'Invalid nexus ID' }); return; }
+
+    const nexus = await prisma.nexus.findUnique({ where: { id: nexusId }, select: { ownerId: true, galaxyId: true } });
+    if (!nexus || nexus.ownerId !== req.userId || nexus.galaxyId !== req.galaxyId) {
+      res.status(403).json({ error: 'Not authorized' }); return;
+    }
+
+    const assets = await prisma.spyAsset.findMany({
+      where: { ownerNexusId: nexusId, status: { in: ['discovered', 'lost'] } },
+      orderBy: [{ discoveredAt: 'desc' }, { createdAt: 'desc' }],
+      take: 5,
+    });
+
+    const enriched = await Promise.all(
+      assets.map(async (a) => {
+        const target = await prisma.nexus.findUnique({
+          where: { id: a.targetNexusId },
+          select: { name: true, x: true, y: true, ownerId: true },
+        });
+        // A target that has been razed or now belongs to the player can't be re-embedded.
+        const reembeddable = !!target && target.ownerId !== req.userId;
+        return { ...a, targetName: target?.name, targetX: target?.x, targetY: target?.y, reembeddable };
       }),
     );
 

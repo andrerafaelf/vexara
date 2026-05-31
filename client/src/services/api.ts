@@ -508,6 +508,9 @@ export const getCompletedSpyMissions = (nexusId: string) =>
 export const getSpyAssets = (nexusId: string) =>
   apiRequest(`/attack/spy/assets/${nexusId}`);
 
+export const getDiscoveredSpyAssets = (nexusId: string) =>
+  apiRequest(`/attack/spy/assets/${nexusId}/discovered`);
+
 export const recallSpyAsset = (assetId: number) =>
   apiRequest(`/attack/spy/assets/${assetId}/recall`, { method: 'POST' });
 

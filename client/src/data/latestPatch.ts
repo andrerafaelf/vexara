@@ -15,6 +15,6 @@
 // If "I forgot to bump it" becomes a real pattern, swap to a build step
 // that globs the directory and writes this file. Until then: simpler wins.
 
-export const LATEST_PATCH_VERSION = '0.16';
-export const LATEST_PATCH_LABEL = 'Alpha v0.16';
-export const LATEST_PATCH_HEADLINE = '50×50 map, espionage overhaul, quest fixes, and anti-smurf hardening';
+export const LATEST_PATCH_VERSION = '0.16.1';
+export const LATEST_PATCH_LABEL = 'Alpha v0.16.1';
+export const LATEST_PATCH_HEADLINE = 'One-click re-embed, embed operative fix, and clearer in-transit feedback';
