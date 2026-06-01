@@ -86,6 +86,7 @@ import {
 	interpolateResources
 } from '@/realtime/economy.shared';
 import { serverNow } from '@/realtime/serverClock';
+import { useOnboarding } from '../context/OnboardingContext';
 
 // Import troop images
 import annihilatorplatformImg from '../assets/troops/annihilatorplatform.png';
@@ -444,6 +445,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 	onTabChange
 }) => {
 	const router = useRouter();
+	const { currentStep } = useOnboarding();
 	const [activeTab, setActiveTabState] = useState<NexusTab>(initialTab);
 	const [mapEverVisited, setMapEverVisited] = useState(initialTab === 'map');
 	const [espionageEverVisited, setEspionageEverVisited] = useState(initialTab === 'espionage');
@@ -624,6 +626,21 @@ const NexusView: React.FC<NexusViewProps> = ({
 	useEffect(() => {
 		document.querySelector('.main-content')?.scrollTo({ top: 0 });
 	}, [activeTab]);
+
+	useEffect(() => {
+		if (!currentStep) return;
+		if (currentStep.id === 'upgrade_building' && activeTab !== 'buildings') {
+			setActiveTab('buildings');
+		}
+		if (currentStep.id === 'train_troops') {
+			if (activeTab !== 'troops') setActiveTab('troops');
+			if (troopsSubTab !== 'train') setTroopsSubTab('train');
+		}
+		if (currentStep.id === 'send_attack' && activeTab !== 'map') {
+			setActiveTab('map');
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [currentStep?.id, activeTab, troopsSubTab]);
 
 	useEffect(() => {
 		// Apply finished build/training items as quickly as possible. We bias the

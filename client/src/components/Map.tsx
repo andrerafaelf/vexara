@@ -177,7 +177,7 @@ const Map: React.FC<MapProps> = ({
 	const [centerX, setCenterX] = useState(currentNexus.x);
 	const [centerY, setCenterY] = useState(currentNexus.y);
 	const [showAttackForm, setShowAttackForm] = useState(false);
-	const [attackTroops, setAttackTroops] = useState({
+	const EMPTY_ATTACK_TROOPS = {
 		lancerDrone: 0,
 		assaultTrooper: 0,
 		breakerUnit: 0,
@@ -191,7 +191,8 @@ const Map: React.FC<MapProps> = ({
 		annihilatorPlatform: 0,
 		voidStalker: 0,
 		overseer: 0
-	});
+	};
+	const [attackTroops, setAttackTroops] = useState(EMPTY_ATTACK_TROOPS);
 	const [incomingAttacks, setIncomingAttacks] = useState<any[]>([]);
 	const [outgoingAttacks, setOutgoingAttacks] = useState<any[]>([]);
 	const [ownNexuses, setOwnNexuses] = useState<Nexus[]>([]);
@@ -355,6 +356,7 @@ const Map: React.FC<MapProps> = ({
 				setCenterX(r.data.x);
 				setCenterY(r.data.y);
 				setAttackMissionType('attack');
+				setAttackTroops(EMPTY_ATTACK_TROOPS);
 				setShowAttackForm(true);
 			} catch {
 				toast('Could not load target nexus', 'error');
@@ -1315,6 +1317,7 @@ const Map: React.FC<MapProps> = ({
 									className="attack-btn"
 									onClick={() => {
 										setAttackMissionType('attack');
+										setAttackTroops(EMPTY_ATTACK_TROOPS);
 										setShowAttackForm(true);
 									}}
 									disabled={isConquered || isNewbieProtected || blockedByMyProtection}
@@ -1336,6 +1339,7 @@ const Map: React.FC<MapProps> = ({
 										className="support-btn"
 										onClick={() => {
 											setAttackMissionType('support');
+											setAttackTroops(EMPTY_ATTACK_TROOPS);
 											setShowAttackForm(true);
 										}}
 										title="Send troops to reinforce this ally's nexus"

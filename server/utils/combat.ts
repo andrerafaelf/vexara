@@ -21,6 +21,7 @@ import {
 	notifyFactionUpdated
 } from '../services/warRoomSocket.js';
 import { getNexusTypeEffectiveMultipliers } from './economy.js';
+import { getPopulationMax } from './population.js';
 import type { TroopKey } from '../types/index.js';
 import { logInfo, logWarn } from './logger.js';
 
@@ -771,6 +772,9 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 				if (currentLevel <= 0) continue;
 				const newLevel = Math.max(0, currentLevel - 1);
 				buildingDamageUpdates[building] = newLevel;
+				if (building === 'lifeSupport') {
+					buildingDamageUpdates['populationMax'] = getPopulationMax(newLevel);
+				}
 				buildingDamageLog.push({ building, from: currentLevel, to: newLevel });
 				hitsRemaining--;
 			}
@@ -956,6 +960,12 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 			(defenderNexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled ?? false;
 		const shouldRevokeDoubled =
 			damagedCC !== undefined && damagedCC < 15 && nexusTypeDoubled && !nexusTypeLockedAt;
+		const nextPopulationMax =
+			(buildingDamageUpdates['populationMax'] as number | undefined) ?? defenderNexus.populationMax;
+		const nextPopulationCurrent = Math.min(
+			nextPopulationMax,
+			Math.max(0, defenderNexus.populationCurrent - defenderPopLost)
+		);
 
 		const defenderUpdate = prisma.nexus.update({
 			where: { id: defenderNexus.id },
@@ -964,7 +974,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 				...defenderResourceUpdates,
 				...buildingDamageUpdates,
 				...(shouldRevokeDoubled ? { nexusTypeDoubled: false } : {}),
-				populationCurrent: Math.max(0, defenderNexus.populationCurrent - defenderPopLost),
+				populationCurrent: nextPopulationCurrent,
 				controlLevel: conquered ? 0 : newControlLevel
 			}
 		});

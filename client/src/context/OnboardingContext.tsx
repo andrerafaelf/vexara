@@ -49,7 +49,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 		targetAttr: 'train-troops',
 		title: 'Train Your First Troops',
 		message:
-			'Troops defend your nexus and let you attack others. Queue a few Lancer Drones to get started.',
+			'Troops defend your nexus and let you attack others. Queue a few Assault Troopers to get started.',
 		isComplete: (s) =>
 			s.nexuses.some((n) => {
 				const t = n.troops;

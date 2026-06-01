@@ -14,9 +14,40 @@ interface SpotlightRect {
 
 const PADDING = 10;
 
+function getTargetElement(attr: string): HTMLElement | null {
+	const candidates = Array.from(
+		document.querySelectorAll<HTMLElement>(`[data-onboarding="${attr}"]`)
+	);
+	return (
+		candidates.find((el) => {
+			const rect = el.getBoundingClientRect();
+			const style = window.getComputedStyle(el);
+			return (
+				el.isConnected &&
+				rect.width > 0 &&
+				rect.height > 0 &&
+				style.display !== 'none' &&
+				style.visibility !== 'hidden' &&
+				!(el instanceof HTMLButtonElement && el.disabled)
+			);
+		}) ??
+		candidates.find((el) => {
+			const rect = el.getBoundingClientRect();
+			const style = window.getComputedStyle(el);
+			return (
+				el.isConnected &&
+				rect.width > 0 &&
+				rect.height > 0 &&
+				style.display !== 'none' &&
+				style.visibility !== 'hidden'
+			);
+		}) ??
+		null
+	);
+}
+
 function getTargetRect(attr: string): DOMRect | null {
-	const el = document.querySelector(`[data-onboarding="${attr}"]`);
-	return el ? el.getBoundingClientRect() : null;
+	return getTargetElement(attr)?.getBoundingClientRect() ?? null;
 }
 
 export default function OnboardingOverlay() {
@@ -24,6 +55,8 @@ export default function OnboardingOverlay() {
 	const [rect, setRect] = useState<SpotlightRect | null>(null);
 	const [tooltipSide, setTooltipSide] = useState<'bottom' | 'top'>('bottom');
 	const rafRef = useRef<number>(0);
+	const lastScrolledStepRef = useRef<string | null>(null);
+	const lastScrollAtRef = useRef(0);
 
 	// Sit in the modal queue so the tutorial never lights up while PWA / WYWA
 	// modals are still onscreen. We ask for the floor whenever the onboarding
@@ -34,7 +67,30 @@ export default function OnboardingOverlay() {
 	useEffect(() => {
 		if (!currentStep || !canShow) {
 			setRect(null);
+			lastScrolledStepRef.current = null;
+			lastScrollAtRef.current = 0;
 			return;
+		}
+
+		function centerTarget(target: HTMLElement) {
+			const now = Date.now();
+			if (lastScrolledStepRef.current === currentStep?.id && now - lastScrollAtRef.current < 500) {
+				return;
+			}
+			lastScrolledStepRef.current = currentStep?.id ?? null;
+			lastScrollAtRef.current = now;
+			target.scrollIntoView({
+				block: 'center',
+				inline: 'center',
+				behavior: 'smooth'
+			});
+		}
+
+		if (lastScrolledStepRef.current !== currentStep.id) {
+			const target = getTargetElement(currentStep.targetAttr);
+			if (target) {
+				centerTarget(target);
+			}
 		}
 
 		function update() {
@@ -61,6 +117,10 @@ export default function OnboardingOverlay() {
 				setTooltipSide(domRect.bottom + 160 > window.innerHeight ? 'top' : 'bottom');
 			} else {
 				setRect(null);
+				const target = currentStep ? getTargetElement(currentStep.targetAttr) : null;
+				if (target) {
+					centerTarget(target);
+				}
 			}
 			rafRef.current = requestAnimationFrame(update);
 		}

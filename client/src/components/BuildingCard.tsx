@@ -190,7 +190,6 @@ function BuildingCardInner(props: BuildingCardProps) {
 	return (
 		<div
 			className={`building-card ${isUpgrading ? 'upgrading' : ''} ${isAtMax ? 'maxed' : isDisabled ? 'disabled' : ''}`}
-			{...(onboardingAttr ? { 'data-onboarding': onboardingAttr } : {})}
 		>
 			{imgSrc && <img src={imgSrc} alt={buildingName} className="building-card-image" />}
 			<div className="building-header">
@@ -303,6 +302,7 @@ function BuildingCardInner(props: BuildingCardProps) {
 					className={`building-upgrade-button${flashAvailable ? ' building-upgrade-button--flash' : ''}`}
 					onClick={() => onUpgrade(key)}
 					disabled={isDisabled}
+					{...(onboardingAttr ? { 'data-onboarding': onboardingAttr } : {})}
 				>
 					Upgrade
 				</button>

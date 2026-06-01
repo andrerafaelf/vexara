@@ -906,6 +906,7 @@ export default function FactionsView() {
 													className="factions-btn-primary factions-btn-join"
 													disabled={submitting}
 													onClick={() => handleRequestToJoin(f.id)}
+													data-onboarding="join-faction"
 												>
 													{submitting ? 'Requesting...' : 'Request to Join'}
 												</button>
