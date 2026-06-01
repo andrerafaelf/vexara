@@ -34,19 +34,23 @@ export const CLASS_COUNTERS: Record<TroopClass, Record<TroopClass, number>> = {
 	special: { mobile: 1.0, armor: 1.0, fire: 1.0, special: 1.0 }
 };
 
+// Tiered for proper RTS progression: T1 = early game (pop 1, fast train),
+// T2 = mid-game workhorses (pop 2-3), T3 = endgame power units (pop 4-5,
+// 2 attackers + 2 defenders). Attack-per-pop should grow with tier so
+// spamming the cheapest unit is never the optimal late-game answer.
 export const TROOP_STATS: Record<TroopKey, TroopStat> = {
 	lancerDrone: { attack: 3, defense: 22, speed: 20, carry: 30 },
 	assaultTrooper: { attack: 5, defense: 45, speed: 18, carry: 60 },
-	breakerUnit: { attack: 55, defense: 3, speed: 16, carry: 60 },
+	breakerUnit: { attack: 35, defense: 3, speed: 16, carry: 40 },
 	reconOperative: { attack: 1, defense: 20, speed: 25, carry: 10 },
 	skimmerBike: { attack: 80, defense: 10, speed: 22, carry: 80 },
 	bulwarkGuard: { attack: 3, defense: 130, speed: 12, carry: 25 },
 	suppressorTeam: { attack: 65, defense: 8, speed: 15, carry: 20 },
 	disruptorUnit: { attack: 75, defense: 9, speed: 17, carry: 25 },
 	interceptorBike: { attack: 95, defense: 13, speed: 28, carry: 100 },
-	siegeMech: { attack: 20, defense: 210, speed: 10, carry: 20 },
-	annihilatorPlatform: { attack: 210, defense: 20, speed: 8, carry: 160 },
-	voidStalker: { attack: 110, defense: 8, speed: 32, carry: 40 },
+	siegeMech: { attack: 40, defense: 260, speed: 10, carry: 20 },
+	annihilatorPlatform: { attack: 320, defense: 35, speed: 8, carry: 250 },
+	voidStalker: { attack: 150, defense: 15, speed: 32, carry: 60 },
 	plasmaTurret: { attack: 0, defense: 160, speed: 0, carry: 0 },
 	overseer: { attack: 0, defense: 8, speed: 15, carry: 0 }
 };
@@ -249,11 +253,12 @@ export function computeLootStolen(
 // Compute per-unit loss count for a force that WON the engagement.
 //
 // Two factors modulate the per-unit loss rate on top of baseLossRate:
-//   1. defFactor . higher defense stat = lower loss rate. /600 divisor makes
-//      the spread between a Breaker Unit (def 10) and a Siege Mech (def 210)
-//      meaningful (~10pp survival difference). The earlier /1200 divisor
-//      compressed every unit into a ~5pp band, so "tank" units didn't feel
-//      meaningfully tankier than glass cannons in reports.
+//   1. defFactor . higher defense stat = lower loss rate. /250 divisor (with a
+//      0.1 floor) makes defense a real economic lever for attackers: glass
+//      cannons bleed ~99% of the base rate, mid units bleed ~85-95%, and
+//      true tanks (Bulwark, Siege Mech) drop to 10-50% — so endgame anvil
+//      units genuinely survive their own victories instead of being treated
+//      almost the same as a Breaker Unit on the winning side.
 //   2. matchupFactor . per-unit class advantage against the opposing force's
 //      composition. Armor sent into a Fire-heavy enemy now takes fewer
 //      casualties (the counter triangle helps you survive, not just kill).
@@ -312,7 +317,7 @@ export function computeLossesForWinner(
 		const varianceMagnitude = count < 20 ? 0.1 : count < 200 ? 0.05 : 0.03;
 		const variance = (lcg() - 0.5) * 2 * varianceMagnitude;
 
-		const defFactor = 1 - TROOP_STATS[key].defense / 600;
+		const defFactor = Math.max(0.1, 1 - TROOP_STATS[key].defense / 250);
 
 		// Class matchup: weighted average of CLASS_COUNTERS against the opposing
 		// composition, then mapped to a survival modifier centered at 1.0.

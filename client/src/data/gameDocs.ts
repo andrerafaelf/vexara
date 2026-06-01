@@ -68,7 +68,9 @@ Vexara uses a rock-paper-scissors class triangle: Mobile beats Armor, Armor beat
 
 **Defender advantage:** The defender's Shield Grid multiplies total defensive power on top of all class counters. The attacker never gets the Shield Grid bonus, so pure defensive nexuses with high Shield Grid levels are always harder to break than their raw troop count suggests.
 
-**How losses scale - win or lose:** Combat is no longer all-or-nothing. Both sides' casualties scale with how close the fight was (the loser/winner power ratio). The losing side takes heavy losses - a blowout near-wipes them, but a narrow defeat leaves a real remnant (~85% lost, not 100%). The winning side stays light on a dominant win but bleeds badly on a coin-flip (up to ~45% lost when the fight was nearly even). The lesson: attacking a force of comparable strength is costly even when you win, and being slightly outgunned no longer means automatic annihilation. To conquer, you still need to fully clear the defending garrison, which only happens on a decisive win - a near-even victory will leave survivors and require another strike. Use the in-game combat preview on the attack screen to gauge the outcome before committing.
+**How losses scale - win or lose:** Combat is no longer all-or-nothing. Both sides' casualties scale with how close the fight was (the loser/winner power ratio). The losing side takes heavy losses - a blowout near-wipes them, but a narrow defeat leaves a real remnant (~85% lost, not 100%). The winning side stays light on a dominant win but bleeds badly on a coin-flip (up to ~45% lost when the fight was nearly even). The lesson: attacking a force of comparable strength is costly even when you win, and being slightly outgunned no longer means automatic annihilation. Use the in-game combat preview on the attack screen to gauge the outcome before committing.
+
+**Conquest is a gradient, not a cliff:** When an Overseer rides with a winning attack, it drains the defender's Control Level by an amount that scales with how dominant the strike was. The same power ratio that decides casualties also decides Control drain - crushing wins (3:1 or better) drain 50, clear wins drain 34, and narrow wins still drain 15. A nexus is conquered the moment its Control hits 0. This means a dominant attacker can take a nexus in two strikes; a careful planned attacker takes it in three; and a coalition of smaller players can grind down a fortified target together. Control regenerates at +10 per hour for owned nexuses, so a lone trickle of weak strikes will never succeed - coordinated waves do.
 `;
 
 export type BuildingDoc = {
@@ -110,9 +112,9 @@ export const TROOPS_DOC: TroopDoc[] = [
 		name: 'Breaker Unit',
 		role: 'Mobile assault breacher - counters Armor',
 		description:
-			'Pure attack unit. Cracks armored defensive lines with high damage output but almost no survivability - expect heavy losses.',
+			'Early-game mobile attacker. Decent damage and cheap to produce, but glass-fragile and lightly carries — its job is to soften armored defenders in the opening phase, not anchor a late-game army.',
 		unitClass: 'mobile',
-		stats: { attack: 55, defense: 10, speed: 16, carry: 60 },
+		stats: { attack: 35, defense: 3, speed: 16, carry: 40 },
 		cost: { biomass: 250, alloy: 150, ore: 300, population: 1, time: '2m 40s' },
 		requirements: ['Recruitment Core Lv3', 'Ore Extractor Lv3']
 	},
@@ -187,12 +189,12 @@ export const TROOPS_DOC: TroopDoc[] = [
 	{
 		key: 'voidStalker',
 		name: 'Void Stalker',
-		role: 'Mobile stealth cavalry - counters Armor',
+		role: 'Endgame mobile striker - counters Armor',
 		description:
-			'Fastest unit in the game. A mobile raider that excels at cracking armored defensive lines - nearly no defense, so it relies on speed and shock value.',
+			'Tier-3 fast attacker. The fastest unit in the game and the mobile half of the endgame line - pairs with the Annihilator Platform as the two top-end offensive units. Cracks armored defensive lines at speed; still lightly armored, so use its speed and shock value rather than slugging it out.',
 		unitClass: 'mobile',
-		stats: { attack: 110, defense: 32, speed: 32, carry: 40 },
-		cost: { biomass: 900, alloy: 700, ore: 1100, population: 3, time: '24m 0s' },
+		stats: { attack: 150, defense: 15, speed: 32, carry: 60 },
+		cost: { biomass: 1100, alloy: 900, ore: 1400, population: 4, time: '30m 0s' },
 		requirements: ['Recruitment Core Lv9', 'Alloy Forge Lv8', 'Armory Lv3'],
 		notes: [
 			'Speed 32 - the fastest unit in the roster.',
@@ -203,12 +205,12 @@ export const TROOPS_DOC: TroopDoc[] = [
 	{
 		key: 'siegeMech',
 		name: 'Siege Mech',
-		role: 'Armor siege anchor - counters Fire',
+		role: 'Endgame armor anchor - counters Fire',
 		description:
-			'Towering armored platform built for survival, not offense. Exceptional durability lets it absorb punishment while your fire support does the killing - slow but nearly impossible to dislodge.',
+			'Tier-3 mobile defender. Towering armored platform built for survival, with enough attack to punish anything that crashes into it. Exceptional durability lets it absorb punishment while your fire support does the killing - the field anvil of an endgame army.',
 		unitClass: 'armor',
-		stats: { attack: 80, defense: 210, speed: 10, carry: 20 },
-		cost: { biomass: 1250, alloy: 1000, ore: 2000, population: 4, time: '40m 0s' },
+		stats: { attack: 40, defense: 260, speed: 10, carry: 20 },
+		cost: { biomass: 1250, alloy: 1000, ore: 2000, population: 4, time: '30m 0s' },
 		requirements: ['Recruitment Core Lv10', 'Ore Extractor Lv9', 'Command Core Lv8']
 	},
 	{
@@ -219,7 +221,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 			'Immobile defensive emplacement. Cannot be sent on attacks, transfers, or raids - it always defends the nexus that built it. Decimates mobile forces that try to rush you.',
 		unitClass: 'fire',
 		stats: { attack: 0, defense: 160, speed: 0, carry: 0 },
-		cost: { biomass: 1500, alloy: 1200, ore: 2500, population: 2, time: '50m 0s' },
+		cost: { biomass: 1500, alloy: 1200, ore: 2500, population: 2, time: '45m 0s' },
 		requirements: ['Recruitment Core Lv11', 'Command Core Lv9', 'Armory Lv5'],
 		notes: [
 			'Speed 0 - stripped from any outgoing strike or transfer.',
@@ -229,12 +231,12 @@ export const TROOPS_DOC: TroopDoc[] = [
 	{
 		key: 'annihilatorPlatform',
 		name: 'Annihilator Platform',
-		role: 'Fire artillery - counters Mobile',
+		role: 'Endgame fire artillery - counters Mobile',
 		description:
-			'Top-end fire platform for heavy assaults and sieges. Enormous attack power but lightly armored - protect it with Siege Mechs and Bulwark Guards.',
+			'Tier-3 heavy attacker. Top-end fire platform for heavy assaults and sieges with the highest single-unit attack and carry in the game - protect it with Siege Mechs and Bulwark Guards. The fire half of the endgame line; paired with the Void Stalker, two Annihilators delivers more force than a horde of mass-produced T1 spam.',
 		unitClass: 'fire',
-		stats: { attack: 210, defense: 80, speed: 8, carry: 160 },
-		cost: { biomass: 2000, alloy: 1750, ore: 3000, population: 5, time: '1h 8m' },
+		stats: { attack: 320, defense: 35, speed: 8, carry: 250 },
+		cost: { biomass: 2000, alloy: 1750, ore: 3000, population: 5, time: '40m 0s' },
 		requirements: ['Recruitment Core Lv12', 'Command Core Lv10', 'Shield Grid Lv10']
 	},
 	{
@@ -242,7 +244,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		name: 'Overseer',
 		role: 'Conquest / control unit (Special - no counter in either direction)',
 		description:
-			'The Overseer is a high-value command unit that enables nexus conquest. It does not fight - it administers. Sending an Overseer on a successful strike that clears the defending force reduces the target\'s Control Level by 34. Control starts at 100; once it reaches 0, the nexus is conquered and changes ownership to you. Three successful control strikes with an Overseer will conquer any nexus. Overseer strikes travel 3x slower than standard attacks - giving defenders time to react. The Overseer is only useful if the attack wins - if the attack fails, the Overseer is not used and survives the defeat alongside its escort. If every non-Overseer troop in the strike is killed, the Overseer dies too. On the final conquering strike (the one that brings Control to 0), the Overseer is consumed - it does not return. The other surviving attackers are stationed at the newly captured nexus. The conquered nexus keeps its type (Resource Depot, Military Outpost, etc.) and retains its current building levels, but its name resets to "Conquered Nexus." NPC nexus bonuses are acquired at base tier; the doubled tier unlocks when the new owner reaches Command Core 15.',
+			'The Overseer is a high-value command unit that enables nexus conquest. It does not fight - it administers. Sending an Overseer on a victorious strike reduces the target\'s Control Level by an amount that scales with how dominant your attack was: a crushing win (3:1 power advantage or better) drains 50, a clear win drains 34, and a narrow win still drains 15. Control starts at 100; once it reaches 0, the nexus is conquered and changes ownership to you. Two crushing strikes, three clear strikes, or a sustained coalition campaign can all reach conquest. The defending force does not need to be wiped - any victory with a surviving Overseer drains Control. Owned nexuses regenerate +10 Control per hour, so a lone weak attacker cannot grind a target down alone - coordinated waves are required for an attrition path. Overseer strikes travel 3x slower than standard attacks - giving defenders time to react. The Overseer is only useful if the attack wins - if the attack fails, the Overseer is not used and survives the defeat alongside its escort. If every non-Overseer troop in the strike is killed, the Overseer dies too. On the final conquering strike (the one that brings Control to 0), the Overseer is consumed - it does not return. The other surviving attackers are stationed at the newly captured nexus. The conquered nexus keeps its type (Resource Depot, Military Outpost, etc.) and retains its current building levels, but its name resets to "Conquered Nexus." NPC nexus bonuses are acquired at base tier; the doubled tier unlocks when the new owner reaches Command Core 15.',
 		unitClass: 'special',
 		stats: { attack: 0, defense: 30, speed: 15, carry: 0 },
 		cost: { biomass: 180000, alloy: 140000, ore: 120000, population: 5, time: '4h 0m' },
@@ -250,7 +252,12 @@ export const TROOPS_DOC: TroopDoc[] = [
 		notes: [
 			'Maximum 3 per nexus at any time; maximum 1 per strike.',
 			'Trains in an independent queue - does not block other troop training.',
-			'Control reduction: -34 per successful strike with a surviving Overseer after the defending force is cleared. Three strikes conquer any nexus.',
+			'Control drain scales with strike dominance (power ratio = defender_power / attacker_power):',
+			'  • Crushing win (ratio ≤ 0.33, i.e. 3:1 power advantage or better): -50 Control. Two strikes can conquer.',
+			'  • Clear win (0.33 < ratio ≤ 0.66): -34 Control. Three strikes conquer - the standard planned attack.',
+			'  • Narrow win (ratio > 0.66): -15 Control. Designed for coalition attrition, not solo conquest.',
+			'A wipe of the defending force is NOT required for the Overseer to drain Control. Any victorious strike with a surviving Overseer drains.',
+			'Owned nexuses regenerate +10 Control per hour. A single attacker landing weak strikes far apart will be outpaced by regen.',
 			'Overseer survives a failed attack (as long as its escort is not completely wiped).',
 			'Overseer survives non-conquering control strikes (control reduced but nexus not taken).',
 			'On conquest: the Overseer is consumed. Other surviving attackers are stationed at the captured nexus.',
