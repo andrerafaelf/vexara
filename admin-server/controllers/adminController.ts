@@ -74,7 +74,7 @@ export async function sendGalaxyLiveBroadcast(req: Request, res: Response): Prom
 import type { Request, Response } from 'express';
 import prisma from '../../server/lib/prisma.js';
 import { serializeNexus } from '../../server/models/Nexus.js';
-import { processArrivedAttacks } from '../../server/utils/combat.js';
+import { processArrivedAttacks, processArrivedTransfers } from '../../server/utils/combat.js';
 import {
 	computeNexusPopulation,
 	getPopulationMax,
@@ -912,6 +912,32 @@ export async function completeAttack(req: Request, res: Response): Promise<void>
 		await adminService.updateAttack(attackId, { arrivesAt: new Date() });
 		await processArrivedAttacks();
 		res.json({ success: true, message: 'Attack completed' });
+	} catch (error) {
+		res.status(500).json({ error: (error as Error).message });
+	}
+}
+
+// Force an in-motion troop transfer to land now. Mirrors completeAttack: backdate
+// the relevant timestamp (arrivesAt for outbound, returnsAt for a recall) and run
+// the same processor the game loop uses, so arrival side effects stay consistent.
+export async function completeTransfer(req: Request, res: Response): Promise<void> {
+	try {
+		const transferId = parseInt(req.params.transferId);
+		const transfer = await adminService.getTransferById(transferId);
+		if (!transfer) {
+			res.status(404).json({ error: 'Transfer not found' });
+			return;
+		}
+		if (transfer.status === 'traveling') {
+			await adminService.updateTransfer(transferId, { arrivesAt: new Date() });
+		} else if (transfer.status === 'returning') {
+			await adminService.updateTransfer(transferId, { returnsAt: new Date() });
+		} else {
+			res.status(400).json({ error: 'Transfer is not in motion' });
+			return;
+		}
+		await processArrivedTransfers();
+		res.json({ success: true, message: 'Transfer completed' });
 	} catch (error) {
 		res.status(500).json({ error: (error as Error).message });
 	}

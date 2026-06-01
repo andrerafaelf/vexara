@@ -44,6 +44,7 @@ router.post('/nexuses/:nexusId/complete-training', adminController.completeTrain
 router.delete('/nexuses/:nexusId', adminController.deleteNexus);
 router.get('/attacks', adminController.listAttacks);
 router.post('/attacks/:attackId/complete', adminController.completeAttack);
+router.post('/transfers/:transferId/complete', adminController.completeTransfer);
 
 // Maintenance: force a global populationCurrent recount across all nexuses
 router.post('/maintenance/recount-population', adminController.recountPopulation);

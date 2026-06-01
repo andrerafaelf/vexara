@@ -445,6 +445,17 @@ export function getAdminTroopTransfers(galaxyId: number) {
 	});
 }
 
+export function getTransferById(id: number) {
+	return prisma.troopTransfer.findUnique({ where: { id } });
+}
+
+export function updateTransfer(
+	id: number,
+	data: Parameters<typeof prisma.troopTransfer.update>[0]['data']
+) {
+	return prisma.troopTransfer.update({ where: { id }, data });
+}
+
 export async function getAttackUsernames(
 	attackerUserId: number | null,
 	defenderUserId: number | null

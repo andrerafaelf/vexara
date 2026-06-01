@@ -419,12 +419,16 @@ export default function GalaxiesPage({ adminFetch, showToast }: Props) {
 
 	const handleCompleteAttack = async () => {
 		if (!confirmAttack) return;
+		// Transfers live in a separate table and carry a "transfer-<id>" synthetic
+		// _id; route them to the transfer endpoint with the numeric id stripped.
+		const isTransfer = confirmAttack.type === 'transfer';
+		const url = isTransfer
+			? `${API}/transfers/${confirmAttack._id.replace(/^transfer-/, '')}/complete`
+			: `${API}/attacks/${confirmAttack._id}/complete`;
 		try {
-			const res = await adminFetch(`${API}/attacks/${confirmAttack._id}/complete`, {
-				method: 'POST'
-			});
+			const res = await adminFetch(url, { method: 'POST' });
 			if (res.ok) {
-				showToast('Strike completed instantly', 'success');
+				showToast(isTransfer ? 'Transfer completed instantly' : 'Strike completed instantly', 'success');
 				setConfirmAttack(null);
 				reloadAll();
 			} else {
@@ -905,14 +909,12 @@ export default function GalaxiesPage({ adminFetch, showToast }: Props) {
 												</span>
 											</td>
 											<td className="col-actions">
-												{aType !== 'transfer' && (
-													<button
-														className="btn btn-success btn-xs"
-														onClick={() => setConfirmAttack(a)}
-													>
-														Complete
-													</button>
-												)}
+												<button
+													className="btn btn-success btn-xs"
+													onClick={() => setConfirmAttack(a)}
+												>
+													Complete
+												</button>
 											</td>
 										</tr>
 									);
@@ -1335,12 +1337,20 @@ export default function GalaxiesPage({ adminFetch, showToast }: Props) {
 				/>
 			)}
 
-			{/* Confirm complete attack */}
+			{/* Confirm complete attack / transfer */}
 			{confirmAttack && (
 				<ConfirmModal
-					title="Instantly Complete Strike"
-					description={`Force-resolve the attack from ${confirmAttack.attacker?.user?.username ?? 'Unknown'} → ${confirmAttack.defender?.user?.username ?? 'Unknown'} right now.`}
-					confirmLabel="Complete Strike"
+					title={
+						confirmAttack.type === 'transfer'
+							? 'Instantly Complete Transfer'
+							: 'Instantly Complete Strike'
+					}
+					description={
+						confirmAttack.type === 'transfer'
+							? `Land the troop transfer from ${confirmAttack.attacker?.user?.username ?? 'Unknown'} right now.`
+							: `Force-resolve the attack from ${confirmAttack.attacker?.user?.username ?? 'Unknown'} → ${confirmAttack.defender?.user?.username ?? 'Unknown'} right now.`
+					}
+					confirmLabel={confirmAttack.type === 'transfer' ? 'Complete Transfer' : 'Complete Strike'}
 					variant="warning"
 					onConfirm={handleCompleteAttack}
 					onCancel={() => setConfirmAttack(null)}
