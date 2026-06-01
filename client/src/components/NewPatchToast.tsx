@@ -7,6 +7,7 @@ import {
 	LATEST_PATCH_LABEL,
 	LATEST_PATCH_VERSION
 } from '@/data/latestPatch';
+import { useModalSlot } from '@/context/ModalQueueContext';
 import '@/styles/NewPatchToast.css';
 
 const STORAGE_KEY = 'lastSeenPatchVersion';
@@ -35,7 +36,12 @@ const STORAGE_KEY = 'lastSeenPatchVersion';
 // than the cost of a schema/migration for this feature.
 
 export default function NewPatchToast() {
-	const [show, setShow] = useState(false);
+	const [wantsToShow, setWantsToShow] = useState(false);
+	// Sits at the back of the queue — by the time this slot becomes active, all
+	// higher-priority modals (PWA, WYWA, Onboarding) have already been resolved.
+	// In particular, brand-new players walk through the tutorial first and only
+	// see the patch-notes nudge after they've completed or dismissed it.
+	const canShow = useModalSlot('patch', wantsToShow);
 
 	useEffect(() => {
 		if (typeof window === 'undefined') return;
@@ -59,7 +65,7 @@ export default function NewPatchToast() {
 			}
 			return;
 		}
-		setShow(true);
+		setWantsToShow(true);
 	}, []);
 
 	const markSeen = useCallback(() => {
@@ -68,10 +74,10 @@ export default function NewPatchToast() {
 		} catch {
 			/* ignore */
 		}
-		setShow(false);
+		setWantsToShow(false);
 	}, []);
 
-	if (!show) return null;
+	if (!canShow) return null;
 
 	return (
 		<div

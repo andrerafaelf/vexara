@@ -6,6 +6,7 @@ import DominanceBar from '@/components/DominanceBar';
 import NewPatchToast from '@/components/NewPatchToast';
 import OnboardingOverlay from '@/components/OnboardingOverlay';
 import TroopMovementsBar from '@/components/TroopMovementsBar';
+import { ModalQueueProvider } from '@/context/ModalQueueContext';
 import { OnboardingProvider } from '@/context/OnboardingContext';
 import '@/styles/ConnectionStatusBar.css';
 import MobileNexusDrawer from '@/components/MobileNexusDrawer';
@@ -263,417 +264,424 @@ export default function GameLayout({
 	}, [activePage]);
 
 	return (
-		<OnboardingProvider>
-			<div className="game-container">
-				<header className="game-header">
-					<div className="header-left">
-						<button
-							className="menu-toggle"
-							onClick={() => setIsMobileMenuOpen((p) => !p)}
-							aria-label="Toggle navigation menu"
-							aria-expanded={isMobileMenuOpen}
-						>
-							<Menu size={18} />
-						</button>
-						<h1 className="vx-wordmark game-wordmark">
-							<img src="/vexara-logo.png" alt="" aria-hidden="true" className="vx-wordmark-stamp" />
-							<span className="vx-wordmark-name">Vexara</span>
-						</h1>
-					</div>
+		<ModalQueueProvider>
+			<OnboardingProvider>
+				<div className="game-container">
+					<header className="game-header">
+						<div className="header-left">
+							<button
+								className="menu-toggle"
+								onClick={() => setIsMobileMenuOpen((p) => !p)}
+								aria-label="Toggle navigation menu"
+								aria-expanded={isMobileMenuOpen}
+							>
+								<Menu size={18} />
+							</button>
+							<h1 className="vx-wordmark game-wordmark">
+								<img
+									src="/vexara-logo.png"
+									alt=""
+									aria-hidden="true"
+									className="vx-wordmark-stamp"
+								/>
+								<span className="vx-wordmark-name">Vexara</span>
+							</h1>
+						</div>
 
-					<div className="header-center">
-						<button
-							className={`nav-btn${is('dashboard') ? ' active' : ''}`}
-							onClick={nav(`/nexus/${resolvedSelectedId ?? ''}`)}
-							onMouseEnter={prefetchOnHover(`/nexus/${resolvedSelectedId ?? ''}`)}
-							onFocus={prefetchOnHover(`/nexus/${resolvedSelectedId ?? ''}`)}
-						>
-							Dashboard
-						</button>
-						<button
-							className={`nav-btn${is('starfield') ? ' active' : ''}`}
-							onClick={nav('/starfield')}
-							onMouseEnter={prefetchOnHover('/starfield')}
-							onFocus={prefetchOnHover('/starfield')}
-						>
-							Starfield
-						</button>
-						{showMarket && (
+						<div className="header-center">
 							<button
-								className={`nav-btn${is('market') ? ' active' : ''}`}
-								onClick={nav('/market')}
-								onMouseEnter={prefetchOnHover('/market')}
-								onFocus={prefetchOnHover('/market')}
+								className={`nav-btn${is('dashboard') ? ' active' : ''}`}
+								onClick={nav(`/nexus/${resolvedSelectedId ?? ''}`)}
+								onMouseEnter={prefetchOnHover(`/nexus/${resolvedSelectedId ?? ''}`)}
+								onFocus={prefetchOnHover(`/nexus/${resolvedSelectedId ?? ''}`)}
 							>
-								Market
+								Dashboard
 							</button>
-						)}
-						<button
-							className={`nav-btn${is('combat-logs') ? ' active' : ''}`}
-							onClick={nav('/combat-logs')}
-							onMouseEnter={prefetchOnHover('/combat-logs')}
-							onFocus={prefetchOnHover('/combat-logs')}
-						>
-							<span className="nav-btn-content">
-								Combat Logs
-								{hasUnreadReports && (
-									<span className="nav-attention-mark" aria-label="Unread combat reports" />
-								)}
-							</span>
-						</button>
-						{showAllies && (
 							<button
-								className={`nav-btn${is('allies') ? ' active' : ''}`}
-								onClick={nav('/allies')}
-								onMouseEnter={prefetchOnHover('/allies')}
-								onFocus={prefetchOnHover('/allies')}
+								className={`nav-btn${is('starfield') ? ' active' : ''}`}
+								onClick={nav('/starfield')}
+								onMouseEnter={prefetchOnHover('/starfield')}
+								onFocus={prefetchOnHover('/starfield')}
 							>
-								<span className="nav-btn-content">
-									Allies
-									{(hasUnreadFriends || hasTokens) && (
-										<span
-											className="nav-attention-mark"
-											aria-label="Unread ally activity or tokens to redeem"
-										/>
-									)}
-								</span>
+								Starfield
 							</button>
-						)}
-						{showFactions && (
-							<button
-								className={`nav-btn${is('factions') ? ' active' : ''}`}
-								onClick={nav('/factions')}
-								onMouseEnter={prefetchOnHover('/factions')}
-								onFocus={prefetchOnHover('/factions')}
-							>
-								<span className="nav-btn-content">
-									Factions
-									{hasFactionAttention && (
-										<span className="nav-attention-mark" aria-label="Faction action required" />
-									)}
-								</span>
-							</button>
-						)}
-						{showPlayers && (
-							<button
-								className={`nav-btn${is('players') ? ' active' : ''}`}
-								onClick={nav('/players')}
-								onMouseEnter={prefetchOnHover('/players')}
-								onFocus={prefetchOnHover('/players')}
-							>
-								Players
-							</button>
-						)}
-						<button
-							className={`nav-btn${is('profile') ? ' active' : ''}`}
-							onClick={nav('/profile')}
-							onMouseEnter={prefetchOnHover('/profile')}
-							onFocus={prefetchOnHover('/profile')}
-						>
-							Profile
-						</button>
-						<a href="/codex" target="_blank" rel="noopener noreferrer" className="nav-btn">
-							Codex
-						</a>
-						<a href="/calculator" target="_blank" rel="noopener noreferrer" className="nav-btn">
-							Calculator
-						</a>
-						{hiddenCount > 0 && (
-							<div className="nav-discover-wrap">
+							{showMarket && (
 								<button
-									type="button"
-									className={`nav-btn nav-discover-btn${isDiscoverOpen ? ' active' : ''}`}
-									onClick={() => setIsDiscoverOpen((v) => !v)}
-									aria-haspopup="menu"
-									aria-expanded={isDiscoverOpen}
-									title="More features — unlock as you progress"
+									className={`nav-btn${is('market') ? ' active' : ''}`}
+									onClick={nav('/market')}
+									onMouseEnter={prefetchOnHover('/market')}
+									onFocus={prefetchOnHover('/market')}
+								>
+									Market
+								</button>
+							)}
+							<button
+								className={`nav-btn${is('combat-logs') ? ' active' : ''}`}
+								onClick={nav('/combat-logs')}
+								onMouseEnter={prefetchOnHover('/combat-logs')}
+								onFocus={prefetchOnHover('/combat-logs')}
+							>
+								<span className="nav-btn-content">
+									Combat Logs
+									{hasUnreadReports && (
+										<span className="nav-attention-mark" aria-label="Unread combat reports" />
+									)}
+								</span>
+							</button>
+							{showAllies && (
+								<button
+									className={`nav-btn${is('allies') ? ' active' : ''}`}
+									onClick={nav('/allies')}
+									onMouseEnter={prefetchOnHover('/allies')}
+									onFocus={prefetchOnHover('/allies')}
 								>
 									<span className="nav-btn-content">
-										More
-										<ChevronDown size={14} aria-hidden="true" />
+										Allies
+										{(hasUnreadFriends || hasTokens) && (
+											<span
+												className="nav-attention-mark"
+												aria-label="Unread ally activity or tokens to redeem"
+											/>
+										)}
 									</span>
 								</button>
-								{isDiscoverOpen && (
-									<div className="nav-discover-menu" role="menu">
-										<p className="nav-discover-hint">Unlocks as you progress</p>
-										{!showMarket && (
-											<button
-												type="button"
-												role="menuitem"
-												className="nav-discover-item"
-												onClick={() => {
-													setIsDiscoverOpen(false);
-													nav('/market')();
-												}}
-											>
-												<span>Market</span>
-												<span className="nav-discover-req">Command Core Lv3</span>
-											</button>
-										)}
-										{!showAllies && (
-											<button
-												type="button"
-												role="menuitem"
-												className="nav-discover-item"
-												onClick={() => {
-													setIsDiscoverOpen(false);
-													nav('/allies')();
-												}}
-											>
-												<span>Allies</span>
-												<span className="nav-discover-req">Command Core Lv2</span>
-											</button>
-										)}
-										{!showFactions && (
-											<button
-												type="button"
-												role="menuitem"
-												className="nav-discover-item"
-												onClick={() => {
-													setIsDiscoverOpen(false);
-													nav('/factions')();
-												}}
-											>
-												<span>Factions</span>
-												<span className="nav-discover-req">Build Recruitment Core</span>
-											</button>
-										)}
-										{!showPlayers && (
-											<button
-												type="button"
-												role="menuitem"
-												className="nav-discover-item"
-												onClick={() => {
-													setIsDiscoverOpen(false);
-													nav('/players')();
-												}}
-											>
-												<span>Players</span>
-												<span className="nav-discover-req">First combat report</span>
-											</button>
-										)}
-									</div>
-								)}
-							</div>
-						)}
-					</div>
-
-					<div className="header-right">
-						<button
-							className={`nexus-drawer-toggle${isNexusDrawerOpen ? ' active' : ''}`}
-							onClick={() => setIsNexusDrawerOpen((v) => !v)}
-							aria-label="Toggle nexus panel"
-							aria-expanded={isNexusDrawerOpen}
-							title="Your Nexuses"
-						>
-							<Building2 size={18} />
-						</button>
-					</div>
-				</header>
-
-				<ConnectionStatusBar />
-				<TroopMovementsBar />
-				<DominanceBar />
-				<ConqueredModal />
-				<NewPatchToast />
-
-				<MobileNexusDrawer
-					nexuses={nexuses}
-					selectedNexusId={resolvedSelectedId}
-					onSelectNexus={handleSelectNexus}
-					isOpen={isNexusDrawerOpen}
-					onClose={closeNexusDrawer}
-					unreadNexusIds={unreadNexusIds}
-				/>
-
-				<button
-					type="button"
-					className={`mobile-drawer-backdrop ${isMobileMenuOpen ? 'open' : ''}`}
-					aria-label="Close navigation menu"
-					onClick={() => setIsMobileMenuOpen(false)}
-				/>
-
-				<aside className={`mobile-drawer ${isMobileMenuOpen ? 'open' : ''}`}>
-					{user && (
-						<div className="commander-card commander-card-mobile">
-							<Avatar
-								username={user.username}
-								avatarUrl={user.avatarUrl ?? null}
-								avatarUrlSm={user.avatarUrlSm ?? null}
-								size="md"
-								className={`commander-avatar${user.supporterTier === 'officer' ? ' supporter-border supporter-border-officer' : ''}${user.supporterTier === 'commander' ? ' supporter-border supporter-border-commander' : ''}`}
-								ariaHidden
-							/>
-							<div className="commander-info">
-								<div
-									className={[
-										'commander-name',
-										user.isSupporter ? 'supporter-name' : null,
-										user.supporterTier === 'recruit' ? 'supporter-tier-recruit' : null,
-										user.supporterTier === 'officer' ? 'supporter-tier-officer' : null,
-										user.supporterTier === 'commander' ? 'supporter-tier-commander' : null
-									]
-										.filter(Boolean)
-										.join(' ')}
+							)}
+							{showFactions && (
+								<button
+									className={`nav-btn${is('factions') ? ' active' : ''}`}
+									onClick={nav('/factions')}
+									onMouseEnter={prefetchOnHover('/factions')}
+									onFocus={prefetchOnHover('/factions')}
 								>
-									{user.username}
+									<span className="nav-btn-content">
+										Factions
+										{hasFactionAttention && (
+											<span className="nav-attention-mark" aria-label="Faction action required" />
+										)}
+									</span>
+								</button>
+							)}
+							{showPlayers && (
+								<button
+									className={`nav-btn${is('players') ? ' active' : ''}`}
+									onClick={nav('/players')}
+									onMouseEnter={prefetchOnHover('/players')}
+									onFocus={prefetchOnHover('/players')}
+								>
+									Players
+								</button>
+							)}
+							<button
+								className={`nav-btn${is('profile') ? ' active' : ''}`}
+								onClick={nav('/profile')}
+								onMouseEnter={prefetchOnHover('/profile')}
+								onFocus={prefetchOnHover('/profile')}
+							>
+								Profile
+							</button>
+							<a href="/codex" target="_blank" rel="noopener noreferrer" className="nav-btn">
+								Codex
+							</a>
+							<a href="/calculator" target="_blank" rel="noopener noreferrer" className="nav-btn">
+								Calculator
+							</a>
+							{hiddenCount > 0 && (
+								<div className="nav-discover-wrap">
+									<button
+										type="button"
+										className={`nav-btn nav-discover-btn${isDiscoverOpen ? ' active' : ''}`}
+										onClick={() => setIsDiscoverOpen((v) => !v)}
+										aria-haspopup="menu"
+										aria-expanded={isDiscoverOpen}
+										title="More features — unlock as you progress"
+									>
+										<span className="nav-btn-content">
+											More
+											<ChevronDown size={14} aria-hidden="true" />
+										</span>
+									</button>
+									{isDiscoverOpen && (
+										<div className="nav-discover-menu" role="menu">
+											<p className="nav-discover-hint">Unlocks as you progress</p>
+											{!showMarket && (
+												<button
+													type="button"
+													role="menuitem"
+													className="nav-discover-item"
+													onClick={() => {
+														setIsDiscoverOpen(false);
+														nav('/market')();
+													}}
+												>
+													<span>Market</span>
+													<span className="nav-discover-req">Command Core Lv3</span>
+												</button>
+											)}
+											{!showAllies && (
+												<button
+													type="button"
+													role="menuitem"
+													className="nav-discover-item"
+													onClick={() => {
+														setIsDiscoverOpen(false);
+														nav('/allies')();
+													}}
+												>
+													<span>Allies</span>
+													<span className="nav-discover-req">Command Core Lv2</span>
+												</button>
+											)}
+											{!showFactions && (
+												<button
+													type="button"
+													role="menuitem"
+													className="nav-discover-item"
+													onClick={() => {
+														setIsDiscoverOpen(false);
+														nav('/factions')();
+													}}
+												>
+													<span>Factions</span>
+													<span className="nav-discover-req">Build Recruitment Core</span>
+												</button>
+											)}
+											{!showPlayers && (
+												<button
+													type="button"
+													role="menuitem"
+													className="nav-discover-item"
+													onClick={() => {
+														setIsDiscoverOpen(false);
+														nav('/players')();
+													}}
+												>
+													<span>Players</span>
+													<span className="nav-discover-req">First combat report</span>
+												</button>
+											)}
+										</div>
+									)}
 								</div>
-								<div className="commander-meta">
-									Commander · {nexuses.reduce((s, n) => s + (n.points ?? 0), 0).toLocaleString()}{' '}
-									inf
-								</div>
-							</div>
+							)}
 						</div>
-					)}
-					<div className="mobile-drawer-links">
-						<button
-							className={`nav-btn${is('dashboard') ? ' active' : ''}`}
-							onClick={nav(`/nexus/${resolvedSelectedId ?? ''}`)}
-						>
-							Dashboard
-						</button>
-						<button
-							className={`nav-btn${is('starfield') ? ' active' : ''}`}
-							onClick={nav('/starfield')}
-						>
-							Starfield
-						</button>
-						{showMarket && (
-							<button
-								className={`nav-btn${is('market') ? ' active' : ''}`}
-								onClick={nav('/market')}
-							>
-								Market
-							</button>
-						)}
-						<button
-							className={`nav-btn${is('combat-logs') ? ' active' : ''}`}
-							onClick={nav('/combat-logs')}
-						>
-							<span className="nav-btn-content">
-								Combat Logs
-								{hasUnreadReports && (
-									<span className="nav-attention-mark" aria-label="Unread combat reports" />
-								)}
-							</span>
-						</button>
-						{showAllies && (
-							<button
-								className={`nav-btn${is('allies') ? ' active' : ''}`}
-								onClick={nav('/allies')}
-							>
-								<span className="nav-btn-content">
-									Allies
-									{(hasUnreadFriends || hasTokens) && (
-										<span
-											className="nav-attention-mark"
-											aria-label="Unread ally activity or tokens to redeem"
-										/>
-									)}
-								</span>
-							</button>
-						)}
-						{showFactions && (
-							<button
-								className={`nav-btn${is('factions') ? ' active' : ''}`}
-								onClick={nav('/factions')}
-							>
-								<span className="nav-btn-content">
-									Factions
-									{hasFactionAttention && (
-										<span className="nav-attention-mark" aria-label="Faction action required" />
-									)}
-								</span>
-							</button>
-						)}
-						{showPlayers && (
-							<button
-								className={`nav-btn${is('players') ? ' active' : ''}`}
-								onClick={nav('/players')}
-							>
-								Players
-							</button>
-						)}
-						<button
-							className={`nav-btn${is('profile') ? ' active' : ''}`}
-							onClick={nav('/profile')}
-						>
-							Profile
-						</button>
-						<a href="/codex" target="_blank" rel="noopener noreferrer" className="nav-btn">
-							Codex
-						</a>
-						<a href="/calculator" target="_blank" rel="noopener noreferrer" className="nav-btn">
-							Calculator
-						</a>
-						{hiddenCount > 0 && (
-							<div className="mobile-drawer-discover">
-								<p className="nav-discover-hint">Unlocks as you progress</p>
-								{!showMarket && (
-									<button
-										type="button"
-										className="nav-btn nav-discover-item-mobile"
-										onClick={nav('/market')}
-									>
-										<span>Market</span>
-										<span className="nav-discover-req">Command Core Lv3</span>
-									</button>
-								)}
-								{!showAllies && (
-									<button
-										type="button"
-										className="nav-btn nav-discover-item-mobile"
-										onClick={nav('/allies')}
-									>
-										<span>Allies</span>
-										<span className="nav-discover-req">Command Core Lv2</span>
-									</button>
-								)}
-								{!showFactions && (
-									<button
-										type="button"
-										className="nav-btn nav-discover-item-mobile"
-										onClick={nav('/factions')}
-									>
-										<span>Factions</span>
-										<span className="nav-discover-req">Build Recruitment Core</span>
-									</button>
-								)}
-								{!showPlayers && (
-									<button
-										type="button"
-										className="nav-btn nav-discover-item-mobile"
-										onClick={nav('/players')}
-									>
-										<span>Players</span>
-										<span className="nav-discover-req">First combat report</span>
-									</button>
-								)}
-							</div>
-						)}
-						<SupportTiersCard
-							variant="compact"
-							currentTier={user?.supporterTier ?? null}
-							isFounder={user?.isFounder}
-							isSupporter={user?.isSupporter}
-						/>
-					</div>
-				</aside>
 
-				<div className="game-content">
-					<NexusSidebar
+						<div className="header-right">
+							<button
+								className={`nexus-drawer-toggle${isNexusDrawerOpen ? ' active' : ''}`}
+								onClick={() => setIsNexusDrawerOpen((v) => !v)}
+								aria-label="Toggle nexus panel"
+								aria-expanded={isNexusDrawerOpen}
+								title="Your Nexuses"
+							>
+								<Building2 size={18} />
+							</button>
+						</div>
+					</header>
+
+					<ConnectionStatusBar />
+					<TroopMovementsBar />
+					<DominanceBar />
+					<ConqueredModal />
+					<NewPatchToast />
+
+					<MobileNexusDrawer
 						nexuses={nexuses}
 						selectedNexusId={resolvedSelectedId}
 						onSelectNexus={handleSelectNexus}
+						isOpen={isNexusDrawerOpen}
+						onClose={closeNexusDrawer}
 						unreadNexusIds={unreadNexusIds}
-						user={user}
 					/>
-					<main className={`main-content${mainClassName ? ` ${mainClassName}` : ''}`}>
-						{children}
-					</main>
+
+					<button
+						type="button"
+						className={`mobile-drawer-backdrop ${isMobileMenuOpen ? 'open' : ''}`}
+						aria-label="Close navigation menu"
+						onClick={() => setIsMobileMenuOpen(false)}
+					/>
+
+					<aside className={`mobile-drawer ${isMobileMenuOpen ? 'open' : ''}`}>
+						{user && (
+							<div className="commander-card commander-card-mobile">
+								<Avatar
+									username={user.username}
+									avatarUrl={user.avatarUrl ?? null}
+									avatarUrlSm={user.avatarUrlSm ?? null}
+									size="md"
+									className={`commander-avatar${user.supporterTier === 'officer' ? ' supporter-border supporter-border-officer' : ''}${user.supporterTier === 'commander' ? ' supporter-border supporter-border-commander' : ''}`}
+									ariaHidden
+								/>
+								<div className="commander-info">
+									<div
+										className={[
+											'commander-name',
+											user.isSupporter ? 'supporter-name' : null,
+											user.supporterTier === 'recruit' ? 'supporter-tier-recruit' : null,
+											user.supporterTier === 'officer' ? 'supporter-tier-officer' : null,
+											user.supporterTier === 'commander' ? 'supporter-tier-commander' : null
+										]
+											.filter(Boolean)
+											.join(' ')}
+									>
+										{user.username}
+									</div>
+									<div className="commander-meta">
+										Commander · {nexuses.reduce((s, n) => s + (n.points ?? 0), 0).toLocaleString()}{' '}
+										inf
+									</div>
+								</div>
+							</div>
+						)}
+						<div className="mobile-drawer-links">
+							<button
+								className={`nav-btn${is('dashboard') ? ' active' : ''}`}
+								onClick={nav(`/nexus/${resolvedSelectedId ?? ''}`)}
+							>
+								Dashboard
+							</button>
+							<button
+								className={`nav-btn${is('starfield') ? ' active' : ''}`}
+								onClick={nav('/starfield')}
+							>
+								Starfield
+							</button>
+							{showMarket && (
+								<button
+									className={`nav-btn${is('market') ? ' active' : ''}`}
+									onClick={nav('/market')}
+								>
+									Market
+								</button>
+							)}
+							<button
+								className={`nav-btn${is('combat-logs') ? ' active' : ''}`}
+								onClick={nav('/combat-logs')}
+							>
+								<span className="nav-btn-content">
+									Combat Logs
+									{hasUnreadReports && (
+										<span className="nav-attention-mark" aria-label="Unread combat reports" />
+									)}
+								</span>
+							</button>
+							{showAllies && (
+								<button
+									className={`nav-btn${is('allies') ? ' active' : ''}`}
+									onClick={nav('/allies')}
+								>
+									<span className="nav-btn-content">
+										Allies
+										{(hasUnreadFriends || hasTokens) && (
+											<span
+												className="nav-attention-mark"
+												aria-label="Unread ally activity or tokens to redeem"
+											/>
+										)}
+									</span>
+								</button>
+							)}
+							{showFactions && (
+								<button
+									className={`nav-btn${is('factions') ? ' active' : ''}`}
+									onClick={nav('/factions')}
+								>
+									<span className="nav-btn-content">
+										Factions
+										{hasFactionAttention && (
+											<span className="nav-attention-mark" aria-label="Faction action required" />
+										)}
+									</span>
+								</button>
+							)}
+							{showPlayers && (
+								<button
+									className={`nav-btn${is('players') ? ' active' : ''}`}
+									onClick={nav('/players')}
+								>
+									Players
+								</button>
+							)}
+							<button
+								className={`nav-btn${is('profile') ? ' active' : ''}`}
+								onClick={nav('/profile')}
+							>
+								Profile
+							</button>
+							<a href="/codex" target="_blank" rel="noopener noreferrer" className="nav-btn">
+								Codex
+							</a>
+							<a href="/calculator" target="_blank" rel="noopener noreferrer" className="nav-btn">
+								Calculator
+							</a>
+							{hiddenCount > 0 && (
+								<div className="mobile-drawer-discover">
+									<p className="nav-discover-hint">Unlocks as you progress</p>
+									{!showMarket && (
+										<button
+											type="button"
+											className="nav-btn nav-discover-item-mobile"
+											onClick={nav('/market')}
+										>
+											<span>Market</span>
+											<span className="nav-discover-req">Command Core Lv3</span>
+										</button>
+									)}
+									{!showAllies && (
+										<button
+											type="button"
+											className="nav-btn nav-discover-item-mobile"
+											onClick={nav('/allies')}
+										>
+											<span>Allies</span>
+											<span className="nav-discover-req">Command Core Lv2</span>
+										</button>
+									)}
+									{!showFactions && (
+										<button
+											type="button"
+											className="nav-btn nav-discover-item-mobile"
+											onClick={nav('/factions')}
+										>
+											<span>Factions</span>
+											<span className="nav-discover-req">Build Recruitment Core</span>
+										</button>
+									)}
+									{!showPlayers && (
+										<button
+											type="button"
+											className="nav-btn nav-discover-item-mobile"
+											onClick={nav('/players')}
+										>
+											<span>Players</span>
+											<span className="nav-discover-req">First combat report</span>
+										</button>
+									)}
+								</div>
+							)}
+							<SupportTiersCard
+								variant="compact"
+								currentTier={user?.supporterTier ?? null}
+								isFounder={user?.isFounder}
+								isSupporter={user?.isSupporter}
+							/>
+						</div>
+					</aside>
+
+					<div className="game-content">
+						<NexusSidebar
+							nexuses={nexuses}
+							selectedNexusId={resolvedSelectedId}
+							onSelectNexus={handleSelectNexus}
+							unreadNexusIds={unreadNexusIds}
+							user={user}
+						/>
+						<main className={`main-content${mainClassName ? ` ${mainClassName}` : ''}`}>
+							{children}
+						</main>
+					</div>
+					<OnboardingOverlay />
 				</div>
-				<OnboardingOverlay />
-			</div>
-		</OnboardingProvider>
+			</OnboardingProvider>
+		</ModalQueueProvider>
 	);
 }

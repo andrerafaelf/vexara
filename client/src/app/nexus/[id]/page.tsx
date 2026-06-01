@@ -3,8 +3,8 @@
 import GameLayout from '@/components/GameLayout';
 import NexusView from '@/components/NexusView';
 import PageSkeleton from '@/components/PageSkeleton';
-import PwaGuideModal from '@/components/PwaGuideModal';
-import WhileYouWereAway from '@/components/WhileYouWereAway';
+import QueuedPwaGuideModal from '@/components/QueuedPwaGuideModal';
+import QueuedWhileYouWereAway from '@/components/QueuedWhileYouWereAway';
 import { usePageReady } from '@/components/NavigationProgress';
 import { useMyNexuses } from '@/hooks/useMyNexuses';
 import { useUnreadReports } from '@/hooks/useUnreadReports';
@@ -15,8 +15,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
-const PWA_GUIDE_SEEN_KEY = 'pwa_guide_seen';
-const WYWA_SESSION_KEY = 'wywa_shown_session';
 const SELECTED_NEXUS_KEY = 'selectedNexusId';
 
 type NexusTab = 'overview' | 'buildings' | 'troops' | 'deployed' | 'map' | 'espionage';
@@ -35,11 +33,8 @@ function parseTab(value: string | null): NexusTab {
 
 export default function NexusPage() {
 	const { refresh: refreshUnread } = useUnreadReports();
-	const [showPwaGuide, setShowPwaGuide] = useState(false);
-	const [showWywa, setShowWywa] = useState(false);
 	const [creatingNexus, setCreatingNexus] = useState(false);
 	const [nexusNameInput, setNexusNameInput] = useState('');
-	const wywaChecked = useRef(false);
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const params = useParams();
@@ -113,24 +108,6 @@ export default function NexusPage() {
 		(nexusesResolved && nexuses.length === 0) ||
 		(nexusOwnershipLost && nexusesResolved);
 	usePageReady(pageReady, 'nexus');
-
-	useEffect(() => {
-		if (!localStorage.getItem(PWA_GUIDE_SEEN_KEY)) {
-			setShowPwaGuide(true);
-			localStorage.setItem(PWA_GUIDE_SEEN_KEY, '1');
-		}
-	}, []);
-
-	// Show WYWA once per browser session (sessionStorage flag)
-	useEffect(() => {
-		if (wywaChecked.current) return;
-		wywaChecked.current = true;
-		if (typeof window === 'undefined') return;
-		if (!localStorage.getItem('token')) return;
-		if (sessionStorage.getItem(WYWA_SESSION_KEY)) return;
-		sessionStorage.setItem(WYWA_SESSION_KEY, '1');
-		setShowWywa(true);
-	}, []);
 
 	useEffect(() => {
 		if (typeof window !== 'undefined' && !localStorage.getItem('token')) {
@@ -215,13 +192,13 @@ export default function NexusPage() {
 
 	return (
 		<>
-			{showPwaGuide && <PwaGuideModal onClose={() => setShowPwaGuide(false)} />}
-			{showWywa && <WhileYouWereAway onDismiss={() => setShowWywa(false)} />}
 			<GameLayout
 				activePage="dashboard"
 				selectedNexusId={nexusId}
 				onSelectNexus={handleSelectNexus}
 			>
+				<QueuedPwaGuideModal />
+				<QueuedWhileYouWereAway />
 				{selectedNexus ? (
 					<NexusView
 						nexus={selectedNexus}
