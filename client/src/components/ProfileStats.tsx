@@ -420,9 +420,7 @@ export default function ProfileStats() {
 										</div>
 										<button
 											className="ps-nexus-coords"
-											onClick={() =>
-												router.push(`/nexus/${n.id ?? n._id}?tab=map&cx=${n.x}&cy=${n.y}`)
-											}
+											onClick={() => router.push(`/starfield?cx=${n.x}&cy=${n.y}`)}
 											title="Open on Starfield map"
 										>
 											<MapPin size={12} aria-hidden="true" />

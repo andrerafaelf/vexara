@@ -123,7 +123,7 @@ interface NexusViewProps {
 	onTabChange?: (tab: NexusTab) => void;
 }
 
-type NexusTab = 'overview' | 'buildings' | 'troops' | 'deployed' | 'map' | 'espionage';
+type NexusTab = 'overview' | 'buildings' | 'troops' | 'deployed' | 'espionage';
 
 const BASE_MAX_BUILD_QUEUE = 5;
 const BASE_MAX_TRAINING_QUEUE = 5;
@@ -447,11 +447,9 @@ const NexusView: React.FC<NexusViewProps> = ({
 	const router = useRouter();
 	const { currentStep } = useOnboarding();
 	const [activeTab, setActiveTabState] = useState<NexusTab>(initialTab);
-	const [mapEverVisited, setMapEverVisited] = useState(initialTab === 'map');
 	const [espionageEverVisited, setEspionageEverVisited] = useState(initialTab === 'espionage');
 	const setActiveTab = (tab: NexusTab) => {
 		setActiveTabState(tab);
-		if (tab === 'map') setMapEverVisited(true);
 		if (tab === 'espionage') setEspionageEverVisited(true);
 		onTabChange?.(tab);
 	};
@@ -619,7 +617,6 @@ const NexusView: React.FC<NexusViewProps> = ({
 
 	useEffect(() => {
 		setActiveTabState(initialTab);
-		if (initialTab === 'map') setMapEverVisited(true);
 		if (initialTab === 'espionage') setEspionageEverVisited(true);
 	}, [initialTab]);
 
@@ -636,8 +633,8 @@ const NexusView: React.FC<NexusViewProps> = ({
 			if (activeTab !== 'troops') setActiveTab('troops');
 			if (troopsSubTab !== 'train') setTroopsSubTab('train');
 		}
-		if (currentStep.id === 'send_attack' && activeTab !== 'map') {
-			setActiveTab('map');
+		if (currentStep.id === 'send_attack') {
+			router.push('/starfield');
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [currentStep?.id, activeTab, troopsSubTab]);
@@ -3404,12 +3401,6 @@ const NexusView: React.FC<NexusViewProps> = ({
 						</div>
 					)}
 				</div>
-
-				{(activeTab === 'map' || mapEverVisited) && (
-					<div className="map-tab" style={activeTab !== 'map' ? { display: 'none' } : undefined}>
-						<StarfieldMap currentNexus={nexus} onRefresh={onUpdate} />
-					</div>
-				)}
 
 				{(activeTab === 'espionage' || espionageEverVisited) && (
 					<div style={activeTab !== 'espionage' ? { display: 'none' } : undefined}>

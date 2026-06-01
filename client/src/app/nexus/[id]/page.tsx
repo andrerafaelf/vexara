@@ -17,14 +17,13 @@ import { useEffect, useRef, useState } from 'react';
 
 const SELECTED_NEXUS_KEY = 'selectedNexusId';
 
-type NexusTab = 'overview' | 'buildings' | 'troops' | 'deployed' | 'map' | 'espionage';
+type NexusTab = 'overview' | 'buildings' | 'troops' | 'deployed' | 'espionage';
 
 function parseTab(value: string | null): NexusTab {
 	if (
 		value === 'buildings' ||
 		value === 'troops' ||
 		value === 'deployed' ||
-		value === 'map' ||
 		value === 'espionage'
 	)
 		return value;
@@ -146,9 +145,7 @@ export default function NexusPage() {
 
 	const handleSelectNexus = (nexus: Nexus) => {
 		localStorage.setItem(SELECTED_NEXUS_KEY, String(nexus._id));
-		const tabParam = searchParams.get('tab');
-		const query = tabParam ? `?tab=${tabParam}` : '';
-		router.push(`/nexus/${nexus._id}${query}`);
+		router.push(`/nexus/${nexus._id}`);
 	};
 
 	const handleTabChange = (tab: NexusTab) => {
