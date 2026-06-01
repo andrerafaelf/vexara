@@ -16,6 +16,8 @@ export const TROOP_SPEED: Record<string, number> = {
 	overseer: 6
 };
 
+export const TRANSFER_TRAVEL_MINUTES_PER_UNIT = 5;
+
 type TravelSource = {
 	x: number;
 	y: number;
@@ -66,6 +68,11 @@ export function travelMinutes(
 
 	const hasOverseer = (troops.overseer ?? 0) > 0;
 	return dist * (4 + (28 - minSpeed) / 10) * (hasOverseer ? 3 : 1) * multiplier;
+}
+
+export function transferTravelMinutes(source: TravelSource, target: TravelTarget): number {
+	const dist = Math.sqrt((target.x - source.x) ** 2 + (target.y - source.y) ** 2);
+	return dist * TRANSFER_TRAVEL_MINUTES_PER_UNIT * travelMultiplier(source);
 }
 
 export function formatDuration(minutes: number): string {

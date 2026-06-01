@@ -12,7 +12,6 @@ import {
 	Waves,
 	Zap
 } from 'lucide-react';
-import { TROOP_STATS } from '../utils/combatSim';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
@@ -39,6 +38,7 @@ import { useNow } from '@/hooks/useNow';
 import '../styles/Map.css';
 import { Nexus } from '../types/game';
 import { formatDateTime, formatTimeOfDay } from '../utils/date';
+import { transferTravelMinutes, travelMinutes } from '../utils/travel';
 
 interface GalaxyEvent {
 	id: number;
@@ -886,36 +886,21 @@ const Map: React.FC<MapProps> = ({
 		if (!selectedNexus) return null;
 		const totalTroops = Object.values(attackTroops).reduce((a, b) => a + b, 0);
 		if (totalTroops === 0) return null;
-		const dx = selectedNexus.x - currentNexus.x;
-		const dy = selectedNexus.y - currentNexus.y;
-		const distance = Math.sqrt(dx * dx + dy * dy);
-		let mins: number;
-		if (attackMissionType === 'support') {
-			let minSpeed = Infinity;
-			for (const [type, amount] of Object.entries(attackTroops)) {
-				if (amount > 0 && (TROOP_STATS as Record<string, { speed: number }>)[type]) {
-					const speed = (TROOP_STATS as Record<string, { speed: number }>)[type].speed;
-					if (speed < minSpeed) minSpeed = speed;
-				}
-			}
-			if (!isFinite(minSpeed)) return null;
-			mins = distance * (4 + (28 - minSpeed) / 10);
-		} else {
-			const OVERSEER_EFFECTIVE_SPEED = 6;
-			let minSpeed = Infinity;
-			for (const [type, amount] of Object.entries(attackTroops)) {
-				if (amount > 0 && (TROOP_STATS as Record<string, { speed: number }>)[type]) {
-					const speed =
-						type === 'overseer'
-							? OVERSEER_EFFECTIVE_SPEED
-							: (TROOP_STATS as Record<string, { speed: number }>)[type].speed;
-					if (speed < minSpeed) minSpeed = speed;
-				}
-			}
-			if (!isFinite(minSpeed)) return null;
-			const hasOverseer = (attackTroops.overseer || 0) > 0;
-			mins = distance * (4 + (28 - minSpeed) / 10) * (hasOverseer ? 3 : 1);
-		}
+		const mins = travelMinutes(currentNexus, selectedNexus, attackTroops, attackMissionType);
+		if (mins <= 0) return null;
+		const arrivesAt = new Date(Date.now() + mins * 60_000);
+		return { duration: formatTravelMinutes(mins), arrivesAt };
+	};
+
+	const estimateTroopTransferTime = (): { duration: string; arrivesAt: Date } | null => {
+		if (!selectedNexus) return null;
+		const totalTroops = Object.values(troopSendAmounts).reduce(
+			(sum, value) => sum + (parseInt(value, 10) || 0),
+			0
+		);
+		if (totalTroops === 0) return null;
+		const mins = transferTravelMinutes(currentNexus, selectedNexus);
+		if (mins <= 0) return null;
 		const arrivesAt = new Date(Date.now() + mins * 60_000);
 		return { duration: formatTravelMinutes(mins), arrivesAt };
 	};
@@ -1371,6 +1356,23 @@ const Map: React.FC<MapProps> = ({
 						) : (
 							<div className="attack-form">
 								<h4>{attackMissionType === 'support' ? 'Send Support' : 'Launch Attack'}</h4>
+								{(() => {
+									const travel = estimateTravelTime();
+									return travel ? (
+										<div className="attack-travel-estimate">
+											<Clock size={12} aria-hidden="true" />
+											<span>
+												ETA: <strong>{travel.duration}</strong> @{' '}
+												<strong>{formatTimeOfDay(travel.arrivesAt, true)}</strong>
+											</span>
+										</div>
+									) : (
+										<div className="attack-travel-estimate attack-travel-estimate--empty">
+											<Clock size={12} aria-hidden="true" />
+											<span>Select troops to preview ETA</span>
+										</div>
+									);
+								})()}
 								<div className="troop-selector">
 									{attackTroopRows.map(([type, available]) => {
 										const effectiveMax =
@@ -1406,18 +1408,6 @@ const Map: React.FC<MapProps> = ({
 										);
 									})}
 								</div>
-								{(() => {
-									const travel = estimateTravelTime();
-									return travel ? (
-										<div className="attack-travel-estimate">
-											<Clock size={12} aria-hidden="true" />
-											<span>
-												Travel time: <strong>{travel.duration}</strong> @{' '}
-												<strong>{formatTimeOfDay(travel.arrivesAt, true)}</strong>
-											</span>
-										</div>
-									) : null;
-								})()}
 								<div className="attack-form-actions">
 									<button
 										className="send-all-btn"
@@ -1540,6 +1530,18 @@ const Map: React.FC<MapProps> = ({
 											(c) => Number(c) === 0
 										) && <p className="map-empty-state">No troops available to send.</p>}
 									</div>
+									{(() => {
+										const travel = estimateTroopTransferTime();
+										return travel ? (
+											<div className="attack-travel-estimate">
+												<Clock size={12} aria-hidden="true" />
+												<span>
+													ETA: <strong>{travel.duration}</strong> @{' '}
+													<strong>{formatTimeOfDay(travel.arrivesAt, true)}</strong>
+												</span>
+											</div>
+										) : null;
+									})()}
 									<button
 										type="button"
 										className="transfer-send-btn"

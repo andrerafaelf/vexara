@@ -358,7 +358,9 @@
 	scrollbar-width: none;
 	background: var(--bg-app);
 	position: sticky;
-	top: 0;
+	/* Pin below the 56px sticky .game-header. With top: 0 the tab bar slid
+	   under the header and the tops of the troop cards leaked into the gap. */
+	top: 56px;
 	z-index: 10;
 }
 
