@@ -35,20 +35,20 @@ export const CLASS_COUNTERS: Record<TroopClass, Record<TroopClass, number>> = {
 };
 
 export const TROOP_STATS: Record<TroopKey, TroopStat> = {
-  lancerDrone:          { attack: 0,   defense: 22,  speed: 20, carry: 30  },
-  assaultTrooper:       { attack: 0,   defense: 45,  speed: 18, carry: 60  },
-  breakerUnit:          { attack: 55,  defense: 0,   speed: 16, carry: 60  },
-  reconOperative:       { attack: 0,   defense: 20,  speed: 25, carry: 10  },
-  skimmerBike:          { attack: 80,  defense: 0,   speed: 22, carry: 80  },
-  bulwarkGuard:         { attack: 0,   defense: 130, speed: 12, carry: 25  },
-  suppressorTeam:       { attack: 65,  defense: 0,   speed: 15, carry: 20  },
-  disruptorUnit:        { attack: 75,  defense: 0,   speed: 17, carry: 25  },
-  interceptorBike:      { attack: 95,  defense: 0,   speed: 28, carry: 100 },
-  siegeMech:            { attack: 0,   defense: 210, speed: 10, carry: 20  },
-  annihilatorPlatform:  { attack: 210, defense: 0,   speed: 8,  carry: 160 },
-  voidStalker:          { attack: 110, defense: 0,   speed: 32, carry: 40  },
+  lancerDrone:          { attack: 3,   defense: 22,  speed: 20, carry: 30  },
+  assaultTrooper:       { attack: 5,   defense: 45,  speed: 18, carry: 60  },
+  breakerUnit:          { attack: 55,  defense: 3,   speed: 16, carry: 60  },
+  reconOperative:       { attack: 1,   defense: 20,  speed: 25, carry: 10  },
+  skimmerBike:          { attack: 80,  defense: 10,  speed: 22, carry: 80  },
+  bulwarkGuard:         { attack: 3,   defense: 130, speed: 12, carry: 25  },
+  suppressorTeam:       { attack: 65,  defense: 8,   speed: 15, carry: 20  },
+  disruptorUnit:        { attack: 75,  defense: 9,   speed: 17, carry: 25  },
+  interceptorBike:      { attack: 95,  defense: 13,  speed: 28, carry: 100 },
+  siegeMech:            { attack: 20,  defense: 210, speed: 10, carry: 20  },
+  annihilatorPlatform:  { attack: 210, defense: 20,  speed: 8,  carry: 160 },
+  voidStalker:          { attack: 110, defense: 8,   speed: 32, carry: 40  },
   plasmaTurret:         { attack: 0,   defense: 160, speed: 0,  carry: 0   },
-  overseer:             { attack: 0,   defense: 0,   speed: 15, carry: 0   },
+  overseer:             { attack: 0,   defense: 8,   speed: 15, carry: 0   },
 };
 
 const TROOP_KEYS = Object.keys(TROOP_STATS) as TroopKey[];

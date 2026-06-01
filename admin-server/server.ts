@@ -1,5 +1,6 @@
 import cors from 'cors';
-import { randomUUID, timingSafeEqual } from 'crypto';
+// auth helpers
+import { randomUUID, timingSafeEqual } from 'crypto'; 
 import dotenv from 'dotenv';
 import express from 'express';
 import { dirname, resolve } from 'path';

@@ -50,13 +50,11 @@ test('calculatePoints awards points for buildings and troops', () => {
 });
 
 test('computeForcePower sums troop stats for selected power type', () => {
-  const troops = {
-    assaultTrooper: 10,
-    lancerDrone: 5,
-  };
+  const attackTroops = { breakerUnit: 10, suppressorTeam: 5 };
+  const defenseTroops = { assaultTrooper: 10, lancerDrone: 5 };
 
-  const attackPower = computeForcePower(troops, 'attack');
-  const defensePower = computeForcePower(troops, 'defense');
+  const attackPower = computeForcePower(attackTroops, 'attack');
+  const defensePower = computeForcePower(defenseTroops, 'defense');
 
   assert.ok(attackPower > 0);
   assert.ok(defensePower > 0);

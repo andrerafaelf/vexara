@@ -1,6 +1,8 @@
 'use client';
 import {
-  Activity, BarChart2, Flag, Globe, LogOut, Menu, Radio, Shield, Swords, Users, X,
+  // nav icons
+  Activity, BarChart2, Flag, Globe, LogOut, Menu, Radio, Shield,
+  Users, X
 } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
 import '../styles/Admin.css';
