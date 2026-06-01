@@ -52,6 +52,10 @@ export function createPublicAuthRouter(deps: AuthDeps): Router {
 				res.status(500).json({ error: 'TOTP not configured' });
 				return;
 			}
+			if (!totp) {
+				res.status(200).json({ requiresTotp: true });
+				return;
+			}
 			if (!/^\d{6}$/.test(totp)) {
 				res.status(401).json({ error: 'Invalid 2FA code' });
 				return;

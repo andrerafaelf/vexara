@@ -15,6 +15,7 @@ import {
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
+import { useOnboarding } from '../context/OnboardingContext';
 import { useToast } from '../context/ToastContext';
 import { useGameSocket } from '../hooks/useGameSocket';
 import WavePlanner from './WavePlanner';
@@ -167,6 +168,7 @@ const Map: React.FC<MapProps> = ({
 	espionageHint
 }) => {
 	const { user } = useAuth();
+	const { currentStep, advance: advanceOnboarding } = useOnboarding();
 	const toast = useToast();
 	const isMobile = useIsMobile();
 	const router = useRouter();
@@ -211,6 +213,7 @@ const Map: React.FC<MapProps> = ({
 	const [factionTargeting, setFactionTargeting] = useState(false);
 	const [mapLoading, setMapLoading] = useState(false);
 	useNow(); // keep component ticking for Countdown leaves
+	const isSendAttackOnboarding = currentStep?.id === 'send_attack';
 
 	// currentNexus.troops is already the server-authoritative post-deduction
 	// count (the server deducts on send). Subtracting outgoing attacks on top
@@ -816,6 +819,9 @@ const Map: React.FC<MapProps> = ({
 			await sendAttack(currentNexus._id, selectedNexus._id, attackTroops, attackMissionType);
 			const missionLabel = attackMissionType === 'support' ? 'Support mission sent' : 'Strike sent';
 			toast(missionLabel, 'success');
+			if (isSendAttackOnboarding && attackMissionType === 'attack') {
+				advanceOnboarding();
+			}
 			setShowAttackForm(false);
 			setAttackMissionType('attack');
 			setAttackTroops({
@@ -939,6 +945,25 @@ const Map: React.FC<MapProps> = ({
 	const ownNexusIds = useMemo(() => new Set(ownNexuses.map((n) => n._id)), [ownNexuses]);
 
 	const isEspionage = mode === 'espionage';
+	const hasVisibleOnboardingAttackTarget = useMemo(
+		() =>
+			nexuses.some((nexus) => {
+				const isNpc =
+					nexus.name.includes('Resource Depot') ||
+					nexus.name.includes('Military Outpost') ||
+					nexus.name.includes('Supply Cache') ||
+					nexus.name.includes('Abandoned Base') ||
+					nexus.name.includes('Neutral Settlement');
+				return (
+					isNpc &&
+					nexus._id !== currentNexus._id &&
+					!ownNexusIds.has(nexus._id) &&
+					Math.abs(nexus.x - centerX) <= visibleRange &&
+					Math.abs(nexus.y - centerY) <= visibleRange
+				);
+			}),
+		[nexuses, currentNexus._id, ownNexusIds, centerX, centerY, visibleRange]
+	);
 
 	const gridCells = useMemo(() => {
 		const grid = [];
@@ -1006,6 +1031,15 @@ const Map: React.FC<MapProps> = ({
 						title={titleText}
 						data-x={x}
 						data-y={y}
+						{...(isSendAttackOnboarding &&
+						!selectedNexus &&
+						mode === 'normal' &&
+						hasVisibleOnboardingAttackTarget &&
+						isNpcNexus &&
+						!isCurrent &&
+						!isOwnNexus
+							? { 'data-onboarding': 'send-attack' }
+							: {})}
 					>
 						{nexus && (
 							<div
@@ -1070,6 +1104,10 @@ const Map: React.FC<MapProps> = ({
 		visibleRange,
 		currentNexus._id,
 		isEspionage,
+		isSendAttackOnboarding,
+		mode,
+		selectedNexus,
+		hasVisibleOnboardingAttackTarget,
 		galaxyEvents
 	]);
 
@@ -1321,6 +1359,12 @@ const Map: React.FC<MapProps> = ({
 										setShowAttackForm(true);
 									}}
 									disabled={isConquered || isNewbieProtected || blockedByMyProtection}
+									{...(isSendAttackOnboarding &&
+									!isConquered &&
+									!isNewbieProtected &&
+									!blockedByMyProtection
+										? { 'data-onboarding': 'send-attack' }
+										: {})}
 									title={
 										isConquered
 											? 'Nexus already conquered'
@@ -1425,7 +1469,9 @@ const Map: React.FC<MapProps> = ({
 										className="send-btn"
 										onClick={handleSendAttack}
 										disabled={attackAvailableTroopTotal <= 0}
-										{...(attackMissionType === 'attack'
+										{...(isSendAttackOnboarding &&
+										attackMissionType === 'attack' &&
+										attackAvailableTroopTotal > 0
 											? { 'data-onboarding': 'send-attack' }
 											: {})}
 									>
@@ -1834,6 +1880,12 @@ const Map: React.FC<MapProps> = ({
 							cursor: isDragging ? 'grabbing' : 'grab',
 							['--map-visible-range' as any]: visibleRange * 2 + 1
 						}}
+						{...(isSendAttackOnboarding &&
+						!selectedNexus &&
+						mode === 'normal' &&
+						!hasVisibleOnboardingAttackTarget
+							? { 'data-onboarding': 'send-attack' }
+							: {})}
 					>
 						{gridCells}
 					</div>

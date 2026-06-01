@@ -3,7 +3,10 @@
 import { useToast } from '@/context/ToastContext';
 import { createNexus, getMyGalaxy } from '@/services/api';
 import GalaxyPicker, { Galaxy } from '@/components/GalaxyPicker';
+import OnboardingOverlay from '@/components/OnboardingOverlay';
 import { usePageReady } from '@/components/NavigationProgress';
+import { ModalQueueProvider } from '@/context/ModalQueueContext';
+import { OnboardingProvider } from '@/context/OnboardingContext';
 import { useMyNexuses, useInvalidateNexuses } from '@/hooks/useMyNexuses';
 import '@/styles/Game.css';
 import { useRouter } from 'next/navigation';
@@ -91,52 +94,62 @@ export default function PlayDispatcher() {
 	}
 
 	return (
-		<div className="game-container">
-			<header className="game-header">
-				<div className="header-left">
-					<h1>Vexara</h1>
-				</div>
-			</header>
+		<ModalQueueProvider>
+			<OnboardingProvider>
+				<div className="game-container">
+					<header className="game-header">
+						<div className="header-left">
+							<h1>Vexara</h1>
+						</div>
+					</header>
 
-			<main className="game-main">
-				<div className="no-nexuses">
-					<h2>Welcome to Vexara!</h2>
-					{activeGalaxy ? (
-						<>
-							<p>
-								Galaxy: <strong>{activeGalaxy.name}</strong>,{' '}
-								<button className="link-btn" onClick={() => setShowGalaxyPicker(true)}>
-									change
-								</button>
-							</p>
-							<p>Ready to start your empire? Create your first nexus!</p>
-							<button onClick={handleCreateNexus} className="create-nexus-btn" disabled={creating}>
-								{creating ? 'Creating...' : 'Create Your First Nexus'}
-							</button>
-						</>
-					) : (
-						<>
-							<p>Select a galaxy to begin, then create your first nexus.</p>
-							<button className="create-nexus-btn" onClick={() => setShowGalaxyPicker(true)}>
-								Select a Galaxy
-							</button>
-						</>
+					<main className="game-main">
+						<div className="no-nexuses">
+							<h2>Welcome to Vexara!</h2>
+							{activeGalaxy ? (
+								<>
+									<p>
+										Galaxy: <strong>{activeGalaxy.name}</strong>,{' '}
+										<button className="link-btn" onClick={() => setShowGalaxyPicker(true)}>
+											change
+										</button>
+									</p>
+									<p>Ready to start your empire? Create your first nexus!</p>
+									<button
+										onClick={handleCreateNexus}
+										className="create-nexus-btn"
+										disabled={creating}
+										data-onboarding="create-nexus"
+									>
+										{creating ? 'Creating...' : 'Create Your First Nexus'}
+									</button>
+								</>
+							) : (
+								<>
+									<p>Select a galaxy to begin, then create your first nexus.</p>
+									<button className="create-nexus-btn" onClick={() => setShowGalaxyPicker(true)}>
+										Select a Galaxy
+									</button>
+								</>
+							)}
+						</div>
+					</main>
+
+					{showGalaxyPicker && (
+						<GalaxyPicker
+							forced={!activeGalaxy}
+							onClose={() => setShowGalaxyPicker(false)}
+							onSelected={(g) => {
+								setActiveGalaxy(g);
+								setShowGalaxyPicker(false);
+								setJoiningGalaxy(true);
+								invalidateNexuses();
+							}}
+						/>
 					)}
+					<OnboardingOverlay />
 				</div>
-			</main>
-
-			{showGalaxyPicker && (
-				<GalaxyPicker
-					forced={!activeGalaxy}
-					onClose={() => setShowGalaxyPicker(false)}
-					onSelected={(g) => {
-						setActiveGalaxy(g);
-						setShowGalaxyPicker(false);
-						setJoiningGalaxy(true);
-						invalidateNexuses();
-					}}
-				/>
-			)}
-		</div>
+			</OnboardingProvider>
+		</ModalQueueProvider>
 	);
 }

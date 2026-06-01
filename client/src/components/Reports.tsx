@@ -101,6 +101,31 @@ function getTroopEntries(troops?: Record<string, number> | null) {
 
 type ResourceSnapshot = { biomass: number; alloy: number; ore: number };
 const RESOURCE_KEYS = ['biomass', 'alloy', 'ore'] as const;
+type EspionageLog = Record<string, unknown>;
+
+function getEspionageResult(log: EspionageLog): Record<string, unknown> {
+	return (log.result ?? {}) as Record<string, unknown>;
+}
+
+function getEspionageType(log: EspionageLog): string {
+	return String(log.type ?? log.missionType ?? 'embed');
+}
+
+function formatEspionageType(type: string): string {
+	if (type === 'sabotage') return 'Sabotage';
+	if (type === 'embed') return 'Embed';
+	return type.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase());
+}
+
+function getEspionageTargetLabel(target: unknown): string {
+	if (target === 'troops') return 'Training Queue';
+	if (target === 'building') return 'Build Queue';
+	return target ? String(target) : 'Unknown';
+}
+
+function getPositiveEntries(values?: Record<string, unknown> | null) {
+	return Object.entries(values ?? {}).filter(([, value]) => Number(value) > 0);
+}
 
 const Reports: React.FC<ReportsProps> = ({
 	nexus,
@@ -135,7 +160,8 @@ const Reports: React.FC<ReportsProps> = ({
 	const [readIds, setReadIds] = useState<Set<string>>(new Set());
 	const [replayComplete, setReplayComplete] = useState(false);
 	const [mainTab, setMainTab] = useState<'combat' | 'espionage'>('combat');
-	const [espionageLogs, setEspionageLogs] = useState<Array<Record<string, unknown>>>([]);
+	const [espionageLogs, setEspionageLogs] = useState<EspionageLog[]>([]);
+	const [selectedEspionageLog, setSelectedEspionageLog] = useState<EspionageLog | null>(null);
 	const [espionageCursor, setEspionageCursor] = useState<number | undefined>(undefined);
 	const [espionageHasMore, setEspionageHasMore] = useState(false);
 	const [espionageLoading, setEspionageLoading] = useState(false);
@@ -392,7 +418,7 @@ const Reports: React.FC<ReportsProps> = ({
 			const cursor = append ? espionageCursor : undefined;
 			const res = await getAllEspionageLogs(cursor);
 			const data = res.data as {
-				missions: Array<Record<string, unknown>>;
+				missions: EspionageLog[];
 				nextCursor: number | null;
 			};
 			setEspionageLogs((prev) =>
@@ -425,6 +451,159 @@ const Reports: React.FC<ReportsProps> = ({
 
 	const unreadCount = reports.reduce((acc, r) => (readIds.has(r._id) ? acc : acc + 1), 0);
 
+	const renderEspionageIntel = (result: Record<string, unknown>) => {
+		const intel = result.intel as Record<string, unknown> | undefined;
+		if (!intel) {
+			return null;
+		}
+
+		const troops = (intel.troops ?? {}) as Record<string, unknown>;
+		const resources = (intel.resources ?? {}) as Record<string, unknown>;
+		const buildings = (intel.buildings ?? {}) as Record<string, unknown>;
+		const trainingQueue = (intel.trainingQueue ?? []) as Array<{
+			troopType: string;
+			amount: number;
+			completesAt: string;
+		}>;
+		const buildQueue = (intel.buildQueue ?? []) as Array<{
+			building: string;
+			targetLevel: number;
+			completesAt: string;
+		}>;
+		const troopEntries = getPositiveEntries(troops);
+
+		return (
+			<>
+				<div className="report-section">
+					<h3>Detected Garrison</h3>
+					<table className="report-table">
+						<thead>
+							<tr>
+								<th>Unit</th>
+								<th>Detected</th>
+							</tr>
+						</thead>
+						<tbody>
+							{troopEntries.length === 0 ? (
+								<tr>
+									<td colSpan={2}>No troops detected.</td>
+								</tr>
+							) : (
+								troopEntries.map(([troop, count]) => (
+									<tr key={troop}>
+										<td>{troopNames[troop] || troop}</td>
+										<td>{formatNumber(count)}</td>
+									</tr>
+								))
+							)}
+						</tbody>
+					</table>
+				</div>
+
+				<div className="report-section">
+					<h3>Scouted Intelligence</h3>
+					{Boolean(intel.nexusType) && (
+						<p>
+							<strong>Nexus Type:</strong> {String(intel.nexusType)}
+						</p>
+					)}
+					<div className="resources-stolen resources-stolen--remaining">
+						{RESOURCE_KEYS.map((key) => (
+							<div className={`resource-item resource-item--${key}`} key={key}>
+								<span className="resource-item__label">{key[0].toUpperCase() + key.slice(1)}</span>
+								<span className="resource-item__value">
+									{formatNumber((resources as Partial<ResourceSnapshot>)[key])}
+								</span>
+							</div>
+						))}
+					</div>
+				</div>
+
+				<div className="report-section">
+					<h3>Buildings</h3>
+					<table className="report-table">
+						<thead>
+							<tr>
+								<th>Building</th>
+								<th>Level</th>
+							</tr>
+						</thead>
+						<tbody>
+							{Object.entries(buildings).length === 0 ? (
+								<tr>
+									<td colSpan={2}>No building data recorded.</td>
+								</tr>
+							) : (
+								Object.entries(buildings).map(([building, level]) => (
+									<tr key={building}>
+										<td>{buildingNames[building] ?? building}</td>
+										<td>Lv {formatNumber(level)}</td>
+									</tr>
+								))
+							)}
+						</tbody>
+					</table>
+				</div>
+
+				<div className="report-section">
+					<h3>Training Queue</h3>
+					<table className="report-table">
+						<thead>
+							<tr>
+								<th>Unit</th>
+								<th>Amount</th>
+								<th>Completes</th>
+							</tr>
+						</thead>
+						<tbody>
+							{trainingQueue.length === 0 ? (
+								<tr>
+									<td colSpan={3}>Nothing training.</td>
+								</tr>
+							) : (
+								trainingQueue.map((entry, index) => (
+									<tr key={`${entry.troopType}-${index}`}>
+										<td>{troopNames[entry.troopType] || entry.troopType}</td>
+										<td>{formatNumber(entry.amount)}</td>
+										<td>{formatDateTime(entry.completesAt)}</td>
+									</tr>
+								))
+							)}
+						</tbody>
+					</table>
+				</div>
+
+				<div className="report-section">
+					<h3>Build Queue</h3>
+					<table className="report-table">
+						<thead>
+							<tr>
+								<th>Building</th>
+								<th>Target</th>
+								<th>Completes</th>
+							</tr>
+						</thead>
+						<tbody>
+							{buildQueue.length === 0 ? (
+								<tr>
+									<td colSpan={3}>Nothing building.</td>
+								</tr>
+							) : (
+								buildQueue.map((entry, index) => (
+									<tr key={`${entry.building}-${index}`}>
+										<td>{buildingNames[entry.building] ?? entry.building}</td>
+										<td>Lv {formatNumber(entry.targetLevel)}</td>
+										<td>{formatDateTime(entry.completesAt)}</td>
+									</tr>
+								))
+							)}
+						</tbody>
+					</table>
+				</div>
+			</>
+		);
+	};
+
 	const handleMarkAllRead = async () => {
 		try {
 			const res = await markAllReportsRead(nexus._id);
@@ -438,6 +617,152 @@ const Reports: React.FC<ReportsProps> = ({
 
 	if (loading) {
 		return <PageSkeleton variant="rows" count={5} />;
+	}
+
+	if (selectedEspionageLog) {
+		const currentIndex = espionageLogs.findIndex(
+			(log) => String(log.id) === String(selectedEspionageLog.id)
+		);
+		const prevLog = currentIndex > 0 ? espionageLogs[currentIndex - 1] : null;
+		const nextLog =
+			currentIndex >= 0 && currentIndex < espionageLogs.length - 1
+				? espionageLogs[currentIndex + 1]
+				: null;
+		const result = getEspionageResult(selectedEspionageLog);
+		const type = getEspionageType(selectedEspionageLog);
+		const success = Boolean(result.success);
+		const isSabotage = type === 'sabotage';
+		const targetLabel = getEspionageTargetLabel(result.target);
+
+		return (
+			<div className="reports-container">
+				<div className="reports-header">
+					<div className="reports-detail-nav">
+						<button
+							onClick={() => setSelectedEspionageLog(null)}
+							className="btn-back"
+							aria-label="Back to espionage logs list"
+						>
+							<ArrowLeft size={14} aria-hidden="true" />
+							Back
+						</button>
+						<div className="reports-nav-arrows">
+							<button
+								className="btn-nav-arrow"
+								onClick={() => prevLog && setSelectedEspionageLog(prevLog)}
+								disabled={!prevLog}
+								title="Previous espionage log"
+							>
+								&lt;
+							</button>
+							<span className="reports-nav-count">
+								{currentIndex + 1} / {espionageLogs.length}
+							</span>
+							<button
+								className="btn-nav-arrow"
+								onClick={() => nextLog && setSelectedEspionageLog(nextLog)}
+								disabled={!nextLog}
+								title="Next espionage log"
+							>
+								&gt;
+							</button>
+						</div>
+					</div>
+					<h2>Espionage Report</h2>
+				</div>
+
+				<div className="report-detail">
+					<div className={`report-result ${success ? 'victory' : 'defeat'}`}>
+						{success ? (
+							<span>
+								{isSabotage ? 'Sabotage resolved.' : 'Embed successful. Intelligence gathered.'}
+							</span>
+						) : (
+							<span>Mission failed - operative discovered.</span>
+						)}
+					</div>
+
+					<div className="report-section scout-attack-section">
+						<div className="scout-target-bar">
+							<div className="scout-target-info">
+								<span className="scout-target-label">Target</span>
+								<span className="scout-target-name">
+									{String(selectedEspionageLog.targetName ?? 'Unknown')}{' '}
+									<span className="scout-target-coords">
+										({String(selectedEspionageLog.targetX ?? '?')}|
+										{String(selectedEspionageLog.targetY ?? '?')})
+									</span>
+								</span>
+							</div>
+							<div className="espionage-detail-status">
+								<span className={success ? 'report-won' : 'report-lost'}>
+									{success ? 'Success' : 'Failed'}
+								</span>
+							</div>
+						</div>
+					</div>
+
+					<div className="report-section">
+						<h3>Mission Information</h3>
+						<p>
+							<strong>Mission:</strong> {formatEspionageType(type)}
+						</p>
+						<p>
+							<strong>Launched From:</strong>{' '}
+							{String(selectedEspionageLog.fromNexusName ?? 'Unknown')}
+						</p>
+						{Boolean(selectedEspionageLog.targetOwnerUsername) && (
+							<p>
+								<strong>Target Owner:</strong>{' '}
+								<span className="report-opponent">
+									{String(selectedEspionageLog.targetOwnerUsername)}
+								</span>
+							</p>
+						)}
+						<p>
+							<strong>Date:</strong>{' '}
+							{selectedEspionageLog.createdAt
+								? formatDate(String(selectedEspionageLog.createdAt))
+								: 'Unknown'}
+						</p>
+						{Number(result.operatives ?? 0) > 0 && (
+							<p>
+								<strong>Operatives:</strong> {formatNumber(result.operatives)}
+							</p>
+						)}
+					</div>
+
+					{isSabotage && success && (
+						<div className="report-section">
+							<h3>Sabotage Outcome</h3>
+							<p>
+								<strong>Target:</strong> {targetLabel}
+							</p>
+							{result.delayMinutes ? (
+								<p>
+									<strong>Delay:</strong> {formatNumber(result.delayMinutes)} minutes
+								</p>
+							) : (
+								<p>{String(result.message ?? 'No active queue to disrupt.')}</p>
+							)}
+						</div>
+					)}
+
+					{!success && (
+						<div className="report-section">
+							<h3>Mission Outcome</h3>
+							<p>
+								The mission was detected before usable intel could be extracted.
+								{result.defenderRecon !== undefined &&
+									` Defender recon strength: ${formatNumber(result.defenderRecon)}.`}
+							</p>
+						</div>
+					)}
+
+					{success && !isSabotage && renderEspionageIntel(result)}
+				</div>
+			</div>
+		);
 	}
 
 	if (selectedReport) {
@@ -1076,40 +1401,47 @@ const Reports: React.FC<ReportsProps> = ({
 					) : (
 						<>
 							<div className="reports-list">
-								{espionageLogs.map((m) => (
-									<div key={String(m.id)} className="report-item won">
-										<div className="report-icon" aria-hidden="true">
-											<Eye size={18} />
-										</div>
-										<div className="report-info">
-											<div className="report-title">
-												{String(m.missionType ?? 'Spy')} on {String(m.targetName ?? 'Unknown')} (
-												{String(m.targetX ?? '?')}|{String(m.targetY ?? '?')})
-												{(m.targetOwnerUsername as string | null | undefined) && (
-													<>
-														{' '}
-														—{' '}
-														<span className="report-opponent">{String(m.targetOwnerUsername)}</span>
-													</>
-												)}
+								{espionageLogs.map((m) => {
+									const result = getEspionageResult(m);
+									const missionType = getEspionageType(m);
+									const success = Boolean(result.success);
+
+									return (
+										<div
+											key={String(m.id)}
+											className={`report-item ${success ? 'won' : 'lost'}`}
+											onClick={() => setSelectedEspionageLog(m)}
+										>
+											<div className="report-icon" aria-hidden="true">
+												<Eye size={18} />
 											</div>
-											<div className="report-meta">
-												{String(m.fromNexusName ?? 'Unknown')} ·{' '}
-												{m.createdAt ? formatDate(String(m.createdAt)) : ''}
-												{' · '}
-												<span
-													className={
-														String(m.status) === 'completed' && (m as any).result?.success
-															? 'report-won'
-															: 'report-lost'
-													}
-												>
-													{(m as any).result?.success ? 'Success' : 'Failed'}
-												</span>
+											<div className="report-info">
+												<div className="report-title">
+													{formatEspionageType(missionType)} on {String(m.targetName ?? 'Unknown')}{' '}
+													({String(m.targetX ?? '?')}|{String(m.targetY ?? '?')})
+													{(m.targetOwnerUsername as string | null | undefined) && (
+														<>
+															{' '}
+															—{' '}
+															<span className="report-opponent">
+																{String(m.targetOwnerUsername)}
+															</span>
+														</>
+													)}
+												</div>
+												<div className="report-meta">
+													{String(m.fromNexusName ?? 'Unknown')} ·{' '}
+													{m.createdAt ? formatDate(String(m.createdAt)) : ''}
+													{' · '}
+													<span className={success ? 'report-won' : 'report-lost'}>
+														{success ? 'Success' : 'Failed'}
+													</span>
+												</div>
 											</div>
+											<div className="report-arrow">-&gt;</div>
 										</div>
-									</div>
-								))}
+									);
+								})}
 							</div>
 							{espionageHasMore && (
 								<button

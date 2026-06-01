@@ -3,6 +3,7 @@ import React, { createContext, useCallback, useContext, useEffect, useRef, useSt
 import { getProfile, updateOnboardingStep } from '../services/api';
 import { useMyNexuses } from '../hooks/useMyNexuses';
 import type { Nexus } from '../types/game';
+import { usePathname } from 'next/navigation';
 
 export interface OnboardingStep {
 	id: string;
@@ -27,7 +28,10 @@ export interface OnboardingStep {
 // stay cheap (no nested object access into possibly-undefined fields).
 export interface OnboardingGameState {
 	nexuses: Nexus[];
+	pathname: string;
 }
+
+const isNexusPath = (pathname: string) => pathname === '/nexus' || pathname.startsWith('/nexus/');
 
 // Ordered list of beginner steps. Each targetAttr must match a
 // data-onboarding="<value>" attribute somewhere in the DOM.
@@ -46,7 +50,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 		title: 'Upgrade a Building',
 		message:
 			'Upgrade your Command Core first — it unlocks every other building and increases your build queue.',
-		isReady: (s) => s.nexuses.length > 0,
+		isReady: (s) => s.nexuses.length > 0 && isNexusPath(s.pathname),
 		isComplete: (s) => s.nexuses.some((n) => (n.buildings?.commandCore ?? 1) >= 2)
 	},
 	{
@@ -59,33 +63,51 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 		// building the troop card is locked, so prompting the player to click it
 		// just frustrates them.
 		isReady: (s) =>
-			s.nexuses.some((n) => (n.buildings?.recruitmentCore ?? 0) >= 1),
+			isNexusPath(s.pathname) && s.nexuses.some((n) => (n.buildings?.recruitmentCore ?? 0) >= 1),
 		isComplete: (s) =>
 			s.nexuses.some((n) => {
 				// Already has something in the training queue → done.
 				if ((n.trainingQueue?.length ?? 0) > 0) return true;
-				// Trained an Assault Trooper specifically (counts above the starter
-				// allotment). Starter armies can include up to a few dozen of each;
-				// we want a clear signal the player actively trained, so require a
-				// meaningful jump over the spawn defaults.
+				const trained = Number(n.troopsTrained?.assaultTrooper ?? 0);
+				if (trained >= 5) return true;
+				// Legacy fallback for snapshots without troopsTrained.
 				const at = Number(n.troops?.assaultTrooper ?? 0);
-				return at > 100;
+				return at >= 5;
 			})
+	},
+	{
+		id: 'open_starfield',
+		targetAttr: 'open-starfield',
+		title: 'Open The Starfield',
+		message: 'Head to the Starfield when your troops are ready, then pick a neutral nexus to raid.',
+		isReady: (s) => s.nexuses.length > 0,
+		isComplete: (s) => s.pathname === '/starfield'
 	},
 	{
 		id: 'send_attack',
 		targetAttr: 'send-attack',
 		title: 'Launch Your First Strike',
-		message: 'Find a neutral nexus on the map and attack it to earn resources and score points.'
+		message: 'Find a neutral nexus on the map and attack it to earn resources and score points.',
+		isReady: (s) => s.pathname === '/starfield'
 		// No reliable client-side signal for "ever attacked"; only completes via
 		// the explicit "Got it" or because the user navigates past it after the
 		// target appears in the DOM.
 	},
 	{
+		id: 'open_factions',
+		targetAttr: 'open-factions',
+		title: 'Open Factions',
+		message: 'Open the Factions page to find allies and join a coordinated force.',
+		isReady: (s) => s.nexuses.some((n) => (n.buildings?.recruitmentCore ?? 0) >= 1),
+		isComplete: (s) => s.pathname === '/factions'
+	},
+	{
 		id: 'join_faction',
 		targetAttr: 'join-faction',
 		title: 'Join a Faction',
-		message: 'Factions unlock coordinated attacks, war rooms, and diplomacy. Find one to join here.'
+		message:
+			'Factions unlock coordinated attacks, war rooms, and diplomacy. Find one to join here.',
+		isReady: (s) => s.pathname === '/factions'
 	}
 ];
 
@@ -111,6 +133,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 	const [enabled, setEnabled] = useState(false);
 	const [ready, setReady] = useState(false);
 	const { nexuses } = useMyNexuses();
+	const pathname = usePathname();
 	// Track which step ids we've already auto-completed in this session so we
 	// don't spam updateOnboardingStep on every render.
 	const autoSentRef = useRef<Set<string>>(new Set());
@@ -151,7 +174,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 		if (!ready || !enabled || stepIndex === null) return;
 		const step = ONBOARDING_STEPS[stepIndex];
 		if (!step) return;
-		const state: OnboardingGameState = { nexuses };
+		const state: OnboardingGameState = { nexuses, pathname };
 		if (step.isComplete?.(state)) {
 			if (!autoSentRef.current.has(step.id)) {
 				autoSentRef.current.add(step.id);
@@ -160,7 +183,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 			const next = stepIndex + 1;
 			setStepIndex(next < ONBOARDING_STEPS.length ? next : null);
 		}
-	}, [ready, enabled, stepIndex, nexuses]);
+	}, [ready, enabled, stepIndex, nexuses, pathname]);
 
 	const rawStep =
 		ready && enabled && stepIndex !== null ? (ONBOARDING_STEPS[stepIndex] ?? null) : null;
@@ -168,7 +191,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 	// currentStep tears down the overlay entirely, so the player can play
 	// unimpeded until the gate opens (e.g. they build a Recruitment Core).
 	const gateOpen =
-		rawStep === null || rawStep.isReady === undefined || rawStep.isReady({ nexuses });
+		rawStep === null || rawStep.isReady === undefined || rawStep.isReady({ nexuses, pathname });
 	const currentStep = gateOpen ? rawStep : null;
 
 	const advance = useCallback(() => {

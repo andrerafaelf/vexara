@@ -1,8 +1,8 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { FormEvent, useState } from 'react';
 import '@/styles/Admin.css';
+import { useRouter } from 'next/navigation';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 
 const ADMIN_API_URL = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:3002/api/admin';
 
@@ -11,35 +11,57 @@ export default function AuthPage() {
 	const [username, setUsername] = useState('');
 	const [password, setPassword] = useState('');
 	const [totp, setTotp] = useState('');
+	const [requiresTotp, setRequiresTotp] = useState(false);
 	const [error, setError] = useState('');
 	const [submitting, setSubmitting] = useState(false);
+	const totpInputRef = useRef<HTMLInputElement>(null);
+
+	useEffect(() => {
+		if (requiresTotp) {
+			totpInputRef.current?.focus();
+		}
+	}, [requiresTotp]);
 
 	const handleSubmit = async (event: FormEvent) => {
 		event.preventDefault();
 		const u = username.trim();
-		const code = totp.replace(/\s+/g, '');
 		if (!u || !password) {
 			setError('Enter username and password');
 			return;
 		}
-		if (!/^\d{6}$/.test(code)) {
+		const code = totp.replace(/\s+/g, '');
+		if (requiresTotp && !/^\d{6}$/.test(code)) {
 			setError('Enter the 6-digit code from your authenticator');
 			return;
 		}
 		setSubmitting(true);
 		setError('');
 		try {
+			const body: { username: string; password: string; totp?: string } = {
+				username: u,
+				password
+			};
+			if (requiresTotp) {
+				body.totp = code;
+			}
 			const res = await fetch(`${ADMIN_API_URL}/auth/login`, {
 				method: 'POST',
 				credentials: 'include',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ username: u, password, totp: code })
+				body: JSON.stringify(body)
 			});
+			const data = await res.json().catch(() => null);
+			if (data?.requiresTotp) {
+				setRequiresTotp(true);
+				setError('Enter your 2FA code to finish signing in');
+				return;
+			}
 			if (!res.ok) {
-				const data = await res.json().catch(() => null);
 				setError(data?.error || 'Sign in failed');
 				return;
 			}
+			setRequiresTotp(false);
+			setTotp('');
 			router.replace('/admin');
 		} catch {
 			setError('Network error');
@@ -89,17 +111,26 @@ export default function AuthPage() {
 						/>
 					</label>
 
-					<label className="auth-field">
-						<span className="auth-label">2FA code</span>
-						<input
-							value={totp}
-							onChange={(e) => setTotp(e.target.value)}
-							inputMode="numeric"
-							autoComplete="one-time-code"
-							maxLength={6}
-							placeholder="123456"
-						/>
-					</label>
+					{requiresTotp && (
+						<label className="auth-field">
+							<span className="auth-label">2FA code</span>
+							<input
+								ref={totpInputRef}
+								value={totp}
+								onChange={(e) => setTotp(e.target.value)}
+								inputMode="numeric"
+								autoComplete="one-time-code"
+								maxLength={6}
+								placeholder="123456"
+							/>
+						</label>
+					)}
+
+					{!requiresTotp && (
+						<p className="auth-subtitle-text">
+							2FA will be requested after your username and password are accepted.
+						</p>
+					)}
 
 					{error && (
 						<div className="auth-error" role="alert">

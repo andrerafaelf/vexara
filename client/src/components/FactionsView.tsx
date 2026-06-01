@@ -34,6 +34,7 @@ import {
 	getGalaxyDiplomacy
 } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useOnboarding } from '../context/OnboardingContext';
 import { useBadgesQuery } from '../hooks/useNotificationBadges';
 import FactionChat from './FactionChat';
 import DiplomacyChat from './DiplomacyChat';
@@ -162,12 +163,20 @@ interface FactionTreaty {
 const ROLE_ORDER: Record<string, number> = { leader: 0, officer: 1, member: 2 };
 
 export default function FactionsView() {
+	const { currentStep, advance: advanceOnboarding } = useOnboarding();
 	const [myFaction, setMyFaction] = useState<(Faction & { myRole: string }) | null>(null);
 	const [invites, setInvites] = useState<FactionInvite[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState('');
 	const [activeTab, setActiveTab] = useTabParam<Tab>(FACTION_TABS, 'overview');
 	usePageReady(!loading, 'factions');
+	const isJoinFactionOnboarding = currentStep?.id === 'join_faction';
+
+	useEffect(() => {
+		if (!loading && myFaction && isJoinFactionOnboarding) {
+			advanceOnboarding();
+		}
+	}, [advanceOnboarding, isJoinFactionOnboarding, loading, myFaction]);
 
 	const [showCreateForm, setShowCreateForm] = useState(false);
 	const [formName, setFormName] = useState('');
@@ -378,6 +387,7 @@ export default function FactionsView() {
 			await acceptFactionInvite(inviteId);
 			setInvites(invites.filter((i) => i.id !== inviteId));
 			await refreshFaction();
+			if (isJoinFactionOnboarding) advanceOnboarding();
 		} catch (err) {
 			setError((err as Error).message);
 		}
@@ -606,6 +616,7 @@ export default function FactionsView() {
 			const res = await getMyFactionJoinRequests();
 			setMyJoinRequests(res.data);
 			setJoinRequestMsg((prev) => ({ ...prev, [factionId]: '' }));
+			if (isJoinFactionOnboarding) advanceOnboarding();
 		} catch (err) {
 			setJoinRequestError((prev) => ({
 				...prev,

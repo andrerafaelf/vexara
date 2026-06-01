@@ -302,6 +302,7 @@ export default function GameLayout({
 								onClick={nav('/starfield')}
 								onMouseEnter={prefetchOnHover('/starfield')}
 								onFocus={prefetchOnHover('/starfield')}
+								data-onboarding="open-starfield"
 							>
 								Starfield
 							</button>
@@ -352,6 +353,7 @@ export default function GameLayout({
 									onClick={nav('/factions')}
 									onMouseEnter={prefetchOnHover('/factions')}
 									onFocus={prefetchOnHover('/factions')}
+									data-onboarding="open-factions"
 								>
 									<span className="nav-btn-content">
 										Factions
@@ -542,6 +544,7 @@ export default function GameLayout({
 							<button
 								className={`nav-btn${is('starfield') ? ' active' : ''}`}
 								onClick={nav('/starfield')}
+								data-onboarding="open-starfield"
 							>
 								Starfield
 							</button>
@@ -584,6 +587,7 @@ export default function GameLayout({
 								<button
 									className={`nav-btn${is('factions') ? ' active' : ''}`}
 									onClick={nav('/factions')}
+									data-onboarding="open-factions"
 								>
 									<span className="nav-btn-content">
 										Factions

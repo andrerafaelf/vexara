@@ -633,9 +633,6 @@ const NexusView: React.FC<NexusViewProps> = ({
 			if (activeTab !== 'troops') setActiveTab('troops');
 			if (troopsSubTab !== 'train') setTroopsSubTab('train');
 		}
-		if (currentStep.id === 'send_attack') {
-			router.push('/starfield');
-		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [currentStep?.id, activeTab, troopsSubTab]);
 
