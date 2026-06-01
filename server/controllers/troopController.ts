@@ -127,6 +127,22 @@ const TROOP_NAMES: Record<string, string> = {
 	overseer: 'Overseer'
 };
 
+function troopPopulation(troops: unknown): number {
+	if (!troops || typeof troops !== 'object') return 0;
+	return Object.entries(troops as Record<string, unknown>).reduce((sum, [type, amount]) => {
+		const count = Math.max(0, Math.floor(Number(amount) || 0));
+		return sum + count * (TROOP_COSTS[type]?.population ?? 0);
+	}, 0);
+}
+
+function trainingQueuePopulation(queue: unknown): number {
+	return normalizeTrainingQueue(queue).reduce(
+		(sum: number, entry: { troopType: string; amount: number }) =>
+			sum + (Number(entry.amount) || 0) * (TROOP_COSTS[entry.troopType]?.population ?? 0),
+		0
+	);
+}
+
 export async function trainTroops(req: AuthRequest, res: Response): Promise<void> {
 	try {
 		const { nexusId, troopType, amount } = req.body as {
@@ -164,26 +180,27 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
 		if (requirements.buildings) {
 			for (const [building, requiredLevel] of Object.entries(requirements.buildings)) {
 				if (((nexus as unknown as Record<string, number>)[building] || 0) < requiredLevel) {
-					res
-						.status(400)
-						.json({
-							error: `Requires ${BUILDING_NAMES[building] || building} Level ${requiredLevel}`
-						});
+					res.status(400).json({
+						error: `Requires ${BUILDING_NAMES[building] || building} Level ${requiredLevel}`
+					});
 					return;
 				}
 			}
 		}
 
+		const [inFlight, outboundTransfers] = await Promise.all([
+			troopService.getInFlightTroops(nexus.id),
+			troopService.getOutboundTransferTroops(nexus.id)
+		]);
+
 		if (requirements.maxPerNexus) {
 			const queuedAmount = normalizeTrainingQueue(nexus.trainingQueue)
 				.filter((e: { troopType: string }) => e.troopType === troopType)
 				.reduce((sum: number, e: { amount: number }) => sum + (Number(e.amount) || 0), 0);
-			const inFlight = await troopService.getInFlightTroops(nexus.id);
 			const inFlightAmount = inFlight.reduce(
 				(sum, a) => sum + ((a.troops as Record<string, number>)?.[troopType] || 0),
 				0
 			);
-			const outboundTransfers = await troopService.getOutboundTransferTroops(nexus.id);
 			const transferAmount = outboundTransfers.reduce(
 				(sum, t) => sum + ((t.troops as Record<string, number>)?.[troopType] || 0),
 				0
@@ -194,11 +211,9 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
 				inFlightAmount +
 				transferAmount;
 			if (current + parsedAmount > requirements.maxPerNexus) {
-				res
-					.status(400)
-					.json({
-						error: `Maximum ${requirements.maxPerNexus} ${TROOP_NAMES[troopType] || troopType} per nexus`
-					});
+				res.status(400).json({
+					error: `Maximum ${requirements.maxPerNexus} ${TROOP_NAMES[troopType] || troopType} per nexus`
+				});
 				return;
 			}
 		}
@@ -227,7 +242,20 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
 			res.status(400).json({ error: 'Insufficient resources' });
 			return;
 		}
-		if (nexus.populationCurrent + totalCost.population > nexus.populationMax) {
+		const nexusTroopPopulation = troopPopulation(nexus);
+		const inFlightPopulation = inFlight.reduce(
+			(sum, attack) => sum + troopPopulation(attack.troops),
+			0
+		);
+		const transferPopulation = outboundTransfers.reduce(
+			(sum, transfer) => sum + troopPopulation(transfer.troops),
+			0
+		);
+		const queuedPopulation = trainingQueuePopulation(nexus.trainingQueue);
+		const committedPopulation =
+			nexusTroopPopulation + inFlightPopulation + transferPopulation + queuedPopulation;
+
+		if (committedPopulation + totalCost.population > nexus.populationMax) {
 			res.status(400).json({ error: 'Insufficient population capacity' });
 			return;
 		}
@@ -273,7 +301,7 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
 				biomass: current.biomass - totalCost.biomass,
 				alloy: current.alloy - totalCost.alloy,
 				ore: current.ore - totalCost.ore,
-				populationCurrent: nexus.populationCurrent + totalCost.population,
+				populationCurrent: committedPopulation + totalCost.population,
 				trainingQueue: queueToJson(newQueue)
 			});
 		} catch (e) {
