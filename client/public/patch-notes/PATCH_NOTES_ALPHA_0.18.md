@@ -212,4 +212,22 @@ take it in three. Bring your friends, take anything.
 
 ---
 
+### Bug fixes
+
+- **Onboarding no longer locks the screen.** The beginner tip overlay
+  was capturing every click on the page, leaving new players unable to
+  move, scroll, or leave the troops tab. The overlay now only
+  highlights — it never blocks input. The "train troops" tip also no
+  longer surfaces before you've built a Recruitment Core, so you
+  can't be pushed toward a button that doesn't work yet.
+- **Training queues that exceeded population capacity have been
+  trimmed.** A handful of nexuses queued more troops than their Life
+  Support could support before the cap check was tightened. Those
+  queues have been trimmed back from the most recently queued entries
+  first, with full biomass / alloy / ore refunded for any cancelled
+  units. Anything already mid-training stays. No troops you've
+  actually trained were touched.
+
+---
+
 See you in the dark. — André
