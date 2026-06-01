@@ -8,5 +8,5 @@ import { useFriendsUnreadFromBadges } from './useNotificationBadges';
  * consolidated /notifications/badges query (no separate request).
  */
 export function useFriendsUnread() {
-  return useFriendsUnreadFromBadges();
+	return useFriendsUnreadFromBadges();
 }

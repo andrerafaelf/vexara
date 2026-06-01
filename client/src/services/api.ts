@@ -4,206 +4,219 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 // Helper function to make API requests
 const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('token');
+	const token = localStorage.getItem('token');
 
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
+	const headers: Record<string, string> = {
+		'Content-Type': 'application/json'
+	};
 
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
+	if (token) {
+		headers['Authorization'] = `Bearer ${token}`;
+	}
 
-  const requestStartMs = Date.now();
-  const response = await fetch(`${API_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
-  // Sync the client/server clock offset from the `Date` response header on
-  // every API call. Cheap, no extra round-trip. Countdowns and resource
-  // interpolation then read serverNow() instead of trusting the local clock.
-  recordServerTimeSample(response, requestStartMs, Date.now());
+	const requestStartMs = Date.now();
+	const response = await fetch(`${API_URL}${endpoint}`, {
+		...options,
+		headers
+	});
+	// Sync the client/server clock offset from the `Date` response header on
+	// every API call. Cheap, no extra round-trip. Countdowns and resource
+	// interpolation then read serverNow() instead of trusting the local clock.
+	recordServerTimeSample(response, requestStartMs, Date.now());
 
-  const rawBody = await response.text();
-  let data: any = {};
-  if (rawBody) {
-    try {
-      data = JSON.parse(rawBody);
-    } catch {
-      data = { error: rawBody };
-    }
-  }
+	const rawBody = await response.text();
+	let data: any = {};
+	if (rawBody) {
+		try {
+			data = JSON.parse(rawBody);
+		} catch {
+			data = { error: rawBody };
+		}
+	}
 
-  if (!response.ok) {
-    if (response.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      if (typeof window !== 'undefined') {
-        const here = window.location.pathname;
-        if (here !== '/login' && here !== '/register') {
-          window.location.href = '/login';
-        }
-      }
-    }
-    if (response.status === 409 && data?.code === 'no_active_galaxy' && typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('galaxy:needs-selection'));
-    }
-    const error = new Error(data.error || 'Request failed');
-    (error as any).response = { data, status: response.status };
-    throw error;
-  }
+	if (!response.ok) {
+		if (response.status === 401) {
+			localStorage.removeItem('token');
+			localStorage.removeItem('user');
+			if (typeof window !== 'undefined') {
+				const here = window.location.pathname;
+				if (here !== '/login' && here !== '/register') {
+					window.location.href = '/login';
+				}
+			}
+		}
+		if (
+			response.status === 409 &&
+			data?.code === 'no_active_galaxy' &&
+			typeof window !== 'undefined'
+		) {
+			window.dispatchEvent(new CustomEvent('galaxy:needs-selection'));
+		}
+		const error = new Error(data.error || 'Request failed');
+		(error as any).response = { data, status: response.status };
+		throw error;
+	}
 
-  return { data };
+	return { data };
 };
 
 // Auth
 export const login = (username: string, password: string) =>
-  apiRequest('/auth/login', {
-    method: 'POST',
-    body: JSON.stringify({ username, password }),
-  });
+	apiRequest('/auth/login', {
+		method: 'POST',
+		body: JSON.stringify({ username, password })
+	});
 
 export type Utm = { utm_source?: string; utm_medium?: string; utm_campaign?: string };
 
 export const requestAlphaAccess = (email: string, utm?: Utm) =>
-  apiRequest('/auth/alpha-signup', {
-    method: 'POST',
-    body: JSON.stringify({ email, ...(utm ?? {}) }),
-  });
+	apiRequest('/auth/alpha-signup', {
+		method: 'POST',
+		body: JSON.stringify({ email, ...(utm ?? {}) })
+	});
 
 export const getAlphaSignupCount = () => apiRequest('/auth/alpha-signup/count');
 
 export interface RegisterPayload {
-  username: string;
-  email: string;
-  password: string;
-  referralCode?: string;
-  utm_source?: string;
-  utm_medium?: string;
-  utm_campaign?: string;
+	username: string;
+	email: string;
+	password: string;
+	referralCode?: string;
+	utm_source?: string;
+	utm_medium?: string;
+	utm_campaign?: string;
 }
 
 export const register = (payload: RegisterPayload) =>
-  apiRequest('/auth/register', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
+	apiRequest('/auth/register', {
+		method: 'POST',
+		body: JSON.stringify(payload)
+	});
 
 export const verifyEmail = (token: string) =>
-  apiRequest('/auth/verify-email', {
-    method: 'POST',
-    body: JSON.stringify({ token }),
-  });
+	apiRequest('/auth/verify-email', {
+		method: 'POST',
+		body: JSON.stringify({ token })
+	});
 
 export const resendVerification = (email: string) =>
-  apiRequest('/auth/resend-verification', {
-    method: 'POST',
-    body: JSON.stringify({ email }),
-  });
+	apiRequest('/auth/resend-verification', {
+		method: 'POST',
+		body: JSON.stringify({ email })
+	});
 
 export const requestPasswordReset = (email: string) =>
-  apiRequest('/auth/request-password-reset', {
-    method: 'POST',
-    body: JSON.stringify({ email }),
-  });
+	apiRequest('/auth/request-password-reset', {
+		method: 'POST',
+		body: JSON.stringify({ email })
+	});
 
 export const resetPassword = (token: string, newPassword: string) =>
-  apiRequest('/auth/reset-password', {
-    method: 'POST',
-    body: JSON.stringify({ token, newPassword }),
-  });
+	apiRequest('/auth/reset-password', {
+		method: 'POST',
+		body: JSON.stringify({ token, newPassword })
+	});
 
 // Galaxies
 export const getGalaxies = () => apiRequest('/galaxies');
 export const getMyGalaxy = () => apiRequest('/galaxies/me');
 export const selectGalaxy = (galaxyId: number | string) =>
-  apiRequest(`/galaxies/${galaxyId}/select`, { method: 'POST' });
+	apiRequest(`/galaxies/${galaxyId}/select`, { method: 'POST' });
 export const leaveGalaxy = (galaxyId: number | string) =>
-  apiRequest(`/galaxies/${galaxyId}/leave`, { method: 'POST' });
+	apiRequest(`/galaxies/${galaxyId}/leave`, { method: 'POST' });
 export const getGalaxyWinResults = (galaxyId: number | string) =>
-  apiRequest(`/galaxies/${galaxyId}/win-results`);
+	apiRequest(`/galaxies/${galaxyId}/win-results`);
 
 // Nexuses
 export const createNexus = (name?: string) =>
-  apiRequest('/nexus/create', {
-    method: 'POST',
-    body: JSON.stringify({ name }),
-  });
+	apiRequest('/nexus/create', {
+		method: 'POST',
+		body: JSON.stringify({ name })
+	});
 
 export const getMyNexuses = () => apiRequest('/nexus/my-nexuses');
 
 export const getNexus = (nexusId: string) => apiRequest(`/nexus/${nexusId}`);
 
 export const renameNexus = (nexusId: string, name: string) =>
-  apiRequest(`/nexus/${nexusId}/name`, {
-    method: 'PATCH',
-    body: JSON.stringify({ name }),
-  });
+	apiRequest(`/nexus/${nexusId}/name`, {
+		method: 'PATCH',
+		body: JSON.stringify({ name })
+	});
 
 // Nexus groups
 export const getNexusGroups = () => apiRequest('/nexus/groups');
 
 export const createNexusGroup = (name: string) =>
-  apiRequest('/nexus/groups', { method: 'POST', body: JSON.stringify({ name }) });
+	apiRequest('/nexus/groups', { method: 'POST', body: JSON.stringify({ name }) });
 
 export const renameNexusGroup = (groupId: string, name: string) =>
-  apiRequest(`/nexus/groups/${groupId}`, { method: 'PATCH', body: JSON.stringify({ name }) });
+	apiRequest(`/nexus/groups/${groupId}`, { method: 'PATCH', body: JSON.stringify({ name }) });
 
 export const deleteNexusGroup = (groupId: string) =>
-  apiRequest(`/nexus/groups/${groupId}`, { method: 'DELETE' });
+	apiRequest(`/nexus/groups/${groupId}`, { method: 'DELETE' });
 
 export const setGroupNexuses = (groupId: string, nexusIds: string[]) =>
-  apiRequest(`/nexus/groups/${groupId}/nexuses`, { method: 'PUT', body: JSON.stringify({ nexusIds }) });
+	apiRequest(`/nexus/groups/${groupId}/nexuses`, {
+		method: 'PUT',
+		body: JSON.stringify({ nexusIds })
+	});
 
-export const transferResources = (fromNexusId: string, toNexusId: string, biomass: number, alloy: number, ore: number) =>
-  apiRequest('/nexus/transfer-resources', {
-    method: 'POST',
-    body: JSON.stringify({ fromNexusId, toNexusId, biomass, alloy, ore }),
-  });
+export const transferResources = (
+	fromNexusId: string,
+	toNexusId: string,
+	biomass: number,
+	alloy: number,
+	ore: number
+) =>
+	apiRequest('/nexus/transfer-resources', {
+		method: 'POST',
+		body: JSON.stringify({ fromNexusId, toNexusId, biomass, alloy, ore })
+	});
 
 export const claimQuestReward = (sourceNexusId: string, batchId: string, rewardNexusId: string) =>
-  apiRequest(`/nexus/${sourceNexusId}/quests/${batchId}/claim`, {
-    method: 'POST',
-    body: JSON.stringify({ rewardNexusId }),
-  });
+	apiRequest(`/nexus/${sourceNexusId}/quests/${batchId}/claim`, {
+		method: 'POST',
+		body: JSON.stringify({ rewardNexusId })
+	});
 
 // Buildings
 export const upgradeBuilding = (nexusId: string, building: string) =>
-  apiRequest('/building/upgrade', {
-    method: 'POST',
-    body: JSON.stringify({ nexusId, building }),
-  });
+	apiRequest('/building/upgrade', {
+		method: 'POST',
+		body: JSON.stringify({ nexusId, building })
+	});
 
 export const checkBuildQueue = (nexusId: string) =>
-  apiRequest('/building/check-queue', {
-    method: 'POST',
-    body: JSON.stringify({ nexusId }),
-  });
+	apiRequest('/building/check-queue', {
+		method: 'POST',
+		body: JSON.stringify({ nexusId })
+	});
 
 export const cancelBuildQueueItem = (nexusId: string, index: number) =>
-  apiRequest('/building/cancel-queue', {
-    method: 'POST',
-    body: JSON.stringify({ nexusId, index }),
-  });
+	apiRequest('/building/cancel-queue', {
+		method: 'POST',
+		body: JSON.stringify({ nexusId, index })
+	});
 
 // Troops
 export const trainTroops = (nexusId: string, troopType: string, amount: number) =>
-  apiRequest('/troop/train', {
-    method: 'POST',
-    body: JSON.stringify({ nexusId, troopType, amount }),
-  });
+	apiRequest('/troop/train', {
+		method: 'POST',
+		body: JSON.stringify({ nexusId, troopType, amount })
+	});
 
 export const checkTrainingQueue = (nexusId: string) =>
-  apiRequest('/troop/check-queue', {
-    method: 'POST',
-    body: JSON.stringify({ nexusId }),
-  });
+	apiRequest('/troop/check-queue', {
+		method: 'POST',
+		body: JSON.stringify({ nexusId })
+	});
 
 export const cancelTrainingQueueItem = (nexusId: string, index: number) =>
-  apiRequest('/troop/cancel-queue', {
-    method: 'POST',
-    body: JSON.stringify({ nexusId, index }),
-  });
+	apiRequest('/troop/cancel-queue', {
+		method: 'POST',
+		body: JSON.stringify({ nexusId, index })
+	});
 
 // Map
 export const getMapArea = (x: number, y: number) => apiRequest(`/map/area/${x}/${y}`);
@@ -212,16 +225,16 @@ export const getNexusInfo = (nexusId: string) => apiRequest(`/map/nexus/${nexusI
 
 // Attacks
 export const sendAttack = (
-  fromNexusId: string,
-  toNexusId: string,
-  troops: any,
-  type: string = 'attack',
-  clientRequestId?: string,
+	fromNexusId: string,
+	toNexusId: string,
+	troops: any,
+	type: string = 'attack',
+	clientRequestId?: string
 ) =>
-  apiRequest('/attack/send', {
-    method: 'POST',
-    body: JSON.stringify({ fromNexusId, toNexusId, troops, type, clientRequestId }),
-  });
+	apiRequest('/attack/send', {
+		method: 'POST',
+		body: JSON.stringify({ fromNexusId, toNexusId, troops, type, clientRequestId })
+	});
 
 export const getIncomingAttacks = (nexusId: string) => apiRequest(`/attack/incoming/${nexusId}`);
 
@@ -230,25 +243,32 @@ export const getOutgoingAttacks = (nexusId: string) => apiRequest(`/attack/outgo
 export const getAllAttacks = () => apiRequest('/attack/all');
 
 // Troop transfers
-export const sendTroops = (fromNexusId: string, toNexusId: string, troops: Record<string, number>) =>
-  apiRequest('/troop-transfer/send', { method: 'POST', body: JSON.stringify({ fromNexusId, toNexusId, troops }) });
+export const sendTroops = (
+	fromNexusId: string,
+	toNexusId: string,
+	troops: Record<string, number>
+) =>
+	apiRequest('/troop-transfer/send', {
+		method: 'POST',
+		body: JSON.stringify({ fromNexusId, toNexusId, troops })
+	});
 
 export const recallTroops = (transferId: string) =>
-  apiRequest(`/troop-transfer/${transferId}/recall`, { method: 'POST' });
+	apiRequest(`/troop-transfer/${transferId}/recall`, { method: 'POST' });
 
 export const sendBackTroops = (transferId: string) =>
-  apiRequest(`/troop-transfer/${transferId}/send-back`, { method: 'POST' });
+	apiRequest(`/troop-transfer/${transferId}/send-back`, { method: 'POST' });
 
 export const getNexusTroopTransfers = (nexusId: string) =>
-  apiRequest(`/troop-transfer/nexus/${nexusId}`);
+	apiRequest(`/troop-transfer/nexus/${nexusId}`);
 
 // Reports
 export const getReports = (nexusId: string) => apiRequest(`/report/reports/${nexusId}`);
 export const getNexusHistory = (nexusId: string) => apiRequest(`/report/nexus-history/${nexusId}`);
 export const markReportRead = (attackId: string) =>
-  apiRequest(`/report/read/${attackId}`, { method: 'POST' });
+	apiRequest(`/report/read/${attackId}`, { method: 'POST' });
 export const markAllReportsRead = (nexusId: string) =>
-  apiRequest(`/report/read-all/${nexusId}`, { method: 'POST' });
+	apiRequest(`/report/read-all/${nexusId}`, { method: 'POST' });
 export const getReadReportIds = () => apiRequest('/report/read-ids');
 export const getUnreadNexusIds = () => apiRequest('/report/unread-nexus-ids');
 
@@ -256,24 +276,25 @@ export const getUnreadNexusIds = () => apiRequest('/report/unread-nexus-ids');
 export const getMarketListings = () => apiRequest('/market');
 
 export const createMarketListing = (
-  nexusId: string,
-  offerResource: string,
-  offerAmount: number,
-  wantResource: string,
-  wantAmount: number,
+	nexusId: string,
+	offerResource: string,
+	offerAmount: number,
+	wantResource: string,
+	wantAmount: number
 ) =>
-  apiRequest('/market/list', {
-    method: 'POST',
-    body: JSON.stringify({ nexusId, offerResource, offerAmount, wantResource, wantAmount }),
-  });
+	apiRequest('/market/list', {
+		method: 'POST',
+		body: JSON.stringify({ nexusId, offerResource, offerAmount, wantResource, wantAmount })
+	});
 
 export const buyMarketListing = (listingId: number, buyerNexusId: string) =>
-  apiRequest(`/market/buy/${listingId}`, {
-    method: 'POST',
-    body: JSON.stringify({ buyerNexusId }),
-  });
+	apiRequest(`/market/buy/${listingId}`, {
+		method: 'POST',
+		body: JSON.stringify({ buyerNexusId })
+	});
 
-export const cancelMarketListing = (listingId: number) => apiRequest(`/market/${listingId}`, { method: 'DELETE' });
+export const cancelMarketListing = (listingId: number) =>
+	apiRequest(`/market/${listingId}`, { method: 'DELETE' });
 export const getMarketHistory = () => apiRequest('/market/history');
 
 // Factions
@@ -281,130 +302,152 @@ export const getMyFaction = () => apiRequest('/faction/my');
 export const getFaction = (id: number) => apiRequest(`/faction/${id}`);
 export const listFactionsInGalaxy = () => apiRequest('/faction/galaxy/list');
 export const createFaction = (data: { name: string; tag: string; description?: string }) =>
-  apiRequest('/faction', { method: 'POST', body: JSON.stringify(data) });
+	apiRequest('/faction', { method: 'POST', body: JSON.stringify(data) });
 export const inviteToFaction = (factionId: number, username: string) =>
-  apiRequest(`/faction/${factionId}/invite`, {
-    method: 'POST',
-    body: JSON.stringify({ username }),
-  });
+	apiRequest(`/faction/${factionId}/invite`, {
+		method: 'POST',
+		body: JSON.stringify({ username })
+	});
 export const getMyFactionInvites = () => apiRequest('/faction/invites/list');
 export const acceptFactionInvite = (inviteId: number) =>
-  apiRequest(`/faction/invites/${inviteId}/accept`, { method: 'POST' });
-export const declineFactionInvite = (inviteId: number) => apiRequest(`/faction/invites/${inviteId}`, { method: 'DELETE' });
+	apiRequest(`/faction/invites/${inviteId}/accept`, { method: 'POST' });
+export const declineFactionInvite = (inviteId: number) =>
+	apiRequest(`/faction/invites/${inviteId}`, { method: 'DELETE' });
 export const kickFactionMember = (factionId: number, userId: number) =>
-  apiRequest(`/faction/${factionId}/members/${userId}`, { method: 'DELETE' });
+	apiRequest(`/faction/${factionId}/members/${userId}`, { method: 'DELETE' });
 export const setFactionMemberRole = (factionId: number, userId: number, role: string) =>
-  apiRequest(`/faction/${factionId}/members/${userId}/role`, {
-    method: 'PATCH',
-    body: JSON.stringify({ role }),
-  });
+	apiRequest(`/faction/${factionId}/members/${userId}/role`, {
+		method: 'PATCH',
+		body: JSON.stringify({ role })
+	});
 export const transferFactionLeader = (factionId: number, userId: number) =>
-  apiRequest(`/faction/${factionId}/members/${userId}/transfer-leader`, { method: 'POST' });
-export const leaveFaction = (factionId: number) => apiRequest(`/faction/${factionId}/leave`, { method: 'POST' });
-export const disbandFaction = (factionId: number) => apiRequest(`/faction/${factionId}`, { method: 'DELETE' });
+	apiRequest(`/faction/${factionId}/members/${userId}/transfer-leader`, { method: 'POST' });
+export const leaveFaction = (factionId: number) =>
+	apiRequest(`/faction/${factionId}/leave`, { method: 'POST' });
+export const disbandFaction = (factionId: number) =>
+	apiRequest(`/faction/${factionId}`, { method: 'DELETE' });
 export const getFactionLeaderboard = () => apiRequest('/faction/leaderboard');
 export const updateFactionMotd = (factionId: number, motd: string) =>
-  apiRequest(`/faction/${factionId}/motd`, { method: 'PATCH', body: JSON.stringify({ motd }) });
+	apiRequest(`/faction/${factionId}/motd`, { method: 'PATCH', body: JSON.stringify({ motd }) });
 export const getFactionChat = (factionId: number, before?: number) =>
-  apiRequest(`/faction/${factionId}/chat${before ? `?before=${before}` : ''}`);
+	apiRequest(`/faction/${factionId}/chat${before ? `?before=${before}` : ''}`);
 export const sendFactionMessage = (factionId: number, content: string) =>
-  apiRequest(`/faction/${factionId}/chat`, { method: 'POST', body: JSON.stringify({ content }) });
+	apiRequest(`/faction/${factionId}/chat`, { method: 'POST', body: JSON.stringify({ content }) });
 export const getFactionEvents = (factionId: number, before?: number) =>
-  apiRequest(`/faction/${factionId}/events${before ? `?before=${before}` : ''}`);
+	apiRequest(`/faction/${factionId}/events${before ? `?before=${before}` : ''}`);
 export const getFactionWars = (factionId: number) => apiRequest(`/faction/${factionId}/wars`);
 export const declareWar = (factionId: number, targetFactionId: number) =>
-  apiRequest(`/faction/${factionId}/wars/declare/${targetFactionId}`, { method: 'POST' });
-export const acceptWar = (warId: number) => apiRequest(`/faction/wars/${warId}/accept`, { method: 'POST' });
-export const declineWar = (warId: number) => apiRequest(`/faction/wars/${warId}/decline`, { method: 'POST' });
-export const proposeCeasefire = (warId: number) => apiRequest(`/faction/wars/${warId}/ceasefire`, { method: 'POST' });
-export const acceptCeasefire = (warId: number) => apiRequest(`/faction/wars/${warId}/ceasefire/accept`, { method: 'POST' });
-export const declineCeasefire = (warId: number) => apiRequest(`/faction/wars/${warId}/ceasefire/decline`, { method: 'POST' });
+	apiRequest(`/faction/${factionId}/wars/declare/${targetFactionId}`, { method: 'POST' });
+export const acceptWar = (warId: number) =>
+	apiRequest(`/faction/wars/${warId}/accept`, { method: 'POST' });
+export const declineWar = (warId: number) =>
+	apiRequest(`/faction/wars/${warId}/decline`, { method: 'POST' });
+export const proposeCeasefire = (warId: number) =>
+	apiRequest(`/faction/wars/${warId}/ceasefire`, { method: 'POST' });
+export const acceptCeasefire = (warId: number) =>
+	apiRequest(`/faction/wars/${warId}/ceasefire/accept`, { method: 'POST' });
+export const declineCeasefire = (warId: number) =>
+	apiRequest(`/faction/wars/${warId}/ceasefire/decline`, { method: 'POST' });
 export const requestToJoinFaction = (factionId: number, message?: string) =>
-  apiRequest(`/faction/${factionId}/join-request`, { method: 'POST', body: JSON.stringify({ message }) });
+	apiRequest(`/faction/${factionId}/join-request`, {
+		method: 'POST',
+		body: JSON.stringify({ message })
+	});
 export const cancelFactionJoinRequest = (factionId: number) =>
-  apiRequest(`/faction/${factionId}/join-request`, { method: 'DELETE' });
+	apiRequest(`/faction/${factionId}/join-request`, { method: 'DELETE' });
 export const getMyFactionJoinRequests = () => apiRequest('/faction/join-requests/my');
-export const getFactionJoinRequests = (factionId: number) => apiRequest(`/faction/${factionId}/join-requests`);
+export const getFactionJoinRequests = (factionId: number) =>
+	apiRequest(`/faction/${factionId}/join-requests`);
 export const approveJoinRequest = (factionId: number, requestId: number) =>
-  apiRequest(`/faction/${factionId}/join-requests/${requestId}/approve`, { method: 'POST' });
+	apiRequest(`/faction/${factionId}/join-requests/${requestId}/approve`, { method: 'POST' });
 export const declineJoinRequest = (factionId: number, requestId: number) =>
-  apiRequest(`/faction/${factionId}/join-requests/${requestId}`, { method: 'DELETE' });
+	apiRequest(`/faction/${factionId}/join-requests/${requestId}`, { method: 'DELETE' });
 
 export const markFactionTarget = (nexusId: string, note?: string) =>
-  apiRequest(`/faction/targets/${nexusId}`, { method: 'POST', body: JSON.stringify({ note }) });
+	apiRequest(`/faction/targets/${nexusId}`, { method: 'POST', body: JSON.stringify({ note }) });
 export const unmarkFactionTarget = (nexusId: string) =>
-  apiRequest(`/faction/targets/${nexusId}`, { method: 'DELETE' });
+	apiRequest(`/faction/targets/${nexusId}`, { method: 'DELETE' });
 export const listFactionTargets = () => apiRequest('/faction/targets');
 
 export const systemBuyResource = (
-  nexusId: string,
-  receiveResource: string,
-  receiveAmount: number,
-  payResource: string,
+	nexusId: string,
+	receiveResource: string,
+	receiveAmount: number,
+	payResource: string
 ) =>
-  apiRequest('/market/system/buy', {
-    method: 'POST',
-    body: JSON.stringify({ nexusId, receiveResource, receiveAmount, payResource }),
-  });
-
+	apiRequest('/market/system/buy', {
+		method: 'POST',
+		body: JSON.stringify({ nexusId, receiveResource, receiveAmount, payResource })
+	});
 
 // Friends
 export const getFriends = () => apiRequest('/friends');
 export const getFriendsBadges = () => apiRequest('/friends/badges');
 export const getFriendRequests = () => apiRequest('/friends/requests');
 export const sendFriendRequest = (username: string) =>
-  apiRequest('/friends/request', { method: 'POST', body: JSON.stringify({ username }) });
+	apiRequest('/friends/request', { method: 'POST', body: JSON.stringify({ username }) });
 export const acceptFriendRequest = (requestId: string) =>
-  apiRequest(`/friends/request/${requestId}/accept`, { method: 'POST' });
+	apiRequest(`/friends/request/${requestId}/accept`, { method: 'POST' });
 export const declineFriendRequest = (requestId: string) =>
-  apiRequest(`/friends/request/${requestId}/decline`, { method: 'POST' });
+	apiRequest(`/friends/request/${requestId}/decline`, { method: 'POST' });
 export const cancelFriendRequest = (requestId: string) =>
-  apiRequest(`/friends/request/${requestId}/cancel`, { method: 'POST' });
+	apiRequest(`/friends/request/${requestId}/cancel`, { method: 'POST' });
 export const removeFriend = (friendId: string) =>
-  apiRequest(`/friends/${friendId}`, { method: 'DELETE' });
+	apiRequest(`/friends/${friendId}`, { method: 'DELETE' });
 
 // Users (public profile)
 export const getMe = () => apiRequest('/users/me');
 
 export const uploadAvatar = async (
-  file: Blob,
-): Promise<{ data: { avatarKey: string; avatarUrl: string | null; avatarUrlSm: string | null } }> => {
-  const token = localStorage.getItem('token');
-  const fd = new FormData();
-  fd.append('avatar', file);
-  const res = await fetch(`${API_URL}/users/me/avatar`, {
-    method: 'POST',
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    body: fd,
-  });
-  const raw = await res.text();
-  let data: { avatarKey?: string; avatarUrl?: string | null; avatarUrlSm?: string | null; error?: string } = {};
-  try {
-    data = raw ? JSON.parse(raw) : {};
-  } catch {
-    data = { error: raw };
-  }
-  if (!res.ok) {
-    const error = new Error(data.error || 'Upload failed');
-    (error as Error & { response?: { data: unknown; status: number } }).response = { data, status: res.status };
-    throw error;
-  }
-  return { data: data as { avatarKey: string; avatarUrl: string | null; avatarUrlSm: string | null } };
+	file: Blob
+): Promise<{
+	data: { avatarKey: string; avatarUrl: string | null; avatarUrlSm: string | null };
+}> => {
+	const token = localStorage.getItem('token');
+	const fd = new FormData();
+	fd.append('avatar', file);
+	const res = await fetch(`${API_URL}/users/me/avatar`, {
+		method: 'POST',
+		headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+		body: fd
+	});
+	const raw = await res.text();
+	let data: {
+		avatarKey?: string;
+		avatarUrl?: string | null;
+		avatarUrlSm?: string | null;
+		error?: string;
+	} = {};
+	try {
+		data = raw ? JSON.parse(raw) : {};
+	} catch {
+		data = { error: raw };
+	}
+	if (!res.ok) {
+		const error = new Error(data.error || 'Upload failed');
+		(error as Error & { response?: { data: unknown; status: number } }).response = {
+			data,
+			status: res.status
+		};
+		throw error;
+	}
+	return {
+		data: data as { avatarKey: string; avatarUrl: string | null; avatarUrlSm: string | null }
+	};
 };
 
-export const deleteAvatar = () =>
-  apiRequest('/users/me/avatar', { method: 'DELETE' });
+export const deleteAvatar = () => apiRequest('/users/me/avatar', { method: 'DELETE' });
 
 export const getPublicProfile = (username: string) =>
-  apiRequest(`/users/${encodeURIComponent(username)}/profile`);
+	apiRequest(`/users/${encodeURIComponent(username)}/profile`);
 
 export const listPlayersInGalaxy = () => apiRequest('/users');
 
 export const changePassword = (currentPassword: string, newPassword: string) =>
-  apiRequest('/users/me/change-password', {
-    method: 'POST',
-    body: JSON.stringify({ currentPassword, newPassword }),
-  });
+	apiRequest('/users/me/change-password', {
+		method: 'POST',
+		body: JSON.stringify({ currentPassword, newPassword })
+	});
 
 // Stats
 export const getUserStats = () => apiRequest('/stats/me');
@@ -416,45 +459,45 @@ export const claimDailyStreak = () => apiRequest('/stats/daily-streak/claim', { 
 export const getConversations = () => apiRequest('/chat/conversations');
 export const getChatUnreadCount = () => apiRequest('/chat/unread-count');
 export const getChatMessages = (friendId: string, before?: string) =>
-  apiRequest(`/chat/${friendId}/messages${before ? `?before=${before}` : ''}`);
+	apiRequest(`/chat/${friendId}/messages${before ? `?before=${before}` : ''}`);
 export const sendChatMessage = (friendId: string, content: string) =>
-  apiRequest(`/chat/${friendId}/messages`, { method: 'POST', body: JSON.stringify({ content }) });
+	apiRequest(`/chat/${friendId}/messages`, { method: 'POST', body: JSON.stringify({ content }) });
 export const markChatRead = (friendId: string) =>
-  apiRequest(`/chat/${friendId}/read`, { method: 'POST' });
+	apiRequest(`/chat/${friendId}/read`, { method: 'POST' });
 
 // Push Notifications
 export const getVapidPublicKey = () => apiRequest('/notifications/vapid-public-key');
 
 export const subscribePush = (subscription: PushSubscriptionJSON) =>
-  apiRequest('/notifications/subscribe', {
-    method: 'POST',
-    body: JSON.stringify({
-      endpoint: subscription.endpoint,
-      keys: subscription.keys,
-    }),
-  });
+	apiRequest('/notifications/subscribe', {
+		method: 'POST',
+		body: JSON.stringify({
+			endpoint: subscription.endpoint,
+			keys: subscription.keys
+		})
+	});
 
 export const unsubscribePush = (endpoint: string) =>
-  apiRequest('/notifications/subscribe', {
-    method: 'DELETE',
-    body: JSON.stringify({ endpoint }),
-  });
+	apiRequest('/notifications/subscribe', {
+		method: 'DELETE',
+		body: JSON.stringify({ endpoint })
+	});
 
 export const getNotificationPreferences = () => apiRequest('/notifications/preferences');
 
 export const updateNotificationPreferences = (prefs: Partial<Record<string, boolean>>) =>
-  apiRequest('/notifications/preferences', {
-    method: 'PATCH',
-    body: JSON.stringify(prefs),
-  });
+	apiRequest('/notifications/preferences', {
+		method: 'PATCH',
+		body: JSON.stringify(prefs)
+	});
 
 export const getNotificationBadges = () => apiRequest('/notifications/badges');
 
 export const markFactionChatRead = (factionId: number, messageId: number) =>
-  apiRequest(`/factions/${factionId}/chat/read`, {
-    method: 'POST',
-    body: JSON.stringify({ messageId }),
-  });
+	apiRequest(`/factions/${factionId}/chat/read`, {
+		method: 'POST',
+		body: JSON.stringify({ messageId })
+	});
 
 // Referrals
 export const getMyReferrals = () => apiRequest('/referral');
@@ -462,138 +505,161 @@ export const getMyPendingTokens = () => apiRequest('/referral/pending');
 export const getMyReferralCode = () => apiRequest('/referral/my-code');
 export const getMyReferrer = () => apiRequest('/referral/my-referrer');
 export const redeemReferralToken = (
-  tokenId: number,
-  rewardType: 'building_instant' | 'troop_grant',
-  nexusId: number,
-  opts: { building?: string; troopType?: string },
+	tokenId: number,
+	rewardType: 'building_instant' | 'troop_grant',
+	nexusId: number,
+	opts: { building?: string; troopType?: string }
 ) =>
-  apiRequest(`/referral/tokens/${tokenId}/redeem`, {
-    method: 'POST',
-    body: JSON.stringify({ rewardType, nexusId, ...opts }),
-  });
+	apiRequest(`/referral/tokens/${tokenId}/redeem`, {
+		method: 'POST',
+		body: JSON.stringify({ rewardType, nexusId, ...opts })
+	});
 export const redeemMilestoneToken = (
-  tokenId: number,
-  rewardType: 'building_instant' | 'troop_grant',
-  nexusId: number,
-  opts: { building?: string; troopType?: string },
+	tokenId: number,
+	rewardType: 'building_instant' | 'troop_grant',
+	nexusId: number,
+	opts: { building?: string; troopType?: string }
 ) =>
-  apiRequest(`/referral/milestone-tokens/${tokenId}/redeem`, {
-    method: 'POST',
-    body: JSON.stringify({ rewardType, nexusId, ...opts }),
-  });
+	apiRequest(`/referral/milestone-tokens/${tokenId}/redeem`, {
+		method: 'POST',
+		body: JSON.stringify({ rewardType, nexusId, ...opts })
+	});
 
 // Nexus specialization
 export const specializeNexus = (nexusId: string, nexusType: string) =>
-  apiRequest(`/nexus/${nexusId}/specialize`, {
-    method: 'POST',
-    body: JSON.stringify({ nexusType }),
-  });
+	apiRequest(`/nexus/${nexusId}/specialize`, {
+		method: 'POST',
+		body: JSON.stringify({ nexusType })
+	});
 
 // Espionage
-export const sendSpyMission = (fromNexusId: string, toNexusId: string, type: 'sabotage' | 'embed', operatives: number, sabotageTarget?: string) =>
-  apiRequest('/attack/spy', {
-    method: 'POST',
-    body: JSON.stringify({ fromNexusId, toNexusId, type, operatives, sabotageTarget }),
-  });
+export const sendSpyMission = (
+	fromNexusId: string,
+	toNexusId: string,
+	type: 'sabotage' | 'embed',
+	operatives: number,
+	sabotageTarget?: string
+) =>
+	apiRequest('/attack/spy', {
+		method: 'POST',
+		body: JSON.stringify({ fromNexusId, toNexusId, type, operatives, sabotageTarget })
+	});
 
 export const getAllEspionageLogs = (cursor?: number) =>
-  apiRequest(`/attack/spy/logs${cursor ? `?cursor=${cursor}` : ''}`);
+	apiRequest(`/attack/spy/logs${cursor ? `?cursor=${cursor}` : ''}`);
 
-export const getSpyMissions = (nexusId: string) =>
-  apiRequest(`/attack/spy/missions/${nexusId}`);
+export const getSpyMissions = (nexusId: string) => apiRequest(`/attack/spy/missions/${nexusId}`);
 
 export const getCompletedSpyMissions = (nexusId: string) =>
-  apiRequest(`/attack/spy/missions/${nexusId}/completed`);
+	apiRequest(`/attack/spy/missions/${nexusId}/completed`);
 
-export const getSpyAssets = (nexusId: string) =>
-  apiRequest(`/attack/spy/assets/${nexusId}`);
+export const getSpyAssets = (nexusId: string) => apiRequest(`/attack/spy/assets/${nexusId}`);
 
 export const getDiscoveredSpyAssets = (nexusId: string) =>
-  apiRequest(`/attack/spy/assets/${nexusId}/discovered`);
+	apiRequest(`/attack/spy/assets/${nexusId}/discovered`);
 
 export const recallSpyAsset = (assetId: number) =>
-  apiRequest(`/attack/spy/assets/${assetId}/recall`, { method: 'POST' });
+	apiRequest(`/attack/spy/assets/${assetId}/recall`, { method: 'POST' });
 
-export const getEmbedIntel = (assetId: number) =>
-  apiRequest(`/attack/spy/assets/${assetId}/intel`);
+export const getEmbedIntel = (assetId: number) => apiRequest(`/attack/spy/assets/${assetId}/intel`);
 
 // Galaxy events
-export const getGalaxyEvents = () =>
-  apiRequest('/map/events');
+export const getGalaxyEvents = () => apiRequest('/map/events');
 
 // Activity summary (While You Were Away)
 export const getActivitySummary = (since?: string) =>
-  apiRequest(`/report/summary${since ? `?since=${encodeURIComponent(since)}` : ''}`);
+	apiRequest(`/report/summary${since ? `?since=${encodeURIComponent(since)}` : ''}`);
 
 // War Room (real-time faction operation planning)
 export const getWarRoomStarfield = () => apiRequest('/warroom/starfield');
 export const listWarRoomOperations = () => apiRequest('/warroom/operations');
-export const getWarRoomOperation = (operationId: number) => apiRequest(`/warroom/operations/${operationId}`);
-export const createWarRoomOperation = (data: { name: string; targetNexusId: number; arrivalAt: string }) =>
-  apiRequest('/warroom/operations', { method: 'POST', body: JSON.stringify(data) });
+export const getWarRoomOperation = (operationId: number) =>
+	apiRequest(`/warroom/operations/${operationId}`);
+export const createWarRoomOperation = (data: {
+	name: string;
+	targetNexusId: number;
+	arrivalAt: string;
+}) => apiRequest('/warroom/operations', { method: 'POST', body: JSON.stringify(data) });
 export const updateWarRoomOperation = (
-  operationId: number,
-  data: { name?: string; arrivalAt?: string; status?: 'planning' | 'locked' | 'cancelled' | 'completed' },
+	operationId: number,
+	data: {
+		name?: string;
+		arrivalAt?: string;
+		status?: 'planning' | 'locked' | 'cancelled' | 'completed';
+	}
 ) =>
-  apiRequest(`/warroom/operations/${operationId}`, { method: 'PATCH', body: JSON.stringify(data) });
+	apiRequest(`/warroom/operations/${operationId}`, { method: 'PATCH', body: JSON.stringify(data) });
 export const deleteWarRoomOperation = (operationId: number) =>
-  apiRequest(`/warroom/operations/${operationId}`, { method: 'DELETE' });
+	apiRequest(`/warroom/operations/${operationId}`, { method: 'DELETE' });
 export const addWarRoomWave = (
-  operationId: number,
-  data: { label?: string; arrivalOffsetMs?: number; troops?: Record<string, number> },
+	operationId: number,
+	data: { label?: string; arrivalOffsetMs?: number; troops?: Record<string, number> }
 ) =>
-  apiRequest(`/warroom/operations/${operationId}/waves`, { method: 'POST', body: JSON.stringify(data) });
+	apiRequest(`/warroom/operations/${operationId}/waves`, {
+		method: 'POST',
+		body: JSON.stringify(data)
+	});
 export const updateWarRoomWave = (
-  waveId: number,
-  data: { label?: string; arrivalOffsetMs?: number; troops?: Record<string, number> },
-) =>
-  apiRequest(`/warroom/waves/${waveId}`, { method: 'PATCH', body: JSON.stringify(data) });
+	waveId: number,
+	data: { label?: string; arrivalOffsetMs?: number; troops?: Record<string, number> }
+) => apiRequest(`/warroom/waves/${waveId}`, { method: 'PATCH', body: JSON.stringify(data) });
 export const deleteWarRoomWave = (waveId: number) =>
-  apiRequest(`/warroom/waves/${waveId}`, { method: 'DELETE' });
+	apiRequest(`/warroom/waves/${waveId}`, { method: 'DELETE' });
 export const claimWarRoomSlot = (
-  waveId: number,
-  data: { fromNexusId: number; troops: Record<string, number>; note?: string },
-) =>
-  apiRequest(`/warroom/waves/${waveId}/slots`, { method: 'POST', body: JSON.stringify(data) });
+	waveId: number,
+	data: { fromNexusId: number; troops: Record<string, number>; note?: string }
+) => apiRequest(`/warroom/waves/${waveId}/slots`, { method: 'POST', body: JSON.stringify(data) });
 export const releaseWarRoomSlot = (slotId: number) =>
-  apiRequest(`/warroom/slots/${slotId}`, { method: 'DELETE' });
+	apiRequest(`/warroom/slots/${slotId}`, { method: 'DELETE' });
 export const markWarRoomSlotSent = (slotId: number, attackId: number | string) =>
-  apiRequest(`/warroom/slots/${slotId}/sent`, { method: 'POST', body: JSON.stringify({ attackId }) });
+	apiRequest(`/warroom/slots/${slotId}/sent`, {
+		method: 'POST',
+		body: JSON.stringify({ attackId })
+	});
 export const getWarRoomThread = (operationId: number, before?: number) =>
-  apiRequest(`/warroom/operations/${operationId}/thread${before ? `?before=${before}` : ''}`);
+	apiRequest(`/warroom/operations/${operationId}/thread${before ? `?before=${before}` : ''}`);
 export const postWarRoomThreadMessage = (operationId: number, content: string) =>
-  apiRequest(`/warroom/operations/${operationId}/thread`, { method: 'POST', body: JSON.stringify({ content }) });
+	apiRequest(`/warroom/operations/${operationId}/thread`, {
+		method: 'POST',
+		body: JSON.stringify({ content })
+	});
 
 // Faction diplomacy
-export const proposeTreaty = (factionId: number, targetFactionId: number, type: string, durationDays?: number) =>
-  apiRequest(`/faction/${factionId}/treaties/propose`, {
-    method: 'POST',
-    body: JSON.stringify({ targetFactionId, type, durationDays }),
-  });
+export const proposeTreaty = (
+	factionId: number,
+	targetFactionId: number,
+	type: string,
+	durationDays?: number
+) =>
+	apiRequest(`/faction/${factionId}/treaties/propose`, {
+		method: 'POST',
+		body: JSON.stringify({ targetFactionId, type, durationDays })
+	});
 
 export const acceptTreaty = (treatyId: number) =>
-  apiRequest(`/faction/treaties/${treatyId}/accept`, { method: 'POST' });
+	apiRequest(`/faction/treaties/${treatyId}/accept`, { method: 'POST' });
 
 export const cancelTreaty = (treatyId: number) =>
-  apiRequest(`/faction/treaties/${treatyId}/cancel`, { method: 'POST' });
+	apiRequest(`/faction/treaties/${treatyId}/cancel`, { method: 'POST' });
 
 export const getActiveTreaties = (factionId: number) =>
-  apiRequest(`/faction/${factionId}/treaties`);
+	apiRequest(`/faction/${factionId}/treaties`);
 
-export const getGalaxyDiplomacy = () =>
-  apiRequest('/faction/diplomacy/galaxy');
+export const getGalaxyDiplomacy = () => apiRequest('/faction/diplomacy/galaxy');
 
 // Diplomacy chat
 export const getDiplomacyMessages = (treatyId: number, before?: number) =>
-  apiRequest(`/faction/treaties/${treatyId}/chat${before ? `?before=${before}` : ''}`);
+	apiRequest(`/faction/treaties/${treatyId}/chat${before ? `?before=${before}` : ''}`);
 
 export const sendDiplomacyMessage = (treatyId: number, content: string) =>
-  apiRequest(`/faction/treaties/${treatyId}/chat`, { method: 'POST', body: JSON.stringify({ content }) });
+	apiRequest(`/faction/treaties/${treatyId}/chat`, {
+		method: 'POST',
+		body: JSON.stringify({ content })
+	});
 
 // Onboarding
 export const getProfile = () => apiRequest('/users/me');
 export const updateOnboardingStep = (stepId: string) =>
-  apiRequest('/users/onboarding-step', { method: 'PATCH', body: JSON.stringify({ step: stepId }) });
+	apiRequest('/users/onboarding-step', { method: 'PATCH', body: JSON.stringify({ step: stepId }) });
 export const trackReferralClick = (code: string) =>
-  apiRequest(`/referral/click/${code}`, { method: 'POST' });
-
+	apiRequest(`/referral/click/${code}`, { method: 'POST' });

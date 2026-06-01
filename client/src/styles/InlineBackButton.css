@@ -2,42 +2,45 @@
    app uses one back affordance. Sits inline with other action buttons
    (prev/next/share, etc) instead of in its own full-width strip. */
 .inline-back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px 6px 10px;
-  background: transparent;
-  border: 1px solid var(--border-default);
-  border-radius: 6px;
-  color: var(--text-muted);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 12px 6px 10px;
+	background: transparent;
+	border: 1px solid var(--border-default);
+	border-radius: 6px;
+	color: var(--text-muted);
+	font-size: 13px;
+	font-weight: 500;
+	cursor: pointer;
+	transition:
+		color 120ms ease,
+		border-color 120ms ease,
+		background 120ms ease;
 }
 
 .inline-back-btn:hover,
 .inline-back-btn:focus-visible {
-  color: var(--accent);
-  border-color: var(--accent);
-  background: var(--accent-soft);
-  outline: none;
+	color: var(--accent);
+	border-color: var(--accent);
+	background: var(--accent-soft);
+	outline: none;
 }
 
 .inline-back-btn:active {
-  transform: translateY(1px);
+	transform: translateY(1px);
 }
 
 .inline-back-btn-label {
-  line-height: 1;
+	line-height: 1;
 }
 
 /* Opt-in icon-only mode for tight headers on mobile. */
 @media (max-width: 480px) {
-  .inline-back-btn--collapse {
-    padding: 6px;
-  }
-  .inline-back-btn--collapse .inline-back-btn-label {
-    display: none;
-  }
+	.inline-back-btn--collapse {
+		padding: 6px;
+	}
+	.inline-back-btn--collapse .inline-back-btn-label {
+		display: none;
+	}
 }

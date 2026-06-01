@@ -18,4 +18,4 @@
 export const LATEST_PATCH_VERSION = '0.17';
 export const LATEST_PATCH_LABEL = 'Alpha v0.17';
 export const LATEST_PATCH_HEADLINE =
-  'New onboarding tips for fresh players, an Espionage log in Combat Logs, daily galaxy events firing more often, and a richer While You Were Away summary.';
+	'New onboarding tips for fresh players, an Espionage log in Combat Logs, daily galaxy events firing more often, and a richer While You Were Away summary.';

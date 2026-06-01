@@ -24,9 +24,9 @@ let offsetMs = 0;
 // network latency (~half the request RTT). Without this, the offset
 // systematically reads ~500 ms high on every sample.
 function median(values: number[]): number {
-  const sorted = [...values].sort((a, b) => a - b);
-  const mid = sorted.length >> 1;
-  return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+	const sorted = [...values].sort((a, b) => a - b);
+	const mid = sorted.length >> 1;
+	return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
 }
 
 /**
@@ -36,32 +36,32 @@ function median(values: number[]): number {
  * parse anything.
  */
 export function recordServerTimeSample(
-  response: { headers: { get(name: string): string | null } } | null | undefined,
-  requestStartMs: number,
-  requestEndMs: number,
+	response: { headers: { get(name: string): string | null } } | null | undefined,
+	requestStartMs: number,
+	requestEndMs: number
 ): void {
-  if (!response) return;
-  const dateHeader = response.headers.get('Date');
-  if (!dateHeader) return;
-  const serverMs = Date.parse(dateHeader);
-  if (!Number.isFinite(serverMs)) return;
-  // The server stamped `Date` *somewhere* between when it received the request
-  // and when the response started streaming back. The best client-side guess
-  // for that moment is the midpoint of the round-trip. Subtract that midpoint
-  // from the local clock to get the clientMinusServer offset at that moment.
-  const midpointMs = (requestStartMs + requestEndMs) / 2;
-  const sample = midpointMs - serverMs;
-  samples.push(sample);
-  if (samples.length > SAMPLE_LIMIT) samples.shift();
-  offsetMs = median(samples);
+	if (!response) return;
+	const dateHeader = response.headers.get('Date');
+	if (!dateHeader) return;
+	const serverMs = Date.parse(dateHeader);
+	if (!Number.isFinite(serverMs)) return;
+	// The server stamped `Date` *somewhere* between when it received the request
+	// and when the response started streaming back. The best client-side guess
+	// for that moment is the midpoint of the round-trip. Subtract that midpoint
+	// from the local clock to get the clientMinusServer offset at that moment.
+	const midpointMs = (requestStartMs + requestEndMs) / 2;
+	const sample = midpointMs - serverMs;
+	samples.push(sample);
+	if (samples.length > SAMPLE_LIMIT) samples.shift();
+	offsetMs = median(samples);
 }
 
 /** Current best estimate of `clientNow - serverNow` in ms. */
 export function getClockOffsetMs(): number {
-  return offsetMs;
+	return offsetMs;
 }
 
 /** Current best estimate of the server's clock in ms-since-epoch. */
 export function serverNow(): number {
-  return Date.now() - offsetMs;
+	return Date.now() - offsetMs;
 }

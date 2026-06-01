@@ -5,13 +5,13 @@ import { useSmartBack } from '@/hooks/useSmartBack';
 import '@/styles/BackBar.css';
 
 interface BackBarProps {
-  /** Where to go if there's no in-app history to pop (deep-linked entry). */
-  fallback: string;
-  /**
-   * Short label for the destination the user is leaving back to.
-   * Shown next to the arrow on screens that have room.
-   */
-  fallbackLabel?: string;
+	/** Where to go if there's no in-app history to pop (deep-linked entry). */
+	fallback: string;
+	/**
+	 * Short label for the destination the user is leaving back to.
+	 * Shown next to the arrow on screens that have room.
+	 */
+	fallbackLabel?: string;
 }
 
 // Slim sticky strip placed at the top of detail pages (PublicProfile, Replay,
@@ -27,19 +27,19 @@ interface BackBarProps {
 // title so it doesn't duplicate the page's identity block.
 
 export default function BackBar({ fallback, fallbackLabel }: BackBarProps) {
-  const onBack = useSmartBack(fallback);
+	const onBack = useSmartBack(fallback);
 
-  return (
-    <div className="backbar" role="navigation" aria-label="Page navigation">
-      <button
-        type="button"
-        className="backbar-btn"
-        onClick={onBack}
-        aria-label={fallbackLabel ? `Back to ${fallbackLabel}` : 'Back'}
-      >
-        <ArrowLeft size={16} aria-hidden="true" />
-        <span className="backbar-btn-label">{fallbackLabel ?? 'Back'}</span>
-      </button>
-    </div>
-  );
+	return (
+		<div className="backbar" role="navigation" aria-label="Page navigation">
+			<button
+				type="button"
+				className="backbar-btn"
+				onClick={onBack}
+				aria-label={fallbackLabel ? `Back to ${fallbackLabel}` : 'Back'}
+			>
+				<ArrowLeft size={16} aria-hidden="true" />
+				<span className="backbar-btn-label">{fallbackLabel ?? 'Back'}</span>
+			</button>
+		</div>
+	);
 }

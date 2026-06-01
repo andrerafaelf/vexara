@@ -1,168 +1,188 @@
 /* Centered modal-style placement — patch notes are worth showing prominently. */
 .new-patch-toast {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: var(--z-toast);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 28px 32px;
-  width: min(520px, calc(100vw - 32px));
-  background: var(--bg-surface);
-  border: 1px solid rgba(255, 158, 61, 0.45);
-  border-top: 3px solid var(--accent);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg), var(--glow-accent-soft), 0 0 0 1px rgba(255, 158, 61, 0.08);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  color: var(--text-strong);
-  animation: newPatchSlideIn 320ms var(--ease-out);
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	z-index: var(--z-toast);
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	padding: 28px 32px;
+	width: min(520px, calc(100vw - 32px));
+	background: var(--bg-surface);
+	border: 1px solid rgba(255, 158, 61, 0.45);
+	border-top: 3px solid var(--accent);
+	border-radius: var(--radius-lg);
+	box-shadow:
+		var(--shadow-lg),
+		var(--glow-accent-soft),
+		0 0 0 1px rgba(255, 158, 61, 0.08);
+	backdrop-filter: blur(14px);
+	-webkit-backdrop-filter: blur(14px);
+	color: var(--text-strong);
+	animation: newPatchSlideIn 320ms var(--ease-out);
 }
 
 /* Backdrop overlay so the toast feels like a modal */
 .new-patch-toast::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  z-index: -1;
-  animation: newPatchFadeIn 320ms var(--ease-out);
+	content: '';
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.55);
+	z-index: -1;
+	animation: newPatchFadeIn 320ms var(--ease-out);
 }
 
 @keyframes newPatchSlideIn {
-  from { transform: translate(-50%, calc(-50% + 16px)); opacity: 0; }
-  to   { transform: translate(-50%, -50%);              opacity: 1; }
+	from {
+		transform: translate(-50%, calc(-50% + 16px));
+		opacity: 0;
+	}
+	to {
+		transform: translate(-50%, -50%);
+		opacity: 1;
+	}
 }
 
 @keyframes newPatchFadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
 }
 
 .new-patch-toast-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
 }
 
 .new-patch-toast-icon {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  color: var(--accent);
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	color: var(--accent);
 }
 
 .new-patch-toast-label {
-  flex: 1;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--accent);
+	flex: 1;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--accent);
 }
 
 .new-patch-toast-close {
-  flex-shrink: 0;
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 4px;
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 120ms ease, background 120ms ease;
+	flex-shrink: 0;
+	background: transparent;
+	border: none;
+	color: var(--text-muted);
+	cursor: pointer;
+	padding: 4px;
+	border-radius: var(--radius-sm);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition:
+		color 120ms ease,
+		background 120ms ease;
 }
 
 .new-patch-toast-close:hover,
 .new-patch-toast-close:focus-visible {
-  color: var(--text-strong);
-  background: rgba(255, 255, 255, 0.06);
-  outline: none;
+	color: var(--text-strong);
+	background: rgba(255, 255, 255, 0.06);
+	outline: none;
 }
 
 .new-patch-toast-body {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
 }
 
 .new-patch-toast-headline {
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1.25;
-  color: var(--text-strong);
-  word-break: break-word;
-  letter-spacing: -0.015em;
+	font-size: 20px;
+	font-weight: 700;
+	line-height: 1.25;
+	color: var(--text-strong);
+	word-break: break-word;
+	letter-spacing: -0.015em;
 }
 
 .new-patch-toast-subtext {
-  font-size: 14px;
-  color: var(--text-muted);
-  line-height: 1.5;
+	font-size: 14px;
+	color: var(--text-muted);
+	line-height: 1.5;
 }
 
 .new-patch-toast-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 4px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-top: 4px;
 }
 
 .new-patch-toast-cta {
-  display: inline-flex;
-  align-items: center;
-  padding: 10px 22px;
-  background: var(--accent);
-  color: #0D1117;
-  font-size: 14px;
-  font-weight: 700;
-  text-decoration: none;
-  border-radius: var(--radius-sm);
-  transition: filter 120ms ease, transform 120ms ease;
-  letter-spacing: 0.02em;
+	display: inline-flex;
+	align-items: center;
+	padding: 10px 22px;
+	background: var(--accent);
+	color: #0d1117;
+	font-size: 14px;
+	font-weight: 700;
+	text-decoration: none;
+	border-radius: var(--radius-sm);
+	transition:
+		filter 120ms ease,
+		transform 120ms ease;
+	letter-spacing: 0.02em;
 }
 
 .new-patch-toast-cta:hover,
 .new-patch-toast-cta:focus-visible {
-  filter: brightness(1.08);
-  outline: none;
+	filter: brightness(1.08);
+	outline: none;
 }
 
 .new-patch-toast-cta:active {
-  transform: translateY(1px);
+	transform: translateY(1px);
 }
 
 .new-patch-toast-dismiss {
-  background: transparent;
-  border: 1px solid var(--border-default);
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 10px 18px;
-  border-radius: var(--radius-sm);
-  font-size: 13px;
-  font-weight: 500;
-  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+	background: transparent;
+	border: 1px solid var(--border-default);
+	color: var(--text-muted);
+	cursor: pointer;
+	padding: 10px 18px;
+	border-radius: var(--radius-sm);
+	font-size: 13px;
+	font-weight: 500;
+	transition:
+		color 120ms ease,
+		border-color 120ms ease,
+		background 120ms ease;
 }
 
 .new-patch-toast-dismiss:hover,
 .new-patch-toast-dismiss:focus-visible {
-  color: var(--text-strong);
-  border-color: var(--border-strong);
-  background: rgba(255, 255, 255, 0.04);
-  outline: none;
+	color: var(--text-strong);
+	border-color: var(--border-strong);
+	background: rgba(255, 255, 255, 0.04);
+	outline: none;
 }
 
 @media (max-width: 480px) {
-  .new-patch-toast {
-    padding: 22px 20px;
-  }
+	.new-patch-toast {
+		padding: 22px 20px;
+	}
 
-  .new-patch-toast-headline {
-    font-size: 17px;
-  }
+	.new-patch-toast-headline {
+		font-size: 17px;
+	}
 }

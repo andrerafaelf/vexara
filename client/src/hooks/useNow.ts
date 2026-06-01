@@ -18,47 +18,47 @@ let intervalId: ReturnType<typeof setInterval> | null = null;
 let visibilityBound = false;
 
 function tick() {
-  nowMs = serverNow();
-  for (const l of listeners) l();
+	nowMs = serverNow();
+	for (const l of listeners) l();
 }
 
 function startInterval() {
-  if (intervalId) return;
-  // Snap to a fresh value immediately so subscribers don't see a stale `nowMs` on resume.
-  nowMs = serverNow();
-  intervalId = setInterval(tick, 1000);
+	if (intervalId) return;
+	// Snap to a fresh value immediately so subscribers don't see a stale `nowMs` on resume.
+	nowMs = serverNow();
+	intervalId = setInterval(tick, 1000);
 }
 
 function stopInterval() {
-  if (!intervalId) return;
-  clearInterval(intervalId);
-  intervalId = null;
+	if (!intervalId) return;
+	clearInterval(intervalId);
+	intervalId = null;
 }
 
 function ensureVisibilityBinding() {
-  if (visibilityBound || typeof document === 'undefined') return;
-  visibilityBound = true;
-  document.addEventListener('visibilitychange', () => {
-    if (listeners.size === 0) return;
-    if (document.visibilityState === 'visible') {
-      tick();
-      startInterval();
-    } else {
-      stopInterval();
-    }
-  });
+	if (visibilityBound || typeof document === 'undefined') return;
+	visibilityBound = true;
+	document.addEventListener('visibilitychange', () => {
+		if (listeners.size === 0) return;
+		if (document.visibilityState === 'visible') {
+			tick();
+			startInterval();
+		} else {
+			stopInterval();
+		}
+	});
 }
 
 function subscribe(listener: () => void): () => void {
-  listeners.add(listener);
-  ensureVisibilityBinding();
-  if (typeof document === 'undefined' || document.visibilityState === 'visible') {
-    startInterval();
-  }
-  return () => {
-    listeners.delete(listener);
-    if (listeners.size === 0) stopInterval();
-  };
+	listeners.add(listener);
+	ensureVisibilityBinding();
+	if (typeof document === 'undefined' || document.visibilityState === 'visible') {
+		startInterval();
+	}
+	return () => {
+		listeners.delete(listener);
+		if (listeners.size === 0) stopInterval();
+	};
 }
 
 const getSnapshot = () => nowMs;
@@ -71,14 +71,14 @@ const getServerSnapshot = () => 0;
  * not their parents or siblings. The clock auto-pauses when the document is hidden.
  */
 export function useNow(): number {
-  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+	return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
 // Stable no-op subscribe used by useGatedNow when disabled, so the calling
 // component is wired to a store that *never* notifies - re-renders only when
 // `enabled` itself flips.
 function noopSubscribe(): () => void {
-  return () => {};
+	return () => {};
 }
 
 /**
@@ -94,9 +94,9 @@ function noopSubscribe(): () => void {
  * per-second render count proportional to "interesting" cards, not total cards.
  */
 export function useGatedNow(enabled: boolean): number {
-  return useSyncExternalStore(
-    enabled ? subscribe : noopSubscribe,
-    enabled ? getSnapshot : () => 0,
-    getServerSnapshot,
-  );
+	return useSyncExternalStore(
+		enabled ? subscribe : noopSubscribe,
+		enabled ? getSnapshot : () => 0,
+		getServerSnapshot
+	);
 }

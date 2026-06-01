@@ -10,24 +10,26 @@ import { useGameConnectionStatus } from '@/hooks/useGameSocket';
  * routine wifi blips is more noise than signal.
  */
 export default function ConnectionStatusBar() {
-  const status = useGameConnectionStatus();
-  if (status !== 'disconnected') return null;
+	const status = useGameConnectionStatus();
+	if (status !== 'disconnected') return null;
 
-  return (
-    <div
-      role="status"
-      aria-live="polite"
-      className="connection-status-bar connection-status-bar--fail"
-    >
-      <span className="connection-status-dot" aria-hidden="true" />
-      <span className="connection-status-text">Live updates disconnected - refresh to reconnect.</span>
-      <button
-        type="button"
-        className="connection-status-action"
-        onClick={() => window.location.reload()}
-      >
-        Reload
-      </button>
-    </div>
-  );
+	return (
+		<div
+			role="status"
+			aria-live="polite"
+			className="connection-status-bar connection-status-bar--fail"
+		>
+			<span className="connection-status-dot" aria-hidden="true" />
+			<span className="connection-status-text">
+				Live updates disconnected - refresh to reconnect.
+			</span>
+			<button
+				type="button"
+				className="connection-status-action"
+				onClick={() => window.location.reload()}
+			>
+				Reload
+			</button>
+		</div>
+	);
 }

@@ -6,18 +6,18 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function ProfilePage() {
-  const router = useRouter();
+	const router = useRouter();
 
-  useEffect(() => {
-    if (typeof window !== 'undefined' && !localStorage.getItem('token')) {
-      router.push('/login');
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+	useEffect(() => {
+		if (typeof window !== 'undefined' && !localStorage.getItem('token')) {
+			router.push('/login');
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
-  return (
-    <GameLayout activePage="profile">
-      <ProfileStats />
-    </GameLayout>
-  );
+	return (
+		<GameLayout activePage="profile">
+			<ProfileStats />
+		</GameLayout>
+	);
 }

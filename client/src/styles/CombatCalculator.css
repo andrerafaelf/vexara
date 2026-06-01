@@ -2,124 +2,141 @@
    Combat Calculator — live outcome prediction shown in the attack form.
    ========================================================================== */
 .cc-root {
-  margin: 10px 0 4px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--border-default, #2a2f3a);
-  background: rgba(255, 255, 255, 0.03);
-  font-size: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+	margin: 10px 0 4px;
+	padding: 10px 12px;
+	border-radius: 8px;
+	border: 1px solid var(--border-default, #2a2f3a);
+	background: rgba(255, 255, 255, 0.03);
+	font-size: 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
 }
 
 .cc-root--idle {
-  flex-direction: row;
-  align-items: center;
-  gap: 6px;
-  color: var(--text-muted, #8b94a3);
+	flex-direction: row;
+	align-items: center;
+	gap: 6px;
+	color: var(--text-muted, #8b94a3);
 }
 
 .cc-root--win {
-  border-color: rgba(86, 211, 100, 0.4);
-  background: rgba(86, 211, 100, 0.06);
+	border-color: rgba(86, 211, 100, 0.4);
+	background: rgba(86, 211, 100, 0.06);
 }
 
 .cc-root--loss {
-  border-color: rgba(248, 81, 73, 0.4);
-  background: rgba(248, 81, 73, 0.06);
+	border-color: rgba(248, 81, 73, 0.4);
+	background: rgba(248, 81, 73, 0.06);
 }
 
 .cc-verdict {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  flex-wrap: wrap;
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	flex-wrap: wrap;
 }
 
 .cc-verdict-text {
-  font-weight: 800;
-  letter-spacing: 0.01em;
+	font-weight: 800;
+	letter-spacing: 0.01em;
 }
 
-.cc-root--win .cc-verdict-text { color: #56D364; }
-.cc-root--loss .cc-verdict-text { color: #F85149; }
+.cc-root--win .cc-verdict-text {
+	color: #56d364;
+}
+.cc-root--loss .cc-verdict-text {
+	color: #f85149;
+}
 
 .cc-margin {
-  font-size: 11px;
-  color: var(--text-muted, #8b94a3);
-  margin-left: auto;
+	font-size: 11px;
+	color: var(--text-muted, #8b94a3);
+	margin-left: auto;
 }
 
-.cc-margin--coinflip { color: #D29922; }
-.cc-margin--close { color: #E3A008; }
+.cc-margin--coinflip {
+	color: #d29922;
+}
+.cc-margin--close {
+	color: #e3a008;
+}
 
 .cc-power-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 700;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-weight: 700;
 }
 
 .cc-power {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
 }
 
-.cc-power--atk { color: #FF9E3D; }
-.cc-power--def { color: #58A6FF; }
-.cc-power-vs { color: var(--text-muted, #8b94a3); font-weight: 600; }
+.cc-power--atk {
+	color: #ff9e3d;
+}
+.cc-power--def {
+	color: #58a6ff;
+}
+.cc-power-vs {
+	color: var(--text-muted, #8b94a3);
+	font-weight: 600;
+}
 
 .cc-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 14px;
 }
 
 .cc-stat {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
 }
 
 .cc-stat-label {
-  font-size: 10.5px;
-  color: var(--text-muted, #8b94a3);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+	font-size: 10.5px;
+	color: var(--text-muted, #8b94a3);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
 }
 
 .cc-stat-value {
-  font-weight: 700;
-  color: var(--text-strong, #e6edf3);
+	font-weight: 700;
+	color: var(--text-strong, #e6edf3);
 }
 
-.cc-stat-value--loss { color: #F85149; }
+.cc-stat-value--loss {
+	color: #f85149;
+}
 
 .cc-conquest {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  padding: 7px 9px;
-  border-radius: 6px;
-  font-size: 11.5px;
-  line-height: 1.35;
+	display: flex;
+	align-items: flex-start;
+	gap: 6px;
+	padding: 7px 9px;
+	border-radius: 6px;
+	font-size: 11.5px;
+	line-height: 1.35;
 }
 
 .cc-conquest--yes {
-  background: rgba(86, 211, 100, 0.1);
-  color: #7ee787;
+	background: rgba(86, 211, 100, 0.1);
+	color: #7ee787;
 }
 
 .cc-conquest--no {
-  background: rgba(210, 153, 34, 0.1);
-  color: #e3b341;
+	background: rgba(210, 153, 34, 0.1);
+	color: #e3b341;
 }
 
 .cc-note {
-  font-size: 11px;
-  line-height: 1.35;
-  color: var(--text-muted, #8b94a3);
-  font-style: italic;
+	font-size: 11px;
+	line-height: 1.35;
+	color: var(--text-muted, #8b94a3);
+	font-style: italic;
 }

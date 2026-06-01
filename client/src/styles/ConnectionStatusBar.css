@@ -1,71 +1,78 @@
 .connection-status-bar {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.45rem 1rem;
-  font-size: 0.85rem;
-  font-weight: 500;
-  border-bottom: 1px solid currentColor;
-  animation: connection-status-slide-in 180ms ease-out;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.45rem 1rem;
+	font-size: 0.85rem;
+	font-weight: 500;
+	border-bottom: 1px solid currentColor;
+	animation: connection-status-slide-in 180ms ease-out;
 }
 
 .connection-status-bar--retry {
-  background: rgba(234, 179, 8, 0.12);
-  color: #facc15;
-  border-bottom-color: rgba(234, 179, 8, 0.4);
+	background: rgba(234, 179, 8, 0.12);
+	color: #facc15;
+	border-bottom-color: rgba(234, 179, 8, 0.4);
 }
 
 .connection-status-bar--fail {
-  background: rgba(239, 68, 68, 0.14);
-  color: #f87171;
-  border-bottom-color: rgba(239, 68, 68, 0.5);
+	background: rgba(239, 68, 68, 0.14);
+	color: #f87171;
+	border-bottom-color: rgba(239, 68, 68, 0.5);
 }
 
 .connection-status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: currentColor;
-  animation: connection-status-pulse 1.4s ease-in-out infinite;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: currentColor;
+	animation: connection-status-pulse 1.4s ease-in-out infinite;
 }
 
 .connection-status-bar--fail .connection-status-dot {
-  animation: none;
+	animation: none;
 }
 
 .connection-status-text {
-  flex: 1;
-  letter-spacing: 0.01em;
+	flex: 1;
+	letter-spacing: 0.01em;
 }
 
 .connection-status-action {
-  background: rgba(255, 255, 255, 0.08);
-  color: inherit;
-  border: 1px solid currentColor;
-  border-radius: 4px;
-  padding: 0.2rem 0.7rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 120ms ease-out;
+	background: rgba(255, 255, 255, 0.08);
+	color: inherit;
+	border: 1px solid currentColor;
+	border-radius: 4px;
+	padding: 0.2rem 0.7rem;
+	font-size: 0.78rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background 120ms ease-out;
 }
 
 .connection-status-action:hover {
-  background: rgba(255, 255, 255, 0.16);
+	background: rgba(255, 255, 255, 0.16);
 }
 
 @keyframes connection-status-slide-in {
-  from {
-    transform: translateY(-100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+	from {
+		transform: translateY(-100%);
+		opacity: 0;
+	}
+	to {
+		transform: translateY(0);
+		opacity: 1;
+	}
 }
 
 @keyframes connection-status-pulse {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50%      { opacity: 1;   transform: scale(1.25); }
+	0%,
+	100% {
+		opacity: 0.5;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 1;
+		transform: scale(1.25);
+	}
 }

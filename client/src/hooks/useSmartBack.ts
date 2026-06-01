@@ -21,25 +21,25 @@ import { useCallback, useEffect, useState } from 'react';
 // The hook returns a stable callback you can wire to any <button onClick>.
 
 export function useSmartBack(fallback: string): () => void {
-  const router = useRouter();
-  // Capture once at mount so later in-page interactions (modal opens, tab
-  // changes via router.replace) don't confuse the heuristic. Same-origin
-  // navigations don't change document.referrer, but they do bump history.length
-  // . freezing the entry-time signal avoids that drift.
-  const [canGoBack, setCanGoBack] = useState(false);
+	const router = useRouter();
+	// Capture once at mount so later in-page interactions (modal opens, tab
+	// changes via router.replace) don't confuse the heuristic. Same-origin
+	// navigations don't change document.referrer, but they do bump history.length
+	// . freezing the entry-time signal avoids that drift.
+	const [canGoBack, setCanGoBack] = useState(false);
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const referrer = document.referrer;
-    const sameOrigin = referrer ? new URL(referrer).origin === window.location.origin : false;
-    setCanGoBack(window.history.length > 1 && sameOrigin);
-  }, []);
+	useEffect(() => {
+		if (typeof window === 'undefined') return;
+		const referrer = document.referrer;
+		const sameOrigin = referrer ? new URL(referrer).origin === window.location.origin : false;
+		setCanGoBack(window.history.length > 1 && sameOrigin);
+	}, []);
 
-  return useCallback(() => {
-    if (canGoBack) {
-      router.back();
-    } else {
-      router.push(fallback);
-    }
-  }, [canGoBack, fallback, router]);
+	return useCallback(() => {
+		if (canGoBack) {
+			router.back();
+		} else {
+			router.push(fallback);
+		}
+	}, [canGoBack, fallback, router]);
 }

@@ -1,104 +1,108 @@
 .sc-wrapper {
-  background: var(--color-navy-800);
-  border: 2px solid var(--color-navy-700);
-  border-radius: 10px;
-  overflow: hidden;
+	background: var(--color-navy-800);
+	border: 2px solid var(--color-navy-700);
+	border-radius: 10px;
+	overflow: hidden;
 }
 
 .sc-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--color-navy-700);
-  padding: 8px 14px;
-  gap: 12px;
-  flex-wrap: wrap;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	background: var(--color-navy-700);
+	padding: 8px 14px;
+	gap: 12px;
+	flex-wrap: wrap;
 }
 
 /* Tab buttons (Combat / Resources) */
 .sc-tabs {
-  display: flex;
-  gap: 4px;
+	display: flex;
+	gap: 4px;
 }
 
 .sc-tab {
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--text-muted);
-  font-size: 13px;
-  font-weight: bold;
-  padding: 5px 14px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+	background: transparent;
+	border: 1px solid transparent;
+	color: var(--text-muted);
+	font-size: 13px;
+	font-weight: bold;
+	padding: 5px 14px;
+	border-radius: 5px;
+	cursor: pointer;
+	transition:
+		color 0.15s,
+		border-color 0.15s;
 }
 
 .sc-tab:hover {
-  color: var(--text-muted);
+	color: var(--text-muted);
 }
 
 .sc-tab.active {
-  color: var(--accent);
-  border-color: var(--accent);
+	color: var(--accent);
+	border-color: var(--accent);
 }
 
 /* Range selector (7d / 30d / 90d) */
 .sc-ranges {
-  display: flex;
-  gap: 4px;
+	display: flex;
+	gap: 4px;
 }
 
 .sc-range {
-  background: transparent;
-  border: 1px solid var(--color-navy-500);
-  color: var(--text-muted);
-  font-size: 12px;
-  padding: 4px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+	background: transparent;
+	border: 1px solid var(--color-navy-500);
+	color: var(--text-muted);
+	font-size: 12px;
+	padding: 4px 10px;
+	border-radius: 4px;
+	cursor: pointer;
+	transition:
+		color 0.15s,
+		border-color 0.15s;
 }
 
 .sc-range:hover {
-  color: var(--text-muted);
-  border-color: var(--text-muted);
+	color: var(--text-muted);
+	border-color: var(--text-muted);
 }
 
 .sc-range.active {
-  color: var(--text-default);
-  border-color: var(--text-muted);
-  background: rgba(255, 158, 61, 0.1);
+	color: var(--text-default);
+	border-color: var(--text-muted);
+	background: rgba(255, 158, 61, 0.1);
 }
 
 /* Metric label between toolbar and chart */
 .sc-metric-label {
-  color: var(--text-muted);
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 10px 14px 0;
+	color: var(--text-muted);
+	font-size: 12px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	padding: 10px 14px 0;
 }
 
 /* Chart area */
 .sc-chart-area {
-  padding: 8px 8px 8px;
-  position: relative;
-  min-height: 256px;
+	padding: 8px 8px 8px;
+	position: relative;
+	min-height: 256px;
 }
 
 .sc-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  font-size: 14px;
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--text-muted);
+	font-size: 14px;
 }
 
 .sc-error {
-  color: var(--accent);
+	color: var(--accent);
 }
 
 /* ╔══════════════════════════════════════════════════════════════════╗
@@ -107,33 +111,33 @@
 
 [class^='sc-'],
 [class*=' sc-'] {
-  border-radius: 0;
+	border-radius: 0;
 }
 
 [class*='sc-'][class*='-card'],
 [class*='sc-'][class*='-panel'] {
-  border-left: 2px solid var(--accent-2);
+	border-left: 2px solid var(--accent-2);
 }
 
 [class*='sc-'][class*='-title'],
 [class*='sc-'][class*='-heading'] {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--accent);
+	font-family: var(--font-mono);
+	font-size: 11px;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--accent);
 }
 
 [class*='sc-'][class*='-label'] {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+	font-family: var(--font-mono);
+	font-size: 10px;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
 }
 
 [class*='sc-'][class*='-value'],
 [class*='sc-'][class*='-numeric'],
 [class*='sc-'][class*='-tooltip'] {
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
 }

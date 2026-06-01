@@ -3,94 +3,114 @@
 import Link from 'next/link';
 
 interface ReplayPayload {
-  id: string;
-  attacker: { username: string | null; nexusName: string | null; x: number | null; y: number | null };
-  defender: { username: string | null; nexusName: string | null; x: number | null; y: number | null };
-  attackerInitial: Record<string, number>;
-  defenderInitial: Record<string, number>;
-  attackerLosses: Record<string, number>;
-  defenderLosses: Record<string, number>;
-  attackerPower: number | null;
-  defenderPower: number | null;
-  victory: boolean;
-  conquered: boolean;
-  resourcesStolen: { biomass: number; alloy: number; ore: number };
-  combatSeed: number;
-  createdAt: string;
+	id: string;
+	attacker: {
+		username: string | null;
+		nexusName: string | null;
+		x: number | null;
+		y: number | null;
+	};
+	defender: {
+		username: string | null;
+		nexusName: string | null;
+		x: number | null;
+		y: number | null;
+	};
+	attackerInitial: Record<string, number>;
+	defenderInitial: Record<string, number>;
+	attackerLosses: Record<string, number>;
+	defenderLosses: Record<string, number>;
+	attackerPower: number | null;
+	defenderPower: number | null;
+	victory: boolean;
+	conquered: boolean;
+	resourcesStolen: { biomass: number; alloy: number; ore: number };
+	combatSeed: number;
+	createdAt: string;
 }
 
 export default function ReplayClient({ data }: { data: ReplayPayload }) {
-  const attackerLabel = data.attacker.username || 'Unknown';
-  const defenderLabel = data.defender.username || 'Unknown';
+	const attackerLabel = data.attacker.username || 'Unknown';
+	const defenderLabel = data.defender.username || 'Unknown';
 
-  const outcomeChip = data.conquered
-    ? { text: 'NEXUS CONQUERED', color: '#F85149' }
-    : data.victory
-      ? { text: 'ATTACKER VICTORY', color: '#FF9E3D' }
-      : { text: 'DEFENSE HELD', color: '#56D364' };
+	const outcomeChip = data.conquered
+		? { text: 'NEXUS CONQUERED', color: '#F85149' }
+		: data.victory
+			? { text: 'ATTACKER VICTORY', color: '#FF9E3D' }
+			: { text: 'DEFENSE HELD', color: '#56D364' };
 
-  const totalAttackers = Object.values(data.attackerInitial).reduce((a, b) => a + b, 0);
-  const totalDefenders = Object.values(data.defenderInitial).reduce((a, b) => a + b, 0);
-  const date = new Date(data.createdAt);
+	const totalAttackers = Object.values(data.attackerInitial).reduce((a, b) => a + b, 0);
+	const totalDefenders = Object.values(data.defenderInitial).reduce((a, b) => a + b, 0);
+	const date = new Date(data.createdAt);
 
-  return (
-    <div className="public-replay-root">
-      <header className="public-replay-header">
-        <Link href="/" className="public-replay-brand" aria-label="Vexara home">
-          <span className="public-replay-brand-mark">▲</span>
-          <span className="public-replay-brand-name">VEXARA</span>
-        </Link>
-        <span
-          className="public-replay-outcome-chip"
-          style={{ background: outcomeChip.color, color: '#0D1117' }}
-        >
-          {outcomeChip.text}
-        </span>
-        <Link href="/" className="public-replay-cta">Play Vexara →</Link>
-      </header>
+	return (
+		<div className="public-replay-root">
+			<header className="public-replay-header">
+				<Link href="/" className="public-replay-brand" aria-label="Vexara home">
+					<span className="public-replay-brand-mark">▲</span>
+					<span className="public-replay-brand-name">VEXARA</span>
+				</Link>
+				<span
+					className="public-replay-outcome-chip"
+					style={{ background: outcomeChip.color, color: '#0D1117' }}
+				>
+					{outcomeChip.text}
+				</span>
+				<Link href="/" className="public-replay-cta">
+					Play Vexara →
+				</Link>
+			</header>
 
-      <main className="public-replay-main">
-        <div className="public-replay-meta">
-          <div className="public-replay-meta-row">
-            <div className="public-replay-side public-replay-side--attacker">
-              <span className="public-replay-side-label">ATTACKER</span>
-              <span className="public-replay-side-name">{attackerLabel}</span>
-              {data.attacker.nexusName && (
-                <span className="public-replay-side-detail">
-                  {data.attacker.nexusName}
-                  {data.attacker.x != null && ` (${data.attacker.x}|${data.attacker.y})`}
-                </span>
-              )}
-              <span className="public-replay-side-stat">{totalAttackers} units · {data.attackerPower ? data.attackerPower.toLocaleString() : '.'} atk</span>
-            </div>
-            <span className="public-replay-vs">VS</span>
-            <div className="public-replay-side public-replay-side--defender">
-              <span className="public-replay-side-label">DEFENDER</span>
-              <span className="public-replay-side-name">{defenderLabel}</span>
-              {data.defender.nexusName && (
-                <span className="public-replay-side-detail">
-                  {data.defender.nexusName}
-                  {data.defender.x != null && ` (${data.defender.x}|${data.defender.y})`}
-                </span>
-              )}
-              <span className="public-replay-side-stat">{totalDefenders} units · {data.defenderPower ? data.defenderPower.toLocaleString() : '.'} def</span>
-            </div>
-          </div>
-        </div>
+			<main className="public-replay-main">
+				<div className="public-replay-meta">
+					<div className="public-replay-meta-row">
+						<div className="public-replay-side public-replay-side--attacker">
+							<span className="public-replay-side-label">ATTACKER</span>
+							<span className="public-replay-side-name">{attackerLabel}</span>
+							{data.attacker.nexusName && (
+								<span className="public-replay-side-detail">
+									{data.attacker.nexusName}
+									{data.attacker.x != null && ` (${data.attacker.x}|${data.attacker.y})`}
+								</span>
+							)}
+							<span className="public-replay-side-stat">
+								{totalAttackers} units ·{' '}
+								{data.attackerPower ? data.attackerPower.toLocaleString() : '.'} atk
+							</span>
+						</div>
+						<span className="public-replay-vs">VS</span>
+						<div className="public-replay-side public-replay-side--defender">
+							<span className="public-replay-side-label">DEFENDER</span>
+							<span className="public-replay-side-name">{defenderLabel}</span>
+							{data.defender.nexusName && (
+								<span className="public-replay-side-detail">
+									{data.defender.nexusName}
+									{data.defender.x != null && ` (${data.defender.x}|${data.defender.y})`}
+								</span>
+							)}
+							<span className="public-replay-side-stat">
+								{totalDefenders} units ·{' '}
+								{data.defenderPower ? data.defenderPower.toLocaleString() : '.'} def
+							</span>
+						</div>
+					</div>
+				</div>
 
-        <div className="public-replay-stage">
-          <div style={{ textAlign: 'center', padding: '32px', color: '#6E7681', fontSize: '13px' }}>
-            Detailed replay not available for this battle.
-          </div>
-        </div>
+				<div className="public-replay-stage">
+					<div style={{ textAlign: 'center', padding: '32px', color: '#6E7681', fontSize: '13px' }}>
+						Detailed replay not available for this battle.
+					</div>
+				</div>
 
-        <div className="public-replay-footer">
-          <span>Battle ID #{data.id} · {date.toLocaleString()}</span>
-          <span>Deterministic seed {data.combatSeed} · Same seed always replays identically</span>
-        </div>
-      </main>
+				<div className="public-replay-footer">
+					<span>
+						Battle ID #{data.id} · {date.toLocaleString()}
+					</span>
+					<span>Deterministic seed {data.combatSeed} · Same seed always replays identically</span>
+				</div>
+			</main>
 
-      <style>{`
+			<style>{`
         body { margin: 0; }
         .public-replay-root {
           min-height: 100vh;
@@ -224,6 +244,6 @@ export default function ReplayClient({ data }: { data: ReplayPayload }) {
           .public-replay-side-name { font-size: 18px; }
         }
       `}</style>
-    </div>
-  );
+		</div>
+	);
 }

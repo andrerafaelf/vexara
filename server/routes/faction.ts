@@ -11,56 +11,136 @@ import type { AuthRequest } from '../types/index.js';
 const router = Router();
 
 // Static routes first, must precede /:id to avoid param capture
-router.get('/my', auth, (req, res) => factionController.getMyFaction(req as AuthRequest, res as Response));
-router.get('/targets', auth, (req, res) => targetController.listTargets(req as AuthRequest, res as Response));
-router.post('/targets/:nexusId', auth, (req, res) => targetController.markTarget(req as AuthRequest, res as Response));
-router.delete('/targets/:nexusId', auth, (req, res) => targetController.unmarkTarget(req as AuthRequest, res as Response));
-router.get('/galaxy/list', auth, (req, res) => factionController.listFactionsInGalaxy(req as AuthRequest, res as Response));
-router.get('/leaderboard', auth, (req, res) => factionController.getLeaderboard(req as AuthRequest, res as Response));
-router.get('/diplomacy/galaxy', auth, (req, res) => treatyController.getGalaxyDiplomacy(req as AuthRequest, res as Response));
+router.get('/my', auth, (req, res) =>
+	factionController.getMyFaction(req as AuthRequest, res as Response)
+);
+router.get('/targets', auth, (req, res) =>
+	targetController.listTargets(req as AuthRequest, res as Response)
+);
+router.post('/targets/:nexusId', auth, (req, res) =>
+	targetController.markTarget(req as AuthRequest, res as Response)
+);
+router.delete('/targets/:nexusId', auth, (req, res) =>
+	targetController.unmarkTarget(req as AuthRequest, res as Response)
+);
+router.get('/galaxy/list', auth, (req, res) =>
+	factionController.listFactionsInGalaxy(req as AuthRequest, res as Response)
+);
+router.get('/leaderboard', auth, (req, res) =>
+	factionController.getLeaderboard(req as AuthRequest, res as Response)
+);
+router.get('/diplomacy/galaxy', auth, (req, res) =>
+	treatyController.getGalaxyDiplomacy(req as AuthRequest, res as Response)
+);
 
 // Treaty action routes (must precede /:id)
-router.post('/treaties/:treatyId/accept', auth, (req, res) => treatyController.acceptTreaty(req as AuthRequest, res as Response));
-router.post('/treaties/:treatyId/cancel', auth, (req, res) => treatyController.cancelTreaty(req as AuthRequest, res as Response));
-router.get('/treaties/:treatyId/chat', auth, (req, res) => diplomacyChatController.getDiplomacyMessages(req as AuthRequest, res as Response));
-router.post('/treaties/:treatyId/chat', auth, (req, res) => diplomacyChatController.sendDiplomacyMessage(req as AuthRequest, res as Response));
-router.get('/invites/list', auth, (req, res) => factionController.getMyInvites(req as AuthRequest, res as Response));
-router.post('/invites/:inviteId/accept', auth, (req, res) => factionController.acceptInvite(req as AuthRequest, res as Response));
-router.delete('/invites/:inviteId', auth, (req, res) => factionController.declineInvite(req as AuthRequest, res as Response));
-router.get('/join-requests/my', auth, (req, res) => factionController.getMyJoinRequests(req as AuthRequest, res as Response));
+router.post('/treaties/:treatyId/accept', auth, (req, res) =>
+	treatyController.acceptTreaty(req as AuthRequest, res as Response)
+);
+router.post('/treaties/:treatyId/cancel', auth, (req, res) =>
+	treatyController.cancelTreaty(req as AuthRequest, res as Response)
+);
+router.get('/treaties/:treatyId/chat', auth, (req, res) =>
+	diplomacyChatController.getDiplomacyMessages(req as AuthRequest, res as Response)
+);
+router.post('/treaties/:treatyId/chat', auth, (req, res) =>
+	diplomacyChatController.sendDiplomacyMessage(req as AuthRequest, res as Response)
+);
+router.get('/invites/list', auth, (req, res) =>
+	factionController.getMyInvites(req as AuthRequest, res as Response)
+);
+router.post('/invites/:inviteId/accept', auth, (req, res) =>
+	factionController.acceptInvite(req as AuthRequest, res as Response)
+);
+router.delete('/invites/:inviteId', auth, (req, res) =>
+	factionController.declineInvite(req as AuthRequest, res as Response)
+);
+router.get('/join-requests/my', auth, (req, res) =>
+	factionController.getMyJoinRequests(req as AuthRequest, res as Response)
+);
 
-router.post('/', auth, (req, res) => factionController.createFaction(req as AuthRequest, res as Response));
+router.post('/', auth, (req, res) =>
+	factionController.createFaction(req as AuthRequest, res as Response)
+);
 
 // War action routes (must precede /:id to prevent 'wars' being captured as an id)
-router.post('/wars/:warId/ceasefire', auth, (req, res) => warController.proposeCeasefire(req as AuthRequest, res as Response));
-router.post('/wars/:warId/ceasefire/accept', auth, (req, res) => warController.acceptCeasefire(req as AuthRequest, res as Response));
-router.post('/wars/:warId/ceasefire/decline', auth, (req, res) => warController.declineCeasefire(req as AuthRequest, res as Response));
+router.post('/wars/:warId/ceasefire', auth, (req, res) =>
+	warController.proposeCeasefire(req as AuthRequest, res as Response)
+);
+router.post('/wars/:warId/ceasefire/accept', auth, (req, res) =>
+	warController.acceptCeasefire(req as AuthRequest, res as Response)
+);
+router.post('/wars/:warId/ceasefire/decline', auth, (req, res) =>
+	warController.declineCeasefire(req as AuthRequest, res as Response)
+);
 
 // Parametric routes
-router.get('/:id', auth, (req, res) => factionController.getFaction(req as AuthRequest, res as Response));
-router.post('/:id/invite', auth, (req, res) => factionController.inviteToFaction(req as AuthRequest, res as Response));
-router.post('/:id/join-request', auth, (req, res) => factionController.requestToJoin(req as AuthRequest, res as Response));
-router.delete('/:id/join-request', auth, (req, res) => factionController.cancelJoinRequest(req as AuthRequest, res as Response));
-router.get('/:id/join-requests', auth, (req, res) => factionController.getJoinRequests(req as AuthRequest, res as Response));
-router.post('/:id/join-requests/:requestId/approve', auth, (req, res) => factionController.approveJoinRequest(req as AuthRequest, res as Response));
-router.delete('/:id/join-requests/:requestId', auth, (req, res) => factionController.declineJoinRequest(req as AuthRequest, res as Response));
-router.patch('/:id/members/:userId/role', auth, (req, res) => factionController.setMemberRole(req as AuthRequest, res as Response));
-router.post('/:id/members/:userId/transfer-leader', auth, (req, res) => factionController.transferLeader(req as AuthRequest, res as Response));
-router.delete('/:id/members/:userId', auth, (req, res) => factionController.kickMember(req as AuthRequest, res as Response));
-router.post('/:id/leave', auth, (req, res) => factionController.leaveFaction(req as AuthRequest, res as Response));
-router.delete('/:id', auth, (req, res) => factionController.disbandFaction(req as AuthRequest, res as Response));
-router.patch('/:id/motd', auth, (req, res) => factionController.updateMotd(req as AuthRequest, res as Response));
-router.post('/:id/chat/read', auth, (req, res) => factionController.markChatRead(req as AuthRequest, res as Response));
-router.get('/:id/chat', auth, (req, res) => factionController.getChatMessages(req as AuthRequest, res as Response));
-router.post('/:id/chat', auth, (req, res) => factionController.sendChatMessage(req as AuthRequest, res as Response));
-router.get('/:id/events', auth, (req, res) => factionController.getEvents(req as AuthRequest, res as Response));
+router.get('/:id', auth, (req, res) =>
+	factionController.getFaction(req as AuthRequest, res as Response)
+);
+router.post('/:id/invite', auth, (req, res) =>
+	factionController.inviteToFaction(req as AuthRequest, res as Response)
+);
+router.post('/:id/join-request', auth, (req, res) =>
+	factionController.requestToJoin(req as AuthRequest, res as Response)
+);
+router.delete('/:id/join-request', auth, (req, res) =>
+	factionController.cancelJoinRequest(req as AuthRequest, res as Response)
+);
+router.get('/:id/join-requests', auth, (req, res) =>
+	factionController.getJoinRequests(req as AuthRequest, res as Response)
+);
+router.post('/:id/join-requests/:requestId/approve', auth, (req, res) =>
+	factionController.approveJoinRequest(req as AuthRequest, res as Response)
+);
+router.delete('/:id/join-requests/:requestId', auth, (req, res) =>
+	factionController.declineJoinRequest(req as AuthRequest, res as Response)
+);
+router.patch('/:id/members/:userId/role', auth, (req, res) =>
+	factionController.setMemberRole(req as AuthRequest, res as Response)
+);
+router.post('/:id/members/:userId/transfer-leader', auth, (req, res) =>
+	factionController.transferLeader(req as AuthRequest, res as Response)
+);
+router.delete('/:id/members/:userId', auth, (req, res) =>
+	factionController.kickMember(req as AuthRequest, res as Response)
+);
+router.post('/:id/leave', auth, (req, res) =>
+	factionController.leaveFaction(req as AuthRequest, res as Response)
+);
+router.delete('/:id', auth, (req, res) =>
+	factionController.disbandFaction(req as AuthRequest, res as Response)
+);
+router.patch('/:id/motd', auth, (req, res) =>
+	factionController.updateMotd(req as AuthRequest, res as Response)
+);
+router.post('/:id/chat/read', auth, (req, res) =>
+	factionController.markChatRead(req as AuthRequest, res as Response)
+);
+router.get('/:id/chat', auth, (req, res) =>
+	factionController.getChatMessages(req as AuthRequest, res as Response)
+);
+router.post('/:id/chat', auth, (req, res) =>
+	factionController.sendChatMessage(req as AuthRequest, res as Response)
+);
+router.get('/:id/events', auth, (req, res) =>
+	factionController.getEvents(req as AuthRequest, res as Response)
+);
 
 // War list + declare
-router.get('/:factionId/wars', auth, (req, res) => warController.getWars(req as AuthRequest, res as Response));
-router.post('/:id/wars/declare/:targetFactionId', auth, (req, res) => warController.declareWar(req as AuthRequest, res as Response));
+router.get('/:factionId/wars', auth, (req, res) =>
+	warController.getWars(req as AuthRequest, res as Response)
+);
+router.post('/:id/wars/declare/:targetFactionId', auth, (req, res) =>
+	warController.declareWar(req as AuthRequest, res as Response)
+);
 
 // Treaty list + propose
-router.get('/:factionId/treaties', auth, (req, res) => treatyController.getActiveTreaties(req as AuthRequest, res as Response));
-router.post('/:factionId/treaties/propose', auth, (req, res) => treatyController.proposeTreaty(req as AuthRequest, res as Response));
+router.get('/:factionId/treaties', auth, (req, res) =>
+	treatyController.getActiveTreaties(req as AuthRequest, res as Response)
+);
+router.post('/:factionId/treaties/propose', auth, (req, res) =>
+	treatyController.proposeTreaty(req as AuthRequest, res as Response)
+);
 
 export default router;

@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import {
-  alphaSignup,
-  alphaSignupCount,
-  login,
-  register,
-  requestPasswordReset,
-  resendVerification,
-  resetPassword,
-  verifyEmail,
+	alphaSignup,
+	alphaSignupCount,
+	login,
+	register,
+	requestPasswordReset,
+	resendVerification,
+	resetPassword,
+	verifyEmail
 } from '../controllers/authController.js';
 
 const router = Router();

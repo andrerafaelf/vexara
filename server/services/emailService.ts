@@ -13,12 +13,12 @@ const SENDER_LOCATION = 'Funchal, Portugal';
 
 let cached: Resend | null = null;
 function client(): Resend {
-  if (!cached) cached = new Resend(process.env.RESEND_API_KEY ?? '');
-  return cached;
+	if (!cached) cached = new Resend(process.env.RESEND_API_KEY ?? '');
+	return cached;
 }
 
 function unsubscribeLinkFor(token: string): string {
-  return `${UNSUBSCRIBE_URL}?token=${encodeURIComponent(token)}`;
+	return `${UNSUBSCRIBE_URL}?token=${encodeURIComponent(token)}`;
 }
 
 /**
@@ -30,47 +30,53 @@ function unsubscribeLinkFor(token: string): string {
  * waitlist still get a working unsubscribe link.
  */
 async function getOrCreateUnsubscribeToken(email: string): Promise<string> {
-  const token = randomBytes(32).toString('hex');
-  const row = await prisma.alphaSignup.upsert({
-    where: { email },
-    create: { email, source: 'user', unsubscribeToken: token },
-    update: {},
-    select: { unsubscribeToken: true },
-  });
-  if (row.unsubscribeToken) return row.unsubscribeToken;
-  const updated = await prisma.alphaSignup.update({
-    where: { email },
-    data: { unsubscribeToken: token },
-    select: { unsubscribeToken: true },
-  });
-  return updated.unsubscribeToken ?? token;
+	const token = randomBytes(32).toString('hex');
+	const row = await prisma.alphaSignup.upsert({
+		where: { email },
+		create: { email, source: 'user', unsubscribeToken: token },
+		update: {},
+		select: { unsubscribeToken: true }
+	});
+	if (row.unsubscribeToken) return row.unsubscribeToken;
+	const updated = await prisma.alphaSignup.update({
+		where: { email },
+		data: { unsubscribeToken: token },
+		select: { unsubscribeToken: true }
+	});
+	return updated.unsubscribeToken ?? token;
 }
 
 function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+	return value
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#39;');
 }
 
 interface LayoutOptions {
-  preheader: string;
-  bodyHtml: string;
-  // Transactional emails (verify, reset) should not show an unsubscribe link.
-  showUnsubscribe?: boolean;
-  // Per-recipient unsubscribe token. When omitted (or null) the link is hidden.
-  unsubscribeToken?: string | null;
+	preheader: string;
+	bodyHtml: string;
+	// Transactional emails (verify, reset) should not show an unsubscribe link.
+	showUnsubscribe?: boolean;
+	// Per-recipient unsubscribe token. When omitted (or null) the link is hidden.
+	unsubscribeToken?: string | null;
 }
 
-function renderLayout({ preheader, bodyHtml, showUnsubscribe = true, unsubscribeToken = null }: LayoutOptions): string {
-  const unsubBlock = showUnsubscribe && unsubscribeToken
-    ? `<p style="margin:0;font-size:12px;line-height:1.6;color:#6b7180;">
+function renderLayout({
+	preheader,
+	bodyHtml,
+	showUnsubscribe = true,
+	unsubscribeToken = null
+}: LayoutOptions): string {
+	const unsubBlock =
+		showUnsubscribe && unsubscribeToken
+			? `<p style="margin:0;font-size:12px;line-height:1.6;color:#6b7180;">
                   <a href="${unsubscribeLinkFor(unsubscribeToken)}" style="color:#7aa2ff;text-decoration:underline;">Unsubscribe</a>
                 </p>`
-    : '';
-  return `<!doctype html>
+			: '';
+	return `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -111,22 +117,22 @@ function renderLayout({ preheader, bodyHtml, showUnsubscribe = true, unsubscribe
 }
 
 function renderTextFooter(showUnsubscribe: boolean, unsubscribeToken?: string | null): string[] {
-  const lines = [
-    '',
-    '---',
-    `You're receiving this because of activity at ${SITE_URL}.`,
-    "If this wasn't you, you can safely ignore this email.",
-    '',
-    `Vexara . ${SENDER_LOCATION}`,
-  ];
-  if (showUnsubscribe && unsubscribeToken) {
-    lines.push(`Unsubscribe: ${unsubscribeLinkFor(unsubscribeToken)}`);
-  }
-  return lines;
+	const lines = [
+		'',
+		'---',
+		`You're receiving this because of activity at ${SITE_URL}.`,
+		"If this wasn't you, you can safely ignore this email.",
+		'',
+		`Vexara . ${SENDER_LOCATION}`
+	];
+	if (showUnsubscribe && unsubscribeToken) {
+		lines.push(`Unsubscribe: ${unsubscribeLinkFor(unsubscribeToken)}`);
+	}
+	return lines;
 }
 
 function buttonHtml(href: string, label: string, color = '#5865f2'): string {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 20px;">
+	return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 20px;">
     <tr><td>
       <a href="${href}" style="display:inline-block;background:${color};color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:15px;font-weight:600;">${escapeHtml(label)}</a>
     </td></tr>
@@ -138,14 +144,14 @@ function buttonHtml(href: string, label: string, color = '#5865f2'): string {
 // ────────────────────────────────────────────────────────────────────────────
 
 interface RenderedEmail {
-  subject: string;
-  html: string;
-  text: string;
-  showUnsubscribe: boolean;
+	subject: string;
+	html: string;
+	text: string;
+	showUnsubscribe: boolean;
 }
 
 function tplAlphaWelcome(email: string, unsubscribeToken: string | null): RenderedEmail {
-  const body = `
+	const body = `
     <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#ffffff;font-weight:600;">You're on the alpha list</h1>
     <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#c8ccd6;">
       Thanks for joining. Vexara is a real-time strategy game where alliances, betrayals, and territory shape every galaxy you fight in.
@@ -166,35 +172,39 @@ function tplAlphaWelcome(email: string, unsubscribeToken: string | null): Render
     </p>
     <p style="margin:16px 0 0;font-size:14px;line-height:1.6;color:#8a90a0;">Questions? Just reply to this email. It reaches a real person.</p>
   `;
-  const text = [
-    "You're on the Vexara alpha list",
-    '',
-    'Thanks for joining. Vexara is a real-time strategy game where alliances, betrayals, and territory shape every galaxy you fight in.',
-    '',
-    'What happens next:',
-    "  - We'll send everyone an invite link at the same time when alpha opens.",
-    "  - Keep an eye on this inbox so you don't miss it.",
-    '',
-    'In the meantime, join the Discord for bug reports, patch notes, and dev updates.',
-    `Discord: ${DISCORD_URL}`,
-    '',
-    `Vexara runs on a small server during alpha. Support the project: ${KOFI_URL}`,
-    '',
-    'Questions? Just reply to this email. It reaches a real person.',
-    ...renderTextFooter(true, unsubscribeToken),
-  ].join('\n');
-  void email;
-  return {
-    subject: "You're on the Vexara alpha list",
-    html: renderLayout({ preheader: "You're on the Vexara alpha list. We'll email you when alpha opens.", bodyHtml: body, unsubscribeToken }),
-    text,
-    showUnsubscribe: true,
-  };
+	const text = [
+		"You're on the Vexara alpha list",
+		'',
+		'Thanks for joining. Vexara is a real-time strategy game where alliances, betrayals, and territory shape every galaxy you fight in.',
+		'',
+		'What happens next:',
+		"  - We'll send everyone an invite link at the same time when alpha opens.",
+		"  - Keep an eye on this inbox so you don't miss it.",
+		'',
+		'In the meantime, join the Discord for bug reports, patch notes, and dev updates.',
+		`Discord: ${DISCORD_URL}`,
+		'',
+		`Vexara runs on a small server during alpha. Support the project: ${KOFI_URL}`,
+		'',
+		'Questions? Just reply to this email. It reaches a real person.',
+		...renderTextFooter(true, unsubscribeToken)
+	].join('\n');
+	void email;
+	return {
+		subject: "You're on the Vexara alpha list",
+		html: renderLayout({
+			preheader: "You're on the Vexara alpha list. We'll email you when alpha opens.",
+			bodyHtml: body,
+			unsubscribeToken
+		}),
+		text,
+		showUnsubscribe: true
+	};
 }
 
 function tplAlphaInviteAnnouncement(email: string, unsubscribeToken: string | null): RenderedEmail {
-  const registerUrl = `${SITE_URL}/register`;
-  const body = `
+	const registerUrl = `${SITE_URL}/register`;
+	const body = `
     <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#ffffff;font-weight:600;">Alpha starts Saturday. Registration is open now.</h1>
     <p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#c8ccd6;">
       You're on the waitlist, so you get to know first.
@@ -221,41 +231,48 @@ function tplAlphaInviteAnnouncement(email: string, unsubscribeToken: string | nu
     <div style="text-align:center;">${buttonHtml(DISCORD_URL, 'Join the Discord')}</div>
     <p style="margin:0;font-size:14px;line-height:1.6;color:#8a90a0;">Questions? Just reply to this email. It reaches a real person.</p>
   `;
-  const text = [
-    'Vexara alpha starts Saturday, 23 May 2026. Registration is open now.',
-    '',
-    "You're on the waitlist, so you get to know first.",
-    '',
-    'Alpha opens: Saturday, 23 May 2026 at 15:30 UTC',
-    '16:30 Lisbon · 17:30 Paris · 11:30 New York · 08:30 Los Angeles',
-    '',
-    'Registration is open now. Create your account before Saturday and you will be ready to play the moment alpha goes live. The first players in get the founder\'s badge and a permanent leaderboard mark.',
-    '',
-    `Create your account: ${registerUrl}`,
-    '',
-    "If a friend gave you their referral code, enter it at signup. You don't need one to play.",
-    '',
-    'Join the Discord for launch updates, bug reports, and strategy talk.',
-    `Discord: ${DISCORD_URL}`,
-    '',
-    'Questions? Just reply to this email. It reaches a real person.',
-    ...renderTextFooter(true, unsubscribeToken),
-  ].join('\n');
-  void email;
-  return {
-    subject: 'Vexara alpha starts Saturday at 15:30 UTC',
-    html: renderLayout({ preheader: 'Registration is open now. Alpha goes live Saturday, 23 May at 15:30 UTC. Founder badges for the first players in.', bodyHtml: body, unsubscribeToken }),
-    text,
-    showUnsubscribe: true,
-  };
+	const text = [
+		'Vexara alpha starts Saturday, 23 May 2026. Registration is open now.',
+		'',
+		"You're on the waitlist, so you get to know first.",
+		'',
+		'Alpha opens: Saturday, 23 May 2026 at 15:30 UTC',
+		'16:30 Lisbon · 17:30 Paris · 11:30 New York · 08:30 Los Angeles',
+		'',
+		"Registration is open now. Create your account before Saturday and you will be ready to play the moment alpha goes live. The first players in get the founder's badge and a permanent leaderboard mark.",
+		'',
+		`Create your account: ${registerUrl}`,
+		'',
+		"If a friend gave you their referral code, enter it at signup. You don't need one to play.",
+		'',
+		'Join the Discord for launch updates, bug reports, and strategy talk.',
+		`Discord: ${DISCORD_URL}`,
+		'',
+		'Questions? Just reply to this email. It reaches a real person.',
+		...renderTextFooter(true, unsubscribeToken)
+	].join('\n');
+	void email;
+	return {
+		subject: 'Vexara alpha starts Saturday at 15:30 UTC',
+		html: renderLayout({
+			preheader:
+				'Registration is open now. Alpha goes live Saturday, 23 May at 15:30 UTC. Founder badges for the first players in.',
+			bodyHtml: body,
+			unsubscribeToken
+		}),
+		text,
+		showUnsubscribe: true
+	};
 }
 
-function tplGalaxyLive(email: string, unsubscribeToken: string | null, displayName?: string): RenderedEmail {
-  const playUrl = `${SITE_URL}/galaxies`;
-  const greeting = displayName
-    ? `Commander ${escapeHtml(displayName)},`
-    : 'Commander,';
-  const body = `
+function tplGalaxyLive(
+	email: string,
+	unsubscribeToken: string | null,
+	displayName?: string
+): RenderedEmail {
+	const playUrl = `${SITE_URL}/galaxies`;
+	const greeting = displayName ? `Commander ${escapeHtml(displayName)},` : 'Commander,';
+	const body = `
     <p style="margin:0 0 8px;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#7aa2ff;font-weight:700;">// Transmission inbound</p>
     <h1 style="margin:0 0 16px;font-size:26px;line-height:1.25;color:#ffffff;font-weight:700;letter-spacing:-0.01em;">The galaxy is live.</h1>
     <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#c8ccd6;">
@@ -292,46 +309,46 @@ function tplGalaxyLive(email: string, unsubscribeToken: string | null, displayNa
     </p>
     <p style="margin:16px 0 0;font-size:14px;line-height:1.6;color:#8a90a0;">See you in the dark. Questions? Just reply to this email &mdash; it reaches a real person.</p>
   `;
-  const text = [
-    'The galaxy is live.',
-    '',
-    displayName ? `Commander ${displayName},` : 'Commander,',
-    '',
-    'The stars are open. Alliances are forming as you read this. Every minute you wait, someone else is claiming a nexus, drawing borders, and writing the early history of this galaxy.',
-    '',
-    'Status: Galaxy online - 23 May 2026, 15:30 UTC',
-    "Founder badges are minting for the first players in.",
-    '',
-    `Enter the galaxy: ${playUrl}`,
-    '',
-    'First moves matter:',
-    '  - Claim your starting nexus before the map fills around you.',
-    '  - Build the Command Core early - it accelerates every upgrade that follows.',
-    '  - Scout neighbours before you strike. Recon is cheaper than a wiped fleet.',
-    '  - Find a faction. Galaxies are won by groups, not lone commanders.',
-    '',
-    `Discord: ${DISCORD_URL}`,
-    '',
-    `Support the project on Ko-fi: ${KOFI_URL}`,
-    '',
-    'See you in the dark. Questions? Just reply to this email - it reaches a real person.',
-    ...renderTextFooter(true, unsubscribeToken),
-  ].join('\n');
-  void email;
-  return {
-    subject: 'The galaxy is live. Enter now.',
-    html: renderLayout({
-      preheader: 'Vexara is open. Claim your nexus before the map fills around you.',
-      bodyHtml: body,
-      unsubscribeToken,
-    }),
-    text,
-    showUnsubscribe: true,
-  };
+	const text = [
+		'The galaxy is live.',
+		'',
+		displayName ? `Commander ${displayName},` : 'Commander,',
+		'',
+		'The stars are open. Alliances are forming as you read this. Every minute you wait, someone else is claiming a nexus, drawing borders, and writing the early history of this galaxy.',
+		'',
+		'Status: Galaxy online - 23 May 2026, 15:30 UTC',
+		'Founder badges are minting for the first players in.',
+		'',
+		`Enter the galaxy: ${playUrl}`,
+		'',
+		'First moves matter:',
+		'  - Claim your starting nexus before the map fills around you.',
+		'  - Build the Command Core early - it accelerates every upgrade that follows.',
+		'  - Scout neighbours before you strike. Recon is cheaper than a wiped fleet.',
+		'  - Find a faction. Galaxies are won by groups, not lone commanders.',
+		'',
+		`Discord: ${DISCORD_URL}`,
+		'',
+		`Support the project on Ko-fi: ${KOFI_URL}`,
+		'',
+		'See you in the dark. Questions? Just reply to this email - it reaches a real person.',
+		...renderTextFooter(true, unsubscribeToken)
+	].join('\n');
+	void email;
+	return {
+		subject: 'The galaxy is live. Enter now.',
+		html: renderLayout({
+			preheader: 'Vexara is open. Claim your nexus before the map fills around you.',
+			bodyHtml: body,
+			unsubscribeToken
+		}),
+		text,
+		showUnsubscribe: true
+	};
 }
 
 function tplVerifyEmail(email: string, username: string, verifyUrl: string): RenderedEmail {
-  const body = `
+	const body = `
     <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#ffffff;font-weight:600;">Confirm your email</h1>
     <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#c8ccd6;">
       Welcome, ${escapeHtml(username)}. Click the button below to confirm this email address and activate your Vexara account.
@@ -341,30 +358,39 @@ function tplVerifyEmail(email: string, username: string, verifyUrl: string): Ren
     <p style="margin:0 0 16px;font-size:13px;line-height:1.6;color:#7aa2ff;word-break:break-all;">${verifyUrl}</p>
     <p style="margin:0;font-size:13px;line-height:1.6;color:#8a90a0;">This link expires in 24 hours. If you didn't sign up for Vexara, you can ignore this email.</p>
   `;
-  const text = [
-    'Confirm your email',
-    '',
-    `Welcome, ${username}. Confirm this email address to activate your Vexara account.`,
-    '',
-    `Confirm: ${verifyUrl}`,
-    '',
-    "This link expires in 24 hours. If you didn't sign up for Vexara, you can ignore this email.",
-    ...renderTextFooter(false),
-  ].join('\n');
-  void email;
-  return {
-    subject: 'Confirm your Vexara email',
-    html: renderLayout({ preheader: 'Confirm your email to activate your Vexara account.', bodyHtml: body, showUnsubscribe: false }),
-    text,
-    showUnsubscribe: false,
-  };
+	const text = [
+		'Confirm your email',
+		'',
+		`Welcome, ${username}. Confirm this email address to activate your Vexara account.`,
+		'',
+		`Confirm: ${verifyUrl}`,
+		'',
+		"This link expires in 24 hours. If you didn't sign up for Vexara, you can ignore this email.",
+		...renderTextFooter(false)
+	].join('\n');
+	void email;
+	return {
+		subject: 'Confirm your Vexara email',
+		html: renderLayout({
+			preheader: 'Confirm your email to activate your Vexara account.',
+			bodyHtml: body,
+			showUnsubscribe: false
+		}),
+		text,
+		showUnsubscribe: false
+	};
 }
 
-function tplWelcome(email: string, username: string, referralCode: string, unsubscribeToken: string | null): RenderedEmail {
-  const playUrl = `${SITE_URL}/galaxies`;
-  const inviteUrl = `${SITE_URL}/register?ref=${encodeURIComponent(referralCode)}`;
-  const safeCode = escapeHtml(referralCode);
-  const body = `
+function tplWelcome(
+	email: string,
+	username: string,
+	referralCode: string,
+	unsubscribeToken: string | null
+): RenderedEmail {
+	const playUrl = `${SITE_URL}/galaxies`;
+	const inviteUrl = `${SITE_URL}/register?ref=${encodeURIComponent(referralCode)}`;
+	const safeCode = escapeHtml(referralCode);
+	const body = `
     <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#ffffff;font-weight:600;">Welcome to Vexara, ${escapeHtml(username)}</h1>
     <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#c8ccd6;">
       Your account is active. Pick a galaxy, claim your first nexus, and start building.
@@ -402,41 +428,45 @@ function tplWelcome(email: string, username: string, referralCode: string, unsub
     <div style="text-align:center;">${buttonHtml(DISCORD_URL, 'Join the Discord')}</div>
     <p style="margin:0;font-size:14px;line-height:1.6;color:#8a90a0;">Questions? Just reply to this email. It reaches a real person.</p>
   `;
-  const text = [
-    `Welcome to Vexara, ${username}`,
-    '',
-    'Your account is active. Pick a galaxy, claim your first nexus, and start building.',
-    '',
-    `Enter the game: ${playUrl}`,
-    '',
-    'Invite your friends',
-    `Your referral code: ${referralCode}`,
-    `Invite link: ${inviteUrl}`,
-    'When a friend you referred reaches 1,000 influence points, you earn 2 reward tokens',
-    'redeemable for instant building levels or troop grants.',
-    '',
-    'A few pointers:',
-    '  - Build your Command Core early - it speeds up every upgrade you queue afterwards.',
-    '  - Scout before you strike. A Recon Operative is cheaper than a wiped fleet.',
-    '  - Hit a bug or want to talk strategy? The Discord is the place.',
-    '',
-    `Discord: ${DISCORD_URL}`,
-    '',
-    'Questions? Just reply to this email. It reaches a real person.',
-    ...renderTextFooter(true, unsubscribeToken),
-  ].join('\n');
-  void email;
-  return {
-    subject: 'Welcome to Vexara',
-    html: renderLayout({ preheader: 'Your Vexara account is active. Enter the game and claim your first nexus.', bodyHtml: body, unsubscribeToken }),
-    text,
-    showUnsubscribe: true,
-  };
+	const text = [
+		`Welcome to Vexara, ${username}`,
+		'',
+		'Your account is active. Pick a galaxy, claim your first nexus, and start building.',
+		'',
+		`Enter the game: ${playUrl}`,
+		'',
+		'Invite your friends',
+		`Your referral code: ${referralCode}`,
+		`Invite link: ${inviteUrl}`,
+		'When a friend you referred reaches 1,000 influence points, you earn 2 reward tokens',
+		'redeemable for instant building levels or troop grants.',
+		'',
+		'A few pointers:',
+		'  - Build your Command Core early - it speeds up every upgrade you queue afterwards.',
+		'  - Scout before you strike. A Recon Operative is cheaper than a wiped fleet.',
+		'  - Hit a bug or want to talk strategy? The Discord is the place.',
+		'',
+		`Discord: ${DISCORD_URL}`,
+		'',
+		'Questions? Just reply to this email. It reaches a real person.',
+		...renderTextFooter(true, unsubscribeToken)
+	].join('\n');
+	void email;
+	return {
+		subject: 'Welcome to Vexara',
+		html: renderLayout({
+			preheader: 'Your Vexara account is active. Enter the game and claim your first nexus.',
+			bodyHtml: body,
+			unsubscribeToken
+		}),
+		text,
+		showUnsubscribe: true
+	};
 }
 
 function tplPasswordChanged(email: string, username: string): RenderedEmail {
-  const resetUrl = `${SITE_URL}/forgot-password`;
-  const body = `
+	const resetUrl = `${SITE_URL}/forgot-password`;
+	const body = `
     <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#ffffff;font-weight:600;">Your password was changed</h1>
     <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#c8ccd6;">
       Hi ${escapeHtml(username)}, the password for your Vexara account was just changed successfully.
@@ -450,30 +480,34 @@ function tplPasswordChanged(email: string, username: string): RenderedEmail {
     <div style="text-align:center;">${buttonHtml(resetUrl, 'Reset password now', '#ef4444')}</div>
     <p style="margin:0;font-size:13px;line-height:1.6;color:#8a90a0;">If you have any questions, reply to this email - it reaches a real person.</p>
   `;
-  const text = [
-    'Your Vexara password was changed',
-    '',
-    `Hi ${username}, the password for your Vexara account was just changed successfully.`,
-    '',
-    "If you made this change, no further action is needed.",
-    '',
-    "If you didn't do this, your account may be compromised. Reset your password immediately:",
-    `Reset: ${resetUrl}`,
-    '',
-    "If you have any questions, reply to this email - it reaches a real person.",
-    ...renderTextFooter(false),
-  ].join('\n');
-  void email;
-  return {
-    subject: 'Your Vexara password was changed',
-    html: renderLayout({ preheader: 'Your Vexara password was just changed. If this wasn\'t you, reset it immediately.', bodyHtml: body, showUnsubscribe: false }),
-    text,
-    showUnsubscribe: false,
-  };
+	const text = [
+		'Your Vexara password was changed',
+		'',
+		`Hi ${username}, the password for your Vexara account was just changed successfully.`,
+		'',
+		'If you made this change, no further action is needed.',
+		'',
+		"If you didn't do this, your account may be compromised. Reset your password immediately:",
+		`Reset: ${resetUrl}`,
+		'',
+		'If you have any questions, reply to this email - it reaches a real person.',
+		...renderTextFooter(false)
+	].join('\n');
+	void email;
+	return {
+		subject: 'Your Vexara password was changed',
+		html: renderLayout({
+			preheader: "Your Vexara password was just changed. If this wasn't you, reset it immediately.",
+			bodyHtml: body,
+			showUnsubscribe: false
+		}),
+		text,
+		showUnsubscribe: false
+	};
 }
 
 function tplPasswordReset(email: string, username: string, resetUrl: string): RenderedEmail {
-  const body = `
+	const body = `
     <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#ffffff;font-weight:600;">Reset your password</h1>
     <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#c8ccd6;">
       Hi ${escapeHtml(username)}, we got a request to reset the password for your Vexara account. Click the button below to set a new one.
@@ -483,23 +517,27 @@ function tplPasswordReset(email: string, username: string, resetUrl: string): Re
     <p style="margin:0 0 16px;font-size:13px;line-height:1.6;color:#7aa2ff;word-break:break-all;">${resetUrl}</p>
     <p style="margin:0;font-size:13px;line-height:1.6;color:#8a90a0;">This link expires in 1 hour. If you didn't ask for a password reset, you can ignore this email. Your password will not change.</p>
   `;
-  const text = [
-    'Reset your Vexara password',
-    '',
-    `Hi ${username}, we got a request to reset the password for your Vexara account.`,
-    '',
-    `Reset: ${resetUrl}`,
-    '',
-    "This link expires in 1 hour. If you didn't ask for a password reset, you can ignore this email. Your password will not change.",
-    ...renderTextFooter(false),
-  ].join('\n');
-  void email;
-  return {
-    subject: 'Reset your Vexara password',
-    html: renderLayout({ preheader: 'Reset your Vexara password. Link expires in 1 hour.', bodyHtml: body, showUnsubscribe: false }),
-    text,
-    showUnsubscribe: false,
-  };
+	const text = [
+		'Reset your Vexara password',
+		'',
+		`Hi ${username}, we got a request to reset the password for your Vexara account.`,
+		'',
+		`Reset: ${resetUrl}`,
+		'',
+		"This link expires in 1 hour. If you didn't ask for a password reset, you can ignore this email. Your password will not change.",
+		...renderTextFooter(false)
+	].join('\n');
+	void email;
+	return {
+		subject: 'Reset your Vexara password',
+		html: renderLayout({
+			preheader: 'Reset your Vexara password. Link expires in 1 hour.',
+			bodyHtml: body,
+			showUnsubscribe: false
+		}),
+		text,
+		showUnsubscribe: false
+	};
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -507,56 +545,69 @@ function tplPasswordReset(email: string, username: string, resetUrl: string): Re
 // ────────────────────────────────────────────────────────────────────────────
 
 async function send(
-  to: string,
-  rendered: RenderedEmail,
-  unsubscribeToken: string | null,
+	to: string,
+	rendered: RenderedEmail,
+	unsubscribeToken: string | null
 ): Promise<void> {
-  const headers: Record<string, string> = {};
-  if (rendered.showUnsubscribe && unsubscribeToken) {
-    headers['List-Unsubscribe'] = `<${unsubscribeLinkFor(unsubscribeToken)}>, <mailto:unsubscribe@vexara.world>`;
-    headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
-  }
-  await client().emails.send({
-    from: FROM,
-    to: [to],
-    replyTo: REPLY_TO,
-    subject: rendered.subject,
-    html: rendered.html,
-    text: rendered.text,
-    headers,
-  });
+	const headers: Record<string, string> = {};
+	if (rendered.showUnsubscribe && unsubscribeToken) {
+		headers['List-Unsubscribe'] =
+			`<${unsubscribeLinkFor(unsubscribeToken)}>, <mailto:unsubscribe@vexara.world>`;
+		headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
+	}
+	await client().emails.send({
+		from: FROM,
+		to: [to],
+		replyTo: REPLY_TO,
+		subject: rendered.subject,
+		html: rendered.html,
+		text: rendered.text,
+		headers
+	});
 }
 
 export async function sendAlphaWelcome(email: string): Promise<void> {
-  const token = await getOrCreateUnsubscribeToken(email);
-  await send(email, tplAlphaWelcome(email, token), token);
+	const token = await getOrCreateUnsubscribeToken(email);
+	await send(email, tplAlphaWelcome(email, token), token);
 }
 
 export async function sendAlphaInviteAnnouncement(email: string): Promise<void> {
-  const token = await getOrCreateUnsubscribeToken(email);
-  await send(email, tplAlphaInviteAnnouncement(email, token), token);
+	const token = await getOrCreateUnsubscribeToken(email);
+	await send(email, tplAlphaInviteAnnouncement(email, token), token);
 }
 
 export async function sendGalaxyLive(email: string, displayName?: string): Promise<void> {
-  const token = await getOrCreateUnsubscribeToken(email);
-  await send(email, tplGalaxyLive(email, token, displayName), token);
+	const token = await getOrCreateUnsubscribeToken(email);
+	await send(email, tplGalaxyLive(email, token, displayName), token);
 }
 
-export async function sendVerifyEmail(email: string, username: string, token: string): Promise<void> {
-  const verifyUrl = `${SITE_URL}/verify-email?token=${encodeURIComponent(token)}`;
-  await send(email, tplVerifyEmail(email, username, verifyUrl), null);
+export async function sendVerifyEmail(
+	email: string,
+	username: string,
+	token: string
+): Promise<void> {
+	const verifyUrl = `${SITE_URL}/verify-email?token=${encodeURIComponent(token)}`;
+	await send(email, tplVerifyEmail(email, username, verifyUrl), null);
 }
 
-export async function sendWelcome(email: string, username: string, referralCode: string): Promise<void> {
-  const token = await getOrCreateUnsubscribeToken(email);
-  await send(email, tplWelcome(email, username, referralCode, token), token);
+export async function sendWelcome(
+	email: string,
+	username: string,
+	referralCode: string
+): Promise<void> {
+	const token = await getOrCreateUnsubscribeToken(email);
+	await send(email, tplWelcome(email, username, referralCode, token), token);
 }
 
-export async function sendPasswordReset(email: string, username: string, token: string): Promise<void> {
-  const resetUrl = `${SITE_URL}/reset-password?token=${encodeURIComponent(token)}`;
-  await send(email, tplPasswordReset(email, username, resetUrl), null);
+export async function sendPasswordReset(
+	email: string,
+	username: string,
+	token: string
+): Promise<void> {
+	const resetUrl = `${SITE_URL}/reset-password?token=${encodeURIComponent(token)}`;
+	await send(email, tplPasswordReset(email, username, resetUrl), null);
 }
 
 export async function sendPasswordChanged(email: string, username: string): Promise<void> {
-  await send(email, tplPasswordChanged(email, username), null);
+	await send(email, tplPasswordChanged(email, username), null);
 }

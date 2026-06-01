@@ -13,10 +13,10 @@ import { NOTIFICATION_BADGES_KEY, useUnreadReportsFromBadges } from './useNotifi
  * invalidates `notificationBadges`, so live updates still work.
  */
 export function useUnreadReports() {
-  const qc = useQueryClient();
-  const { hasUnreadReports, unreadNexusIds } = useUnreadReportsFromBadges();
+	const qc = useQueryClient();
+	const { hasUnreadReports, unreadNexusIds } = useUnreadReportsFromBadges();
 
-  const refresh = () => qc.invalidateQueries({ queryKey: NOTIFICATION_BADGES_KEY });
+	const refresh = () => qc.invalidateQueries({ queryKey: NOTIFICATION_BADGES_KEY });
 
-  return { hasUnreadReports, unreadNexusIds, refresh };
+	return { hasUnreadReports, unreadNexusIds, refresh };
 }

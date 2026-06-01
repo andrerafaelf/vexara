@@ -14,26 +14,26 @@ const SELECTED_NEXUS_KEY = 'selectedNexusId';
 // sticky "Back to game" bar that routes straight back to the player's last
 // selected nexus (or /play, which redirects appropriately).
 export default function PatchNotesBackToGame() {
-  const [href, setHref] = useState<string | null>(null);
+	const [href, setHref] = useState<string | null>(null);
 
-  useEffect(() => {
-    try {
-      if (!localStorage.getItem('token')) return;
-      const nexusId = localStorage.getItem(SELECTED_NEXUS_KEY);
-      setHref(nexusId ? `/nexus/${nexusId}` : '/play');
-    } catch {
-      /* private mode / quota — leave the bar hidden */
-    }
-  }, []);
+	useEffect(() => {
+		try {
+			if (!localStorage.getItem('token')) return;
+			const nexusId = localStorage.getItem(SELECTED_NEXUS_KEY);
+			setHref(nexusId ? `/nexus/${nexusId}` : '/play');
+		} catch {
+			/* private mode / quota — leave the bar hidden */
+		}
+	}, []);
 
-  if (!href) return null;
+	if (!href) return null;
 
-  return (
-    <div className="pn-back-bar">
-      <Link href={href} className="pn-back-btn">
-        <ArrowLeft size={16} aria-hidden="true" />
-        <span>Back to game</span>
-      </Link>
-    </div>
-  );
+	return (
+		<div className="pn-back-bar">
+			<Link href={href} className="pn-back-btn">
+				<ArrowLeft size={16} aria-hidden="true" />
+				<span>Back to game</span>
+			</Link>
+		</div>
+	);
 }

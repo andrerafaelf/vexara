@@ -1,2250 +1,2328 @@
 .factions-container {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-  padding: var(--space-6);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-6);
+	padding: var(--space-6);
 }
 
 .factions-error {
-  padding: var(--space-4);
-  background-color: rgba(248, 81, 73, 0.1);
-  border: 1px solid rgba(248, 81, 73, 0.3);
-  border-radius: var(--radius-lg);
-  color: var(--danger);
-  font-size: var(--text-sm);
+	padding: var(--space-4);
+	background-color: rgba(248, 81, 73, 0.1);
+	border: 1px solid rgba(248, 81, 73, 0.3);
+	border-radius: var(--radius-lg);
+	color: var(--danger);
+	font-size: var(--text-sm);
 }
 
 .factions-panel {
-  padding: var(--space-6);
-  background: var(--bg-surface);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-default);
+	padding: var(--space-6);
+	background: var(--bg-surface);
+	border-radius: var(--radius-sm);
+	border: 1px solid var(--border-default);
 }
 
 .factions-panel h2 {
-  font-size: var(--text-2xl);
-  color: var(--text-strong);
-  margin: 0 0 var(--space-4) 0;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+	font-size: var(--text-2xl);
+	color: var(--text-strong);
+	margin: 0 0 var(--space-4) 0;
+	font-weight: 800;
+	letter-spacing: -0.02em;
+	line-height: 1.1;
+	display: flex;
+	align-items: center;
+	gap: 10px;
 }
 
 /* Amber tick that sits before every panel h2 - quiet, repeated detail */
 .factions-panel h2::before {
-  content: '';
-  width: 6px;
-  height: 18px;
-  background: var(--accent);
-  flex-shrink: 0;
+	content: '';
+	width: 6px;
+	height: 18px;
+	background: var(--accent);
+	flex-shrink: 0;
 }
 
 .factions-panel h3 {
-  font-size: var(--text-lg);
-  color: var(--text-strong);
-  margin: var(--space-4) 0 var(--space-3) 0;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+	font-size: var(--text-lg);
+	color: var(--text-strong);
+	margin: var(--space-4) 0 var(--space-3) 0;
+	font-weight: 700;
+	letter-spacing: -0.01em;
 }
 
 /* First panel on a page gets the full eyebrow + rule treatment.
    :first-child here matches against .factions-container's first child,
    so each FactionsView "tab" gets exactly one eyebrowed header. */
 .factions-container > .factions-panel:first-of-type > h2:first-child::after {
-  content: '';
-  display: block;
-  width: 40px;
-  height: 3px;
-  background: var(--accent);
-  margin-left: 14px;
+	content: '';
+	display: block;
+	width: 40px;
+	height: 3px;
+	background: var(--accent);
+	margin-left: 14px;
 }
 
 .factions-description {
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-  margin-bottom: var(--space-3);
-  font-style: italic;
+	color: var(--text-muted);
+	font-size: var(--text-sm);
+	margin-bottom: var(--space-3);
+	font-style: italic;
 }
 
 .factions-role {
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-  margin-bottom: var(--space-4);
+	font-size: var(--text-sm);
+	color: var(--text-muted);
+	margin-bottom: var(--space-4);
 }
 
 /* Members Section */
 .factions-members {
-  margin: var(--space-5) 0;
+	margin: var(--space-5) 0;
 }
 
 .factions-member-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
 }
 
 .factions-member-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-3);
-  background: var(--color-navy-900);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-default);
-  transition: border-color var(--duration-fast) var(--ease-out);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: var(--space-3);
+	background: var(--color-navy-900);
+	border-radius: var(--radius-sm);
+	border: 1px solid var(--border-default);
+	transition: border-color var(--duration-fast) var(--ease-out);
 }
 
 .factions-member-row:hover {
-  border-color: var(--border-strong);
+	border-color: var(--border-strong);
 }
 
 .factions-member-info {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
 }
 
 .factions-member-name {
-  font-weight: 600;
-  color: var(--text-strong);
-  font-size: var(--text-sm);
+	font-weight: 600;
+	color: var(--text-strong);
+	font-size: var(--text-sm);
 }
 
 .factions-member-role {
-  font-size: var(--text-xs);
-  padding: 2px 8px;
-  background: rgba(255, 158, 61, 0.1);
-  border-radius: var(--radius-sm);
-  color: var(--accent);
-  font-weight: 500;
+	font-size: var(--text-xs);
+	padding: 2px 8px;
+	background: rgba(255, 158, 61, 0.1);
+	border-radius: var(--radius-sm);
+	color: var(--accent);
+	font-weight: 500;
 }
 
 .factions-member-actions {
-  display: flex;
-  gap: var(--space-2);
+	display: flex;
+	gap: var(--space-2);
 }
 
 /* Invite Form */
 .factions-invite-form {
-  margin: var(--space-5) 0;
-  padding: var(--space-4);
-  background: var(--color-navy-900);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-default);
+	margin: var(--space-5) 0;
+	padding: var(--space-4);
+	background: var(--color-navy-900);
+	border-radius: var(--radius-sm);
+	border: 1px solid var(--border-default);
 }
 
 .factions-field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	margin-bottom: var(--space-3);
 }
 
 .factions-label {
-  font-size: var(--text-xs);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-muted);
+	font-size: var(--text-xs);
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--text-muted);
 }
 
 .factions-field input,
 .factions-field textarea {
-  padding: var(--space-2) var(--space-3);
-  background: var(--color-navy-900);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-sm);
-  color: var(--text-default);
-  font-family: inherit;
-  font-size: var(--text-sm);
-  transition: border-color var(--duration-fast) var(--ease-out);
+	padding: var(--space-2) var(--space-3);
+	background: var(--color-navy-900);
+	border: 1px solid var(--border-default);
+	border-radius: var(--radius-sm);
+	color: var(--text-default);
+	font-family: inherit;
+	font-size: var(--text-sm);
+	transition: border-color var(--duration-fast) var(--ease-out);
 }
 
 .factions-field input:focus,
 .factions-field textarea:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(255, 158, 61, 0.18);
+	outline: none;
+	border-color: var(--accent);
+	box-shadow: 0 0 0 2px rgba(255, 158, 61, 0.18);
 }
 
 .factions-field input:disabled,
 .factions-field textarea:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+	opacity: 0.6;
+	cursor: not-allowed;
 }
 
 .factions-field-error {
-  padding: var(--space-2) var(--space-3);
-  background-color: rgba(248, 81, 73, 0.1);
-  border: 1px solid rgba(248, 81, 73, 0.3);
-  border-radius: var(--radius-md);
-  color: var(--danger);
-  font-size: var(--text-xs);
+	padding: var(--space-2) var(--space-3);
+	background-color: rgba(248, 81, 73, 0.1);
+	border: 1px solid rgba(248, 81, 73, 0.3);
+	border-radius: var(--radius-md);
+	color: var(--danger);
+	font-size: var(--text-xs);
 }
 
 /* Buttons */
 .factions-btn-primary,
 .factions-btn-danger,
 .factions-btn-small {
-  padding: var(--space-2) var(--space-4);
-  border: none;
-  border-radius: var(--radius-sm);
-  font-weight: 600;
-  font-size: var(--text-sm);
-  cursor: pointer;
-  transition: background var(--duration-fast) var(--ease-out);
-  white-space: nowrap;
+	padding: var(--space-2) var(--space-4);
+	border: none;
+	border-radius: var(--radius-sm);
+	font-weight: 600;
+	font-size: var(--text-sm);
+	cursor: pointer;
+	transition: background var(--duration-fast) var(--ease-out);
+	white-space: nowrap;
 }
 
 .factions-btn-primary {
-  background: var(--accent);
-  color: var(--text-on-accent);
-  box-shadow: var(--shadow-xs), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+	background: var(--accent);
+	color: var(--text-on-accent);
+	box-shadow:
+		var(--shadow-xs),
+		inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .factions-btn-primary:hover:not(:disabled) {
-  background: var(--accent-hover);
+	background: var(--accent-hover);
 }
 
 .factions-btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+	opacity: 0.5;
+	cursor: not-allowed;
 }
 
 .factions-btn-danger {
-  background: var(--danger-soft);
-  color: var(--danger);
-  border: 1px solid rgba(248, 81, 73, 0.35);
+	background: var(--danger-soft);
+	color: var(--danger);
+	border: 1px solid rgba(248, 81, 73, 0.35);
 }
 
 .factions-btn-danger:hover:not(:disabled) {
-  background: rgba(248, 81, 73, 0.22);
-  border-color: rgba(248, 81, 73, 0.55);
+	background: rgba(248, 81, 73, 0.22);
+	border-color: rgba(248, 81, 73, 0.55);
 }
 
 .factions-btn-danger:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+	opacity: 0.5;
+	cursor: not-allowed;
 }
 
 .factions-btn-small {
-  padding: var(--space-1) var(--space-3);
-  font-size: var(--text-xs);
-  background: var(--accent-soft);
-  color: var(--accent);
-  border: 1px solid var(--border-accent);
+	padding: var(--space-1) var(--space-3);
+	font-size: var(--text-xs);
+	background: var(--accent-soft);
+	color: var(--accent);
+	border: 1px solid var(--border-accent);
 }
 
 .factions-btn-small:hover:not(:disabled) {
-  background: rgba(255, 158, 61, 0.18);
-  border-color: rgba(255, 158, 61, 0.4);
+	background: rgba(255, 158, 61, 0.18);
+	border-color: rgba(255, 158, 61, 0.4);
 }
 
 .factions-actions {
-  display: flex;
-  gap: var(--space-3);
-  margin-top: var(--space-5);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--border-default);
+	display: flex;
+	gap: var(--space-3);
+	margin-top: var(--space-5);
+	padding-top: var(--space-4);
+	border-top: 1px solid var(--border-default);
 }
 
 /* Invites Section */
 .factions-invites {
-  background: var(--accent-soft);
-  border: 1px solid var(--border-accent);
+	background: var(--accent-soft);
+	border: 1px solid var(--border-accent);
 }
 
 .factions-invite-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
 }
 
 .factions-invite-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-4);
-  background: var(--color-navy-900);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-default);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: var(--space-4);
+	background: var(--color-navy-900);
+	border-radius: var(--radius-sm);
+	border: 1px solid var(--border-default);
 }
 
 .factions-invite-info {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
 }
 
 .factions-invite-info strong {
-  font-size: var(--text-base);
-  color: var(--text-strong);
+	font-size: var(--text-base);
+	color: var(--text-strong);
 }
 
 .factions-invite-info p {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  margin: 0;
+	font-size: var(--text-xs);
+	color: var(--text-muted);
+	margin: 0;
 }
 
 .factions-invite-tag {
-  font-size: var(--text-xs);
-  padding: 2px 8px;
-  background: rgba(255, 158, 61, 0.1);
-  border-radius: var(--radius-sm);
-  color: var(--accent);
-  font-weight: 600;
-  width: fit-content;
+	font-size: var(--text-xs);
+	padding: 2px 8px;
+	background: rgba(255, 158, 61, 0.1);
+	border-radius: var(--radius-sm);
+	color: var(--accent);
+	font-weight: 600;
+	width: fit-content;
 }
 
 .factions-invite-actions {
-  display: flex;
-  gap: var(--space-2);
+	display: flex;
+	gap: var(--space-2);
 }
 
 /* All Factions List */
 .factions-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--space-4);
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: var(--space-4);
 }
 
 .factions-item {
-  padding: var(--space-4);
-  background: var(--color-navy-900);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-default);
-  transition: border-color var(--duration-fast) var(--ease-out);
+	padding: var(--space-4);
+	background: var(--color-navy-900);
+	border-radius: var(--radius-sm);
+	border: 1px solid var(--border-default);
+	transition: border-color var(--duration-fast) var(--ease-out);
 }
 
 .factions-item:hover {
-  border-color: var(--border-strong);
+	border-color: var(--border-strong);
 }
 
 .factions-item-header {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
-  margin-bottom: var(--space-2);
+	display: flex;
+	align-items: baseline;
+	gap: var(--space-2);
+	margin-bottom: var(--space-2);
 }
 
 .factions-item h3 {
-  margin: 0;
-  flex: 1;
+	margin: 0;
+	flex: 1;
 }
 
 .factions-tag {
-  font-size: var(--text-xs);
-  padding: 3px 10px;
-  background: var(--accent-soft);
-  border: 1px solid var(--border-accent);
-  border-radius: var(--radius-sm);
-  color: var(--accent);
-  font-weight: 700;
-  white-space: nowrap;
+	font-size: var(--text-xs);
+	padding: 3px 10px;
+	background: var(--accent-soft);
+	border: 1px solid var(--border-accent);
+	border-radius: var(--radius-sm);
+	color: var(--accent);
+	font-weight: 700;
+	white-space: nowrap;
 }
 
 .factions-item-desc {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  margin: 0 0 var(--space-2) 0;
-  line-height: 1.4;
+	font-size: var(--text-xs);
+	color: var(--text-muted);
+	margin: 0 0 var(--space-2) 0;
+	line-height: 1.4;
 }
 
 .factions-item-meta {
-  display: flex;
-  gap: var(--space-3);
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  padding-top: var(--space-2);
-  border-top: 1px solid var(--border-default);
+	display: flex;
+	gap: var(--space-3);
+	font-size: var(--text-xs);
+	color: var(--text-muted);
+	padding-top: var(--space-2);
+	border-top: 1px solid var(--border-default);
 }
 
 .factions-empty {
-  text-align: center;
-  color: var(--text-muted);
-  padding: var(--space-5);
-  font-size: var(--text-sm);
+	text-align: center;
+	color: var(--text-muted);
+	padding: var(--space-5);
+	font-size: var(--text-sm);
 }
 
 .factions-no-faction {
-  text-align: center;
+	text-align: center;
 }
 
 .factions-no-faction p {
-  color: var(--text-muted);
-  margin-bottom: var(--space-4);
+	color: var(--text-muted);
+	margin-bottom: var(--space-4);
 }
 
 .factions-create-form {
-  background: var(--accent-soft);
-  border: 1px solid var(--border-accent);
+	background: var(--accent-soft);
+	border: 1px solid var(--border-accent);
 }
 
 .factions-my-faction {
-  background: var(--success-soft);
-  border: 1px solid rgba(86, 211, 100, 0.25);
+	background: var(--success-soft);
+	border: 1px solid rgba(86, 211, 100, 0.25);
 }
 
 /* Loading */
 .factions-loading {
-  text-align: center;
-  color: var(--text-muted);
-  padding: var(--space-8);
-  font-size: var(--text-sm);
+	text-align: center;
+	color: var(--text-muted);
+	padding: var(--space-8);
+	font-size: var(--text-sm);
 }
 
 /* ── Header ─────────────────────────────────────────────────────────────── */
 .factions-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  padding: var(--space-5) var(--space-6);
-  background: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-sm);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: var(--space-3);
+	padding: var(--space-5) var(--space-6);
+	background: var(--bg-surface);
+	border: 1px solid var(--border-default);
+	border-radius: var(--radius-sm);
 }
 
 .factions-header-name {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-3);
+	display: flex;
+	align-items: baseline;
+	gap: var(--space-3);
 }
 
 .factions-header-name h1 {
-  font-size: var(--text-2xl);
-  font-weight: 800;
-  color: var(--text-strong);
-  margin: 0;
+	font-size: var(--text-2xl);
+	font-weight: 800;
+	color: var(--text-strong);
+	margin: 0;
 }
 
 .factions-tag--lg {
-  font-size: var(--text-sm);
-  padding: 4px 12px;
+	font-size: var(--text-sm);
+	padding: 4px 12px;
 }
 
 .factions-header-meta {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
 }
 
 .factions-role-badge {
-  font-size: var(--text-xs);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 4px 12px;
-  border-radius: var(--radius-sm);
+	font-size: var(--text-xs);
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	padding: 4px 12px;
+	border-radius: var(--radius-sm);
 }
 
 .factions-role-badge--leader {
-  background: var(--warning-soft);
-  border: 1px solid rgba(210, 153, 34, 0.4);
-  color: var(--warning);
+	background: var(--warning-soft);
+	border: 1px solid rgba(210, 153, 34, 0.4);
+	color: var(--warning);
 }
 
 .factions-role-badge--officer {
-  background: rgba(255, 158, 61, 0.1);
-  border: 1px solid rgba(255, 158, 61, 0.3);
-  color: var(--accent);
+	background: rgba(255, 158, 61, 0.1);
+	border: 1px solid rgba(255, 158, 61, 0.3);
+	color: var(--accent);
 }
 
 .factions-role-badge--member {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-default);
-  color: var(--text-muted);
+	background: rgba(255, 255, 255, 0.05);
+	border: 1px solid var(--border-default);
+	color: var(--text-muted);
 }
 
 .factions-member-count {
-  font-size: var(--text-sm);
-  color: var(--text-muted);
+	font-size: var(--text-sm);
+	color: var(--text-muted);
 }
 
 /* ── MOTD ────────────────────────────────────────────────────────────────── */
 .factions-motd-area {
-  padding: var(--space-4) var(--space-6);
-  background: var(--color-navy-900);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-sm);
+	padding: var(--space-4) var(--space-6);
+	background: var(--color-navy-900);
+	border: 1px solid var(--border-default);
+	border-radius: var(--radius-sm);
 }
 
 .factions-motd-display {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-3);
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: var(--space-3);
 }
 
 .factions-motd-text {
-  font-size: var(--text-sm);
-  color: var(--text-default);
-  line-height: 1.6;
-  margin: 0;
-  flex: 1;
+	font-size: var(--text-sm);
+	color: var(--text-default);
+	line-height: 1.6;
+	margin: 0;
+	flex: 1;
 }
 
 .factions-motd-empty {
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-  font-style: italic;
-  margin: 0;
-  flex: 1;
+	font-size: var(--text-sm);
+	color: var(--text-muted);
+	font-style: italic;
+	margin: 0;
+	flex: 1;
 }
 
 .factions-motd-editor {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
 }
 
 .factions-motd-input {
-  width: 100%;
-  padding: var(--space-3);
-  background: var(--color-navy-900);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-sm);
-  color: var(--text-default);
-  font-family: inherit;
-  font-size: var(--text-sm);
-  resize: vertical;
-  box-sizing: border-box;
-  transition: border-color var(--duration-fast) var(--ease-out);
+	width: 100%;
+	padding: var(--space-3);
+	background: var(--color-navy-900);
+	border: 1px solid var(--border-default);
+	border-radius: var(--radius-sm);
+	color: var(--text-default);
+	font-family: inherit;
+	font-size: var(--text-sm);
+	resize: vertical;
+	box-sizing: border-box;
+	transition: border-color var(--duration-fast) var(--ease-out);
 }
 
 .factions-motd-input:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(255, 158, 61, 0.18);
+	outline: none;
+	border-color: var(--accent);
+	box-shadow: 0 0 0 2px rgba(255, 158, 61, 0.18);
 }
 
 .factions-motd-editor-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-2);
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: var(--space-2);
 }
 
 /* ── Tabs ────────────────────────────────────────────────────────────────── */
 .factions-tabs {
-  display: flex;
-  gap: 2px;
-  background: var(--color-navy-900);
-  border-radius: var(--radius-sm);
-  padding: 4px;
-  border: 1px solid var(--border-default);
+	display: flex;
+	gap: 2px;
+	background: var(--color-navy-900);
+	border-radius: var(--radius-sm);
+	padding: 4px;
+	border: 1px solid var(--border-default);
 }
 
 .factions-tab {
-  flex: 1;
-  padding: var(--space-2) var(--space-3);
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  cursor: pointer;
-  transition: background var(--duration-fast) var(--ease-out),
-              color var(--duration-fast) var(--ease-out),
-              border-color var(--duration-fast) var(--ease-out);
-  white-space: nowrap;
+	flex: 1;
+	padding: var(--space-2) var(--space-3);
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: var(--radius-sm);
+	color: var(--text-muted);
+	font-size: var(--text-sm);
+	font-weight: 600;
+	cursor: pointer;
+	transition:
+		background var(--duration-fast) var(--ease-out),
+		color var(--duration-fast) var(--ease-out),
+		border-color var(--duration-fast) var(--ease-out);
+	white-space: nowrap;
 }
 
 .factions-tab:hover:not(.factions-tab--active) {
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--text-default);
+	background: rgba(255, 255, 255, 0.04);
+	color: var(--text-default);
 }
 
 .factions-tab--active {
-  background: var(--accent-soft);
-  color: var(--accent);
-  border-color: var(--border-accent);
+	background: var(--accent-soft);
+	color: var(--accent);
+	border-color: var(--border-accent);
 }
 
 /* ── Tab Content ─────────────────────────────────────────────────────────── */
 .factions-tab-content {
-  min-height: 200px;
+	min-height: 200px;
 }
 
 .factions-tab-content--chat {
-  padding: 0;
-  overflow: hidden;
+	padding: 0;
+	overflow: hidden;
 }
 
 .factions-overview-section {
-  margin-bottom: var(--space-5);
+	margin-bottom: var(--space-5);
 }
 
 .factions-overview-section h3 {
-  font-size: var(--text-sm);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
-  margin: 0 0 var(--space-3) 0;
+	font-size: var(--text-sm);
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--text-muted);
+	margin: 0 0 var(--space-3) 0;
 }
 
 .factions-overview-stats {
-  display: flex;
-  gap: var(--space-4);
-  padding: var(--space-4);
-  background: var(--color-navy-900);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-default);
-  margin-bottom: var(--space-5);
-  flex-wrap: wrap;
+	display: flex;
+	gap: var(--space-4);
+	padding: var(--space-4);
+	background: var(--color-navy-900);
+	border-radius: var(--radius-sm);
+	border: 1px solid var(--border-default);
+	margin-bottom: var(--space-5);
+	flex-wrap: wrap;
 }
 
 .factions-stat {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  min-width: 80px;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	min-width: 80px;
 }
 
 .factions-stat-value {
-  font-size: var(--text-lg);
-  font-weight: 700;
-  color: var(--text-strong);
+	font-size: var(--text-lg);
+	font-weight: 700;
+	color: var(--text-strong);
 }
 
 .factions-stat-label {
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
+	font-size: var(--text-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--text-muted);
 }
 
 .factions-see-all {
-  background: none;
-  border: none;
-  color: var(--accent);
-  font-size: var(--text-xs);
-  cursor: pointer;
-  padding: var(--space-2) var(--space-3);
-  text-align: left;
-  opacity: 0.8;
-  transition: opacity 0.15s;
+	background: none;
+	border: none;
+	color: var(--accent);
+	font-size: var(--text-xs);
+	cursor: pointer;
+	padding: var(--space-2) var(--space-3);
+	text-align: left;
+	opacity: 0.8;
+	transition: opacity 0.15s;
 }
 
-.factions-see-all:hover { opacity: 1; }
+.factions-see-all:hover {
+	opacity: 1;
+}
 
 /* Member role colour variants */
 .factions-member-role--leader {
-  background: rgba(210, 153, 34, 0.15);
-  border: 1px solid rgba(210, 153, 34, 0.3);
-  color: var(--warning);
+	background: rgba(210, 153, 34, 0.15);
+	border: 1px solid rgba(210, 153, 34, 0.3);
+	color: var(--warning);
 }
 
 .factions-member-role--officer {
-  background: rgba(255, 158, 61, 0.1);
-  color: var(--accent);
+	background: rgba(255, 158, 61, 0.1);
+	color: var(--accent);
 }
 
 .factions-member-role--member {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-muted);
+	background: rgba(255, 255, 255, 0.05);
+	color: var(--text-muted);
 }
 
 .factions-member-last-played {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  opacity: 0.7;
-  margin-left: var(--space-2);
+	font-size: var(--text-xs);
+	color: var(--text-muted);
+	opacity: 0.7;
+	margin-left: var(--space-2);
 }
 
 /* Invite inline layout */
 .factions-invite-inline {
-  display: flex;
-  gap: var(--space-2);
-  margin-bottom: var(--space-2);
+	display: flex;
+	gap: var(--space-2);
+	margin-bottom: var(--space-2);
 }
 
 .factions-invite-inline input {
-  flex: 1;
-  padding: var(--space-2) var(--space-3);
-  background: var(--color-navy-900);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-sm);
-  color: var(--text-default);
-  font-family: inherit;
-  font-size: var(--text-sm);
-  transition: border-color var(--duration-fast) var(--ease-out);
+	flex: 1;
+	padding: var(--space-2) var(--space-3);
+	background: var(--color-navy-900);
+	border: 1px solid var(--border-default);
+	border-radius: var(--radius-sm);
+	color: var(--text-default);
+	font-family: inherit;
+	font-size: var(--text-sm);
+	transition: border-color var(--duration-fast) var(--ease-out);
 }
 
 .factions-invite-inline input:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(255, 158, 61, 0.18);
+	outline: none;
+	border-color: var(--accent);
+	box-shadow: 0 0 0 2px rgba(255, 158, 61, 0.18);
 }
 
 /* ── Faction Chat ─────────────────────────────────────────────────────────── */
 .faction-chat {
-  display: flex;
-  flex-direction: column;
-  height: 520px;
+	display: flex;
+	flex-direction: column;
+	height: 520px;
 }
 
 .faction-chat-messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--space-4) var(--space-5);
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 158, 61, 0.2) transparent;
+	flex: 1;
+	overflow-y: auto;
+	padding: var(--space-4) var(--space-5);
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	scrollbar-width: thin;
+	scrollbar-color: rgba(255, 158, 61, 0.2) transparent;
 }
 
-.faction-chat-messages::-webkit-scrollbar { width: 5px; }
-.faction-chat-messages::-webkit-scrollbar-track { background: transparent; }
-.faction-chat-messages::-webkit-scrollbar-thumb { background: rgba(255, 158, 61, 0.2); border-radius: 3px; }
+.faction-chat-messages::-webkit-scrollbar {
+	width: 5px;
+}
+.faction-chat-messages::-webkit-scrollbar-track {
+	background: transparent;
+}
+.faction-chat-messages::-webkit-scrollbar-thumb {
+	background: rgba(255, 158, 61, 0.2);
+	border-radius: 3px;
+}
 
 .faction-chat-load-older {
-  align-self: center;
-  background: none;
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-  color: var(--text-muted);
-  font-size: var(--text-xs);
-  padding: var(--space-1) var(--space-4);
-  cursor: pointer;
-  margin-bottom: var(--space-3);
-  transition: all 0.2s;
+	align-self: center;
+	background: none;
+	border: 1px solid var(--border-default);
+	border-radius: var(--radius-md);
+	color: var(--text-muted);
+	font-size: var(--text-xs);
+	padding: var(--space-1) var(--space-4);
+	cursor: pointer;
+	margin-bottom: var(--space-3);
+	transition: all 0.2s;
 }
 
 .faction-chat-load-older:hover:not(:disabled) {
-  border-color: rgba(255, 158, 61, 0.3);
-  color: var(--accent);
+	border-color: rgba(255, 158, 61, 0.3);
+	color: var(--accent);
 }
 
 .faction-chat-empty {
-  text-align: center;
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-  padding: var(--space-8);
-  font-style: italic;
+	text-align: center;
+	color: var(--text-muted);
+	font-size: var(--text-sm);
+	padding: var(--space-8);
+	font-style: italic;
 }
 
 .faction-chat-date-divider {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  margin: var(--space-3) 0 var(--space-2);
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	margin: var(--space-3) 0 var(--space-2);
 }
 
 .faction-chat-date-divider::before,
 .faction-chat-date-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border-default);
+	content: '';
+	flex: 1;
+	height: 1px;
+	background: var(--border-default);
 }
 
 .faction-chat-date-divider span {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  white-space: nowrap;
+	font-size: var(--text-xs);
+	color: var(--text-muted);
+	white-space: nowrap;
 }
 
 .faction-chat-msg {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 2px var(--space-2);
-  border-radius: var(--radius-md);
-  transition: background 0.1s;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: 2px var(--space-2);
+	border-radius: var(--radius-md);
+	transition: background 0.1s;
 }
 
 .faction-chat-msg:hover {
-  background: rgba(255, 255, 255, 0.03);
+	background: rgba(255, 255, 255, 0.03);
 }
 
 .faction-chat-author {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
-  margin-top: var(--space-2);
+	display: flex;
+	align-items: baseline;
+	gap: var(--space-2);
+	margin-top: var(--space-2);
 }
 
 .faction-chat-username {
-  font-size: var(--text-sm);
-  font-weight: 700;
-  color: var(--accent);
+	font-size: var(--text-sm);
+	font-weight: 700;
+	color: var(--accent);
 }
 
 .faction-chat-msg--mine .faction-chat-username {
-  color: var(--success);
+	color: var(--success);
 }
 
 .faction-chat-time {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
+	font-size: var(--text-xs);
+	color: var(--text-muted);
 }
 
 .faction-chat-bubble {
-  font-size: var(--text-sm);
-  color: var(--text-default);
-  line-height: 1.5;
-  word-break: break-word;
-  white-space: pre-wrap;
-  padding-left: var(--space-1);
+	font-size: var(--text-sm);
+	color: var(--text-default);
+	line-height: 1.5;
+	word-break: break-word;
+	white-space: pre-wrap;
+	padding-left: var(--space-1);
 }
 
 /* ── Combat log card (in chat) ─────────────────────────────────────────────── */
 
 .clm-card {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  width: 100%;
-  max-width: 420px;
-  background: var(--color-navy-900);
-  border: 1px solid var(--border-default);
-  border-left: 3px solid var(--border-default);
-  border-radius: 6px;
-  padding: 10px 12px;
-  text-align: left;
-  cursor: pointer;
-  transition: background 120ms ease-out, border-color 120ms ease-out;
-  margin-top: 2px;
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	width: 100%;
+	max-width: 420px;
+	background: var(--color-navy-900);
+	border: 1px solid var(--border-default);
+	border-left: 3px solid var(--border-default);
+	border-radius: 6px;
+	padding: 10px 12px;
+	text-align: left;
+	cursor: pointer;
+	transition:
+		background 120ms ease-out,
+		border-color 120ms ease-out;
+	margin-top: 2px;
 }
 
 .clm-card:hover {
-  background: rgba(255, 255, 255, 0.04);
+	background: rgba(255, 255, 255, 0.04);
 }
 
-.clm-card--victory { border-left-color: var(--success); }
-.clm-card--defeat  { border-left-color: var(--danger); }
-.clm-card--scout   { border-left-color: var(--warning); }
+.clm-card--victory {
+	border-left-color: var(--success);
+}
+.clm-card--defeat {
+	border-left-color: var(--danger);
+}
+.clm-card--scout {
+	border-left-color: var(--warning);
+}
 
 .clm-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
 }
 
 .clm-card-outcome {
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+	font-size: 0.78rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
 }
 
-.clm-card--victory .clm-card-outcome { color: var(--success); }
-.clm-card--defeat  .clm-card-outcome { color: var(--danger); }
-.clm-card--scout   .clm-card-outcome { color: var(--warning); }
+.clm-card--victory .clm-card-outcome {
+	color: var(--success);
+}
+.clm-card--defeat .clm-card-outcome {
+	color: var(--danger);
+}
+.clm-card--scout .clm-card-outcome {
+	color: var(--warning);
+}
 
 .clm-card-hint {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  opacity: 0.7;
+	font-size: 0.72rem;
+	color: var(--text-muted);
+	opacity: 0.7;
 }
 
-.clm-card:hover .clm-card-hint { opacity: 1; color: var(--accent); }
+.clm-card:hover .clm-card-hint {
+	opacity: 1;
+	color: var(--accent);
+}
 
 .clm-card-meta {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.8rem;
-  color: var(--text-default);
-  flex-wrap: wrap;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 0.8rem;
+	color: var(--text-default);
+	flex-wrap: wrap;
 }
 
 .clm-card-striker,
 .clm-card-defender {
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 160px;
+	font-weight: 600;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 160px;
 }
 
 .clm-card-vs {
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  flex-shrink: 0;
+	color: var(--text-muted);
+	font-size: 0.72rem;
+	flex-shrink: 0;
 }
 
 .clm-card-loot {
-  font-size: 0.75rem;
-  color: var(--accent);
-  opacity: 0.85;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+	font-size: 0.75rem;
+	color: var(--accent);
+	opacity: 0.85;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 /* ── Combat log modal ───────────────────────────────────────────────────────── */
 
 .clm-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.72);
-  z-index: 1200;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  animation: clm-fade-in 140ms ease-out;
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.72);
+	z-index: 1200;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 16px;
+	animation: clm-fade-in 140ms ease-out;
 }
 
 @keyframes clm-fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
 }
 
 .clm-modal {
-  background: var(--color-navy-800);
-  border: 1px solid var(--border-default);
-  border-radius: 8px;
-  width: 100%;
-  max-width: 560px;
-  max-height: 85vh;
-  display: flex;
-  flex-direction: column;
-  animation: clm-slide-in 160ms ease-out;
-  overflow: hidden;
+	background: var(--color-navy-800);
+	border: 1px solid var(--border-default);
+	border-radius: 8px;
+	width: 100%;
+	max-width: 560px;
+	max-height: 85vh;
+	display: flex;
+	flex-direction: column;
+	animation: clm-slide-in 160ms ease-out;
+	overflow: hidden;
 }
 
 @keyframes clm-slide-in {
-  from { transform: translateY(12px) scale(0.98); opacity: 0; }
-  to   { transform: none; opacity: 1; }
+	from {
+		transform: translateY(12px) scale(0.98);
+		opacity: 0;
+	}
+	to {
+		transform: none;
+		opacity: 1;
+	}
 }
 
 .clm-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px 12px;
-  border-bottom: 1px solid var(--border-default);
-  flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 14px 16px 12px;
+	border-bottom: 1px solid var(--border-default);
+	flex-shrink: 0;
 }
 
 .clm-title {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--text-strong);
-  margin: 0;
+	font-size: 1rem;
+	font-weight: 700;
+	color: var(--text-strong);
+	margin: 0;
 }
 
 .clm-close {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: 1rem;
-  padding: 4px 6px;
-  cursor: pointer;
-  border-radius: 4px;
-  line-height: 1;
-  transition: color 100ms ease-out, background 100ms ease-out;
+	background: none;
+	border: none;
+	color: var(--text-muted);
+	font-size: 1rem;
+	padding: 4px 6px;
+	cursor: pointer;
+	border-radius: 4px;
+	line-height: 1;
+	transition:
+		color 100ms ease-out,
+		background 100ms ease-out;
 }
 
 .clm-close:hover {
-  color: var(--text-strong);
-  background: rgba(255, 255, 255, 0.08);
+	color: var(--text-strong);
+	background: rgba(255, 255, 255, 0.08);
 }
 
 .clm-body {
-  overflow-y: auto;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+	overflow-y: auto;
+	padding: 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
 }
 
 .clm-result {
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 8px 12px;
-  border-radius: 4px;
-  text-align: center;
+	font-size: 0.85rem;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	padding: 8px 12px;
+	border-radius: 4px;
+	text-align: center;
 }
 
 .clm-result--victory {
-  background: var(--success-soft);
-  color: var(--success);
-  border: 1px solid rgba(86, 211, 100, 0.25);
+	background: var(--success-soft);
+	color: var(--success);
+	border: 1px solid rgba(86, 211, 100, 0.25);
 }
 
 .clm-result--defeat {
-  background: var(--danger-soft);
-  color: var(--danger);
-  border: 1px solid rgba(248, 81, 73, 0.25);
+	background: var(--danger-soft);
+	color: var(--danger);
+	border: 1px solid rgba(248, 81, 73, 0.25);
 }
 
 .clm-section {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
 }
 
 .clm-section--meta {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border-default);
-  border-radius: 6px;
-  padding: 10px 12px;
-  gap: 4px;
+	background: rgba(255, 255, 255, 0.03);
+	border: 1px solid var(--border-default);
+	border-radius: 6px;
+	padding: 10px 12px;
+	gap: 4px;
 }
 
-.clm-section--loot .clm-pre--loot { color: var(--accent); }
-.clm-section--damage .clm-pre--damage { color: var(--danger); }
+.clm-section--loot .clm-pre--loot {
+	color: var(--accent);
+}
+.clm-section--damage .clm-pre--damage {
+	color: var(--danger);
+}
 
 .clm-section-title {
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-muted);
-  margin: 0;
+	font-size: 0.78rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--text-muted);
+	margin: 0;
 }
 
 .clm-row {
-  display: flex;
-  gap: 10px;
-  font-size: 0.82rem;
-  line-height: 1.5;
+	display: flex;
+	gap: 10px;
+	font-size: 0.82rem;
+	line-height: 1.5;
 }
 
 .clm-label {
-  color: var(--text-muted);
-  min-width: 72px;
-  flex-shrink: 0;
+	color: var(--text-muted);
+	min-width: 72px;
+	flex-shrink: 0;
 }
 
 .clm-value {
-  color: var(--text-default);
-  word-break: break-word;
+	color: var(--text-default);
+	word-break: break-word;
 }
 
 .clm-pre {
-  font-family: 'Segoe UI', monospace;
-  font-size: 0.78rem;
-  line-height: 1.6;
-  color: var(--text-default);
-  white-space: pre;
-  overflow-x: auto;
-  margin: 0;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
-  padding: 8px 10px;
+	font-family: 'Segoe UI', monospace;
+	font-size: 0.78rem;
+	line-height: 1.6;
+	color: var(--text-default);
+	white-space: pre;
+	overflow-x: auto;
+	margin: 0;
+	background: rgba(0, 0, 0, 0.2);
+	border-radius: 4px;
+	padding: 8px 10px;
 }
 
 .faction-chat-error {
-  padding: var(--space-2) var(--space-4);
-  background: rgba(248, 81, 73, 0.1);
-  border-top: 1px solid rgba(248, 81, 73, 0.2);
-  color: var(--danger);
-  font-size: var(--text-xs);
+	padding: var(--space-2) var(--space-4);
+	background: rgba(248, 81, 73, 0.1);
+	border-top: 1px solid rgba(248, 81, 73, 0.2);
+	color: var(--danger);
+	font-size: var(--text-xs);
 }
 
 .faction-chat-form {
-  display: flex;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  border-top: 1px solid var(--border-default);
-  background: var(--color-navy-900);
+	display: flex;
+	gap: var(--space-2);
+	padding: var(--space-3) var(--space-4);
+	border-top: 1px solid var(--border-default);
+	background: var(--color-navy-900);
 }
 
 .faction-chat-input {
-  flex: 1;
-  padding: var(--space-2) var(--space-3);
-  background: var(--color-navy-900);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-sm);
-  color: var(--text-default);
-  font-family: inherit;
-  font-size: var(--text-sm);
-  resize: none;
-  transition: border-color var(--duration-fast) var(--ease-out);
-  line-height: 1.4;
+	flex: 1;
+	padding: var(--space-2) var(--space-3);
+	background: var(--color-navy-900);
+	border: 1px solid var(--border-default);
+	border-radius: var(--radius-sm);
+	color: var(--text-default);
+	font-family: inherit;
+	font-size: var(--text-sm);
+	resize: none;
+	transition: border-color var(--duration-fast) var(--ease-out);
+	line-height: 1.4;
 }
 
 .faction-chat-input:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(255, 158, 61, 0.18);
+	outline: none;
+	border-color: var(--accent);
+	box-shadow: 0 0 0 2px rgba(255, 158, 61, 0.18);
 }
 
-.faction-chat-input:disabled { opacity: 0.6; }
+.faction-chat-input:disabled {
+	opacity: 0.6;
+}
 
 .faction-chat-send {
-  align-self: flex-end;
-  padding: var(--space-2) var(--space-5);
-  background: var(--accent);
-  color: var(--text-on-accent);
-  border: none;
-  border-radius: var(--radius-sm);
-  font-weight: 700;
-  font-size: var(--text-sm);
-  cursor: pointer;
-  box-shadow: var(--shadow-xs), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  transition: background var(--duration-fast) var(--ease-out);
-  white-space: nowrap;
+	align-self: flex-end;
+	padding: var(--space-2) var(--space-5);
+	background: var(--accent);
+	color: var(--text-on-accent);
+	border: none;
+	border-radius: var(--radius-sm);
+	font-weight: 700;
+	font-size: var(--text-sm);
+	cursor: pointer;
+	box-shadow:
+		var(--shadow-xs),
+		inset 0 1px 0 rgba(255, 255, 255, 0.15);
+	transition: background var(--duration-fast) var(--ease-out);
+	white-space: nowrap;
 }
 
 .faction-chat-send:hover:not(:disabled) {
-  background: var(--accent-hover);
+	background: var(--accent-hover);
 }
 
 .faction-chat-send:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+	opacity: 0.5;
+	cursor: not-allowed;
 }
 
 /* ── Activity Log ────────────────────────────────────────────────────────── */
 .faction-activity {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
 }
 
 .faction-activity-loading,
 .faction-activity-empty {
-  text-align: center;
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-  padding: var(--space-6);
-  font-style: italic;
+	text-align: center;
+	color: var(--text-muted);
+	font-size: var(--text-sm);
+	padding: var(--space-6);
+	font-style: italic;
 }
 
 .faction-activity-error {
-  padding: var(--space-2) var(--space-3);
-  background: rgba(248, 81, 73, 0.1);
-  border: 1px solid rgba(248, 81, 73, 0.2);
-  border-radius: var(--radius-md);
-  color: var(--danger);
-  font-size: var(--text-xs);
+	padding: var(--space-2) var(--space-3);
+	background: rgba(248, 81, 73, 0.1);
+	border: 1px solid rgba(248, 81, 73, 0.2);
+	border-radius: var(--radius-md);
+	color: var(--danger);
+	font-size: var(--text-xs);
 }
 
 .faction-activity-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
 }
 
 .faction-activity-row {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-md);
-  transition: background 0.1s;
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-3);
+	padding: var(--space-2) var(--space-3);
+	border-radius: var(--radius-md);
+	transition: background 0.1s;
 }
 
 .faction-activity-row:hover {
-  background: rgba(255, 255, 255, 0.03);
+	background: rgba(255, 255, 255, 0.03);
 }
 
 .faction-activity-icon {
-  width: 22px;
-  height: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  font-size: 11px;
-  font-weight: 700;
-  flex-shrink: 0;
-  margin-top: 1px;
+	width: 22px;
+	height: 22px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	font-size: 11px;
+	font-weight: 700;
+	flex-shrink: 0;
+	margin-top: 1px;
 }
 
-.event-icon--gold   { background: rgba(210, 153, 34, 0.15); color: var(--warning); border: 1px solid rgba(210, 153, 34, 0.3); }
-.event-icon--green  { background: rgba(86, 211, 100, 0.15); color: var(--success); border: 1px solid rgba(86, 211, 100, 0.3); }
-.event-icon--cyan   { background: rgba(255, 158, 61, 0.15); color: var(--accent); border: 1px solid rgba(255, 158, 61, 0.3); }
-.event-icon--red    { background: rgba(248, 81, 73, 0.15); color: var(--danger); border: 1px solid rgba(248, 81, 73, 0.3); }
-.event-icon--orange { background: rgba(251, 146, 60, 0.15); color: #fb923c; border: 1px solid rgba(251, 146, 60, 0.3); }
-.event-icon--muted  { background: rgba(255, 255, 255, 0.05); color: var(--text-muted); border: 1px solid var(--border-default); }
+.event-icon--gold {
+	background: rgba(210, 153, 34, 0.15);
+	color: var(--warning);
+	border: 1px solid rgba(210, 153, 34, 0.3);
+}
+.event-icon--green {
+	background: rgba(86, 211, 100, 0.15);
+	color: var(--success);
+	border: 1px solid rgba(86, 211, 100, 0.3);
+}
+.event-icon--cyan {
+	background: rgba(255, 158, 61, 0.15);
+	color: var(--accent);
+	border: 1px solid rgba(255, 158, 61, 0.3);
+}
+.event-icon--red {
+	background: rgba(248, 81, 73, 0.15);
+	color: var(--danger);
+	border: 1px solid rgba(248, 81, 73, 0.3);
+}
+.event-icon--orange {
+	background: rgba(251, 146, 60, 0.15);
+	color: #fb923c;
+	border: 1px solid rgba(251, 146, 60, 0.3);
+}
+.event-icon--muted {
+	background: rgba(255, 255, 255, 0.05);
+	color: var(--text-muted);
+	border: 1px solid var(--border-default);
+}
 
 .faction-activity-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
 }
 
 .faction-activity-label {
-  font-size: var(--text-sm);
-  color: var(--text-default);
+	font-size: var(--text-sm);
+	color: var(--text-default);
 }
 
 .faction-activity-meta {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
+	font-size: var(--text-xs);
+	color: var(--text-muted);
 }
 
 .faction-activity-time {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  white-space: nowrap;
-  flex-shrink: 0;
+	font-size: var(--text-xs);
+	color: var(--text-muted);
+	white-space: nowrap;
+	flex-shrink: 0;
 }
 
 .faction-activity-load-more {
-  align-self: center;
-  background: none;
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-  color: var(--text-muted);
-  font-size: var(--text-xs);
-  padding: var(--space-1) var(--space-4);
-  cursor: pointer;
-  transition: all 0.2s;
+	align-self: center;
+	background: none;
+	border: 1px solid var(--border-default);
+	border-radius: var(--radius-md);
+	color: var(--text-muted);
+	font-size: var(--text-xs);
+	padding: var(--space-1) var(--space-4);
+	cursor: pointer;
+	transition: all 0.2s;
 }
 
 .faction-activity-load-more:hover:not(:disabled) {
-  border-color: rgba(255, 158, 61, 0.3);
-  color: var(--accent);
+	border-color: rgba(255, 158, 61, 0.3);
+	color: var(--accent);
 }
 
 /* Responsive */
 /* ── Faction Leaderboard ─────────────────────────────────────────────────── */
 .flb {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
 }
 
 .flb-loading,
 .flb-empty {
-  text-align: center;
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-  padding: var(--space-5);
-  font-style: italic;
+	text-align: center;
+	color: var(--text-muted);
+	font-size: var(--text-sm);
+	padding: var(--space-5);
+	font-style: italic;
 }
 
 .flb-error {
-  color: var(--danger);
-  font-size: var(--text-sm);
-  padding: var(--space-3);
+	color: var(--danger);
+	font-size: var(--text-sm);
+	padding: var(--space-3);
 }
 
 /* Dominance alert */
 .flb-dominance-alert {
-  padding: var(--space-4) var(--space-5);
-  background: var(--warning-soft);
-  border: 1px solid rgba(210, 153, 34, 0.3);
-  border-radius: var(--radius-sm);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+	padding: var(--space-4) var(--space-5);
+	background: var(--warning-soft);
+	border: 1px solid rgba(210, 153, 34, 0.3);
+	border-radius: var(--radius-sm);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
 }
 
 .flb-dominance-alert-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  flex-wrap: wrap;
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	flex-wrap: wrap;
 }
 
 .flb-dominance-icon {
-  font-size: var(--text-lg);
+	font-size: var(--text-lg);
 }
 
 .flb-dominance-name {
-  font-size: var(--text-base);
-  font-weight: 700;
-  color: var(--warning);
+	font-size: var(--text-base);
+	font-weight: 700;
+	color: var(--warning);
 }
 
 .flb-dominance-tag {
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: rgba(255, 215, 0, 0.7);
+	font-size: var(--text-sm);
+	font-weight: 600;
+	color: rgba(255, 215, 0, 0.7);
 }
 
 .flb-dominance-label {
-  font-size: var(--text-sm);
-  color: var(--text-muted);
+	font-size: var(--text-sm);
+	color: var(--text-muted);
 }
 
 .flb-dominance-bar-wrap {
-  height: 6px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 3px;
-  overflow: hidden;
+	height: 6px;
+	background: rgba(255, 255, 255, 0.08);
+	border-radius: 3px;
+	overflow: hidden;
 }
 
 .flb-dominance-bar {
-  height: 100%;
-  background: var(--warning);
-  border-radius: 3px;
-  transition: width 1s ease;
+	height: 100%;
+	background: var(--warning);
+	border-radius: 3px;
+	transition: width 1s ease;
 }
 
 .flb-dominance-footer {
-  display: flex;
-  justify-content: space-between;
-  font-size: var(--text-xs);
-  color: var(--text-muted);
+	display: flex;
+	justify-content: space-between;
+	font-size: var(--text-xs);
+	color: var(--text-muted);
 }
 
 /* Meta row */
 .flb-meta {
-  display: flex;
-  justify-content: space-between;
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  padding: 0 var(--space-1);
+	display: flex;
+	justify-content: space-between;
+	font-size: var(--text-xs);
+	color: var(--text-muted);
+	padding: 0 var(--space-1);
 }
 
 /* Table */
 .flb-table {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
 }
 
 .flb-thead {
-  display: grid;
-  grid-template-columns: 32px 1fr 80px 1fr 64px;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
+	display: grid;
+	grid-template-columns: 32px 1fr 80px 1fr 64px;
+	gap: var(--space-2);
+	padding: var(--space-2) var(--space-3);
 }
 
 .flb-th {
-  font-size: var(--text-xs);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
+	font-size: var(--text-xs);
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--text-muted);
 }
 
 .flb-row {
-  display: grid;
-  grid-template-columns: 32px 1fr 80px 1fr 64px;
-  gap: var(--space-2);
-  align-items: center;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-md);
-  border: 1px solid transparent;
-  transition: all 0.15s ease;
+	display: grid;
+	grid-template-columns: 32px 1fr 80px 1fr 64px;
+	gap: var(--space-2);
+	align-items: center;
+	padding: var(--space-2) var(--space-3);
+	border-radius: var(--radius-md);
+	border: 1px solid transparent;
+	transition: all 0.15s ease;
 }
 
 .flb-row:hover {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: var(--border-default);
+	background: rgba(255, 255, 255, 0.03);
+	border-color: var(--border-default);
 }
 
 .flb-row--mine {
-  background: rgba(86, 211, 100, 0.05);
-  border-color: rgba(86, 211, 100, 0.15);
+	background: rgba(86, 211, 100, 0.05);
+	border-color: rgba(86, 211, 100, 0.15);
 }
 
 .flb-row--dominating {
-  background: rgba(210, 153, 34, 0.05);
-  border-color: rgba(210, 153, 34, 0.2);
+	background: rgba(210, 153, 34, 0.05);
+	border-color: rgba(210, 153, 34, 0.2);
 }
 
 .flb-td {
-  display: flex;
-  align-items: center;
+	display: flex;
+	align-items: center;
 }
 
 .flb-td--rank {
-  justify-content: center;
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-  font-weight: 600;
+	justify-content: center;
+	font-size: var(--text-sm);
+	color: var(--text-muted);
+	font-weight: 600;
 }
 
 .flb-rank-crown {
-  font-size: var(--text-base);
+	font-size: var(--text-base);
 }
 
 .flb-td--name {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-  flex-wrap: wrap;
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-width: 0;
+	flex-wrap: wrap;
 }
 
 .flb-faction-name {
-  font-size: var(--text-sm);
-  font-weight: 700;
-  color: var(--text-strong);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+	font-size: var(--text-sm);
+	font-weight: 700;
+	color: var(--text-strong);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .factions-notice-strip {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  flex-wrap: wrap;
-  padding: var(--space-3) var(--space-4);
-  background: rgba(255, 158, 61, 0.05);
-  border: 1px solid rgba(255, 158, 61, 0.18);
-  border-left: 3px solid var(--accent);
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	flex-wrap: wrap;
+	padding: var(--space-3) var(--space-4);
+	background: rgba(255, 158, 61, 0.05);
+	border: 1px solid rgba(255, 158, 61, 0.18);
+	border-left: 3px solid var(--accent);
 }
 
 .factions-notice-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  height: 28px;
-  padding: 0 10px;
-  background: var(--color-navy-900);
-  border: 1px solid rgba(255, 158, 61, 0.22);
-  color: var(--text-default);
-  font-size: var(--text-xs);
-  font-weight: 700;
-  font-family: var(--font-mono);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	height: 28px;
+	padding: 0 10px;
+	background: var(--color-navy-900);
+	border: 1px solid rgba(255, 158, 61, 0.22);
+	color: var(--text-default);
+	font-size: var(--text-xs);
+	font-weight: 700;
+	font-family: var(--font-mono);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	cursor: pointer;
 }
 
 .factions-notice-chip:hover {
-  border-color: rgba(255, 158, 61, 0.45);
-  color: var(--accent);
+	border-color: rgba(255, 158, 61, 0.45);
+	color: var(--accent);
 }
 
 .factions-notice-mark {
-  width: 3px;
-  height: 14px;
-  background: var(--accent);
-  box-shadow: 0 0 10px rgba(255, 158, 61, 0.45);
-  transform: skewX(-14deg);
+	width: 3px;
+	height: 14px;
+	background: var(--accent);
+	box-shadow: 0 0 10px rgba(255, 158, 61, 0.45);
+	transform: skewX(-14deg);
 }
 
 .factions-notice-count {
-  min-width: 18px;
-  padding: 1px 5px;
-  background: rgba(255, 158, 61, 0.14);
-  border: 1px solid rgba(255, 158, 61, 0.24);
-  color: var(--accent);
-  text-align: center;
+	min-width: 18px;
+	padding: 1px 5px;
+	background: rgba(255, 158, 61, 0.14);
+	border: 1px solid rgba(255, 158, 61, 0.24);
+	color: var(--accent);
+	text-align: center;
 }
 
 .flb-faction-name-button {
-  appearance: none;
-  background: transparent;
-  border: 0;
-  padding: 0;
-  cursor: pointer;
-  text-align: left;
+	appearance: none;
+	background: transparent;
+	border: 0;
+	padding: 0;
+	cursor: pointer;
+	text-align: left;
 }
 
 .flb-faction-name-button:hover,
 .flb-faction-name-button:focus-visible {
-  color: var(--accent);
-  text-decoration: underline;
-  outline: none;
+	color: var(--accent);
+	text-decoration: underline;
+	outline: none;
 }
 
 .flb-faction-tag {
-  font-size: var(--text-xs);
-  color: var(--accent);
-  font-weight: 600;
-  white-space: nowrap;
+	font-size: var(--text-xs);
+	color: var(--accent);
+	font-weight: 600;
+	white-space: nowrap;
 }
 
 .flb-mine-badge {
-  font-size: 10px;
-  padding: 1px 6px;
-  background: rgba(86, 211, 100, 0.15);
-  border: 1px solid rgba(86, 211, 100, 0.3);
-  border-radius: var(--radius-sm);
-  color: var(--success);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+	font-size: 10px;
+	padding: 1px 6px;
+	background: rgba(86, 211, 100, 0.15);
+	border: 1px solid rgba(86, 211, 100, 0.3);
+	border-radius: var(--radius-sm);
+	color: var(--success);
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
 }
 
 .flb-td--nexus {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
 }
 
 .flb-nexus-count {
-  font-size: var(--text-sm);
-  font-weight: 700;
-  color: var(--text-strong);
+	font-size: var(--text-sm);
+	font-weight: 700;
+	color: var(--text-strong);
 }
 
 .flb-nexus-pct {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
+	font-size: var(--text-xs);
+	color: var(--text-muted);
 }
 
 .flb-td--bar {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
 }
 
 .flb-bar-track {
-  position: relative;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.07);
-  border-radius: 3px;
-  overflow: hidden;
+	position: relative;
+	height: 6px;
+	background: rgba(255, 255, 255, 0.07);
+	border-radius: 3px;
+	overflow: hidden;
 }
 
 .flb-bar-fill {
-  height: 100%;
-  background: rgba(255, 158, 61, 0.65);
-  border-radius: 3px;
-  transition: width 0.6s ease;
+	height: 100%;
+	background: rgba(255, 158, 61, 0.65);
+	border-radius: 3px;
+	transition: width 0.6s ease;
 }
 
 .flb-bar-fill--over {
-  background: var(--warning);
+	background: var(--warning);
 }
 
 .flb-hold-time {
-  font-size: 10px;
-  color: var(--warning);
-  font-weight: 600;
+	font-size: 10px;
+	color: var(--warning);
+	font-weight: 600;
 }
 
 .flb-th--members {
-  text-align: center;
+	text-align: center;
 }
 
 .flb-td--members {
-  font-size: var(--text-sm);
-  font-weight: 700;
-  color: var(--text-strong);
-  justify-content: center;
+	font-size: var(--text-sm);
+	font-weight: 700;
+	color: var(--text-strong);
+	justify-content: center;
 }
 
 .flb-row--expanded {
-  border-bottom-color: transparent;
+	border-bottom-color: transparent;
 }
 
 .flb-member-panel {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-3);
-  margin: 0 0 var(--space-2) 0;
-  background: rgba(0, 0, 0, 0.18);
-  border: 1px solid var(--border-default);
-  border-top: 0;
-  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	padding: var(--space-3);
+	margin: 0 0 var(--space-2) 0;
+	background: rgba(0, 0, 0, 0.18);
+	border: 1px solid var(--border-default);
+	border-top: 0;
+	border-radius: 0 0 var(--radius-sm) var(--radius-sm);
 }
 
 .flb-member-status {
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-  font-style: italic;
+	color: var(--text-muted);
+	font-size: var(--text-sm);
+	font-style: italic;
 }
 
 .flb-member-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--space-2);
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: var(--space-2);
 }
 
 .flb-member-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  min-width: 0;
-  padding: var(--space-2) var(--space-3);
-  background: var(--color-navy-900);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	min-width: 0;
+	padding: var(--space-2) var(--space-3);
+	background: var(--color-navy-900);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-sm);
 }
 
 .flb-member-main {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-  flex-wrap: wrap;
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-width: 0;
+	flex-wrap: wrap;
 }
 
 .flb-member-stats {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-3);
-  color: var(--text-muted);
-  font-size: var(--text-xs);
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  flex-wrap: wrap;
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: var(--space-3);
+	color: var(--text-muted);
+	font-size: var(--text-xs);
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+	flex-wrap: wrap;
 }
 
 @media (max-width: 768px) {
-  .factions-container {
-    padding: var(--space-4);
-  }
+	.factions-container {
+		padding: var(--space-4);
+	}
 
-  .factions-panel {
-    padding: var(--space-4);
-  }
+	.factions-panel {
+		padding: var(--space-4);
+	}
 
-  .factions-list {
-    grid-template-columns: 1fr;
-  }
+	.factions-list {
+		grid-template-columns: 1fr;
+	}
 
-  .factions-invite-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-3);
-  }
+	.factions-invite-item {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--space-3);
+	}
 
-  .factions-invite-actions {
-    width: 100%;
-  }
+	.factions-invite-actions {
+		width: 100%;
+	}
 
-  .factions-invite-actions button {
-    flex: 1;
-  }
+	.factions-invite-actions button {
+		flex: 1;
+	}
 
-  .factions-member-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-2);
-  }
+	.factions-member-row {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--space-2);
+	}
 
-  .factions-member-actions {
-    width: 100%;
-  }
+	.factions-member-actions {
+		width: 100%;
+	}
 
-  .factions-member-actions button {
-    flex: 1;
-  }
+	.factions-member-actions button {
+		flex: 1;
+	}
 
-  .factions-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+	.factions-header {
+		flex-direction: column;
+		align-items: flex-start;
+	}
 
-  .factions-tabs {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-  }
+	.factions-tabs {
+		overflow-x: auto;
+		flex-wrap: nowrap;
+	}
 
-  .factions-tab {
-    flex-shrink: 0;
-    font-size: var(--text-xs);
-  }
+	.factions-tab {
+		flex-shrink: 0;
+		font-size: var(--text-xs);
+	}
 
-  .faction-chat {
-    height: 420px;
-  }
+	.faction-chat {
+		height: 420px;
+	}
 
-  .factions-overview-stats {
-    gap: var(--space-3);
-  }
+	.factions-overview-stats {
+		gap: var(--space-3);
+	}
 
-  .factions-invite-inline {
-    flex-direction: column;
-  }
+	.factions-invite-inline {
+		flex-direction: column;
+	}
 
-  .factions-motd-display {
-    flex-direction: column;
-    gap: var(--space-2);
-  }
+	.factions-motd-display {
+		flex-direction: column;
+		gap: var(--space-2);
+	}
 
-  .flb-thead {
-    display: none;
-  }
+	.flb-thead {
+		display: none;
+	}
 
-  .flb-row {
-    grid-template-columns: 28px 1fr 60px;
-    grid-template-rows: auto auto;
-  }
+	.flb-row {
+		grid-template-columns: 28px 1fr 60px;
+		grid-template-rows: auto auto;
+	}
 
-  .flb-td--bar,
-  .flb-td--members {
-    display: none;
-  }
+	.flb-td--bar,
+	.flb-td--members {
+		display: none;
+	}
 }
 
 /* ── War Tab ─────────────────────────────────────────────────────────────── */
 .factions-tab-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 16px;
-  height: 15px;
-  padding: 0 5px;
-  border-radius: 0;
-  font-size: 10px;
-  font-weight: 700;
-  font-family: var(--font-mono);
-  background: rgba(255, 158, 61, 0.12);
-  border: 1px solid rgba(255, 158, 61, 0.24);
-  color: var(--accent);
-  margin-left: 7px;
-  vertical-align: middle;
-  line-height: 1;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 16px;
+	height: 15px;
+	padding: 0 5px;
+	border-radius: 0;
+	font-size: 10px;
+	font-weight: 700;
+	font-family: var(--font-mono);
+	background: rgba(255, 158, 61, 0.12);
+	border: 1px solid rgba(255, 158, 61, 0.24);
+	color: var(--accent);
+	margin-left: 7px;
+	vertical-align: middle;
+	line-height: 1;
 }
 
 .factions-tab-badge--alert {
-  background: rgba(255, 158, 61, 0.16);
-  border-color: rgba(255, 158, 61, 0.36);
-  color: var(--accent);
+	background: rgba(255, 158, 61, 0.16);
+	border-color: rgba(255, 158, 61, 0.36);
+	color: var(--accent);
 }
 
 .factions-war-error {
-  margin-bottom: var(--space-4);
+	margin-bottom: var(--space-4);
 }
 
 .factions-war-section {
-  margin-bottom: var(--space-5);
+	margin-bottom: var(--space-5);
 }
 
 .factions-war-section-title {
-  font-size: var(--text-sm);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
-  margin-bottom: var(--space-3);
+	font-size: var(--text-sm);
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--text-muted);
+	margin-bottom: var(--space-3);
 }
 
 .factions-war-section-title--active {
-  color: var(--danger);
+	color: var(--danger);
 }
 
 .factions-war-section-title--alert {
-  color: var(--danger);
-  animation: war-alert-pulse 2s ease-in-out infinite;
+	color: var(--danger);
+	animation: war-alert-pulse 2s ease-in-out infinite;
 }
 
 @keyframes war-alert-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.6;
+	}
 }
 
 .factions-war-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-default);
-  margin-bottom: var(--space-2);
-  background: rgba(255, 255, 255, 0.02);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	padding: var(--space-3) var(--space-4);
+	border-radius: var(--radius-md);
+	border: 1px solid var(--border-default);
+	margin-bottom: var(--space-2);
+	background: rgba(255, 255, 255, 0.02);
 }
 
 .factions-war-card--active {
-  border-color: rgba(248, 81, 73, 0.4);
-  background: rgba(248, 81, 73, 0.04);
+	border-color: rgba(248, 81, 73, 0.4);
+	background: rgba(248, 81, 73, 0.04);
 }
 
 .factions-war-card--pending-incoming {
-  border-color: rgba(248, 81, 73, 0.3);
-  background: rgba(248, 81, 73, 0.03);
+	border-color: rgba(248, 81, 73, 0.3);
+	background: rgba(248, 81, 73, 0.03);
 }
 
 .factions-war-card--pending-outgoing {
-  border-color: rgba(255, 158, 61, 0.2);
+	border-color: rgba(255, 158, 61, 0.2);
 }
 
 .factions-war-info {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-  min-width: 0;
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	flex-wrap: wrap;
+	min-width: 0;
 }
 
 .factions-war-vs {
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 0.1em;
-  color: var(--danger);
-  background: var(--danger-soft);
-  border: 1px solid rgba(248, 81, 73, 0.3);
-  border-radius: var(--radius-sm);
-  padding: 2px 6px;
-  flex-shrink: 0;
+	font-size: 10px;
+	font-weight: 900;
+	letter-spacing: 0.1em;
+	color: var(--danger);
+	background: var(--danger-soft);
+	border: 1px solid rgba(248, 81, 73, 0.3);
+	border-radius: var(--radius-sm);
+	padding: 2px 6px;
+	flex-shrink: 0;
 }
 
 .factions-war-faction {
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--text-default);
+	font-size: var(--text-sm);
+	font-weight: 600;
+	color: var(--text-default);
 }
 
 .factions-war-meta {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
+	font-size: var(--text-xs);
+	color: var(--text-muted);
 }
 
 .factions-war-actions {
-  display: flex;
-  gap: var(--space-2);
-  flex-shrink: 0;
+	display: flex;
+	gap: var(--space-2);
+	flex-shrink: 0;
 }
 
 .factions-war-status-badge {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 3px 8px;
-  border-radius: 999px;
-  flex-shrink: 0;
+	font-size: 10px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	padding: 3px 8px;
+	border-radius: 999px;
+	flex-shrink: 0;
 }
 
 .factions-war-status-badge--pending {
-  color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--border-default);
+	color: var(--text-muted);
+	background: rgba(255, 255, 255, 0.06);
+	border: 1px solid var(--border-default);
 }
 
 .factions-war-empty {
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-  text-align: center;
-  padding: var(--space-6) 0;
+	color: var(--text-muted);
+	font-size: var(--text-sm);
+	text-align: center;
+	padding: var(--space-6) 0;
 }
 
 .factions-war-declare-form {
-  display: flex;
-  gap: var(--space-3);
-  align-items: center;
-  flex-wrap: wrap;
+	display: flex;
+	gap: var(--space-3);
+	align-items: center;
+	flex-wrap: wrap;
 }
 
 .factions-war-select {
-  flex: 1;
-  min-width: 0;
-  background: var(--bg-input, var(--color-navy-900));
-  border: 1px solid var(--border-default);
-  color: var(--text-default);
-  padding: 8px 10px;
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
-  font-family: inherit;
-  cursor: pointer;
+	flex: 1;
+	min-width: 0;
+	background: var(--bg-input, var(--color-navy-900));
+	border: 1px solid var(--border-default);
+	color: var(--text-default);
+	padding: 8px 10px;
+	border-radius: var(--radius-md);
+	font-size: var(--text-sm);
+	font-family: inherit;
+	cursor: pointer;
 }
 .factions-war-select:focus {
-  outline: none;
-  border-color: var(--accent);
+	outline: none;
+	border-color: var(--accent);
 }
 
 /* ── Faction Browser (no-faction state) ──────────────────────────────────── */
 .factions-browser-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
 }
 
 .factions-browser-empty {
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-  font-style: italic;
+	color: var(--text-muted);
+	font-size: var(--text-sm);
+	font-style: italic;
 }
 
 .factions-browser-card {
-  background: var(--color-navy-900);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-sm);
-  padding: var(--space-4) var(--space-5);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  transition: border-color var(--duration-fast) var(--ease-out);
+	background: var(--color-navy-900);
+	border: 1px solid var(--border-default);
+	border-radius: var(--radius-sm);
+	padding: var(--space-4) var(--space-5);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	transition: border-color var(--duration-fast) var(--ease-out);
 }
 
 .factions-browser-card:hover {
-  border-color: var(--border-strong);
+	border-color: var(--border-strong);
 }
 
 .factions-browser-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  min-width: 0;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	min-width: 0;
 }
 
 .factions-browser-card-identity {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-  flex: 1;
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-width: 0;
+	flex: 1;
 }
 
 .factions-browser-card-name {
-  font-weight: 700;
-  color: var(--text-strong);
-  font-size: var(--text-base);
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+	font-weight: 700;
+	color: var(--text-strong);
+	font-size: var(--text-base);
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .factions-browser-card-name-button {
-  background: none;
-  border: 0;
-  padding: 0;
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
-  text-align: left;
-  transition: color var(--duration-fast) var(--ease-out);
+	background: none;
+	border: 0;
+	padding: 0;
+	font: inherit;
+	color: inherit;
+	cursor: pointer;
+	text-align: left;
+	transition: color var(--duration-fast) var(--ease-out);
 }
 
 .factions-browser-card-name-button:hover,
 .factions-browser-card-name-button:focus-visible {
-  color: var(--accent);
-  text-decoration: underline;
-  outline: none;
+	color: var(--accent);
+	text-decoration: underline;
+	outline: none;
 }
 
 .factions-browser-card-members-panel {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-3);
-  background: rgba(0, 0, 0, 0.18);
-  border: 1px solid var(--border-default);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	padding: var(--space-3);
+	background: rgba(0, 0, 0, 0.18);
+	border: 1px solid var(--border-default);
 }
 
 .factions-browser-card-members-status {
-  color: var(--text-muted);
-  font-style: italic;
-  font-size: var(--text-sm);
+	color: var(--text-muted);
+	font-style: italic;
+	font-size: var(--text-sm);
 }
 
 .factions-browser-card-members-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: var(--space-2);
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+	gap: var(--space-2);
 }
 
 .factions-browser-card-members-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  background: var(--color-navy-900);
-  border: 1px solid var(--border-default);
-  font-size: var(--text-sm);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-2);
+	padding: var(--space-2) var(--space-3);
+	background: var(--color-navy-900);
+	border: 1px solid var(--border-default);
+	font-size: var(--text-sm);
 }
 
 .factions-browser-card-member-main {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-  flex-wrap: wrap;
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-width: 0;
+	flex-wrap: wrap;
 }
 
 .factions-browser-card-member-stats {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-2);
-  color: var(--text-muted);
-  font-size: var(--text-xs);
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  flex-wrap: wrap;
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: var(--space-2);
+	color: var(--text-muted);
+	font-size: var(--text-xs);
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+	flex-wrap: wrap;
 }
 
 .factions-browser-card-tag {
-  font-size: var(--text-xs);
-  color: var(--accent);
-  font-weight: 600;
-  background: rgba(255, 158, 61, 0.08);
-  border: 1px solid rgba(255, 158, 61, 0.2);
-  border-radius: var(--radius-sm);
-  padding: 2px 6px;
+	font-size: var(--text-xs);
+	color: var(--accent);
+	font-weight: 600;
+	background: rgba(255, 158, 61, 0.08);
+	border: 1px solid rgba(255, 158, 61, 0.2);
+	border-radius: var(--radius-sm);
+	padding: 2px 6px;
 }
 
 .factions-browser-card-members {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  white-space: nowrap;
-  flex-shrink: 0;
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
+	font-size: var(--text-xs);
+	color: var(--text-muted);
+	white-space: nowrap;
+	flex-shrink: 0;
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+	letter-spacing: 0.02em;
 }
 
 .factions-browser-card-desc {
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-  font-style: italic;
-  margin: 0;
+	font-size: var(--text-sm);
+	color: var(--text-muted);
+	font-style: italic;
+	margin: 0;
 }
 
 .factions-browser-card-join {
-  display: flex;
-  gap: var(--space-2);
-  align-items: center;
-  flex-wrap: wrap;
+	display: flex;
+	gap: var(--space-2);
+	align-items: center;
+	flex-wrap: wrap;
 }
 
 .factions-join-req-msg {
-  flex: 1;
-  min-width: 160px;
-  background: var(--bg-input, var(--color-navy-900));
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-  color: var(--text-default);
-  font-size: var(--text-sm);
-  padding: 7px 10px;
-  font-family: inherit;
-  transition: border-color 0.2s;
+	flex: 1;
+	min-width: 160px;
+	background: var(--bg-input, var(--color-navy-900));
+	border: 1px solid var(--border-default);
+	border-radius: var(--radius-md);
+	color: var(--text-default);
+	font-size: var(--text-sm);
+	padding: 7px 10px;
+	font-family: inherit;
+	transition: border-color 0.2s;
 }
 
 .factions-join-req-msg:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(255, 158, 61, 0.1);
+	outline: none;
+	border-color: var(--accent);
+	box-shadow: 0 0 0 3px rgba(255, 158, 61, 0.1);
 }
 
 .factions-btn-join {
-  white-space: nowrap;
+	white-space: nowrap;
 }
 
 .factions-browser-card-pending {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
 }
 
 .factions-join-req-status {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  font-style: italic;
+	font-size: var(--text-xs);
+	color: var(--text-muted);
+	font-style: italic;
 }
 
 /* ── Join Requests (leader view in Members tab) ───────────────────────────── */
 .factions-join-requests-section {
-  margin-bottom: var(--space-6);
-  padding-bottom: var(--space-5);
-  border-bottom: 1px solid var(--border-default);
+	margin-bottom: var(--space-6);
+	padding-bottom: var(--space-5);
+	border-bottom: 1px solid var(--border-default);
 }
 
 .factions-join-requests-empty {
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-  font-style: italic;
+	font-size: var(--text-sm);
+	color: var(--text-muted);
+	font-style: italic;
 }
 
 .factions-join-req-row {
-  background: rgba(255, 158, 61, 0.03);
-  border-color: rgba(255, 158, 61, 0.15);
+	background: rgba(255, 158, 61, 0.03);
+	border-color: rgba(255, 158, 61, 0.15);
 }
 
 .factions-join-req-msg-display {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  font-style: italic;
-  margin-left: var(--space-2);
+	font-size: var(--text-xs);
+	color: var(--text-muted);
+	font-style: italic;
+	margin-left: var(--space-2);
 }
 
 /* ── FactionLeaderboard locked notice ────────────────────────────────────── */
 .flb-locked-notice {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
-  padding: var(--space-4) var(--space-5);
-  background: rgba(210, 153, 34, 0.06);
-  border: 1px solid rgba(210, 153, 34, 0.2);
-  border-radius: var(--radius-lg);
-  margin-bottom: var(--space-4);
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-3);
+	padding: var(--space-4) var(--space-5);
+	background: rgba(210, 153, 34, 0.06);
+	border: 1px solid rgba(210, 153, 34, 0.2);
+	border-radius: var(--radius-lg);
+	margin-bottom: var(--space-4);
 }
 
 .flb-locked-icon {
-  font-size: 1.1rem;
-  line-height: 1.4;
+	font-size: 1.1rem;
+	line-height: 1.4;
 }
 
 .flb-locked-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
 }
 
 .flb-locked-text strong {
-  font-size: var(--text-sm);
-  color: var(--warning);
-  font-weight: 600;
+	font-size: var(--text-sm);
+	color: var(--warning);
+	font-weight: 600;
 }
 
 .flb-locked-text span {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
+	font-size: var(--text-xs);
+	color: var(--text-muted);
 }
 
 /* ── Pending join requests sent panel ────────────────────────────────────── */
 .factions-join-requests-sent .factions-invite-item {
-  border-color: rgba(255, 158, 61, 0.15);
-  background: rgba(255, 158, 61, 0.03);
+	border-color: rgba(255, 158, 61, 0.15);
+	background: rgba(255, 158, 61, 0.03);
 }
 
 /* ---- Diplomacy Tab ---- */
 .factions-treaty-form {
-  flex-wrap: wrap;
-  gap: 8px;
+	flex-wrap: wrap;
+	gap: 8px;
 }
 
 .factions-treaty-duration-input {
-  width: 70px;
-  background: var(--color-navy-900);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-sm);
-  padding: 6px 10px;
-  color: var(--text-strong);
-  font-size: var(--text-sm);
+	width: 70px;
+	background: var(--color-navy-900);
+	border: 1px solid var(--border-default);
+	border-radius: var(--radius-sm);
+	padding: 6px 10px;
+	color: var(--text-strong);
+	font-size: var(--text-sm);
 }
 
 .factions-treaty-hint {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  margin-top: 6px;
-  line-height: 1.5;
+	font-size: var(--text-xs);
+	color: var(--text-muted);
+	margin-top: 6px;
+	line-height: 1.5;
 }
 
 .factions-treaty-type {
-  font-size: var(--text-xs);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 2px 8px;
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--border-default);
-  color: var(--text-muted);
-  flex-shrink: 0;
+	font-size: var(--text-xs);
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	padding: 2px 8px;
+	border-radius: var(--radius-sm);
+	background: rgba(255, 255, 255, 0.06);
+	border: 1px solid var(--border-default);
+	color: var(--text-muted);
+	flex-shrink: 0;
 }
 
 .factions-treaty-type--active {
-  background: var(--success-soft);
-  border-color: rgba(86, 211, 100, 0.3);
-  color: var(--success);
+	background: var(--success-soft);
+	border-color: rgba(86, 211, 100, 0.3);
+	color: var(--success);
 }
 
 .factions-treaty-type--pending {
-  background: var(--warning-soft);
-  border-color: rgba(210, 153, 34, 0.3);
-  color: var(--warning);
+	background: var(--warning-soft);
+	border-color: rgba(210, 153, 34, 0.3);
+	color: var(--warning);
 }
 
 .factions-diplomacy-board {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
 }
 
 .factions-diplomacy-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  background: var(--color-navy-900);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-sm);
-  padding: 9px 12px;
-  font-size: var(--text-sm);
-  flex-wrap: wrap;
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	background: var(--color-navy-900);
+	border: 1px solid var(--border-default);
+	border-radius: var(--radius-sm);
+	padding: 9px 12px;
+	font-size: var(--text-sm);
+	flex-wrap: wrap;
 }
 
 .factions-diplomacy-row--pending {
-  opacity: 0.7;
+	opacity: 0.7;
 }
 
 .factions-diplomacy-parties {
-  color: var(--text-default);
-  flex: 1;
-  min-width: 0;
+	color: var(--text-default);
+	flex: 1;
+	min-width: 0;
 }
 
 .factions-diplomacy-sep {
-  color: var(--text-muted);
-  margin: 0 var(--space-2);
-  font-size: var(--text-xs);
+	color: var(--text-muted);
+	margin: 0 var(--space-2);
+	font-size: var(--text-xs);
 }
 
 .factions-diplomacy-status {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  flex-shrink: 0;
+	font-size: var(--text-xs);
+	color: var(--text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	flex-shrink: 0;
 }
 
 /* ── Diplomacy Chat ─────────────────────────────────────────────────────────── */
 
 .diplomacy-chat {
-  display: flex;
-  flex-direction: column;
-  height: 420px;
-  border: 1px solid rgba(255, 158, 61, 0.2);
-  border-radius: var(--radius-md);
-  background: rgba(255, 158, 61, 0.03);
-  margin-top: var(--space-4);
-  overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	height: 420px;
+	border: 1px solid rgba(255, 158, 61, 0.2);
+	border-radius: var(--radius-md);
+	background: rgba(255, 158, 61, 0.03);
+	margin-top: var(--space-4);
+	overflow: hidden;
 }
 
 .diplomacy-chat-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-2) var(--space-4);
-  border-bottom: 1px solid rgba(255, 158, 61, 0.15);
-  background: rgba(255, 158, 61, 0.05);
-  flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: var(--space-2) var(--space-4);
+	border-bottom: 1px solid rgba(255, 158, 61, 0.15);
+	background: rgba(255, 158, 61, 0.05);
+	flex-shrink: 0;
 }
 
 .diplomacy-chat-title {
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--accent);
-  letter-spacing: 0.02em;
+	font-size: var(--text-sm);
+	font-weight: 600;
+	color: var(--accent);
+	letter-spacing: 0.02em;
 }
 
 .diplomacy-chat-close {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-  cursor: pointer;
-  padding: 0 var(--space-1);
-  line-height: 1;
-  transition: color 0.15s;
+	background: none;
+	border: none;
+	color: var(--text-muted);
+	font-size: var(--text-sm);
+	cursor: pointer;
+	padding: 0 var(--space-1);
+	line-height: 1;
+	transition: color 0.15s;
 }
 
 .diplomacy-chat-close:hover {
-  color: var(--text-default);
+	color: var(--text-default);
 }
 
 .diplomacy-chat-messages {
-  height: 100%;
+	height: 100%;
 }
 
 .factions-btn-active {
-  background: rgba(255, 158, 61, 0.15);
-  border-color: var(--accent);
-  color: var(--accent);
+	background: rgba(255, 158, 61, 0.15);
+	border-color: var(--accent);
+	color: var(--accent);
 }
 
 /* ╔══════════════════════════════════════════════════════════════════╗
@@ -2252,43 +2330,43 @@
    ╚══════════════════════════════════════════════════════════════════╝ */
 
 .factions-panel {
-  border-radius: 0;
-  border-left: 2px solid var(--border-default);
-  position: relative;
-  transition: border-left-color var(--duration-base) var(--ease-out);
+	border-radius: 0;
+	border-left: 2px solid var(--border-default);
+	position: relative;
+	transition: border-left-color var(--duration-base) var(--ease-out);
 }
 
 .factions-container > .factions-panel:first-of-type {
-  border-left: 3px solid var(--accent);
+	border-left: 3px solid var(--accent);
 }
 
 .factions-member-row,
 .factions-invite-form,
 .factions-field {
-  border-radius: 0;
+	border-radius: 0;
 }
 
 .factions-member-row {
-  border-left: 2px solid var(--border-default);
-  transition: border-left-color var(--duration-base) var(--ease-out);
+	border-left: 2px solid var(--border-default);
+	transition: border-left-color var(--duration-base) var(--ease-out);
 }
 
 .factions-member-row:hover {
-  border-left-color: var(--accent);
+	border-left-color: var(--accent);
 }
 
 .factions-member-role {
-  border-radius: 0;
-  font-family: var(--font-mono);
-  letter-spacing: 0.10em;
-  text-transform: uppercase;
+	border-radius: 0;
+	font-family: var(--font-mono);
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
 }
 
 .factions-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+	font-family: var(--font-mono);
+	font-size: 10px;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
 }
 
 [class*='factions-'][class*='-btn'],
@@ -2299,42 +2377,47 @@
 [class*='factions-'][class*='-badge'],
 [class*='factions-'][class*='-chip'],
 [class*='factions-'][class*='-pill'] {
-  border-radius: 0;
+	border-radius: 0;
 }
 
 [class*='factions-'][class*='-btn-primary'] {
-  background: var(--accent);
-  color: var(--text-on-accent);
-  position: relative;
-  overflow: hidden;
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
+	background: var(--accent);
+	color: var(--text-on-accent);
+	position: relative;
+	overflow: hidden;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
 }
 
 [class*='factions-'][class*='-btn-primary']::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.18) 50%, transparent 70%);
-  transform: translateX(-110%);
-  transition: transform 0.5s var(--ease-out);
-  pointer-events: none;
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(
+		110deg,
+		transparent 30%,
+		rgba(255, 255, 255, 0.18) 50%,
+		transparent 70%
+	);
+	transform: translateX(-110%);
+	transition: transform 0.5s var(--ease-out);
+	pointer-events: none;
 }
 
 [class*='factions-'][class*='-btn-primary']:hover:not(:disabled)::before {
-  transform: translateX(110%);
+	transform: translateX(110%);
 }
 
 [class*='factions-'][class*='-error'] {
-  border-radius: 0;
-  border-left: 3px solid var(--danger);
+	border-radius: 0;
+	border-left: 3px solid var(--danger);
 }
 
 [class*='factions-'][class*='-rank'],
 [class*='factions-'][class*='-points'],
 [class*='factions-'][class*='-influence'],
 [class*='factions-'][class*='-numeric'] {
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
 }
 
 /* Broader prefixes used inside Factions.css */
@@ -2346,7 +2429,7 @@
 [class*=' diplomacy-'],
 [class^='event-'],
 [class*=' event-'] {
-  border-radius: 0;
+	border-radius: 0;
 }
 
 [class*='flb-'][class*='-card'],
@@ -2356,13 +2439,13 @@
 [class*='faction-'][class*='-row'],
 [class*='diplomacy-'][class*='-card'],
 [class*='diplomacy-'][class*='-row'] {
-  border-left: 2px solid var(--border-default);
-  transition: border-left-color var(--duration-base) var(--ease-out);
+	border-left: 2px solid var(--border-default);
+	transition: border-left-color var(--duration-base) var(--ease-out);
 }
 
 [class*='flb-'][class*='-card']:hover,
 [class*='flb-'][class*='-row']:hover {
-  border-left-color: var(--accent);
+	border-left-color: var(--accent);
 }
 
 [class*='flb-'][class*='-title'],
@@ -2370,11 +2453,11 @@
 [class*='diplomacy-'][class*='-title'],
 [class*='diplomacy-'][class*='-heading'],
 [class*='faction-'][class*='-title']:not([class*='factions-']) {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--accent);
+	font-family: var(--font-mono);
+	font-size: 11px;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--accent);
 }
 
 [class*='flb-'][class*='-numeric'],
@@ -2382,8 +2465,8 @@
 [class*='flb-'][class*='-rank'],
 [class*='flb-'][class*='-pct'],
 [class*='flb-'][class*='-bar'] {
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
 }
 
 [class*='flb-'][class*='-badge'],
@@ -2391,139 +2474,143 @@
 [class*='flb-'][class*='-tag'],
 [class*='faction-'][class*='-badge'],
 [class*='diplomacy-'][class*='-badge'] {
-  font-family: var(--font-mono);
-  letter-spacing: 0.08em;
+	font-family: var(--font-mono);
+	letter-spacing: 0.08em;
 }
 
 /* Diplomacy chat bubbles */
 [class*='diplomacy-'][class*='-bubble'] {
-  border-left: 2px solid var(--border-default);
+	border-left: 2px solid var(--border-default);
 }
 
-[class*='diplomacy-'][class*='-bubble']:where([class*='--me'], [class*='--self'], [class*='--own']) {
-  border-left-color: var(--accent);
+[class*='diplomacy-'][class*='-bubble']:where(
+		[class*='--me'],
+		[class*='--self'],
+		[class*='--own']
+	) {
+	border-left-color: var(--accent);
 }
 
 /* Chat bubbles within faction view inherit sharper edges */
 [class*='factions-'][class*='chat-'] {
-  border-radius: 0;
+	border-radius: 0;
 }
 
 /* ── Players card: keep rank + avatar fixed-width, let name shrink ───────── */
 .players-card .factions-browser-card-identity {
-  flex-wrap: nowrap;
+	flex-wrap: nowrap;
 }
 
 .players-card-avatar {
-  flex-shrink: 0;
+	flex-shrink: 0;
 }
 
 /* Username's outer wrapper (inline-flex span without a class) must also shrink */
 .players-card .factions-browser-card-identity > span {
-  min-width: 0;
+	min-width: 0;
 }
 
 /* The link or text-span carrying the name class truncates */
 .players-card .factions-browser-card-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
-  display: block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+	display: block;
 }
 
 /* ── Players list (shares faction-browser visual language) ───────────────── */
 .players-toolbar {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  margin-bottom: var(--space-3);
-  flex-wrap: wrap;
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	margin-bottom: var(--space-3);
+	flex-wrap: wrap;
 }
 
 .players-search {
-  flex: 1 1 220px;
-  min-width: 200px;
-  padding: var(--space-2) var(--space-3);
-  background: var(--color-navy-900);
-  border: 1px solid var(--border-default);
-  border-radius: 0;
-  color: var(--text-default);
-  font-size: var(--text-sm);
+	flex: 1 1 220px;
+	min-width: 200px;
+	padding: var(--space-2) var(--space-3);
+	background: var(--color-navy-900);
+	border: 1px solid var(--border-default);
+	border-radius: 0;
+	color: var(--text-default);
+	font-size: var(--text-sm);
 }
 
 .players-search:focus {
-  outline: none;
-  border-color: var(--border-accent);
-  box-shadow: var(--glow-accent-soft);
+	outline: none;
+	border-color: var(--border-accent);
+	box-shadow: var(--glow-accent-soft);
 }
 
 .players-sort {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  color: var(--text-muted);
-  font-size: var(--text-xs);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	color: var(--text-muted);
+	font-size: var(--text-xs);
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
 }
 
 .players-sort select {
-  padding: var(--space-2) var(--space-3);
-  background: var(--color-navy-900);
-  border: 1px solid var(--border-default);
-  color: var(--text-default);
-  font-size: var(--text-sm);
-  border-radius: 0;
+	padding: var(--space-2) var(--space-3);
+	background: var(--color-navy-900);
+	border: 1px solid var(--border-default);
+	color: var(--text-default);
+	font-size: var(--text-sm);
+	border-radius: 0;
 }
 
 .players-card-rank {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 36px;
-  padding: 0 6px;
-  background: var(--bg-surface-2);
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  letter-spacing: 0.05em;
-  margin-right: var(--space-2);
-  flex-shrink: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 36px;
+	padding: 0 6px;
+	background: var(--bg-surface-2);
+	color: var(--text-muted);
+	font-family: var(--font-mono);
+	font-size: var(--text-xs);
+	letter-spacing: 0.05em;
+	margin-right: var(--space-2);
+	flex-shrink: 0;
 }
 
 .players-card-meta {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  flex-wrap: wrap;
-  color: var(--text-muted);
-  font-size: var(--text-sm);
+	display: flex;
+	align-items: center;
+	gap: var(--space-4);
+	flex-wrap: wrap;
+	color: var(--text-muted);
+	font-size: var(--text-sm);
 }
 
 .players-card-meta-item strong {
-  color: var(--text-default);
-  font-weight: 600;
+	color: var(--text-default);
+	font-weight: 600;
 }
 
 .players-card-meta-dim {
-  font-style: italic;
-  color: var(--text-faint);
+	font-style: italic;
+	color: var(--text-faint);
 }
 
 .players-card-faction-link {
-  color: var(--accent);
-  text-decoration: none;
+	color: var(--accent);
+	text-decoration: none;
 }
 
 .players-card-faction-link:hover {
-  text-decoration: underline;
+	text-decoration: underline;
 }
 
 .players-card-faction-tag {
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  letter-spacing: 0.05em;
-  margin-left: 2px;
+	color: var(--text-muted);
+	font-family: var(--font-mono);
+	font-size: var(--text-xs);
+	letter-spacing: 0.05em;
+	margin-left: 2px;
 }

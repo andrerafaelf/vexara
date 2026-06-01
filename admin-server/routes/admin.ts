@@ -49,8 +49,8 @@ router.post('/users/:userId/flag', adminController.flagUser);
 router.delete('/users/:userId/flag', adminController.unflagUser);
 router.get('/flagged-users', adminController.listFlaggedUsers);
 
-router.get('/analytics/activation',  adminController.getActivationAnalytics);
-router.get('/analytics/engagement',  adminController.getEngagementAnalytics);
-router.get('/analytics/referrals',   adminController.getReferralAnalytics);
+router.get('/analytics/activation', adminController.getActivationAnalytics);
+router.get('/analytics/engagement', adminController.getEngagementAnalytics);
+router.get('/analytics/referrals', adminController.getReferralAnalytics);
 
 export default router;

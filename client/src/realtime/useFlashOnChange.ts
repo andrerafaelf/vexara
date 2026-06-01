@@ -15,24 +15,24 @@ import { useEffect, useRef, useState } from 'react';
  * server timestamp / version number) rather than a fresh object each render.
  */
 export function useFlashOnChange<T>(value: T, durationMs = 600): boolean {
-  const [flashing, setFlashing] = useState(false);
-  const previousRef = useRef<T>(value);
-  const firstRenderRef = useRef(true);
+	const [flashing, setFlashing] = useState(false);
+	const previousRef = useRef<T>(value);
+	const firstRenderRef = useRef(true);
 
-  useEffect(() => {
-    if (firstRenderRef.current) {
-      firstRenderRef.current = false;
-      previousRef.current = value;
-      return;
-    }
-    if (Object.is(previousRef.current, value)) return;
-    previousRef.current = value;
-    setFlashing(true);
-    const id = setTimeout(() => setFlashing(false), durationMs);
-    return () => clearTimeout(id);
-  }, [value, durationMs]);
+	useEffect(() => {
+		if (firstRenderRef.current) {
+			firstRenderRef.current = false;
+			previousRef.current = value;
+			return;
+		}
+		if (Object.is(previousRef.current, value)) return;
+		previousRef.current = value;
+		setFlashing(true);
+		const id = setTimeout(() => setFlashing(false), durationMs);
+		return () => clearTimeout(id);
+	}, [value, durationMs]);
 
-  return flashing;
+	return flashing;
 }
 
 /**
@@ -41,23 +41,23 @@ export function useFlashOnChange<T>(value: T, durationMs = 600): boolean {
  * become-unavailable direction shouldn't trigger a celebration animation.
  */
 export function useFlashOnTrue(value: boolean, durationMs = 600): boolean {
-  const [flashing, setFlashing] = useState(false);
-  const previousRef = useRef(value);
-  const firstRenderRef = useRef(true);
+	const [flashing, setFlashing] = useState(false);
+	const previousRef = useRef(value);
+	const firstRenderRef = useRef(true);
 
-  useEffect(() => {
-    if (firstRenderRef.current) {
-      firstRenderRef.current = false;
-      previousRef.current = value;
-      return;
-    }
-    const prev = previousRef.current;
-    previousRef.current = value;
-    if (prev || !value) return;
-    setFlashing(true);
-    const id = setTimeout(() => setFlashing(false), durationMs);
-    return () => clearTimeout(id);
-  }, [value, durationMs]);
+	useEffect(() => {
+		if (firstRenderRef.current) {
+			firstRenderRef.current = false;
+			previousRef.current = value;
+			return;
+		}
+		const prev = previousRef.current;
+		previousRef.current = value;
+		if (prev || !value) return;
+		setFlashing(true);
+		const id = setTimeout(() => setFlashing(false), durationMs);
+		return () => clearTimeout(id);
+	}, [value, durationMs]);
 
-  return flashing;
+	return flashing;
 }

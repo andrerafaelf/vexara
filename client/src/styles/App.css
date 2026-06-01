@@ -1,51 +1,51 @@
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: var(--color-navy-700);
-  color: var(--text-strong);
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+	background: var(--color-navy-700);
+	color: var(--text-strong);
 }
 
 .App {
-  min-height: 100vh;
+	min-height: 100vh;
 }
 
 button {
-  cursor: pointer;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 0;
-  font-size: 14px;
-  transition: all 0.3s ease;
+	cursor: pointer;
+	border: none;
+	padding: 10px 20px;
+	border-radius: 0;
+	font-size: 14px;
+	transition: all 0.3s ease;
 }
 
 button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+	opacity: 0.5;
+	cursor: not-allowed;
 }
 
 input {
-  padding: 10px;
-  border: 1px solid var(--color-navy-500);
-  border-radius: 0;
-  font-size: 14px;
-  background: var(--color-navy-500);
-  color: var(--text-strong);
+	padding: 10px;
+	border: 1px solid var(--color-navy-500);
+	border-radius: 0;
+	font-size: 14px;
+	background: var(--color-navy-500);
+	color: var(--text-strong);
 }
 
 input:focus {
-  outline: none;
-  border-color: var(--accent);
+	outline: none;
+	border-color: var(--accent);
 }
 
 .loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  font-size: 24px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100vh;
+	font-size: 24px;
 }

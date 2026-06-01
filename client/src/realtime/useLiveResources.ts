@@ -6,11 +6,11 @@ import { interpolateResources, type ResourceAmounts } from './economy.shared';
 import { realtimeStore, type ResourceSnapshot } from './store';
 
 export interface LiveResources {
-  biomass: number;
-  alloy: number;
-  ore: number;
-  production: ResourceAmounts;
-  storageMax: number;
+	biomass: number;
+	alloy: number;
+	ore: number;
+	production: ResourceAmounts;
+	storageMax: number;
 }
 
 // SSR snapshot is undefined so React's hydration matches the first client render
@@ -26,12 +26,12 @@ const getServerSnapshot = (): ResourceSnapshot | undefined => undefined;
  * that distribute the snapshot to leaves which do their own interpolation.
  */
 export function useResourceSnapshot(nexusId: string | null | undefined): ResourceSnapshot | null {
-  const snap = useSyncExternalStore(
-    realtimeStore.subscribe,
-    () => (nexusId ? realtimeStore.get(nexusId) : undefined),
-    getServerSnapshot,
-  );
-  return snap ?? null;
+	const snap = useSyncExternalStore(
+		realtimeStore.subscribe,
+		() => (nexusId ? realtimeStore.get(nexusId) : undefined),
+		getServerSnapshot
+	);
+	return snap ?? null;
 }
 
 /**
@@ -44,7 +44,7 @@ export function useResourceSnapshot(nexusId: string | null | undefined): Resourc
  * useLiveResources inside the leaves that actually render ticking values.
  */
 export function useLiveResources(nexusId: string | null | undefined): LiveResources | null {
-  return useGatedLiveResources(nexusId, true);
+	return useGatedLiveResources(nexusId, true);
 }
 
 /**
@@ -55,30 +55,30 @@ export function useLiveResources(nexusId: string | null | undefined): LiveResour
  * boundary). The returned values are the snapshot-time values when not ticking.
  */
 export function useGatedLiveResources(
-  nexusId: string | null | undefined,
-  tick: boolean,
+	nexusId: string | null | undefined,
+	tick: boolean
 ): LiveResources | null {
-  const snap = useResourceSnapshot(nexusId);
-  const now = useGatedNow(tick);
+	const snap = useResourceSnapshot(nexusId);
+	const now = useGatedNow(tick);
 
-  if (!snap) return null;
+	if (!snap) return null;
 
-  // When tick is false useGatedNow returns 0; fall back to the snapshot anchor
-  // so interpolation yields the values at last snapshot, not in 1970.
-  const effectiveNow = tick ? now : snap.anchorMs;
-  const interpolated = interpolateResources(
-    snap.base,
-    snap.production,
-    snap.storageMax,
-    snap.anchorMs,
-    effectiveNow,
-  );
+	// When tick is false useGatedNow returns 0; fall back to the snapshot anchor
+	// so interpolation yields the values at last snapshot, not in 1970.
+	const effectiveNow = tick ? now : snap.anchorMs;
+	const interpolated = interpolateResources(
+		snap.base,
+		snap.production,
+		snap.storageMax,
+		snap.anchorMs,
+		effectiveNow
+	);
 
-  return {
-    biomass: interpolated.biomass,
-    alloy: interpolated.alloy,
-    ore: interpolated.ore,
-    production: snap.production,
-    storageMax: snap.storageMax,
-  };
+	return {
+		biomass: interpolated.biomass,
+		alloy: interpolated.alloy,
+		ore: interpolated.ore,
+		production: snap.production,
+		storageMax: snap.storageMax
+	};
 }

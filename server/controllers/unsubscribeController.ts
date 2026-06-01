@@ -3,21 +3,21 @@ import prisma from '../lib/prisma.js';
 import { logError } from '../utils/logger.js';
 
 function extractToken(req: Request): string | null {
-  const fromQuery = typeof req.query?.token === 'string' ? req.query.token : '';
-  const fromBody =
-    req.body && typeof (req.body as { token?: unknown }).token === 'string'
-      ? ((req.body as { token: string }).token)
-      : '';
-  const raw = (fromQuery || fromBody).trim();
-  // 32 random bytes hex-encoded → 64 chars. Allow 16–128 for flexibility.
-  if (!raw || raw.length < 16 || raw.length > 128) return null;
-  if (!/^[a-f0-9]+$/i.test(raw)) return null;
-  return raw;
+	const fromQuery = typeof req.query?.token === 'string' ? req.query.token : '';
+	const fromBody =
+		req.body && typeof (req.body as { token?: unknown }).token === 'string'
+			? (req.body as { token: string }).token
+			: '';
+	const raw = (fromQuery || fromBody).trim();
+	// 32 random bytes hex-encoded → 64 chars. Allow 16–128 for flexibility.
+	if (!raw || raw.length < 16 || raw.length > 128) return null;
+	if (!/^[a-f0-9]+$/i.test(raw)) return null;
+	return raw;
 }
 
 function renderConfirmation(email: string): string {
-  const safeEmail = email.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  return `<!doctype html>
+	const safeEmail = email.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+	return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>Unsubscribed</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
@@ -35,7 +35,7 @@ function renderConfirmation(email: string): string {
 }
 
 function renderInvalidLink(): string {
-  return `<!doctype html>
+	return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>Invalid unsubscribe link</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
@@ -53,45 +53,48 @@ function renderInvalidLink(): string {
 }
 
 export async function unsubscribe(req: Request, res: Response): Promise<void> {
-  try {
-    const token = extractToken(req);
-    if (!token) {
-      if (req.method === 'POST') {
-        res.status(400).json({ error: 'Invalid unsubscribe link' });
-      } else {
-        res.status(400).type('html').send(renderInvalidLink());
-      }
-      return;
-    }
+	try {
+		const token = extractToken(req);
+		if (!token) {
+			if (req.method === 'POST') {
+				res.status(400).json({ error: 'Invalid unsubscribe link' });
+			} else {
+				res.status(400).type('html').send(renderInvalidLink());
+			}
+			return;
+		}
 
-    const record = await prisma.alphaSignup.findUnique({
-      where: { unsubscribeToken: token },
-      select: { email: true },
-    });
+		const record = await prisma.alphaSignup.findUnique({
+			where: { unsubscribeToken: token },
+			select: { email: true }
+		});
 
-    if (!record) {
-      if (req.method === 'POST') {
-        res.status(400).json({ error: 'Invalid unsubscribe link' });
-      } else {
-        res.status(400).type('html').send(renderInvalidLink());
-      }
-      return;
-    }
+		if (!record) {
+			if (req.method === 'POST') {
+				res.status(400).json({ error: 'Invalid unsubscribe link' });
+			} else {
+				res.status(400).type('html').send(renderInvalidLink());
+			}
+			return;
+		}
 
-    await prisma.alphaSignup.update({
-      where: { unsubscribeToken: token },
-      data: { unsubscribedAt: new Date() },
-    });
+		await prisma.alphaSignup.update({
+			where: { unsubscribeToken: token },
+			data: { unsubscribedAt: new Date() }
+		});
 
-    // RFC 8058 one-click POST: respond 200 with no body so mail clients mark success.
-    if (req.method === 'POST') {
-      res.status(200).json({ ok: true });
-      return;
-    }
+		// RFC 8058 one-click POST: respond 200 with no body so mail clients mark success.
+		if (req.method === 'POST') {
+			res.status(200).json({ ok: true });
+			return;
+		}
 
-    res.status(200).type('html').send(renderConfirmation(record.email));
-  } catch (error) {
-    logError('unhandled_controller_error', { message: (error as Error).message, file: 'unsubscribeController.ts' });
-    res.status(500).json({ error: 'Internal server error' });
-  }
+		res.status(200).type('html').send(renderConfirmation(record.email));
+	} catch (error) {
+		logError('unhandled_controller_error', {
+			message: (error as Error).message,
+			file: 'unsubscribeController.ts'
+		});
+		res.status(500).json({ error: 'Internal server error' });
+	}
 }

@@ -12,44 +12,44 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function CombatLogsPage() {
-  const { selectedNexus } = useMyNexuses();
-  const { refresh: refreshUnreadReports } = useUnreadReports();
-  const { user } = useAuth();
-  const router = useRouter();
-  const [factionId, setFactionId] = useState<number | undefined>();
+	const { selectedNexus } = useMyNexuses();
+	const { refresh: refreshUnreadReports } = useUnreadReports();
+	const { user } = useAuth();
+	const router = useRouter();
+	const [factionId, setFactionId] = useState<number | undefined>();
 
-  usePageReady(!!selectedNexus, 'combat-logs');
+	usePageReady(!!selectedNexus, 'combat-logs');
 
-  useEffect(() => {
-    if (typeof window !== 'undefined' && !localStorage.getItem('token')) {
-      router.push('/login');
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+	useEffect(() => {
+		if (typeof window !== 'undefined' && !localStorage.getItem('token')) {
+			router.push('/login');
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
-  useEffect(() => {
-    getMyFaction()
-      .then((res) => {
-        const id = res.data?.faction?.id;
-        if (id) setFactionId(id);
-      })
-      .catch(() => {});
-  }, []);
+	useEffect(() => {
+		getMyFaction()
+			.then((res) => {
+				const id = res.data?.faction?.id;
+				if (id) setFactionId(id);
+			})
+			.catch(() => {});
+	}, []);
 
-  const currentUserId = user?.id ? parseInt(user.id, 10) : undefined;
+	const currentUserId = user?.id ? parseInt(user.id, 10) : undefined;
 
-  return (
-    <GameLayout activePage="combat-logs">
-      {selectedNexus ? (
-        <Reports
-          nexus={selectedNexus}
-          onReadStateChange={refreshUnreadReports}
-          factionId={factionId}
-          currentUserId={currentUserId}
-        />
-      ) : (
-        <PageSkeleton variant="rows" count={5} />
-      )}
-    </GameLayout>
-  );
+	return (
+		<GameLayout activePage="combat-logs">
+			{selectedNexus ? (
+				<Reports
+					nexus={selectedNexus}
+					onReadStateChange={refreshUnreadReports}
+					factionId={factionId}
+					currentUserId={currentUserId}
+				/>
+			) : (
+				<PageSkeleton variant="rows" count={5} />
+			)}
+		</GameLayout>
+	);
 }

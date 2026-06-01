@@ -4,60 +4,63 @@
    top stack above (header / connection bar / dominance bar) so there's no
    dead space between them. */
 .backbar {
-  position: sticky;
-  top: 0;
-  z-index: var(--z-sticky);
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: 10px var(--space-7);
-  margin: calc(var(--space-7) * -1) calc(var(--space-7) * -1) var(--space-5);
-  background: var(--bg-app);
-  border-bottom: 1px solid var(--border-default);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  min-height: 44px;
+	position: sticky;
+	top: 0;
+	z-index: var(--z-sticky);
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: 10px var(--space-7);
+	margin: calc(var(--space-7) * -1) calc(var(--space-7) * -1) var(--space-5);
+	background: var(--bg-app);
+	border-bottom: 1px solid var(--border-default);
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
+	min-height: 44px;
 }
 
 .backbar-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px 6px 10px;
-  background: transparent;
-  border: 1px solid var(--border-default);
-  border-radius: 6px;
-  color: var(--text-muted);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 12px 6px 10px;
+	background: transparent;
+	border: 1px solid var(--border-default);
+	border-radius: 6px;
+	color: var(--text-muted);
+	font-size: 13px;
+	font-weight: 500;
+	cursor: pointer;
+	transition:
+		color 120ms ease,
+		border-color 120ms ease,
+		background 120ms ease;
 }
 
 .backbar-btn:hover,
 .backbar-btn:focus-visible {
-  color: var(--accent);
-  border-color: var(--accent);
-  background: var(--accent-soft);
-  outline: none;
+	color: var(--accent);
+	border-color: var(--accent);
+	background: var(--accent-soft);
+	outline: none;
 }
 
 .backbar-btn:active {
-  transform: translateY(1px);
+	transform: translateY(1px);
 }
 
 .backbar-btn-label {
-  line-height: 1;
+	line-height: 1;
 }
 
 /* Mobile: keep the breakout but pin below the 56px game header.
    .main-content padding shrinks to 14px under 768px; mirror those numbers
    so the back button sits at the same visual edge as page content. */
 @media (max-width: 768px) {
-  .backbar {
-    top: 56px;
-    padding: 8px 14px;
-    margin: -14px -14px var(--space-4);
-    min-height: 40px;
-  }
+	.backbar {
+		top: 56px;
+		padding: 8px 14px;
+		margin: -14px -14px var(--space-4);
+		min-height: 40px;
+	}
 }

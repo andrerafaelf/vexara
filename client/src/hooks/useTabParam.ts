@@ -16,34 +16,34 @@ import { useCallback, useMemo } from 'react';
 // from a stale link falls back to the default instead of rendering nothing.
 
 export function useTabParam<T extends string>(
-  allowed: readonly T[],
-  defaultTab: T,
-  paramName: string = 'tab',
+	allowed: readonly T[],
+	defaultTab: T,
+	paramName: string = 'tab'
 ): [T, (next: T) => void] {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+	const router = useRouter();
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
 
-  const raw = searchParams?.get(paramName);
-  const active: T = useMemo(() => {
-    if (raw && (allowed as readonly string[]).includes(raw)) return raw as T;
-    return defaultTab;
-  }, [raw, allowed, defaultTab]);
+	const raw = searchParams?.get(paramName);
+	const active: T = useMemo(() => {
+		if (raw && (allowed as readonly string[]).includes(raw)) return raw as T;
+		return defaultTab;
+	}, [raw, allowed, defaultTab]);
 
-  const setTab = useCallback(
-    (next: T) => {
-      if (next === active) return;
-      const params = new URLSearchParams(searchParams?.toString() ?? '');
-      if (next === defaultTab) {
-        params.delete(paramName);
-      } else {
-        params.set(paramName, next);
-      }
-      const qs = params.toString();
-      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-    },
-    [active, defaultTab, paramName, pathname, router, searchParams],
-  );
+	const setTab = useCallback(
+		(next: T) => {
+			if (next === active) return;
+			const params = new URLSearchParams(searchParams?.toString() ?? '');
+			if (next === defaultTab) {
+				params.delete(paramName);
+			} else {
+				params.set(paramName, next);
+			}
+			const qs = params.toString();
+			router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+		},
+		[active, defaultTab, paramName, pathname, router, searchParams]
+	);
 
-  return [active, setTab];
+	return [active, setTab];
 }

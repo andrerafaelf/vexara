@@ -1,457 +1,457 @@
 .referrals-tab {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  width: 100%;
-  padding: 4px 16px;
-  box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+	width: 100%;
+	padding: 4px 16px;
+	box-sizing: border-box;
 }
 
 .referrals-loading {
-  color: var(--text-muted);
-  font-size: 14px;
-  padding: 16px 0;
+	color: var(--text-muted);
+	font-size: 14px;
+	padding: 16px 0;
 }
 
 .referrals-section {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
 }
 
 .referrals-section-title {
-  font-size: 13px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+	font-size: 13px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--text-muted);
+	margin: 0;
+	display: flex;
+	align-items: center;
+	gap: 8px;
 }
 
 .referrals-count-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  border-radius: 999px;
-  background: var(--danger);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 20px;
+	height: 20px;
+	padding: 0 6px;
+	border-radius: 999px;
+	background: var(--danger);
+	color: #fff;
+	font-size: 11px;
+	font-weight: 700;
 }
 
 .referrals-hint {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin: 0;
-  line-height: 1.5;
+	font-size: 13px;
+	color: var(--text-muted);
+	margin: 0;
+	line-height: 1.5;
 }
 
 .referrals-error {
-  font-size: 13px;
-  color: var(--danger);
-  padding: 6px 10px;
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--danger) 10%, transparent);
+	font-size: 13px;
+	color: var(--danger);
+	padding: 6px 10px;
+	border-radius: 4px;
+	background: color-mix(in srgb, var(--danger) 10%, transparent);
 }
 
 .referrals-success {
-  font-size: 13px;
-  color: #4caf7d;
-  padding: 6px 10px;
-  border-radius: 4px;
-  background: color-mix(in srgb, #4caf7d 10%, transparent);
+	font-size: 13px;
+	color: #4caf7d;
+	padding: 6px 10px;
+	border-radius: 4px;
+	background: color-mix(in srgb, #4caf7d 10%, transparent);
 }
 
 /* Referrer card */
 .referrals-referrer-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  background: var(--color-navy-800, #0d1633);
-  border: 1px solid var(--border-default, #1e2d5a);
-  border-radius: 8px;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 12px 14px;
+	background: var(--color-navy-800, #0d1633);
+	border: 1px solid var(--border-default, #1e2d5a);
+	border-radius: 8px;
 }
 
 .referrals-referrer-name {
-  font-weight: 600;
-  font-size: 15px;
-  flex: 1;
+	font-weight: 600;
+	font-size: 15px;
+	flex: 1;
 }
 
 .referrals-badge {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 999px;
-  white-space: nowrap;
+	font-size: 11px;
+	font-weight: 600;
+	padding: 3px 8px;
+	border-radius: 999px;
+	white-space: nowrap;
 }
 
 .referrals-badge--done {
-  background: color-mix(in srgb, #4caf7d 15%, transparent);
-  color: #4caf7d;
-  border: 1px solid color-mix(in srgb, #4caf7d 30%, transparent);
+	background: color-mix(in srgb, #4caf7d 15%, transparent);
+	color: #4caf7d;
+	border: 1px solid color-mix(in srgb, #4caf7d 30%, transparent);
 }
 
 .referrals-badge--progress {
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-  color: var(--accent);
-  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+	background: color-mix(in srgb, var(--accent) 10%, transparent);
+	color: var(--accent);
+	border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 .referrals-badge--ready {
-  background: color-mix(in srgb, #f5a623 15%, transparent);
-  color: #f5a623;
-  border: 1px solid color-mix(in srgb, #f5a623 30%, transparent);
+	background: color-mix(in srgb, #f5a623 15%, transparent);
+	color: #f5a623;
+	border: 1px solid color-mix(in srgb, #f5a623 30%, transparent);
 }
 
 /* Set referrer form */
 .referrals-referrer-form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
 }
 
 .referrals-referrer-inline {
-  display: flex;
-  gap: 8px;
+	display: flex;
+	gap: 8px;
 }
 
 .referrals-referrer-inline input {
-  flex: 1;
-  background: var(--color-navy-800, #0d1633);
-  border: 1px solid var(--border-default, #1e2d5a);
-  border-radius: 6px;
-  padding: 8px 12px;
-  color: var(--text-primary, #e0e8ff);
-  font-size: 14px;
-  min-width: 0;
+	flex: 1;
+	background: var(--color-navy-800, #0d1633);
+	border: 1px solid var(--border-default, #1e2d5a);
+	border-radius: 6px;
+	padding: 8px 12px;
+	color: var(--text-primary, #e0e8ff);
+	font-size: 14px;
+	min-width: 0;
 }
 
 .referrals-referrer-inline input:focus {
-  outline: none;
-  border-color: var(--accent);
+	outline: none;
+	border-color: var(--accent);
 }
 
 /* Buttons */
 .referrals-btn {
-  background: var(--color-navy-700, #1a2650);
-  color: var(--text-primary, #e0e8ff);
-  border: 1px solid var(--border-default, #1e2d5a);
-  border-radius: 6px;
-  padding: 8px 16px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.15s;
-  white-space: nowrap;
+	background: var(--color-navy-700, #1a2650);
+	color: var(--text-primary, #e0e8ff);
+	border: 1px solid var(--border-default, #1e2d5a);
+	border-radius: 6px;
+	padding: 8px 16px;
+	font-size: 13px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: background 0.15s;
+	white-space: nowrap;
 }
 
 .referrals-btn:hover:not(:disabled) {
-  background: var(--color-navy-600, #233070);
+	background: var(--color-navy-600, #233070);
 }
 
 .referrals-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+	opacity: 0.5;
+	cursor: not-allowed;
 }
 
 .referrals-btn.primary {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
+	background: var(--accent);
+	color: #fff;
+	border-color: var(--accent);
 }
 
 .referrals-btn.primary:hover:not(:disabled) {
-  filter: brightness(1.1);
+	filter: brightness(1.1);
 }
 
 /* Token list */
 .referrals-token-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
 }
 
 .referrals-token-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 14px;
-  background: var(--color-navy-800, #0d1633);
-  border: 1px solid var(--border-accent, #2c3a78);
-  border-radius: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 12px 14px;
+	background: var(--color-navy-800, #0d1633);
+	border: 1px solid var(--border-accent, #2c3a78);
+	border-radius: 8px;
 }
 
 .referrals-token-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
 }
 
 .referrals-token-label {
-  font-size: 14px;
-  font-weight: 600;
+	font-size: 14px;
+	font-weight: 600;
 }
 
 .referrals-token-meta {
-  font-size: 12px;
-  color: var(--text-muted);
+	font-size: 12px;
+	color: var(--text-muted);
 }
 
 /* Redeem form */
 .referrals-redeem-form {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 16px;
-  background: var(--color-navy-800, #0d1633);
-  border: 1px solid var(--border-accent, #2c3a78);
-  border-radius: 8px;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	padding: 16px;
+	background: var(--color-navy-800, #0d1633);
+	border: 1px solid var(--border-accent, #2c3a78);
+	border-radius: 8px;
 }
 
 .referrals-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
 }
 
 .referrals-label {
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-muted);
+	font-size: 12px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--text-muted);
 }
 
 .referrals-field select {
-  background: var(--color-navy-700, #1a2650);
-  border: 1px solid var(--border-default, #1e2d5a);
-  border-radius: 6px;
-  padding: 8px 10px;
-  color: var(--text-primary, #e0e8ff);
-  font-size: 14px;
+	background: var(--color-navy-700, #1a2650);
+	border: 1px solid var(--border-default, #1e2d5a);
+	border-radius: 6px;
+	padding: 8px 10px;
+	color: var(--text-primary, #e0e8ff);
+	font-size: 14px;
 }
 
 .referrals-field select:focus {
-  outline: none;
-  border-color: var(--accent);
+	outline: none;
+	border-color: var(--accent);
 }
 
 .referrals-preview {
-  font-size: 12px;
-  color: var(--accent);
-  font-style: italic;
+	font-size: 12px;
+	color: var(--accent);
+	font-style: italic;
 }
 
 .referrals-preview--warn {
-  color: var(--warning, #e8a838);
+	color: var(--warning, #e8a838);
 }
 
 .referrals-reward-type-row {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+	display: flex;
+	gap: 10px;
+	flex-wrap: wrap;
 }
 
 .referrals-reward-option {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border: 1px solid var(--border-default, #1e2d5a);
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
-  background: var(--color-navy-700, #1a2650);
-  transition: border-color 0.15s;
-  flex: 1;
-  min-width: 140px;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 14px;
+	border: 1px solid var(--border-default, #1e2d5a);
+	border-radius: 6px;
+	cursor: pointer;
+	font-size: 13px;
+	font-weight: 500;
+	background: var(--color-navy-700, #1a2650);
+	transition: border-color 0.15s;
+	flex: 1;
+	min-width: 140px;
 }
 
 .referrals-reward-option.selected {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
+	border-color: var(--accent);
+	color: var(--accent);
+	background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 .referrals-reward-option input[type='radio'] {
-  accent-color: var(--accent);
+	accent-color: var(--accent);
 }
 
 .referrals-redeem-actions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
+	display: flex;
+	gap: 8px;
+	justify-content: flex-end;
 }
 
 /* Referral list */
 .referrals-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
 }
 
 .referrals-list-item {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 12px 14px;
-  background: var(--color-navy-800, #0d1633);
-  border: 1px solid var(--border-default, #1e2d5a);
-  border-radius: 8px;
-  transition: border-color 0.15s;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 12px 14px;
+	background: var(--color-navy-800, #0d1633);
+	border: 1px solid var(--border-default, #1e2d5a);
+	border-radius: 8px;
+	transition: border-color 0.15s;
 }
 
 .referrals-list-item--done {
-  opacity: 0.6;
+	opacity: 0.6;
 }
 
 .referrals-list-info {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  flex-wrap: wrap;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	flex-wrap: wrap;
 }
 
 .referrals-list-name {
-  font-weight: 600;
-  font-size: 14px;
+	font-weight: 600;
+	font-size: 14px;
 }
 
 .referrals-list-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--text-muted);
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 13px;
+	color: var(--text-muted);
 }
 
 .referrals-progress-bar-wrap {
-  height: 4px;
-  background: var(--color-navy-700, #1a2650);
-  border-radius: 2px;
-  overflow: hidden;
+	height: 4px;
+	background: var(--color-navy-700, #1a2650);
+	border-radius: 2px;
+	overflow: hidden;
 }
 
 .referrals-progress-bar-wrap--tiered {
-  overflow: visible;
-  position: relative;
+	overflow: visible;
+	position: relative;
 }
 
 .referrals-progress-milestone {
-  position: absolute;
-  top: -3px;
-  width: 2px;
-  height: 10px;
-  background: var(--accent);
-  opacity: 0.5;
-  transform: translateX(-50%);
+	position: absolute;
+	top: -3px;
+	width: 2px;
+	height: 10px;
+	background: var(--accent);
+	opacity: 0.5;
+	transform: translateX(-50%);
 }
 
 .referrals-progress-bar {
-  height: 100%;
-  background: var(--accent);
-  border-radius: 2px;
-  transition: width 0.3s ease;
-  max-width: 100%;
+	height: 100%;
+	background: var(--accent);
+	border-radius: 2px;
+	transition: width 0.3s ease;
+	max-width: 100%;
 }
 
 .referrals-progress-label {
-  font-size: 11px;
-  color: var(--text-muted);
-  text-align: right;
-  font-family: var(--font-mono);
+	font-size: 11px;
+	color: var(--text-muted);
+	text-align: right;
+	font-family: var(--font-mono);
 }
 
 /* Invite block */
 .referrals-invite-block {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 14px;
-  background: var(--color-navy-800, #0d1633);
-  border: 1px solid var(--border-default, #1e2d5a);
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding: 14px;
+	background: var(--color-navy-800, #0d1633);
+	border: 1px solid var(--border-default, #1e2d5a);
 }
 
 .referrals-invite-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+	display: flex;
+	align-items: center;
+	gap: 10px;
 }
 
 .referrals-invite-label {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text-muted);
-  white-space: nowrap;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	color: var(--text-muted);
+	white-space: nowrap;
 }
 
 .referrals-invite-code {
-  font-family: var(--font-mono);
-  letter-spacing: 0.15em;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--accent);
+	font-family: var(--font-mono);
+	letter-spacing: 0.15em;
+	font-size: 15px;
+	font-weight: 700;
+	color: var(--accent);
 }
 
 .referrals-invite-actions {
-  display: flex;
-  gap: 8px;
+	display: flex;
+	gap: 8px;
 }
 
 /* Reward explainer */
 .referrals-reward-explainer {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
 }
 
 .referrals-reward-explainer-item {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  font-size: 13px;
-  color: var(--text-muted);
-  line-height: 1.4;
+	display: flex;
+	align-items: baseline;
+	gap: 10px;
+	font-size: 13px;
+	color: var(--text-muted);
+	line-height: 1.4;
 }
 
 .referrals-reward-explainer-you {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  white-space: nowrap;
-  padding: 2px 6px;
-  background: color-mix(in srgb, var(--accent) 15%, transparent);
-  color: var(--accent);
-  flex-shrink: 0;
+	font-size: 10px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	white-space: nowrap;
+	padding: 2px 6px;
+	background: color-mix(in srgb, var(--accent) 15%, transparent);
+	color: var(--accent);
+	flex-shrink: 0;
 }
 
 .referrals-reward-explainer-them {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  white-space: nowrap;
-  padding: 2px 6px;
-  background: color-mix(in srgb, var(--color-cyan-400, #22d3ee) 12%, transparent);
-  color: var(--color-cyan-400, #22d3ee);
-  flex-shrink: 0;
+	font-size: 10px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	white-space: nowrap;
+	padding: 2px 6px;
+	background: color-mix(in srgb, var(--color-cyan-400, #22d3ee) 12%, transparent);
+	color: var(--color-cyan-400, #22d3ee);
+	flex-shrink: 0;
 }
 
 /* ╔══════════════════════════════════════════════════════════════════╗
@@ -460,60 +460,60 @@
 
 [class^='referrals-'],
 [class*=' referrals-'] {
-  border-radius: 0;
+	border-radius: 0;
 }
 
 [class*='referrals-'][class*='-card'],
 [class*='referrals-'][class*='-panel'] {
-  border-left: 2px solid var(--border-default);
-  transition: border-left-color var(--duration-base) var(--ease-out);
+	border-left: 2px solid var(--border-default);
+	transition: border-left-color var(--duration-base) var(--ease-out);
 }
 
 [class*='referrals-'][class*='-card']:hover {
-  border-left-color: var(--accent);
+	border-left-color: var(--accent);
 }
 
 [class*='referrals-'][class*='-title'],
 [class*='referrals-'][class*='-heading'] {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--accent);
+	font-family: var(--font-mono);
+	font-size: 11px;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--accent);
 }
 
 [class*='referrals-'][class*='-code'],
 [class*='referrals-'][class*='-tokens'],
 [class*='referrals-'][class*='-count'],
 [class*='referrals-'][class*='-numeric'] {
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
 }
 
 [class*='referrals-'][class*='-label'] {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+	font-family: var(--font-mono);
+	font-size: 10px;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
 }
 
 [class*='referrals-'][class*='-badge'],
 [class*='referrals-'][class*='-chip'],
 [class*='referrals-'][class*='-tag'],
 [class*='referrals-'][class*='-pill'] {
-  font-family: var(--font-mono);
-  letter-spacing: 0.08em;
+	font-family: var(--font-mono);
+	letter-spacing: 0.08em;
 }
 
 [class*='referrals-'][class*='-btn'] {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+	font-family: var(--font-mono);
+	font-size: 11px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
 }
 
 /* Progress bars sharper */
 [class*='referrals-progress'][class*='-bar'],
 [class*='referrals-progress'][class*='-track'] {
-  border-radius: 0;
+	border-radius: 0;
 }

@@ -9,25 +9,25 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function StarfieldPage() {
-  const { selectedNexus, refetch } = useMyNexuses();
-  const router = useRouter();
+	const { selectedNexus, refetch } = useMyNexuses();
+	const router = useRouter();
 
-  usePageReady(!!selectedNexus, 'starfield');
+	usePageReady(!!selectedNexus, 'starfield');
 
-  useEffect(() => {
-    if (typeof window !== 'undefined' && !localStorage.getItem('token')) {
-      router.push('/login');
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+	useEffect(() => {
+		if (typeof window !== 'undefined' && !localStorage.getItem('token')) {
+			router.push('/login');
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
-  return (
-    <GameLayout activePage="starfield" mainClassName="main-content--map">
-      {selectedNexus ? (
-        <Map currentNexus={selectedNexus} onRefresh={refetch} />
-      ) : (
-        <PageSkeleton variant="canvas" />
-      )}
-    </GameLayout>
-  );
+	return (
+		<GameLayout activePage="starfield" mainClassName="main-content--map">
+			{selectedNexus ? (
+				<Map currentNexus={selectedNexus} onRefresh={refetch} />
+			) : (
+				<PageSkeleton variant="canvas" />
+			)}
+		</GameLayout>
+	);
 }

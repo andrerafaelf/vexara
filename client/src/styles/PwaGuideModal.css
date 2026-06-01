@@ -1,209 +1,212 @@
 .pwa-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 16px;
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.7);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1000;
+	padding: 16px;
 }
 
 .pwa-modal {
-  background: var(--color-navy-800);
-  border: 1px solid var(--color-navy-500);
-  border-left: 3px solid var(--accent);
-  border-radius: var(--radius-sm);
-  padding: 28px 24px 24px;
-  max-width: 480px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-  position: relative;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%);
+	background: var(--color-navy-800);
+	border: 1px solid var(--color-navy-500);
+	border-left: 3px solid var(--accent);
+	border-radius: var(--radius-sm);
+	padding: 28px 24px 24px;
+	max-width: 480px;
+	width: 100%;
+	max-height: 90vh;
+	overflow-y: auto;
+	position: relative;
+	box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%);
 }
 
 .pwa-modal-close {
-  position: absolute;
-  top: 14px;
-  right: 16px;
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: 22px;
-  line-height: 1;
-  cursor: pointer;
-  padding: 2px 6px;
-  border-radius: 4px;
-  transition: color 0.15s;
+	position: absolute;
+	top: 14px;
+	right: 16px;
+	background: none;
+	border: none;
+	color: var(--text-muted);
+	font-size: 22px;
+	line-height: 1;
+	cursor: pointer;
+	padding: 2px 6px;
+	border-radius: 4px;
+	transition: color 0.15s;
 }
 
 .pwa-modal-close:hover {
-  color: var(--text-strong);
+	color: var(--text-strong);
 }
 
 .pwa-modal-header {
-  text-align: center;
-  margin-bottom: 24px;
+	text-align: center;
+	margin-bottom: 24px;
 }
 
 .pwa-modal-icon {
-  font-size: 36px;
-  margin-bottom: 10px;
+	font-size: 36px;
+	margin-bottom: 10px;
 }
 
 .pwa-modal-title {
-  color: var(--text-strong);
-  font-size: 22px;
-  font-weight: 800;
-  text-transform: none;
-  letter-spacing: -0.02em;
-  margin: 0 0 8px;
-  line-height: 1.1;
+	color: var(--text-strong);
+	font-size: 22px;
+	font-weight: 800;
+	text-transform: none;
+	letter-spacing: -0.02em;
+	margin: 0 0 8px;
+	line-height: 1.1;
 }
 
 .pwa-modal-title::before {
-  content: '// INSTALL · FIELD KIT';
-  display: block;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  color: var(--accent);
-  text-transform: uppercase;
-  margin-bottom: 6px;
+	content: '// INSTALL · FIELD KIT';
+	display: block;
+	font-family: var(--font-mono);
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.18em;
+	color: var(--accent);
+	text-transform: uppercase;
+	margin-bottom: 6px;
 }
 
 .pwa-modal-subtitle {
-  color: var(--text-muted);
-  font-size: 13px;
-  margin: 0;
-  line-height: 1.5;
+	color: var(--text-muted);
+	font-size: 13px;
+	margin: 0;
+	line-height: 1.5;
 }
 
 .pwa-modal-tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 20px;
+	display: flex;
+	gap: 8px;
+	margin-bottom: 20px;
 }
 
 .pwa-tab {
-  flex: 1;
-  padding: 9px 12px;
-  background: var(--color-navy-700);
-  border: 1px solid var(--color-navy-500);
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+	flex: 1;
+	padding: 9px 12px;
+	background: var(--color-navy-700);
+	border: 1px solid var(--color-navy-500);
+	border-radius: var(--radius-sm);
+	color: var(--text-muted);
+	font-size: 13px;
+	font-weight: 600;
+	cursor: pointer;
+	transition:
+		background 0.15s,
+		color 0.15s,
+		border-color 0.15s;
 }
 
 .pwa-tab--active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--text-on-accent);
+	background: var(--accent);
+	border-color: var(--accent);
+	color: var(--text-on-accent);
 }
 
 .pwa-tab:not(.pwa-tab--active):hover {
-  background: var(--color-navy-500);
-  color: var(--text-strong);
+	background: var(--color-navy-500);
+	color: var(--text-strong);
 }
 
 .pwa-modal-section {
-  margin-bottom: 20px;
+	margin-bottom: 20px;
 }
 
 .pwa-modal-section-title {
-  color: var(--text-strong);
-  font-size: 14px;
-  font-weight: 600;
-  margin: 0 0 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+	color: var(--text-strong);
+	font-size: 14px;
+	font-weight: 600;
+	margin: 0 0 10px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
 }
 
 .pwa-modal-step-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  background: var(--accent);
-  border-radius: 50%;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-on-accent);
-  flex-shrink: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	background: var(--accent);
+	border-radius: 50%;
+	font-size: 12px;
+	font-weight: 700;
+	color: var(--text-on-accent);
+	flex-shrink: 0;
 }
 
 .pwa-modal-steps {
-  margin: 0;
-  padding-left: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  counter-reset: step-counter;
+	margin: 0;
+	padding-left: 0;
+	list-style: none;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	counter-reset: step-counter;
 }
 
 .pwa-modal-step {
-  counter-increment: step-counter;
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  color: var(--text-muted);
-  font-size: 13px;
-  line-height: 1.5;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 6px;
-  border-left: 2px solid var(--color-navy-500);
+	counter-increment: step-counter;
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	color: var(--text-muted);
+	font-size: 13px;
+	line-height: 1.5;
+	padding: 8px 12px;
+	background: rgba(255, 255, 255, 0.03);
+	border-radius: 6px;
+	border-left: 2px solid var(--color-navy-500);
 }
 
 .pwa-modal-step::before {
-  content: counter(step-counter);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  background: var(--color-navy-500);
-  border-radius: 50%;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-muted);
-  flex-shrink: 0;
-  margin-top: 1px;
+	content: counter(step-counter);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 20px;
+	height: 20px;
+	background: var(--color-navy-500);
+	border-radius: 50%;
+	font-size: 11px;
+	font-weight: 700;
+	color: var(--text-muted);
+	flex-shrink: 0;
+	margin-top: 1px;
 }
 
 .pwa-modal-note {
-  background: rgba(255, 158, 61, 0.1);
-  border: 1px solid rgba(255, 158, 61, 0.3);
-  border-radius: 6px;
-  color: var(--danger);
-  font-size: 12px;
-  padding: 10px 12px;
-  margin-bottom: 20px;
-  line-height: 1.5;
+	background: rgba(255, 158, 61, 0.1);
+	border: 1px solid rgba(255, 158, 61, 0.3);
+	border-radius: 6px;
+	color: var(--danger);
+	font-size: 12px;
+	padding: 10px 12px;
+	margin-bottom: 20px;
+	line-height: 1.5;
 }
 
 .pwa-modal-done {
-  width: 100%;
-  background: var(--accent);
-  color: var(--text-on-accent);
-  border: none;
-  border-radius: 6px;
-  padding: 11px 16px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
+	width: 100%;
+	background: var(--accent);
+	color: var(--text-on-accent);
+	border: none;
+	border-radius: 6px;
+	padding: 11px 16px;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background 0.2s;
 }
 
 .pwa-modal-done:hover {
-  background: var(--color-rose-600);
+	background: var(--color-rose-600);
 }
