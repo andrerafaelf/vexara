@@ -849,21 +849,38 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 
 		let newControlLevel = defenderNexus.controlLevel ?? 100;
 		const overseerSent = attackTroops.overseer || 0;
+		// Conquest no longer requires a total wipe of the defending force. Instead,
+		// the Overseer drains control proportionally to how dominant the strike was
+		// (powerRatio = defender_power / attacker_power, lower = more dominant):
+		//   - Crushing (ratio <= 0.33, i.e. 3:1+ power advantage): 50 drain → 2 waves
+		//   - Clear     (0.33 < ratio <= 0.66): 34 drain → 3 waves
+		//   - Narrow    (ratio > 0.66): 15 drain → ~7 waves, attrition path for coalitions
+		// Surviving stragglers from rounding can no longer block conquest, and small
+		// factions can grind down a bigger player by stacking narrow wins. Hourly
+		// control regeneration (+10/hr) prevents griefing-by-trickle from a single
+		// attacker — attrition only works when waves land faster than control recovers.
 		const overseerCanAct =
-			attackerWins && overseerSent > 0 && attackerLosses.overseer === 0 && allDefenderTroopsWiped;
+			attackerWins && overseerSent > 0 && attackerLosses.overseer === 0;
 
-		if (attackerWins && overseerSent > 0 && !allDefenderTroopsWiped) {
-			logWarn('conquest_blocked_defenders_remaining', {
+		let controlDrain = 0;
+		if (overseerCanAct) {
+			if (powerRatio <= 0.33) {
+				controlDrain = 50;
+			} else if (powerRatio <= 0.66) {
+				controlDrain = 34;
+			} else {
+				controlDrain = 15;
+			}
+			newControlLevel = Math.max(0, newControlLevel - controlDrain);
+			logInfo('overseer_control_drained', {
 				attackId: attack.id,
 				defenderNexusId: defenderNexus.id,
-				totalDefenderTroopsInForce,
-				totalDefenderTroopsLost,
-				supportTransferCount: supportTransfers.length
+				powerRatio: Number(powerRatio.toFixed(3)),
+				controlDrain,
+				previousControlLevel: defenderNexus.controlLevel ?? 100,
+				newControlLevel,
+				allDefenderTroopsWiped
 			});
-		}
-
-		if (overseerCanAct) {
-			newControlLevel = Math.max(0, newControlLevel - 34);
 			if (newControlLevel <= 0) {
 				const attackerNexus = await prisma.nexus.findUnique({
 					where: { id: attack.attackerNexusId! }

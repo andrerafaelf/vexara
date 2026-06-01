@@ -142,12 +142,62 @@ the fight and starts wiping the Breakers. In practice, 1 Annihilator
 takes ~10 Breakers in a head-on fight and keeps more survivors at
 half the pop cost. That's the tier contract working as intended.
 
+### Conquest — your effort now matches the outcome
+
+The old rule said: **wipe every single defending unit, or your Overseer
+does nothing.** That created a brutal cliff. Bring 95% of the force you
+needed? Same result as bringing 50% — a failed conquest, heavy losses,
+and zero progress. Worse, the wipe check could fail on a single Lancer
+Drone surviving by a rounding remainder. Players couldn't predict it,
+plan it, or learn from it.
+
+Conquest is now a **smooth gradient** based on how dominant your strike
+was. The Overseer drains Control on **any** victorious strike, and the
+amount scales with the power ratio of the fight:
+
+| Strike outcome | Power advantage | Control drained | Waves to conquer |
+|---|---|---|---|
+| **Crushing win** | 3:1 or better | **–50** | **2** |
+| **Clear win** | between 1.5:1 and 3:1 | **–34** | **3** |
+| **Narrow win** | razor-thin victory | **–15** | ~7 |
+
+Control still starts at 100 and conquest still triggers at 0. The math
+is the same — the **path to it** is now legible.
+
+**Why this matters:**
+
+- **Two-wave conquests are now possible.** If you overcommit force and
+  crush a target 3:1, two Overseer strikes take the nexus. Your effort
+  is rewarded.
+- **Three-wave remains the standard path** for a clean, planned attack
+  against a comparable defender. Nothing changes for the typical case.
+- **Stragglers can no longer block you.** A single surviving Lancer
+  Drone left alive by the loss-rounding formula no longer cancels your
+  Overseer's work.
+- **Coalitions have a real tool.** Five faction members each landing a
+  narrow win on a fortified target now collectively drain 75 Control —
+  enough to crack a defender no single member could break alone. The
+  "wolves vs. bear" dynamic is back.
+- **Control regenerates at +10/hour** (unchanged). A solo griefer
+  trickling one narrow strike every 12 hours achieves nothing — the
+  nexus heals faster than they can drain it. Attrition only works
+  when waves land *together*.
+
+**A worked example.** Last week's combat log: an attacker won the
+fight against a supported defender but left 66 Lancer Drones and 25
+Plasma Turrets alive. Under the old rules: zero progress, Overseer
+trip wasted. Under the new rules: that was a clear win (~1.7:1 power
+advantage) → 34 Control drained. Two more strikes at the same
+intensity take the nexus.
+
 ### Codex updates
 
 All Tier 3 unit descriptions have been refreshed to reflect their new
 role and identity. Scout intel threat estimates have been re-tuned
 against the authoritative combat numbers, so the threat label you see
 on a scouted nexus actually reflects what it would do to your army.
+The Overseer and conquest entries have been rewritten to describe the
+new scaled Control-drain system.
 
 ---
 
@@ -155,6 +205,10 @@ A patch about saying no to spam. If you've spent the last few months
 training Breaker Units by the thousand, you don't need to retire them
 — they're still the right Tier 1 mobile attacker. You just have a
 much better answer waiting for you at the top of the tech tree now.
+
+Conquest finally rewards the work you put into a strike. Bring
+overwhelming force, take it in two. Bring a careful planned force,
+take it in three. Bring your friends, take anything.
 
 ---
 
