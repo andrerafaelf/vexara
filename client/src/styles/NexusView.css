@@ -1934,7 +1934,7 @@
 
 .troops-stationed-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
 	gap: 12px;
 }
 
@@ -1944,6 +1944,7 @@
 	align-items: center;
 	gap: 12px;
 	padding: 10px;
+	padding-right: 58px;
 	background: var(--bg-app);
 	border: 1px solid var(--border-default);
 	border-left: 3px solid var(--accent);
@@ -2024,93 +2025,226 @@
 	position: absolute;
 	top: 6px;
 	right: 28px;
-	background: transparent;
-	border: none;
+	display: inline-grid;
+	place-items: center;
+	width: 24px;
+	height: 24px;
+	background: rgba(248, 81, 73, 0.04);
+	border: 1px solid transparent;
 	color: var(--text-faint);
 	cursor: pointer;
-	padding: 4px 5px;
-	font-size: 0.7rem;
-	line-height: 1;
+	padding: 0;
+	border-radius: var(--radius-sm);
 	transition:
 		color var(--duration-fast) var(--ease-out),
-		background var(--duration-fast) var(--ease-out);
+		background var(--duration-fast) var(--ease-out),
+		border-color var(--duration-fast) var(--ease-out);
 }
 
 .stationed-card-destroy-btn:hover,
 .stationed-card-destroy-btn--active {
 	color: var(--danger);
-	background: rgba(248, 81, 73, 0.1);
+	background: rgba(248, 81, 73, 0.12);
+	border-color: rgba(248, 81, 73, 0.38);
 }
 
 .stationed-card--destroying {
 	border-left-color: var(--danger);
+	border-color: rgba(248, 81, 73, 0.32);
+	background:
+		linear-gradient(90deg, rgba(248, 81, 73, 0.08), transparent 54%),
+		var(--bg-app);
 }
 
 .stationed-destroy-row {
-	grid-column: 1 / -1;
+	flex: 0 0 100%;
 	display: flex;
-	align-items: center;
-	gap: 6px;
-	flex-wrap: wrap;
-	padding-top: 8px;
-	margin-top: 8px;
-	border-top: 1px solid rgba(248, 81, 73, 0.2);
-	width: 100%;
+	flex-direction: column;
+	gap: 10px;
+	margin: 2px -48px 0 0;
+	padding: 10px;
+	background:
+		linear-gradient(90deg, rgba(248, 81, 73, 0.1), rgba(248, 81, 73, 0.02)),
+		rgba(0, 0, 0, 0.16);
+	border: 1px solid rgba(248, 81, 73, 0.28);
+	border-left: 2px solid var(--danger);
+	border-radius: var(--radius-sm);
 }
 
 .stationed-card {
 	flex-wrap: wrap;
 }
 
+.stationed-destroy-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 10px;
+	width: 100%;
+	min-width: 0;
+}
+
+.stationed-destroy-kicker {
+	color: var(--danger);
+	font-family: var(--font-mono);
+	font-size: 0.64rem;
+	font-weight: 800;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+}
+
+.stationed-destroy-target {
+	min-width: 0;
+	color: var(--text-muted);
+	font-size: 0.72rem;
+	font-weight: 700;
+	overflow: hidden;
+	text-align: right;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.stationed-destroy-controls {
+	display: grid;
+	grid-template-columns: minmax(82px, 1fr) auto auto;
+	align-items: stretch;
+	gap: 8px;
+	width: 100%;
+}
+
+.stationed-destroy-field {
+	display: flex;
+	align-items: center;
+	min-width: 0;
+	background: rgba(9, 12, 20, 0.72);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.stationed-destroy-field span {
+	flex: 0 0 auto;
+	padding: 0 8px;
+	color: var(--text-faint);
+	font-family: var(--font-mono);
+	font-size: 0.61rem;
+	font-weight: 800;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+}
+
 .stationed-destroy-input {
-	width: 72px;
-	padding: 3px 6px;
-	background: var(--bg-app);
-	border: 1px solid var(--border-default);
+	width: 100%;
+	min-width: 42px;
+	height: 30px;
+	padding: 0 8px;
+	background: transparent;
+	border: 0;
+	border-left: 1px solid rgba(255, 255, 255, 0.08);
 	color: var(--text-strong);
 	font-family: var(--font-mono);
-	font-size: 0.75rem;
-	border-radius: 0;
+	font-size: 0.86rem;
+	font-weight: 800;
+	text-align: right;
+	border-radius: var(--radius-sm);
 }
 
 .stationed-destroy-input:focus {
 	outline: none;
-	border-color: var(--danger);
+	box-shadow: inset 0 -1px 0 var(--danger);
 }
 
 .stationed-destroy-max {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 5px;
+	min-width: 58px;
+	height: 32px;
+	padding: 0 8px;
+	background: rgba(255, 158, 61, 0.08);
+	border: 1px solid rgba(255, 158, 61, 0.22);
+	color: var(--accent);
 	font-family: var(--font-mono);
-	font-size: 0.72rem;
-	color: var(--text-muted);
-}
-
-.stationed-destroy-refund {
-	font-family: var(--font-mono);
-	font-size: 0.68rem;
-	color: var(--text-muted);
-	flex: 1;
-	white-space: nowrap;
-}
-
-.stationed-destroy-confirm {
-	padding: 3px 10px;
-	background: rgba(248, 81, 73, 0.12);
-	border: 1px solid rgba(248, 81, 73, 0.4);
-	color: #fca5a5;
-	font-size: 0.72rem;
-	font-family: var(--font-mono);
-	font-weight: 700;
-	letter-spacing: 0.06em;
+	font-size: 0.66rem;
+	font-weight: 800;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	border-radius: var(--radius-sm);
 	cursor: pointer;
-	border-radius: 0;
 	transition:
 		background var(--duration-fast) var(--ease-out),
 		border-color var(--duration-fast) var(--ease-out);
 }
 
+.stationed-destroy-max:hover {
+	background: rgba(255, 158, 61, 0.14);
+	border-color: rgba(255, 158, 61, 0.42);
+}
+
+.stationed-destroy-max span {
+	color: var(--text-strong);
+	letter-spacing: 0;
+}
+
+.stationed-destroy-refund {
+	display: grid;
+	grid-template-columns: auto repeat(3, minmax(0, 1fr));
+	align-items: center;
+	gap: 6px;
+	width: 100%;
+	font-family: var(--font-mono);
+	font-size: 0.65rem;
+	color: var(--text-muted);
+}
+
+.stationed-destroy-refund span,
+.stationed-destroy-refund b {
+	padding: 4px 6px;
+	background: rgba(255, 255, 255, 0.035);
+	border: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+.stationed-destroy-refund span {
+	color: var(--text-faint);
+	font-weight: 800;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+}
+
+.stationed-destroy-refund b {
+	color: var(--accent);
+	font-weight: 800;
+	text-align: center;
+	white-space: nowrap;
+}
+
+.stationed-destroy-confirm {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	min-width: 88px;
+	height: 32px;
+	padding: 0 12px;
+	background: rgba(248, 81, 73, 0.16);
+	border: 1px solid rgba(248, 81, 73, 0.52);
+	color: #ffb4ae;
+	font-size: 0.7rem;
+	font-family: var(--font-mono);
+	font-weight: 800;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	cursor: pointer;
+	border-radius: var(--radius-sm);
+	transition:
+		background var(--duration-fast) var(--ease-out),
+		border-color var(--duration-fast) var(--ease-out),
+		color var(--duration-fast) var(--ease-out);
+}
+
 .stationed-destroy-confirm:hover:not(:disabled) {
-	background: rgba(248, 81, 73, 0.22);
-	border-color: rgba(248, 81, 73, 0.7);
+	background: var(--danger);
+	border-color: var(--danger);
+	color: var(--bg-app);
 }
 
 .stationed-destroy-confirm:disabled {
@@ -2154,13 +2288,31 @@
 	}
 
 	.troops-stationed-grid {
-		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+		grid-template-columns: 1fr;
 		gap: 10px;
 	}
 
 	.stationed-card {
-		padding: 8px;
+		padding: 8px 56px 8px 8px;
 		gap: 10px;
+	}
+
+	.stationed-destroy-row {
+		margin-right: -48px;
+	}
+
+	.stationed-destroy-controls {
+		grid-template-columns: minmax(82px, 1fr) auto auto;
+		gap: 6px;
+	}
+
+	.stationed-destroy-confirm {
+		min-width: 82px;
+		padding: 0 10px;
+	}
+
+	.stationed-destroy-refund {
+		grid-template-columns: 1fr;
 	}
 
 	.stationed-card-image-wrap {

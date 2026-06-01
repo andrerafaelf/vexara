@@ -55,7 +55,7 @@ const BUILDING_RULES: Record<
 		]
 	},
 	lifeSupport: {
-		maxLevel: 20,
+		maxLevel: 25,
 		unlock: { building: 'commandCore', level: 2 },
 		milestones: [
 			{ level: 4, requires: [{ building: 'biomassFarm', level: 2 }] },

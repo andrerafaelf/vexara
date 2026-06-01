@@ -54,13 +54,13 @@ Command Core's own next upgrade) by 0.95. The reduction stacks compoundingly:
 
 - Role: Population cap scaling
 - Base cost: Biomass 80, Alloy 100, Ore 70, Time 150s
-- Max level: 20
+- Max level: 25
 - Unlock: Command Core Lv2
 - Milestones:
   - Lv4 requires Biomass Farm Lv2
   - Lv8 requires Storage Vault Lv4
 - Impact:
-  - Population max formula: floor(100 \* 1.30^level)
+  - Population max formula: floor(100 \* 1.19^level)
 
 ### Storage Vault
 

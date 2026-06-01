@@ -309,7 +309,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		role: 'Population capacity building',
 		description: 'Increases maximum population to support larger armies.',
 		baseCost: { biomass: 80, alloy: 100, ore: 70, timeSeconds: 150 },
-		maxLevel: 20,
+		maxLevel: 25,
 		unlock: 'Command Core Lv2',
 		milestones: [
 			{ level: 4, requires: ['Biomass Farm Lv2'] },

@@ -40,6 +40,7 @@ import {
 	ShieldCheck,
 	Sparkles,
 	Swords,
+	Trash2,
 	X,
 	Zap
 } from 'lucide-react';
@@ -194,7 +195,7 @@ const BUILDING_RULES: {
 		]
 	},
 	lifeSupport: {
-		maxLevel: 20,
+		maxLevel: 25,
 		unlock: { building: 'commandCore', level: 2 },
 		milestones: [
 			{ level: 4, requires: [{ building: 'biomassFarm', level: 2 }] },
@@ -3060,53 +3061,67 @@ const NexusView: React.FC<NexusViewProps> = ({
 																					}
 																				}}
 																			>
-																				✕
+																				<Trash2 size={13} aria-hidden="true" />
 																			</button>
 																			{isPending && (
-																				<div className="stationed-destroy-row">
-																					<input
-																						type="number"
-																						className="stationed-destroy-input"
-																						min={1}
-																						max={count}
-																						placeholder={`1–${count}`}
-																						value={destroyAmount}
-																						onChange={(e) => setDestroyAmount(e.target.value)}
-																						autoFocus
-																					/>
-																					<span
-																						className="stationed-destroy-max troop-available-clickable"
-																						onClick={() => setDestroyAmount(String(count))}
-																					>
-																						/ {count}
-																					</span>
+																				<div className="stationed-destroy-row" aria-label={`Destroy ${TROOP_NAMES[type]}`}>
+																					<div className="stationed-destroy-head">
+																						<span className="stationed-destroy-kicker">Decommission</span>
+																						<span className="stationed-destroy-target">{TROOP_NAMES[type]}</span>
+																					</div>
+																					<div className="stationed-destroy-controls">
+																						<label className="stationed-destroy-field">
+																							<span>Units</span>
+																							<input
+																								type="number"
+																								className="stationed-destroy-input"
+																								min={1}
+																								max={count}
+																								placeholder={`1-${count}`}
+																								value={destroyAmount}
+																								onChange={(e) => setDestroyAmount(e.target.value)}
+																								autoFocus
+																							/>
+																						</label>
+																						<button
+																							type="button"
+																							className="stationed-destroy-max troop-available-clickable"
+																							onClick={() => setDestroyAmount(String(count))}
+																						>
+																							Max <span>{count.toLocaleString()}</span>
+																						</button>
+																						<button
+																							type="button"
+																							className="stationed-destroy-confirm"
+																							disabled={destroyingTroops || parsedAmt < 1}
+																							onClick={async () => {
+																								if (parsedAmt < 1) return;
+																								setDestroyingTroops(true);
+																								try {
+																									await destroyTroops(nexus._id, type, parsedAmt);
+																									showToast(`${parsedAmt.toLocaleString()} ${TROOP_NAMES[type]} destroyed. Resources partially refunded.`, 'info');
+																									setDestroyPending(null);
+																									setDestroyAmount('');
+																									onUpdate();
+																								} catch (err: any) {
+																									showToast(err?.response?.data?.error || 'Failed to destroy troops', 'error');
+																								} finally {
+																									setDestroyingTroops(false);
+																								}
+																							}}
+																						>
+																							<Trash2 size={12} aria-hidden="true" />
+																							{destroyingTroops ? '...' : 'Destroy'}
+																						</button>
+																					</div>
 																					{refund && parsedAmt > 0 && (
-																						<span className="stationed-destroy-refund">
-																							+{refund.biomass.toLocaleString()} B · +{refund.alloy.toLocaleString()} A · +{refund.ore.toLocaleString()} O
-																						</span>
+																						<div className="stationed-destroy-refund">
+																							<span>Refund</span>
+																							<b>+{refund.biomass.toLocaleString()} B</b>
+																							<b>+{refund.alloy.toLocaleString()} A</b>
+																							<b>+{refund.ore.toLocaleString()} O</b>
+																						</div>
 																					)}
-																					<button
-																						type="button"
-																						className="stationed-destroy-confirm"
-																						disabled={destroyingTroops || parsedAmt < 1}
-																						onClick={async () => {
-																							if (parsedAmt < 1) return;
-																							setDestroyingTroops(true);
-																							try {
-																								await destroyTroops(nexus._id, type, parsedAmt);
-																								showToast(`${parsedAmt.toLocaleString()} ${TROOP_NAMES[type]} destroyed. Resources partially refunded.`, 'info');
-																								setDestroyPending(null);
-																								setDestroyAmount('');
-																								onUpdate();
-																							} catch (err: any) {
-																								showToast(err?.response?.data?.error || 'Failed to destroy troops', 'error');
-																							} finally {
-																								setDestroyingTroops(false);
-																							}
-																						}}
-																					>
-																						{destroyingTroops ? '…' : 'Destroy'}
-																					</button>
 																				</div>
 																			)}
 																		</div>
