@@ -10,7 +10,7 @@
   "scripts": {
     "postinstall": "prisma generate",
     "build": "tsup",
-    "start": "prisma generate && prisma migrate deploy && node scripts/trim-overcap-training-queues.mjs && node dist/server.js",
+    "start": "prisma generate && prisma migrate deploy && node dist/server.js",
     "dev": "tsx watch server.ts",
     "test": "node --import tsx/esm --test",
     "db:migrate": "prisma migrate dev",

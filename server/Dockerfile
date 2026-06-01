@@ -22,10 +22,9 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
-COPY --from=builder /app/scripts ./scripts
 
 USER nodeuser
 
 EXPOSE 3001
 
-CMD ["sh", "-c", "node scripts/heal-failed-migration.mjs && npx prisma migrate deploy --schema ./prisma/schema.prisma && node scripts/trim-overcap-training-queues.mjs && node dist/server.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy --schema ./prisma/schema.prisma && node dist/server.js"]
