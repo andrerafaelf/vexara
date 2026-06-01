@@ -25,6 +25,7 @@ import {
 import {
 	AlertTriangle,
 	ArrowDownLeft,
+	ArrowUpRight,
 	Building2,
 	Check,
 	ChevronDown,
@@ -498,6 +499,49 @@ const NexusView: React.FC<NexusViewProps> = ({
 	const [infoModal, setInfoModal] = useState<InfoModalState | null>(null);
 	const ownNexuses: Nexus[] = ownNexusesData;
 	const troopTransfers: TroopTransfer[] = troopTransfersData;
+	// In-motion troop transfers (own-nexus reinforcements) for the Strikes card.
+	// Outgoing = we own the sending nexus; incoming = this nexus is the host.
+	// 'stationed' transfers have already arrived and live in the Deployed tab, so
+	// only 'traveling'/'returning' belong in Strikes.
+	const inMotionTransfers = troopTransfers.filter(
+		(t) => t.status === 'traveling' || t.status === 'returning'
+	);
+	const outgoingTransfers = inMotionTransfers.filter((t) => t.ownerNexusId === nexus._id);
+	const incomingTransfers = inMotionTransfers.filter(
+		(t) => t.hostNexusId === nexus._id && t.ownerNexusId !== nexus._id
+	);
+	// One Strikes-card row for a troop transfer. `direction` controls which nexus
+	// name is shown as the "other end" and the arrow glyph. Returning transfers
+	// always render as homebound regardless of direction.
+	const renderTransferEntry = (t: TroopTransfer, direction: 'outgoing' | 'incoming') => {
+		const returning = t.status === 'returning';
+		const other = direction === 'outgoing' ? t.hostNexus : t.ownerNexus;
+		const when = returning ? t.returnsAt : t.arrivesAt;
+		return (
+			<div key={`transfer-${t._id}`} className="strikes-card-entry strikes-card-entry--transfer">
+				<span className="strikes-card-entry-who">
+					<span className="strikes-card-transfer-badge">TRANSFER</span>
+					{returning || direction === 'incoming' ? (
+						<ArrowDownLeft size={11} aria-hidden="true" style={{ marginRight: 4 }} />
+					) : (
+						<ArrowUpRight size={11} aria-hidden="true" style={{ marginRight: 4 }} />
+					)}
+					{returning ? 'returning from ' : direction === 'outgoing' ? '→ ' : 'from '}
+					{other?.name ?? '?'}
+				</span>
+				<span className="strikes-card-entry-time">
+					{when && (
+						<>
+							<span className="strikes-card-entry-arrival">
+								@ {formatTimeOfDay(when, true)}
+							</span>{' '}
+							<Countdown endAt={when} className="strikes-card-entry-countdown" />
+						</>
+					)}
+				</span>
+			</div>
+		);
+	};
 	const [showTransfer, setShowTransfer] = useState(false);
 	const [transferTo, setTransferTo] = useState('');
 	const [transferAmounts, setTransferAmounts] = useState({ biomass: '', alloy: '', ore: '' });
@@ -2355,8 +2399,9 @@ const NexusView: React.FC<NexusViewProps> = ({
 							<div className="strikes-card-split">
 								<div className="strikes-card-half">
 									<span className="strikes-card-label">Outgoing</span>
-									{allOutgoing.length > 0 ? (
+									{allOutgoing.length > 0 || outgoingTransfers.length > 0 ? (
 										<div className="strikes-card-list">
+											{outgoingTransfers.map((t) => renderTransferEntry(t, 'outgoing'))}
 											{allOutgoing.map((a: any) => {
 												const target = a.defender?.nexus ?? a.defenderNexus;
 												const src = a.attacker?.nexus ?? a.attackerNexus;
@@ -2397,12 +2442,12 @@ const NexusView: React.FC<NexusViewProps> = ({
 											})}
 										</div>
 									) : (
-										<span className="strikes-card-value">No outgoing strikes</span>
+										<span className="strikes-card-value">No outgoing movements</span>
 									)}
 								</div>
 								<div className="strikes-card-divider" />
 								<div className="strikes-card-half">
-									{incomingAttacks.length > 0 ? (
+									{incomingAttacks.length > 0 || incomingTransfers.length > 0 ? (
 										<>
 											<button
 												type="button"
@@ -2410,10 +2455,12 @@ const NexusView: React.FC<NexusViewProps> = ({
 												onClick={() => setIncomingCollapsed((c) => !c)}
 												aria-expanded={!incomingCollapsed}
 												title={
-													incomingCollapsed ? 'Show incoming strikes' : 'Hide incoming strikes'
+													incomingCollapsed ? 'Show incoming movements' : 'Hide incoming movements'
 												}
 											>
-												<span>Incoming ({incomingAttacks.length})</span>
+												<span>
+													Incoming ({incomingAttacks.length + incomingTransfers.length})
+												</span>
 												{incomingCollapsed ? (
 													<ChevronDown size={13} aria-hidden="true" />
 												) : (
@@ -2422,6 +2469,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 											</button>
 											{!incomingCollapsed && (
 												<div className="strikes-card-list">
+													{incomingTransfers.map((t) => renderTransferEntry(t, 'incoming'))}
 													{incomingAttacks.map((a: any) => {
 														const src = a.attacker?.nexus ?? a.attackerNexus;
 														return (

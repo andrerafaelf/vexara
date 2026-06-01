@@ -88,7 +88,7 @@ export interface GalaxyStats {
 	topUsers: TopUser[];
 }
 
-export type AttackType = 'attack' | 'scout' | 'support';
+export type AttackType = 'attack' | 'scout' | 'support' | 'transfer';
 
 export interface Attack {
 	_id: string;
@@ -97,6 +97,7 @@ export interface Attack {
 	troops: Record<string, number>;
 	arrivesAt: string;
 	type: AttackType;
+	status?: string;
 }
 
 export interface Galaxy {

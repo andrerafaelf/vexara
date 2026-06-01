@@ -398,6 +398,11 @@ export async function applyQuestRewards(
 	// Derive populationCurrent from the post-grant troops + queue + away-pop,
 	// capped at the (possibly increased) populationMax.
 	if (newlyClaimedRewards.length > 0) {
+		const maxStorage = getMaxStorage(nexus);
+		data['biomass'] = Math.min(data['biomass'] as number, maxStorage);
+		data['alloy'] = Math.min(data['alloy'] as number, maxStorage);
+		data['ore'] = Math.min(data['ore'] as number, maxStorage);
+
 		const away = await loadAwayPopulation(prisma, nexus.id);
 		data['populationCurrent'] = computeNexusPopulation({
 			troops: { ...(nexus as unknown as Record<string, unknown>), ...data },
@@ -496,10 +501,11 @@ export async function claimQuestBatchReward(
 	// can't drift. See applyQuestRewards for the same convention.
 	const newPopulationMax =
 		rewardNexus.populationMax + Math.floor((batch.reward.populationCurrent || 0) * mult);
+	const rewardMaxStorage = getMaxStorage(rewardNexus);
 	const data: Record<string, unknown> = {
-		biomass: rewardNexus.biomass + Math.floor((batch.reward.biomass || 0) * mult),
-		alloy: rewardNexus.alloy + Math.floor((batch.reward.alloy || 0) * mult),
-		ore: rewardNexus.ore + Math.floor((batch.reward.ore || 0) * mult),
+		biomass: Math.min(rewardNexus.biomass + Math.floor((batch.reward.biomass || 0) * mult), rewardMaxStorage),
+		alloy: Math.min(rewardNexus.alloy + Math.floor((batch.reward.alloy || 0) * mult), rewardMaxStorage),
+		ore: Math.min(rewardNexus.ore + Math.floor((batch.reward.ore || 0) * mult), rewardMaxStorage),
 		populationMax: newPopulationMax
 	};
 

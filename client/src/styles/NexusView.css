@@ -366,6 +366,12 @@
 	   The mobile override below uses top: 56px because there .main-content
 	   is overflow: visible and the window is the scroll root. */
 	top: 0;
+	/* .main-content has var(--space-7) top padding. Without compensating, the
+	   sticky bar pins below that padding and page content scrolls through the
+	   gap above it. Pull up by the padding amount and re-add it as the bar's
+	   own padding so its background covers that strip — same trick as .backbar. */
+	margin-top: calc(var(--space-7) * -1);
+	padding-top: var(--space-7);
 	z-index: 10;
 }
 
@@ -386,6 +392,10 @@
 		top: calc(56px + var(--safe-top));
 		z-index: 1040;
 		background: color-mix(in srgb, var(--bg-app) 92%, transparent);
+		/* Mobile scroll root is the window (.main-content is overflow: visible),
+		   so the desktop padding-compensation gap fix doesn't apply here - reset it. */
+		margin-top: 0;
+		padding-top: 0;
 		margin-left: calc(var(--space-3) * -1);
 		margin-right: calc(var(--space-3) * -1);
 		margin-bottom: var(--space-3);
@@ -974,6 +984,28 @@
 	margin-right: 4px;
 	vertical-align: middle;
 	line-height: 1.6;
+}
+
+/* Troop transfers (own-nexus reinforcements) reuse the strike row layout but
+   read as logistics, not combat - lime badge to set them apart from the orange
+   SUPPORT tag and from hostile strikes. */
+.strikes-card-transfer-badge {
+	display: inline-block;
+	font-size: 9px;
+	font-weight: 700;
+	letter-spacing: 0.05em;
+	color: var(--success);
+	background: color-mix(in srgb, var(--success) 12%, transparent);
+	border: 1px solid color-mix(in srgb, var(--success) 30%, transparent);
+	border-radius: 3px;
+	padding: 0 4px;
+	margin-right: 4px;
+	vertical-align: middle;
+	line-height: 1.6;
+}
+
+.strikes-card-entry--transfer .strikes-card-entry-arrival {
+	color: var(--success);
 }
 
 .strikes-card-entry-who {

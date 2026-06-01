@@ -115,6 +115,8 @@ export default function GalaxiesPage({ adminFetch, showToast }: Props) {
 	const [tokenCount, setTokenCount] = useState('1');
 	const [tokenReason, setTokenReason] = useState('manual');
 
+	const [recounting, setRecounting] = useState(false);
+
 	// Confirm modals
 	const [confirmReset, setConfirmReset] = useState<GalaxyUser | null>(null);
 	const [confirmDeleteUser, setConfirmDeleteUser] = useState<GalaxyUser | null>(null);
@@ -396,6 +398,22 @@ export default function GalaxiesPage({ adminFetch, showToast }: Props) {
 			}
 		} catch {
 			showToast('Error', 'error');
+		}
+	};
+
+	const handleRecountPopulation = async () => {
+		if (recounting) return;
+		if (!window.confirm('Force a population recount across ALL nexuses in every galaxy? This recomputes populationCurrent from troops, training queues, in-flight attacks and transfers.')) return;
+		setRecounting(true);
+		try {
+			const res = await adminFetch(`${API}/maintenance/recount-population`, { method: 'POST' });
+			const data = await res.json().catch(() => null);
+			if (!res.ok) { showToast(data?.error || 'Recount failed', 'error'); return; }
+			showToast(data?.message || 'Population recounted', 'success');
+		} catch {
+			showToast('Error running recount', 'error');
+		} finally {
+			setRecounting(false);
 		}
 	};
 
@@ -738,6 +756,16 @@ export default function GalaxiesPage({ adminFetch, showToast }: Props) {
 							Players in {selectedGalaxy.name}
 							<span className="section-title-count">{galaxyUsers.length}</span>
 						</span>
+						<div className="section-actions">
+							<button
+								className="btn btn-ghost btn-sm"
+								onClick={handleRecountPopulation}
+								disabled={recounting}
+								title="Recompute populationCurrent for every nexus across all galaxies"
+							>
+								<RotateCcw size={11} /> {recounting ? 'Recounting…' : 'Recount Population'}
+							</button>
+						</div>
 					</div>
 					<div className="player-list">
 						{galaxyUsers.length === 0 && (
@@ -827,7 +855,7 @@ export default function GalaxiesPage({ adminFetch, showToast }: Props) {
 				<div className="section">
 					<div className="section-header">
 						<span className="section-title">
-							<Swords size={14} /> Traveling Strikes{' '}
+							<Swords size={14} /> Traveling Strikes &amp; Transfers{' '}
 							<span className="section-title-count">{attacks.length}</span>
 						</span>
 					</div>
@@ -877,12 +905,14 @@ export default function GalaxiesPage({ adminFetch, showToast }: Props) {
 												</span>
 											</td>
 											<td className="col-actions">
-												<button
-													className="btn btn-success btn-xs"
-													onClick={() => setConfirmAttack(a)}
-												>
-													Complete
-												</button>
+												{aType !== 'transfer' && (
+													<button
+														className="btn btn-success btn-xs"
+														onClick={() => setConfirmAttack(a)}
+													>
+														Complete
+													</button>
+												)}
 											</td>
 										</tr>
 									);

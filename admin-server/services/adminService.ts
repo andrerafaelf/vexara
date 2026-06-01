@@ -431,6 +431,20 @@ export function getAttackById(id: number) {
 	return prisma.attack.findUnique({ where: { id } });
 }
 
+// In-motion troop transfers (own-nexus reinforcements). These live in a separate
+// table from attacks, so the strikes list never showed them - this surfaces them
+// for operators. Includes the owning user via the source nexus.
+export function getAdminTroopTransfers(galaxyId: number) {
+	return prisma.troopTransfer.findMany({
+		where: { galaxyId, status: { in: ['traveling', 'returning'] } },
+		include: {
+			ownerNexus: { select: { id: true, name: true, x: true, y: true, ownerId: true } },
+			hostNexus: { select: { id: true, name: true, x: true, y: true } }
+		},
+		orderBy: { arrivesAt: 'asc' }
+	});
+}
+
 export async function getAttackUsernames(
 	attackerUserId: number | null,
 	defenderUserId: number | null

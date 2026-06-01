@@ -845,6 +845,13 @@
 	color: var(--success);
 }
 
+/* Troop transfers (own-nexus reinforcements) folded into the strikes table.
+   Lavender to read as logistics - distinct from scout (cyan) and support (green). */
+.attack-pill.transfer {
+	background: rgba(159, 122, 234, 0.14);
+	color: #b794f6;
+}
+
 .time-urgent {
 	color: var(--danger);
 	font-weight: 700;

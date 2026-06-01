@@ -20,7 +20,7 @@ import {
 	notifyNexusConquered,
 	notifyFactionUpdated
 } from '../services/warRoomSocket.js';
-import { getNexusTypeEffectiveMultipliers } from './economy.js';
+import { getNexusTypeEffectiveMultipliers, getMaxStorage } from './economy.js';
 import { computeNexusPopulation, getPopulationMax, loadAwayPopulation } from './population.js';
 import type { TroopKey } from '../types/index.js';
 import { logInfo, logWarn } from './logger.js';
@@ -1272,9 +1272,10 @@ async function processReturnedTroops(attack: Attack): Promise<void> {
 				returnData[troopType] =
 					((attackerNexus as unknown as Record<string, number>)[troopType] || 0) + count!;
 		}
-		returnData['biomass'] = attackerNexus.biomass + (resourcesStolen.biomass || 0);
-		returnData['alloy'] = attackerNexus.alloy + (resourcesStolen.alloy || 0);
-		returnData['ore'] = attackerNexus.ore + (resourcesStolen.ore || 0);
+		const attackerMaxStorage = getMaxStorage(attackerNexus as Parameters<typeof getMaxStorage>[0]);
+		returnData['biomass'] = Math.min(attackerNexus.biomass + (resourcesStolen.biomass || 0), attackerMaxStorage);
+		returnData['alloy'] = Math.min(attackerNexus.alloy + (resourcesStolen.alloy || 0), attackerMaxStorage);
+		returnData['ore'] = Math.min(attackerNexus.ore + (resourcesStolen.ore || 0), attackerMaxStorage);
 
 		// Survivors are now back on the troop columns and this attack row is about to
 		// be 'completed' (no longer counted as away). Recompute housing from the

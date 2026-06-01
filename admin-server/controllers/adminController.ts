@@ -838,12 +838,16 @@ export async function listAttacks(req: Request, res: Response): Promise<void> {
 	try {
 		const galaxyId = requireGalaxyId(req, res);
 		if (galaxyId == null) return;
-		const attacks = await adminService.getAdminAttacks(galaxyId);
+		const [attacks, transfers] = await Promise.all([
+			adminService.getAdminAttacks(galaxyId),
+			adminService.getAdminTroopTransfers(galaxyId)
+		]);
 		const allIds = [
 			...new Set(
-				attacks.flatMap((a) =>
-					[a.attackerUserId, a.defenderUserId].filter((id): id is number => id != null)
-				)
+				[
+					...attacks.flatMap((a) => [a.attackerUserId, a.defenderUserId]),
+					...transfers.map((t) => t.ownerNexus?.ownerId ?? null)
+				].filter((id): id is number => id != null)
 			)
 		];
 		const users = await (
@@ -853,23 +857,41 @@ export async function listAttacks(req: Request, res: Response): Promise<void> {
 			select: { id: true, username: true }
 		});
 		const byId = new Map(users.map((u) => [u.id, u.username]));
-		res.json(
-			attacks.map((a) => ({
-				...a,
-				_id: a.id,
-				type: a.type,
-				attacker: {
-					user: {
-						username: (a.attackerUserId != null ? byId.get(a.attackerUserId) : null) || 'Unknown'
-					}
-				},
-				defender: {
-					user: {
-						username: (a.defenderUserId != null ? byId.get(a.defenderUserId) : null) || 'Neutral'
-					}
+		const attackRows = attacks.map((a) => ({
+			...a,
+			_id: a.id,
+			type: a.type,
+			attacker: {
+				user: {
+					username: (a.attackerUserId != null ? byId.get(a.attackerUserId) : null) || 'Unknown'
 				}
-			}))
-		);
+			},
+			defender: {
+				user: {
+					username: (a.defenderUserId != null ? byId.get(a.defenderUserId) : null) || 'Neutral'
+				}
+			}
+		}));
+		// Troop transfers move between two nexuses owned by the same player, so both
+		// "attacker" and "defender" resolve to that owner. Surface them as type
+		// 'transfer' rows so the admin strikes table renders them inline.
+		const transferRows = transfers.map((t) => {
+			const owner = (t.ownerNexus?.ownerId != null ? byId.get(t.ownerNexus.ownerId) : null) || 'Unknown';
+			const arrivesAt = t.status === 'returning' ? t.returnsAt : t.arrivesAt;
+			return {
+				_id: `transfer-${t.id}`,
+				id: t.id,
+				type: 'transfer' as const,
+				status: t.status,
+				troops: t.troops,
+				arrivesAt,
+				attackerNexus: t.ownerNexus,
+				defenderNexus: t.hostNexus,
+				attacker: { user: { username: owner } },
+				defender: { user: { username: owner } }
+			};
+		});
+		res.json([...attackRows, ...transferRows]);
 	} catch (error) {
 		res.status(500).json({ error: (error as Error).message });
 	}
