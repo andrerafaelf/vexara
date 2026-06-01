@@ -28,4 +28,4 @@ USER nodeuser
 
 EXPOSE 3001
 
-CMD ["sh", "-c", "node scripts/heal-failed-migration.mjs && npx prisma migrate deploy --schema ./prisma/schema.prisma && node dist/server.js"]
+CMD ["sh", "-c", "node scripts/heal-failed-migration.mjs && npx prisma migrate deploy --schema ./prisma/schema.prisma && node scripts/trim-overcap-training-queues.mjs && node dist/server.js"]

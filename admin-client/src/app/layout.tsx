@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { headers } from 'next/headers';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -20,14 +21,17 @@ export const viewport: Viewport = {
 	initialScale: 1
 };
 
-export default function RootLayout({
+export default async function RootLayout({
 	children
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
+	// Reading the nonce header forces Next to thread it through to its inline
+	// bootstrap scripts so they match the CSP set by middleware.
+	const nonce = (await headers()).get('x-nonce') ?? undefined;
 	return (
 		<html lang="en">
-			<body>{children}</body>
+			<body data-nonce={nonce}>{children}</body>
 		</html>
 	);
 }
