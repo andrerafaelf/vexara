@@ -83,48 +83,46 @@ async function destroyInvalidInboundSupport(
       status: 'traveling',
       type: 'support',
     },
-    select: { id: true, attackerUserId: true, attackerNexusId: true, defenderUserId: true, troops: true },
+    select: { id: true, attackerUserId: true, attackerNexusId: true, defenderUserId: true, troops: true, createdAt: true, arrivesAt: true },
   });
 
   const invalidSupport = supportAttacks.filter((support) => support.defenderUserId !== newOwnerId);
   if (invalidSupport.length === 0) return 0;
 
-  await prisma.attack.updateMany({
-    where: { id: { in: invalidSupport.map((support) => support.id) } },
-    data: {
-      status: 'completed',
-      result: {
-        mission: 'support',
-        victory: false,
-        destroyed: true,
-        reason: 'host_conquered',
-        troopsDestroyed: true,
-        attackerLosses: {},
-        defenderLosses: {},
-        resourcesStolen: { biomass: 0, alloy: 0, ore: 0 },
-      } as Prisma.InputJsonObject,
-    },
-  });
+  const now = Date.now();
+  for (const support of invalidSupport) {
+    // Troops were still in transit — bounce them home. Travel time back equals
+    // the original one-way trip duration so the round trip is symmetric.
+    const travelMs = support.arrivesAt!.getTime() - support.createdAt.getTime();
+    const returnsAt = new Date(now + travelMs);
+    await prisma.attack.update({
+      where: { id: support.id },
+      data: {
+        status: 'returning',
+        returnsAt,
+        result: {
+          mission: 'support',
+          victory: false,
+          reason: 'host_conquered',
+          survivingTroops: support.troops,
+          attackerLosses: {},
+          defenderLosses: {},
+          resourcesStolen: { biomass: 0, alloy: 0, ore: 0 },
+        } as Prisma.InputJsonObject,
+      },
+    });
+    notifyAttackUpdate(support.attackerUserId, support.defenderUserId, nexusId);
+    if (support.attackerUserId) notifyReportUpdate(support.attackerUserId);
+  }
 
-  logWarn('conquest_destroyed_inbound_support', {
+  logInfo('conquest_bounced_inbound_support', {
     nexusId,
     galaxyId,
     newOwnerId,
     capturedByAttackId,
     supportAttackIds: invalidSupport.map((support) => support.id),
-    troopsDestroyed: invalidSupport.reduce((sum, support) => sum + countTroops(support.troops), 0),
+    troopsBounced: invalidSupport.reduce((sum, support) => sum + countTroops(support.troops), 0),
   });
-
-  for (const support of invalidSupport) {
-    await freePopulationForDestroyedTroops(support.attackerNexusId, support.troops, {
-      reason: 'inbound_support_destroyed_by_conquest',
-      supportAttackId: support.id,
-      conqueredNexusId: nexusId,
-      capturedByAttackId,
-    });
-    notifyAttackUpdate(support.attackerUserId, support.defenderUserId, nexusId);
-    if (support.attackerUserId) notifyReportUpdate(support.attackerUserId);
-  }
 
   return invalidSupport.length;
 }

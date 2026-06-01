@@ -1,6 +1,6 @@
-import { ArrowLeft, Coins, Share2, Skull, Swords, Trophy } from 'lucide-react';
+import { ArrowLeft, Coins, Eye, Share2, Skull, Swords, Trophy } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { getReadReportIds, getReports, markAllReportsRead, markReportRead, sendAttack, sendFactionMessage } from '../services/api';
+import { getAllEspionageLogs, getReadReportIds, getReports, markAllReportsRead, markReportRead, sendAttack, sendFactionMessage } from '../services/api';
 import '../styles/Reports.css';
 import { useToast } from '../context/ToastContext';
 import { Attack, Nexus } from '../types/game';
@@ -116,6 +116,11 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
   });
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
   const [replayComplete, setReplayComplete] = useState(false);
+  const [mainTab, setMainTab] = useState<'combat' | 'espionage'>('combat');
+  const [espionageLogs, setEspionageLogs] = useState<Array<Record<string, unknown>>>([]);
+  const [espionageCursor, setEspionageCursor] = useState<number | undefined>(undefined);
+  const [espionageHasMore, setEspionageHasMore] = useState(false);
+  const [espionageLoading, setEspionageLoading] = useState(false);
 
   useEffect(() => {
     loadReports();
@@ -123,6 +128,13 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
       .then((r) => setReadIds(new Set(r.data)))
       .catch(() => {});
   }, [nexus._id]);
+
+  useEffect(() => {
+    if (mainTab === 'espionage' && espionageLogs.length === 0 && !espionageLoading) {
+      void loadEspionageLogs();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mainTab]);
 
   useEffect(() => {
     if (!selectedReport || readIds.has(selectedReport._id)) return;
@@ -335,6 +347,20 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
       console.error('Error loading reports:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadEspionageLogs = async (append = false) => {
+    setEspionageLoading(true);
+    try {
+      const cursor = append ? espionageCursor : undefined;
+      const res = await getAllEspionageLogs(cursor);
+      const data = res.data as { missions: Array<Record<string, unknown>>; nextCursor: number | null };
+      setEspionageLogs((prev) => (append ? [...prev, ...(data.missions ?? [])] : (data.missions ?? [])));
+      setEspionageCursor(data.nextCursor ?? undefined);
+      setEspionageHasMore(data.nextCursor != null);
+    } catch { /* non-critical */ } finally {
+      setEspionageLoading(false);
     }
   };
 
@@ -851,13 +877,74 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
       <div className="reports-header">
         <div className="reports-header-row">
           <h2>Combat Logs</h2>
-          {unreadCount > 0 && (
+          {mainTab === 'combat' && unreadCount > 0 && (
             <button className="btn-read-all" onClick={handleMarkAllRead}>
               Mark all read ({unreadCount})
             </button>
           )}
         </div>
+        <div className="reports-tab-bar">
+          <button
+            className={`reports-tab-btn${mainTab === 'combat' ? ' active' : ''}`}
+            onClick={() => setMainTab('combat')}
+          >
+            <Swords size={13} aria-hidden="true" />
+            Combat
+          </button>
+          <button
+            className={`reports-tab-btn${mainTab === 'espionage' ? ' active' : ''}`}
+            onClick={() => setMainTab('espionage')}
+          >
+            <Eye size={13} aria-hidden="true" />
+            Espionage
+          </button>
+        </div>
       </div>
+
+      {mainTab === 'espionage' && (
+        <div className="espionage-logs">
+          {espionageLoading && espionageLogs.length === 0 ? (
+            <p className="no-reports">Loading espionage logs...</p>
+          ) : espionageLogs.length === 0 ? (
+            <p className="no-reports">No espionage missions completed yet. Use the Espionage tab on your nexus to send operatives.</p>
+          ) : (
+            <>
+              <div className="reports-list">
+                {espionageLogs.map((m) => (
+                  <div key={String(m.id)} className="report-item won">
+                    <div className="report-icon" aria-hidden="true"><Eye size={18} /></div>
+                    <div className="report-info">
+                      <div className="report-title">
+                        {String(m.missionType ?? 'Spy')} on {String(m.targetName ?? 'Unknown')} ({String(m.targetX ?? '?')}|{String(m.targetY ?? '?')})
+                        {m.targetOwnerUsername && <> — <span className="report-opponent">{String(m.targetOwnerUsername)}</span></>}
+                      </div>
+                      <div className="report-meta">
+                        {String(m.fromNexusName ?? 'Unknown')} · {m.createdAt ? formatDate(String(m.createdAt)) : ''}
+                        {' · '}
+                        <span className={String(m.status) === 'completed' && (m as any).result?.success ? 'report-won' : 'report-lost'}>
+                          {(m as any).result?.success ? 'Success' : 'Failed'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {espionageHasMore && (
+                <button
+                  className="btn-read-all"
+                  style={{ display: 'block', margin: '12px auto' }}
+                  onClick={() => loadEspionageLogs(true)}
+                  disabled={espionageLoading}
+                >
+                  {espionageLoading ? 'Loading...' : 'Load more'}
+                </button>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {mainTab === 'combat' && <>
 
       {reports.length === 0 ? (
         <div className="no-reports">
@@ -936,6 +1023,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
           })}
         </div>
       )}
+      </>}
     </div>
   );
 };

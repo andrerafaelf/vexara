@@ -212,6 +212,19 @@
   flex-shrink: 0;
 }
 
+.wywa-rank-line {
+  font-size: 13px;
+  color: var(--text-primary);
+  margin: 0;
+  padding: 2px 0;
+}
+
+.wywa-section--rank {
+  border-top: 1px solid var(--color-navy-700);
+  padding-top: 10px;
+  margin-top: 4px;
+}
+
 .wywa-footer {
   padding: 14px 20px;
   border-top: 1px solid var(--color-navy-700);

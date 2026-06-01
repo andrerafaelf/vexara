@@ -102,6 +102,8 @@ export async function getMe(req: AuthRequest, res: Response): Promise<void> {
         supporterTier: true,
         isFounder: true,
         avatarKey: true,
+        beginnerTipsEnabled: true,
+        onboardingStep: true,
       },
     });
     if (!user) {
@@ -117,7 +119,23 @@ export async function getMe(req: AuthRequest, res: Response): Promise<void> {
       isFounder: user.isFounder ?? false,
       avatarUrl: avatarUrl(user.id, user.avatarKey),
       avatarUrlSm: avatarUrlSm(user.id, user.avatarKey),
+      beginnerTipsEnabled: user.beginnerTipsEnabled,
+      onboardingStep: user.onboardingStep ?? null,
     });
+  } catch (error) {
+    logError('unhandled_controller_error', { message: (error as Error).message, file: 'usersController.ts' });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+export async function updateOnboardingStep(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const step = typeof req.body?.step === 'string' ? req.body.step.slice(0, 64) : null;
+    if (!step) { res.status(400).json({ error: 'step is required' }); return; }
+    const data: Record<string, unknown> = { onboardingStep: step };
+    if (step === '__disabled__') data.beginnerTipsEnabled = false;
+    await prisma.user.update({ where: { id: req.userId }, data });
+    res.json({ success: true });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'usersController.ts' });
     res.status(500).json({ error: 'Internal server error' });
@@ -329,11 +347,9 @@ export async function getPublicProfile(req: AuthRequest, res: Response): Promise
     }
 
     // A public profile must NOT leak operational intel about another player:
-    // current resource stockpile, production rates, total troop count, and
-    // per-nexus names/coordinates/types are all things an attacker would
-    // otherwise have to spend a scout mission to learn. Those are returned only
-    // when the viewer is looking at their OWN profile. Everyone else sees the
-    // reputational stats (influence, win/loss record, galaxies, account age).
+    // current resource stockpile, production rates, and total troop count are
+    // self-only. Nexus names/coordinates are public — they're visible on the
+    // map anyway and give opponents no advantage they don't already have.
     res.json({
       userId: user.id,
       username: user.username,
@@ -372,17 +388,15 @@ export async function getPublicProfile(req: AuthRequest, res: Response): Promise
           }
         : null,
       streak: streak ? { currentStreak: streak.currentStreak, longestStreak: streak.longestStreak } : null,
-      nexuses: isSelf
-        ? activeNexuses.map((n) => ({
-            _id: String(n.id),
-            id: n.id,
-            name: n.name,
-            x: n.x,
-            y: n.y,
-            nexusType: n.nexusType,
-            points: n.points,
-          }))
-        : [],
+      nexuses: activeNexuses.map((n) => ({
+        _id: String(n.id),
+        id: n.id,
+        name: n.name,
+        x: n.x,
+        y: n.y,
+        nexusType: n.nexusType,
+        points: n.points,
+      })),
       galaxies,
       friendship,
     });

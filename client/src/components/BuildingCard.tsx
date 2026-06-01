@@ -78,6 +78,7 @@ export interface BuildingCardProps {
   formatDurationSeconds: (totalSeconds: number) => string;
   onUpgrade: (buildingKey: string) => void;
   onInfoTap: (title: string, description: string, codexHref?: string) => void;
+  onboardingAttr?: string;
 }
 
 function BuildingCardInner(props: BuildingCardProps) {
@@ -103,6 +104,7 @@ function BuildingCardInner(props: BuildingCardProps) {
     formatDurationSeconds,
     onUpgrade,
     onInfoTap,
+    onboardingAttr,
   } = props;
 
   // Compute static gates first using the snapshot (no 1Hz subscription) so we
@@ -172,6 +174,7 @@ function BuildingCardInner(props: BuildingCardProps) {
   return (
     <div
       className={`building-card ${isUpgrading ? 'upgrading' : ''} ${isAtMax ? 'maxed' : isDisabled ? 'disabled' : ''}`}
+      {...(onboardingAttr ? { 'data-onboarding': onboardingAttr } : {})}
     >
       {imgSrc && (
         <img src={imgSrc} alt={buildingName} className="building-card-image" />

@@ -506,15 +506,26 @@ export async function getDiscoveredSpyAssets(req: AuthRequest, res: Response): P
 
 // ---- getAllEspionageLogs ----
 // Returns completed spy missions across all of a user's nexuses for the espionage tab.
+// Cursor-based pagination: pass ?cursor=<id> to get the next page.
+const ESPIONAGE_PAGE_SIZE = 50;
+
 export async function getAllEspionageLogs(req: AuthRequest, res: Response): Promise<void> {
   try {
+    const cursorRaw = req.query?.cursor;
+    const cursor = cursorRaw ? parsePositiveInt(String(cursorRaw)) : undefined;
+
     const missions = await prisma.spyMission.findMany({
       where: { ownerUserId: req.userId, galaxyId: req.galaxyId, status: 'completed' },
       orderBy: { createdAt: 'desc' },
-      take: 50,
+      take: ESPIONAGE_PAGE_SIZE + 1,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
     });
 
-    const nexusIds = [...new Set(missions.flatMap((m) => [m.fromNexusId, m.toNexusId]))];
+    const hasMore = missions.length > ESPIONAGE_PAGE_SIZE;
+    const page = hasMore ? missions.slice(0, ESPIONAGE_PAGE_SIZE) : missions;
+    const nextCursor = hasMore ? page[page.length - 1]?.id ?? null : null;
+
+    const nexusIds = [...new Set(page.flatMap((m) => [m.fromNexusId, m.toNexusId]))];
     const nexuses = await prisma.nexus.findMany({
       where: { id: { in: nexusIds } },
       select: { id: true, name: true, x: true, y: true, ownerId: true },
@@ -528,7 +539,7 @@ export async function getAllEspionageLogs(req: AuthRequest, res: Response): Prom
     });
     const userMap = new Map(users.map((u) => [u.id, u.username]));
 
-    const enriched = missions.map((m) => {
+    const enriched = page.map((m) => {
       const from = nexusMap.get(m.fromNexusId);
       const to = nexusMap.get(m.toNexusId);
       return {
@@ -541,7 +552,7 @@ export async function getAllEspionageLogs(req: AuthRequest, res: Response): Prom
       };
     });
 
-    res.json(enriched);
+    res.json({ missions: enriched, nextCursor });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'spyController.ts' });
     res.status(500).json({ error: 'Internal server error' });

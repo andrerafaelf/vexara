@@ -6,7 +6,7 @@ import * as attackService from '../services/attackService.js';
 import type { AuthRequest, TroopKey } from '../types/index.js';
 import { TROOP_STATS } from '../utils/combatMath.js';
 import { normalizeTroopPayload, parsePositiveInt } from '../utils/validation.js';
-import { logError } from '../utils/logger.js';
+import { logError, logGameEvent } from '../utils/logger.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
 import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
 import { NEXUS_TYPE_BONUSES } from '../utils/economy.js';
@@ -181,6 +181,10 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
       }
       if (!reused) void incrementQuestProgress(req.userId, req.galaxyId, 'login', 1);
     } catch {}
+    if (!reused) {
+      if (attackType === 'attack') logGameEvent('first_attack', req.userId, req.galaxyId, { defenderUserId: defenderNexus.ownerId ?? null });
+      else if (attackType === 'scout') logGameEvent('first_scout', req.userId, req.galaxyId);
+    }
     res.json({ success: true, attack: serializeAttack(attack) });
   } catch (error) {
     if (error instanceof attackService.InsufficientTroopsError) {

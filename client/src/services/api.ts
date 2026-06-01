@@ -496,8 +496,8 @@ export const sendSpyMission = (fromNexusId: string, toNexusId: string, type: 'sa
     body: JSON.stringify({ fromNexusId, toNexusId, type, operatives, sabotageTarget }),
   });
 
-export const getAllEspionageLogs = () =>
-  apiRequest('/attack/spy/logs');
+export const getAllEspionageLogs = (cursor?: number) =>
+  apiRequest(`/attack/spy/logs${cursor ? `?cursor=${cursor}` : ''}`);
 
 export const getSpyMissions = (nexusId: string) =>
   apiRequest(`/attack/spy/missions/${nexusId}`);
@@ -589,4 +589,11 @@ export const getDiplomacyMessages = (treatyId: number, before?: number) =>
 
 export const sendDiplomacyMessage = (treatyId: number, content: string) =>
   apiRequest(`/faction/treaties/${treatyId}/chat`, { method: 'POST', body: JSON.stringify({ content }) });
+
+// Onboarding
+export const getProfile = () => apiRequest('/users/me');
+export const updateOnboardingStep = (stepId: string) =>
+  apiRequest('/users/onboarding-step', { method: 'PATCH', body: JSON.stringify({ step: stepId }) });
+export const trackReferralClick = (code: string) =>
+  apiRequest(`/referral/click/${code}`, { method: 'POST' });
 

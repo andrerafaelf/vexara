@@ -232,8 +232,6 @@ function PublicProfilePageInner() {
         : '.';
   const totalStolen = profile.combat.resourcesStolen.biomass + profile.combat.resourcesStolen.alloy + profile.combat.resourcesStolen.ore;
   const totalLost = profile.combat.resourcesLost.biomass + profile.combat.resourcesLost.alloy + profile.combat.resourcesLost.ore;
-  const res = profile.resources;
-  const totalAvgDay = res ? res.avgPerDay.biomass + res.avgPerDay.alloy + res.avgPerDay.ore : 0;
 
   return (
     <GameLayout activePage="profile">
@@ -318,36 +316,6 @@ function PublicProfilePageInner() {
               )}
             </div>
           </div>
-        )}
-
-        {/* Resource intel (stockpile, production) is self-only — never exposed on
-            another player's public profile, so it can't be used as a free scout. */}
-        {res && (
-          <Section title="Resources">
-            <div className="ps-cards">
-              <StatCard label="Avg Production / Day" value={fmt(totalAvgDay)} sub={`B ${fmt(res.avgPerDay.biomass)} / A ${fmt(res.avgPerDay.alloy)} / O ${fmt(res.avgPerDay.ore)}`} />
-              <StatCard label="Production / Hour" value={fmt(res.productionPerHour.biomass + res.productionPerHour.alloy + res.productionPerHour.ore)} sub={`B ${fmt(res.productionPerHour.biomass)} / A ${fmt(res.productionPerHour.alloy)} / O ${fmt(res.productionPerHour.ore)}`} />
-              <StatCard label="Current Stockpile" value={fmt(res.current.biomass + res.current.alloy + res.current.ore)} sub={`B ${fmt(res.current.biomass)} / A ${fmt(res.current.alloy)} / O ${fmt(res.current.ore)}`} />
-            </div>
-
-            <div className="ps-resource-bars">
-              {(['biomass', 'alloy', 'ore'] as const).map((r) => {
-                const total = res.avgPerDay.biomass + res.avgPerDay.alloy + res.avgPerDay.ore;
-                const pct = total > 0 ? Math.round((res.avgPerDay[r] / total) * 100) : 33;
-                const colors = { biomass: '#56D364', alloy: '#FF9E3D', ore: '#D29922' };
-                const labels = { biomass: 'Biomass', alloy: 'Alloy', ore: 'Ore' };
-                return (
-                  <div key={r} className="ps-bar-row">
-                    <span className="ps-bar-label" style={{ color: colors[r] }}>{labels[r]}</span>
-                    <div className="ps-bar-track">
-                      <div className="ps-bar-fill" style={{ width: `${pct}%`, background: colors[r] }} />
-                    </div>
-                    <span className="ps-bar-pct">{pct}%</span>
-                  </div>
-                );
-              })}
-            </div>
-          </Section>
         )}
 
         <Section title="Combat">

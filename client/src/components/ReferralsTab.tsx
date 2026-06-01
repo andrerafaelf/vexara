@@ -180,6 +180,7 @@ export default function ReferralsTab({ mode = 'referrals' }: ReferralsTabProps) 
   const [referrer, setReferrer_] = useState<ReferrerInfo | null>(null);
   const [nexuses, setNexuses] = useState<NexusSummary[]>([]);
   const [myReferralCode, setMyReferralCode] = useState('');
+  const [myReferralClicks, setMyReferralClicks] = useState(0);
   const [codeCopied, setCodeCopied] = useState(false);
 
   const [redeemState, setRedeemState] = useState<RedeemState | null>(null);
@@ -205,7 +206,9 @@ export default function ReferralsTab({ mode = 'referrals' }: ReferralsTabProps) 
       setPendingReferralTokens(pending.referral ?? []);
       setPendingMilestoneTokens(pending.milestone ?? []);
       setReferrer_((referrerRes.data as { referrer: ReferrerInfo | null }).referrer);
-      setMyReferralCode((codeRes.data as { referralCode: string }).referralCode ?? '');
+      const codeData = codeRes.data as { referralCode: string; referralClickCount?: number };
+      setMyReferralCode(codeData.referralCode ?? '');
+      setMyReferralClicks(codeData.referralClickCount ?? 0);
       const mappedNexuses: NexusSummary[] = (nexusRes.data as any[]).map((n: any) => ({
         id: String(n.id),
         name: n.name,
@@ -493,6 +496,11 @@ export default function ReferralsTab({ mode = 'referrals' }: ReferralsTabProps) 
               </button>
             </div>
           </div>
+          {myReferralClicks > 0 && (
+            <p className="referrals-hint" style={{ marginTop: 8 }}>
+              Your link has been clicked <strong>{myReferralClicks}</strong> time{myReferralClicks !== 1 ? 's' : ''}.
+            </p>
+          )}
           <div className="referrals-reward-explainer">
             <div className="referrals-reward-explainer-item">
               <span className="referrals-reward-explainer-you">You - 100 pts</span>

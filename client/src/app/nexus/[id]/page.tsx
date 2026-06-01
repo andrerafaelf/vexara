@@ -257,6 +257,7 @@ export default function NexusPage() {
                 className="eliminated-create-btn"
                 onClick={handleCreateNexus}
                 disabled={creatingNexus}
+                data-onboarding="create-nexus"
               >
                 {creatingNexus ? 'Rebuilding...' : 'Rise Again'}
               </button>

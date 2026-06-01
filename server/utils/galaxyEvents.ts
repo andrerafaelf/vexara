@@ -37,7 +37,7 @@ async function notifyOwnersNearEvent(
 // How often events can fire per galaxy (ms between rolls)
 const EVENT_ROLL_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
 // Probability of an event firing each roll (per galaxy)
-const EVENT_FIRE_CHANCE = 0.65;
+const EVENT_FIRE_CHANCE = 0.75;
 // Max active events per galaxy at once
 const MAX_ACTIVE_EVENTS = 3;
 // Event TTL when no nexus involved

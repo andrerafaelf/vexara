@@ -155,7 +155,7 @@ const BUILDING_DESCRIPTIONS: { [key: string]: string } = {
   oreExtractor: 'Produces Ore per hour. Higher levels increase production rate.',
   shieldGrid: 'Increases defensive bonus. Protects your nexus from enemy attacks.',
   armory: 'Amplifies unit class-counter bonuses in combat (+1.5% per level). Unlocks Void Stalker (Lv3) and Plasma Turret (Lv5).',
-  stealthArray: 'Reduces enemy spy success rate and boosts your operative effectiveness (+2% per level). Requires Armory Lv3.',
+  stealthArray: 'Reduces enemy spy success rate and boosts your operative effectiveness (+2% per level). Armory Lv3 required to upgrade past level 3.',
 };
 
 
@@ -2215,6 +2215,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                           formatDurationSeconds={stableHelpers.formatDurationSeconds}
                           onUpgrade={stableHelpers.onUpgrade}
                           onInfoTap={stableHelpers.onInfoTap}
+                          onboardingAttr={key === 'commandCore' ? 'upgrade-building' : undefined}
                         />
                       );
                     })}
@@ -2555,6 +2556,7 @@ const NexusView: React.FC<NexusViewProps> = ({ nexus, onUpdate, initialTab = 'ov
                                   canTrain={canTrain}
                                   isTrainDisabled={isTrainDisabled}
                                   onTrain={handleTrainTroops}
+                                  onboardingAttr={type === 'assaultTrooper' ? 'train-troops' : undefined}
                                 />
                               </div>
                             );
@@ -3031,6 +3033,7 @@ interface TrainAmountControlsProps {
   troopType: string;
   troopLabel: string;
   maxTrainable: number;
+  onboardingAttr?: string;
   canTrain: boolean;
   isTrainDisabled: boolean;
   onTrain: (troopType: string, rawAmount: string) => Promise<boolean>;
@@ -3043,6 +3046,7 @@ const TrainAmountControls = React.memo(function TrainAmountControls({
   canTrain,
   isTrainDisabled,
   onTrain,
+  onboardingAttr,
 }: TrainAmountControlsProps) {
   const [amount, setAmount] = useState('');
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -3068,7 +3072,11 @@ const TrainAmountControls = React.memo(function TrainAmountControls({
           aria-label={`${troopLabel} amount`}
           disabled={isTrainDisabled}
         />
-        <button onClick={onSubmit} disabled={isTrainDisabled}>
+        <button
+          onClick={onSubmit}
+          disabled={isTrainDisabled}
+          {...(onboardingAttr ? { 'data-onboarding': onboardingAttr } : {})}
+        >
           Train
         </button>
       </div>
@@ -3104,7 +3112,7 @@ const NewbieProtectionBanner = React.memo(function NewbieProtectionBanner({ ends
           </strong>
         </span>
         <span className="newbie-protection-subtext">
-          New nexuses get 3 days of protection from player attacks. No one can hit you until the timer runs out.
+          New nexuses get 1.5 days of protection from player attacks. No one can hit you until the timer runs out.
         </span>
       </div>
     </div>

@@ -6,7 +6,7 @@ import { comparePassword, hashPassword } from '../models/User.js';
 import * as authService from '../services/authService.js';
 import { sendAlphaWelcome, sendPasswordReset, sendVerifyEmail, sendWelcome } from '../services/emailService.js';
 import { generateUniqueReferralCode } from '../services/referralService.js';
-import { logError } from '../utils/logger.js';
+import { logError, logGameEvent } from '../utils/logger.js';
 import { detectEmailTypo, validateEmail, validatePassword, validateUsername } from '../utils/validation.js';
 
 const VERIFY_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -207,6 +207,11 @@ export async function register(req: Request, res: Response): Promise<void> {
       console.error('[emailService] sendVerifyEmail failed:', err),
     );
 
+    logGameEvent('user_registered', user.id, null, {
+      utmSource: pickUtm(body.utm_source),
+      referred: referredById != null,
+    });
+
     res.status(201).json({ ok: true, message: 'Check your email to confirm your account.' });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'authController.ts' });
@@ -261,6 +266,8 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
         emailVerificationTokenExpiresAt: null,
       },
     });
+
+    logGameEvent('user_verified', user.id);
 
     sendWelcome(user.email, user.username, user.referralCode).catch((err) =>
       console.error('[emailService] sendWelcome failed:', err),

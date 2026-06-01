@@ -617,3 +617,254 @@ export function disbandFaction(factionId: number) {
     return faction;
   });
 }
+
+// ---------------------------------------------------------------------------
+// Analytics helpers
+// ---------------------------------------------------------------------------
+
+function daysAgo(n: number): Date {
+  return new Date(Date.now() - n * 24 * 60 * 60 * 1000);
+}
+
+function countEvent(event: string, since?: Date) {
+  return prisma.gameEvent.count({ where: { event, ...(since ? { createdAt: { gte: since } } : {}) } });
+}
+
+function distinctUsersWithEvent(event: string, since?: Date) {
+  return prisma.gameEvent.findMany({
+    where: { event, ...(since ? { createdAt: { gte: since } } : {}) },
+    select: { userId: true },
+    distinct: ['userId'],
+  }).then((rows) => rows.length);
+}
+
+export async function getActivationFunnel() {
+  const [
+    totalRegistered,
+    totalVerified,
+    totalFirstNexus,
+    totalFirstBuild,
+    totalFirstTrain,
+    totalFirstAttack,
+    totalFirstScout,
+    totalJoinedFaction,
+  ] = await Promise.all([
+    prisma.user.count(),
+    prisma.user.count({ where: { emailVerifiedAt: { not: null } } }),
+    distinctUsersWithEvent('first_nexus_created'),
+    distinctUsersWithEvent('first_build'),
+    distinctUsersWithEvent('first_train'),
+    distinctUsersWithEvent('first_attack'),
+    distinctUsersWithEvent('first_scout'),
+    distinctUsersWithEvent('joined_faction'),
+  ]);
+
+  // Retention cohorts: for each cohort window, count users who registered
+  // within that window AND had any GameEvent after their cohort day.
+  async function retentionRate(cohortDays: number, returnAfterDays: number) {
+    const cohortStart = daysAgo(cohortDays + returnAfterDays);
+    const cohortEnd   = daysAgo(returnAfterDays);
+    const cohortUsers = await prisma.user.findMany({
+      where: { createdAt: { gte: cohortStart, lte: cohortEnd } },
+      select: { id: true, createdAt: true },
+    });
+    if (cohortUsers.length === 0) return { cohort: cohortUsers.length, returned: 0, rate: 0 };
+    const returned = await Promise.all(
+      cohortUsers.map((u) =>
+        prisma.gameEvent.count({
+          where: {
+            userId: u.id,
+            createdAt: { gte: new Date(u.createdAt.getTime() + returnAfterDays * 24 * 60 * 60 * 1000) },
+          },
+        }).then((n) => (n > 0 ? 1 : 0)),
+      ),
+    );
+    const returnedCount = returned.reduce((a, b) => a + b, 0);
+    return { cohort: cohortUsers.length, returned: returnedCount, rate: cohortUsers.length > 0 ? Math.round((returnedCount / cohortUsers.length) * 100) : 0 };
+  }
+
+  const [d1, d3, d7] = await Promise.all([
+    retentionRate(14, 1),
+    retentionRate(14, 3),
+    retentionRate(14, 7),
+  ]);
+
+  // Average minutes from registration to first_nexus_created
+  const firstNexusEvents = await prisma.gameEvent.findMany({
+    where: { event: 'first_nexus_created' },
+    select: { userId: true, createdAt: true },
+  });
+  let avgMinutesToFirstAction = 0;
+  if (firstNexusEvents.length > 0) {
+    const userIds = firstNexusEvents.map((e) => e.userId);
+    const users = await prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, createdAt: true } });
+    const userMap = new Map(users.map((u) => [u.id, u.createdAt]));
+    const deltas = firstNexusEvents
+      .map((e) => {
+        const reg = userMap.get(e.userId);
+        return reg ? (e.createdAt.getTime() - reg.getTime()) / 60000 : null;
+      })
+      .filter((d): d is number => d !== null && d >= 0 && d < 60 * 24 * 7);
+    avgMinutesToFirstAction = deltas.length > 0 ? Math.round(deltas.reduce((a, b) => a + b, 0) / deltas.length) : 0;
+  }
+
+  const pct = (n: number, base: number) => (base > 0 ? Math.round((n / base) * 100) : 0);
+
+  return {
+    funnel: [
+      { step: 'Registered',      count: totalRegistered,    pct: 100 },
+      { step: 'Verified email',  count: totalVerified,      pct: pct(totalVerified,      totalRegistered) },
+      { step: 'Created nexus',   count: totalFirstNexus,    pct: pct(totalFirstNexus,    totalRegistered) },
+      { step: 'First build',     count: totalFirstBuild,    pct: pct(totalFirstBuild,    totalRegistered) },
+      { step: 'First train',     count: totalFirstTrain,    pct: pct(totalFirstTrain,    totalRegistered) },
+      { step: 'First attack',    count: totalFirstAttack,   pct: pct(totalFirstAttack,   totalRegistered) },
+      { step: 'First scout',     count: totalFirstScout,    pct: pct(totalFirstScout,    totalRegistered) },
+      { step: 'Joined faction',  count: totalJoinedFaction, pct: pct(totalJoinedFaction, totalRegistered) },
+    ],
+    retention: { d1, d3, d7 },
+    avgMinutesToFirstAction,
+  };
+}
+
+export async function getEngagementStats() {
+  const now = new Date();
+  const since24h  = daysAgo(1);
+  const since7d   = daysAgo(7);
+  const since30d  = daysAgo(30);
+
+  // Active player counts (distinct users with a GameEvent in window)
+  const [active24h, active7d, active30d] = await Promise.all([
+    prisma.gameEvent.findMany({ where: { createdAt: { gte: since24h } }, select: { userId: true }, distinct: ['userId'] }).then((r) => r.length),
+    prisma.gameEvent.findMany({ where: { createdAt: { gte: since7d  } }, select: { userId: true }, distinct: ['userId'] }).then((r) => r.length),
+    prisma.gameEvent.findMany({ where: { createdAt: { gte: since30d } }, select: { userId: true }, distinct: ['userId'] }).then((r) => r.length),
+  ]);
+
+  // Attack stats
+  const [
+    attacksLast7d,
+    pvpAttacksLast7d,
+    pveAttacksLast7d,
+    attackersLast7d,
+    defendersLast7d,
+  ] = await Promise.all([
+    prisma.attack.count({ where: { type: 'attack', createdAt: { gte: since7d } } }),
+    prisma.attack.count({ where: { type: 'attack', defenderUserId: { not: null }, createdAt: { gte: since7d } } }),
+    prisma.attack.count({ where: { type: 'attack', defenderUserId: null, createdAt: { gte: since7d } } }),
+    prisma.attack.findMany({ where: { type: 'attack', createdAt: { gte: since7d } }, select: { attackerUserId: true }, distinct: ['attackerUserId'] }).then((r) => r.filter((a) => a.attackerUserId != null).length),
+    prisma.attack.findMany({ where: { type: 'attack', defenderUserId: { not: null }, createdAt: { gte: since7d } }, select: { defenderUserId: true }, distinct: ['defenderUserId'] }).then((r) => r.length),
+  ]);
+
+  // Attacks per day for the last 14 days
+  const attacksPerDay: { date: string; attacks: number; pvp: number; pve: number }[] = [];
+  const dayPromises = Array.from({ length: 14 }, (_, i) => {
+    const dayStart = new Date(now); dayStart.setDate(dayStart.getDate() - (13 - i)); dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(dayStart); dayEnd.setHours(23, 59, 59, 999);
+    return Promise.all([
+      prisma.attack.count({ where: { type: 'attack', createdAt: { gte: dayStart, lte: dayEnd } } }),
+      prisma.attack.count({ where: { type: 'attack', defenderUserId: { not: null }, createdAt: { gte: dayStart, lte: dayEnd } } }),
+      dayStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    ]);
+  });
+  const dayResults = await Promise.all(dayPromises);
+  for (const [total, pvp, date] of dayResults) {
+    attacksPerDay.push({ date: date as string, attacks: total as number, pvp: pvp as number, pve: (total as number) - (pvp as number) });
+  }
+
+  // Players with zero attacks ever
+  const totalPlayers = await prisma.user.count();
+  const playersWithAttacks = await prisma.attack.findMany({
+    where: { attackerUserId: { not: null } },
+    select: { attackerUserId: true },
+    distinct: ['attackerUserId'],
+  }).then((r) => r.length);
+  const zeroAttackPlayers = totalPlayers - playersWithAttacks;
+
+  // Players stuck on beginner quests (have a nexus but no first_build event)
+  const playersWithNexus = await prisma.nexus.findMany({
+    where: { ownerId: { not: null } },
+    select: { ownerId: true },
+    distinct: ['ownerId'],
+  }).then((r) => r.map((n) => n.ownerId!));
+  const playersWithFirstBuild = await prisma.gameEvent.findMany({
+    where: { event: 'first_build', userId: { in: playersWithNexus } },
+    select: { userId: true },
+    distinct: ['userId'],
+  }).then((r) => new Set(r.map((e) => e.userId)));
+  const stuckOnOnboarding = playersWithNexus.filter((id) => !playersWithFirstBuild.has(id)).length;
+
+  // Players who dismissed beginner tips
+  const dismissedTips = await prisma.user.count({ where: { beginnerTipsEnabled: false } });
+
+  return {
+    activePlayers: { last24h: active24h, last7d: active7d, last30d: active30d },
+    attacks: {
+      last7d: attacksLast7d,
+      pvpLast7d: pvpAttacksLast7d,
+      pveLast7d: pveAttacksLast7d,
+      attackersLast7d,
+      defendersLast7d,
+    },
+    attacksPerDay,
+    playerHealth: {
+      zeroAttackPlayers,
+      stuckOnOnboarding,
+      dismissedTips,
+    },
+  };
+}
+
+export async function getReferralAnalytics() {
+  // Top referrers by activated referees (reached REFERRAL_EARLY_THRESHOLD)
+  const referralTokens = await prisma.referralToken.findMany({
+    select: { referrerId: true, refereeId: true, redeemedAt: true, galaxyId: true },
+  });
+
+  // Count unique referees per referrer where the early-scout token exists (galaxyId < 0)
+  const earlyByReferrer = new Map<number, Set<number>>();
+  const mainByReferrer  = new Map<number, Set<number>>();
+  for (const t of referralTokens) {
+    if (t.galaxyId < 0) {
+      if (!earlyByReferrer.has(t.referrerId)) earlyByReferrer.set(t.referrerId, new Set());
+      earlyByReferrer.get(t.referrerId)!.add(t.refereeId);
+    } else if (t.galaxyId > 0) {
+      if (!mainByReferrer.has(t.referrerId)) mainByReferrer.set(t.referrerId, new Set());
+      mainByReferrer.get(t.referrerId)!.add(t.refereeId);
+    }
+  }
+
+  const referrerIds = [...new Set([...earlyByReferrer.keys(), ...mainByReferrer.keys()])];
+  const referrers = await prisma.user.findMany({
+    where: { id: { in: referrerIds } },
+    select: { id: true, username: true, referralClickCount: true },
+  });
+  const referrerMap = new Map(referrers.map((r) => [r.id, r]));
+
+  const leaderboard = referrerIds
+    .map((id) => ({
+      userId: id,
+      username: referrerMap.get(id)?.username ?? 'Unknown',
+      clicks: referrerMap.get(id)?.referralClickCount ?? 0,
+      activated: earlyByReferrer.get(id)?.size ?? 0,
+      converted: mainByReferrer.get(id)?.size ?? 0,
+    }))
+    .sort((a, b) => b.activated - a.activated)
+    .slice(0, 20);
+
+  // Overall funnel
+  const totalWithReferralCode  = await prisma.user.count({ where: { referredById: { not: null } } });
+  const totalReferralClicks    = await prisma.user.aggregate({ _sum: { referralClickCount: true } }).then((r) => r._sum.referralClickCount ?? 0);
+  const totalActivated         = earlyByReferrer.size > 0
+    ? [...earlyByReferrer.values()].reduce((s, v) => s + v.size, 0) : 0;
+  const totalConverted         = mainByReferrer.size > 0
+    ? [...mainByReferrer.values()].reduce((s, v) => s + v.size, 0) : 0;
+
+  return {
+    funnel: {
+      clicks: totalReferralClicks,
+      registered: totalWithReferralCode,
+      activated: totalActivated,
+      converted: totalConverted,
+    },
+    leaderboard,
+  };
+}

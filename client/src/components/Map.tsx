@@ -838,7 +838,15 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
     const distance = Math.sqrt(dx * dx + dy * dy);
     let mins: number;
     if (attackMissionType === 'support') {
-      mins = distance * (4 + (28 - 18) / 10);
+      let minSpeed = Infinity;
+      for (const [type, amount] of Object.entries(attackTroops)) {
+        if (amount > 0 && (TROOP_STATS as Record<string, { speed: number }>)[type]) {
+          const speed = (TROOP_STATS as Record<string, { speed: number }>)[type].speed;
+          if (speed < minSpeed) minSpeed = speed;
+        }
+      }
+      if (!isFinite(minSpeed)) return null;
+      mins = distance * (4 + (28 - minSpeed) / 10);
     } else {
       const OVERSEER_EFFECTIVE_SPEED = 6;
       let minSpeed = Infinity;
@@ -1309,6 +1317,7 @@ const Map: React.FC<MapProps> = ({ currentNexus, onRefresh, mode = 'normal', onS
                     className="send-btn"
                     onClick={handleSendAttack}
                     disabled={attackAvailableTroopTotal <= 0}
+                    {...(attackMissionType === 'attack' ? { 'data-onboarding': 'send-attack' } : {})}
                   >
                     {attackMissionType === 'support' ? 'Send Support' : 'Send Attack'}
                   </button>

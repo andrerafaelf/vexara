@@ -7,7 +7,7 @@ import { getMaxStorage, getResourceProduction } from '../utils/economy.js';
 import { BUILDING_COSTS, getBuildingCost, getCommandBuildQueueBonus, getEffectiveBuildTimeSeconds } from '../utils/gameConstants.js';
 import { notifyNexusResources } from '../services/warRoomSocket.js';
 import { getPopulationMax } from '../utils/population.js';
-import { logError } from '../utils/logger.js';
+import { logError, logGameEvent } from '../utils/logger.js';
 
 const BASE_MAX_BUILD_QUEUE = 5;
 
@@ -217,6 +217,10 @@ export async function upgradeBuilding(req: AuthRequest, res: Response): Promise<
       void incrementQuestProgress(req.userId, req.galaxyId, 'upgrade_1', 1);
       void incrementQuestProgress(req.userId, req.galaxyId, 'upgrade_2', 1);
     } catch {}
+    // Emit first_build only when the queue was previously empty (this is truly the first queued build).
+    if (buildQueue.length === 0) {
+      logGameEvent('first_build', req.userId, req.galaxyId, { building, nexusId: nexus.id });
+    }
     res.json({ success: true, completesAt, nexus: serializeNexus(rewardApplied) });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'buildingController.ts' });

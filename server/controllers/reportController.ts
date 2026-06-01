@@ -123,10 +123,10 @@ export async function getActivitySummary(req: AuthRequest, res: Response): Promi
     if (!user?.activeGalaxyId) { res.json({ attacks: [], buildings: [], troops: [], events: [] }); return; }
     const galaxyId = user.activeGalaxyId;
 
-    const [ownNexuses, completedAttacks] = await Promise.all([
+    const [ownNexuses, completedAttacks, factionMembership, galaxyPlayer] = await Promise.all([
       prisma.nexus.findMany({
         where: { ownerId: req.userId, galaxyId },
-        select: { id: true, name: true, buildQueue: true, trainingQueue: true },
+        select: { id: true, name: true, buildQueue: true, trainingQueue: true, x: true, y: true },
       }),
       prisma.attack.findMany({
         where: {
@@ -149,9 +149,76 @@ export async function getActivitySummary(req: AuthRequest, res: Response): Promi
         orderBy: { arrivesAt: 'desc' },
         take: 20,
       }),
+      prisma.factionMember.findFirst({
+        where: { userId: req.userId, galaxyId },
+        select: { factionId: true },
+      }),
+      prisma.galaxyPlayer.findFirst({
+        where: { userId: req.userId, galaxyId },
+        select: { points: true },
+        orderBy: { points: 'desc' },
+      }),
     ]);
 
     const nexusIds = ownNexuses.map((n) => n.id);
+
+    // Faction wars and nearby conquests — run in parallel after we have nexusIds/factionId.
+    const [factionWars, nearbyConquests, rankRow] = await Promise.all([
+      // Faction wars that were declared or activated while the player was away.
+      factionMembership?.factionId
+        ? prisma.factionWar.findMany({
+            where: {
+              galaxyId,
+              OR: [
+                { declarerFactionId: factionMembership.factionId },
+                { targetFactionId: factionMembership.factionId },
+              ],
+              declaredAt: { gte: since },
+            },
+            select: {
+              id: true, status: true, declaredAt: true,
+              declarerFaction: { select: { name: true } },
+              targetFaction: { select: { name: true } },
+            },
+            take: 5,
+          })
+        : Promise.resolve([]),
+
+      // Nexuses conquered within 10 tiles of any of your nexuses.
+      nexusIds.length > 0
+        ? prisma.attack.findMany({
+            where: {
+              galaxyId,
+              type: 'attack',
+              status: { in: ['returning', 'completed'] },
+              arrivesAt: { gte: since },
+              result: { path: ['conquered'], equals: true },
+              defenderUserId: { not: req.userId },
+            },
+            select: {
+              defenderNexus: { select: { name: true, x: true, y: true } },
+              attackerNexus: { select: { name: true } },
+            },
+            take: 20,
+          }).then((rows) =>
+            rows.filter((r) => {
+              const tx = r.defenderNexus?.x;
+              const ty = r.defenderNexus?.y;
+              if (tx == null || ty == null) return false;
+              return ownNexuses.some((n) => {
+                const dx = Math.abs(n.x - tx);
+                const dy = Math.abs(n.y - ty);
+                return Math.sqrt(dx * dx + dy * dy) <= 10;
+              });
+            }),
+          )
+        : Promise.resolve([]),
+
+      // Current rank (1-based position by points desc).
+      prisma.galaxyPlayer.count({
+        where: { galaxyId, points: { gt: galaxyPlayer?.points ?? 0 } },
+      }).then((above) => ({ rank: above + 1, points: galaxyPlayer?.points ?? 0 })),
+    ]);
 
     // Completed building upgrades: items in trainingQueue/buildQueue that finished since last visit
     // We proxy this via the attack/report data, buildings that finished show up in nexus state.
@@ -193,7 +260,30 @@ export async function getActivitySummary(req: AuthRequest, res: Response): Promi
       };
     });
 
-    res.json({ attacks, buildings: buildingsDone, troops: troopsDone, since: since.toISOString() });
+    const factionWarsSummary = factionWars.map((w) => ({
+      id: w.id,
+      status: w.status,
+      declaredAt: w.declaredAt,
+      declarerFaction: w.declarerFaction.name,
+      targetFaction: w.targetFaction.name,
+    }));
+
+    const nearbyConquestsSummary = nearbyConquests.map((c) => ({
+      defenderNexus: c.defenderNexus?.name ?? 'Unknown',
+      attackerNexus: c.attackerNexus?.name ?? 'Unknown',
+      x: c.defenderNexus?.x,
+      y: c.defenderNexus?.y,
+    }));
+
+    res.json({
+      attacks,
+      buildings: buildingsDone,
+      troops: troopsDone,
+      factionWars: factionWarsSummary,
+      nearbyConquests: nearbyConquestsSummary,
+      rank: rankRow,
+      since: since.toISOString(),
+    });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'reportController.ts' });
     res.status(500).json({ error: 'Internal server error' });

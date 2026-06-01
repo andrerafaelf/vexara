@@ -1,10 +1,11 @@
 'use client';
 import {
-  Activity, Flag, Globe, LogOut, Menu, Radio, Shield, Swords, Users, X,
+  Activity, BarChart2, Flag, Globe, LogOut, Menu, Radio, Shield, Swords, Users, X,
 } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
 import '../styles/Admin.css';
 import type { AdminFaction, AllUser, Galaxy } from '../types/admin';
+import AnalyticsPage from './pages/AnalyticsPage';
 import BroadcastPage from './pages/BroadcastPage';
 import FactionsPage from './pages/FactionsPage';
 import GalaxiesPage from './pages/GalaxiesPage';
@@ -14,10 +15,11 @@ import ToastStack, { type ToastMessage, mkToastId } from './shared/Toast';
 
 const API = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:3002/api/admin';
 
-type Page = 'overview' | 'galaxies' | 'players' | 'factions' | 'broadcast';
+type Page = 'overview' | 'analytics' | 'galaxies' | 'players' | 'factions' | 'broadcast';
 
 const NAV_ITEMS: { page: Page; label: string; icon: React.ReactNode }[] = [
   { page: 'overview',   label: 'Overview',   icon: <Activity size={15} /> },
+  { page: 'analytics',  label: 'Analytics',  icon: <BarChart2 size={15} /> },
   { page: 'galaxies',   label: 'Galaxies',   icon: <Globe size={15} /> },
   { page: 'players',    label: 'Players',    icon: <Users size={15} /> },
   { page: 'factions',   label: 'Factions',   icon: <Shield size={15} /> },
@@ -26,6 +28,7 @@ const NAV_ITEMS: { page: Page; label: string; icon: React.ReactNode }[] = [
 
 const PAGE_TITLES: Record<Page, string> = {
   overview:  'Overview',
+  analytics: 'Analytics',
   galaxies:  'Galaxies',
   players:   'Players',
   factions:  'Factions',
@@ -199,7 +202,8 @@ export default function AdminShell({ onLogout }: Props) {
         </header>
 
         <div className="shell-content">
-          {page === 'overview'  && <OverviewPage adminFetch={adminFetch} />}
+          {page === 'overview'  && <OverviewPage  adminFetch={adminFetch} />}
+          {page === 'analytics' && <AnalyticsPage adminFetch={adminFetch} />}
           {page === 'galaxies'  && <GalaxiesPage adminFetch={adminFetch} showToast={showToast} />}
           {page === 'players'   && <PlayersPage  adminFetch={adminFetch} showToast={showToast} />}
           {page === 'factions'  && (

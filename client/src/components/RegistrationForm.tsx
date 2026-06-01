@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { register as registerApi } from '../services/api';
+import { register as registerApi, trackReferralClick } from '../services/api';
 import PasswordField from './PasswordField';
 import '../styles/Auth.css';
 
@@ -154,10 +154,15 @@ const RegistrationForm: React.FC = () => {
   }, [isAuthenticated, router]);
 
   // Pre-fill referral code from ?ref= query param so referrers can share links.
+  // Also fire a click event so referrers can see how many users their link brought in.
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const ref = new URLSearchParams(window.location.search).get('ref');
-    if (ref) setReferralCode(ref.toUpperCase().slice(0, 12));
+    if (ref) {
+      const code = ref.toUpperCase().slice(0, 12);
+      setReferralCode(code);
+      void trackReferralClick(code).catch(() => {});
+    }
   }, []);
 
   const touchStartX = useRef<number | null>(null);

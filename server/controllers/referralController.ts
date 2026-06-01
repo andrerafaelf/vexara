@@ -317,10 +317,10 @@ export async function getMyReferralCode(req: AuthRequest, res: Response): Promis
   try {
     const me = await prisma.user.findUnique({
       where: { id: req.userId! },
-      select: { referralCode: true },
+      select: { referralCode: true, referralClickCount: true },
     });
     if (!me) { res.status(404).json({ error: 'User not found' }); return; }
-    res.json({ referralCode: me.referralCode });
+    res.json({ referralCode: me.referralCode, referralClickCount: me.referralClickCount ?? 0 });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'referralController.ts' });
     res.status(500).json({ error: 'Internal server error' });
@@ -374,6 +374,18 @@ export async function getMyReferrer(req: AuthRequest, res: Response): Promise<vo
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'referralController.ts' });
     res.status(500).json({ error: 'Internal server error' });
   }
+}
+
+export async function trackReferralClick(req: { params: { code: string } }, res: Response): Promise<void> {
+  const code = req.params.code?.trim();
+  if (!code) { res.json({ ok: true }); return; }
+  try {
+    await prisma.user.updateMany({
+      where: { referralCode: code },
+      data: { referralClickCount: { increment: 1 } },
+    });
+  } catch { /* best-effort, never surface errors to the client */ }
+  res.json({ ok: true });
 }
 
 export { grantAmountForTroop, TROOP_GRANTS, TROOP_NAMES, BUILDING_NAMES, BUILDING_MAX, TROOP_POPULATION };

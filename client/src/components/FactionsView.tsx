@@ -578,7 +578,7 @@ export default function FactionsView() {
                     <p>Invited by {invite.invitedByUsername}</p>
                   </div>
                   <div className="factions-invite-actions">
-                    <button className="factions-btn-primary" onClick={() => handleAcceptInvite(invite.id)}>Accept</button>
+                    <button className="factions-btn-primary" onClick={() => handleAcceptInvite(invite.id)} data-onboarding="join-faction">Accept</button>
                     <button className="factions-btn-danger" onClick={() => handleDeclineInvite(invite.id)}>Decline</button>
                   </div>
                 </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { Building2, Shield, Swords, Trophy, Users, X } from 'lucide-react';
+import { Building2, MapPin, Shield, Swords, Trophy, Users, X, Zap } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import '../styles/WhileYouWereAway.css';
 import { getActivitySummary } from '../services/api';
@@ -38,10 +38,28 @@ interface TroopSummary {
   count: number;
 }
 
+interface FactionWarSummary {
+  id: number;
+  status: string;
+  declaredAt: string;
+  declarerFaction: string;
+  targetFaction: string;
+}
+
+interface NearbyConquestSummary {
+  defenderNexus: string;
+  attackerNexus: string;
+  x?: number;
+  y?: number;
+}
+
 interface ActivityData {
   attacks: AttackSummary[];
   buildings: BuildingSummary[];
   troops: TroopSummary[];
+  factionWars?: FactionWarSummary[];
+  nearbyConquests?: NearbyConquestSummary[];
+  rank?: { rank: number; points: number };
   since: string;
 }
 
@@ -166,7 +184,14 @@ export default function WhileYouWereAway({ onDismiss }: Props) {
   if (loading) return null;
   if (!data) return null;
 
-  const hasAnything = data.attacks.length > 0 || data.buildings.length > 0 || data.troops.length > 0;
+  const factionWars = data.factionWars ?? [];
+  const nearbyConquests = data.nearbyConquests ?? [];
+  const hasAnything =
+    data.attacks.length > 0 ||
+    data.buildings.length > 0 ||
+    data.troops.length > 0 ||
+    factionWars.length > 0 ||
+    nearbyConquests.length > 0;
   if (!hasAnything) {
     handleDismiss();
     return null;
@@ -254,6 +279,54 @@ export default function WhileYouWereAway({ onDismiss }: Props) {
                   </li>
                 ))}
               </ul>
+            </section>
+          )}
+
+          {factionWars.length > 0 && (
+            <section className="wywa-section">
+              <div className="wywa-section-header">
+                <Zap size={15} />
+                <span>Faction war{factionWars.length !== 1 ? 's' : ''} ({factionWars.length})</span>
+              </div>
+              <ul className="wywa-list">
+                {factionWars.map((w) => (
+                  <li key={w.id} className="wywa-item-row">
+                    <span className="wywa-item-label">{w.declarerFaction} declared war on {w.targetFaction}</span>
+                    <span className={`wywa-result ${w.status === 'active' ? 'wywa-result--loss' : ''}`}>{w.status}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {nearbyConquests.length > 0 && (
+            <section className="wywa-section">
+              <div className="wywa-section-header">
+                <MapPin size={15} />
+                <span>Nearby conquests ({nearbyConquests.length})</span>
+              </div>
+              <ul className="wywa-list">
+                {nearbyConquests.map((c, i) => (
+                  <li key={i} className="wywa-item-row">
+                    <span className="wywa-item-label">{c.defenderNexus} conquered by {c.attackerNexus}</span>
+                    {c.x != null && c.y != null && (
+                      <span className="wywa-item-meta">{c.x}|{c.y}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {data.rank && (
+            <section className="wywa-section wywa-section--rank">
+              <div className="wywa-section-header">
+                <Trophy size={15} />
+                <span>Your rank</span>
+              </div>
+              <p className="wywa-rank-line">
+                #{data.rank.rank} &mdash; {data.rank.points.toLocaleString()} influence
+              </p>
             </section>
           )}
         </div>

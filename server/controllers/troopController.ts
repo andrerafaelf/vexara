@@ -6,7 +6,7 @@ import type { AuthRequest } from '../types/index.js';
 import { getMaxStorage, getResourceProduction } from '../utils/economy.js';
 import { TROOP_COSTS, getCommandTrainingQueueBonus, getEffectiveTrainTimeSeconds, getOverseerCost, getTrainTimeSeconds } from '../utils/gameConstants.js';
 import { parsePositiveInt } from '../utils/validation.js';
-import { logError } from '../utils/logger.js';
+import { logError, logGameEvent } from '../utils/logger.js';
 import { notifyNexusResources } from '../services/warRoomSocket.js';
 
 // Pushes a fresh resource snapshot to the nexus owner. Best-effort: a failed
@@ -183,6 +183,10 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
       void incrementQuestProgress(req.userId, req.galaxyId, 'train_15', parsedAmount);
       void incrementQuestProgress(req.userId, req.galaxyId, 'train_30', parsedAmount);
     } catch {}
+    // Emit first_train only when the training queue was previously empty.
+    if (trainingQueue.length === 0) {
+      logGameEvent('first_train', req.userId, req.galaxyId, { troopType, amount: parsedAmount });
+    }
     res.json({ success: true, completesAt, nexus: serializeNexus(rewardApplied) });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'troopController.ts' });

@@ -7,7 +7,7 @@ import { getPopulationMax } from '../utils/population.js';
 import { NEWBIE_PROTECTION_DURATION_MS, buildRespawnNexusConfig } from '../utils/starterNexus.js';
 import { calculateTroopInfluence, getMaxStorage, getResourceProduction } from '../utils/economy.js';
 import { notifyNexusResources } from '../services/warRoomSocket.js';
-import { logError } from '../utils/logger.js';
+import { logError, logGameEvent } from '../utils/logger.js';
 
 const MAX_NEXUSES_PER_USER = 10;
 
@@ -206,6 +206,7 @@ export async function createNexus(req: AuthRequest, res: Response): Promise<void
       newbieProtectionEndsAt: protectionEndsAt,
     });
 
+    logGameEvent('first_nexus_created', req.userId, req.galaxyId, { nexusId: nexus.id });
     res.json({ ...serializeNexus(nexus), eliminatedRespawn: false });
   } catch (error) {
     logError('unhandled_controller_error', { message: (error as Error).message, file: 'nexusController.ts' });

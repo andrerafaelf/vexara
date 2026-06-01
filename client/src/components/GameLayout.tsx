@@ -4,7 +4,9 @@ import ConnectionStatusBar from '@/components/ConnectionStatusBar';
 import ConqueredModal from '@/components/ConqueredModal';
 import DominanceBar from '@/components/DominanceBar';
 import NewPatchToast from '@/components/NewPatchToast';
+import OnboardingOverlay from '@/components/OnboardingOverlay';
 import TroopMovementsBar from '@/components/TroopMovementsBar';
+import { OnboardingProvider } from '@/context/OnboardingContext';
 import '@/styles/ConnectionStatusBar.css';
 import MobileNexusDrawer from '@/components/MobileNexusDrawer';
 import NexusSidebar from '@/components/NexusSidebar';
@@ -237,6 +239,7 @@ export default function GameLayout({
   }, [activePage]);
 
   return (
+    <OnboardingProvider>
     <div className="game-container">
       <header className="game-header">
         <div className="header-left">
@@ -508,6 +511,8 @@ export default function GameLayout({
           {children}
         </main>
       </div>
+      <OnboardingOverlay />
     </div>
+    </OnboardingProvider>
   );
 }

@@ -7,7 +7,7 @@ import {
   notifyFactionUpdated,
 } from '../services/warRoomSocket.js';
 import type { AuthRequest } from '../types/index.js';
-import { logError } from '../utils/logger.js';
+import { logError, logGameEvent } from '../utils/logger.js';
 import { containsBlockedChatWord } from '../utils/profanity.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
 import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
@@ -283,6 +283,7 @@ export async function createFaction(req: AuthRequest, res: Response): Promise<vo
     ]);
 
     await logEvent(faction.id, 'faction_created', callerUser?.username);
+    logGameEvent('created_faction', req.userId, req.galaxyId, { factionId: faction.id });
 
     res.status(201).json(faction);
   } catch (error) {
@@ -477,6 +478,7 @@ export async function acceptInvite(req: AuthRequest, res: Response): Promise<voi
     ]);
 
     await logEvent(invite.factionId, 'member_joined', joiner?.username);
+    logGameEvent('joined_faction', req.userId, req.galaxyId, { factionId: invite.factionId });
 
     try {
       notifyFactionUpdated(invite.factionId);

@@ -995,3 +995,30 @@ export async function disbandFaction(req: Request, res: Response): Promise<void>
     res.status((error as { status?: number }).status || 500).json({ error: (error as Error).message });
   }
 }
+
+export async function getActivationAnalytics(_req: Request, res: Response): Promise<void> {
+  try {
+    const data = await adminService.getActivationFunnel();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
+export async function getEngagementAnalytics(_req: Request, res: Response): Promise<void> {
+  try {
+    const data = await adminService.getEngagementStats();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
+export async function getReferralAnalytics(_req: Request, res: Response): Promise<void> {
+  try {
+    const data = await adminService.getReferralAnalytics();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}

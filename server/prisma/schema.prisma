@@ -59,6 +59,10 @@ model User {
   lastSeenWarsAt   DateTime?
   lastPlayedAt     DateTime?
 
+  beginnerTipsEnabled Boolean  @default(true)
+  onboardingStep      String?  @db.VarChar(64)
+  referralClickCount  Int      @default(0)
+
   isFlagged        Boolean   @default(false)
   flagReason       String?   @db.VarChar(200)
   flaggedAt        DateTime?
@@ -301,6 +305,7 @@ model Nexus {
   protectionWarningSentAt  DateTime?
   createdAt                DateTime  @default(now())
   conqueredAt              DateTime?
+  rebuildBonusEndsAt       DateTime?
 
   attacksAsAttacker  Attack[]         @relation("AttackerNexus")
   attacksAsDefender  Attack[]         @relation("DefenderNexus")
@@ -811,4 +816,17 @@ model WarOperationMessage {
   operation WarOperation @relation(fields: [operationId], references: [id], onDelete: Cascade)
 
   @@index([operationId, createdAt])
+}
+
+model GameEvent {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  galaxyId  Int?
+  event     String   @db.VarChar(64)
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId, event])
+  @@index([event, createdAt])
+  @@index([galaxyId, event, createdAt])
 }
