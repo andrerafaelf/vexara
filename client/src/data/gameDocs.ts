@@ -110,9 +110,9 @@ export const TROOPS_DOC: TroopDoc[] = [
 		name: 'Breaker Unit',
 		role: 'Mobile assault breacher - counters Armor',
 		description:
-			'Pure attack unit. Cracks armored defensive lines with high damage output but almost no survivability - expect heavy losses.',
+			'Early-game mobile attacker. Decent damage and cheap to produce, but glass-fragile and lightly carries — its job is to soften armored defenders in the opening phase, not anchor a late-game army.',
 		unitClass: 'mobile',
-		stats: { attack: 55, defense: 10, speed: 16, carry: 60 },
+		stats: { attack: 35, defense: 3, speed: 16, carry: 40 },
 		cost: { biomass: 250, alloy: 150, ore: 300, population: 1, time: '2m 40s' },
 		requirements: ['Recruitment Core Lv3', 'Ore Extractor Lv3']
 	},
@@ -187,12 +187,12 @@ export const TROOPS_DOC: TroopDoc[] = [
 	{
 		key: 'voidStalker',
 		name: 'Void Stalker',
-		role: 'Mobile stealth cavalry - counters Armor',
+		role: 'Endgame mobile striker - counters Armor',
 		description:
-			'Fastest unit in the game. A mobile raider that excels at cracking armored defensive lines - nearly no defense, so it relies on speed and shock value.',
+			'Tier-3 fast attacker. The fastest unit in the game and the mobile half of the endgame line - pairs with the Annihilator Platform as the two top-end offensive units. Cracks armored defensive lines at speed; still lightly armored, so use its speed and shock value rather than slugging it out.',
 		unitClass: 'mobile',
-		stats: { attack: 110, defense: 32, speed: 32, carry: 40 },
-		cost: { biomass: 900, alloy: 700, ore: 1100, population: 3, time: '24m 0s' },
+		stats: { attack: 150, defense: 15, speed: 32, carry: 60 },
+		cost: { biomass: 1100, alloy: 900, ore: 1400, population: 4, time: '30m 0s' },
 		requirements: ['Recruitment Core Lv9', 'Alloy Forge Lv8', 'Armory Lv3'],
 		notes: [
 			'Speed 32 - the fastest unit in the roster.',
@@ -203,12 +203,12 @@ export const TROOPS_DOC: TroopDoc[] = [
 	{
 		key: 'siegeMech',
 		name: 'Siege Mech',
-		role: 'Armor siege anchor - counters Fire',
+		role: 'Endgame armor anchor - counters Fire',
 		description:
-			'Towering armored platform built for survival, not offense. Exceptional durability lets it absorb punishment while your fire support does the killing - slow but nearly impossible to dislodge.',
+			'Tier-3 mobile defender. Towering armored platform built for survival, with enough attack to punish anything that crashes into it. Exceptional durability lets it absorb punishment while your fire support does the killing - the field anvil of an endgame army.',
 		unitClass: 'armor',
-		stats: { attack: 80, defense: 210, speed: 10, carry: 20 },
-		cost: { biomass: 1250, alloy: 1000, ore: 2000, population: 4, time: '40m 0s' },
+		stats: { attack: 40, defense: 260, speed: 10, carry: 20 },
+		cost: { biomass: 1250, alloy: 1000, ore: 2000, population: 4, time: '30m 0s' },
 		requirements: ['Recruitment Core Lv10', 'Ore Extractor Lv9', 'Command Core Lv8']
 	},
 	{
@@ -219,7 +219,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 			'Immobile defensive emplacement. Cannot be sent on attacks, transfers, or raids - it always defends the nexus that built it. Decimates mobile forces that try to rush you.',
 		unitClass: 'fire',
 		stats: { attack: 0, defense: 160, speed: 0, carry: 0 },
-		cost: { biomass: 1500, alloy: 1200, ore: 2500, population: 2, time: '50m 0s' },
+		cost: { biomass: 1500, alloy: 1200, ore: 2500, population: 2, time: '45m 0s' },
 		requirements: ['Recruitment Core Lv11', 'Command Core Lv9', 'Armory Lv5'],
 		notes: [
 			'Speed 0 - stripped from any outgoing strike or transfer.',
@@ -229,12 +229,12 @@ export const TROOPS_DOC: TroopDoc[] = [
 	{
 		key: 'annihilatorPlatform',
 		name: 'Annihilator Platform',
-		role: 'Fire artillery - counters Mobile',
+		role: 'Endgame fire artillery - counters Mobile',
 		description:
-			'Top-end fire platform for heavy assaults and sieges. Enormous attack power but lightly armored - protect it with Siege Mechs and Bulwark Guards.',
+			'Tier-3 heavy attacker. Top-end fire platform for heavy assaults and sieges with the highest single-unit attack and carry in the game - protect it with Siege Mechs and Bulwark Guards. The fire half of the endgame line; paired with the Void Stalker, two Annihilators delivers more force than a horde of mass-produced T1 spam.',
 		unitClass: 'fire',
-		stats: { attack: 210, defense: 80, speed: 8, carry: 160 },
-		cost: { biomass: 2000, alloy: 1750, ore: 3000, population: 5, time: '1h 8m' },
+		stats: { attack: 320, defense: 35, speed: 8, carry: 250 },
+		cost: { biomass: 2000, alloy: 1750, ore: 3000, population: 5, time: '40m 0s' },
 		requirements: ['Recruitment Core Lv12', 'Command Core Lv10', 'Shield Grid Lv10']
 	},
 	{

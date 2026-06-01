@@ -15,7 +15,7 @@
 // If "I forgot to bump it" becomes a real pattern, swap to a build step
 // that globs the directory and writes this file. Until then: simpler wins.
 
-export const LATEST_PATCH_VERSION = '0.17';
-export const LATEST_PATCH_LABEL = 'Alpha v0.17';
+export const LATEST_PATCH_VERSION = '0.18';
+export const LATEST_PATCH_LABEL = 'Alpha v0.18';
 export const LATEST_PATCH_HEADLINE =
-	'New onboarding tips for fresh players, an Espionage log in Combat Logs, daily galaxy events firing more often, and a richer While You Were Away summary.';
+	'Full combat rebalance: Breaker spam is no longer the optimal endgame, Tier 3 units (Annihilator, Void Stalker, Siege Mech, Plasma Turret) finally feel apex, and defense actually matters when you win a fight.';

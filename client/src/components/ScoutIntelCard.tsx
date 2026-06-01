@@ -28,18 +28,20 @@ interface ScoutIntelCardProps {
 }
 
 const TROOP_STATS: Record<string, { attack: number; defense: number }> = {
-	lancerDrone: { attack: 15, defense: 25 },
-	assaultTrooper: { attack: 30, defense: 40 },
-	breakerUnit: { attack: 50, defense: 15 },
-	reconOperative: { attack: 5, defense: 20 },
-	skimmerBike: { attack: 80, defense: 70 },
-	siegeMech: { attack: 150, defense: 200 },
-	bulwarkGuard: { attack: 20, defense: 120 },
-	suppressorTeam: { attack: 60, defense: 50 },
-	disruptorUnit: { attack: 70, defense: 60 },
-	interceptorBike: { attack: 90, defense: 80 },
-	annihilatorPlatform: { attack: 200, defense: 150 },
-	overseer: { attack: 0, defense: 30 }
+	lancerDrone: { attack: 3, defense: 22 },
+	assaultTrooper: { attack: 5, defense: 45 },
+	breakerUnit: { attack: 35, defense: 3 },
+	reconOperative: { attack: 1, defense: 20 },
+	skimmerBike: { attack: 80, defense: 10 },
+	siegeMech: { attack: 40, defense: 260 },
+	bulwarkGuard: { attack: 3, defense: 130 },
+	suppressorTeam: { attack: 65, defense: 8 },
+	disruptorUnit: { attack: 75, defense: 9 },
+	interceptorBike: { attack: 95, defense: 13 },
+	voidStalker: { attack: 150, defense: 15 },
+	plasmaTurret: { attack: 0, defense: 160 },
+	annihilatorPlatform: { attack: 320, defense: 35 },
+	overseer: { attack: 0, defense: 8 }
 };
 
 const TROOP_NAMES: Record<string, string> = {

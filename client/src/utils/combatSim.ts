@@ -46,16 +46,16 @@ export const TROOP_CLASS: Record<TroopKey, TroopClass> = {
 export const TROOP_STATS: Record<TroopKey, { attack: number; defense: number; speed: number }> = {
 	lancerDrone: { attack: 3, defense: 22, speed: 20 },
 	assaultTrooper: { attack: 5, defense: 45, speed: 18 },
-	breakerUnit: { attack: 55, defense: 3, speed: 16 },
+	breakerUnit: { attack: 35, defense: 3, speed: 16 },
 	reconOperative: { attack: 1, defense: 20, speed: 25 },
 	skimmerBike: { attack: 80, defense: 10, speed: 22 },
 	bulwarkGuard: { attack: 3, defense: 130, speed: 12 },
 	suppressorTeam: { attack: 65, defense: 8, speed: 15 },
 	disruptorUnit: { attack: 75, defense: 9, speed: 17 },
 	interceptorBike: { attack: 95, defense: 13, speed: 28 },
-	siegeMech: { attack: 20, defense: 210, speed: 10 },
-	annihilatorPlatform: { attack: 210, defense: 20, speed: 8 },
-	voidStalker: { attack: 110, defense: 8, speed: 32 },
+	siegeMech: { attack: 40, defense: 260, speed: 10 },
+	annihilatorPlatform: { attack: 320, defense: 35, speed: 8 },
+	voidStalker: { attack: 150, defense: 15, speed: 32 },
 	plasmaTurret: { attack: 0, defense: 160, speed: 0 },
 	overseer: { attack: 0, defense: 8, speed: 15 }
 };
@@ -75,7 +75,7 @@ export const TROOP_KEYS = Object.keys(TROOP_STATS) as TroopKey[];
 export const TROOP_CARRY: Record<TroopKey, number> = {
 	lancerDrone: 30,
 	assaultTrooper: 60,
-	breakerUnit: 60,
+	breakerUnit: 40,
 	reconOperative: 10,
 	skimmerBike: 80,
 	bulwarkGuard: 25,
@@ -83,8 +83,8 @@ export const TROOP_CARRY: Record<TroopKey, number> = {
 	disruptorUnit: 25,
 	interceptorBike: 100,
 	siegeMech: 20,
-	annihilatorPlatform: 160,
-	voidStalker: 40,
+	annihilatorPlatform: 250,
+	voidStalker: 60,
 	plasmaTurret: 0,
 	overseer: 0
 };
