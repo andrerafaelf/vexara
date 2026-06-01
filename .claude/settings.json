@@ -4,7 +4,21 @@
       "Bash(npx eslint *)",
       "Bash(echo \"\\(eslint exit $?\\)\")",
       "Bash(node --import tsx/esm --test test/*.test.js)",
-      "Bash(xargs -I {} basename {})"
+      "Bash(xargs -I {} basename {})",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\academie\\\\Vexara\" -Force | Select-Object Name, @{Name=\"Type\"; Expression={if\\($_.PSIsContainer\\){\"DIR\"}else{\"FILE\"}}} | Format-Table -AutoSize)",
+      "Bash(cd /mnt/c/academie/Vexara/server && npx prisma migrate dev --name analytics_onboarding_rebuild 2>&1)",
+      "Read(//mnt/c/academie/Vexara/**)",
+      "Bash(Get-ChildItem -Path \"c:\\\\academie\\\\Vexara\" -Recurse -Directory)",
+      "Bash(Select-Object -First 20 FullName)",
+      "Bash(xargs grep -l \"1h 29m\\\\|ETA\\\\|arrivesAt\")",
+      "Bash(./node_modules/.bin/tsc --noEmit)",
+      "PowerShell(cd c:\\\\academie\\\\Vexara\\\\server; ./node_modules/.bin/tsc --noEmit 2>&1 | Where-Object { $_ -match \"logger.ts\" })",
+      "PowerShell(cd c:\\\\academie\\\\Vexara\\\\server; \\(Get-Content node_modules\\\\@zootools\\\\email-spell-checker\\\\package.json | ConvertFrom-Json\\).main)",
+      "PowerShell(cd c:\\\\academie\\\\Vexara\\\\server; \\(Get-Content node_modules\\\\@zootools\\\\email-spell-checker\\\\package.json | ConvertFrom-Json\\) | Select-Object main, module, types, exports | Format-List)",
+      "PowerShell(npm show @types/resend 2>&1)",
+      "PowerShell(npm show @types/socket.io 2>&1)",
+      "PowerShell(npm show @types/aws-sdk 2>&1)",
+      "PowerShell(cd c:\\\\academie\\\\Vexara\\\\server; ./node_modules/.bin/tsc --noEmit 2>&1 | Where-Object { $_ -match \"r2\\\\.ts|emailService|warRoomSocket|validation\" })"
     ]
   }
 }

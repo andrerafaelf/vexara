@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 
 export function logInfo(event: string, meta: Record<string, unknown> = {}): void {
@@ -21,6 +22,6 @@ export function logGameEvent(
   meta?: Record<string, unknown>,
 ): void {
   prisma.gameEvent
-    .create({ data: { event, userId, galaxyId: galaxyId ?? null, meta: meta ?? undefined } })
+    .create({ data: { event, userId, galaxyId: galaxyId ?? null, meta: (meta ?? undefined) as Prisma.InputJsonValue | undefined } })
     .catch((err) => logError('game_event_write_failed', { event, userId, message: (err as Error).message }));
 }

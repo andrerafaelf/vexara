@@ -173,13 +173,15 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
 
     try {
       const { incrementQuestProgress } = await import('../services/dailyStreakService.js');
-      if (!reused && attackType === 'attack') {
-        void incrementQuestProgress(req.userId, req.galaxyId, 'attack_1', 1);
-        void incrementQuestProgress(req.userId, req.galaxyId, 'attack_3', 1);
-      } else if (!reused && attackType === 'support') {
-        void incrementQuestProgress(req.userId, req.galaxyId, 'support_1', 1);
-      }
-      if (!reused) void incrementQuestProgress(req.userId, req.galaxyId, 'login', 1);
+      if (!reused) void (async () => {
+        if (attackType === 'attack') {
+          await incrementQuestProgress(req.userId, req.galaxyId, 'attack_1', 1);
+          await incrementQuestProgress(req.userId, req.galaxyId, 'attack_3', 1);
+        } else if (attackType === 'support') {
+          await incrementQuestProgress(req.userId, req.galaxyId, 'support_1', 1);
+        }
+        await incrementQuestProgress(req.userId, req.galaxyId, 'login', 1);
+      })();
     } catch {}
     if (!reused) {
       if (attackType === 'attack') logGameEvent('first_attack', req.userId, req.galaxyId, { defenderUserId: defenderNexus.ownerId ?? null });

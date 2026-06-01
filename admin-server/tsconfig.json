@@ -4,13 +4,13 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "outDir": "dist",
-    "rootDir": ".",
+    "rootDir": "..",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "declaration": true,
-    "declarationMap": true,
+    "declaration": false,
+    "declarationMap": false,
     "sourceMap": true,
     "paths": {
       "@server/*": ["../server/*"]
@@ -21,6 +21,8 @@
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "../server/node_modules",
+    "../server/dist"
   ]
 }

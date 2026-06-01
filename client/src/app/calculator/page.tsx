@@ -81,12 +81,18 @@ const TROOP_IMAGES: Record<TroopKey, StaticImageData> = {
   overseer: overseerImg,
 };
 
-// Troops grouped by class in display order
-const TROOP_GROUPS: { cls: TroopClass; keys: TroopKey[] }[] = [
+// Attacker units: have ATK > 0, DEF = 0
+const ATTACKER_GROUPS: { cls: TroopClass; keys: TroopKey[] }[] = [
   { cls: 'mobile', keys: ['breakerUnit', 'skimmerBike', 'interceptorBike', 'voidStalker'] },
+  { cls: 'fire',   keys: ['suppressorTeam', 'disruptorUnit', 'annihilatorPlatform'] },
+  { cls: 'special', keys: ['overseer'] },
+];
+
+// Defender units: have DEF > 0, ATK = 0
+const DEFENDER_GROUPS: { cls: TroopClass; keys: TroopKey[] }[] = [
   { cls: 'armor',  keys: ['assaultTrooper', 'bulwarkGuard', 'siegeMech'] },
-  { cls: 'fire',   keys: ['lancerDrone', 'suppressorTeam', 'disruptorUnit', 'annihilatorPlatform', 'plasmaTurret'] },
-  { cls: 'special', keys: ['reconOperative', 'overseer'] },
+  { cls: 'fire',   keys: ['lancerDrone', 'plasmaTurret'] },
+  { cls: 'special', keys: ['reconOperative'] },
 ];
 
 const MARGIN_COPY: Record<string, string> = {
@@ -109,6 +115,7 @@ interface ForceEditorProps {
   label: string;
   side: 'atk' | 'def';
   force: Force;
+  groups: { cls: TroopClass; keys: TroopKey[] }[];
   shieldGrid: number;
   armory: number;
   onChange: (force: Force) => void;
@@ -116,7 +123,7 @@ interface ForceEditorProps {
   onArmoryChange: (v: number) => void;
 }
 
-function ForceEditor({ label, side, force, shieldGrid, armory, onChange, onShieldChange, onArmoryChange }: ForceEditorProps) {
+function ForceEditor({ label, side, force, groups, shieldGrid, armory, onChange, onShieldChange, onArmoryChange }: ForceEditorProps) {
   const [collapsed, setCollapsed] = useState<Record<TroopClass, boolean>>({
     mobile: false, armor: false, fire: false, special: false,
   });
@@ -126,13 +133,14 @@ function ForceEditor({ label, side, force, shieldGrid, armory, onChange, onShiel
     onChange({ ...force, [key]: v });
   };
 
+  const visibleKeys = groups.flatMap((g) => g.keys);
   const setAll = (val: number) => {
-    const next: Force = {};
-    for (const k of TROOP_KEYS) next[k] = val;
+    const next: Force = { ...force };
+    for (const k of visibleKeys) next[k] = val;
     onChange(next);
   };
 
-  const total = TROOP_KEYS.reduce((s, k) => s + (force[k] || 0), 0);
+  const total = visibleKeys.reduce((s, k) => s + (force[k] || 0), 0);
 
   return (
     <div className={`calc-panel calc-panel--${side}`}>
@@ -147,7 +155,7 @@ function ForceEditor({ label, side, force, shieldGrid, armory, onChange, onShiel
         </button>
       </div>
 
-      {TROOP_GROUPS.map(({ cls, keys }) => (
+      {groups.map(({ cls, keys }) => (
         <div key={cls} className="calc-class-group">
           <button
             className="calc-class-header"
@@ -514,6 +522,7 @@ export default function CalculatorPage() {
           label="Attacker"
           side="atk"
           force={atk}
+          groups={ATTACKER_GROUPS}
           shieldGrid={shieldGrid}
           armory={armory}
           onChange={setAtk}
@@ -532,6 +541,7 @@ export default function CalculatorPage() {
           label="Defender"
           side="def"
           force={def}
+          groups={DEFENDER_GROUPS}
           shieldGrid={shieldGrid}
           armory={armory}
           onChange={setDef}

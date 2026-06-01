@@ -679,7 +679,7 @@ export async function getActivationFunnel() {
         }).then((n) => (n > 0 ? 1 : 0)),
       ),
     );
-    const returnedCount = returned.reduce((a, b) => a + b, 0);
+    const returnedCount = returned.reduce<number>((a, b) => a + b, 0);
     return { cohort: cohortUsers.length, returned: returnedCount, rate: cohortUsers.length > 0 ? Math.round((returnedCount / cohortUsers.length) * 100) : 0 };
   }
 

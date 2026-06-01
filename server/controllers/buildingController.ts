@@ -214,8 +214,10 @@ export async function upgradeBuilding(req: AuthRequest, res: Response): Promise<
     }
     try {
       const { incrementQuestProgress } = await import('../services/dailyStreakService.js');
-      void incrementQuestProgress(req.userId, req.galaxyId, 'upgrade_1', 1);
-      void incrementQuestProgress(req.userId, req.galaxyId, 'upgrade_2', 1);
+      void (async () => {
+        await incrementQuestProgress(req.userId, req.galaxyId, 'upgrade_1', 1);
+        await incrementQuestProgress(req.userId, req.galaxyId, 'upgrade_2', 1);
+      })();
     } catch {}
     // Emit first_build only when the queue was previously empty (this is truly the first queued build).
     if (buildQueue.length === 0) {

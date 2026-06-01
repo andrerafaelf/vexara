@@ -179,9 +179,11 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
     catch (e) { logError('nexus_resources_emit_failed', { message: (e as Error).message, file: 'troopController.ts', op: 'trainTroops' }); }
     try {
       const { incrementQuestProgress } = await import('../services/dailyStreakService.js');
-      void incrementQuestProgress(req.userId, req.galaxyId, 'train_5', parsedAmount);
-      void incrementQuestProgress(req.userId, req.galaxyId, 'train_15', parsedAmount);
-      void incrementQuestProgress(req.userId, req.galaxyId, 'train_30', parsedAmount);
+      void (async () => {
+        await incrementQuestProgress(req.userId, req.galaxyId, 'train_5', parsedAmount);
+        await incrementQuestProgress(req.userId, req.galaxyId, 'train_15', parsedAmount);
+        await incrementQuestProgress(req.userId, req.galaxyId, 'train_30', parsedAmount);
+      })();
     } catch {}
     // Emit first_train only when the training queue was previously empty.
     if (trainingQueue.length === 0) {

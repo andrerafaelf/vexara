@@ -916,7 +916,7 @@ const Reports: React.FC<ReportsProps> = ({ nexus, onReadStateChange, factionId, 
                     <div className="report-info">
                       <div className="report-title">
                         {String(m.missionType ?? 'Spy')} on {String(m.targetName ?? 'Unknown')} ({String(m.targetX ?? '?')}|{String(m.targetY ?? '?')})
-                        {m.targetOwnerUsername && <> — <span className="report-opponent">{String(m.targetOwnerUsername)}</span></>}
+                        {(m.targetOwnerUsername as string | null | undefined) && <> — <span className="report-opponent">{String(m.targetOwnerUsername)}</span></>}
                       </div>
                       <div className="report-meta">
                         {String(m.fromNexusName ?? 'Unknown')} · {m.createdAt ? formatDate(String(m.createdAt)) : ''}
