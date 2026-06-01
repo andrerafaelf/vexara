@@ -4,21 +4,48 @@ import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
 import '@/styles/Admin.css';
 
+const ADMIN_API_URL = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:3002/api/admin';
+
 export default function AuthPage() {
 	const router = useRouter();
 	const [username, setUsername] = useState('');
 	const [password, setPassword] = useState('');
+	const [totp, setTotp] = useState('');
 	const [error, setError] = useState('');
+	const [submitting, setSubmitting] = useState(false);
 
-	const handleSubmit = (event: FormEvent) => {
+	const handleSubmit = async (event: FormEvent) => {
 		event.preventDefault();
 		const u = username.trim();
+		const code = totp.replace(/\s+/g, '');
 		if (!u || !password) {
 			setError('Enter username and password');
 			return;
 		}
-		sessionStorage.setItem('admin_basic_auth', btoa(`${u}:${password}`));
-		router.replace('/admin');
+		if (!/^\d{6}$/.test(code)) {
+			setError('Enter the 6-digit code from your authenticator');
+			return;
+		}
+		setSubmitting(true);
+		setError('');
+		try {
+			const res = await fetch(`${ADMIN_API_URL}/auth/login`, {
+				method: 'POST',
+				credentials: 'include',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ username: u, password, totp: code })
+			});
+			if (!res.ok) {
+				const data = await res.json().catch(() => null);
+				setError(data?.error || 'Sign in failed');
+				return;
+			}
+			router.replace('/admin');
+		} catch {
+			setError('Network error');
+		} finally {
+			setSubmitting(false);
+		}
 	};
 
 	return (
@@ -62,14 +89,26 @@ export default function AuthPage() {
 						/>
 					</label>
 
+					<label className="auth-field">
+						<span className="auth-label">2FA code</span>
+						<input
+							value={totp}
+							onChange={(e) => setTotp(e.target.value)}
+							inputMode="numeric"
+							autoComplete="one-time-code"
+							maxLength={6}
+							placeholder="123456"
+						/>
+					</label>
+
 					{error && (
 						<div className="auth-error" role="alert">
 							{error}
 						</div>
 					)}
 
-					<button type="submit" className="auth-submit">
-						Sign in
+					<button type="submit" className="auth-submit" disabled={submitting}>
+						{submitting ? 'Signing in…' : 'Sign in'}
 					</button>
 				</form>
 			</div>

@@ -18,7 +18,9 @@
       "PowerShell(npm show @types/resend 2>&1)",
       "PowerShell(npm show @types/socket.io 2>&1)",
       "PowerShell(npm show @types/aws-sdk 2>&1)",
-      "PowerShell(cd c:\\\\academie\\\\Vexara\\\\server; ./node_modules/.bin/tsc --noEmit 2>&1 | Where-Object { $_ -match \"r2\\\\.ts|emailService|warRoomSocket|validation\" })"
+      "PowerShell(cd c:\\\\academie\\\\Vexara\\\\server; ./node_modules/.bin/tsc --noEmit 2>&1 | Where-Object { $_ -match \"r2\\\\.ts|emailService|warRoomSocket|validation\" })",
+      "Bash(xargs grep -l \"data-onboarding\")",
+      "Bash(xargs grep -l \"create-nexus\\\\|create_nexus\")"
     ]
   }
 }

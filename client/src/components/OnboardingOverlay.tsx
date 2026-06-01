@@ -73,12 +73,8 @@ export default function OnboardingOverlay() {
 		}
 
 		function centerTarget(target: HTMLElement) {
-			const now = Date.now();
-			if (lastScrolledStepRef.current === currentStep?.id && now - lastScrollAtRef.current < 500) {
-				return;
-			}
 			lastScrolledStepRef.current = currentStep?.id ?? null;
-			lastScrollAtRef.current = now;
+			lastScrollAtRef.current = Date.now();
 			target.scrollIntoView({
 				block: 'center',
 				inline: 'center',
@@ -86,10 +82,24 @@ export default function OnboardingOverlay() {
 			});
 		}
 
+		// Only auto-scroll once per step, when it first appears. Re-scrolling on
+		// every layout shift fights the player's manual scroll and feels like the
+		// game is forcing them to a page.
 		if (lastScrolledStepRef.current !== currentStep.id) {
 			const target = getTargetElement(currentStep.targetAttr);
 			if (target) {
-				centerTarget(target);
+				const rect = target.getBoundingClientRect();
+				const offscreen =
+					rect.bottom < 0 ||
+					rect.right < 0 ||
+					rect.top > window.innerHeight ||
+					rect.left > window.innerWidth;
+				if (offscreen) {
+					centerTarget(target);
+				} else {
+					lastScrolledStepRef.current = currentStep.id;
+					lastScrollAtRef.current = Date.now();
+				}
 			}
 		}
 
@@ -117,10 +127,6 @@ export default function OnboardingOverlay() {
 				setTooltipSide(domRect.bottom + 160 > window.innerHeight ? 'top' : 'bottom');
 			} else {
 				setRect(null);
-				const target = currentStep ? getTargetElement(currentStep.targetAttr) : null;
-				if (target) {
-					centerTarget(target);
-				}
 			}
 			rafRef.current = requestAnimationFrame(update);
 		}
@@ -139,8 +145,11 @@ export default function OnboardingOverlay() {
 
 	return (
 		<div className="ob-root" aria-live="polite">
-			{/* Dim overlay with a transparent cutout where the target is */}
-			<div className="ob-backdrop" onClick={dismiss} style={{ background: 'transparent' }}>
+			{/* Dim overlay with a transparent cutout where the target is.
+			    pointer-events: none on both the wrapper and the SVG so the player
+			    can click ANYTHING on the page — including buttons outside the
+			    spotlight. The tutorial is a hint, never a gate. */}
+			<div className="ob-backdrop">
 				<svg className="ob-mask" aria-hidden="true">
 					<defs>
 						<mask id="ob-spotlight-mask">
@@ -155,7 +164,7 @@ export default function OnboardingOverlay() {
 							/>
 						</mask>
 					</defs>
-					<rect width="100%" height="100%" fill="rgba(0,0,0,0.72)" mask="url(#ob-spotlight-mask)" />
+					<rect width="100%" height="100%" fill="rgba(0,0,0,0.55)" mask="url(#ob-spotlight-mask)" />
 				</svg>
 			</div>
 

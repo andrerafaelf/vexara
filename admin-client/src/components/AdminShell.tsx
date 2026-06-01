@@ -62,14 +62,11 @@ export default function AdminShell({ onLogout }: Props) {
 
 	const adminFetch = useCallback(
 		async (url: string, options: RequestInit = {}): Promise<Response> => {
-			const token = sessionStorage.getItem('admin_basic_auth');
 			const headers = new Headers(options.headers || {});
-			if (token) headers.set('Authorization', `Basic ${token}`);
 			if (options.body && !headers.has('Content-Type'))
 				headers.set('Content-Type', 'application/json');
-			const response = await fetch(url, { ...options, headers });
+			const response = await fetch(url, { ...options, headers, credentials: 'include' });
 			if (response.status === 401) {
-				sessionStorage.removeItem('admin_basic_auth');
 				onLogout();
 			}
 			return response;

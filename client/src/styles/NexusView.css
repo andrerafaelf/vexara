@@ -358,9 +358,14 @@
 	scrollbar-width: none;
 	background: var(--bg-app);
 	position: sticky;
-	/* Pin below the 56px sticky .game-header. With top: 0 the tab bar slid
-	   under the header and the tops of the troop cards leaked into the gap. */
-	top: 56px;
+	/* Desktop scroll root is .main-content (overflow-y: auto), so sticky
+	   resolves against the top of .main-content — which already sits flush
+	   under the 56px .game-header. top: 0 pins the tab bar tight to the
+	   header; top: 56px (the previous value) left a 56px gap because the
+	   scroll container's own top edge is already below the header.
+	   The mobile override below uses top: 56px because there .main-content
+	   is overflow: visible and the window is the scroll root. */
+	top: 0;
 	z-index: 10;
 }
 
@@ -4988,7 +4993,13 @@
    Persistent breadcrumb sourced from the active intro-chapter quest. Clicking
    it switches to the relevant tab (or routes to Starfield for map quests). */
 .next-action-chip {
-	display: inline-flex;
+	/* Block-level flex so the chip occupies its own row inside the
+	   non-flex .nexus-header parent. Previously this was inline-flex, which
+	   put it on the same line as the inline-flex .header-resource-strip and
+	   the chip ended up beside the resource pills. */
+	display: flex;
+	width: fit-content;
+	max-width: 100%;
 	align-items: center;
 	gap: 8px;
 	background: var(--success-soft);
@@ -4997,13 +5008,13 @@
 	border-radius: var(--radius-sm);
 	padding: 6px 12px;
 	margin-top: 8px;
+	margin-bottom: var(--space-3);
 	color: var(--text-default);
 	font-size: 13px;
 	cursor: pointer;
 	transition:
 		background var(--duration-fast) var(--ease-out),
 		border-color var(--duration-fast) var(--ease-out);
-	align-self: flex-start;
 }
 
 .next-action-chip:hover {

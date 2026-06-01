@@ -9,16 +9,27 @@ import { startTransition } from 'react';
 import { useStartProgress } from './NavigationProgress';
 import '@/styles/TroopMovementsBar.css';
 
+interface AttackNexus {
+	_id: string;
+	id: string;
+	name?: string;
+	x?: number;
+	y?: number;
+}
+
 interface Attack {
 	_id: string;
 	status: string;
 	arrivesAt: string;
-	attackerNexusId: number;
-	defenderNexusId: number;
-	attackerNexus?: { id: number; name: string; x: number; y: number } | null;
-	defenderNexus?: { id: number; name: string; x: number; y: number } | null;
-	attackerUsername?: string;
 	type?: string;
+	attacker: {
+		user: { _id: string | null; id: string | null; username?: string };
+		nexus: AttackNexus;
+	};
+	defender: {
+		user: { _id: string | null; id: string | null; username?: string };
+		nexus: AttackNexus;
+	};
 }
 
 export default function TroopMovementsBar() {
@@ -36,7 +47,7 @@ export default function TroopMovementsBar() {
 
 	if (incoming.length === 0) return null;
 
-	const goToNexus = (nexusId: number) => {
+	const goToNexus = (nexusId: string) => {
 		startProgress();
 		startTransition(() => router.push(`/nexus/${nexusId}`));
 	};
@@ -50,13 +61,17 @@ export default function TroopMovementsBar() {
 		<div className="troop-movements-bar" role="alert" aria-label="Incoming strikes">
 			{incoming.map((attack) => {
 				const isScout = attack.type === 'scout';
+				const defenderNexus = attack.defender.nexus;
+				const attackerUsername = attack.attacker.user.username;
+				const canShowOnStarfield =
+					typeof defenderNexus.x === 'number' && typeof defenderNexus.y === 'number';
 				return (
 					<button
 						key={`in-${attack._id}`}
 						type="button"
 						className={`tmb-item tmb-item--incoming${isScout ? ' tmb-item--scout' : ''}`}
-						onClick={() => goToNexus(attack.defenderNexusId)}
-						title={`${isScout ? 'Incoming scout' : 'Incoming attack'} on ${attack.defenderNexus?.name ?? 'your nexus'} — click to view nexus`}
+						onClick={() => goToNexus(defenderNexus._id)}
+						title={`${isScout ? 'Incoming scout' : 'Incoming attack'} on ${defenderNexus.name ?? 'your nexus'} — click to view nexus`}
 					>
 						<span className="tmb-pulse" aria-hidden="true" />
 						<span className="tmb-icon" aria-hidden="true">
@@ -64,14 +79,14 @@ export default function TroopMovementsBar() {
 						</span>
 						<span className="tmb-label">
 							<span className="tmb-verb">{isScout ? 'SCOUT' : 'INCOMING'}</span>
-							{attack.attackerUsername && (
+							{attackerUsername && (
 								<span className="tmb-who">
 									{' '}
-									from <strong>{attack.attackerUsername}</strong>
+									from <strong>{attackerUsername}</strong>
 								</span>
 							)}
-							{attack.defenderNexus && (
-								<span className="tmb-target"> → {attack.defenderNexus.name}</span>
+							{defenderNexus.name && (
+								<span className="tmb-target"> → {defenderNexus.name}</span>
 							)}
 						</span>
 						<span className="tmb-countdown">
@@ -79,13 +94,13 @@ export default function TroopMovementsBar() {
 							{' @ '}
 							{formatTimeOfDay(attack.arrivesAt, true)}
 						</span>
-						{attack.defenderNexus && (
+						{canShowOnStarfield && (
 							<button
 								type="button"
 								className="tmb-map-btn"
 								onClick={(e) => {
 									e.stopPropagation();
-									goToStarfield(attack.defenderNexus!.x, attack.defenderNexus!.y);
+									goToStarfield(defenderNexus.x!, defenderNexus.y!);
 								}}
 								title="View on Starfield"
 								aria-label="View on Starfield"

@@ -330,6 +330,9 @@ jobs:
             CORS_ORIGINS=${{ vars.CORS_ORIGINS }}
             ADMIN_USER=${{ secrets.ADMIN_USER }}
             ADMIN_PASS=${{ secrets.ADMIN_PASS }}
+            ADMIN_SESSION_SECRET=${{ secrets.ADMIN_SESSION_SECRET }}
+            ADMIN_TOTP_SECRET=${{ secrets.ADMIN_TOTP_SECRET }}
+            ADMIN_COOKIE_DOMAIN=${{ secrets.ADMIN_COOKIE_DOMAIN }}
             ADMIN_CORS_ORIGINS=${{ vars.ADMIN_CORS_ORIGINS }}
             VAPID_PUBLIC_KEY=${{ secrets.VAPID_PUBLIC_KEY }}
             VAPID_PRIVATE_KEY=${{ secrets.VAPID_PRIVATE_KEY }}

@@ -17,6 +17,10 @@ export interface OnboardingStep {
 	// saw it. This is what stops the "create_nexus" tooltip from popping up
 	// after the user has already created a nexus, etc.
 	isComplete?: (state: OnboardingGameState) => boolean;
+	// Optional gate: when false, the step is suppressed (no tooltip, no auto-
+	// complete) until the prerequisite is met. Stops e.g. "train troops" from
+	// surfacing before the player has built a Recruitment Core.
+	isReady?: (state: OnboardingGameState) => boolean;
 }
 
 // Subset of game state the predicates can read. Kept narrow so the predicates
@@ -42,6 +46,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 		title: 'Upgrade a Building',
 		message:
 			'Upgrade your Command Core first — it unlocks every other building and increases your build queue.',
+		isReady: (s) => s.nexuses.length > 0,
 		isComplete: (s) => s.nexuses.some((n) => (n.buildings?.commandCore ?? 1) >= 2)
 	},
 	{
@@ -50,14 +55,21 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 		title: 'Train Your First Troops',
 		message:
 			'Troops defend your nexus and let you attack others. Queue a few Assault Troopers to get started.',
+		// Only surface this once the player has a Recruitment Core. Without that
+		// building the troop card is locked, so prompting the player to click it
+		// just frustrates them.
+		isReady: (s) =>
+			s.nexuses.some((n) => (n.buildings?.recruitmentCore ?? 0) >= 1),
 		isComplete: (s) =>
 			s.nexuses.some((n) => {
-				const t = n.troops;
-				if (!t) return false;
-				// Any non-starter troop count or anything in the training queue counts.
-				const trained = Object.values(t).reduce<number>((a, b) => a + (Number(b) || 0), 0);
-				const queued = (n.trainingQueue?.length ?? 0) > 0;
-				return trained > 50 || queued;
+				// Already has something in the training queue → done.
+				if ((n.trainingQueue?.length ?? 0) > 0) return true;
+				// Trained an Assault Trooper specifically (counts above the starter
+				// allotment). Starter armies can include up to a few dozen of each;
+				// we want a clear signal the player actively trained, so require a
+				// meaningful jump over the spawn defaults.
+				const at = Number(n.troops?.assaultTrooper ?? 0);
+				return at > 100;
 			})
 	},
 	{
@@ -150,8 +162,14 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 		}
 	}, [ready, enabled, stepIndex, nexuses]);
 
-	const currentStep =
+	const rawStep =
 		ready && enabled && stepIndex !== null ? (ONBOARDING_STEPS[stepIndex] ?? null) : null;
+	// Suppress steps whose prerequisites haven't been met. Returning null from
+	// currentStep tears down the overlay entirely, so the player can play
+	// unimpeded until the gate opens (e.g. they build a Recruitment Core).
+	const gateOpen =
+		rawStep === null || rawStep.isReady === undefined || rawStep.isReady({ nexuses });
+	const currentStep = gateOpen ? rawStep : null;
 
 	const advance = useCallback(() => {
 		if (stepIndex === null) return;
