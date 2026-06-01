@@ -1,3 +1,4 @@
+import { useNow } from '@/hooks/useNow';
 import {
 	AlertTriangle,
 	Building,
@@ -12,14 +13,12 @@ import {
 	Waves,
 	Zap
 } from 'lucide-react';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useOnboarding } from '../context/OnboardingContext';
 import { useToast } from '../context/ToastContext';
 import { useGameSocket } from '../hooks/useGameSocket';
-import WavePlanner from './WavePlanner';
-import Username from './Username';
 import {
 	getGalaxyEvents,
 	getIncomingAttacks,
@@ -29,17 +28,18 @@ import {
 	getNexusInfo,
 	getOutgoingAttacks,
 	markFactionTarget,
-	unmarkFactionTarget,
 	sendAttack,
 	sendTroops,
-	transferResources
+	transferResources,
+	unmarkFactionTarget
 } from '../services/api';
-import { Countdown } from './Countdown';
-import { useNow } from '@/hooks/useNow';
 import '../styles/Map.css';
 import { Nexus } from '../types/game';
 import { formatDateTime, formatTimeOfDay } from '../utils/date';
 import { transferTravelMinutes, travelMinutes } from '../utils/travel';
+import { Countdown } from './Countdown';
+import Username from './Username';
+import WavePlanner from './WavePlanner';
 
 interface GalaxyEvent {
 	id: number;
@@ -1391,15 +1391,18 @@ const Map: React.FC<MapProps> = ({
 										<Shield size={14} aria-hidden="true" /> Support
 									</button>
 								)}
-								{!isConquered && !isNewbieProtected && ownNexuses.length > 1 && (
-									<button
-										className="wave-planner-btn"
-										onClick={() => setShowWavePlanner(true)}
-										title="Open Wave Planner. Coordinate multiple attacks to arrive simultaneously"
-									>
-										<Waves size={14} aria-hidden="true" /> Wave Planner
-									</button>
-								)}
+								{!isConquered &&
+									!isNewbieProtected &&
+									!blockedByMyProtection &&
+									ownNexuses.length > 1 && (
+										<button
+											className="wave-planner-btn"
+											onClick={() => setShowWavePlanner(true)}
+											title="Open Wave Planner. Coordinate multiple attacks to arrive simultaneously"
+										>
+											<Waves size={14} aria-hidden="true" /> Wave Planner
+										</button>
+									)}
 							</div>
 						) : (
 							<div className="attack-form">

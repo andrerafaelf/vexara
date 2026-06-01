@@ -50,6 +50,8 @@ export const TROOP_COSTS: Record<string, TroopCost> = {
 
 export const COST_SCALING = { early: 1.5, mid: 1.65, late: 1.8 };
 export const TIME_SCALING = { early: 1.25, mid: 1.35, late: 1.45 };
+const LIFE_SUPPORT_OLD_MAX_LEVEL = 20;
+const LIFE_SUPPORT_MAX_LEVEL = 25;
 
 export const COMMAND_BUILD_TIME_FACTOR_PER_LEVEL = 0.95;
 export const RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL = 0.91;
@@ -73,10 +75,43 @@ export function getCommandTrainingQueueBonus(commandLevel: number): number {
 	return Math.max(0, Math.min(2, veteran - 2));
 }
 
+function getLifeSupportCostCurveLevel(targetLevel: number): number {
+	return (
+		1 +
+		((Math.max(1, targetLevel) - 1) * (LIFE_SUPPORT_OLD_MAX_LEVEL - 1)) /
+			(LIFE_SUPPORT_MAX_LEVEL - 1)
+	);
+}
+
+function getTieredMultiplier(
+	level: number,
+	scaling: { early: number; mid: number; late: number }
+): number {
+	const earlyLevels = Math.min(Math.max(level - 1, 0), 4);
+	const midLevels = Math.min(Math.max(level - 5, 0), 5);
+	const lateLevels = Math.max(level - 10, 0);
+	return (
+		Math.pow(scaling.early, earlyLevels) *
+		Math.pow(scaling.mid, midLevels) *
+		Math.pow(scaling.late, lateLevels)
+	);
+}
+
 export function getBuildingCost(building: string, currentLevel: number): BuildingCost {
 	const base = BUILDING_COSTS[building];
 	const targetLevel = currentLevel + 1;
 	let { biomass, alloy, ore, time } = base;
+	if (building === 'lifeSupport') {
+		const costCurveLevel = getLifeSupportCostCurveLevel(targetLevel);
+		const costMultiplier = getTieredMultiplier(costCurveLevel, COST_SCALING);
+		const timeMultiplier = getTieredMultiplier(costCurveLevel, TIME_SCALING);
+		return {
+			biomass: Math.floor(biomass * costMultiplier),
+			alloy: Math.floor(alloy * costMultiplier),
+			ore: Math.floor(ore * costMultiplier),
+			time: Math.floor(time * timeMultiplier)
+		};
+	}
 	for (let level = 2; level <= targetLevel; level += 1) {
 		const cm = level <= 5 ? COST_SCALING.early : level <= 10 ? COST_SCALING.mid : COST_SCALING.late;
 		const tm = level <= 5 ? TIME_SCALING.early : level <= 10 ? TIME_SCALING.mid : TIME_SCALING.late;

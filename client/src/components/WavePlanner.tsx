@@ -3,11 +3,11 @@
 import { Clock, Plus, Send, Trash2, X } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useToast } from '../context/ToastContext';
-import { getMyNexuses, sendAttack } from '../services/api';
 import { serverNow } from '../realtime/serverClock';
-import { formatDuration, hasOnlyRecon, travelMinutes } from '../utils/travel';
+import { getMyNexuses, sendAttack } from '../services/api';
 import '../styles/WavePlanner.css';
 import type { Nexus } from '../types/game';
+import { formatDuration, hasOnlyRecon, travelMinutes } from '../utils/travel';
 
 interface TargetNexus {
 	_id: string;
@@ -74,6 +74,7 @@ interface ScheduledWaveRecord {
 	nexusId: string;
 	troops: TroopMap;
 	scheduledLaunchAt: number;
+	onFired: (result: { success: boolean; error?: string }) => void;
 }
 
 const scheduledWaveRecords = new Map<string, ScheduledWaveRecord>();
@@ -125,6 +126,8 @@ function armStoredScheduledWave(record: ScheduledWaveRecord) {
 		const current = scheduledWaveRecords.get(record.id);
 		if (!current) return;
 
+		let success = false;
+		let errorMsg: string | undefined;
 		try {
 			await sendAttack(
 				current.nexusId,
@@ -133,9 +136,17 @@ function armStoredScheduledWave(record: ScheduledWaveRecord) {
 				missionForTroops(current.troops),
 				current.requestId
 			);
+			success = true;
+		} catch (err: any) {
+			errorMsg = err?.response?.data?.error || 'Failed to send wave';
 		} finally {
 			scheduledWaveTimers.delete(current.id);
 			scheduledWaveRecords.delete(current.id);
+			// onFired must run before notifyScheduledWaveSubscribers so that
+			// syncScheduled's filter sees the wave already marked sent/error
+			// (scheduled: false) and keeps it in the wave list rather than
+			// dropping it because it was still flagged as scheduled.
+			current.onFired({ success, error: errorMsg });
 			notifyScheduledWaveSubscribers();
 		}
 	};
@@ -427,7 +438,29 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
 				target,
 				nexusId: nexus._id,
 				troops: wave.troops,
-				scheduledLaunchAt: launchMs
+				scheduledLaunchAt: launchMs,
+				onFired: ({ success, error }) => {
+					if (success) {
+						setWaves((prev) =>
+							prev.map((w) =>
+								w.id !== wave.id
+									? w
+									: { ...w, scheduled: false, scheduledLaunchAt: null, sent: true }
+							)
+						);
+						toast(`Wave from ${nexus.name} launched`, 'success');
+					} else {
+						const msg = error ?? 'Failed to send wave';
+						setWaves((prev) =>
+							prev.map((w) =>
+								w.id !== wave.id
+									? w
+									: { ...w, scheduled: false, scheduledLaunchAt: null, error: msg }
+							)
+						);
+						toast(`Wave from ${nexus.name} failed: ${msg}`, 'error');
+					}
+				}
 			});
 			toast(`Wave from ${nexus.name} scheduled. Launches in ${formatTimeUntil(launchMs)}`, 'info');
 			setWaves((prev) =>

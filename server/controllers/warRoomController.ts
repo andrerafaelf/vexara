@@ -1,14 +1,14 @@
 import type { Response } from 'express';
 import prisma from '../lib/prisma.js';
-import type { AuthRequest, TroopCounts } from '../types/index.js';
-import { logError } from '../utils/logger.js';
-import { containsBlockedChatWord } from '../utils/profanity.js';
+import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
 import {
 	broadcastOperationDeleted,
 	broadcastOperationUpdate,
 	broadcastThreadMessage
 } from '../services/warRoomSocket.js';
-import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
+import type { AuthRequest, TroopCounts } from '../types/index.js';
+import { logError } from '../utils/logger.js';
+import { containsBlockedChatWord } from '../utils/profanity.js';
 
 const NAME_MAX = 64;
 const MESSAGE_MAX = 1000;
@@ -829,7 +829,7 @@ export async function markSlotSent(req: AuthRequest, res: Response): Promise<voi
 			attack.attackerUserId !== req.userId ||
 			attack.attackerNexusId !== slot.fromNexusId ||
 			attack.defenderNexusId !== slot.wave.operation.targetNexusId ||
-			attack.status !== 'traveling'
+			!['traveling', 'returning', 'completed'].includes(attack.status)
 		) {
 			res.status(400).json({ error: 'Attack does not match this wave slot' });
 			return;

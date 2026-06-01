@@ -7,7 +7,7 @@ import {
 	computeLootStolen
 } from '../utils/combatMath.js';
 import { calculatePoints, computeResourceUpdate } from '../utils/economy.js';
-import { getOverseerCost, getOverseerCostMultiplier } from '../utils/gameConstants.js';
+import { getBuildingCost, getOverseerCost, getOverseerCostMultiplier } from '../utils/gameConstants.js';
 import { buildRespawnNexusConfig, RESPAWN_INFLUENCE_FRACTION } from '../utils/starterNexus.js';
 
 test('computeResourceUpdate increases resources over elapsed time', () => {
@@ -37,6 +37,22 @@ test('overseer cost ramps to a 4x cap at 12 owned nexuses', () => {
 		biomass: 720000,
 		alloy: 560000,
 		ore: 480000
+	});
+});
+
+test('life support level 25 cost is rescaled to the old level 20 cap', () => {
+	assert.deepEqual(getBuildingCost('lifeSupport', 24), {
+		biomass: 1768478,
+		alloy: 2210598,
+		ore: 1547418,
+		time: 67465
+	});
+
+	assert.deepEqual(getBuildingCost('lifeSupport', 21), {
+		biomass: 437852,
+		alloy: 547315,
+		ore: 383120,
+		time: 27914
 	});
 });
 
