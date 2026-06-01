@@ -1573,7 +1573,15 @@ const Map: React.FC<MapProps> = ({
 															setTroopSendAmounts((a) => ({ ...a, [type]: e.target.value }))
 														}
 													/>
-													<span className="transfer-available">/ {count}</span>
+													<span
+														className={`transfer-available${Number(count) > 0 ? ' troop-available-clickable' : ''}`}
+														onClick={() => {
+															if (Number(count) > 0)
+																setTroopSendAmounts((a) => ({ ...a, [type]: String(count) }));
+														}}
+													>
+														/ {count}
+													</span>
 												</div>
 											))}
 										{Object.values(currentNexus.troops as Record<string, number>).every(

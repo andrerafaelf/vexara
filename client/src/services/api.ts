@@ -218,6 +218,12 @@ export const cancelTrainingQueueItem = (nexusId: string, index: number) =>
 		body: JSON.stringify({ nexusId, index })
 	});
 
+export const destroyTroops = (nexusId: string, troopType: string, amount: number) =>
+	apiRequest('/troop/destroy', {
+		method: 'POST',
+		body: JSON.stringify({ nexusId, troopType, amount })
+	});
+
 // Map
 export const getMapArea = (x: number, y: number) => apiRequest(`/map/area/${x}/${y}`);
 

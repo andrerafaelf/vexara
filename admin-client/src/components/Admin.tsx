@@ -45,6 +45,9 @@ const Admin: React.FC = () => {
 	const [addUserModal, setAddUserModal] = useState<AddUserModal>(null);
 	const [addUserForm, setAddUserForm] = useState({ username: '', email: '', password: '' });
 
+	// Global maintenance: force a populationCurrent recount across all nexuses
+	const [recounting, setRecounting] = useState(false);
+
 	useEffect(() => {
 		const id = setInterval(() => setCurrentTime(new Date()), 1000);
 		return () => clearInterval(id);
@@ -203,6 +206,32 @@ const Admin: React.FC = () => {
 		}
 	};
 
+	const handleRecountPopulation = async () => {
+		if (recounting) return;
+		if (
+			!window.confirm(
+				'Force a population recount across ALL nexuses in every galaxy? This recomputes populationCurrent from troops, training queues, in-flight attacks and transfers.'
+			)
+		)
+			return;
+		setRecounting(true);
+		try {
+			const res = await adminFetch(`${ADMIN_API_URL}/maintenance/recount-population`, {
+				method: 'POST'
+			});
+			const data = await res.json().catch(() => null);
+			if (!res.ok) {
+				showToast(data?.error || 'Recount failed', 'error');
+				return;
+			}
+			showToast(data?.message || 'Population recounted', 'success');
+		} catch {
+			showToast('Error running recount', 'error');
+		} finally {
+			setRecounting(false);
+		}
+	};
+
 	if (loading) return <div className="loading">Loading admin panel…</div>;
 
 	return (
@@ -254,9 +283,19 @@ const Admin: React.FC = () => {
 						</button>
 					</div>
 				</div>
-				<button className="btn-primary" onClick={() => setAddUserModal({ open: true })}>
-					+ Add User
-				</button>
+				<div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+					<button
+						className="btn-secondary"
+						onClick={handleRecountPopulation}
+						disabled={recounting}
+						title="Recompute populationCurrent for every nexus across all galaxies"
+					>
+						{recounting ? 'Recounting…' : 'Recount Population'}
+					</button>
+					<button className="btn-primary" onClick={() => setAddUserModal({ open: true })}>
+						+ Add User
+					</button>
+				</div>
 			</div>
 
 			{/* Tab content */}

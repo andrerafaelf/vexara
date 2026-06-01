@@ -21,7 +21,7 @@ import {
 	notifyFactionUpdated
 } from '../services/warRoomSocket.js';
 import { getNexusTypeEffectiveMultipliers } from './economy.js';
-import { getPopulationMax } from './population.js';
+import { computeNexusPopulation, getPopulationMax, loadAwayPopulation } from './population.js';
 import type { TroopKey } from '../types/index.js';
 import { logInfo, logWarn } from './logger.js';
 
@@ -87,19 +87,29 @@ async function freePopulationForDestroyedTroops(
 	const populationFreed = troopPopulationCost(troops);
 	if (populationFreed <= 0) return;
 
-	const nexus = await prisma.nexus.findUnique({
-		where: { id: nexusId },
-		select: { populationCurrent: true }
-	});
+	const nexus = await prisma.nexus.findUnique({ where: { id: nexusId } });
 	if (!nexus) return;
+
+	// Recompute from the post-mutation state rather than subtracting the freed
+	// cost. By now the destroyed troops are already gone from their transfer/
+	// attack row, so reading the nexus's troops + queue + remaining away-pop via
+	// computeNexusPopulation yields the authoritative value and can't drift.
+	const away = await loadAwayPopulation(prisma, nexusId);
+	const populationCurrent = computeNexusPopulation({
+		troops: nexus as unknown as Record<string, unknown>,
+		trainingQueue: nexus.trainingQueue,
+		populationMax: nexus.populationMax,
+		...away
+	});
 
 	await prisma.nexus.update({
 		where: { id: nexusId },
-		data: { populationCurrent: Math.max(0, nexus.populationCurrent - populationFreed) }
+		data: { populationCurrent }
 	});
 	logInfo('destroyed_troops_population_freed', {
 		nexusId,
 		populationFreed,
+		populationCurrent,
 		...context
 	});
 }
@@ -532,8 +542,9 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 		const defenderLosses: Partial<Record<TroopKey, number>> = {};
 		const defenderTroopUpdates: Record<string, unknown> = {};
 
-		// Clamp losses to actual troops present; split between garrison and support
-		let defenderPopLost = 0;
+		// Clamp losses to actual troops present; split between garrison and support.
+		// Population freed by these losses is captured by the recompute that reads
+		// defenderTroopUpdates below - no running delta needed.
 		for (const troopType of TROOP_KEYS) {
 			if (troopType === 'overseer') continue;
 			const totalInForce = mergedDefenderForce[troopType] || 0;
@@ -543,7 +554,6 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 			const garrisonCount = (defenderNexus as unknown as Record<TroopKey, number>)[troopType] || 0;
 			const garrisonLoss = Math.min(rawLoss, garrisonCount);
 			defenderTroopUpdates[troopType] = Math.max(0, garrisonCount - garrisonLoss);
-			defenderPopLost += garrisonLoss * (TROOP_POPULATION_COST[troopType] ?? 1);
 		}
 
 		// Overseer: destroyed only if all escort is wiped
@@ -579,7 +589,6 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 			if (attackerWins && totalDefenderNonOverseerLost >= totalDefenderNonOverseer) {
 				defenderLosses.overseer = defenderOverseerCount;
 				defenderTroopUpdates['overseer'] = 0;
-				defenderPopLost += garrisonOverseerCount * (TROOP_POPULATION_COST.overseer ?? 5);
 			} else {
 				defenderTroopUpdates['overseer'] = garrisonOverseerCount;
 			}
@@ -979,10 +988,16 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 			damagedCC !== undefined && damagedCC < 15 && nexusTypeDoubled && !nexusTypeLockedAt;
 		const nextPopulationMax =
 			(buildingDamageUpdates['populationMax'] as number | undefined) ?? defenderNexus.populationMax;
-		const nextPopulationCurrent = Math.min(
-			nextPopulationMax,
-			Math.max(0, defenderNexus.populationCurrent - defenderPopLost)
-		);
+		// Recompute from the post-combat troop columns (defenderTroopUpdates already
+		// holds the survivors) + queue + away-pop, capped at the possibly-reduced
+		// max, instead of subtracting defenderPopLost from the stored value.
+		const defenderAway = await loadAwayPopulation(prisma, defenderNexus.id);
+		const nextPopulationCurrent = computeNexusPopulation({
+			troops: { ...(defenderNexus as unknown as Record<string, unknown>), ...defenderTroopUpdates },
+			trainingQueue: defenderNexus.trainingQueue,
+			populationMax: nextPopulationMax,
+			...defenderAway
+		});
 
 		const defenderUpdate = prisma.nexus.update({
 			where: { id: defenderNexus.id },
@@ -1035,21 +1050,11 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 		}
 
 		const survivingTroops: Partial<Record<TroopKey, number>> = {};
-		let attackerPopFreed = 0;
 		for (const troopType of TROOP_KEYS) {
 			const sent = attackTroops[troopType] || 0;
 			const lost = attackerLosses[troopType] || 0;
 			const survived = Math.max(0, sent - lost);
 			if (survived > 0) survivingTroops[troopType] = survived;
-			attackerPopFreed += lost * (TROOP_POPULATION_COST[troopType] || 1);
-		}
-
-		const attackerNexus = await prisma.nexus.findUnique({ where: { id: attack.attackerNexusId! } });
-		if (attackerNexus && attackerPopFreed > 0) {
-			await prisma.nexus.update({
-				where: { id: attack.attackerNexusId! },
-				data: { populationCurrent: Math.max(0, attackerNexus.populationCurrent - attackerPopFreed) }
-			});
 		}
 
 		const travelMs = attack.arrivesAt!.getTime() - attack.createdAt.getTime();
@@ -1151,6 +1156,32 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 			}
 		});
 
+		// Reconcile the attacker's housing now that losses are final. Recompute from
+		// the nexus's own troops + queue + still-away pop rather than subtracting the
+		// dead. Survivors of a 'returning' attack live on no counted row yet (the
+		// attack row is 'returning', loadAwayPopulation only counts 'traveling'), so
+		// pass them as extraTroops; processReturnedTroops recomputes again on landing.
+		// For 'completed' (conquest / no survivors) survivors are either in a
+		// stationed transfer (already counted) or gone, so no extra is owed.
+		const attackerNexus = await prisma.nexus.findUnique({
+			where: { id: attack.attackerNexusId! }
+		});
+		if (attackerNexus) {
+			const attackerAway = await loadAwayPopulation(prisma, attack.attackerNexusId!);
+			await prisma.nexus.update({
+				where: { id: attack.attackerNexusId! },
+				data: {
+					populationCurrent: computeNexusPopulation({
+						troops: attackerNexus as unknown as Record<string, unknown>,
+						trainingQueue: attackerNexus.trainingQueue,
+						populationMax: attackerNexus.populationMax,
+						...attackerAway,
+						extraTroops: resolvedStatus === 'returning' ? survivingTroops : undefined
+					})
+				}
+			});
+		}
+
 		const [attackerNexusForNotif, defenderNexusForNotif] = await Promise.all([
 			prisma.nexus.findUnique({ where: { id: attack.attackerNexusId! }, select: { name: true } }),
 			prisma.nexus.findUnique({
@@ -1244,6 +1275,18 @@ async function processReturnedTroops(attack: Attack): Promise<void> {
 		returnData['biomass'] = attackerNexus.biomass + (resourcesStolen.biomass || 0);
 		returnData['alloy'] = attackerNexus.alloy + (resourcesStolen.alloy || 0);
 		returnData['ore'] = attackerNexus.ore + (resourcesStolen.ore || 0);
+
+		// Survivors are now back on the troop columns and this attack row is about to
+		// be 'completed' (no longer counted as away). Recompute housing from the
+		// post-landing state so the brief 'returning' window - where survivors lived
+		// on no counted row - is reconciled exactly once, with no drift.
+		const returnAway = await loadAwayPopulation(prisma, attack.attackerNexusId!);
+		returnData['populationCurrent'] = computeNexusPopulation({
+			troops: { ...(attackerNexus as unknown as Record<string, unknown>), ...returnData },
+			trainingQueue: attackerNexus.trainingQueue,
+			populationMax: attackerNexus.populationMax,
+			...returnAway
+		});
 
 		await prisma.$transaction([
 			prisma.nexus.update({ where: { id: attack.attackerNexusId! }, data: returnData }),

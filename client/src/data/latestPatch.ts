@@ -15,7 +15,7 @@
 // If "I forgot to bump it" becomes a real pattern, swap to a build step
 // that globs the directory and writes this file. Until then: simpler wins.
 
-export const LATEST_PATCH_VERSION = '0.18';
-export const LATEST_PATCH_LABEL = 'Alpha v0.18';
+export const LATEST_PATCH_VERSION = '0.18.1';
+export const LATEST_PATCH_LABEL = 'Alpha v0.18.1';
 export const LATEST_PATCH_HEADLINE =
-	'Full combat rebalance: Breaker spam is no longer the optimal endgame, Tier 3 units (Annihilator, Void Stalker, Siege Mech, Plasma Turret) finally feel apex, and defense actually matters when you win a fight.';
+	'Tier 3 tuning, Life Support to level 25, troop disbanding, troop movements bar restyle, and click-to-fill on Send Troops.';

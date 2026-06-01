@@ -9,6 +9,7 @@ import type { BuildQueueEntry } from '../models/Nexus.js';
 import prisma from '../lib/prisma.js';
 import * as referralService from '../services/referralService.js';
 import type { AuthRequest } from '../types/index.js';
+import { computeNexusPopulation, loadAwayPopulation } from '../utils/population.js';
 import { logError } from '../utils/logger.js';
 import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
 
@@ -53,7 +54,7 @@ const BUILDINGS = [
 const BUILDING_MAX: Record<string, number> = {
 	commandCore: 20,
 	recruitmentCore: 15,
-	lifeSupport: 20,
+	lifeSupport: 25,
 	storageVault: 20,
 	biomassFarm: 20,
 	alloyForge: 20,
@@ -276,11 +277,19 @@ export async function redeemToken(req: AuthRequest, res: Response): Promise<void
 			}
 
 			const currentTroops = (nexus as unknown as Record<string, number>)[troopType] ?? 0;
+			const grantAway = await loadAwayPopulation(prisma, nexus.id);
 			const updated = await prisma.nexus.update({
 				where: { id: nexus.id },
 				data: {
 					[troopType]: currentTroops + actualGrant,
-					populationCurrent: popCurrent + actualGrant * popPerUnit
+					// Recompute from the post-grant troop columns rather than adding a
+					// delta - also self-heals the row if it was already drifted.
+					populationCurrent: computeNexusPopulation({
+						troops: { ...(nexus as unknown as Record<string, unknown>), [troopType]: currentTroops + actualGrant },
+						trainingQueue: nexus.trainingQueue,
+						populationMax: popMax,
+						...grantAway
+					})
 				}
 			});
 
@@ -415,11 +424,19 @@ export async function redeemMilestoneToken(req: AuthRequest, res: Response): Pro
 				return;
 			}
 			const currentTroops = (nexus as unknown as Record<string, number>)[troopType] ?? 0;
+			const grantAway = await loadAwayPopulation(prisma, nexus.id);
 			const updated = await prisma.nexus.update({
 				where: { id: nexus.id },
 				data: {
 					[troopType]: currentTroops + actualGrant,
-					populationCurrent: popCurrent + actualGrant * popPerUnit
+					// Recompute from the post-grant troop columns rather than adding a
+					// delta - also self-heals the row if it was already drifted.
+					populationCurrent: computeNexusPopulation({
+						troops: { ...(nexus as unknown as Record<string, unknown>), [troopType]: currentTroops + actualGrant },
+						trainingQueue: nexus.trainingQueue,
+						populationMax: popMax,
+						...grantAway
+					})
 				}
 			});
 			await referralService.markMilestoneTokenRedeemed(tokenId, 'troop_grant', {

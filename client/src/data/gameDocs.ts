@@ -194,7 +194,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 			'Tier-3 fast attacker. The fastest unit in the game and the mobile half of the endgame line - pairs with the Annihilator Platform as the two top-end offensive units. Cracks armored defensive lines at speed; still lightly armored, so use its speed and shock value rather than slugging it out.',
 		unitClass: 'mobile',
 		stats: { attack: 150, defense: 15, speed: 32, carry: 60 },
-		cost: { biomass: 1100, alloy: 900, ore: 1400, population: 4, time: '30m 0s' },
+		cost: { biomass: 1100, alloy: 900, ore: 1400, population: 3, time: '27m 0s' },
 		requirements: ['Recruitment Core Lv9', 'Alloy Forge Lv8', 'Armory Lv3'],
 		notes: [
 			'Speed 32 - the fastest unit in the roster.',
@@ -236,7 +236,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 			'Tier-3 heavy attacker. Top-end fire platform for heavy assaults and sieges with the highest single-unit attack and carry in the game - protect it with Siege Mechs and Bulwark Guards. The fire half of the endgame line; paired with the Void Stalker, two Annihilators delivers more force than a horde of mass-produced T1 spam.',
 		unitClass: 'fire',
 		stats: { attack: 320, defense: 35, speed: 8, carry: 250 },
-		cost: { biomass: 2000, alloy: 1750, ore: 3000, population: 5, time: '40m 0s' },
+		cost: { biomass: 2000, alloy: 1750, ore: 3000, population: 4, time: '40m 0s' },
 		requirements: ['Recruitment Core Lv12', 'Command Core Lv10', 'Shield Grid Lv10']
 	},
 	{
@@ -308,13 +308,13 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		role: 'Population capacity building',
 		description: 'Increases maximum population to support larger armies.',
 		baseCost: { biomass: 80, alloy: 100, ore: 70, timeSeconds: 150 },
-		maxLevel: 20,
+		maxLevel: 25,
 		unlock: 'Command Core Lv2',
 		milestones: [
 			{ level: 4, requires: ['Biomass Farm Lv2'] },
 			{ level: 8, requires: ['Storage Vault Lv4'] }
 		],
-		impact: ['Population max formula: floor(100 * 1.15^level).']
+		impact: ['Population max formula: floor(100 * 1.19^level).']
 	},
 	{
 		key: 'storageVault',

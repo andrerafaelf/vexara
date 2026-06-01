@@ -72,9 +72,15 @@ export async function sendGalaxyLiveBroadcast(req: Request, res: Response): Prom
 	}
 }
 import type { Request, Response } from 'express';
+import prisma from '../../server/lib/prisma.js';
 import { serializeNexus } from '../../server/models/Nexus.js';
 import { processArrivedAttacks } from '../../server/utils/combat.js';
-import { getPopulationMax } from '../../server/utils/population.js';
+import {
+	computeNexusPopulation,
+	getPopulationMax,
+	loadAwayPopulation,
+	recountAllPopulation
+} from '../../server/utils/population.js';
 import { NOTIF, sendPushToUser } from '../../server/utils/push.js';
 import * as adminService from '../services/adminService.js';
 
@@ -414,10 +420,17 @@ export async function addTroopsToUser(req: Request, res: Response): Promise<void
 		const nexusRecord = nexus as unknown as Record<string, number>;
 		const current = nexusRecord[troopType] || 0;
 		const next = Math.max(0, current + amount);
-		const delta = next - current;
+		// Recompute housing from the post-change troop columns rather than nudging
+		// by the delta - also self-heals the row if it was already drifted.
+		const away = await loadAwayPopulation(prisma, nexus.id);
 		const updated = await adminService.updateNexus(nexus.id, {
 			[troopType]: next,
-			populationCurrent: Math.max(0, nexus.populationCurrent + delta)
+			populationCurrent: computeNexusPopulation({
+				troops: { ...nexusRecord, [troopType]: next },
+				trainingQueue: nexus.trainingQueue,
+				populationMax: nexus.populationMax,
+				...away
+			})
 		});
 		res.json({ success: true, nexus: serializeNexus(updated) });
 	} catch (error) {
@@ -449,6 +462,22 @@ export async function setBuildingForUser(req: Request, res: Response): Promise<v
 		}
 		const updated = await adminService.updateNexus(nexus.id, data);
 		res.json({ success: true, nexus: serializeNexus(updated) });
+	} catch (error) {
+		res.status(500).json({ error: (error as Error).message });
+	}
+}
+
+// Recompute populationCurrent for every nexus across all galaxies from first
+// principles (stationed + queued + in-flight + transfers). Heals nexuses whose
+// stored count drifted - e.g. after a training queue was cleared out of band.
+export async function recountPopulation(_req: Request, res: Response): Promise<void> {
+	try {
+		const result = await recountAllPopulation(prisma);
+		res.json({
+			success: true,
+			message: `Recounted ${result.scanned} nexuses, corrected ${result.corrected}.`,
+			...result
+		});
 	} catch (error) {
 		res.status(500).json({ error: (error as Error).message });
 	}
@@ -540,17 +569,25 @@ export async function completeTrainingForUser(req: Request, res: Response): Prom
 		}
 		const nexusRecord = nexus as unknown as Record<string, number>;
 		const troopUpdates: Record<string, number> = {};
-		let totalPop = 0;
 		for (const t of queue) {
 			const amount = adminService.toInt(t.amount);
 			if (amount <= 0) continue;
 			troopUpdates[t.troopType] =
 				(troopUpdates[t.troopType] || nexusRecord[t.troopType] || 0) + amount;
-			totalPop += amount;
 		}
+		// Move queued troops onto the columns and clear the queue, then recompute.
+		// The queued troops were already committed to populationCurrent, so the old
+		// "+ totalPop" delta double-counted (and mis-weighted multi-pop units); the
+		// recompute from the post-state troops + empty queue is exactly right.
+		const away = await loadAwayPopulation(prisma, nexus.id);
 		const updated = await adminService.updateNexus(nexus.id, {
 			...troopUpdates,
-			populationCurrent: nexus.populationCurrent + totalPop,
+			populationCurrent: computeNexusPopulation({
+				troops: { ...nexusRecord, ...troopUpdates },
+				trainingQueue: [],
+				populationMax: nexus.populationMax,
+				...away
+			}),
 			trainingQueue: []
 		});
 		res.json({ success: true, nexus: serializeNexus(updated) });
@@ -639,22 +676,7 @@ export async function addTroopsToNexus(req: Request, res: Response): Promise<voi
 			res.status(404).json({ error: 'Nexus not found' });
 			return;
 		}
-		const troopsAdded =
-			lancerDrone +
-			assaultTrooper +
-			breakerUnit +
-			reconOperative +
-			skimmerBike +
-			siegeMech +
-			bulwarkGuard +
-			suppressorTeam +
-			disruptorUnit +
-			interceptorBike +
-			voidStalker +
-			plasmaTurret +
-			annihilatorPlatform +
-			overseer;
-		const updated = await adminService.updateNexus(nexus.id, {
+		const troopUpdates = {
 			lancerDrone: nexus.lancerDrone + lancerDrone,
 			assaultTrooper: nexus.assaultTrooper + assaultTrooper,
 			breakerUnit: nexus.breakerUnit + breakerUnit,
@@ -668,8 +690,19 @@ export async function addTroopsToNexus(req: Request, res: Response): Promise<voi
 			voidStalker: nexus.voidStalker + voidStalker,
 			plasmaTurret: nexus.plasmaTurret + plasmaTurret,
 			annihilatorPlatform: nexus.annihilatorPlatform + annihilatorPlatform,
-			overseer: nexus.overseer + overseer,
-			populationCurrent: nexus.populationCurrent + troopsAdded
+			overseer: nexus.overseer + overseer
+		};
+		// Recompute from the post-add troop columns rather than "+ troopsAdded"
+		// (which assumed 1 pop/unit and mis-weighted multi-pop units).
+		const away = await loadAwayPopulation(prisma, nexus.id);
+		const updated = await adminService.updateNexus(nexus.id, {
+			...troopUpdates,
+			populationCurrent: computeNexusPopulation({
+				troops: { ...(nexus as unknown as Record<string, unknown>), ...troopUpdates },
+				trainingQueue: nexus.trainingQueue,
+				populationMax: nexus.populationMax,
+				...away
+			})
 		});
 		res.json({ success: true, nexus: serializeNexus(updated) });
 	} catch (error) {
@@ -758,17 +791,25 @@ export async function completeTrainingForNexus(req: Request, res: Response): Pro
 		}
 		const nexusRecord = nexus as unknown as Record<string, number>;
 		const troopUpdates: Record<string, number> = {};
-		let totalPop = 0;
 		for (const t of queue) {
 			const amount = adminService.toInt(t.amount);
 			if (amount <= 0) continue;
 			troopUpdates[t.troopType] =
 				(troopUpdates[t.troopType] || nexusRecord[t.troopType] || 0) + amount;
-			totalPop += amount;
 		}
+		// Move queued troops onto the columns and clear the queue, then recompute.
+		// The queued troops were already committed to populationCurrent, so the old
+		// "+ totalPop" delta double-counted (and mis-weighted multi-pop units); the
+		// recompute from the post-state troops + empty queue is exactly right.
+		const away = await loadAwayPopulation(prisma, nexus.id);
 		const updated = await adminService.updateNexus(nexus.id, {
 			...troopUpdates,
-			populationCurrent: nexus.populationCurrent + totalPop,
+			populationCurrent: computeNexusPopulation({
+				troops: { ...nexusRecord, ...troopUpdates },
+				trainingQueue: [],
+				populationMax: nexus.populationMax,
+				...away
+			}),
 			trainingQueue: []
 		});
 		res.json({ success: true, nexus: serializeNexus(updated) });

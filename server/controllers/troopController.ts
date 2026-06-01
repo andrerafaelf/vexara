@@ -20,6 +20,7 @@ import {
 	getTrainTimeSeconds
 } from '../utils/gameConstants.js';
 import { parsePositiveInt } from '../utils/validation.js';
+import { computeNexusPopulation } from '../utils/population.js';
 import { logError, logGameEvent } from '../utils/logger.js';
 import { notifyNexusResources } from '../services/warRoomSocket.js';
 
@@ -301,7 +302,15 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
 				biomass: current.biomass - totalCost.biomass,
 				alloy: current.alloy - totalCost.alloy,
 				ore: current.ore - totalCost.ore,
-				populationCurrent: committedPopulation + totalCost.population,
+				// newQueue already includes the batch being trained, so the recompute
+				// captures the new commitment without re-adding totalCost by hand.
+				populationCurrent: computeNexusPopulation({
+					troops: nexus as unknown as Record<string, unknown>,
+					trainingQueue: newQueue,
+					populationMax: nexus.populationMax,
+					inFlightPopulation,
+					transferPopulation
+				}),
 				trainingQueue: queueToJson(newQueue)
 			});
 		} catch (e) {
@@ -423,8 +432,6 @@ export async function cancelTrainingQueue(req: AuthRequest, res: Response): Prom
 		);
 
 		let refund = { biomass: 0, alloy: 0, ore: 0 };
-		let refundedItem: { troopType: string; amount: number; completesAt: string | Date } | null =
-			null;
 		let newQueue = trainingQueue.slice() as Array<{
 			troopType: string;
 			amount: number;
@@ -438,7 +445,6 @@ export async function cancelTrainingQueue(req: AuthRequest, res: Response): Prom
 				completesAt: string | Date;
 				perUnitCost?: { biomass: number; alloy: number; ore: number };
 			};
-			refundedItem = item;
 			const baseTroopCost = TROOP_COSTS[item.troopType];
 			if (!baseTroopCost) {
 				res.status(400).json({ error: 'Invalid troop type in queue' });
@@ -488,13 +494,6 @@ export async function cancelTrainingQueue(req: AuthRequest, res: Response): Prom
 			}
 		}
 
-		// Population freed = refunded (uncompleted) units' cost only. Partial-credited
-		// units stay alive on the nexus and continue to occupy population, so the
-		// delta is just the cancelled remainder, not the original queue amount.
-		const refundedPopulation = refundedItem
-			? (TROOP_COSTS[refundedItem.troopType]?.population ?? 0) * refundedItem.amount
-			: 0;
-
 		// Apply trained delta to the nexus troop counts so partial-credit units
 		// actually appear on the row before the refund/dequeue write lands.
 		const troopUpdates: Record<string, number> = {};
@@ -505,13 +504,27 @@ export async function cancelTrainingQueue(req: AuthRequest, res: Response): Prom
 
 		const resourceUpdate = computeResourceUpdate(nexus);
 		const current = { ...nexus, ...resourceUpdate } as unknown as Record<string, number>;
+		// Recompute populationCurrent from the post-mutation state (troops with the
+		// trained-credit delta applied + the trimmed queue + troops still away on
+		// attacks/transfers) rather than nudging by refundedPopulation. Keeps the
+		// stored value structurally in sync - see computeNexusPopulation.
+		const [refundInFlight, refundTransfers] = await Promise.all([
+			troopService.getInFlightTroops(nexus.id),
+			troopService.getOutboundTransferTroops(nexus.id)
+		]);
 		const dataUpdate: Record<string, unknown> = {
 			...resourceUpdate,
 			...troopUpdates,
 			biomass: current.biomass + refund.biomass,
 			alloy: current.alloy + refund.alloy,
 			ore: current.ore + refund.ore,
-			populationCurrent: Math.max(0, nexus.populationCurrent - refundedPopulation),
+			populationCurrent: computeNexusPopulation({
+				troops: { ...nexusRecord, ...troopUpdates },
+				trainingQueue: newQueue,
+				populationMax: nexus.populationMax,
+				inFlightPopulation: refundInFlight.reduce((s, a) => s + troopPopulation(a.troops), 0),
+				transferPopulation: refundTransfers.reduce((s, t) => s + troopPopulation(t.troops), 0)
+			}),
 			trainingQueue: queueToJson(newQueue)
 		};
 		if (Object.keys(trainedDelta).length > 0) {
@@ -624,6 +637,100 @@ export async function checkTrainingQueue(req: AuthRequest, res: Response): Promi
 			});
 		}
 		res.json({ completed, nexus: serializeNexus(rewardApplied) });
+	} catch (error) {
+		logError('unhandled_controller_error', {
+			message: (error as Error).message,
+			file: 'troopController.ts'
+		});
+		res.status(500).json({ error: 'Internal server error' });
+	}
+}
+
+// 10% of training cost is refunded per troop destroyed (all resources).
+const DESTROY_REFUND_RATE = 0.1;
+
+export async function destroyTroops(req: AuthRequest, res: Response): Promise<void> {
+	try {
+		const { nexusId, troopType, amount } = req.body as {
+			nexusId?: unknown;
+			troopType?: string;
+			amount?: unknown;
+		};
+		const parsedNexusId = parsePositiveInt(nexusId);
+		const parsedAmount = parsePositiveInt(amount);
+		if (!parsedNexusId) {
+			res.status(400).json({ error: 'Invalid nexus ID' });
+			return;
+		}
+		if (!parsedAmount) {
+			res.status(400).json({ error: 'Amount must be a positive integer' });
+			return;
+		}
+		if (!troopType || !TROOP_COSTS[troopType]) {
+			res.status(400).json({ error: 'Invalid troop type' });
+			return;
+		}
+
+		const rawNexus = await troopService.getNexusById(parsedNexusId);
+		if (!rawNexus || rawNexus.ownerId !== req.userId || rawNexus.galaxyId !== req.galaxyId) {
+			res.status(403).json({ error: 'Not authorized' });
+			return;
+		}
+		const nexus = await applyCompletedQueues(rawNexus);
+
+		const stationed = ((nexus as unknown as Record<string, number>)[troopType] ?? 0);
+		if (parsedAmount > stationed) {
+			res.status(400).json({ error: 'Not enough stationed troops' });
+			return;
+		}
+
+		const baseCost = TROOP_COSTS[troopType];
+		const refund = {
+			biomass: Math.floor(baseCost.biomass * DESTROY_REFUND_RATE * parsedAmount),
+			alloy:   Math.floor(baseCost.alloy   * DESTROY_REFUND_RATE * parsedAmount),
+			ore:     Math.floor(baseCost.ore      * DESTROY_REFUND_RATE * parsedAmount),
+		};
+		const populationFreed = baseCost.population * parsedAmount;
+
+		const resourceUpdate = computeResourceUpdate(nexus);
+		const current = { ...nexus, ...resourceUpdate } as unknown as Record<string, number>;
+
+		let updated;
+		try {
+			updated = await atomicUpdateNexusResources(nexus.id, nexus.lastResourceUpdate, {
+				...resourceUpdate,
+				biomass: current.biomass + refund.biomass,
+				alloy:   current.alloy   + refund.alloy,
+				ore:     current.ore     + refund.ore,
+				populationCurrent: Math.max(0, current.populationCurrent - populationFreed),
+				[troopType]: stationed - parsedAmount,
+			});
+		} catch (e) {
+			if (e instanceof ResourceConflictError) {
+				res.status(409).json({ error: 'Resources updated simultaneously - please retry' });
+				return;
+			}
+			throw e;
+		}
+
+		try {
+			emitResourceSnapshot(req.userId!, updated);
+		} catch (e) {
+			logError('nexus_resources_emit_failed', {
+				message: (e as Error).message,
+				file: 'troopController.ts',
+				op: 'destroyTroops'
+			});
+		}
+
+		logGameEvent('destroy_troops', req.userId, req.galaxyId, {
+			nexusId: nexus.id,
+			troopType,
+			amount: parsedAmount,
+			refund,
+		});
+
+		res.json({ success: true, refund, nexus: serializeNexus(updated) });
 	} catch (error) {
 		logError('unhandled_controller_error', {
 			message: (error as Error).message,

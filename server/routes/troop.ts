@@ -15,5 +15,8 @@ router.post('/cancel-queue', auth, (req, res) =>
 router.post('/check-queue', auth, (req, res) =>
 	troopController.checkTrainingQueue(req as AuthRequest, res as Response)
 );
+router.post('/destroy', auth, (req, res) =>
+	troopController.destroyTroops(req as AuthRequest, res as Response)
+);
 
 export default router;

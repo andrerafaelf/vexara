@@ -7,6 +7,8 @@ import {
 	checkBuildQueue,
 	checkTrainingQueue,
 	claimQuestReward,
+	destroyTroops,
+	getAllAttacks,
 	getGalaxyEvents,
 	getIncomingAttacks,
 	getMyNexuses,
@@ -191,7 +193,7 @@ const BUILDING_RULES: {
 		]
 	},
 	lifeSupport: {
-		maxLevel: 20,
+		maxLevel: 25,
 		unlock: { building: 'commandCore', level: 2 },
 		milestones: [
 			{ level: 4, requires: [{ building: 'biomassFarm', level: 2 }] },
@@ -475,6 +477,15 @@ const NexusView: React.FC<NexusViewProps> = ({
 		queryKey: ['outgoingAttacks', nexus._id],
 		queryFn: () => getOutgoingAttacks(nexus._id).then((r) => r.data)
 	});
+	// All outgoing across every nexus the user owns — used for the Overview
+	// strikes card so support missions from other nexuses are visible here.
+	const { data: allAttacksData } = useQuery({
+		queryKey: ['allAttacks'],
+		queryFn: () => getAllAttacks().then((r) => r.data),
+		staleTime: 10_000,
+		refetchInterval: 15_000
+	});
+	const allOutgoing: any[] = allAttacksData?.outgoing ?? [];
 	const { data: ownNexusesData = [] } = useQuery({
 		queryKey: ['myNexuses'],
 		queryFn: () => getMyNexuses().then((r) => r.data)
@@ -495,6 +506,9 @@ const NexusView: React.FC<NexusViewProps> = ({
 	const [troopSendTo, setTroopSendTo] = useState('');
 	const [troopSendAmounts, setTroopSendAmounts] = useState<Record<string, string>>({});
 	const [sendingTroops, setSendingTroops] = useState(false);
+	const [destroyPending, setDestroyPending] = useState<string | null>(null);
+	const [destroyAmount, setDestroyAmount] = useState('');
+	const [destroyingTroops, setDestroyingTroops] = useState(false);
 	const submittingRef = useRef<Set<string>>(new Set());
 	const [dismissedTips, setDismissedTips] = useState<Set<string>>(new Set());
 	const [showSpecModal, setShowSpecModal] = useState(false);
@@ -785,6 +799,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 	const loadAttacks = () => {
 		queryClient.invalidateQueries({ queryKey: ['incomingAttacks', nexus._id] });
 		queryClient.invalidateQueries({ queryKey: ['outgoingAttacks', nexus._id] });
+		queryClient.invalidateQueries({ queryKey: ['allAttacks'] });
 	};
 
 	const handleUpgrade = async (building: string) => {
@@ -2340,19 +2355,18 @@ const NexusView: React.FC<NexusViewProps> = ({
 							<div className="strikes-card-split">
 								<div className="strikes-card-half">
 									<span className="strikes-card-label">Outgoing</span>
-									{outgoingAttacks.length > 0 ? (
+									{allOutgoing.length > 0 ? (
 										<div className="strikes-card-list">
-											{outgoingAttacks.map((a: any) => {
+											{allOutgoing.map((a: any) => {
 												const target = a.defender?.nexus ?? a.defenderNexus;
-												const troopSummary = a.troops
-													? Object.entries(a.troops as Record<string, number>)
-															.filter(([, n]) => (Number(n) || 0) > 0)
-															.map(([k, n]) => `${n} ${TROOP_NAMES[k] || k}`)
-															.join(', ')
-													: '';
+												const src = a.attacker?.nexus ?? a.attackerNexus;
+												const isSupport = a.type === 'support';
 												return (
-													<div key={a._id} className="strikes-card-entry">
+													<div key={a._id} className={`strikes-card-entry${isSupport ? ' strikes-card-entry--support' : ''}`}>
 														<span className="strikes-card-entry-who">
+															{isSupport && (
+																<span className="strikes-card-support-badge">SUPPORT</span>
+															)}
 															{a.status === 'returning' && (
 																<ArrowDownLeft
 																	size={11}
@@ -2360,13 +2374,11 @@ const NexusView: React.FC<NexusViewProps> = ({
 																	style={{ marginRight: 4 }}
 																/>
 															)}
+															{src?.name ? `${src.name} → ` : ''}
 															{target?.name
 																? `${target.name} (${target.x}|${target.y})`
 																: 'Unknown nexus'}
 														</span>
-														{troopSummary && (
-															<span className="strikes-card-entry-troops">{troopSummary}</span>
-														)}
 														<span className="strikes-card-entry-time">
 															<span className="strikes-card-entry-arrival">
 																@{' '}
@@ -2944,40 +2956,114 @@ const NexusView: React.FC<NexusViewProps> = ({
 																{category === 'offense' ? 'Offense' : 'Defense'}
 															</h4>
 															<div className="troops-stationed-grid">
-																{rows.map(({ type, count }) => (
-																	<div key={type} className="stationed-card">
-																		{TROOP_IMAGES[type] && (
-																			<div className="stationed-card-image-wrap">
-																				<img
-																					src={TROOP_IMAGES[type].src || TROOP_IMAGES[type]}
-																					alt={TROOP_NAMES[type]}
-																					className="stationed-card-image"
-																				/>
+																{rows.map(({ type, count }) => {
+																	const isPending = destroyPending === type;
+																	const baseCost = TROOP_COSTS[type];
+																	const parsedAmt = Math.max(0, Math.min(parseInt(destroyAmount) || 0, count));
+																	const refund = baseCost ? {
+																		biomass: Math.floor(baseCost.biomass * 0.1 * parsedAmt),
+																		alloy:   Math.floor(baseCost.alloy   * 0.1 * parsedAmt),
+																		ore:     Math.floor(baseCost.ore      * 0.1 * parsedAmt),
+																	} : null;
+																	return (
+																		<div key={type} className={`stationed-card${isPending ? ' stationed-card--destroying' : ''}`}>
+																			{TROOP_IMAGES[type] && (
+																				<div className="stationed-card-image-wrap">
+																					<img
+																						src={TROOP_IMAGES[type].src || TROOP_IMAGES[type]}
+																						alt={TROOP_NAMES[type]}
+																						className="stationed-card-image"
+																					/>
+																				</div>
+																			)}
+																			<div className="stationed-card-body">
+																				<div className="stationed-card-name">{TROOP_NAMES[type]}</div>
+																				<div className="stationed-card-count">
+																					{count.toLocaleString()}
+																				</div>
 																			</div>
-																		)}
-																		<div className="stationed-card-body">
-																			<div className="stationed-card-name">{TROOP_NAMES[type]}</div>
-																			<div className="stationed-card-count">
-																				{count.toLocaleString()}
-																			</div>
+																			<button
+																				type="button"
+																				className="troop-info stationed-card-info"
+																				title={TROOP_DESCRIPTIONS[type]}
+																				aria-label={`${TROOP_NAMES[type]} info`}
+																				onClick={() =>
+																					handleInfoTap(
+																						TROOP_NAMES[type],
+																						TROOP_DESCRIPTIONS[type],
+																						`/codex?tab=troops#troop-${type}`
+																					)
+																				}
+																			>
+																				<Info size={13} />
+																			</button>
+																			<button
+																				type="button"
+																				className={`stationed-card-destroy-btn${isPending ? ' stationed-card-destroy-btn--active' : ''}`}
+																				title="Destroy troops"
+																				aria-label={`Destroy ${TROOP_NAMES[type]}`}
+																				onClick={() => {
+																					if (isPending) {
+																						setDestroyPending(null);
+																						setDestroyAmount('');
+																					} else {
+																						setDestroyPending(type);
+																						setDestroyAmount('');
+																					}
+																				}}
+																			>
+																				✕
+																			</button>
+																			{isPending && (
+																				<div className="stationed-destroy-row">
+																					<input
+																						type="number"
+																						className="stationed-destroy-input"
+																						min={1}
+																						max={count}
+																						placeholder={`1–${count}`}
+																						value={destroyAmount}
+																						onChange={(e) => setDestroyAmount(e.target.value)}
+																						autoFocus
+																					/>
+																					<span
+																						className="stationed-destroy-max troop-available-clickable"
+																						onClick={() => setDestroyAmount(String(count))}
+																					>
+																						/ {count}
+																					</span>
+																					{refund && parsedAmt > 0 && (
+																						<span className="stationed-destroy-refund">
+																							+{refund.biomass.toLocaleString()} B · +{refund.alloy.toLocaleString()} A · +{refund.ore.toLocaleString()} O
+																						</span>
+																					)}
+																					<button
+																						type="button"
+																						className="stationed-destroy-confirm"
+																						disabled={destroyingTroops || parsedAmt < 1}
+																						onClick={async () => {
+																							if (parsedAmt < 1) return;
+																							setDestroyingTroops(true);
+																							try {
+																								await destroyTroops(nexus._id, type, parsedAmt);
+																								showToast(`${parsedAmt.toLocaleString()} ${TROOP_NAMES[type]} destroyed. Resources partially refunded.`, 'info');
+																								setDestroyPending(null);
+																								setDestroyAmount('');
+																								onUpdate();
+																							} catch (err: any) {
+																								showToast(err?.response?.data?.error || 'Failed to destroy troops', 'error');
+																							} finally {
+																								setDestroyingTroops(false);
+																							}
+																						}}
+																					>
+																						{destroyingTroops ? '…' : 'Destroy'}
+																					</button>
+																				</div>
+																			)}
 																		</div>
-																		<button
-																			type="button"
-																			className="troop-info stationed-card-info"
-																			title={TROOP_DESCRIPTIONS[type]}
-																			aria-label={`${TROOP_NAMES[type]} info`}
-																			onClick={() =>
-																				handleInfoTap(
-																					TROOP_NAMES[type],
-																					TROOP_DESCRIPTIONS[type],
-																					`/codex?tab=troops#troop-${type}`
-																				)
-																			}
-																		>
-																			<Info size={13} />
-																		</button>
-																	</div>
-																))}
+																	);
+																})}
 															</div>
 														</div>
 													)

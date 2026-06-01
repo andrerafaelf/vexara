@@ -41,10 +41,10 @@ export const TROOP_COSTS: Record<string, TroopCost> = {
 	bulwarkGuard: { biomass: 400, alloy: 600, ore: 500, population: 2, time: 720 },
 	disruptorUnit: { biomass: 550, alloy: 750, ore: 650, population: 2, time: 840 },
 	interceptorBike: { biomass: 750, alloy: 600, ore: 900, population: 3, time: 1080 },
-	voidStalker: { biomass: 1100, alloy: 900, ore: 1400, population: 4, time: 1800 },
+	voidStalker: { biomass: 1100, alloy: 900, ore: 1400, population: 3, time: 1620 },
 	siegeMech: { biomass: 1250, alloy: 1000, ore: 2000, population: 4, time: 1800 },
 	plasmaTurret: { biomass: 1500, alloy: 1200, ore: 2500, population: 2, time: 2700 },
-	annihilatorPlatform: { biomass: 2000, alloy: 1750, ore: 3000, population: 5, time: 2400 },
+	annihilatorPlatform: { biomass: 2000, alloy: 1750, ore: 3000, population: 4, time: 2400 },
 	overseer: { biomass: 180000, alloy: 140000, ore: 120000, population: 5, time: 14400 }
 };
 

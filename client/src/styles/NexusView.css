@@ -1977,7 +1977,7 @@
 	color: var(--text-muted);
 	cursor: pointer;
 	padding: 4px;
-	border-radius: 4px;
+	border-radius: 0;
 	transition:
 		color var(--duration-fast) var(--ease-out),
 		background var(--duration-fast) var(--ease-out);
@@ -1986,6 +1986,104 @@
 .stationed-card-info:hover {
 	color: var(--accent);
 	background: rgba(255, 158, 61, 0.1);
+}
+
+.stationed-card-destroy-btn {
+	position: absolute;
+	top: 6px;
+	right: 28px;
+	background: transparent;
+	border: none;
+	color: var(--text-faint);
+	cursor: pointer;
+	padding: 4px 5px;
+	font-size: 0.7rem;
+	line-height: 1;
+	transition:
+		color var(--duration-fast) var(--ease-out),
+		background var(--duration-fast) var(--ease-out);
+}
+
+.stationed-card-destroy-btn:hover,
+.stationed-card-destroy-btn--active {
+	color: var(--danger);
+	background: rgba(248, 81, 73, 0.1);
+}
+
+.stationed-card--destroying {
+	border-left-color: var(--danger);
+}
+
+.stationed-destroy-row {
+	grid-column: 1 / -1;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex-wrap: wrap;
+	padding-top: 8px;
+	margin-top: 8px;
+	border-top: 1px solid rgba(248, 81, 73, 0.2);
+	width: 100%;
+}
+
+.stationed-card {
+	flex-wrap: wrap;
+}
+
+.stationed-destroy-input {
+	width: 72px;
+	padding: 3px 6px;
+	background: var(--bg-app);
+	border: 1px solid var(--border-default);
+	color: var(--text-strong);
+	font-family: var(--font-mono);
+	font-size: 0.75rem;
+	border-radius: 0;
+}
+
+.stationed-destroy-input:focus {
+	outline: none;
+	border-color: var(--danger);
+}
+
+.stationed-destroy-max {
+	font-family: var(--font-mono);
+	font-size: 0.72rem;
+	color: var(--text-muted);
+}
+
+.stationed-destroy-refund {
+	font-family: var(--font-mono);
+	font-size: 0.68rem;
+	color: var(--text-muted);
+	flex: 1;
+	white-space: nowrap;
+}
+
+.stationed-destroy-confirm {
+	padding: 3px 10px;
+	background: rgba(248, 81, 73, 0.12);
+	border: 1px solid rgba(248, 81, 73, 0.4);
+	color: #fca5a5;
+	font-size: 0.72rem;
+	font-family: var(--font-mono);
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	cursor: pointer;
+	border-radius: 0;
+	transition:
+		background var(--duration-fast) var(--ease-out),
+		border-color var(--duration-fast) var(--ease-out);
+}
+
+.stationed-destroy-confirm:hover:not(:disabled) {
+	background: rgba(248, 81, 73, 0.22);
+	border-color: rgba(248, 81, 73, 0.7);
+}
+
+.stationed-destroy-confirm:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
 }
 
 .troops-stationed-empty {

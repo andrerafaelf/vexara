@@ -7,7 +7,7 @@ import {
 } from '../models/Nexus.js';
 import * as adminService from '../services/internalAdminService.js';
 import { processArrivedAttacks } from '../utils/combat.js';
-import { getPopulationMax } from '../utils/population.js';
+import { computeNexusPopulation, getPopulationMax, loadAwayPopulation } from '../utils/population.js';
 import { TROOP_COSTS } from '../utils/gameConstants.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
 import { logError, logInfo } from '../utils/logger.js';
@@ -167,7 +167,14 @@ export async function addTroops(req: Request, res: Response): Promise<void> {
 			res.status(400).json({ error: 'Not enough population capacity' });
 			return;
 		}
-		updates['populationCurrent'] = nexus.populationCurrent + popUsed;
+		// Recompute from the post-grant troop columns rather than adding popUsed.
+		const away = await loadAwayPopulation(prisma, nexus.id);
+		updates['populationCurrent'] = computeNexusPopulation({
+			troops: { ...(nexus as unknown as Record<string, unknown>), ...updates },
+			trainingQueue: nexus.trainingQueue,
+			populationMax: nexus.populationMax,
+			...away
+		});
 
 		const updated = await adminService.updateNexus(nexus.id, updates);
 		res.json({ success: true, nexus: serializeNexus(updated) });
@@ -226,7 +233,7 @@ export async function resetTroops(req: Request, res: Response): Promise<void> {
 			res.status(404).json({ error: 'Nexus not found' });
 			return;
 		}
-		const updated = await adminService.updateNexus(nexus.id, {
+		const zeroedTroops = {
 			lancerDrone: 0,
 			assaultTrooper: 0,
 			breakerUnit: 0,
@@ -240,8 +247,19 @@ export async function resetTroops(req: Request, res: Response): Promise<void> {
 			voidStalker: 0,
 			plasmaTurret: 0,
 			annihilatorPlatform: 0,
-			overseer: 0,
-			populationCurrent: 0
+			overseer: 0
+		};
+		// Derive populationCurrent rather than hard-coding 0: troops still away on
+		// attacks/transfers and any training queue still occupy housing.
+		const away = await loadAwayPopulation(prisma, nexus.id);
+		const updated = await adminService.updateNexus(nexus.id, {
+			...zeroedTroops,
+			populationCurrent: computeNexusPopulation({
+				troops: { ...(nexus as unknown as Record<string, unknown>), ...zeroedTroops },
+				trainingQueue: nexus.trainingQueue,
+				populationMax: nexus.populationMax,
+				...away
+			})
 		});
 		res.json({ success: true, nexus: serializeNexus(updated) });
 	} catch (error) {

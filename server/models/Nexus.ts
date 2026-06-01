@@ -7,8 +7,11 @@ import {
 	getResourceProduction as getResourceProductionBase,
 	type StormBonus
 } from '../utils/economy.js';
-import { getPopulationMax } from '../utils/population.js';
-import { TROOP_COSTS } from '../utils/gameConstants.js';
+import {
+	computeNexusPopulation,
+	getPopulationMax,
+	loadAwayPopulation
+} from '../utils/population.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
 import {
 	isUserOnline,
@@ -276,14 +279,6 @@ type NexusWithQuests = Nexus & {
 };
 type GalaxyPlayerForQuests = { id: number; questRewardClaims: unknown; completedQuestIds: unknown };
 
-function troopPopCost(troops: Partial<Record<TroopKey, number>>): number {
-	let total = 0;
-	for (const [type, count] of Object.entries(troops)) {
-		total += (TROOP_COSTS[type]?.population ?? 0) * (count ?? 0);
-	}
-	return total;
-}
-
 export async function applyQuestRewards(
 	nexus: NexusWithQuests,
 	options: {
@@ -365,7 +360,11 @@ export async function applyQuestRewards(
 		biomass: nexus.biomass,
 		alloy: nexus.alloy,
 		ore: nexus.ore,
-		populationCurrent: nexus.populationCurrent
+		// The reward's populationCurrent figure grants extra HOUSING (populationMax),
+		// not pre-occupied population: a quest that hands you troops also hands you
+		// the room to hold them. populationCurrent itself is derived from the granted
+		// troops below via computeNexusPopulation, so it never drifts.
+		populationMax: nexus.populationMax
 	};
 
 	for (const batch of QUEST_REWARD_BATCHES) {
@@ -381,10 +380,9 @@ export async function applyQuestRewards(
 		data['alloy'] =
 			(data['alloy'] as number) + Math.floor((batch.reward.alloy || 0) * rewardMultiplier);
 		data['ore'] = (data['ore'] as number) + Math.floor((batch.reward.ore || 0) * rewardMultiplier);
-		data['populationCurrent'] =
-			(data['populationCurrent'] as number) +
-			Math.floor((batch.reward.populationCurrent || 0) * rewardMultiplier) +
-			troopPopCost(batch.reward.troops || {});
+		data['populationMax'] =
+			(data['populationMax'] as number) +
+			Math.floor((batch.reward.populationCurrent || 0) * rewardMultiplier);
 
 		for (const [troopType, amount] of Object.entries(batch.reward.troops || {})) {
 			data[troopType] =
@@ -395,6 +393,18 @@ export async function applyQuestRewards(
 
 		claimedRewards.add(batch.id);
 		newlyClaimedRewards.push(batch.id);
+	}
+
+	// Derive populationCurrent from the post-grant troops + queue + away-pop,
+	// capped at the (possibly increased) populationMax.
+	if (newlyClaimedRewards.length > 0) {
+		const away = await loadAwayPopulation(prisma, nexus.id);
+		data['populationCurrent'] = computeNexusPopulation({
+			troops: { ...(nexus as unknown as Record<string, unknown>), ...data },
+			trainingQueue: nexus.trainingQueue,
+			populationMax: data['populationMax'] as number,
+			...away
+		});
 	}
 
 	const updatedCompletedIds = Array.from(completedQuestIds);
@@ -481,20 +491,30 @@ export async function claimQuestBatchReward(
 	const ccLevel = Math.min(rewardNexus.commandCore, 15);
 	const mult = 1 + (ccLevel / 15) * 1.5;
 
+	// Flat reward populationCurrent grants extra housing (populationMax); the
+	// actual populationCurrent is derived from the granted troops below so it
+	// can't drift. See applyQuestRewards for the same convention.
+	const newPopulationMax =
+		rewardNexus.populationMax + Math.floor((batch.reward.populationCurrent || 0) * mult);
 	const data: Record<string, unknown> = {
 		biomass: rewardNexus.biomass + Math.floor((batch.reward.biomass || 0) * mult),
 		alloy: rewardNexus.alloy + Math.floor((batch.reward.alloy || 0) * mult),
 		ore: rewardNexus.ore + Math.floor((batch.reward.ore || 0) * mult),
-		populationCurrent:
-			rewardNexus.populationCurrent +
-			Math.floor((batch.reward.populationCurrent || 0) * mult) +
-			troopPopCost(batch.reward.troops || {})
+		populationMax: newPopulationMax
 	};
 
 	for (const [troopType, amount] of Object.entries(batch.reward.troops || {})) {
 		data[troopType] =
 			((rewardNexus as unknown as Record<string, number>)[troopType] || 0) + (amount as number);
 	}
+
+	const rewardAway = await loadAwayPopulation(prisma, rewardNexus.id);
+	data['populationCurrent'] = computeNexusPopulation({
+		troops: { ...(rewardNexus as unknown as Record<string, unknown>), ...data },
+		trainingQueue: rewardNexus.trainingQueue,
+		populationMax: newPopulationMax,
+		...rewardAway
+	});
 
 	claimedRewards.add(batchId);
 	const updatedClaimedRewards = Array.from(claimedRewards);

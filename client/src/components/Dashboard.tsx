@@ -760,10 +760,15 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 									onClick={() => setSelectedAttack(attack)}
 								>
 									<div className="activity-nexus">
-										{nexuses.find((v) => v._id === attack.attacker.nexus)?.name || 'Unknown'}
+										{attack.attacker?.nexus?.name ||
+											nexuses.find((v) => v._id === attack.attacker?.nexus?._id)?.name ||
+											'Unknown'}
+										{attack.type === 'support' && (
+											<span style={{ marginLeft: 4, fontSize: '9px', fontWeight: 700, color: 'var(--success)', letterSpacing: '0.08em' }}>SUPPORT</span>
+										)}
 									</div>
 									<div className="activity-details">
-										{attack.status === 'returning' ? 'returning from' : '→'}{' '}
+										{attack.status === 'returning' ? 'returning from' : attack.type === 'support' ? 'supporting' : '→'}{' '}
 										{attack.defender?.nexus?.name || 'Unknown'} ({attack.defender?.nexus?.x ?? '?'}|
 										{attack.defender?.nexus?.y ?? '?'})
 									</div>

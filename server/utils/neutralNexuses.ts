@@ -1,6 +1,7 @@
 import prisma from '../lib/prisma.js';
-import { getPopulationMax } from './population.js';
+import { computeNexusPopulation, getPopulationMax } from './population.js';
 import { getMaxStorage } from './economy.js';
+import { TROOP_COSTS } from './gameConstants.js';
 
 const NPC_LEVELABLE_BUILDINGS = [
 	'commandCore',
@@ -322,7 +323,15 @@ export async function levelUpNeutralNexuses() {
 		const rcLevel = buildingLevels.recruitmentCore;
 		const lifeSupport = buildingLevels.lifeSupport;
 		const populationMax = getPopulationMax(lifeSupport);
-		let populationCurrent = nexus.populationCurrent ?? 0;
+		// Population-room budgeting uses real per-unit costs so this stays in lockstep
+		// with computeNexusPopulation (NPCs have no queue or away-troops). Tracked as a
+		// running figure here only to gate recruitment; the authoritative value is
+		// recomputed from the final troop columns below.
+		let populationUsed = computeNexusPopulation({
+			troops: nexus as unknown as Record<string, unknown>,
+			trainingQueue: [],
+			populationMax
+		});
 
 		// Difficulty scales recruitment count - early galaxies grow slowly,
 		// late galaxies fill fast. (0.5x..1.5x roughly)
@@ -336,15 +345,22 @@ export async function levelUpNeutralNexuses() {
 			const cap = Math.floor(rule.cap * (0.6 + difficultyRatio));
 			if (base >= cap) continue;
 			const want = Math.max(1, Math.floor(rule.perTick * trainScale));
-			const popRoom = Math.max(0, populationMax - populationCurrent);
+			const popPerUnit = TROOP_COSTS[rule.key]?.population ?? 1;
+			const popRoom = Math.max(0, populationMax - populationUsed);
 			if (popRoom <= 0) break;
-			const allowed = Math.min(want, cap - base, popRoom);
+			const allowed = Math.min(want, cap - base, Math.floor(popRoom / popPerUnit));
 			if (allowed <= 0) continue;
 			updates[rule.key] = base + allowed;
-			populationCurrent += allowed;
+			populationUsed += allowed * popPerUnit;
 		}
-		if (populationCurrent !== (nexus.populationCurrent ?? 0)) {
-			updates['populationCurrent'] = populationCurrent;
+		// Recompute authoritatively from the post-growth troop columns.
+		const recomputed = computeNexusPopulation({
+			troops: { ...(nexus as unknown as Record<string, unknown>), ...updates },
+			trainingQueue: [],
+			populationMax
+		});
+		if (recomputed !== (nexus.populationCurrent ?? 0)) {
+			updates['populationCurrent'] = recomputed;
 		}
 
 		// ── Resources ────────────────────────────────────────────────────────
