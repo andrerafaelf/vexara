@@ -198,6 +198,54 @@ export function computeLossesForLoser(
 	return losses;
 }
 
+type ResourceAmounts = { biomass: number; alloy: number; ore: number };
+
+export function computeLootStolen(
+	resources: ResourceAmounts,
+	survivingCarry: number,
+	lootableFraction = 1
+): ResourceAmounts {
+	const safeCarry = Math.max(0, Math.floor(survivingCarry || 0));
+	const safeFraction = Math.max(0, Math.min(1, lootableFraction || 0));
+	const lootable = {
+		biomass: Math.max(0, Math.floor((resources.biomass || 0) * safeFraction)),
+		alloy: Math.max(0, Math.floor((resources.alloy || 0) * safeFraction)),
+		ore: Math.max(0, Math.floor((resources.ore || 0) * safeFraction))
+	};
+	const totalLootable = lootable.biomass + lootable.alloy + lootable.ore;
+	const targetTotal = Math.min(safeCarry, totalLootable);
+
+	if (targetTotal <= 0 || totalLootable <= 0) {
+		return { biomass: 0, alloy: 0, ore: 0 };
+	}
+
+	const raw = {
+		biomass: (lootable.biomass / totalLootable) * targetTotal,
+		alloy: (lootable.alloy / totalLootable) * targetTotal,
+		ore: (lootable.ore / totalLootable) * targetTotal
+	};
+	const stolen = {
+		biomass: Math.min(lootable.biomass, Math.floor(raw.biomass)),
+		alloy: Math.min(lootable.alloy, Math.floor(raw.alloy)),
+		ore: Math.min(lootable.ore, Math.floor(raw.ore))
+	};
+	let remainder = targetTotal - stolen.biomass - stolen.alloy - stolen.ore;
+
+	const order = (['biomass', 'alloy', 'ore'] as const)
+		.map((key) => ({ key, fraction: raw[key] - Math.floor(raw[key]) }))
+		.sort((a, b) => b.fraction - a.fraction);
+	for (const { key } of order) {
+		if (remainder <= 0) break;
+		const room = lootable[key] - stolen[key];
+		if (room <= 0) continue;
+		const add = Math.min(room, remainder);
+		stolen[key] += add;
+		remainder -= add;
+	}
+
+	return stolen;
+}
+
 // Compute per-unit loss count for a force that WON the engagement.
 //
 // Two factors modulate the per-unit loss rate on top of baseLossRate:

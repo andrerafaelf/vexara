@@ -5,6 +5,7 @@ import {
 	computeClassWeightedAttack,
 	computeLossesForLoser,
 	computeLossesForWinner,
+	computeLootStolen,
 	computeTroopTotal,
 	areAllDefendingTroopsEliminated,
 	TROOP_STATS
@@ -826,20 +827,15 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 			const lootProtection = defenderBonuses?.lootProtection ?? 0;
 			const lootableFraction = 1 - lootProtection;
 
-			// Carry is a threshold, not a hard cap against the resource pool.
-			// Any army with survivingCarry >= LOOT_CARRY_THRESHOLD takes 100% of
-			// lootable resources. Smaller raids scale proportionally below the threshold.
-			// This prevents the carry total becoming irrelevant against large late-game vaults.
-			const LOOT_CARRY_THRESHOLD = 8000;
-			const lootRatio = Math.min(survivingCarry / LOOT_CARRY_THRESHOLD, 1);
-
-			if (lootRatio > 0) {
-				resourcesStolen = {
-					biomass: Math.floor(defenderNexus.biomass * lootableFraction * lootRatio),
-					alloy: Math.floor(defenderNexus.alloy * lootableFraction * lootRatio),
-					ore: Math.floor(defenderNexus.ore * lootableFraction * lootRatio)
-				};
-			}
+			resourcesStolen = computeLootStolen(
+				{
+					biomass: defenderNexus.biomass,
+					alloy: defenderNexus.alloy,
+					ore: defenderNexus.ore
+				},
+				survivingCarry,
+				lootableFraction
+			);
 			defenderResourceUpdates.biomass = defenderNexus.biomass - resourcesStolen.biomass;
 			defenderResourceUpdates.alloy = defenderNexus.alloy - resourcesStolen.alloy;
 			defenderResourceUpdates.ore = defenderNexus.ore - resourcesStolen.ore;

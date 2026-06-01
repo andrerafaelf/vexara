@@ -80,6 +80,7 @@ Set these in your repo → Settings → Secrets and variables → Actions.
 | `DOMAIN` | e.g. `vexara.com` |
 | `CORS_ORIGINS` | e.g. `https://vexara.com` |
 | `ADMIN_CORS_ORIGINS` | e.g. `https://admin.vexara.com` |
+| `ADMIN_ALLOW_IPS` | Comma-separated IP/CIDR allowlist for `admin.<domain>` |
 | `VAPID_SUBJECT` | e.g. `mailto:admin@vexara.com` |
 
 ---
@@ -212,7 +213,7 @@ For off-site backup, configure an S3-compatible object store (Hetzner Object Sto
 
 - [ ] No `.env` committed to git (`.gitignore` covers it)
 - [ ] PostgreSQL not exposed on host network
-- [ ] Admin panel restricted by IP (uncomment `allow/deny` in nginx.conf)
+- [ ] Admin panel restricted by IP (`ADMIN_ALLOW_IPS` set in `.env`)
 - [ ] UFW blocks all ports except 22, 80, 443
 - [ ] fail2ban enabled for SSH brute-force protection
 - [ ] JWT_SECRET is at least 64 random bytes

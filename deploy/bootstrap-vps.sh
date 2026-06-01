@@ -113,6 +113,10 @@ sed "s/DOMAIN_PLACEHOLDER/${DOMAIN}/g" \
   > "$APP_DIR/deploy/nginx/nginx.conf"
 sed "s/DOMAIN_PLACEHOLDER/${DOMAIN}/g" \
   "$APP_DIR/deploy/nginx/admin.conf.template" \
+  | awk '
+      /^ADMIN_ALLOW_PLACEHOLDER$/ { print "    deny all;"; next }
+      { print }
+    ' \
   > "$APP_DIR/deploy/nginx/admin.conf"
 
 # ─── Auto-renew: webroot mode — nginx container serves the challenge ──────────

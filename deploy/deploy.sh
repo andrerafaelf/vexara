@@ -80,27 +80,27 @@ chown 5050:5050 "$APP_DIR/deploy/pgadmin/pgpass" "$APP_DIR/deploy/pgadmin/server
 # Render the admin server block from its own template, but only if the cert exists.
 # Otherwise leave admin.conf empty so the main include is a no-op.
 if [ -f "$ADMIN_CERT" ]; then
-  # Build the pgAdmin IP allowlist from PGADMIN_ALLOW_IPS (comma-separated).
-  # If unset, deny all so pgAdmin stays inaccessible until you set it.
-  PGADMIN_ALLOW_BLOCK=""
-  if [ -n "${PGADMIN_ALLOW_IPS:-}" ]; then
-    IFS=',' read -ra IPS <<< "$PGADMIN_ALLOW_IPS"
+  # Build the admin-origin IP allowlist from ADMIN_ALLOW_IPS (comma-separated).
+  # If unset, deny all so the admin origin stays inaccessible until configured.
+  ADMIN_ALLOW_BLOCK=""
+  if [ -n "${ADMIN_ALLOW_IPS:-}" ]; then
+    IFS=',' read -ra IPS <<< "$ADMIN_ALLOW_IPS"
     for IP in "${IPS[@]}"; do
       IP="${IP// /}"  # strip spaces
-      [ -n "$IP" ] && PGADMIN_ALLOW_BLOCK+="        allow ${IP};"$'\n'
+      [ -n "$IP" ] && ADMIN_ALLOW_BLOCK+="    allow ${IP};"$'\n'
     done
-    PGADMIN_ALLOW_BLOCK+="        deny all;"
+    ADMIN_ALLOW_BLOCK+="    deny all;"
   else
-    echo "[deploy] WARN: PGADMIN_ALLOW_IPS unset — pgAdmin will reject all requests"
-    PGADMIN_ALLOW_BLOCK="        deny all;"
+    echo "[deploy] WARN: ADMIN_ALLOW_IPS unset; admin origin will reject all requests"
+    ADMIN_ALLOW_BLOCK="    deny all;"
   fi
 
   # First do DOMAIN substitution, then inject the allowlist block.
   # Use awk for the multi-line replacement (sed escaping is fragile here).
   sed "s/DOMAIN_PLACEHOLDER/${DOMAIN}/g" \
     "$APP_DIR/deploy/nginx/admin.conf.template" \
-    | awk -v block="$PGADMIN_ALLOW_BLOCK" '
-        /^PGADMIN_ALLOW_PLACEHOLDER$/ { print block; next }
+    | awk -v block="$ADMIN_ALLOW_BLOCK" '
+        /^ADMIN_ALLOW_PLACEHOLDER$/ { print block; next }
         { print }
       ' \
     > "$APP_DIR/deploy/nginx/admin.conf"

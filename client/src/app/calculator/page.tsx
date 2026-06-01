@@ -90,18 +90,23 @@ const TROOP_IMAGES: Record<TroopKey, StaticImageData> = {
 	overseer: overseerImg
 };
 
-// Attacker units: have ATK > 0, DEF = 0
+// Attacker panel keeps the usual strike roster grouped by combat role.
 const ATTACKER_GROUPS: { cls: TroopClass; keys: TroopKey[] }[] = [
 	{ cls: 'mobile', keys: ['breakerUnit', 'skimmerBike', 'interceptorBike', 'voidStalker'] },
 	{ cls: 'fire', keys: ['suppressorTeam', 'disruptorUnit', 'annihilatorPlatform'] },
 	{ cls: 'special', keys: ['overseer'] }
 ];
 
-// Defender units: have DEF > 0, ATK = 0
+// Defender panel includes every unit type because stationed attacking units
+// defend the host nexus too.
 const DEFENDER_GROUPS: { cls: TroopClass; keys: TroopKey[] }[] = [
+	{ cls: 'mobile', keys: ['breakerUnit', 'skimmerBike', 'interceptorBike', 'voidStalker'] },
 	{ cls: 'armor', keys: ['assaultTrooper', 'bulwarkGuard', 'siegeMech'] },
-	{ cls: 'fire', keys: ['lancerDrone', 'plasmaTurret'] },
-	{ cls: 'special', keys: ['reconOperative'] }
+	{
+		cls: 'fire',
+		keys: ['lancerDrone', 'suppressorTeam', 'disruptorUnit', 'annihilatorPlatform', 'plasmaTurret']
+	},
+	{ cls: 'special', keys: ['reconOperative', 'overseer'] }
 ];
 
 const MARGIN_COPY: Record<string, string> = {

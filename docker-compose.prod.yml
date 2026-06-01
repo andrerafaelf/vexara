@@ -238,7 +238,7 @@ services:
         max-file: "2"
 
   # ── pgAdmin (Postgres web UI) ────────────────────────────────────────────────
-  # Reached at https://admin.${DOMAIN}/pgadmin/ behind IP allowlist + admin auth.
+  # Reached at https://admin.${DOMAIN}/pgadmin/ behind admin-origin IP allowlist + admin auth.
   # Listens on app_net only — no public ports, only nginx can talk to it.
   pgadmin:
     image: dpage/pgadmin4:latest

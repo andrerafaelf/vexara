@@ -19,11 +19,12 @@ server {
     ssl_prefer_server_ciphers off;
 
     add_header Strict-Transport-Security "max-age=31536000" always;
-    # Extra protection for admin — only your IP or VPN in production
-    # allow 1.2.3.4;
-    # deny all;
+    # Extra protection for the entire admin origin. deploy.sh substitutes this
+    # with allow/deny rules built from ADMIN_ALLOW_IPS.
+ADMIN_ALLOW_PLACEHOLDER
 
     location /.well-known/acme-challenge/ {
+        allow all;
         root /var/www/certbot;
     }
 
@@ -81,11 +82,8 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # pgAdmin — IP-allowlisted Postgres web UI.
-    # deploy.sh substitutes PGADMIN_ALLOW_PLACEHOLDER with allow/deny rules.
+    # pgAdmin — covered by the admin-origin IP allowlist above.
     location /pgadmin/ {
-PGADMIN_ALLOW_PLACEHOLDER
-
         set $pgadmin_upstream http://pgadmin:80;
         proxy_pass $pgadmin_upstream;
         proxy_http_version 1.1;
