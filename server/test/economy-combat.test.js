@@ -7,6 +7,7 @@ import {
 	computeLootStolen
 } from '../utils/combatMath.js';
 import { calculatePoints, computeResourceUpdate } from '../utils/economy.js';
+import { getOverseerCost, getOverseerCostMultiplier } from '../utils/gameConstants.js';
 import { buildRespawnNexusConfig, RESPAWN_INFLUENCE_FRACTION } from '../utils/starterNexus.js';
 
 test('computeResourceUpdate increases resources over elapsed time', () => {
@@ -26,6 +27,17 @@ test('computeResourceUpdate increases resources over elapsed time', () => {
 	assert.ok(updated.biomass > 500);
 	assert.ok(updated.alloy > 500);
 	assert.ok(updated.ore > 500);
+});
+
+test('overseer cost ramps to a 4x cap at 12 owned nexuses', () => {
+	assert.equal(getOverseerCostMultiplier(3), 1);
+	assert.equal(getOverseerCostMultiplier(12), 4);
+	assert.equal(getOverseerCostMultiplier(20), 4);
+	assert.deepEqual(getOverseerCost(12), {
+		biomass: 720000,
+		alloy: 560000,
+		ore: 480000
+	});
 });
 
 test('calculatePoints awards points for buildings and troops', () => {

@@ -105,10 +105,19 @@ export function getBuildingCost(building: string, currentLevel: number): Buildin
 	};
 }
 
-// Overseer cost scales 1.5x per nexus owned beyond 3.
+// Overseer cost scales with owned nexuses, then caps at 4x from 12+.
 // The first 3 nexuses use the base cost from TROOP_COSTS.
 export const OVERSEER_COST_SCALE_THRESHOLD = 3;
-export const OVERSEER_COST_SCALE_PER_EXTRA = 1.5;
+export const OVERSEER_COST_SCALE_CAP_NEXUSES = 12;
+export const OVERSEER_COST_MAX_MULTIPLIER = 4;
+
+export function getOverseerCostMultiplier(nexusCount: number): number {
+	const count = Math.max(0, nexusCount || 0);
+	if (count <= OVERSEER_COST_SCALE_THRESHOLD) return 1;
+	const span = OVERSEER_COST_SCALE_CAP_NEXUSES - OVERSEER_COST_SCALE_THRESHOLD;
+	const progress = Math.min(1, (count - OVERSEER_COST_SCALE_THRESHOLD) / span);
+	return 1 + (OVERSEER_COST_MAX_MULTIPLIER - 1) * progress;
+}
 
 export function getOverseerCost(nexusCount: number): {
 	biomass: number;
@@ -116,8 +125,7 @@ export function getOverseerCost(nexusCount: number): {
 	ore: number;
 } {
 	const base = TROOP_COSTS.overseer;
-	const extra = Math.max(0, nexusCount - OVERSEER_COST_SCALE_THRESHOLD);
-	const multiplier = extra > 0 ? Math.pow(OVERSEER_COST_SCALE_PER_EXTRA, extra) : 1;
+	const multiplier = getOverseerCostMultiplier(nexusCount);
 	return {
 		biomass: Math.floor(base.biomass * multiplier),
 		alloy: Math.floor(base.alloy * multiplier),

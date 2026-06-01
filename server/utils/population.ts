@@ -63,9 +63,23 @@ export function computeNexusPopulation(args: {
 	return Math.min(args.populationMax, stationed + queued + away + extra);
 }
 
-// Population currently away from a nexus on traveling attacks and transfers.
-// These count toward populationCurrent but don't live on the nexus row, so any
+// Population currently away from a nexus on attacks and transfers. A unit
+// occupies its SENDER's housing for its entire away-lifetime and is only
+// released when it dies (see the support-mission invariant in combat.ts). These
+// count toward populationCurrent but don't live on the nexus row, so any
 // recompute that only sees the row must add them back.
+//
+// Transfers carry their full troop set the whole way (traveling -> stationed at
+// a host -> returning), so all three statuses are counted at face value. This
+// mirrors the training-capacity gate's getOutboundTransferTroops - keep the two
+// in lockstep, or the displayed populationCurrent under-reports stationed
+// reinforcements and the UI shows free housing the gate then rejects.
+//
+// Attacks are intentionally 'traveling'-only: the attack row's `troops` column
+// holds the FULL dispatched force and is never trimmed to survivors, so counting
+// a 'returning' attack here would charge housing for troops that already died.
+// Returning-attack survivors are bridged via computeNexusPopulation's
+// extraTroops at combat-resolve time and land on the troop columns thereafter.
 export async function loadAwayPopulation(
 	prisma: PrismaClient,
 	nexusId: number
@@ -76,7 +90,7 @@ export async function loadAwayPopulation(
 			select: { troops: true }
 		}),
 		prisma.troopTransfer.findMany({
-			where: { ownerNexusId: nexusId, status: 'traveling' },
+			where: { ownerNexusId: nexusId, status: { in: ['traveling', 'stationed', 'returning'] } },
 			select: { troops: true }
 		})
 	]);
@@ -108,13 +122,19 @@ export async function recountAllPopulation(prisma: PrismaClient): Promise<Recoun
 		}
 	});
 
+	// Same away-status filters as loadAwayPopulation: transfers hold their
+	// sender's housing across all three away statuses (a stationed reinforcement
+	// still counts), while attacks are 'traveling'-only because a returning
+	// attack's `troops` column still lists the dead. Counting only 'traveling'
+	// transfers here would heal every nexus toward an under-reported value and
+	// re-introduce the capacity-display mismatch this job exists to prevent.
 	const [attacks, transfers] = await Promise.all([
 		prisma.attack.findMany({
 			where: { status: 'traveling' },
 			select: { attackerNexusId: true, troops: true }
 		}),
 		prisma.troopTransfer.findMany({
-			where: { status: 'traveling' },
+			where: { status: { in: ['traveling', 'stationed', 'returning'] } },
 			select: { ownerNexusId: true, troops: true }
 		})
 	]);

@@ -252,6 +252,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		notes: [
 			'Maximum 3 per nexus at any time; maximum 1 per strike.',
 			'Trains in an independent queue - does not block other troop training.',
+			'Overseer resource cost scales with empire size: base cost through 3 owned nexuses, then a smooth ramp to 4x cost at 12+ owned nexuses.',
 			'Control drain scales with strike dominance (power ratio = defender_power / attacker_power):',
 			'  • Crushing win (ratio ≤ 0.33, i.e. 3:1 power advantage or better): -50 Control. Two strikes can conquer.',
 			'  • Clear win (0.33 < ratio ≤ 0.66): -34 Control. Three strikes conquer - the standard planned attack.',
@@ -308,7 +309,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		role: 'Population capacity building',
 		description: 'Increases maximum population to support larger armies.',
 		baseCost: { biomass: 80, alloy: 100, ore: 70, timeSeconds: 150 },
-		maxLevel: 25,
+		maxLevel: 20,
 		unlock: 'Command Core Lv2',
 		milestones: [
 			{ level: 4, requires: ['Biomass Farm Lv2'] },

@@ -15,7 +15,7 @@
 // If "I forgot to bump it" becomes a real pattern, swap to a build step
 // that globs the directory and writes this file. Until then: simpler wins.
 
-export const LATEST_PATCH_VERSION = '0.18.1';
-export const LATEST_PATCH_LABEL = 'Alpha v0.18.1';
+export const LATEST_PATCH_VERSION = '0.18.2';
+export const LATEST_PATCH_LABEL = 'Alpha v0.18.2';
 export const LATEST_PATCH_HEADLINE =
-	'Tier 3 tuning, Life Support to level 25, troop disbanding, troop movements bar restyle, and click-to-fill on Send Troops.';
+	'Overseer empire scaling now ramps to a 4x cap at 12+ owned nexuses.';

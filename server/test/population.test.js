@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { computeNexusPopulation, getPopulationMax } from '../utils/population.js';
+import { computeNexusPopulation, getPopulationMax, loadAwayPopulation } from '../utils/population.js';
 import { TROOP_COSTS } from '../utils/gameConstants.js';
 
 // A nexus with a high enough max that the cap never interferes unless a test
@@ -90,6 +90,44 @@ test('tolerates a non-array training queue', () => {
 		populationMax: ROOMY_MAX
 	});
 	assert.equal(pop, 4 * TROOP_COSTS.lancerDrone.population);
+});
+
+// Regression: a stationed reinforcement (a TroopTransfer parked at a host) still
+// occupies its SENDER's housing, so loadAwayPopulation must count transfers in
+// all three away statuses - not just 'traveling'. Previously it counted only
+// 'traveling', so the displayed populationCurrent under-reported and the UI
+// showed free housing the training gate then rejected ("Insufficient population
+// capacity" with plenty of headroom on screen). Attacks stay 'traveling'-only
+// because a returning attack's troops column still lists the dead.
+test('loadAwayPopulation counts transfers across traveling/stationed/returning, attacks traveling-only', async () => {
+	const captured = {};
+	const mockPrisma = {
+		attack: {
+			findMany: async ({ where }) => {
+				captured.attackStatus = where.status;
+				return [{ troops: { voidStalker: 2 } }]; // 2 * pop
+			}
+		},
+		troopTransfer: {
+			findMany: async ({ where }) => {
+				captured.transferStatus = where.status;
+				return [{ troops: { siegeMech: 1 } }, { troops: { lancerDrone: 5 } }];
+			}
+		}
+	};
+
+	const away = await loadAwayPopulation(mockPrisma, 1);
+
+	// Attacks: a bare 'traveling' equality, NOT an { in: [...] } set.
+	assert.equal(captured.attackStatus, 'traveling');
+	// Transfers: all three away statuses so stationed reinforcements are charged.
+	assert.deepEqual(captured.transferStatus, { in: ['traveling', 'stationed', 'returning'] });
+
+	assert.equal(away.inFlightPopulation, 2 * TROOP_COSTS.voidStalker.population);
+	assert.equal(
+		away.transferPopulation,
+		1 * TROOP_COSTS.siegeMech.population + 5 * TROOP_COSTS.lancerDrone.population
+	);
 });
 
 test('getPopulationMax follows floor(100 * 1.19^level) and supports level 25', () => {

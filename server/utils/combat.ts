@@ -1158,9 +1158,11 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 
 		// Reconcile the attacker's housing now that losses are final. Recompute from
 		// the nexus's own troops + queue + still-away pop rather than subtracting the
-		// dead. Survivors of a 'returning' attack live on no counted row yet (the
-		// attack row is 'returning', loadAwayPopulation only counts 'traveling'), so
-		// pass them as extraTroops; processReturnedTroops recomputes again on landing.
+		// dead. Survivors of a 'returning' attack live on no counted row yet: the
+		// attack row's `troops` column still holds the FULL dispatched force (it is
+		// never reduced to survivors), so loadAwayPopulation deliberately skips
+		// 'returning' attacks to avoid counting the dead. Pass the actual survivors
+		// as extraTroops instead; processReturnedTroops recomputes again on landing.
 		// For 'completed' (conquest / no survivors) survivors are either in a
 		// stationed transfer (already counted) or gone, so no extra is owed.
 		const attackerNexus = await prisma.nexus.findUnique({

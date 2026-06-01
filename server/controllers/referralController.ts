@@ -54,7 +54,7 @@ const BUILDINGS = [
 const BUILDING_MAX: Record<string, number> = {
 	commandCore: 20,
 	recruitmentCore: 15,
-	lifeSupport: 25,
+	lifeSupport: 20,
 	storageVault: 20,
 	biomassFarm: 20,
 	alloyForge: 20,
