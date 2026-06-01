@@ -9,13 +9,27 @@ import {
 import prisma from '../lib/prisma.js';
 import * as nexusService from '../services/nexusService.js';
 import type { AuthRequest } from '../types/index.js';
-import { getPopulationMax } from '../utils/population.js';
+import { computeNexusPopulation, getPopulationMax } from '../utils/population.js';
+import { TROOP_COSTS } from '../utils/gameConstants.js';
 import { NEWBIE_PROTECTION_DURATION_MS, buildRespawnNexusConfig } from '../utils/starterNexus.js';
 import { calculateTroopInfluence, getMaxStorage, getResourceProduction } from '../utils/economy.js';
 import { notifyNexusResources } from '../services/warRoomSocket.js';
 import { logError, logGameEvent } from '../utils/logger.js';
 
 const MAX_NEXUSES_PER_USER = 10;
+
+function troopPopulation(troops: unknown): number {
+	if (!troops || typeof troops !== 'object') return 0;
+	return Object.entries(troops as Record<string, unknown>).reduce((sum, [type, amount]) => {
+		const count = Math.max(0, Math.floor(Number(amount) || 0));
+		return sum + count * (TROOP_COSTS[type]?.population ?? 0);
+	}, 0);
+}
+
+function liveAttackTroops(attack: { status: string; troops: unknown; result: unknown }): unknown {
+	if (attack.status !== 'returning') return attack.troops;
+	return (attack.result as { survivingTroops?: unknown } | null)?.survivingTroops ?? {};
+}
 
 export async function getMyNexuses(req: AuthRequest, res: Response): Promise<void> {
 	try {
@@ -76,8 +90,11 @@ export async function getMyNexuses(req: AuthRequest, res: Response): Promise<voi
 			})
 		]);
 		const inFlightByNexus = new Map<number, number>();
+		const attackPopulationByNexus = new Map<number, number>();
+		const transferPopulationByNexus = new Map<number, number>();
 		for (const a of inFlightAttacks) {
 			if (a.attackerNexusId == null) continue;
+			const liveTroops = liveAttackTroops(a);
 			const sent = (a.troops as Record<string, number> | null) || {};
 			const result = a.result as { attackerLosses?: Record<string, number> } | null;
 			const losses = result?.attackerLosses || {};
@@ -89,17 +106,36 @@ export async function getMyNexuses(req: AuthRequest, res: Response): Promise<voi
 			}
 			const inf = calculateTroopInfluence(live);
 			inFlightByNexus.set(a.attackerNexusId, (inFlightByNexus.get(a.attackerNexusId) ?? 0) + inf);
+			attackPopulationByNexus.set(
+				a.attackerNexusId,
+				(attackPopulationByNexus.get(a.attackerNexusId) ?? 0) + troopPopulation(liveTroops)
+			);
 		}
 		for (const t of outboundTransfers) {
 			const troops = (t.troops as Record<string, number> | null) || {};
 			const inf = calculateTroopInfluence(troops);
 			inFlightByNexus.set(t.ownerNexusId, (inFlightByNexus.get(t.ownerNexusId) ?? 0) + inf);
+			transferPopulationByNexus.set(
+				t.ownerNexusId,
+				(transferPopulationByNexus.get(t.ownerNexusId) ?? 0) + troopPopulation(troops)
+			);
 		}
 
 		const withInFlight = updated.map((v) => {
 			const bump = inFlightByNexus.get(v.id) ?? 0;
-			if (bump <= 0) return v;
-			return { ...v, points: v.points + Math.floor(bump) };
+			const populationCurrent = computeNexusPopulation({
+				troops: v as unknown as Record<string, unknown>,
+				trainingQueue: v.trainingQueue,
+				populationMax: v.populationMax,
+				inFlightPopulation: attackPopulationByNexus.get(v.id) ?? 0,
+				transferPopulation: transferPopulationByNexus.get(v.id) ?? 0
+			});
+			if (bump <= 0 && populationCurrent === v.populationCurrent) return v;
+			return {
+				...v,
+				points: v.points + Math.floor(bump),
+				populationCurrent
+			};
 		});
 
 		const totalPoints = withInFlight.reduce((sum, v) => sum + v.points, 0);
@@ -128,7 +164,27 @@ export async function getNexus(req: AuthRequest, res: Response): Promise<void> {
 		}
 		const refreshed = await refreshResources(await applyCompletedQueues(nexus));
 		const updated = await applyQuestRewards(refreshed);
-		res.json(serializeNexus(updated));
+		const [attacks, transfers] = await Promise.all([
+			prisma.attack.findMany({
+				where: { attackerNexusId: updated.id, status: { in: ['traveling', 'returning'] } },
+				select: { troops: true, status: true, result: true }
+			}),
+			prisma.troopTransfer.findMany({
+				where: {
+					ownerNexusId: updated.id,
+					status: { in: ['traveling', 'stationed', 'returning'] }
+				},
+				select: { troops: true }
+			})
+		]);
+		const populationCurrent = computeNexusPopulation({
+			troops: updated as unknown as Record<string, unknown>,
+			trainingQueue: updated.trainingQueue,
+			populationMax: updated.populationMax,
+			inFlightPopulation: attacks.reduce((sum, a) => sum + troopPopulation(liveAttackTroops(a)), 0),
+			transferPopulation: transfers.reduce((sum, t) => sum + troopPopulation(t.troops), 0)
+		});
+		res.json(serializeNexus({ ...updated, populationCurrent }));
 	} catch (error) {
 		logError('unhandled_controller_error', {
 			message: (error as Error).message,
