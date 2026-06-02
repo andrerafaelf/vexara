@@ -53,6 +53,13 @@ function buildIntel(defender: Record<string, unknown>) {
 			siegeMech: defender.siegeMech,
 			disruptorUnit: defender.disruptorUnit,
 			interceptorBike: defender.interceptorBike,
+			// voidStalker and plasmaTurret were missing here, so espionage intel
+			// dropped them entirely (the scout-mission intel builder in
+			// scouting.ts has always included both). Plasma Turrets are a
+			// stationary defensive emplacement — exactly the thing a spy needs to
+			// see before committing an attack.
+			voidStalker: defender.voidStalker,
+			plasmaTurret: defender.plasmaTurret,
 			overseer: defender.overseer
 		},
 		resources: {
