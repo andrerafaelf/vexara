@@ -73,7 +73,7 @@
 
 .calc-layout {
 	display: grid;
-	grid-template-columns: 1fr 320px 1fr;
+	grid-template-columns: 1fr 360px 1fr;
 	gap: 0;
 	flex: 1;
 	align-items: start;
@@ -598,7 +598,10 @@
 
 .calc-survivors-grid {
 	display: grid;
-	grid-template-columns: 1fr 1fr;
+	/* minmax(0, 1fr) lets each column shrink below its content's intrinsic width
+	   so .calc-survivor-name can ellipsize instead of the row overflowing the
+	   (fixed-width) result card and clipping the defender numbers. */
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 	border-top: 1px solid var(--border-default);
 }
 .calc-survivors-col {

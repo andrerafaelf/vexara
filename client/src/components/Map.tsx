@@ -128,6 +128,17 @@ const OFFENSE_TROOPS = new Set([
 	'overseer'
 ]);
 
+// Stationing troops at another nexus - an ally's (support) or your own
+// (transfer) - is one operation and accepts DEFENSIVE units only. Offensive
+// units, Overseers, Recon, and the stationary Plasma Turret are excluded.
+// Mirrors the server's STATIONABLE_TROOPS; the server is the authoritative gate.
+const STATIONABLE_TROOPS = new Set([
+	'assaultTrooper',
+	'lancerDrone',
+	'siegeMech',
+	'bulwarkGuard'
+]);
+
 const VISIBLE_RANGE = 5;
 const MIN_VISIBLE_RANGE = 2;
 const MAX_VISIBLE_RANGE = 10;
@@ -878,7 +889,7 @@ const Map: React.FC<MapProps> = ({
 			const next = { ...prev };
 			for (const [type, count] of Object.entries(availableTroops)) {
 				if (attackMissionType === 'support') {
-					if (!OFFENSE_TROOPS.has(type) && type !== 'reconOperative' && type !== 'plasmaTurret') {
+					if (STATIONABLE_TROOPS.has(type)) {
 						(next as Record<string, number>)[type] = Number(count);
 					}
 				} else if (OFFENSE_TROOPS.has(type)) {
@@ -1184,7 +1195,7 @@ const Map: React.FC<MapProps> = ({
 
 		const attackTroopRows = Object.entries(availableTroops).filter(([type]) => {
 			if (type === 'reconOperative' || type === 'plasmaTurret') return false;
-			if (attackMissionType === 'support') return !OFFENSE_TROOPS.has(type);
+			if (attackMissionType === 'support') return STATIONABLE_TROOPS.has(type);
 			return true;
 		});
 		const attackAvailableTroopTotal = attackTroopRows.reduce(
@@ -1562,7 +1573,7 @@ const Map: React.FC<MapProps> = ({
 									</p>
 									<div className="transfer-inputs">
 										{Object.entries(currentNexus.troops as Record<string, number>)
-											.filter(([, count]) => Number(count) > 0)
+											.filter(([type, count]) => Number(count) > 0 && STATIONABLE_TROOPS.has(type))
 											.map(([type, count]) => (
 												<div key={type} className="transfer-input-row">
 													<label>{TROOP_LABELS[type] || type}</label>
@@ -1587,9 +1598,15 @@ const Map: React.FC<MapProps> = ({
 													</span>
 												</div>
 											))}
-										{Object.values(currentNexus.troops as Record<string, number>).every(
-											(c) => Number(c) === 0
-										) && <p className="map-empty-state">No troops available to send.</p>}
+										{Object.entries(currentNexus.troops as Record<string, number>).every(
+											([type, c]) => Number(c) === 0 || !STATIONABLE_TROOPS.has(type)
+										) && (
+											<p className="map-empty-state">
+												No defensive troops available to send. Only defensive units (Assault
+												Trooper, Lancer Drone, Siege Mech, Bulwark Guard) can be stationed at
+												another nexus.
+											</p>
+										)}
 									</div>
 									{(() => {
 										const travel = estimateTroopTransferTime();

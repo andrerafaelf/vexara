@@ -242,6 +242,25 @@ export const sendAttack = (
 		body: JSON.stringify({ fromNexusId, toNexusId, troops, type, clientRequestId })
 	});
 
+// Server-side scheduled waves — fire whether or not the planning tab is open.
+export const scheduleAttack = (params: {
+	fromNexusId: string;
+	toNexusId: string;
+	troops: any;
+	type?: string;
+	launchAt: string;
+	clientRequestId?: string;
+}) =>
+	apiRequest('/attack/schedule', {
+		method: 'POST',
+		body: JSON.stringify({ type: 'attack', ...params })
+	});
+
+export const getScheduledAttacks = () => apiRequest('/attack/scheduled');
+
+export const cancelScheduledAttack = (id: number) =>
+	apiRequest(`/attack/scheduled/${id}`, { method: 'DELETE' });
+
 export const getIncomingAttacks = (nexusId: string) => apiRequest(`/attack/incoming/${nexusId}`);
 
 export const getOutgoingAttacks = (nexusId: string) => apiRequest(`/attack/outgoing/${nexusId}`);

@@ -130,10 +130,13 @@ test('loadAwayPopulation counts transfers across traveling/stationed/returning, 
 	);
 });
 
-test('getPopulationMax follows floor(100 * 1.19^level) and supports level 25', () => {
+test('getPopulationMax follows floor(100 * 1.202^level) and tops out just under 10k at Lv25', () => {
 	assert.equal(getPopulationMax(0), 100);
-	assert.equal(getPopulationMax(25), Math.floor(100 * Math.pow(1.19, 25)));
-	// Monotonic increasing across the new 21-25 band.
+	assert.equal(getPopulationMax(25), Math.floor(100 * Math.pow(1.202, 25)));
+	// Max-level Life Support should land just under 10,000 (the tuning target).
+	assert.equal(getPopulationMax(25), 9945);
+	assert.ok(getPopulationMax(25) < 10000);
+	// Monotonic increasing across the 21-25 band.
 	for (let lvl = 21; lvl <= 25; lvl++) {
 		assert.ok(getPopulationMax(lvl) > getPopulationMax(lvl - 1));
 	}

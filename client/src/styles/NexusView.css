@@ -358,20 +358,17 @@
 	scrollbar-width: none;
 	background: var(--bg-app);
 	position: sticky;
-	/* Desktop scroll root is .main-content (overflow-y: auto), so sticky
-	   resolves against the top of .main-content — which already sits flush
-	   under the 56px .game-header. top: 0 pins the tab bar tight to the
-	   header; top: 56px (the previous value) left a 56px gap because the
-	   scroll container's own top edge is already below the header.
-	   The mobile override below uses top: 56px because there .main-content
-	   is overflow: visible and the window is the scroll root. */
+	/* Desktop scroll root is .main-content (overflow-y: auto). The tab bar is NOT
+	   the first child of that container — .nexus-header sits above it — so it must
+	   pin flush to the top of the scroll viewport with no padding-compensation.
+	   (An earlier version copied the .backbar first-child trick of
+	   margin-top:-space-7 / padding-top:space-7 to cancel .main-content's top
+	   padding. On a non-first-child that pulled the bar up into .nexus-header AND
+	   inflated it by 32px, pushing the buttons 32px below the pinned top edge —
+	   that was the persistent desktop gap.) The mobile override below uses
+	   top: 56px because there .main-content is overflow: visible and the window is
+	   the scroll root. */
 	top: 0;
-	/* .main-content has var(--space-7) top padding. Without compensating, the
-	   sticky bar pins below that padding and page content scrolls through the
-	   gap above it. Pull up by the padding amount and re-add it as the bar's
-	   own padding so its background covers that strip — same trick as .backbar. */
-	margin-top: calc(var(--space-7) * -1);
-	padding-top: var(--space-7);
 	z-index: 10;
 }
 
@@ -392,10 +389,8 @@
 		top: calc(56px + var(--safe-top));
 		z-index: 1040;
 		background: color-mix(in srgb, var(--bg-app) 92%, transparent);
-		/* Mobile scroll root is the window (.main-content is overflow: visible),
-		   so the desktop padding-compensation gap fix doesn't apply here - reset it. */
-		margin-top: 0;
-		padding-top: 0;
+		/* Mobile scroll root is the window (.main-content is overflow: visible), so
+		   the bar pins below the 56px header rather than at the viewport top. */
 		margin-left: calc(var(--space-3) * -1);
 		margin-right: calc(var(--space-3) * -1);
 		margin-bottom: var(--space-3);
@@ -4309,6 +4304,107 @@
 
 .queue-cancel-btn {
 	border-radius: 0;
+}
+
+/* ── Class-based training chains (CC15 veteran split) ─────────────
+   The training queue groups into parallel lanes. Each lane carries a class
+   accent on its left edge + header icon so the counter triangle reads at a
+   glance. Colors are scoped to .queue-chains so they never leak globally;
+   mobile=cyan, armor=steel, fire=amber, special=neutral accent, combat (the
+   pre-CC15 merged lane)=neutral accent. */
+.queue-chains {
+	--chain-mobile: var(--color-cyan-500, #38bdf8);
+	--chain-armor: #7c93b3;
+	--chain-fire: #f59e3d;
+	--chain-special: var(--accent-2);
+	--chain-combat: var(--accent);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+.queue-chain {
+	--chain-accent: var(--chain-combat);
+	border-left: 2px solid var(--chain-accent);
+	padding-left: var(--space-3);
+}
+.queue-chain--mobile {
+	--chain-accent: var(--chain-mobile);
+}
+.queue-chain--armor {
+	--chain-accent: var(--chain-armor);
+}
+.queue-chain--fire {
+	--chain-accent: var(--chain-fire);
+}
+.queue-chain--special {
+	--chain-accent: var(--chain-special);
+}
+.queue-chain--combat {
+	--chain-accent: var(--chain-combat);
+}
+
+.queue-chain-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	margin-bottom: 8px;
+}
+
+.queue-chain-title {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--chain-accent);
+}
+
+.queue-chain-meter {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+/* Discrete slot pips: filled = used, hollow = free. The pip count mirrors the
+   nexus's per-chain max so the meter doubles as the slot limit indicator. */
+.queue-slot-pip {
+	width: 7px;
+	height: 7px;
+	border: 1px solid var(--chain-accent);
+	opacity: 0.45;
+	transition: opacity var(--duration-base) var(--ease-out);
+}
+.queue-slot-pip.filled {
+	background: var(--chain-accent);
+	opacity: 1;
+}
+
+.queue-chain-count {
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+	font-size: 11px;
+	color: var(--text-muted);
+	margin-left: 4px;
+}
+
+/* Tint each lane's items with its class accent (overrides the generic
+   border-left from .queue-item above). */
+.queue-chain .queue-item {
+	border-left-color: color-mix(in srgb, var(--chain-accent) 55%, var(--border-default));
+}
+.queue-chain .queue-item:hover {
+	border-left-color: var(--chain-accent);
+}
+
+@media (max-width: 768px) {
+	.queue-chain-head {
+		flex-wrap: wrap;
+		gap: 6px;
+	}
 }
 
 /* ── Noob tip / intro quest cards ─────────────────────────────── */

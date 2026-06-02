@@ -54,7 +54,24 @@ const LIFE_SUPPORT_OLD_MAX_LEVEL = 20;
 const LIFE_SUPPORT_MAX_LEVEL = 25;
 
 export const COMMAND_BUILD_TIME_FACTOR_PER_LEVEL = 0.95;
+// -9%/level through L15, then -5%/level for L16-20 (see server mirror for why).
 export const RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL = 0.91;
+const RECRUITMENT_TRAIN_FACTOR_LATE = 0.95;
+const RECRUITMENT_TRAIN_FACTOR_BREAKPOINT = 15;
+
+export function getRecruitmentTrainFactor(recruitmentLevel: number): number {
+	const lvl = Math.max(0, recruitmentLevel || 0);
+	const earlyLevels = Math.min(lvl, RECRUITMENT_TRAIN_FACTOR_BREAKPOINT);
+	const lateLevels = Math.max(0, lvl - RECRUITMENT_TRAIN_FACTOR_BREAKPOINT);
+	return (
+		Math.pow(RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL, earlyLevels) *
+		Math.pow(RECRUITMENT_TRAIN_FACTOR_LATE, lateLevels)
+	);
+}
+
+// Hard cap on units trained per single train request. Mirror of
+// server/utils/gameConstants.ts; the train input clamps "max trainable" to this.
+export const MAX_TRAIN_PER_BATCH = 1000;
 
 // Veteran tier (CC 16-20) grants extra queue slots. CC 16/17 each add +1
 // build slot; CC 18/19 each add +1 training slot. Mirror of
@@ -73,6 +90,52 @@ export function getCommandBuildQueueBonus(commandLevel: number): number {
 export function getCommandTrainingQueueBonus(commandLevel: number): number {
 	const veteran = Math.max(0, (commandLevel || 0) - COMMAND_VETERAN_THRESHOLD);
 	return Math.max(0, Math.min(2, veteran - 2));
+}
+
+// ── Class-based training chains (CC15 veteran unlock) ───────────────────────
+// Mirror of server/utils/gameConstants.ts. See that file for the full rationale.
+// Training runs as concurrent chains; at CC15 the single `combat` chain splits
+// into the mobile/armor/fire counter classes. Purely additive for veterans.
+export type TrainingChain = 'mobile' | 'armor' | 'fire' | 'special' | 'combat';
+
+const TROOP_COMBAT_CLASS: Record<string, 'mobile' | 'armor' | 'fire' | 'special'> = {
+	lancerDrone: 'fire',
+	assaultTrooper: 'armor',
+	breakerUnit: 'mobile',
+	reconOperative: 'special',
+	skimmerBike: 'mobile',
+	bulwarkGuard: 'armor',
+	suppressorTeam: 'fire',
+	disruptorUnit: 'fire',
+	interceptorBike: 'mobile',
+	siegeMech: 'armor',
+	annihilatorPlatform: 'fire',
+	voidStalker: 'mobile',
+	plasmaTurret: 'fire',
+	overseer: 'special'
+};
+
+export const PRE_VETERAN_QUEUE_BASE = 5;
+export const VETERAN_CHAIN_QUEUE_BASE = 2;
+
+export function getTrainingChains(commandLevel: number): TrainingChain[] {
+	return (commandLevel || 0) >= COMMAND_VETERAN_THRESHOLD
+		? ['mobile', 'armor', 'fire', 'special']
+		: ['combat', 'special'];
+}
+
+export function trainingChainFor(troopType: string, commandLevel: number): TrainingChain {
+	const cls = TROOP_COMBAT_CLASS[troopType] ?? 'special';
+	if (cls === 'special') return 'special';
+	return (commandLevel || 0) >= COMMAND_VETERAN_THRESHOLD ? cls : 'combat';
+}
+
+export function getMaxTrainingQueueSlots(commandLevel: number): number {
+	const base =
+		(commandLevel || 0) >= COMMAND_VETERAN_THRESHOLD
+			? VETERAN_CHAIN_QUEUE_BASE
+			: PRE_VETERAN_QUEUE_BASE;
+	return base + getCommandTrainingQueueBonus(commandLevel);
 }
 
 function getLifeSupportCostCurveLevel(targetLevel: number): number {
@@ -158,10 +221,7 @@ export function getOverseerCost(nexusCount: number): {
 export function getTrainTimeSeconds(troopType: string, recruitmentLevel: number): number {
 	const baseTime = TROOP_COSTS[troopType].time;
 	if (troopType === 'overseer') return baseTime;
-	const factor = Math.pow(
-		RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL,
-		Math.max(0, recruitmentLevel || 0)
-	);
+	const factor = getRecruitmentTrainFactor(recruitmentLevel);
 	return Math.max(1, Math.floor(baseTime * factor));
 }
 

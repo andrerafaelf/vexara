@@ -1638,6 +1638,65 @@
 	text-transform: uppercase;
 	letter-spacing: 0.1em;
 }
+
+/* Step 2: confirmed-account summary chip + "change" affordance. Signals that
+   credentials were accepted and the form has advanced to the 2FA step. */
+.auth-step-account {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 10px 12px;
+	background: var(--adm-accent-soft);
+	border: 1px solid var(--adm-accent-border);
+	border-radius: var(--radius-sm);
+}
+.auth-step-account-info {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+.auth-step-account-label {
+	font-size: 10px;
+	font-weight: 700;
+	color: var(--text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+}
+.auth-step-account-name {
+	font-size: var(--text-sm);
+	font-weight: 600;
+	color: var(--text-strong);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.auth-step-back {
+	flex-shrink: 0;
+	background: transparent;
+	border: none;
+	padding: 4px 6px;
+	font-size: var(--text-sm);
+	font-weight: 600;
+	color: var(--adm-accent);
+	cursor: pointer;
+	border-radius: var(--radius-sm);
+	transition: color var(--duration-fast) var(--ease-out);
+}
+.auth-step-back:hover {
+	color: var(--adm-accent-h);
+	text-decoration: underline;
+}
+
+/* Neutral helper text under a field (e.g. the 2FA instruction). Distinct from
+   .auth-error so a prompt never reads as a failure. */
+.auth-hint {
+	font-size: var(--text-sm);
+	color: var(--text-faint);
+	line-height: 1.4;
+}
+
 .auth-error {
 	background: var(--danger-soft);
 	color: var(--danger);

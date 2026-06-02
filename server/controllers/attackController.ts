@@ -1,17 +1,13 @@
-import type { AttackType } from '@prisma/client';
 import type { Response } from 'express';
 import prisma from '../lib/prisma.js';
-import { applyQuestRewards, serializeAttack } from '../models/Nexus.js';
+import { serializeAttack } from '../models/Nexus.js';
 import * as attackService from '../services/attackService.js';
 import type { AuthRequest, TroopKey } from '../types/index.js';
-import { TROOP_STATS } from '../utils/combatMath.js';
-import { normalizeTroopPayload, parsePositiveInt } from '../utils/validation.js';
 import { logError, logGameEvent } from '../utils/logger.js';
-import { NOTIF, sendPushToUser } from '../utils/push.js';
 import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
-import { NEXUS_TYPE_BONUSES } from '../utils/economy.js';
+import { normalizeTroopPayload, parsePositiveInt } from '../utils/validation.js';
 
-const TROOP_KEYS: TroopKey[] = [
+const SCHEDULE_TROOP_KEYS: TroopKey[] = [
 	'lancerDrone',
 	'assaultTrooper',
 	'breakerUnit',
@@ -27,8 +23,9 @@ const TROOP_KEYS: TroopKey[] = [
 	'plasmaTurret',
 	'overseer'
 ];
-// Note: Overseers are not actually a troop type that can be sent on their own, but we include them in the normalization and validation logic for convenience since they can be included in attacks/support missions.
-const SUPPORTED_ATTACK_TYPES = new Set<AttackType>(['attack', 'scout', 'support']);
+// Cap how far ahead and how many waves a player can queue, to bound the table.
+const MAX_SCHEDULE_AHEAD_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const MAX_PENDING_SCHEDULED_PER_USER = 50;
 
 // Controller for handling attack-related endpoints: sending attacks, viewing incoming/outgoing attacks, etc.
 export async function sendAttack(req: AuthRequest, res: Response): Promise<void> {
@@ -46,253 +43,28 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
 			type?: string;
 			clientRequestId?: unknown;
 		};
-		const parsedFromNexusId = parsePositiveInt(fromNexusId);
-		const parsedToNexusId = parsePositiveInt(toNexusId);
-		if (!parsedFromNexusId || !parsedToNexusId) {
-			res.status(400).json({ error: 'Invalid nexus IDs' });
-			return;
-		}
-		if (!SUPPORTED_ATTACK_TYPES.has(type as AttackType)) {
-			res.status(400).json({ error: 'Unsupported mission type' });
-			return;
-		}
-		const attackType = type as AttackType;
-		const normalizedClientRequestId =
-			typeof clientRequestId === 'string' && clientRequestId.trim().length > 0
-				? clientRequestId.trim()
-				: null;
-		if (
-			normalizedClientRequestId &&
-			(normalizedClientRequestId.length > 128 ||
-				!/^[A-Za-z0-9:_-]+$/.test(normalizedClientRequestId))
-		) {
-			res.status(400).json({ error: 'Invalid request id' });
+
+		const result = await attackService.launchAttack({
+			userId: req.userId!,
+			galaxyId: req.galaxyId!,
+			fromNexusId,
+			toNexusId,
+			troops,
+			type,
+			clientRequestId
+		});
+		if (!result.ok) {
+			const payload: Record<string, unknown> = { error: result.error };
+			if (result.protectedUntil != null) payload.protectedUntil = result.protectedUntil;
+			res.status(result.status).json(payload);
 			return;
 		}
 
-		const normalizedPayload = normalizeTroopPayload(troops, TROOP_KEYS);
-		if ('error' in normalizedPayload && normalizedPayload.error) {
-			res.status(400).json({ error: normalizedPayload.error });
-			return;
-		}
-		const normalizedTroops = (normalizedPayload as { normalized: Record<string, number> })
-			.normalized;
+		const { attack, reused, attackType, defenderOwnerId } = result;
 
-		const [attackerNexus, defenderNexus] = await Promise.all([
-			attackService.getNexusById(parsedFromNexusId),
-			attackService.getNexusById(parsedToNexusId)
-		]);
-		if (
-			!attackerNexus ||
-			attackerNexus.ownerId !== req.userId ||
-			attackerNexus.galaxyId !== req.galaxyId
-		) {
-			res.status(403).json({ error: 'Not authorized' });
-			return;
-		}
-		if (!defenderNexus) {
-			res.status(404).json({ error: 'Target nexus not found' });
-			return;
-		}
-		if (defenderNexus.galaxyId !== req.galaxyId) {
-			res.status(400).json({ error: 'Cannot attack a nexus in a different galaxy' });
-			return;
-		}
-		if (defenderNexus.ownerId && defenderNexus.ownerId === req.userId) {
-			res.status(400).json({ error: 'Cannot attack your own nexus' });
-			return;
-		}
-		if (
-			defenderNexus.newbieProtectionEndsAt &&
-			new Date(defenderNexus.newbieProtectionEndsAt) > new Date()
-		) {
-			res
-				.status(403)
-				.json({
-					error: 'This nexus is under newbie protection and cannot be attacked yet',
-					protectedUntil: defenderNexus.newbieProtectionEndsAt
-				});
-			return;
-		}
-
-		// A still-protected attacker may only act offensively against NPC / unowned
-		// nexuses — they cannot attack or scout other PLAYERS while sheltered. This
-		// is symmetric with being un-attackable: you can't hide behind protection
-		// and still poke real players. Support to friendly players is benign and
-		// stays allowed (it's checked further down). NPC raids are how a protected
-		// newbie grows, so those remain open.
-		if (
-			(attackType === 'attack' || attackType === 'scout') &&
-			defenderNexus.ownerId != null &&
-			attackerNexus.newbieProtectionEndsAt &&
-			new Date(attackerNexus.newbieProtectionEndsAt) > new Date()
-		) {
-			res.status(403).json({
-				error: 'While under newbie protection you can only attack NPC nexuses, not other players.',
-				protectedUntil: attackerNexus.newbieProtectionEndsAt
-			});
-			return;
-		}
-
-		const totalTroopsRequested = Object.values(normalizedTroops).reduce((sum, a) => sum + a, 0);
-		if (totalTroopsRequested <= 0) {
-			res.status(400).json({ error: 'Select at least one troop' });
-			return;
-		}
-		if ((normalizedTroops.plasmaTurret || 0) > 0) {
-			res.status(400).json({ error: 'Plasma Turrets cannot leave their nexus' });
-			return;
-		}
-
-		if (attackType === 'scout') {
-			const reconOperatives = normalizedTroops.reconOperative || 0;
-			const nonScout = TROOP_KEYS.filter((t) => t !== 'reconOperative').some(
-				(t) => normalizedTroops[t] > 0
-			);
-			if (reconOperatives <= 0 || nonScout) {
-				res.status(400).json({ error: 'Scout missions require Recon Operatives only' });
-				return;
-			}
-		}
-		if (attackType === 'support') {
-			// Cannot send support to your own nexus (use troop transfer instead)
-			if (defenderNexus.ownerId === req.userId) {
-				res
-					.status(400)
-					.json({ error: 'Use troop transfer to move troops between your own nexuses' });
-				return;
-			}
-			// Target must be a friendly player (same faction or friend)
-			if (defenderNexus.ownerId) {
-				const [sameFaction, areFriends] = await Promise.all([
-					prisma.factionMember
-						.findFirst({
-							where: {
-								galaxyId: req.galaxyId!,
-								userId: { in: [req.userId!, defenderNexus.ownerId] }
-							}
-						})
-						.then(async (m1) => {
-							if (!m1) return false;
-							const m2 = await prisma.factionMember.findFirst({
-								where: {
-									galaxyId: req.galaxyId!,
-									userId: m1.userId === req.userId ? defenderNexus.ownerId! : req.userId!
-								}
-							});
-							return !!(m1 && m2 && m1.factionId === (m2 as any)?.factionId);
-						}),
-					prisma.friendship
-						.findFirst({
-							where: {
-								OR: [
-									{ userAId: req.userId!, userBId: defenderNexus.ownerId! },
-									{ userAId: defenderNexus.ownerId!, userBId: req.userId! }
-								]
-							}
-						})
-						.then(Boolean)
-				]);
-				if (!sameFaction && !areFriends) {
-					res
-						.status(403)
-						.json({ error: 'Support missions can only be sent to faction members or friends' });
-					return;
-				}
-			} else {
-				res.status(400).json({ error: 'Cannot send support to an unowned nexus' });
-				return;
-			}
-			// No overseer in support missions
-			if ((normalizedTroops.overseer || 0) > 0) {
-				res.status(400).json({ error: 'Overseers cannot be sent on support missions' });
-				return;
-			}
-		}
-		if (attackType !== 'support' && (normalizedTroops.overseer || 0) > 1) {
-			res.status(400).json({ error: 'Maximum 1 Overseer per strike' });
-			return;
-		}
-
-		const attackerRecord = attackerNexus as unknown as Record<string, number>;
-		for (const [troopType, amount] of Object.entries(normalizedTroops)) {
-			if ((attackerRecord[troopType] || 0) < amount) {
-				res.status(400).json({ error: `Insufficient ${troopType}` });
-				return;
-			}
-		}
-
-		const distance = Math.sqrt(
-			Math.pow(defenderNexus.x - attackerNexus.x, 2) +
-				Math.pow(defenderNexus.y - attackerNexus.y, 2)
-		);
-		const baseTravel =
-			NEXUS_TYPE_BONUSES[
-				(attackerNexus as unknown as { nexusType?: string | null }).nexusType ?? ''
-			]?.travelTimeMultiplier ?? 1;
-		const nexusDoubledForTravel =
-			(attackerNexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled ?? false;
-		const travelSpeedMultiplier =
-			baseTravel === 1 ? 1 : nexusDoubledForTravel ? Math.pow(baseTravel, 2) : baseTravel;
-		let travelTimeMinutes: number;
-		if (attackType === 'scout') {
-			travelTimeMinutes = distance * 4 * travelSpeedMultiplier;
-		} else {
-			// Overseer strikes use the slowest-troop formula then get a 3x surcharge -
-			// making conquest trains clearly distinct (and giving defenders time to react).
-			const OVERSEER_EFFECTIVE_SPEED = 6;
-			const OVERSEER_TRAVEL_MULTIPLIER = 3;
-			let minSpeed = Infinity;
-			for (const [troopType, amount] of Object.entries(normalizedTroops)) {
-				if (amount > 0 && (TROOP_STATS as Record<string, { speed: number }>)[troopType]) {
-					const speed =
-						troopType === 'overseer'
-							? OVERSEER_EFFECTIVE_SPEED
-							: (TROOP_STATS as Record<string, { speed: number }>)[troopType].speed;
-					if (speed < minSpeed) minSpeed = speed;
-				}
-			}
-			const hasOverseer = (normalizedTroops.overseer || 0) > 0;
-			travelTimeMinutes =
-				distance *
-				(4 + (28 - minSpeed) / 10) *
-				(hasOverseer ? OVERSEER_TRAVEL_MULTIPLIER : 1) *
-				travelSpeedMultiplier;
-		}
-		const arrivesAt = new Date(Date.now() + travelTimeMinutes * 60 * 1000);
-
-		const { attack, updatedAttackerNexus, reused } =
-			await attackService.createAttackAndDeductTroops(
-				{
-					galaxyId: req.galaxyId,
-					attackerUserId: req.userId,
-					attackerNexusId: parsedFromNexusId,
-					defenderUserId: defenderNexus.ownerId ?? null,
-					defenderNexusId: parsedToNexusId,
-					troops: normalizedTroops,
-					arrivesAt,
-					type: attackType,
-					clientRequestId: normalizedClientRequestId
-				} as Parameters<typeof prisma.attack.create>[0]['data'],
-				attackerNexus.id,
-				normalizedTroops
-			);
-		if (!reused) await applyQuestRewards(updatedAttackerNexus, { hasOutgoingStrike: true });
-
-		// Notify the defender immediately that an attack is inbound.
-		// Scout missions are intentionally excluded - stealth is part of the mechanic.
-		if (!reused && defenderNexus.ownerId && attackType === 'attack') {
-			const etaMinutes = Math.round(travelTimeMinutes);
-			const etaStr =
-				etaMinutes < 60 ? `${etaMinutes}m` : `${Math.floor(etaMinutes / 60)}h ${etaMinutes % 60}m`;
-			void sendPushToUser(defenderNexus.ownerId, NOTIF.ATTACK_INCOMING, {
-				title: '⚠️ Incoming Attack',
-				body: `A strike is heading for ${defenderNexus.name}. ETA: ${etaStr}.`,
-				tag: `incoming-${attack.id}`,
-				data: { url: '/' }
-			});
-		}
-
+		// Quest / streak progress + first-event telemetry are HTTP-path concerns
+		// (a scheduled launch increments them through this same controller is N/A —
+		// the job fires launchAttack directly, so we keep these here).
 		try {
 			const { incrementQuestProgress } = await import('../services/dailyStreakService.js');
 			if (!reused)
@@ -309,7 +81,7 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
 		if (!reused) {
 			if (attackType === 'attack')
 				logGameEvent('first_attack', req.userId, req.galaxyId, {
-					defenderUserId: defenderNexus.ownerId ?? null
+					defenderUserId: defenderOwnerId
 				});
 			else if (attackType === 'scout') logGameEvent('first_scout', req.userId, req.galaxyId);
 		}
@@ -452,6 +224,211 @@ export async function getOutgoingAttacks(req: AuthRequest, res: Response): Promi
 				});
 			})
 		);
+	} catch (error) {
+		logError('unhandled_controller_error', {
+			message: (error as Error).message,
+			file: 'attackController.ts'
+		});
+		res.status(500).json({ error: 'Internal server error' });
+	}
+}
+
+function serializeScheduledAttack(row: {
+	id: number;
+	fromNexusId: number;
+	toNexusId: number;
+	troops: unknown;
+	type: string;
+	launchAt: Date;
+	status: string;
+	error: string | null;
+	createdAt: Date;
+}) {
+	return {
+		id: row.id,
+		fromNexusId: row.fromNexusId,
+		toNexusId: row.toNexusId,
+		troops: (row.troops ?? {}) as Record<string, number>,
+		type: row.type,
+		launchAt: row.launchAt.toISOString(),
+		status: row.status,
+		error: row.error,
+		createdAt: row.createdAt.toISOString()
+	};
+}
+
+// POST /attack/schedule — queue a wave to launch server-side at launchAt.
+// Validation here is intentionally light (cheap sanity checks); the heavy
+// validation (troop availability, protection, etc.) runs at fire time in
+// processScheduledAttacks via attackService.launchAttack, because those facts
+// can change between scheduling and launch.
+export async function scheduleAttack(req: AuthRequest, res: Response): Promise<void> {
+	try {
+		const {
+			fromNexusId,
+			toNexusId,
+			troops,
+			type = 'attack',
+			launchAt,
+			clientRequestId
+		} = req.body as {
+			fromNexusId?: unknown;
+			toNexusId?: unknown;
+			troops?: unknown;
+			type?: string;
+			launchAt?: unknown;
+			clientRequestId?: unknown;
+		};
+
+		const parsedFromNexusId = parsePositiveInt(fromNexusId);
+		const parsedToNexusId = parsePositiveInt(toNexusId);
+		if (!parsedFromNexusId || !parsedToNexusId) {
+			res.status(400).json({ error: 'Invalid nexus IDs' });
+			return;
+		}
+		if (!['attack', 'scout', 'support'].includes(type)) {
+			res.status(400).json({ error: 'Unsupported mission type' });
+			return;
+		}
+		const launchMs =
+			typeof launchAt === 'string' || typeof launchAt === 'number'
+				? new Date(launchAt).getTime()
+				: NaN;
+		if (!Number.isFinite(launchMs)) {
+			res.status(400).json({ error: 'Invalid launch time' });
+			return;
+		}
+		// Allow a small grace window in the past — a launch within ~30s of now is
+		// effectively "send now"; the job will fire it on its next tick.
+		const now = Date.now();
+		if (launchMs > now + MAX_SCHEDULE_AHEAD_MS) {
+			res.status(400).json({ error: 'Cannot schedule more than 7 days ahead' });
+			return;
+		}
+		if (launchMs < now - 30_000) {
+			res.status(400).json({ error: 'Launch time is in the past' });
+			return;
+		}
+
+		const normalizedPayload = normalizeTroopPayload(troops, SCHEDULE_TROOP_KEYS);
+		if ('error' in normalizedPayload && normalizedPayload.error) {
+			res.status(400).json({ error: normalizedPayload.error });
+			return;
+		}
+		const normalizedTroops = (normalizedPayload as { normalized: Record<string, number> })
+			.normalized;
+		if (Object.values(normalizedTroops).reduce((s, n) => s + n, 0) <= 0) {
+			res.status(400).json({ error: 'Select at least one troop' });
+			return;
+		}
+
+		const normalizedClientRequestId =
+			typeof clientRequestId === 'string' && clientRequestId.trim().length > 0
+				? clientRequestId.trim()
+				: null;
+		if (
+			normalizedClientRequestId &&
+			(normalizedClientRequestId.length > 128 ||
+				!/^[A-Za-z0-9:_-]+$/.test(normalizedClientRequestId))
+		) {
+			res.status(400).json({ error: 'Invalid request id' });
+			return;
+		}
+
+		// Verify the source nexus is currently the caller's and in their galaxy.
+		// (Re-checked at fire time too, but failing fast gives a clean error now.)
+		const nexus = await prisma.nexus.findUnique({
+			where: { id: parsedFromNexusId },
+			select: { ownerId: true, galaxyId: true }
+		});
+		if (!nexus || nexus.ownerId !== req.userId || nexus.galaxyId !== req.galaxyId) {
+			res.status(403).json({ error: 'Not authorized' });
+			return;
+		}
+
+		const pendingCount = await prisma.scheduledAttack.count({
+			where: { userId: req.userId!, status: 'pending' }
+		});
+		if (pendingCount >= MAX_PENDING_SCHEDULED_PER_USER) {
+			res
+				.status(409)
+				.json({ error: `Limit of ${MAX_PENDING_SCHEDULED_PER_USER} scheduled waves reached` });
+			return;
+		}
+
+		// Idempotent on clientRequestId so a retried request doesn't double-queue.
+		if (normalizedClientRequestId) {
+			const existing = await prisma.scheduledAttack.findUnique({
+				where: { clientRequestId: normalizedClientRequestId }
+			});
+			if (existing) {
+				res.json({ success: true, scheduled: serializeScheduledAttack(existing) });
+				return;
+			}
+		}
+
+		const row = await prisma.scheduledAttack.create({
+			data: {
+				galaxyId: req.galaxyId!,
+				userId: req.userId!,
+				fromNexusId: parsedFromNexusId,
+				toNexusId: parsedToNexusId,
+				troops: normalizedTroops,
+				type: type as any,
+				launchAt: new Date(launchMs),
+				clientRequestId: normalizedClientRequestId
+			}
+		});
+		res.json({ success: true, scheduled: serializeScheduledAttack(row) });
+	} catch (error) {
+		if ((error as { code?: string }).code === 'P2002') {
+			res.status(409).json({ error: 'Request id already used' });
+			return;
+		}
+		logError('unhandled_controller_error', {
+			message: (error as Error).message,
+			file: 'attackController.ts'
+		});
+		res.status(500).json({ error: 'Internal server error' });
+	}
+}
+
+// GET /attack/scheduled — list the caller's pending scheduled waves.
+export async function getScheduledAttacks(req: AuthRequest, res: Response): Promise<void> {
+	try {
+		const rows = await prisma.scheduledAttack.findMany({
+			where: { userId: req.userId!, galaxyId: req.galaxyId!, status: 'pending' },
+			orderBy: { launchAt: 'asc' }
+		});
+		res.json({ scheduled: rows.map(serializeScheduledAttack) });
+	} catch (error) {
+		logError('unhandled_controller_error', {
+			message: (error as Error).message,
+			file: 'attackController.ts'
+		});
+		res.status(500).json({ error: 'Internal server error' });
+	}
+}
+
+// DELETE /attack/scheduled/:id — cancel a pending scheduled wave.
+export async function cancelScheduledAttack(req: AuthRequest, res: Response): Promise<void> {
+	try {
+		const id = parsePositiveInt(req.params.id);
+		if (!id) {
+			res.status(400).json({ error: 'Invalid id' });
+			return;
+		}
+		// Only flip pending → cancelled, and only for the owner. updateMany returns a
+		// count so a race with the job (which moves the row to launched) is a no-op.
+		const updated = await prisma.scheduledAttack.updateMany({
+			where: { id, userId: req.userId!, status: 'pending' },
+			data: { status: 'cancelled', processedAt: new Date() }
+		});
+		if (updated.count === 0) {
+			res.status(404).json({ error: 'Scheduled wave not found or already launched' });
+			return;
+		}
+		res.json({ success: true });
 	} catch (error) {
 		logError('unhandled_controller_error', {
 			message: (error as Error).message,

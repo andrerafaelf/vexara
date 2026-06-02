@@ -15,7 +15,7 @@
 // If "I forgot to bump it" becomes a real pattern, swap to a build step
 // that globs the directory and writes this file. Until then: simpler wins.
 
-export const LATEST_PATCH_VERSION = '0.18.2';
-export const LATEST_PATCH_LABEL = 'Alpha v0.18.2';
+export const LATEST_PATCH_VERSION = '0.19';
+export const LATEST_PATCH_LABEL = 'Alpha v0.19';
 export const LATEST_PATCH_HEADLINE =
-	'Overseer empire scaling now ramps to a 4x cap at 12+ owned nexuses.';
+	'Server-side scheduled waves, class-split training queues at Command Core 15, and a flush nexus tab bar.';

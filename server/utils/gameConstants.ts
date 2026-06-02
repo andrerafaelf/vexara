@@ -57,8 +57,32 @@ const LIFE_SUPPORT_MAX_LEVEL = 25;
 // Command Core reduces build time 5% per level (compounding)
 export const COMMAND_BUILD_TIME_FACTOR_PER_LEVEL = 0.95;
 
-// Recruitment Core reduces train time 9% per level (compounding). Overseer is exempt.
+// Recruitment Core reduces train time per level (compounding). Overseer is exempt.
+// The discount is -9%/level through level 15, then flattens to -5%/level for
+// 16-20. Without the flatten, a maxed RC20 would train ~6.6x faster and RC25
+// ~10.6x - that compounding undercuts the v0.19 anti-snowball training-queue
+// limits for top players. The flattened tail keeps the bonus a meaningful but
+// bounded late-game reward (RC20 ~5.3x). Levels are capped by RC's maxLevel (20).
 export const RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL = 0.91;
+const RECRUITMENT_TRAIN_FACTOR_LATE = 0.95;
+const RECRUITMENT_TRAIN_FACTOR_BREAKPOINT = 15;
+
+// Compound train-time multiplier from Recruitment Core level: 0.91^min(L,15) *
+// 0.95^max(0,L-15). Continuous at L15. Lower = faster.
+export function getRecruitmentTrainFactor(recruitmentLevel: number): number {
+	const lvl = Math.max(0, recruitmentLevel || 0);
+	const earlyLevels = Math.min(lvl, RECRUITMENT_TRAIN_FACTOR_BREAKPOINT);
+	const lateLevels = Math.max(0, lvl - RECRUITMENT_TRAIN_FACTOR_BREAKPOINT);
+	return (
+		Math.pow(RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL, earlyLevels) *
+		Math.pow(RECRUITMENT_TRAIN_FACTOR_LATE, lateLevels)
+	);
+}
+
+// Hard cap on units trained in a single train request (one queue entry). The
+// client must clamp its "max trainable" to this so the input never offers a
+// value the server will reject. Mirrored in client/realtime/gameConstants.shared.ts.
+export const MAX_TRAIN_PER_BATCH = 1000;
 
 // Veteran tier (CC 16-20) grants extra queue slots instead of any combat or
 // economy bonus - pure quality-of-life so late-game CC actually pays rent.
@@ -83,6 +107,96 @@ export function getCommandBuildQueueBonus(commandLevel: number): number {
 export function getCommandTrainingQueueBonus(commandLevel: number): number {
 	const veteran = Math.max(0, (commandLevel || 0) - COMMAND_VETERAN_THRESHOLD);
 	return Math.max(0, Math.min(2, veteran - 2));
+}
+
+// ── Class-based training chains (CC15 veteran unlock) ───────────────────────
+// Training runs as several independent, concurrent chains. Each chain has its
+// own slot budget and its own timeline, so a nexus can train (say) a mobile and
+// an armor batch at the same time instead of serially.
+//
+// Below CC15 there are just two chains - `combat` (every fighting unit) and
+// `special` (recon + overseer) - which is exactly the legacy {regular, overseer}
+// behaviour, unchanged. At CC15 (COMMAND_VETERAN_THRESHOLD) the combat chain
+// splits into the three counter classes (mobile / armor / fire). This is purely
+// additive: sub-veterans keep their old single combat chain and their old slot
+// count; veterans gain parallelism, not a nerf.
+//
+// `special` mirrors TROOP_CLASS in combatMath.ts (recon + overseer are the only
+// non-combat units). Kept as a local map so this constants module stays
+// dependency-free; if a troop's class changes there, change its chain here.
+export type TrainingChain = 'mobile' | 'armor' | 'fire' | 'special' | 'combat';
+
+// Per-chain slot budget BEFORE the CC18/19 bonus.
+//   - Pre-veteran (CC<15): 5, unchanged from the historical single-queue base.
+//   - Veteran (CC>=15): 2 per chain. Deliberately tight: parallel chains are a
+//     capability win (produce a balanced army in one pass) without becoming an
+//     army-regeneration-speed win (which would feed snowballing). This is the
+//     single knob to loosen if veterans feel too slot-starved.
+export const PRE_VETERAN_QUEUE_BASE = 5;
+export const VETERAN_CHAIN_QUEUE_BASE = 2;
+
+// Per-chain max training slots for a nexus at the given Command Core level,
+// including the CC18/19 veteran bonus. Below CC15 this is the legacy 5 (+bonus
+// never applies pre-CC15 anyway). At/after CC15 it's VETERAN_CHAIN_QUEUE_BASE
+// plus the standard +1/+2 ramp.
+export function getMaxTrainingQueueSlots(commandLevel: number): number {
+	const base =
+		(commandLevel || 0) >= COMMAND_VETERAN_THRESHOLD
+			? VETERAN_CHAIN_QUEUE_BASE
+			: PRE_VETERAN_QUEUE_BASE;
+	return base + getCommandTrainingQueueBonus(commandLevel);
+}
+
+// ── Stationing eligibility (support + transfer share one rule) ──────────────
+// Stationing troops at ANOTHER nexus - whether an ally's (support mission) or
+// your own (troop transfer) - is the same operation: it parks a defensive
+// garrison. Only DEFENSIVE units may be stationed. Offensive units only ever
+// leave a nexus via an attack; Recon is scout-only; Overseer is a conquest tool;
+// Plasma Turret is stationary. Single source of truth for both code paths
+// (attackService support branch + troopTransferController) so they never drift.
+export const STATIONABLE_TROOPS: readonly string[] = [
+	'assaultTrooper',
+	'lancerDrone',
+	'siegeMech',
+	'bulwarkGuard'
+];
+const STATIONABLE_TROOP_SET = new Set<string>(STATIONABLE_TROOPS);
+
+export function isStationableTroop(troopType: string): boolean {
+	return STATIONABLE_TROOP_SET.has(troopType);
+}
+
+const TROOP_COMBAT_CLASS: Record<string, 'mobile' | 'armor' | 'fire' | 'special'> = {
+	lancerDrone: 'fire',
+	assaultTrooper: 'armor',
+	breakerUnit: 'mobile',
+	reconOperative: 'special',
+	skimmerBike: 'mobile',
+	bulwarkGuard: 'armor',
+	suppressorTeam: 'fire',
+	disruptorUnit: 'fire',
+	interceptorBike: 'mobile',
+	siegeMech: 'armor',
+	annihilatorPlatform: 'fire',
+	voidStalker: 'mobile',
+	plasmaTurret: 'fire',
+	overseer: 'special'
+};
+
+// Which chains a nexus has, given its Command Core level. Order is fixed so the
+// UI renders lanes consistently (combat triangle first, special last).
+export function getTrainingChains(commandLevel: number): TrainingChain[] {
+	return (commandLevel || 0) >= COMMAND_VETERAN_THRESHOLD
+		? ['mobile', 'armor', 'fire', 'special']
+		: ['combat', 'special'];
+}
+
+// Which chain a given troop type trains in, for the nexus's current CC tier.
+// Pre-veteran, every combat class collapses into the single `combat` chain.
+export function trainingChainFor(troopType: string, commandLevel: number): TrainingChain {
+	const cls = TROOP_COMBAT_CLASS[troopType] ?? 'special';
+	if (cls === 'special') return 'special';
+	return (commandLevel || 0) >= COMMAND_VETERAN_THRESHOLD ? cls : 'combat';
 }
 
 // Effective per-tier multiplier when a building cost is computed from level 1 → targetLevel.
@@ -173,10 +287,7 @@ export function getOverseerCost(nexusCount: number): {
 export function getTrainTimeSeconds(troopType: string, recruitmentLevel: number): number {
 	const baseTime = TROOP_COSTS[troopType].time;
 	if (troopType === 'overseer') return baseTime;
-	const factor = Math.pow(
-		RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL,
-		Math.max(0, recruitmentLevel || 0)
-	);
+	const factor = getRecruitmentTrainFactor(recruitmentLevel);
 	return Math.max(1, Math.floor(baseTime * factor));
 }
 

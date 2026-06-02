@@ -403,6 +403,13 @@ enum AttackStatus {
   cancelled
 }
 
+enum ScheduledAttackStatus {
+  pending
+  launched
+  failed
+  cancelled
+}
+
 model Attack {
   id Int @id @default(autoincrement())
 
@@ -431,6 +438,37 @@ model Attack {
   @@index([status, arrivesAt])
   @@index([attackerNexusId, status])
   @@index([defenderNexusId, status])
+}
+
+// A wave/attack queued to launch at a future moment. Persisted server-side so it
+// fires whether or not the planning client is online (the in-browser Wave Planner
+// only fired while the tab stayed open). The processScheduledAttacks job picks up
+// rows where status='pending' AND launchAt <= now and runs attackService.launchAttack,
+// which re-validates ownership/troops/protection at fire time. IDs are stored as
+// plain scalars (no FK relations) intentionally — the launcher tolerates a missing
+// nexus by marking the row failed.
+model ScheduledAttack {
+  id Int @id @default(autoincrement())
+
+  galaxyId    Int
+  userId      Int
+  fromNexusId Int
+  toNexusId   Int
+  troops      Json
+  type        AttackType @default(attack)
+
+  launchAt DateTime
+  status   ScheduledAttackStatus @default(pending)
+  error    String?               @db.VarChar(256)
+  // Forwarded to launchAttack so the resulting Attack is idempotent on retries.
+  clientRequestId String? @unique
+
+  createdAt   DateTime  @default(now())
+  processedAt DateTime?
+
+  @@index([status, launchAt])
+  @@index([userId])
+  @@index([galaxyId])
 }
 
 model Faction {

@@ -2,7 +2,10 @@ import type { PrismaClient } from '@prisma/client';
 import { TROOP_COSTS } from './gameConstants.js';
 
 export const POPULATION_BASE = 100;
-export const POPULATION_GROWTH = 1.19;
+// Tuned so a max-level (25) Life Support tops out just under 10,000 pop
+// (floor(100 * 1.202^25) = 9,945). Base stays 100 so early game is barely
+// affected; the buff concentrates in the late levels where the investment is.
+export const POPULATION_GROWTH = 1.202;
 
 export function getPopulationMax(level: number): number {
 	const safeLevel = Math.max(0, Number(level) || 0);

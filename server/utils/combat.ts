@@ -1269,10 +1269,19 @@ async function processReturnedTroops(attack: Attack): Promise<void> {
 		}
 
 		const returnData: Record<string, unknown> = {};
+		// Resolved (numeric) post-landing troop counts, used only for the population
+		// recompute below. The DB write uses atomic { increment } so two attacks
+		// returning to the same nexus in one pass can't clobber each other's
+		// survivors; the population calc needs plain numbers, not increment objects.
+		const resolvedTroops: Record<string, number> = {
+			...(attackerNexus as unknown as Record<string, number>)
+		};
 		for (const [troopType, count] of Object.entries(survivingTroops)) {
-			if ((count ?? 0) > 0)
-				returnData[troopType] =
+			if ((count ?? 0) > 0) {
+				returnData[troopType] = { increment: count! };
+				resolvedTroops[troopType] =
 					((attackerNexus as unknown as Record<string, number>)[troopType] || 0) + count!;
+			}
 		}
 		const attackerMaxStorage = getMaxStorage(attackerNexus as Parameters<typeof getMaxStorage>[0]);
 		returnData['biomass'] = Math.min(attackerNexus.biomass + (resourcesStolen.biomass || 0), attackerMaxStorage);
@@ -1285,7 +1294,7 @@ async function processReturnedTroops(attack: Attack): Promise<void> {
 		// on no counted row - is reconciled exactly once, with no drift.
 		const returnAway = await loadAwayPopulation(prisma, attack.attackerNexusId!);
 		returnData['populationCurrent'] = computeNexusPopulation({
-			troops: { ...(attackerNexus as unknown as Record<string, unknown>), ...returnData },
+			troops: resolvedTroops,
 			trainingQueue: attackerNexus.trainingQueue,
 			populationMax: attackerNexus.populationMax,
 			...returnAway
@@ -1406,19 +1415,78 @@ export async function processArrivedTransfers(): Promise<void> {
 	for (const transfer of returning) {
 		try {
 			const troops = transfer.troops as Record<TroopKey, number>;
-			const returnData: Record<string, number> = {};
+
+			// Re-read the destination from the DB rather than trusting the row loaded
+			// at query time. If the owner lost this nexus (conquered) or it no longer
+			// exists, the old code's blind nexus.update threw every tick and the
+			// transfer was stuck in 'returning' forever - troops silently lost. Now we
+			// detect that, delete the transfer, and free the population the troops were
+			// still holding (symmetric with the arriving-block owner-changed guard).
+			const destNexus = await prisma.nexus.findUnique({ where: { id: transfer.ownerNexusId } });
+			const ownerId = (transfer.ownerNexus as unknown as { owner?: { id: number } })?.owner?.id;
+
+			if (!destNexus || (ownerId != null && destNexus.ownerId !== ownerId)) {
+				await prisma.troopTransfer.delete({ where: { id: transfer.id } });
+				await freePopulationForDestroyedTroops(transfer.ownerNexusId, troops, {
+					reason: 'returning_transfer_home_nexus_lost',
+					transferId: transfer.id,
+					ownerNexusId: transfer.ownerNexusId
+				});
+				logWarn('returning_transfer_home_lost', {
+					transferId: transfer.id,
+					ownerNexusId: transfer.ownerNexusId,
+					troopsLost: countTroops(troops)
+				});
+				if (ownerId) {
+					void sendPushToUser(ownerId, NOTIF.TROOP_TRANSFER, {
+						title: 'Troops Lost',
+						body: `Returning troops were lost - their home nexus is no longer yours.`,
+						tag: `transfer-return-lost-${transfer.id}`,
+						data: { url: '/' }
+					});
+					notifyTransferUpdate(ownerId, transfer.ownerNexusId);
+				}
+				continue;
+			}
+
+			// Credit surviving troops back onto the home nexus row. `troops` already
+			// reflects combat survivors (combat rewrites the transfer blob to the
+			// survivors and only deletes it when none remain), so a partially-wiped
+			// support force returns exactly its survivors.
+			//
+			// Use atomic { increment } rather than reading the current count and
+			// writing an absolute sum. The old absolute approach read the home
+			// nexus's troop counts from a snapshot taken at query time; when two
+			// transfers returned to the SAME nexus in one tick, the second write was
+			// computed from the stale pre-first-write snapshot and silently clobbered
+			// the first transfer's troops for any shared type. Increments compose
+			// correctly no matter how many transfers land together.
+			const returnData: Record<string, { increment: number }> = {};
 			for (const field of TRANSFER_TROOP_FIELDS) {
-				if (troops[field] > 0)
-					returnData[field] =
-						((transfer.ownerNexus as unknown as Record<TroopKey, number>)[field] ?? 0) +
-						troops[field];
+				if (troops[field] > 0) returnData[field] = { increment: troops[field] };
 			}
 			await prisma.$transaction([
 				prisma.nexus.update({ where: { id: transfer.ownerNexusId }, data: returnData }),
 				prisma.troopTransfer.delete({ where: { id: transfer.id } })
 			]);
+			// Recompute housing now that the troops live on the row again and no longer
+			// count as 'away' population - keeps populationCurrent authoritative.
+			const away = await loadAwayPopulation(prisma, transfer.ownerNexusId);
+			const refreshed = await prisma.nexus.findUnique({ where: { id: transfer.ownerNexusId } });
+			if (refreshed) {
+				await prisma.nexus.update({
+					where: { id: transfer.ownerNexusId },
+					data: {
+						populationCurrent: computeNexusPopulation({
+							troops: refreshed as unknown as Record<string, unknown>,
+							trainingQueue: refreshed.trainingQueue,
+							populationMax: refreshed.populationMax,
+							...away
+						})
+					}
+				});
+			}
 
-			const ownerId = (transfer.ownerNexus as unknown as { owner?: { id: number } })?.owner?.id;
 			if (ownerId) {
 				const total = TRANSFER_TROOP_FIELDS.reduce((s, f) => s + (troops[f] || 0), 0);
 				void sendPushToUser(ownerId, NOTIF.TROOP_TRANSFER, {

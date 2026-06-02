@@ -35,6 +35,7 @@ import troopRoutes from './routes/troop.js';
 import troopTransferRoutes from './routes/troopTransfer.js';
 import usersRoutes from './routes/users.js';
 import { processArrivedAttacks, processArrivedTransfers } from './utils/combat.js';
+import { processScheduledAttacks } from './services/attackService.js';
 import { processArrivedSpyMissions } from './controllers/spyController.js';
 import { processDominanceVictories } from './utils/dominance.js';
 import { logError, logInfo, logWarn } from './utils/logger.js';
@@ -208,7 +209,8 @@ const JOB_LOCKS = {
 	protectionWarnings: 9112,
 	rogueAiRaids: 9113,
 	rogueAiGrowth: 9114,
-	purgeNexuslessMembers: 9115
+	purgeNexuslessMembers: 9115,
+	processScheduledAttacks: 9116
 };
 
 async function runWithPgAdvisoryLock(
@@ -286,6 +288,13 @@ prisma
 		setInterval(() => {
 			void runWithPgAdvisoryLock(JOB_LOCKS.processCombat, 'process_combat', () =>
 				processArrivedAttacks()
+			);
+		}, 10000);
+		setInterval(() => {
+			void runWithPgAdvisoryLock(
+				JOB_LOCKS.processScheduledAttacks,
+				'process_scheduled_attacks',
+				() => processScheduledAttacks()
 			);
 		}, 10000);
 		setInterval(() => {

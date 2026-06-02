@@ -13,11 +13,14 @@ import { atomicUpdateNexusResources, ResourceConflictError } from '../services/n
 import type { AuthRequest } from '../types/index.js';
 import { getMaxStorage, getResourceProduction } from '../utils/economy.js';
 import {
+	MAX_TRAIN_PER_BATCH,
 	TROOP_COSTS,
-	getCommandTrainingQueueBonus,
 	getEffectiveTrainTimeSeconds,
+	getMaxTrainingQueueSlots,
 	getOverseerCost,
-	getTrainTimeSeconds
+	getTrainTimeSeconds,
+	getTrainingChains,
+	trainingChainFor
 } from '../utils/gameConstants.js';
 import { parsePositiveInt } from '../utils/validation.js';
 import { computeNexusPopulation } from '../utils/population.js';
@@ -71,12 +74,18 @@ function emitResourceSnapshot(
 	});
 }
 
-const BASE_MAX_TRAINING_QUEUE = 5;
-
-// CC Veteran tier (Lv18-19) adds +1 training queue slot each, capped at +2 (7 total).
-// Applied to both the regular and overseer sub-chains independently.
-function getMaxTrainingQueue(commandCore: number): number {
-	return BASE_MAX_TRAINING_QUEUE + getCommandTrainingQueueBonus(commandCore);
+// True if a queue entry belongs to the same training chain as `troopType`, given
+// the nexus's Command Core tier. Below CC15 there are two chains (combat /
+// special); at CC15+ the combat chain splits into mobile / armor / fire. This
+// replaces the old hard-coded overseer-vs-regular predicate.
+function sameTrainingChain(
+	entry: { troopType: string },
+	troopType: string,
+	commandCore: number
+): boolean {
+	return (
+		trainingChainFor(entry.troopType, commandCore) === trainingChainFor(troopType, commandCore)
+	);
 }
 
 const TROOP_REQUIREMENTS: Record<
@@ -157,8 +166,10 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
 			res.status(400).json({ error: 'Invalid nexus ID' });
 			return;
 		}
-		if (!parsedAmount || parsedAmount > 1000) {
-			res.status(400).json({ error: 'Amount must be an integer between 1 and 1000' });
+		if (!parsedAmount || parsedAmount > MAX_TRAIN_PER_BATCH) {
+			res
+				.status(400)
+				.json({ error: `Amount must be an integer between 1 and ${MAX_TRAIN_PER_BATCH}` });
 			return;
 		}
 
@@ -262,11 +273,10 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
 		}
 
 		const trainingQueue = normalizeTrainingQueue(nexus.trainingQueue);
-		const isOverseer = troopType === 'overseer';
 		const sameChainQueue = trainingQueue.filter((e: { troopType: string }) =>
-			isOverseer ? e.troopType === 'overseer' : e.troopType !== 'overseer'
+			sameTrainingChain(e, troopType, nexus.commandCore)
 		);
-		const maxTrainingQueue = getMaxTrainingQueue(nexus.commandCore);
+		const maxTrainingQueue = getMaxTrainingQueueSlots(nexus.commandCore);
 		if (sameChainQueue.length >= maxTrainingQueue) {
 			res
 				.status(400)
@@ -414,11 +424,11 @@ export async function cancelTrainingQueue(req: AuthRequest, res: Response): Prom
 				}
 			}
 		};
-		const isOverseerItem =
-			(trainingQueue[parsedIndex] as { troopType: string } | undefined)?.troopType === 'overseer';
-		advanceChain((e: { troopType: string }) =>
-			isOverseerItem ? e.troopType === 'overseer' : e.troopType !== 'overseer'
-		);
+		const cancelledChainTroop =
+			(trainingQueue[parsedIndex] as { troopType: string } | undefined)?.troopType ?? '';
+		const inCancelledChain = (e: { troopType: string }) =>
+			sameTrainingChain(e, cancelledChainTroop, nexus.commandCore);
+		advanceChain(inCancelledChain);
 
 		// The index the client sent referred to the queue before partial-credit;
 		// re-resolve it by finding the first remaining entry in the same chain that
@@ -463,7 +473,7 @@ export async function cancelTrainingQueue(req: AuthRequest, res: Response): Prom
 			};
 			const itemCompletesAt = new Date(item.completesAt).getTime();
 			const sameChainPredicate = (entry: { troopType: string }) =>
-				isOverseerItem ? entry.troopType === 'overseer' : entry.troopType !== 'overseer';
+				sameTrainingChain(entry, cancelledChainTroop, nexus.commandCore);
 			newQueue = trainingQueue.filter((_, i) => i !== refundedIdx) as Array<{
 				troopType: string;
 				amount: number;
@@ -611,8 +621,14 @@ export async function checkTrainingQueue(req: AuthRequest, res: Response): Promi
 				}
 			}
 		};
-		advanceChain((e: { troopType: string }) => e.troopType !== 'overseer');
-		advanceChain((e: { troopType: string }) => e.troopType === 'overseer');
+		// Advance each training chain independently. Chains run concurrently, so we
+		// drain the head of every one whose timer has elapsed. (Pre-CC15 this is
+		// just combat + special; at CC15+ it's mobile/armor/fire/special.)
+		for (const chain of getTrainingChains(nexus.commandCore)) {
+			advanceChain(
+				(e: { troopType: string }) => trainingChainFor(e.troopType, nexus.commandCore) === chain
+			);
+		}
 		const resourceUpdate = computeResourceUpdate(nexus);
 		const nexusUpdate: Record<string, unknown> = {
 			...resourceUpdate,

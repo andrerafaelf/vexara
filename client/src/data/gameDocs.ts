@@ -68,6 +68,8 @@ Vexara uses a rock-paper-scissors class triangle: Mobile beats Armor, Armor beat
 
 **Defender advantage:** The defender's Shield Grid multiplies total defensive power on top of all class counters. The attacker never gets the Shield Grid bonus, so pure defensive nexuses with high Shield Grid levels are always harder to break than their raw troop count suggests.
 
+**Stationing is defense-only (support AND transfer):** Parking troops at another nexus - whether an ally's (a support mission) or one of your own (a troop transfer) - is the same operation, and only DEFENSIVE units may go: Assault Trooper, Lancer Drone, Siege Mech, and Bulwark Guard. Send them to reinforce a wall wherever you need one. Offensive units, Overseers, Recon Operatives, and the stationary Plasma Turret are never stationable - an attacking unit only ever leaves its nexus to attack, and always strikes from the nexus that trained it.
+
 **How losses scale - win or lose:** Combat is no longer all-or-nothing. Both sides' casualties scale with how close the fight was (the loser/winner power ratio). The losing side takes heavy losses - a blowout near-wipes them, but a narrow defeat leaves a real remnant (~85% lost, not 100%). The winning side stays light on a dominant win but bleeds badly on a coin-flip (up to ~45% lost when the fight was nearly even). The lesson: attacking a force of comparable strength is costly even when you win, and being slightly outgunned no longer means automatic annihilation. Use the in-game combat preview on the attack screen to gauge the outcome before committing.
 
 **Conquest is a gradient, not a cliff:** When an Overseer rides with a winning attack, it drains the defender's Control Level by an amount that scales with how dominant the strike was. The same power ratio that decides casualties also decides Control drain - crushing wins (3:1 or better) drain 50, clear wins drain 34, and narrow wins still drain 15. A nexus is conquered the moment its Control hits 0. This means a dominant attacker can take a nexus in two strikes; a careful planned attacker takes it in three; and a coalition of smaller players can grind down a fortified target together. Control regenerates at +10 per hour for owned nexuses, so a lone trickle of weak strikes will never succeed - coordinated waves do.
@@ -218,13 +220,13 @@ export const TROOPS_DOC: TroopDoc[] = [
 		name: 'Plasma Turret',
 		role: 'Static fire emplacement - counters Mobile',
 		description:
-			'Immobile defensive emplacement. Cannot be sent on attacks, transfers, or raids - it always defends the nexus that built it. Decimates mobile forces that try to rush you.',
+			'Immobile defensive emplacement. Cannot be sent on attacks, scouts, support, or transfers - it always defends the nexus that built it. Decimates mobile forces that try to rush you.',
 		unitClass: 'fire',
 		stats: { attack: 0, defense: 160, speed: 0, carry: 0 },
 		cost: { biomass: 1500, alloy: 1200, ore: 2500, population: 2, time: '45m 0s' },
 		requirements: ['Recruitment Core Lv11', 'Command Core Lv9', 'Armory Lv5'],
 		notes: [
-			'Speed 0 - stripped from any outgoing strike or transfer.',
+			'Speed 0 - stationary. It is never offered as an option on any outgoing mission (attack, scout, support, or transfer); you cannot lend it to an ally.',
 			'Hard counters Void Stalker, Skimmer Bike, Interceptor Bike, and Breaker Unit.'
 		]
 	},
@@ -285,7 +287,8 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		impact: [
 			'Primary unlock gate for multiple systems and troop tiers.',
 			'5% faster construction per level (compounding) - applies to every building.',
-			'Veteran tier: +1 build queue slot at Lv16 and Lv17 (max 7). +1 training queue slot at Lv18 and Lv19 (max 7). Lv20 unlocks no extra slot but keeps the standard build-time discount.'
+			'Veteran tier: +1 build queue slot at Lv16 and Lv17 (max 7).',
+			'Lv15 splits training into parallel class lanes: your single combat queue becomes three concurrent lanes (Mobile, Armor, Fire) plus the Special lane (Recon + Overseer). Below Lv15 you have one combat queue (5 slots) + the Special queue. From Lv15 each lane starts at 2 slots; Lv18 and Lv19 each add +1 (to 4). Parallel lanes let you build a balanced army in one pass - population cap is still the ceiling. Lv20 adds no extra slot but keeps the standard build-time discount.'
 		]
 	},
 	{
@@ -294,14 +297,18 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		role: 'Military production building',
 		description: 'Enables troop training and unlocks higher combat tiers.',
 		baseCost: { biomass: 180, alloy: 150, ore: 80, timeSeconds: 180 },
-		maxLevel: 15,
+		maxLevel: 20,
 		unlock: 'Command Core Lv2',
 		milestones: [
 			{ level: 4, requires: ['Biomass Farm Lv2'] },
 			{ level: 6, requires: ['Alloy Forge Lv2'] },
 			{ level: 10, requires: ['Life Support Lv5'] }
 		],
-		impact: ['Required to train troops at all.', 'Higher levels unlock stronger troop classes.']
+		impact: [
+			'Required to train troops at all.',
+			'Higher levels unlock stronger troop classes.',
+			'Cuts training time -9% per level through Lv15, then -5% per level for Lv16-20 (compounding). A maxed Lv20 trains roughly 5.3x faster than base.'
+		]
 	},
 	{
 		key: 'lifeSupport',
@@ -315,7 +322,10 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 			{ level: 4, requires: ['Biomass Farm Lv2'] },
 			{ level: 8, requires: ['Storage Vault Lv4'] }
 		],
-		impact: ['Population max formula: floor(100 * 1.19^level).']
+		impact: [
+			'Population max formula: floor(100 * 1.202^level).',
+			'A maxed Lv25 Life Support supports 9,945 population.'
+		]
 	},
 	{
 		key: 'storageVault',

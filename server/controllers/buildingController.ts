@@ -46,7 +46,7 @@ const BUILDING_RULES: Record<
 		]
 	},
 	recruitmentCore: {
-		maxLevel: 15,
+		maxLevel: 20,
 		unlock: { building: 'commandCore', level: 2 },
 		milestones: [
 			{ level: 4, requires: [{ building: 'biomassFarm', level: 2 }] },

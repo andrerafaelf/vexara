@@ -30,6 +30,7 @@ import {
 	Check,
 	ChevronDown,
 	ChevronUp,
+	Crosshair,
 	Eye,
 	EyeOff,
 	Hammer,
@@ -68,12 +69,16 @@ import {
 	BUILDING_COSTS,
 	TROOP_COSTS,
 	getBuildingCost as getSharedBuildingCost,
+	MAX_TRAIN_PER_BATCH,
 	getCommandBuildQueueBonus,
-	getCommandTrainingQueueBonus,
 	getEffectiveBuildTimeSeconds,
 	getEffectiveTrainTimeSeconds,
+	getMaxTrainingQueueSlots,
 	getOverseerCost,
-	getTrainTimeSeconds as getRecruitDiscountedTrainSeconds
+	getTrainingChains,
+	getTrainTimeSeconds as getRecruitDiscountedTrainSeconds,
+	trainingChainFor,
+	type TrainingChain
 } from '../realtime/gameConstants.shared';
 import { useToast } from '../context/ToastContext';
 import { Countdown } from './Countdown';
@@ -130,7 +135,21 @@ interface NexusViewProps {
 type NexusTab = 'overview' | 'buildings' | 'troops' | 'deployed' | 'espionage';
 
 const BASE_MAX_BUILD_QUEUE = 5;
-const BASE_MAX_TRAINING_QUEUE = 5;
+
+// Display metadata for each training chain. `key` matches the CSS modifier
+// (.queue-chain--<key>) and the class-color token. Icons reuse the lucide set
+// already imported. Order here is irrelevant; render order is driven by
+// getTrainingChains() so it stays in sync with the server.
+const TRAINING_CHAIN_META: Record<
+	TrainingChain,
+	{ label: string; Icon: React.ComponentType<{ size?: number; 'aria-hidden'?: boolean }> }
+> = {
+	mobile: { label: 'Mobile', Icon: Zap },
+	armor: { label: 'Armor', Icon: ShieldCheck },
+	fire: { label: 'Fire', Icon: Crosshair },
+	special: { label: 'Special', Icon: Sparkles },
+	combat: { label: 'Combat', Icon: Swords }
+};
 
 // Gate for the buff banner - labels are derived per-type inline so this
 // only needs to know which types render a banner.
@@ -186,7 +205,7 @@ const BUILDING_RULES: {
 		]
 	},
 	recruitmentCore: {
-		maxLevel: 15,
+		maxLevel: 20,
 		unlock: { building: 'commandCore', level: 2 },
 		milestones: [
 			{ level: 4, requires: [{ building: 'biomassFarm', level: 2 }] },
@@ -380,7 +399,8 @@ const TROOP_REQUIREMENTS: { [key: string]: any } = {
 };
 
 const POPULATION_BASE = 100;
-const POPULATION_GROWTH = 1.19;
+// Mirror of server/utils/population.ts. Lv25 = floor(100 * 1.202^25) = 9,945.
+const POPULATION_GROWTH = 1.202;
 const STORAGE_BASE = 1500;
 const STORAGE_GROWTH = 1.5;
 const SHIELD_BONUS_PER_LEVEL = 0.02;
@@ -885,11 +905,12 @@ const NexusView: React.FC<NexusViewProps> = ({
 		if (submittingRef.current.has(key)) return false;
 		submittingRef.current.add(key);
 
-		const sameChainCount = nexus.trainingQueue.filter((entry: any) =>
-			troopType === 'overseer' ? entry.troopType === 'overseer' : entry.troopType !== 'overseer'
+		const cc = nexus.buildings.commandCore;
+		const targetChain = trainingChainFor(troopType, cc);
+		const sameChainCount = nexus.trainingQueue.filter(
+			(entry: any) => trainingChainFor(entry.troopType, cc) === targetChain
 		).length;
-		const maxTrainingQueue =
-			BASE_MAX_TRAINING_QUEUE + getCommandTrainingQueueBonus(nexus.buildings.commandCore);
+		const maxTrainingQueue = getMaxTrainingQueueSlots(cc);
 		if (sameChainCount >= maxTrainingQueue) {
 			showToast(`Training queue is full (${maxTrainingQueue}/${maxTrainingQueue})`, 'error');
 			submittingRef.current.delete(key);
@@ -1030,17 +1051,18 @@ const NexusView: React.FC<NexusViewProps> = ({
 		return index > 0 ? queue[index - 1]?.completesAt : undefined;
 	};
 
-	// Training queue has two parallel chains (overseer vs non-overseer); find the prior entry
-	// in the same chain so QueueCountdown can label "Queued • …" correctly.
+	// Training runs several parallel chains (combat/special pre-CC15; mobile/armor/
+	// fire/special at CC15+). Find the prior entry in the same chain so
+	// QueueCountdown can label "Queued • …" against the right predecessor.
 	const getPrevTrainingEnd = (index: number): string | Date | undefined => {
 		const queue = Array.isArray(nexus.trainingQueue) ? nexus.trainingQueue : [];
 		const item = queue[index];
 		if (!item) return undefined;
-		const isOverseerItem = item.troopType === 'overseer';
+		const cc = nexus.buildings.commandCore;
+		const itemChain = trainingChainFor(item.troopType, cc);
 		for (let i = index - 1; i >= 0; i -= 1) {
 			const candidate = queue[i];
-			const candidateIsOverseer = candidate.troopType === 'overseer';
-			if (candidateIsOverseer === isOverseerItem) return candidate.completesAt;
+			if (trainingChainFor(candidate.troopType, cc) === itemChain) return candidate.completesAt;
 		}
 		return undefined;
 	};
@@ -1134,6 +1156,10 @@ const NexusView: React.FC<NexusViewProps> = ({
 				: Number.POSITIVE_INFINITY;
 
 		let maxTrainable = Math.max(0, Math.floor(Math.min(byBiomass, byAlloy, byOre, byPopulation)));
+
+		// The server rejects any single train request above MAX_TRAIN_PER_BATCH, so
+		// never offer more than that in one batch (queue another batch for more).
+		maxTrainable = Math.min(maxTrainable, MAX_TRAIN_PER_BATCH);
 
 		const requirements = TROOP_REQUIREMENTS[troopType];
 		if (requirements?.maxPerNexus) {
@@ -3137,39 +3163,92 @@ const NexusView: React.FC<NexusViewProps> = ({
 								</div>
 							)}
 
-							{troopsSubTab === 'train' && nexus.trainingQueue.length > 0 && (
-								<div className="queue-section">
-									<h4>Training queue</h4>
-									{nexus.trainingQueue.map((item, idx) => (
-										<QueueCountdown
-											key={idx}
-											endAt={item.completesAt}
-											prevEndAt={getPrevTrainingEnd(idx)}
-										>
-											{({ label, isWaiting }) => (
-												<div className={`queue-item ${isWaiting ? 'queue-item-waiting' : ''}`}>
-													<span>
-														{item.amount}x {TROOP_NAMES[item.troopType] || item.troopType}
-													</span>
-													<div className="queue-item-actions">
-														<span className={isWaiting ? 'queue-time-queued' : 'queue-time'}>
-															{label}
-														</span>
-														<button
-															type="button"
-															className="queue-cancel-btn"
-															onClick={() => handleCancelTrainingQueue(idx)}
-															title="Cancel (85% refund)"
-														>
-															<X size={12} aria-hidden="true" />
-														</button>
-													</div>
-												</div>
-											)}
-										</QueueCountdown>
-									))}
-								</div>
-							)}
+							{troopsSubTab === 'train' &&
+								nexus.trainingQueue.length > 0 &&
+								(() => {
+									// Group queue entries by training chain, preserving each entry's
+									// GLOBAL index (the server cancel endpoint addresses items by their
+									// position in the flat queue, so we must keep that index intact).
+									const cc = nexus.buildings.commandCore;
+									const maxSlots = getMaxTrainingQueueSlots(cc);
+									const grouped = new Map<TrainingChain, Array<{ item: any; globalIdx: number }>>();
+									nexus.trainingQueue.forEach((item, globalIdx) => {
+										const chain = trainingChainFor(item.troopType, cc);
+										const bucket = grouped.get(chain) ?? [];
+										bucket.push({ item, globalIdx });
+										grouped.set(chain, bucket);
+									});
+									// Render lanes in the canonical server order; skip empty ones.
+									const lanes = getTrainingChains(cc).filter((c) => (grouped.get(c)?.length ?? 0) > 0);
+									return (
+										<div className="queue-section queue-section--chains">
+											<h4>Training queue</h4>
+											<div className="queue-chains">
+												{lanes.map((chain) => {
+													const entries = grouped.get(chain)!;
+													const meta = TRAINING_CHAIN_META[chain];
+													const ChainIcon = meta.Icon;
+													return (
+														<div key={chain} className={`queue-chain queue-chain--${chain}`}>
+															<div className="queue-chain-head">
+																<span className="queue-chain-title">
+																	<ChainIcon size={13} aria-hidden={true} />
+																	{meta.label}
+																</span>
+																<span
+																	className="queue-chain-meter"
+																	title={`${entries.length} of ${maxSlots} slots used`}
+																	aria-label={`${entries.length} of ${maxSlots} slots used`}
+																>
+																	{Array.from({ length: maxSlots }).map((_, i) => (
+																		<span
+																			key={i}
+																			className={`queue-slot-pip ${i < entries.length ? 'filled' : ''}`}
+																		/>
+																	))}
+																	<span className="queue-chain-count">
+																		{entries.length}/{maxSlots}
+																	</span>
+																</span>
+															</div>
+															{entries.map(({ item, globalIdx }) => (
+																<QueueCountdown
+																	key={globalIdx}
+																	endAt={item.completesAt}
+																	prevEndAt={getPrevTrainingEnd(globalIdx)}
+																>
+																	{({ label, isWaiting }) => (
+																		<div
+																			className={`queue-item ${isWaiting ? 'queue-item-waiting' : ''}`}
+																		>
+																			<span>
+																				{item.amount}x{' '}
+																				{TROOP_NAMES[item.troopType] || item.troopType}
+																			</span>
+																			<div className="queue-item-actions">
+																				<span className={isWaiting ? 'queue-time-queued' : 'queue-time'}>
+																					{label}
+																				</span>
+																				<button
+																					type="button"
+																					className="queue-cancel-btn"
+																					onClick={() => handleCancelTrainingQueue(globalIdx)}
+																					title="Cancel (85% refund)"
+																				>
+																					<X size={12} aria-hidden="true" />
+																				</button>
+																			</div>
+																		</div>
+																	)}
+																</QueueCountdown>
+															))}
+														</div>
+													);
+												})}
+											</div>
+										</div>
+									);
+								})()}
 
 							{troopsSubTab === 'train' && (
 								<div className="troops-train">
@@ -3231,15 +3310,15 @@ const NexusView: React.FC<NexusViewProps> = ({
 														const militaryBonusLabel = nexus.nexusTypeDoubled
 															? '4× faster · Military Outpost T2'
 															: '2× faster · Military Outpost';
-														const isOverseerTrack = type === 'overseer';
-														const sameChainQueueLength = nexus.trainingQueue.filter((entry: any) =>
-															isOverseerTrack
-																? entry.troopType === 'overseer'
-																: entry.troopType !== 'overseer'
+														const trainChain = trainingChainFor(type, nexus.buildings.commandCore);
+														const sameChainQueueLength = nexus.trainingQueue.filter(
+															(entry: any) =>
+																trainingChainFor(entry.troopType, nexus.buildings.commandCore) ===
+																trainChain
 														).length;
-														const maxTrainingQueueDisplay =
-															BASE_MAX_TRAINING_QUEUE +
-															getCommandTrainingQueueBonus(nexus.buildings.commandCore);
+														const maxTrainingQueueDisplay = getMaxTrainingQueueSlots(
+															nexus.buildings.commandCore
+														);
 														const isTrainingQueueFull =
 															sameChainQueueLength >= maxTrainingQueueDisplay;
 														const isTrainDisabled =
@@ -3324,7 +3403,8 @@ const NexusView: React.FC<NexusViewProps> = ({
 																	<div className="requirements-missing">
 																		<p className="requires-label">Queue full</p>
 																		<p className="requirement-item">
-																			• Training queue limit reached ({maxTrainingQueueDisplay})
+																			• {TRAINING_CHAIN_META[trainChain].label} queue is full (
+																			{maxTrainingQueueDisplay}/{maxTrainingQueueDisplay})
 																		</p>
 																	</div>
 																)}
