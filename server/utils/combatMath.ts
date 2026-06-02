@@ -315,7 +315,13 @@ export function computeLossesForWinner(
 		if (count <= 0) continue;
 
 		const varianceMagnitude = count < 20 ? 0.1 : count < 200 ? 0.05 : 0.03;
-		const variance = (lcg() - 0.5) * 2 * varianceMagnitude;
+		// Multiplicative jitter (1 ± magnitude), NOT an additive ± on the rate.
+		// Additive variance manufactured losses out of nothing: against a near-
+		// powerless attacker baseLossRate is ~0, but a positive additive term still
+		// produced losses = count * (+variance) — e.g. a lone Breaker Unit "killing"
+		// 22 of a 1181 Assault Trooper garrison. Scaling the rate instead means a
+		// ~0 base stays ~0 regardless of the roll, while real losses still jitter.
+		const varianceMult = 1 + (lcg() - 0.5) * 2 * varianceMagnitude;
 
 		const defFactor = Math.max(0.1, 1 - TROOP_STATS[key].defense / 250);
 
@@ -337,8 +343,17 @@ export function computeLossesForWinner(
 			matchupFactor = Math.max(0.85, Math.min(1.15, 2.0 - weightedCounter));
 		}
 
-		const rawRate = Math.min(0.5, Math.max(0, baseLossRate * defFactor * matchupFactor + variance));
-		losses[key] = Math.max(0, Math.ceil(count * rawRate));
+		const rawRate = Math.min(
+			0.5,
+			Math.max(0, baseLossRate * defFactor * matchupFactor * varianceMult)
+		);
+		// Round (not ceil): a winner facing a near-powerless attacker should be able
+		// to take ZERO losses on a unit type. Ceil forced >=1 loss of every type for
+		// any positive rate, so a lone Breaker Unit still "killed" one of each
+		// defender. Round means <0.5 expected losses -> 0, while real attrition
+		// (>=0.5 expected) still costs the unit. The loser's losses keep ceil (you
+		// always pay for a fight you lost); only the winner gets this softer floor.
+		losses[key] = Math.max(0, Math.round(count * rawRate));
 	}
 	return losses;
 }

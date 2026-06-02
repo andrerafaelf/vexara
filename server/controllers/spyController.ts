@@ -205,12 +205,23 @@ export async function sendSpyMission(req: AuthRequest, res: Response): Promise<v
 
 		try {
 			const { incrementQuestProgress } = await import('../services/dailyStreakService.js');
-			void incrementQuestProgress(req.userId, req.galaxyId, 'scout_1', 1);
+			// Awaited (not fire-and-forget void) so a rejection can't silently drop the
+			// quest tick - that was leaving "Send 1 espionage / sabotage mission" stuck
+			// at 0/1 after a successful dispatch. Every espionage mission counts toward
+			// scout_1 ("Reconnaissance"); sabotage additionally ticks sabotage_1.
+			await incrementQuestProgress(req.userId, req.galaxyId, 'scout_1', 1);
 			if (type === 'sabotage') {
-				void incrementQuestProgress(req.userId, req.galaxyId, 'sabotage_1', 1);
+				await incrementQuestProgress(req.userId, req.galaxyId, 'sabotage_1', 1);
 			}
-			void incrementQuestProgress(req.userId, req.galaxyId, 'login', 1);
-		} catch {}
+			await incrementQuestProgress(req.userId, req.galaxyId, 'login', 1);
+		} catch (e) {
+			logError('quest_progress_increment_failed', {
+				message: (e as Error).message,
+				file: 'spyController.ts',
+				op: 'sendSpyMission',
+				type
+			});
+		}
 		void applyQuestRewards(attacker, { hasOutgoingSpyMission: true });
 
 		res.json({

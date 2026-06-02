@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
 	computeForcePower,
 	computeLossesForLoser,
+	computeLossesForWinner,
 	computeClassWeightedAttack,
 	computeLootStolen
 } from '../utils/combatMath.js';
@@ -144,6 +145,35 @@ test('a decisive blowout is a TOTAL wipe — no survivors', () => {
 	// Just above the threshold a remnant begins to survive again (gradient intact).
 	const justAbove = computeLossesForLoser(force, 0.5);
 	assert.ok(justAbove.assaultTrooper < 100, 'a non-blowout loss leaves a remnant');
+});
+
+test('winner takes ~zero losses against a near-powerless attacker', () => {
+	// Regression: a lone Breaker Unit (powerRatio ~0) was "killing" 22 of a 1181
+	// Assault Trooper garrison because variance was ADDED to a ~0 base rate and
+	// every type was force-rounded up via ceil. Multiplicative variance + round
+	// means a trivial attacker costs the winner nothing.
+	const garrison = {
+		siegeMech: 136,
+		bulwarkGuard: 134,
+		plasmaTurret: 18,
+		assaultTrooper: 1181,
+		reconOperative: 495
+	};
+	for (let seed = 0; seed < 12; seed++) {
+		const losses = computeLossesForWinner(garrison, 0.0005, seed * 7919 + 1, {
+			breakerUnit: 1
+		});
+		const total = Object.values(losses).reduce((a, b) => a + (b || 0), 0);
+		assert.equal(total, 0, `lone attacker should cost the winner 0 (seed ${seed} gave ${total})`);
+	}
+});
+
+test('winner still bleeds on a near-even victory (coin-flip cost preserved)', () => {
+	const garrison = { assaultTrooper: 1000, siegeMech: 100 };
+	// powerRatio 0.8 = barely won; should cost a meaningful chunk, not zero.
+	const losses = computeLossesForWinner(garrison, 0.8, 4242, { skimmerBike: 1500 });
+	const total = Object.values(losses).reduce((a, b) => a + (b || 0), 0);
+	assert.ok(total > 100, `a near-even win should bleed (got ${total})`);
 });
 
 test('a lone Overseer has zero class-weighted attack power', () => {
