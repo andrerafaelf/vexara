@@ -6,7 +6,7 @@ import {
 	broadcastOperationUpdate,
 	broadcastThreadMessage
 } from '../services/warRoomSocket.js';
-import type { AuthRequest, TroopCounts } from '../types/index.js';
+import { type AuthRequest, TROOP_KEYS } from '../types/index.js';
 import { logError } from '../utils/logger.js';
 import { containsBlockedChatWord } from '../utils/profanity.js';
 
@@ -16,26 +16,16 @@ const MESSAGES_PAGE = 80;
 const MAX_WAVES_PER_OP = 20;
 const MAX_ACTIVE_OPS_PER_FACTION = 12;
 
-const TROOP_KEYS: ReadonlyArray<keyof TroopCounts> = [
-	'lancerDrone',
-	'assaultTrooper',
-	'breakerUnit',
-	'reconOperative',
-	'skimmerBike',
-	'siegeMech',
-	'bulwarkGuard',
-	'suppressorTeam',
-	'disruptorUnit',
-	'interceptorBike',
-	'annihilatorPlatform',
-	'voidStalker',
-	'overseer'
-];
+// Troops a War Room operation can allocate. Derived from the canonical list so a
+// new unit is picked up automatically — minus Plasma Turret, which is a
+// stationary emplacement and can never be sent on an operation. (Keep this an
+// exclusion of the global list, not a fresh hand-typed array, so it can't drift.)
+const SENDABLE_TROOP_KEYS = TROOP_KEYS.filter((k) => k !== 'plasmaTurret');
 
 function sanitizeTroopMap(input: unknown): Record<string, number> {
 	if (!input || typeof input !== 'object') return {};
 	const out: Record<string, number> = {};
-	for (const k of TROOP_KEYS) {
+	for (const k of SENDABLE_TROOP_KEYS) {
 		const raw = (input as Record<string, unknown>)[k];
 		const n = typeof raw === 'number' ? Math.floor(raw) : parseInt(String(raw ?? 0), 10);
 		if (Number.isFinite(n) && n > 0) out[k] = n;

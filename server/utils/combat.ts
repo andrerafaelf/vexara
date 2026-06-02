@@ -1358,22 +1358,6 @@ async function processReturnedTroops(attack: Attack): Promise<void> {
 	}
 }
 
-const TRANSFER_TROOP_FIELDS: TroopKey[] = [
-	'lancerDrone',
-	'assaultTrooper',
-	'breakerUnit',
-	'reconOperative',
-	'skimmerBike',
-	'siegeMech',
-	'bulwarkGuard',
-	'suppressorTeam',
-	'disruptorUnit',
-	'interceptorBike',
-	'annihilatorPlatform',
-	'voidStalker',
-	'plasmaTurret',
-	'overseer'
-];
 
 export async function processArrivedTransfers(): Promise<void> {
 	const now = new Date();
@@ -1423,7 +1407,7 @@ export async function processArrivedTransfers(): Promise<void> {
 			});
 
 			if (ownerId) {
-				const total = TRANSFER_TROOP_FIELDS.reduce((s, f) => s + (troops[f] || 0), 0);
+				const total = TROOP_KEYS.reduce((s, f) => s + (troops[f] || 0), 0);
 				void sendPushToUser(ownerId, NOTIF.TROOP_TRANSFER, {
 					title: '🚀 Troops Arrived',
 					body: `📦 ${total} troop${total !== 1 ? 's' : ''} arrived at ${transfer.hostNexus.name}.`,
@@ -1492,7 +1476,7 @@ export async function processArrivedTransfers(): Promise<void> {
 			// the first transfer's troops for any shared type. Increments compose
 			// correctly no matter how many transfers land together.
 			const returnData: Record<string, { increment: number }> = {};
-			for (const field of TRANSFER_TROOP_FIELDS) {
+			for (const field of TROOP_KEYS) {
 				if (troops[field] > 0) returnData[field] = { increment: troops[field] };
 			}
 			await prisma.$transaction([
@@ -1518,7 +1502,7 @@ export async function processArrivedTransfers(): Promise<void> {
 			}
 
 			if (ownerId) {
-				const total = TRANSFER_TROOP_FIELDS.reduce((s, f) => s + (troops[f] || 0), 0);
+				const total = TROOP_KEYS.reduce((s, f) => s + (troops[f] || 0), 0);
 				void sendPushToUser(ownerId, NOTIF.TROOP_TRANSFER, {
 					title: '🏠 Troops Returned Home',
 					body: `🪖 ${total} troop${total !== 1 ? 's' : ''} returned to ${transfer.ownerNexus.name}.`,

@@ -90,16 +90,9 @@ const TROOP_IMAGES: Record<TroopKey, StaticImageData> = {
 	overseer: overseerImg
 };
 
-// Attacker panel keeps the usual strike roster grouped by combat role.
-const ATTACKER_GROUPS: { cls: TroopClass; keys: TroopKey[] }[] = [
-	{ cls: 'mobile', keys: ['breakerUnit', 'skimmerBike', 'interceptorBike', 'voidStalker'] },
-	{ cls: 'fire', keys: ['suppressorTeam', 'disruptorUnit', 'annihilatorPlatform'] },
-	{ cls: 'special', keys: ['overseer'] }
-];
-
-// Defender panel includes every unit type because stationed attacking units
-// defend the host nexus too.
-const DEFENDER_GROUPS: { cls: TroopClass; keys: TroopKey[] }[] = [
+// Both panels expose the full roster so the calculator can model oddball
+// scenarios, including sending defensive units as attackers.
+const ALL_TROOP_GROUPS: { cls: TroopClass; keys: TroopKey[] }[] = [
 	{ cls: 'mobile', keys: ['breakerUnit', 'skimmerBike', 'interceptorBike', 'voidStalker'] },
 	{ cls: 'armor', keys: ['assaultTrooper', 'bulwarkGuard', 'siegeMech'] },
 	{
@@ -592,7 +585,7 @@ export default function CalculatorPage() {
 					label="Attacker"
 					side="atk"
 					force={atk}
-					groups={ATTACKER_GROUPS}
+					groups={ALL_TROOP_GROUPS}
 					shieldGrid={shieldGrid}
 					armory={armory}
 					onChange={setAtk}
@@ -615,7 +608,7 @@ export default function CalculatorPage() {
 					label="Defender"
 					side="def"
 					force={def}
-					groups={DEFENDER_GROUPS}
+					groups={ALL_TROOP_GROUPS}
 					shieldGrid={shieldGrid}
 					armory={armory}
 					onChange={setDef}

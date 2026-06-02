@@ -1,6 +1,6 @@
 import type { Nexus } from '@prisma/client';
 import prisma from '../lib/prisma.js';
-import type { BuildingLevels, ResourceAmounts, TroopCounts } from '../types/index.js';
+import { type BuildingLevels, type ResourceAmounts, type TroopCounts, TROOP_KEYS } from '../types/index.js';
 import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
 // BuildingLevels and TroopCounts are extended via their interfaces to include armory/voidStalker/plasmaTurret
 
@@ -41,23 +41,6 @@ export interface ScoutIntel {
 	nexusY: number;
 }
 
-const SUPPORT_TROOP_KEYS: ReadonlyArray<keyof TroopCounts> = [
-	'lancerDrone',
-	'assaultTrooper',
-	'breakerUnit',
-	'reconOperative',
-	'skimmerBike',
-	'siegeMech',
-	'bulwarkGuard',
-	'suppressorTeam',
-	'disruptorUnit',
-	'interceptorBike',
-	'annihilatorPlatform',
-	'voidStalker',
-	'plasmaTurret',
-	'overseer'
-];
-
 // Sum all troops stationed at `hostNexusId` via support missions (status
 // 'stationed'). Returns the merged counts (only keys with > 0), or undefined if
 // there's no support — so callers can spread it onto a ScoutIntel without adding
@@ -74,7 +57,7 @@ export async function aggregateStationedSupport(
 	const merged: Partial<Record<keyof TroopCounts, number>> = {};
 	for (const t of transfers) {
 		const troops = (t.troops ?? {}) as Record<string, number>;
-		for (const key of SUPPORT_TROOP_KEYS) {
+		for (const key of TROOP_KEYS) {
 			const n = Math.max(0, Math.floor(Number(troops[key]) || 0));
 			if (n > 0) merged[key] = (merged[key] ?? 0) + n;
 		}
@@ -137,22 +120,12 @@ export function buildDetailedScoutIntel(nexus: Nexus): ScoutIntel {
 			armory: n['armory'] ?? 0,
 			stealthArray: n['stealthArray'] ?? 0
 		},
-		troops: {
-			lancerDrone: nexus.lancerDrone,
-			assaultTrooper: nexus.assaultTrooper,
-			breakerUnit: nexus.breakerUnit,
-			reconOperative: nexus.reconOperative,
-			skimmerBike: nexus.skimmerBike,
-			siegeMech: nexus.siegeMech,
-			bulwarkGuard: nexus.bulwarkGuard,
-			suppressorTeam: nexus.suppressorTeam,
-			disruptorUnit: nexus.disruptorUnit,
-			interceptorBike: nexus.interceptorBike,
-			annihilatorPlatform: nexus.annihilatorPlatform,
-			voidStalker: n['voidStalker'] ?? 0,
-			plasmaTurret: n['plasmaTurret'] ?? 0,
-			overseer: nexus.overseer
-		},
+		// Build from the canonical TROOP_KEYS so a new unit is reported
+		// automatically. The cast is safe: TROOP_KEYS is exactly keyof TroopCounts.
+		troops: TROOP_KEYS.reduce((acc, key) => {
+			acc[key] = Math.max(0, Math.floor(Number(n[key]) || 0));
+			return acc;
+		}, {} as TroopCounts),
 		population: {
 			current: nexus.populationCurrent,
 			max: nexus.populationMax

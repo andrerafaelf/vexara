@@ -1,7 +1,7 @@
 import type { Response } from 'express';
 import type { Prisma } from '@prisma/client';
 import prisma from '../lib/prisma.js';
-import type { AuthRequest } from '../types/index.js';
+import { type AuthRequest, TROOP_KEYS } from '../types/index.js';
 import { parsePositiveInt } from '../utils/validation.js';
 import { TROOP_STATS } from '../utils/combatMath.js';
 import { logError } from '../utils/logger.js';
@@ -40,28 +40,16 @@ function travelMinutes(x1: number, y1: number, x2: number, y2: number): number {
 }
 
 function buildIntel(defender: Record<string, unknown>) {
+	// Build the troop map from the canonical TROOP_KEYS so a newly-added unit is
+	// reported automatically. This previously hand-listed each field and silently
+	// dropped voidStalker + plasmaTurret — exactly the stationary defenders a spy
+	// most needs to see before committing an attack.
+	const troops: Record<string, number> = {};
+	for (const key of TROOP_KEYS) {
+		troops[key] = Math.max(0, Math.floor(Number(defender[key]) || 0));
+	}
 	return {
-		troops: {
-			lancerDrone: defender.lancerDrone,
-			assaultTrooper: defender.assaultTrooper,
-			breakerUnit: defender.breakerUnit,
-			bulwarkGuard: defender.bulwarkGuard,
-			suppressorTeam: defender.suppressorTeam,
-			annihilatorPlatform: defender.annihilatorPlatform,
-			reconOperative: defender.reconOperative,
-			skimmerBike: defender.skimmerBike,
-			siegeMech: defender.siegeMech,
-			disruptorUnit: defender.disruptorUnit,
-			interceptorBike: defender.interceptorBike,
-			// voidStalker and plasmaTurret were missing here, so espionage intel
-			// dropped them entirely (the scout-mission intel builder in
-			// scouting.ts has always included both). Plasma Turrets are a
-			// stationary defensive emplacement — exactly the thing a spy needs to
-			// see before committing an attack.
-			voidStalker: defender.voidStalker,
-			plasmaTurret: defender.plasmaTurret,
-			overseer: defender.overseer
-		},
+		troops,
 		resources: {
 			biomass: Math.floor(defender.biomass as number),
 			alloy: Math.floor(defender.alloy as number),

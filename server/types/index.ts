@@ -8,6 +8,33 @@ export interface AuthRequest extends Request {
 	activeGalaxyOptional?: boolean;
 }
 
+// ── Single source of truth for troop types ──────────────────────────────────
+// Every place that needs to iterate troop types (sum garrisons, build scout /
+// espionage intel, validate payloads, etc.) must use TROOP_KEYS rather than
+// hand-listing the fields. Hand-rolled lists drift: a new unit gets added to
+// the schema but forgotten in one of a dozen literals, and that unit silently
+// vanishes from a report or a total. The two assertions below make the array
+// and the TroopCounts type provably equivalent — add a troop to one without the
+// other and the build fails, so they can never disagree again.
+export const TROOP_KEYS = [
+	'lancerDrone',
+	'assaultTrooper',
+	'breakerUnit',
+	'reconOperative',
+	'skimmerBike',
+	'siegeMech',
+	'bulwarkGuard',
+	'suppressorTeam',
+	'disruptorUnit',
+	'interceptorBike',
+	'annihilatorPlatform',
+	'voidStalker',
+	'plasmaTurret',
+	'overseer'
+] as const;
+
+export type TroopKey = (typeof TROOP_KEYS)[number];
+
 export interface TroopCounts {
 	lancerDrone: number;
 	assaultTrooper: number;
@@ -25,7 +52,13 @@ export interface TroopCounts {
 	overseer: number;
 }
 
-export type TroopKey = keyof TroopCounts;
+// Compile-time proof that TROOP_KEYS and keyof TroopCounts are the same set.
+// If a troop is added to one but not the other, one of these lines fails to
+// compile (the unmatched key becomes `never` and the assignment errors).
+type _AssertKeysCoverCounts = TroopKey extends keyof TroopCounts ? true : never;
+type _AssertCountsCoverKeys = keyof TroopCounts extends TroopKey ? true : never;
+const _troopKeyParity: [_AssertKeysCoverCounts, _AssertCountsCoverKeys] = [true, true];
+void _troopKeyParity;
 
 export interface BuildingLevels {
 	commandCore: number;

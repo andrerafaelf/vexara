@@ -60,7 +60,7 @@ export function parseNonNegativeInt(value: unknown): number | null {
 
 export function normalizeTroopPayload(
 	troops: unknown,
-	troopKeys: TroopKey[]
+	troopKeys: readonly TroopKey[]
 ): { normalized: Record<TroopKey, number> } | { error: string } {
 	if (!troops || typeof troops !== 'object' || Array.isArray(troops)) {
 		return { error: 'Invalid troops payload' };

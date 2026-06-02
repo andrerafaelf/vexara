@@ -1,7 +1,7 @@
 import type { AttackType } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 import { applyQuestRewards } from '../models/Nexus.js';
-import type { TroopKey } from '../types/index.js';
+import { TROOP_KEYS } from '../types/index.js';
 import { TROOP_STATS } from '../utils/combatMath.js';
 import { NEXUS_TYPE_BONUSES } from '../utils/economy.js';
 import { isStationableTroop } from '../utils/gameConstants.js';
@@ -20,22 +20,6 @@ export class DuplicateRequestIdError extends Error {
 	}
 }
 
-const TROOP_KEYS: TroopKey[] = [
-	'lancerDrone',
-	'assaultTrooper',
-	'breakerUnit',
-	'reconOperative',
-	'skimmerBike',
-	'siegeMech',
-	'bulwarkGuard',
-	'suppressorTeam',
-	'disruptorUnit',
-	'interceptorBike',
-	'annihilatorPlatform',
-	'voidStalker',
-	'plasmaTurret',
-	'overseer'
-];
 const SUPPORTED_ATTACK_TYPES = new Set<AttackType>(['attack', 'scout', 'support']);
 
 export interface LaunchAttackInput {

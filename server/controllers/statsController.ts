@@ -1,24 +1,9 @@
 import type { Response } from 'express';
 import * as statsService from '../services/statsService.js';
-import type { AuthRequest } from '../types/index.js';
+import { type AuthRequest, TROOP_KEYS } from '../types/index.js';
 import { getResourceProduction } from '../utils/economy.js';
 import { logError } from '../utils/logger.js';
 import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
-
-const TROOP_KEYS = [
-	'lancerDrone',
-	'assaultTrooper',
-	'breakerUnit',
-	'reconOperative',
-	'skimmerBike',
-	'siegeMech',
-	'bulwarkGuard',
-	'suppressorTeam',
-	'disruptorUnit',
-	'interceptorBike',
-	'annihilatorPlatform',
-	'overseer'
-];
 
 function sumTroops(troopObj: unknown): number {
 	if (!troopObj || typeof troopObj !== 'object') return 0;

@@ -2,27 +2,11 @@ import type { Response } from 'express';
 import prisma from '../lib/prisma.js';
 import { serializeAttack } from '../models/Nexus.js';
 import * as attackService from '../services/attackService.js';
-import type { AuthRequest, TroopKey } from '../types/index.js';
+import { type AuthRequest, TROOP_KEYS } from '../types/index.js';
 import { logError, logGameEvent } from '../utils/logger.js';
 import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
 import { normalizeTroopPayload, parsePositiveInt } from '../utils/validation.js';
 
-const SCHEDULE_TROOP_KEYS: TroopKey[] = [
-	'lancerDrone',
-	'assaultTrooper',
-	'breakerUnit',
-	'reconOperative',
-	'skimmerBike',
-	'siegeMech',
-	'bulwarkGuard',
-	'suppressorTeam',
-	'disruptorUnit',
-	'interceptorBike',
-	'annihilatorPlatform',
-	'voidStalker',
-	'plasmaTurret',
-	'overseer'
-];
 // Cap how far ahead and how many waves a player can queue, to bound the table.
 const MAX_SCHEDULE_AHEAD_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 const MAX_PENDING_SCHEDULED_PER_USER = 50;
@@ -310,7 +294,7 @@ export async function scheduleAttack(req: AuthRequest, res: Response): Promise<v
 			return;
 		}
 
-		const normalizedPayload = normalizeTroopPayload(troops, SCHEDULE_TROOP_KEYS);
+		const normalizedPayload = normalizeTroopPayload(troops, TROOP_KEYS);
 		if ('error' in normalizedPayload && normalizedPayload.error) {
 			res.status(400).json({ error: normalizedPayload.error });
 			return;

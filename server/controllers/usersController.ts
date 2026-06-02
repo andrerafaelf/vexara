@@ -3,7 +3,7 @@ import prisma from '../lib/prisma.js';
 import * as friendsService from '../services/friendsService.js';
 import { comparePassword, hashPassword } from '../models/User.js';
 import { sendPasswordChanged } from '../services/emailService.js';
-import type { AuthRequest } from '../types/index.js';
+import { type AuthRequest, TROOP_KEYS } from '../types/index.js';
 import { validatePassword } from '../utils/validation.js';
 import { logError } from '../utils/logger.js';
 import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
@@ -11,21 +11,6 @@ import { getResourceProduction } from '../utils/economy.js';
 import { sortOwnedNexuses } from '../services/nexusService.js';
 
 type FriendshipStatus = 'self' | 'none' | 'pending_outgoing' | 'pending_incoming' | 'friends';
-
-const TROOP_KEYS = [
-	'lancerDrone',
-	'assaultTrooper',
-	'breakerUnit',
-	'reconOperative',
-	'skimmerBike',
-	'siegeMech',
-	'bulwarkGuard',
-	'suppressorTeam',
-	'disruptorUnit',
-	'interceptorBike',
-	'annihilatorPlatform',
-	'overseer'
-];
 
 function sumTroops(troopObj: unknown): number {
 	if (!troopObj || typeof troopObj !== 'object') return 0;
