@@ -1104,6 +1104,11 @@ export function serializeNexus(
 		nexusTypeLockedAt:
 			(v as unknown as { nexusTypeLockedAt?: Date | null }).nexusTypeLockedAt ?? null,
 		newbieProtectionEndsAt: v.newbieProtectionEndsAt ?? null,
+		relocationTokenAvailable:
+			(v as unknown as { relocationTokenAvailable?: boolean | null }).relocationTokenAvailable ??
+			false,
+		relocationTokenUsedAt:
+			(v as unknown as { relocationTokenUsedAt?: Date | null }).relocationTokenUsedAt ?? null,
 		createdAt: v.createdAt,
 		conqueredAt: v.conqueredAt ?? null
 	};

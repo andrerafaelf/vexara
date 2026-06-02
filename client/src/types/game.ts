@@ -128,6 +128,8 @@ export interface Nexus {
 	isDerelict?: boolean;
 	nexusTypeLockedAt?: string | null;
 	newbieProtectionEndsAt?: string | null;
+	relocationTokenAvailable?: boolean;
+	relocationTokenUsedAt?: string | null;
 	createdAt?: string;
 	conqueredAt?: string | null;
 	intelLevel?: 'public' | 'scouted' | 'owned';

@@ -557,6 +557,14 @@ export const specializeNexus = (nexusId: string, nexusType: string) =>
 		body: JSON.stringify({ nexusType })
 	});
 
+// One-time newbie relocation: warp the caller's single nexus to the nearest
+// open tile around the chosen anchor nexus.
+export const relocateNexus = (anchorNexusId: string) =>
+	apiRequest('/nexus/relocate', {
+		method: 'POST',
+		body: JSON.stringify({ anchorNexusId })
+	});
+
 // Espionage
 export const sendSpyMission = (
 	fromNexusId: string,

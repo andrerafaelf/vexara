@@ -1,6 +1,7 @@
 import type { PrismaClient } from '@prisma/client';
 import { getPopulationMax } from './population.js';
 import { calculatePoints, getMaxStorage } from './economy.js';
+import { MIN_NEXUS_SPACING } from './neutralNexuses.js';
 
 export const STARTER_NEXUS_DEFAULTS = {
 	commandCore: 0,
@@ -20,11 +21,22 @@ export async function findOpenStarterCoordinates(
 	galaxyId: number,
 	{ mapSize = 50, maxAttempts = 100 } = {}
 ): Promise<{ x: number; y: number } | null> {
-	for (let i = 0; i < maxAttempts; i++) {
-		const x = Math.floor(Math.random() * mapSize);
-		const y = Math.floor(Math.random() * mapSize);
-		const existing = await tx.nexus.findFirst({ where: { galaxyId, x, y }, select: { id: true } });
-		if (!existing) return { x, y };
+	// New players used to be placed with only an exact-collision check, so they
+	// could spawn directly adjacent to NPCs or each other - which both fed the
+	// map's clustering and dropped newbies right next to bigger fish. Enforce the
+	// same MIN_NEXUS_SPACING the neutral spawner uses so starters land with at
+	// least one empty cell of breathing room. Falls back to spacing=1 (exact
+	// collision only) on a tight map so a join never hard-fails for want of room.
+	const existing = await tx.nexus.findMany({ where: { galaxyId }, select: { x: true, y: true } });
+	const fits = (x: number, y: number, spacing: number) =>
+		!existing.some((n) => Math.max(Math.abs(n.x - x), Math.abs(n.y - y)) < spacing);
+
+	for (const spacing of [MIN_NEXUS_SPACING, 1]) {
+		for (let i = 0; i < maxAttempts; i++) {
+			const x = Math.floor(Math.random() * mapSize);
+			const y = Math.floor(Math.random() * mapSize);
+			if (fits(x, y, spacing)) return { x, y };
+		}
 	}
 	return null;
 }
@@ -61,7 +73,11 @@ export async function createStarterNexus(
 			alloy: 1500,
 			ore: 1500,
 			populationMax: getPopulationMax(STARTER_NEXUS_DEFAULTS.lifeSupport),
-			newbieProtectionEndsAt: new Date(Date.now() + NEWBIE_PROTECTION_DURATION_MS)
+			newbieProtectionEndsAt: new Date(Date.now() + NEWBIE_PROTECTION_DURATION_MS),
+			// One-time relocation token: fresh signups only. Lets a new player who
+			// landed in a bad spot warp near a chosen nexus once, while still
+			// protected. Consumed on use and dead when protection lapses.
+			relocationTokenAvailable: true
 		}
 	});
 }

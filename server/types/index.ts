@@ -74,6 +74,8 @@ export interface SerializedNexus {
 	isDerelict: boolean;
 	nexusTypeLockedAt: Date | null;
 	newbieProtectionEndsAt: Date | null;
+	relocationTokenAvailable: boolean;
+	relocationTokenUsedAt: Date | null;
 	createdAt: Date;
 	conqueredAt: Date | null;
 }

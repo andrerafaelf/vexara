@@ -27,12 +27,12 @@ const NPC_MAX_LEVELS: Record<LevelableBuilding, number> = {
 	shieldGrid: 11
 };
 
-const MAP_SIZE = 50;
+export const MAP_SIZE = 50;
 // Minimum gap (Chebyshev distance) between any two nexuses.
 // Distance 2 means no nexus can be placed in the 3x3 ring around an
 // existing one - visually they always have at least one empty cell between
 // them, so the map never looks like a solid wall of icons.
-const MIN_NEXUS_SPACING = 2;
+export const MIN_NEXUS_SPACING = 2;
 // Hard cap: at spacing=2 each nexus "owns" a 5×5 footprint, so the
 // theoretical maximum is 2500/25 = 100. We cap well below that so the map
 // never gets completely saturated regardless of player count.
@@ -43,6 +43,24 @@ const MIN_NEUTRALS = 12;
 const NEUTRALS_PER_CAPTURED = 1;
 const NEUTRALS_PER_PLAYER = 1.2;
 const DAILY_NEXUS_GROWTH = 2;
+// How many candidate tiles findOpenCoordinates samples before committing.
+// Pure rejection-sampling (take the first non-colliding cell) clusters badly -
+// random points clump, so the map ends up a dense diagonal blob with empty
+// edges. Mitchell's best-candidate: sample K valid cells, keep the one whose
+// nearest existing neighbour is farthest away. This pushes placements apart and
+// fills the map evenly without the cost of a full Poisson-disc pass.
+const PLACEMENT_CANDIDATES = 10;
+// Specials are the typed neutrals that carry a NEXUS_TYPE_BONUSES perk -
+// Resource Depot, Military Outpost, Supply Cache, AND Forward Base (25% faster
+// travel / 20% faster build). They're juicy early targets that distort the
+// opening economy and surround fresh newbies with high-value bait before they
+// can defend. Suppress them until a galaxy is this old, so the first signup
+// cohort clears its 3-day protection (+2 day buffer) against a backdrop of
+// plain Neutral Settlements only (the one type with no bonus). Keyed off galaxy
+// AGE, not player count, so a galaxy that loses players can't "un-mature".
+// Existing galaxies are already past this window, so they keep spawning the
+// full type table.
+const SPECIAL_NEXUS_DELAY_MS = 5 * 24 * 60 * 60 * 1000;
 // Tuned so a fresh player's first 20 Assault Troopers can take a Neutral
 // Settlement (the most common pick, 40% weight). The opening loop is built
 // around "train 5 troopers, then scavenge", so the easiest neutrals must
@@ -54,10 +72,10 @@ const CAPTURE_DIFFICULTY_STEP = 0.004;
 
 const NEXUS_TYPES = [
 	{ name: 'Neutral Settlement', weight: 40 },
-	{ name: 'Resource Depot', weight: 20, resourceBonus: true },
-	{ name: 'Military Outpost', weight: 15, troopBonus: true },
-	{ name: 'Supply Cache', weight: 15, highResources: true },
-	{ name: 'Forward Base', weight: 10 }
+	{ name: 'Resource Depot', weight: 20, resourceBonus: true, special: true },
+	{ name: 'Military Outpost', weight: 15, troopBonus: true, special: true },
+	{ name: 'Supply Cache', weight: 15, highResources: true, special: true },
+	{ name: 'Forward Base', weight: 10, special: true }
 ] as const;
 
 type NexusTypeConfig = {
@@ -66,16 +84,24 @@ type NexusTypeConfig = {
 	resourceBonus?: boolean;
 	troopBonus?: boolean;
 	highResources?: boolean;
+	special?: boolean;
 };
 
-function selectNexusType(): NexusTypeConfig {
-	const totalWeight = NEXUS_TYPES.reduce((sum, t) => sum + t.weight, 0);
+// Weighted pick over a type table. While a galaxy is younger than
+// SPECIAL_NEXUS_DELAY_MS we drop every special type and pick only among the
+// non-special ones - currently just Neutral Settlement - so early galaxies seed
+// plain neutrals exclusively. (Weights renormalise automatically since the loop
+// sums whatever subset survives the filter.)
+function selectNexusType(galaxyAgeMs: number): NexusTypeConfig {
+	const all = NEXUS_TYPES as readonly NexusTypeConfig[];
+	const pool = galaxyAgeMs < SPECIAL_NEXUS_DELAY_MS ? all.filter((t) => !t.special) : all;
+	const totalWeight = pool.reduce((sum, t) => sum + t.weight, 0);
 	let random = Math.random() * totalWeight;
-	for (const type of NEXUS_TYPES) {
+	for (const type of pool) {
 		random -= type.weight;
 		if (random <= 0) return type;
 	}
-	return NEXUS_TYPES[0];
+	return pool[0];
 }
 
 function scaleTroopCount(
@@ -88,8 +114,13 @@ function scaleTroopCount(
 	return Math.max(0, Math.floor(raw * troopMultiplier * difficultyScale));
 }
 
-function buildNeutralNexusData(x: number, y: number, difficultyScale = BASE_NEUTRAL_DIFFICULTY) {
-	const nexusType = selectNexusType();
+function buildNeutralNexusData(
+	x: number,
+	y: number,
+	difficultyScale = BASE_NEUTRAL_DIFFICULTY,
+	galaxyAgeMs = Number.POSITIVE_INFINITY
+) {
+	const nexusType = selectNexusType(galaxyAgeMs);
 	const lifeSupport = Math.max(1, Math.floor(Math.random() * 3) + Math.floor(difficultyScale));
 
 	// Resources scale linearly with difficulty: 1× at base (0.5) up to 3× at max (1.35)
@@ -148,39 +179,74 @@ function buildNeutralNexusData(x: number, y: number, difficultyScale = BASE_NEUT
 	};
 }
 
+// Chebyshev distance to the nearest existing nexus; Infinity on an empty map.
+function nearestNeighborDistance(
+	x: number,
+	y: number,
+	existing: Array<{ x: number; y: number }>
+): number {
+	let best = Number.POSITIVE_INFINITY;
+	for (const n of existing) {
+		const d = Math.max(Math.abs(n.x - x), Math.abs(n.y - y));
+		if (d < best) best = d;
+	}
+	return best;
+}
+
 async function findOpenCoordinates(galaxyId: number): Promise<{ x: number; y: number } | null> {
 	const existing = await prisma.nexus.findMany({
 		where: { galaxyId },
 		select: { x: true, y: true }
 	});
-	for (let attempt = 0; attempt < MAP_SIZE * 4; attempt++) {
+	// Mitchell's best-candidate: collect up to PLACEMENT_CANDIDATES spacing-valid
+	// cells and keep the one farthest from its nearest neighbour, so placements
+	// spread out instead of clumping. We still bound total tries so a nearly full
+	// map can't spin forever.
+	let best: { x: number; y: number } | null = null;
+	let bestDist = -1;
+	let found = 0;
+	for (let attempt = 0; attempt < MAP_SIZE * 4 && found < PLACEMENT_CANDIDATES; attempt++) {
 		const x = Math.floor(Math.random() * MAP_SIZE);
 		const y = Math.floor(Math.random() * MAP_SIZE);
-		const tooClose = existing.some(
-			(n) => Math.max(Math.abs(n.x - x), Math.abs(n.y - y)) < MIN_NEXUS_SPACING
-		);
-		if (!tooClose) return { x, y };
+		const dist = nearestNeighborDistance(x, y, existing);
+		if (dist < MIN_NEXUS_SPACING) continue;
+		found++;
+		if (dist > bestDist) {
+			bestDist = dist;
+			best = { x, y };
+		}
 	}
-	return null;
+	return best;
 }
 
 export async function createNeutralNexus(
 	galaxyId: number,
-	difficultyScale = BASE_NEUTRAL_DIFFICULTY
+	difficultyScale = BASE_NEUTRAL_DIFFICULTY,
+	galaxyAgeMs = Number.POSITIVE_INFINITY
 ) {
 	const coordinates = await findOpenCoordinates(galaxyId);
 	if (!coordinates) return null;
 	return prisma.nexus.create({
-		data: { ...buildNeutralNexusData(coordinates.x, coordinates.y, difficultyScale), galaxyId }
+		data: {
+			...buildNeutralNexusData(coordinates.x, coordinates.y, difficultyScale, galaxyAgeMs),
+			galaxyId
+		}
 	});
 }
 
+function galaxyAgeMs(galaxy: { startsAt: Date | null; createdAt: Date }): number {
+	const anchor = galaxy.startsAt ?? galaxy.createdAt;
+	return Date.now() - anchor.getTime();
+}
+
 async function ensureNeutralNexusPoolForGalaxy(galaxyId: number) {
-	const [playerCount, totalNexusCount, neutralCount] = await Promise.all([
+	const [galaxy, playerCount, totalNexusCount, neutralCount] = await Promise.all([
+		prisma.galaxy.findUnique({ where: { id: galaxyId }, select: { startsAt: true, createdAt: true } }),
 		prisma.galaxyPlayer.count({ where: { galaxyId } }),
 		prisma.nexus.count({ where: { galaxyId } }),
 		prisma.nexus.count({ where: { galaxyId, ownerId: null } })
 	]);
+	const ageMs = galaxy ? galaxyAgeMs(galaxy) : Number.POSITIVE_INFINITY;
 
 	const capturedCount = Math.max(0, totalNexusCount - playerCount - neutralCount);
 	const neutralDifficulty = Math.min(
@@ -199,7 +265,7 @@ async function ensureNeutralNexusPoolForGalaxy(galaxyId: number) {
 
 	let created = 0;
 	for (let i = 0; i < missingCount; i++) {
-		const nexus = await createNeutralNexus(galaxyId, neutralDifficulty);
+		const nexus = await createNeutralNexus(galaxyId, neutralDifficulty, ageMs);
 		if (!nexus) break;
 		created++;
 	}
@@ -388,7 +454,7 @@ export async function levelUpNeutralNexuses() {
 export async function dailyNexusGrowth() {
 	const galaxies = await prisma.galaxy.findMany({
 		where: { status: 'active' },
-		select: { id: true }
+		select: { id: true, startsAt: true, createdAt: true }
 	});
 
 	let totalCreated = 0;
@@ -397,9 +463,10 @@ export async function dailyNexusGrowth() {
 		const remaining = MAX_NEUTRALS - totalCount;
 		if (remaining <= 0) continue;
 
+		const ageMs = galaxyAgeMs(galaxy);
 		const toCreate = Math.min(DAILY_NEXUS_GROWTH, remaining);
 		for (let i = 0; i < toCreate; i++) {
-			const nexus = await createNeutralNexus(galaxy.id);
+			const nexus = await createNeutralNexus(galaxy.id, BASE_NEUTRAL_DIFFICULTY, ageMs);
 			if (!nexus) break;
 			totalCreated++;
 		}

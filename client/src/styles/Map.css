@@ -164,52 +164,42 @@
 	min-height: 0;
 }
 
-.map-grid-wrapper {
+/* ── Camera viewport + transform layer ─────────────────────────────────────
+   .map-viewport is the fixed clipping surface that captures all gestures
+   (drag / wheel / pinch). It never moves. .map-layer holds every cell, each
+   absolutely positioned in world space, and is moved/scaled by a single
+   translate3d()+scale() transform written from the camera hook's rAF loop —
+   so panning and zooming are pure GPU compositing, no React re-render. */
+.map-viewport {
 	flex: 1;
 	min-width: 0;
 	min-height: 0;
 	overflow: hidden;
-	background: transparent;
 	position: relative;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	/* Switched from `container-type: size` + `cqw`/`cqh` cell sizing to
-     viewport-relative sizing. Reason: with `container-type: size`, the
-     wrapper is size-contained and its `cqw`/`cqh` resolution interacts
-     with sibling reflow (the .map-sidebar content grows on selection
-     and triggers a layout pass). Browsers can briefly resolve `cq` units
-     against a transient mid-reflow inline/block-size, producing the
-     visible "starfield shrinks on click" glitch. Viewport units are
-     stable across layout passes triggered by sibling changes. */
+	background: transparent;
+	cursor: grab;
+	touch-action: none;
+	overscroll-behavior: contain;
+	-webkit-user-select: none;
+	user-select: none;
+	-webkit-user-drag: none;
 	contain: layout paint;
+	/* Deep-space backdrop lives on the (static) viewport so it doesn't move
+	   with the layer — the parallax of a fixed starfield behind a moving grid
+	   reads as depth. */
+	background:
+		radial-gradient(ellipse 55% 40% at 18% 22%, rgba(255, 158, 61, 0.16) 0%, transparent 100%),
+		radial-gradient(ellipse 50% 35% at 82% 78%, rgba(86, 211, 100, 0.12) 0%, transparent 100%),
+		radial-gradient(ellipse 30% 50% at 88% 35%, rgba(248, 81, 73, 0.09) 0%, transparent 100%),
+		radial-gradient(ellipse 70% 70% at 50% 50%, rgba(14, 18, 44, 0.6) 0%, transparent 70%),
+		linear-gradient(135deg, #020408 0%, #060a14 30%, #08101e 55%, #030608 100%);
 }
 
-.map-grid {
-	--map-visible-range: 11;
-	/* Approximation: usable area ≈ viewport minus nexus-nav (260) and
-     map-sidebar (350) horizontally, minus header (~60) and bottom padding
-     vertically. We use straight viewport units so the calc is stable
-     regardless of intermediate flex resolution. clamp() guards both ends.
-     On mobile, the sidebar collapses (see media queries) so 85vw is fine. */
-	--map-cell-size: clamp(
-		28px,
-		min(60vw / var(--map-visible-range), 80vh / var(--map-visible-range)),
-		96px
-	);
+.map-viewport.is-panning {
+	cursor: grabbing;
 }
 
-@media (max-width: 1100px) {
-	.map-grid {
-		--map-cell-size: clamp(
-			28px,
-			min(85vw / var(--map-visible-range), 70vh / var(--map-visible-range)),
-			96px
-		);
-	}
-}
-
-.map-grid-wrapper::before {
+.map-viewport::before {
 	content: '';
 	position: absolute;
 	inset: 0;
@@ -230,119 +220,77 @@
 	z-index: 0;
 }
 
-.map-crosshair {
+.map-layer {
 	position: absolute;
-	pointer-events: none;
-	z-index: 100;
-	transform: translate(-50%, -50%);
-}
-
-.crosshair-center {
-	width: 12px;
-	height: 12px;
-	border: 2px solid var(--danger);
-	border-radius: 50%;
-	background: rgba(248, 81, 73, 0.6);
-	box-shadow:
-		0 0 10px rgba(248, 81, 73, 1),
-		0 0 20px rgba(248, 81, 73, 0.8);
-	position: relative;
-	z-index: 2;
-}
-
-.crosshair-line {
-	position: absolute;
-	background: var(--danger);
-	box-shadow: 0 0 8px rgba(248, 81, 73, 0.8);
-}
-
-.crosshair-top {
-	width: 2px;
-	height: 20px;
-	left: 50%;
-	bottom: 50%;
-	transform: translateX(-50%);
-	margin-bottom: 6px;
-}
-
-.crosshair-bottom {
-	width: 2px;
-	height: 20px;
-	left: 50%;
-	top: 50%;
-	transform: translateX(-50%);
-	margin-top: 6px;
-}
-
-.crosshair-left {
-	width: 20px;
-	height: 2px;
-	right: 50%;
-	top: 50%;
-	transform: translateY(-50%);
-	margin-right: 6px;
-}
-
-.crosshair-right {
-	width: 20px;
-	height: 2px;
-	left: 50%;
-	top: 50%;
-	transform: translateY(-50%);
-	margin-left: 6px;
-}
-
-.map-grid {
-	display: inline-block;
-	border: 1px solid rgba(255, 158, 61, 0.12);
-	border-radius: var(--radius-lg);
-	overflow: visible;
-	user-select: none;
-	touch-action: none;
-	overscroll-behavior: contain;
-	-webkit-user-drag: none;
-	position: relative;
+	top: 0;
+	left: 0;
+	width: 0;
+	height: 0;
+	transform-origin: 0 0;
 	z-index: 1;
+	/* will-change is toggled on only while a gesture is active (.is-panning on
+	   the viewport) so the GPU layer isn't pinned permanently — a permanent
+	   will-change wastes GPU memory and can blur text. */
+}
+
+.map-viewport.is-panning .map-layer {
 	will-change: transform;
-	background:
-    /* cyan nebula bloom, top-left quadrant */
-		radial-gradient(ellipse 55% 40% at 18% 22%, rgba(255, 158, 61, 0.18) 0%, transparent 100%),
-		/* green bloom, bottom-right */
-		radial-gradient(ellipse 50% 35% at 82% 78%, rgba(86, 211, 100, 0.13) 0%, transparent 100%),
-		/* warm magenta rift, mid-right */
-		radial-gradient(ellipse 30% 50% at 88% 35%, rgba(248, 81, 73, 0.1) 0%, transparent 100%),
-		/* deep core glow, centre */
-		radial-gradient(ellipse 60% 60% at 50% 50%, rgba(20, 25, 60, 0.7) 0%, transparent 100%),
-		/* base, near-black deep space */
-		linear-gradient(135deg, #020408 0%, #060a14 30%, #08101e 55%, #030608 100%);
-	box-shadow:
-		inset 0 0 80px rgba(255, 158, 61, 0.06),
-		inset 0 0 160px rgba(0, 0, 0, 0.6);
 }
 
-.map-row {
+/* ── Zoom buttons (over the viewport, do not move with the map) ───────────── */
+.map-zoom-controls {
+	position: absolute;
+	right: 12px;
+	bottom: 12px;
+	z-index: 30;
 	display: flex;
-	background: transparent;
+	flex-direction: column;
+	gap: 6px;
 }
 
+.map-zoom-btn {
+	width: 34px;
+	height: 34px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(8, 12, 28, 0.82);
+	color: var(--text-strong);
+	border: 1px solid var(--border-default);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+	backdrop-filter: blur(4px);
+	transition:
+		background 0.15s,
+		border-color 0.15s;
+}
+
+.map-zoom-btn:hover {
+	background: rgba(255, 158, 61, 0.18);
+	border-color: var(--accent);
+	color: var(--accent);
+}
+
+.map-zoom-btn:active {
+	transform: translateY(1px);
+}
+
+/* box-sizing: border-box keeps the outer cell footprint constant when the
+   border thickens (1px → 2px for owned/enemy/current states) so a highlight
+   never nudges neighbours. width/height/left/top are written inline (world
+   space) by the renderer; sizing here is just the fallback. */
 .map-cell {
-	/* box-sizing: border-box keeps the outer cell size constant when the
-     border width changes (1px → 2px for current/own/enemy cells). Without
-     it, classifying cells as highlighted grows the grid by the cumulative
-     extra border width, and any layout that depends on that size (e.g. the
-     container-query cell-size calc) can recompute and produce visible
-     "shrink" effects when selection state changes. */
 	box-sizing: border-box;
-	width: var(--map-cell-size, 60px);
-	height: var(--map-cell-size, 60px);
+	position: absolute;
+	width: 72px;
+	height: 72px;
 	border: 1px solid rgba(255, 158, 61, 0.1);
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
 	cursor: pointer;
-	position: relative;
-	background: rgba(8, 12, 28, 0.55);
+	background: rgba(8, 12, 28, 0.4);
 }
 
 .map-cell.has-nexus,
@@ -359,18 +307,20 @@
 }
 
 /* ── Espionage map: denser starfield + recon aesthetic ─────────── */
-.map-grid--espionage {
+.map-viewport--espionage {
+	/* Espionage uses tap-to-select; let the browser scroll the page on a
+	   single-finger swipe (pinch still zooms via the camera hook). */
+	touch-action: pan-y pinch-zoom;
 	background:
 		radial-gradient(ellipse 60% 45% at 20% 25%, rgba(86, 156, 214, 0.12) 0%, transparent 100%),
 		radial-gradient(ellipse 40% 55% at 85% 70%, rgba(168, 119, 232, 0.1) 0%, transparent 100%),
 		radial-gradient(ellipse 50% 35% at 60% 15%, rgba(248, 81, 73, 0.07) 0%, transparent 100%),
 		radial-gradient(ellipse 60% 60% at 50% 50%, rgba(8, 14, 35, 0.85) 0%, transparent 100%),
 		linear-gradient(160deg, #01020a 0%, #03061a 30%, #040a1c 55%, #02040e 100%);
-	border-color: rgba(86, 156, 214, 0.18);
 }
 
 /* Extra stars layer for espionage — more dense, cooler (blue-white) tones */
-.map-grid--espionage::before {
+.map-viewport--espionage::before {
 	content: '';
 	position: absolute;
 	inset: 0;
@@ -401,17 +351,17 @@
 	z-index: 0;
 }
 
-.map-grid--espionage .map-cell {
+.map-viewport--espionage .map-cell {
 	background: rgba(2, 5, 18, 0.6);
 	border-color: rgba(86, 156, 214, 0.08);
 }
 
-.map-grid--espionage .map-cell:hover {
+.map-viewport--espionage .map-cell:hover {
 	background: rgba(20, 30, 65, 0.7);
 	border-color: rgba(86, 156, 214, 0.3);
 }
 
-.map-grid--espionage .map-cell.has-nexus:not(.current-nexus) {
+.map-viewport--espionage .map-cell.has-nexus:not(.current-nexus) {
 	cursor: crosshair;
 	background: rgba(5, 10, 30, 0.7);
 }
@@ -422,10 +372,12 @@
 	background: rgba(255, 158, 61, 0.1) !important;
 }
 
-/* Owner label shown on nexus cells in espionage mode */
+/* Owner label shown on nexus cells in espionage mode. These font sizes are in
+   fixed px relative to the base 72px cell; the whole layer is scaled by the
+   camera transform, so labels scale with zoom automatically. */
 .cell-owner-label {
 	font-family: var(--font-mono);
-	font-size: calc(var(--map-cell-size, 60px) * 0.13);
+	font-size: 9px;
 	font-weight: 600;
 	color: rgba(200, 220, 255, 0.85);
 	line-height: 1;
@@ -545,15 +497,64 @@
 		0 0 24px rgba(86, 211, 100, 0.22);
 }
 
-/* Selected cell, white outline on top of any state */
+/* Selected cell — a bright targeting ring on top of any ownership state. It
+   lives inside the transformed layer, so it tracks the selected nexus through
+   pans/zooms for free (no separate overlay to reposition each frame). */
 .map-cell.selected {
-	outline: 2px solid rgba(255, 255, 255, 0.7);
+	outline: 2px solid rgba(255, 255, 255, 0.85);
 	outline-offset: -2px;
-	z-index: 5;
+	z-index: 20;
+}
+
+.map-cell.selected::after {
+	content: '';
+	position: absolute;
+	inset: -5px;
+	border: 2px solid rgba(255, 255, 255, 0.85);
+	border-radius: 4px;
+	box-shadow:
+		0 0 10px rgba(255, 255, 255, 0.55),
+		inset 0 0 10px rgba(255, 255, 255, 0.25);
+	pointer-events: none;
+	animation: map-select-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes map-select-pulse {
+	0%,
+	100% {
+		opacity: 0.65;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 1;
+		transform: scale(1.04);
+	}
+}
+
+/* ── Level of detail: when zoomed out (.map-viewport--lod), drop the most
+   expensive per-cell paint (multi-layer glows, marker drop-shadows) and the
+   tiny text that's unreadable at that scale. This keeps a wide sector smooth
+   even on low-end phones — paint cost scales with visible nexuses otherwise. */
+.map-viewport--lod .cell-coords,
+.map-viewport--lod .cell-owner-label,
+.map-viewport--lod .faction-target-label {
+	display: none;
+}
+
+.map-viewport--lod .map-cell.current-nexus,
+.map-viewport--lod .map-cell.own-nexus,
+.map-viewport--lod .map-cell.enemy-nexus,
+.map-viewport--lod .map-cell.faction-nexus,
+.map-viewport--lod .map-cell.ally-nexus {
+	box-shadow: none;
+}
+
+.map-viewport--lod .nexus-marker {
+	filter: none;
 }
 
 .nexus-marker {
-	font-size: calc(var(--map-cell-size, 60px) * 0.4);
+	font-size: 29px;
 	line-height: 1;
 	display: flex;
 	align-items: center;
@@ -602,7 +603,7 @@
 .faction-target-label {
 	margin-top: 1px;
 	font-family: var(--font-mono);
-	font-size: calc(var(--map-cell-size, 60px) * 0.14);
+	font-size: 10px;
 	font-weight: 700;
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
@@ -640,7 +641,7 @@
 }
 
 .cell-coords {
-	font-size: calc(var(--map-cell-size, 60px) * 0.15);
+	font-size: 11px;
 	color: var(--text-muted);
 	margin-top: 2px;
 	line-height: 1;
@@ -952,6 +953,33 @@
 	background: var(--color-navy-500);
 	color: var(--text-strong);
 	border-color: var(--accent);
+}
+
+.relocate-btn {
+	background: transparent;
+	color: var(--accent);
+	border: 1px solid var(--accent);
+	padding: 10px 14px;
+	border-radius: var(--radius-sm);
+	font-size: 13px;
+	font-weight: 600;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	white-space: nowrap;
+	transition: all 0.15s;
+	flex-shrink: 0;
+}
+
+.relocate-btn:hover:not(:disabled) {
+	background: var(--accent);
+	color: var(--color-navy-900);
+}
+
+.relocate-btn:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
 }
 
 .attack-form {

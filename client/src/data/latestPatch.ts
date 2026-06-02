@@ -15,7 +15,7 @@
 // If "I forgot to bump it" becomes a real pattern, swap to a build step
 // that globs the directory and writes this file. Until then: simpler wins.
 
-export const LATEST_PATCH_VERSION = '0.19';
-export const LATEST_PATCH_LABEL = 'Alpha v0.19';
+export const LATEST_PATCH_VERSION = '0.20';
+export const LATEST_PATCH_LABEL = 'Alpha v0.20';
 export const LATEST_PATCH_HEADLINE =
-	'Server-side scheduled waves, class-split training queues at Command Core 15, and a flush nexus tab bar.';
+	'A rebuilt Starfield map with buttery pan/zoom, a one-time relocation token for fresh commanders, and far less clumpy map seeding.';

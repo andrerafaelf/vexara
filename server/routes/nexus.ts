@@ -41,6 +41,9 @@ router.patch('/:nexusId/name', auth, (req, res) =>
 router.post('/:nexusId/specialize', auth, (req, res) =>
 	nexusController.specializeNexus(req as AuthRequest, res as Response)
 );
+router.post('/relocate', auth, (req, res) =>
+	nexusController.relocateNexus(req as AuthRequest, res as Response)
+);
 router.post('/:nexusId/quests/:batchId/claim', auth, (req, res) =>
 	nexusController.claimQuestReward(req as AuthRequest, res as Response)
 );

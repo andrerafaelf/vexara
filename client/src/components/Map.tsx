@@ -1,11 +1,11 @@
 import { useNow } from '@/hooks/useNow';
 import {
 	AlertTriangle,
-	Building,
 	Clock,
 	Crosshair,
-	Home,
 	Info,
+	Minus,
+	Plus,
 	Shield,
 	Sparkles,
 	Star,
@@ -19,6 +19,8 @@ import { useAuth } from '../context/AuthContext';
 import { useOnboarding } from '../context/OnboardingContext';
 import { useToast } from '../context/ToastContext';
 import { useGameSocket } from '../hooks/useGameSocket';
+import { useMapCamera } from '../hooks/useMapCamera';
+import { MapCell, type CellKind, type MapCellData } from './MapCell';
 import {
 	getGalaxyEvents,
 	getIncomingAttacks,
@@ -28,6 +30,7 @@ import {
 	getNexusInfo,
 	getOutgoingAttacks,
 	markFactionTarget,
+	relocateNexus,
 	sendAttack,
 	sendTroops,
 	transferResources,
@@ -101,6 +104,16 @@ export interface MapNexus {
 	isFactionTarget?: boolean;
 }
 
+// NPC nexuses are identified by name prefix (the server names them by type).
+const NPC_NAME_FRAGMENTS = [
+	'Resource Depot',
+	'Military Outpost',
+	'Supply Cache',
+	'Abandoned Base',
+	'Neutral Settlement'
+];
+const isNpcNexusName = (name: string) => NPC_NAME_FRAGMENTS.some((f) => name.includes(f));
+
 const TROOP_LABELS: Record<string, string> = {
 	lancerDrone: 'Lancer Drone',
 	assaultTrooper: 'Assault Trooper',
@@ -139,9 +152,6 @@ const STATIONABLE_TROOPS = new Set([
 	'bulwarkGuard'
 ]);
 
-const VISIBLE_RANGE = 5;
-const MIN_VISIBLE_RANGE = 2;
-const MAX_VISIBLE_RANGE = 10;
 // Must match the `range` the server's /map/area endpoint returns around the
 // requested center (mapController.getArea). The client fetches this radius and
 // reuses it as a pan buffer, only refetching when the viewport nears its edge.
@@ -149,6 +159,21 @@ const SERVER_FETCH_RANGE = 10;
 const MAP_SIZE = 50;
 const MAP_MAX_INDEX = MAP_SIZE - 1;
 const MOBILE_BREAKPOINT = 768;
+
+// ── Camera model ──────────────────────────────────────────────────────────
+// One cell is CELL_PX CSS pixels at zoom 1; the camera scales this layer with a
+// GPU transform, so zoom is a cheap compositing op (no DOM rebuild, no refetch).
+// Tactical view: zoomed all the way out you see a local sector (~±9 cells), and
+// the hook enforces a viewport-derived min-zoom floor so you can never scroll
+// past the rendered/fetched window on any screen size.
+const CELL_PX = 72;
+const MIN_ZOOM = 0.55; // nominal lower bound (hook clamps tighter per viewport)
+const MAX_ZOOM = 2.4; // close-in detail
+const ZOOM_STEP = 0.18; // keyboard / button nudge
+// The rendered cell window is centred on the last fetched sector and matches the
+// server's returned radius, so the camera can pan freely over it without a
+// refetch or a DOM rebuild until the centre drifts toward the window edge.
+const RENDER_RADIUS = SERVER_FETCH_RANGE;
 
 const useIsMobile = () => {
 	const [isMobile, setIsMobile] = useState(() =>
@@ -166,11 +191,6 @@ const useIsMobile = () => {
 	return isMobile;
 };
 
-interface CrosshairPosition {
-	left: number;
-	top: number;
-}
-
 const Map: React.FC<MapProps> = ({
 	currentNexus,
 	onRefresh,
@@ -187,8 +207,6 @@ const Map: React.FC<MapProps> = ({
 	const searchParams = useSearchParams();
 	const [nexuses, setVillages] = useState<MapNexus[]>([]);
 	const [selectedNexus, setSelectedNexus] = useState<MapNexus | null>(null);
-	const [centerX, setCenterX] = useState(currentNexus.x);
-	const [centerY, setCenterY] = useState(currentNexus.y);
 	const [showAttackForm, setShowAttackForm] = useState(false);
 	const EMPTY_ATTACK_TROOPS = {
 		lancerDrone: 0,
@@ -222,6 +240,7 @@ const Map: React.FC<MapProps> = ({
 	const [showEventsPanel, setShowEventsPanel] = useState(false);
 	const [nexusHistory, setNexusHistory] = useState<any[]>([]);
 	const [factionTargeting, setFactionTargeting] = useState(false);
+	const [relocating, setRelocating] = useState(false);
 	const [mapLoading, setMapLoading] = useState(false);
 	useNow(); // keep component ticking for Countdown leaves
 	const isSendAttackOnboarding = currentStep?.id === 'send_attack';
@@ -237,19 +256,47 @@ const Map: React.FC<MapProps> = ({
 		return base;
 	}, [currentNexus.troops]);
 	const currentTimeRef = useRef(new Date());
-	const [isDragging, setIsDragging] = useState(false);
-	const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-	const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 	const [targetX, setTargetX] = useState(String(currentNexus.x));
 	const [targetY, setTargetY] = useState(String(currentNexus.y));
-	const [crosshairPosition, setCrosshairPosition] = useState<CrosshairPosition | null>(null);
-	const [visibleRange, setVisibleRange] = useState(VISIBLE_RANGE);
-	const mapGridWrapperRef = useRef<HTMLDivElement | null>(null);
-	const mapGridRef = useRef<HTMLDivElement | null>(null);
-	const touchDraggedRef = useRef(false);
-	const touchDistanceRef = useRef(0);
-	const prevRangeRef = useRef(VISIBLE_RANGE);
-	const rangeRef = useRef(VISIBLE_RANGE);
+
+	// Continuous pixel-space camera. The hook works in SCREEN-ROW space (row 0 at
+	// the top), but the game's y axis grows upward, so we flip y at the boundary:
+	// row = MAP_MAX_INDEX - mapY. Cells are laid out the same way, so the camera
+	// and the grid agree. centerX/centerY/zoom are the *settled* values (updated
+	// only at rest); live pan/zoom is written straight to the layer transform in
+	// the hook's rAF loop, so neither a pan nor a zoom re-renders the grid.
+	const {
+		layerRef,
+		viewportRef,
+		centerX,
+		centerY: centerRow,
+		zoom,
+		isPanning,
+		moveTo: moveToRow,
+		zoomBy
+	} = useMapCamera({
+		cellPx: CELL_PX,
+		maxIndex: MAP_MAX_INDEX,
+		initialCenterX: currentNexus.x,
+		initialCenterY: MAP_MAX_INDEX - currentNexus.y,
+		minZoom: MIN_ZOOM,
+		maxZoom: MAX_ZOOM,
+		renderRadius: RENDER_RADIUS,
+		// Espionage selects targets by tapping; leave single-finger touch to the
+		// browser there so the page still scrolls. Pinch-zoom always works.
+		allowTouchPan: mode === 'normal'
+	});
+	const centerY = MAP_MAX_INDEX - centerRow;
+	const moveTo = useCallback(
+		(mapX: number, mapY: number) => moveToRow(mapX, MAP_MAX_INDEX - mapY),
+		[moveToRow]
+	);
+
+	// Latest settled centre, read by event handlers (keyboard) without stale closures.
+	const camCenterRef = useRef({ x: centerX, y: centerY });
+	useEffect(() => {
+		camCenterRef.current = { x: centerX, y: centerY };
+	}, [centerX, centerY]);
 
 	const clampCoordinate = (value: string, fallback: number) => {
 		const parsed = Number.parseInt(value, 10);
@@ -263,8 +310,7 @@ const Map: React.FC<MapProps> = ({
 	const handleJumpToCoordinates = () => {
 		const nextX = clampCoordinate(targetX, centerX);
 		const nextY = clampCoordinate(targetY, centerY);
-		setCenterX(nextX);
-		setCenterY(nextY);
+		moveTo(nextX, nextY);
 		setTargetX(String(nextX));
 		setTargetY(String(nextY));
 		const nexusAtCoords = nexusLookup[`${nextX},${nextY}`];
@@ -272,8 +318,7 @@ const Map: React.FC<MapProps> = ({
 	};
 
 	const handleResetMap = () => {
-		setCenterX(currentNexus.x);
-		setCenterY(currentNexus.y);
+		moveTo(currentNexus.x, currentNexus.y);
 		setTargetX(String(currentNexus.x));
 		setTargetY(String(currentNexus.y));
 	};
@@ -316,11 +361,14 @@ const Map: React.FC<MapProps> = ({
 	const lastFetchRef = useRef<{ x: number; y: number } | null>(null);
 
 	useEffect(() => {
-		// Refetch only when the viewport edge approaches the edge of the buffered
-		// area. buffer = how far the center can drift before the visible range would
-		// show cells the last fetch didn't cover (minus a 1-cell safety margin).
+		// Refetch only when the settled centre drifts far enough from the last
+		// fetched sector that the rendered window would expose un-fetched cells.
+		// Zoom does NOT enter this calc — the camera scales the same rendered
+		// window, so zooming never refetches. The render window (RENDER_RADIUS)
+		// is sized to cover the widest viewport at min zoom, and the buffer keeps
+		// a margin so the edge is refreshed before it scrolls into view.
 		const last = lastFetchRef.current;
-		const buffer = Math.max(0, SERVER_FETCH_RANGE - visibleRange - 1);
+		const buffer = Math.max(2, SERVER_FETCH_RANGE - RENDER_RADIUS / 2);
 		const needsFetch =
 			!last || Math.abs(centerX - last.x) > buffer || Math.abs(centerY - last.y) > buffer;
 
@@ -337,7 +385,7 @@ const Map: React.FC<MapProps> = ({
 			if (mapDebounceRef.current) clearTimeout(mapDebounceRef.current);
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [centerX, centerY, visibleRange]);
+	}, [centerX, centerY]);
 
 	// Pre-select current nexus on mount (desktop only, on mobile this would
 	// immediately pop the modal open before the user has interacted)
@@ -367,8 +415,7 @@ const Map: React.FC<MapProps> = ({
 				const r = await getNexusInfo(attackId);
 				if (cancelled || !r.data) return;
 				setSelectedNexus(r.data);
-				setCenterX(r.data.x);
-				setCenterY(r.data.y);
+				moveTo(r.data.x, r.data.y);
 				setAttackMissionType('attack');
 				setAttackTroops(EMPTY_ATTACK_TROOPS);
 				setShowAttackForm(true);
@@ -395,8 +442,10 @@ const Map: React.FC<MapProps> = ({
 		const rawCx = searchParams?.get('cx');
 		const rawCy = searchParams?.get('cy');
 		if (rawCx == null && rawCy == null) return;
-		if (rawCx != null) setCenterX(clampCoordinate(rawCx, centerX));
-		if (rawCy != null) setCenterY(clampCoordinate(rawCy, centerY));
+		moveTo(
+			rawCx != null ? clampCoordinate(rawCx, centerX) : centerX,
+			rawCy != null ? clampCoordinate(rawCy, centerY) : centerY
+		);
 		const nextParams = new URLSearchParams(searchParams.toString());
 		nextParams.delete('cx');
 		nextParams.delete('cy');
@@ -410,7 +459,8 @@ const Map: React.FC<MapProps> = ({
 		setTargetY(String(centerY));
 	}, [centerX, centerY]);
 
-	// Keyboard navigation and zoom
+	// Keyboard navigation: arrows pan by a few cells, +/- zoom. All gesture
+	// input (drag, wheel, pinch) is owned by the camera hook on the viewport.
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
 			const tag = (e.target as HTMLElement)?.tagName;
@@ -419,117 +469,35 @@ const Map: React.FC<MapProps> = ({
 			switch (e.key) {
 				case 'ArrowUp':
 					e.preventDefault();
-					setCenterY((prev) => Math.min(MAP_MAX_INDEX, prev + step));
+					moveTo(camCenterRef.current.x, camCenterRef.current.y + step);
 					break;
 				case 'ArrowDown':
 					e.preventDefault();
-					setCenterY((prev) => Math.max(0, prev - step));
+					moveTo(camCenterRef.current.x, camCenterRef.current.y - step);
 					break;
 				case 'ArrowLeft':
 					e.preventDefault();
-					setCenterX((prev) => Math.max(0, prev - step));
+					moveTo(camCenterRef.current.x - step, camCenterRef.current.y);
 					break;
 				case 'ArrowRight':
 					e.preventDefault();
-					setCenterX((prev) => Math.min(MAP_MAX_INDEX, prev + step));
+					moveTo(camCenterRef.current.x + step, camCenterRef.current.y);
+					break;
+				case '+':
+				case '=':
+					e.preventDefault();
+					zoomBy(ZOOM_STEP);
+					break;
+				case '-':
+				case '_':
+					e.preventDefault();
+					zoomBy(-ZOOM_STEP);
 					break;
 			}
 		};
 		window.addEventListener('keydown', handleKeyDown);
 		return () => window.removeEventListener('keydown', handleKeyDown);
-	}, []);
-
-	useEffect(() => {
-		rangeRef.current = visibleRange;
-	}, [visibleRange]);
-
-	useEffect(() => {
-		const el = mapGridRef.current;
-		if (!el) return;
-
-		const clampRange = (r: number) =>
-			Math.max(MIN_VISIBLE_RANGE, Math.min(MAX_VISIBLE_RANGE, Math.round(r)));
-
-		const getTouchDistance = (touches: TouchList) => {
-			if (touches.length < 2) return 0;
-			const dx = touches[0].clientX - touches[1].clientX;
-			const dy = touches[0].clientY - touches[1].clientY;
-			return Math.sqrt(dx * dx + dy * dy);
-		};
-
-		// Two-listener split so plain wheel never blocks page scroll:
-		//  - passive listener performs the zoom calc on ctrl/meta+wheel
-		//  - non-passive listener calls preventDefault only on ctrl/meta+wheel
-		//    to suppress the browser's native page-zoom gesture
-		// Without ctrl/meta both handlers no-op, so wheel events bubble freely to
-		// whatever ancestor scrolls (e.g. .main-content on the espionage tab).
-		const onWheelZoom = (e: WheelEvent) => {
-			if (!e.ctrlKey && !e.metaKey) return;
-			const delta = e.deltaY > 0 ? 1 : -1;
-			const newRange = clampRange(rangeRef.current + delta);
-			if (newRange !== rangeRef.current) {
-				rangeRef.current = newRange;
-				setVisibleRange(newRange);
-			}
-		};
-		const onWheelPrevent = (e: WheelEvent) => {
-			if (!e.ctrlKey && !e.metaKey) return;
-			e.preventDefault();
-		};
-
-		let pinchStartRange = rangeRef.current;
-
-		const onTouchStart = (e: TouchEvent) => {
-			if (e.touches.length === 2) {
-				e.preventDefault();
-				touchDistanceRef.current = getTouchDistance(e.touches);
-				prevRangeRef.current = rangeRef.current;
-				pinchStartRange = rangeRef.current;
-			}
-		};
-
-		const onTouchMove = (e: TouchEvent) => {
-			if (e.touches.length === 2 && touchDistanceRef.current > 0) {
-				e.preventDefault();
-				e.stopPropagation();
-				const newDistance = getTouchDistance(e.touches);
-				const ratio = newDistance / touchDistanceRef.current;
-				const targetRange = pinchStartRange / ratio;
-				const newRange = clampRange(targetRange);
-				if (newRange !== rangeRef.current) {
-					rangeRef.current = newRange;
-					setVisibleRange(newRange);
-				}
-			} else if (e.touches.length === 1) {
-				// Prevent page scroll while panning the map with one finger.
-				// This must be in the non-passive listener (passive: false above) -
-				// React's synthetic onTouchMove is passive and ignores preventDefault.
-				e.preventDefault();
-			}
-		};
-
-		const onTouchEnd = (e: TouchEvent) => {
-			if (e.touches.length < 2) {
-				touchDistanceRef.current = 0;
-				prevRangeRef.current = rangeRef.current;
-			}
-		};
-
-		el.addEventListener('wheel', onWheelZoom, { passive: true });
-		el.addEventListener('wheel', onWheelPrevent, { passive: false });
-		el.addEventListener('touchstart', onTouchStart, { passive: false });
-		el.addEventListener('touchmove', onTouchMove, { passive: false });
-		el.addEventListener('touchend', onTouchEnd, { passive: false });
-		el.addEventListener('touchcancel', onTouchEnd, { passive: false });
-
-		return () => {
-			el.removeEventListener('wheel', onWheelZoom);
-			el.removeEventListener('wheel', onWheelPrevent);
-			el.removeEventListener('touchstart', onTouchStart);
-			el.removeEventListener('touchmove', onTouchMove);
-			el.removeEventListener('touchend', onTouchEnd);
-			el.removeEventListener('touchcancel', onTouchEnd);
-		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	const loadMapArea = async () => {
@@ -666,104 +634,50 @@ const Map: React.FC<MapProps> = ({
 		}
 	};
 
-	const handleMouseDown = (e: React.MouseEvent) => {
-		if (e.button === 0) {
-			// Left mouse button
-			e.preventDefault();
-			e.stopPropagation();
-			setIsDragging(true);
-			setDragStart({ x: e.clientX, y: e.clientY });
-			setDragOffset({ x: 0, y: 0 });
+	const handleRelocate = async () => {
+		if (!selectedNexus) return;
+		const ok = window.confirm(
+			`Relocate your nexus to the nearest open tile beside ${selectedNexus.name} (${selectedNexus.x}|${selectedNexus.y})?\n\n` +
+				'This is a one-time move. The token expires when your newbie protection ends, ' +
+				'and you cannot relocate while troops or attacks are in transit.'
+		);
+		if (!ok) return;
+		setRelocating(true);
+		try {
+			await relocateNexus(selectedNexus._id);
+			toast('Nexus relocated.', 'success');
+			setSelectedNexus(null);
+			onRefresh();
+		} catch (err: any) {
+			toast(err.response?.data?.error || 'Relocation failed', 'error');
+		} finally {
+			setRelocating(false);
 		}
 	};
 
-	const handleMouseMove = (e: React.MouseEvent) => {
-		if (isDragging) {
-			e.preventDefault();
-			e.stopPropagation();
-			const deltaX = e.clientX - dragStart.x;
-			const deltaY = e.clientY - dragStart.y;
+	// Distinguish a tap/click (select a nexus) from a drag (pan). The camera hook
+	// moves the map; here we only track how far the pointer travelled between
+	// down and up so a pan doesn't also register as a click. Hit-testing still
+	// rides the cell DOM's data-x/data-y, which works through the CSS transform.
+	const pointerDownRef = useRef<{ x: number; y: number } | null>(null);
+	const movedTooFarRef = useRef(false);
+	const CLICK_SLOP = 6; // px of travel allowed before a click becomes a drag
 
-			// Store offset for visual feedback
-			setDragOffset({ x: deltaX, y: deltaY });
-
-			const dragThreshold = 90;
-			const cellsX = Math.round(-deltaX / dragThreshold);
-			const cellsY = Math.round(deltaY / dragThreshold);
-
-			if (cellsX !== 0 || cellsY !== 0) {
-				setCenterX((prev) => Math.max(0, Math.min(MAP_MAX_INDEX, prev + cellsX)));
-				setCenterY((prev) => Math.max(0, Math.min(MAP_MAX_INDEX, prev + cellsY)));
-				setDragStart({ x: e.clientX, y: e.clientY });
-				setDragOffset({ x: 0, y: 0 });
-			}
-		}
+	const handlePointerDownCapture = (e: React.PointerEvent) => {
+		pointerDownRef.current = { x: e.clientX, y: e.clientY };
+		movedTooFarRef.current = false;
 	};
-
-	const handleMouseUp = (e?: React.MouseEvent) => {
-		if (e) {
-			e.preventDefault();
-			e.stopPropagation();
+	const handlePointerMoveCapture = (e: React.PointerEvent) => {
+		const start = pointerDownRef.current;
+		if (!start) return;
+		if (Math.abs(e.clientX - start.x) > CLICK_SLOP || Math.abs(e.clientY - start.y) > CLICK_SLOP) {
+			movedTooFarRef.current = true;
 		}
-		if (isDragging) {
-			setIsDragging(false);
-			setDragOffset({ x: 0, y: 0 });
-		}
-	};
-
-	const handleTouchStart = (e: React.TouchEvent) => {
-		if (e.touches.length === 1) {
-			touchDraggedRef.current = false;
-			const touch = e.touches[0];
-			setIsDragging(true);
-			setDragStart({ x: touch.clientX, y: touch.clientY });
-			setDragOffset({ x: 0, y: 0 });
-		} else if (e.touches.length === 2) {
-			setIsDragging(false);
-		}
-	};
-
-	const handleTouchMove = (e: React.TouchEvent) => {
-		if (e.touches.length === 2) {
-			return;
-		}
-		if (!isDragging || e.touches.length !== 1) return;
-		const touch = e.touches[0];
-		const deltaX = touch.clientX - dragStart.x;
-		const deltaY = touch.clientY - dragStart.y;
-
-		if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
-			touchDraggedRef.current = true;
-		}
-
-		setDragOffset({ x: deltaX, y: deltaY });
-
-		const dragThreshold = 55;
-		const cellsX = Math.round(-deltaX / dragThreshold);
-		const cellsY = Math.round(deltaY / dragThreshold);
-
-		if (cellsX !== 0 || cellsY !== 0) {
-			setCenterX((prev) => Math.max(0, Math.min(MAP_MAX_INDEX, prev + cellsX)));
-			setCenterY((prev) => Math.max(0, Math.min(MAP_MAX_INDEX, prev + cellsY)));
-			setDragStart({ x: touch.clientX, y: touch.clientY });
-			setDragOffset({ x: 0, y: 0 });
-		}
-	};
-
-	const handleTouchEnd = () => {
-		setIsDragging(false);
-		setDragOffset({ x: 0, y: 0 });
 	};
 
 	const handleGridClick = (e: React.MouseEvent<HTMLDivElement>) => {
-		if (
-			touchDraggedRef.current ||
-			isDragging ||
-			Math.abs(dragOffset.x) > 5 ||
-			Math.abs(dragOffset.y) > 5
-		) {
-			return;
-		}
+		// Suppress the click that follows a drag/flick.
+		if (movedTooFarRef.current || isPanning) return;
 		const cellEl = (e.target as HTMLElement).closest<HTMLElement>('.map-cell');
 		if (!cellEl) return;
 		const xAttr = cellEl.getAttribute('data-x');
@@ -784,13 +698,8 @@ const Map: React.FC<MapProps> = ({
 		if (e) {
 			e.stopPropagation();
 		}
-		// Don't process clicks if we were dragging (mouse or touch)
-		if (
-			touchDraggedRef.current ||
-			isDragging ||
-			Math.abs(dragOffset.x) > 5 ||
-			Math.abs(dragOffset.y) > 5
-		) {
+		// Don't process clicks that were really the end of a pan gesture.
+		if (movedTooFarRef.current || isPanning) {
 			return;
 		}
 		try {
@@ -956,204 +865,125 @@ const Map: React.FC<MapProps> = ({
 	const ownNexusIds = useMemo(() => new Set(ownNexuses.map((n) => n._id)), [ownNexuses]);
 
 	const isEspionage = mode === 'espionage';
+
 	const hasVisibleOnboardingAttackTarget = useMemo(
 		() =>
-			nexuses.some((nexus) => {
-				const isNpc =
-					nexus.name.includes('Resource Depot') ||
-					nexus.name.includes('Military Outpost') ||
-					nexus.name.includes('Supply Cache') ||
-					nexus.name.includes('Abandoned Base') ||
-					nexus.name.includes('Neutral Settlement');
-				return (
-					isNpc &&
+			nexuses.some(
+				(nexus) =>
+					isNpcNexusName(nexus.name) &&
 					nexus._id !== currentNexus._id &&
 					!ownNexusIds.has(nexus._id) &&
-					Math.abs(nexus.x - centerX) <= visibleRange &&
-					Math.abs(nexus.y - centerY) <= visibleRange
-				);
-			}),
-		[nexuses, currentNexus._id, ownNexusIds, centerX, centerY, visibleRange]
+					Math.abs(nexus.x - centerX) <= RENDER_RADIUS &&
+					Math.abs(nexus.y - centerY) <= RENDER_RADIUS
+			),
+		[nexuses, currentNexus._id, ownNexusIds, centerX, centerY]
 	);
 
-	const gridCells = useMemo(() => {
-		const grid = [];
+	// Storm zones rarely change; precompute the active rectangles once per events
+	// update so per-cell classification is a cheap point-in-rect test.
+	const stormRects = useMemo(
+		() =>
+			galaxyEvents
+				.filter((ev) => ev.type === 'resource_storm' && ev.meta?.xMin != null)
+				.map((ev) => ({
+					xMin: ev.meta!.xMin!,
+					xMax: ev.meta!.xMax!,
+					yMin: ev.meta!.yMin!,
+					yMax: ev.meta!.yMax!
+				})),
+		[galaxyEvents]
+	);
 
-		for (let y = centerY + visibleRange; y >= centerY - visibleRange; y--) {
-			const row = [];
-			for (let x = centerX - visibleRange; x <= centerX + visibleRange; x++) {
-				const isOutOfBounds = x < 0 || x > MAP_MAX_INDEX || y < 0 || y > MAP_MAX_INDEX;
-
-				const nexus = !isOutOfBounds ? (nexusLookup[`${x},${y}`] ?? null) : null;
+	// Build the stable cell window. It is centred on the SETTLED centre (which
+	// only changes at rest, when a refetch is also triggered), so this list is
+	// rebuilt on data/selection changes — never during a pan or zoom. The camera
+	// hook slides/scales the parent layer over these world-positioned cells.
+	const cells = useMemo<MapCellData[]>(() => {
+		const out: MapCellData[] = [];
+		const selId = selectedNexus?._id ?? null;
+		for (let y = centerY - RENDER_RADIUS; y <= centerY + RENDER_RADIUS; y++) {
+			if (y < 0 || y > MAP_MAX_INDEX) continue;
+			for (let x = centerX - RENDER_RADIUS; x <= centerX + RENDER_RADIUS; x++) {
+				if (x < 0 || x > MAP_MAX_INDEX) continue;
+				const nexus = nexusLookup[`${x},${y}`] ?? null;
 				const isCurrent = nexus?._id === currentNexus._id;
-				const isOwnNexus = nexus ? ownNexusIds.has(nexus._id) : false;
-				const isNpcNexus = nexus
-					? nexus.name.includes('Resource Depot') ||
-						nexus.name.includes('Military Outpost') ||
-						nexus.name.includes('Supply Cache') ||
-						nexus.name.includes('Abandoned Base') ||
-						nexus.name.includes('Neutral Settlement')
-					: false;
-				const isEnemyNexus = !!nexus && !isCurrent && !isOwnNexus && !isNpcNexus;
+				const isOwn = nexus ? ownNexusIds.has(nexus._id) : false;
+				const isNpc = nexus ? isNpcNexusName(nexus.name) : false;
+				const isEnemy = !!nexus && !isCurrent && !isOwn && !isNpc;
 
-				const isInStormZone =
-					!isOutOfBounds &&
-					galaxyEvents.some(
-						(ev) =>
-							ev.type === 'resource_storm' &&
-							ev.meta?.xMin != null &&
-							x >= ev.meta.xMin! &&
-							x <= ev.meta.xMax! &&
-							y >= ev.meta.yMin! &&
-							y <= ev.meta.yMax!
-					);
+				let kind: CellKind = 'empty';
+				if (nexus) {
+					if (isCurrent) kind = 'current';
+					else if (isOwn) kind = 'own';
+					else if (isEnemy && nexus.relation === 'faction') kind = 'faction';
+					else if (isEnemy && nexus.relation === 'friend') kind = 'ally';
+					else if (isEnemy) kind = 'enemy';
+					else kind = 'npc';
+				}
 
-				const isFactionNexus = isEnemyNexus && nexus?.relation === 'faction';
-				const isAllyNexus = isEnemyNexus && nexus?.relation === 'friend';
-				const isFactionTarget = !!nexus?.isFactionTarget && !isCurrent && !isOwnNexus;
-
-				const cellClasses = ['map-cell'];
-				if (isOutOfBounds) cellClasses.push('out-of-bounds');
-				if (isInStormZone) cellClasses.push('resource-storm-zone');
-				if (nexus) cellClasses.push('has-nexus');
-				if (isCurrent) cellClasses.push('current-nexus');
-				if (isOwnNexus && !isCurrent) cellClasses.push('own-nexus');
-				if (isFactionNexus) cellClasses.push('faction-nexus');
-				else if (isAllyNexus) cellClasses.push('ally-nexus');
-				else if (isEnemyNexus) cellClasses.push('enemy-nexus');
-				if (isEspionage && nexus && !isCurrent) cellClasses.push('spy-target');
-				if (isFactionTarget) cellClasses.push('faction-target');
-
-				const titleText = isOutOfBounds
-					? 'Out of bounds'
-					: nexus
-						? nexus.newbieProtectionEndsAt &&
-							new Date(nexus.newbieProtectionEndsAt) > currentTimeRef.current
-							? `${nexus.name} (${nexus.x}|${nexus.y}) · Protected`
-							: isFactionTarget
-								? `${nexus.name} (${nexus.x}|${nexus.y}) · Faction Target`
-								: `${nexus.name} (${nexus.x}|${nexus.y})`
-						: `(${x}|${y})`;
-
-				row.push(
-					<div
-						key={`${x}-${y}`}
-						className={cellClasses.join(' ')}
-						title={titleText}
-						data-x={x}
-						data-y={y}
-						{...(isSendAttackOnboarding &&
-						!selectedNexus &&
-						mode === 'normal' &&
-						hasVisibleOnboardingAttackTarget &&
-						isNpcNexus &&
-						!isCurrent &&
-						!isOwnNexus
-							? { 'data-onboarding': 'send-attack' }
-							: {})}
-					>
-						{nexus && (
-							<div
-								className={`nexus-marker ${
-									isCurrent
-										? 'nexus-marker-current'
-										: isOwnNexus
-											? 'nexus-marker-own'
-											: isFactionNexus
-												? 'nexus-marker-faction'
-												: isAllyNexus
-													? 'nexus-marker-ally'
-													: 'nexus-marker-enemy'
-								}`}
-								aria-hidden="true"
-							>
-								{isCurrent ? (
-									<Star size={14} />
-								) : isOwnNexus ? (
-									<Building size={14} />
-								) : (
-									<Home size={14} />
-								)}
-							</div>
-						)}
-						{isFactionTarget && (
-							<div
-								className="faction-target-badge"
-								aria-label="Faction target"
-								title="Faction Target"
-							>
-								<Crosshair size={10} />
-							</div>
-						)}
-						{isFactionTarget && (
-							<div className="faction-target-label" title="Marked as a target by your faction">
-								Target
-							</div>
-						)}
-						{isEspionage && nexus && !isCurrent && nexus.owner?.username && (
-							<div className="cell-owner-label" title={nexus.owner.username}>
-								{nexus.owner.username}
-							</div>
-						)}
-						<div className="cell-coords">{isOutOfBounds ? '.' : `${x}|${y}`}</div>
-					</div>
+				const isFactionTarget = !!nexus?.isFactionTarget && !isCurrent && !isOwn;
+				const isInStormZone = stormRects.some(
+					(r) => x >= r.xMin && x <= r.xMax && y >= r.yMin && y <= r.yMax
 				);
-			}
-			grid.push(
-				<div key={y} className="map-row">
-					{row}
-				</div>
-			);
-		}
+				const isSpyTarget = isEspionage && !!nexus && !isCurrent;
+				const ownerLabel =
+					isEspionage && nexus && !isCurrent ? (nexus.owner?.username ?? null) : null;
 
-		return grid;
+				const protectedNow =
+					nexus?.newbieProtectionEndsAt &&
+					new Date(nexus.newbieProtectionEndsAt) > currentTimeRef.current;
+				const title = nexus
+					? protectedNow
+						? `${nexus.name} (${nexus.x}|${nexus.y}) · Protected`
+						: isFactionTarget
+							? `${nexus.name} (${nexus.x}|${nexus.y}) · Faction Target`
+							: `${nexus.name} (${nexus.x}|${nexus.y})`
+					: `(${x}|${y})`;
+
+				const onboarding =
+					isSendAttackOnboarding &&
+					!selectedNexus &&
+					mode === 'normal' &&
+					hasVisibleOnboardingAttackTarget &&
+					isNpc &&
+					!isCurrent &&
+					!isOwn;
+
+				out.push({
+					x,
+					y,
+					// World space: y grows DOWNWARD in screen space, but the map's
+					// y axis grows upward, so flip y for layout. The camera works in
+					// this same flipped world space.
+					worldLeft: x * CELL_PX,
+					worldTop: (MAP_MAX_INDEX - y) * CELL_PX,
+					cellPx: CELL_PX,
+					nexus,
+					kind,
+					isSelected: !!selId && nexus?._id === selId,
+					isFactionTarget,
+					isInStormZone,
+					isSpyTarget,
+					ownerLabel,
+					title,
+					onboarding
+				});
+			}
+		}
+		return out;
 	}, [
 		nexusLookup,
 		ownNexusIds,
 		centerX,
 		centerY,
-		visibleRange,
 		currentNexus._id,
 		isEspionage,
 		isSendAttackOnboarding,
 		mode,
 		selectedNexus,
 		hasVisibleOnboardingAttackTarget,
-		galaxyEvents
+		stormRects
 	]);
-
-	useEffect(() => {
-		if (!selectedNexus) {
-			setCrosshairPosition(null);
-			return;
-		}
-		const dx = selectedNexus.x - centerX;
-		const dy = centerY - selectedNexus.y;
-		if (Math.abs(dx) > visibleRange || Math.abs(dy) > visibleRange) {
-			setCrosshairPosition(null);
-			return;
-		}
-		const update = () => {
-			const wrapper = mapGridWrapperRef.current;
-			const grid = mapGridRef.current;
-			if (!wrapper || !grid) {
-				setCrosshairPosition(null);
-				return;
-			}
-			const wrapperRect = wrapper.getBoundingClientRect();
-			const gridRect = grid.getBoundingClientRect();
-			const cellSize = gridRect.width / (visibleRange * 2 + 1);
-			const left = gridRect.left - wrapperRect.left + (dx + visibleRange + 0.5) * cellSize;
-			const top = gridRect.top - wrapperRect.top + (dy + visibleRange + 0.5) * cellSize;
-			setCrosshairPosition({ left, top });
-		};
-		const frameId = window.requestAnimationFrame(update);
-		window.addEventListener('resize', update);
-		return () => {
-			window.cancelAnimationFrame(frameId);
-			window.removeEventListener('resize', update);
-		};
-	}, [selectedNexus, centerX, centerY, visibleRange]);
 
 	const renderNexusContent = () => {
 		if (!selectedNexus) {
@@ -1178,12 +1008,7 @@ const Map: React.FC<MapProps> = ({
 		const isNewbieProtected =
 			!!selectedNexus.newbieProtectionEndsAt &&
 			new Date(selectedNexus.newbieProtectionEndsAt) > currentTimeRef.current;
-		const isNpc =
-			selectedNexus.name.includes('Resource Depot') ||
-			selectedNexus.name.includes('Military Outpost') ||
-			selectedNexus.name.includes('Supply Cache') ||
-			selectedNexus.name.includes('Abandoned Base') ||
-			selectedNexus.name.includes('Neutral Settlement');
+		const isNpc = isNpcNexusName(selectedNexus.name);
 		// While the attacker's OWN nexus is under newbie protection it may only act
 		// offensively against NPCs, never against other players (mirrors the server
 		// rule in attackController). Target is a player when it has an owner / isn't NPC.
@@ -1192,6 +1017,18 @@ const Map: React.FC<MapProps> = ({
 			!!currentNexus.newbieProtectionEndsAt &&
 			new Date(currentNexus.newbieProtectionEndsAt) > currentTimeRef.current;
 		const blockedByMyProtection = myNexusProtected && targetIsPlayer;
+
+		// One-time newbie relocation: offered while the viewer still holds a single,
+		// still-protected nexus with the token, and is inspecting some OTHER nexus to
+		// use as the relocation anchor. The server re-validates everything (single
+		// nexus, token unused, protection live, nothing in transit); this is just the
+		// affordance.
+		const canRelocate =
+			!isOwn &&
+			ownNexuses.length <= 1 &&
+			!!currentNexus.relocationTokenAvailable &&
+			!currentNexus.relocationTokenUsedAt &&
+			myNexusProtected;
 
 		const attackTroopRows = Object.entries(availableTroops).filter(([type]) => {
 			if (type === 'reconOperative' || type === 'plasmaTurret') return false;
@@ -1414,6 +1251,17 @@ const Map: React.FC<MapProps> = ({
 											<Waves size={14} aria-hidden="true" /> Wave Planner
 										</button>
 									)}
+								{canRelocate && (
+									<button
+										className="relocate-btn"
+										onClick={handleRelocate}
+										disabled={relocating}
+										title="One-time newbie move: warp your nexus to the nearest open tile beside this one. Expires when your protection ends."
+									>
+										<Sparkles size={14} aria-hidden="true" />{' '}
+										{relocating ? 'Relocating…' : 'Relocate Here'}
+									</button>
+								)}
 							</div>
 						) : (
 							<div className="attack-form">
@@ -1790,10 +1638,7 @@ const Map: React.FC<MapProps> = ({
 										{ev.x != null && ev.y != null && (
 											<button
 												className="galaxy-event-goto"
-												onClick={() => {
-													setCenterX(ev.x!);
-													setCenterY(ev.y!);
-												}}
+												onClick={() => moveTo(ev.x!, ev.y!)}
 											>
 												({ev.x}|{ev.y})
 											</button>
@@ -1891,47 +1736,47 @@ const Map: React.FC<MapProps> = ({
 
 			<div className="map-content">
 				<div className="map-content-mobile-events">{renderGalaxyEventsPanel()}</div>
-				<div className="map-grid-wrapper" ref={mapGridWrapperRef}>
-					<div
-						ref={mapGridRef}
-						className={`map-grid${isEspionage ? ' map-grid--espionage' : ''}`}
-						onMouseDown={handleMouseDown}
-						onMouseMove={handleMouseMove}
-						onMouseUp={(e) => handleMouseUp(e)}
-						onMouseLeave={(e) => handleMouseUp(e)}
-						onClick={handleGridClick}
-						onDragStart={(e) => e.preventDefault()}
-						onTouchStart={handleTouchStart}
-						onTouchMove={handleTouchMove}
-						onTouchEnd={handleTouchEnd}
-						style={{
-							cursor: isDragging ? 'grabbing' : 'grab',
-							['--map-visible-range' as any]: visibleRange * 2 + 1
-						}}
-						{...(isSendAttackOnboarding &&
-						!selectedNexus &&
-						mode === 'normal' &&
-						!hasVisibleOnboardingAttackTarget
-							? { 'data-onboarding': 'send-attack' }
-							: {})}
-					>
-						{gridCells}
+				<div
+					className={`map-viewport${isEspionage ? ' map-viewport--espionage' : ''}${
+						isPanning ? ' is-panning' : ''
+					}${zoom < 0.8 ? ' map-viewport--lod' : ''}`}
+					ref={viewportRef}
+					onClickCapture={handleGridClick}
+					onPointerDownCapture={handlePointerDownCapture}
+					onPointerMoveCapture={handlePointerMoveCapture}
+					onDragStart={(e) => e.preventDefault()}
+					{...(isSendAttackOnboarding &&
+					!selectedNexus &&
+					mode === 'normal' &&
+					!hasVisibleOnboardingAttackTarget
+						? { 'data-onboarding': 'send-attack' }
+						: {})}
+				>
+					<div ref={layerRef} className="map-layer">
+						{cells.map((c) => (
+							<MapCell key={`${c.x}-${c.y}`} data={c} />
+						))}
 					</div>
-					{selectedNexus && crosshairPosition && (
-						<div
-							className="map-crosshair"
-							style={{
-								left: `${crosshairPosition.left}px`,
-								top: `${crosshairPosition.top}px`
-							}}
+					<div className="map-zoom-controls">
+						<button
+							type="button"
+							className="map-zoom-btn"
+							onClick={() => zoomBy(ZOOM_STEP)}
+							aria-label="Zoom in"
+							title="Zoom in"
 						>
-							<div className="crosshair-line crosshair-top"></div>
-							<div className="crosshair-line crosshair-bottom"></div>
-							<div className="crosshair-line crosshair-left"></div>
-							<div className="crosshair-line crosshair-right"></div>
-							<div className="crosshair-center"></div>
-						</div>
-					)}
+							<Plus size={16} />
+						</button>
+						<button
+							type="button"
+							className="map-zoom-btn"
+							onClick={() => zoomBy(-ZOOM_STEP)}
+							aria-label="Zoom out"
+							title="Zoom out"
+						>
+							<Minus size={16} />
+						</button>
+					</div>
 				</div>
 
 				{mode === 'normal' && (

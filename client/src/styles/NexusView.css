@@ -3601,10 +3601,10 @@
 .espionage-map-wrapper,
 .espionage-map-wrapper .map-container,
 .espionage-map-wrapper .map-content,
-.espionage-map-wrapper .map-grid-wrapper,
-.espionage-map-wrapper .map-grid--espionage,
-.espionage-map-wrapper .map-grid--espionage .map-row,
-.espionage-map-wrapper .map-grid--espionage .map-cell {
+.espionage-map-wrapper .map-viewport,
+.espionage-map-wrapper .map-viewport--espionage,
+.espionage-map-wrapper .map-layer,
+.espionage-map-wrapper .map-cell {
 	touch-action: pan-y pinch-zoom;
 }
 

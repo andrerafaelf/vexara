@@ -277,7 +277,11 @@ export async function createNexus(req: AuthRequest, res: Response): Promise<void
 			alloy: 1500,
 			ore: 1500,
 			populationMax: getPopulationMax(1),
-			newbieProtectionEndsAt: protectionEndsAt
+			newbieProtectionEndsAt: protectionEndsAt,
+			// Fresh signup gets the one-time relocation token (eliminated-respawn
+			// above does not - it would let a veteran loop eliminate -> respawn ->
+			// fresh warp).
+			relocationTokenAvailable: true
 		});
 
 		logGameEvent('first_nexus_created', req.userId, req.galaxyId, { nexusId: nexus.id });
@@ -668,6 +672,45 @@ export async function claimQuestReward(req: AuthRequest, res: Response): Promise
 			return;
 		}
 		logError('unhandled_controller_error', { message: msg, file: 'nexusController.ts' });
+		res.status(500).json({ error: 'Internal server error' });
+	}
+}
+
+export async function relocateNexus(req: AuthRequest, res: Response): Promise<void> {
+	const { relocateNexus: doRelocate, RelocationFailure } = await import(
+		'../services/relocationService.js'
+	);
+	try {
+		if (req.galaxyId == null) {
+			res.status(400).json({ error: 'No active galaxy' });
+			return;
+		}
+		const { anchorNexusId: rawAnchor } = req.body as { anchorNexusId?: unknown };
+		const anchorNexusId = parseInt(String(rawAnchor), 10);
+		if (!Number.isFinite(anchorNexusId)) {
+			res.status(400).json({ error: 'Invalid anchor nexus' });
+			return;
+		}
+
+		const updated = await doRelocate(req.userId, req.galaxyId, anchorNexusId);
+		logGameEvent('nexus_relocated', req.userId, req.galaxyId, {
+			nexusId: updated.id,
+			anchorNexusId,
+			x: updated.x,
+			y: updated.y
+		});
+		res.json({ success: true, nexus: serializeNexus(updated) });
+	} catch (error) {
+		// Structured relocation failures are user-actionable 400s; anything else
+		// is a genuine 500.
+		if (error instanceof RelocationFailure) {
+			res.status(400).json({ error: error.message, code: error.code });
+			return;
+		}
+		logError('unhandled_controller_error', {
+			message: (error as Error).message,
+			file: 'nexusController.ts'
+		});
 		res.status(500).json({ error: 'Internal server error' });
 	}
 }

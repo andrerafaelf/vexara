@@ -307,6 +307,11 @@ model Nexus {
   lastControlRecoverAt     DateTime  @default(now())
   newbieProtectionEndsAt   DateTime?
   protectionWarningSentAt  DateTime?
+  // One-time newbie relocation token, lifecycle-bound to the starter nexus.
+  // Granted on fresh signup (not on eliminated-respawn); consumed when the
+  // player relocates near a chosen nexus. Dead once newbie protection lapses.
+  relocationTokenAvailable Boolean   @default(false)
+  relocationTokenUsedAt    DateTime?
   createdAt                DateTime  @default(now())
   conqueredAt              DateTime?
   rebuildBonusEndsAt       DateTime?
