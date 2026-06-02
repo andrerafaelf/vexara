@@ -662,8 +662,9 @@ export async function checkTrainingQueue(req: AuthRequest, res: Response): Promi
 	}
 }
 
-// 10% of training cost is refunded per troop destroyed (all resources).
-const DESTROY_REFUND_RATE = 0.1;
+// Decommissioning costs 10% of the troop's training cost per unit (all
+// resources). It is a deliberate sacrifice that frees population - NOT a refund.
+const DESTROY_COST_RATE = 0.1;
 
 export async function destroyTroops(req: AuthRequest, res: Response): Promise<void> {
 	try {
@@ -701,23 +702,33 @@ export async function destroyTroops(req: AuthRequest, res: Response): Promise<vo
 		}
 
 		const baseCost = TROOP_COSTS[troopType];
-		const refund = {
-			biomass: Math.floor(baseCost.biomass * DESTROY_REFUND_RATE * parsedAmount),
-			alloy:   Math.floor(baseCost.alloy   * DESTROY_REFUND_RATE * parsedAmount),
-			ore:     Math.floor(baseCost.ore      * DESTROY_REFUND_RATE * parsedAmount),
+		// Decommission FEE (charged, not refunded) — frees population at a cost.
+		const cost = {
+			biomass: Math.floor(baseCost.biomass * DESTROY_COST_RATE * parsedAmount),
+			alloy:   Math.floor(baseCost.alloy   * DESTROY_COST_RATE * parsedAmount),
+			ore:     Math.floor(baseCost.ore      * DESTROY_COST_RATE * parsedAmount),
 		};
 		const populationFreed = baseCost.population * parsedAmount;
 
 		const resourceUpdate = computeResourceUpdate(nexus);
 		const current = { ...nexus, ...resourceUpdate } as unknown as Record<string, number>;
 
+		if (
+			current.biomass < cost.biomass ||
+			current.alloy < cost.alloy ||
+			current.ore < cost.ore
+		) {
+			res.status(400).json({ error: 'Insufficient resources to decommission' });
+			return;
+		}
+
 		let updated;
 		try {
 			updated = await atomicUpdateNexusResources(nexus.id, nexus.lastResourceUpdate, {
 				...resourceUpdate,
-				biomass: current.biomass + refund.biomass,
-				alloy:   current.alloy   + refund.alloy,
-				ore:     current.ore     + refund.ore,
+				biomass: current.biomass - cost.biomass,
+				alloy:   current.alloy   - cost.alloy,
+				ore:     current.ore     - cost.ore,
 				populationCurrent: Math.max(0, current.populationCurrent - populationFreed),
 				[troopType]: stationed - parsedAmount,
 			});
@@ -743,10 +754,10 @@ export async function destroyTroops(req: AuthRequest, res: Response): Promise<vo
 			nexusId: nexus.id,
 			troopType,
 			amount: parsedAmount,
-			refund,
+			cost,
 		});
 
-		res.json({ success: true, refund, nexus: serializeNexus(updated) });
+		res.json({ success: true, cost, nexus: serializeNexus(updated) });
 	} catch (error) {
 		logError('unhandled_controller_error', {
 			message: (error as Error).message,

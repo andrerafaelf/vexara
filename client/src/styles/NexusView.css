@@ -2199,7 +2199,8 @@
 	letter-spacing: 0;
 }
 
-.stationed-destroy-refund {
+/* Decommission COST line (it's a fee, not a refund — values read as a loss). */
+.stationed-destroy-cost {
 	display: grid;
 	grid-template-columns: auto repeat(3, minmax(0, 1fr));
 	align-items: center;
@@ -2210,25 +2211,43 @@
 	color: var(--text-muted);
 }
 
-.stationed-destroy-refund span,
-.stationed-destroy-refund b {
+.stationed-destroy-cost span,
+.stationed-destroy-cost b {
 	padding: 4px 6px;
 	background: rgba(255, 255, 255, 0.035);
 	border: 1px solid rgba(255, 255, 255, 0.055);
 }
 
-.stationed-destroy-refund span {
+.stationed-destroy-cost span {
 	color: var(--text-faint);
 	font-weight: 800;
 	letter-spacing: 0.12em;
 	text-transform: uppercase;
 }
 
-.stationed-destroy-refund b {
-	color: var(--accent);
+.stationed-destroy-cost b {
+	/* Muted/amber — a debit, not the cyan "gain" the old refund used. */
+	color: var(--warning, #d29922);
 	font-weight: 800;
 	text-align: center;
 	white-space: nowrap;
+}
+
+/* Can't afford: flip the cost line to danger and surface a short warning. */
+.stationed-destroy-cost--short b {
+	color: var(--danger);
+	border-color: rgba(248, 81, 73, 0.4);
+	background: rgba(248, 81, 73, 0.08);
+}
+
+.stationed-destroy-cost-warn {
+	grid-column: 1 / -1;
+	color: var(--danger) !important;
+	background: transparent !important;
+	border: none !important;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	font-weight: 800;
 }
 
 .stationed-destroy-confirm {

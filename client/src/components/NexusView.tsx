@@ -3065,11 +3065,17 @@ const NexusView: React.FC<NexusViewProps> = ({
 																	const isPending = destroyPending === type;
 																	const baseCost = TROOP_COSTS[type];
 																	const parsedAmt = Math.max(0, Math.min(parseInt(destroyAmount) || 0, count));
-																	const refund = baseCost ? {
+																	// Decommissioning COSTS 10% of build cost (it frees population at a
+																	// price — not a refund). Matches DESTROY_COST_RATE on the server.
+																	const destroyCost = baseCost ? {
 																		biomass: Math.floor(baseCost.biomass * 0.1 * parsedAmt),
 																		alloy:   Math.floor(baseCost.alloy   * 0.1 * parsedAmt),
 																		ore:     Math.floor(baseCost.ore      * 0.1 * parsedAmt),
 																	} : null;
+																	const canAffordDestroy = !destroyCost ||
+																		(nexus.resources.biomass >= destroyCost.biomass &&
+																			nexus.resources.alloy >= destroyCost.alloy &&
+																			nexus.resources.ore >= destroyCost.ore);
 																	return (
 																		<div key={type} className={`stationed-card${isPending ? ' stationed-card--destroying' : ''}`}>
 																			{TROOP_IMAGES[type] && (
@@ -3149,33 +3155,38 @@ const NexusView: React.FC<NexusViewProps> = ({
 																						<button
 																							type="button"
 																							className="stationed-destroy-confirm"
-																							disabled={destroyingTroops || parsedAmt < 1}
+																							disabled={destroyingTroops || parsedAmt < 1 || !canAffordDestroy}
 																							onClick={async () => {
-																								if (parsedAmt < 1) return;
+																								if (parsedAmt < 1 || !canAffordDestroy) return;
 																								setDestroyingTroops(true);
 																								try {
 																									await destroyTroops(nexus._id, type, parsedAmt);
-																									showToast(`${parsedAmt.toLocaleString()} ${TROOP_NAMES[type]} destroyed. Resources partially refunded.`, 'info');
+																									showToast(`${parsedAmt.toLocaleString()} ${TROOP_NAMES[type]} decommissioned.`, 'info');
 																									setDestroyPending(null);
 																									setDestroyAmount('');
 																									onUpdate();
 																								} catch (err: any) {
-																									showToast(err?.response?.data?.error || 'Failed to destroy troops', 'error');
+																									showToast(err?.response?.data?.error || 'Failed to decommission troops', 'error');
 																								} finally {
 																									setDestroyingTroops(false);
 																								}
 																							}}
 																						>
 																							<Trash2 size={12} aria-hidden="true" />
-																							{destroyingTroops ? '...' : 'Destroy'}
+																							{destroyingTroops ? '...' : 'Decommission'}
 																						</button>
 																					</div>
-																					{refund && parsedAmt > 0 && (
-																						<div className="stationed-destroy-refund">
-																							<span>Refund</span>
-																							<b>+{refund.biomass.toLocaleString()} B</b>
-																							<b>+{refund.alloy.toLocaleString()} A</b>
-																							<b>+{refund.ore.toLocaleString()} O</b>
+																					{destroyCost && parsedAmt > 0 && (
+																						<div
+																							className={`stationed-destroy-cost${canAffordDestroy ? '' : ' stationed-destroy-cost--short'}`}
+																						>
+																							<span>Cost</span>
+																							<b>−{destroyCost.biomass.toLocaleString()} B</b>
+																							<b>−{destroyCost.alloy.toLocaleString()} A</b>
+																							<b>−{destroyCost.ore.toLocaleString()} O</b>
+																							{!canAffordDestroy && (
+																								<span className="stationed-destroy-cost-warn">Insufficient</span>
+																							)}
 																						</div>
 																					)}
 																				</div>
