@@ -2,6 +2,7 @@
 
 import { Building2, MapPin, Shield, Swords, Trophy, Users, X, Zap } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import '../styles/WhileYouWereAway.css';
 import { getActivitySummary } from '../services/api';
 import { serverNow } from '../realtime/serverClock';
@@ -129,6 +130,13 @@ interface Props {
 export default function WhileYouWereAway({ onDismiss }: Props) {
 	const [data, setData] = useState<ActivityData | null>(null);
 	const [loading, setLoading] = useState(true);
+	// Portal target. The modal is rendered as a child of the scrollable,
+	// layout-contained .main-content; without a portal its `position: fixed`
+	// anchors to that container instead of the viewport, so it ends up parked
+	// at the bottom of the scroll rather than centred on screen. Portalling to
+	// <body> lets fixed positioning resolve against the viewport as intended.
+	const [mounted, setMounted] = useState(false);
+	useEffect(() => setMounted(true), []);
 
 	// The displayed window (`data.since`) must match what we actually queried, so
 	// we compute a single `since` up front and reuse it both for the request and
@@ -218,7 +226,9 @@ export default function WhileYouWereAway({ onDismiss }: Props) {
 	}).length;
 	const losses = data.attacks.length - wins;
 
-	return (
+	if (!mounted) return null;
+
+	return createPortal(
 		<div className="wywa-overlay" role="dialog" aria-modal="true" aria-label="Activity summary">
 			<div className="wywa-modal">
 				<div className="wywa-header">
@@ -378,6 +388,7 @@ export default function WhileYouWereAway({ onDismiss }: Props) {
 					</button>
 				</div>
 			</div>
-		</div>
+		</div>,
+		document.body
 	);
 }

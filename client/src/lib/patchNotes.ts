@@ -60,7 +60,11 @@ function escapeHtml(text: string): string {
 }
 
 function applyInline(text: string): string {
-	return escapeHtml(text)
+	// Within a block, a single hard newline is just a space in Markdown. Collapse
+	// it BEFORE inline parsing so emphasis/code that wraps across source lines
+	// (e.g. **bold text that\nspilled to the next line**) still matches - the
+	// `.+?` in the bold/code patterns doesn't cross newlines otherwise.
+	return escapeHtml(text.replace(/\s*\n\s*/g, ' '))
 		.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
 		.replace(/`([^`]+)`/g, '<code>$1</code>')
 		.replace(
@@ -112,6 +116,27 @@ export function renderMarkdown(raw: string): ReactNode[] {
 
 		if (line.startsWith('---')) {
 			i++;
+			continue;
+		}
+
+		// Blockquote: consecutive lines starting with '>' collapse into one quote
+		// block. The marker (and a single following space) is stripped, then the
+		// joined text runs through applyInline so **bold**, `code`, and links work
+		// inside the note.
+		if (line.trimStart().startsWith('>')) {
+			const quoteLines: string[] = [];
+			while (i < lines.length && lines[i].trimStart().startsWith('>')) {
+				quoteLines.push(lines[i].trimStart().replace(/^>\s?/, ''));
+				i++;
+			}
+			elements.push(
+				React.createElement('blockquote', {
+					key: i,
+					className: 'pn-entry-quote',
+					dangerouslySetInnerHTML: { __html: applyInline(quoteLines.join('\n')) }
+				})
+			);
+			while (i < lines.length && lines[i] === '') i++;
 			continue;
 		}
 
@@ -272,6 +297,7 @@ export function renderMarkdown(raw: string): ReactNode[] {
 			!lines[i].startsWith('##') &&
 			!lines[i].startsWith('---') &&
 			!lines[i].trimStart().startsWith('- ') &&
+			!lines[i].trimStart().startsWith('>') &&
 			!/^\s*\d+\.\s/.test(lines[i]) &&
 			!(isTableRow(lines[i]) && i + 1 < lines.length && isTableSeparator(lines[i + 1]))
 		) {

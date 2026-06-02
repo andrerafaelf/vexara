@@ -531,13 +531,18 @@
 	}
 }
 
-/* ── Level of detail: when zoomed out (.map-viewport--lod), drop the most
-   expensive per-cell paint (multi-layer glows, marker drop-shadows) and the
-   tiny text that's unreadable at that scale. This keeps a wide sector smooth
-   even on low-end phones — paint cost scales with visible nexuses otherwise. */
-.map-viewport--lod .cell-coords,
-.map-viewport--lod .cell-owner-label,
-.map-viewport--lod .faction-target-label {
+/* ── Level of detail ────────────────────────────────────────────────────────
+   Two independent tiers, each driven by a class the renderer toggles:
+   • .map-viewport--lod-text — cells are too small on screen to read the
+     coordinate / owner / target labels; hide them. Keyed off the *effective*
+     cell pixel size (base × zoom), so it's correct on any device — unlike a
+     raw zoom threshold, which hid coords permanently on mobile.
+   • .map-viewport--lod — zoomed far enough out that the heavy per-cell paint
+     (multi-layer glows, marker drop-shadows) isn't worth it; drop it to keep a
+     wide sector smooth on low-end phones. */
+.map-viewport--lod-text .cell-coords,
+.map-viewport--lod-text .cell-owner-label,
+.map-viewport--lod-text .faction-target-label {
 	display: none;
 }
 

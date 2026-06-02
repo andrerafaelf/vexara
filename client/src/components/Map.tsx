@@ -153,9 +153,12 @@ const STATIONABLE_TROOPS = new Set([
 ]);
 
 // Must match the `range` the server's /map/area endpoint returns around the
-// requested center (mapController.getArea). The client fetches this radius and
-// reuses it as a pan buffer, only refetching when the viewport nears its edge.
-const SERVER_FETCH_RANGE = 10;
+// requested center (mapController.getArea). This is deliberately LARGER than the
+// rendered window (RENDER_RADIUS) so the fetched area extends well past what's
+// on screen — the difference is the pan buffer that lets you scroll a good way
+// before the next fetch is needed, and a live prefetch (onCenterMove) starts
+// that fetch while you're still moving rather than after you stop.
+const SERVER_FETCH_RANGE = 16;
 const MAP_SIZE = 50;
 const MAP_MAX_INDEX = MAP_SIZE - 1;
 const MOBILE_BREAKPOINT = 768;
@@ -170,10 +173,16 @@ const CELL_PX = 72;
 const MIN_ZOOM = 0.55; // nominal lower bound (hook clamps tighter per viewport)
 const MAX_ZOOM = 2.4; // close-in detail
 const ZOOM_STEP = 0.18; // keyboard / button nudge
-// The rendered cell window is centred on the last fetched sector and matches the
-// server's returned radius, so the camera can pan freely over it without a
-// refetch or a DOM rebuild until the centre drifts toward the window edge.
-const RENDER_RADIUS = SERVER_FETCH_RANGE;
+// Radius (in cells) of the rendered DOM window around the *render centre*. Kept
+// smaller than SERVER_FETCH_RANGE so the fetched data always extends past the
+// rendered cells. The window re-centres in coarse steps (RENDER_RECENTER_STEP)
+// as you pan, so the visible edge is always populated without rebuilding the
+// grid every frame.
+const RENDER_RADIUS = 12;
+// Re-centre the rendered window once the live camera centre drifts this many
+// cells from the current render centre. Coarse enough that a rebuild is rare,
+// fine enough that you can never out-pan the rendered window before it shifts.
+const RENDER_RECENTER_STEP = 3;
 
 const useIsMobile = () => {
 	const [isMobile, setIsMobile] = useState(() =>
@@ -259,6 +268,16 @@ const Map: React.FC<MapProps> = ({
 	const [targetX, setTargetX] = useState(String(currentNexus.x));
 	const [targetY, setTargetY] = useState(String(currentNexus.y));
 
+	// Indirection so the camera's onCenterMove can call the latest maybeFetch
+	// (defined later in the body) without re-subscribing the gesture listeners.
+	const maybeFetchRef = useRef<(cx: number, cy: number) => void>(() => {});
+
+	// Centre of the rendered DOM window (map coords). Distinct from the settled
+	// camera centre: it re-centres in coarse steps as you pan so the grid isn't
+	// rebuilt every frame, but stays populated under the moving camera.
+	const [renderCenterX, setRenderCenterX] = useState(currentNexus.x);
+	const [renderCenterY, setRenderCenterY] = useState(currentNexus.y);
+
 	// Continuous pixel-space camera. The hook works in SCREEN-ROW space (row 0 at
 	// the top), but the game's y axis grows upward, so we flip y at the boundary:
 	// row = MAP_MAX_INDEX - mapY. Cells are laid out the same way, so the camera
@@ -284,7 +303,16 @@ const Map: React.FC<MapProps> = ({
 		renderRadius: RENDER_RADIUS,
 		// Espionage selects targets by tapping; leave single-finger touch to the
 		// browser there so the page still scrolls. Pinch-zoom always works.
-		allowTouchPan: mode === 'normal'
+		allowTouchPan: mode === 'normal',
+		// Live, during a pan/flick: prefetch the next sector AND re-centre the
+		// rendered DOM window in coarse steps so the visible edge stays populated.
+		// cyRow is in row space; flip back to map-y for both.
+		onCenterMove: (cx, cyRow) => {
+			const cy = MAP_MAX_INDEX - cyRow;
+			maybeFetchRef.current(cx, cy);
+			setRenderCenterX((prev) => (Math.abs(cx - prev) >= RENDER_RECENTER_STEP ? cx : prev));
+			setRenderCenterY((prev) => (Math.abs(cy - prev) >= RENDER_RECENTER_STEP ? cy : prev));
+		}
 	});
 	const centerY = MAP_MAX_INDEX - centerRow;
 	const moveTo = useCallback(
@@ -296,6 +324,14 @@ const Map: React.FC<MapProps> = ({
 	const camCenterRef = useRef({ x: centerX, y: centerY });
 	useEffect(() => {
 		camCenterRef.current = { x: centerX, y: centerY };
+	}, [centerX, centerY]);
+
+	// Snap the rendered window to the settled centre too. This covers imperative
+	// jumps (Jump box, Reset, event goto, ?attack/?cx links) where the camera
+	// teleports rather than panning through onCenterMove.
+	useEffect(() => {
+		setRenderCenterX(centerX);
+		setRenderCenterY(centerY);
 	}, [centerX, centerY]);
 
 	const clampCoordinate = (value: string, fallback: number) => {
@@ -361,26 +397,10 @@ const Map: React.FC<MapProps> = ({
 	const lastFetchRef = useRef<{ x: number; y: number } | null>(null);
 
 	useEffect(() => {
-		// Refetch only when the settled centre drifts far enough from the last
-		// fetched sector that the rendered window would expose un-fetched cells.
-		// Zoom does NOT enter this calc — the camera scales the same rendered
-		// window, so zooming never refetches. The render window (RENDER_RADIUS)
-		// is sized to cover the widest viewport at min zoom, and the buffer keeps
-		// a margin so the edge is refreshed before it scrolls into view.
-		const last = lastFetchRef.current;
-		const buffer = Math.max(2, SERVER_FETCH_RANGE - RENDER_RADIUS / 2);
-		const needsFetch =
-			!last || Math.abs(centerX - last.x) > buffer || Math.abs(centerY - last.y) > buffer;
-
-		if (!needsFetch) return;
-
-		if (mapDebounceRef.current) clearTimeout(mapDebounceRef.current);
-		// Short debounce: long enough to coalesce a fast drag, short enough that the
-		// fetch feels responsive when you stop. The buffer above already absorbs most
-		// small pans, so this only fires on meaningful viewport moves.
-		mapDebounceRef.current = setTimeout(() => {
-			loadMapArea();
-		}, 180);
+		// Settle-time safety net: ensure the sector under the final resting centre
+		// is loaded. The live prefetch (maybeFetch via onCenterMove) usually has it
+		// already; this catches imperative moves (Jump/Reset) and the initial load.
+		maybeFetch(centerX, centerY);
 		return () => {
 			if (mapDebounceRef.current) clearTimeout(mapDebounceRef.current);
 		};
@@ -500,9 +520,12 @@ const Map: React.FC<MapProps> = ({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
-	const loadMapArea = async () => {
-		const fetchX = centerX;
-		const fetchY = centerY;
+	// Center of the sector a fetch is in flight for (or completed). Prevents
+	// firing a second identical fetch while one is already covering that centre.
+	const fetchInFlightRef = useRef<{ x: number; y: number } | null>(null);
+
+	const loadMapArea = useCallback(async (fetchX: number, fetchY: number) => {
+		fetchInFlightRef.current = { x: fetchX, y: fetchY };
 		setMapLoading(true);
 		try {
 			const response = await getMapArea(fetchX, fetchY);
@@ -515,7 +538,35 @@ const Map: React.FC<MapProps> = ({
 		} finally {
 			setMapLoading(false);
 		}
-	};
+	}, []);
+
+	// Decide whether the sector around (cx, cy) needs loading, and if so kick a
+	// lightly-debounced fetch. Called both live during a pan (onCenterMove) and at
+	// rest (the settle effect). The buffer is the gap between the fetched radius
+	// and the rendered window: while the centre stays within `buffer` cells of the
+	// last fetch, the rendered window is fully covered and no fetch is needed.
+	const maybeFetch = useCallback(
+		(cx: number, cy: number) => {
+			const last = lastFetchRef.current;
+			const inFlight = fetchInFlightRef.current;
+			const buffer = Math.max(2, SERVER_FETCH_RANGE - RENDER_RADIUS - 1);
+			const covered = (c: { x: number; y: number } | null) =>
+				!!c && Math.abs(cx - c.x) <= buffer && Math.abs(cy - c.y) <= buffer;
+			// Already covered by the last fetch, or a still-relevant in-flight one.
+			if (covered(last) || covered(inFlight)) return;
+
+			if (mapDebounceRef.current) clearTimeout(mapDebounceRef.current);
+			// Tiny debounce just to coalesce the burst of whole-cell crossings from a
+			// fast flick into one request; short enough to feel immediate.
+			mapDebounceRef.current = setTimeout(() => loadMapArea(cx, cy), 60);
+		},
+		[loadMapArea]
+	);
+
+	// Keep the ref the camera's onCenterMove calls pointed at the latest closure.
+	useEffect(() => {
+		maybeFetchRef.current = maybeFetch;
+	}, [maybeFetch]);
 
 	const loadAttacks = useCallback(async () => {
 		try {
@@ -901,9 +952,9 @@ const Map: React.FC<MapProps> = ({
 	const cells = useMemo<MapCellData[]>(() => {
 		const out: MapCellData[] = [];
 		const selId = selectedNexus?._id ?? null;
-		for (let y = centerY - RENDER_RADIUS; y <= centerY + RENDER_RADIUS; y++) {
+		for (let y = renderCenterY - RENDER_RADIUS; y <= renderCenterY + RENDER_RADIUS; y++) {
 			if (y < 0 || y > MAP_MAX_INDEX) continue;
-			for (let x = centerX - RENDER_RADIUS; x <= centerX + RENDER_RADIUS; x++) {
+			for (let x = renderCenterX - RENDER_RADIUS; x <= renderCenterX + RENDER_RADIUS; x++) {
 				if (x < 0 || x > MAP_MAX_INDEX) continue;
 				const nexus = nexusLookup[`${x},${y}`] ?? null;
 				const isCurrent = nexus?._id === currentNexus._id;
@@ -974,8 +1025,8 @@ const Map: React.FC<MapProps> = ({
 	}, [
 		nexusLookup,
 		ownNexusIds,
-		centerX,
-		centerY,
+		renderCenterX,
+		renderCenterY,
 		currentNexus._id,
 		isEspionage,
 		isSendAttackOnboarding,
@@ -1739,7 +1790,13 @@ const Map: React.FC<MapProps> = ({
 				<div
 					className={`map-viewport${isEspionage ? ' map-viewport--espionage' : ''}${
 						isPanning ? ' is-panning' : ''
-					}${zoom < 0.8 ? ' map-viewport--lod' : ''}`}
+					}${zoom < 0.8 ? ' map-viewport--lod' : ''}${
+						// Hide per-cell text only once a cell is genuinely too small on
+						// screen to read it (effective px = base cell × zoom). Gating on a
+						// raw zoom number broke mobile, where the min-zoom floor sits below
+						// 0.8 so coords never showed at max zoom-out.
+						CELL_PX * zoom < 46 ? ' map-viewport--lod-text' : ''
+					}`}
 					ref={viewportRef}
 					onClickCapture={handleGridClick}
 					onPointerDownCapture={handlePointerDownCapture}

@@ -45,6 +45,13 @@ export interface MapCameraOptions {
 	allowTouchPan?: boolean;
 	/** Called (debounced by caller via state) when the integer centre settles. */
 	onCenterSettled?: (cx: number, cy: number) => void;
+	/**
+	 * Called continuously *during* a pan/inertia gesture (throttled to whole-cell
+	 * changes of the live centre), so the caller can prefetch the next sector
+	 * before the user reaches the edge — instead of waiting for the gesture to
+	 * settle. Receives the live integer centre cell.
+	 */
+	onCenterMove?: (cx: number, cy: number) => void;
 }
 
 export interface MapCamera {
@@ -78,7 +85,8 @@ export function useMapCamera(opts: MapCameraOptions): MapCamera {
 		maxZoom,
 		renderRadius,
 		allowTouchPan = true,
-		onCenterSettled
+		onCenterSettled,
+		onCenterMove
 	} = opts;
 
 	// ── Live camera state (refs — mutated at 60fps, never trigger renders) ──
@@ -122,11 +130,18 @@ export function useMapCamera(opts: MapCameraOptions): MapCamera {
 	const [zoom, setZoomState] = useState(1);
 	const [isPanning, setIsPanning] = useState(false);
 
-	// Keep the latest callback without re-subscribing the rAF loop.
+	// Keep the latest callbacks without re-subscribing the rAF loop.
 	const onSettledRef = useRef(onCenterSettled);
 	useEffect(() => {
 		onSettledRef.current = onCenterSettled;
 	}, [onCenterSettled]);
+	const onMoveRef = useRef(onCenterMove);
+	useEffect(() => {
+		onMoveRef.current = onCenterMove;
+	}, [onCenterMove]);
+	// Last integer centre we emitted via onCenterMove, so we only fire on whole-
+	// cell changes (not every sub-pixel frame).
+	const lastEmittedCellRef = useRef<{ x: number; y: number } | null>(null);
 
 	const worldBounds = useCallback(() => {
 		// Camera centre is clamped so the *map* edge can reach the viewport edge
@@ -203,6 +218,18 @@ export function useMapCamera(opts: MapCameraOptions): MapCamera {
 			if (dirtyRef.current) {
 				applyTransform();
 				dirtyRef.current = false;
+				// Prefetch hook: while the camera is moving, report whole-cell centre
+				// changes so the caller can fetch the next sector before the edge is
+				// reached. Cheap — only fires when the rounded centre actually changes.
+				if (onMoveRef.current) {
+					const cx = clamp(Math.round(camX.current / cellPx), 0, maxIndex);
+					const cy = clamp(Math.round(camY.current / cellPx), 0, maxIndex);
+					const le = lastEmittedCellRef.current;
+					if (!le || le.x !== cx || le.y !== cy) {
+						lastEmittedCellRef.current = { x: cx, y: cy };
+						onMoveRef.current(cx, cy);
+					}
+				}
 			}
 
 			// Keep pumping while a gesture or inertia is active; otherwise idle out.
@@ -213,7 +240,7 @@ export function useMapCamera(opts: MapCameraOptions): MapCamera {
 			}
 		};
 		rafRef.current = requestAnimationFrame(tick);
-	}, [applyTransform, clampCam, scheduleSettle]);
+	}, [applyTransform, clampCam, scheduleSettle, cellPx, maxIndex]);
 
 	const allowTouchPanRef = useRef(allowTouchPan);
 	useEffect(() => {

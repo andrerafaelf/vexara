@@ -10,7 +10,10 @@ export async function getArea(req: AuthRequest, res: Response): Promise<void> {
 	try {
 		const x = parseInt(req.params.x);
 		const y = parseInt(req.params.y);
-		const range = 10;
+		// Must stay >= the client's SERVER_FETCH_RANGE (client Map.tsx). The fetched
+		// box is larger than the rendered window so there's a pan buffer the client
+		// can scroll into before the next fetch lands.
+		const range = 16;
 		const nexuses = await mapService.getNexusesInArea(req.galaxyId, x, y, range);
 		const ownerIds = [
 			...new Set(nexuses.map((v) => v.ownerId).filter((id): id is number => id != null))

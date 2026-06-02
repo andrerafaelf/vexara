@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import '@/styles/SiteFooter.css';
 
@@ -6,7 +7,13 @@ export default function SiteFooter() {
 		<footer className="site-footer" aria-label="Site footer">
 			<div className="site-footer-inner">
 				<div className="site-footer-mark">
-					<span className="site-footer-stamp">VX</span>
+					<Image
+						src="/vexara-logo.png"
+						alt="Vexara"
+						width={44}
+						height={44}
+						className="site-footer-logo"
+					/>
 					<div className="site-footer-mark-text">
 						<span className="site-footer-wordmark">Vexara</span>
 						<span className="site-footer-tag">

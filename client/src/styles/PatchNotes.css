@@ -282,6 +282,33 @@
 	color: var(--text-muted, #9aa4bd);
 }
 
+/* Blockquote callout (> ) */
+.pn-entry-quote {
+	margin: 4px 0;
+	padding: 12px 16px;
+	border-left: 3px solid var(--accent);
+	border-radius: 0 6px 6px 0;
+	background: rgba(245, 158, 11, 0.06);
+	font-size: 13.5px;
+	color: var(--text-muted, #9aa4bd);
+	line-height: 1.65;
+}
+
+.pn-entry-quote strong {
+	color: var(--text-strong);
+	font-weight: 600;
+}
+
+.pn-entry-quote code {
+	font-family: var(--font-mono);
+	font-size: 0.88em;
+	background: rgba(255, 255, 255, 0.07);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 3px;
+	padding: 1px 5px;
+	color: var(--text-strong);
+}
+
 /* Sub-heading (#### ) */
 .pn-entry-subtitle {
 	font-size: 13px;
@@ -383,18 +410,19 @@
 
 .pn-cta-btn {
 	display: inline-block;
-	background: var(--color-amber-500, #f59e0b);
-	color: #000;
+	background: var(--accent);
+	color: var(--text-on-accent);
 	font-weight: 700;
 	font-size: 14px;
 	padding: 10px 24px;
-	border-radius: 4px;
 	text-decoration: none;
 	transition: background 0.15s;
+	/* Signature Vexara clipped-corner button (matches landing/in-game CTAs) */
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
 }
 
 .pn-cta-btn:hover {
-	background: var(--color-amber-400, #fbbf24);
+	background: var(--accent-hover);
 }
 
 /* ── Index: card grid ── */
@@ -667,16 +695,15 @@
 	align-items: center;
 	gap: 8px;
 	padding: 8px 16px;
-	border-radius: 6px;
-	border: 1px solid var(--border-default);
-	background: var(--color-amber-500, #f59e0b);
-	color: #000;
+	background: var(--accent);
+	color: var(--text-on-accent);
 	font-weight: 700;
 	font-size: 14px;
 	text-decoration: none;
-	transition: filter 0.15s ease;
+	transition: background 0.15s ease;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
 }
 
 .pn-back-btn:hover {
-	filter: brightness(1.08);
+	background: var(--accent-hover);
 }
