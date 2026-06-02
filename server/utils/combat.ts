@@ -762,12 +762,25 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 			defenderLosses
 		);
 		const buildingDamageLog: { building: string; from: number; to: number }[] = [];
-		if (attackerWins && allDefenderTroopsWiped) {
-			// Number of building levels reduced is proportional to how dominant the attack was
-			const overflowRatio = Math.min(
-				1,
-				defensePower > 0 ? (attackPower - defensePower) / Math.max(1, attackPower) : 0.5
-			);
+		// Building damage requires the attacker to bring real siege weight, not just
+		// "win". Against an UNDEFENDED nexus the old code took a flat 0.5 overflow
+		// fallback, so a single Lancer Drone (attack power ~3) flattened 2 building
+		// levels. Now overflow is the surplus attack power over the defense as a
+		// fraction of a siege baseline, and a minimum power floor gates it entirely
+		// so trivial pokes do nothing.
+		const BUILDING_DAMAGE_MIN_ATTACK_POWER = 2000; // ~ a real assault, not a poke
+		const BUILDING_DAMAGE_FULL_OVERFLOW = 20000; // attack power for max (5) hits vs empty
+		if (
+			attackerWins &&
+			allDefenderTroopsWiped &&
+			attackPower >= BUILDING_DAMAGE_MIN_ATTACK_POWER
+		) {
+			// Overflow = surplus power past the defense, scaled to the siege baseline.
+			// Vs a defended nexus this is (attack-defense)/baseline; vs an empty one
+			// it's the attacker's raw power/baseline — so hits scale with how much
+			// force was actually committed, never a flat fallback.
+			const surplus = Math.max(0, attackPower - defensePower);
+			const overflowRatio = Math.min(1, surplus / BUILDING_DAMAGE_FULL_OVERFLOW);
 			const maxHits = Math.max(1, Math.floor(overflowRatio * 5)); // 1–5 levels total
 			const BUILDING_PRIORITY = [
 				'shieldGrid',
