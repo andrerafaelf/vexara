@@ -1029,7 +1029,11 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 				...buildingDamageUpdates,
 				...(shouldRevokeDoubled ? { nexusTypeDoubled: false } : {}),
 				populationCurrent: nextPopulationCurrent,
-				controlLevel: conquered ? 0 : newControlLevel
+				controlLevel: conquered ? 0 : newControlLevel,
+				// Restart the regen clock from this strike whenever control was
+				// drained (incl. conquest), so the next tick measures elapsed time
+				// from the attack, not a stale anchor that would grant instant regen.
+				...(controlDrain > 0 ? { lastControlRecoverAt: new Date() } : {})
 			}
 		});
 		if (cancelledListings > 0) {
@@ -1146,6 +1150,10 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 					victory: attackerWins,
 					conquered,
 					remainingControl: newControlLevel,
+					// Per-strike control delta so the report is self-explanatory
+					// (before -> after, -drain) without diffing against other reports.
+					previousControl: defenderNexus.controlLevel ?? 100,
+					controlDrain,
 					combatSeed: seed,
 					attackerInitial: attackTroops,
 					defenderInitial,

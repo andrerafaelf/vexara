@@ -1074,7 +1074,26 @@ const Reports: React.FC<ReportsProps> = ({
 								{selectedReport.result?.remainingControl !== undefined &&
 									selectedReport.result.remainingControl !== null && (
 										<p>
-											<strong>Nexus Control:</strong> {selectedReport.result.remainingControl}/100
+											<strong>Nexus Control:</strong>{' '}
+											{(() => {
+												const after = selectedReport.result.remainingControl as number;
+												const drain = (selectedReport.result as { controlDrain?: number })
+													.controlDrain;
+												const before = (selectedReport.result as { previousControl?: number })
+													.previousControl;
+												// Show this strike's actual effect (before -> after, -drain) when
+												// the Overseer drained control, so the number is self-explanatory
+												// and doesn't have to be diffed against other reports.
+												if (drain && drain > 0 && before !== undefined) {
+													return (
+														<>
+															{before} → {after}/100{' '}
+															<span style={{ color: '#f85149' }}>(−{drain})</span>
+														</>
+													);
+												}
+												return <>{after}/100</>;
+											})()}
 											{selectedReport.result.conquered && ' (Conquered!)'}
 										</p>
 									)}

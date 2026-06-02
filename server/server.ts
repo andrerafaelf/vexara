@@ -317,6 +317,12 @@ prisma
 				await ensureNeutralNexusPool();
 			});
 		}, 60000);
+		// Control regen is now TIME-BASED (recoverControlLevels grants +10 per whole
+		// hour elapsed per nexus, anchored on lastControlRecoverAt). It's idempotent
+		// and only acts once an hour has actually accrued, so it's safe to run at boot
+		// and on a short interval — frequency no longer affects the rate, and a
+		// restart can't grant a free tick. The 5-min interval just makes regen apply
+		// promptly after each hour boundary instead of waiting up to a full extra hour.
 		void runWithPgAdvisoryLock(JOB_LOCKS.recoverControl, 'recover_control', () =>
 			recoverControlLevels()
 		);
@@ -326,7 +332,7 @@ prisma
 					recoverControlLevels()
 				);
 			},
-			60 * 60 * 1000
+			5 * 60 * 1000
 		);
 		setInterval(
 			() => {

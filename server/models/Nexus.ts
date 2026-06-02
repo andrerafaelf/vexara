@@ -817,12 +817,24 @@ export async function processCompletedQueuesAndNotify(): Promise<void> {
 
 export async function recoverControlLevels(): Promise<void> {
 	try {
-		// Single SQL expression, no per-row round-trips
+		// Time-based regen: +10 control per WHOLE hour elapsed since the nexus's
+		// lastControlRecoverAt anchor, capped at 100. The anchor advances by exactly
+		// the hours consumed (whole_hours * 1 hour), so any partial hour carries over
+		// to the next tick. This makes regen reflect real elapsed time regardless of
+		// how often this job runs or the server restarts — no free +10 on boot, no
+		// lost time from frequent deploys. (The job can safely run on a short
+		// interval now; rows with <1h elapsed are simply skipped.)
 		await prisma.$executeRaw`
       UPDATE "Nexus"
-      SET "controlLevel" = LEAST("controlLevel" + 10, 100)
+      SET "controlLevel" = LEAST(
+            "controlLevel" + 10 * FLOOR(EXTRACT(EPOCH FROM (NOW() - "lastControlRecoverAt")) / 3600)::int,
+            100
+          ),
+          "lastControlRecoverAt" = "lastControlRecoverAt"
+            + (FLOOR(EXTRACT(EPOCH FROM (NOW() - "lastControlRecoverAt")) / 3600)::int) * INTERVAL '1 hour'
       WHERE "ownerId" IS NOT NULL
         AND "controlLevel" < 100
+        AND EXTRACT(EPOCH FROM (NOW() - "lastControlRecoverAt")) >= 3600
     `;
 	} catch (err) {
 		console.error('Error recovering control levels:', err);

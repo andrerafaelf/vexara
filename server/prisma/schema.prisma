@@ -301,6 +301,10 @@ model Nexus {
   lastResourceUpdate       DateTime  @default(now())
   points                   Int       @default(5)
   controlLevel             Int       @default(100)
+  // Anchor for time-based control regen: advanced by the whole hours consumed
+  // each tick so regen reflects real elapsed time and is immune to server
+  // restart cadence (no free tick on boot, no lost time from frequent deploys).
+  lastControlRecoverAt     DateTime  @default(now())
   newbieProtectionEndsAt   DateTime?
   protectionWarningSentAt  DateTime?
   createdAt                DateTime  @default(now())
