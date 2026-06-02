@@ -98,7 +98,8 @@ export function getCommandTrainingQueueBonus(commandLevel: number): number {
 // into the mobile/armor/fire counter classes. Purely additive for veterans.
 export type TrainingChain = 'mobile' | 'armor' | 'fire' | 'special' | 'combat';
 
-const TROOP_COMBAT_CLASS: Record<string, 'mobile' | 'armor' | 'fire' | 'special'> = {
+export type TroopCombatClass = 'mobile' | 'armor' | 'fire' | 'special';
+export const TROOP_COMBAT_CLASS: Record<string, TroopCombatClass> = {
 	lancerDrone: 'fire',
 	assaultTrooper: 'armor',
 	breakerUnit: 'mobile',

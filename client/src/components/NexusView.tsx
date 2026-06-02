@@ -30,7 +30,6 @@ import {
 	Check,
 	ChevronDown,
 	ChevronUp,
-	Crosshair,
 	Eye,
 	EyeOff,
 	Hammer,
@@ -70,6 +69,8 @@ import {
 	TROOP_COSTS,
 	getBuildingCost as getSharedBuildingCost,
 	MAX_TRAIN_PER_BATCH,
+	TROOP_COMBAT_CLASS,
+	type TroopCombatClass,
 	getCommandBuildQueueBonus,
 	getEffectiveBuildTimeSeconds,
 	getEffectiveTrainTimeSeconds,
@@ -136,19 +137,25 @@ type NexusTab = 'overview' | 'buildings' | 'troops' | 'deployed' | 'espionage';
 
 const BASE_MAX_BUILD_QUEUE = 5;
 
-// Display metadata for each training chain. `key` matches the CSS modifier
-// (.queue-chain--<key>) and the class-color token. Icons reuse the lucide set
-// already imported. Order here is irrelevant; render order is driven by
-// getTrainingChains() so it stays in sync with the server.
-const TRAINING_CHAIN_META: Record<
-	TrainingChain,
-	{ label: string; Icon: React.ComponentType<{ size?: number; 'aria-hidden'?: boolean }> }
-> = {
-	mobile: { label: 'Mobile', Icon: Zap },
-	armor: { label: 'Armor', Icon: ShieldCheck },
-	fire: { label: 'Fire', Icon: Crosshair },
-	special: { label: 'Special', Icon: Sparkles },
-	combat: { label: 'Combat', Icon: Swords }
+// Display label for each training-queue lane. `key` matches the CSS modifier
+// (.queue-chain--<key>) and the class-colour token. Order is irrelevant; render
+// order is driven by getTrainingChains() so it stays in sync with the server.
+const TRAINING_CHAIN_META: Record<TrainingChain, { label: string }> = {
+	mobile: { label: 'Mobile' },
+	armor: { label: 'Armor' },
+	fire: { label: 'Fire' },
+	special: { label: 'Special' },
+	combat: { label: 'Combat' }
+};
+
+// Per-unit combat class, shown as a text badge on each train card. label drives
+// the visible text; the `.troop-class-badge--<class>` modifier carries the
+// counter-triangle colour. title spells out the matchup for a hover hint.
+const TROOP_CLASS_META: Record<TroopCombatClass, { label: string; title: string }> = {
+	mobile: { label: 'Mobile', title: 'Mobile — beats Armor, weak to Fire' },
+	armor: { label: 'Armor', title: 'Armor — beats Fire, weak to Mobile' },
+	fire: { label: 'Fire', title: 'Fire — beats Mobile, weak to Armor' },
+	special: { label: 'Special', title: 'Special — no counter in either direction' }
 };
 
 // Gate for the buff banner - labels are derived per-type inline so this
@@ -472,6 +479,28 @@ const NexusView: React.FC<NexusViewProps> = ({
 	const { currentStep } = useOnboarding();
 	const [activeTab, setActiveTabState] = useState<NexusTab>(initialTab);
 	const [espionageEverVisited, setEspionageEverVisited] = useState(initialTab === 'espionage');
+	// Tab bar "stuck" detection: a zero-height sentinel sits just above the sticky
+	// tab bar. When it scrolls out of the top of the scroll container, the bar is
+	// pinned — we add .is-stuck so the gap-fill padding applies ONLY while stuck,
+	// leaving the at-rest layout untouched.
+	const tabStickySentinelRef = useRef<HTMLDivElement | null>(null);
+	const [tabBarStuck, setTabBarStuck] = useState(false);
+
+	useEffect(() => {
+		const sentinel = tabStickySentinelRef.current;
+		if (!sentinel || typeof IntersectionObserver === 'undefined') return;
+		const scrollRoot = sentinel.closest('.main-content') as HTMLElement | null;
+		// rootMargin top is shrunk by the scroll container's top padding so the
+		// sentinel registers "gone" exactly when the bar reaches the pinned position,
+		// not 32px early. Falls back to viewport root on mobile (.main-content is
+		// overflow: visible) where the sticky pins under the 56px header instead.
+		const observer = new IntersectionObserver(
+			([entry]) => setTabBarStuck(entry.intersectionRatio === 0),
+			{ root: scrollRoot, rootMargin: '-32px 0px 0px 0px', threshold: [0, 1] }
+		);
+		observer.observe(sentinel);
+		return () => observer.disconnect();
+	}, []);
 	const setActiveTab = (tab: NexusTab) => {
 		setActiveTabState(tab);
 		if (tab === 'espionage') setEspionageEverVisited(true);
@@ -2254,7 +2283,8 @@ const NexusView: React.FC<NexusViewProps> = ({
 				/>
 			</div>
 
-			<div className="nexus-tab-bar">
+			<div ref={tabStickySentinelRef} className="nexus-tab-sticky-sentinel" aria-hidden="true" />
+			<div className={`nexus-tab-bar${tabBarStuck ? ' is-stuck' : ''}`}>
 				<button
 					type="button"
 					className={`nexus-tab-btn${activeTab === 'overview' ? ' active' : ''}`}
@@ -3187,14 +3217,10 @@ const NexusView: React.FC<NexusViewProps> = ({
 												{lanes.map((chain) => {
 													const entries = grouped.get(chain)!;
 													const meta = TRAINING_CHAIN_META[chain];
-													const ChainIcon = meta.Icon;
 													return (
 														<div key={chain} className={`queue-chain queue-chain--${chain}`}>
 															<div className="queue-chain-head">
-																<span className="queue-chain-title">
-																	<ChainIcon size={13} aria-hidden={true} />
-																	{meta.label}
-																</span>
+																<span className="queue-chain-title">{meta.label}</span>
 																<span
 																	className="queue-chain-meter"
 																	title={`${entries.length} of ${maxSlots} slots used`}
@@ -3346,6 +3372,18 @@ const NexusView: React.FC<NexusViewProps> = ({
 																<div className="troop-header">
 																	<h5>{TROOP_NAMES[type]}</h5>
 																	<div className="troop-header-right">
+																		{(() => {
+																			const cls = TROOP_COMBAT_CLASS[type];
+																			const meta = cls ? TROOP_CLASS_META[cls] : null;
+																			return meta ? (
+																				<span
+																					className={`troop-class-badge troop-class-badge--${cls}`}
+																					title={meta.title}
+																				>
+																					{meta.label}
+																				</span>
+																			) : null;
+																		})()}
 																		<button
 																			type="button"
 																			className="troop-info"

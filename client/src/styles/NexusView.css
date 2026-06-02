@@ -358,19 +358,34 @@
 	scrollbar-width: none;
 	background: var(--bg-app);
 	position: sticky;
-	/* Desktop scroll root is .main-content, which has var(--space-7) (32px) top
-	   padding. Pinning at top:0 leaves that 32px padding strip showing app
-	   background above the bar (the "empty band" gap). Pin 32px higher
-	   (top: -space-7) so the bar reaches the scroll container's border-box top.
-	   The 32px strip above the buttons is painted by a box-shadow (not padding,
-	   not a pseudo-element) — box-shadow draws OUTSIDE the box and isn't clipped
-	   by this element's overflow-y:hidden, and adds no height. So at rest the strip
-	   is covered, and when PINNED the bar is exactly button-height with no dead
-	   padding-top. The mobile override resets all of this. */
-	top: calc(var(--space-7) * -1);
-	margin-top: calc(var(--space-7) * -1);
-	box-shadow: 0 calc(var(--space-7) * -1) 0 var(--bg-app);
+	/* Desktop scroll root is .main-content (var(--space-7) top padding). At rest
+	   the bar sits in normal flow under the resource strip — untouched. When it
+	   sticks, `top: 0` would pin it at the padding EDGE, leaving a 32px strip of
+	   app background above it (the gap). So we pin 32px higher and add 32px of
+	   padding-top, but ONLY while stuck — the .is-stuck class is toggled by an
+	   IntersectionObserver sentinel in NexusView. While stuck the padding fills
+	   the strip and the buttons stay flush at the viewport top; at rest neither
+	   applies, so the resting layout is exactly as before. Mobile resets below. */
+	top: 0;
 	z-index: 10;
+}
+
+/* Desktop-only: the gap-fill applies while stuck. Scoped to >=769px so it can't
+   override the mobile pinning rule below (which pins under the 56px header). */
+@media (min-width: 769px) {
+	.nexus-tab-bar.is-stuck {
+		top: calc(var(--space-7) * -1);
+		padding-top: var(--space-7);
+	}
+}
+
+/* Zero-impact marker the IntersectionObserver watches to know when the tab bar
+   has pinned. Must not affect layout. */
+.nexus-tab-sticky-sentinel {
+	height: 0;
+	margin: 0;
+	padding: 0;
+	pointer-events: none;
 }
 
 .nexus-tab-bar::-webkit-scrollbar {
@@ -2457,6 +2472,37 @@
 	align-items: center;
 	gap: 6px;
 	flex-shrink: 0;
+}
+
+/* Per-unit combat-class badge on train cards. Colours match the counter triangle
+   used by the training-queue lanes (mobile=cyan, armor=steel, fire=amber,
+   special=neutral). Text label, no icon. */
+.troop-class-badge {
+	font-size: 9px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	padding: 2px 6px;
+	border-radius: var(--radius-sm);
+	border: 1px solid currentColor;
+	line-height: 1.2;
+	white-space: nowrap;
+}
+.troop-class-badge--mobile {
+	color: var(--color-cyan-500, #38bdf8);
+	background: color-mix(in srgb, var(--color-cyan-500, #38bdf8) 12%, transparent);
+}
+.troop-class-badge--armor {
+	color: #9fb2d0;
+	background: color-mix(in srgb, #7c93b3 14%, transparent);
+}
+.troop-class-badge--fire {
+	color: #f59e3d;
+	background: color-mix(in srgb, #f59e3d 12%, transparent);
+}
+.troop-class-badge--special {
+	color: var(--accent-2);
+	background: color-mix(in srgb, var(--accent-2) 12%, transparent);
 }
 
 .troop-header h5 {
