@@ -94,7 +94,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		role: 'Fire interceptor - counters Mobile',
 		description: 'Cheap suppression drone that pins down early mobile raiders.',
 		unitClass: 'fire',
-		stats: { attack: 12, defense: 22, speed: 20, carry: 30 },
+		stats: { attack: 3, defense: 22, speed: 20, carry: 30 },
 		cost: { biomass: 150, alloy: 150, ore: 200, population: 1, time: '53s' },
 		requirements: ['Recruitment Core Lv2']
 	},
@@ -105,7 +105,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		description:
 			'Durable frontline unit built to hold ground and close distance on fire emplacements. Low attack - its job is to survive and keep the line.',
 		unitClass: 'armor',
-		stats: { attack: 18, defense: 45, speed: 18, carry: 60 },
+		stats: { attack: 5, defense: 45, speed: 18, carry: 60 },
 		cost: { biomass: 150, alloy: 150, ore: 350, population: 1, time: '1m 19s' },
 		requirements: ['Recruitment Core Lv1']
 	},
@@ -127,7 +127,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		description:
 			'Lightly armed intel gatherer that reveals enemy nexus resources, troops, and defenses. Not a frontline fighter.',
 		unitClass: 'special',
-		stats: { attack: 5, defense: 20, speed: 25, carry: 10 },
+		stats: { attack: 1, defense: 20, speed: 25, carry: 10 },
 		cost: { biomass: 400, alloy: 150, ore: 400, population: 1, time: '3m 0s' },
 		requirements: ['Recruitment Core Lv4', 'Command Core Lv3'],
 		notes: ['This is the unit used for scouting and espionage missions.']
@@ -139,7 +139,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		description:
 			'Aggressive fire support that pins down mobile forces. High attack for its tier but fragile - keep it behind your armor.',
 		unitClass: 'fire',
-		stats: { attack: 65, defense: 30, speed: 15, carry: 20 },
+		stats: { attack: 65, defense: 8, speed: 15, carry: 20 },
 		cost: { biomass: 450, alloy: 400, ore: 450, population: 2, time: '9m 0s' },
 		requirements: ['Recruitment Core Lv7', 'Command Core Lv6']
 	},
@@ -150,7 +150,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		description:
 			'High mobility raider with strong carry. Good attack, mediocre defense - trades hits for resource hauls and speed.',
 		unitClass: 'mobile',
-		stats: { attack: 80, defense: 40, speed: 22, carry: 80 },
+		stats: { attack: 80, defense: 10, speed: 22, carry: 80 },
 		cost: { biomass: 625, alloy: 500, ore: 750, population: 3, time: '12m 0s' },
 		requirements: ['Recruitment Core Lv5', 'Alloy Forge Lv4']
 	},
@@ -161,7 +161,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		description:
 			'Defensive anchor of any mid-game garrison. Exceptional survivability, minimal attack - it holds the line while your fire units deal damage.',
 		unitClass: 'armor',
-		stats: { attack: 10, defense: 130, speed: 12, carry: 25 },
+		stats: { attack: 3, defense: 130, speed: 12, carry: 25 },
 		cost: { biomass: 400, alloy: 600, ore: 500, population: 2, time: '12m 0s' },
 		requirements: ['Recruitment Core Lv5', 'Life Support Lv5']
 	},
@@ -172,7 +172,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		description:
 			'Aggressive fire specialist that suppresses mobile skirmishers on the offensive. Strong damage, low defense - commit it to attacks, not defense.',
 		unitClass: 'fire',
-		stats: { attack: 75, defense: 35, speed: 17, carry: 25 },
+		stats: { attack: 75, defense: 9, speed: 17, carry: 25 },
 		cost: { biomass: 550, alloy: 750, ore: 650, population: 2, time: '14m 0s' },
 		requirements: ['Recruitment Core Lv7', 'Ore Extractor Lv6'],
 		notes: ['No special anti-mech multiplier is currently applied in combat code.']
@@ -184,7 +184,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		description:
 			'Very fast mobile raider, ideal for rapid redeploy and cracking armored defenders. High attack and carry, moderate defense.',
 		unitClass: 'mobile',
-		stats: { attack: 95, defense: 50, speed: 28, carry: 100 },
+		stats: { attack: 95, defense: 13, speed: 28, carry: 100 },
 		cost: { biomass: 750, alloy: 600, ore: 900, population: 3, time: '18m 0s' },
 		requirements: ['Recruitment Core Lv8', 'Alloy Forge Lv7']
 	},
@@ -223,7 +223,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 			'Immobile defensive emplacement. Cannot be sent on attacks, scouts, support, or transfers - it always defends the nexus that built it. Decimates mobile forces that try to rush you.',
 		unitClass: 'fire',
 		stats: { attack: 0, defense: 160, speed: 0, carry: 0 },
-		cost: { biomass: 1500, alloy: 1200, ore: 2500, population: 2, time: '45m 0s' },
+		cost: { biomass: 1500, alloy: 1200, ore: 2500, population: 3, time: '45m 0s' },
 		requirements: ['Recruitment Core Lv11', 'Command Core Lv9', 'Armory Lv5'],
 		notes: [
 			'Speed 0 - stationary. It is never offered as an option on any outgoing mission (attack, scout, support, or transfer); you cannot lend it to an ally.',
@@ -248,7 +248,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		description:
 			'The Overseer is a high-value command unit that enables nexus conquest. It does not fight - it administers. Sending an Overseer on a victorious strike reduces the target\'s Control Level by an amount that scales with how dominant your attack was: a crushing win (3:1 power advantage or better) drains 50, a clear win drains 34, and a narrow win still drains 15. Control starts at 100; once it reaches 0, the nexus is conquered and changes ownership to you. Two crushing strikes, three clear strikes, or a sustained coalition campaign can all reach conquest. The defending force does not need to be wiped - any victory with a surviving Overseer drains Control. Owned nexuses regenerate +10 Control per hour, so a lone weak attacker cannot grind a target down alone - coordinated waves are required for an attrition path. Overseer strikes travel 3x slower than standard attacks - giving defenders time to react. The Overseer is only useful if the attack wins - if the attack fails, the Overseer is not used and survives the defeat alongside its escort. If every non-Overseer troop in the strike is killed, the Overseer dies too. On the final conquering strike (the one that brings Control to 0), the Overseer is consumed - it does not return. The other surviving attackers are stationed at the newly captured nexus. The conquered nexus keeps its type (Resource Depot, Military Outpost, etc.) and retains its current building levels, but its name resets to "Conquered Nexus." NPC nexus bonuses are acquired at base tier; the doubled tier unlocks when the new owner reaches Command Core 15.',
 		unitClass: 'special',
-		stats: { attack: 0, defense: 30, speed: 15, carry: 0 },
+		stats: { attack: 0, defense: 8, speed: 15, carry: 0 },
 		cost: { biomass: 180000, alloy: 140000, ore: 120000, population: 5, time: '4h 0m' },
 		requirements: ['Recruitment Core Lv14', 'Command Core Lv14', 'Shield Grid Lv13'],
 		notes: [

@@ -55,7 +55,7 @@ _Ordered weakest → strongest by overall combat value._
 
 - Role: Fire interceptor, counters Mobile units
 - Class: Fire
-- Stats: Attack 12, Defense 22, Speed 20, Carry 30
+- Stats: Attack 3, Defense 22, Speed 20, Carry 30
 - Cost: Biomass 150, Alloy 150, Ore 200
 - Population: 1
 - Training Time: 53s
@@ -65,7 +65,7 @@ _Ordered weakest → strongest by overall combat value._
 
 - Role: Armor frontline infantry, counters Fire units
 - Class: Armor
-- Stats: Attack 18, Defense 45, Speed 18, Carry 60
+- Stats: Attack 5, Defense 45, Speed 18, Carry 60
 - Cost: Biomass 150, Alloy 150, Ore 350
 - Population: 1
 - Training Time: 1m 19s
@@ -75,7 +75,7 @@ _Ordered weakest → strongest by overall combat value._
 
 - Role: Mobile assault breacher, counters Armor units
 - Class: Mobile
-- Stats: Attack 55, Defense 10, Speed 16, Carry 60
+- Stats: Attack 35, Defense 3, Speed 16, Carry 40
 - Cost: Biomass 250, Alloy 150, Ore 300
 - Population: 1
 - Training Time: 2m 40s
@@ -87,7 +87,7 @@ _Ordered weakest → strongest by overall combat value._
 
 - Role: Scout / support unit (Special class, no counter bonus)
 - Class: Special
-- Stats: Attack 5, Defense 20, Speed 25, Carry 10
+- Stats: Attack 1, Defense 20, Speed 25, Carry 10
 - Cost: Biomass 400, Alloy 150, Ore 400
 - Population: 1
 - Training Time: 3m 0s
@@ -101,7 +101,7 @@ _Ordered weakest → strongest by overall combat value._
 
 - Role: Fire support, counters Mobile units
 - Class: Fire
-- Stats: Attack 65, Defense 30, Speed 15, Carry 20
+- Stats: Attack 65, Defense 8, Speed 15, Carry 20
 - Cost: Biomass 450, Alloy 400, Ore 450
 - Population: 2
 - Training Time: 9m 0s
@@ -113,7 +113,7 @@ _Ordered weakest → strongest by overall combat value._
 
 - Role: Fast mobile raider, counters Armor units
 - Class: Mobile
-- Stats: Attack 80, Defense 40, Speed 22, Carry 80
+- Stats: Attack 80, Defense 10, Speed 22, Carry 80
 - Cost: Biomass 625, Alloy 500, Ore 750
 - Population: 3
 - Training Time: 12m 0s
@@ -125,7 +125,7 @@ _Ordered weakest → strongest by overall combat value._
 
 - Role: Elite armor defender, counters Fire units
 - Class: Armor
-- Stats: Attack 10, Defense 130, Speed 12, Carry 25
+- Stats: Attack 3, Defense 130, Speed 12, Carry 25
 - Cost: Biomass 400, Alloy 600, Ore 500
 - Population: 2
 - Training Time: 12m 0s
@@ -137,7 +137,7 @@ _Ordered weakest → strongest by overall combat value._
 
 - Role: Fire EMP specialist, counters Mobile units
 - Class: Fire
-- Stats: Attack 75, Defense 35, Speed 17, Carry 25
+- Stats: Attack 75, Defense 9, Speed 17, Carry 25
 - Cost: Biomass 550, Alloy 750, Ore 650
 - Population: 2
 - Training Time: 14m 0s
@@ -149,7 +149,7 @@ _Ordered weakest → strongest by overall combat value._
 
 - Role: Mobile rapid-response cavalry, counters Armor units
 - Class: Mobile
-- Stats: Attack 95, Defense 50, Speed 28, Carry 100
+- Stats: Attack 95, Defense 13, Speed 28, Carry 100
 - Cost: Biomass 750, Alloy 600, Ore 900
 - Population: 3
 - Training Time: 18m 0s
@@ -161,10 +161,10 @@ _Ordered weakest → strongest by overall combat value._
 
 - Role: Ultra-fast mobile cavalry, counters Armor units (and is itself countered by Fire)
 - Class: Mobile
-- Stats: Attack 110, Defense 32, Speed 32, Carry 40
-- Cost: Biomass 900, Alloy 700, Ore 1100
+- Stats: Attack 150, Defense 15, Speed 32, Carry 60
+- Cost: Biomass 1100, Alloy 900, Ore 1400
 - Population: 3
-- Training Time: 24m 0s
+- Training Time: 27m 0s
 - Requirements:
   - Recruitment Core Lv9
   - Alloy Forge Lv8
@@ -177,10 +177,10 @@ _Ordered weakest → strongest by overall combat value._
 
 - Role: Armor siege anchor, counters Fire units
 - Class: Armor
-- Stats: Attack 80, Defense 210, Speed 10, Carry 20
+- Stats: Attack 40, Defense 260, Speed 10, Carry 20
 - Cost: Biomass 1250, Alloy 1000, Ore 2000
 - Population: 4
-- Training Time: 40m 0s
+- Training Time: 30m 0s
 - Requirements:
   - Recruitment Core Lv10
   - Ore Extractor Lv9
@@ -192,8 +192,8 @@ _Ordered weakest → strongest by overall combat value._
 - Class: Fire
 - Stats: Attack 0, Defense 160, Speed 0, Carry 0
 - Cost: Biomass 1500, Alloy 1200, Ore 2500
-- Population: 2 (lighter pop tax than mobile units — turret can't transfer between nexuses)
-- Training Time: 50m 0s
+- Population: 3 (static-defense tax: strong at home, but no longer equal-pop hard-walls siege units)
+- Training Time: 45m 0s
 - Requirements:
   - Recruitment Core Lv11
   - Command Core Lv9
@@ -207,10 +207,10 @@ _Ordered weakest → strongest by overall combat value._
 
 - Role: Fire artillery, counters Mobile units
 - Class: Fire
-- Stats: Attack 210, Defense 80, Speed 8, Carry 160
+- Stats: Attack 320, Defense 35, Speed 8, Carry 250
 - Cost: Biomass 2000, Alloy 1750, Ore 3000
-- Population: 5
-- Training Time: 1h 8m
+- Population: 4
+- Training Time: 40m 0s
 - Requirements:
   - Recruitment Core Lv12
   - Command Core Lv10
@@ -220,7 +220,7 @@ _Ordered weakest → strongest by overall combat value._
 
 - Role: Conquest / control unit (Special — no counter in either direction)
 - Class: Special
-- Stats: Attack 0, Defense 30, Speed 15, Carry 0
+- Stats: Attack 0, Defense 8, Speed 15, Carry 0
 - Cost: Biomass 180000, Alloy 140000, Ore 120000
 - Population: 5
 - Training Time: 4h 0m

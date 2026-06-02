@@ -24,18 +24,18 @@ export interface CombatReplay {
 }
 
 const TROOP_ATTACK: Record<string, number> = {
-	lancerDrone: 12,
-	assaultTrooper: 18,
-	breakerUnit: 55,
-	reconOperative: 5,
+	lancerDrone: 3,
+	assaultTrooper: 5,
+	breakerUnit: 35,
+	reconOperative: 1,
 	skimmerBike: 80,
-	bulwarkGuard: 10,
+	bulwarkGuard: 3,
 	suppressorTeam: 65,
 	disruptorUnit: 75,
 	interceptorBike: 95,
-	siegeMech: 80,
-	annihilatorPlatform: 210,
-	voidStalker: 110,
+	siegeMech: 40,
+	annihilatorPlatform: 320,
+	voidStalker: 150,
 	plasmaTurret: 0,
 	overseer: 0
 };
@@ -43,18 +43,18 @@ const TROOP_ATTACK: Record<string, number> = {
 const TROOP_DEFENSE: Record<string, number> = {
 	lancerDrone: 22,
 	assaultTrooper: 45,
-	breakerUnit: 10,
+	breakerUnit: 3,
 	reconOperative: 20,
-	skimmerBike: 40,
+	skimmerBike: 10,
 	bulwarkGuard: 130,
-	suppressorTeam: 30,
-	disruptorUnit: 35,
-	interceptorBike: 50,
-	siegeMech: 210,
-	annihilatorPlatform: 80,
-	voidStalker: 32,
+	suppressorTeam: 8,
+	disruptorUnit: 9,
+	interceptorBike: 13,
+	siegeMech: 260,
+	annihilatorPlatform: 35,
+	voidStalker: 15,
 	plasmaTurret: 160,
-	overseer: 30
+	overseer: 8
 };
 
 function forcePower(troops: Record<string, number>, stat: Record<string, number>): number {
