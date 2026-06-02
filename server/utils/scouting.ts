@@ -28,11 +28,58 @@ export interface ScoutIntel {
 	resources: ResourceAmounts;
 	buildings: BuildingLevels;
 	troops: TroopCounts;
+	// Allied support currently stationed at this nexus (faction members / friends
+	// reinforcing it). Lives on TroopTransfer rows, NOT the nexus troop columns, so
+	// it must be aggregated separately - omitting it made scouts under-report the
+	// real defensive force (e.g. "5 Breakers" while 1000 Bulwark sat in support).
+	// Present and > 0 only when reinforcements exist.
+	supportTroops?: Partial<TroopCounts>;
 	population: { current: number; max: number };
 	controlLevel: number;
 	nexusName: string;
 	nexusX: number;
 	nexusY: number;
+}
+
+const SUPPORT_TROOP_KEYS: ReadonlyArray<keyof TroopCounts> = [
+	'lancerDrone',
+	'assaultTrooper',
+	'breakerUnit',
+	'reconOperative',
+	'skimmerBike',
+	'siegeMech',
+	'bulwarkGuard',
+	'suppressorTeam',
+	'disruptorUnit',
+	'interceptorBike',
+	'annihilatorPlatform',
+	'voidStalker',
+	'plasmaTurret',
+	'overseer'
+];
+
+// Sum all troops stationed at `hostNexusId` via support missions (status
+// 'stationed'). Returns the merged counts (only keys with > 0), or undefined if
+// there's no support — so callers can spread it onto a ScoutIntel without adding
+// an empty object. Mirrors the supportTransfers aggregation combat uses, so what
+// a scout shows matches what the attacker will actually face.
+export async function aggregateStationedSupport(
+	hostNexusId: number
+): Promise<Partial<TroopCounts> | undefined> {
+	const transfers = await prisma.troopTransfer.findMany({
+		where: { hostNexusId, status: 'stationed' },
+		select: { troops: true }
+	});
+	if (transfers.length === 0) return undefined;
+	const merged: Partial<Record<keyof TroopCounts, number>> = {};
+	for (const t of transfers) {
+		const troops = (t.troops ?? {}) as Record<string, number>;
+		for (const key of SUPPORT_TROOP_KEYS) {
+			const n = Math.max(0, Math.floor(Number(troops[key]) || 0));
+			if (n > 0) merged[key] = (merged[key] ?? 0) + n;
+		}
+	}
+	return Object.keys(merged).length > 0 ? merged : undefined;
 }
 
 function buildPublicNexusData(
@@ -197,6 +244,7 @@ export async function getNexusIntelForUser(
 		return {
 			...publicData,
 			...buildDetailedScoutIntel(nexus),
+			supportTroops: await aggregateStationedSupport(nexus.id),
 			intelLevel: 'owned',
 			scoutedAt: new Date().toISOString(),
 			newbieProtectionEndsAt
@@ -216,9 +264,11 @@ export async function getNexusIntelForUser(
 		orderBy: { createdAt: 'desc' }
 	});
 	if (spyAsset) {
+		// Embedded operative = live intel, so reflect support stationed RIGHT NOW.
 		return {
 			...publicData,
 			...buildDetailedScoutIntel(nexus),
+			supportTroops: await aggregateStationedSupport(nexus.id),
 			intelLevel: 'scouted',
 			scoutedAt: new Date().toISOString(),
 			isFriendly: friendly,

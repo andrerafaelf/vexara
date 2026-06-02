@@ -16,6 +16,7 @@ interface IntelData {
 		shieldGrid: number;
 	};
 	troops: Record<string, number>;
+	supportTroops?: Record<string, number>;
 	population: { current: number; max: number };
 	controlLevel: number;
 }
@@ -56,8 +57,21 @@ const TROOP_NAMES: Record<string, string> = {
 	disruptorUnit: 'Disruptor Unit',
 	interceptorBike: 'Interceptor Bike',
 	annihilatorPlatform: 'Annihilator Platform',
+	voidStalker: 'Void Stalker',
+	plasmaTurret: 'Plasma Turret',
 	overseer: 'Overseer'
 };
+
+// Merge garrison + allied support into one count map (for total defense/threat).
+function mergeTroops(
+	a: Record<string, number>,
+	b?: Record<string, number>
+): Record<string, number> {
+	if (!b) return a;
+	const out: Record<string, number> = { ...a };
+	for (const [k, v] of Object.entries(b)) out[k] = (out[k] ?? 0) + (v ?? 0);
+	return out;
+}
 
 function computeDefensePower(troops: Record<string, number>, shieldLevel: number): number {
 	const raw = Object.entries(troops).reduce((sum, [type, count]) => {
@@ -86,8 +100,13 @@ const BUILDING_LABELS: Record<string, string> = {
 };
 
 const ScoutIntelCard: React.FC<ScoutIntelCardProps> = ({ intel, targetName, targetCoords }) => {
+	const support = intel.supportTroops;
+	const hasSupport = !!support && Object.values(support).some((n) => n > 0);
+	// Threat + defense power reflect the FULL force the attacker will face
+	// (garrison + allied reinforcements), so the badge isn't misleadingly low.
+	const mergedDefense = mergeTroops(intel.troops, support);
 	const totalTroops = Object.values(intel.troops).reduce((s, n) => s + n, 0);
-	const defensePower = computeDefensePower(intel.troops, intel.buildings.shieldGrid);
+	const defensePower = computeDefensePower(mergedDefense, intel.buildings.shieldGrid);
 	const threat = getThreatLevel(defensePower);
 	const totalResources = intel.resources.biomass + intel.resources.alloy + intel.resources.ore;
 	const popPct =
@@ -95,6 +114,7 @@ const ScoutIntelCard: React.FC<ScoutIntelCardProps> = ({ intel, targetName, targ
 			? Math.round((intel.population.current / intel.population.max) * 100)
 			: 0;
 	const activeTroops = Object.entries(intel.troops).filter(([, n]) => n > 0);
+	const activeSupport = support ? Object.entries(support).filter(([, n]) => n > 0) : [];
 
 	return (
 		<div className="intel-card">
@@ -187,6 +207,34 @@ const ScoutIntelCard: React.FC<ScoutIntelCardProps> = ({ intel, targetName, targ
 					</div>
 				)}
 			</div>
+
+			{/* Allied reinforcements (stationed support from faction/friends) */}
+			{hasSupport && (
+				<div className="intel-section">
+					<div className="intel-section-heading intel-section-heading--support">
+						<AlertTriangle size={11} />
+						Allied Reinforcements
+						<span className="intel-troop-total">
+							{activeSupport.reduce((s, [, n]) => s + n, 0)} units
+						</span>
+					</div>
+					<div className="intel-troop-grid">
+						{activeSupport.map(([type, count]) => {
+							const stats = TROOP_STATS[type];
+							const defContrib = count * (stats?.defense ?? 0);
+							return (
+								<div key={type} className="intel-troop-row intel-troop-row--support">
+									<span className="intel-troop-name">{TROOP_NAMES[type] ?? type}</span>
+									<span className="intel-troop-count">{count}</span>
+									<span className="intel-troop-def" title="Defense contribution">
+										+{defContrib.toLocaleString()} def
+									</span>
+								</div>
+							);
+						})}
+					</div>
+				</div>
+			)}
 
 			{/* Buildings */}
 			<div className="intel-section">

@@ -359,20 +359,17 @@
 	background: var(--bg-app);
 	position: sticky;
 	/* Desktop scroll root is .main-content, which has var(--space-7) (32px) top
-	   padding. The fix for the "empty band above the pinned bar" gap has two parts
-	   that must work together:
-	   1. top: -var(--space-7) — pin the bar flush to the scroll container's
-	      border-box top (32px ABOVE the padding edge). Pinning at top:0 instead
-	      leaves the 32px padding strip showing app background above the bar.
-	   2. padding-top: var(--space-7) — re-add that 32px inside the bar so the
-	      buttons keep their position and the bar's own background fills the strip.
-	   sticky resolves against the scroll container (not the previous sibling), so
-	   this is correct even though .nexus-header sits above the bar in the flow.
-	   The mobile override below resets this — there the window is the scroll root
-	   and the bar pins under the 56px fixed header instead. */
+	   padding. Pinning at top:0 leaves that 32px padding strip showing app
+	   background above the bar (the "empty band" gap). Pin 32px higher
+	   (top: -space-7) so the bar reaches the scroll container's border-box top.
+	   The 32px strip above the buttons is painted by a box-shadow (not padding,
+	   not a pseudo-element) — box-shadow draws OUTSIDE the box and isn't clipped
+	   by this element's overflow-y:hidden, and adds no height. So at rest the strip
+	   is covered, and when PINNED the bar is exactly button-height with no dead
+	   padding-top. The mobile override resets all of this. */
 	top: calc(var(--space-7) * -1);
 	margin-top: calc(var(--space-7) * -1);
-	padding-top: var(--space-7);
+	box-shadow: 0 calc(var(--space-7) * -1) 0 var(--bg-app);
 	z-index: 10;
 }
 

@@ -10,7 +10,7 @@ import {
 	areAllDefendingTroopsEliminated,
 	TROOP_STATS
 } from './combatMath.js';
-import { buildDetailedScoutIntel } from './scouting.js';
+import { aggregateStationedSupport, buildDetailedScoutIntel } from './scouting.js';
 import { NOTIF, sendPushToUser } from './push.js';
 import { resolveEventForNexus } from './galaxyEvents.js';
 import {
@@ -357,6 +357,15 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 			const travelMs = attack.arrivesAt!.getTime() - attack.createdAt.getTime();
 			const returnsAt = new Date(Date.now() + travelMs);
 
+			// Capture stationed allied support into the report so the scout reveals the
+			// REAL defensive force at scout-arrival, not just the nexus's own garrison
+			// (support lives on TroopTransfer rows, not the nexus troop columns).
+			const scoutIntel = defenderNexus ? buildDetailedScoutIntel(defenderNexus) : null;
+			if (scoutIntel) {
+				const support = await aggregateStationedSupport(defenderNexus!.id);
+				if (support) scoutIntel.supportTroops = support;
+			}
+
 			await prisma.attack.update({
 				where: { id: attack.id },
 				data: {
@@ -365,7 +374,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 					result: {
 						mission: 'scout',
 						victory: true,
-						intel: defenderNexus ? buildDetailedScoutIntel(defenderNexus) : null,
+						intel: scoutIntel,
 						survivingTroops: { reconOperative: attackTroops.reconOperative || 0 },
 						attackerLosses: {},
 						defenderLosses: {},

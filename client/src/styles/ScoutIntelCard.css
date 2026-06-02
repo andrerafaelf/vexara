@@ -232,6 +232,19 @@
 	border-radius: 6px;
 }
 
+/* Allied reinforcements — amber/warning accent so it reads as "more than the
+   garrison; mind the trap." */
+.intel-section-heading--support {
+	color: var(--warning);
+}
+.intel-section-heading--support .intel-troop-total {
+	color: var(--warning);
+}
+.intel-troop-row--support {
+	background: var(--warning-soft);
+	border-left: 2px solid var(--warning);
+}
+
 .intel-troop-name {
 	flex: 1;
 	color: var(--text-default);

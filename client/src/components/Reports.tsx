@@ -344,6 +344,18 @@ const Reports: React.FC<ReportsProps> = ({
 					lines.push(`  ${(troopNames[type] ?? type).padEnd(24)}${String(count).padStart(6)}`);
 				}
 			}
+			const support = (report.result.intel as { supportTroops?: Record<string, number> })
+				.supportTroops;
+			const detectedSupport = support
+				? Object.entries(support).filter(([, c]) => Number(c) > 0)
+				: [];
+			if (detectedSupport.length > 0) {
+				lines.push('');
+				lines.push('[ ALLIED REINFORCEMENTS ]');
+				for (const [type, count] of detectedSupport) {
+					lines.push(`  ${(troopNames[type] ?? type).padEnd(24)}${String(count).padStart(6)}`);
+				}
+			}
 		}
 
 		lines.push(sep);
