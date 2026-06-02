@@ -518,7 +518,10 @@ model FactionMessage {
   id        Int      @id @default(autoincrement())
   factionId Int
   userId    Int
-  content   String   @db.VarChar(1000)
+  // 4000 to match FACTION_MSG_MAX in factionController. Combat-report shares run
+  // ~1.5-2.5k chars (one block per allied contributor); the old VarChar(1000)
+  // passed validation then threw a Postgres "value too long" error -> 500.
+  content   String   @db.VarChar(4000)
   createdAt DateTime @default(now())
 
   faction Faction @relation(fields: [factionId], references: [id], onDelete: Cascade)
