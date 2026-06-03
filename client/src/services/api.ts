@@ -120,6 +120,7 @@ export const resetPassword = (token: string, newPassword: string) =>
 // Galaxies
 export const getGalaxies = () => apiRequest('/galaxies');
 export const getMyGalaxy = () => apiRequest('/galaxies/me');
+export const getPublicGalaxyStatus = () => apiRequest('/galaxies/public/status');
 export const selectGalaxy = (galaxyId: number | string) =>
 	apiRequest(`/galaxies/${galaxyId}/select`, { method: 'POST' });
 export const leaveGalaxy = (galaxyId: number | string) =>

@@ -12,6 +12,9 @@ function authNoGalaxy(req: Request, res: Response, next: NextFunction) {
 	return auth(req, res, next);
 }
 
+router.get('/public/status', (req, res) =>
+	galaxyController.getPublicGalaxyStatus(req as AuthRequest, res as Response)
+);
 router.get('/', authNoGalaxy, (req, res) =>
 	galaxyController.listGalaxies(req as AuthRequest, res as Response)
 );

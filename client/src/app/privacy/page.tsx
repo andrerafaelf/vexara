@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import PublicNav from '@/components/PublicNav';
+import SiteFooter from '@/components/SiteFooter';
 
 export const metadata: Metadata = {
 	title: 'Privacy Policy - Vexara',
@@ -10,16 +12,18 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
 	return (
-		<main
-			style={{
-				maxWidth: 720,
-				margin: '0 auto',
-				padding: '48px 24px',
-				color: '#c8ccd6',
-				fontFamily: 'inherit',
-				lineHeight: 1.7
-			}}
-		>
+		<>
+			<PublicNav loc="Privacy" />
+			<main
+				style={{
+					maxWidth: 720,
+					margin: '0 auto',
+					padding: '48px 24px',
+					color: '#c8ccd6',
+					fontFamily: 'inherit',
+					lineHeight: 1.7
+				}}
+			>
 			<h1 style={{ color: '#fff', fontSize: 28, marginBottom: 8 }}>Privacy Policy</h1>
 			<p style={{ color: '#8a90a0', marginBottom: 32 }}>Last updated: May 2026</p>
 
@@ -100,6 +104,8 @@ export default function PrivacyPage() {
 				</a>
 				.
 			</p>
-		</main>
+			</main>
+			<SiteFooter />
+		</>
 	);
 }

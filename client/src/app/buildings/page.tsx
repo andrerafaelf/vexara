@@ -65,7 +65,7 @@ export default function BuildingsPage() {
 
 	return (
 		<>
-			<PublicNav />
+			<PublicNav loc="Buildings" />
 
 			<main className="gp-root">
 				<header className="gp-header">
@@ -144,7 +144,7 @@ export default function BuildingsPage() {
 				<div className="gp-cta-block">
 					<p className="gp-cta-text">Ready to build your first nexus?</p>
 					<Link href="/register" className="gp-cta-btn">
-						Play free - no download required
+						Join the live galaxy
 					</Link>
 				</div>
 			</main>

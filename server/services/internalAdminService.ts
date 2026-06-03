@@ -45,7 +45,23 @@ export function getAdminStats() {
 			}
 		}),
 		prisma.galaxyPlayer.aggregate({ _avg: { points: true } }),
-		prisma.marketListing.count()
+		prisma.marketListing.count(),
+		prisma.gameEvent.count({
+			where: { event: 'first_nexus_created', createdAt: { gte: oneWeekAgo } }
+		}),
+		prisma.gameEvent.count({
+			where: { event: { in: ['first_attack', 'first_scout'] }, createdAt: { gte: oneWeekAgo } }
+		}),
+		prisma.gameEvent.count({ where: { event: 'joined_faction', createdAt: { gte: oneWeekAgo } } }),
+		prisma.user.count({ where: { referredById: { not: null }, createdAt: { gte: oneWeekAgo } } }),
+		prisma.user.groupBy({
+			by: ['utmSource'],
+			where: { createdAt: { gte: oneWeekAgo }, utmSource: { not: null } },
+			_count: { id: true },
+			orderBy: { _count: { id: 'desc' } },
+			take: 8
+		}),
+		prisma.user.aggregate({ _sum: { referralClickCount: true } })
 	]);
 }
 

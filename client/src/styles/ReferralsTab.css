@@ -386,6 +386,12 @@
 	border: 1px solid var(--border-default, #1e2d5a);
 }
 
+.referrals-orders {
+	border-left: 3px solid var(--accent, #ff9e3d);
+	margin-bottom: 18px;
+	background: rgba(255, 158, 61, 0.06);
+}
+
 .referrals-invite-row {
 	display: flex;
 	align-items: center;

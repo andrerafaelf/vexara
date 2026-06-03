@@ -1,0 +1,150 @@
+/* ==========================================================================
+   Vexara · Public Nav (vx-nav)
+   Single source of truth for every public-page header. Used by the landing
+   page, codex, guide pages, patch notes, calculator, state-of-galaxy, and
+   the static legal pages. Optional `.vx-nav--loc` slot mirrors the Codex
+   "/ section" breadcrumb so pages can identify themselves without forking
+   the component.
+   ========================================================================== */
+
+.vx-nav {
+	position: sticky;
+	top: 0;
+	z-index: 50;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 12px 26px;
+	padding-top: max(12px, var(--safe-top));
+	background: rgba(8, 9, 12, 0.78);
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
+	border-bottom: 1px solid var(--border-default);
+}
+
+.vx-nav-mark {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	color: var(--text-strong);
+	font-weight: 800;
+	font-size: 16px;
+	letter-spacing: -0.01em;
+	text-decoration: none;
+}
+
+.vx-nav-mark:hover {
+	color: var(--text-strong);
+}
+
+.vx-nav-sep {
+	color: var(--text-faint);
+	font-weight: 400;
+	font-family: var(--font-mono);
+}
+
+.vx-nav-loc {
+	color: var(--accent);
+	font-family: var(--font-mono);
+	font-size: 12px;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+}
+
+.vx-nav-links {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.vx-nav-links a {
+	color: var(--text-default);
+	padding: 7px 12px;
+	font-size: 13px;
+	font-weight: 500;
+	letter-spacing: 0.01em;
+	border-radius: var(--radius-sm);
+	text-decoration: none;
+	transition:
+		background var(--duration-fast) var(--ease-out),
+		color var(--duration-fast) var(--ease-out);
+}
+
+.vx-nav-links a:hover {
+	background: rgba(255, 255, 255, 0.04);
+	color: var(--text-strong);
+}
+
+.vx-nav-link-quiet {
+	color: var(--text-muted) !important;
+}
+
+.vx-nav-link-quiet:hover {
+	color: var(--text-strong) !important;
+}
+
+/* Login — same cut-corner shape as the primary CTA. Outline instead of
+   filled so the visual hierarchy reads as: secondary action / primary action.
+   Shape and padding match .vx-nav-cta so they line up side-by-side. */
+.vx-nav-cta-outline {
+	color: var(--text-strong) !important;
+	font-weight: 700 !important;
+	border: 1px solid rgba(255, 255, 255, 0.22);
+	background: rgba(255, 255, 255, 0.02);
+	padding: 7px 14px !important;
+	clip-path: polygon(
+		0 0,
+		100% 0,
+		100% calc(100% - var(--cut-btn)),
+		calc(100% - var(--cut-btn)) 100%,
+		0 100%
+	);
+}
+
+.vx-nav-cta-outline:hover {
+	background: rgba(255, 255, 255, 0.08) !important;
+	border-color: rgba(255, 255, 255, 0.4);
+	color: var(--text-strong) !important;
+}
+
+/* Primary nav CTA — same cut-corner geometry as .vx-btn so it reads as
+   the canonical primary action regardless of where the nav appears.
+   Slightly tighter padding than .vx-btn for nav density. */
+.vx-nav-cta {
+	background: var(--accent);
+	color: var(--text-on-accent) !important;
+	font-weight: 700 !important;
+	margin-left: 8px;
+	padding: 7px 14px !important;
+	clip-path: polygon(
+		0 0,
+		100% 0,
+		100% calc(100% - var(--cut-btn)),
+		calc(100% - var(--cut-btn)) 100%,
+		0 100%
+	);
+}
+
+.vx-nav-cta:hover {
+	background: var(--accent-hover) !important;
+	color: var(--text-on-accent) !important;
+}
+
+@media (max-width: 640px) {
+	.vx-nav {
+		padding: 10px 16px;
+		padding-top: max(10px, var(--safe-top));
+	}
+	.vx-nav-links a {
+		padding: 6px 10px;
+		font-size: 12px;
+	}
+	/* On narrow viewports, hide everything but the login/CTA so the bar
+	   doesn't wrap. Codex link stays so the field manual is reachable. */
+	.vx-nav-links a:not(.vx-nav-cta):not(.vx-nav-cta-outline):not([href='/codex']) {
+		display: none;
+	}
+	.vx-nav-mark span:not(.vx-nav-loc):not(.vx-nav-sep) {
+		display: none;
+	}
+}

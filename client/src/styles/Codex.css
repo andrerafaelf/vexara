@@ -9,105 +9,9 @@
 	min-height: 100vh;
 }
 
-/* ============================================================== NAV ===== */
-
-.cx-nav {
-	position: sticky;
-	top: 0;
-	z-index: 50;
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 12px 26px;
-	background: rgba(8, 9, 12, 0.78);
-	backdrop-filter: blur(10px);
-	-webkit-backdrop-filter: blur(10px);
-	border-bottom: 1px solid var(--border-default);
-}
-
-.cx-nav-mark {
-	display: inline-flex;
-	align-items: center;
-	gap: 10px;
-	color: var(--text-strong);
-	font-weight: 800;
-	font-size: 16px;
-	letter-spacing: -0.01em;
-}
-
-.cx-nav-mark:hover {
-	color: var(--text-strong);
-}
-
-.cx-nav-sep {
-	color: var(--text-faint);
-	font-weight: 400;
-	font-family: var(--font-mono);
-}
-
-.cx-nav-loc {
-	color: var(--accent);
-	font-family: var(--font-mono);
-	font-size: 12px;
-	letter-spacing: 0.16em;
-	text-transform: uppercase;
-}
-
-.cx-nav-links {
-	display: flex;
-	align-items: center;
-	gap: 4px;
-}
-
-.cx-nav-links a {
-	color: var(--text-default);
-	padding: 7px 12px;
-	font-size: 13px;
-	font-weight: 500;
-	border-radius: var(--radius-sm);
-}
-
-.cx-nav-link-quiet {
-	color: var(--text-muted) !important;
-}
-.cx-nav-link-quiet:hover {
-	color: var(--text-strong) !important;
-}
-
-.cx-nav-link-login {
-	color: var(--text-strong) !important;
-	font-weight: 600 !important;
-	border: 1px solid rgba(255, 255, 255, 0.18);
-	background: rgba(255, 255, 255, 0.02);
-}
-
-.cx-nav-link-login:hover {
-	background: rgba(255, 255, 255, 0.08) !important;
-	border-color: rgba(255, 255, 255, 0.32);
-}
-
-.cx-nav-cta {
-	background: var(--accent);
-	color: var(--text-on-accent) !important;
-	font-weight: 700 !important;
-	margin-left: 8px;
-	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%);
-}
-
-.cx-nav-cta:hover {
-	background: var(--accent-hover) !important;
-}
-
-@media (max-width: 640px) {
-	.cx-nav {
-		padding: 10px 16px;
-	}
-	.cx-nav-mark span:not(.cx-nav-loc):not(.cx-nav-sep) {
-		display: none;
-	}
-}
-
 /* =========================================================== HEADER ===== */
+/* Nav moved to PublicNav.css (.vx-nav) — Codex now uses the shared header
+   via <PublicNav loc="Codex" /> so it picks up the full link set. */
 
 .cx-header {
 	position: relative;
@@ -146,27 +50,17 @@
 	margin: 0 auto;
 }
 
-.cx-header-stamps {
-	display: flex;
-	gap: 12px;
-	align-items: flex-start;
-	margin-bottom: 22px;
-}
-
-.cx-header-stamp {
+/* Page-name label — same `// PAGE` pattern used by every other public page
+   (.gp-header-label, .pn-header-label). The nav breadcrumb covers the
+   "Vexara / CODEX" path; this is the content-area echo. */
+.cx-header-label {
 	font-family: var(--font-mono);
 	font-size: 11px;
-	letter-spacing: 0.2em;
-	text-transform: uppercase;
+	font-weight: 700;
+	letter-spacing: 0.12em;
 	color: var(--accent);
-	padding: 5px 10px;
-	border: 1px solid var(--border-accent);
-}
-
-.cx-header-stamp-rot {
-	transform: rotate(-1.5deg);
-	color: var(--text-muted);
-	border-color: var(--border-default);
+	text-transform: uppercase;
+	margin-bottom: 22px;
 }
 
 .cx-header-title {

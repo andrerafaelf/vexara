@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import Link from 'next/link';
 import Image, { type StaticImageData } from 'next/image';
+import PublicNav from '@/components/PublicNav';
 import {
 	Shield,
 	Swords,
@@ -555,15 +555,7 @@ export default function CalculatorPage() {
 
 	return (
 		<div className="calc-page">
-			<div className="calc-topbar">
-				<Link href="/play" className="calc-back-link">
-					← Back to game
-				</Link>
-				<h1 className="calc-page-title">Combat Calculator</h1>
-				<Link href="/codex" className="calc-codex-link" target="_blank" rel="noopener noreferrer">
-					Codex
-				</Link>
-			</div>
+			<PublicNav loc="Calculator" />
 
 			<div className="calc-class-triangle">
 				<span style={{ color: CLASS_COLOR.mobile }}>Mobile</span>

@@ -8,6 +8,7 @@ import { TROOPS_DOC, BUILDINGS_DOC } from '@/data/gameDocs';
 import { TROOP_ICONS, BUILDING_ICONS } from '@/data/gameIcons';
 import SiteFooter from '@/components/SiteFooter';
 import PublicNav from '@/components/PublicNav';
+import { getPublicGalaxyStatus } from '@/services/api';
 import '@/styles/Landing.css';
 
 const FOOTAGE: { src: string; label: string; code: string; caption: string }[] = [
@@ -100,6 +101,31 @@ const PILLARS = [
 	}
 ];
 
+interface PublicGalaxyStatus {
+	galaxy: { id: number; name: string; createdAt: string } | null;
+	activePlayers: number;
+	totalRegistered: number;
+	claimedNexuses: number;
+	topFactions: {
+		id: number;
+		name: string;
+		tag: string;
+		members: number;
+		points: number;
+		nexuses: number;
+	}[];
+	latestBattles: {
+		id: number;
+		attacker: string;
+		defender: string;
+		victory: boolean;
+		conquered: boolean;
+		totalUnits: number;
+		arrivesAt: string;
+	}[];
+	recentConquests: { id: number; attacker: string; defender: string; arrivesAt: string }[];
+}
+
 export default function LandingPage() {
 	const router = useRouter();
 	const [redirectingAuthed, setRedirectingAuthed] = useState(false);
@@ -118,6 +144,7 @@ export default function LandingPage() {
 		<div className="lp-root">
 			<PublicNav />
 			<Hero />
+			<GalaxyStatus />
 			<Marquee />
 			<Pillars />
 			<Footage items={FOOTAGE} />
@@ -170,7 +197,7 @@ function Hero() {
 
 				<div className="lp-hero-ctas">
 					<Link href="/register" className="lp-btn lp-btn-primary">
-						<span className="lp-btn-label">Enlist now</span>
+						<span className="lp-btn-label">Join the live galaxy</span>
 						<span className="lp-btn-arrow" aria-hidden="true">
 							→
 						</span>
@@ -182,12 +209,12 @@ function Hero() {
 
 				<dl className="lp-hero-stats">
 					<div>
-						<dt>Unit types</dt>
-						<dd>12</dd>
+						<dt>Live target</dt>
+						<dd>100</dd>
 					</div>
 					<div>
-						<dt>Core buildings</dt>
-						<dd>08</dd>
+						<dt>Unit types</dt>
+						<dd>12</dd>
 					</div>
 					<div>
 						<dt>Uptime</dt>
@@ -210,6 +237,115 @@ function Hero() {
 }
 
 /* ──────────────────────────────────────────────────────────── */
+
+function GalaxyStatus() {
+	const [status, setStatus] = useState<PublicGalaxyStatus | null>(null);
+
+	useEffect(() => {
+		let alive = true;
+		getPublicGalaxyStatus()
+			.then((res) => {
+				if (alive) setStatus(res.data as PublicGalaxyStatus);
+			})
+			.catch(() => {
+				if (alive) setStatus(null);
+			});
+		return () => {
+			alive = false;
+		};
+	}, []);
+
+	const latest = status?.latestBattles ?? [];
+	const topFactions = status?.topFactions ?? [];
+
+	return (
+		<section className="lp-section lp-galaxy-status" aria-labelledby="lp-galaxy-status-title">
+			<SectionHead
+				label="TRANSMISSION 01B"
+				title="Galaxy status"
+				subtitle="Public proof from the live galaxy."
+				titleId="lp-galaxy-status-title"
+			/>
+
+			<div className="lp-status-grid">
+				<div className="lp-status-command">
+					<span className="lp-status-kicker">Recruitment objective</span>
+					<strong>40-ish commanders are already in-galaxy. Next stop: 100 active players.</strong>
+					<p>
+						New commanders get starter protection, guided quests, a relocation token, and a
+						faction-first path into the war.
+					</p>
+					<div className="lp-status-actions">
+						<Link
+							href="/register?utm_source=site&utm_medium=status&utm_campaign=100_active"
+							className="lp-btn lp-btn-primary"
+						>
+							<span className="lp-btn-label">Join the live galaxy</span>
+						</Link>
+						<Link href="/state-of-galaxy" className="lp-btn lp-btn-ghost">
+							<span className="lp-btn-label">Read state of the galaxy</span>
+						</Link>
+					</div>
+				</div>
+
+				<dl className="lp-status-metrics">
+					<div>
+						<dt>Active players</dt>
+						<dd>{status ? status.activePlayers.toLocaleString() : '...'}</dd>
+					</div>
+					<div>
+						<dt>Registered</dt>
+						<dd>{status ? status.totalRegistered.toLocaleString() : '...'}</dd>
+					</div>
+					<div>
+						<dt>Claimed nexuses</dt>
+						<dd>{status ? status.claimedNexuses.toLocaleString() : '...'}</dd>
+					</div>
+				</dl>
+
+				<div className="lp-status-panel">
+					<h3>Top factions</h3>
+					{topFactions.length > 0 ? (
+						<ol className="lp-status-list">
+							{topFactions.map((faction) => (
+								<li key={faction.id}>
+									<span>
+										[{faction.tag}] {faction.name}
+									</span>
+									<strong>{faction.points.toLocaleString()} pts</strong>
+								</li>
+							))}
+						</ol>
+					) : (
+						<p className="lp-status-empty">Faction openings are still forming.</p>
+					)}
+				</div>
+
+				<div className="lp-status-panel">
+					<h3>Latest battles</h3>
+					{latest.length > 0 ? (
+						<ol className="lp-status-list">
+							{latest.map((battle) => (
+								<li key={battle.id}>
+									<Link href={`/replay/${battle.id}`}>
+										{battle.conquered
+											? `${battle.attacker} conquered ${battle.defender}`
+											: battle.victory
+												? `${battle.attacker} defeated ${battle.defender}`
+												: `${battle.defender} held against ${battle.attacker}`}
+									</Link>
+									<strong>{battle.totalUnits.toLocaleString()} units</strong>
+								</li>
+							))}
+						</ol>
+					) : (
+						<p className="lp-status-empty">No public battles yet. Be the first headline.</p>
+					)}
+				</div>
+			</div>
+		</section>
+	);
+}
 
 function Marquee() {
 	const items = [
@@ -434,8 +570,8 @@ function Founder() {
 					<li>
 						<span className="lp-founder-bullet">◆</span>
 						<span>
-							<strong>Referral rewards.</strong> Invite players - each that reaches 1,000 influence
-							earns you 2 tokens for instant building levels or troop grants.
+							<strong>Recruitment Orders.</strong> Invite one friend each week for public cosmetic
+							bragging rights, Discord recognition, and your existing account referral rewards.
 						</span>
 					</li>
 				</ul>
@@ -466,6 +602,10 @@ function BuiltBy() {
 					Vexara is a solo project. No publisher. No investors. No roadmap dictated by quarterly
 					targets. Just a strategy-game player building the kind of persistent MMO that doesn&apos;t
 					sell wins.
+				</p>
+				<p>
+					Discord is the command center: #new-commanders, #battle-replays, #faction-recruitment,
+					#patch-notes, and #war-stories.
 				</p>
 				<p className="lp-builtby-sig">
 					<span className="lp-builtby-sig-line" aria-hidden="true" />
@@ -504,7 +644,7 @@ function Enlist() {
 				</p>
 				<div className="lp-enlist-ctas">
 					<Link href="/register" className="lp-btn lp-btn-primary lp-btn-lg">
-						<span className="lp-btn-label">Enlist now</span>
+						<span className="lp-btn-label">Join the live galaxy</span>
 						<span className="lp-btn-arrow" aria-hidden="true">
 							→
 						</span>

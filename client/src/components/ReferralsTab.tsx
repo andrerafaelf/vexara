@@ -585,6 +585,38 @@ export default function ReferralsTab({ mode = 'referrals' }: ReferralsTabProps) 
 			{/* Your referral code, account-bound, unique across galaxies */}
 			{mode === 'referrals' && myReferralCode && (
 				<section className="referrals-section">
+					<div className="referrals-invite-block referrals-orders">
+						<div className="referrals-invite-row">
+							<span className="referrals-invite-label">Weekly Recruitment Orders</span>
+							<span className="referrals-invite-code">1 recruit</span>
+						</div>
+						<p className="referrals-hint">
+							Invite one friend this week and post in Discord for manual cosmetic recognition: First
+							Wave, Founding Commander, or War Week Veteran. These titles are community bragging
+							rights only, not power.
+						</p>
+						<div className="referrals-invite-actions">
+							<button
+								type="button"
+								className="referrals-btn"
+								onClick={async () => {
+									const origin =
+										typeof window !== 'undefined' ? window.location.origin : 'https://vexara.world';
+									const link = `${origin}/register?ref=${myReferralCode}&utm_source=referral&utm_medium=player&utm_campaign=recruitment_orders`;
+									const text = `I am recruiting for Vexara's live galaxy. Free browser MMO RTS, no download, no resets, no pay-to-win. Join with my invite: ${link}`;
+									try {
+										await navigator.clipboard.writeText(text);
+										setCodeCopied(true);
+										setTimeout(() => setCodeCopied(false), 2000);
+									} catch {
+										// clipboard unavailable
+									}
+								}}
+							>
+								{codeCopied ? 'Copied!' : 'Copy recruitment post'}
+							</button>
+						</div>
+					</div>
 					<h3 className="referrals-section-title">Invite a Friend</h3>
 					<p className="referrals-hint">
 						Share your invite link. Your recruit gets a resource head-start on day one. You earn

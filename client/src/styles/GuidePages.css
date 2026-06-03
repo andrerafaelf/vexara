@@ -3,83 +3,8 @@
    Shared layout for static SEO content pages.
    ========================================================================== */
 
-/* ── Nav ── */
-
-.gp-nav {
-	position: sticky;
-	top: 0;
-	z-index: 50;
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 14px 28px;
-	padding-top: max(14px, var(--safe-top));
-	background: rgba(8, 9, 12, 0.85);
-	backdrop-filter: blur(10px);
-	-webkit-backdrop-filter: blur(10px);
-	border-bottom: 1px solid var(--border-default);
-}
-
-.gp-nav-mark {
-	display: inline-flex;
-	align-items: center;
-	gap: 10px;
-	text-decoration: none;
-	color: var(--text-strong);
-	font-weight: 800;
-	font-size: 17px;
-	letter-spacing: -0.01em;
-}
-
-.gp-nav-stamp {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 32px;
-	height: 32px;
-	background: var(--color-amber-500, #f59e0b);
-	color: #000;
-	font-size: 11px;
-	font-weight: 900;
-	letter-spacing: 0.05em;
-	border-radius: 4px;
-	flex-shrink: 0;
-}
-
-.gp-nav-wordmark {
-	color: var(--text-strong);
-}
-
-.gp-nav-links {
-	display: flex;
-	align-items: center;
-	gap: 4px;
-}
-
-.gp-nav-links a {
-	color: var(--text-muted);
-	text-decoration: none;
-	font-size: 14px;
-	padding: 6px 12px;
-	border-radius: 4px;
-	transition: color 0.15s;
-}
-
-.gp-nav-links a:hover {
-	color: var(--text-strong);
-}
-
-.gp-nav-cta {
-	background: var(--color-amber-500, #f59e0b) !important;
-	color: #000 !important;
-	font-weight: 700;
-	font-size: 13px !important;
-}
-
-.gp-nav-cta:hover {
-	background: var(--color-amber-400, #fbbf24) !important;
-	color: #000 !important;
-}
+/* Nav moved to PublicNav.css (.vx-nav). Guide pages render <PublicNav />
+   directly so the header matches every other public page. */
 
 /* ── Root & layout ── */
 
@@ -103,7 +28,7 @@
 	font-size: 11px;
 	font-weight: 700;
 	letter-spacing: 0.12em;
-	color: var(--color-amber-500, #f59e0b);
+	color: var(--accent);
 	text-transform: uppercase;
 	margin-bottom: 12px;
 }
@@ -125,20 +50,43 @@
 	max-width: 600px;
 }
 
+/* CTA buttons share the canonical cut-corner geometry. Composed inline
+   with .vx-btn .vx-btn-primary in the markup; the local class only adds
+   the inline-block + spacing layer the templates expect. */
+/* "Updated N minutes ago" stamp under the H1/subtitle on pages that surface
+   server-rendered live data (state-of-galaxy). Mono lettering reads as a
+   system timestamp, not a marketing line. */
+.gp-updated {
+	display: block;
+	font-family: var(--font-mono);
+	font-size: 11px;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--text-faint);
+	margin: 0 0 20px;
+}
+
 .gp-hero-cta {
 	display: inline-block;
-	background: var(--color-amber-500, #f59e0b);
-	color: #000;
+	background: var(--accent);
+	color: var(--text-on-accent);
 	font-weight: 700;
 	font-size: 14px;
 	padding: 10px 24px;
-	border-radius: 4px;
 	text-decoration: none;
-	transition: background 0.15s;
+	transition: background var(--duration-fast) var(--ease-out);
+	clip-path: polygon(
+		0 0,
+		100% 0,
+		100% calc(100% - var(--cut-btn)),
+		calc(100% - var(--cut-btn)) 100%,
+		0 100%
+	);
 }
 
 .gp-hero-cta:hover {
-	background: var(--color-amber-400, #fbbf24);
+	background: var(--accent-hover);
+	color: var(--text-on-accent);
 }
 
 /* ── Sections ── */
@@ -165,6 +113,40 @@
 	max-width: 680px;
 }
 
+.sog-metrics {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 12px;
+	margin-bottom: 18px;
+}
+
+.sog-metric {
+	border: 1px solid var(--border-default);
+	background: rgba(255, 255, 255, 0.02);
+	padding: 16px;
+}
+
+.sog-metric dt,
+.sog-metric span {
+	display: block;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	margin-bottom: 8px;
+}
+
+.sog-metric dd,
+.sog-metric strong {
+	display: block;
+	font-size: 26px;
+	font-weight: 900;
+	color: var(--text-strong);
+	font-variant-numeric: tabular-nums;
+	margin: 0;
+}
+
 /* ── How-to-Play steps ── */
 
 .gp-steps {
@@ -182,7 +164,7 @@
 .gp-step-num {
 	font-size: 11px;
 	font-weight: 900;
-	color: var(--color-amber-500, #f59e0b);
+	color: var(--accent);
 	letter-spacing: 0.08em;
 	padding-top: 3px;
 	flex-shrink: 0;
@@ -405,9 +387,9 @@ details[open] .gp-faq-q::after {
 
 .gp-req-tag {
 	font-size: 11px;
-	background: rgba(245, 158, 11, 0.12);
-	color: var(--color-amber-500, #f59e0b);
-	border: 1px solid rgba(245, 158, 11, 0.25);
+	background: var(--accent-soft);
+	color: var(--accent);
+	border: 1px solid var(--border-accent);
 	padding: 2px 7px;
 	border-radius: 3px;
 	font-weight: 600;
@@ -472,7 +454,7 @@ details[open] .gp-faq-q::after {
 
 .gp-building-maxlvl {
 	font-size: 11px;
-	color: var(--color-amber-500, #f59e0b);
+	color: var(--accent);
 	font-weight: 600;
 	margin-top: 2px;
 }
@@ -529,38 +511,37 @@ details[open] .gp-faq-q::after {
 
 .gp-cta-btn {
 	display: inline-block;
-	background: var(--color-amber-500, #f59e0b);
-	color: #000;
+	background: var(--accent);
+	color: var(--text-on-accent);
 	font-weight: 700;
 	font-size: 14px;
 	padding: 10px 24px;
-	border-radius: 4px;
 	text-decoration: none;
-	transition: background 0.15s;
+	transition: background var(--duration-fast) var(--ease-out);
+	clip-path: polygon(
+		0 0,
+		100% 0,
+		100% calc(100% - var(--cut-btn)),
+		calc(100% - var(--cut-btn)) 100%,
+		0 100%
+	);
 }
 
 .gp-cta-btn:hover {
-	background: var(--color-amber-400, #fbbf24);
+	background: var(--accent-hover);
+	color: var(--text-on-accent);
 }
 
 /* ── Mobile ── */
 
 @media (max-width: 600px) {
-	.gp-nav {
-		padding: 12px 16px;
-		padding-top: max(12px, var(--safe-top));
-	}
-
 	.gp-root {
 		padding: 0 16px 60px;
 	}
 
 	.gp-unit-grid,
-	.gp-building-grid {
+	.gp-building-grid,
+	.sog-metrics {
 		grid-template-columns: 1fr;
-	}
-
-	.gp-nav-links a:not(.gp-nav-cta) {
-		display: none;
 	}
 }

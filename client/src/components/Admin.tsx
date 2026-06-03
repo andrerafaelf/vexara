@@ -16,6 +16,13 @@ interface Stats {
 	userCount: number;
 	villageCount: number;
 	attackCount: number;
+	newUsersThisWeek?: number;
+	createdNexusThisWeek?: number;
+	firstCombatThisWeek?: number;
+	joinedFactionThisWeek?: number;
+	referralSignupsThisWeek?: number;
+	totalReferralClicks?: number;
+	utmSourcesThisWeek?: { source: string; count: number }[];
 	topUsers: { username: string; points: number }[];
 }
 
@@ -667,6 +674,44 @@ const Admin: React.FC = () => {
 						<h3>{stats.attackCount}</h3>
 						<p>Total Strikes</p>
 					</div>
+					<div className="stat-card">
+						<h3>{stats.newUsersThisWeek ?? 0}</h3>
+						<p>New This Week</p>
+					</div>
+					<div className="stat-card">
+						<h3>{stats.createdNexusThisWeek ?? 0}</h3>
+						<p>Nexus Activations</p>
+					</div>
+					<div className="stat-card">
+						<h3>{stats.firstCombatThisWeek ?? 0}</h3>
+						<p>First Combat/Scout</p>
+					</div>
+					<div className="stat-card">
+						<h3>{stats.joinedFactionThisWeek ?? 0}</h3>
+						<p>Faction Joins</p>
+					</div>
+					<div className="stat-card">
+						<h3>{stats.referralSignupsThisWeek ?? 0}</h3>
+						<p>Referral Signups</p>
+					</div>
+					<div className="stat-card">
+						<h3>{stats.totalReferralClicks ?? 0}</h3>
+						<p>Total Referral Clicks</p>
+					</div>
+				</div>
+			)}
+
+			{stats?.utmSourcesThisWeek && stats.utmSourcesThisWeek.length > 0 && (
+				<div className="admin-section">
+					<h3>Weekly UTM Sources</h3>
+					<ol className="top-players">
+						{stats.utmSourcesThisWeek.map((row) => (
+							<li key={row.source}>
+								<span>{row.source}</span>
+								<strong>{row.count}</strong>
+							</li>
+						))}
+					</ol>
 				</div>
 			)}
 

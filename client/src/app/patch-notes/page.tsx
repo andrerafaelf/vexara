@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import SiteFooter from '@/components/SiteFooter';
 import PublicNav from '@/components/PublicNav';
-import PatchNotesBackToGame from '@/components/PatchNotesBackToGame';
 import { loadPatchNotes } from '@/lib/patchNotes';
 import '@/styles/PatchNotes.css';
 
@@ -31,8 +30,7 @@ export default function PatchNotesPage() {
 
 	return (
 		<>
-			<PublicNav />
-			<PatchNotesBackToGame />
+			<PublicNav loc="Patch Notes" />
 
 			<main className="pn-root pn-root--index">
 				<header className="pn-header">
@@ -68,7 +66,7 @@ export default function PatchNotesPage() {
 						Playing since before any of these patches? You helped shape all of this.
 					</p>
 					<Link href="/register" className="pn-cta-btn">
-						Enlist now — free, no download
+						Join the live galaxy
 					</Link>
 				</div>
 			</main>

@@ -32,6 +32,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
 			priority: 0.8
 		},
 		{
+			url: `${SITE_URL}/state-of-galaxy`,
+			lastModified: now,
+			changeFrequency: 'weekly',
+			priority: 0.8
+		},
+		{
 			url: `${SITE_URL}/units`,
 			lastModified: now,
 			changeFrequency: 'monthly',

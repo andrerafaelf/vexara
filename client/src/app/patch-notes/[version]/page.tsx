@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import SiteFooter from '@/components/SiteFooter';
 import PublicNav from '@/components/PublicNav';
-import PatchNotesBackToGame from '@/components/PatchNotesBackToGame';
 import { loadPatchNotes, loadPatchNote, renderMarkdown } from '@/lib/patchNotes';
 import '@/styles/PatchNotes.css';
 
@@ -52,8 +51,7 @@ export default async function PatchNotePage({ params }: Props) {
 
 	return (
 		<>
-			<PublicNav />
-			<PatchNotesBackToGame />
+			<PublicNav loc="Patch Notes" />
 
 			<main className="pn-root pn-root--detail">
 				<div className="pn-detail-back">
@@ -102,7 +100,7 @@ export default async function PatchNotePage({ params }: Props) {
 						Playing since before any of these patches? You helped shape all of this.
 					</p>
 					<Link href="/register" className="pn-cta-btn">
-						Enlist now — free, no download
+						Join the live galaxy
 					</Link>
 				</div>
 			</main>

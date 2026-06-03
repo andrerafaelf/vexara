@@ -137,7 +137,7 @@ export default function HowToPlayPage() {
 				type="application/ld+json"
 				dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
 			/>
-			<PublicNav />
+			<PublicNav loc="How to Play" />
 
 			<main className="gp-root">
 				<header className="gp-header">
@@ -148,7 +148,7 @@ export default function HowToPlayPage() {
 						fight real players in a persistent galaxy that never resets.
 					</p>
 					<Link href="/register" className="gp-hero-cta">
-						Play free in your browser
+						Join the live galaxy
 					</Link>
 				</header>
 
@@ -191,9 +191,9 @@ export default function HowToPlayPage() {
 				</section>
 
 				<div className="gp-cta-block">
-					<p className="gp-cta-text">Ready to enlist? The galaxy is live right now.</p>
+					<p className="gp-cta-text">Ready to join? The galaxy is live right now.</p>
 					<Link href="/register" className="gp-cta-btn">
-						Play free - no download required
+						Join the live galaxy
 					</Link>
 				</div>
 			</main>

@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import {
 	TROOPS_DOC,
 	BUILDINGS_DOC,
@@ -13,6 +12,7 @@ import {
 	type TroopClass
 } from '@/data/gameDocs';
 import { TROOP_ICONS, BUILDING_ICONS } from '@/data/gameIcons';
+import PublicNav from '@/components/PublicNav';
 import SiteFooter from '@/components/SiteFooter';
 import { useTabParam } from '@/hooks/useTabParam';
 import '@/styles/Codex.css';
@@ -75,7 +75,7 @@ export default function CodexPage() {
 
 	return (
 		<div className="cx-root">
-			<CodexNav />
+			<PublicNav loc="Codex" />
 			<CodexHeader />
 
 			<div className="cx-shell">
@@ -140,62 +140,13 @@ export default function CodexPage() {
 	);
 }
 
-/* ────────────────────────────────────────────────────── NAV / HEADER === */
-
-function CodexNav() {
-	const [isLoggedIn, setIsLoggedIn] = useState(false);
-	useEffect(() => {
-		setIsLoggedIn(!!localStorage.getItem('token'));
-	}, []);
-
-	const handleBack = (e: React.MouseEvent) => {
-		if (window.history.length > 1) {
-			e.preventDefault();
-			window.history.back();
-		}
-	};
-
-	return (
-		<header className="cx-nav">
-			<div className="cx-nav-left">
-				<Link href={isLoggedIn ? '/play' : '/'} className="cx-nav-mark" aria-label="Vexara home">
-					<Image src="/vexara-logo.png" alt="" width={26} height={26} priority />
-					<span>Vexara</span>
-					<span className="cx-nav-sep">/</span>
-					<span className="cx-nav-loc">Codex</span>
-				</Link>
-			</div>
-			<nav className="cx-nav-links" aria-label="Primary">
-				{isLoggedIn ? (
-					<Link href="/play" className="cx-nav-cta" onClick={handleBack}>
-						← Back to game
-					</Link>
-				) : (
-					<>
-						<Link href="/" className="cx-nav-link-quiet">
-							Home
-						</Link>
-						<Link href="/login" className="cx-nav-link-login">
-							Login
-						</Link>
-						<Link href="/register" className="cx-nav-cta">
-							Enlist
-						</Link>
-					</>
-				)}
-			</nav>
-		</header>
-	);
-}
+/* ──────────────────────────────────────────────────────────── HEADER === */
 
 function CodexHeader() {
 	return (
 		<section className="cx-header" aria-labelledby="cx-header-title">
 			<div className="cx-header-inner">
-				<div className="cx-header-stamps" aria-hidden="true">
-					<span className="cx-header-stamp">VEXARA · CODEX</span>
-					<span className="cx-header-stamp cx-header-stamp-rot">VOLUME 01 · v0.2</span>
-				</div>
+				<div className="cx-header-label">{'// CODEX'}</div>
 
 				<h1 id="cx-header-title" className="cx-header-title">
 					<span className="cx-header-title-thin">A field manual</span>

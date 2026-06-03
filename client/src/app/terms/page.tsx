@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import PublicNav from '@/components/PublicNav';
+import SiteFooter from '@/components/SiteFooter';
 
 export const metadata: Metadata = {
 	title: 'Terms of Service - Vexara',
@@ -9,16 +11,18 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
 	return (
-		<main
-			style={{
-				maxWidth: 720,
-				margin: '0 auto',
-				padding: '48px 24px',
-				color: '#c8ccd6',
-				fontFamily: 'inherit',
-				lineHeight: 1.7
-			}}
-		>
+		<>
+			<PublicNav loc="Terms" />
+			<main
+				style={{
+					maxWidth: 720,
+					margin: '0 auto',
+					padding: '48px 24px',
+					color: '#c8ccd6',
+					fontFamily: 'inherit',
+					lineHeight: 1.7
+				}}
+			>
 			<h1 style={{ color: '#fff', fontSize: 28, marginBottom: 8 }}>Terms of Service</h1>
 			<p style={{ color: '#8a90a0', marginBottom: 32 }}>Last updated: May 2026</p>
 
@@ -72,6 +76,8 @@ export default function TermsPage() {
 				</a>
 				.
 			</p>
-		</main>
+			</main>
+			<SiteFooter />
+		</>
 	);
 }

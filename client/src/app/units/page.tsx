@@ -57,7 +57,7 @@ export default function UnitsPage() {
 
 	return (
 		<>
-			<PublicNav />
+			<PublicNav loc="Units" />
 
 			<main className="gp-root">
 				<header className="gp-header">
@@ -157,7 +157,7 @@ export default function UnitsPage() {
 				<div className="gp-cta-block">
 					<p className="gp-cta-text">Want to see these units in action? The galaxy is live.</p>
 					<Link href="/register" className="gp-cta-btn">
-						Play free - no download required
+						Join the live galaxy
 					</Link>
 				</div>
 			</main>

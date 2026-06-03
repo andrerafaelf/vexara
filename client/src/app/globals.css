@@ -82,6 +82,12 @@
 	--radius-xl: 1px;
 	--radius-pill: 999px;
 
+	/* Signature cut-corner depth. Applied by the global button cascade
+	   (see end of this file) so every interactive button in the app has
+	   an identical notched bottom-right corner. Change this one value to
+	   retune the entire app's button geometry. */
+	--cut-btn: 6px;
+
 	/* ── Spacing scale (4px grid) ─────────────────────────────── */
 	--space-1: 4px;
 	--space-2: 8px;
@@ -414,7 +420,14 @@ a:focus-visible,
 	color: var(--warning);
 }
 
-/* Button variants, opt-in helpers (existing buttons keep their classes) */
+/* ──────────────────────────────────────────────────────────────
+   Canonical button primitive.
+   All public-facing and most in-game CTAs should compose .vx-btn
+   with a variant (.vx-btn-primary, .vx-btn-ghost, etc). The cut
+   bottom-right corner is the brand signature — vary only color.
+   Size variants override the cut depth via --vx-btn-cut so the
+   notch reads at every scale.
+   ────────────────────────────────────────────────────────────── */
 .vx-btn {
 	display: inline-flex;
 	align-items: center;
@@ -422,24 +435,37 @@ a:focus-visible,
 	gap: 8px;
 	padding: 10px 18px;
 	border-radius: 0;
+	font-family: inherit;
 	font-size: var(--text-base);
 	font-weight: 600;
 	letter-spacing: 0.01em;
 	border: 1px solid transparent;
 	user-select: none;
+	text-decoration: none;
+	white-space: nowrap;
+	cursor: pointer;
+	/* Cut corner provided by the global button cascade. Size variants below
+	   only change padding / typography — never the corner depth. */
+}
+
+.vx-btn-sm {
+	padding: 7px 12px;
+	font-size: 13px;
+}
+
+.vx-btn-lg {
+	padding: 14px 24px;
+	font-size: 15px;
 }
 
 .vx-btn-primary {
-	background: var(--color-cyan-500);
+	background: var(--accent);
 	color: var(--text-on-accent);
-	box-shadow:
-		var(--shadow-sm),
-		inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .vx-btn-primary:hover:not(:disabled) {
-	background: var(--color-cyan-600);
-	box-shadow: var(--shadow-sm);
+	background: var(--accent-hover);
+	color: var(--text-on-accent);
 	transform: translateY(-1px);
 }
 
@@ -456,6 +482,7 @@ a:focus-visible,
 
 .vx-btn-secondary:hover:not(:disabled) {
 	background: var(--accent-soft-hover);
+	color: var(--accent);
 }
 
 .vx-btn-ghost {
@@ -470,17 +497,25 @@ a:focus-visible,
 	color: var(--text-strong);
 }
 
+.vx-btn-outline {
+	background: rgba(255, 255, 255, 0.02);
+	color: var(--text-strong);
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+.vx-btn-outline:hover:not(:disabled) {
+	background: rgba(255, 255, 255, 0.08);
+	border-color: rgba(255, 255, 255, 0.32);
+	color: var(--text-strong);
+}
+
 .vx-btn-danger {
 	background: var(--danger);
 	color: #fff;
-	box-shadow:
-		var(--shadow-sm),
-		inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .vx-btn-danger:hover:not(:disabled) {
 	background: var(--color-rose-600);
-	box-shadow: var(--shadow-sm);
 	transform: translateY(-1px);
 }
 
@@ -820,4 +855,49 @@ img.vx-avatar {
 	display: flex;
 	gap: 8px;
 	justify-content: flex-end;
+}
+
+/* ==========================================================================
+   Global button cut-corner cascade.
+   The signature Vexara button shape is a notched bottom-right corner. This
+   rule applies it to every interactive button across public, codex, and
+   in-game surfaces so the only thing that varies per button is color.
+
+   What gets cut:
+   - <button> elements
+   - anchors / divs / spans whose class contains `-btn`, `-cta`, or `-submit`
+   - elements with role="button"
+
+   What stays flat (skipped via :not()):
+   - Decorative containers that happen to share a -btn suffix nowhere
+     (filtered by name fragments below)
+   - Anything tagged with the .no-cut escape hatch — apply this class to a
+     specific button when the notch would clip a border, an avatar, or other
+     intentional geometry. Prefer fixing the markup before reaching for it.
+   - Nav links inside .vx-nav-links (those are link styling, not buttons)
+   - Pure icons / close affordances where the notch reads as a glitch
+   - Form inputs (handled separately via the input ruleset above)
+   ========================================================================== */
+a[class*='-btn']:not(.no-cut):not([class*='-icon']):not([class*='-close']):not([class*='close-btn']):not([class*='-link']):not([class*='-nav-link']):not([class*='-chip']):not([class*='-panel']):not([class*='-card']):not([class*='-tile']):not([class*='-modal']):not([class*='-container']):not([class*='-wrap']):not([class*='-row']):not([class*='-cell']):not([class*='-bar']):not([class*='-track']):not([class*='-rail']):not([class*='-mark']):not([class*='-stamp']):not([class*='-badge']),
+a[class*='-cta']:not(.no-cut):not([class*='-text']):not([class*='-block']):not([class*='-link']),
+a[class*='-submit']:not(.no-cut),
+button[class*='-btn']:not(.no-cut):not([class*='-icon']):not([class*='-close']):not([class*='close-btn']):not([class*='-link']):not([class*='-nav-link']):not([class*='-chip']):not([class*='-panel']):not([class*='-card']):not([class*='-tile']):not([class*='-modal']):not([class*='-container']):not([class*='-wrap']):not([class*='-row']):not([class*='-cell']):not([class*='-bar']):not([class*='-track']):not([class*='-rail']):not([class*='-mark']):not([class*='-stamp']):not([class*='-badge']),
+button[class*='-cta']:not(.no-cut):not([class*='-text']):not([class*='-block']):not([class*='-link']),
+button[class*='-submit']:not(.no-cut),
+[role='button']:not(.no-cut):not([class*='-icon']):not([class*='-close']):not([class*='close-btn']):not([class*='-chip']):not([class*='-panel']):not([class*='-card']):not([class*='-tile']):not([class*='-modal']):not([class*='-container']) {
+	clip-path: polygon(
+		0 0,
+		100% 0,
+		100% calc(100% - var(--cut-btn)),
+		calc(100% - var(--cut-btn)) 100%,
+		0 100%
+	) !important;
+}
+
+/* Escape hatch — apply .no-cut to a specific button when the notch would
+   clip a border, an avatar, or other intentional geometry. The !important
+   above is what enforces the "all the same" rule across the 175+ pre-existing
+   button selectors; .no-cut is the only legitimate way to opt out. */
+.no-cut {
+	clip-path: none !important;
 }

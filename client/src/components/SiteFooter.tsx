@@ -25,8 +25,9 @@ export default function SiteFooter() {
 				<nav className="site-footer-grid" aria-label="Footer navigation">
 					<div className="site-footer-col">
 						<span className="site-footer-col-title">{'// Play'}</span>
-						<Link href="/register">Enlist</Link>
+						<Link href="/register">Join live galaxy</Link>
 						<Link href="/login">Sign in</Link>
+						<Link href="/state-of-galaxy">Galaxy Status</Link>
 						<Link href="/codex">Codex</Link>
 						<Link href="/calculator">Calculator</Link>
 						<Link href="/patch-notes">Patch Notes</Link>

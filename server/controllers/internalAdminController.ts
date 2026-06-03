@@ -7,7 +7,11 @@ import {
 } from '../models/Nexus.js';
 import * as adminService from '../services/internalAdminService.js';
 import { processArrivedAttacks } from '../utils/combat.js';
-import { computeNexusPopulation, getPopulationMax, loadAwayPopulation } from '../utils/population.js';
+import {
+	computeNexusPopulation,
+	getPopulationMax,
+	loadAwayPopulation
+} from '../utils/population.js';
 import { TROOP_COSTS } from '../utils/gameConstants.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
 import { logError, logInfo } from '../utils/logger.js';
@@ -45,7 +49,13 @@ export async function getStats(req: Request, res: Response): Promise<void> {
 			topUsers,
 			troopAgg,
 			pointsAgg,
-			marketCount
+			marketCount,
+			createdNexusThisWeek,
+			firstCombatThisWeek,
+			joinedFactionThisWeek,
+			referralSignupsThisWeek,
+			utmSourcesThisWeek,
+			referralClicksAgg
 		] = await adminService.getAdminStats();
 		const troopSum = (troopAgg as { _sum: Record<string, number | null> })._sum;
 		const totalTroops = Object.values(troopSum).reduce<number>((acc, v) => acc + (v ?? 0), 0);
@@ -54,8 +64,18 @@ export async function getStats(req: Request, res: Response): Promise<void> {
 			villageCount,
 			travelingAttackCount,
 			totalAttackCount,
+			attackCount: totalAttackCount,
 			newUsersThisWeek,
 			zeroNexusCount,
+			createdNexusThisWeek,
+			firstCombatThisWeek,
+			joinedFactionThisWeek,
+			referralSignupsThisWeek,
+			totalReferralClicks: referralClicksAgg._sum.referralClickCount ?? 0,
+			utmSourcesThisWeek: utmSourcesThisWeek.map((row) => ({
+				source: row.utmSource ?? 'unknown',
+				count: row._count.id
+			})),
 			totalTroops,
 			avgPoints: Math.round(pointsAgg._avg.points ?? 0),
 			marketCount,
