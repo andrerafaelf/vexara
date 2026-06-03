@@ -2,18 +2,24 @@ import type { StaticImageData } from 'next/image';
 
 import annihilatorplatformImg from '@/assets/troops/annihilatorplatform.png';
 import assaulttrooperImg from '@/assets/troops/assaulttrooper.png';
-import breakerunitImg from '@/assets/troops/breakerunit.png';
 import bulwarkguardImg from '@/assets/troops/bulwarkguard.png';
-import disruptorunitImg from '@/assets/troops/disruptorunit.png';
-import interceptorbikeImg from '@/assets/troops/interceptorbike.png';
-import lancerdroneImg from '@/assets/troops/lancerdrone.png';
 import overseerImg from '@/assets/troops/overseer.png';
 import plasmaturretImg from '@/assets/troops/plasmaturret.png';
 import reconoperativeImg from '@/assets/troops/reconoperative.png';
 import siegemechImg from '@/assets/troops/siegemech.png';
-import skimmerbikeImg from '@/assets/troops/skimmerbike.png';
-import suppressorteamImg from '@/assets/troops/suppressorteam.png';
 import voidstalkerImg from '@/assets/troops/voidstalker.png';
+// Renamed units (Stage 2d). PNG filenames stayed as the legacy name; aliasing
+// keeps the import name aligned with the new troop key. New units (Siege
+// Colossus, Aegis Skirmisher) reuse existing art as a placeholder until
+// dedicated per-unit art ships.
+import vanguardBreakerImg from '@/assets/troops/breakerunit.png';
+import arcDisruptorImg from '@/assets/troops/disruptorunit.png';
+import phantomLanceImg from '@/assets/troops/interceptorbike.png';
+import sentinelLancerImg from '@/assets/troops/lancerdrone.png';
+import wraithSkimmerImg from '@/assets/troops/skimmerbike.png';
+import pyreSuppressorImg from '@/assets/troops/suppressorteam.png';
+import siegeColossusImg from '@/assets/troops/siegemech.png';
+import aegisSkirmisherImg from '@/assets/troops/bulwarkguard.png';
 
 import alloyforgeImg from '@/assets/buildings/alloyforge.png';
 import armoryImg from '@/assets/buildings/armory.png';
@@ -29,18 +35,20 @@ import storagevaultImg from '@/assets/buildings/storagevault.png';
 
 export const TROOP_ICONS: Record<string, StaticImageData> = {
 	assaultTrooper: assaulttrooperImg,
-	lancerDrone: lancerdroneImg,
-	breakerUnit: breakerunitImg,
+	sentinelLancer: sentinelLancerImg,
+	vanguardBreaker: vanguardBreakerImg,
 	reconOperative: reconoperativeImg,
-	skimmerBike: skimmerbikeImg,
+	wraithSkimmer: wraithSkimmerImg,
 	bulwarkGuard: bulwarkguardImg,
-	suppressorTeam: suppressorteamImg,
-	disruptorUnit: disruptorunitImg,
-	interceptorBike: interceptorbikeImg,
+	aegisSkirmisher: aegisSkirmisherImg,
+	pyreSuppressor: pyreSuppressorImg,
+	arcDisruptor: arcDisruptorImg,
+	phantomLance: phantomLanceImg,
 	voidStalker: voidstalkerImg,
 	siegeMech: siegemechImg,
 	plasmaTurret: plasmaturretImg,
 	annihilatorPlatform: annihilatorplatformImg,
+	siegeColossus: siegeColossusImg,
 	overseer: overseerImg
 };
 

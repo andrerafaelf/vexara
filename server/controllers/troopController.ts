@@ -100,18 +100,28 @@ const TROOP_REQUIREMENTS: Record<
 	{ buildings: Record<string, number>; maxPerNexus?: number }
 > = {
 	assaultTrooper: { buildings: { armorFoundry: 1 } },
-	lancerDrone: { buildings: { plasmaForge: 2 } },
-	breakerUnit: { buildings: { hangarBay: 3, oreExtractor: 3 } },
+	sentinelLancer: { buildings: { plasmaForge: 2 } },
+	vanguardBreaker: { buildings: { hangarBay: 3, oreExtractor: 3 } },
 	reconOperative: { buildings: { commandCore: 3 } },
-	skimmerBike: { buildings: { hangarBay: 5, alloyForge: 4 } },
+	wraithSkimmer: { buildings: { hangarBay: 5, alloyForge: 4 } },
 	bulwarkGuard: { buildings: { armorFoundry: 5, lifeSupport: 5 } },
-	suppressorTeam: { buildings: { plasmaForge: 7, commandCore: 6 } },
-	disruptorUnit: { buildings: { plasmaForge: 7, oreExtractor: 6 } },
-	interceptorBike: { buildings: { hangarBay: 8, alloyForge: 7 } },
+	// Aegis Skirmisher (Stage 2d): Mobile defender. Slots between Bulwark and
+	// the early-game roster - same Hangar Bay gate as Wraith Skimmer (Lv5)
+	// but additionally requires Shield Grid Lv2 so it surfaces with the
+	// player's first defensive infrastructure investments.
+	aegisSkirmisher: { buildings: { hangarBay: 5, shieldGrid: 2 } },
+	pyreSuppressor: { buildings: { plasmaForge: 7, commandCore: 6 } },
+	arcDisruptor: { buildings: { plasmaForge: 7, oreExtractor: 6 } },
+	phantomLance: { buildings: { hangarBay: 8, alloyForge: 7 } },
 	siegeMech: { buildings: { armorFoundry: 10, oreExtractor: 9, commandCore: 8 } },
 	annihilatorPlatform: { buildings: { plasmaForge: 12, commandCore: 10, shieldGrid: 10 } },
 	voidStalker: { buildings: { hangarBay: 9, alloyForge: 8, armory: 3 } },
 	plasmaTurret: { buildings: { plasmaForge: 11, commandCore: 9, armory: 5 } },
+	// Siege Colossus (Stage 2d): elite Armor attacker. Gated higher than Siege
+	// Mech (Armor Foundry Lv13 vs Mech's Lv10) and requires Armory Lv5 like
+	// the other elite-tier units, so it surfaces alongside the Annihilator
+	// and Void Stalker rather than as an early Siege Mech replacement.
+	siegeColossus: { buildings: { armorFoundry: 13, commandCore: 10, armory: 5 } },
 	overseer: { buildings: { commandCore: 14, shieldGrid: 13 }, maxPerNexus: 3 }
 };
 
@@ -130,19 +140,21 @@ const BUILDING_NAMES: Record<string, string> = {
 };
 
 const TROOP_NAMES: Record<string, string> = {
-	lancerDrone: 'Lancer Drone',
+	sentinelLancer: 'Sentinel Lancer',
 	assaultTrooper: 'Assault Trooper',
-	breakerUnit: 'Breaker Unit',
+	vanguardBreaker: 'Vanguard Breaker',
 	reconOperative: 'Recon Operative',
-	skimmerBike: 'Skimmer Bike',
+	wraithSkimmer: 'Wraith Skimmer',
 	siegeMech: 'Siege Mech',
 	bulwarkGuard: 'Bulwark Guard',
-	suppressorTeam: 'Suppressor Team',
-	disruptorUnit: 'Disruptor Unit',
-	interceptorBike: 'Interceptor Bike',
+	aegisSkirmisher: 'Aegis Skirmisher',
+	pyreSuppressor: 'Pyre Suppressor',
+	arcDisruptor: 'Arc Disruptor',
+	phantomLance: 'Phantom Lance',
 	annihilatorPlatform: 'Annihilator Platform',
 	voidStalker: 'Void Stalker',
 	plasmaTurret: 'Plasma Turret',
+	siegeColossus: 'Siege Colossus',
 	overseer: 'Overseer'
 };
 

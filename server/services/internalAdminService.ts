@@ -30,17 +30,21 @@ export function getAdminStats() {
 		}),
 		prisma.nexus.aggregate({
 			_sum: {
-				lancerDrone: true,
+				sentinelLancer: true,
 				assaultTrooper: true,
-				breakerUnit: true,
+				vanguardBreaker: true,
 				reconOperative: true,
-				skimmerBike: true,
+				wraithSkimmer: true,
 				siegeMech: true,
 				bulwarkGuard: true,
-				suppressorTeam: true,
-				disruptorUnit: true,
-				interceptorBike: true,
+				aegisSkirmisher: true,
+				pyreSuppressor: true,
+				arcDisruptor: true,
+				phantomLance: true,
 				annihilatorPlatform: true,
+				voidStalker: true,
+				plasmaTurret: true,
+				siegeColossus: true,
 				overseer: true
 			}
 		}),

@@ -49,7 +49,7 @@ export const NEWBIE_PROTECTION_DURATION_MS = 3 * 24 * 60 * 60 * 1000;
 // Resources can't exceed day-1 storage (1500 each), so we give troops instead —
 // they're immediately useful and don't silently overflow the storage cap.
 export const REFERRAL_SIGNUP_BONUS = 0; // kept for backward-compat imports
-export const REFERRAL_TROOP_BONUS = { reconOperative: 15, lancerDrone: 10, assaultTrooper: 10 };
+export const REFERRAL_TROOP_BONUS = { reconOperative: 15, sentinelLancer: 10, assaultTrooper: 10 };
 
 export async function createStarterNexus(
 	tx: TxClient,
@@ -124,10 +124,10 @@ const RESPAWN_FLOOR = {
 	},
 	troops: {
 		assaultTrooper: 100,
-		lancerDrone: 60,
-		breakerUnit: 40,
+		sentinelLancer: 60,
+		vanguardBreaker: 40,
 		reconOperative: 20,
-		suppressorTeam: 15,
+		pyreSuppressor: 15,
 		bulwarkGuard: 15
 	}
 } as const;

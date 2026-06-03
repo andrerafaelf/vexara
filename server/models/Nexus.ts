@@ -123,7 +123,7 @@ export const QUEST_REWARD_BATCHES: QuestBatch[] = [
 			alloy: 1500,
 			ore: 1500,
 			populationCurrent: 15,
-			troops: { reconOperative: 15, lancerDrone: 20 }
+			troops: { reconOperative: 15, sentinelLancer: 20 }
 		}
 	},
 
@@ -135,7 +135,13 @@ export const QUEST_REWARD_BATCHES: QuestBatch[] = [
 			{ id: 'build_command_core_4', check: ({ nexus }) => nexus.commandCore >= 4 },
 			{ id: 'build_ore_extractor_4', check: ({ nexus }) => nexus.oreExtractor >= 4 },
 			{ id: 'build_shield_grid_2', check: ({ nexus }) => nexus.shieldGrid >= 2 },
-			{ id: 'train_skimmer_bike_5', check: ({ nexus }) => trainedCount(nexus, 'skimmerBike') >= 5 },
+			// Quest ID preserved across the Military Restructure (Stage 2d rename
+			// of skimmerBike -> wraithSkimmer). Existing claims survive; the check
+			// reads the new column.
+			{
+				id: 'train_skimmer_bike_5',
+				check: ({ nexus }) => trainedCount(nexus, 'wraithSkimmer') >= 5
+			},
 			{ id: 'send_first_strike', check: ({ hasOutgoingStrike }) => hasOutgoingStrike }
 		],
 		reward: {
@@ -143,7 +149,7 @@ export const QUEST_REWARD_BATCHES: QuestBatch[] = [
 			alloy: 3500,
 			ore: 3500,
 			populationCurrent: 30,
-			troops: { skimmerBike: 25, breakerUnit: 15 }
+			troops: { wraithSkimmer: 25, vanguardBreaker: 15 }
 		}
 	},
 
@@ -174,7 +180,7 @@ export const QUEST_REWARD_BATCHES: QuestBatch[] = [
 			alloy: 5000,
 			ore: 5000,
 			populationCurrent: 25,
-			troops: { reconOperative: 25, disruptorUnit: 10 }
+			troops: { reconOperative: 25, arcDisruptor: 10 }
 		}
 	},
 
@@ -203,7 +209,7 @@ export const QUEST_REWARD_BATCHES: QuestBatch[] = [
 			alloy: 8000,
 			ore: 8000,
 			populationCurrent: 50,
-			troops: { siegeMech: 15, disruptorUnit: 10, suppressorTeam: 10 }
+			troops: { siegeMech: 15, arcDisruptor: 10, pyreSuppressor: 10 }
 		}
 	},
 
@@ -221,9 +227,12 @@ export const QUEST_REWARD_BATCHES: QuestBatch[] = [
 				id: 'build_stealth_array_3',
 				check: ({ nexus }) => (nexus as unknown as Record<string, number>).stealthArray >= 3
 			},
+			// Quest ID preserved across the Military Restructure (Stage 2d rename
+			// of disruptorUnit -> arcDisruptor). Existing claims survive; the
+			// check reads the new column.
 			{
 				id: 'train_disruptor_10',
-				check: ({ nexus }) => trainedCount(nexus, 'disruptorUnit') >= 10
+				check: ({ nexus }) => trainedCount(nexus, 'arcDisruptor') >= 10
 			},
 			{ id: 'complete_attack', check: ({ hasCompletedAttack }) => hasCompletedAttack }
 		],
@@ -232,7 +241,7 @@ export const QUEST_REWARD_BATCHES: QuestBatch[] = [
 			alloy: 15000,
 			ore: 15000,
 			populationCurrent: 75,
-			troops: { siegeMech: 20, interceptorBike: 15, voidStalker: 5 }
+			troops: { siegeMech: 20, phantomLance: 15, voidStalker: 5 }
 		}
 	},
 
@@ -954,14 +963,16 @@ export async function updateAllResources(): Promise<void> {
 					shieldGrid: true,
 					armory: true,
 					stealthArray: true,
-					lancerDrone: true,
+					sentinelLancer: true,
 					assaultTrooper: true,
-					breakerUnit: true,
+					vanguardBreaker: true,
 					reconOperative: true,
-					skimmerBike: true,
+					wraithSkimmer: true,
 					siegeMech: true,
 					voidStalker: true,
-					plasmaTurret: true
+					plasmaTurret: true,
+					siegeColossus: true,
+					aegisSkirmisher: true
 				}
 			}),
 			loadActiveStorms()
@@ -1093,20 +1104,24 @@ export function serializeNexus(
 			stealthArray: (v as unknown as { stealthArray?: number }).stealthArray ?? 0
 		},
 		troops: {
-			lancerDrone: v.lancerDrone,
+			sentinelLancer: v.sentinelLancer,
 			assaultTrooper: v.assaultTrooper,
-			breakerUnit: v.breakerUnit,
+			vanguardBreaker: v.vanguardBreaker,
 			reconOperative: v.reconOperative,
-			skimmerBike: v.skimmerBike,
+			wraithSkimmer: v.wraithSkimmer,
 			siegeMech: v.siegeMech,
 			bulwarkGuard: v.bulwarkGuard,
-			suppressorTeam: v.suppressorTeam,
-			disruptorUnit: v.disruptorUnit,
-			interceptorBike: v.interceptorBike,
+			pyreSuppressor: v.pyreSuppressor,
+			arcDisruptor: v.arcDisruptor,
+			phantomLance: v.phantomLance,
 			annihilatorPlatform: v.annihilatorPlatform,
 			voidStalker: (v as unknown as { voidStalker?: number }).voidStalker ?? 0,
 			plasmaTurret: (v as unknown as { plasmaTurret?: number }).plasmaTurret ?? 0,
-			overseer: v.overseer
+			overseer: v.overseer,
+			siegeColossus:
+				(v as unknown as { siegeColossus?: number }).siegeColossus ?? 0,
+			aegisSkirmisher:
+				(v as unknown as { aegisSkirmisher?: number }).aegisSkirmisher ?? 0
 		},
 		population: { current: v.populationCurrent, max: v.populationMax },
 		buildQueue: (v.buildQueue as unknown[]) ?? [],

@@ -10,21 +10,21 @@ const GROWTH_TROOP_CAP = 5; // max ratio of current/initial garrison
 
 // Base troops added per growth tick (gets scaled by age).
 const BASE_GROWTH: Record<string, number> = {
-	lancerDrone: 8,
+	sentinelLancer: 8,
 	assaultTrooper: 6,
-	breakerUnit: 3,
+	vanguardBreaker: 3,
 	bulwarkGuard: 3,
-	suppressorTeam: 2,
+	pyreSuppressor: 2,
 	annihilatorPlatform: 0.2
 };
 
 // Generous initial-equivalent garrison used to cap growth. Mirrors spawnRogueAi.
 const INITIAL_TROOP_CEILING: Record<string, number> = {
-	lancerDrone: 80,
+	sentinelLancer: 80,
 	assaultTrooper: 60,
-	breakerUnit: 30,
+	vanguardBreaker: 30,
 	bulwarkGuard: 25,
-	suppressorTeam: 20,
+	pyreSuppressor: 20,
 	annihilatorPlatform: 3
 };
 

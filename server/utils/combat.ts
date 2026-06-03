@@ -51,20 +51,22 @@ async function logFactionEvent(
 const TROOP_KEYS = Object.keys(TROOP_STATS) as TroopKey[];
 
 const TROOP_POPULATION_COST: Record<TroopKey, number> = {
-	lancerDrone: 1,
+	sentinelLancer: 1,
 	assaultTrooper: 1,
-	breakerUnit: 1,
+	vanguardBreaker: 1,
 	reconOperative: 1,
-	skimmerBike: 3,
+	wraithSkimmer: 3,
 	siegeMech: 4,
 	bulwarkGuard: 2,
-	suppressorTeam: 2,
-	disruptorUnit: 2,
-	interceptorBike: 3,
+	aegisSkirmisher: 2,
+	pyreSuppressor: 2,
+	arcDisruptor: 2,
+	phantomLance: 3,
 	annihilatorPlatform: 5,
 	voidStalker: 3,
 	plasmaTurret: 4,
-	overseer: 5
+	overseer: 5,
+	siegeColossus: 5
 };
 
 type AttackWithNexuses = Attack & { attackerNexus: Nexus | null; defenderNexus: Nexus | null };

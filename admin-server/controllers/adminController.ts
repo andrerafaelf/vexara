@@ -85,19 +85,21 @@ import { NOTIF, sendPushToUser } from '../../server/utils/push.js';
 import * as adminService from '../services/adminService.js';
 
 const TROOP_KEYS = [
-	'lancerDrone',
+	'sentinelLancer',
 	'assaultTrooper',
-	'breakerUnit',
+	'vanguardBreaker',
 	'reconOperative',
-	'skimmerBike',
+	'wraithSkimmer',
 	'siegeMech',
 	'bulwarkGuard',
-	'suppressorTeam',
-	'disruptorUnit',
-	'interceptorBike',
+	'aegisSkirmisher',
+	'pyreSuppressor',
+	'arcDisruptor',
+	'phantomLance',
 	'voidStalker',
 	'plasmaTurret',
 	'annihilatorPlatform',
+	'siegeColossus',
 	'overseer'
 ] as const;
 const BUILDING_KEYS = [
@@ -657,19 +659,21 @@ export async function giveResourcesToNexus(req: Request, res: Response): Promise
 export async function addTroopsToNexus(req: Request, res: Response): Promise<void> {
 	try {
 		const {
-			lancerDrone = 0,
+			sentinelLancer = 0,
 			assaultTrooper = 0,
-			breakerUnit = 0,
+			vanguardBreaker = 0,
 			reconOperative = 0,
-			skimmerBike = 0,
+			wraithSkimmer = 0,
 			siegeMech = 0,
 			bulwarkGuard = 0,
-			suppressorTeam = 0,
-			disruptorUnit = 0,
-			interceptorBike = 0,
+			aegisSkirmisher = 0,
+			pyreSuppressor = 0,
+			arcDisruptor = 0,
+			phantomLance = 0,
 			voidStalker = 0,
 			plasmaTurret = 0,
 			annihilatorPlatform = 0,
+			siegeColossus = 0,
 			overseer = 0
 		} = req.body as Record<string, number>;
 		const { default: prisma } = await import('../../server/lib/prisma.js');
@@ -679,19 +683,21 @@ export async function addTroopsToNexus(req: Request, res: Response): Promise<voi
 			return;
 		}
 		const troopUpdates = {
-			lancerDrone: nexus.lancerDrone + lancerDrone,
+			sentinelLancer: nexus.sentinelLancer + sentinelLancer,
 			assaultTrooper: nexus.assaultTrooper + assaultTrooper,
-			breakerUnit: nexus.breakerUnit + breakerUnit,
+			vanguardBreaker: nexus.vanguardBreaker + vanguardBreaker,
 			reconOperative: nexus.reconOperative + reconOperative,
-			skimmerBike: nexus.skimmerBike + skimmerBike,
+			wraithSkimmer: nexus.wraithSkimmer + wraithSkimmer,
 			siegeMech: nexus.siegeMech + siegeMech,
 			bulwarkGuard: nexus.bulwarkGuard + bulwarkGuard,
-			suppressorTeam: nexus.suppressorTeam + suppressorTeam,
-			disruptorUnit: nexus.disruptorUnit + disruptorUnit,
-			interceptorBike: nexus.interceptorBike + interceptorBike,
+			aegisSkirmisher: nexus.aegisSkirmisher + aegisSkirmisher,
+			pyreSuppressor: nexus.pyreSuppressor + pyreSuppressor,
+			arcDisruptor: nexus.arcDisruptor + arcDisruptor,
+			phantomLance: nexus.phantomLance + phantomLance,
 			voidStalker: nexus.voidStalker + voidStalker,
 			plasmaTurret: nexus.plasmaTurret + plasmaTurret,
 			annihilatorPlatform: nexus.annihilatorPlatform + annihilatorPlatform,
+			siegeColossus: nexus.siegeColossus + siegeColossus,
 			overseer: nexus.overseer + overseer
 		};
 		// Recompute from the post-add troop columns rather than "+ troopsAdded"

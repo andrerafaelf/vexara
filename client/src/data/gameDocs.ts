@@ -89,8 +89,8 @@ export type BuildingDoc = {
 
 export const TROOPS_DOC: TroopDoc[] = [
 	{
-		key: 'lancerDrone',
-		name: 'Lancer Drone',
+		key: 'sentinelLancer',
+		name: 'Sentinel Lancer',
 		role: 'Fire interceptor - counters Mobile',
 		description: 'Cheap suppression drone that pins down early mobile raiders.',
 		unitClass: 'fire',
@@ -110,8 +110,8 @@ export const TROOPS_DOC: TroopDoc[] = [
 		requirements: ['Armor Foundry Lv1']
 	},
 	{
-		key: 'breakerUnit',
-		name: 'Breaker Unit',
+		key: 'vanguardBreaker',
+		name: 'Vanguard Breaker',
 		role: 'Mobile assault breacher - counters Armor',
 		description:
 			'Early-game mobile attacker. Decent damage and cheap to produce, but glass-fragile and lightly carries — its job is to soften armored defenders in the opening phase, not anchor a late-game army.',
@@ -133,8 +133,8 @@ export const TROOPS_DOC: TroopDoc[] = [
 		notes: ['This is the unit used for scouting missions.']
 	},
 	{
-		key: 'suppressorTeam',
-		name: 'Suppressor Team',
+		key: 'pyreSuppressor',
+		name: 'Pyre Suppressor',
 		role: 'Fire support - counters Mobile',
 		description:
 			'Aggressive fire support that pins down mobile forces. High attack for its tier but fragile - keep it behind your armor.',
@@ -144,11 +144,11 @@ export const TROOPS_DOC: TroopDoc[] = [
 		requirements: ['Plasma Forge Lv7', 'Command Core Lv6']
 	},
 	{
-		key: 'skimmerBike',
-		name: 'Skimmer Bike',
+		key: 'wraithSkimmer',
+		name: 'Wraith Skimmer',
 		role: 'Fast mobile raider - counters Armor',
 		description:
-			'High mobility raider with strong carry. Good attack, mediocre defense - trades hits for resource hauls and speed.',
+			'Stealth hovercraft raider with strong carry. Good attack, mediocre defense - trades hits for resource hauls and speed.',
 		unitClass: 'mobile',
 		stats: { attack: 80, defense: 10, speed: 22, carry: 80 },
 		cost: { biomass: 625, alloy: 500, ore: 750, population: 3, time: '12m 0s' },
@@ -166,8 +166,19 @@ export const TROOPS_DOC: TroopDoc[] = [
 		requirements: ['Armor Foundry Lv5', 'Life Support Lv5']
 	},
 	{
-		key: 'disruptorUnit',
-		name: 'Disruptor Unit',
+		key: 'aegisSkirmisher',
+		name: 'Aegis Skirmisher',
+		role: 'Mobile rapid-response defender - counters Armor',
+		description:
+			'Fast-response mobile defender. Intercepts incoming Mobile attackers before they reach the static defense line. Lower defense than Bulwark Guard but high speed lets it move to where it is needed.',
+		unitClass: 'mobile',
+		stats: { attack: 50, defense: 90, speed: 24, carry: 30 },
+		cost: { biomass: 500, alloy: 550, ore: 450, population: 2, time: '12m 0s' },
+		requirements: ['Hangar Bay Lv5', 'Shield Grid Lv2']
+	},
+	{
+		key: 'arcDisruptor',
+		name: 'Arc Disruptor',
 		role: 'Fire EMP specialist - counters Mobile',
 		description:
 			'Aggressive fire specialist that suppresses mobile skirmishers on the offensive. Strong damage, low defense - commit it to attacks, not defense.',
@@ -178,8 +189,8 @@ export const TROOPS_DOC: TroopDoc[] = [
 		notes: ['No special anti-mech multiplier is currently applied in combat code.']
 	},
 	{
-		key: 'interceptorBike',
-		name: 'Interceptor Bike',
+		key: 'phantomLance',
+		name: 'Phantom Lance',
 		role: 'Mobile rapid-response cavalry - counters Armor',
 		description:
 			'Very fast mobile raider, ideal for rapid redeploy and cracking armored defenders. High attack and carry, moderate defense.',
@@ -240,6 +251,17 @@ export const TROOPS_DOC: TroopDoc[] = [
 		stats: { attack: 320, defense: 35, speed: 8, carry: 250 },
 		cost: { biomass: 2000, alloy: 1750, ore: 3000, population: 4, time: '40m 0s' },
 		requirements: ['Plasma Forge Lv12', 'Command Core Lv10', 'Shield Grid Lv10']
+	},
+	{
+		key: 'siegeColossus',
+		name: 'Siege Colossus',
+		role: 'Endgame armor walker - counters Fire',
+		description:
+			'Tier-3 elite armor attacker. The heaviest single unit in the game - extreme attack and defense, slowest speed, highest population cost. Built to crack fortified Nexuses where lighter forces would shatter. The armor half of the endgame line; paired with Annihilator Platforms for a balanced siege force.',
+		unitClass: 'armor',
+		stats: { attack: 280, defense: 280, speed: 6, carry: 150 },
+		cost: { biomass: 1800, alloy: 2200, ore: 3200, population: 5, time: '50m 0s' },
+		requirements: ['Armor Foundry Lv13', 'Command Core Lv10', 'Armory Lv5']
 	},
 	{
 		key: 'overseer',

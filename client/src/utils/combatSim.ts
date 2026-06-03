@@ -9,54 +9,60 @@
 // always faithful, variance is purely visual sequencing.
 
 export type TroopKey =
-	| 'lancerDrone'
+	| 'sentinelLancer'
 	| 'assaultTrooper'
-	| 'breakerUnit'
+	| 'vanguardBreaker'
 	| 'reconOperative'
-	| 'skimmerBike'
+	| 'wraithSkimmer'
 	| 'bulwarkGuard'
-	| 'suppressorTeam'
-	| 'disruptorUnit'
-	| 'interceptorBike'
+	| 'aegisSkirmisher'
+	| 'pyreSuppressor'
+	| 'arcDisruptor'
+	| 'phantomLance'
 	| 'siegeMech'
 	| 'annihilatorPlatform'
 	| 'voidStalker'
 	| 'plasmaTurret'
+	| 'siegeColossus'
 	| 'overseer';
 
 export type TroopClass = 'mobile' | 'armor' | 'fire' | 'special';
 
 export const TROOP_CLASS: Record<TroopKey, TroopClass> = {
-	lancerDrone: 'fire',
+	sentinelLancer: 'fire',
 	assaultTrooper: 'armor',
-	breakerUnit: 'mobile',
+	vanguardBreaker: 'mobile',
 	reconOperative: 'special',
-	skimmerBike: 'mobile',
+	wraithSkimmer: 'mobile',
 	bulwarkGuard: 'armor',
-	suppressorTeam: 'fire',
-	disruptorUnit: 'fire',
-	interceptorBike: 'mobile',
+	aegisSkirmisher: 'mobile',
+	pyreSuppressor: 'fire',
+	arcDisruptor: 'fire',
+	phantomLance: 'mobile',
 	siegeMech: 'armor',
 	annihilatorPlatform: 'fire',
 	voidStalker: 'mobile',
 	plasmaTurret: 'fire',
+	siegeColossus: 'armor',
 	overseer: 'special'
 };
 
 export const TROOP_STATS: Record<TroopKey, { attack: number; defense: number; speed: number }> = {
-	lancerDrone: { attack: 3, defense: 22, speed: 20 },
+	sentinelLancer: { attack: 3, defense: 22, speed: 20 },
 	assaultTrooper: { attack: 5, defense: 45, speed: 18 },
-	breakerUnit: { attack: 35, defense: 3, speed: 16 },
+	vanguardBreaker: { attack: 35, defense: 3, speed: 16 },
 	reconOperative: { attack: 1, defense: 20, speed: 25 },
-	skimmerBike: { attack: 80, defense: 10, speed: 22 },
+	wraithSkimmer: { attack: 80, defense: 10, speed: 22 },
 	bulwarkGuard: { attack: 3, defense: 130, speed: 12 },
-	suppressorTeam: { attack: 65, defense: 8, speed: 15 },
-	disruptorUnit: { attack: 75, defense: 9, speed: 17 },
-	interceptorBike: { attack: 95, defense: 13, speed: 28 },
+	aegisSkirmisher: { attack: 50, defense: 90, speed: 24 },
+	pyreSuppressor: { attack: 65, defense: 8, speed: 15 },
+	arcDisruptor: { attack: 75, defense: 9, speed: 17 },
+	phantomLance: { attack: 95, defense: 13, speed: 28 },
 	siegeMech: { attack: 40, defense: 260, speed: 10 },
 	annihilatorPlatform: { attack: 320, defense: 35, speed: 8 },
 	voidStalker: { attack: 150, defense: 15, speed: 32 },
 	plasmaTurret: { attack: 0, defense: 160, speed: 0 },
+	siegeColossus: { attack: 280, defense: 280, speed: 6 },
 	overseer: { attack: 0, defense: 8, speed: 15 }
 };
 
@@ -73,19 +79,21 @@ export const TROOP_KEYS = Object.keys(TROOP_STATS) as TroopKey[];
 // the predictive calculator's loot estimate. Kept here (the replay sim doesn't
 // need carry) so the calculator has a single client-side source.
 export const TROOP_CARRY: Record<TroopKey, number> = {
-	lancerDrone: 30,
+	sentinelLancer: 30,
 	assaultTrooper: 60,
-	breakerUnit: 40,
+	vanguardBreaker: 40,
 	reconOperative: 10,
-	skimmerBike: 80,
+	wraithSkimmer: 80,
 	bulwarkGuard: 25,
-	suppressorTeam: 20,
-	disruptorUnit: 25,
-	interceptorBike: 100,
+	aegisSkirmisher: 30,
+	pyreSuppressor: 20,
+	arcDisruptor: 25,
+	phantomLance: 100,
 	siegeMech: 20,
 	annihilatorPlatform: 250,
 	voidStalker: 60,
 	plasmaTurret: 0,
+	siegeColossus: 150,
 	overseer: 0
 };
 

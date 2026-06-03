@@ -115,29 +115,32 @@ const NPC_NAME_FRAGMENTS = [
 const isNpcNexusName = (name: string) => NPC_NAME_FRAGMENTS.some((f) => name.includes(f));
 
 const TROOP_LABELS: Record<string, string> = {
-	lancerDrone: 'Lancer Drone',
+	sentinelLancer: 'Sentinel Lancer',
 	assaultTrooper: 'Assault Trooper',
-	breakerUnit: 'Breaker Unit',
+	vanguardBreaker: 'Vanguard Breaker',
 	reconOperative: 'Recon Operative',
-	skimmerBike: 'Skimmer Bike',
+	wraithSkimmer: 'Wraith Skimmer',
 	siegeMech: 'Siege Mech',
 	bulwarkGuard: 'Bulwark Guard',
-	suppressorTeam: 'Suppressor Team',
-	disruptorUnit: 'Disruptor Unit',
-	interceptorBike: 'Interceptor Bike',
+	aegisSkirmisher: 'Aegis Skirmisher',
+	pyreSuppressor: 'Pyre Suppressor',
+	arcDisruptor: 'Arc Disruptor',
+	phantomLance: 'Phantom Lance',
 	annihilatorPlatform: 'Annihilator Platform',
 	voidStalker: 'Void Stalker',
+	siegeColossus: 'Siege Colossus',
 	overseer: 'Overseer'
 };
 
 const OFFENSE_TROOPS = new Set([
-	'breakerUnit',
-	'skimmerBike',
-	'suppressorTeam',
-	'disruptorUnit',
-	'interceptorBike',
+	'vanguardBreaker',
+	'wraithSkimmer',
+	'pyreSuppressor',
+	'arcDisruptor',
+	'phantomLance',
 	'annihilatorPlatform',
 	'voidStalker',
+	'siegeColossus',
 	'overseer'
 ]);
 
@@ -147,9 +150,10 @@ const OFFENSE_TROOPS = new Set([
 // Mirrors the server's STATIONABLE_TROOPS; the server is the authoritative gate.
 const STATIONABLE_TROOPS = new Set([
 	'assaultTrooper',
-	'lancerDrone',
+	'sentinelLancer',
 	'siegeMech',
-	'bulwarkGuard'
+	'bulwarkGuard',
+	'aegisSkirmisher'
 ]);
 
 // Must match the `range` the server's /map/area endpoint returns around the
@@ -218,18 +222,20 @@ const Map: React.FC<MapProps> = ({
 	const [selectedNexus, setSelectedNexus] = useState<MapNexus | null>(null);
 	const [showAttackForm, setShowAttackForm] = useState(false);
 	const EMPTY_ATTACK_TROOPS = {
-		lancerDrone: 0,
+		sentinelLancer: 0,
 		assaultTrooper: 0,
-		breakerUnit: 0,
+		vanguardBreaker: 0,
 		reconOperative: 0,
-		skimmerBike: 0,
+		wraithSkimmer: 0,
 		siegeMech: 0,
 		bulwarkGuard: 0,
-		suppressorTeam: 0,
-		disruptorUnit: 0,
-		interceptorBike: 0,
+		aegisSkirmisher: 0,
+		pyreSuppressor: 0,
+		arcDisruptor: 0,
+		phantomLance: 0,
 		annihilatorPlatform: 0,
 		voidStalker: 0,
+		siegeColossus: 0,
 		overseer: 0
 	};
 	const [attackTroops, setAttackTroops] = useState(EMPTY_ATTACK_TROOPS);
@@ -796,18 +802,20 @@ const Map: React.FC<MapProps> = ({
 			setShowAttackForm(false);
 			setAttackMissionType('attack');
 			setAttackTroops({
-				lancerDrone: 0,
+				sentinelLancer: 0,
 				assaultTrooper: 0,
-				breakerUnit: 0,
+				vanguardBreaker: 0,
 				reconOperative: 0,
-				skimmerBike: 0,
+				wraithSkimmer: 0,
 				siegeMech: 0,
 				bulwarkGuard: 0,
-				suppressorTeam: 0,
-				disruptorUnit: 0,
-				interceptorBike: 0,
+				aegisSkirmisher: 0,
+				pyreSuppressor: 0,
+				arcDisruptor: 0,
+				phantomLance: 0,
 				annihilatorPlatform: 0,
 				voidStalker: 0,
+				siegeColossus: 0,
 				overseer: 0
 			});
 			onRefresh();

@@ -151,19 +151,21 @@ export async function addTroops(req: Request, res: Response): Promise<void> {
 		}
 
 		const TROOP_FIELDS = [
-			'lancerDrone',
+			'sentinelLancer',
 			'assaultTrooper',
-			'breakerUnit',
+			'vanguardBreaker',
 			'reconOperative',
-			'skimmerBike',
+			'wraithSkimmer',
 			'siegeMech',
 			'bulwarkGuard',
-			'suppressorTeam',
-			'disruptorUnit',
-			'interceptorBike',
+			'aegisSkirmisher',
+			'pyreSuppressor',
+			'arcDisruptor',
+			'phantomLance',
 			'voidStalker',
 			'plasmaTurret',
 			'annihilatorPlatform',
+			'siegeColossus',
 			'overseer'
 		] as const;
 		const popFree = Math.max(0, nexus.populationMax - nexus.populationCurrent);
@@ -259,19 +261,21 @@ export async function resetTroops(req: Request, res: Response): Promise<void> {
 			return;
 		}
 		const zeroedTroops = {
-			lancerDrone: 0,
+			sentinelLancer: 0,
 			assaultTrooper: 0,
-			breakerUnit: 0,
+			vanguardBreaker: 0,
 			reconOperative: 0,
-			skimmerBike: 0,
+			wraithSkimmer: 0,
 			siegeMech: 0,
 			bulwarkGuard: 0,
-			suppressorTeam: 0,
-			disruptorUnit: 0,
-			interceptorBike: 0,
+			aegisSkirmisher: 0,
+			pyreSuppressor: 0,
+			arcDisruptor: 0,
+			phantomLance: 0,
 			voidStalker: 0,
 			plasmaTurret: 0,
 			annihilatorPlatform: 0,
+			siegeColossus: 0,
 			overseer: 0
 		};
 		// Derive populationCurrent rather than hard-coding 0: troops still away on

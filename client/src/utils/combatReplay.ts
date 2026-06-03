@@ -23,38 +23,58 @@ export interface CombatReplay {
 	resourcesStolen: { biomass: number; alloy: number; ore: number };
 }
 
+// Includes legacy keys so a historical Attack.result that still references
+// the pre-Stage-2d troop names still scores power correctly during replay.
 const TROOP_ATTACK: Record<string, number> = {
-	lancerDrone: 3,
+	sentinelLancer: 3,
 	assaultTrooper: 5,
-	breakerUnit: 35,
+	vanguardBreaker: 35,
 	reconOperative: 1,
-	skimmerBike: 80,
+	wraithSkimmer: 80,
 	bulwarkGuard: 3,
-	suppressorTeam: 65,
-	disruptorUnit: 75,
-	interceptorBike: 95,
+	aegisSkirmisher: 50,
+	pyreSuppressor: 65,
+	arcDisruptor: 75,
+	phantomLance: 95,
 	siegeMech: 40,
 	annihilatorPlatform: 320,
 	voidStalker: 150,
 	plasmaTurret: 0,
-	overseer: 0
+	siegeColossus: 280,
+	overseer: 0,
+	// Legacy keys.
+	lancerDrone: 3,
+	breakerUnit: 35,
+	skimmerBike: 80,
+	suppressorTeam: 65,
+	disruptorUnit: 75,
+	interceptorBike: 95
 };
 
 const TROOP_DEFENSE: Record<string, number> = {
-	lancerDrone: 22,
+	sentinelLancer: 22,
 	assaultTrooper: 45,
-	breakerUnit: 3,
+	vanguardBreaker: 3,
 	reconOperative: 20,
-	skimmerBike: 10,
+	wraithSkimmer: 10,
 	bulwarkGuard: 130,
-	suppressorTeam: 8,
-	disruptorUnit: 9,
-	interceptorBike: 13,
+	aegisSkirmisher: 90,
+	pyreSuppressor: 8,
+	arcDisruptor: 9,
+	phantomLance: 13,
 	siegeMech: 260,
 	annihilatorPlatform: 35,
 	voidStalker: 15,
 	plasmaTurret: 160,
-	overseer: 8
+	siegeColossus: 280,
+	overseer: 8,
+	// Legacy keys.
+	lancerDrone: 22,
+	breakerUnit: 3,
+	skimmerBike: 10,
+	suppressorTeam: 8,
+	disruptorUnit: 9,
+	interceptorBike: 13
 };
 
 function forcePower(troops: Record<string, number>, stat: Record<string, number>): number {

@@ -69,11 +69,11 @@ test('calculatePoints awards points for buildings and troops', () => {
 		alloyForge: 1,
 		oreExtractor: 1,
 		shieldGrid: 1,
-		lancerDrone: 2,
+		sentinelLancer: 2,
 		assaultTrooper: 3,
-		breakerUnit: 1,
+		vanguardBreaker: 1,
 		reconOperative: 1,
-		skimmerBike: 1,
+		wraithSkimmer: 1,
 		siegeMech: 1
 	};
 
@@ -82,8 +82,8 @@ test('calculatePoints awards points for buildings and troops', () => {
 });
 
 test('computeForcePower sums troop stats for selected power type', () => {
-	const attackTroops = { breakerUnit: 10, suppressorTeam: 5 };
-	const defenseTroops = { assaultTrooper: 10, lancerDrone: 5 };
+	const attackTroops = { vanguardBreaker: 10, pyreSuppressor: 5 };
+	const defenseTroops = { assaultTrooper: 10, sentinelLancer: 5 };
 
 	const attackPower = computeForcePower(attackTroops, 'attack');
 	const defensePower = computeForcePower(defenseTroops, 'defense');
@@ -96,26 +96,26 @@ test('computeForcePower sums troop stats for selected power type', () => {
 test('computeLossesForLoser wipes all non-overseer troops', () => {
 	const troops = {
 		assaultTrooper: 62,
-		lancerDrone: 25,
-		breakerUnit: 3,
+		sentinelLancer: 25,
+		vanguardBreaker: 3,
 		overseer: 1
 	};
 
 	const losses = computeLossesForLoser(troops);
 
 	assert.equal(losses.assaultTrooper, troops.assaultTrooper);
-	assert.equal(losses.lancerDrone, troops.lancerDrone);
-	assert.equal(losses.breakerUnit, troops.breakerUnit);
+	assert.equal(losses.sentinelLancer, troops.sentinelLancer);
+	assert.equal(losses.vanguardBreaker, troops.vanguardBreaker);
 	assert.equal(losses.overseer, undefined);
 });
 
 test('loser losses scale with how close the fight was (no all-or-nothing cliff)', () => {
-	const force = { assaultTrooper: 100, lancerDrone: 100 };
+	const force = { assaultTrooper: 100, sentinelLancer: 100 };
 
 	// Blowout (powerRatio -> 0): essentially wiped.
 	const blowout = computeLossesForLoser(force, 0);
 	assert.equal(blowout.assaultTrooper, 100);
-	assert.equal(blowout.lancerDrone, 100);
+	assert.equal(blowout.sentinelLancer, 100);
 
 	// Near-even loss (powerRatio -> 1): ~85%, leaving a real remnant.
 	const even = computeLossesForLoser(force, 1);
@@ -132,14 +132,14 @@ test('loser losses scale with how close the fight was (no all-or-nothing cliff)'
 });
 
 test('a decisive blowout is a TOTAL wipe — no survivors', () => {
-	const force = { assaultTrooper: 100, lancerDrone: 100 };
+	const force = { assaultTrooper: 100, sentinelLancer: 100 };
 
 	// At/under the wipe threshold (~3:1 power, ratio <= 0.33) the losing army is
 	// 100% destroyed. This is the "150k vs 10k should leave nothing" fix: a
 	// crushing victory annihilates the defender instead of leaving stragglers.
 	const lopsided = computeLossesForLoser(force, 0.067); // ~15:1, the reported case
 	assert.equal(lopsided.assaultTrooper, 100, 'blowout wipes the whole force');
-	assert.equal(lopsided.lancerDrone, 100);
+	assert.equal(lopsided.sentinelLancer, 100);
 
 	const atThreshold = computeLossesForLoser(force, 0.33);
 	assert.equal(atThreshold.assaultTrooper, 100, 'exactly at the threshold still wipes');
@@ -163,7 +163,7 @@ test('winner takes ~zero losses against a near-powerless attacker', () => {
 	};
 	for (let seed = 0; seed < 12; seed++) {
 		const losses = computeLossesForWinner(garrison, 0.0005, seed * 7919 + 1, {
-			breakerUnit: 1
+			vanguardBreaker: 1
 		});
 		const total = Object.values(losses).reduce((a, b) => a + (b || 0), 0);
 		assert.equal(total, 0, `lone attacker should cost the winner 0 (seed ${seed} gave ${total})`);
@@ -173,7 +173,7 @@ test('winner takes ~zero losses against a near-powerless attacker', () => {
 test('winner still bleeds on a near-even victory (coin-flip cost preserved)', () => {
 	const garrison = { assaultTrooper: 1000, siegeMech: 100 };
 	// powerRatio 0.8 = barely won; should cost a meaningful chunk, not zero.
-	const losses = computeLossesForWinner(garrison, 0.8, 4242, { skimmerBike: 1500 });
+	const losses = computeLossesForWinner(garrison, 0.8, 4242, { wraithSkimmer: 1500 });
 	const total = Object.values(losses).reduce((a, b) => a + (b || 0), 0);
 	assert.ok(total > 100, `a near-even win should bleed (got ${total})`);
 });

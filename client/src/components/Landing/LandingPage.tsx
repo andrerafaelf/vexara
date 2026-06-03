@@ -76,8 +76,8 @@ const PILLARS = [
 	},
 	{
 		idx: '02',
-		title: 'Train twelve unit types',
-		body: 'From 53s Lancer Drones to 4h Overseers. Each unit has attack, defense, speed, and carry. Composition wins fights, not raw numbers.'
+		title: 'Train sixteen unit types',
+		body: 'From 53s Sentinel Lancers to 4h Overseers. Each unit has attack, defense, speed, and carry. Composition wins fights, not raw numbers.'
 	},
 	{
 		idx: '03',

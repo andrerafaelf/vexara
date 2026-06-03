@@ -78,18 +78,27 @@ const BUILDING_LABELS: Record<string, string> = {
 };
 
 const TROOP_LABELS: Record<string, string> = {
-	lancerDrone: 'Lancer Drone',
+	sentinelLancer: 'Sentinel Lancer',
 	assaultTrooper: 'Assault Trooper',
-	breakerUnit: 'Breaker Unit',
+	vanguardBreaker: 'Vanguard Breaker',
 	reconOperative: 'Recon Operative',
-	skimmerBike: 'Skimmer Bike',
+	wraithSkimmer: 'Wraith Skimmer',
 	siegeMech: 'Siege Mech',
 	bulwarkGuard: 'Bulwark Guard',
-	suppressorTeam: 'Suppressor Team',
-	disruptorUnit: 'Disruptor Unit',
-	interceptorBike: 'Interceptor Bike',
+	aegisSkirmisher: 'Aegis Skirmisher',
+	pyreSuppressor: 'Pyre Suppressor',
+	arcDisruptor: 'Arc Disruptor',
+	phantomLance: 'Phantom Lance',
 	annihilatorPlatform: 'Annihilator Platform',
-	overseer: 'Overseer'
+	siegeColossus: 'Siege Colossus',
+	overseer: 'Overseer',
+	// Legacy keys preserved for historical activity summaries.
+	lancerDrone: 'Sentinel Lancer',
+	breakerUnit: 'Vanguard Breaker',
+	skimmerBike: 'Wraith Skimmer',
+	suppressorTeam: 'Pyre Suppressor',
+	disruptorUnit: 'Arc Disruptor',
+	interceptorBike: 'Phantom Lance'
 };
 
 function formatDuration(since: string) {

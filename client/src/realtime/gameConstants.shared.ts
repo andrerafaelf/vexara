@@ -34,19 +34,21 @@ export interface TroopCost {
 }
 
 export const TROOP_COSTS: Record<string, TroopCost> = {
-	lancerDrone: { biomass: 150, alloy: 150, ore: 200, population: 1, time: 53 },
+	sentinelLancer: { biomass: 150, alloy: 150, ore: 200, population: 1, time: 53 },
 	assaultTrooper: { biomass: 150, alloy: 150, ore: 350, population: 1, time: 79 },
-	breakerUnit: { biomass: 250, alloy: 150, ore: 300, population: 1, time: 160 },
+	vanguardBreaker: { biomass: 250, alloy: 150, ore: 300, population: 1, time: 160 },
 	reconOperative: { biomass: 400, alloy: 150, ore: 400, population: 1, time: 180 },
-	suppressorTeam: { biomass: 450, alloy: 400, ore: 450, population: 2, time: 540 },
-	skimmerBike: { biomass: 625, alloy: 500, ore: 750, population: 3, time: 720 },
+	pyreSuppressor: { biomass: 450, alloy: 400, ore: 450, population: 2, time: 540 },
+	wraithSkimmer: { biomass: 625, alloy: 500, ore: 750, population: 3, time: 720 },
 	bulwarkGuard: { biomass: 400, alloy: 600, ore: 500, population: 2, time: 720 },
-	disruptorUnit: { biomass: 550, alloy: 750, ore: 650, population: 2, time: 840 },
-	interceptorBike: { biomass: 750, alloy: 600, ore: 900, population: 3, time: 1080 },
+	aegisSkirmisher: { biomass: 500, alloy: 550, ore: 450, population: 2, time: 720 },
+	arcDisruptor: { biomass: 550, alloy: 750, ore: 650, population: 2, time: 840 },
+	phantomLance: { biomass: 750, alloy: 600, ore: 900, population: 3, time: 1080 },
 	voidStalker: { biomass: 1100, alloy: 900, ore: 1400, population: 3, time: 1620 },
 	siegeMech: { biomass: 1250, alloy: 1000, ore: 2000, population: 4, time: 1800 },
 	plasmaTurret: { biomass: 1500, alloy: 1200, ore: 2500, population: 3, time: 2700 },
 	annihilatorPlatform: { biomass: 2000, alloy: 1750, ore: 3000, population: 4, time: 2400 },
+	siegeColossus: { biomass: 1800, alloy: 2200, ore: 3200, population: 5, time: 3000 },
 	overseer: { biomass: 180000, alloy: 140000, ore: 120000, population: 5, time: 14400 }
 };
 
@@ -76,19 +78,21 @@ export function getClassBuildingTrainFactor(classBuildingLevel: number): number 
 // armor classes map to their class building; specials (recon, overseer) train
 // from Command Core. Both halves must move together when units are added.
 const TROOP_TRAINING_BUILDING: Record<string, string> = {
-	lancerDrone: 'plasmaForge',
+	sentinelLancer: 'plasmaForge',
 	assaultTrooper: 'armorFoundry',
-	breakerUnit: 'hangarBay',
+	vanguardBreaker: 'hangarBay',
 	reconOperative: 'commandCore',
-	skimmerBike: 'hangarBay',
+	wraithSkimmer: 'hangarBay',
 	bulwarkGuard: 'armorFoundry',
-	suppressorTeam: 'plasmaForge',
-	disruptorUnit: 'plasmaForge',
-	interceptorBike: 'hangarBay',
+	aegisSkirmisher: 'hangarBay',
+	pyreSuppressor: 'plasmaForge',
+	arcDisruptor: 'plasmaForge',
+	phantomLance: 'hangarBay',
 	siegeMech: 'armorFoundry',
 	annihilatorPlatform: 'plasmaForge',
 	voidStalker: 'hangarBay',
 	plasmaTurret: 'plasmaForge',
+	siegeColossus: 'armorFoundry',
 	overseer: 'commandCore'
 };
 
@@ -127,19 +131,21 @@ export type TrainingChain = 'mobile' | 'armor' | 'fire' | 'special' | 'combat';
 
 export type TroopCombatClass = 'mobile' | 'armor' | 'fire' | 'special';
 export const TROOP_COMBAT_CLASS: Record<string, TroopCombatClass> = {
-	lancerDrone: 'fire',
+	sentinelLancer: 'fire',
 	assaultTrooper: 'armor',
-	breakerUnit: 'mobile',
+	vanguardBreaker: 'mobile',
 	reconOperative: 'special',
-	skimmerBike: 'mobile',
+	wraithSkimmer: 'mobile',
 	bulwarkGuard: 'armor',
-	suppressorTeam: 'fire',
-	disruptorUnit: 'fire',
-	interceptorBike: 'mobile',
+	aegisSkirmisher: 'mobile',
+	pyreSuppressor: 'fire',
+	arcDisruptor: 'fire',
+	phantomLance: 'mobile',
 	siegeMech: 'armor',
 	annihilatorPlatform: 'fire',
 	voidStalker: 'mobile',
 	plasmaTurret: 'fire',
+	siegeColossus: 'armor',
 	overseer: 'special'
 };
 

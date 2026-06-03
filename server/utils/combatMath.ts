@@ -8,20 +8,22 @@ import type { TroopKey, TroopStat } from '../types/index.js';
 export type TroopClass = 'mobile' | 'armor' | 'fire' | 'special';
 
 export const TROOP_CLASS: Record<TroopKey, TroopClass> = {
-	lancerDrone: 'fire',
+	sentinelLancer: 'fire',
 	assaultTrooper: 'armor',
-	breakerUnit: 'mobile',
+	vanguardBreaker: 'mobile',
 	reconOperative: 'special',
-	skimmerBike: 'mobile',
+	wraithSkimmer: 'mobile',
 	bulwarkGuard: 'armor',
-	suppressorTeam: 'fire',
-	disruptorUnit: 'fire',
-	interceptorBike: 'mobile',
+	pyreSuppressor: 'fire',
+	arcDisruptor: 'fire',
+	phantomLance: 'mobile',
 	siegeMech: 'armor',
 	annihilatorPlatform: 'fire',
 	voidStalker: 'mobile',
 	plasmaTurret: 'fire',
-	overseer: 'special'
+	overseer: 'special',
+	siegeColossus: 'armor',
+	aegisSkirmisher: 'mobile'
 };
 
 // Counter matrix: CLASS_COUNTERS[attackerClass][defenderClass] = damage multiplier.
@@ -39,20 +41,31 @@ export const CLASS_COUNTERS: Record<TroopClass, Record<TroopClass, number>> = {
 // 2 attackers + 2 defenders). Attack-per-pop should grow with tier so
 // spamming the cheapest unit is never the optimal late-game answer.
 export const TROOP_STATS: Record<TroopKey, TroopStat> = {
-	lancerDrone: { attack: 3, defense: 22, speed: 20, carry: 30 },
+	sentinelLancer: { attack: 3, defense: 22, speed: 20, carry: 30 },
 	assaultTrooper: { attack: 5, defense: 45, speed: 18, carry: 60 },
-	breakerUnit: { attack: 35, defense: 3, speed: 16, carry: 40 },
+	vanguardBreaker: { attack: 35, defense: 3, speed: 16, carry: 40 },
 	reconOperative: { attack: 1, defense: 20, speed: 25, carry: 10 },
-	skimmerBike: { attack: 80, defense: 10, speed: 22, carry: 80 },
+	wraithSkimmer: { attack: 80, defense: 10, speed: 22, carry: 80 },
 	bulwarkGuard: { attack: 3, defense: 130, speed: 12, carry: 25 },
-	suppressorTeam: { attack: 65, defense: 8, speed: 15, carry: 20 },
-	disruptorUnit: { attack: 75, defense: 9, speed: 17, carry: 25 },
-	interceptorBike: { attack: 95, defense: 13, speed: 28, carry: 100 },
+	// Aegis Skirmisher (Stage 2d): Mobile defender. Lower defense than the
+	// Armor-class Bulwark (90 vs 130) so it's not a strictly better choice;
+	// higher speed (24 vs Bulwark's 12) lets it intercept incoming Mobile
+	// attackers. Modest attack so it's defensive-first, not a hybrid raider.
+	aegisSkirmisher: { attack: 50, defense: 90, speed: 24, carry: 30 },
+	pyreSuppressor: { attack: 65, defense: 8, speed: 15, carry: 20 },
+	arcDisruptor: { attack: 75, defense: 9, speed: 17, carry: 25 },
+	phantomLance: { attack: 95, defense: 13, speed: 28, carry: 100 },
 	siegeMech: { attack: 40, defense: 260, speed: 10, carry: 20 },
 	annihilatorPlatform: { attack: 320, defense: 35, speed: 8, carry: 250 },
 	voidStalker: { attack: 150, defense: 15, speed: 32, carry: 60 },
 	plasmaTurret: { attack: 0, defense: 160, speed: 0, carry: 0 },
-	overseer: { attack: 0, defense: 8, speed: 15, carry: 0 }
+	overseer: { attack: 0, defense: 8, speed: 15, carry: 0 },
+	// Siege Colossus (Stage 2d): elite Armor attacker. Highest attack of any
+	// armor unit (280 vs Siege Mech's 40), comparable defense to Siege Mech
+	// (280 vs 260). Slowest at speed 6, heaviest at pop 5. Costed above the
+	// Void Stalker (mobile endgame) and slightly below Annihilator (fire
+	// endgame); paired with the Annihilator as the elite siege duo.
+	siegeColossus: { attack: 280, defense: 280, speed: 6, carry: 150 }
 };
 
 const TROOP_KEYS = Object.keys(TROOP_STATS) as TroopKey[];

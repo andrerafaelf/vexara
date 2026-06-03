@@ -106,9 +106,9 @@ async function spawnDerelictShip(galaxyId: number) {
 			nexusType: 'Resource Depot', // baseline; derelict flag boosts the multiplier to 3x (4x at Command Core 15)
 			isDerelict: true,
 			// Zero most troops, should be easy to take
-			lancerDrone: 0,
+			sentinelLancer: 0,
 			assaultTrooper: 0,
-			breakerUnit: 0,
+			vanguardBreaker: 0,
 			reconOperative: randInt(2, 6)
 		}
 	});
@@ -202,11 +202,11 @@ async function spawnRogueAi(galaxyId: number) {
 			alloyForge: 5,
 			oreExtractor: 5,
 			shieldGrid: 6,
-			lancerDrone: randInt(40, 80),
+			sentinelLancer: randInt(40, 80),
 			assaultTrooper: randInt(30, 60),
-			breakerUnit: randInt(15, 30),
+			vanguardBreaker: randInt(15, 30),
 			bulwarkGuard: randInt(10, 25),
-			suppressorTeam: randInt(8, 20),
+			pyreSuppressor: randInt(8, 20),
 			annihilatorPlatform: randInt(1, 3),
 			populationMax: 200
 		}

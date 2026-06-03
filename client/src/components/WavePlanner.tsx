@@ -28,18 +28,20 @@ interface WavePlanner_Props {
 }
 
 const TROOP_KEYS = [
-	'lancerDrone',
+	'sentinelLancer',
 	'assaultTrooper',
-	'breakerUnit',
+	'vanguardBreaker',
 	'reconOperative',
-	'skimmerBike',
+	'wraithSkimmer',
 	'siegeMech',
 	'bulwarkGuard',
-	'suppressorTeam',
-	'disruptorUnit',
-	'interceptorBike',
+	'aegisSkirmisher',
+	'pyreSuppressor',
+	'arcDisruptor',
+	'phantomLance',
 	'annihilatorPlatform',
 	'voidStalker',
+	'siegeColossus',
 	'overseer'
 ] as const;
 
@@ -56,18 +58,20 @@ function perWaveTroopCap(troopType: string, available: number): number {
 }
 
 const TROOP_LABELS: Record<string, string> = {
-	lancerDrone: 'Lancer Drone',
+	sentinelLancer: 'Sentinel Lancer',
 	assaultTrooper: 'Assault Trooper',
-	breakerUnit: 'Breaker Unit',
+	vanguardBreaker: 'Vanguard Breaker',
 	reconOperative: 'Recon Operative',
-	skimmerBike: 'Skimmer Bike',
+	wraithSkimmer: 'Wraith Skimmer',
 	siegeMech: 'Siege Mech',
 	bulwarkGuard: 'Bulwark Guard',
-	suppressorTeam: 'Suppressor Team',
-	disruptorUnit: 'Disruptor Unit',
-	interceptorBike: 'Interceptor Bike',
+	aegisSkirmisher: 'Aegis Skirmisher',
+	pyreSuppressor: 'Pyre Suppressor',
+	arcDisruptor: 'Arc Disruptor',
+	phantomLance: 'Phantom Lance',
 	annihilatorPlatform: 'Annihilator Platform',
 	voidStalker: 'Void Stalker',
+	siegeColossus: 'Siege Colossus',
 	overseer: 'Overseer'
 };
 

@@ -8,17 +8,19 @@ import NexusMap from './NexusMap';
 import ResourceIcon from './ResourceIcon';
 
 const TROOP_NAMES: { [key: string]: string } = {
-	lancerDrone: 'Lancer Drone',
+	sentinelLancer: 'Sentinel Lancer',
 	assaultTrooper: 'Assault Trooper',
-	breakerUnit: 'Breaker Unit',
+	vanguardBreaker: 'Vanguard Breaker',
 	reconOperative: 'Recon Operative',
-	skimmerBike: 'Skimmer Bike',
+	wraithSkimmer: 'Wraith Skimmer',
 	siegeMech: 'Siege Mech',
 	bulwarkGuard: 'Bulwark Guard',
-	suppressorTeam: 'Suppressor Team',
-	disruptorUnit: 'Disruptor Unit',
-	interceptorBike: 'Interceptor Bike',
+	aegisSkirmisher: 'Aegis Skirmisher',
+	pyreSuppressor: 'Pyre Suppressor',
+	arcDisruptor: 'Arc Disruptor',
+	phantomLance: 'Phantom Lance',
 	annihilatorPlatform: 'Annihilator Platform',
+	siegeColossus: 'Siege Colossus',
 	overseer: 'Overseer'
 };
 
@@ -187,31 +189,35 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 
 	const totalTroops = nexuses.reduce(
 		(sum, v) => ({
-			lancerDrone: sum.lancerDrone + v.troops.lancerDrone,
+			sentinelLancer: sum.sentinelLancer + v.troops.sentinelLancer,
 			assaultTrooper: sum.assaultTrooper + v.troops.assaultTrooper,
-			breakerUnit: sum.breakerUnit + v.troops.breakerUnit,
+			vanguardBreaker: sum.vanguardBreaker + v.troops.vanguardBreaker,
 			reconOperative: sum.reconOperative + v.troops.reconOperative,
-			skimmerBike: sum.skimmerBike + v.troops.skimmerBike,
+			wraithSkimmer: sum.wraithSkimmer + v.troops.wraithSkimmer,
 			siegeMech: sum.siegeMech + v.troops.siegeMech,
 			bulwarkGuard: sum.bulwarkGuard + (v.troops.bulwarkGuard || 0),
-			suppressorTeam: sum.suppressorTeam + (v.troops.suppressorTeam || 0),
-			disruptorUnit: sum.disruptorUnit + (v.troops.disruptorUnit || 0),
-			interceptorBike: sum.interceptorBike + (v.troops.interceptorBike || 0),
+			aegisSkirmisher: sum.aegisSkirmisher + (v.troops.aegisSkirmisher || 0),
+			pyreSuppressor: sum.pyreSuppressor + (v.troops.pyreSuppressor || 0),
+			arcDisruptor: sum.arcDisruptor + (v.troops.arcDisruptor || 0),
+			phantomLance: sum.phantomLance + (v.troops.phantomLance || 0),
 			annihilatorPlatform: sum.annihilatorPlatform + (v.troops.annihilatorPlatform || 0),
+			siegeColossus: sum.siegeColossus + (v.troops.siegeColossus || 0),
 			overseer: sum.overseer + (v.troops.overseer || 0)
 		}),
 		{
-			lancerDrone: 0,
+			sentinelLancer: 0,
 			assaultTrooper: 0,
-			breakerUnit: 0,
+			vanguardBreaker: 0,
 			reconOperative: 0,
-			skimmerBike: 0,
+			wraithSkimmer: 0,
 			siegeMech: 0,
 			bulwarkGuard: 0,
-			suppressorTeam: 0,
-			disruptorUnit: 0,
-			interceptorBike: 0,
+			aegisSkirmisher: 0,
+			pyreSuppressor: 0,
+			arcDisruptor: 0,
+			phantomLance: 0,
 			annihilatorPlatform: 0,
+			siegeColossus: 0,
 			overseer: 0
 		}
 	);
@@ -355,8 +361,8 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 			{
 				id: 'fast-raiders',
 				title: 'Fast Raiders',
-				description: 'Train 5 Skimmer Bikes.',
-				completed: done('first_blood', 'train_skimmer_bike_5', tt('skimmerBike') >= 5)
+				description: 'Train 5 Wraith Skimmers.',
+				completed: done('first_blood', 'train_skimmer_bike_5', tt('wraithSkimmer') >= 5)
 			},
 			{
 				id: 'first-expedition',
@@ -460,8 +466,8 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 			{
 				id: 'disruptor-corps',
 				title: 'Disruptor Corps',
-				description: 'Train 10 Disruptor Units.',
-				completed: done('veteran', 'train_disruptor_10', tt('disruptorUnit') >= 10)
+				description: 'Train 10 Arc Disruptors.',
+				completed: done('veteran', 'train_disruptor_10', tt('arcDisruptor') >= 10)
 			},
 			{
 				id: 'proven-in-battle',
@@ -554,14 +560,16 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 				title: 'Ch.2. Expansion',
 				quests: expansionQuests,
 				unlocked: introComplete,
-				reward: '+1500 each resource, +15 pop (×CC bonus), +15 Recon Operatives, +20 Lancer Drones'
+				reward:
+					'+1500 each resource, +15 pop (×CC bonus), +15 Recon Operatives, +20 Sentinel Lancers'
 			},
 			{
 				id: 'first_blood',
 				title: 'Ch.3. First Blood',
 				quests: firstBloodQuests,
 				unlocked: expansionComplete,
-				reward: '+3500 each resource, +30 pop (×CC bonus), +25 Skimmer Bikes, +15 Breaker Units'
+				reward:
+					'+3500 each resource, +30 pop (×CC bonus), +25 Wraith Skimmers, +15 Vanguard Breakers'
 			},
 			{
 				id: 'shadow_ops',
@@ -569,7 +577,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 				quests: shadowOpsQuests,
 				unlocked: firstBloodComplete,
 				reward:
-					'+5000 each resource, +25 pop (×CC bonus), +25 Recon Operatives, +10 Disruptor Units'
+					'+5000 each resource, +25 pop (×CC bonus), +25 Recon Operatives, +10 Arc Disruptors'
 			},
 			{
 				id: 'arsenal',
@@ -577,7 +585,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 				quests: arsenalQuests,
 				unlocked: shadowOpsComplete,
 				reward:
-					'+8000 each resource, +50 pop (×CC bonus), +15 Siege Mechs, +10 Disruptors, +10 Suppressors'
+					'+8000 each resource, +50 pop (×CC bonus), +15 Siege Mechs, +10 Arc Disruptors, +10 Pyre Suppressors'
 			},
 			{
 				id: 'veteran',
@@ -585,7 +593,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 				quests: veteranQuests,
 				unlocked: arsenalComplete,
 				reward:
-					'+15000 each resource, +75 pop (×CC bonus), +20 Siege Mechs, +15 Interceptors, +5 Void Stalkers'
+					'+15000 each resource, +75 pop (×CC bonus), +20 Siege Mechs, +15 Phantom Lances, +5 Void Stalkers'
 			},
 			{
 				id: 'ghost_protocol',

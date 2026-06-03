@@ -130,34 +130,38 @@ interface Props {
 // ────────────────────────────────────────────────────────────────────────────
 
 const TROOP_KEYS = [
-	'lancerDrone',
+	'sentinelLancer',
 	'assaultTrooper',
-	'breakerUnit',
+	'vanguardBreaker',
 	'reconOperative',
-	'skimmerBike',
+	'wraithSkimmer',
 	'siegeMech',
 	'bulwarkGuard',
-	'suppressorTeam',
-	'disruptorUnit',
-	'interceptorBike',
+	'aegisSkirmisher',
+	'pyreSuppressor',
+	'arcDisruptor',
+	'phantomLance',
 	'annihilatorPlatform',
 	'voidStalker',
+	'siegeColossus',
 	'overseer'
 ] as const;
 
 const TROOP_LABELS: Record<string, string> = {
-	lancerDrone: 'Lancer',
+	sentinelLancer: 'Lancer',
 	assaultTrooper: 'Trooper',
-	breakerUnit: 'Breaker',
+	vanguardBreaker: 'Breaker',
 	reconOperative: 'Recon',
-	skimmerBike: 'Skimmer',
+	wraithSkimmer: 'Skimmer',
 	siegeMech: 'Siege',
 	bulwarkGuard: 'Bulwark',
-	suppressorTeam: 'Suppressor',
-	disruptorUnit: 'Disruptor',
-	interceptorBike: 'Interceptor',
+	aegisSkirmisher: 'Skirmisher',
+	pyreSuppressor: 'Suppressor',
+	arcDisruptor: 'Disruptor',
+	phantomLance: 'Lance',
 	annihilatorPlatform: 'Annihilator',
 	voidStalker: 'Stalker',
+	siegeColossus: 'Colossus',
 	overseer: 'Overseer'
 };
 

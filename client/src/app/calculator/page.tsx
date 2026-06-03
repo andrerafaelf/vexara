@@ -26,36 +26,43 @@ import {
 } from '@/utils/combatSim';
 import annihilatorplatformImg from '@/assets/troops/annihilatorplatform.png';
 import assaulttrooperImg from '@/assets/troops/assaulttrooper.png';
-import breakerunitImg from '@/assets/troops/breakerunit.png';
 import bulwarkguardImg from '@/assets/troops/bulwarkguard.png';
-import disruptorunitImg from '@/assets/troops/disruptorunit.png';
-import interceptorbikeImg from '@/assets/troops/interceptorbike.png';
-import lancerdroneImg from '@/assets/troops/lancerdrone.png';
 import overseerImg from '@/assets/troops/overseer.png';
 import plasmaturretImg from '@/assets/troops/plasmaturret.png';
 import reconoperativeImg from '@/assets/troops/reconoperative.png';
 import siegemechImg from '@/assets/troops/siegemech.png';
-import skimmerbikeImg from '@/assets/troops/skimmerbike.png';
-import suppressorteamImg from '@/assets/troops/suppressorteam.png';
 import voidstalkerImg from '@/assets/troops/voidstalker.png';
+// Renamed units (Stage 2d) - PNG files keep legacy names; import aliases match
+// the new troop keys. New units (Siege Colossus, Aegis Skirmisher) reuse
+// existing art as placeholders until per-unit art ships.
+import vanguardBreakerImg from '@/assets/troops/breakerunit.png';
+import arcDisruptorImg from '@/assets/troops/disruptorunit.png';
+import phantomLanceImg from '@/assets/troops/interceptorbike.png';
+import sentinelLancerImg from '@/assets/troops/lancerdrone.png';
+import wraithSkimmerImg from '@/assets/troops/skimmerbike.png';
+import pyreSuppressorImg from '@/assets/troops/suppressorteam.png';
+import siegeColossusImg from '@/assets/troops/siegemech.png';
+import aegisSkirmisherImg from '@/assets/troops/bulwarkguard.png';
 import '@/styles/Calculator.css';
 
 // ── Static data ────────────────────────────────────────────────────────────
 
 const TROOP_LABELS: Record<TroopKey, string> = {
-	lancerDrone: 'Lancer Drone',
+	sentinelLancer: 'Sentinel Lancer',
 	assaultTrooper: 'Assault Trooper',
-	breakerUnit: 'Breaker Unit',
+	vanguardBreaker: 'Vanguard Breaker',
 	reconOperative: 'Recon Operative',
-	skimmerBike: 'Skimmer Bike',
+	wraithSkimmer: 'Wraith Skimmer',
 	bulwarkGuard: 'Bulwark Guard',
-	suppressorTeam: 'Suppressor Team',
-	disruptorUnit: 'Disruptor Unit',
-	interceptorBike: 'Interceptor Bike',
+	aegisSkirmisher: 'Aegis Skirmisher',
+	pyreSuppressor: 'Pyre Suppressor',
+	arcDisruptor: 'Arc Disruptor',
+	phantomLance: 'Phantom Lance',
 	siegeMech: 'Siege Mech',
 	annihilatorPlatform: 'Annihilator Platform',
 	voidStalker: 'Void Stalker',
 	plasmaTurret: 'Plasma Turret',
+	siegeColossus: 'Siege Colossus',
 	overseer: 'Overseer'
 };
 
@@ -74,30 +81,41 @@ const CLASS_COLOR: Record<TroopClass, string> = {
 };
 
 const TROOP_IMAGES: Record<TroopKey, StaticImageData> = {
-	lancerDrone: lancerdroneImg,
+	sentinelLancer: sentinelLancerImg,
 	assaultTrooper: assaulttrooperImg,
-	breakerUnit: breakerunitImg,
+	vanguardBreaker: vanguardBreakerImg,
 	reconOperative: reconoperativeImg,
-	skimmerBike: skimmerbikeImg,
+	wraithSkimmer: wraithSkimmerImg,
 	bulwarkGuard: bulwarkguardImg,
-	suppressorTeam: suppressorteamImg,
-	disruptorUnit: disruptorunitImg,
-	interceptorBike: interceptorbikeImg,
+	aegisSkirmisher: aegisSkirmisherImg,
+	pyreSuppressor: pyreSuppressorImg,
+	arcDisruptor: arcDisruptorImg,
+	phantomLance: phantomLanceImg,
 	siegeMech: siegemechImg,
 	annihilatorPlatform: annihilatorplatformImg,
 	voidStalker: voidstalkerImg,
 	plasmaTurret: plasmaturretImg,
+	siegeColossus: siegeColossusImg,
 	overseer: overseerImg
 };
 
 // Both panels expose the full roster so the calculator can model oddball
 // scenarios, including sending defensive units as attackers.
 const ALL_TROOP_GROUPS: { cls: TroopClass; keys: TroopKey[] }[] = [
-	{ cls: 'mobile', keys: ['breakerUnit', 'skimmerBike', 'interceptorBike', 'voidStalker'] },
-	{ cls: 'armor', keys: ['assaultTrooper', 'bulwarkGuard', 'siegeMech'] },
+	{
+		cls: 'mobile',
+		keys: ['vanguardBreaker', 'wraithSkimmer', 'phantomLance', 'voidStalker', 'aegisSkirmisher']
+	},
+	{ cls: 'armor', keys: ['assaultTrooper', 'bulwarkGuard', 'siegeMech', 'siegeColossus'] },
 	{
 		cls: 'fire',
-		keys: ['lancerDrone', 'suppressorTeam', 'disruptorUnit', 'annihilatorPlatform', 'plasmaTurret']
+		keys: [
+			'sentinelLancer',
+			'pyreSuppressor',
+			'arcDisruptor',
+			'annihilatorPlatform',
+			'plasmaTurret'
+		]
 	},
 	{ cls: 'special', keys: ['reconOperative', 'overseer'] }
 ];

@@ -12,16 +12,18 @@ const TROOP_COMMIT_FRACTION = 0.45; // how much of the core's garrison goes on a
 const MIN_TROOPS_PER_RAID = 12;
 
 const COMBAT_TROOP_KEYS = [
-	'lancerDrone',
+	'sentinelLancer',
 	'assaultTrooper',
-	'breakerUnit',
-	'skimmerBike',
+	'vanguardBreaker',
+	'wraithSkimmer',
 	'siegeMech',
 	'bulwarkGuard',
-	'suppressorTeam',
-	'disruptorUnit',
-	'interceptorBike',
-	'annihilatorPlatform'
+	'aegisSkirmisher',
+	'pyreSuppressor',
+	'arcDisruptor',
+	'phantomLance',
+	'annihilatorPlatform',
+	'siegeColossus'
 ] as const;
 type CombatTroopKey = (typeof COMBAT_TROOP_KEYS)[number];
 

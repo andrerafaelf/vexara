@@ -263,20 +263,22 @@ model Nexus {
   stealthArray    Int @default(0)
 
   // Troops
-  lancerDrone         Int @default(0)
+  sentinelLancer      Int @default(0)
   assaultTrooper      Int @default(0)
-  breakerUnit         Int @default(0)
+  vanguardBreaker     Int @default(0)
   reconOperative      Int @default(0)
-  skimmerBike         Int @default(0)
+  wraithSkimmer       Int @default(0)
   siegeMech           Int @default(0)
   bulwarkGuard        Int @default(0)
-  suppressorTeam      Int @default(0)
-  disruptorUnit       Int @default(0)
-  interceptorBike     Int @default(0)
+  pyreSuppressor      Int @default(0)
+  arcDisruptor        Int @default(0)
+  phantomLance        Int @default(0)
   annihilatorPlatform Int @default(0)
   voidStalker         Int @default(0)
   plasmaTurret        Int @default(0)
   overseer            Int @default(0)
+  siegeColossus       Int @default(0)
+  aegisSkirmisher     Int @default(0)
 
   // Population
   populationCurrent Int @default(5)

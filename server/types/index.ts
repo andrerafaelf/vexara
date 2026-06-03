@@ -17,39 +17,43 @@ export interface AuthRequest extends Request {
 // and the TroopCounts type provably equivalent — add a troop to one without the
 // other and the build fails, so they can never disagree again.
 export const TROOP_KEYS = [
-	'lancerDrone',
+	'sentinelLancer',
 	'assaultTrooper',
-	'breakerUnit',
+	'vanguardBreaker',
 	'reconOperative',
-	'skimmerBike',
+	'wraithSkimmer',
 	'siegeMech',
 	'bulwarkGuard',
-	'suppressorTeam',
-	'disruptorUnit',
-	'interceptorBike',
+	'pyreSuppressor',
+	'arcDisruptor',
+	'phantomLance',
 	'annihilatorPlatform',
 	'voidStalker',
 	'plasmaTurret',
-	'overseer'
+	'overseer',
+	'siegeColossus',
+	'aegisSkirmisher'
 ] as const;
 
 export type TroopKey = (typeof TROOP_KEYS)[number];
 
 export interface TroopCounts {
-	lancerDrone: number;
+	sentinelLancer: number;
 	assaultTrooper: number;
-	breakerUnit: number;
+	vanguardBreaker: number;
 	reconOperative: number;
-	skimmerBike: number;
+	wraithSkimmer: number;
 	siegeMech: number;
 	bulwarkGuard: number;
-	suppressorTeam: number;
-	disruptorUnit: number;
-	interceptorBike: number;
+	pyreSuppressor: number;
+	arcDisruptor: number;
+	phantomLance: number;
 	annihilatorPlatform: number;
 	voidStalker: number;
 	plasmaTurret: number;
 	overseer: number;
+	siegeColossus: number;
+	aegisSkirmisher: number;
 }
 
 // Compile-time proof that TROOP_KEYS and keyof TroopCounts are the same set.

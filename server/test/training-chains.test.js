@@ -10,9 +10,9 @@ test('pre-veteran (CC<15): combat units collapse into one combat chain', () => {
   for (const cc of [0, 10, 14]) {
     assert.deepEqual(getTrainingChains(cc), ['combat', 'special']);
     // Every fighting unit maps to `combat`, regardless of its counter class.
-    assert.equal(trainingChainFor('skimmerBike', cc), 'combat'); // mobile
+    assert.equal(trainingChainFor('wraithSkimmer', cc), 'combat'); // mobile
     assert.equal(trainingChainFor('assaultTrooper', cc), 'combat'); // armor
-    assert.equal(trainingChainFor('lancerDrone', cc), 'combat'); // fire
+    assert.equal(trainingChainFor('sentinelLancer', cc), 'combat'); // fire
     // Recon + overseer are always special.
     assert.equal(trainingChainFor('reconOperative', cc), 'special');
     assert.equal(trainingChainFor('overseer', cc), 'special');
@@ -22,11 +22,11 @@ test('pre-veteran (CC<15): combat units collapse into one combat chain', () => {
 test('veteran (CC>=15): combat chain splits into mobile/armor/fire', () => {
   for (const cc of [15, 18, 20]) {
     assert.deepEqual(getTrainingChains(cc), ['mobile', 'armor', 'fire', 'special']);
-    assert.equal(trainingChainFor('skimmerBike', cc), 'mobile');
+    assert.equal(trainingChainFor('wraithSkimmer', cc), 'mobile');
     assert.equal(trainingChainFor('voidStalker', cc), 'mobile');
     assert.equal(trainingChainFor('assaultTrooper', cc), 'armor');
     assert.equal(trainingChainFor('siegeMech', cc), 'armor');
-    assert.equal(trainingChainFor('lancerDrone', cc), 'fire');
+    assert.equal(trainingChainFor('sentinelLancer', cc), 'fire');
     assert.equal(trainingChainFor('plasmaTurret', cc), 'fire');
     assert.equal(trainingChainFor('overseer', cc), 'special');
     assert.equal(trainingChainFor('reconOperative', cc), 'special');
@@ -34,8 +34,8 @@ test('veteran (CC>=15): combat chain splits into mobile/armor/fire', () => {
 });
 
 test('the CC15 boundary flips exactly at the veteran threshold', () => {
-  assert.equal(trainingChainFor('skimmerBike', 14), 'combat');
-  assert.equal(trainingChainFor('skimmerBike', 15), 'mobile');
+  assert.equal(trainingChainFor('wraithSkimmer', 14), 'combat');
+  assert.equal(trainingChainFor('wraithSkimmer', 15), 'mobile');
 });
 
 test('slot budget: pre-veteran keeps 5, veteran is the tight base 2 + CC18/19 ramp', () => {

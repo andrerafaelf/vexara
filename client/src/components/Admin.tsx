@@ -37,11 +37,11 @@ interface Attack {
 		nexus: { _id: string; name: string; x: number; y: number };
 	};
 	troops: {
-		lancerDrone: number;
+		sentinelLancer: number;
 		assaultTrooper: number;
-		breakerUnit: number;
+		vanguardBreaker: number;
 		reconDrone: number;
-		skimmerBike: number;
+		wraithSkimmer: number;
 		siegeMech: number;
 	};
 	arrivesAt: string;
@@ -135,17 +135,19 @@ const Admin: React.FC = () => {
 	const openTroopModal = (nexusId: string) => {
 		setModal({ type: 'troops', nexusId });
 		setFormData({
-			lancerDrone: 0,
+			sentinelLancer: 0,
 			assaultTrooper: 0,
-			breakerUnit: 0,
+			vanguardBreaker: 0,
 			reconOperative: 0,
-			skimmerBike: 0,
+			wraithSkimmer: 0,
 			siegeMech: 0,
 			bulwarkGuard: 0,
-			suppressorTeam: 0,
-			disruptorUnit: 0,
-			interceptorBike: 0,
+			aegisSkirmisher: 0,
+			pyreSuppressor: 0,
+			arcDisruptor: 0,
+			phantomLance: 0,
 			annihilatorPlatform: 0,
+			siegeColossus: 0,
 			overseer: 0
 		});
 	};
@@ -428,22 +430,22 @@ const Admin: React.FC = () => {
 										/>
 									</div>
 									<div className="form-group">
-										<label>Lancer Drone</label>
+										<label>Sentinel Lancer</label>
 										<input
 											type="number"
-											value={formData.lancerDrone || 0}
+											value={formData.sentinelLancer || 0}
 											onChange={(e) =>
-												setFormData({ ...formData, lancerDrone: parseInt(e.target.value) || 0 })
+												setFormData({ ...formData, sentinelLancer: parseInt(e.target.value) || 0 })
 											}
 										/>
 									</div>
 									<div className="form-group">
-										<label>Breaker Unit</label>
+										<label>Vanguard Breaker</label>
 										<input
 											type="number"
-											value={formData.breakerUnit || 0}
+											value={formData.vanguardBreaker || 0}
 											onChange={(e) =>
-												setFormData({ ...formData, breakerUnit: parseInt(e.target.value) || 0 })
+												setFormData({ ...formData, vanguardBreaker: parseInt(e.target.value) || 0 })
 											}
 										/>
 									</div>
@@ -458,12 +460,12 @@ const Admin: React.FC = () => {
 										/>
 									</div>
 									<div className="form-group">
-										<label>Skimmer Bike</label>
+										<label>Wraith Skimmer</label>
 										<input
 											type="number"
-											value={formData.skimmerBike || 0}
+											value={formData.wraithSkimmer || 0}
 											onChange={(e) =>
-												setFormData({ ...formData, skimmerBike: parseInt(e.target.value) || 0 })
+												setFormData({ ...formData, wraithSkimmer: parseInt(e.target.value) || 0 })
 											}
 										/>
 									</div>
@@ -488,32 +490,52 @@ const Admin: React.FC = () => {
 										/>
 									</div>
 									<div className="form-group">
-										<label>Suppressor Team</label>
+										<label>Pyre Suppressor</label>
 										<input
 											type="number"
-											value={formData.suppressorTeam || 0}
+											value={formData.pyreSuppressor || 0}
 											onChange={(e) =>
-												setFormData({ ...formData, suppressorTeam: parseInt(e.target.value) || 0 })
+												setFormData({ ...formData, pyreSuppressor: parseInt(e.target.value) || 0 })
 											}
 										/>
 									</div>
 									<div className="form-group">
-										<label>Disruptor Unit</label>
+										<label>Arc Disruptor</label>
 										<input
 											type="number"
-											value={formData.disruptorUnit || 0}
+											value={formData.arcDisruptor || 0}
 											onChange={(e) =>
-												setFormData({ ...formData, disruptorUnit: parseInt(e.target.value) || 0 })
+												setFormData({ ...formData, arcDisruptor: parseInt(e.target.value) || 0 })
 											}
 										/>
 									</div>
 									<div className="form-group">
-										<label>Interceptor Bike</label>
+										<label>Phantom Lance</label>
 										<input
 											type="number"
-											value={formData.interceptorBike || 0}
+											value={formData.phantomLance || 0}
 											onChange={(e) =>
-												setFormData({ ...formData, interceptorBike: parseInt(e.target.value) || 0 })
+												setFormData({ ...formData, phantomLance: parseInt(e.target.value) || 0 })
+											}
+										/>
+									</div>
+									<div className="form-group">
+										<label>Aegis Skirmisher</label>
+										<input
+											type="number"
+											value={formData.aegisSkirmisher || 0}
+											onChange={(e) =>
+												setFormData({ ...formData, aegisSkirmisher: parseInt(e.target.value) || 0 })
+											}
+										/>
+									</div>
+									<div className="form-group">
+										<label>Siege Colossus</label>
+										<input
+											type="number"
+											value={formData.siegeColossus || 0}
+											onChange={(e) =>
+												setFormData({ ...formData, siegeColossus: parseInt(e.target.value) || 0 })
 											}
 										/>
 									</div>

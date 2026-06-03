@@ -38,19 +38,31 @@ export interface TroopCost {
 }
 
 export const TROOP_COSTS: Record<string, TroopCost> = {
-	lancerDrone: { biomass: 150, alloy: 150, ore: 200, population: 1, time: 53 },
+	sentinelLancer: { biomass: 150, alloy: 150, ore: 200, population: 1, time: 53 },
 	assaultTrooper: { biomass: 150, alloy: 150, ore: 350, population: 1, time: 79 },
-	breakerUnit: { biomass: 250, alloy: 150, ore: 300, population: 1, time: 160 },
+	vanguardBreaker: { biomass: 250, alloy: 150, ore: 300, population: 1, time: 160 },
 	reconOperative: { biomass: 400, alloy: 150, ore: 400, population: 1, time: 180 },
-	suppressorTeam: { biomass: 450, alloy: 400, ore: 450, population: 2, time: 540 },
-	skimmerBike: { biomass: 625, alloy: 500, ore: 750, population: 3, time: 720 },
+	pyreSuppressor: { biomass: 450, alloy: 400, ore: 450, population: 2, time: 540 },
+	wraithSkimmer: { biomass: 625, alloy: 500, ore: 750, population: 3, time: 720 },
 	bulwarkGuard: { biomass: 400, alloy: 600, ore: 500, population: 2, time: 720 },
-	disruptorUnit: { biomass: 550, alloy: 750, ore: 650, population: 2, time: 840 },
-	interceptorBike: { biomass: 750, alloy: 600, ore: 900, population: 3, time: 1080 },
+	// Aegis Skirmisher (new) - Mobile defender, peer to Bulwark Guard. Lower
+	// defense than Bulwark (90 vs 130) but mobile + intercepts incoming mobile
+	// attackers. Pop 2 matches Bulwark; cost and train-time scaled to the
+	// same tier so it competes as a defensive choice, not a strictly better
+	// or worse one.
+	aegisSkirmisher: { biomass: 500, alloy: 550, ore: 450, population: 2, time: 720 },
+	arcDisruptor: { biomass: 550, alloy: 750, ore: 650, population: 2, time: 840 },
+	phantomLance: { biomass: 750, alloy: 600, ore: 900, population: 3, time: 1080 },
 	voidStalker: { biomass: 1100, alloy: 900, ore: 1400, population: 3, time: 1620 },
 	siegeMech: { biomass: 1250, alloy: 1000, ore: 2000, population: 4, time: 1800 },
 	plasmaTurret: { biomass: 1500, alloy: 1200, ore: 2500, population: 3, time: 2700 },
 	annihilatorPlatform: { biomass: 2000, alloy: 1750, ore: 3000, population: 4, time: 2400 },
+	// Siege Colossus (new) - tier-3 Armor attacker peer to Annihilator and
+	// Void Stalker. Heaviest single unit (pop 5, slowest speed 6), longest
+	// train time, designed to crack fortified Nexuses. Slightly cheaper than
+	// Annihilator (the fire endgame) but more expensive than Void Stalker
+	// (the mobile endgame). The hammer of the late-game army.
+	siegeColossus: { biomass: 1800, alloy: 2200, ore: 3200, population: 5, time: 3000 },
 	overseer: { biomass: 180000, alloy: 140000, ore: 120000, population: 5, time: 14400 }
 };
 
@@ -166,9 +178,12 @@ export function getMaxTrainingQueueSlots(commandLevel: number): number {
 // (attackService support branch + troopTransferController) so they never drift.
 export const STATIONABLE_TROOPS: readonly string[] = [
 	'assaultTrooper',
-	'lancerDrone',
+	'sentinelLancer',
 	'siegeMech',
-	'bulwarkGuard'
+	'bulwarkGuard',
+	// Aegis Skirmisher (Stage 2d): Mobile defender, joins the stationable
+	// roster so allies can lend it as a fast-response reinforcement.
+	'aegisSkirmisher'
 ];
 const STATIONABLE_TROOP_SET = new Set<string>(STATIONABLE_TROOPS);
 
@@ -177,20 +192,22 @@ export function isStationableTroop(troopType: string): boolean {
 }
 
 const TROOP_COMBAT_CLASS: Record<string, 'mobile' | 'armor' | 'fire' | 'special'> = {
-	lancerDrone: 'fire',
+	sentinelLancer: 'fire',
 	assaultTrooper: 'armor',
-	breakerUnit: 'mobile',
+	vanguardBreaker: 'mobile',
 	reconOperative: 'special',
-	skimmerBike: 'mobile',
+	wraithSkimmer: 'mobile',
 	bulwarkGuard: 'armor',
-	suppressorTeam: 'fire',
-	disruptorUnit: 'fire',
-	interceptorBike: 'mobile',
+	pyreSuppressor: 'fire',
+	arcDisruptor: 'fire',
+	phantomLance: 'mobile',
 	siegeMech: 'armor',
 	annihilatorPlatform: 'fire',
 	voidStalker: 'mobile',
 	plasmaTurret: 'fire',
-	overseer: 'special'
+	overseer: 'special',
+	siegeColossus: 'armor',
+	aegisSkirmisher: 'mobile'
 };
 
 // Which chains a nexus has, given its Command Core level. Order is fixed so the
@@ -297,20 +314,22 @@ export function getOverseerCost(nexusCount: number): {
 // overseer) train from Command Core. Single source of truth so call sites can
 // derive both the gate check and the train-time factor from the troop type.
 const TROOP_TRAINING_BUILDING: Record<string, string> = {
-	lancerDrone: 'plasmaForge',
+	sentinelLancer: 'plasmaForge',
 	assaultTrooper: 'armorFoundry',
-	breakerUnit: 'hangarBay',
+	vanguardBreaker: 'hangarBay',
 	reconOperative: 'commandCore',
-	skimmerBike: 'hangarBay',
+	wraithSkimmer: 'hangarBay',
 	bulwarkGuard: 'armorFoundry',
-	suppressorTeam: 'plasmaForge',
-	disruptorUnit: 'plasmaForge',
-	interceptorBike: 'hangarBay',
+	pyreSuppressor: 'plasmaForge',
+	arcDisruptor: 'plasmaForge',
+	phantomLance: 'hangarBay',
 	siegeMech: 'armorFoundry',
 	annihilatorPlatform: 'plasmaForge',
 	voidStalker: 'hangarBay',
 	plasmaTurret: 'plasmaForge',
-	overseer: 'commandCore'
+	overseer: 'commandCore',
+	siegeColossus: 'armorFoundry',
+	aegisSkirmisher: 'hangarBay'
 };
 
 export function trainingBuildingFor(troopType: string): string {

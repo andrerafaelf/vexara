@@ -84,44 +84,44 @@ const BUILDING_NAMES: Record<string, string> = {
 };
 
 const TROOP_NAMES: Record<string, string> = {
-	lancerDrone: 'Lancer Drone',
+	sentinelLancer: 'Sentinel Lancer',
 	assaultTrooper: 'Assault Trooper',
-	breakerUnit: 'Breaker Unit',
+	vanguardBreaker: 'Vanguard Breaker',
 	reconOperative: 'Recon Operative',
-	skimmerBike: 'Skimmer Bike',
+	wraithSkimmer: 'Wraith Skimmer',
 	bulwarkGuard: 'Bulwark Guard',
-	suppressorTeam: 'Suppressor Team',
-	disruptorUnit: 'Disruptor Unit',
-	interceptorBike: 'Interceptor Bike',
+	pyreSuppressor: 'Pyre Suppressor',
+	arcDisruptor: 'Arc Disruptor',
+	phantomLance: 'Phantom Lance',
 	siegeMech: 'Siege Mech',
 	annihilatorPlatform: 'Annihilator Platform'
 };
 
 const TROOP_POPULATION: Record<string, number> = {
-	lancerDrone: 1,
+	sentinelLancer: 1,
 	assaultTrooper: 1,
-	breakerUnit: 1,
+	vanguardBreaker: 1,
 	reconOperative: 1,
-	skimmerBike: 3,
+	wraithSkimmer: 3,
 	bulwarkGuard: 2,
-	suppressorTeam: 2,
-	disruptorUnit: 2,
-	interceptorBike: 3,
+	pyreSuppressor: 2,
+	arcDisruptor: 2,
+	phantomLance: 3,
 	siegeMech: 4,
 	annihilatorPlatform: 5
 };
 
 // Grant amounts indexed by commandCore tier: 1-4 / 5-8 / 9-12 / 13-20
 const TROOP_GRANTS: Record<string, [number, number, number, number]> = {
-	lancerDrone: [35, 75, 120, 180],
-	breakerUnit: [35, 75, 120, 180],
+	sentinelLancer: [35, 75, 120, 180],
+	vanguardBreaker: [35, 75, 120, 180],
 	assaultTrooper: [20, 45, 75, 110],
 	reconOperative: [20, 45, 75, 110],
 	bulwarkGuard: [15, 32, 50, 75],
-	suppressorTeam: [15, 32, 50, 75],
-	skimmerBike: [12, 25, 40, 60],
-	disruptorUnit: [12, 25, 40, 60],
-	interceptorBike: [12, 25, 40, 60],
+	pyreSuppressor: [15, 32, 50, 75],
+	wraithSkimmer: [12, 25, 40, 60],
+	arcDisruptor: [12, 25, 40, 60],
+	phantomLance: [12, 25, 40, 60],
 	siegeMech: [5, 12, 20, 30],
 	annihilatorPlatform: [2, 5, 10, 15]
 };

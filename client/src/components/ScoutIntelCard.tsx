@@ -31,37 +31,56 @@ interface ScoutIntelCardProps {
 }
 
 const TROOP_STATS: Record<string, { attack: number; defense: number }> = {
-	lancerDrone: { attack: 3, defense: 22 },
+	sentinelLancer: { attack: 3, defense: 22 },
 	assaultTrooper: { attack: 5, defense: 45 },
-	breakerUnit: { attack: 35, defense: 3 },
+	vanguardBreaker: { attack: 35, defense: 3 },
 	reconOperative: { attack: 1, defense: 20 },
-	skimmerBike: { attack: 80, defense: 10 },
+	wraithSkimmer: { attack: 80, defense: 10 },
 	siegeMech: { attack: 40, defense: 260 },
 	bulwarkGuard: { attack: 3, defense: 130 },
-	suppressorTeam: { attack: 65, defense: 8 },
-	disruptorUnit: { attack: 75, defense: 9 },
-	interceptorBike: { attack: 95, defense: 13 },
+	aegisSkirmisher: { attack: 50, defense: 90 },
+	pyreSuppressor: { attack: 65, defense: 8 },
+	arcDisruptor: { attack: 75, defense: 9 },
+	phantomLance: { attack: 95, defense: 13 },
 	voidStalker: { attack: 150, defense: 15 },
 	plasmaTurret: { attack: 0, defense: 160 },
 	annihilatorPlatform: { attack: 320, defense: 35 },
-	overseer: { attack: 0, defense: 8 }
+	siegeColossus: { attack: 280, defense: 280 },
+	overseer: { attack: 0, defense: 8 },
+	// Legacy keys preserved so a historical scout report stored under the
+	// pre-Stage-2d names still scores threat correctly.
+	lancerDrone: { attack: 3, defense: 22 },
+	breakerUnit: { attack: 35, defense: 3 },
+	skimmerBike: { attack: 80, defense: 10 },
+	suppressorTeam: { attack: 65, defense: 8 },
+	disruptorUnit: { attack: 75, defense: 9 },
+	interceptorBike: { attack: 95, defense: 13 }
 };
 
 const TROOP_NAMES: Record<string, string> = {
-	lancerDrone: 'Lancer Drone',
+	sentinelLancer: 'Sentinel Lancer',
 	assaultTrooper: 'Assault Trooper',
-	breakerUnit: 'Breaker Unit',
+	vanguardBreaker: 'Vanguard Breaker',
 	reconOperative: 'Recon Operative',
-	skimmerBike: 'Skimmer Bike',
+	wraithSkimmer: 'Wraith Skimmer',
 	siegeMech: 'Siege Mech',
 	bulwarkGuard: 'Bulwark Guard',
-	suppressorTeam: 'Suppressor Team',
-	disruptorUnit: 'Disruptor Unit',
-	interceptorBike: 'Interceptor Bike',
+	aegisSkirmisher: 'Aegis Skirmisher',
+	pyreSuppressor: 'Pyre Suppressor',
+	arcDisruptor: 'Arc Disruptor',
+	phantomLance: 'Phantom Lance',
 	annihilatorPlatform: 'Annihilator Platform',
 	voidStalker: 'Void Stalker',
 	plasmaTurret: 'Plasma Turret',
-	overseer: 'Overseer'
+	siegeColossus: 'Siege Colossus',
+	overseer: 'Overseer',
+	// Legacy keys (historical scout reports).
+	lancerDrone: 'Sentinel Lancer',
+	breakerUnit: 'Vanguard Breaker',
+	skimmerBike: 'Wraith Skimmer',
+	suppressorTeam: 'Pyre Suppressor',
+	disruptorUnit: 'Arc Disruptor',
+	interceptorBike: 'Phantom Lance'
 };
 
 // Merge garrison + allied support into one count map (for total defense/threat).

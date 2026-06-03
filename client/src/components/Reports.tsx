@@ -41,21 +41,34 @@ const buildingNames: Record<string, string> = {
 	stealthArray: 'Stealth Array'
 };
 
+// Includes legacy keys (lancerDrone, breakerUnit, skimmerBike,
+// suppressorTeam, disruptorUnit, interceptorBike) so completed historical
+// combat reports stored under those keys still resolve to a label. New
+// reports use the renamed keys per the Stage 2d migration.
 const troopNames: Record<string, string> = {
-	lancerDrone: 'Lancer Drone',
+	sentinelLancer: 'Sentinel Lancer',
 	assaultTrooper: 'Assault Trooper',
-	breakerUnit: 'Breaker Unit',
+	vanguardBreaker: 'Vanguard Breaker',
 	reconOperative: 'Recon Operative',
-	skimmerBike: 'Skimmer Bike',
+	wraithSkimmer: 'Wraith Skimmer',
 	siegeMech: 'Siege Mech',
 	bulwarkGuard: 'Bulwark Guard',
-	suppressorTeam: 'Suppressor Team',
-	disruptorUnit: 'Disruptor Unit',
-	interceptorBike: 'Interceptor Bike',
+	aegisSkirmisher: 'Aegis Skirmisher',
+	pyreSuppressor: 'Pyre Suppressor',
+	arcDisruptor: 'Arc Disruptor',
+	phantomLance: 'Phantom Lance',
 	annihilatorPlatform: 'Annihilator Platform',
 	voidStalker: 'Void Stalker',
 	plasmaTurret: 'Plasma Turret',
-	overseer: 'Overseer'
+	siegeColossus: 'Siege Colossus',
+	overseer: 'Overseer',
+	// Legacy keys preserved for historical Attack.result reports.
+	lancerDrone: 'Sentinel Lancer',
+	breakerUnit: 'Vanguard Breaker',
+	skimmerBike: 'Wraith Skimmer',
+	suppressorTeam: 'Pyre Suppressor',
+	disruptorUnit: 'Arc Disruptor',
+	interceptorBike: 'Phantom Lance'
 };
 
 const ATTACKABLE_TROOP_TYPES = new Set(
@@ -118,19 +131,21 @@ const Reports: React.FC<ReportsProps> = ({
 	const [sharing, setSharing] = useState(false);
 	const [sharePreview, setSharePreview] = useState<string | null>(null);
 	const [attackTroops, setAttackTroops] = useState({
-		lancerDrone: 0,
+		sentinelLancer: 0,
 		assaultTrooper: 0,
-		breakerUnit: 0,
+		vanguardBreaker: 0,
 		reconOperative: 0,
-		skimmerBike: 0,
+		wraithSkimmer: 0,
 		siegeMech: 0,
 		bulwarkGuard: 0,
-		suppressorTeam: 0,
-		disruptorUnit: 0,
-		interceptorBike: 0,
+		aegisSkirmisher: 0,
+		pyreSuppressor: 0,
+		arcDisruptor: 0,
+		phantomLance: 0,
 		annihilatorPlatform: 0,
 		voidStalker: 0,
 		plasmaTurret: 0,
+		siegeColossus: 0,
 		overseer: 0
 	});
 	const [readIds, setReadIds] = useState<Set<string>>(new Set());
@@ -154,19 +169,21 @@ const Reports: React.FC<ReportsProps> = ({
 		setShowAttackForm(false);
 		setReplayComplete(false);
 		setAttackTroops({
-			lancerDrone: 0,
+			sentinelLancer: 0,
 			assaultTrooper: 0,
-			breakerUnit: 0,
+			vanguardBreaker: 0,
 			reconOperative: 0,
-			skimmerBike: 0,
+			wraithSkimmer: 0,
 			siegeMech: 0,
 			bulwarkGuard: 0,
-			suppressorTeam: 0,
-			disruptorUnit: 0,
-			interceptorBike: 0,
+			aegisSkirmisher: 0,
+			pyreSuppressor: 0,
+			arcDisruptor: 0,
+			phantomLance: 0,
 			annihilatorPlatform: 0,
 			voidStalker: 0,
 			plasmaTurret: 0,
+			siegeColossus: 0,
 			overseer: 0
 		});
 	}, [selectedReport?._id]);
@@ -355,19 +372,21 @@ const Reports: React.FC<ReportsProps> = ({
 			toast('Strike sent', 'success');
 			setShowAttackForm(false);
 			setAttackTroops({
-				lancerDrone: 0,
+				sentinelLancer: 0,
 				assaultTrooper: 0,
-				breakerUnit: 0,
+				vanguardBreaker: 0,
 				reconOperative: 0,
-				skimmerBike: 0,
+				wraithSkimmer: 0,
 				siegeMech: 0,
 				bulwarkGuard: 0,
-				suppressorTeam: 0,
-				disruptorUnit: 0,
-				interceptorBike: 0,
+				aegisSkirmisher: 0,
+				pyreSuppressor: 0,
+				arcDisruptor: 0,
+				phantomLance: 0,
 				annihilatorPlatform: 0,
 				voidStalker: 0,
 				plasmaTurret: 0,
+				siegeColossus: 0,
 				overseer: 0
 			});
 		} catch (err: any) {

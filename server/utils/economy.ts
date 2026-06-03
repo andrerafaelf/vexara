@@ -162,19 +162,27 @@ export function computeResourceUpdate(
 }
 
 export const TROOP_INFLUENCE_POINTS: Record<string, number> = {
-	lancerDrone: 1,
+	sentinelLancer: 1,
 	assaultTrooper: 1,
-	breakerUnit: 1,
+	vanguardBreaker: 1,
 	reconOperative: 2,
-	suppressorTeam: 3,
+	pyreSuppressor: 3,
 	bulwarkGuard: 3,
-	skimmerBike: 4,
-	disruptorUnit: 4,
-	interceptorBike: 5,
+	// Aegis Skirmisher (Stage 2d): Mobile defender peer to Bulwark - same
+	// 3 points so it competes as a defensive investment rather than a
+	// strictly better/worse one.
+	aegisSkirmisher: 3,
+	wraithSkimmer: 4,
+	arcDisruptor: 4,
+	phantomLance: 5,
 	voidStalker: 5,
 	siegeMech: 8,
 	plasmaTurret: 10,
 	annihilatorPlatform: 13,
+	// Siege Colossus (Stage 2d): elite Armor attacker - sits between
+	// Annihilator (fire endgame, 13) and Overseer (conquest, 50). 15 reflects
+	// the heaviest single non-special unit.
+	siegeColossus: 15,
 	overseer: 50
 };
 

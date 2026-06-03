@@ -1,19 +1,30 @@
 import { NEXUS_TYPE_BONUSES } from '../realtime/economy.shared';
 
+// Includes legacy keys so a travel-time calculation against a historical
+// troop snapshot still resolves the right speed under the pre-Stage-2d names.
 export const TROOP_SPEED: Record<string, number> = {
-	lancerDrone: 20,
+	sentinelLancer: 20,
 	assaultTrooper: 18,
-	breakerUnit: 16,
+	vanguardBreaker: 16,
 	reconOperative: 25,
-	skimmerBike: 22,
+	wraithSkimmer: 22,
 	siegeMech: 10,
 	bulwarkGuard: 12,
-	suppressorTeam: 15,
-	disruptorUnit: 17,
-	interceptorBike: 28,
+	aegisSkirmisher: 24,
+	pyreSuppressor: 15,
+	arcDisruptor: 17,
+	phantomLance: 28,
 	annihilatorPlatform: 8,
 	voidStalker: 32,
-	overseer: 6
+	siegeColossus: 6,
+	overseer: 6,
+	// Legacy keys for historical reports / in-flight snapshots.
+	lancerDrone: 20,
+	breakerUnit: 16,
+	skimmerBike: 22,
+	suppressorTeam: 15,
+	disruptorUnit: 17,
+	interceptorBike: 28
 };
 
 export const TRANSFER_TRAVEL_MINUTES_PER_UNIT = 5;

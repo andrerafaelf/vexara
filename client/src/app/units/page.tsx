@@ -5,9 +5,9 @@ import PublicNav from '@/components/PublicNav';
 import { TROOPS_DOC, CLASS_COUNTERS } from '@/data/gameDocs';
 import '@/styles/GuidePages.css';
 
-const TITLE = 'Vexara Units Guide - All 14 Troops, Stats & Class Counters';
+const TITLE = 'Vexara Units Guide - All 16 Troops, Stats & Class Counters';
 const DESCRIPTION =
-	'Complete unit roster for Vexara, the free browser MMO RTS. Stats, costs, unlock requirements, and class counter relationships for all 14 troop types - Lancer Drone to Annihilator Platform.';
+	'Complete unit roster for Vexara, the free browser MMO RTS. Stats, costs, unlock requirements, and class counter relationships for all 16 troop types - Sentinel Lancer to Siege Colossus.';
 
 export const metadata: Metadata = {
 	title: TITLE,

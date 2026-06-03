@@ -29,19 +29,21 @@ export const BUILDING_KEYS = [
 export type BuildingKey = (typeof BUILDING_KEYS)[number];
 
 export const TROOP_KEYS = [
-	'lancerDrone',
+	'sentinelLancer',
 	'assaultTrooper',
-	'breakerUnit',
+	'vanguardBreaker',
 	'reconOperative',
-	'skimmerBike',
+	'wraithSkimmer',
 	'siegeMech',
 	'bulwarkGuard',
-	'suppressorTeam',
-	'disruptorUnit',
-	'interceptorBike',
+	'aegisSkirmisher',
+	'pyreSuppressor',
+	'arcDisruptor',
+	'phantomLance',
 	'voidStalker',
 	'plasmaTurret',
 	'annihilatorPlatform',
+	'siegeColossus',
 	'overseer'
 ] as const;
 export type TroopKey = (typeof TROOP_KEYS)[number];

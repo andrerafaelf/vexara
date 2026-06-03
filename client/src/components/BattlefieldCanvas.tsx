@@ -34,18 +34,20 @@ const MAX_UNIT_DOTS_PER_SIDE = 220; // cap dot count for performance on huge bat
 const PARTICLE_BUDGET = 240;
 const TROOP_COLORS: Record<TroopKey, string> = {
 	// Light, cyan
-	breakerUnit: '#74E0FF',
-	skimmerBike: '#46B5E8',
-	interceptorBike: '#2A8FCC',
+	vanguardBreaker: '#74E0FF',
+	wraithSkimmer: '#46B5E8',
+	phantomLance: '#2A8FCC',
 	voidStalker: '#A0F2FF',
+	aegisSkirmisher: '#5FD0E2',
 	// Heavy, orange/amber
 	assaultTrooper: '#FFB05A',
 	bulwarkGuard: '#E67D2F',
 	siegeMech: '#C25A12',
+	siegeColossus: '#A24500',
 	// Ranged, magenta/violet
-	lancerDrone: '#D484F0',
-	suppressorTeam: '#B85CDD',
-	disruptorUnit: '#9038C0',
+	sentinelLancer: '#D484F0',
+	pyreSuppressor: '#B85CDD',
+	arcDisruptor: '#9038C0',
 	annihilatorPlatform: '#7022A8',
 	plasmaTurret: '#5915A0',
 	// Special, pale gold
@@ -54,36 +56,40 @@ const TROOP_COLORS: Record<TroopKey, string> = {
 };
 
 const TROOP_GLYPHS: Record<TroopKey, string> = {
-	lancerDrone: '◇',
+	sentinelLancer: '◇',
 	assaultTrooper: '▲',
-	breakerUnit: '◆',
+	vanguardBreaker: '◆',
 	reconOperative: '◉',
-	skimmerBike: '◀',
+	wraithSkimmer: '◀',
 	bulwarkGuard: '■',
-	suppressorTeam: '▽',
-	disruptorUnit: '◐',
-	interceptorBike: '◣',
+	aegisSkirmisher: '◤',
+	pyreSuppressor: '▽',
+	arcDisruptor: '◐',
+	phantomLance: '◣',
 	siegeMech: '⬢',
 	annihilatorPlatform: '⬣',
 	voidStalker: '✦',
 	plasmaTurret: '◯',
+	siegeColossus: '⬟',
 	overseer: '★'
 };
 
 const TROOP_NAMES_SHORT: Record<TroopKey, string> = {
-	lancerDrone: 'Lancer',
+	sentinelLancer: 'Lancer',
 	assaultTrooper: 'Assault',
-	breakerUnit: 'Breaker',
+	vanguardBreaker: 'Breaker',
 	reconOperative: 'Recon',
-	skimmerBike: 'Skimmer',
+	wraithSkimmer: 'Skimmer',
 	bulwarkGuard: 'Bulwark',
-	suppressorTeam: 'Suppressor',
-	disruptorUnit: 'Disruptor',
-	interceptorBike: 'Interceptor',
+	aegisSkirmisher: 'Skirmisher',
+	pyreSuppressor: 'Suppressor',
+	arcDisruptor: 'Disruptor',
+	phantomLance: 'Lance',
 	siegeMech: 'Siege',
 	annihilatorPlatform: 'Annihilator',
 	voidStalker: 'Void Stalker',
 	plasmaTurret: 'Plasma',
+	siegeColossus: 'Colossus',
 	overseer: 'Overseer'
 };
 

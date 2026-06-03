@@ -11,21 +11,32 @@ interface BattleReplayProps {
 	onComplete?: () => void;
 }
 
+// Includes legacy keys (lancerDrone etc.) so completed historical battle
+// reports still render labels under the pre-Stage-2d names.
 const TROOP_SHORT: Record<string, string> = {
-	lancerDrone: 'Lancer',
+	sentinelLancer: 'Lancer',
 	assaultTrooper: 'Assault',
-	breakerUnit: 'Breaker',
+	vanguardBreaker: 'Breaker',
 	reconOperative: 'Recon',
-	skimmerBike: 'Skimmer',
+	wraithSkimmer: 'Skimmer',
 	siegeMech: 'Siege Mech',
 	bulwarkGuard: 'Bulwark',
-	suppressorTeam: 'Suppressor',
-	disruptorUnit: 'Disruptor',
-	interceptorBike: 'Interceptor',
+	aegisSkirmisher: 'Skirmisher',
+	pyreSuppressor: 'Suppressor',
+	arcDisruptor: 'Disruptor',
+	phantomLance: 'Lance',
 	annihilatorPlatform: 'Annihilator',
 	voidStalker: 'Void Stalker',
 	plasmaTurret: 'Plasma Turret',
-	overseer: 'Overseer'
+	siegeColossus: 'Colossus',
+	overseer: 'Overseer',
+	// Legacy keys for historical reports.
+	lancerDrone: 'Lancer',
+	breakerUnit: 'Breaker',
+	skimmerBike: 'Skimmer',
+	suppressorTeam: 'Suppressor',
+	disruptorUnit: 'Disruptor',
+	interceptorBike: 'Interceptor'
 };
 
 function PowerBar({

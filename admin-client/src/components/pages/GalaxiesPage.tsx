@@ -53,19 +53,21 @@ const BUILDING_LABELS: Record<BuildingKey, string> = {
 	stealthArray: 'Stealth Array'
 };
 const TROOP_LABELS: Record<TroopKey, string> = {
-	lancerDrone: 'Lancer Drone',
+	sentinelLancer: 'Sentinel Lancer',
 	assaultTrooper: 'Assault Trooper',
-	breakerUnit: 'Breaker Unit',
+	vanguardBreaker: 'Vanguard Breaker',
 	reconOperative: 'Recon Operative',
-	skimmerBike: 'Skimmer Bike',
+	wraithSkimmer: 'Wraith Skimmer',
 	siegeMech: 'Siege Mech',
 	bulwarkGuard: 'Bulwark Guard',
-	suppressorTeam: 'Suppressor Team',
-	disruptorUnit: 'Disruptor Unit',
-	interceptorBike: 'Interceptor Bike',
+	aegisSkirmisher: 'Aegis Skirmisher',
+	pyreSuppressor: 'Pyre Suppressor',
+	arcDisruptor: 'Arc Disruptor',
+	phantomLance: 'Phantom Lance',
 	voidStalker: 'Void Stalker',
 	plasmaTurret: 'Plasma Turret',
 	annihilatorPlatform: 'Annihilator Platform',
+	siegeColossus: 'Siege Colossus',
 	overseer: 'Overseer'
 };
 

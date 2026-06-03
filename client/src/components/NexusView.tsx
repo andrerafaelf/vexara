@@ -103,17 +103,25 @@ import { useOnboarding } from '../context/OnboardingContext';
 // Import troop images
 import annihilatorplatformImg from '../assets/troops/annihilatorplatform.png';
 import assaulttrooperImg from '../assets/troops/assaulttrooper.png';
-import breakerunitImg from '../assets/troops/breakerunit.png';
+// Renamed units (Stage 2d). The PNG files keep their legacy filenames - per-
+// unit art reuses the same image until new art ships. Import alias matches the
+// new troop key so the BUILDING_IMAGES map below stays readable.
+import vanguardBreakerImg from '../assets/troops/breakerunit.png';
 import bulwarkguardImg from '../assets/troops/bulwarkguard.png';
-import disruptorunitImg from '../assets/troops/disruptorunit.png';
-import interceptorbikeImg from '../assets/troops/interceptorbike.png';
-import lancerdroneImg from '../assets/troops/lancerdrone.png';
+import arcDisruptorImg from '../assets/troops/disruptorunit.png';
+import phantomLanceImg from '../assets/troops/interceptorbike.png';
+import sentinelLancerImg from '../assets/troops/lancerdrone.png';
 import overseerImg from '../assets/troops/overseer.png';
 import plasmaturretImg from '../assets/troops/plasmaturret.png';
 import reconoperativeImg from '../assets/troops/reconoperative.png';
 import siegemechImg from '../assets/troops/siegemech.png';
-import skimmerbikeImg from '../assets/troops/skimmerbike.png';
-import suppressorteamImg from '../assets/troops/suppressorteam.png';
+import wraithSkimmerImg from '../assets/troops/skimmerbike.png';
+import pyreSuppressorImg from '../assets/troops/suppressorteam.png';
+// New units (Stage 2d): Siege Colossus reuses the Siege Mech art and
+// Aegis Skirmisher reuses the Bulwark Guard art as placeholders until new
+// per-unit art ships.
+import siegeColossusImg from '../assets/troops/siegemech.png';
+import aegisSkirmisherImg from '../assets/troops/bulwarkguard.png';
 import voidstalkerImg from '../assets/troops/voidstalker.png';
 
 // Import building images
@@ -356,58 +364,64 @@ const BUILDING_IMAGES: { [key: string]: any } = {
 
 const TROOP_NAMES: { [key: string]: string } = {
 	assaultTrooper: 'Assault Trooper',
-	lancerDrone: 'Lancer Drone',
-	breakerUnit: 'Breaker Unit',
+	sentinelLancer: 'Sentinel Lancer',
+	vanguardBreaker: 'Vanguard Breaker',
 	reconOperative: 'Recon Operative',
-	skimmerBike: 'Skimmer Bike',
+	wraithSkimmer: 'Wraith Skimmer',
 	siegeMech: 'Siege Mech',
 	bulwarkGuard: 'Bulwark Guard',
-	suppressorTeam: 'Suppressor Team',
-	disruptorUnit: 'Disruptor Unit',
-	interceptorBike: 'Interceptor Bike',
+	aegisSkirmisher: 'Aegis Skirmisher',
+	pyreSuppressor: 'Pyre Suppressor',
+	arcDisruptor: 'Arc Disruptor',
+	phantomLance: 'Phantom Lance',
 	annihilatorPlatform: 'Annihilator Platform',
 	voidStalker: 'Void Stalker',
 	plasmaTurret: 'Plasma Turret',
+	siegeColossus: 'Siege Colossus',
 	overseer: 'Overseer'
 };
 
 const TROOP_IMAGES: { [key: string]: any } = {
 	assaultTrooper: assaulttrooperImg,
-	lancerDrone: lancerdroneImg,
-	breakerUnit: breakerunitImg,
+	sentinelLancer: sentinelLancerImg,
+	vanguardBreaker: vanguardBreakerImg,
 	reconOperative: reconoperativeImg,
-	skimmerBike: skimmerbikeImg,
+	wraithSkimmer: wraithSkimmerImg,
 	siegeMech: siegemechImg,
 	bulwarkGuard: bulwarkguardImg,
-	suppressorTeam: suppressorteamImg,
-	disruptorUnit: disruptorunitImg,
-	interceptorBike: interceptorbikeImg,
+	aegisSkirmisher: aegisSkirmisherImg,
+	pyreSuppressor: pyreSuppressorImg,
+	arcDisruptor: arcDisruptorImg,
+	phantomLance: phantomLanceImg,
 	annihilatorPlatform: annihilatorplatformImg,
 	voidStalker: voidstalkerImg,
 	plasmaTurret: plasmaturretImg,
+	siegeColossus: siegeColossusImg,
 	overseer: overseerImg
 };
 
 const TROOP_DESCRIPTIONS: { [key: string]: string } = {
 	assaultTrooper:
 		'Standard heavy infantry. Frontline soldier optimized for sustained combat. Counters special units. Requires Lv1 Armor Foundry.',
-	lancerDrone:
+	sentinelLancer:
 		'Ranged interceptor drone. Suppresses fast-moving light units effectively. Requires Lv2 Plasma Forge.',
-	breakerUnit:
+	vanguardBreaker:
 		'Light assault breacher. Exploits armor gaps to devastate heavy units. Requires Lv3 Hangar Bay, Lv3 Ore Extractor.',
 	reconOperative:
 		'Scout & intelligence operative. Gathers intel on enemy nexuses. Requires Lv3 Command Core.',
-	skimmerBike:
-		'Fast light raider. High-speed bike that counters heavy armor with mobility. Requires Lv5 Hangar Bay, Lv4 Alloy Forge.',
+	wraithSkimmer:
+		'Fast light raider. Stealth hovercraft that counters heavy armor with mobility. Requires Lv5 Hangar Bay, Lv4 Alloy Forge.',
 	siegeMech:
 		'Heavy siege unit. Massive mech that crushes special command units. Requires Lv10 Armor Foundry, Lv9 Ore Extractor, Lv8 Command Core.',
 	bulwarkGuard:
 		'Elite heavy defender. Heavily shielded infantry. Requires Lv5 Armor Foundry, Lv5 Life Support.',
-	suppressorTeam:
+	aegisSkirmisher:
+		'Mobile rapid-response defender. Intercepts incoming Mobile attackers before they reach your line. Requires Lv5 Hangar Bay, Lv2 Shield Grid.',
+	pyreSuppressor:
 		'Ranged suppressor. Long-range team specialized in pinning down light cavalry. Requires Lv7 Plasma Forge, Lv6 Command Core.',
-	disruptorUnit:
+	arcDisruptor:
 		'Ranged anti-armor. EMP weapons suppress heavy units. Requires Lv7 Plasma Forge, Lv6 Ore Extractor.',
-	interceptorBike:
+	phantomLance:
 		'Light rapid-response cavalry. Extremely fast, counters heavy armor. Requires Lv8 Hangar Bay, Lv7 Alloy Forge.',
 	annihilatorPlatform:
 		'Heavy artillery. Slow but devastating ranged platform that suppresses light units. Requires Lv12 Plasma Forge, Lv10 Command Core, Lv10 Shield Grid.',
@@ -415,24 +429,28 @@ const TROOP_DESCRIPTIONS: { [key: string]: string } = {
 		'Light stealth cavalry. Fastest unit in the game; hard-counters heavy armor - but is itself suppressed by ranged emplacements. Requires Lv9 Hangar Bay, Lv8 Alloy Forge, Lv3 Armory.',
 	plasmaTurret:
 		'Ranged static emplacement. Cannot be sent on attacks, defends from the nexus. Decimates light cavalry. Requires Lv11 Plasma Forge, Lv9 Command Core, Lv5 Armory.',
+	siegeColossus:
+		'Elite armor walker. Highest single-unit attack and survivability in the roster; the hammer for cracking fortified Nexuses. Slowest unit. Requires Lv13 Armor Foundry, Lv10 Command Core, Lv5 Armory.',
 	overseer:
 		'Conquest unit. Reduces enemy Control by 34 per successful strike. Requires Lv14 Command Core, Lv13 Shield Grid. Up to 3 per nexus.'
 };
 
 const TROOP_REQUIREMENTS: { [key: string]: any } = {
 	assaultTrooper: { buildings: { armorFoundry: 1 } },
-	lancerDrone: { buildings: { plasmaForge: 2 } },
-	breakerUnit: { buildings: { hangarBay: 3, oreExtractor: 3 } },
+	sentinelLancer: { buildings: { plasmaForge: 2 } },
+	vanguardBreaker: { buildings: { hangarBay: 3, oreExtractor: 3 } },
 	reconOperative: { buildings: { commandCore: 3 } },
-	skimmerBike: { buildings: { hangarBay: 5, alloyForge: 4 } },
+	wraithSkimmer: { buildings: { hangarBay: 5, alloyForge: 4 } },
 	bulwarkGuard: { buildings: { armorFoundry: 5, lifeSupport: 5 } },
-	suppressorTeam: { buildings: { plasmaForge: 7, commandCore: 6 } },
-	disruptorUnit: { buildings: { plasmaForge: 7, oreExtractor: 6 } },
-	interceptorBike: { buildings: { hangarBay: 8, alloyForge: 7 } },
+	aegisSkirmisher: { buildings: { hangarBay: 5, shieldGrid: 2 } },
+	pyreSuppressor: { buildings: { plasmaForge: 7, commandCore: 6 } },
+	arcDisruptor: { buildings: { plasmaForge: 7, oreExtractor: 6 } },
+	phantomLance: { buildings: { hangarBay: 8, alloyForge: 7 } },
 	siegeMech: { buildings: { armorFoundry: 10, oreExtractor: 9, commandCore: 8 } },
 	annihilatorPlatform: { buildings: { plasmaForge: 12, commandCore: 10, shieldGrid: 10 } },
 	voidStalker: { buildings: { hangarBay: 9, alloyForge: 8, armory: 3 } },
 	plasmaTurret: { buildings: { plasmaForge: 11, commandCore: 9, armory: 5 } },
+	siegeColossus: { buildings: { armorFoundry: 13, commandCore: 10, armory: 5 } },
 	overseer: { buildings: { commandCore: 14, shieldGrid: 13 }, maxPerNexus: 3 }
 };
 
@@ -444,16 +462,18 @@ const STORAGE_GROWTH = 1.5;
 const SHIELD_BONUS_PER_LEVEL = 0.02;
 
 const TROOP_CATEGORIES: Record<string, 'offense' | 'defense'> = {
-	breakerUnit: 'offense',
-	skimmerBike: 'offense',
-	suppressorTeam: 'offense',
-	disruptorUnit: 'offense',
-	interceptorBike: 'offense',
+	vanguardBreaker: 'offense',
+	wraithSkimmer: 'offense',
+	pyreSuppressor: 'offense',
+	arcDisruptor: 'offense',
+	phantomLance: 'offense',
 	annihilatorPlatform: 'offense',
 	voidStalker: 'offense',
+	siegeColossus: 'offense',
 	overseer: 'offense',
 	assaultTrooper: 'defense',
-	lancerDrone: 'defense',
+	sentinelLancer: 'defense',
+	aegisSkirmisher: 'defense',
 	reconOperative: 'defense',
 	siegeMech: 'defense',
 	bulwarkGuard: 'defense',
@@ -1555,9 +1575,9 @@ const NexusView: React.FC<NexusViewProps> = ({
 			Math.max(trained[key] || 0, nexus.troops[key] || 0);
 		const assaultTroopers = trainedOrAlive('assaultTrooper');
 		const reconOperatives = trainedOrAlive('reconOperative');
-		const skimmerBikes = trainedOrAlive('skimmerBike');
+		const skimmerBikes = trainedOrAlive('wraithSkimmer');
 		const siegeMechs = trainedOrAlive('siegeMech');
-		const disruptorUnits = trainedOrAlive('disruptorUnit');
+		const disruptorUnits = trainedOrAlive('arcDisruptor');
 		const annihilatorPlatforms = trainedOrAlive('annihilatorPlatform');
 
 		// First quest line walks the player through the entire opening loop:

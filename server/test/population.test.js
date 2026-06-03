@@ -9,12 +9,12 @@ const ROOMY_MAX = 100000;
 
 test('sums stationed troops by their real per-unit population cost', () => {
 	const pop = computeNexusPopulation({
-		troops: { lancerDrone: 5, voidStalker: 2, annihilatorPlatform: 1 },
+		troops: { sentinelLancer: 5, voidStalker: 2, annihilatorPlatform: 1 },
 		trainingQueue: [],
 		populationMax: ROOMY_MAX
 	});
 	const expected =
-		5 * TROOP_COSTS.lancerDrone.population +
+		5 * TROOP_COSTS.sentinelLancer.population +
 		2 * TROOP_COSTS.voidStalker.population +
 		1 * TROOP_COSTS.annihilatorPlatform.population;
 	assert.equal(pop, expected);
@@ -22,11 +22,11 @@ test('sums stationed troops by their real per-unit population cost', () => {
 
 test('ignores non-troop columns on the nexus row', () => {
 	const pop = computeNexusPopulation({
-		troops: { biomass: 9999, alloy: 9999, lifeSupport: 20, lancerDrone: 3 },
+		troops: { biomass: 9999, alloy: 9999, lifeSupport: 20, sentinelLancer: 3 },
 		trainingQueue: [],
 		populationMax: ROOMY_MAX
 	});
-	assert.equal(pop, 3 * TROOP_COSTS.lancerDrone.population);
+	assert.equal(pop, 3 * TROOP_COSTS.sentinelLancer.population);
 });
 
 test('counts queued training toward population', () => {
@@ -34,38 +34,38 @@ test('counts queued training toward population', () => {
 		troops: { siegeMech: 1 },
 		trainingQueue: [
 			{ troopType: 'voidStalker', amount: 4 },
-			{ troopType: 'lancerDrone', amount: 10 }
+			{ troopType: 'sentinelLancer', amount: 10 }
 		],
 		populationMax: ROOMY_MAX
 	});
 	const expected =
 		1 * TROOP_COSTS.siegeMech.population +
 		4 * TROOP_COSTS.voidStalker.population +
-		10 * TROOP_COSTS.lancerDrone.population;
+		10 * TROOP_COSTS.sentinelLancer.population;
 	assert.equal(pop, expected);
 });
 
 test('adds in-flight and transfer population that lives off the nexus row', () => {
 	const pop = computeNexusPopulation({
-		troops: { lancerDrone: 1 },
+		troops: { sentinelLancer: 1 },
 		trainingQueue: [],
 		populationMax: ROOMY_MAX,
 		inFlightPopulation: 12,
 		transferPopulation: 7
 	});
-	assert.equal(pop, 1 * TROOP_COSTS.lancerDrone.population + 12 + 7);
+	assert.equal(pop, 1 * TROOP_COSTS.sentinelLancer.population + 12 + 7);
 });
 
 test('extraTroops covers survivors in transit on no counted row', () => {
 	const pop = computeNexusPopulation({
-		troops: { lancerDrone: 2 },
+		troops: { sentinelLancer: 2 },
 		trainingQueue: [],
 		populationMax: ROOMY_MAX,
 		extraTroops: { voidStalker: 3 }
 	});
 	assert.equal(
 		pop,
-		2 * TROOP_COSTS.lancerDrone.population + 3 * TROOP_COSTS.voidStalker.population
+		2 * TROOP_COSTS.sentinelLancer.population + 3 * TROOP_COSTS.voidStalker.population
 	);
 });
 
@@ -85,11 +85,11 @@ test('empty nexus reports zero population', () => {
 
 test('tolerates a non-array training queue', () => {
 	const pop = computeNexusPopulation({
-		troops: { lancerDrone: 4 },
+		troops: { sentinelLancer: 4 },
 		trainingQueue: null,
 		populationMax: ROOMY_MAX
 	});
-	assert.equal(pop, 4 * TROOP_COSTS.lancerDrone.population);
+	assert.equal(pop, 4 * TROOP_COSTS.sentinelLancer.population);
 });
 
 // Regression: a stationed reinforcement (a TroopTransfer parked at a host) still
@@ -111,7 +111,7 @@ test('loadAwayPopulation counts transfers across traveling/stationed/returning, 
 		troopTransfer: {
 			findMany: async ({ where }) => {
 				captured.transferStatus = where.status;
-				return [{ troops: { siegeMech: 1 } }, { troops: { lancerDrone: 5 } }];
+				return [{ troops: { siegeMech: 1 } }, { troops: { sentinelLancer: 5 } }];
 			}
 		}
 	};
@@ -126,7 +126,7 @@ test('loadAwayPopulation counts transfers across traveling/stationed/returning, 
 	assert.equal(away.inFlightPopulation, 2 * TROOP_COSTS.voidStalker.population);
 	assert.equal(
 		away.transferPopulation,
-		1 * TROOP_COSTS.siegeMech.population + 5 * TROOP_COSTS.lancerDrone.population
+		1 * TROOP_COSTS.siegeMech.population + 5 * TROOP_COSTS.sentinelLancer.population
 	);
 });
 

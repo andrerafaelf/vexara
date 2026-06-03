@@ -101,7 +101,7 @@ const STEPS = [
 	{
 		num: '03',
 		title: 'Train troops with composition in mind',
-		body: "Vexara uses a class triangle: Mobile beats Armor, Armor beats Fire, Fire beats Mobile. Your early roster (Assault Troopers, Lancer Drones, Breaker Units) covers all three classes. Don't spam one type - a mixed force handles unknown defenders and won't be hard-countered."
+		body: "Vexara uses a class triangle: Mobile beats Armor, Armor beats Fire, Fire beats Mobile. Your early roster (Assault Troopers, Sentinel Lancers, Vanguard Breakers) covers all three classes. Don't spam one type - a mixed force handles unknown defenders and won't be hard-countered."
 	},
 	{
 		num: '04',
@@ -111,7 +111,7 @@ const STEPS = [
 	{
 		num: '05',
 		title: 'Raid neutrals for early resources',
-		body: 'Neutral nexuses on the galaxy map are unowned and generate resources passively. Raiding them is low-risk and high-reward in the early game. Your carry capacity determines how much loot comes home - Assault Troopers and Breaker Units carry well. Any army with 8,000+ carry takes 100% of lootable resources.'
+		body: 'Neutral nexuses on the galaxy map are unowned and generate resources passively. Raiding them is low-risk and high-reward in the early game. Your carry capacity determines how much loot comes home - Assault Troopers and Vanguard Breakers carry well. Any army with 8,000+ carry takes 100% of lootable resources.'
 	},
 	{
 		num: '06',
