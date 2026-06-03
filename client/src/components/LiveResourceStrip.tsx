@@ -1,8 +1,13 @@
 'use client';
 
 import React from 'react';
+import { Lock } from 'lucide-react';
 import { useNow } from '@/hooks/useNow';
 import { useFlashOnChange } from '@/realtime/useFlashOnChange';
+import {
+	getStealthVaultPerResource,
+	partitionStealthVault
+} from '@/realtime/gameConstants.shared';
 
 interface LiveResourceStripProps {
 	baseResources: { biomass: number; alloy: number; ore: number };
@@ -12,6 +17,8 @@ interface LiveResourceStripProps {
 	storageCapacity: number;
 	/** Timestamp of the last server-side resource snapshot (anchor for interpolation). */
 	lastResourceUpdate?: string | Date | null;
+	/** Stealth Array level for the hidden-vault indicator. Omit / 0 = no indicator. */
+	stealthArrayLevel?: number;
 }
 
 function fmt(v: number): string {
@@ -33,7 +40,8 @@ function LiveResourceStripInner({
 	baseResources,
 	production,
 	storageCapacity,
-	lastResourceUpdate
+	lastResourceUpdate,
+	stealthArrayLevel = 0
 }: LiveResourceStripProps) {
 	const now = useNow();
 	const anchorMs = lastResourceUpdate
@@ -51,6 +59,28 @@ function LiveResourceStripInner({
 		alloy: baseResources.alloy + production.alloy * elapsedHours,
 		ore: baseResources.ore + production.ore * elapsedHours
 	};
+	// Hidden vault from Stealth Array (Stage 2c). Same per-resource cap on
+	// each resource; on display we show the full live total to the owner -
+	// the vault indicator just tells them how much of that total is shielded
+	// from raids and scout reports.
+	const vaultCap = getStealthVaultPerResource(stealthArrayLevel);
+	const showVault = vaultCap > 0;
+	const [openVault, setOpenVault] = React.useState<string | null>(null);
+	// Tap-outside dismissal for the mobile popover. Desktop users will mouse
+	// off and the title-attr tooltip handles the rest, but tapping the icon
+	// on mobile opens the popover and a second tap anywhere closes it.
+	React.useEffect(() => {
+		if (!openVault) return;
+		const close = () => setOpenVault(null);
+		// rAF so the click that opened it doesn't immediately close it.
+		const id = requestAnimationFrame(() => {
+			document.addEventListener('click', close, { once: true });
+		});
+		return () => {
+			cancelAnimationFrame(id);
+			document.removeEventListener('click', close);
+		};
+	}, [openVault]);
 	const entries = [
 		{
 			key: 'biomass',
@@ -71,6 +101,10 @@ function LiveResourceStripInner({
 			{entries.map(({ key, label, val, rate }) => {
 				const ratio = val / storageCapacity;
 				const fullCls = ratio >= 0.98 ? 'header-res-full' : ratio >= 0.85 ? 'header-res-near' : '';
+				const { hidden } = showVault
+					? partitionStealthVault(Math.floor(val), stealthArrayLevel)
+					: { hidden: 0 };
+				const isOpen = openVault === key;
 				return (
 					<div
 						key={key}
@@ -84,6 +118,36 @@ function LiveResourceStripInner({
 							</span>
 						</span>
 						<span className="header-res-rate">{fmtRate(rate)}</span>
+						{showVault && (
+							<button
+								type="button"
+								className={`header-res-vault${isOpen ? ' is-open' : ''}`}
+								title={`Hidden vault: ${hidden.toLocaleString()} of ${vaultCap.toLocaleString()} ${label.toLowerCase()} protected by Stealth Array Lv${stealthArrayLevel}. Not lootable, not visible to scouts.`}
+								aria-label={`Hidden vault: ${hidden.toLocaleString()} protected ${label.toLowerCase()}`}
+								onClick={(e) => {
+									e.stopPropagation();
+									setOpenVault(isOpen ? null : key);
+								}}
+							>
+								<Lock size={10} aria-hidden="true" />
+								<span className="header-res-vault-amt">{fmt(hidden)}</span>
+								{isOpen && (
+									<div
+										className="header-res-vault-pop"
+										role="tooltip"
+										onClick={(e) => e.stopPropagation()}
+									>
+										<span className="header-res-vault-pop-title">Hidden vault</span>
+										<span className="header-res-vault-pop-line">
+											{hidden.toLocaleString()} / {vaultCap.toLocaleString()} stored
+										</span>
+										<span className="header-res-vault-pop-line header-res-vault-pop-foot">
+											Stealth Array Lv{stealthArrayLevel} · protected from raids and scout reports
+										</span>
+									</div>
+								)}
+							</button>
+						)}
 					</div>
 				);
 			})}

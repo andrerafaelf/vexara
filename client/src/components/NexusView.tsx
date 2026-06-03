@@ -2340,6 +2340,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 					production={production}
 					storageCapacity={storageCapacity}
 					lastResourceUpdate={nexus.lastResourceUpdate}
+					stealthArrayLevel={nexus.buildings.stealthArray ?? 0}
 				/>
 			</div>
 
