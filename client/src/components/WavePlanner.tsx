@@ -153,11 +153,14 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
 				troops: TroopMap;
 				launchAt: string;
 			}> = res.data?.scheduled ?? [];
+			// Compare as numbers to avoid string-vs-int mismatches: target._id can
+			// arrive as either "42" or 42 depending on the caller. Coerce both
+			// sides to Number so the planner never silently drops scheduled rows
+			// that belong to this target.
+			const targetIdNum = Number(target._id);
 			const forTarget = rows
-				.filter((r) => String(r.toNexusId) === target._id)
-				.sort(
-					(a, b) => new Date(a.launchAt).getTime() - new Date(b.launchAt).getTime()
-				);
+				.filter((r) => Number(r.toNexusId) === targetIdNum)
+				.sort((a, b) => new Date(a.launchAt).getTime() - new Date(b.launchAt).getTime());
 			setWaves((prev) => {
 				// Keep locally-edited (not-yet-scheduled) waves; replace the scheduled set.
 				const local = prev.filter((w) => w.scheduledId == null && !w.sent);

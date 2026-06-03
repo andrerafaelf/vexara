@@ -1,3 +1,4 @@
+import type { AttackType } from '@prisma/client';
 import type { Response } from 'express';
 import prisma from '../lib/prisma.js';
 import { serializeAttack } from '../models/Nexus.js';
@@ -384,7 +385,59 @@ export async function getScheduledAttacks(req: AuthRequest, res: Response): Prom
 			where: { userId: req.userId!, galaxyId: req.galaxyId!, status: 'pending' },
 			orderBy: { launchAt: 'asc' }
 		});
-		res.json({ scheduled: rows.map(serializeScheduledAttack) });
+
+		// Resolve source/target nexus metadata in a single batched lookup so the
+		// dashboard "Outgoing Strikes" card can render scheduled waves with the
+		// same shape it uses for active strikes (origin name, target name + coords)
+		// and a precomputed estimatedArrivesAt. Without this the client would
+		// either need a second round-trip per row or its own (drift-prone) copy
+		// of the travel formula.
+		const nexusIds = new Set<number>();
+		for (const row of rows) {
+			nexusIds.add(row.fromNexusId);
+			nexusIds.add(row.toNexusId);
+		}
+		const nexusList =
+			nexusIds.size > 0
+				? await prisma.nexus.findMany({
+						where: { id: { in: Array.from(nexusIds) } },
+						select: {
+							id: true,
+							name: true,
+							x: true,
+							y: true,
+							nexusType: true,
+							nexusTypeDoubled: true
+						}
+					})
+				: [];
+		const nexusById = new Map(nexusList.map((n) => [n.id, n]));
+
+		const enriched = (rows as Parameters<typeof serializeScheduledAttack>[0][]).map((row) => {
+			const base = serializeScheduledAttack(row);
+			const from = nexusById.get(row.fromNexusId);
+			const to = nexusById.get(row.toNexusId);
+			let estimatedArrivesAt: string | null = null;
+			if (from && to) {
+				const minutes = attackService.computeTravelMinutes(
+					from,
+					to,
+					base.troops,
+					row.type as AttackType
+				);
+				estimatedArrivesAt = new Date(row.launchAt.getTime() + minutes * 60 * 1000).toISOString();
+			}
+			return {
+				...base,
+				fromNexusName: from?.name ?? null,
+				toNexusName: to?.name ?? null,
+				toX: to?.x ?? null,
+				toY: to?.y ?? null,
+				estimatedArrivesAt
+			};
+		});
+
+		res.json({ scheduled: enriched });
 	} catch (error) {
 		logError('unhandled_controller_error', {
 			message: (error as Error).message,

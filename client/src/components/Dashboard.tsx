@@ -1,6 +1,6 @@
 import { Check, Sparkles, Users } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
-import { getGalaxyEvents, getOutgoingAttacks } from '../services/api';
+import { getGalaxyEvents, getOutgoingAttacks, getScheduledAttacks } from '../services/api';
 import { useGameSocket } from '../hooks/useGameSocket';
 import '../styles/Dashboard.css';
 import { Nexus, NexusGroup } from '../types/game';
@@ -104,6 +104,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 	const [currentTime, setCurrentTime] = useState(new Date());
 	const [now, setNow] = useState(() => Date.now());
 	const [outgoingAttacks, setOutgoingAttacks] = useState<any[]>([]);
+	const [scheduledAttacks, setScheduledAttacks] = useState<any[]>([]);
 	const [selectedAttack, setSelectedAttack] = useState<any | null>(null);
 	const [activeEventCount, setActiveEventCount] = useState(0);
 	const [focusedNexusId, setFocusedNexusId] = useState<string | null>(nexuses[0]?._id ?? null);
@@ -127,11 +128,31 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 		}
 	}, [nexuses]);
 
+	// Pending scheduled waves (queued via WavePlanner). Surfaced in the same
+	// Outgoing Strikes card so a commander sees their full attack pipeline
+	// — already-in-flight strikes and planned-but-not-yet-launched waves —
+	// in one place. Polled at the same cadence as outgoing attacks via the
+	// socket refresh signal.
+	const loadScheduledAttacks = useCallback(async () => {
+		try {
+			const res = await getScheduledAttacks();
+			setScheduledAttacks(res.data?.scheduled ?? []);
+		} catch (err) {
+			console.error('Error loading scheduled attacks:', err);
+		}
+	}, []);
+
 	useEffect(() => {
 		loadOutgoingAttacks();
-	}, [loadOutgoingAttacks]);
+		loadScheduledAttacks();
+	}, [loadOutgoingAttacks, loadScheduledAttacks]);
 
-	useGameSocket({ onAttacksRefresh: () => loadOutgoingAttacks() });
+	useGameSocket({
+		onAttacksRefresh: () => {
+			loadOutgoingAttacks();
+			loadScheduledAttacks();
+		}
+	});
 
 	useEffect(() => {
 		const now = Date.now();
@@ -751,7 +772,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 				{/* Outgoing Strikes */}
 				<div className="cc-card">
 					<h3 className="cc-card-title">Outgoing Strikes</h3>
-					{outgoingAttacks.length > 0 ? (
+					{outgoingAttacks.length > 0 || scheduledAttacks.length > 0 ? (
 						<div className="activity-list">
 							{outgoingAttacks.map((attack) => (
 								<div
@@ -779,6 +800,55 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 									</div>
 								</div>
 							))}
+
+							{/* Planned (scheduled) waves. Rendered after in-flight strikes
+							    so the timeline reads top-to-bottom: imminent → planned. */}
+							{scheduledAttacks.map((wave) => {
+								const fromName =
+									wave.fromNexusName ||
+									nexuses.find((v) => Number(v._id) === wave.fromNexusId)?.name ||
+									'Unknown';
+								return (
+									<div key={`sched-${wave.id}`} className="activity-item activity-item--planned">
+										<div className="activity-nexus">
+											{fromName}
+											<span
+												style={{
+													marginLeft: 6,
+													fontSize: 9,
+													fontWeight: 700,
+													color: 'var(--accent)',
+													letterSpacing: '0.08em'
+												}}
+											>
+												PLANNED
+											</span>
+										</div>
+										<div className="activity-details">
+											{wave.type === 'support' ? 'supporting' : '→'}{' '}
+											{wave.toNexusName || 'Unknown'}
+											{wave.toX != null && wave.toY != null
+												? ` (${wave.toX}|${wave.toY})`
+												: ''}
+										</div>
+										<div className="activity-time">
+											<span>leaves in {formatTime(wave.launchAt)}</span>
+											{wave.estimatedArrivesAt && (
+												<span
+													style={{
+														display: 'block',
+														fontSize: 10,
+														color: 'var(--text-muted)',
+														marginTop: 2
+													}}
+												>
+													arrives in {formatTime(wave.estimatedArrivesAt)}
+												</span>
+											)}
+										</div>
+									</div>
+								);
+							})}
 						</div>
 					) : (
 						<p className="no-activity">No outgoing strikes</p>

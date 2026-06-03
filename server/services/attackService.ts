@@ -26,6 +26,65 @@ export class DuplicateRequestIdError extends Error {
 
 const SUPPORTED_ATTACK_TYPES = new Set<AttackType>(['attack', 'scout', 'support']);
 
+interface TravelSourceNexus {
+	x: number;
+	y: number;
+	nexusType?: string | null;
+	nexusTypeDoubled?: boolean | null;
+}
+
+interface TravelTargetNexus {
+	x: number;
+	y: number;
+}
+
+/**
+ * Pure travel-time formula. Extracted from launchAttack so callers that need
+ * a projected arrival time (e.g. listing scheduled waves) can use the exact
+ * same math the server uses at fire time. Must stay in lockstep with the
+ * inline calculation inside launchAttack and with client/utils/travel.ts.
+ */
+export function computeTravelMinutes(
+	source: TravelSourceNexus,
+	target: TravelTargetNexus,
+	troops: Record<string, number>,
+	attackType: AttackType
+): number {
+	const distance = Math.sqrt(
+		Math.pow(target.x - source.x, 2) + Math.pow(target.y - source.y, 2)
+	);
+	const baseTravel = NEXUS_TYPE_BONUSES[source.nexusType ?? '']?.travelTimeMultiplier ?? 1;
+	const travelSpeedMultiplier =
+		baseTravel === 1
+			? 1
+			: source.nexusTypeDoubled
+				? Math.pow(baseTravel, 2)
+				: baseTravel;
+	if (attackType === 'scout') {
+		return distance * 4 * travelSpeedMultiplier;
+	}
+	const OVERSEER_EFFECTIVE_SPEED = 6;
+	const OVERSEER_TRAVEL_MULTIPLIER = 3;
+	let minSpeed = Infinity;
+	for (const [troopType, amount] of Object.entries(troops)) {
+		if (amount > 0 && (TROOP_STATS as Record<string, { speed: number }>)[troopType]) {
+			const speed =
+				troopType === 'overseer'
+					? OVERSEER_EFFECTIVE_SPEED
+					: (TROOP_STATS as Record<string, { speed: number }>)[troopType].speed;
+			if (speed < minSpeed) minSpeed = speed;
+		}
+	}
+	if (!isFinite(minSpeed)) return 0;
+	const hasOverseer = (troops.overseer || 0) > 0;
+	return (
+		distance *
+		(4 + (28 - minSpeed) / 10) *
+		(hasOverseer ? OVERSEER_TRAVEL_MULTIPLIER : 1) *
+		travelSpeedMultiplier
+	);
+}
+
 export interface LaunchAttackInput {
 	userId: number;
 	galaxyId: number;
