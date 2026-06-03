@@ -369,3 +369,48 @@ export const NEXUS_TYPE_TRAINING_MULTIPLIERS: Record<string, number> = {
 export const NEXUS_TYPE_BUILD_TIME_MULTIPLIERS: Record<string, number> = {
 	'Forward Base': 0.8
 };
+
+// ── Stealth Array (defensive concealment) ───────────────────────────────────
+// Stealth Array has two effects:
+//   1. Scout-fail chance: incoming Recon Operative scouts fail outright with
+//      this probability. On failure, the attacker loses the operatives sent
+//      and no intel is returned. Low % by design - intel must stay a reliable
+//      strategic tool. 1.5%/level, hard-capped at 22.5% at Lv15 (max level).
+//   2. Hidden vault: the first N units of each resource are stored in a
+//      hidden vault. Raids can't loot the hidden portion, and scout reports
+//      show only the visible (non-hidden) portion. Curve calibrated to land
+//      ~49k per resource at Lv15 (~1% of the 5M max storage cap) - a war
+//      recovery fund, not a raid-proofing trick. floor(550 * 1.35^L).
+export const STEALTH_SCOUT_FAIL_PER_LEVEL = 0.015;
+export const STEALTH_SCOUT_FAIL_CAP = 0.225;
+
+// Same growth rate (1.35) as the resource production curve so vault scaling
+// tracks the rest of the economy. Base 550 yields ~49k at L15 (the max level).
+export const STEALTH_VAULT_BASE = 550;
+export const STEALTH_VAULT_GROWTH = 1.35;
+
+export function getStealthScoutFailChance(stealthArrayLevel: number): number {
+	const lvl = Math.max(0, stealthArrayLevel || 0);
+	return Math.min(STEALTH_SCOUT_FAIL_CAP, lvl * STEALTH_SCOUT_FAIL_PER_LEVEL);
+}
+
+// Hidden cap per resource (biomass / alloy / ore separately). Returns 0 when
+// Stealth Array is not built.
+export function getStealthVaultPerResource(stealthArrayLevel: number): number {
+	const lvl = Math.max(0, stealthArrayLevel || 0);
+	if (lvl <= 0) return 0;
+	return Math.floor(STEALTH_VAULT_BASE * Math.pow(STEALTH_VAULT_GROWTH, lvl));
+}
+
+// Splits a single-resource stockpile into visible (lootable, scout-visible)
+// and hidden portions given the defender's Stealth Array level. Hidden fills
+// first up to the per-resource cap; everything above the cap is visible.
+export function partitionStealthVault(
+	stockpile: number,
+	stealthArrayLevel: number
+): { visible: number; hidden: number } {
+	const total = Math.max(0, Math.floor(stockpile || 0));
+	const cap = getStealthVaultPerResource(stealthArrayLevel);
+	const hidden = Math.min(total, cap);
+	return { visible: total - hidden, hidden };
+}

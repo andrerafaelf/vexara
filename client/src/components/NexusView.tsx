@@ -75,6 +75,8 @@ import {
 	getEffectiveTrainTimeSeconds,
 	getMaxTrainingQueueSlots,
 	getOverseerCost,
+	getStealthScoutFailChance,
+	getStealthVaultPerResource,
 	getTrainingChains,
 	getTrainTimeSeconds as getRecruitDiscountedTrainSeconds,
 	trainingBuildingFor,
@@ -204,7 +206,7 @@ const BUILDING_DESCRIPTIONS: { [key: string]: string } = {
 	armory:
 		'Amplifies unit class-counter bonuses in combat (+1.5% per level). Unlocks Void Stalker (Lv3) and Plasma Turret (Lv5).',
 	stealthArray:
-		'Defensive concealment array. Armory Lv3 required to upgrade past level 3.'
+		'Defensive concealment. Hides a portion of your resources from raids and scout reports (vault grows per level), and gives incoming scouts a small chance to fail outright. Armory Lv3 required to upgrade past level 3.'
 };
 
 const BUILDING_RULES: {
@@ -1405,7 +1407,11 @@ const NexusView: React.FC<NexusViewProps> = ({
 				return `Counter-bonus: +${currentBonus}% → +${nextBonus}%`;
 			}
 			case 'stealthArray': {
-				return `Stealth Array upgrade: Lv ${currentLevel} → Lv ${targetLevel}`;
+				const currentVault = getStealthVaultPerResource(currentLevel);
+				const nextVault = getStealthVaultPerResource(targetLevel);
+				const currentFail = (getStealthScoutFailChance(currentLevel) * 100).toFixed(1);
+				const nextFail = (getStealthScoutFailChance(targetLevel) * 100).toFixed(1);
+				return `Hidden vault: ${currentVault.toLocaleString()} → ${nextVault.toLocaleString()} per resource · Scout-fail: ${currentFail}% → ${nextFail}%`;
 			}
 			case 'commandCore':
 			case 'hangarBay':

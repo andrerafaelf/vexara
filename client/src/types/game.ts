@@ -298,6 +298,9 @@ export interface Attack {
 		}[];
 		alliedNexusIds?: number[];
 		mission?: 'scout';
+		// Scout-attack outcome. True when defender's Stealth Array intercepted
+		// the scout - operatives lost, no intel returned (Stage 2c).
+		scoutFailed?: boolean;
 		intel?: {
 			resources: {
 				biomass: number;

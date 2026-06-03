@@ -503,7 +503,14 @@ const Reports: React.FC<ReportsProps> = ({
 							className={`report-result ${(isMyAttack ? selectedReport.result.victory : !selectedReport.result.victory) ? 'victory' : 'defeat'}`}
 						>
 							{scoutReport ? (
-								<span>Recon complete. Intelligence updated.</span>
+								selectedReport.result.scoutFailed ? (
+									<span>
+										Scout failed — operatives lost to enemy Stealth Array. No intel
+										returned.
+									</span>
+								) : (
+									<span>Recon complete. Intelligence updated.</span>
+								)
 							) : isMyAttack ? (
 								selectedReport.result.victory ? (
 									<>

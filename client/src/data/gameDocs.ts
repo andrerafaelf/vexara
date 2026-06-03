@@ -460,9 +460,9 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 	{
 		key: 'stealthArray',
 		name: 'Stealth Array',
-		role: 'Counter-espionage',
+		role: 'Defensive concealment',
 		description:
-			'Defensive counter-intelligence array. Raises the chance that enemy embedded operatives are detected, and that their intel refreshes get discovered.',
+			'Two effects: (1) a hidden vault that protects the first N units of each resource from raids and scout reports; (2) a low chance to intercept incoming scout missions outright, costing the attacker their operatives and returning no intel.',
 		baseCost: { biomass: 100, alloy: 150, ore: 180, timeSeconds: 210 },
 		maxLevel: 15,
 		unlock: 'Command Core Lv7',
@@ -472,8 +472,10 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 			{ level: 12, requires: ['Armory Lv10', 'Command Core Lv15'] }
 		],
 		impact: [
-			'Embed detection: 5% base + 2% per level (cap 15%).',
-			'Refresh-intel discovery chance scales the same way.'
+			'Hidden vault: floor(550 * 1.35^L) units per resource (biomass, alloy, ore each get their own hidden pool). Roughly 1,500 at Lv3, 11,000 at Lv10, 49,000 at Lv15.',
+			'Hidden resources are not lootable in raids and are not visible to scout reports - the defender keeps the full balance, but raiders see only the surplus above the vault.',
+			'Auto-fill: the first units accumulated each tick are placed in the vault until full; anything above the cap sits in normal storage and is fully exposed.',
+			'Scout-fail chance: 1.5% per level, capped at 22.5% at Lv15. Failed scouts lose all operatives sent and return no intel.'
 		]
 	}
 ];

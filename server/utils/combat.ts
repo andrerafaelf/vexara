@@ -24,6 +24,11 @@ import { getNexusTypeEffectiveMultipliers, getMaxStorage } from './economy.js';
 import { computeNexusPopulation, getPopulationMax, loadAwayPopulation } from './population.js';
 import type { TroopKey } from '../types/index.js';
 import { logInfo, logWarn } from './logger.js';
+import {
+	getStealthScoutFailChance,
+	getStealthVaultPerResource,
+	partitionStealthVault
+} from './gameConstants.js';
 
 async function logFactionEvent(
 	userId: number,
@@ -357,13 +362,39 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 			const travelMs = attack.arrivesAt!.getTime() - attack.createdAt.getTime();
 			const returnsAt = new Date(Date.now() + travelMs);
 
+			// Stealth Array (Stage 2c) gives the defender a small chance to detect
+			// and intercept the scout outright. On failure the recon operative is
+			// lost, no intel returns, and the defender's report still gets the
+			// mission ping but with no captured data. Chance is 0 when the
+			// defender has no Stealth Array, so the common path is unchanged.
+			const defenderStealthLevel = defenderNexus
+				? ((defenderNexus as unknown as Record<string, number>).stealthArray as number) ?? 0
+				: 0;
+			const scoutFailChance = getStealthScoutFailChance(defenderStealthLevel);
+			const scoutFailed = defenderNexus !== null && Math.random() < scoutFailChance;
+
+			const reconSent = attackTroops.reconOperative || 0;
+			const reconSurviving = scoutFailed ? 0 : reconSent;
+
 			// Capture stationed allied support into the report so the scout reveals the
 			// REAL defensive force at scout-arrival, not just the nexus's own garrison
 			// (support lives on TroopTransfer rows, not the nexus troop columns).
-			const scoutIntel = defenderNexus ? buildDetailedScoutIntel(defenderNexus) : null;
-			if (scoutIntel) {
-				const support = await aggregateStationedSupport(defenderNexus!.id);
+			let scoutIntel = !scoutFailed && defenderNexus ? buildDetailedScoutIntel(defenderNexus) : null;
+			if (scoutIntel && defenderNexus) {
+				const support = await aggregateStationedSupport(defenderNexus.id);
 				if (support) scoutIntel.supportTroops = support;
+
+				// Hidden vault: scouts see only the visible (non-hidden) portion
+				// of each resource. Defender's actual stockpile stays untouched
+				// on the nexus row.
+				scoutIntel = {
+					...scoutIntel,
+					resources: {
+						biomass: partitionStealthVault(defenderNexus.biomass, defenderStealthLevel).visible,
+						alloy: partitionStealthVault(defenderNexus.alloy, defenderStealthLevel).visible,
+						ore: partitionStealthVault(defenderNexus.ore, defenderStealthLevel).visible
+					}
+				};
 			}
 
 			await prisma.attack.update({
@@ -373,10 +404,11 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 					returnsAt,
 					result: {
 						mission: 'scout',
-						victory: true,
+						victory: !scoutFailed,
+						scoutFailed,
 						intel: scoutIntel,
-						survivingTroops: { reconOperative: attackTroops.reconOperative || 0 },
-						attackerLosses: {},
+						survivingTroops: { reconOperative: reconSurviving },
+						attackerLosses: scoutFailed ? { reconOperative: reconSent } : {},
 						defenderLosses: {},
 						resourcesStolen: { biomass: 0, alloy: 0, ore: 0 }
 					} as Prisma.InputJsonObject
@@ -869,11 +901,31 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 			const lootProtection = defenderBonuses?.lootProtection ?? 0;
 			const lootableFraction = 1 - lootProtection;
 
+			// Stealth Array hidden vault protects the first N units of each
+			// resource from raids (Stage 2c). Only the portion ABOVE the per-
+			// resource hidden cap is exposed to the loot calculation. The actual
+			// stockpile on the nexus row stays intact - raiders can't loot what
+			// they can't see, but the defender keeps the full balance.
+			const defenderStealthLevel =
+				((defenderNexus as unknown as Record<string, number>).stealthArray as number) ?? 0;
+			const biomassVisible = partitionStealthVault(
+				defenderNexus.biomass,
+				defenderStealthLevel
+			).visible;
+			const alloyVisible = partitionStealthVault(
+				defenderNexus.alloy,
+				defenderStealthLevel
+			).visible;
+			const oreVisible = partitionStealthVault(
+				defenderNexus.ore,
+				defenderStealthLevel
+			).visible;
+
 			resourcesStolen = computeLootStolen(
 				{
-					biomass: defenderNexus.biomass,
-					alloy: defenderNexus.alloy,
-					ore: defenderNexus.ore
+					biomass: biomassVisible,
+					alloy: alloyVisible,
+					ore: oreVisible
 				},
 				survivingCarry,
 				lootableFraction
