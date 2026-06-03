@@ -37,8 +37,7 @@ finger **pixel-for-pixel** with no rebuild between frames.
 The selected-nexus ring now lives on the tile itself, so it stays locked to
 your selection as you pan and zoom. Everything else is intact — ownership
 colours, faction/ally tints, faction targets, storm zones, event jumps, the
-Jump box and Reset. On the Espionage tab a one-finger swipe still scrolls
-the page (you select targets by tapping); pinch still zooms.
+Jump box and Reset.
 
 ### New: one-time relocation token for fresh commanders
 

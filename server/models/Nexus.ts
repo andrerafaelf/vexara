@@ -82,9 +82,9 @@ export const QUEST_REWARD_BATCHES: QuestBatch[] = [
 		quests: [
 			{ id: 'build_command_core_1', check: ({ nexus }) => nexus.commandCore >= 1 },
 			{ id: 'build_command_core_2', check: ({ nexus }) => nexus.commandCore >= 2 },
-			// Quest ID preserved (it was already renamed once: troop_fab -> recruitmentCore).
-			// Now points at Armor Foundry Lv1, which trains the same first unit
-			// (Assault Trooper) the original quest pushed players toward.
+			// Quest ID preserved across renames. Now points at Armor Foundry Lv1,
+			// which trains the same first unit (Assault Trooper) the original
+			// quest pushed players toward.
 			{
 				id: 'build_troop_fab_1',
 				check: ({ nexus }) => (nexus as unknown as Record<string, number>).armorFoundry >= 1
@@ -598,13 +598,8 @@ export async function refreshResources(nexus: Nexus): Promise<Nexus> {
 	return prisma.nexus.update({ where: { id: nexus.id }, data: { ...resourceUpdate, points } });
 }
 
-// Recruitment Core was retired in the Military Restructure (Stage 2b). Its
-// production role was split across Hangar Bay / Plasma Forge / Armor Foundry,
-// so there is no longer a single canonical replacement. We drop the legacy
-// alias map entirely: the prior `troopFabricator -> recruitmentCore` redirect
-// is no longer reachable (RC migration zeroed in-flight queue entries that
-// referenced either key), and any straggler reference will surface as an
-// unknown building downstream.
+// No legacy building-key aliases are active. The function is kept as a
+// stable hook for future renames; today it's an identity pass-through.
 export function canonicalBuildingKey(key: string): string {
 	return key;
 }
