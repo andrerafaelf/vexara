@@ -2493,9 +2493,16 @@
 	flex-shrink: 0;
 }
 
-/* Per-unit combat-class badge on train cards. Colours match the counter triangle
-   used by the training-queue lanes (mobile=cyan, armor=steel, fire=amber,
-   special=neutral). Text label, no icon. */
+/* Per-unit combat-class badge on train cards. Colors match the Codex's
+   counter triangle (.cx-class-chip-*) so the game UI and the public field
+   manual agree on what each class looks like at a glance:
+     - mobile  cyan    #7dd3fc
+     - armor   red     #fca5a5
+     - fire    yellow  #fcd34d
+     - special purple  #c4b5fd
+   Hard-coded hex (not tokens) because --color-cyan-500 is rebound to the
+   amber accent globally, which would collapse mobile and fire into the
+   same color. */
 .troop-class-badge {
 	font-size: 9px;
 	font-weight: 700;
@@ -2508,20 +2515,20 @@
 	white-space: nowrap;
 }
 .troop-class-badge--mobile {
-	color: var(--color-cyan-500, #38bdf8);
-	background: color-mix(in srgb, var(--color-cyan-500, #38bdf8) 12%, transparent);
+	color: #7dd3fc;
+	background: rgba(125, 211, 252, 0.08);
 }
 .troop-class-badge--armor {
-	color: #9fb2d0;
-	background: color-mix(in srgb, #7c93b3 14%, transparent);
+	color: #fca5a5;
+	background: rgba(252, 165, 165, 0.08);
 }
 .troop-class-badge--fire {
-	color: #f59e3d;
-	background: color-mix(in srgb, #f59e3d 12%, transparent);
+	color: #fcd34d;
+	background: rgba(252, 211, 77, 0.08);
 }
 .troop-class-badge--special {
-	color: var(--accent-2);
-	background: color-mix(in srgb, var(--accent-2) 12%, transparent);
+	color: #c4b5fd;
+	background: rgba(196, 181, 253, 0.08);
 }
 
 .troop-header h5 {
@@ -2586,17 +2593,18 @@
 .train-controls {
 	display: flex;
 	align-items: stretch;
-	border-radius: var(--radius-sm);
-	overflow: hidden;
-	border: 1px solid var(--border-accent);
+	gap: 0;
+	/* No wrapper border or overflow:hidden — both would draw past the
+	   button's cut corner and reveal an orphan square. The input owns
+	   its own outline; the button takes the cascade's notch directly. */
 }
 
 .train-controls input {
 	flex: 0 0 52px;
 	width: 52px;
 	max-width: 52px;
-	border: none;
-	border-right: 1px solid var(--border-accent);
+	border: 1px solid var(--border-accent);
+	border-right: none;
 	border-radius: 0;
 	background: var(--color-navy-900);
 	color: var(--text-strong);
@@ -2606,20 +2614,28 @@
 	font-weight: 600;
 }
 
-.train-controls button {
+.train-submit-btn {
 	background: var(--accent);
 	color: var(--text-on-accent);
 	flex: 1;
-	border: none;
+	border: 1px solid var(--accent);
 	border-radius: 0;
 	padding: 8px 6px;
 	font-size: 12px;
 	font-weight: 700;
 	letter-spacing: 0.2px;
+	cursor: pointer;
+	/* Cut corner provided by the global button cascade in globals.css. */
 }
 
-.train-controls button:hover {
+.train-submit-btn:hover:not(:disabled) {
 	background: var(--accent-hover);
+	border-color: var(--accent-hover);
+}
+
+.train-submit-btn:disabled {
+	cursor: not-allowed;
+	opacity: 0.5;
 }
 
 .train-card.disabled {

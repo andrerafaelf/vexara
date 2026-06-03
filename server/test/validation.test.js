@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  MAX_OVERSEERS_PER_ATTACK,
   normalizeTroopPayload,
   parseNonNegativeInt,
   parsePositiveInt,
   validateEmail,
+  validateOverseerAttackCap,
   validatePassword,
   validateUsername,
 } from '../utils/validation.js';
@@ -40,6 +42,41 @@ test('normalizeTroopPayload returns normalized object with defaults', () => {
     reconOperative: 0,
     overseer: 0,
   });
+});
+
+test('MAX_OVERSEERS_PER_ATTACK is 1 (game rule guard)', () => {
+  // Pinned because the WavePlanner client mirrors this value. If the cap
+  // ever changes, update both sides AND this test together.
+  assert.equal(MAX_OVERSEERS_PER_ATTACK, 1);
+});
+
+test('validateOverseerAttackCap rejects 2+ overseers on an attack', () => {
+  const result = validateOverseerAttackCap('attack', { overseer: 2 });
+  assert.equal(result.ok, false);
+  assert.match(result.error, /Overseer/);
+});
+
+test('validateOverseerAttackCap accepts 1 overseer on an attack', () => {
+  const result = validateOverseerAttackCap('attack', { overseer: 1 });
+  assert.equal(result.ok, true);
+});
+
+test('validateOverseerAttackCap accepts 0 overseers on an attack', () => {
+  const result = validateOverseerAttackCap('attack', { overseer: 0 });
+  assert.equal(result.ok, true);
+});
+
+test('validateOverseerAttackCap accepts 0 overseers when key is absent', () => {
+  // Missing key should be treated as 0, not throw.
+  const result = validateOverseerAttackCap('attack', {});
+  assert.equal(result.ok, true);
+});
+
+test('validateOverseerAttackCap is a no-op for support missions', () => {
+  // Support missions have their own no-offensive-units check; the overseer
+  // cap intentionally short-circuits so we don't double-report the same error.
+  const result = validateOverseerAttackCap('support', { overseer: 5 });
+  assert.equal(result.ok, true);
 });
 
 test('credential validators enforce expected format', () => {

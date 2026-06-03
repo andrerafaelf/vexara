@@ -4093,6 +4093,8 @@ const TrainAmountControls = React.memo(function TrainAmountControls({
 					disabled={isTrainDisabled}
 				/>
 				<button
+					type="button"
+					className="train-submit-btn"
 					onClick={onSubmit}
 					disabled={isTrainDisabled}
 					{...(onboardingAttr ? { 'data-onboarding': onboardingAttr } : {})}

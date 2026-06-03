@@ -6,7 +6,11 @@ import { TROOP_STATS } from '../utils/combatMath.js';
 import { NEXUS_TYPE_BONUSES } from '../utils/economy.js';
 import { isStationableTroop } from '../utils/gameConstants.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
-import { normalizeTroopPayload, parsePositiveInt } from '../utils/validation.js';
+import {
+	normalizeTroopPayload,
+	parsePositiveInt,
+	validateOverseerAttackCap
+} from '../utils/validation.js';
 
 export class InsufficientTroopsError extends Error {
 	constructor() {
@@ -219,8 +223,9 @@ export async function launchAttack(input: LaunchAttackInput): Promise<LaunchAtta
 			};
 		}
 	}
-	if (attackType !== 'support' && (normalizedTroops.overseer || 0) > 1) {
-		return { ok: false, status: 400, error: 'Maximum 1 Overseer per strike' };
+	const overseerCheck = validateOverseerAttackCap(attackType, normalizedTroops);
+	if (!overseerCheck.ok) {
+		return { ok: false, status: 400, error: overseerCheck.error };
 	}
 
 	const attackerRecord = attackerNexus as unknown as Record<string, number>;

@@ -58,6 +58,31 @@ export function parseNonNegativeInt(value: unknown): number | null {
 	return num;
 }
 
+// Per-attack hard cap on overseers. An attack carries one army with one
+// commanding officer; multiple overseers in the same strike doesn't make
+// game sense (only one can drive control reduction) and would let players
+// burn through their per-nexus overseer pool in a single failed raid.
+// The client-side WavePlanner mirrors this constant.
+export const MAX_OVERSEERS_PER_ATTACK = 1;
+
+/**
+ * Pure-function gate for the per-attack overseer cap. Split out from
+ * attackService so it can be unit-tested without standing up the database.
+ * `attackType === 'support'` is excluded because support missions have
+ * their own no-Overseer rule (no offensive troops at all) checked separately.
+ */
+export function validateOverseerAttackCap(
+	attackType: string,
+	troops: Record<string, number>
+): { ok: true } | { ok: false; error: string } {
+	if (attackType === 'support') return { ok: true };
+	const overseers = troops.overseer ?? 0;
+	if (overseers > MAX_OVERSEERS_PER_ATTACK) {
+		return { ok: false, error: `Maximum ${MAX_OVERSEERS_PER_ATTACK} Overseer per strike` };
+	}
+	return { ok: true };
+}
+
 export function normalizeTroopPayload(
 	troops: unknown,
 	troopKeys: readonly TroopKey[]

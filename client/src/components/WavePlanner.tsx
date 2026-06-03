@@ -43,6 +43,18 @@ const TROOP_KEYS = [
 	'overseer'
 ] as const;
 
+// Per-wave hard cap. Mirrors the server rule in
+// server/services/attackService.ts (`Maximum 1 Overseer per strike`).
+// Each wave sends one army, so the server limit IS the per-wave limit.
+// Capping in the UI prevents the player from staging an invalid wave
+// that would only fail at submission time.
+const MAX_OVERSEERS_PER_WAVE = 1;
+
+function perWaveTroopCap(troopType: string, available: number): number {
+	if (troopType === 'overseer') return Math.min(available, MAX_OVERSEERS_PER_WAVE);
+	return available;
+}
+
 const TROOP_LABELS: Record<string, string> = {
 	lancerDrone: 'Lancer Drone',
 	assaultTrooper: 'Assault Trooper',
@@ -232,24 +244,23 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
 
 	const updateWaveTroop = (waveId: string, troopType: string, value: number) => {
 		setWaves((prev) => {
-			const next = prev.map((w) =>
-				w.id !== waveId
-					? w
-					: {
-							...w,
-							troops: {
-								...w.troops,
-								[troopType]: Math.min(
-									(
-										myNexuses.find((n) => n._id === w.nexusId)?.troops as
-											| Record<string, number>
-											| undefined
-									)?.[troopType] ?? value,
-									Math.max(0, value)
-								)
-							}
-						}
-			);
+			const next = prev.map((w) => {
+				if (w.id !== waveId) return w;
+				const available =
+					(
+						myNexuses.find((n) => n._id === w.nexusId)?.troops as
+							| Record<string, number>
+							| undefined
+					)?.[troopType] ?? 0;
+				const cap = perWaveTroopCap(troopType, available);
+				return {
+					...w,
+					troops: {
+						...w.troops,
+						[troopType]: Math.min(cap, Math.max(0, value))
+					}
+				};
+			});
 
 			// After updating troops, check if the current arrival time is still
 			// reachable. If the slowest unit in this wave now needs more travel time
@@ -290,10 +301,8 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
 				const troops = { ...w.troops };
 				if (selected) {
 					for (const key of TROOP_KEYS) {
-						troops[key] = Math.min(
-							troops[key] ?? 0,
-							(selected.troops as Record<string, number>)[key] ?? 0
-						);
+						const available = (selected.troops as Record<string, number>)[key] ?? 0;
+						troops[key] = Math.min(troops[key] ?? 0, perWaveTroopCap(key, available));
 					}
 				}
 				return { ...w, nexusId, troops };
@@ -541,6 +550,7 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
 									<div className="wplanner-troop-grid">
 										{TROOP_KEYS.filter((k) => (nexus?.troops as any)?.[k] > 0).map((troopType) => {
 											const available = (nexus?.troops as any)?.[troopType] ?? 0;
+											const cap = perWaveTroopCap(troopType, available);
 											const current = wave.troops[troopType] ?? 0;
 											return (
 												<div key={troopType} className="wplanner-troop-row">
@@ -548,7 +558,7 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
 													<input
 														type="number"
 														min={0}
-														max={available}
+														max={cap}
 														value={current || ''}
 														placeholder="0"
 														className="wplanner-troop-input"
@@ -556,7 +566,7 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
 															updateWaveTroop(wave.id, troopType, parseInt(e.target.value) || 0)
 														}
 													/>
-													<span className="wplanner-troop-avail">/{available}</span>
+													<span className="wplanner-troop-avail">/{cap}</span>
 												</div>
 											);
 										})}
