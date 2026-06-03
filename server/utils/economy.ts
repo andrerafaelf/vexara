@@ -48,7 +48,9 @@ interface NexusForEconomy {
 	ore: number;
 	lastResourceUpdate: Date;
 	commandCore?: number;
-	recruitmentCore?: number;
+	hangarBay?: number;
+	plasmaForge?: number;
+	armorFoundry?: number;
 	lifeSupport?: number;
 	shieldGrid?: number;
 	armory?: number;
@@ -188,7 +190,14 @@ export function calculatePoints(nexus: NexusForEconomy & Partial<Record<string, 
 	let points = 0;
 	const buildingPoints: Record<string, number> = {
 		commandCore: 10,
-		recruitmentCore: 16,
+		// The retired Recruitment Core was worth 16. The three class buildings
+		// each contribute 8: a single-class specialist who levels only one
+		// building scores under the old RC (modest cost for the per-class
+		// trade-off), while a player who invests in all three scores 24 -
+		// a 1.5x reward for the broader building investment.
+		hangarBay: 8,
+		plasmaForge: 8,
+		armorFoundry: 8,
 		lifeSupport: 5,
 		storageVault: 6,
 		biomassFarm: 6,

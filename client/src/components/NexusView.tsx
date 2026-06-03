@@ -77,6 +77,7 @@ import {
 	getOverseerCost,
 	getTrainingChains,
 	getTrainTimeSeconds as getRecruitDiscountedTrainSeconds,
+	trainingBuildingFor,
 	trainingChainFor,
 	type TrainingChain
 } from '../realtime/gameConstants.shared';
@@ -119,7 +120,11 @@ import biomassfarmImg from '../assets/buildings/biomassfarm.png';
 import commandcoreImg from '../assets/buildings/commandcore.png';
 import lifesupportImg from '../assets/buildings/lifesupport.png';
 import oreextractorImg from '../assets/buildings/oreextractor.png';
-import recruitmentcoreImg from '../assets/buildings/recruitmentcore.png';
+// Placeholder asset shared by all three class buildings (Hangar Bay,
+// Plasma Forge, Armor Foundry) until per-class art lands. Reusing the retired
+// Recruitment Core PNG keeps the slot non-blank without leaving the file
+// orphaned in the bundle.
+import classBuildingPlaceholderImg from '../assets/buildings/recruitmentcore.png';
 import armoryImg from '../assets/buildings/armory.png';
 import stealtharrayImg from '../assets/buildings/stealtharray.png';
 import shieldgridImg from '../assets/buildings/shieldgrid.png';
@@ -168,7 +173,9 @@ const NEXUS_TYPES_WITH_BUFF = new Set([
 
 const BUILDING_NAMES: { [key: string]: string } = {
 	commandCore: 'Command Core',
-	recruitmentCore: 'Recruitment Core',
+	hangarBay: 'Hangar Bay',
+	plasmaForge: 'Plasma Forge',
+	armorFoundry: 'Armor Foundry',
 	lifeSupport: 'Life Support',
 	storageVault: 'Storage Vault',
 	biomassFarm: 'Biomass Farm',
@@ -182,7 +189,12 @@ const BUILDING_NAMES: { [key: string]: string } = {
 const BUILDING_DESCRIPTIONS: { [key: string]: string } = {
 	commandCore:
 		'Unlocks new buildings, units, and progression milestones. Required for nexus expansion.',
-	recruitmentCore: 'Allows training of combat units. Higher levels reduce training time.',
+	hangarBay:
+		'Produces mobile-class units. Higher levels reduce mobile-class training time.',
+	plasmaForge:
+		'Produces fire-class units. Higher levels reduce fire-class training time.',
+	armorFoundry:
+		'Produces armor-class units. Higher levels reduce armor-class training time.',
 	lifeSupport: 'Increases maximum population capacity for housing more troops and workers.',
 	storageVault: 'Increases resource storage capacity. Protects resources from raids.',
 	biomassFarm: 'Produces Biomass per hour. Higher levels increase production rate.',
@@ -210,12 +222,30 @@ const BUILDING_RULES: {
 			{ level: 10, requires: [{ building: 'storageVault', level: 5 }] }
 		]
 	},
-	recruitmentCore: {
+	hangarBay: {
+		maxLevel: 20,
+		unlock: { building: 'commandCore', level: 2 },
+		milestones: [
+			{ level: 4, requires: [{ building: 'alloyForge', level: 2 }] },
+			{ level: 6, requires: [{ building: 'lifeSupport', level: 3 }] },
+			{ level: 10, requires: [{ building: 'commandCore', level: 6 }] }
+		]
+	},
+	plasmaForge: {
+		maxLevel: 20,
+		unlock: { building: 'commandCore', level: 2 },
+		milestones: [
+			{ level: 4, requires: [{ building: 'oreExtractor', level: 3 }] },
+			{ level: 6, requires: [{ building: 'alloyForge', level: 4 }] },
+			{ level: 10, requires: [{ building: 'shieldGrid', level: 4 }] }
+		]
+	},
+	armorFoundry: {
 		maxLevel: 20,
 		unlock: { building: 'commandCore', level: 2 },
 		milestones: [
 			{ level: 4, requires: [{ building: 'biomassFarm', level: 2 }] },
-			{ level: 6, requires: [{ building: 'alloyForge', level: 2 }] },
+			{ level: 6, requires: [{ building: 'oreExtractor', level: 4 }] },
 			{ level: 10, requires: [{ building: 'lifeSupport', level: 5 }] }
 		]
 	},
@@ -239,10 +269,7 @@ const BUILDING_RULES: {
 	biomassFarm: {
 		maxLevel: 20,
 		unlock: { building: 'lifeSupport', level: 1 },
-		milestones: [
-			{ level: 6, requires: [{ building: 'recruitmentCore', level: 2 }] },
-			{ level: 10, requires: [{ building: 'lifeSupport', level: 5 }] }
-		]
+		milestones: [{ level: 10, requires: [{ building: 'lifeSupport', level: 5 }] }]
 	},
 	alloyForge: {
 		maxLevel: 20,
@@ -269,11 +296,11 @@ const BUILDING_RULES: {
 		maxLevel: 20,
 		unlock: { building: 'commandCore', level: 5 },
 		milestones: [
-			{ level: 3, requires: [{ building: 'recruitmentCore', level: 5 }] },
+			{ level: 3, requires: [{ building: 'hangarBay', level: 5 }] },
 			{
 				level: 5,
 				requires: [
-					{ building: 'recruitmentCore', level: 7 },
+					{ building: 'plasmaForge', level: 7 },
 					{ building: 'shieldGrid', level: 3 }
 				]
 			},
@@ -281,7 +308,7 @@ const BUILDING_RULES: {
 				level: 10,
 				requires: [
 					{ building: 'commandCore', level: 10 },
-					{ building: 'recruitmentCore', level: 10 }
+					{ building: 'armorFoundry', level: 10 }
 				]
 			}
 		]
@@ -311,7 +338,10 @@ const BUILDING_RULES: {
 
 const BUILDING_IMAGES: { [key: string]: any } = {
 	commandCore: commandcoreImg,
-	recruitmentCore: recruitmentcoreImg,
+	// Class buildings share a placeholder until per-class art ships.
+	hangarBay: classBuildingPlaceholderImg,
+	plasmaForge: classBuildingPlaceholderImg,
+	armorFoundry: classBuildingPlaceholderImg,
 	lifeSupport: lifesupportImg,
 	storageVault: storagevaultImg,
 	biomassFarm: biomassfarmImg,
@@ -358,50 +388,50 @@ const TROOP_IMAGES: { [key: string]: any } = {
 
 const TROOP_DESCRIPTIONS: { [key: string]: string } = {
 	assaultTrooper:
-		'Standard heavy infantry. Frontline soldier optimized for sustained combat. Counters special units. Requires Lv1 Recruitment Core.',
+		'Standard heavy infantry. Frontline soldier optimized for sustained combat. Counters special units. Requires Lv1 Armor Foundry.',
 	lancerDrone:
-		'Ranged interceptor drone. Suppresses fast-moving light units effectively. Requires Lv2 Recruitment Core.',
+		'Ranged interceptor drone. Suppresses fast-moving light units effectively. Requires Lv2 Plasma Forge.',
 	breakerUnit:
-		'Light assault breacher. Exploits armor gaps to devastate heavy units. Requires Lv3 Recruitment Core, Lv3 Ore Extractor.',
+		'Light assault breacher. Exploits armor gaps to devastate heavy units. Requires Lv3 Hangar Bay, Lv3 Ore Extractor.',
 	reconOperative:
-		'Scout & intelligence operative. Gathers intel on enemy nexuses. Requires Lv4 Recruitment Core, Lv3 Command Core.',
+		'Scout & intelligence operative. Gathers intel on enemy nexuses. Requires Lv3 Command Core.',
 	skimmerBike:
-		'Fast light raider. High-speed bike that counters heavy armor with mobility. Requires Lv5 Recruitment Core, Lv4 Alloy Forge.',
+		'Fast light raider. High-speed bike that counters heavy armor with mobility. Requires Lv5 Hangar Bay, Lv4 Alloy Forge.',
 	siegeMech:
-		'Heavy siege unit. Massive mech that crushes special command units. Requires Lv10 Recruitment Core, Lv9 Ore Extractor, Lv8 Command Core.',
+		'Heavy siege unit. Massive mech that crushes special command units. Requires Lv10 Armor Foundry, Lv9 Ore Extractor, Lv8 Command Core.',
 	bulwarkGuard:
-		'Elite heavy defender. Heavily shielded infantry. Requires Lv5 Recruitment Core, Lv5 Life Support.',
+		'Elite heavy defender. Heavily shielded infantry. Requires Lv5 Armor Foundry, Lv5 Life Support.',
 	suppressorTeam:
-		'Ranged suppressor. Long-range team specialized in pinning down light cavalry. Requires Lv7 Recruitment Core, Lv6 Command Core.',
+		'Ranged suppressor. Long-range team specialized in pinning down light cavalry. Requires Lv7 Plasma Forge, Lv6 Command Core.',
 	disruptorUnit:
-		'Ranged anti-armor. EMP weapons suppress heavy units. Requires Lv7 Recruitment Core, Lv6 Ore Extractor.',
+		'Ranged anti-armor. EMP weapons suppress heavy units. Requires Lv7 Plasma Forge, Lv6 Ore Extractor.',
 	interceptorBike:
-		'Light rapid-response cavalry. Extremely fast, counters heavy armor. Requires Lv8 Recruitment Core, Lv7 Alloy Forge.',
+		'Light rapid-response cavalry. Extremely fast, counters heavy armor. Requires Lv8 Hangar Bay, Lv7 Alloy Forge.',
 	annihilatorPlatform:
-		'Heavy artillery. Slow but devastating ranged platform that suppresses light units. Requires Lv12 Recruitment Core, Lv10 Command Core, Lv10 Shield Grid.',
+		'Heavy artillery. Slow but devastating ranged platform that suppresses light units. Requires Lv12 Plasma Forge, Lv10 Command Core, Lv10 Shield Grid.',
 	voidStalker:
-		'Light stealth cavalry. Fastest unit in the game; hard-counters heavy armor - but is itself suppressed by ranged emplacements. Requires Lv9 Recruitment Core, Lv8 Alloy Forge, Lv3 Armory.',
+		'Light stealth cavalry. Fastest unit in the game; hard-counters heavy armor - but is itself suppressed by ranged emplacements. Requires Lv9 Hangar Bay, Lv8 Alloy Forge, Lv3 Armory.',
 	plasmaTurret:
-		'Ranged static emplacement. Cannot be sent on attacks, defends from the nexus. Decimates light cavalry. Requires Lv11 Recruitment Core, Lv9 Command Core, Lv5 Armory.',
+		'Ranged static emplacement. Cannot be sent on attacks, defends from the nexus. Decimates light cavalry. Requires Lv11 Plasma Forge, Lv9 Command Core, Lv5 Armory.',
 	overseer:
-		'Conquest unit. Reduces enemy Control by 34 per successful strike. Requires Lv14 Recruitment Core, Lv14 Command Core, Lv13 Shield Grid. Up to 3 per nexus.'
+		'Conquest unit. Reduces enemy Control by 34 per successful strike. Requires Lv14 Command Core, Lv13 Shield Grid. Up to 3 per nexus.'
 };
 
 const TROOP_REQUIREMENTS: { [key: string]: any } = {
-	assaultTrooper: { buildings: { recruitmentCore: 1 } },
-	lancerDrone: { buildings: { recruitmentCore: 2 } },
-	breakerUnit: { buildings: { recruitmentCore: 3, oreExtractor: 3 } },
-	reconOperative: { buildings: { recruitmentCore: 4, commandCore: 3 } },
-	skimmerBike: { buildings: { recruitmentCore: 5, alloyForge: 4 } },
-	bulwarkGuard: { buildings: { recruitmentCore: 5, lifeSupport: 5 } },
-	suppressorTeam: { buildings: { recruitmentCore: 7, commandCore: 6 } },
-	disruptorUnit: { buildings: { recruitmentCore: 7, oreExtractor: 6 } },
-	interceptorBike: { buildings: { recruitmentCore: 8, alloyForge: 7 } },
-	siegeMech: { buildings: { recruitmentCore: 10, oreExtractor: 9, commandCore: 8 } },
-	annihilatorPlatform: { buildings: { recruitmentCore: 12, commandCore: 10, shieldGrid: 10 } },
-	voidStalker: { buildings: { recruitmentCore: 9, alloyForge: 8, armory: 3 } },
-	plasmaTurret: { buildings: { recruitmentCore: 11, commandCore: 9, armory: 5 } },
-	overseer: { buildings: { recruitmentCore: 14, commandCore: 14, shieldGrid: 13 }, maxPerNexus: 3 }
+	assaultTrooper: { buildings: { armorFoundry: 1 } },
+	lancerDrone: { buildings: { plasmaForge: 2 } },
+	breakerUnit: { buildings: { hangarBay: 3, oreExtractor: 3 } },
+	reconOperative: { buildings: { commandCore: 3 } },
+	skimmerBike: { buildings: { hangarBay: 5, alloyForge: 4 } },
+	bulwarkGuard: { buildings: { armorFoundry: 5, lifeSupport: 5 } },
+	suppressorTeam: { buildings: { plasmaForge: 7, commandCore: 6 } },
+	disruptorUnit: { buildings: { plasmaForge: 7, oreExtractor: 6 } },
+	interceptorBike: { buildings: { hangarBay: 8, alloyForge: 7 } },
+	siegeMech: { buildings: { armorFoundry: 10, oreExtractor: 9, commandCore: 8 } },
+	annihilatorPlatform: { buildings: { plasmaForge: 12, commandCore: 10, shieldGrid: 10 } },
+	voidStalker: { buildings: { hangarBay: 9, alloyForge: 8, armory: 3 } },
+	plasmaTurret: { buildings: { plasmaForge: 11, commandCore: 9, armory: 5 } },
+	overseer: { buildings: { commandCore: 14, shieldGrid: 13 }, maxPerNexus: 3 }
 };
 
 const POPULATION_BASE = 100;
@@ -1378,7 +1408,9 @@ const NexusView: React.FC<NexusViewProps> = ({
 				return `Stealth Array upgrade: Lv ${currentLevel} → Lv ${targetLevel}`;
 			}
 			case 'commandCore':
-			case 'recruitmentCore': {
+			case 'hangarBay':
+			case 'plasmaForge':
+			case 'armorFoundry': {
 				const unlockSummary = getUnlockSummary(building, targetLevel);
 
 				if (unlockSummary) {
@@ -1523,7 +1555,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 		const annihilatorPlatforms = trainedOrAlive('annihilatorPlatform');
 
 		// First quest line walks the player through the entire opening loop:
-		//   Command Core → Recruitment Core → Train troops → Loot a nexus.
+		//   Command Core → Armor Foundry → Train troops → Loot a nexus.
 		// Each step gates the next, so a player who follows the prompts hits
 		// their first scavenge raid without ever being stuck on "what now?".
 		const introQuests: IntroQuest[] = [
@@ -1543,25 +1575,29 @@ const NexusView: React.FC<NexusViewProps> = ({
 			{
 				id: 'reinforce-command',
 				title: 'Reinforce Command',
-				description: 'Upgrade Command Core to Lv2 to unlock Recruitment Core.',
+				description: 'Upgrade Command Core to Lv2 to unlock the production buildings.',
 				completed: done('intro', 'build_command_core_2', nexus.buildings.commandCore >= 2),
 				tab: 'buildings',
 				tip: (
 					<>
 						<strong>Next up:</strong> Upgrade <em>Command Core</em> to Lv2 to unlock the{' '}
-						<em>Recruitment Core</em>.
+						<em>Hangar Bay</em>, <em>Plasma Forge</em>, and <em>Armor Foundry</em>.
 					</>
 				)
 			},
 			{
 				id: 'start-fabrication',
-				title: 'Enable Recruitment',
-				description: 'Build Recruitment Core to Lv1 so you can train troops.',
-				completed: done('intro', 'build_troop_fab_1', nexus.buildings.recruitmentCore >= 1),
+				title: 'Enable Production',
+				description: 'Build an Armor Foundry to Lv1 so you can train troops.',
+				completed: done(
+					'intro',
+					'build_troop_fab_1',
+					(nexus.buildings.armorFoundry ?? 0) >= 1
+				),
 				tab: 'buildings',
 				tip: (
 					<>
-						<strong>Next up:</strong> Build <em>Recruitment Core</em> to Lv1 so you can train your
+						<strong>Next up:</strong> Build <em>Armor Foundry</em> to Lv1 so you can train your
 						first troops.
 					</>
 				)
@@ -1794,9 +1830,13 @@ const NexusView: React.FC<NexusViewProps> = ({
 			},
 			{
 				id: 'troop-logistics',
-				title: 'Troop Logistics',
-				description: 'Upgrade Recruitment Core to Lv5.',
-				completed: done('arsenal', 'build_troop_fab_5', nexus.buildings.recruitmentCore >= 5),
+				title: 'Heavy Production',
+				description: 'Upgrade Armor Foundry to Lv5.',
+				completed: done(
+					'arsenal',
+					'build_troop_fab_5',
+					(nexus.buildings.armorFoundry ?? 0) >= 5
+				),
 				tab: 'buildings'
 			},
 			{
@@ -2966,8 +3006,10 @@ const NexusView: React.FC<NexusViewProps> = ({
 						);
 					})()}
 
-					{nexus.buildings.recruitmentCore === 0 ? (
-						<p>Build a Recruitment Core to train troops!</p>
+					{(nexus.buildings.hangarBay ?? 0) === 0 &&
+					(nexus.buildings.plasmaForge ?? 0) === 0 &&
+					(nexus.buildings.armorFoundry ?? 0) === 0 ? (
+						<p>Build a Hangar Bay, Plasma Forge, or Armor Foundry to train troops!</p>
 					) : (
 						<>
 							<div className="troops-subtab-bar" role="tablist" aria-label="Troops view">
@@ -3282,7 +3324,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 										);
 										// Partition into trainable vs locked. Locked troops collapse
 										// into a single <details> stub at the bottom of the category —
-										// a player with Recruitment Core Lv1 used to see 6+ red
+										// a player with Armor Foundry Lv1 used to see 6+ red
 										// "requires X" cards per category, drowning out the one they
 										// could actually train. Opt-in disclosure removes that noise
 										// without hiding the long-term roadmap.
@@ -3309,22 +3351,23 @@ const NexusView: React.FC<NexusViewProps> = ({
 															costs,
 															canTrain
 														);
+														const classBuildingLevel =
+															(nexus.buildings as unknown as Record<string, number>)[
+																trainingBuildingFor(type)
+															] ?? 0;
 														const trainSeconds = canTrain
 															? getEffectiveTrainTimeSeconds(
 																	type,
-																	nexus.buildings.recruitmentCore,
+																	classBuildingLevel,
 																	nexus.nexusType,
 																	nexus.nexusTypeDoubled ?? false
 																)
 															: costs.time;
-														// Pre-bonus time (Recruitment Core discount applied, Nexus type NOT applied).
+														// Pre-bonus time (class-building discount applied, Nexus type NOT applied).
 														// Shown as strikethrough next to the actual time when Military Outpost is active,
 														// so the player can see the bonus working.
 														const preBonusTrainSeconds = canTrain
-															? getRecruitDiscountedTrainSeconds(
-																	type,
-																	nexus.buildings.recruitmentCore
-																)
+															? getRecruitDiscountedTrainSeconds(type, classBuildingLevel)
 															: costs.time;
 														const militaryBonusActive =
 															nexus.nexusType === 'Military Outpost' &&

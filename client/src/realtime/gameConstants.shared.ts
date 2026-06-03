@@ -12,7 +12,9 @@ export interface BuildingCost {
 
 export const BUILDING_COSTS: Record<string, BuildingCost> = {
 	commandCore: { biomass: 90, alloy: 80, ore: 70, time: 120 },
-	recruitmentCore: { biomass: 180, alloy: 150, ore: 80, time: 180 },
+	hangarBay: { biomass: 180, alloy: 150, ore: 80, time: 180 },
+	plasmaForge: { biomass: 180, alloy: 150, ore: 80, time: 180 },
+	armorFoundry: { biomass: 180, alloy: 150, ore: 80, time: 180 },
 	lifeSupport: { biomass: 80, alloy: 100, ore: 70, time: 150 },
 	storageVault: { biomass: 60, alloy: 50, ore: 70, time: 120 },
 	biomassFarm: { biomass: 50, alloy: 60, ore: 60, time: 120 },
@@ -54,19 +56,44 @@ const LIFE_SUPPORT_OLD_MAX_LEVEL = 20;
 const LIFE_SUPPORT_MAX_LEVEL = 25;
 
 export const COMMAND_BUILD_TIME_FACTOR_PER_LEVEL = 0.95;
-// -9%/level through L15, then -5%/level for L16-20 (see server mirror for why).
-export const RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL = 0.91;
-const RECRUITMENT_TRAIN_FACTOR_LATE = 0.95;
-const RECRUITMENT_TRAIN_FACTOR_BREAKPOINT = 15;
+// -9%/level through L15, then -5%/level for L16-20. Applied per class building
+// (Hangar Bay / Plasma Forge / Armor Foundry) to its own units only.
+export const CLASS_BUILDING_TRAIN_TIME_FACTOR_PER_LEVEL = 0.91;
+const CLASS_BUILDING_TRAIN_FACTOR_LATE = 0.95;
+const CLASS_BUILDING_TRAIN_FACTOR_BREAKPOINT = 15;
 
-export function getRecruitmentTrainFactor(recruitmentLevel: number): number {
-	const lvl = Math.max(0, recruitmentLevel || 0);
-	const earlyLevels = Math.min(lvl, RECRUITMENT_TRAIN_FACTOR_BREAKPOINT);
-	const lateLevels = Math.max(0, lvl - RECRUITMENT_TRAIN_FACTOR_BREAKPOINT);
+export function getClassBuildingTrainFactor(classBuildingLevel: number): number {
+	const lvl = Math.max(0, classBuildingLevel || 0);
+	const earlyLevels = Math.min(lvl, CLASS_BUILDING_TRAIN_FACTOR_BREAKPOINT);
+	const lateLevels = Math.max(0, lvl - CLASS_BUILDING_TRAIN_FACTOR_BREAKPOINT);
 	return (
-		Math.pow(RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL, earlyLevels) *
-		Math.pow(RECRUITMENT_TRAIN_FACTOR_LATE, lateLevels)
+		Math.pow(CLASS_BUILDING_TRAIN_TIME_FACTOR_PER_LEVEL, earlyLevels) *
+		Math.pow(CLASS_BUILDING_TRAIN_FACTOR_LATE, lateLevels)
 	);
+}
+
+// Mirror of server/utils/gameConstants.ts TROOP_TRAINING_BUILDING. Mobile/fire/
+// armor classes map to their class building; specials (recon, overseer) train
+// from Command Core. Both halves must move together when units are added.
+const TROOP_TRAINING_BUILDING: Record<string, string> = {
+	lancerDrone: 'plasmaForge',
+	assaultTrooper: 'armorFoundry',
+	breakerUnit: 'hangarBay',
+	reconOperative: 'commandCore',
+	skimmerBike: 'hangarBay',
+	bulwarkGuard: 'armorFoundry',
+	suppressorTeam: 'plasmaForge',
+	disruptorUnit: 'plasmaForge',
+	interceptorBike: 'hangarBay',
+	siegeMech: 'armorFoundry',
+	annihilatorPlatform: 'plasmaForge',
+	voidStalker: 'hangarBay',
+	plasmaTurret: 'plasmaForge',
+	overseer: 'commandCore'
+};
+
+export function trainingBuildingFor(troopType: string): string {
+	return TROOP_TRAINING_BUILDING[troopType] ?? 'commandCore';
 }
 
 // Hard cap on units trained per single train request. Mirror of
@@ -219,20 +246,20 @@ export function getOverseerCost(nexusCount: number): {
 	};
 }
 
-export function getTrainTimeSeconds(troopType: string, recruitmentLevel: number): number {
+export function getTrainTimeSeconds(troopType: string, classBuildingLevel: number): number {
 	const baseTime = TROOP_COSTS[troopType].time;
-	if (troopType === 'overseer') return baseTime;
-	const factor = getRecruitmentTrainFactor(recruitmentLevel);
+	if (troopType === 'overseer' || troopType === 'reconOperative') return baseTime;
+	const factor = getClassBuildingTrainFactor(classBuildingLevel);
 	return Math.max(1, Math.floor(baseTime * factor));
 }
 
 export function getEffectiveTrainTimeSeconds(
 	troopType: string,
-	recruitmentLevel: number,
+	classBuildingLevel: number,
 	nexusType: string | null | undefined,
 	nexusTypeDoubled: boolean
 ): number {
-	const perUnit = getTrainTimeSeconds(troopType, recruitmentLevel);
+	const perUnit = getTrainTimeSeconds(troopType, classBuildingLevel);
 	if (troopType === 'overseer') return perUnit;
 	const baseTrainMult = NEXUS_TYPE_TRAINING_MULTIPLIERS[nexusType ?? ''];
 	if (baseTrainMult === undefined) return perUnit;

@@ -60,7 +60,9 @@ test('life support level 25 cost is rescaled to the old level 20 cap', () => {
 test('calculatePoints awards points for buildings and troops', () => {
 	const nexus = {
 		commandCore: 1,
-		recruitmentCore: 1,
+		hangarBay: 1,
+		plasmaForge: 1,
+		armorFoundry: 1,
 		lifeSupport: 1,
 		storageVault: 1,
 		biomassFarm: 1,

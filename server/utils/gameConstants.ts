@@ -12,7 +12,13 @@ export interface BuildingCost {
 
 export const BUILDING_COSTS: Record<string, BuildingCost> = {
 	commandCore: { biomass: 90, alloy: 80, ore: 70, time: 120 },
-	recruitmentCore: { biomass: 180, alloy: 150, ore: 80, time: 180 },
+	// Three class-specific production buildings share the same cost / curve so
+	// no class is privileged at build time; differentiation comes from WHAT they
+	// train (TROOP_REQUIREMENTS in troopController.ts) and from each one
+	// reducing train time for its own class only (getTrainTimeSeconds below).
+	hangarBay: { biomass: 180, alloy: 150, ore: 80, time: 180 },
+	plasmaForge: { biomass: 180, alloy: 150, ore: 80, time: 180 },
+	armorFoundry: { biomass: 180, alloy: 150, ore: 80, time: 180 },
 	lifeSupport: { biomass: 80, alloy: 100, ore: 70, time: 150 },
 	storageVault: { biomass: 60, alloy: 50, ore: 70, time: 120 },
 	biomassFarm: { biomass: 50, alloy: 60, ore: 60, time: 120 },
@@ -57,25 +63,29 @@ const LIFE_SUPPORT_MAX_LEVEL = 25;
 // Command Core reduces build time 5% per level (compounding)
 export const COMMAND_BUILD_TIME_FACTOR_PER_LEVEL = 0.95;
 
-// Recruitment Core reduces train time per level (compounding). Overseer is exempt.
-// The discount is -9%/level through level 15, then flattens to -5%/level for
-// 16-20. Without the flatten, a maxed RC20 would train ~6.6x faster and RC25
+// Each class building (Hangar Bay / Plasma Forge / Armor Foundry) reduces
+// train time for its own class. Same curve that the retired Recruitment Core
+// used to apply globally: -9%/level through L15, then flattens to -5%/level for
+// 16-20. Without the flatten, a maxed L20 would train ~6.6x faster and L25
 // ~10.6x - that compounding undercuts the v0.19 anti-snowball training-queue
 // limits for top players. The flattened tail keeps the bonus a meaningful but
-// bounded late-game reward (RC20 ~5.3x). Levels are capped by RC's maxLevel (20).
-export const RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL = 0.91;
-const RECRUITMENT_TRAIN_FACTOR_LATE = 0.95;
-const RECRUITMENT_TRAIN_FACTOR_BREAKPOINT = 15;
+// bounded late-game reward (L20 ~5.3x). Levels are capped by the building's
+// maxLevel (20). Overseer and Recon Operative (the two `special` units) train
+// at base time; they're produced from Command Core and don't follow the
+// per-class production model.
+export const CLASS_BUILDING_TRAIN_TIME_FACTOR_PER_LEVEL = 0.91;
+const CLASS_BUILDING_TRAIN_FACTOR_LATE = 0.95;
+const CLASS_BUILDING_TRAIN_FACTOR_BREAKPOINT = 15;
 
-// Compound train-time multiplier from Recruitment Core level: 0.91^min(L,15) *
+// Compound train-time multiplier from a class building level: 0.91^min(L,15) *
 // 0.95^max(0,L-15). Continuous at L15. Lower = faster.
-export function getRecruitmentTrainFactor(recruitmentLevel: number): number {
-	const lvl = Math.max(0, recruitmentLevel || 0);
-	const earlyLevels = Math.min(lvl, RECRUITMENT_TRAIN_FACTOR_BREAKPOINT);
-	const lateLevels = Math.max(0, lvl - RECRUITMENT_TRAIN_FACTOR_BREAKPOINT);
+export function getClassBuildingTrainFactor(classBuildingLevel: number): number {
+	const lvl = Math.max(0, classBuildingLevel || 0);
+	const earlyLevels = Math.min(lvl, CLASS_BUILDING_TRAIN_FACTOR_BREAKPOINT);
+	const lateLevels = Math.max(0, lvl - CLASS_BUILDING_TRAIN_FACTOR_BREAKPOINT);
 	return (
-		Math.pow(RECRUITMENT_TRAIN_TIME_FACTOR_PER_LEVEL, earlyLevels) *
-		Math.pow(RECRUITMENT_TRAIN_FACTOR_LATE, lateLevels)
+		Math.pow(CLASS_BUILDING_TRAIN_TIME_FACTOR_PER_LEVEL, earlyLevels) *
+		Math.pow(CLASS_BUILDING_TRAIN_FACTOR_LATE, lateLevels)
 	);
 }
 
@@ -282,12 +292,38 @@ export function getOverseerCost(nexusCount: number): {
 	};
 }
 
+// Which building's level reduces a troop's training time AND gates its
+// production. Mobile/fire/armor map to their class building; specials (recon,
+// overseer) train from Command Core. Single source of truth so call sites can
+// derive both the gate check and the train-time factor from the troop type.
+const TROOP_TRAINING_BUILDING: Record<string, string> = {
+	lancerDrone: 'plasmaForge',
+	assaultTrooper: 'armorFoundry',
+	breakerUnit: 'hangarBay',
+	reconOperative: 'commandCore',
+	skimmerBike: 'hangarBay',
+	bulwarkGuard: 'armorFoundry',
+	suppressorTeam: 'plasmaForge',
+	disruptorUnit: 'plasmaForge',
+	interceptorBike: 'hangarBay',
+	siegeMech: 'armorFoundry',
+	annihilatorPlatform: 'plasmaForge',
+	voidStalker: 'hangarBay',
+	plasmaTurret: 'plasmaForge',
+	overseer: 'commandCore'
+};
+
+export function trainingBuildingFor(troopType: string): string {
+	return TROOP_TRAINING_BUILDING[troopType] ?? 'commandCore';
+}
+
 // Per-unit train time in seconds, before the Nexus-type training multiplier.
-// Overseer trains at base time regardless of Recruitment Core.
-export function getTrainTimeSeconds(troopType: string, recruitmentLevel: number): number {
+// Overseer and Recon Operative train at base time regardless of Command Core
+// level - specials are not eligible for class-building speedups.
+export function getTrainTimeSeconds(troopType: string, classBuildingLevel: number): number {
 	const baseTime = TROOP_COSTS[troopType].time;
-	if (troopType === 'overseer') return baseTime;
-	const factor = getRecruitmentTrainFactor(recruitmentLevel);
+	if (troopType === 'overseer' || troopType === 'reconOperative') return baseTime;
+	const factor = getClassBuildingTrainFactor(classBuildingLevel);
 	return Math.max(1, Math.floor(baseTime * factor));
 }
 
@@ -295,11 +331,11 @@ export function getTrainTimeSeconds(troopType: string, recruitmentLevel: number)
 // preserving the existing rule that overseer is exempt from type bonuses.
 export function getEffectiveTrainTimeSeconds(
 	troopType: string,
-	recruitmentLevel: number,
+	classBuildingLevel: number,
 	nexusType: string | null | undefined,
 	nexusTypeDoubled: boolean
 ): number {
-	const perUnit = getTrainTimeSeconds(troopType, recruitmentLevel);
+	const perUnit = getTrainTimeSeconds(troopType, classBuildingLevel);
 	if (troopType === 'overseer') return perUnit;
 	const baseTrainMult = NEXUS_TYPE_TRAINING_MULTIPLIERS[nexusType ?? ''];
 	if (baseTrainMult === undefined) return perUnit;

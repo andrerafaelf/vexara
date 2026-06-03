@@ -21,7 +21,8 @@ import biomassfarmImg from '@/assets/buildings/biomassfarm.png';
 import commandcoreImg from '@/assets/buildings/commandcore.png';
 import lifesupportImg from '@/assets/buildings/lifesupport.png';
 import oreextractorImg from '@/assets/buildings/oreextractor.png';
-import recruitmentcoreImg from '@/assets/buildings/recruitmentcore.png';
+// Shared placeholder until per-class art ships.
+import classBuildingPlaceholderImg from '@/assets/buildings/recruitmentcore.png';
 import shieldgridImg from '@/assets/buildings/shieldgrid.png';
 import stealtharrayImg from '@/assets/buildings/stealtharray.png';
 import storagevaultImg from '@/assets/buildings/storagevault.png';
@@ -45,7 +46,9 @@ export const TROOP_ICONS: Record<string, StaticImageData> = {
 
 export const BUILDING_ICONS: Record<string, StaticImageData> = {
 	commandCore: commandcoreImg,
-	recruitmentCore: recruitmentcoreImg,
+	hangarBay: classBuildingPlaceholderImg,
+	plasmaForge: classBuildingPlaceholderImg,
+	armorFoundry: classBuildingPlaceholderImg,
 	lifeSupport: lifesupportImg,
 	storageVault: storagevaultImg,
 	biomassFarm: biomassfarmImg,

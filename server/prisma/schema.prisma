@@ -250,7 +250,9 @@ model Nexus {
 
   // Buildings
   commandCore     Int @default(0)
-  recruitmentCore Int @default(0)
+  hangarBay       Int @default(0)
+  plasmaForge     Int @default(0)
+  armorFoundry    Int @default(0)
   lifeSupport     Int @default(1)
   storageVault    Int @default(1)
   biomassFarm     Int @default(1)

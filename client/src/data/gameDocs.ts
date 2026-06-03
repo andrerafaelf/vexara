@@ -96,7 +96,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		unitClass: 'fire',
 		stats: { attack: 3, defense: 22, speed: 20, carry: 30 },
 		cost: { biomass: 150, alloy: 150, ore: 200, population: 1, time: '53s' },
-		requirements: ['Recruitment Core Lv2']
+		requirements: ['Plasma Forge Lv2']
 	},
 	{
 		key: 'assaultTrooper',
@@ -107,7 +107,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		unitClass: 'armor',
 		stats: { attack: 5, defense: 45, speed: 18, carry: 60 },
 		cost: { biomass: 150, alloy: 150, ore: 350, population: 1, time: '1m 19s' },
-		requirements: ['Recruitment Core Lv1']
+		requirements: ['Armor Foundry Lv1']
 	},
 	{
 		key: 'breakerUnit',
@@ -118,7 +118,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		unitClass: 'mobile',
 		stats: { attack: 35, defense: 3, speed: 16, carry: 40 },
 		cost: { biomass: 250, alloy: 150, ore: 300, population: 1, time: '2m 40s' },
-		requirements: ['Recruitment Core Lv3', 'Ore Extractor Lv3']
+		requirements: ['Hangar Bay Lv3', 'Ore Extractor Lv3']
 	},
 	{
 		key: 'reconOperative',
@@ -129,8 +129,8 @@ export const TROOPS_DOC: TroopDoc[] = [
 		unitClass: 'special',
 		stats: { attack: 1, defense: 20, speed: 25, carry: 10 },
 		cost: { biomass: 400, alloy: 150, ore: 400, population: 1, time: '3m 0s' },
-		requirements: ['Recruitment Core Lv4', 'Command Core Lv3'],
-		notes: ['This is the unit used for scouting and espionage missions.']
+		requirements: ['Command Core Lv3'],
+		notes: ['This is the unit used for scouting missions.']
 	},
 	{
 		key: 'suppressorTeam',
@@ -141,7 +141,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		unitClass: 'fire',
 		stats: { attack: 65, defense: 8, speed: 15, carry: 20 },
 		cost: { biomass: 450, alloy: 400, ore: 450, population: 2, time: '9m 0s' },
-		requirements: ['Recruitment Core Lv7', 'Command Core Lv6']
+		requirements: ['Plasma Forge Lv7', 'Command Core Lv6']
 	},
 	{
 		key: 'skimmerBike',
@@ -152,7 +152,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		unitClass: 'mobile',
 		stats: { attack: 80, defense: 10, speed: 22, carry: 80 },
 		cost: { biomass: 625, alloy: 500, ore: 750, population: 3, time: '12m 0s' },
-		requirements: ['Recruitment Core Lv5', 'Alloy Forge Lv4']
+		requirements: ['Hangar Bay Lv5', 'Alloy Forge Lv4']
 	},
 	{
 		key: 'bulwarkGuard',
@@ -163,7 +163,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		unitClass: 'armor',
 		stats: { attack: 3, defense: 130, speed: 12, carry: 25 },
 		cost: { biomass: 400, alloy: 600, ore: 500, population: 2, time: '12m 0s' },
-		requirements: ['Recruitment Core Lv5', 'Life Support Lv5']
+		requirements: ['Armor Foundry Lv5', 'Life Support Lv5']
 	},
 	{
 		key: 'disruptorUnit',
@@ -174,7 +174,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		unitClass: 'fire',
 		stats: { attack: 75, defense: 9, speed: 17, carry: 25 },
 		cost: { biomass: 550, alloy: 750, ore: 650, population: 2, time: '14m 0s' },
-		requirements: ['Recruitment Core Lv7', 'Ore Extractor Lv6'],
+		requirements: ['Plasma Forge Lv7', 'Ore Extractor Lv6'],
 		notes: ['No special anti-mech multiplier is currently applied in combat code.']
 	},
 	{
@@ -186,7 +186,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		unitClass: 'mobile',
 		stats: { attack: 95, defense: 13, speed: 28, carry: 100 },
 		cost: { biomass: 750, alloy: 600, ore: 900, population: 3, time: '18m 0s' },
-		requirements: ['Recruitment Core Lv8', 'Alloy Forge Lv7']
+		requirements: ['Hangar Bay Lv8', 'Alloy Forge Lv7']
 	},
 	{
 		key: 'voidStalker',
@@ -197,7 +197,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		unitClass: 'mobile',
 		stats: { attack: 150, defense: 15, speed: 32, carry: 60 },
 		cost: { biomass: 1100, alloy: 900, ore: 1400, population: 3, time: '27m 0s' },
-		requirements: ['Recruitment Core Lv9', 'Alloy Forge Lv8', 'Armory Lv3'],
+		requirements: ['Hangar Bay Lv9', 'Alloy Forge Lv8', 'Armory Lv3'],
 		notes: [
 			'Speed 32 - the fastest unit in the roster.',
 			'Mobile class is countered BY Fire (Suppressor / Lancer / Disruptor / Annihilator / Plasma Turret).',
@@ -213,7 +213,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		unitClass: 'armor',
 		stats: { attack: 40, defense: 260, speed: 10, carry: 20 },
 		cost: { biomass: 1250, alloy: 1000, ore: 2000, population: 4, time: '30m 0s' },
-		requirements: ['Recruitment Core Lv10', 'Ore Extractor Lv9', 'Command Core Lv8']
+		requirements: ['Armor Foundry Lv10', 'Ore Extractor Lv9', 'Command Core Lv8']
 	},
 	{
 		key: 'plasmaTurret',
@@ -224,7 +224,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		unitClass: 'fire',
 		stats: { attack: 0, defense: 160, speed: 0, carry: 0 },
 		cost: { biomass: 1500, alloy: 1200, ore: 2500, population: 3, time: '45m 0s' },
-		requirements: ['Recruitment Core Lv11', 'Command Core Lv9', 'Armory Lv5'],
+		requirements: ['Plasma Forge Lv11', 'Command Core Lv9', 'Armory Lv5'],
 		notes: [
 			'Speed 0 - stationary. It is never offered as an option on any outgoing mission (attack, scout, support, or transfer); you cannot lend it to an ally.',
 			'Hard counters Void Stalker, Skimmer Bike, Interceptor Bike, and Breaker Unit.'
@@ -239,7 +239,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		unitClass: 'fire',
 		stats: { attack: 320, defense: 35, speed: 8, carry: 250 },
 		cost: { biomass: 2000, alloy: 1750, ore: 3000, population: 4, time: '40m 0s' },
-		requirements: ['Recruitment Core Lv12', 'Command Core Lv10', 'Shield Grid Lv10']
+		requirements: ['Plasma Forge Lv12', 'Command Core Lv10', 'Shield Grid Lv10']
 	},
 	{
 		key: 'overseer',
@@ -250,7 +250,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		unitClass: 'special',
 		stats: { attack: 0, defense: 8, speed: 15, carry: 0 },
 		cost: { biomass: 180000, alloy: 140000, ore: 120000, population: 5, time: '4h 0m' },
-		requirements: ['Recruitment Core Lv14', 'Command Core Lv14', 'Shield Grid Lv13'],
+		requirements: ['Command Core Lv14', 'Shield Grid Lv13'],
 		notes: [
 			'Maximum 3 per nexus at any time; maximum 1 per strike.',
 			'Trains in an independent queue - does not block other troop training.',
@@ -292,22 +292,61 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		]
 	},
 	{
-		key: 'recruitmentCore',
-		name: 'Recruitment Core',
-		role: 'Military production building',
-		description: 'Enables troop training and unlocks higher combat tiers.',
+		key: 'hangarBay',
+		name: 'Hangar Bay',
+		role: 'Mobile-class production building',
+		description: 'Produces mobile-class units (Breaker, Skimmer, Interceptor, Void Stalker).',
+		baseCost: { biomass: 180, alloy: 150, ore: 80, timeSeconds: 180 },
+		maxLevel: 20,
+		unlock: 'Command Core Lv2',
+		milestones: [
+			{ level: 4, requires: ['Alloy Forge Lv2'] },
+			{ level: 6, requires: ['Life Support Lv3'] },
+			{ level: 10, requires: ['Command Core Lv6'] }
+		],
+		impact: [
+			'Required to train any mobile-class unit.',
+			'Higher levels unlock stronger mobile tiers.',
+			'Cuts mobile-class training time -9% per level through Lv15, then -5% per level for Lv16-20 (compounding). A maxed Lv20 trains roughly 5.3x faster than base.'
+		]
+	},
+	{
+		key: 'plasmaForge',
+		name: 'Plasma Forge',
+		role: 'Fire-class production building',
+		description:
+			'Produces fire-class units (Lancer Drone, Suppressor, Disruptor, Plasma Turret, Annihilator).',
+		baseCost: { biomass: 180, alloy: 150, ore: 80, timeSeconds: 180 },
+		maxLevel: 20,
+		unlock: 'Command Core Lv2',
+		milestones: [
+			{ level: 4, requires: ['Ore Extractor Lv3'] },
+			{ level: 6, requires: ['Alloy Forge Lv4'] },
+			{ level: 10, requires: ['Shield Grid Lv4'] }
+		],
+		impact: [
+			'Required to train any fire-class unit.',
+			'Higher levels unlock stronger fire tiers.',
+			'Cuts fire-class training time -9% per level through Lv15, then -5% per level for Lv16-20 (compounding). A maxed Lv20 trains roughly 5.3x faster than base.'
+		]
+	},
+	{
+		key: 'armorFoundry',
+		name: 'Armor Foundry',
+		role: 'Armor-class production building',
+		description: 'Produces armor-class units (Assault Trooper, Bulwark Guard, Siege Mech).',
 		baseCost: { biomass: 180, alloy: 150, ore: 80, timeSeconds: 180 },
 		maxLevel: 20,
 		unlock: 'Command Core Lv2',
 		milestones: [
 			{ level: 4, requires: ['Biomass Farm Lv2'] },
-			{ level: 6, requires: ['Alloy Forge Lv2'] },
+			{ level: 6, requires: ['Ore Extractor Lv4'] },
 			{ level: 10, requires: ['Life Support Lv5'] }
 		],
 		impact: [
-			'Required to train troops at all.',
-			'Higher levels unlock stronger troop classes.',
-			'Cuts training time -9% per level through Lv15, then -5% per level for Lv16-20 (compounding). A maxed Lv20 trains roughly 5.3x faster than base.'
+			'Required to train any armor-class unit.',
+			'Higher levels unlock stronger armor tiers.',
+			'Cuts armor-class training time -9% per level through Lv15, then -5% per level for Lv16-20 (compounding). A maxed Lv20 trains roughly 5.3x faster than base.'
 		]
 	},
 	{
@@ -350,10 +389,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		baseCost: { biomass: 50, alloy: 60, ore: 60, timeSeconds: 120 },
 		maxLevel: 20,
 		unlock: 'Life Support Lv1',
-		milestones: [
-			{ level: 6, requires: ['Recruitment Core Lv2'] },
-			{ level: 10, requires: ['Life Support Lv5'] }
-		],
+		milestones: [{ level: 10, requires: ['Life Support Lv5'] }],
 		impact: ['Production scales by floor(800 * 1.35^(level-1)).']
 	},
 	{
@@ -411,9 +447,9 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		maxLevel: 20,
 		unlock: 'Command Core Lv5',
 		milestones: [
-			{ level: 3, requires: ['Recruitment Core Lv5'] },
-			{ level: 5, requires: ['Recruitment Core Lv7', 'Shield Grid Lv3'] },
-			{ level: 10, requires: ['Command Core Lv10', 'Recruitment Core Lv10'] }
+			{ level: 3, requires: ['Hangar Bay Lv5'] },
+			{ level: 5, requires: ['Plasma Forge Lv7', 'Shield Grid Lv3'] },
+			{ level: 10, requires: ['Command Core Lv10', 'Armor Foundry Lv10'] }
 		],
 		impact: [
 			'Each level adds +1.5% amplification to class-counter bonuses (cap +30% at Lv20).',
@@ -549,7 +585,7 @@ export const ESPIONAGE_DOC: {
 	intelScope: [
 		'Troops - every unit count (all 12 types including Overseer and Recon Operative).',
 		'Resources - biomass, alloy, ore (floored to whole numbers).',
-		'Buildings - Command Core, Shield Grid, Recruitment Core levels.',
+		'Buildings - Command Core, Shield Grid, Hangar Bay, Plasma Forge, Armor Foundry levels.',
 		'Nexus type - capital, outpost, etc.',
 		'Build queue - every queued building, target level, and completion timestamp.',
 		'Training queue - every queued troop batch.',

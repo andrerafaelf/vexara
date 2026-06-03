@@ -191,7 +191,11 @@ async function spawnRogueAi(galaxyId: number) {
 			alloy: 5000,
 			ore: 3000,
 			commandCore: 8,
-			recruitmentCore: 6,
+			// Old RC 6 -> 6 in each class building so a galaxy-event spawn keeps
+			// balanced production across all three classes.
+			hangarBay: 6,
+			plasmaForge: 6,
+			armorFoundry: 6,
 			lifeSupport: 5,
 			storageVault: 6,
 			biomassFarm: 5,

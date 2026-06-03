@@ -20,6 +20,7 @@ import {
 	getOverseerCost,
 	getTrainTimeSeconds,
 	getTrainingChains,
+	trainingBuildingFor,
 	trainingChainFor
 } from '../utils/gameConstants.js';
 import { parsePositiveInt } from '../utils/validation.js';
@@ -88,29 +89,37 @@ function sameTrainingChain(
 	);
 }
 
+// Each unit gates on the level of its class building (Hangar Bay for mobile,
+// Plasma Forge for fire, Armor Foundry for armor). Specials (recon, overseer)
+// gate on Command Core. Original Recruitment Core levels have been mapped onto
+// the class building 1:1 - same gate level, just sourced from the matching
+// per-class building now. Secondary infrastructure gates (alloyForge, etc.)
+// stay the same.
 const TROOP_REQUIREMENTS: Record<
 	string,
 	{ buildings: Record<string, number>; maxPerNexus?: number }
 > = {
-	assaultTrooper: { buildings: { recruitmentCore: 1 } },
-	lancerDrone: { buildings: { recruitmentCore: 2 } },
-	breakerUnit: { buildings: { recruitmentCore: 3, oreExtractor: 3 } },
-	reconOperative: { buildings: { recruitmentCore: 4, commandCore: 3 } },
-	skimmerBike: { buildings: { recruitmentCore: 5, alloyForge: 4 } },
-	bulwarkGuard: { buildings: { recruitmentCore: 5, lifeSupport: 5 } },
-	suppressorTeam: { buildings: { recruitmentCore: 7, commandCore: 6 } },
-	disruptorUnit: { buildings: { recruitmentCore: 7, oreExtractor: 6 } },
-	interceptorBike: { buildings: { recruitmentCore: 8, alloyForge: 7 } },
-	siegeMech: { buildings: { recruitmentCore: 10, oreExtractor: 9, commandCore: 8 } },
-	annihilatorPlatform: { buildings: { recruitmentCore: 12, commandCore: 10, shieldGrid: 10 } },
-	voidStalker: { buildings: { recruitmentCore: 9, alloyForge: 8, armory: 3 } },
-	plasmaTurret: { buildings: { recruitmentCore: 11, commandCore: 9, armory: 5 } },
-	overseer: { buildings: { recruitmentCore: 14, commandCore: 14, shieldGrid: 13 }, maxPerNexus: 3 }
+	assaultTrooper: { buildings: { armorFoundry: 1 } },
+	lancerDrone: { buildings: { plasmaForge: 2 } },
+	breakerUnit: { buildings: { hangarBay: 3, oreExtractor: 3 } },
+	reconOperative: { buildings: { commandCore: 3 } },
+	skimmerBike: { buildings: { hangarBay: 5, alloyForge: 4 } },
+	bulwarkGuard: { buildings: { armorFoundry: 5, lifeSupport: 5 } },
+	suppressorTeam: { buildings: { plasmaForge: 7, commandCore: 6 } },
+	disruptorUnit: { buildings: { plasmaForge: 7, oreExtractor: 6 } },
+	interceptorBike: { buildings: { hangarBay: 8, alloyForge: 7 } },
+	siegeMech: { buildings: { armorFoundry: 10, oreExtractor: 9, commandCore: 8 } },
+	annihilatorPlatform: { buildings: { plasmaForge: 12, commandCore: 10, shieldGrid: 10 } },
+	voidStalker: { buildings: { hangarBay: 9, alloyForge: 8, armory: 3 } },
+	plasmaTurret: { buildings: { plasmaForge: 11, commandCore: 9, armory: 5 } },
+	overseer: { buildings: { commandCore: 14, shieldGrid: 13 }, maxPerNexus: 3 }
 };
 
 const BUILDING_NAMES: Record<string, string> = {
 	commandCore: 'Command Core',
-	recruitmentCore: 'Recruitment Core',
+	hangarBay: 'Hangar Bay',
+	plasmaForge: 'Plasma Forge',
+	armorFoundry: 'Armor Foundry',
 	lifeSupport: 'Life Support',
 	storageVault: 'Storage Vault',
 	biomassFarm: 'Biomass Farm',
@@ -183,8 +192,15 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
 			res.status(400).json({ error: 'Invalid troop type' });
 			return;
 		}
-		if (nexus.recruitmentCore === 0) {
-			res.status(400).json({ error: 'Recruitment Core required' });
+		// Each troop is produced by exactly one building (its class building, or
+		// Command Core for specials). At least that building must be > 0.
+		const trainingBuilding = trainingBuildingFor(troopType);
+		const trainingBuildingLevel =
+			((nexus as unknown as Record<string, number>)[trainingBuilding] as number) || 0;
+		if (trainingBuildingLevel === 0) {
+			res
+				.status(400)
+				.json({ error: `${BUILDING_NAMES[trainingBuilding] || trainingBuilding} required` });
 			return;
 		}
 
@@ -287,7 +303,7 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
 		const doubled = (nexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled ?? false;
 		const perUnitSeconds = getEffectiveTrainTimeSeconds(
 			troopType,
-			nexus.recruitmentCore,
+			trainingBuildingLevel,
 			nexus.nexusType,
 			doubled
 		);
@@ -409,7 +425,13 @@ export async function cancelTrainingQueue(req: AuthRequest, res: Response): Prom
 				}
 				const completesAtMs = new Date(entry.completesAt).getTime();
 				const perUnitSeconds =
-					entry.perUnitSeconds || getTrainTimeSeconds(entry.troopType, nexus.recruitmentCore);
+					entry.perUnitSeconds ||
+					getTrainTimeSeconds(
+						entry.troopType,
+						((nexus as unknown as Record<string, number>)[
+							trainingBuildingFor(entry.troopType)
+						] as number) || 0
+					);
 				const perUnitMs = perUnitSeconds * 1000;
 				const startedAtMs = completesAtMs - entry.amount * perUnitMs;
 				const elapsedMs = nowMs - startedAtMs;
@@ -603,7 +625,13 @@ export async function checkTrainingQueue(req: AuthRequest, res: Response): Promi
 				}
 				const completesAtMs = new Date(entry.completesAt).getTime();
 				const perUnitSeconds =
-					entry.perUnitSeconds || getTrainTimeSeconds(entry.troopType, nexus.recruitmentCore);
+					entry.perUnitSeconds ||
+					getTrainTimeSeconds(
+						entry.troopType,
+						((nexus as unknown as Record<string, number>)[
+							trainingBuildingFor(entry.troopType)
+						] as number) || 0
+					);
 				const perUnitMs = perUnitSeconds * 1000;
 				const startedAtMs = completesAtMs - entry.amount * perUnitMs;
 				const elapsedMs = now.getTime() - startedAtMs;

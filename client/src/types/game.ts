@@ -84,7 +84,9 @@ export interface Nexus {
 	};
 	buildings: {
 		commandCore: number;
-		recruitmentCore: number;
+		hangarBay: number;
+		plasmaForge: number;
+		armorFoundry: number;
 		lifeSupport: number;
 		storageVault: number;
 		biomassFarm: number;
@@ -304,7 +306,9 @@ export interface Attack {
 			};
 			buildings: {
 				commandCore: number;
-				recruitmentCore: number;
+				hangarBay: number;
+				plasmaForge: number;
+				armorFoundry: number;
 				lifeSupport: number;
 				storageVault: number;
 				biomassFarm: number;

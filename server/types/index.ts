@@ -62,7 +62,9 @@ void _troopKeyParity;
 
 export interface BuildingLevels {
 	commandCore: number;
-	recruitmentCore: number;
+	hangarBay: number;
+	plasmaForge: number;
+	armorFoundry: number;
 	lifeSupport: number;
 	storageVault: number;
 	biomassFarm: number;

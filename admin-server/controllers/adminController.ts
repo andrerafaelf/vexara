@@ -102,7 +102,9 @@ const TROOP_KEYS = [
 ] as const;
 const BUILDING_KEYS = [
 	'commandCore',
-	'recruitmentCore',
+	'hangarBay',
+	'plasmaForge',
+	'armorFoundry',
 	'lifeSupport',
 	'storageVault',
 	'biomassFarm',
@@ -714,7 +716,9 @@ export async function addBuildingsToNexus(req: Request, res: Response): Promise<
 	try {
 		const {
 			commandCore = 0,
-			recruitmentCore = 0,
+			hangarBay = 0,
+			plasmaForge = 0,
+			armorFoundry = 0,
 			lifeSupport = 0,
 			storageVault = 0,
 			biomassFarm = 0,
@@ -729,9 +733,12 @@ export async function addBuildingsToNexus(req: Request, res: Response): Promise<
 			return;
 		}
 		const newLS = nexus.lifeSupport + lifeSupport;
+		const n = nexus as unknown as Record<string, number>;
 		const updated = await adminService.updateNexus(nexus.id, {
 			commandCore: nexus.commandCore + commandCore,
-			recruitmentCore: nexus.recruitmentCore + recruitmentCore,
+			hangarBay: (n.hangarBay ?? 0) + hangarBay,
+			plasmaForge: (n.plasmaForge ?? 0) + plasmaForge,
+			armorFoundry: (n.armorFoundry ?? 0) + armorFoundry,
 			lifeSupport: newLS,
 			storageVault: nexus.storageVault + storageVault,
 			biomassFarm: nexus.biomassFarm + biomassFarm,

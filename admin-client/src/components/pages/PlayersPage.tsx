@@ -32,7 +32,9 @@ const RESOURCE_LABELS: Record<ResourceKey, string> = {
 };
 const BUILDING_LABELS: Record<BuildingKey, string> = {
 	commandCore: 'Command Core',
-	recruitmentCore: 'Recruitment Core',
+	hangarBay: 'Hangar Bay',
+	plasmaForge: 'Plasma Forge',
+	armorFoundry: 'Armor Foundry',
 	lifeSupport: 'Life Support',
 	storageVault: 'Storage Vault',
 	biomassFarm: 'Biomass Farm',

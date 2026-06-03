@@ -82,7 +82,13 @@ export const QUEST_REWARD_BATCHES: QuestBatch[] = [
 		quests: [
 			{ id: 'build_command_core_1', check: ({ nexus }) => nexus.commandCore >= 1 },
 			{ id: 'build_command_core_2', check: ({ nexus }) => nexus.commandCore >= 2 },
-			{ id: 'build_troop_fab_1', check: ({ nexus }) => nexus.recruitmentCore >= 1 },
+			// Quest ID preserved (it was already renamed once: troop_fab -> recruitmentCore).
+			// Now points at Armor Foundry Lv1, which trains the same first unit
+			// (Assault Trooper) the original quest pushed players toward.
+			{
+				id: 'build_troop_fab_1',
+				check: ({ nexus }) => (nexus as unknown as Record<string, number>).armorFoundry >= 1
+			},
 			{
 				id: 'train_assault_trooper_5',
 				check: ({ nexus }) => trainedCount(nexus, 'assaultTrooper') >= 5
@@ -182,7 +188,13 @@ export const QUEST_REWARD_BATCHES: QuestBatch[] = [
 				id: 'build_armory_3',
 				check: ({ nexus }) => (nexus as unknown as Record<string, number>).armory >= 3
 			},
-			{ id: 'build_troop_fab_5', check: ({ nexus }) => nexus.recruitmentCore >= 5 },
+			// Quest ID preserved (was build_troop_fab_5 -> RC Lv5). Now points at
+			// Armor Foundry Lv5, since this batch's track-fed unit (Siege Mech)
+			// is Armor-class and trains there.
+			{
+				id: 'build_troop_fab_5',
+				check: ({ nexus }) => (nexus as unknown as Record<string, number>).armorFoundry >= 5
+			},
 			{ id: 'build_life_support_4', check: ({ nexus }) => nexus.lifeSupport >= 4 },
 			{ id: 'train_siege_mech_5', check: ({ nexus }) => trainedCount(nexus, 'siegeMech') >= 5 }
 		],
@@ -577,10 +589,15 @@ export async function refreshResources(nexus: Nexus): Promise<Nexus> {
 	return prisma.nexus.update({ where: { id: nexus.id }, data: { ...resourceUpdate, points } });
 }
 
-const LEGACY_BUILDING_ALIASES: Record<string, string> = { troopFabricator: 'recruitmentCore' };
-
+// Recruitment Core was retired in the Military Restructure (Stage 2b). Its
+// production role was split across Hangar Bay / Plasma Forge / Armor Foundry,
+// so there is no longer a single canonical replacement. We drop the legacy
+// alias map entirely: the prior `troopFabricator -> recruitmentCore` redirect
+// is no longer reachable (RC migration zeroed in-flight queue entries that
+// referenced either key), and any straggler reference will surface as an
+// unknown building downstream.
 export function canonicalBuildingKey(key: string): string {
-	return LEGACY_BUILDING_ALIASES[key] || key;
+	return key;
 }
 
 export interface BuildQueueEntry {
@@ -930,7 +947,9 @@ export async function updateAllResources(): Promise<void> {
 					ore: true,
 					lastResourceUpdate: true,
 					commandCore: true,
-					recruitmentCore: true,
+					hangarBay: true,
+					plasmaForge: true,
+					armorFoundry: true,
 					lifeSupport: true,
 					shieldGrid: true,
 					armory: true,
@@ -1061,7 +1080,9 @@ export function serializeNexus(
 		resources: { biomass: v.biomass, alloy: v.alloy, ore: v.ore },
 		buildings: {
 			commandCore: v.commandCore,
-			recruitmentCore: v.recruitmentCore,
+			hangarBay: (v as unknown as { hangarBay?: number }).hangarBay ?? 0,
+			plasmaForge: (v as unknown as { plasmaForge?: number }).plasmaForge ?? 0,
+			armorFoundry: (v as unknown as { armorFoundry?: number }).armorFoundry ?? 0,
 			lifeSupport: v.lifeSupport,
 			storageVault: v.storageVault,
 			biomassFarm: v.biomassFarm,

@@ -40,7 +40,9 @@ function absorbBoostIntoBuildQueue(
 
 const BUILDINGS = [
 	'commandCore',
-	'recruitmentCore',
+	'hangarBay',
+	'plasmaForge',
+	'armorFoundry',
 	'lifeSupport',
 	'storageVault',
 	'biomassFarm',
@@ -53,7 +55,9 @@ const BUILDINGS = [
 
 const BUILDING_MAX: Record<string, number> = {
 	commandCore: 20,
-	recruitmentCore: 15,
+	hangarBay: 20,
+	plasmaForge: 20,
+	armorFoundry: 20,
 	lifeSupport: 25,
 	storageVault: 20,
 	biomassFarm: 20,
@@ -66,7 +70,9 @@ const BUILDING_MAX: Record<string, number> = {
 
 const BUILDING_NAMES: Record<string, string> = {
 	commandCore: 'Command Core',
-	recruitmentCore: 'Recruitment Core',
+	hangarBay: 'Hangar Bay',
+	plasmaForge: 'Plasma Forge',
+	armorFoundry: 'Armor Foundry',
 	lifeSupport: 'Life Support',
 	storageVault: 'Storage Vault',
 	biomassFarm: 'Biomass Farm',

@@ -7,7 +7,9 @@ interface IntelData {
 	resources: { biomass: number; alloy: number; ore: number };
 	buildings: {
 		commandCore: number;
-		recruitmentCore: number;
+		hangarBay: number;
+		plasmaForge: number;
+		armorFoundry: number;
 		lifeSupport: number;
 		storageVault: number;
 		biomassFarm: number;
@@ -90,7 +92,9 @@ function getThreatLevel(defensePower: number): { label: string; className: strin
 
 const BUILDING_LABELS: Record<string, string> = {
 	commandCore: 'Command Core',
-	recruitmentCore: 'Recruitment Core',
+	hangarBay: 'Hangar Bay',
+	plasmaForge: 'Plasma Forge',
+	armorFoundry: 'Armor Foundry',
 	lifeSupport: 'Life Support',
 	storageVault: 'Storage Vault',
 	biomassFarm: 'Biomass Farm',

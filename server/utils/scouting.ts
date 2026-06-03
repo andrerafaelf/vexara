@@ -110,7 +110,9 @@ export function buildDetailedScoutIntel(nexus: Nexus): ScoutIntel {
 		},
 		buildings: {
 			commandCore: nexus.commandCore,
-			recruitmentCore: nexus.recruitmentCore,
+			hangarBay: n['hangarBay'] ?? 0,
+			plasmaForge: n['plasmaForge'] ?? 0,
+			armorFoundry: n['armorFoundry'] ?? 0,
 			lifeSupport: nexus.lifeSupport,
 			storageVault: nexus.storageVault,
 			biomassFarm: nexus.biomassFarm,

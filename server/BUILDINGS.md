@@ -2,7 +2,7 @@
 
 ## Overview
 
-Vexara has 10 core buildings. Buildings control economy, population, defense, espionage, and unlock progression.
+Vexara has 12 core buildings. Buildings control economy, population, defense, and unlock progression.
 
 - Build queue cap: 5 upgrades per nexus
 - Costs are paid when queued
@@ -39,15 +39,37 @@ Command Core's own next upgrade) by 0.95. The reduction stacks compoundingly:
   - Lv6 requires Shield Grid Lv2
   - Lv10 requires Storage Vault Lv5
 
-### Recruitment Core (recruitmentCore)
+### Hangar Bay (hangarBay)
 
-- Role: Troop production and military unlock gate
+- Role: Mobile-class production. Produces Breaker, Skimmer, Interceptor, Void Stalker. Reduces mobile-class training time.
 - Base cost: Biomass 180, Alloy 150, Ore 80, Time 180s
-- Max level: 15
+- Max level: 20
+- Unlock: Command Core Lv2
+- Milestones:
+  - Lv4 requires Alloy Forge Lv2
+  - Lv6 requires Life Support Lv3
+  - Lv10 requires Command Core Lv6
+
+### Plasma Forge (plasmaForge)
+
+- Role: Fire-class production. Produces Lancer Drone, Suppressor, Disruptor, Plasma Turret, Annihilator Platform. Reduces fire-class training time.
+- Base cost: Biomass 180, Alloy 150, Ore 80, Time 180s
+- Max level: 20
+- Unlock: Command Core Lv2
+- Milestones:
+  - Lv4 requires Ore Extractor Lv3
+  - Lv6 requires Alloy Forge Lv4
+  - Lv10 requires Shield Grid Lv4
+
+### Armor Foundry (armorFoundry)
+
+- Role: Armor-class production. Produces Assault Trooper, Bulwark Guard, Siege Mech. Reduces armor-class training time.
+- Base cost: Biomass 180, Alloy 150, Ore 80, Time 180s
+- Max level: 20
 - Unlock: Command Core Lv2
 - Milestones:
   - Lv4 requires Biomass Farm Lv2
-  - Lv6 requires Alloy Forge Lv2
+  - Lv6 requires Ore Extractor Lv4
   - Lv10 requires Life Support Lv5
 
 ### Life Support
@@ -82,7 +104,6 @@ Command Core's own next upgrade) by 0.95. The reduction stacks compoundingly:
 - Max level: 20
 - Unlock: Life Support Lv1
 - Milestones:
-  - Lv6 requires Recruitment Core Lv2
   - Lv10 requires Life Support Lv5
 - Impact:
   - Production scales as floor(800 \* 1.35^(level-1))
@@ -129,9 +150,9 @@ Command Core's own next upgrade) by 0.95. The reduction stacks compoundingly:
 - Max level: 20
 - Unlock: Command Core Lv5
 - Milestones:
-  - Lv3 requires Recruitment Core Lv5
-  - Lv5 requires Recruitment Core Lv7, Shield Grid Lv3
-  - Lv10 requires Command Core Lv10, Recruitment Core Lv10
+  - Lv3 requires Hangar Bay Lv5
+  - Lv5 requires Plasma Forge Lv7, Shield Grid Lv3
+  - Lv10 requires Command Core Lv10, Armor Foundry Lv10
 - Impact:
   - Each level adds +1.5% amplification to unit class-counter bonuses (cap +30% at Lv20)
   - Lv3: Unlocks Void Stalker training
@@ -142,7 +163,9 @@ Command Core's own next upgrade) by 0.95. The reduction stacks compoundingly:
 New nexuses start with:
 
 - Command Core: 0
-- Recruitment Core: 0
+- Hangar Bay: 0
+- Plasma Forge: 0
+- Armor Foundry: 0
 - Life Support: 1
 - Storage Vault: 1
 - Biomass Farm: 1
@@ -151,4 +174,4 @@ New nexuses start with:
 - Shield Grid: 0
 - Armory: 0
 
-_Last Updated: May 2026_
+_Last Updated: June 2026_

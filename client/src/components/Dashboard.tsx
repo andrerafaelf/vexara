@@ -24,7 +24,9 @@ const TROOP_NAMES: { [key: string]: string } = {
 
 const BUILDING_NAMES: { [key: string]: string } = {
 	commandCore: 'Command Core',
-	recruitmentCore: 'Recruitment Core',
+	hangarBay: 'Hangar Bay',
+	plasmaForge: 'Plasma Forge',
+	armorFoundry: 'Armor Foundry',
 	lifeSupport: 'Life Support',
 	storageVault: 'Storage Vault',
 	biomassFarm: 'Biomass Farm',
@@ -276,9 +278,9 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 			},
 			{
 				id: 'start-fabrication',
-				title: 'Enable Recruitment',
-				description: 'Upgrade Recruitment Core to Lv1.',
-				completed: done('intro', 'build_troop_fab_1', b.recruitmentCore >= 1)
+				title: 'Enable Production',
+				description: 'Upgrade Armor Foundry to Lv1.',
+				completed: done('intro', 'build_troop_fab_1', (b.armorFoundry ?? 0) >= 1)
 			},
 			{
 				id: 'raise-force',
@@ -416,9 +418,9 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 			},
 			{
 				id: 'troop-logistics',
-				title: 'Troop Logistics',
-				description: 'Upgrade Recruitment Core to Lv5.',
-				completed: done('arsenal', 'build_troop_fab_5', b.recruitmentCore >= 5)
+				title: 'Heavy Production',
+				description: 'Upgrade Armor Foundry to Lv5.',
+				completed: done('arsenal', 'build_troop_fab_5', (b.armorFoundry ?? 0) >= 5)
 			},
 			{
 				id: 'life-support-push',
@@ -961,9 +963,14 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 						<p className="no-troops">
 							{outgoingAttacks.length > 0
 								? 'All troops on missions!'
-								: nexuses.some((v) => v.buildings.recruitmentCore > 0)
+								: nexuses.some(
+											(v) =>
+												v.buildings.hangarBay > 0 ||
+												v.buildings.plasmaForge > 0 ||
+												v.buildings.armorFoundry > 0
+										)
 									? 'No troops trained yet.'
-									: 'Build a Recruitment Core to train troops.'}
+									: 'Build a Hangar Bay, Plasma Forge, or Armor Foundry to train troops.'}
 						</p>
 					)}
 				</div>

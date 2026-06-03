@@ -211,7 +211,9 @@ export async function addBuildings(req: Request, res: Response): Promise<void> {
 	try {
 		const {
 			commandCore = 0,
-			recruitmentCore = 0,
+			hangarBay = 0,
+			plasmaForge = 0,
+			armorFoundry = 0,
 			lifeSupport = 0,
 			storageVault = 0,
 			biomassFarm = 0,
@@ -225,9 +227,12 @@ export async function addBuildings(req: Request, res: Response): Promise<void> {
 			return;
 		}
 		const newLifeSupport = nexus.lifeSupport + lifeSupport;
+		const n = nexus as unknown as Record<string, number>;
 		const updated = await adminService.updateNexus(nexus.id, {
 			commandCore: nexus.commandCore + commandCore,
-			recruitmentCore: nexus.recruitmentCore + recruitmentCore,
+			hangarBay: (n.hangarBay ?? 0) + hangarBay,
+			plasmaForge: (n.plasmaForge ?? 0) + plasmaForge,
+			armorFoundry: (n.armorFoundry ?? 0) + armorFoundry,
 			lifeSupport: newLifeSupport,
 			storageVault: nexus.storageVault + storageVault,
 			biomassFarm: nexus.biomassFarm + biomassFarm,
@@ -300,7 +305,9 @@ export async function resetBuildings(req: Request, res: Response): Promise<void>
 		}
 		const updated = await adminService.updateNexus(nexus.id, {
 			commandCore: 0,
-			recruitmentCore: 0,
+			hangarBay: 0,
+			plasmaForge: 0,
+			armorFoundry: 0,
 			lifeSupport: 0,
 			storageVault: 0,
 			biomassFarm: 0,

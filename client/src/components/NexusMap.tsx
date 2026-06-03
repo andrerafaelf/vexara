@@ -5,7 +5,8 @@ import biomassfarmImg from '../assets/buildings/biomassfarm.png';
 import commandcoreImg from '../assets/buildings/commandcore.png';
 import lifesupportImg from '../assets/buildings/lifesupport.png';
 import oreextractorImg from '../assets/buildings/oreextractor.png';
-import recruitmentcoreImg from '../assets/buildings/recruitmentcore.png';
+// Shared placeholder for the three class buildings until per-class art ships.
+import classBuildingPlaceholderImg from '../assets/buildings/recruitmentcore.png';
 import shieldgridImg from '../assets/buildings/shieldgrid.png';
 import stealtharrayImg from '../assets/buildings/stealtharray.png';
 import storagevaultImg from '../assets/buildings/storagevault.png';
@@ -14,7 +15,14 @@ import { Nexus } from '../types/game';
 
 const BUILDINGS = [
 	{ key: 'commandCore', img: commandcoreImg, name: 'Command Core', short: 'Command' },
-	{ key: 'recruitmentCore', img: recruitmentcoreImg, name: 'Recruitment Core', short: 'Recruit.' },
+	{ key: 'hangarBay', img: classBuildingPlaceholderImg, name: 'Hangar Bay', short: 'Hangar' },
+	{ key: 'plasmaForge', img: classBuildingPlaceholderImg, name: 'Plasma Forge', short: 'Forge' },
+	{
+		key: 'armorFoundry',
+		img: classBuildingPlaceholderImg,
+		name: 'Armor Foundry',
+		short: 'Foundry'
+	},
 	{ key: 'lifeSupport', img: lifesupportImg, name: 'Life Support', short: 'Life Sup.' },
 	{ key: 'storageVault', img: storagevaultImg, name: 'Storage Vault', short: 'Storage' },
 	{ key: 'biomassFarm', img: biomassfarmImg, name: 'Biomass Farm', short: 'Biomass' },

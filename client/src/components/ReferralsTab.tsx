@@ -36,7 +36,9 @@ const TROOP_KEYS = Object.keys(TROOP_LABELS);
 
 const BUILDING_LABELS: Record<string, string> = {
 	commandCore: 'Command Core',
-	recruitmentCore: 'Recruitment Core',
+	hangarBay: 'Hangar Bay',
+	plasmaForge: 'Plasma Forge',
+	armorFoundry: 'Armor Foundry',
 	lifeSupport: 'Life Support',
 	storageVault: 'Storage Vault',
 	biomassFarm: 'Biomass Farm',
@@ -124,7 +126,9 @@ interface ReferrerInfo {
 
 const BUILDING_MAX: Record<string, number> = {
 	commandCore: 20,
-	recruitmentCore: 15,
+	hangarBay: 20,
+	plasmaForge: 20,
+	armorFoundry: 20,
 	lifeSupport: 25,
 	storageVault: 20,
 	biomassFarm: 20,
@@ -136,7 +140,9 @@ const BUILDING_MAX: Record<string, number> = {
 };
 
 const BUILDING_UNLOCK: Record<string, { building: string; level: number }> = {
-	recruitmentCore: { building: 'commandCore', level: 2 },
+	hangarBay: { building: 'commandCore', level: 2 },
+	plasmaForge: { building: 'commandCore', level: 2 },
+	armorFoundry: { building: 'commandCore', level: 2 },
 	lifeSupport: { building: 'commandCore', level: 2 },
 	storageVault: { building: 'commandCore', level: 2 },
 	biomassFarm: { building: 'lifeSupport', level: 1 },

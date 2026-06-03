@@ -45,12 +45,34 @@ const BUILDING_RULES: Record<
 			{ level: 10, requires: [{ building: 'storageVault', level: 5 }] }
 		]
 	},
-	recruitmentCore: {
+	// Three class-specific production buildings replaced the old Recruitment
+	// Core in the Military Restructure. Each gates and accelerates training of
+	// units in its class only (Hangar Bay = mobile, Plasma Forge = fire, Armor
+	// Foundry = armor). Specials (recon, overseer) train from Command Core.
+	hangarBay: {
+		maxLevel: 20,
+		unlock: { building: 'commandCore', level: 2 },
+		milestones: [
+			{ level: 4, requires: [{ building: 'alloyForge', level: 2 }] },
+			{ level: 6, requires: [{ building: 'lifeSupport', level: 3 }] },
+			{ level: 10, requires: [{ building: 'commandCore', level: 6 }] }
+		]
+	},
+	plasmaForge: {
+		maxLevel: 20,
+		unlock: { building: 'commandCore', level: 2 },
+		milestones: [
+			{ level: 4, requires: [{ building: 'oreExtractor', level: 3 }] },
+			{ level: 6, requires: [{ building: 'alloyForge', level: 4 }] },
+			{ level: 10, requires: [{ building: 'shieldGrid', level: 4 }] }
+		]
+	},
+	armorFoundry: {
 		maxLevel: 20,
 		unlock: { building: 'commandCore', level: 2 },
 		milestones: [
 			{ level: 4, requires: [{ building: 'biomassFarm', level: 2 }] },
-			{ level: 6, requires: [{ building: 'alloyForge', level: 2 }] },
+			{ level: 6, requires: [{ building: 'oreExtractor', level: 4 }] },
 			{ level: 10, requires: [{ building: 'lifeSupport', level: 5 }] }
 		]
 	},
@@ -74,10 +96,7 @@ const BUILDING_RULES: Record<
 	biomassFarm: {
 		maxLevel: 20,
 		unlock: { building: 'lifeSupport', level: 1 },
-		milestones: [
-			{ level: 6, requires: [{ building: 'recruitmentCore', level: 2 }] },
-			{ level: 10, requires: [{ building: 'lifeSupport', level: 5 }] }
-		]
+		milestones: [{ level: 10, requires: [{ building: 'lifeSupport', level: 5 }] }]
 	},
 	alloyForge: {
 		maxLevel: 20,
@@ -104,11 +123,16 @@ const BUILDING_RULES: Record<
 		maxLevel: 20,
 		unlock: { building: 'commandCore', level: 5 },
 		milestones: [
-			{ level: 3, requires: [{ building: 'recruitmentCore', level: 5 }] },
+			// Armory milestones are gated by the class building matching the unit
+			// each Armory tier unlocks. Lv3 unlocks Void Stalker (mobile) -> gate
+			// on Hangar Bay. Lv5 unlocks Plasma Turret (fire) -> Plasma Forge.
+			// Lv10 caps the heavy-end on Armor Foundry to keep symmetry across
+			// the three production buildings.
+			{ level: 3, requires: [{ building: 'hangarBay', level: 5 }] },
 			{
 				level: 5,
 				requires: [
-					{ building: 'recruitmentCore', level: 7 },
+					{ building: 'plasmaForge', level: 7 },
 					{ building: 'shieldGrid', level: 3 }
 				]
 			},
@@ -116,7 +140,7 @@ const BUILDING_RULES: Record<
 				level: 10,
 				requires: [
 					{ building: 'commandCore', level: 10 },
-					{ building: 'recruitmentCore', level: 10 }
+					{ building: 'armorFoundry', level: 10 }
 				]
 			}
 		]
@@ -146,7 +170,9 @@ const BUILDING_RULES: Record<
 
 const BUILDING_NAMES: Record<string, string> = {
 	commandCore: 'Command Core',
-	recruitmentCore: 'Recruitment Core',
+	hangarBay: 'Hangar Bay',
+	plasmaForge: 'Plasma Forge',
+	armorFoundry: 'Armor Foundry',
 	lifeSupport: 'Life Support',
 	storageVault: 'Storage Vault',
 	biomassFarm: 'Biomass Farm',
@@ -185,7 +211,9 @@ function getMissingRequirements(
 function getPlannedBuildingLevels(nexus: Record<string, unknown>) {
 	const planned: Record<string, number> = {
 		commandCore: nexus.commandCore as number,
-		recruitmentCore: nexus.recruitmentCore as number,
+		hangarBay: (nexus.hangarBay as number) || 0,
+		plasmaForge: (nexus.plasmaForge as number) || 0,
+		armorFoundry: (nexus.armorFoundry as number) || 0,
 		lifeSupport: nexus.lifeSupport as number,
 		storageVault: nexus.storageVault as number,
 		biomassFarm: nexus.biomassFarm as number,

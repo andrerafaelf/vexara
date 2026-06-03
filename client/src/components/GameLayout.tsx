@@ -97,7 +97,14 @@ export default function GameLayout({
 		(max, n) => Math.max(max, n.buildings?.commandCore ?? 0),
 		0
 	);
-	const anyRecruitmentCore = nexuses.some((n) => (n.buildings?.recruitmentCore ?? 0) >= 1);
+	// "Has any class building" — the post-Recruitment-Core successor signal.
+	// Used to know when the player has built at least one production building.
+	const anyRecruitmentCore = nexuses.some(
+		(n) =>
+			(n.buildings?.hangarBay ?? 0) >= 1 ||
+			(n.buildings?.plasmaForge ?? 0) >= 1 ||
+			(n.buildings?.armorFoundry ?? 0) >= 1
+	);
 	const anyResourceStockpile = nexuses.some((n) => {
 		const r = n.resources;
 		if (!r) return false;
@@ -444,7 +451,7 @@ export default function GameLayout({
 													}}
 												>
 													<span>Factions</span>
-													<span className="nav-discover-req">Build Recruitment Core</span>
+													<span className="nav-discover-req">Build a production building</span>
 												</button>
 											)}
 											{!showPlayers && (

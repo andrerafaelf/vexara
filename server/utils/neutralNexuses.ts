@@ -1,7 +1,7 @@
 import prisma from '../lib/prisma.js';
 import { computeNexusPopulation, getPopulationMax } from './population.js';
 import { getMaxStorage } from './economy.js';
-import { TROOP_COSTS } from './gameConstants.js';
+import { TROOP_COSTS, trainingBuildingFor } from './gameConstants.js';
 
 const NPC_LEVELABLE_BUILDINGS = [
 	'commandCore',
@@ -10,15 +10,21 @@ const NPC_LEVELABLE_BUILDINGS = [
 	'biomassFarm',
 	'alloyForge',
 	'oreExtractor',
-	'recruitmentCore',
+	'hangarBay',
+	'plasmaForge',
+	'armorFoundry',
 	'shieldGrid'
 ] as const;
 
 type LevelableBuilding = (typeof NPC_LEVELABLE_BUILDINGS)[number];
 
+// Class buildings inherit the old RC cap of 11 so NPC progression at max
+// difficulty produces troops at roughly the same speed as before the split.
 const NPC_MAX_LEVELS: Record<LevelableBuilding, number> = {
 	commandCore: 15,
-	recruitmentCore: 11,
+	hangarBay: 11,
+	plasmaForge: 11,
+	armorFoundry: 11,
 	lifeSupport: 15,
 	storageVault: 15,
 	biomassFarm: 15,
@@ -152,7 +158,18 @@ function buildNeutralNexusData(
 		alloy: Math.floor(alloy),
 		ore: Math.floor(ore),
 		commandCore: Math.max(1, Math.floor(Math.random() * 3) + Math.floor(difficultyScale)),
-		recruitmentCore: Math.max(
+		// Each class building seeds at the same level the retired RC used to.
+		// Independent random rolls so an NPC's spawn can favour one class over
+		// another, giving variety on the map.
+		hangarBay: Math.max(
+			0,
+			Math.floor(Math.random() * 2) + Math.floor((difficultyScale - 0.6) * 2)
+		),
+		plasmaForge: Math.max(
+			0,
+			Math.floor(Math.random() * 2) + Math.floor((difficultyScale - 0.6) * 2)
+		),
+		armorFoundry: Math.max(
 			0,
 			Math.floor(Math.random() * 2) + Math.floor((difficultyScale - 0.6) * 2)
 		),
@@ -300,24 +317,28 @@ export async function ensureNeutralNexusPool() {
 // requirement to the count added per tick (scaled by difficulty). Garrison
 // caps prevent a single NPC from spawning a runaway army; once at cap the
 // type is skipped, so growth keeps shifting toward higher-tier units.
+// buildingMin is the minimum level the troop's class building (Hangar Bay /
+// Plasma Forge / Armor Foundry, or Command Core for specials) needs to reach
+// before NPCs start producing this unit. Same gate numbers the player-facing
+// TROOP_REQUIREMENTS uses.
 const NPC_TROOP_TRAINING: Array<{
 	key: string;
-	rcMin: number;
+	buildingMin: number;
 	perTick: number;
 	cap: number;
 }> = [
-	// Basic line - always recruited once RC is up.
-	{ key: 'assaultTrooper', rcMin: 1, perTick: 12, cap: 220 },
-	{ key: 'lancerDrone', rcMin: 2, perTick: 8, cap: 160 },
-	{ key: 'breakerUnit', rcMin: 3, perTick: 5, cap: 110 },
+	// Basic line - always recruited once the class building is up.
+	{ key: 'assaultTrooper', buildingMin: 1, perTick: 12, cap: 220 },
+	{ key: 'lancerDrone', buildingMin: 2, perTick: 8, cap: 160 },
+	{ key: 'breakerUnit', buildingMin: 3, perTick: 5, cap: 110 },
 	// Support / mid-tier.
-	{ key: 'bulwarkGuard', rcMin: 5, perTick: 4, cap: 80 },
-	{ key: 'suppressorTeam', rcMin: 7, perTick: 3, cap: 60 },
-	{ key: 'disruptorUnit', rcMin: 7, perTick: 3, cap: 60 },
-	{ key: 'reconOperative', rcMin: 4, perTick: 2, cap: 30 },
+	{ key: 'bulwarkGuard', buildingMin: 5, perTick: 4, cap: 80 },
+	{ key: 'suppressorTeam', buildingMin: 7, perTick: 3, cap: 60 },
+	{ key: 'disruptorUnit', buildingMin: 7, perTick: 3, cap: 60 },
+	{ key: 'reconOperative', buildingMin: 3, perTick: 2, cap: 30 },
 	// Heavy / late-game.
-	{ key: 'siegeMech', rcMin: 10, perTick: 1, cap: 18 },
-	{ key: 'annihilatorPlatform', rcMin: 12, perTick: 1, cap: 8 }
+	{ key: 'siegeMech', buildingMin: 10, perTick: 1, cap: 18 },
+	{ key: 'annihilatorPlatform', buildingMin: 12, perTick: 1, cap: 8 }
 ];
 
 const NPC_BUILDS_PER_TICK = 2;
@@ -383,10 +404,11 @@ export async function levelUpNeutralNexuses() {
 
 		// ── Troops ───────────────────────────────────────────────────────────
 		// NPCs recruit troops every tick based on their (now possibly newly
-		// upgraded) RC level. We cap by difficulty so weak galaxies don't get
+		// upgraded) class-building level. Each troop checks the level of its own
+		// class building (Hangar Bay / Plasma Forge / Armor Foundry, or Command
+		// Core for specials). We cap by difficulty so weak galaxies don't get
 		// stomped, and respect a per-type garrison ceiling so each NPC keeps a
 		// varied composition rather than swelling into a single deathball.
-		const rcLevel = buildingLevels.recruitmentCore;
 		const lifeSupport = buildingLevels.lifeSupport;
 		const populationMax = getPopulationMax(lifeSupport);
 		// Population-room budgeting uses real per-unit costs so this stays in lockstep
@@ -404,7 +426,9 @@ export async function levelUpNeutralNexuses() {
 		const trainScale = 0.5 + difficultyRatio;
 
 		for (const rule of NPC_TROOP_TRAINING) {
-			if (rcLevel < rule.rcMin) continue;
+			const gateBuilding = trainingBuildingFor(rule.key);
+			const gateLevel = buildingLevels[gateBuilding] ?? 0;
+			if (gateLevel < rule.buildingMin) continue;
 			const current = ((nexus as Record<string, unknown>)[rule.key] as number) ?? 0;
 			const updatedFromThisTick = updates[rule.key] as number | undefined;
 			const base = updatedFromThisTick ?? current;

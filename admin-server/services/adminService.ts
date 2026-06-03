@@ -169,7 +169,9 @@ export function getUsersInGalaxy(galaxyId: number) {
 					populationCurrent: true,
 					populationMax: true,
 					commandCore: true,
-					recruitmentCore: true,
+					hangarBay: true,
+					plasmaForge: true,
+					armorFoundry: true,
 					lifeSupport: true,
 					storageVault: true,
 					biomassFarm: true,
@@ -345,7 +347,9 @@ export function resetUserAccount(userId: number, username: string, galaxyId: num
 		if (targetGalaxy.status !== 'active') throw new Error('Cannot reset into a non-active galaxy');
 		const STARTER_NEXUS_DATA = {
 			commandCore: 0,
-			recruitmentCore: 0,
+			hangarBay: 0,
+			plasmaForge: 0,
+			armorFoundry: 0,
 			lifeSupport: 1,
 			storageVault: 1,
 			biomassFarm: 1,

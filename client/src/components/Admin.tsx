@@ -154,7 +154,9 @@ const Admin: React.FC = () => {
 		setModal({ type: 'buildings', nexusId });
 		setFormData({
 			commandCore: 0,
-			recruitmentCore: 0,
+			hangarBay: 0,
+			plasmaForge: 0,
+			armorFoundry: 0,
 			lifeSupport: 0,
 			storageVault: 0,
 			biomassFarm: 0,
@@ -552,12 +554,32 @@ const Admin: React.FC = () => {
 										/>
 									</div>
 									<div className="form-group">
-										<label>Recruitment Core</label>
+										<label>Hangar Bay</label>
 										<input
 											type="number"
-											value={formData.recruitmentCore || 0}
+											value={formData.hangarBay || 0}
 											onChange={(e) =>
-												setFormData({ ...formData, recruitmentCore: parseInt(e.target.value) || 0 })
+												setFormData({ ...formData, hangarBay: parseInt(e.target.value) || 0 })
+											}
+										/>
+									</div>
+									<div className="form-group">
+										<label>Plasma Forge</label>
+										<input
+											type="number"
+											value={formData.plasmaForge || 0}
+											onChange={(e) =>
+												setFormData({ ...formData, plasmaForge: parseInt(e.target.value) || 0 })
+											}
+										/>
+									</div>
+									<div className="form-group">
+										<label>Armor Foundry</label>
+										<input
+											type="number"
+											value={formData.armorFoundry || 0}
+											onChange={(e) =>
+												setFormData({ ...formData, armorFoundry: parseInt(e.target.value) || 0 })
 											}
 										/>
 									</div>

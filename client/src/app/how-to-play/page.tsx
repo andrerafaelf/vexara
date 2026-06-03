@@ -65,7 +65,7 @@ const faqSchema = {
 			name: 'How do you conquer a nexus in Vexara?',
 			acceptedAnswer: {
 				'@type': 'Answer',
-				text: "Train an Overseer unit (requires Command Core and Recruitment Core level 14). Each successful strike that includes a surviving Overseer reduces the target's control by 34. Control starts at 100 - reach 0 and the nexus is yours. It takes a minimum of three strikes."
+				text: "Train an Overseer unit (requires Command Core level 14 and Shield Grid level 13). Each successful strike that includes a surviving Overseer reduces the target's control by 34. Control starts at 100 - reach 0 and the nexus is yours. It takes a minimum of three strikes."
 			}
 		},
 		{
@@ -96,7 +96,7 @@ const STEPS = [
 	{
 		num: '02',
 		title: 'Unlock troops through your Command Core',
-		body: 'The Command Core is your progression gate. Level it to 2 to unlock the Recruitment Core, which lets you train troops. Higher Command Core levels unlock buildings like the Shield Grid, Armory, and Stealth Array. Rush it alongside your economy buildings - most unlock chains run through it.'
+		body: 'The Command Core is your progression gate. Level it to 2 to unlock the three class production buildings (Hangar Bay for mobile units, Plasma Forge for fire units, Armor Foundry for armor units). Higher Command Core levels unlock the Shield Grid, Armory, and Stealth Array. Rush it alongside your economy buildings - most unlock chains run through it.'
 	},
 	{
 		num: '03',

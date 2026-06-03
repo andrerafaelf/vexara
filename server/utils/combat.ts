@@ -785,7 +785,14 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 			const BUILDING_PRIORITY = [
 				'shieldGrid',
 				'commandCore',
-				'recruitmentCore',
+				// The retired RC sat at priority slot 3 (right after CC). Its three
+				// replacements (Hangar Bay / Plasma Forge / Armor Foundry) inherit
+				// that slot. They're hit in declaration order; with only 1-5 hits
+				// per resolved attack the worst case is a max-overflow strike that
+				// reaches the heavies, which mirrors the old RC-at-slot-3 behavior.
+				'hangarBay',
+				'plasmaForge',
+				'armorFoundry',
 				'lifeSupport',
 				'storageVault',
 				'biomassFarm',

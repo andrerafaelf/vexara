@@ -14,7 +14,9 @@ export interface AllUser {
 
 export const BUILDING_KEYS = [
 	'commandCore',
-	'recruitmentCore',
+	'hangarBay',
+	'plasmaForge',
+	'armorFoundry',
 	'lifeSupport',
 	'storageVault',
 	'biomassFarm',

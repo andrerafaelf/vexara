@@ -20,7 +20,7 @@ export interface OnboardingStep {
 	isComplete?: (state: OnboardingGameState) => boolean;
 	// Optional gate: when false, the step is suppressed (no tooltip, no auto-
 	// complete) until the prerequisite is met. Stops e.g. "train troops" from
-	// surfacing before the player has built a Recruitment Core.
+	// surfacing before the player has built a a class production building.
 	isReady?: (state: OnboardingGameState) => boolean;
 }
 
@@ -59,11 +59,17 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 		title: 'Train Your First Troops',
 		message:
 			'Troops defend your nexus and let you attack others. Queue a few Assault Troopers to get started.',
-		// Only surface this once the player has a Recruitment Core. Without that
-		// building the troop card is locked, so prompting the player to click it
-		// just frustrates them.
+		// Only surface this once the player has at least one class production
+		// building (Hangar Bay / Plasma Forge / Armor Foundry). Without one, the
+		// troop card is locked - prompting the player to click it just frustrates.
 		isReady: (s) =>
-			isNexusPath(s.pathname) && s.nexuses.some((n) => (n.buildings?.recruitmentCore ?? 0) >= 1),
+			isNexusPath(s.pathname) &&
+			s.nexuses.some(
+				(n) =>
+					(n.buildings?.hangarBay ?? 0) >= 1 ||
+					(n.buildings?.plasmaForge ?? 0) >= 1 ||
+					(n.buildings?.armorFoundry ?? 0) >= 1
+			),
 		isComplete: (s) =>
 			s.nexuses.some((n) => {
 				// Already has something in the training queue → done.
@@ -98,7 +104,13 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 		targetAttr: 'open-factions',
 		title: 'Open Factions',
 		message: 'Open the Factions page to find allies and join a coordinated force.',
-		isReady: (s) => s.nexuses.some((n) => (n.buildings?.recruitmentCore ?? 0) >= 1),
+		isReady: (s) =>
+			s.nexuses.some(
+				(n) =>
+					(n.buildings?.hangarBay ?? 0) >= 1 ||
+					(n.buildings?.plasmaForge ?? 0) >= 1 ||
+					(n.buildings?.armorFoundry ?? 0) >= 1
+			),
 		isComplete: (s) => s.pathname === '/factions'
 	},
 	{
@@ -189,7 +201,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 		ready && enabled && stepIndex !== null ? (ONBOARDING_STEPS[stepIndex] ?? null) : null;
 	// Suppress steps whose prerequisites haven't been met. Returning null from
 	// currentStep tears down the overlay entirely, so the player can play
-	// unimpeded until the gate opens (e.g. they build a Recruitment Core).
+	// unimpeded until the gate opens (e.g. they build a a class production building).
 	const gateOpen =
 		rawStep === null || rawStep.isReady === undefined || rawStep.isReady({ nexuses, pathname });
 	const currentStep = gateOpen ? rawStep : null;

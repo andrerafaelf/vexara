@@ -35,7 +35,9 @@ export const metadata: Metadata = {
 
 const CATEGORY: Record<string, string> = {
 	commandCore: 'Progression',
-	recruitmentCore: 'Military',
+	hangarBay: 'Military',
+	plasmaForge: 'Military',
+	armorFoundry: 'Military',
 	lifeSupport: 'Population',
 	storageVault: 'Economy',
 	biomassFarm: 'Economy',

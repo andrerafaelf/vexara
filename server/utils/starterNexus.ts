@@ -5,7 +5,9 @@ import { MIN_NEXUS_SPACING } from './neutralNexuses.js';
 
 export const STARTER_NEXUS_DEFAULTS = {
 	commandCore: 0,
-	recruitmentCore: 0,
+	hangarBay: 0,
+	plasmaForge: 0,
+	armorFoundry: 0,
 	lifeSupport: 0,
 	storageVault: 0,
 	biomassFarm: 1,
@@ -105,7 +107,12 @@ export const RESPAWN_INFLUENCE_FRACTION = 0.55;
 const RESPAWN_FLOOR = {
 	buildings: {
 		commandCore: 12,
-		recruitmentCore: 7,
+		// The retired RC respawn floor was 7. Granted as 7 to each of the three
+		// class buildings so a respawning player retains balanced production
+		// capacity across all classes.
+		hangarBay: 7,
+		plasmaForge: 7,
+		armorFoundry: 7,
 		lifeSupport: 12,
 		storageVault: 12,
 		biomassFarm: 12,
