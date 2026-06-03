@@ -365,7 +365,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 		];
 		const firstBloodComplete = firstBloodQuests.every((q) => q.completed);
 
-		// Chapter 4: Shadow Operations (Espionage)
+		// Chapter 4: Shadow Operations (Stealth Array / defensive concealment)
 		const shadowOpsQuests: DashboardQuest[] = [
 			{
 				id: 'shadow-command',
@@ -392,10 +392,10 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 				completed: done('shadow_ops', 'train_recon_operative_10', tt('reconOperative') >= 10)
 			},
 			{
-				id: 'first-spy-mission',
-				title: 'First Spy Mission',
-				description: 'Send an outgoing strike or spy mission.',
-				completed: done('shadow_ops', 'send_spy_mission', hasOutgoingStrike)
+				id: 'shadow-strike',
+				title: 'Shadow Strike',
+				description: 'Resolve an attack.',
+				completed: done('shadow_ops', 'complete_attack', false)
 			}
 		];
 		const shadowOpsComplete = shadowOpsQuests.every((q) => q.completed);
@@ -470,7 +470,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 		];
 		const veteranComplete = veteranQuests.every((q) => q.completed);
 
-		// Chapter 7: Ghost Protocol (Advanced Espionage)
+		// Chapter 7: Ghost Protocol
 		const ghostProtocolQuests: DashboardQuest[] = [
 			{
 				id: 'ghost-command',

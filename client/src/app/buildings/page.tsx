@@ -43,10 +43,10 @@ const CATEGORY: Record<string, string> = {
 	oreExtractor: 'Economy',
 	shieldGrid: 'Defence',
 	armory: 'Military',
-	stealthArray: 'Espionage'
+	stealthArray: 'Defence'
 };
 
-const CATEGORY_ORDER = ['Progression', 'Economy', 'Population', 'Military', 'Defence', 'Espionage'];
+const CATEGORY_ORDER = ['Progression', 'Economy', 'Population', 'Military', 'Defence'];
 
 function formatTime(seconds: number): string {
 	if (seconds < 60) return `${seconds}s`;
@@ -72,9 +72,9 @@ export default function BuildingsPage() {
 					<div className="gp-header-label">// INFRASTRUCTURE</div>
 					<h1 className="gp-title">Vexara Buildings - All 10 Structures</h1>
 					<p className="gp-subtitle">
-						Ten core buildings drive every nexus in Vexara. Economy, military, defence, and
-						espionage - each structure unlocks new capabilities and scales with investment. All
-						available free, in your browser.
+						Ten core buildings drive every nexus in Vexara. Economy, military, and defence -
+						each structure unlocks new capabilities and scales with investment. All available
+						free, in your browser.
 					</p>
 				</header>
 

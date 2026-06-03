@@ -1744,9 +1744,9 @@ function CreateOperationModal({
 							<StarfieldMap
 								currentNexus={sourceNexus}
 								onRefresh={() => {}}
-								mode="espionage"
-								espionageHint="Click a nexus to set it as the operation target"
-								onSelectSpyTarget={setTarget}
+								mode="selectTarget"
+								selectTargetHint="Click a nexus to set it as the operation target"
+								onSelectTarget={setTarget}
 							/>
 						) : null}
 					</div>

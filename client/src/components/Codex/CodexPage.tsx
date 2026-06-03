@@ -17,8 +17,8 @@ import SiteFooter from '@/components/SiteFooter';
 import { useTabParam } from '@/hooks/useTabParam';
 import '@/styles/Codex.css';
 
-type Tab = 'buildings' | 'troops' | 'espionage' | 'scaling';
-const CODEX_TABS: readonly Tab[] = ['buildings', 'troops', 'espionage', 'scaling'] as const;
+type Tab = 'buildings' | 'troops' | 'scaling';
+const CODEX_TABS: readonly Tab[] = ['buildings', 'troops', 'scaling'] as const;
 
 export default function CodexPage() {
 	const [tab, setTab] = useTabParam<Tab>(CODEX_TABS, 'buildings');
@@ -64,7 +64,6 @@ export default function CodexPage() {
 		if (!hash) return;
 		if (hash.startsWith('troop-')) setTab('troops');
 		else if (hash.startsWith('building-')) setTab('buildings');
-		else if (hash.startsWith('espionage')) setTab('espionage');
 		// small delay so the rendered tab content lands before we scroll
 		setTimeout(() => {
 			const el = document.getElementById(hash);
@@ -111,16 +110,6 @@ export default function CodexPage() {
 						</section>
 					)}
 
-					{tab === 'espionage' && (
-						<section className="cx-stream" aria-label="Espionage">
-							<CodexStreamHead
-								eyebrow="DOSSIER · INTEL"
-								title="Espionage"
-								lede="Two missions, one operative type. Embed listens. Sabotage breaks things."
-							/>
-							<EspionagePanel />
-						</section>
-					)}
 
 					{tab === 'scaling' && (
 						<section className="cx-stream" aria-label="Scaling">
@@ -250,37 +239,6 @@ function CodexRail({
 				</CodexRailGroup>
 
 				<CodexRailGroup
-					title="// Espionage"
-					isOpen={tab === 'espionage'}
-					onClick={() => setTab('espionage')}
-				>
-					{ESPIONAGE_DOC.missions.map((m) => {
-						const id = `espionage-${m.key}`;
-						return (
-							<a
-								key={id}
-								href={`#${id}`}
-								className={`cx-rail-link ${activeAnchor === id ? 'is-active' : ''}`}
-								onClick={() => setTab('espionage')}
-							>
-								<span className="cx-rail-link-icon cx-rail-link-icon-text">
-									{m.key === 'embed' ? '◉' : '✖'}
-								</span>
-								<span className="cx-rail-link-name">{m.name}</span>
-							</a>
-						);
-					})}
-					<a
-						href="#espionage-defense"
-						className={`cx-rail-link ${activeAnchor === 'espionage-defense' ? 'is-active' : ''}`}
-						onClick={() => setTab('espionage')}
-					>
-						<span className="cx-rail-link-icon cx-rail-link-icon-text">⛨</span>
-						<span className="cx-rail-link-name">Counter-intel</span>
-					</a>
-				</CodexRailGroup>
-
-				<CodexRailGroup
 					title="// Appendix"
 					isOpen={tab === 'scaling'}
 					onClick={() => setTab('scaling')}
@@ -328,7 +286,7 @@ function CodexRailGroup({
 function CodexTabs({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
 	return (
 		<div className="cx-tabs" role="tablist" aria-label="Section selection">
-			{(['buildings', 'troops', 'espionage', 'scaling'] as Tab[]).map((t) => (
+			{(['buildings', 'troops', 'scaling'] as Tab[]).map((t) => (
 				<button
 					key={t}
 					role="tab"
@@ -338,7 +296,6 @@ function CodexTabs({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
 				>
 					{t === 'buildings' && 'Buildings'}
 					{t === 'troops' && 'Troops'}
-					{t === 'espionage' && 'Espionage'}
 					{t === 'scaling' && 'Scaling'}
 				</button>
 			))}

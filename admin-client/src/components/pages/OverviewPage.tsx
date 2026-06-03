@@ -34,7 +34,6 @@ interface OverviewData {
 		marketListings: number;
 		flaggedUsers: number;
 		unverifiedUsers: number;
-		activeSpyMissions: number;
 		activeWarOps: number;
 	};
 	activityChart: { date: string; users: number; attacks: number }[];
@@ -105,12 +104,6 @@ export default function OverviewPage({ adminFetch }: Props) {
 			value: totals.marketListings,
 			icon: <ShoppingCart size={17} />,
 			variant: 'default'
-		},
-		{
-			label: 'Active Spy Ops',
-			value: totals.activeSpyMissions,
-			icon: <Activity size={17} />,
-			variant: 'warn'
 		},
 		{
 			label: 'Active War Ops',

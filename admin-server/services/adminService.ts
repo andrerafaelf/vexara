@@ -63,7 +63,6 @@ export async function getOverviewStats() {
 		totalMarketListings,
 		totalFlaggedUsers,
 		totalUnverified,
-		totalSpyMissions,
 		totalWarOperations,
 		recentAttacks
 	] = await Promise.all([
@@ -75,7 +74,6 @@ export async function getOverviewStats() {
 		prisma.marketListing.count(),
 		prisma.user.count({ where: { isFlagged: true } }),
 		prisma.user.count({ where: { emailVerifiedAt: null } }),
-		prisma.spyMission.count({ where: { status: { in: ['traveling', 'returning'] } } }),
 		prisma.warOperation.count({ where: { status: { in: ['planning', 'locked', 'launched'] } } }),
 		prisma.attack.findMany({
 			where: { status: 'traveling' },
@@ -98,7 +96,6 @@ export async function getOverviewStats() {
 			marketListings: totalMarketListings,
 			flaggedUsers: totalFlaggedUsers,
 			unverifiedUsers: totalUnverified,
-			activeSpyMissions: totalSpyMissions,
 			activeWarOps: totalWarOperations
 		},
 		activityChart: buckets,

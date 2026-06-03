@@ -566,37 +566,6 @@ export const relocateNexus = (anchorNexusId: string) =>
 		body: JSON.stringify({ anchorNexusId })
 	});
 
-// Espionage
-export const sendSpyMission = (
-	fromNexusId: string,
-	toNexusId: string,
-	type: 'sabotage' | 'embed',
-	operatives: number,
-	sabotageTarget?: string
-) =>
-	apiRequest('/attack/spy', {
-		method: 'POST',
-		body: JSON.stringify({ fromNexusId, toNexusId, type, operatives, sabotageTarget })
-	});
-
-export const getAllEspionageLogs = (cursor?: number) =>
-	apiRequest(`/attack/spy/logs${cursor ? `?cursor=${cursor}` : ''}`);
-
-export const getSpyMissions = (nexusId: string) => apiRequest(`/attack/spy/missions/${nexusId}`);
-
-export const getCompletedSpyMissions = (nexusId: string) =>
-	apiRequest(`/attack/spy/missions/${nexusId}/completed`);
-
-export const getSpyAssets = (nexusId: string) => apiRequest(`/attack/spy/assets/${nexusId}`);
-
-export const getDiscoveredSpyAssets = (nexusId: string) =>
-	apiRequest(`/attack/spy/assets/${nexusId}/discovered`);
-
-export const recallSpyAsset = (assetId: number) =>
-	apiRequest(`/attack/spy/assets/${assetId}/recall`, { method: 'POST' });
-
-export const getEmbedIntel = (assetId: number) => apiRequest(`/attack/spy/assets/${assetId}/intel`);
-
 // Galaxy events
 export const getGalaxyEvents = () => apiRequest('/map/events');
 

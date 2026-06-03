@@ -43,7 +43,6 @@ interface QuestContext {
 	nexus: Nexus & Record<string, unknown>;
 	hasOutgoingStrike: boolean;
 	hasCompletedAttack: boolean;
-	hasOutgoingSpyMission: boolean;
 	claimedRewards?: Set<string>;
 }
 
@@ -142,7 +141,12 @@ export const QUEST_REWARD_BATCHES: QuestBatch[] = [
 		}
 	},
 
-	// --- Chapter 4: Shadow Operations (Espionage) ---
+	// --- Chapter 4: Shadow Operations ---
+	// Batch ID preserved across the Military Restructure (Stage 2a) so existing
+	// claims survive. Espionage quests retired; the chapter now focuses on
+	// reconnaissance + the Stealth Array's defensive role (hidden vault, scout
+	// counter). `train_recon_operative_10` stays because recon operatives are
+	// still trained — they're the scout-attack unit now (Stage 2c).
 	{
 		id: 'shadow_ops',
 		isUnlocked: ({ claimedRewards }) => claimedRewards.has('first_blood'),
@@ -157,7 +161,7 @@ export const QUEST_REWARD_BATCHES: QuestBatch[] = [
 				id: 'train_recon_operative_10',
 				check: ({ nexus }) => trainedCount(nexus, 'reconOperative') >= 10
 			},
-			{ id: 'send_spy_mission', check: ({ hasOutgoingSpyMission }) => hasOutgoingSpyMission }
+			{ id: 'complete_attack', check: ({ hasCompletedAttack }) => hasCompletedAttack }
 		],
 		reward: {
 			biomass: 5000,
@@ -220,7 +224,11 @@ export const QUEST_REWARD_BATCHES: QuestBatch[] = [
 		}
 	},
 
-	// --- Chapter 7: Ghost Protocol (Advanced Espionage) ---
+	// --- Chapter 7: Ghost Protocol ---
+	// Batch ID preserved across the Military Restructure (Stage 2a). All quests
+	// here were already non-spy (Stealth Array, Shield Grid, Ore Extractor, recon
+	// training) so no quest swaps needed — the chapter just leans into the
+	// Stealth Array's new role as a defensive/hidden-vault building.
 	{
 		id: 'ghost_protocol',
 		isUnlocked: ({ claimedRewards }) => claimedRewards.has('veteran'),
@@ -284,7 +292,6 @@ export async function applyQuestRewards(
 	options: {
 		hasOutgoingStrike?: boolean;
 		hasCompletedAttack?: boolean;
-		hasOutgoingSpyMission?: boolean;
 		player?: GalaxyPlayerForQuests;
 	} = {}
 ): Promise<NexusWithQuests> {
@@ -325,17 +332,11 @@ export async function applyQuestRewards(
 				select: { id: true }
 			})
 		);
-	const hasOutgoingSpyMission =
-		options.hasOutgoingSpyMission ??
-		Boolean(
-			await prisma.spyMission.findFirst({ where: { fromNexusId: nexus.id }, select: { id: true } })
-		);
 
 	const ctx: QuestContext = {
 		nexus: nexus as Nexus & Record<string, unknown>,
 		hasOutgoingStrike,
-		hasCompletedAttack,
-		hasOutgoingSpyMission
+		hasCompletedAttack
 	};
 
 	for (const batch of QUEST_REWARD_BATCHES) {

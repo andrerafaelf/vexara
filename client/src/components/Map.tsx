@@ -68,9 +68,9 @@ interface GalaxyEvent {
 interface MapProps {
 	currentNexus: Nexus;
 	onRefresh: () => void;
-	mode?: 'normal' | 'espionage';
-	onSelectSpyTarget?: (nexus: MapNexus) => void;
-	espionageHint?: string;
+	mode?: 'normal' | 'selectTarget';
+	onSelectTarget?: (nexus: MapNexus) => void;
+	selectTargetHint?: string;
 }
 
 export interface MapNexus {
@@ -204,8 +204,8 @@ const Map: React.FC<MapProps> = ({
 	currentNexus,
 	onRefresh,
 	mode = 'normal',
-	onSelectSpyTarget,
-	espionageHint
+	onSelectTarget,
+	selectTargetHint
 }) => {
 	const { user } = useAuth();
 	const { currentStep, advance: advanceOnboarding } = useOnboarding();
@@ -738,8 +738,8 @@ const Map: React.FC<MapProps> = ({
 		const cy = Number(yAttr);
 		const nexus = nexusLookup[`${cx},${cy}`];
 		if (!nexus) return;
-		if (mode === 'espionage' && nexus._id !== currentNexus._id) {
-			onSelectSpyTarget?.(nexus);
+		if (mode === 'selectTarget' && nexus._id !== currentNexus._id) {
+			onSelectTarget?.(nexus);
 			return;
 		}
 		handleVillageClick(nexus, e);
@@ -915,7 +915,7 @@ const Map: React.FC<MapProps> = ({
 
 	const ownNexusIds = useMemo(() => new Set(ownNexuses.map((n) => n._id)), [ownNexuses]);
 
-	const isEspionage = mode === 'espionage';
+	const isSelectTarget = mode === 'selectTarget';
 
 	const hasVisibleOnboardingAttackTarget = useMemo(
 		() =>
@@ -976,9 +976,9 @@ const Map: React.FC<MapProps> = ({
 				const isInStormZone = stormRects.some(
 					(r) => x >= r.xMin && x <= r.xMax && y >= r.yMin && y <= r.yMax
 				);
-				const isSpyTarget = isEspionage && !!nexus && !isCurrent;
+				const isSpyTarget = isSelectTarget && !!nexus && !isCurrent;
 				const ownerLabel =
-					isEspionage && nexus && !isCurrent ? (nexus.owner?.username ?? null) : null;
+					isSelectTarget && nexus && !isCurrent ? (nexus.owner?.username ?? null) : null;
 
 				const protectedNow =
 					nexus?.newbieProtectionEndsAt &&
@@ -1028,7 +1028,7 @@ const Map: React.FC<MapProps> = ({
 		renderCenterX,
 		renderCenterY,
 		currentNexus._id,
-		isEspionage,
+		isSelectTarget,
 		isSendAttackOnboarding,
 		mode,
 		selectedNexus,
@@ -1755,10 +1755,10 @@ const Map: React.FC<MapProps> = ({
 					</div>
 				</div>
 			)}
-			{mode === 'espionage' && (
+			{mode === 'selectTarget' && (
 				<div className="map-header map-header--espionage">
 					<span className="map-hint">
-						{espionageHint ?? 'Click a nexus to select it as your spy target'}
+						{selectTargetHint ?? 'Click a nexus to select it as your target'}
 					</span>
 					<div className="map-coordinate-controls">
 						<input
@@ -1788,7 +1788,7 @@ const Map: React.FC<MapProps> = ({
 			<div className="map-content">
 				<div className="map-content-mobile-events">{renderGalaxyEventsPanel()}</div>
 				<div
-					className={`map-viewport${isEspionage ? ' map-viewport--espionage' : ''}${
+					className={`map-viewport${isSelectTarget ? ' map-viewport--espionage' : ''}${
 						isPanning ? ' is-panning' : ''
 					}${zoom < 0.8 ? ' map-viewport--lod' : ''}${
 						// Hide per-cell text only once a cell is genuinely too small on

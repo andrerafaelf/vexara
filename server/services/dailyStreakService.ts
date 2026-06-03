@@ -83,22 +83,6 @@ const QUEST_TEMPLATES: Array<{
 		reward: { type: 'resources', biomass: 3500, alloy: 3500, ore: 3500 }
 	},
 	{
-		id: 'scout_1',
-		title: 'Reconnaissance',
-		description: 'Send 1 espionage mission',
-		target: 1,
-		category: 'scout',
-		reward: { type: 'resources', biomass: 2500, alloy: 2500, ore: 2500 }
-	},
-	{
-		id: 'sabotage_1',
-		title: 'Saboteur',
-		description: 'Send 1 sabotage mission',
-		target: 1,
-		category: 'sabotage',
-		reward: { type: 'resources', biomass: 4500, alloy: 4500, ore: 4500 }
-	},
-	{
 		id: 'market_1',
 		title: 'Trader',
 		description: 'Create 1 market listing',
