@@ -3063,19 +3063,6 @@ const NexusView: React.FC<NexusViewProps> = ({
 															<div className="troops-stationed-grid">
 																{rows.map(({ type, count }) => {
 																	const isPending = destroyPending === type;
-																	const baseCost = TROOP_COSTS[type];
-																	const parsedAmt = Math.max(0, Math.min(parseInt(destroyAmount) || 0, count));
-																	// Decommissioning COSTS 10% of build cost (it frees population at a
-																	// price — not a refund). Matches DESTROY_COST_RATE on the server.
-																	const destroyCost = baseCost ? {
-																		biomass: Math.floor(baseCost.biomass * 0.1 * parsedAmt),
-																		alloy:   Math.floor(baseCost.alloy   * 0.1 * parsedAmt),
-																		ore:     Math.floor(baseCost.ore      * 0.1 * parsedAmt),
-																	} : null;
-																	const canAffordDestroy = !destroyCost ||
-																		(nexus.resources.biomass >= destroyCost.biomass &&
-																			nexus.resources.alloy >= destroyCost.alloy &&
-																			nexus.resources.ore >= destroyCost.ore);
 																	return (
 																		<div key={type} className={`stationed-card${isPending ? ' stationed-card--destroying' : ''}`}>
 																			{TROOP_IMAGES[type] && (
@@ -3110,87 +3097,16 @@ const NexusView: React.FC<NexusViewProps> = ({
 																			</button>
 																			<button
 																				type="button"
-																				className={`stationed-card-destroy-btn${isPending ? ' stationed-card-destroy-btn--active' : ''}`}
-																				title="Destroy troops"
-																				aria-label={`Destroy ${TROOP_NAMES[type]}`}
+																				className="stationed-card-destroy-btn"
+																				title="Decommission troops"
+																				aria-label={`Decommission ${TROOP_NAMES[type]}`}
 																				onClick={() => {
-																					if (isPending) {
-																						setDestroyPending(null);
-																						setDestroyAmount('');
-																					} else {
-																						setDestroyPending(type);
-																						setDestroyAmount('');
-																					}
+																					setDestroyPending(type);
+																					setDestroyAmount('');
 																				}}
 																			>
 																				<Trash2 size={13} aria-hidden="true" />
 																			</button>
-																			{isPending && (
-																				<div className="stationed-destroy-row" aria-label={`Destroy ${TROOP_NAMES[type]}`}>
-																					<div className="stationed-destroy-head">
-																						<span className="stationed-destroy-kicker">Decommission</span>
-																						<span className="stationed-destroy-target">{TROOP_NAMES[type]}</span>
-																					</div>
-																					<div className="stationed-destroy-controls">
-																						<label className="stationed-destroy-field">
-																							<span>Units</span>
-																							<input
-																								type="number"
-																								className="stationed-destroy-input"
-																								min={1}
-																								max={count}
-																								placeholder={`1-${count}`}
-																								value={destroyAmount}
-																								onChange={(e) => setDestroyAmount(e.target.value)}
-																								autoFocus
-																							/>
-																						</label>
-																						<button
-																							type="button"
-																							className="stationed-destroy-max troop-available-clickable"
-																							onClick={() => setDestroyAmount(String(count))}
-																						>
-																							Max <span>{count.toLocaleString()}</span>
-																						</button>
-																						<button
-																							type="button"
-																							className="stationed-destroy-confirm"
-																							disabled={destroyingTroops || parsedAmt < 1 || !canAffordDestroy}
-																							onClick={async () => {
-																								if (parsedAmt < 1 || !canAffordDestroy) return;
-																								setDestroyingTroops(true);
-																								try {
-																									await destroyTroops(nexus._id, type, parsedAmt);
-																									showToast(`${parsedAmt.toLocaleString()} ${TROOP_NAMES[type]} decommissioned.`, 'info');
-																									setDestroyPending(null);
-																									setDestroyAmount('');
-																									onUpdate();
-																								} catch (err: any) {
-																									showToast(err?.response?.data?.error || 'Failed to decommission troops', 'error');
-																								} finally {
-																									setDestroyingTroops(false);
-																								}
-																							}}
-																						>
-																							<Trash2 size={12} aria-hidden="true" />
-																							{destroyingTroops ? '...' : 'Decommission'}
-																						</button>
-																					</div>
-																					{destroyCost && parsedAmt > 0 && (
-																						<div
-																							className={`stationed-destroy-cost${canAffordDestroy ? '' : ' stationed-destroy-cost--short'}`}
-																						>
-																							<span>Cost</span>
-																							<b>−{destroyCost.biomass.toLocaleString()} B</b>
-																							<b>−{destroyCost.alloy.toLocaleString()} A</b>
-																							<b>−{destroyCost.ore.toLocaleString()} O</b>
-																							{!canAffordDestroy && (
-																								<span className="stationed-destroy-cost-warn">Insufficient</span>
-																							)}
-																						</div>
-																					)}
-																				</div>
-																			)}
 																		</div>
 																	);
 																})}
@@ -3683,6 +3599,182 @@ const NexusView: React.FC<NexusViewProps> = ({
 					</div>
 				)}
 			</div>
+
+			{destroyPending &&
+				(() => {
+					const type = destroyPending;
+					const stationed = Number((nexus.troops as any)?.[type]) || 0;
+					// Pending unit vanished (e.g. all decommissioned, queue resolved) —
+					// nothing left to act on, so close the dialog.
+					if (stationed <= 0) {
+						return null;
+					}
+					const baseCost = TROOP_COSTS[type];
+					const parsedAmt = Math.max(0, Math.min(parseInt(destroyAmount) || 0, stationed));
+					// Decommissioning COSTS 10% of build cost (it frees population at a
+					// price — not a refund). Matches DESTROY_COST_RATE on the server.
+					const destroyCost = baseCost
+						? {
+								biomass: Math.floor(baseCost.biomass * 0.1 * parsedAmt),
+								alloy: Math.floor(baseCost.alloy * 0.1 * parsedAmt),
+								ore: Math.floor(baseCost.ore * 0.1 * parsedAmt)
+							}
+						: null;
+					const populationFreed = baseCost ? (baseCost.population ?? 0) * parsedAmt : 0;
+					const canAffordDestroy =
+						!destroyCost ||
+						(nexus.resources.biomass >= destroyCost.biomass &&
+							nexus.resources.alloy >= destroyCost.alloy &&
+							nexus.resources.ore >= destroyCost.ore);
+					const close = () => {
+						if (destroyingTroops) return;
+						setDestroyPending(null);
+						setDestroyAmount('');
+					};
+					const submit = async () => {
+						if (parsedAmt < 1 || !canAffordDestroy || destroyingTroops) return;
+						setDestroyingTroops(true);
+						try {
+							await destroyTroops(nexus._id, type, parsedAmt);
+							showToast(
+								`${parsedAmt.toLocaleString()} ${TROOP_NAMES[type]} decommissioned.`,
+								'info'
+							);
+							setDestroyPending(null);
+							setDestroyAmount('');
+							onUpdate();
+						} catch (err: any) {
+							showToast(
+								err?.response?.data?.error || 'Failed to decommission troops',
+								'error'
+							);
+						} finally {
+							setDestroyingTroops(false);
+						}
+					};
+					return createPortal(
+						<div className="attack-modal-overlay decommission-modal-overlay" onClick={close}>
+							<div
+								className="attack-modal decommission-modal"
+								role="dialog"
+								aria-modal="true"
+								aria-label={`Decommission ${TROOP_NAMES[type]}`}
+								onClick={(e) => e.stopPropagation()}
+							>
+								<div className="attack-modal-header decommission-modal-header">
+									<h3>
+										<Trash2 size={15} aria-hidden="true" />
+										Decommission
+									</h3>
+									<button className="close-btn" onClick={close} aria-label="Close">
+										<X size={12} aria-hidden="true" />
+									</button>
+								</div>
+								<div className="attack-modal-content decommission-modal-content">
+									<div className="decommission-unit">
+										{TROOP_IMAGES[type] && (
+											<div className="decommission-unit-image">
+												<img
+													src={TROOP_IMAGES[type].src || TROOP_IMAGES[type]}
+													alt={TROOP_NAMES[type]}
+												/>
+											</div>
+										)}
+										<div className="decommission-unit-meta">
+											<span className="decommission-unit-name">{TROOP_NAMES[type]}</span>
+											<span className="decommission-unit-count">
+												{stationed.toLocaleString()} stationed
+											</span>
+										</div>
+									</div>
+
+									<p className="decommission-note">
+										Permanently disbands these units to free population. This charges a
+										10% scrap fee — it is not a refund.
+									</p>
+
+									<div className="decommission-field">
+										<label htmlFor="decommission-amount">Units to decommission</label>
+										<div className="decommission-input-row">
+											<input
+												id="decommission-amount"
+												type="number"
+												className="decommission-input"
+												min={1}
+												max={stationed}
+												placeholder={`1 – ${stationed.toLocaleString()}`}
+												value={destroyAmount}
+												onChange={(e) => setDestroyAmount(e.target.value)}
+												onKeyDown={(e) => {
+													if (e.key === 'Enter') submit();
+												}}
+												autoFocus
+											/>
+											<button
+												type="button"
+												className="decommission-max"
+												onClick={() => setDestroyAmount(String(stationed))}
+											>
+												Max
+											</button>
+										</div>
+									</div>
+
+									{parsedAmt > 0 && (
+										<div className="decommission-summary">
+											<div className="decommission-summary-row decommission-summary-row--freed">
+												<span>Population freed</span>
+												<b>+{populationFreed.toLocaleString()}</b>
+											</div>
+											{destroyCost && (
+												<div
+													className={`decommission-summary-row decommission-summary-row--cost${canAffordDestroy ? '' : ' decommission-summary-row--short'}`}
+												>
+													<span>Scrap fee</span>
+													<div className="decommission-cost-values">
+														<b>−{destroyCost.biomass.toLocaleString()} B</b>
+														<b>−{destroyCost.alloy.toLocaleString()} A</b>
+														<b>−{destroyCost.ore.toLocaleString()} O</b>
+													</div>
+												</div>
+											)}
+											{!canAffordDestroy && (
+												<div className="decommission-warn">
+													Insufficient resources for the scrap fee.
+												</div>
+											)}
+										</div>
+									)}
+
+									<div className="decommission-actions">
+										<button
+											type="button"
+											className="decommission-cancel"
+											onClick={close}
+											disabled={destroyingTroops}
+										>
+											Cancel
+										</button>
+										<button
+											type="button"
+											className="decommission-confirm"
+											disabled={destroyingTroops || parsedAmt < 1 || !canAffordDestroy}
+											onClick={submit}
+										>
+											<Trash2 size={13} aria-hidden="true" />
+											{destroyingTroops
+												? 'Decommissioning…'
+												: parsedAmt > 0
+													? `Decommission ${parsedAmt.toLocaleString()}`
+													: 'Decommission'}
+										</button>
+									</div>
+								</div>
+							</div>
+						</div>,
+						document.body
+					);
+				})()}
 
 			{showSpecModal && (
 				<div className="attack-modal-overlay" onClick={() => setShowSpecModal(false)}>

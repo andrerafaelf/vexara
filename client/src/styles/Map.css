@@ -559,12 +559,54 @@
 }
 
 .nexus-marker {
+	position: relative;
 	font-size: 29px;
 	line-height: 1;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	filter: drop-shadow(0 0 5px currentColor) drop-shadow(0 0 10px currentColor);
+}
+
+/* "Online" presence pulse — a small green dot pinned to the top-right of any
+   other player's nexus marker whose owner acted within the activity window.
+   Green reads as the universal "online" signal and stays distinct from the
+   amber/red/blue owner-relation marker colors. Sits OUTSIDE the marker's
+   drop-shadow filter context via its own layer so it isn't tinted by it. */
+.nexus-activity-dot {
+	position: absolute;
+	top: -1px;
+	right: -3px;
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--success, #56d364);
+	box-shadow:
+		0 0 0 1.5px var(--bg-app, #0d1117),
+		0 0 5px var(--success, #56d364);
+	/* Reset the inherited drop-shadow tint from .nexus-marker. */
+	filter: none;
+	z-index: 7;
+	pointer-events: none;
+	animation: nexus-activity-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes nexus-activity-pulse {
+	0%,
+	100% {
+		opacity: 1;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 0.55;
+		transform: scale(0.82);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.nexus-activity-dot {
+		animation: none;
+	}
 }
 
 .nexus-marker-current {
@@ -585,6 +627,44 @@
 
 .nexus-marker-ally {
 	color: #a877e8;
+}
+
+/* Inspect-drawer "Active" presence badge — mirrors the map pulse, shown beside
+   another player's name when they've acted within the activity window. */
+.detail-owner-cell {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.nexus-active-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 1px 7px 1px 5px;
+	font-family: var(--font-mono);
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--success, #56d364);
+	background: var(--success-soft, rgba(86, 211, 100, 0.14));
+	border: 1px solid rgba(86, 211, 100, 0.32);
+}
+
+.nexus-active-badge-dot {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--success, #56d364);
+	box-shadow: 0 0 4px var(--success, #56d364);
+	animation: nexus-activity-pulse 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.nexus-active-badge-dot {
+		animation: none;
+	}
 }
 
 /* Faction target — orange crosshair border to distinguish from normal enemy cells */

@@ -15,7 +15,7 @@
 // If "I forgot to bump it" becomes a real pattern, swap to a build step
 // that globs the directory and writes this file. Until then: simpler wins.
 
-export const LATEST_PATCH_VERSION = '0.20';
-export const LATEST_PATCH_LABEL = 'Alpha v0.20';
+export const LATEST_PATCH_VERSION = '0.21';
+export const LATEST_PATCH_LABEL = 'Alpha v0.21';
 export const LATEST_PATCH_HEADLINE =
-	'A rebuilt Starfield map with buttery pan/zoom, a one-time relocation token for fresh commanders, and far less clumpy map seeding.';
+	'Nexuses now show an active pulse so you can see who is at the controls, a cleaner decommission dialog, Influence dialed back ~15%, and a crash screen that finally matches the game.';

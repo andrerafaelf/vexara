@@ -102,6 +102,13 @@ export interface MapNexus {
 	 */
 	relation?: 'faction' | 'friend' | null;
 	isFactionTarget?: boolean;
+	/**
+	 * Presence signal from the server: the owner took a deliberate action
+	 * (train / build / cancel / decommission) within the active window
+	 * (~15 min). Surfaced on the map as a small "online" pulse so other
+	 * players can tell at a glance which nexuses are currently being played.
+	 */
+	active?: boolean;
 }
 
 // NPC nexuses are identified by name prefix (the server names them by type).
@@ -979,6 +986,10 @@ const Map: React.FC<MapProps> = ({
 				const isSpyTarget = isEspionage && !!nexus && !isCurrent;
 				const ownerLabel =
 					isEspionage && nexus && !isCurrent ? (nexus.owner?.username ?? null) : null;
+				// "Online" pulse for OTHER players' recently-active nexuses. The server
+				// only flags owned nexuses inside the activity window, so NPCs/neutrals
+				// are never active. Hidden on your own current nexus (you know you're here).
+				const isActive = !!nexus?.active && !isCurrent && !isOwn;
 
 				const protectedNow =
 					nexus?.newbieProtectionEndsAt &&
@@ -1015,6 +1026,7 @@ const Map: React.FC<MapProps> = ({
 					isFactionTarget,
 					isInStormZone,
 					isSpyTarget,
+					isActive,
 					ownerLabel,
 					title,
 					onboarding
@@ -1119,12 +1131,23 @@ const Map: React.FC<MapProps> = ({
 
 				<div className="detail-line">
 					<span>Owner</span>
-					<Username
-						name={selectedNexus.owner?.username ?? ''}
-						isSupporter={selectedNexus.owner?.isSupporter}
-						supporterTier={selectedNexus.owner?.supporterTier as any}
-						linkToProfile
-					/>
+					<span className="detail-owner-cell">
+						<Username
+							name={selectedNexus.owner?.username ?? ''}
+							isSupporter={selectedNexus.owner?.isSupporter}
+							supporterTier={selectedNexus.owner?.supporterTier as any}
+							linkToProfile
+						/>
+						{!isOwn && selectedNexus.active && (
+							<span
+								className="nexus-active-badge"
+								title="Acted within the last 15 minutes"
+							>
+								<span className="nexus-active-badge-dot" aria-hidden="true" />
+								Active
+							</span>
+						)}
+					</span>
 				</div>
 				<div className="detail-line">
 					<span>Points</span>
