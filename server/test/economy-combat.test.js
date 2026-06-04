@@ -5,6 +5,7 @@ import {
 	computeLossesForLoser,
 	computeLossesForWinner,
 	computeClassWeightedAttack,
+	computeClassWeightedDefense,
 	computeLootStolen
 } from '../utils/combatMath.js';
 import { calculatePoints, computeResourceUpdate } from '../utils/economy.js';
@@ -176,6 +177,43 @@ test('winner still bleeds on a near-even victory (coin-flip cost preserved)', ()
 	const losses = computeLossesForWinner(garrison, 0.8, 4242, { wraithSkimmer: 1500 });
 	const total = Object.values(losses).reduce((a, b) => a + (b || 0), 0);
 	assert.ok(total > 100, `a near-even win should bleed (got ${total})`);
+});
+
+test('symmetric triangle: a defender amplifies defense when it counters the attacker', () => {
+	// Fire defenders (Arc Disruptor) counter Mobile attackers (Void Stalker), so the
+	// SAME garrison defends harder against mobile than against an armor attacker it
+	// is countered by. This is the core of the v0.22 symmetric-defense rework.
+	const garrison = { arcDisruptor: 100 }; // fire class
+	const vsMobile = computeClassWeightedDefense(garrison, { voidStalker: 50 }); // fire counters mobile
+	const vsArmor = computeClassWeightedDefense(garrison, { siegeColossus: 50 }); // armor counters fire
+	const neutral = computeClassWeightedDefense(garrison, {}); // no attacker → raw defense
+
+	assert.ok(vsMobile > neutral, 'countering the attacker amplifies defense');
+	assert.ok(vsArmor < neutral, 'being countered weakens defense');
+	// Raw (un-weighted) defense is the neutral baseline.
+	assert.equal(neutral, computeForcePower(garrison, 'defense'));
+});
+
+test('symmetric triangle: an empty attacker leaves defense at raw value', () => {
+	const garrison = { siegeMech: 10, bulwarkGuard: 20 };
+	assert.equal(
+		computeClassWeightedDefense(garrison, {}),
+		computeForcePower(garrison, 'defense')
+	);
+});
+
+test('a striker is a poor defender, an anvil is a strong one (role separation)', () => {
+	// Equal-ish footprint: a glass-cannon striker garrison defends far worse than an
+	// anvil garrison of the same unit count, so players are pushed to garrison with
+	// anvils and attack with strikers.
+	const attacker = { siegeColossus: 30 }; // armor attacker
+	const strikerGarrison = { voidStalker: 100 }; // mobile striker (low defense)
+	const anvilGarrison = { aegisSkirmisher: 100 }; // mobile anvil (high defense), counters armor
+	assert.ok(
+		computeClassWeightedDefense(anvilGarrison, attacker) >
+			computeClassWeightedDefense(strikerGarrison, attacker),
+		'the anvil garrison defends harder than the striker garrison'
+	);
 });
 
 test('a lone Overseer has zero class-weighted attack power', () => {

@@ -53,22 +53,26 @@ export const CLASS_COUNTER_CODEX = `
 Vexara uses a rock-paper-scissors class triangle: Mobile beats Armor, Armor beats Fire, Fire beats Mobile. Special units (Overseer, Recon Operative) are neutral - they have no counter advantage or vulnerability because they do not fight.
 
 **The triangle:**
-- Mobile (Breaker Unit, Skimmer Bike, Interceptor Bike, Void Stalker) - fast assault forces that exploit armor gaps and overwhelm armored units
-- Armor (Assault Trooper, Bulwark Guard, Siege Mech) - armored units that close distance and suppress fire emplacements
-- Fire (Lancer Drone, Suppressor Team, Disruptor Unit, Annihilator Platform, Plasma Turret) - fire support that pins down fast-moving mobile forces
+- Mobile (Vanguard Breaker, Wraith Skimmer, Phantom Lance, Void Stalker, Aegis Skirmisher) - fast assault forces that exploit armor gaps and overwhelm armored units
+- Armor (Assault Trooper, Bulwark Guard, Siege Mech, Siege Colossus) - armored units that close distance and suppress fire emplacements
+- Fire (Sentinel Lancer, Pyre Suppressor, Arc Disruptor, Annihilator Platform, Plasma Turret) - fire support that pins down fast-moving mobile forces
 - Special (Overseer, Recon Operative) - no counter in either direction
 
-**Multipliers:** A class that counters the opposing class deals ×1.35 damage. A class being countered receives ×0.75 effective damage (its attacks are weakened). Neutral matchups are ×1.0.
+**The triangle now cuts BOTH ways (attack AND defense).** This is the core of the v0.22 combat rework. Previously the counter only boosted the attacker's damage; defense was raw, so stacking the single highest-defense unit was always the best garrison regardless of what attacked. Now a defending unit whose class counters the incoming attacker has its DEFENSE amplified, and one being countered defends for less. Bringing the wrong class into a fight is punished on both sides of the engagement.
 
-**Partial counters in mixed engagements:** The counter bonus is proportional to how much of the enemy force your class actually counters. If you send 10 Fire units against a mix of 5 Mobile + 5 Armor defenders, Fire counters the Mobile half (×1.35) but is countered by the Armor half (×0.75). Your effective multiplier is the weighted average: (0.5 × 1.35) + (0.5 × 0.75) = 1.05 - a small edge, not the full bonus. You only get the full ×1.35 if 100% of defenders are of the class you counter.
+**Multipliers:** On attack, a class that counters the opposing class deals ×1.35 damage; a class being countered deals ×0.75. On defense, the spread is slightly milder - ×1.25 when your garrison counters the attacker, ×0.80 when it's countered - so the attacker keeps a small initiative and can't be stonewalled by a defender who simply sits still. Neutral matchups are ×1.0 on both sides.
 
-**Armory amplification:** Each level of Armory (+1.5%, cap +30% at Lv20) amplifies counter bonuses above 1.0 and slightly deepens disadvantage penalties. A Lv20 Armory turns a ×1.35 counter into ×1.65 - a significant force multiplier for well-composed attacks.
+**Strikers vs anvils:** Every class has STRIKERS (high attack, low defense - your offensive units) and ANVILS (high defense, low attack - your garrison units). Garrison with anvils and attack with strikers. A glass-cannon striker left on defense barely contributes its tiny defense stat AND can be class-countered on top of that, so a striker garrison folds fast. Each class has at least one anvil, so every attacker has an equal-resource answer on defense: Armor anvils (Assault Trooper / Bulwark Guard / Siege Mech) stop Fire; the Mobile anvil (Aegis Skirmisher) stops Armor; Fire anvils (Arc Disruptor / Plasma Turret) stop Mobile.
+
+**Partial counters in mixed engagements:** The counter bonus is proportional to how much of the enemy force your class actually counters - on attack AND defense. If you send 10 Fire units against a mix of 5 Mobile + 5 Armor defenders, Fire counters the Mobile half (×1.35) but is countered by the Armor half (×0.75). Your effective multiplier is the weighted average: (0.5 × 1.35) + (0.5 × 0.75) = 1.05 - a small edge, not the full bonus. You only get the full counter if 100% of the enemy is the class you counter. Scouting the defender's composition before you commit is no longer optional.
+
+**Armory amplification:** Each level of Armory (+1.5%, cap +30% at Lv20) amplifies your ATTACK counter bonuses above 1.0 and slightly deepens disadvantage penalties. A Lv20 Armory turns a ×1.35 counter into ×1.65 - a significant force multiplier for well-composed attacks. The Armory is an offensive building: it sharpens your strikes and does not boost a defender's class-counter on the wall.
 
 **Matchup affects survival too, not just damage:** When you win an engagement, your per-unit loss rate is also nudged by the same class triangle. Units with the class advantage against the bulk of the enemy take fewer casualties; units with the disadvantage take more. The effect is mild (about ±15% on loss rate) so matchup is a tilt, not a coin flip - sending Armor into a Fire-heavy enemy survives roughly 1.15x as well as sending it into another Armor force. Combine with the defense stat (higher defense = lower loss rate, with a meaningful spread between glass cannons and tank units) to predict how a winning engagement will burn through your stack.
 
-**Defender advantage:** The defender's Shield Grid multiplies total defensive power on top of all class counters. The attacker never gets the Shield Grid bonus, so pure defensive nexuses with high Shield Grid levels are always harder to break than their raw troop count suggests.
+**Defender advantage:** The defender's Shield Grid multiplies total defensive power (now +1.5% per level) on top of all class counters. The attacker never gets the Shield Grid bonus, so a well-composed defensive nexus with anvils, high Shield Grid, and a turret is genuinely hard to break - but it is not unbreakable. A correctly-countered, scouted attack with enough committed force will crack even a deep turtle; it just costs you real losses to do it. Blind or wrong-class assaults still bounce off, no matter how big.
 
-**Stationing is defense-only (support AND transfer):** Parking troops at another nexus - whether an ally's (a support mission) or one of your own (a troop transfer) - is the same operation, and only DEFENSIVE units may go: Assault Trooper, Lancer Drone, Siege Mech, and Bulwark Guard. Send them to reinforce a wall wherever you need one. Offensive units, Overseers, Recon Operatives, and the stationary Plasma Turret are never stationable - an attacking unit only ever leaves its nexus to attack, and always strikes from the nexus that trained it.
+**Stationing is defense-only (support AND transfer):** Parking troops at another nexus - whether an ally's (a support mission) or one of your own (a troop transfer) - is the same operation, and only ANVILS (defensive units) may go: Assault Trooper, Bulwark Guard, Siege Mech, Aegis Skirmisher, and Arc Disruptor. Send them to reinforce a wall wherever you need one. Strikers, Overseers, Recon Operatives, and the stationary Plasma Turret are never stationable - an attacking unit only ever leaves its nexus to attack, and always strikes from the nexus that trained it.
 
 **How losses scale - win or lose:** Combat is no longer all-or-nothing. Both sides' casualties scale with how close the fight was (the loser/winner power ratio). The losing side takes heavy losses - a blowout near-wipes them, but a narrow defeat leaves a real remnant (~85% lost, not 100%). The winning side stays light on a dominant win but bleeds badly on a coin-flip (up to ~45% lost when the fight was nearly even). The lesson: attacking a force of comparable strength is costly even when you win, and being slightly outgunned no longer means automatic annihilation. Use the in-game combat preview on the attack screen to gauge the outcome before committing.
 
@@ -91,32 +95,33 @@ export const TROOPS_DOC: TroopDoc[] = [
 	{
 		key: 'sentinelLancer',
 		name: 'Sentinel Lancer',
-		role: 'Fire interceptor - counters Mobile',
-		description: 'Cheap suppression drone that pins down early mobile raiders.',
+		role: 'Fire striker - counters Mobile',
+		description:
+			'Cheap early-game fire striker. Punches above its cost against mobile raiders, but lightly built — keep it attacking, not garrisoning.',
 		unitClass: 'fire',
-		stats: { attack: 3, defense: 22, speed: 20, carry: 30 },
+		stats: { attack: 28, defense: 14, speed: 20, carry: 30 },
 		cost: { biomass: 150, alloy: 150, ore: 200, population: 1, time: '53s' },
 		requirements: ['Plasma Forge Lv2']
 	},
 	{
 		key: 'assaultTrooper',
 		name: 'Assault Trooper',
-		role: 'Armor frontline infantry - counters Fire',
+		role: 'Armor anvil - counters Fire',
 		description:
-			'Durable frontline unit built to hold ground and close distance on fire emplacements. Low attack - its job is to survive and keep the line.',
+			'The cheapest garrison anvil. Durable frontline infantry that holds ground and defends hardest against Fire attackers. Low attack — its job is to survive and keep the line while strikers do the killing.',
 		unitClass: 'armor',
-		stats: { attack: 5, defense: 45, speed: 18, carry: 60 },
+		stats: { attack: 16, defense: 30, speed: 18, carry: 60 },
 		cost: { biomass: 150, alloy: 150, ore: 350, population: 1, time: '1m 19s' },
 		requirements: ['Armor Foundry Lv1']
 	},
 	{
 		key: 'vanguardBreaker',
 		name: 'Vanguard Breaker',
-		role: 'Mobile assault breacher - counters Armor',
+		role: 'Mobile striker - counters Armor',
 		description:
-			'Early-game mobile attacker. Decent damage and cheap to produce, but glass-fragile and lightly carries — its job is to soften armored defenders in the opening phase, not anchor a late-game army.',
+			'Early-game mobile striker. Good damage and cheap to produce, but glass-fragile — its job is to soften armored defenders in the opening phase, not anchor a late-game army.',
 		unitClass: 'mobile',
-		stats: { attack: 35, defense: 3, speed: 16, carry: 40 },
+		stats: { attack: 32, defense: 14, speed: 16, carry: 40 },
 		cost: { biomass: 250, alloy: 150, ore: 300, population: 1, time: '2m 40s' },
 		requirements: ['Hangar Bay Lv3', 'Ore Extractor Lv3']
 	},
@@ -135,67 +140,67 @@ export const TROOPS_DOC: TroopDoc[] = [
 	{
 		key: 'pyreSuppressor',
 		name: 'Pyre Suppressor',
-		role: 'Fire support - counters Mobile',
+		role: 'Fire striker - counters Mobile',
 		description:
-			'Aggressive fire support that pins down mobile forces. High attack for its tier but fragile - keep it behind your armor.',
+			'Aggressive mid-game fire striker that pins down mobile forces. High attack for its tier but fragile - keep it behind your anvils.',
 		unitClass: 'fire',
-		stats: { attack: 65, defense: 8, speed: 15, carry: 20 },
+		stats: { attack: 80, defense: 20, speed: 15, carry: 20 },
 		cost: { biomass: 450, alloy: 400, ore: 450, population: 2, time: '9m 0s' },
 		requirements: ['Plasma Forge Lv7', 'Command Core Lv6']
 	},
 	{
 		key: 'wraithSkimmer',
 		name: 'Wraith Skimmer',
-		role: 'Fast mobile raider - counters Armor',
+		role: 'Mobile raider - counters Armor',
 		description:
-			'Stealth hovercraft raider with strong carry. Good attack, mediocre defense - trades hits for resource hauls and speed.',
+			'Stealth hovercraft raider with strong carry. High attack, light defense - trades hits for resource hauls and speed. A striker, not a garrison unit.',
 		unitClass: 'mobile',
-		stats: { attack: 80, defense: 10, speed: 22, carry: 80 },
+		stats: { attack: 105, defense: 22, speed: 22, carry: 80 },
 		cost: { biomass: 625, alloy: 500, ore: 750, population: 3, time: '12m 0s' },
 		requirements: ['Hangar Bay Lv5', 'Alloy Forge Lv4']
 	},
 	{
 		key: 'bulwarkGuard',
 		name: 'Bulwark Guard',
-		role: 'Elite armor defender - counters Fire',
+		role: 'Armor anvil - counters Fire',
 		description:
-			'Defensive anchor of any mid-game garrison. Exceptional survivability, minimal attack - it holds the line while your fire units deal damage.',
+			'Defensive anchor of any mid-game garrison. Exceptional survivability, minimal attack - it holds the line while your strikers deal damage, and defends hardest against Fire attackers.',
 		unitClass: 'armor',
-		stats: { attack: 3, defense: 130, speed: 12, carry: 25 },
+		stats: { attack: 18, defense: 90, speed: 12, carry: 25 },
 		cost: { biomass: 400, alloy: 600, ore: 500, population: 2, time: '12m 0s' },
 		requirements: ['Armor Foundry Lv5', 'Life Support Lv5']
 	},
 	{
 		key: 'aegisSkirmisher',
 		name: 'Aegis Skirmisher',
-		role: 'Mobile rapid-response defender - counters Armor',
+		role: 'Mobile anvil - counters Armor',
 		description:
-			'Fast-response mobile defender. Intercepts incoming Mobile attackers before they reach the static defense line. Lower defense than Bulwark Guard but high speed lets it move to where it is needed.',
+			'The mobile-class anvil. The defensive answer to Armor attackers (mobile counters armor on defense too), and fast enough to redeploy where the wall is needed. Defense-first — modest attack keeps it an anchor, not a raider.',
 		unitClass: 'mobile',
-		stats: { attack: 50, defense: 90, speed: 24, carry: 30 },
+		stats: { attack: 34, defense: 64, speed: 24, carry: 30 },
 		cost: { biomass: 500, alloy: 550, ore: 450, population: 2, time: '12m 0s' },
 		requirements: ['Hangar Bay Lv5', 'Shield Grid Lv2']
 	},
 	{
 		key: 'arcDisruptor',
 		name: 'Arc Disruptor',
-		role: 'Fire EMP specialist - counters Mobile',
+		role: 'Fire anvil (EMP) - counters Mobile',
 		description:
-			'Aggressive fire specialist that suppresses mobile skirmishers on the offensive. Strong damage, low defense - commit it to attacks, not defense.',
+			'The fire-class anvil. An EMP interceptor reworked to be the mid-game garrison answer to Mobile raiders — solid defense that the triangle amplifies against incoming mobile forces. Hybrid attack lets it punish what it pins, but its value is on the wall.',
 		unitClass: 'fire',
-		stats: { attack: 75, defense: 9, speed: 17, carry: 25 },
+		stats: { attack: 55, defense: 95, speed: 17, carry: 25 },
 		cost: { biomass: 550, alloy: 750, ore: 650, population: 2, time: '14m 0s' },
 		requirements: ['Plasma Forge Lv7', 'Ore Extractor Lv6'],
-		notes: ['No special anti-mech multiplier is currently applied in combat code.']
+		notes: ['Stationable: lend it to allies as a mobile-stopping reinforcement.']
 	},
 	{
 		key: 'phantomLance',
 		name: 'Phantom Lance',
-		role: 'Mobile rapid-response cavalry - counters Armor',
+		role: 'Mobile raider striker - counters Armor',
 		description:
-			'Very fast mobile raider, ideal for rapid redeploy and cracking armored defenders. High attack and carry, moderate defense.',
+			'Very fast mobile raider striker, ideal for rapid redeploy and cracking armored defenders. High attack and the best carry of its tier; light defense, so strike and withdraw.',
 		unitClass: 'mobile',
-		stats: { attack: 95, defense: 13, speed: 28, carry: 100 },
+		stats: { attack: 125, defense: 26, speed: 28, carry: 100 },
 		cost: { biomass: 750, alloy: 600, ore: 900, population: 3, time: '18m 0s' },
 		requirements: ['Hangar Bay Lv8', 'Alloy Forge Lv7']
 	},
@@ -204,9 +209,9 @@ export const TROOPS_DOC: TroopDoc[] = [
 		name: 'Void Stalker',
 		role: 'Endgame mobile striker - counters Armor',
 		description:
-			'Tier-3 fast attacker. The fastest unit in the game and the mobile half of the endgame line - pairs with the Annihilator Platform as the two top-end offensive units. Cracks armored defensive lines at speed; still lightly armored, so use its speed and shock value rather than slugging it out.',
+			'Tier-3 fast striker. The fastest unit in the game and the mobile half of the endgame line - pairs with the Annihilator Platform as the two top-end offensive units. Cracks armored defensive lines at speed; still lightly armored, so use its speed and shock value rather than slugging it out.',
 		unitClass: 'mobile',
-		stats: { attack: 150, defense: 15, speed: 32, carry: 60 },
+		stats: { attack: 215, defense: 36, speed: 32, carry: 60 },
 		cost: { biomass: 1100, alloy: 900, ore: 1400, population: 3, time: '27m 0s' },
 		requirements: ['Hangar Bay Lv9', 'Alloy Forge Lv8', 'Armory Lv3'],
 		notes: [
@@ -218,11 +223,11 @@ export const TROOPS_DOC: TroopDoc[] = [
 	{
 		key: 'siegeMech',
 		name: 'Siege Mech',
-		role: 'Endgame armor anchor - counters Fire',
+		role: 'Endgame armor anvil - counters Fire',
 		description:
-			'Tier-3 mobile defender. Towering armored platform built for survival, with enough attack to punish anything that crashes into it. Exceptional durability lets it absorb punishment while your fire support does the killing - the field anvil of an endgame army.',
+			'Tier-3 armor anvil. Towering armored platform built for survival, with enough attack to punish anything that crashes into it. Exceptional durability lets it absorb punishment while your strikers do the killing - the great wall of an endgame garrison, defending hardest against Fire.',
 		unitClass: 'armor',
-		stats: { attack: 40, defense: 260, speed: 10, carry: 20 },
+		stats: { attack: 70, defense: 215, speed: 10, carry: 20 },
 		cost: { biomass: 1250, alloy: 1000, ore: 2000, population: 4, time: '30m 0s' },
 		requirements: ['Armor Foundry Lv10', 'Ore Extractor Lv9', 'Command Core Lv8']
 	},
@@ -231,14 +236,14 @@ export const TROOPS_DOC: TroopDoc[] = [
 		name: 'Plasma Turret',
 		role: 'Static fire emplacement - counters Mobile',
 		description:
-			'Immobile defensive emplacement. Cannot be sent on attacks, scouts, support, or transfers - it always defends the nexus that built it. Decimates mobile forces that try to rush you.',
+			'Immobile defensive emplacement and the heaviest anti-mobile anchor in the game. Cannot be sent on attacks, scouts, support, or transfers - it always defends the nexus that built it. Decimates mobile forces that try to rush you, and the triangle amplifies its already-huge defense against them.',
 		unitClass: 'fire',
-		stats: { attack: 0, defense: 160, speed: 0, carry: 0 },
+		stats: { attack: 0, defense: 340, speed: 0, carry: 0 },
 		cost: { biomass: 1500, alloy: 1200, ore: 2500, population: 3, time: '45m 0s' },
 		requirements: ['Plasma Forge Lv11', 'Command Core Lv9', 'Armory Lv5'],
 		notes: [
 			'Speed 0 - stationary. It is never offered as an option on any outgoing mission (attack, scout, support, or transfer); you cannot lend it to an ally.',
-			'Hard counters Void Stalker, Skimmer Bike, Interceptor Bike, and Breaker Unit.'
+			'Hard counters all Mobile strikers - Void Stalker, Wraith Skimmer, Phantom Lance, and Vanguard Breaker.'
 		]
 	},
 	{
@@ -246,20 +251,20 @@ export const TROOPS_DOC: TroopDoc[] = [
 		name: 'Annihilator Platform',
 		role: 'Endgame fire artillery - counters Mobile',
 		description:
-			'Tier-3 heavy attacker. Top-end fire platform for heavy assaults and sieges with the highest single-unit attack and carry in the game - protect it with Siege Mechs and Bulwark Guards. The fire half of the endgame line; paired with the Void Stalker, two Annihilators delivers more force than a horde of mass-produced T1 spam.',
+			'Tier-3 heavy fire striker. Top-end artillery platform for heavy assaults and sieges with the highest single-unit attack and carry in the game - protect it with Siege Mechs and Bulwark Guards. The fire half of the endgame line; paired with the Void Stalker, two Annihilators delivers more force than a horde of mass-produced T1 spam.',
 		unitClass: 'fire',
-		stats: { attack: 320, defense: 35, speed: 8, carry: 250 },
+		stats: { attack: 360, defense: 55, speed: 8, carry: 250 },
 		cost: { biomass: 2000, alloy: 1750, ore: 3000, population: 4, time: '40m 0s' },
 		requirements: ['Plasma Forge Lv12', 'Command Core Lv10', 'Shield Grid Lv10']
 	},
 	{
 		key: 'siegeColossus',
 		name: 'Siege Colossus',
-		role: 'Endgame armor walker - counters Fire',
+		role: 'Endgame armor striker - counters Fire',
 		description:
-			'Tier-3 elite armor attacker. The heaviest single unit in the game - extreme attack and defense, slowest speed, highest population cost. Built to crack fortified Nexuses where lighter forces would shatter. The armor half of the endgame line; paired with Annihilator Platforms for a balanced siege force.',
+			'Tier-3 elite armor striker - the siege hammer. Extreme attack with enough defense to survive its own assault, slowest speed, highest population cost. Built to crack fortified Nexuses where lighter forces would shatter, and armor counters Fire on the way in. The armor half of the endgame line; paired with Annihilator Platforms for a balanced siege force.',
 		unitClass: 'armor',
-		stats: { attack: 280, defense: 280, speed: 6, carry: 150 },
+		stats: { attack: 300, defense: 130, speed: 6, carry: 150 },
 		cost: { biomass: 1800, alloy: 2200, ore: 3200, population: 5, time: '50m 0s' },
 		requirements: ['Armor Foundry Lv13', 'Command Core Lv10', 'Armory Lv5']
 	},
@@ -337,7 +342,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		name: 'Plasma Forge',
 		role: 'Fire-class production building',
 		description:
-			'Produces fire-class units (Lancer Drone, Suppressor, Disruptor, Plasma Turret, Annihilator).',
+			'Produces fire-class units (Sentinel Lancer, Pyre Suppressor, Arc Disruptor, Plasma Turret, Annihilator Platform).',
 		baseCost: { biomass: 180, alloy: 150, ore: 80, timeSeconds: 180 },
 		maxLevel: 20,
 		unlock: 'Command Core Lv2',

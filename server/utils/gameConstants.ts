@@ -181,14 +181,17 @@ export function getMaxTrainingQueueSlots(commandLevel: number): number {
 // leave a nexus via an attack; Recon is scout-only; Overseer is a conquest tool;
 // Plasma Turret is stationary. Single source of truth for both code paths
 // (attackService support branch + troopTransferController) so they never drift.
+// The five ANVILS, one per tier/class niche. v0.22: the list now tracks the
+// rebalanced roles rather than the old hand-picked set. Sentinel Lancer left
+// (it became a Fire striker, atk34/def14 - no longer a defender), and Arc
+// Disruptor joined (reworked into the Fire-class anvil, def95) so the Fire class
+// finally has a lendable mobile-stopping garrison unit.
 export const STATIONABLE_TROOPS: readonly string[] = [
 	'assaultTrooper',
-	'sentinelLancer',
-	'siegeMech',
 	'bulwarkGuard',
-	// Aegis Skirmisher (Stage 2d): Mobile defender, joins the stationable
-	// roster so allies can lend it as a fast-response reinforcement.
-	'aegisSkirmisher'
+	'siegeMech',
+	'aegisSkirmisher',
+	'arcDisruptor'
 ];
 const STATIONABLE_TROOP_SET = new Set<string>(STATIONABLE_TROOPS);
 

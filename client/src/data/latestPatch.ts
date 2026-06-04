@@ -18,4 +18,4 @@
 export const LATEST_PATCH_VERSION = '0.22';
 export const LATEST_PATCH_LABEL = 'Alpha v0.22';
 export const LATEST_PATCH_HEADLINE =
-	'The biggest update since alpha began: espionage is retired, Recruitment Core becomes three class buildings, six units are renamed, two new units join the roster, and Stealth Array gains a hidden vault.';
+	'The biggest update since alpha began: combat is rebalanced so the counter triangle works on attack AND defense, espionage is retired, Recruitment Core becomes three class buildings, six units are renamed, two new units join the roster, and Stealth Array gains a hidden vault.';

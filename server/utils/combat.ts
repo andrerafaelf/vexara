@@ -1,8 +1,8 @@
 import type { Attack, Nexus, Prisma } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 import {
-	computeForcePower,
 	computeClassWeightedAttack,
+	computeClassWeightedDefense,
 	computeLossesForLoser,
 	computeLossesForWinner,
 	computeLootStolen,
@@ -537,20 +537,27 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 		const attackerArmoryLevel =
 			(attackerNexusForArmory as unknown as { armory?: number } | null)?.armory ?? 0;
 
-		// Class-weighted attack power vs raw defense power
+		// Symmetric counter triangle (v0.22): BOTH attack and defense are now
+		// class-weighted. The attacker's strikes are amplified against the classes
+		// they counter (computeClassWeightedAttack), and the defender's garrison is
+		// amplified when its class counters the incoming attacker
+		// (computeClassWeightedDefense). This makes scouting + bringing the right
+		// counter the deciding factor instead of raw stat stacking.
 		let attackPower = computeClassWeightedAttack(
 			attackTroops,
 			mergedDefenderForce,
 			attackerArmoryLevel
 		);
-		let defensePower = computeForcePower(mergedDefenderForce, 'defense');
+		let defensePower = computeClassWeightedDefense(mergedDefenderForce, attackTroops);
 
 		const baseShieldEff = defenderNexus.nexusType === 'Military Outpost' ? 2.0 : 1;
 		const nexusDoubled =
 			(defenderNexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled ?? false;
 		const shieldEfficiencyMultiplier =
 			baseShieldEff === 1 ? 1 : 1 + (baseShieldEff - 1) * (nexusDoubled ? 2 : 1);
-		defensePower *= 1 + defenderNexus.shieldGrid * 0.02 * shieldEfficiencyMultiplier;
+		// Shield Grid trimmed 0.02 → 0.015/level so a high-shield turtle can't stack
+		// an unbreakable wall on top of class-counter-amplified anvil defense.
+		defensePower *= 1 + defenderNexus.shieldGrid * 0.015 * shieldEfficiencyMultiplier;
 
 		// An empty nexus (no defending troops) is taken unopposed. Without this an
 		// attack with zero effective attack power — notably a lone follow-up

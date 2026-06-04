@@ -1,10 +1,12 @@
 ## Vexara - Alpha Patch Notes v0.22
 
-The largest single update to the game since alpha began: the Espionage
-system is retired, Recruitment Core is replaced by three class-specific
-production buildings, six units are renamed, two new units join the
-roster, and Stealth Array gets a brand-new defensive role with a hidden
-resource vault.
+The largest single update to the game since alpha began: combat is
+rebalanced from the ground up so the counter triangle finally works on
+both attack **and** defense, the Espionage system is retired,
+Recruitment Core is replaced by three class-specific production
+buildings, six units are renamed, two new units join the roster, and
+Stealth Array gets a brand-new defensive role with a hidden resource
+vault.
 
 ---
 
@@ -73,10 +75,11 @@ every nexus carry over verbatim — only the displayed name changes:
 | Suppressor Team | **Pyre Suppressor** |
 | Disruptor Unit | **Arc Disruptor** |
 
-Stats, costs, train times, and class are unchanged for all six. The
-Mobile-class trio (Wraith Skimmer, Phantom Lance, Void Stalker) now
-reads as a coherent "ghost-class" of fast strikers, and the Fire roster
-tightens around energy-weapon language.
+Costs, train times, and class are unchanged for all six (their combat
+stats were re-tuned in the combat rebalance below). The Mobile-class
+trio (Wraith Skimmer, Phantom Lance, Void Stalker) now reads as a
+coherent "ghost-class" of fast strikers, and the Fire roster tightens
+around energy-weapon language.
 
 Historical combat reports keep their original wording — a 6-month-old
 battle log still reads "Skimmer Bike" because that's what was sent
@@ -84,21 +87,22 @@ that day.
 
 ### Two new units join the roster
 
-**Siege Colossus** *(Armor attack)* — the elite siege walker. Highest
-single-unit attack and survivability in the game, slowest speed (6),
-highest population cost (5). Built to crack fortified Nexuses. Pairs
+**Siege Colossus** *(Armor striker)* — the elite siege hammer. The
+heaviest single attacker in the game with enough defense to survive its
+own assault, slowest speed (6), highest population cost (5). Built to
+crack fortified Nexuses, and Armor counters Fire on the way in. Pairs
 with the Annihilator Platform as the heavy duo of the endgame line.
 Unlocks at **Armor Foundry Lv13, Command Core Lv10, Armory Lv5**.
 
-**Aegis Skirmisher** *(Mobile defense)* — the fast-response defender.
-Lower defense than Bulwark Guard but high speed (24) lets it intercept
-incoming Mobile attackers rather than passively absorb hits. Pop 2,
-same tier as Bulwark Guard. Unlocks at **Hangar Bay Lv5, Shield Grid
-Lv2**.
+**Aegis Skirmisher** *(Mobile anvil)* — the Mobile-class garrison
+anchor. It's the defensive answer to Armor attackers (Mobile counters
+Armor on defense too) and fast enough (24) to redeploy where the wall
+is needed. Pop 2, same tier as Bulwark Guard. Unlocks at **Hangar Bay
+Lv5, Shield Grid Lv2**.
 
-Final roster after the restructure: **8 attackers, 6 defenders, 2
-specials**. Every class has both an attacker and a defender available
-from the same building.
+Every combat class now has both a **striker** (high-attack offensive
+unit) and an **anvil** (high-defense garrison unit) available from the
+same building — see the combat rebalance below for what that means.
 
 ### Stealth Array gets a hidden vault — and is now far more useful
 
@@ -145,6 +149,90 @@ gated by the class building that matches what each Armory tier unlocks:
   Array see less of their stockpile stolen on a successful raid; the
   hidden portion is untouchable. Defender's actual balance stays intact —
   raiders just can't reach it.
+
+### Combat rebalance: the counter triangle now cuts both ways
+
+This is the big one. The class triangle — Mobile beats Armor, Armor
+beats Fire, Fire beats Mobile — has been the heart of Vexara combat
+since day one. But there was a quiet flaw: the counter only ever
+boosted the **attacker's** damage. Defense was raw. That meant the
+single best garrison was always "stack whatever unit has the biggest
+defense number," no matter what was coming at you — and the triangle
+the codex promised you on defense simply wasn't there.
+
+**Now the triangle is symmetric.** A defending unit whose class counters
+the incoming attacker has its **defense amplified**; a unit being
+countered defends for less. Bringing the wrong class into a fight is
+punished on both sides of the engagement. Scouting your target's
+composition and bringing the class that beats it is no longer a nice
+bonus — it's the deciding factor.
+
+The defensive counter spread is deliberately a touch milder than the
+attack side (×1.25 / ×0.80 on defense vs ×1.35 / ×0.75 on attack), so
+an attacker keeps a small initiative and a defender can't win simply by
+sitting still.
+
+**Every unit is now clearly a striker or an anvil.**
+
+- **Strikers** are high-attack, low-defense — your offensive units.
+  Sending them on attacks, where their counter and their attack stat
+  both shine.
+- **Anvils** are high-defense, low-attack — your garrison units. They
+  hold the wall, and the triangle makes them shine against the class
+  they counter.
+
+A glass-cannon striker left on defense barely contributes its tiny
+defense stat *and* can be class-countered on top of it, so a striker
+garrison folds fast. Garrison with anvils, attack with strikers.
+
+**Every class has an anvil, so every attacker has an answer:**
+
+- **Armor anvils** — Assault Trooper, Bulwark Guard, Siege Mech — stop Fire.
+- **Mobile anvil** — Aegis Skirmisher — stops Armor.
+- **Fire anvils** — Arc Disruptor and Plasma Turret — stop Mobile.
+
+**Arc Disruptor is reborn as the Fire-class anvil.** It used to be a
+glass-cannon fire striker that overlapped with the Suppressor. The
+Fire class had no mobile-stopping garrison unit except the immobile
+Plasma Turret — so a mobile rush had no mid-game answer on the wall.
+Arc Disruptor now trades raw attack for real defense (an EMP
+interceptor) and becomes the mid-game answer to Mobile raiders.
+
+**Sentinel Lancer flips the other way** — from a near-useless
+defensive drone into a genuine cheap Fire striker, giving the early
+game a real fire attacker.
+
+**Full stat pass.** Every combat unit's attack and defense were
+re-tuned so the *counter* decides equal-resource fights, not whichever
+unit happens to have the biggest raw number. Attack-per-population AND
+attack-per-resource both rise with tier, so massing the cheapest unit
+is never the optimal army — Tier-1 strikers (Vanguard Breaker, Sentinel
+Lancer) had their attack trimmed so teching up always beats spamming
+openers, even in the resource-rich early game. They still win their
+counter matchups; they're just no longer a substitute for a real army.
+Check the in-game Codex for every unit's new line — the combat
+calculator and scout reports already reflect the new math.
+
+**Turtles are strong but no longer unbreakable.** A deep defensive
+nexus — anvils, high Shield Grid, a Plasma Turret — is genuinely hard
+to crack. But a correctly-countered, scouted attack with enough
+committed force *will* break it; it just costs you real losses to do
+it. A blind or wrong-class assault still bounces off, no matter how
+big. (Shield Grid was trimmed from +2% to +1.5% defense per level so a
+high-shield wall can't stack into true invincibility on top of the new
+class-amplified defense.)
+
+**Stationing follows the new roles.** Lending troops to allies or
+transferring between your own nexuses is defense-only, so the
+stationable list is now the five anvils: Assault Trooper, Bulwark
+Guard, Siege Mech, Aegis Skirmisher, and **Arc Disruptor** (newly
+eligible as a defender). **Sentinel Lancer** is no longer stationable —
+it's a striker now.
+
+> **Nothing is lost.** Your troop counts, in-flight attacks, and
+> garrisons all carry over untouched — only the numbers behind how
+> they fight have changed. Open the Codex and the combat calculator to
+> re-plan your army around the new triangle before your next war.
 
 ### A note on map and starter changes (already in 0.20)
 
