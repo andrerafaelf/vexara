@@ -6,7 +6,11 @@ import * as attackService from '../services/attackService.js';
 import { type AuthRequest, TROOP_KEYS } from '../types/index.js';
 import { logError, logGameEvent } from '../utils/logger.js';
 import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
-import { normalizeTroopPayload, parsePositiveInt } from '../utils/validation.js';
+import {
+	normalizeTroopPayload,
+	parsePositiveInt,
+	validateOverseerAttackCap
+} from '../utils/validation.js';
 
 // Cap how far ahead and how many waves a player can queue, to bound the table.
 const MAX_SCHEDULE_AHEAD_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -47,22 +51,8 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
 
 		const { attack, reused, attackType, defenderOwnerId } = result;
 
-		// Quest / streak progress + first-event telemetry are HTTP-path concerns
-		// (a scheduled launch increments them through this same controller is N/A —
-		// the job fires launchAttack directly, so we keep these here).
-		try {
-			const { incrementQuestProgress } = await import('../services/dailyStreakService.js');
-			if (!reused)
-				void (async () => {
-					if (attackType === 'attack') {
-						await incrementQuestProgress(req.userId, req.galaxyId, 'attack_1', 1);
-						await incrementQuestProgress(req.userId, req.galaxyId, 'attack_3', 1);
-					} else if (attackType === 'support') {
-						await incrementQuestProgress(req.userId, req.galaxyId, 'support_1', 1);
-					}
-					await incrementQuestProgress(req.userId, req.galaxyId, 'login', 1);
-				})();
-		} catch {}
+		// Quest / streak progress is recorded inside launchAttack so scheduled
+		// waves and send-now strikes count through the same shared path.
 		if (!reused) {
 			if (attackType === 'attack')
 				logGameEvent('first_attack', req.userId, req.galaxyId, {
@@ -304,6 +294,11 @@ export async function scheduleAttack(req: AuthRequest, res: Response): Promise<v
 			.normalized;
 		if (Object.values(normalizedTroops).reduce((s, n) => s + n, 0) <= 0) {
 			res.status(400).json({ error: 'Select at least one troop' });
+			return;
+		}
+		const overseerCheck = validateOverseerAttackCap(type, normalizedTroops);
+		if (!overseerCheck.ok) {
+			res.status(400).json({ error: overseerCheck.error });
 			return;
 		}
 

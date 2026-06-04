@@ -1,6 +1,7 @@
 import type { AttackType } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 import { applyQuestRewards } from '../models/Nexus.js';
+import { incrementQuestProgress } from './dailyStreakService.js';
 import { TROOP_KEYS } from '../types/index.js';
 import { TROOP_STATS } from '../utils/combatMath.js';
 import { NEXUS_TYPE_BONUSES } from '../utils/economy.js';
@@ -345,7 +346,10 @@ export async function launchAttack(input: LaunchAttackInput): Promise<LaunchAtta
 		attackerNexus.id,
 		normalizedTroops
 	);
-	if (!reused) await applyQuestRewards(updatedAttackerNexus, { hasOutgoingStrike: true });
+	if (!reused) {
+		await applyQuestRewards(updatedAttackerNexus, { hasOutgoingStrike: true });
+		await recordLaunchQuestProgress(userId, galaxyId, attackType);
+	}
 
 	// Notify the defender immediately that an attack is inbound (scouts excluded).
 	if (!reused && defenderNexus.ownerId && attackType === 'attack') {
@@ -369,6 +373,24 @@ export async function launchAttack(input: LaunchAttackInput): Promise<LaunchAtta
 		defenderOwnerId: defenderNexus.ownerId ?? null,
 		defenderName: defenderNexus.name
 	};
+}
+
+async function recordLaunchQuestProgress(
+	userId: number,
+	galaxyId: number,
+	attackType: AttackType
+): Promise<void> {
+	try {
+		if (attackType === 'attack') {
+			await incrementQuestProgress(userId, galaxyId, 'attack_1', 1);
+			await incrementQuestProgress(userId, galaxyId, 'attack_3', 1);
+		} else if (attackType === 'support') {
+			await incrementQuestProgress(userId, galaxyId, 'support_1', 1);
+		}
+		await incrementQuestProgress(userId, galaxyId, 'login', 1);
+	} catch {
+		// Daily quest progress should never block a valid launch.
+	}
 }
 
 function isSameAttackRequest(

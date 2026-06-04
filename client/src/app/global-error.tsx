@@ -2,6 +2,13 @@
 
 import { useEffect } from 'react';
 
+// NOTE: global-error replaces the root layout, so globals.css / design tokens
+// are NOT loaded here. Every value below is inlined to match the Vexara design
+// system (gunmetal base, amber accent, flat surfaces, mono kicker). Keep in
+// sync with the .vx-error-* rules in globals.css used by app/error.tsx.
+
+const CUT = 'polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%)';
+
 export default function GlobalError({
 	error,
 	reset
@@ -9,7 +16,6 @@ export default function GlobalError({
 	error: Error & { digest?: string };
 	reset: () => void;
 }) {
-	// Log the error to an external service, or just the console for now
 	useEffect(() => {
 		console.error('[GlobalErrorBoundary]', error);
 	}, [error]);
@@ -21,73 +27,120 @@ export default function GlobalError({
 					margin: 0,
 					minHeight: '100vh',
 					display: 'flex',
-					flexDirection: 'column',
 					alignItems: 'center',
 					justifyContent: 'center',
-					background: '#0b0d12',
-					color: '#e6e8ee',
-					fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
 					padding: '24px',
-					textAlign: 'center',
-					gap: '16px'
+					background:
+						'radial-gradient(120% 80% at 50% -10%, rgba(255,158,61,0.06), transparent 60%), #0d1117',
+					color: '#c9d1d9',
+					fontFamily:
+						"'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
 				}}
 			>
-				<p
+				<div
 					style={{
-						margin: 0,
-						fontSize: '13px',
-						letterSpacing: '0.08em',
-						color: '#7aa2ff',
-						textTransform: 'uppercase'
+						position: 'relative',
+						display: 'flex',
+						flexDirection: 'column',
+						alignItems: 'flex-start',
+						gap: '12px',
+						width: '100%',
+						maxWidth: '440px',
+						padding: '32px 24px 24px',
+						background: '#161b22',
+						border: '1px solid #30363d',
+						borderTop: '2px solid #ff9e3d'
 					}}
 				>
-					Critical error
-				</p>
-				<h1 style={{ margin: 0, fontSize: '22px', fontWeight: 600, color: '#fff' }}>
-					Vexara is temporarily unavailable
-				</h1>
-				<p
-					style={{
-						margin: 0,
-						fontSize: '14px',
-						color: '#8a8fa8',
-						maxWidth: '360px',
-						lineHeight: 1.6
-					}}
-				>
-					The application encountered a fatal error. Please try refreshing or come back shortly.
-				</p>
-				<div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-					<button
-						onClick={reset}
+					<span
 						style={{
-							padding: '9px 20px',
-							background: '#1e2236',
-							border: '1px solid #2e3450',
-							borderRadius: '8px',
-							color: '#e6e8ee',
-							fontSize: '14px',
-							cursor: 'pointer'
+							fontFamily:
+								"'JetBrains Mono', source-code-pro, Menlo, Monaco, Consolas, monospace",
+							fontSize: '11px',
+							fontWeight: 800,
+							letterSpacing: '0.16em',
+							textTransform: 'uppercase',
+							color: '#ff9e3d'
 						}}
 					>
-						Try again
-					</button>
-					<a
-						href="/"
+						Critical fault
+					</span>
+					<h1
 						style={{
-							padding: '9px 20px',
-							background: '#7aa2ff',
-							border: 'none',
-							borderRadius: '8px',
-							color: '#0b0d12',
-							fontSize: '14px',
-							fontWeight: 600,
-							textDecoration: 'none',
-							cursor: 'pointer'
+							margin: 0,
+							fontSize: '20px',
+							fontWeight: 700,
+							color: '#f0f6fc',
+							lineHeight: 1.25
 						}}
 					>
-						Refresh
-					</a>
+						Vexara is temporarily unavailable
+					</h1>
+					<p style={{ margin: 0, fontSize: '14px', lineHeight: 1.6, color: '#8b949e' }}>
+						The application encountered a fatal error. Please try refreshing or come back
+						shortly.
+					</p>
+					{error?.digest && (
+						<code
+							style={{
+								fontFamily:
+									"'JetBrains Mono', source-code-pro, Menlo, Monaco, Consolas, monospace",
+								fontSize: '11px',
+								letterSpacing: '0.08em',
+								color: '#6e7681',
+								padding: '4px 8px',
+								background: '#0d1117',
+								border: '1px solid #30363d'
+							}}
+						>
+							REF {error.digest}
+						</code>
+					)}
+					<div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '12px' }}>
+						<button
+							type="button"
+							onClick={reset}
+							style={{
+								padding: '10px 20px',
+								fontFamily:
+									"'JetBrains Mono', source-code-pro, Menlo, Monaco, Consolas, monospace",
+								fontSize: '12px',
+								fontWeight: 700,
+								letterSpacing: '0.08em',
+								textTransform: 'uppercase',
+								cursor: 'pointer',
+								background: '#222831',
+								border: '1px solid #444c56',
+								color: '#c9d1d9',
+								clipPath: CUT
+							}}
+						>
+							Try again
+						</button>
+						<a
+							href="/"
+							style={{
+								display: 'inline-flex',
+								alignItems: 'center',
+								justifyContent: 'center',
+								padding: '10px 20px',
+								fontFamily:
+									"'JetBrains Mono', source-code-pro, Menlo, Monaco, Consolas, monospace",
+								fontSize: '12px',
+								fontWeight: 700,
+								letterSpacing: '0.08em',
+								textTransform: 'uppercase',
+								textDecoration: 'none',
+								cursor: 'pointer',
+								background: '#ff9e3d',
+								border: '1px solid #ff9e3d',
+								color: '#0d1117',
+								clipPath: CUT
+							}}
+						>
+							Refresh
+						</a>
+					</div>
 				</div>
 			</body>
 		</html>

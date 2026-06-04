@@ -301,6 +301,11 @@ model Nexus {
   isDerelict           Boolean   @default(false)
 
   lastResourceUpdate       DateTime  @default(now())
+  // Stamped whenever the owner takes a deliberate action on this nexus (train,
+  // build, cancel, decommission) via atomicUpdateNexusResources. Surfaced to
+  // OTHER players on the map as an "active" indicator that lapses after
+  // NEXUS_ACTIVE_WINDOW_MS of inactivity — a lightweight presence signal.
+  lastActivityAt           DateTime?
   points                   Int       @default(5)
   controlLevel             Int       @default(100)
   // Anchor for time-based control regen: advanced by the whole hours consumed

@@ -16,6 +16,8 @@ export interface MapCellData {
 	isFactionTarget: boolean;
 	isInStormZone: boolean;
 	isSpyTarget: boolean;
+	/** Owner acted recently (~15 min) — render an "online" pulse for other players. */
+	isActive: boolean;
 	ownerLabel?: string | null;
 	title: string;
 	onboarding: boolean;
@@ -50,6 +52,7 @@ function MapCellInner({ data }: { data: MapCellData }) {
 		isFactionTarget,
 		isInStormZone,
 		isSpyTarget,
+		isActive,
 		ownerLabel,
 		title,
 		onboarding
@@ -91,6 +94,13 @@ function MapCellInner({ data }: { data: MapCellData }) {
 					) : (
 						<Home size={14} />
 					)}
+					{isActive && (
+						<span
+							className="nexus-activity-dot"
+							title="Recently active"
+							aria-label="Recently active"
+						/>
+					)}
 				</div>
 			)}
 			{isFactionTarget && (
@@ -131,6 +141,7 @@ export const MapCell = React.memo(MapCellInner, (prev, next) => {
 		a.isFactionTarget === b.isFactionTarget &&
 		a.isInStormZone === b.isInStormZone &&
 		a.isSpyTarget === b.isSpyTarget &&
+		a.isActive === b.isActive &&
 		a.ownerLabel === b.ownerLabel &&
 		a.title === b.title &&
 		a.onboarding === b.onboarding

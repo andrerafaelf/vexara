@@ -3,6 +3,11 @@
 // same convention as economy.ts / economy.shared.ts. If you change a
 // number or formula here, change it in the client mirror in the same commit.
 
+// A nexus is shown to OTHER players as "active" (online) for this long after its
+// owner's last deliberate action (train/build/cancel/decommission). Mirrors the
+// familiar 15-minute "recent activity" window from games like OGame.
+export const NEXUS_ACTIVE_WINDOW_MS = 15 * 60 * 1000;
+
 export interface BuildingCost {
 	biomass: number;
 	alloy: number;

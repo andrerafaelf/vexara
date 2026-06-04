@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import CookieSettingsLink from '@/components/CookieSettingsLink';
 import '@/styles/SiteFooter.css';
 
 export default function SiteFooter() {
@@ -43,6 +44,7 @@ export default function SiteFooter() {
 						<span className="site-footer-col-title">{'// Legal'}</span>
 						<Link href="/terms">Terms</Link>
 						<Link href="/privacy">Privacy</Link>
+						<CookieSettingsLink />
 					</div>
 				</nav>
 			</div>

@@ -194,6 +194,13 @@ export function calculateTroopInfluence(troops: Record<string, number | undefine
 	return points;
 }
 
+// Influence is reported to players as a single "Influence" number. It was
+// scaling a touch too aggressively, so we trim the headline total by a flat
+// ~15%. Every nexus is scaled by the same factor, so relative ordering between
+// players is unchanged — only the magnitude is dialed back slightly. Building/
+// troop weights below keep their original relative balance.
+export const INFLUENCE_SCALE = 0.85;
+
 export function calculatePoints(nexus: NexusForEconomy & Partial<Record<string, unknown>>): number {
 	let points = 0;
 	const buildingPoints: Record<string, number> = {
@@ -218,5 +225,5 @@ export function calculatePoints(nexus: NexusForEconomy & Partial<Record<string, 
 		points += pts * (Number(nexus[building]) || 0);
 	}
 	points += calculateTroopInfluence(nexus as Record<string, number | undefined | null>);
-	return Math.floor(points);
+	return Math.floor(points * INFLUENCE_SCALE);
 }
