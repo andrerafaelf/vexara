@@ -1,7 +1,6 @@
-import { ArrowLeft, Coins, Share2, Skull, Trophy } from 'lucide-react';
+import { ArrowLeft, Share2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useToast } from '../context/ToastContext';
-import { CombatIcon } from './VexaraIcons';
 import {
 	getReadReportIds,
 	getReports,
@@ -587,7 +586,6 @@ const Reports: React.FC<ReportsProps> = ({
 									</span>
 								</div>
 								<button className="scout-attack-btn" onClick={() => setShowAttackForm((v) => !v)}>
-									<CombatIcon size={14} aria-hidden="true" />{' '}
 									{showAttackForm ? 'Cancel' : scoutReport ? 'Attack' : 'Attack Again'}
 								</button>
 							</div>
@@ -1105,17 +1103,6 @@ const Reports: React.FC<ReportsProps> = ({
 									className={`report-item ${hasBeenViewed ? (won ? 'won' : 'lost') : ''}`}
 									onClick={() => setSelectedReport(report)}
 								>
-									<div className="report-icon" aria-hidden="true">
-										{hasBeenViewed ? (
-											won ? (
-												<Trophy size={18} />
-											) : (
-												<Skull size={18} />
-											)
-										) : (
-											<CombatIcon size={18} />
-										)}
-									</div>
 									<div className="report-info">
 										<div className="report-title">
 											{hasBeenViewed ? (
@@ -1163,7 +1150,6 @@ const Reports: React.FC<ReportsProps> = ({
 												isMyAttack &&
 												report.result.resourcesStolen && (
 													<span className="loot">
-														<Coins size={12} aria-hidden="true" />{' '}
 														{report.result.resourcesStolen.biomass +
 															report.result.resourcesStolen.alloy +
 															report.result.resourcesStolen.ore}

@@ -279,12 +279,6 @@
 	background: var(--color-navy-600);
 }
 
-.report-icon {
-	font-size: 24px;
-	flex-shrink: 0;
-	line-height: 1;
-}
-
 .report-info {
 	flex: 1;
 	min-width: 0;
@@ -950,10 +944,6 @@
 
 	.report-item {
 		padding: 12px;
-	}
-
-	.report-icon {
-		font-size: 20px;
 	}
 
 	.report-title {

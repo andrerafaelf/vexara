@@ -102,6 +102,8 @@ export interface MapNexus {
 	 */
 	relation?: 'faction' | 'friend' | null;
 	isFactionTarget?: boolean;
+	/** Username of the faction member who marked this nexus (inspect drawer only). */
+	factionTargetMarkedBy?: string | null;
 	/**
 	 * Presence signal from the server: the owner took a deliberate action
 	 * (train / build / cancel / decommission) within the active window
@@ -838,7 +840,9 @@ const Map: React.FC<MapProps> = ({
 		try {
 			if (selectedNexus.isFactionTarget) {
 				await unmarkFactionTarget(selectedNexus._id);
-				setSelectedNexus((prev) => (prev ? { ...prev, isFactionTarget: false } : prev));
+				setSelectedNexus((prev) =>
+					prev ? { ...prev, isFactionTarget: false, factionTargetMarkedBy: null } : prev
+				);
 				// update the map cell too
 				setVillages((prev) =>
 					prev.map((n) => (n._id === selectedNexus._id ? { ...n, isFactionTarget: false } : n))
@@ -846,7 +850,13 @@ const Map: React.FC<MapProps> = ({
 				toast('Faction target removed', 'info');
 			} else {
 				await markFactionTarget(selectedNexus._id);
-				setSelectedNexus((prev) => (prev ? { ...prev, isFactionTarget: true } : prev));
+				// Reflect the mark instantly: flag the drawer + map cell, and record
+				// the caller as the marker so "Targeted by" shows without a refetch.
+				setSelectedNexus((prev) =>
+					prev
+						? { ...prev, isFactionTarget: true, factionTargetMarkedBy: user?.username ?? null }
+						: prev
+				);
 				setVillages((prev) =>
 					prev.map((n) => (n._id === selectedNexus._id ? { ...n, isFactionTarget: true } : n))
 				);
@@ -1271,6 +1281,11 @@ const Map: React.FC<MapProps> = ({
 							<Crosshair size={13} aria-hidden="true" />
 							{selectedNexus.isFactionTarget ? 'Unmark Target' : 'Mark as Target'}
 						</button>
+						{selectedNexus.isFactionTarget && selectedNexus.factionTargetMarkedBy && (
+							<span className="faction-target-marker">
+								Targeted by: <strong>{selectedNexus.factionTargetMarkedBy}</strong>
+							</span>
+						)}
 					</div>
 				)}
 

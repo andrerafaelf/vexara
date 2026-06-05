@@ -378,10 +378,15 @@
    fixed px relative to the base 72px cell; the whole layer is scaled by the
    camera transform, so labels scale with zoom automatically. */
 .cell-owner-label {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 14px;
+	margin: 0 auto;
 	font-family: var(--font-mono);
 	font-size: 9px;
 	font-weight: 600;
-	color: rgba(200, 220, 255, 0.85);
+	color: rgba(200, 220, 255, 0.92);
 	line-height: 1;
 	pointer-events: none;
 	max-width: 90%;
@@ -389,8 +394,9 @@
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	text-align: center;
-	margin-top: 1px;
 	letter-spacing: 0.02em;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+	z-index: 5;
 }
 
 @media (max-height: 700px) {
@@ -580,13 +586,15 @@
 }
 
 .nexus-marker {
-	position: relative;
+	/* Command Core art fills the whole cell. Absolutely positioned (inset) so it
+	   spans the full 72px tile while the coords/labels overlay along the bottom
+	   edge instead of being pushed out of the cell by a tall flex child. */
+	position: absolute;
+	inset: 3px;
 	line-height: 1;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 28px;
-	height: 28px;
 	/* Single soft halo — the previous double drop-shadow read as neon and made
 	   the starfield feel arcade-bright rather than tactical. */
 	filter: drop-shadow(0 0 3px color-mix(in srgb, currentColor 65%, transparent));
@@ -603,14 +611,14 @@
 .nexus-marker-glyph {
 	position: relative;
 	display: block;
-	width: 24px;
-	height: 24px;
+	width: 100%;
+	height: 100%;
 	isolation: isolate;
 }
 
 .nexus-marker-glyph--current {
-	width: 26px;
-	height: 26px;
+	width: 100%;
+	height: 100%;
 }
 
 .nexus-marker-art {
@@ -642,6 +650,12 @@
    cell still reads as occupied. No blend overlay (it's already the
    relation colour). */
 .nexus-marker-glyph--fallback {
+	/* The glyph normally fills the cell via the art; on a CDN miss there's no
+	   image, so shrink the wrapper back to a small centred puck rather than a
+	   giant solid square covering the whole tile. */
+	width: 26px;
+	height: 26px;
+	margin: auto;
 	background: currentColor;
 	border-radius: 4px;
 }
@@ -754,56 +768,17 @@
 	outline-offset: -2px;
 }
 
-.faction-target-badge {
-	position: absolute;
-	top: 2px;
-	right: 2px;
-	color: #f97316;
-	line-height: 1;
-	filter: drop-shadow(0 0 3px #f97316);
-	z-index: 6;
-	width: 13px;
-	height: 13px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-.faction-target-reticle {
-	position: relative;
-	display: block;
-	width: 11px;
-	height: 11px;
-	border: 1px solid currentColor;
-}
-
-.faction-target-reticle::before,
-.faction-target-reticle::after {
-	content: '';
-	position: absolute;
-	background: currentColor;
-}
-
-.faction-target-reticle::before {
-	left: 50%;
-	top: -2px;
-	width: 1px;
-	height: 15px;
-	transform: translateX(-50%);
-}
-
-.faction-target-reticle::after {
-	left: -2px;
-	top: 50%;
-	width: 15px;
-	height: 1px;
-	transform: translateY(-50%);
-}
-
 /* Text label under the marker so a faction-marked nexus reads as a TARGET at a
-   glance, not just a small crosshair icon. */
+   glance. The on-cell crosshair badge was removed — the orange cell outline plus
+   this label already read clearly, and the badge crowded small cells. */
 .faction-target-label {
-	margin-top: 1px;
+	/* Bottom-anchored overlay above the coords, so the full-cell Command Core art
+	   shows through behind it. */
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 14px;
+	text-align: center;
 	font-family: var(--font-mono);
 	font-size: 10px;
 	font-weight: 700;
@@ -816,6 +791,8 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+	z-index: 5;
 }
 
 /* On very short viewports the coords hide; keep the target label since it
@@ -843,11 +820,19 @@
 }
 
 .cell-coords {
+	/* Pinned to the bottom edge so the Command Core art behind it can fill the
+	   whole cell. The shadow keeps the coords legible over the building art. */
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 2px;
+	text-align: center;
 	font-size: 11px;
 	color: var(--text-muted);
-	margin-top: 2px;
 	line-height: 1;
 	pointer-events: none;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+	z-index: 5;
 }
 
 @media (max-height: 700px) {
@@ -1073,6 +1058,22 @@
 
 .faction-target-action {
 	margin-top: 12px;
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+/* "Targeted by: <username>" shown beside the Unmark button so a player knows
+   which faction member flagged this nexus. */
+.faction-target-marker {
+	font-size: 11px;
+	color: var(--text-muted);
+}
+
+.faction-target-marker strong {
+	color: #f97316;
+	font-weight: 600;
 }
 
 .faction-target-btn {

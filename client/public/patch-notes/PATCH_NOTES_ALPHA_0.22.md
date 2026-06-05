@@ -411,4 +411,26 @@ probe the enemy.
 
 ---
 
+### Starfield & combat-log polish
+
+A pass over the map and reports UI:
+
+- **Command Core art now fills the whole map tile.** Nexuses used to
+  draw a small building thumbnail floating in the cell; the art now
+  spans the full tile, with coordinates and the "Target" label pinned
+  along the bottom edge so they stay readable on top.
+- **Faction targets are cleaner on the map.** The little crosshair badge
+  is gone , a marked nexus now reads as a target from the orange cell
+  outline plus the "TARGET" label alone.
+- **Marking a target works the way you'd expect.** Targeting a nexus
+  shows on the map instantly, and re-opening an already-marked nexus now
+  correctly offers "Unmark Target" so you can clear it. The inspect
+  drawer also shows **Targeted by: <player>** so your faction knows who
+  flagged it.
+- **Combat logs are de-cluttered.** The decorative icons on combat-log
+  rows (and the loot coin) have been removed , the result text and
+  numbers carry the information on their own.
+
+---
+
 See you in the dark. - André

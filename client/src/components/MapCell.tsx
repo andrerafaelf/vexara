@@ -130,14 +130,9 @@ function MapCellInner({ data }: { data: MapCellData }) {
 				</div>
 			)}
 			{isFactionTarget && (
-				<>
-					<div className="faction-target-badge" aria-label="Faction target" title="Faction Target">
-						<span className="faction-target-reticle" />
-					</div>
-					<div className="faction-target-label" title="Marked as a target by your faction">
-						Target
-					</div>
-				</>
+				<div className="faction-target-label" title="Marked as a target by your faction">
+					Target
+				</div>
 			)}
 			{ownerLabel && (
 				<div className="cell-owner-label" title={ownerLabel}>

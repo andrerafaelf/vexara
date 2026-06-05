@@ -189,6 +189,8 @@ export async function getNexusIntelForUser(
 				isFriendly?: boolean;
 				relation?: FriendlyRelation;
 				newbieProtectionEndsAt?: string | null;
+				isFactionTarget?: boolean;
+				factionTargetMarkedBy?: string | null;
 			})
 	| null
 > {
@@ -239,13 +241,31 @@ export async function getNexusIntelForUser(
 			: null;
 	const friendly = relation !== null;
 
+	// Faction target state for the viewer's faction. The inspect drawer needs both
+	// the flag (so the Mark/Unmark button reflects reality) and who marked it (shown
+	// as "Targeted by"). The map list already flags targets, but a fresh getNexusInfo
+	// fetch on click would otherwise drop the flag, which is what broke unmark.
+	const { isFactionTarget, factionTargetMarkedBy } = await resolveFactionTarget(
+		userId,
+		nexus.galaxyId,
+		nexusId
+	);
+
 	const scoutReport = await prisma.attack.findFirst({
 		where: { attackerUserId: userId, defenderNexusId: nexusId, type: 'scout', status: 'completed' },
 		orderBy: { arrivesAt: 'desc' }
 	});
 
 	const intel = (scoutReport?.result as { intel?: ScoutIntel } | null)?.intel;
-	if (!intel) return { ...publicData, isFriendly: friendly, relation, newbieProtectionEndsAt };
+	if (!intel)
+		return {
+			...publicData,
+			isFriendly: friendly,
+			relation,
+			newbieProtectionEndsAt,
+			isFactionTarget,
+			factionTargetMarkedBy
+		};
 
 	return {
 		...publicData,
@@ -254,6 +274,36 @@ export async function getNexusIntelForUser(
 		scoutedAt: scoutReport!.arrivesAt,
 		isFriendly: friendly,
 		relation,
-		newbieProtectionEndsAt
+		newbieProtectionEndsAt,
+		isFactionTarget,
+		factionTargetMarkedBy
 	};
+}
+
+// Look up whether `nexusId` is a faction target for the caller's faction, and if
+// so who marked it. Returns false/null when the caller isn't in a faction or the
+// nexus isn't targeted. FactionTarget has no User relation (markedById is a bare
+// FK), so the marker's username is resolved in a second lookup.
+async function resolveFactionTarget(
+	userId: number,
+	galaxyId: number,
+	nexusId: number
+): Promise<{ isFactionTarget: boolean; factionTargetMarkedBy: string | null }> {
+	const membership = await prisma.factionMember.findUnique({
+		where: { userId_galaxyId: { userId, galaxyId } },
+		select: { factionId: true }
+	});
+	if (!membership) return { isFactionTarget: false, factionTargetMarkedBy: null };
+
+	const target = await prisma.factionTarget.findUnique({
+		where: { factionId_nexusId: { factionId: membership.factionId, nexusId } },
+		select: { markedById: true }
+	});
+	if (!target) return { isFactionTarget: false, factionTargetMarkedBy: null };
+
+	const marker = await prisma.user.findUnique({
+		where: { id: target.markedById },
+		select: { username: true }
+	});
+	return { isFactionTarget: true, factionTargetMarkedBy: marker?.username ?? null };
 }
