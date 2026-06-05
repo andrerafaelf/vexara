@@ -285,8 +285,8 @@
     "semantic_hash": ""
   },
   "client/src/app/layout.tsx": {
-    "mtime": 1780673833.4630136,
-    "ast_hash": "3cdaebc987d0a59bc21e9c1e7297a2de",
+    "mtime": 1780701268.538081,
+    "ast_hash": "88d9a38e3df33c4451e8b8eca25dee8c",
     "semantic_hash": ""
   },
   "client/src/app/login/page.tsx": {
@@ -400,8 +400,8 @@
     "semantic_hash": ""
   },
   "client/src/app/state-of-galaxy/page.tsx": {
-    "mtime": 1780673833.8235726,
-    "ast_hash": "c8b411a7922560d31d2a4568b240db8f",
+    "mtime": 1780701252.864072,
+    "ast_hash": "85a47c4f1d18446c0d0661308964d474",
     "semantic_hash": ""
   },
   "client/src/app/terms/page.tsx": {
@@ -560,8 +560,8 @@
     "semantic_hash": ""
   },
   "client/src/components/GameLayout.tsx": {
-    "mtime": 1780673834.4860759,
-    "ast_hash": "60d8bf39b382670d9b3ab7d0727f5168",
+    "mtime": 1780701186.651921,
+    "ast_hash": "a5103f17c1879e3cf5eaf23388392b84",
     "semantic_hash": ""
   },
   "client/src/components/InlineBackButton.tsx": {
@@ -570,8 +570,8 @@
     "semantic_hash": ""
   },
   "client/src/components/Landing/LandingPage.tsx": {
-    "mtime": 1780673834.530694,
-    "ast_hash": "aabefe451dd2d0ccad8106466e9da991",
+    "mtime": 1780702258.3576043,
+    "ast_hash": "4a350f65ff264a51d32e322219a2b4f0",
     "semantic_hash": ""
   },
   "client/src/components/LiveResourceStrip.tsx": {
@@ -580,8 +580,8 @@
     "semantic_hash": ""
   },
   "client/src/components/LoginForm.tsx": {
-    "mtime": 1780673834.563264,
-    "ast_hash": "70c471637fbd14ac90fbeed96654f80a",
+    "mtime": 1780702249.3267083,
+    "ast_hash": "c434baebaab37de14624eec65c592211",
     "semantic_hash": ""
   },
   "client/src/components/Map.tsx": {
@@ -665,8 +665,8 @@
     "semantic_hash": ""
   },
   "client/src/components/PublicNav.tsx": {
-    "mtime": 1780673834.8267982,
-    "ast_hash": "cc17ee44804799adf6b6708c951599e9",
+    "mtime": 1780701117.1389737,
+    "ast_hash": "1397b801000c1541664ca60121be7788",
     "semantic_hash": ""
   },
   "client/src/components/PwaGuideModal.tsx": {
@@ -695,8 +695,8 @@
     "semantic_hash": ""
   },
   "client/src/components/RegistrationForm.tsx": {
-    "mtime": 1780673834.914754,
-    "ast_hash": "ab617ed94c74191ec0b468f99db3df75",
+    "mtime": 1780701141.7177908,
+    "ast_hash": "f0dc5c6523c3ebf49a54124384c4b5a0",
     "semantic_hash": ""
   },
   "client/src/components/Reports.tsx": {
@@ -725,8 +725,8 @@
     "semantic_hash": ""
   },
   "client/src/components/SiteFooter.tsx": {
-    "mtime": 1780673835.0267694,
-    "ast_hash": "1a4ba18881e99eff6a69767117ba53f2",
+    "mtime": 1780701220.7021196,
+    "ast_hash": "90c98c2b4a850ea3eaa4e3e75eb1f07b",
     "semantic_hash": ""
   },
   "client/src/components/StatsChart.tsx": {
@@ -810,8 +810,8 @@
     "semantic_hash": ""
   },
   "client/src/data/gameDocs.ts": {
-    "mtime": 1780673835.245275,
-    "ast_hash": "b38457f7662817e3fa0c13fd3aa4381b",
+    "mtime": 1780693643.4756296,
+    "ast_hash": "1a4771d40504e493c7c014b8cd71c049",
     "semantic_hash": ""
   },
   "client/src/data/gameIcons.ts": {
@@ -920,8 +920,8 @@
     "semantic_hash": ""
   },
   "client/src/realtime/gameConstants.shared.ts": {
-    "mtime": 1780673835.633536,
-    "ast_hash": "3532e81f079ecf309eb993d01aa7ba81",
+    "mtime": 1780693643.4746294,
+    "ast_hash": "8d3c7955945cab66d23ab096becea770",
     "semantic_hash": ""
   },
   "client/src/realtime/serverClock.ts": {
@@ -1775,8 +1775,8 @@
     "semantic_hash": ""
   },
   "server/test/economy-combat.test.js": {
-    "mtime": 1780668095.6267602,
-    "ast_hash": "d624e4836a662014bec219e3550b428a",
+    "mtime": 1780693643.4761288,
+    "ast_hash": "0c2f5a764459aa34aa150a5c77ce8cfb",
     "semantic_hash": ""
   },
   "server/test/economy-curves.test.js": {
@@ -1855,8 +1855,8 @@
     "semantic_hash": ""
   },
   "server/utils/gameConstants.ts": {
-    "mtime": 1780673902.8421571,
-    "ast_hash": "973d362a847c717f6d8723f368aa151b",
+    "mtime": 1780693643.4741306,
+    "ast_hash": "3509287b5cfba7c9fbea6e2ce2b2c00b",
     "semantic_hash": ""
   },
   "server/utils/logger.ts": {
@@ -2292,6 +2292,16 @@
   "client/public/window.svg": {
     "mtime": 1778831944.9483302,
     "ast_hash": "a2760511c65806022ad20adf74370ff3",
+    "semantic_hash": ""
+  },
+  "client/src/components/DiscordButton.tsx": {
+    "mtime": 1780701088.3718157,
+    "ast_hash": "7dcf21a38151565d7a8217723e7ab2c0",
+    "semantic_hash": ""
+  },
+  "client/src/constants/social.ts": {
+    "mtime": 1780701064.8269484,
+    "ast_hash": "d9bc0af353ba3d1297ef3db82bcb9629",
     "semantic_hash": ""
   }
 }

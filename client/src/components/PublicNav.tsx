@@ -4,6 +4,7 @@ import '@/styles/PublicNav.css';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import DiscordButton from './DiscordButton';
 
 interface PublicNavProps {
 	/** Optional section label that renders as "Vexara / LOC" — used by the codex. */
@@ -54,9 +55,7 @@ export default function PublicNav({ loc }: PublicNavProps) {
 						<Link href="/codex">Codex</Link>
 						<Link href="/state-of-galaxy">Galaxy Status</Link>
 						<Link href="/calculator">Calculator</Link>
-						<a href="https://discord.gg/D858rzCHP7" target="_blank" rel="noopener noreferrer">
-							Discord
-						</a>
+						<DiscordButton variant="outline" label="Discord" utm="public_nav" />
 						<Link href="/login" className="vx-nav-cta-outline">
 							Login
 						</Link>

@@ -7,6 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { login as loginApi, resendVerification as resendVerificationApi } from '../services/api';
 import PasswordField from './PasswordField';
+import DiscordButton from './DiscordButton';
 import '../styles/Auth.css';
 
 const SCREENSHOTS: { src: string; label: string }[] = [
@@ -344,6 +345,14 @@ const LoginForm: React.FC = () => {
 						</a>
 						.
 					</p>
+
+					<div className="auth-discord-inline">
+						<span className="auth-discord-inline-divider" aria-hidden="true" />
+						<p className="auth-discord-inline-text">
+							Find a faction and keep up with the war on Discord.
+						</p>
+						<DiscordButton variant="outline" utm="login_form" />
+					</div>
 				</div>
 			</div>
 		</div>

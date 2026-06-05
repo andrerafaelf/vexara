@@ -3,6 +3,7 @@
 import Avatar from '@/components/Avatar';
 import ConnectionStatusBar from '@/components/ConnectionStatusBar';
 import ConqueredModal from '@/components/ConqueredModal';
+import DiscordButton from '@/components/DiscordButton';
 import DominanceBar from '@/components/DominanceBar';
 import MobileNexusDrawer from '@/components/MobileNexusDrawer';
 import NewPatchToast from '@/components/NewPatchToast';
@@ -475,6 +476,7 @@ export default function GameLayout({
 						</div>
 
 						<div className="header-right">
+							<DiscordButton variant="pill" label="Discord" utm="ingame_header" />
 							<button
 								className={`nexus-drawer-toggle${isNexusDrawerOpen ? ' active' : ''}`}
 								onClick={() => setIsNexusDrawerOpen((v) => !v)}
@@ -624,6 +626,12 @@ export default function GameLayout({
 							<a href="/calculator" target="_blank" rel="noopener noreferrer" className="nav-btn">
 								Calculator
 							</a>
+							<DiscordButton
+								variant="solid"
+								label="Join the Discord"
+								className="mobile-drawer-discord"
+								utm="ingame_drawer"
+							/>
 							{hiddenCount > 0 && (
 								<div className="mobile-drawer-discover">
 									<p className="nav-discover-hint">Unlocks as you progress</p>

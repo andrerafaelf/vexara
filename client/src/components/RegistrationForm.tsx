@@ -7,6 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { register as registerApi, trackReferralClick } from '../services/api';
 import PasswordField from './PasswordField';
+import DiscordButton from './DiscordButton';
 import '../styles/Auth.css';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
@@ -453,6 +454,13 @@ const RegistrationForm: React.FC = () => {
 										check your <strong>Junk</strong> folder.
 									</p>
 								)}
+								<div className="auth-discord-cta">
+									<p className="auth-discord-cta-text">
+										While you wait, join the community — find a faction, ask questions, and grab
+										your Alpha Founder role.
+									</p>
+									<DiscordButton variant="solid" utm="register_success" />
+								</div>
 								<Link href="/login" className="auth-link auth-link-block">
 									Back to sign in
 								</Link>
@@ -593,6 +601,14 @@ const RegistrationForm: React.FC = () => {
 								</Link>
 								.
 							</p>
+
+							<div className="auth-discord-inline">
+								<span className="auth-discord-inline-divider" aria-hidden="true" />
+								<p className="auth-discord-inline-text">
+									Got a question? The community lives on Discord.
+								</p>
+								<DiscordButton variant="outline" utm="register_form" />
+							</div>
 						</>
 					)}
 				</div>

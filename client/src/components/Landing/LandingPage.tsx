@@ -9,6 +9,7 @@ import { TROOP_ICONS, BUILDING_ICONS } from '@/data/gameIcons';
 import SiteFooter from '@/components/SiteFooter';
 import PublicNav from '@/components/PublicNav';
 import { getPublicGalaxyStatus } from '@/services/api';
+import { DISCORD_URL } from '@/constants/social';
 import '@/styles/Landing.css';
 
 const FOOTAGE: { src: string; label: string; code: string; caption: string }[] = [
@@ -612,7 +613,7 @@ function BuiltBy() {
 					<span>- andre, sole dev</span>
 				</p>
 				<a
-					href="https://discord.gg/D858rzCHP7"
+					href={`${DISCORD_URL}?utm_source=landing`}
 					target="_blank"
 					rel="noopener noreferrer"
 					className="lp-btn lp-btn-ghost lp-builtby-discord"

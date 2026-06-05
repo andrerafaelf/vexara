@@ -1,0 +1,91 @@
+/* Shared Discord CTA. Discord blurple (#5865f2) so it reads instantly as the
+   community link regardless of where it's placed (nav, signup, in-game). */
+
+.discord-btn {
+	--discord-blurple: #5865f2;
+	--discord-blurple-hover: #4752c4;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	font-weight: 700;
+	letter-spacing: 0.01em;
+	text-decoration: none;
+	border-radius: var(--radius-md, 8px);
+	cursor: pointer;
+	transition:
+		background 120ms ease,
+		border-color 120ms ease,
+		color 120ms ease,
+		filter 120ms ease,
+		transform 120ms ease;
+}
+
+.discord-btn:active {
+	transform: translateY(1px);
+}
+
+.discord-btn:focus-visible {
+	outline: 2px solid var(--discord-blurple);
+	outline-offset: 2px;
+}
+
+.discord-btn svg {
+	flex-shrink: 0;
+}
+
+/* Solid — loudest CTA. Used on signup + landing. */
+.discord-btn--solid {
+	padding: 11px 20px;
+	font-size: 15px;
+	color: #fff;
+	background: var(--discord-blurple);
+	border: 1px solid var(--discord-blurple);
+}
+
+.discord-btn--solid:hover {
+	background: var(--discord-blurple-hover);
+	border-color: var(--discord-blurple-hover);
+}
+
+/* Outline — for public nav, where a filled button would shout over Login/Join. */
+.discord-btn--outline {
+	padding: 7px 14px;
+	font-size: 14px;
+	color: var(--discord-blurple);
+	background: color-mix(in srgb, var(--discord-blurple) 12%, transparent);
+	border: 1px solid color-mix(in srgb, var(--discord-blurple) 55%, transparent);
+}
+
+.discord-btn--outline:hover {
+	color: #fff;
+	background: var(--discord-blurple);
+	border-color: var(--discord-blurple);
+}
+
+/* Pill — compact icon+label chip for the in-game header bar. */
+.discord-btn--pill {
+	padding: 6px 12px;
+	font-size: 13px;
+	color: var(--discord-blurple);
+	background: color-mix(in srgb, var(--discord-blurple) 14%, transparent);
+	border: 1px solid color-mix(in srgb, var(--discord-blurple) 45%, transparent);
+}
+
+.discord-btn--pill:hover {
+	color: #fff;
+	background: var(--discord-blurple);
+	border-color: var(--discord-blurple);
+}
+
+/* On the narrow in-game header, collapse the pill to an icon-only button so it
+   never crowds the nav. The label is kept for screen readers via the visible
+   text, so we just hide it visually under the breakpoint. */
+@media (max-width: 900px) {
+	.discord-btn--pill span {
+		display: none;
+	}
+	.discord-btn--pill {
+		padding: 6px 8px;
+	}
+}

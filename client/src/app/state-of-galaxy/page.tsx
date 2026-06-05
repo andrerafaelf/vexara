@@ -3,6 +3,7 @@ import Link from 'next/link';
 import PublicNav from '@/components/PublicNav';
 import SiteFooter from '@/components/SiteFooter';
 import UpdatedAgo from './UpdatedAgo';
+import { DISCORD_URL } from '@/constants/social';
 import '@/styles/GuidePages.css';
 
 // Refresh the prerendered HTML every 5 minutes. Search crawlers and link
@@ -261,11 +262,7 @@ export default async function StateOfGalaxyPage() {
 								<p className="gp-step-text">
 									Factions are where Vexara becomes social: shared chat, invitations, support
 									troops, war planning, treaties, and rivalries. Find a faction recruiting on the{' '}
-									<a
-										href="https://discord.gg/D858rzCHP7"
-										target="_blank"
-										rel="noopener noreferrer"
-									>
+									<a href={DISCORD_URL} target="_blank" rel="noopener noreferrer">
 										Vexara Discord
 									</a>
 									.

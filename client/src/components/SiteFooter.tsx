@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import CookieSettingsLink from '@/components/CookieSettingsLink';
+import { DISCORD_URL } from '@/constants/social';
 import '@/styles/SiteFooter.css';
 
 export default function SiteFooter() {
@@ -35,7 +36,7 @@ export default function SiteFooter() {
 					</div>
 					<div className="site-footer-col">
 						<span className="site-footer-col-title">{'// Outside'}</span>
-						<a href="https://discord.gg/D858rzCHP7" target="_blank" rel="noopener noreferrer">
+						<a href={DISCORD_URL} target="_blank" rel="noopener noreferrer">
 							Discord
 						</a>
 						<a href="mailto:support@vexara.world">support@vexara.world</a>

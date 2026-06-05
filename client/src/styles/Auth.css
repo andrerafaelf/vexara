@@ -598,6 +598,48 @@
 	margin-top: var(--space-4);
 }
 
+/* Discord CTA on the post-signup "check your email" screen. The user can't
+   play until they confirm, so this is the highest-intent moment to pull them
+   into the community. */
+.auth-discord-cta {
+	margin-top: 14px;
+	padding-top: 14px;
+	border-top: 1px solid rgba(86, 211, 100, 0.25);
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 10px;
+}
+
+.auth-discord-cta-text {
+	margin: 0;
+	font-size: var(--text-sm);
+	line-height: 1.5;
+	color: var(--text-muted);
+}
+
+/* Quieter Discord prompt under the signup form itself. */
+.auth-discord-inline {
+	margin-top: var(--space-5);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 10px;
+	text-align: center;
+}
+
+.auth-discord-inline-divider {
+	width: 100%;
+	height: 1px;
+	background: var(--border-default);
+}
+
+.auth-discord-inline-text {
+	margin: 0;
+	font-size: var(--text-sm);
+	color: var(--text-muted);
+}
+
 /* ── Signup-specific: slot bar, game content ─────────────────── */
 
 .alpha-founder-slots {

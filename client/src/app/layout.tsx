@@ -4,6 +4,7 @@ import QueryProvider from '@/context/QueryProvider';
 import ScrollToTop from '@/components/ScrollToTop';
 import NavigationProgress from '@/components/NavigationProgress';
 import CookieConsent from '@/components/CookieConsent';
+import { DISCORD_URL } from '@/constants/social';
 import type { Metadata, Viewport } from 'next';
 import { Suspense } from 'react';
 import './globals.css';
@@ -145,7 +146,7 @@ const organizationSchema = {
 	name: 'Vexara',
 	url: SITE_URL,
 	logo: `${SITE_URL}/vexara-logo.png`,
-	sameAs: ['https://discord.gg/D858rzCHP7']
+	sameAs: [DISCORD_URL]
 };
 
 const websiteSchema = {

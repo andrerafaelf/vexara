@@ -923,6 +923,12 @@
 	border-bottom: 2px solid transparent;
 }
 
+/* Full-width Discord CTA inside the in-game mobile drawer. */
+.mobile-drawer-discord.discord-btn {
+	width: 100%;
+	margin: 8px 0;
+}
+
 .mobile-drawer-nexuses {
 	border-top: 1px solid var(--color-navy-700);
 	padding-top: 14px;
