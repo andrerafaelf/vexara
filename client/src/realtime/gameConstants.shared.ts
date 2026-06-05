@@ -21,7 +21,7 @@ export const BUILDING_COSTS: Record<string, BuildingCost> = {
 	alloyForge: { biomass: 65, alloy: 40, ore: 60, time: 120 },
 	oreExtractor: { biomass: 75, alloy: 65, ore: 70, time: 150 },
 	shieldGrid: { biomass: 50, alloy: 100, ore: 60, time: 180 },
-	armory: { biomass: 120, alloy: 180, ore: 140, time: 210 },
+	targetingCore: { biomass: 120, alloy: 180, ore: 140, time: 210 },
 	stealthArray: { biomass: 100, alloy: 150, ore: 180, time: 210 }
 };
 
@@ -33,22 +33,26 @@ export interface TroopCost {
 	time: number;
 }
 
+// v0.22 economy overhaul: STRIKER resource costs re-tuned to rising tier bands;
+// Siege Colossus pop 5→4. ANVILS unchanged (their re-pricing was DROPPED — it
+// moved COMBAT_BALANCE §2.1 ratios; §8.1). MUST match server gameConstants.ts.
+// Full rationale: server/ECONOMY_BALANCE.md §3.4 / §3.6 / §8.
 export const TROOP_COSTS: Record<string, TroopCost> = {
-	sentinelLancer: { biomass: 150, alloy: 150, ore: 200, population: 1, time: 53 },
+	sentinelLancer: { biomass: 200, alloy: 200, ore: 250, population: 1, time: 53 },
 	assaultTrooper: { biomass: 150, alloy: 150, ore: 350, population: 1, time: 79 },
 	vanguardBreaker: { biomass: 250, alloy: 150, ore: 300, population: 1, time: 160 },
 	reconOperative: { biomass: 400, alloy: 150, ore: 400, population: 1, time: 180 },
-	pyreSuppressor: { biomass: 450, alloy: 400, ore: 450, population: 2, time: 540 },
-	wraithSkimmer: { biomass: 625, alloy: 500, ore: 750, population: 3, time: 720 },
+	pyreSuppressor: { biomass: 520, alloy: 460, ore: 520, population: 2, time: 540 },
+	wraithSkimmer: { biomass: 650, alloy: 520, ore: 780, population: 3, time: 720 },
 	bulwarkGuard: { biomass: 400, alloy: 600, ore: 500, population: 2, time: 720 },
 	aegisSkirmisher: { biomass: 500, alloy: 550, ore: 450, population: 2, time: 720 },
 	arcDisruptor: { biomass: 550, alloy: 750, ore: 650, population: 2, time: 840 },
-	phantomLance: { biomass: 750, alloy: 600, ore: 900, population: 3, time: 1080 },
-	voidStalker: { biomass: 1100, alloy: 900, ore: 1400, population: 3, time: 1620 },
+	phantomLance: { biomass: 780, alloy: 630, ore: 940, population: 3, time: 1080 },
+	voidStalker: { biomass: 1120, alloy: 910, ore: 1420, population: 3, time: 1620 },
 	siegeMech: { biomass: 1250, alloy: 1000, ore: 2000, population: 4, time: 1800 },
 	plasmaTurret: { biomass: 1500, alloy: 1200, ore: 2500, population: 3, time: 2700 },
-	annihilatorPlatform: { biomass: 2000, alloy: 1750, ore: 3000, population: 4, time: 2400 },
-	siegeColossus: { biomass: 1800, alloy: 2200, ore: 3200, population: 5, time: 3000 },
+	annihilatorPlatform: { biomass: 1900, alloy: 1660, ore: 2840, population: 4, time: 2400 },
+	siegeColossus: { biomass: 1550, alloy: 1890, ore: 2760, population: 4, time: 3000 },
 	overseer: { biomass: 180000, alloy: 140000, ore: 120000, population: 5, time: 14400 }
 };
 

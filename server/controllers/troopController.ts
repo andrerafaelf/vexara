@@ -115,13 +115,13 @@ const TROOP_REQUIREMENTS: Record<
 	phantomLance: { buildings: { hangarBay: 8, alloyForge: 7 } },
 	siegeMech: { buildings: { armorFoundry: 10, oreExtractor: 9, commandCore: 8 } },
 	annihilatorPlatform: { buildings: { plasmaForge: 12, commandCore: 10, shieldGrid: 10 } },
-	voidStalker: { buildings: { hangarBay: 9, alloyForge: 8, armory: 3 } },
-	plasmaTurret: { buildings: { plasmaForge: 11, commandCore: 9, armory: 5 } },
+	voidStalker: { buildings: { hangarBay: 9, alloyForge: 8, targetingCore: 3 } },
+	plasmaTurret: { buildings: { plasmaForge: 11, commandCore: 9, targetingCore: 5 } },
 	// Siege Colossus (Stage 2d): elite Armor attacker. Gated higher than Siege
-	// Mech (Armor Foundry Lv13 vs Mech's Lv10) and requires Armory Lv5 like
+	// Mech (Armor Foundry Lv13 vs Mech's Lv10) and requires Targeting Core Lv5 like
 	// the other elite-tier units, so it surfaces alongside the Annihilator
 	// and Void Stalker rather than as an early Siege Mech replacement.
-	siegeColossus: { buildings: { armorFoundry: 13, commandCore: 10, armory: 5 } },
+	siegeColossus: { buildings: { armorFoundry: 13, commandCore: 10, targetingCore: 5 } },
 	overseer: { buildings: { commandCore: 14, shieldGrid: 13 }, maxPerNexus: 3 }
 };
 
@@ -136,7 +136,7 @@ const BUILDING_NAMES: Record<string, string> = {
 	alloyForge: 'Alloy Forge',
 	oreExtractor: 'Ore Extractor',
 	shieldGrid: 'Shield Grid',
-	armory: 'Armory'
+	targetingCore: 'Targeting Core'
 };
 
 const TROOP_NAMES: Record<string, string> = {

@@ -2,11 +2,12 @@
 
 The largest single update to the game since alpha began: combat is
 rebalanced from the ground up so the counter triangle finally works on
-both attack **and** defense, the Espionage system is retired,
-Recruitment Core is replaced by three class-specific production
-buildings, six units are renamed, two new units join the roster, and
-Stealth Array gets a brand-new defensive role with a hidden resource
-vault.
+both attack **and** defense, the economy is overhauled so resources
+matter again, the Espionage system is retired, Recruitment Core is
+replaced by three class-specific production buildings, six units are
+renamed, two new units join the roster, the Armory becomes the Targeting
+Core, and Stealth Array gets a brand-new defensive role with a hidden
+resource vault.
 
 ---
 
@@ -89,10 +90,10 @@ that day.
 
 **Siege Colossus** *(Armor striker)* — the elite siege hammer. The
 heaviest single attacker in the game with enough defense to survive its
-own assault, slowest speed (6), highest population cost (5). Built to
-crack fortified Nexuses, and Armor counters Fire on the way in. Pairs
-with the Annihilator Platform as the heavy duo of the endgame line.
-Unlocks at **Armor Foundry Lv13, Command Core Lv10, Armory Lv5**.
+own assault, and the slowest speed (6). Built to crack fortified
+Nexuses, and Armor counters Fire on the way in. Pairs with the
+Annihilator Platform as the heavy duo of the endgame line. Unlocks at
+**Armor Foundry Lv13, Command Core Lv10, Targeting Core Lv5**.
 
 **Aegis Skirmisher** *(Mobile anvil)* — the Mobile-class garrison
 anchor. It's the defensive answer to Armor attackers (Mobile counters
@@ -127,16 +128,24 @@ reliable strategic tool even against a maxed defender.
 Core Lv5 (was Lv7) — the new role is useful to more players, so the
 gate sits earlier in the build order.
 
-### Reworked Armory milestones
+### The Armory is now the Targeting Core
 
-Armory's level dependencies were tied to Recruitment Core. Now they're
-gated by the class building that matches what each Armory tier unlocks:
+"Armory" and "Armor Foundry" were too easy to confuse — they look related
+but do completely different jobs (Armor Foundry produces the Armor combat
+class; the old Armory amplifies your *attack* counters and gates elite
+units). The attack-amplifier building is **renamed Targeting Core**. Same
+building, same level, same cost, same effects — only the name changed, and
+your current level carries over untouched.
 
-- **Armory Lv3** (unlocks Void Stalker, a Mobile unit) → requires
+**Reworked Targeting Core milestones.** Its level dependencies were tied to
+Recruitment Core; now they're gated by the class building that matches what
+each tier unlocks:
+
+- **Targeting Core Lv3** (unlocks Void Stalker, a Mobile unit) → requires
   Hangar Bay Lv5
-- **Armory Lv5** (unlocks Plasma Turret, a Fire unit) → requires
+- **Targeting Core Lv5** (unlocks Plasma Turret + Siege Colossus) → requires
   Plasma Forge Lv7 + Shield Grid Lv3
-- **Armory Lv10** (the elite-tier cap) → requires Command Core Lv10
+- **Targeting Core Lv10** (the elite-tier cap) → requires Command Core Lv10
   + Armor Foundry Lv10
 
 ### Reworked points & raid loot
@@ -234,6 +243,107 @@ it's a striker now.
 > they fight have changed. Open the Codex and the combat calculator to
 > re-plan your army around the new triangle before your next war.
 
+### Economy overhaul: resources matter again
+
+With combat rebuilt, we turned the same rigor on everything underneath
+it. At the high end, **resources had quietly stopped mattering** — you
+could gather a war chest in an afternoon while the real wall was always
+training time. Three fixes:
+
+**Production grows faster.** Output per Farm/Forge/Extractor level now
+scales by **1.35** (was 1.32). Your base output is unchanged — a new
+nexus produces exactly what it did before — but the curve climbs harder
+through the mid and late game where resources had gone decorative. A
+maxed economy produces roughly **75% more** at the top than it used to.
+
+**Storage rebalanced — farms are no longer a decoy.** Storage cap now
+grows by **1.48** per Storage Vault level (was 1.50). It reads like a
+nerf; it isn't. Storage was outpacing production so badly that late
+vaults took **30+ hours** to fill from your own output — quietly making
+Storage Vault a must-build and your Farms an afterthought. Now the
+time to fill a vault from empty stays in a sane **3–16 hour** band
+instead of running away to 32. Storage still leads production at every
+level (so raiding still pays — a full vault is always partly stolen
+goods), but **upgrading a Farm is finally a real decision.**
+
+**Unit costs re-tuned so teching up always wins.** Every striker's
+**resource cost** was re-tuned so attack-per-resource rises cleanly with
+tier. Population and training times are unchanged; only the
+biomass/alloy/ore totals moved, and each unit keeps its old resource
+mix. The headline fix: the **Siege Colossus was secretly the worst deal
+in the game** — per resource spent, the elite siege hammer delivered
+*less* attack than a Tier-1 Sentinel Lancer, so massing cheap units was
+cheaper than building the unit designed to crack fortresses. Backwards,
+and fixed.
+
+**Siege Colossus also drops from population 5 to 4.** It was
+double-taxed — worst attack-per-resource *and* worst
+attack-per-population among the Tier-3 strikers, which buried the
+flagship in a niche. At pop 4 you can field it as a real elite line.
+(This changes nothing about how a battle resolves — population only
+governs how many troops a nexus can house, never the math of a fight.)
+
+| Unit | Old total cost | New total cost |
+|---|---|---|
+| Sentinel Lancer | 500 | 650 |
+| Pyre Suppressor | 1,300 | 1,500 |
+| Wraith Skimmer | 1,875 | 1,950 |
+| Phantom Lance | 2,250 | 2,350 |
+| Void Stalker | 3,400 | 3,450 |
+| Annihilator Platform | 6,750 | 6,400 |
+| Siege Colossus | 7,200 | **6,200** *(and pop 5 → 4)* |
+
+> **Nothing you own is touched.** Existing troops, in-flight attacks,
+> and garrisons carry over exactly — only the cost of *building new
+> ones* changes. The Codex already shows every unit's new cost.
+
+A re-pricing of **anvil (garrison) units** and a re-check of two elite
+attack/defense ratios were drafted but deliberately **held back** —
+they reach into combat's tuning, and anything that touches the combat
+triangle waits for a combat-balance pass rather than riding an economy
+update. Same discipline that kept the combat rework clean.
+
+### Quality of life
+
+**Troops return home instantly.** Surviving troops no longer crawl back
+on a full return trip after a strike. The moment a battle resolves, your
+survivors (and any loot) are on their way home and land almost
+immediately — no more watching a victorious army trudge back across the
+map. The same applies to scouts heading home, bounced support, and any
+garrison you recall. (Outbound travel is unchanged — the distance to
+your target still matters; only the trip *home* is now instant.)
+
+**Conquered nexuses keep their name.** Take an enemy nexus and it stays
+named what it was — your new prize keeps its identity instead of being
+flattened to a generic "Conquered Nexus." Rename it yourself if you like.
+
+**No more phantom "Defeat" reports.** Send several waves at one target
+and, once an early wave conquers it, the later waves arrive to find the
+nexus already yours and simply turn around — untouched, no losses. Those
+fly-homes used to clutter your combat log as bogus "Defeat" entries.
+They're gone now; only real engagements show up.
+
+**New Logistics tab — move resources without the star-map hunt.** Open any
+nexus and you'll find a **Logistics** tab: a single table of every base you
+own, each resource shown as current/cap with a fill bar, color-coded so a
+base running **low** (amber) or **near full** (red, about to waste overflow)
+jumps out at a glance. Hit **Send** on any row — or the **Send Resources**
+button — and a transfer dialog opens with your nexuses in dropdowns, the
+destination's free space shown live, and a **Max** button that fills the most
+that fits so you can never overflow. Opening Send from a row even
+**pre-suggests** a sensible top-up. No more bouncing through the star map to
+find a base, eyeball its storage, and guess an amount. (Transfers between your
+own nexuses remain instant.)
+
+**Send resources to faction members.** The same Send Resources dialog now has
+a **Faction** tab alongside *My Empire*. Pick any of your faction-mates'
+nexuses as the destination — their bases appear in the dropdown labeled by
+owner name and coordinates. A **10% transit tax** applies: you send 100,
+they receive 90. The tax is shown live in the dialog footer before you
+confirm. The Max and smart top-up buttons account for the tax automatically
+so you can never accidentally overflow the recipient. Newbie-protected bases
+(fresh players under their protection window) cannot receive faction transfers.
+
 ### A note on map and starter changes (already in 0.20)
 
 If you're catching up: 0.20 shipped a rebuilt Starfield map with
@@ -241,6 +351,26 @@ buttery panning and zooming, one-time relocation tokens for fresh
 commanders, a 5-day hold on special NPC nexus types in young galaxies,
 and an even-spread map seeding pass. Those changes carry forward —
 the map you're playing on today is the rebuilt one.
+
+---
+
+### Galaxy picker & lobby polish (0.22 continued)
+
+Small quality-of-life pass on the galaxy selection screen:
+
+- **Close button** now has a clipped corner matching the rest of the
+  UI's industrial design language.
+- **Dates now read "Starts on" / "Started"** instead of the generic
+  "Created at" label. Pending galaxies show the start date; active
+  galaxies show when play began.
+- **Timezone line is now live-computed** from the galaxy's actual
+  start time rather than hardcoded offsets — times shown for UTC,
+  Lisbon, Paris, New York, and Los Angeles are now correct regardless
+  of DST.
+- **Locked galaxies** (ones where registration is closed) now show a
+  "Locked" tag and a disabled button rather than silently rejecting
+  your join attempt. Already-joined players can still enter and play
+  normally.
 
 ---
 

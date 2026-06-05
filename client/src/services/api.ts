@@ -137,6 +137,10 @@ export const createNexus = (name?: string) =>
 
 export const getMyNexuses = () => apiRequest('/nexus/my-nexuses');
 
+// Faction-mates' nexuses eligible to receive a resource send (same faction, not
+// own, not newbie-protected). Shaped like getMyNexuses, plus ownerUsername.
+export const getFactionNexuses = () => apiRequest('/nexus/faction-nexuses');
+
 export const getNexus = (nexusId: string) => apiRequest(`/nexus/${nexusId}`);
 
 export const renameNexus = (nexusId: string, name: string) =>

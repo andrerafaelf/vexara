@@ -72,8 +72,9 @@ export function getResourceProduction(nexus: EconomyNexus, storm?: StormBonus): 
 		: rawMultiplier === 1
 			? 1
 			: 1 + (rawMultiplier - 1) * getDoubleScale(nexus);
+	// Growth 1.35 (v0.22 economy overhaul, was 1.32). MUST match server economy.ts.
 	const prod = (level: number, stormMult: number) =>
-		level <= 0 ? 0 : baseProduction * Math.pow(1.32, level - 1) * productionMultiplier * stormMult;
+		level <= 0 ? 0 : baseProduction * Math.pow(1.35, level - 1) * productionMultiplier * stormMult;
 	return {
 		biomass: prod(nexus.biomassFarm, storm?.biomass ?? 1),
 		alloy: prod(nexus.alloyForge, storm?.alloy ?? 1),
@@ -85,7 +86,8 @@ export function getMaxStorage(nexus: EconomyNexus): number {
 	const rawMultiplier = NEXUS_TYPE_BONUSES[nexus.nexusType ?? '']?.storageMultiplier ?? 1;
 	const storageMultiplier =
 		rawMultiplier === 1 ? 1 : 1 + (rawMultiplier - 1) * getDoubleScale(nexus);
-	return 1500 * Math.pow(1.5, nexus.storageVault) * storageMultiplier;
+	// Growth 1.48 (v0.22 economy overhaul, was 1.50). MUST match server economy.ts.
+	return 1500 * Math.pow(1.48, nexus.storageVault) * storageMultiplier;
 }
 
 // Pure client-side interpolation against a server-anchored snapshot.

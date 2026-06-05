@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -17,9 +17,7 @@ import {
 	recallTroops,
 	renameNexus,
 	sendBackTroops,
-	sendTroops,
 	trainTroops,
-	transferResources,
 	upgradeBuilding
 } from '../services/api';
 import {
@@ -30,41 +28,30 @@ import {
 	Check,
 	ChevronDown,
 	ChevronUp,
-	EyeOff,
 	Hammer,
 	Info,
 	LayoutGrid,
 	Pencil,
-	RotateCcw,
 	ShieldCheck,
 	Sparkles,
 	Swords,
 	Trash2,
+	Truck,
 	X,
 	Zap
 } from 'lucide-react';
 import '../styles/NexusView.css';
 import Username from './Username';
 import { Nexus, TroopTransfer } from '../types/game';
-import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import type { MapNexus } from './Map';
-
-// StarfieldMap is ~1300 LOC + heavy assets and websocket-bound effects. It's only used inside
-// the Map tab, which isn't visible on first paint. Pulling it out of the initial bundle
-// keeps /nexus/[id] fast on cold load and on every other tab.
-const StarfieldMap = dynamic(() => import('./Map'), {
-	ssr: false,
-	loading: () => null
-});
 import DailyStreaks from './DailyStreaks';
 import NexusMap from './NexusMap';
 import NexusTypeBadge from './NexusTypeBadge';
-import ResourceIcon from './ResourceIcon';
+import DashboardLogistics from './DashboardLogistics';
+import SendResourcesModal, { type SendResourcesPrefill } from './SendResourcesModal';
 // Shared source of truth with server/utils/gameConstants.ts.
 // If you change any number or formula here, change the server mirror in the same commit.
 import {
-	BUILDING_COSTS,
 	TROOP_COSTS,
 	getBuildingCost as getSharedBuildingCost,
 	MAX_TRAIN_PER_BATCH,
@@ -100,45 +87,10 @@ import {
 import { serverNow } from '@/realtime/serverClock';
 import { useOnboarding } from '../context/OnboardingContext';
 
-// Import troop images
-import annihilatorplatformImg from '../assets/troops/annihilatorplatform.png';
-import assaulttrooperImg from '../assets/troops/assaulttrooper.png';
-// Renamed units (Stage 2d). The PNG files keep their legacy filenames - per-
-// unit art reuses the same image until new art ships. Import alias matches the
-// new troop key so the BUILDING_IMAGES map below stays readable.
-import vanguardBreakerImg from '../assets/troops/breakerunit.png';
-import bulwarkguardImg from '../assets/troops/bulwarkguard.png';
-import arcDisruptorImg from '../assets/troops/disruptorunit.png';
-import phantomLanceImg from '../assets/troops/interceptorbike.png';
-import sentinelLancerImg from '../assets/troops/lancerdrone.png';
-import overseerImg from '../assets/troops/overseer.png';
-import plasmaturretImg from '../assets/troops/plasmaturret.png';
-import reconoperativeImg from '../assets/troops/reconoperative.png';
-import siegemechImg from '../assets/troops/siegemech.png';
-import wraithSkimmerImg from '../assets/troops/skimmerbike.png';
-import pyreSuppressorImg from '../assets/troops/suppressorteam.png';
-// New units (Stage 2d): Siege Colossus reuses the Siege Mech art and
-// Aegis Skirmisher reuses the Bulwark Guard art as placeholders until new
-// per-unit art ships.
-import siegeColossusImg from '../assets/troops/siegemech.png';
-import aegisSkirmisherImg from '../assets/troops/bulwarkguard.png';
-import voidstalkerImg from '../assets/troops/voidstalker.png';
-
-// Import building images
-import alloyforgeImg from '../assets/buildings/alloyforge.png';
-import biomassfarmImg from '../assets/buildings/biomassfarm.png';
-import commandcoreImg from '../assets/buildings/commandcore.png';
-import lifesupportImg from '../assets/buildings/lifesupport.png';
-import oreextractorImg from '../assets/buildings/oreextractor.png';
-// Placeholder asset shared by all three class buildings (Hangar Bay,
-// Plasma Forge, Armor Foundry) until per-class art lands. Reusing the retired
-// Recruitment Core PNG keeps the slot non-blank without leaving the file
-// orphaned in the bundle.
-import classBuildingPlaceholderImg from '../assets/buildings/recruitmentcore.png';
-import armoryImg from '../assets/buildings/armory.png';
-import stealtharrayImg from '../assets/buildings/stealtharray.png';
-import shieldgridImg from '../assets/buildings/shieldgrid.png';
-import storagevaultImg from '../assets/buildings/storagevault.png';
+// Troop + building art is served from the Cloudflare CDN — single source of
+// truth in data/gameIcons.ts (keyed by troop/building key). Rendered via plain
+// <img src> below, so the string URLs work directly.
+import { TROOP_ICONS, BUILDING_ICONS } from '../data/gameIcons';
 
 interface NexusViewProps {
 	nexus: Nexus;
@@ -147,7 +99,7 @@ interface NexusViewProps {
 	onTabChange?: (tab: NexusTab) => void;
 }
 
-type NexusTab = 'overview' | 'buildings' | 'troops' | 'deployed';
+type NexusTab = 'overview' | 'buildings' | 'troops' | 'deployed' | 'logistics';
 
 const BASE_MAX_BUILD_QUEUE = 5;
 
@@ -192,7 +144,7 @@ const BUILDING_NAMES: { [key: string]: string } = {
 	alloyForge: 'Alloy Forge',
 	oreExtractor: 'Ore Extractor',
 	shieldGrid: 'Shield Grid',
-	armory: 'Armory',
+	targetingCore: 'Targeting Core',
 	stealthArray: 'Stealth Array'
 };
 
@@ -211,10 +163,10 @@ const BUILDING_DESCRIPTIONS: { [key: string]: string } = {
 	alloyForge: 'Produces Alloy per hour. Higher levels increase production rate.',
 	oreExtractor: 'Produces Ore per hour. Higher levels increase production rate.',
 	shieldGrid: 'Increases defensive bonus. Protects your nexus from enemy attacks.',
-	armory:
+	targetingCore:
 		'Amplifies unit class-counter bonuses in combat (+1.5% per level). Unlocks Void Stalker (Lv3) and Plasma Turret (Lv5).',
 	stealthArray:
-		'Defensive concealment. Hides a portion of your resources from raids and scout reports (vault grows per level), and gives incoming scouts a small chance to fail outright. Armory Lv3 required to upgrade past level 3.'
+		'Defensive concealment. Hides a portion of your resources from raids and scout reports (vault grows per level), and gives incoming scouts a small chance to fail outright. Targeting Core Lv3 required to upgrade past level 3.'
 };
 
 const BUILDING_RULES: {
@@ -302,7 +254,7 @@ const BUILDING_RULES: {
 			{ level: 8, requires: [{ building: 'alloyForge', level: 5 }] }
 		]
 	},
-	armory: {
+	targetingCore: {
 		maxLevel: 20,
 		unlock: { building: 'commandCore', level: 5 },
 		milestones: [
@@ -327,7 +279,7 @@ const BUILDING_RULES: {
 		maxLevel: 15,
 		unlock: { building: 'commandCore', level: 7 },
 		milestones: [
-			{ level: 3, requires: [{ building: 'armory', level: 3 }] },
+			{ level: 3, requires: [{ building: 'targetingCore', level: 3 }] },
 			{
 				level: 7,
 				requires: [
@@ -338,7 +290,7 @@ const BUILDING_RULES: {
 			{
 				level: 12,
 				requires: [
-					{ building: 'armory', level: 10 },
+					{ building: 'targetingCore', level: 10 },
 					{ building: 'commandCore', level: 15 }
 				]
 			}
@@ -346,21 +298,8 @@ const BUILDING_RULES: {
 	}
 };
 
-const BUILDING_IMAGES: { [key: string]: any } = {
-	commandCore: commandcoreImg,
-	// Class buildings share a placeholder until per-class art ships.
-	hangarBay: classBuildingPlaceholderImg,
-	plasmaForge: classBuildingPlaceholderImg,
-	armorFoundry: classBuildingPlaceholderImg,
-	lifeSupport: lifesupportImg,
-	storageVault: storagevaultImg,
-	biomassFarm: biomassfarmImg,
-	alloyForge: alloyforgeImg,
-	oreExtractor: oreextractorImg,
-	shieldGrid: shieldgridImg,
-	armory: armoryImg,
-	stealthArray: stealtharrayImg
-};
+// CDN-backed building art, keyed by building key (see data/gameIcons.ts).
+const BUILDING_IMAGES: { [key: string]: string } = BUILDING_ICONS;
 
 const TROOP_NAMES: { [key: string]: string } = {
 	assaultTrooper: 'Assault Trooper',
@@ -381,24 +320,8 @@ const TROOP_NAMES: { [key: string]: string } = {
 	overseer: 'Overseer'
 };
 
-const TROOP_IMAGES: { [key: string]: any } = {
-	assaultTrooper: assaulttrooperImg,
-	sentinelLancer: sentinelLancerImg,
-	vanguardBreaker: vanguardBreakerImg,
-	reconOperative: reconoperativeImg,
-	wraithSkimmer: wraithSkimmerImg,
-	siegeMech: siegemechImg,
-	bulwarkGuard: bulwarkguardImg,
-	aegisSkirmisher: aegisSkirmisherImg,
-	pyreSuppressor: pyreSuppressorImg,
-	arcDisruptor: arcDisruptorImg,
-	phantomLance: phantomLanceImg,
-	annihilatorPlatform: annihilatorplatformImg,
-	voidStalker: voidstalkerImg,
-	plasmaTurret: plasmaturretImg,
-	siegeColossus: siegeColossusImg,
-	overseer: overseerImg
-};
+// CDN-backed troop art, keyed by troop key (see data/gameIcons.ts).
+const TROOP_IMAGES: { [key: string]: string } = TROOP_ICONS;
 
 const TROOP_DESCRIPTIONS: { [key: string]: string } = {
 	assaultTrooper:
@@ -426,11 +349,11 @@ const TROOP_DESCRIPTIONS: { [key: string]: string } = {
 	annihilatorPlatform:
 		'Heavy artillery. Slow but devastating ranged platform that suppresses light units. Requires Lv12 Plasma Forge, Lv10 Command Core, Lv10 Shield Grid.',
 	voidStalker:
-		'Light stealth cavalry. Fastest unit in the game; hard-counters heavy armor - but is itself suppressed by ranged emplacements. Requires Lv9 Hangar Bay, Lv8 Alloy Forge, Lv3 Armory.',
+		'Light stealth cavalry. Fastest unit in the game; hard-counters heavy armor - but is itself suppressed by ranged emplacements. Requires Lv9 Hangar Bay, Lv8 Alloy Forge, Lv3 Targeting Core.',
 	plasmaTurret:
-		'Ranged static emplacement. Cannot be sent on attacks, defends from the nexus. Decimates light cavalry. Requires Lv11 Plasma Forge, Lv9 Command Core, Lv5 Armory.',
+		'Ranged static emplacement. Cannot be sent on attacks, defends from the nexus. Decimates light cavalry. Requires Lv11 Plasma Forge, Lv9 Command Core, Lv5 Targeting Core.',
 	siegeColossus:
-		'Elite armor walker. Highest single-unit attack and survivability in the roster; the hammer for cracking fortified Nexuses. Slowest unit. Requires Lv13 Armor Foundry, Lv10 Command Core, Lv5 Armory.',
+		'Elite armor walker. Highest single-unit attack and survivability in the roster; the hammer for cracking fortified Nexuses. Slowest unit. Requires Lv13 Armor Foundry, Lv10 Command Core, Lv5 Targeting Core.',
 	overseer:
 		'Conquest unit. Reduces enemy Control by 34 per successful strike. Requires Lv14 Command Core, Lv13 Shield Grid. Up to 3 per nexus.'
 };
@@ -448,9 +371,9 @@ const TROOP_REQUIREMENTS: { [key: string]: any } = {
 	phantomLance: { buildings: { hangarBay: 8, alloyForge: 7 } },
 	siegeMech: { buildings: { armorFoundry: 10, oreExtractor: 9, commandCore: 8 } },
 	annihilatorPlatform: { buildings: { plasmaForge: 12, commandCore: 10, shieldGrid: 10 } },
-	voidStalker: { buildings: { hangarBay: 9, alloyForge: 8, armory: 3 } },
-	plasmaTurret: { buildings: { plasmaForge: 11, commandCore: 9, armory: 5 } },
-	siegeColossus: { buildings: { armorFoundry: 13, commandCore: 10, armory: 5 } },
+	voidStalker: { buildings: { hangarBay: 9, alloyForge: 8, targetingCore: 3 } },
+	plasmaTurret: { buildings: { plasmaForge: 11, commandCore: 9, targetingCore: 5 } },
+	siegeColossus: { buildings: { armorFoundry: 13, commandCore: 10, targetingCore: 5 } },
 	overseer: { buildings: { commandCore: 14, shieldGrid: 13 }, maxPerNexus: 3 }
 };
 
@@ -563,7 +486,6 @@ const NexusView: React.FC<NexusViewProps> = ({
 	const [renameValue, setRenameValue] = useState(nexus.name);
 	const [isSavingNexusName, setIsSavingNexusName] = useState(false);
 	const showToastGlobal = useToast();
-	const queryClient = useQueryClient();
 	const { data: galaxyEvents = [] } = useQuery({
 		queryKey: ['galaxyEvents'],
 		queryFn: () => getGalaxyEvents().then((r) => r.data),
@@ -641,14 +563,9 @@ const NexusView: React.FC<NexusViewProps> = ({
 			</div>
 		);
 	};
-	const [showTransfer, setShowTransfer] = useState(false);
-	const [transferTo, setTransferTo] = useState('');
-	const [transferAmounts, setTransferAmounts] = useState({ biomass: '', alloy: '', ore: '' });
-	const [transferring, setTransferring] = useState(false);
-	const [showTroopSend, setShowTroopSend] = useState(false);
-	const [troopSendTo, setTroopSendTo] = useState('');
-	const [troopSendAmounts, setTroopSendAmounts] = useState<Record<string, string>>({});
-	const [sendingTroops, setSendingTroops] = useState(false);
+	// Send-Resources modal (Logistics). When `sendPrefill` is non-null the modal is
+	// open; the prefill seeds source/destination and the smart top-up suggestion.
+	const [sendPrefill, setSendPrefill] = useState<SendResourcesPrefill | null>(null);
 	const [destroyPending, setDestroyPending] = useState<string | null>(null);
 	const [destroyAmount, setDestroyAmount] = useState('');
 	const [destroyingTroops, setDestroyingTroops] = useState(false);
@@ -782,7 +699,12 @@ const NexusView: React.FC<NexusViewProps> = ({
 
 	useEffect(() => {
 		if (!currentStep) return;
-		if (currentStep.id === 'upgrade_building' && activeTab !== 'buildings') {
+		if (
+			(currentStep.id === 'upgrade_building' ||
+				currentStep.id === 'reinforce_command' ||
+				currentStep.id === 'build_production') &&
+			activeTab !== 'buildings'
+		) {
 			setActiveTab('buildings');
 		}
 		if (currentStep.id === 'train_troops') {
@@ -850,27 +772,6 @@ const NexusView: React.FC<NexusViewProps> = ({
 		refetchTransfers();
 	};
 
-	const handleSendTroops = async () => {
-		if (!troopSendTo) return;
-		const troops: Record<string, number> = {};
-		for (const [k, v] of Object.entries(troopSendAmounts)) {
-			troops[k] = parseInt(v) || 0;
-		}
-		setSendingTroops(true);
-		try {
-			await sendTroops(nexus._id, troopSendTo, troops);
-			showToast('Troops sent', 'success');
-			setTroopSendAmounts({});
-			setShowTroopSend(false);
-			onUpdate();
-			await refreshTroopTransfers();
-		} catch (err: any) {
-			showToast(err.response?.data?.error || 'Failed to send troops', 'error');
-		} finally {
-			setSendingTroops(false);
-		}
-	};
-
 	const handleRecall = async (transferId: string) => {
 		try {
 			await recallTroops(transferId);
@@ -890,29 +791,6 @@ const NexusView: React.FC<NexusViewProps> = ({
 			await refreshTroopTransfers();
 		} catch (err: any) {
 			showToast(err.response?.data?.error || 'Send back failed', 'error');
-		}
-	};
-
-	const handleTransferResources = async () => {
-		if (!transferTo) return;
-		const biomass = parseInt(transferAmounts.biomass) || 0;
-		const alloy = parseInt(transferAmounts.alloy) || 0;
-		const ore = parseInt(transferAmounts.ore) || 0;
-		if (biomass === 0 && alloy === 0 && ore === 0) {
-			showToast('Enter at least one amount to transfer', 'error');
-			return;
-		}
-		setTransferring(true);
-		try {
-			await transferResources(nexus._id, transferTo, biomass, alloy, ore);
-			showToast('Resources transferred', 'success');
-			setTransferAmounts({ biomass: '', alloy: '', ore: '' });
-			setShowTransfer(false);
-			onUpdate();
-		} catch (err: any) {
-			showToast(err.response?.data?.error || 'Transfer failed', 'error');
-		} finally {
-			setTransferring(false);
 		}
 	};
 
@@ -936,12 +814,6 @@ const NexusView: React.FC<NexusViewProps> = ({
 		} catch (err) {
 			console.error('Error checking queues:', err);
 		}
-	};
-
-	const loadAttacks = () => {
-		queryClient.invalidateQueries({ queryKey: ['incomingAttacks', nexus._id] });
-		queryClient.invalidateQueries({ queryKey: ['outgoingAttacks', nexus._id] });
-		queryClient.invalidateQueries({ queryKey: ['allAttacks'] });
 	};
 
 	const handleUpgrade = async (building: string) => {
@@ -1419,7 +1291,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 				const nextBonus = Math.round(targetLevel * SHIELD_BONUS_PER_LEVEL * 100);
 				return `Defense bonus: ${currentBonus}% -> ${nextBonus}%`;
 			}
-			case 'armory': {
+			case 'targetingCore': {
 				const currentBonus = (currentLevel * 1.5).toFixed(1);
 				const nextBonus = (targetLevel * 1.5).toFixed(1);
 				const unlockSummary = getUnlockSummary(building, targetLevel);
@@ -1848,10 +1720,10 @@ const NexusView: React.FC<NexusViewProps> = ({
 				tab: 'buildings'
 			},
 			{
-				id: 'build-armory',
-				title: 'Open The Armory',
-				description: 'Upgrade Armory to Lv3.',
-				completed: done('arsenal', 'build_armory_3', (nexus.buildings.armory || 0) >= 3),
+				id: 'build-targetingCore',
+				title: 'Bring The Targeting Core Online',
+				description: 'Upgrade Targeting Core to Lv3.',
+				completed: done('arsenal', 'build_armory_3', (nexus.buildings.targetingCore || 0) >= 3),
 				tab: 'buildings'
 			},
 			{
@@ -1892,10 +1764,10 @@ const NexusView: React.FC<NexusViewProps> = ({
 				tab: 'buildings'
 			},
 			{
-				id: 'veteran-armory',
+				id: 'veteran-targetingCore',
 				title: 'Hardened Arsenal',
-				description: 'Upgrade Armory to Lv5.',
-				completed: done('veteran', 'build_armory_5', (nexus.buildings.armory || 0) >= 5),
+				description: 'Upgrade Targeting Core to Lv5.',
+				completed: done('veteran', 'build_armory_5', (nexus.buildings.targetingCore || 0) >= 5),
 				tab: 'buildings'
 			},
 			{
@@ -1990,10 +1862,10 @@ const NexusView: React.FC<NexusViewProps> = ({
 				tab: 'buildings'
 			},
 			{
-				id: 'apex-armory',
-				title: 'Apex Armory',
-				description: 'Upgrade Armory to Lv10.',
-				completed: done('annihilator', 'build_armory_10', (nexus.buildings.armory || 0) >= 10),
+				id: 'apex-targetingCore',
+				title: 'Apex Targeting Core',
+				description: 'Upgrade Targeting Core to Lv10.',
+				completed: done('annihilator', 'build_armory_10', (nexus.buildings.targetingCore || 0) >= 10),
 				tab: 'buildings'
 			},
 			{
@@ -2117,12 +1989,6 @@ const NexusView: React.FC<NexusViewProps> = ({
 		storageVault: nexus.buildings.storageVault
 	});
 
-	const getResourceFillClass = (amount: number) => {
-		const pct = amount / storageCapacity;
-		if (pct >= 1) return 'resource-amount resource-full';
-		if (pct >= 0.8) return 'resource-amount resource-near-full';
-		return 'resource-amount';
-	};
 	const { batches: questBatches, allQuestsComplete } = getQuestBatches();
 
 	// Inline "Next up" tooltip - only renders for the first 3 quest chapters
@@ -2382,6 +2248,16 @@ const NexusView: React.FC<NexusViewProps> = ({
 						<span className="nexus-tab-badge" />
 					)}
 				</button>
+				{ownNexuses.length > 1 && (
+					<button
+						type="button"
+						className={`nexus-tab-btn${activeTab === 'logistics' ? ' active' : ''}`}
+						onClick={() => setActiveTab('logistics')}
+					>
+						<Truck size={14} aria-hidden="true" />
+						<span>Logistics</span>
+					</button>
+				)}
 			</div>
 
 			<div className="tab-content">
@@ -2981,7 +2857,13 @@ const NexusView: React.FC<NexusViewProps> = ({
 												formatDurationSeconds={stableHelpers.formatDurationSeconds}
 												onUpgrade={stableHelpers.onUpgrade}
 												onInfoTap={stableHelpers.onInfoTap}
-												onboardingAttr={key === 'commandCore' ? 'upgrade-building' : undefined}
+												onboardingAttr={
+													key === 'commandCore'
+														? 'upgrade-building'
+														: key === 'armorFoundry'
+															? 'build-production'
+															: undefined
+												}
 											/>
 										);
 									})}
@@ -3122,7 +3004,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 																			{TROOP_IMAGES[type] && (
 																				<div className="stationed-card-image-wrap">
 																					<img
-																						src={TROOP_IMAGES[type].src || TROOP_IMAGES[type]}
+																						src={TROOP_IMAGES[type]}
 																						alt={TROOP_NAMES[type]}
 																						className="stationed-card-image"
 																					/>
@@ -3339,7 +3221,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 																{TROOP_IMAGES[type] && (
 																	<div className="troop-card-image-wrap">
 																		<img
-																			src={TROOP_IMAGES[type].src || TROOP_IMAGES[type]}
+																			src={TROOP_IMAGES[type]}
 																			alt={TROOP_NAMES[type]}
 																			className="troop-card-image"
 																		/>
@@ -3648,7 +3530,28 @@ const NexusView: React.FC<NexusViewProps> = ({
 					)}
 				</div>
 
+				<div
+					className="logistics-tab"
+					style={activeTab !== 'logistics' ? { display: 'none' } : undefined}
+				>
+					<h3 className="section-title">Logistics</h3>
+					<DashboardLogistics nexuses={ownNexuses} onSend={(prefill) => setSendPrefill(prefill)} />
+				</div>
+
 			</div>
+
+			{sendPrefill && (
+				<SendResourcesModal
+					nexuses={ownNexuses}
+					prefill={
+						// Default the source to the nexus currently being viewed when the modal is
+						// opened from the top-level "Send Resources" button (no explicit source).
+						sendPrefill.fromNexusId ? sendPrefill : { ...sendPrefill, fromNexusId: nexus._id }
+					}
+					onClose={() => setSendPrefill(null)}
+					onTransferred={onUpdate}
+				/>
+			)}
 
 			{destroyPending &&
 				(() => {
@@ -3725,7 +3628,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 										{TROOP_IMAGES[type] && (
 											<div className="decommission-unit-image">
 												<img
-													src={TROOP_IMAGES[type].src || TROOP_IMAGES[type]}
+													src={TROOP_IMAGES[type]}
 													alt={TROOP_NAMES[type]}
 												/>
 											</div>

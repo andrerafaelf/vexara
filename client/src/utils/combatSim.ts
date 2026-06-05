@@ -1,6 +1,6 @@
 // Deterministic combat simulator.
 //
-// Pure function: same (seed, forces, armoryLevel, shieldGrid) → same timeline.
+// Pure function: same (seed, forces, targetingCoreLevel, shieldGrid) → same timeline.
 // Used by the client to render watchable battle replays from a stored seed.
 //
 // The server uses combatMath.ts to determine the *final* losses; this sim
@@ -190,9 +190,9 @@ export function classComposition(force: Force): Record<TroopClass, number> {
 }
 
 // ─── Class-weighted attack (mirror of server combatMath) ───────────────────
-// armoryLevel amplifies counter advantage above 1.0 (and slightly deepens
+// targetingCoreLevel amplifies counter advantage above 1.0 (and slightly deepens
 // disadvantage) up to +30% at Lv20. Mirrors computeClassWeightedAttack.
-export function classWeightedAttack(attackers: Force, defenders: Force, armoryLevel = 0): number {
+export function classWeightedAttack(attackers: Force, defenders: Force, targetingCoreLevel = 0): number {
 	const defComp: Record<TroopClass, number> = { mobile: 0, armor: 0, fire: 0, special: 0 };
 	let totalDef = 0;
 	for (const k of TROOP_KEYS) {
@@ -202,7 +202,7 @@ export function classWeightedAttack(attackers: Force, defenders: Force, armoryLe
 			totalDef += n;
 		}
 	}
-	const armoryBonus = Math.min(armoryLevel * 0.015, 0.3);
+	const targetingCoreBonus = Math.min(targetingCoreLevel * 0.015, 0.3);
 	let total = 0;
 	for (const k of TROOP_KEYS) {
 		const n = attackers[k] || 0;
@@ -213,7 +213,7 @@ export function classWeightedAttack(attackers: Force, defenders: Force, armoryLe
 			for (const dc of ['mobile', 'armor', 'fire', 'special'] as TroopClass[]) {
 				const ratio = defComp[dc] / totalDef;
 				const base = CLASS_COUNTERS[TROOP_CLASS[k]][dc];
-				const amp = base > 1.0 ? base + armoryBonus : base < 1.0 ? base - armoryBonus * 0.5 : 1.0;
+				const amp = base > 1.0 ? base + targetingCoreBonus : base < 1.0 ? base - targetingCoreBonus * 0.5 : 1.0;
 				weighted += ratio * amp;
 			}
 			mult = weighted;
@@ -226,7 +226,7 @@ export function classWeightedAttack(attackers: Force, defenders: Force, armoryLe
 // Class-weighted DEFENSE (mirror of server computeClassWeightedDefense). A
 // defender whose class counters the attacker composition has its defense
 // amplified (×1.25) and one being countered loses some (×0.80). Defense does
-// NOT take the Armory amplifier — the Armory is an offensive building.
+// NOT take the Targeting Core amplifier — Targeting Core is an offensive building.
 export function classWeightedDefense(defenders: Force, attackers: Force): number {
 	const attComp: Record<TroopClass, number> = { mobile: 0, armor: 0, fire: 0, special: 0 };
 	let totalAtt = 0;
@@ -273,19 +273,19 @@ export interface CombatPrediction {
 export function predictCombat(opts: {
 	attacker: Force;
 	defender: Force;
-	attackerArmory?: number;
+	attackerTargetingCore?: number;
 	defenderShieldGrid?: number;
 	shieldEfficiencyMultiplier?: number; // 2 for Military Outpost, etc.
 }): CombatPrediction {
 	const {
 		attacker,
 		defender,
-		attackerArmory = 0,
+		attackerTargetingCore = 0,
 		defenderShieldGrid = 0,
 		shieldEfficiencyMultiplier = 1
 	} = opts;
 
-	const attackPower = classWeightedAttack(attacker, defender, attackerArmory);
+	const attackPower = classWeightedAttack(attacker, defender, attackerTargetingCore);
 	// Symmetric triangle: defense is class-weighted against the attacker too
 	// (mirror of server resolveCombat), then amplified by the Shield Grid.
 	let defensePower = classWeightedDefense(defender, attacker);

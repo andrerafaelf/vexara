@@ -58,51 +58,9 @@ interface DashboardQuestBatch {
 	reward: string;
 }
 
-const PRODUCTION_GROWTH = 1.35;
-const BASE_PRODUCTION = 600;
-const STORAGE_BASE = 1000;
-const STORAGE_GROWTH = 1.5;
-
-function calcNexusProduction(nexus: Nexus) {
-	return {
-		biomass: Math.floor(
-			BASE_PRODUCTION * Math.pow(PRODUCTION_GROWTH, nexus.buildings.biomassFarm - 1)
-		),
-		alloy: Math.floor(
-			BASE_PRODUCTION * Math.pow(PRODUCTION_GROWTH, nexus.buildings.alloyForge - 1)
-		),
-		ore: Math.floor(BASE_PRODUCTION * Math.pow(PRODUCTION_GROWTH, nexus.buildings.oreExtractor - 1))
-	};
-}
-
-function calcNexusStorage(nexus: Nexus) {
-	return Math.floor(STORAGE_BASE * Math.pow(STORAGE_GROWTH, nexus.buildings.storageVault));
-}
-
-function liveResources(nexus: Nexus, now: number) {
-	const prod = calcNexusProduction(nexus);
-	const cap = calcNexusStorage(nexus);
-	const anchor = nexus.lastResourceUpdate ? new Date(nexus.lastResourceUpdate).getTime() : now;
-	const elapsed = Math.max(0, (now - anchor) / 3600000);
-	return {
-		biomass: Math.min(cap, nexus.resources.biomass + prod.biomass * elapsed),
-		alloy: Math.min(cap, nexus.resources.alloy + prod.alloy * elapsed),
-		ore: Math.min(cap, nexus.resources.ore + prod.ore * elapsed),
-		cap,
-		prod
-	};
-}
-
-function fmtAmount(v: number) {
-	if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
-	if (v >= 1_000) return `${(v / 1_000).toFixed(1).replace(/\.0$/, '')}k`;
-	return Math.floor(v).toString();
-}
-
-function fmtRate(v: number) {
-	if (v >= 1_000) return `+${(v / 1_000).toFixed(1).replace(/\.0$/, '')}k/h`;
-	return `+${v}/h`;
-}
+// Resource math + formatters now live in resourceUtils.ts (shared with the
+// Logistics view and Send-Resources modal so caps/production can't drift).
+import { liveResources, fmtAmount, fmtRate } from './resourceUtils';
 
 const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus }) => {
 	const [currentTime, setCurrentTime] = useState(new Date());
@@ -417,10 +375,10 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 				completed: done('arsenal', 'build_command_core_6', b.commandCore >= 6)
 			},
 			{
-				id: 'build-armory',
-				title: 'Open The Armory',
-				description: 'Upgrade Armory to Lv3.',
-				completed: done('arsenal', 'build_armory_3', (b.armory || 0) >= 3)
+				id: 'build-targeting-core',
+				title: 'Bring The Targeting Core Online',
+				description: 'Upgrade Targeting Core to Lv3.',
+				completed: done('arsenal', 'build_armory_3', (b.targetingCore || 0) >= 3)
 			},
 			{
 				id: 'troop-logistics',
@@ -452,10 +410,10 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 				completed: done('veteran', 'build_command_core_8', b.commandCore >= 8)
 			},
 			{
-				id: 'veteran-armory',
+				id: 'veteran-targeting-core',
 				title: 'Hardened Arsenal',
-				description: 'Upgrade Armory to Lv5.',
-				completed: done('veteran', 'build_armory_5', (b.armory || 0) >= 5)
+				description: 'Upgrade Targeting Core to Lv5.',
+				completed: done('veteran', 'build_armory_5', (b.targetingCore || 0) >= 5)
 			},
 			{
 				id: 'shadow-network',
@@ -522,10 +480,10 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 				completed: done('annihilator', 'build_command_core_12', b.commandCore >= 12)
 			},
 			{
-				id: 'apex-armory',
-				title: 'Apex Armory',
-				description: 'Upgrade Armory to Lv10.',
-				completed: done('annihilator', 'build_armory_10', (b.armory || 0) >= 10)
+				id: 'apex-targeting-core',
+				title: 'Apex Targeting Core',
+				description: 'Upgrade Targeting Core to Lv10.',
+				completed: done('annihilator', 'build_armory_10', (b.targetingCore || 0) >= 10)
 			},
 			{
 				id: 'deep-cover',

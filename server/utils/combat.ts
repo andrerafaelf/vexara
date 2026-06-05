@@ -27,7 +27,8 @@ import { logInfo, logWarn } from './logger.js';
 import {
 	getStealthScoutFailChance,
 	getStealthVaultPerResource,
-	partitionStealthVault
+	partitionStealthVault,
+	RETURN_TRAVEL_MULTIPLIER
 } from './gameConstants.js';
 
 async function logFactionEvent(
@@ -150,10 +151,10 @@ async function destroyInvalidInboundSupport(
 
 	const now = Date.now();
 	for (const support of invalidSupport) {
-		// Troops were still in transit — bounce them home. Travel time back equals
-		// the original one-way trip duration so the round trip is symmetric.
+		// Troops were still in transit — bounce them home. Return time is the
+		// one-way trip scaled by RETURN_TRAVEL_MULTIPLIER (0 = near-instant).
 		const travelMs = support.arrivesAt!.getTime() - support.createdAt.getTime();
-		const returnsAt = new Date(now + travelMs);
+		const returnsAt = new Date(now + travelMs * RETURN_TRAVEL_MULTIPLIER);
 		await prisma.attack.update({
 			where: { id: support.id },
 			data: {
@@ -362,7 +363,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 
 		if (attack.type === 'scout') {
 			const travelMs = attack.arrivesAt!.getTime() - attack.createdAt.getTime();
-			const returnsAt = new Date(Date.now() + travelMs);
+			const returnsAt = new Date(Date.now() + travelMs * RETURN_TRAVEL_MULTIPLIER);
 
 			// Stealth Array (Stage 2c) gives the defender a small chance to detect
 			// and intercept the scout outright. On failure the recon operative is
@@ -442,7 +443,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 			defenderNexus.ownerId === attack.attackerUserId
 		) {
 			const travelMs = attack.arrivesAt!.getTime() - attack.createdAt.getTime();
-			const returnsAt = new Date(Date.now() + travelMs);
+			const returnsAt = new Date(Date.now() + travelMs * RETURN_TRAVEL_MULTIPLIER);
 			await prisma.attack.update({
 				where: { id: attack.id },
 				data: {
@@ -530,12 +531,13 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 				(supportTroops[key] || 0);
 		}
 
-		// Attacker armory level amplifies class-counter bonuses
-		const attackerNexusForArmory = await prisma.nexus.findUnique({
+		// Attacker Targeting Core level amplifies class-counter bonuses
+		const attackerNexusForTargeting = await prisma.nexus.findUnique({
 			where: { id: attack.attackerNexusId! }
 		});
-		const attackerArmoryLevel =
-			(attackerNexusForArmory as unknown as { armory?: number } | null)?.armory ?? 0;
+		const attackerTargetingCoreLevel =
+			(attackerNexusForTargeting as unknown as { targetingCore?: number } | null)?.targetingCore ??
+			0;
 
 		// Symmetric counter triangle (v0.22): BOTH attack and defense are now
 		// class-weighted. The attacker's strikes are amplified against the classes
@@ -546,7 +548,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 		let attackPower = computeClassWeightedAttack(
 			attackTroops,
 			mergedDefenderForce,
-			attackerArmoryLevel
+			attackerTargetingCoreLevel
 		);
 		let defensePower = computeClassWeightedDefense(mergedDefenderForce, attackTroops);
 
@@ -839,7 +841,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 				'biomassFarm',
 				'alloyForge',
 				'oreExtractor',
-				'armory',
+				'targetingCore',
 				'stealthArray'
 			] as const;
 			type BuildingKey = (typeof BUILDING_PRIORITY)[number];
@@ -990,7 +992,9 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 				});
 				const newOwnerId = attackerNexus!.ownerId;
 				defenderTroopUpdates['ownerId'] = newOwnerId;
-				defenderTroopUpdates['name'] = 'Conquered Nexus';
+				// Preserve the nexus's existing name on conquest — the conqueror keeps
+				// whatever it was called (player-given name or NPC type label), rather
+				// than wiping it to a generic "Conquered Nexus".
 				const NPC_TYPE_NAMES = [
 					'Resource Depot',
 					'Military Outpost',
@@ -1152,7 +1156,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 		}
 
 		const travelMs = attack.arrivesAt!.getTime() - attack.createdAt.getTime();
-		const returnsAt = new Date(Date.now() + travelMs);
+		const returnsAt = new Date(Date.now() + travelMs * RETURN_TRAVEL_MULTIPLIER);
 
 		// Capture the defender's force composition at engagement time so replays are
 		// reproducible. Without this, an observer only knows defender *losses*, not

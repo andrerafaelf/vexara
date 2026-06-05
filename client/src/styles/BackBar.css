@@ -26,15 +26,30 @@
 	padding: 6px 12px 6px 10px;
 	background: transparent;
 	border: 1px solid var(--border-default);
-	border-radius: 6px;
+	border-radius: 0;
 	color: var(--text-muted);
 	font-size: 13px;
 	font-weight: 500;
 	cursor: pointer;
+	position: relative;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
 	transition:
 		color 120ms ease,
 		border-color 120ms ease,
 		background 120ms ease;
+}
+
+.backbar-btn::after {
+	content: '';
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	width: 9px;
+	height: 1px;
+	background: var(--border-default);
+	transform: rotate(-45deg);
+	transform-origin: bottom right;
+	transition: background 120ms ease;
 }
 
 .backbar-btn:hover,
@@ -45,12 +60,25 @@
 	outline: none;
 }
 
+.backbar-btn:hover::after,
+.backbar-btn:focus-visible::after {
+	background: var(--accent);
+}
+
 .backbar-btn:active {
 	transform: translateY(1px);
 }
 
 .backbar-btn-label {
 	line-height: 1;
+}
+
+/* Desktop: the backbar is a mobile/PWA affordance — on desktop the page
+   header provides navigation context, so the full-width strip is redundant. */
+@media (min-width: 769px) {
+	.backbar {
+		display: none;
+	}
 }
 
 /* Mobile: keep the breakout but pin below the 56px game header.

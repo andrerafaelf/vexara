@@ -23,6 +23,14 @@ export function getUserById(id: number) {
 	return prisma.user.findUnique({ where: { id }, select: { id: true, username: true } });
 }
 
+export async function isGalaxyMember(userId: number, galaxyId: number): Promise<boolean> {
+	const player = await prisma.galaxyPlayer.findUnique({
+		where: { userId_galaxyId: { userId, galaxyId } },
+		select: { id: true }
+	});
+	return player != null;
+}
+
 export function leaveGalaxy(userId: number, galaxyId: number) {
 	return prisma.$transaction(async (tx) => {
 		const player = await tx.galaxyPlayer.findUnique({

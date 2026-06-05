@@ -66,7 +66,7 @@ Vexara uses a rock-paper-scissors class triangle: Mobile beats Armor, Armor beat
 
 **Partial counters in mixed engagements:** The counter bonus is proportional to how much of the enemy force your class actually counters - on attack AND defense. If you send 10 Fire units against a mix of 5 Mobile + 5 Armor defenders, Fire counters the Mobile half (×1.35) but is countered by the Armor half (×0.75). Your effective multiplier is the weighted average: (0.5 × 1.35) + (0.5 × 0.75) = 1.05 - a small edge, not the full bonus. You only get the full counter if 100% of the enemy is the class you counter. Scouting the defender's composition before you commit is no longer optional.
 
-**Armory amplification:** Each level of Armory (+1.5%, cap +30% at Lv20) amplifies your ATTACK counter bonuses above 1.0 and slightly deepens disadvantage penalties. A Lv20 Armory turns a ×1.35 counter into ×1.65 - a significant force multiplier for well-composed attacks. The Armory is an offensive building: it sharpens your strikes and does not boost a defender's class-counter on the wall.
+**Targeting Core amplification:** Each level of Targeting Core (+1.5%, cap +30% at Lv20) amplifies your ATTACK counter bonuses above 1.0 and slightly deepens disadvantage penalties. A Lv20 Targeting Core turns a ×1.35 counter into ×1.65 - a significant force multiplier for well-composed attacks. The Targeting Core is an offensive building: it sharpens your strikes and does not boost a defender's class-counter on the wall.
 
 **Matchup affects survival too, not just damage:** When you win an engagement, your per-unit loss rate is also nudged by the same class triangle. Units with the class advantage against the bulk of the enemy take fewer casualties; units with the disadvantage take more. The effect is mild (about ±15% on loss rate) so matchup is a tilt, not a coin flip - sending Armor into a Fire-heavy enemy survives roughly 1.15x as well as sending it into another Armor force. Combine with the defense stat (higher defense = lower loss rate, with a meaningful spread between glass cannons and tank units) to predict how a winning engagement will burn through your stack.
 
@@ -100,7 +100,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 			'Cheap early-game fire striker. Punches above its cost against mobile raiders, but lightly built — keep it attacking, not garrisoning.',
 		unitClass: 'fire',
 		stats: { attack: 28, defense: 14, speed: 20, carry: 30 },
-		cost: { biomass: 150, alloy: 150, ore: 200, population: 1, time: '53s' },
+		cost: { biomass: 200, alloy: 200, ore: 250, population: 1, time: '53s' },
 		requirements: ['Plasma Forge Lv2']
 	},
 	{
@@ -145,7 +145,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 			'Aggressive mid-game fire striker that pins down mobile forces. High attack for its tier but fragile - keep it behind your anvils.',
 		unitClass: 'fire',
 		stats: { attack: 80, defense: 20, speed: 15, carry: 20 },
-		cost: { biomass: 450, alloy: 400, ore: 450, population: 2, time: '9m 0s' },
+		cost: { biomass: 520, alloy: 460, ore: 520, population: 2, time: '9m 0s' },
 		requirements: ['Plasma Forge Lv7', 'Command Core Lv6']
 	},
 	{
@@ -156,7 +156,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 			'Stealth hovercraft raider with strong carry. High attack, light defense - trades hits for resource hauls and speed. A striker, not a garrison unit.',
 		unitClass: 'mobile',
 		stats: { attack: 105, defense: 22, speed: 22, carry: 80 },
-		cost: { biomass: 625, alloy: 500, ore: 750, population: 3, time: '12m 0s' },
+		cost: { biomass: 650, alloy: 520, ore: 780, population: 3, time: '12m 0s' },
 		requirements: ['Hangar Bay Lv5', 'Alloy Forge Lv4']
 	},
 	{
@@ -201,7 +201,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 			'Very fast mobile raider striker, ideal for rapid redeploy and cracking armored defenders. High attack and the best carry of its tier; light defense, so strike and withdraw.',
 		unitClass: 'mobile',
 		stats: { attack: 125, defense: 26, speed: 28, carry: 100 },
-		cost: { biomass: 750, alloy: 600, ore: 900, population: 3, time: '18m 0s' },
+		cost: { biomass: 780, alloy: 630, ore: 940, population: 3, time: '18m 0s' },
 		requirements: ['Hangar Bay Lv8', 'Alloy Forge Lv7']
 	},
 	{
@@ -212,8 +212,8 @@ export const TROOPS_DOC: TroopDoc[] = [
 			'Tier-3 fast striker. The fastest unit in the game and the mobile half of the endgame line - pairs with the Annihilator Platform as the two top-end offensive units. Cracks armored defensive lines at speed; still lightly armored, so use its speed and shock value rather than slugging it out.',
 		unitClass: 'mobile',
 		stats: { attack: 215, defense: 36, speed: 32, carry: 60 },
-		cost: { biomass: 1100, alloy: 900, ore: 1400, population: 3, time: '27m 0s' },
-		requirements: ['Hangar Bay Lv9', 'Alloy Forge Lv8', 'Armory Lv3'],
+		cost: { biomass: 1120, alloy: 910, ore: 1420, population: 3, time: '27m 0s' },
+		requirements: ['Hangar Bay Lv9', 'Alloy Forge Lv8', 'Targeting Core Lv3'],
 		notes: [
 			'Speed 32 - the fastest unit in the roster.',
 			'Mobile class is countered BY Fire (Suppressor / Lancer / Disruptor / Annihilator / Plasma Turret).',
@@ -240,7 +240,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		unitClass: 'fire',
 		stats: { attack: 0, defense: 340, speed: 0, carry: 0 },
 		cost: { biomass: 1500, alloy: 1200, ore: 2500, population: 3, time: '45m 0s' },
-		requirements: ['Plasma Forge Lv11', 'Command Core Lv9', 'Armory Lv5'],
+		requirements: ['Plasma Forge Lv11', 'Command Core Lv9', 'Targeting Core Lv5'],
 		notes: [
 			'Speed 0 - stationary. It is never offered as an option on any outgoing mission (attack, scout, support, or transfer); you cannot lend it to an ally.',
 			'Hard counters all Mobile strikers - Void Stalker, Wraith Skimmer, Phantom Lance, and Vanguard Breaker.'
@@ -254,7 +254,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 			'Tier-3 heavy fire striker. Top-end artillery platform for heavy assaults and sieges with the highest single-unit attack and carry in the game - protect it with Siege Mechs and Bulwark Guards. The fire half of the endgame line; paired with the Void Stalker, two Annihilators delivers more force than a horde of mass-produced T1 spam.',
 		unitClass: 'fire',
 		stats: { attack: 360, defense: 55, speed: 8, carry: 250 },
-		cost: { biomass: 2000, alloy: 1750, ore: 3000, population: 4, time: '40m 0s' },
+		cost: { biomass: 1900, alloy: 1660, ore: 2840, population: 4, time: '40m 0s' },
 		requirements: ['Plasma Forge Lv12', 'Command Core Lv10', 'Shield Grid Lv10']
 	},
 	{
@@ -262,18 +262,18 @@ export const TROOPS_DOC: TroopDoc[] = [
 		name: 'Siege Colossus',
 		role: 'Endgame armor striker - counters Fire',
 		description:
-			'Tier-3 elite armor striker - the siege hammer. Extreme attack with enough defense to survive its own assault, slowest speed, highest population cost. Built to crack fortified Nexuses where lighter forces would shatter, and armor counters Fire on the way in. The armor half of the endgame line; paired with Annihilator Platforms for a balanced siege force.',
+			'Tier-3 elite armor striker - the siege hammer. Extreme attack with enough defense to survive its own assault, and the slowest speed in the game. Built to crack fortified Nexuses where lighter forces would shatter, and armor counters Fire on the way in. The armor half of the endgame line; paired with Annihilator Platforms for a balanced siege force.',
 		unitClass: 'armor',
 		stats: { attack: 300, defense: 130, speed: 6, carry: 150 },
-		cost: { biomass: 1800, alloy: 2200, ore: 3200, population: 5, time: '50m 0s' },
-		requirements: ['Armor Foundry Lv13', 'Command Core Lv10', 'Armory Lv5']
+		cost: { biomass: 1550, alloy: 1890, ore: 2760, population: 4, time: '50m 0s' },
+		requirements: ['Armor Foundry Lv13', 'Command Core Lv10', 'Targeting Core Lv5']
 	},
 	{
 		key: 'overseer',
 		name: 'Overseer',
 		role: 'Conquest / control unit (Special - no counter in either direction)',
 		description:
-			'The Overseer is a high-value command unit that enables nexus conquest. It does not fight - it administers. Sending an Overseer on a victorious strike reduces the target\'s Control Level by an amount that scales with how dominant your attack was: a crushing win (3:1 power advantage or better) drains 50, a clear win drains 34, and a narrow win still drains 15. Control starts at 100; once it reaches 0, the nexus is conquered and changes ownership to you. Two crushing strikes, three clear strikes, or a sustained coalition campaign can all reach conquest. The defending force does not need to be wiped - any victory with a surviving Overseer drains Control. Owned nexuses regenerate +10 Control per hour, so a lone weak attacker cannot grind a target down alone - coordinated waves are required for an attrition path. Overseer strikes travel 3x slower than standard attacks - giving defenders time to react. The Overseer is only useful if the attack wins - if the attack fails, the Overseer is not used and survives the defeat alongside its escort. If every non-Overseer troop in the strike is killed, the Overseer dies too. On the final conquering strike (the one that brings Control to 0), the Overseer is consumed - it does not return. The other surviving attackers are stationed at the newly captured nexus. The conquered nexus keeps its type (Resource Depot, Military Outpost, etc.) and retains its current building levels, but its name resets to "Conquered Nexus." NPC nexus bonuses are acquired at base tier; the doubled tier unlocks when the new owner reaches Command Core 15.',
+			'The Overseer is a high-value command unit that enables nexus conquest. It does not fight - it administers. Sending an Overseer on a victorious strike reduces the target\'s Control Level by an amount that scales with how dominant your attack was: a crushing win (3:1 power advantage or better) drains 50, a clear win drains 34, and a narrow win still drains 15. Control starts at 100; once it reaches 0, the nexus is conquered and changes ownership to you. Two crushing strikes, three clear strikes, or a sustained coalition campaign can all reach conquest. The defending force does not need to be wiped - any victory with a surviving Overseer drains Control. Owned nexuses regenerate +10 Control per hour, so a lone weak attacker cannot grind a target down alone - coordinated waves are required for an attrition path. Overseer strikes travel 3x slower than standard attacks - giving defenders time to react. The Overseer is only useful if the attack wins - if the attack fails, the Overseer is not used and survives the defeat alongside its escort. If every non-Overseer troop in the strike is killed, the Overseer dies too. On the final conquering strike (the one that brings Control to 0), the Overseer is consumed - it does not return. The other surviving attackers are stationed at the newly captured nexus. The conquered nexus keeps its type (Resource Depot, Military Outpost, etc.), its name, and its current building levels - you take it as-is and can rename it yourself. NPC nexus bonuses are acquired at base tier; the doubled tier unlocks when the new owner reaches Command Core 15.',
 		unitClass: 'special',
 		stats: { attack: 0, defense: 8, speed: 15, carry: 0 },
 		cost: { biomass: 180000, alloy: 140000, ore: 120000, population: 5, time: '4h 0m' },
@@ -313,7 +313,8 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		],
 		impact: [
 			'Primary unlock gate for multiple systems and troop tiers.',
-			'5% faster construction per level (compounding) - applies to every building.',
+			'5% faster construction per level (compounding) - applies to every building. Worked example: Lv5 = 23% faster, Lv10 = 40% faster, Lv20 = 64% faster.',
+			'⚡ Also trains the Specials (Recon Operative at Lv3, Overseer at Lv14) and gates Pyre Suppressor (Lv6), Siege Mech (Lv8), Plasma Turret (Lv9), Annihilator + Siege Colossus (Lv10), and the doubled NPC-nexus bonus tier (Lv15).',
 			'Veteran tier: +1 build queue slot at Lv16 and Lv17 (max 7).',
 			'Lv15 splits training into parallel class lanes: your single combat queue becomes three concurrent lanes (Mobile, Armor, Fire) plus the Special lane (Recon + Overseer). Below Lv15 you have one combat queue (5 slots) + the Special queue. From Lv15 each lane starts at 2 slots; Lv18 and Lv19 each add +1 (to 4). Parallel lanes let you build a balanced army in one pass - population cap is still the ceiling. Lv20 adds no extra slot but keeps the standard build-time discount.'
 		]
@@ -333,8 +334,8 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		],
 		impact: [
 			'Required to train any mobile-class unit.',
-			'Higher levels unlock stronger mobile tiers.',
-			'Cuts mobile-class training time -9% per level through Lv15, then -5% per level for Lv16-20 (compounding). A maxed Lv20 trains roughly 5.3x faster than base.'
+			'Cuts mobile-class training time -9% per level through Lv15, then -5% per level for Lv16-20 (compounding). Worked example: Lv1 = 9% faster, Lv10 = 61% faster (2.6×), Lv15 = 76% faster (4.1×), Lv20 = 81% faster (5.3×).',
+			'⚡ Unlock gates: Lv3 unlocks Vanguard Breaker, Lv5 unlocks Wraith Skimmer + Aegis Skirmisher, Lv8 unlocks Phantom Lance, Lv9 unlocks Void Stalker (with Targeting Core Lv3).'
 		]
 	},
 	{
@@ -353,8 +354,8 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		],
 		impact: [
 			'Required to train any fire-class unit.',
-			'Higher levels unlock stronger fire tiers.',
-			'Cuts fire-class training time -9% per level through Lv15, then -5% per level for Lv16-20 (compounding). A maxed Lv20 trains roughly 5.3x faster than base.'
+			'Cuts fire-class training time -9% per level through Lv15, then -5% per level for Lv16-20 (compounding). Worked example: Lv1 = 9% faster, Lv10 = 61% faster (2.6×), Lv15 = 76% faster (4.1×), Lv20 = 81% faster (5.3×).',
+			'⚡ Unlock gates: Lv2 unlocks Sentinel Lancer, Lv7 unlocks Pyre Suppressor + Arc Disruptor, Lv11 unlocks Plasma Turret (with Targeting Core Lv5), Lv12 unlocks Annihilator Platform.'
 		]
 	},
 	{
@@ -372,8 +373,8 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		],
 		impact: [
 			'Required to train any armor-class unit.',
-			'Higher levels unlock stronger armor tiers.',
-			'Cuts armor-class training time -9% per level through Lv15, then -5% per level for Lv16-20 (compounding). A maxed Lv20 trains roughly 5.3x faster than base.'
+			'Cuts armor-class training time -9% per level through Lv15, then -5% per level for Lv16-20 (compounding). Worked example: Lv1 = 9% faster, Lv10 = 61% faster (2.6×), Lv15 = 76% faster (4.1×), Lv20 = 81% faster (5.3×).',
+			'⚡ Unlock gates: Lv1 unlocks Assault Trooper, Lv5 unlocks Bulwark Guard, Lv10 unlocks Siege Mech, Lv13 unlocks Siege Colossus (with Targeting Core Lv5).'
 		]
 	},
 	{
@@ -389,8 +390,9 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 			{ level: 8, requires: ['Storage Vault Lv4'] }
 		],
 		impact: [
-			'Population max formula: floor(100 * 1.202^level).',
-			'A maxed Lv25 Life Support supports 9,945 population.'
+			'Each level multiplies population cap by 1.202× (compounding): floor(100 × 1.202^level).',
+			'Worked example: Lv1 = 120, Lv10 = 629 (+106 over Lv9), Lv20 = 3,963 (+666 over Lv19), Lv25 (max) = 9,945 (+1,672 over Lv24). The last few levels add the most housing — population is the real ceiling on army size, so these are high-value late upgrades.',
+			'⚡ Lv8 unlocks deeper population scaling (requires Storage Vault Lv4).'
 		]
 	},
 	{
@@ -406,7 +408,11 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 			{ level: 6, requires: ['Alloy Forge Lv2'] },
 			{ level: 10, requires: ['Command Core Lv8'] }
 		],
-		impact: ['Storage formula: floor(1500 * 1.5^level).']
+		impact: [
+			'Each level multiplies cap by 1.48× (compounding): floor(1500 × 1.48^level) per resource.',
+			'Worked example: Lv1 = 2,220, Lv10 = 75,632 (+24,529 over Lv9), Lv20 = 3,813,515 (+1,236,816 over Lv19).',
+			'Storage deliberately grows a touch faster than production, so a full vault is always partly raid-fed — but the gap is bounded (a vault fills from empty in ~3–16h across all levels). Upgrade to widen your raid buffer and avoid overflow waste.'
+		]
 	},
 	{
 		key: 'biomassFarm',
@@ -417,7 +423,11 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		maxLevel: 20,
 		unlock: 'Life Support Lv1',
 		milestones: [{ level: 10, requires: ['Life Support Lv5'] }],
-		impact: ['Production scales by floor(800 * 1.35^(level-1)).']
+		impact: [
+			'Each level multiplies output by 1.35× (compounding): floor(800 × 1.35^(level-1)) per hour.',
+			'Worked example: Lv1 = 800/h, Lv10 = 11,914/h (+3,089/h over Lv9), Lv20 = 239,570/h (+62,111/h over Lv19). The jump per level grows as you climb, so late levels are the biggest single production gains in the game.',
+			'⚡ Lv10 unlocks deeper production scaling (requires Life Support Lv5).'
+		]
 	},
 	{
 		key: 'alloyForge',
@@ -431,7 +441,10 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 			{ level: 6, requires: ['Command Core Lv4'] },
 			{ level: 10, requires: ['Ore Extractor Lv8'] }
 		],
-		impact: ['Production scales by floor(800 * 1.35^(level-1)).']
+		impact: [
+			'Each level multiplies output by 1.35× (compounding): floor(800 × 1.35^(level-1)) per hour.',
+			'Worked example: Lv1 = 800/h, Lv10 = 11,914/h (+3,089/h over Lv9), Lv20 = 239,570/h (+62,111/h over Lv19). The jump per level grows as you climb, so late levels are the biggest single production gains in the game.'
+		]
 	},
 	{
 		key: 'oreExtractor',
@@ -442,7 +455,10 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		maxLevel: 20,
 		unlock: 'Command Core Lv1',
 		milestones: [{ level: 8, requires: ['Alloy Forge Lv4'] }],
-		impact: ['Production scales by floor(800 * 1.35^(level-1)).']
+		impact: [
+			'Each level multiplies output by 1.35× (compounding): floor(800 × 1.35^(level-1)) per hour.',
+			'Worked example: Lv1 = 800/h, Lv10 = 11,914/h (+3,089/h over Lv9), Lv20 = 239,570/h (+62,111/h over Lv19). The jump per level grows as you climb, so late levels are the biggest single production gains in the game.'
+		]
 	},
 	{
 		key: 'shieldGrid',
@@ -465,8 +481,8 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		]
 	},
 	{
-		key: 'armory',
-		name: 'Armory',
+		key: 'targetingCore',
+		name: 'Targeting Core',
 		role: 'Counter amplifier + advanced unit unlocks',
 		description:
 			'Amplifies the class-counter damage triangle, and gates training of the Void Stalker and Plasma Turret.',
@@ -479,9 +495,8 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 			{ level: 10, requires: ['Command Core Lv10', 'Armor Foundry Lv10'] }
 		],
 		impact: [
-			'Each level adds +1.5% amplification to class-counter bonuses (cap +30% at Lv20).',
-			'Lv3 unlocks Void Stalker training.',
-			'Lv5 unlocks Plasma Turret training.'
+			'Each level adds +1.5% amplification to your ATTACK class-counter bonuses (cap +30% at Lv20). Worked example: a ×1.35 counter becomes ×1.50 at Lv10 and ×1.65 at Lv20 — a major force multiplier for well-composed, scouted attacks. (Offensive only: it does not boost a defender\'s counter on the wall.)',
+			'⚡ Lv3 unlocks Void Stalker; Lv5 unlocks Plasma Turret AND Siege Colossus.'
 		]
 	},
 	{
@@ -494,9 +509,9 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		maxLevel: 15,
 		unlock: 'Command Core Lv7',
 		milestones: [
-			{ level: 3, requires: ['Armory Lv3'] },
+			{ level: 3, requires: ['Targeting Core Lv3'] },
 			{ level: 7, requires: ['Shield Grid Lv5', 'Command Core Lv10'] },
-			{ level: 12, requires: ['Armory Lv10', 'Command Core Lv15'] }
+			{ level: 12, requires: ['Targeting Core Lv10', 'Command Core Lv15'] }
 		],
 		impact: [
 			'Hidden vault: floor(550 * 1.35^L) units per resource (biomass, alloy, ore each get their own hidden pool). Roughly 1,500 at Lv3, 11,000 at Lv10, 49,000 at Lv15.',
@@ -515,6 +530,22 @@ export const BUILDING_SCALING_DOC = {
 		'Target levels 6-10: mid scaling',
 		'Target levels 11+: late scaling'
 	]
+};
+
+/* ─────────────────────────────────────────────── RESOURCE TRANSFERS ===== */
+export const RESOURCE_TRANSFER_DOC = {
+	empireTransfer: {
+		description: 'Move resources between your own nexuses instantly. Open the Logistics tab on any nexus to see every base you own with fill bars. Hit Send on any row for a pre-suggested top-up, or use the Send Resources button to open a blank dialog. Transfers within your own empire are lossless and arrive immediately.',
+	},
+	factionTransfer: {
+		description: 'Send resources to a faction member\'s nexus from the same Send Resources dialog. Switch to the Faction tab, pick any of your faction-mates\' available bases as the destination, and enter amounts. A 10% transit tax applies: the recipient receives 90% of what you send. The dialog shows the tax breakdown before you confirm, and Max buttons account for the tax so the recipient never overflows.',
+		taxRate: 0.1,
+		restrictions: [
+			'Sender must own the source nexus.',
+			'Recipient must be in the same faction as the sender.',
+			'Newbie-protected players cannot receive faction transfers.',
+		],
+	},
 };
 
 /* ─────────────────────────────────────────────────────── SCOUTING ===== */

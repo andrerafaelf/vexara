@@ -119,12 +119,12 @@ const BUILDING_RULES: Record<
 			{ level: 8, requires: [{ building: 'alloyForge', level: 5 }] }
 		]
 	},
-	armory: {
+	targetingCore: {
 		maxLevel: 20,
 		unlock: { building: 'commandCore', level: 5 },
 		milestones: [
-			// Armory milestones are gated by the class building matching the unit
-			// each Armory tier unlocks. Lv3 unlocks Void Stalker (mobile) -> gate
+			// Targeting Core milestones are gated by the class building matching the unit
+			// each Targeting Core tier unlocks. Lv3 unlocks Void Stalker (mobile) -> gate
 			// on Hangar Bay. Lv5 unlocks Plasma Turret (fire) -> Plasma Forge.
 			// Lv10 caps the heavy-end on Armor Foundry to keep symmetry across
 			// the three production buildings.
@@ -149,7 +149,7 @@ const BUILDING_RULES: Record<
 		maxLevel: 15,
 		unlock: { building: 'commandCore', level: 7 },
 		milestones: [
-			{ level: 3, requires: [{ building: 'armory', level: 3 }] },
+			{ level: 3, requires: [{ building: 'targetingCore', level: 3 }] },
 			{
 				level: 7,
 				requires: [
@@ -160,7 +160,7 @@ const BUILDING_RULES: Record<
 			{
 				level: 12,
 				requires: [
-					{ building: 'armory', level: 10 },
+					{ building: 'targetingCore', level: 10 },
 					{ building: 'commandCore', level: 15 }
 				]
 			}
@@ -179,7 +179,7 @@ const BUILDING_NAMES: Record<string, string> = {
 	alloyForge: 'Alloy Forge',
 	oreExtractor: 'Ore Extractor',
 	shieldGrid: 'Shield Grid',
-	armory: 'Armory',
+	targetingCore: 'Targeting Core',
 	stealthArray: 'Stealth Array'
 };
 
@@ -220,7 +220,7 @@ function getPlannedBuildingLevels(nexus: Record<string, unknown>) {
 		alloyForge: nexus.alloyForge as number,
 		oreExtractor: nexus.oreExtractor as number,
 		shieldGrid: nexus.shieldGrid as number,
-		armory: (nexus.armory as number) || 0,
+		targetingCore: (nexus.targetingCore as number) || 0,
 		stealthArray: (nexus.stealthArray as number) || 0
 	};
 	const buildQueue = normalizeBuildQueue(nexus.buildQueue);

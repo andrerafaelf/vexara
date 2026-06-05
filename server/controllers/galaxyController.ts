@@ -16,6 +16,7 @@ function serializeGalaxy(
 		winnerUserId?: number | null;
 		winnerFactionId?: number | null;
 		createdAt: Date;
+		isLocked?: boolean;
 	},
 	opts: { isJoined?: boolean } = {}
 ) {
@@ -28,6 +29,7 @@ function serializeGalaxy(
 		winnerUserId: g.winnerUserId ?? null,
 		winnerFactionId: g.winnerFactionId ?? null,
 		createdAt: g.createdAt,
+		isLocked: g.isLocked ?? false,
 		isJoined: opts.isJoined ?? false
 	};
 }
@@ -341,6 +343,12 @@ export async function selectGalaxy(req: AuthRequest, res: Response): Promise<voi
 		}
 		if (galaxy.startsAt && new Date(galaxy.startsAt) > new Date()) {
 			res.status(400).json({ error: 'This galaxy has not started yet' });
+			return;
+		}
+		// A locked galaxy accepts no new players, but already-joined members may still
+		// enter and play. Only block when the caller isn't already a member.
+		if (galaxy.isLocked && !(await galaxyService.isGalaxyMember(req.userId, galaxyId))) {
+			res.status(403).json({ error: 'This galaxy is locked and not accepting new players' });
 			return;
 		}
 		const user = await galaxyService.getUserById(req.userId);

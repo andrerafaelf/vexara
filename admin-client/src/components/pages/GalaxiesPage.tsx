@@ -4,15 +4,18 @@ import {
 	Bell,
 	Building2,
 	Coins,
+	Lock,
 	Pencil,
 	Plus,
 	RotateCcw,
 	Save,
 	Search,
 	ShoppingCart,
+	SlidersHorizontal,
 	Swords,
 	Trash2,
 	Trophy,
+	Unlock,
 	Users
 } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -49,7 +52,7 @@ const BUILDING_LABELS: Record<BuildingKey, string> = {
 	alloyForge: 'Alloy Forge',
 	oreExtractor: 'Ore Extractor',
 	shieldGrid: 'Shield Grid',
-	armory: 'Armory',
+	targetingCore: 'Targeting Core',
 	stealthArray: 'Stealth Array'
 };
 const TROOP_LABELS: Record<TroopKey, string> = {
@@ -102,6 +105,17 @@ export default function GalaxiesPage({ adminFetch, showToast }: Props) {
 
 	// Delete galaxy
 	const [deleteGalaxyTarget, setDeleteGalaxyTarget] = useState<Galaxy | null>(null);
+
+	// Lock toggle in-flight (galaxy id) and win-config editor
+	const [lockingId, setLockingId] = useState<number | null>(null);
+	const [configGalaxy, setConfigGalaxy] = useState<Galaxy | null>(null);
+	const [configForm, setConfigForm] = useState({
+		winShare: '',
+		winSustainHours: '',
+		winMinPlayers: '',
+		winMinFactions: ''
+	});
+	const [savingConfig, setSavingConfig] = useState(false);
 
 	// Player editor
 	const [editingUser, setEditingUser] = useState<GalaxyUser | null>(null);
@@ -263,6 +277,82 @@ export default function GalaxiesPage({ adminFetch, showToast }: Props) {
 			loadGalaxies();
 		} catch {
 			showToast('Error', 'error');
+		}
+	};
+
+	const handleToggleLock = async (g: Galaxy) => {
+		if (lockingId != null) return;
+		setLockingId(g.id);
+		try {
+			const res = await adminFetch(`${API}/galaxies/${g.id}`, {
+				method: 'PATCH',
+				body: JSON.stringify({ isLocked: !g.isLocked })
+			});
+			const d = await res.json().catch(() => ({}));
+			if (!res.ok) {
+				showToast(d.error || 'Failed', 'error');
+				return;
+			}
+			showToast(`"${g.name}" ${g.isLocked ? 'unlocked' : 'locked'}`, 'success');
+			loadGalaxies();
+		} catch {
+			showToast('Error', 'error');
+		} finally {
+			setLockingId(null);
+		}
+	};
+
+	const openConfig = (g: Galaxy) => {
+		setConfigForm({
+			winShare: g.winShare != null ? String(Math.round(g.winShare * 100)) : '',
+			winSustainHours: g.winSustainHours != null ? String(g.winSustainHours) : '',
+			winMinPlayers: g.winMinPlayers != null ? String(g.winMinPlayers) : '',
+			winMinFactions: g.winMinFactions != null ? String(g.winMinFactions) : ''
+		});
+		setConfigGalaxy(g);
+	};
+
+	// Map a form field to its payload value: '' clears the override (null), a number
+	// is sent as-is. winShare is entered as a percent (e.g. 65) and sent as a fraction.
+	const handleSaveConfig = async () => {
+		if (!configGalaxy) return;
+		const trimmed = {
+			winShare: configForm.winShare.trim(),
+			winSustainHours: configForm.winSustainHours.trim(),
+			winMinPlayers: configForm.winMinPlayers.trim(),
+			winMinFactions: configForm.winMinFactions.trim()
+		};
+		if (trimmed.winShare !== '') {
+			const pct = Number(trimmed.winShare);
+			if (!Number.isFinite(pct) || pct < 30 || pct > 95) {
+				showToast('Dominance share must be 30–95%', 'error');
+				return;
+			}
+		}
+		const body: Record<string, number | null> = {
+			winShare: trimmed.winShare === '' ? null : Number(trimmed.winShare) / 100,
+			winSustainHours: trimmed.winSustainHours === '' ? null : Number(trimmed.winSustainHours),
+			winMinPlayers: trimmed.winMinPlayers === '' ? null : Number(trimmed.winMinPlayers),
+			winMinFactions: trimmed.winMinFactions === '' ? null : Number(trimmed.winMinFactions)
+		};
+		setSavingConfig(true);
+		try {
+			const res = await adminFetch(`${API}/galaxies/${configGalaxy.id}`, {
+				method: 'PATCH',
+				body: JSON.stringify(body)
+			});
+			const d = await res.json().catch(() => ({}));
+			if (!res.ok) {
+				showToast(d.error || 'Failed', 'error');
+				return;
+			}
+			showToast(`Win config saved for "${configGalaxy.name}"`, 'success');
+			setConfigGalaxy(null);
+			loadGalaxies();
+		} catch {
+			showToast('Error', 'error');
+		} finally {
+			setSavingConfig(false);
 		}
 	};
 
@@ -654,6 +744,12 @@ export default function GalaxiesPage({ adminFetch, showToast }: Props) {
 										<span className={`status-dot ${s}`} />
 										{g.name}
 										<span className="badge badge-muted">{s}</span>
+										{g.isLocked && (
+											<span className="badge badge-muted" title="No new players can join">
+												<Lock size={9} style={{ verticalAlign: '-1px', marginRight: 3 }} />
+												locked
+											</span>
+										)}
 									</div>
 									<div className="galaxy-item-meta">
 										{g.playerCount} players · {g.nexusCount} nexuses
@@ -661,17 +757,46 @@ export default function GalaxiesPage({ adminFetch, showToast }: Props) {
 										{' · '}
 										{new Date(g.createdAt).toLocaleDateString()}
 										{g.startsAt ? ` · Starts ${new Date(g.startsAt).toLocaleString()}` : ''}
+										{` · Win ${g.winShare != null ? `${Math.round(g.winShare * 100)}%` : '65%'}/${g.winSustainHours != null ? g.winSustainHours : 36}h`}
 									</div>
 								</div>
-								<button
-									className="btn btn-danger btn-xs"
-									onClick={(e) => {
-										e.stopPropagation();
-										setDeleteGalaxyTarget(g);
-									}}
-								>
-									<Trash2 size={10} /> Delete
-								</button>
+								<div className="galaxy-item-actions">
+									{s !== 'ended' && (
+										<>
+											<button
+												className="btn btn-ghost btn-xs"
+												disabled={lockingId === g.id}
+												title={g.isLocked ? 'Allow new players to join' : 'Stop new players joining'}
+												onClick={(e) => {
+													e.stopPropagation();
+													handleToggleLock(g);
+												}}
+											>
+												{g.isLocked ? <Unlock size={10} /> : <Lock size={10} />}{' '}
+												{g.isLocked ? 'Unlock' : 'Lock'}
+											</button>
+											<button
+												className="btn btn-ghost btn-xs"
+												title="Edit win condition"
+												onClick={(e) => {
+													e.stopPropagation();
+													openConfig(g);
+												}}
+											>
+												<SlidersHorizontal size={10} /> Win
+											</button>
+										</>
+									)}
+									<button
+										className="btn btn-danger btn-xs"
+										onClick={(e) => {
+											e.stopPropagation();
+											setDeleteGalaxyTarget(g);
+										}}
+									>
+										<Trash2 size={10} /> Delete
+									</button>
+								</div>
 							</button>
 						);
 					})}
@@ -1298,6 +1423,99 @@ export default function GalaxiesPage({ adminFetch, showToast }: Props) {
 									: totalDirty === 0
 										? 'Save'
 										: `Save ${totalDirty} change${totalDirty === 1 ? '' : 's'}`}
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* Win-condition config modal */}
+			{configGalaxy && (
+				<div className="modal-overlay" onClick={() => !savingConfig && setConfigGalaxy(null)}>
+					<div className="modal-box" onClick={(e) => e.stopPropagation()}>
+						<div className="modal-head">
+							<h3>
+								<SlidersHorizontal size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
+								Win Condition: {configGalaxy.name}
+							</h3>
+							<button className="modal-close" onClick={() => !savingConfig && setConfigGalaxy(null)}>
+								×
+							</button>
+						</div>
+						<div className="modal-body">
+							<p
+								style={{
+									fontSize: 12,
+									color: 'var(--text-muted)',
+									margin: '0 0 14px',
+									lineHeight: 1.5
+								}}
+							>
+								Faction dominance victory. Leave a field blank to use the engine default. A faction
+								wins by holding the dominance share of the whole map (owned + neutral) for the
+								sustain duration, once the player and faction minimums are met.
+							</p>
+							<div className="form-grid">
+								<div className="form-field">
+									<label className="form-label">Dominance share % (default 65)</label>
+									<input
+										type="number"
+										min={30}
+										max={95}
+										placeholder="65"
+										value={configForm.winShare}
+										onChange={(e) => setConfigForm({ ...configForm, winShare: e.target.value })}
+									/>
+								</div>
+								<div className="form-field">
+									<label className="form-label">Sustain hours (default 36)</label>
+									<input
+										type="number"
+										min={0}
+										max={720}
+										placeholder="36"
+										value={configForm.winSustainHours}
+										onChange={(e) =>
+											setConfigForm({ ...configForm, winSustainHours: e.target.value })
+										}
+									/>
+								</div>
+								<div className="form-field">
+									<label className="form-label">Min players (default 15)</label>
+									<input
+										type="number"
+										min={1}
+										placeholder="15"
+										value={configForm.winMinPlayers}
+										onChange={(e) =>
+											setConfigForm({ ...configForm, winMinPlayers: e.target.value })
+										}
+									/>
+								</div>
+								<div className="form-field">
+									<label className="form-label">Min factions (default 4)</label>
+									<input
+										type="number"
+										min={1}
+										placeholder="4"
+										value={configForm.winMinFactions}
+										onChange={(e) =>
+											setConfigForm({ ...configForm, winMinFactions: e.target.value })
+										}
+									/>
+								</div>
+							</div>
+						</div>
+						<div className="modal-foot">
+							<button
+								className="btn btn-ghost"
+								onClick={() => setConfigGalaxy(null)}
+								disabled={savingConfig}
+							>
+								Cancel
+							</button>
+							<button className="btn btn-primary" onClick={handleSaveConfig} disabled={savingConfig}>
+								<Save size={12} /> {savingConfig ? 'Saving…' : 'Save'}
 							</button>
 						</div>
 					</div>

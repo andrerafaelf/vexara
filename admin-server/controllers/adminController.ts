@@ -113,7 +113,7 @@ const BUILDING_KEYS = [
 	'alloyForge',
 	'oreExtractor',
 	'shieldGrid',
-	'armory',
+	'targetingCore',
 	'stealthArray'
 ] as const;
 
@@ -156,7 +156,12 @@ export async function listGalaxies(_req: Request, res: Response): Promise<void> 
 				winnerUserId: g.winnerUserId,
 				createdAt: g.createdAt,
 				playerCount: g._count.players,
-				nexusCount: g._count.nexuses
+				nexusCount: g._count.nexuses,
+				isLocked: g.isLocked,
+				winShare: g.winShare,
+				winSustainHours: g.winSustainHours,
+				winMinPlayers: g.winMinPlayers,
+				winMinFactions: g.winMinFactions
 			}))
 		);
 	} catch (error) {
@@ -196,7 +201,12 @@ export async function createGalaxy(req: Request, res: Response): Promise<void> {
 				winnerUserId: galaxy.winnerUserId,
 				createdAt: galaxy.createdAt,
 				playerCount: 0,
-				nexusCount: 0
+				nexusCount: 0,
+				isLocked: galaxy.isLocked,
+				winShare: galaxy.winShare,
+				winSustainHours: galaxy.winSustainHours,
+				winMinPlayers: galaxy.winMinPlayers,
+				winMinFactions: galaxy.winMinFactions
 			}
 		});
 	} catch (error) {
@@ -215,6 +225,91 @@ export async function deleteGalaxy(req: Request, res: Response): Promise<void> {
 		}
 		await prisma.galaxy.delete({ where: { id: galaxyId } });
 		res.json({ success: true, message: 'Galaxy deleted' });
+	} catch (error) {
+		res.status(500).json({ error: (error as Error).message });
+	}
+}
+
+// Update a galaxy's lock state and/or per-galaxy win config. Each field is optional;
+// only provided keys are written. Win* fields accept a number to override or null to
+// clear the override (falling back to the engine default in server/utils/dominance.ts).
+export async function updateGalaxy(req: Request, res: Response): Promise<void> {
+	try {
+		const galaxyId = adminService.toInt(req.params.galaxyId);
+		const galaxy = await adminService.getGalaxyById(galaxyId);
+		if (!galaxy) {
+			res.status(404).json({ error: 'Galaxy not found' });
+			return;
+		}
+
+		const body = (req.body ?? {}) as Record<string, unknown>;
+		const data: {
+			isLocked?: boolean;
+			winShare?: number | null;
+			winSustainHours?: number | null;
+			winMinPlayers?: number | null;
+			winMinFactions?: number | null;
+		} = {};
+
+		if ('isLocked' in body) data.isLocked = Boolean(body.isLocked);
+
+		// A win* key may be omitted (leave as-is), null (clear override), or a number.
+		// Numbers are clamped to the same bounds dominance.ts enforces so the stored
+		// value and the live behaviour always agree.
+		const parseWin = (
+			key: 'winShare' | 'winSustainHours' | 'winMinPlayers' | 'winMinFactions',
+			clamp: (n: number) => number
+		): { ok: true; value: number | null } | { ok: false } | { skip: true } => {
+			if (!(key in body)) return { skip: true };
+			const raw = body[key];
+			if (raw === null || raw === '') return { ok: true, value: null };
+			const n = Number(raw);
+			if (!Number.isFinite(n)) return { ok: false };
+			return { ok: true, value: clamp(n) };
+		};
+
+		const wins = {
+			winShare: parseWin('winShare', (n) => Math.min(0.95, Math.max(0.3, n))),
+			winSustainHours: parseWin('winSustainHours', (n) =>
+				Math.min(720, Math.max(0, Math.round(n)))
+			),
+			winMinPlayers: parseWin('winMinPlayers', (n) => Math.max(1, Math.round(n))),
+			winMinFactions: parseWin('winMinFactions', (n) => Math.max(1, Math.round(n)))
+		} as const;
+
+		for (const [key, result] of Object.entries(wins)) {
+			if ('skip' in result) continue;
+			if (!('ok' in result) || !result.ok) {
+				res.status(400).json({ error: `Invalid ${key}` });
+				return;
+			}
+			(data as Record<string, number | null>)[key] = result.value;
+		}
+
+		if (Object.keys(data).length === 0) {
+			res.status(400).json({ error: 'No updatable fields provided' });
+			return;
+		}
+
+		const updated = await adminService.updateGalaxy(galaxyId, data);
+		res.json({
+			success: true,
+			galaxy: {
+				_id: updated.id,
+				id: updated.id,
+				name: updated.name,
+				status: updated.status,
+				startsAt: updated.startsAt,
+				endedAt: updated.endedAt,
+				winnerUserId: updated.winnerUserId,
+				createdAt: updated.createdAt,
+				isLocked: updated.isLocked,
+				winShare: updated.winShare,
+				winSustainHours: updated.winSustainHours,
+				winMinPlayers: updated.winMinPlayers,
+				winMinFactions: updated.winMinFactions
+			}
+		});
 	} catch (error) {
 		res.status(500).json({ error: (error as Error).message });
 	}

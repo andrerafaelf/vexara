@@ -67,10 +67,13 @@ export async function getReportsForNexus(nexusId: number) {
 	const seen = new Set<number>();
 	const merged = [];
 	for (const a of [...direct, ...allied]) {
-		if (!seen.has(a.id)) {
-			seen.add(a.id);
-			merged.push(a);
-		}
+		if (seen.has(a.id)) continue;
+		// A wave that arrived to find the target already attacker-owned (a prior
+		// wave conquered it) just bounces home untouched — no combat happened, so
+		// it isn't a real report. Suppress it instead of logging a phantom "Defeat".
+		if ((a.result as { reason?: string } | null)?.reason === 'target_self_owned') continue;
+		seen.add(a.id);
+		merged.push(a);
 	}
 	merged.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 	return merged;
@@ -138,7 +141,7 @@ export async function getUnreadNexusIds(userId: number, galaxyId: number): Promi
 					{ defenderNexusId: { in: nexusIds }, status: { in: ['returning', 'completed'] } }
 				]
 			},
-			select: { id: true, attackerNexusId: true, defenderNexusId: true }
+			select: { id: true, attackerNexusId: true, defenderNexusId: true, result: true }
 		}),
 		prisma.reportRead.findMany({
 			where: { userId, galaxyId },
@@ -150,6 +153,9 @@ export async function getUnreadNexusIds(userId: number, galaxyId: number): Promi
 	const unreadNexusIds = new Set<number>();
 
 	for (const attack of completedAttacks) {
+		// Self-owned bounces aren't real reports (see getReportsForNexus) — they
+		// must not drive an unread badge either.
+		if ((attack.result as { reason?: string } | null)?.reason === 'target_self_owned') continue;
 		if (!readSet.has(attack.id)) {
 			if (nexusIds.includes(attack.attackerNexusId)) unreadNexusIds.add(attack.attackerNexusId);
 			if (attack.defenderNexusId && nexusIds.includes(attack.defenderNexusId))

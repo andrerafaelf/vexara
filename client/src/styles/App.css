@@ -19,6 +19,7 @@ button {
 	border: none;
 	padding: 10px 20px;
 	border-radius: 0;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
 	font-size: 14px;
 	transition: all 0.3s ease;
 }
@@ -26,6 +27,16 @@ button {
 button:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
+}
+
+/* Vexara cut-corner default for any button-like class. Component CSS can
+   override with a different cut size; opt out with .btn-no-cut. The exclusions
+   below skip pure circles/pills, dot indicators, and tab/nav strips that look
+   wrong with a diagonal cut. */
+[class*='-btn']:not(.btn-no-cut):not([class*='-btn-circle']):not([class*='-btn-pill']):not([class*='-btn-tab']):not([class*='-btn-icon']),
+[class$='-button']:not(.btn-no-cut):not([class*='-button-circle']):not([class*='-button-pill']) {
+	border-radius: 0;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
 }
 
 input {

@@ -89,7 +89,8 @@
 	padding: 0 8px;
 	background: rgba(255, 255, 255, 0.03);
 	border: 1px solid rgba(255, 255, 255, 0.08);
-	border-radius: 99px;
+	border-radius: 0;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%);
 	color: var(--text-muted);
 	font-size: 10px;
 	font-weight: 700;
@@ -98,12 +99,30 @@
 	letter-spacing: 0.06em;
 }
 
+.daily-streaks-collapse-btn::after {
+	content: '';
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	width: 6px;
+	height: 1px;
+	background: rgba(255, 255, 255, 0.08);
+	transform: rotate(-45deg);
+	transform-origin: bottom right;
+	transition: background 0.15s;
+}
+
 .daily-streaks-collapse-btn:hover {
 	background: rgba(255, 255, 255, 0.06);
 	color: var(--text-strong);
 }
 
+.daily-streaks-collapse-btn:hover::after {
+	background: rgba(255, 255, 255, 0.18);
+}
+
 .daily-streaks-summary {
+	position: relative;
 	width: 100%;
 	display: flex;
 	align-items: center;
@@ -112,16 +131,34 @@
 	padding: 8px 10px;
 	background: rgba(86, 211, 100, 0.07);
 	border: 1px solid rgba(86, 211, 100, 0.16);
-	border-radius: var(--radius-sm);
+	border-radius: 0;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
 	color: rgba(210, 255, 215, 0.9);
 	font-size: var(--text-sm);
 	font-weight: 600;
 	text-align: left;
 }
 
+.daily-streaks-summary::after {
+	content: '';
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	width: 9px;
+	height: 1px;
+	background: rgba(86, 211, 100, 0.16);
+	transform: rotate(-45deg);
+	transform-origin: bottom right;
+	transition: background 0.15s;
+}
+
 .daily-streaks-summary:hover {
 	background: rgba(86, 211, 100, 0.1);
 	border-color: rgba(86, 211, 100, 0.24);
+}
+
+.daily-streaks-summary:hover::after {
+	background: rgba(86, 211, 100, 0.24);
 }
 
 .daily-streaks-summary-check {
@@ -270,7 +307,8 @@
 	margin-top: var(--space-3);
 	background: rgba(255, 158, 61, 0.12);
 	border: 1px solid rgba(255, 158, 61, 0.3);
-	border-radius: var(--radius-sm);
+	border-radius: 0;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
 	color: var(--accent);
 	font-weight: 700;
 	font-size: var(--text-sm);
@@ -280,8 +318,25 @@
 	transition: background 0.15s;
 }
 
+.daily-streaks-claim::after {
+	content: '';
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	width: 9px;
+	height: 1px;
+	background: rgba(255, 158, 61, 0.3);
+	transform: rotate(-45deg);
+	transform-origin: bottom right;
+	transition: background 0.15s;
+}
+
 .daily-streaks-claim:hover {
 	background: rgba(255, 158, 61, 0.2);
+}
+
+.daily-streaks-claim:hover::after {
+	background: var(--accent);
 }
 
 .daily-streaks-claim:disabled {

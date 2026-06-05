@@ -132,6 +132,26 @@ export function getGalaxyByName(name: string) {
 	return prisma.galaxy.findUnique({ where: { name } });
 }
 
+export function getGalaxyById(id: number) {
+	return prisma.galaxy.findUnique({ where: { id } });
+}
+
+// Admin update for a galaxy's lock state and per-galaxy win config. Only the keys
+// present in `data` are written; pass null for a win* field to clear an override and
+// fall back to the engine default in server/utils/dominance.ts.
+export function updateGalaxy(
+	id: number,
+	data: {
+		isLocked?: boolean;
+		winShare?: number | null;
+		winSustainHours?: number | null;
+		winMinPlayers?: number | null;
+		winMinFactions?: number | null;
+	}
+) {
+	return prisma.galaxy.update({ where: { id }, data });
+}
+
 export function getAllUsers() {
 	return prisma.user.findMany({
 		select: {
@@ -180,7 +200,7 @@ export function getUsersInGalaxy(galaxyId: number) {
 					alloyForge: true,
 					oreExtractor: true,
 					shieldGrid: true,
-					armory: true,
+					targetingCore: true,
 					stealthArray: true,
 					sentinelLancer: true,
 					assaultTrooper: true,

@@ -89,6 +89,17 @@ model Galaxy {
   winnerFactionId Int?
   createdAt    DateTime     @default(now())
 
+  // When true, no new players may join (existing members keep playing). Set by admins.
+  isLocked     Boolean      @default(false)
+
+  // Per-galaxy dominance victory config. NULL = fall back to the engine defaults in
+  // utils/dominance.ts (0.65 share, 36h sustain, 15 players, 4 factions). Lets admins
+  // tune the win condition per world without a redeploy.
+  winShare        Float? // map share a faction must hold, e.g. 0.65
+  winSustainHours Int?   // hours that share must be sustained before the galaxy ends
+  winMinPlayers   Int?   // minimum players in the galaxy for victory to be eligible
+  winMinFactions  Int?   // minimum distinct factions for victory to be eligible
+
   activeUsers        User[]              @relation("UserActiveGalaxy")
   players            GalaxyPlayer[]
   nexuses            Nexus[]
@@ -259,7 +270,7 @@ model Nexus {
   alloyForge      Int @default(1)
   oreExtractor    Int @default(1)
   shieldGrid      Int @default(0)
-  armory          Int @default(0)
+  targetingCore   Int @default(0)
   stealthArray    Int @default(0)
 
   // Troops

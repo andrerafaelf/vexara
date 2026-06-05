@@ -20,6 +20,9 @@ router.post('/create', auth, (req, res) =>
 router.post('/transfer-resources', auth, (req, res) =>
 	nexusController.transferResources(req as AuthRequest, res as Response)
 );
+router.get('/faction-nexuses', auth, (req, res) =>
+	nexusController.getFactionNexuses(req as AuthRequest, res as Response)
+);
 router.get('/groups', auth, (req, res) =>
 	nexusController.getGroups(req as AuthRequest, res as Response)
 );

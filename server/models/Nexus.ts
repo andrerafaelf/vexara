@@ -184,15 +184,20 @@ export const QUEST_REWARD_BATCHES: QuestBatch[] = [
 		}
 	},
 
-	// --- Chapter 5: Arsenal (Armory & Heavy Weapons) ---
+	// --- Chapter 5: Arsenal (Targeting Core & Heavy Weapons) ---
+	// NOTE: quest IDs below keep the historical `build_armory_*` slug (persisted
+	// completion keys) even though the building is now Targeting Core. Renaming the
+	// id would orphan players' completion state — same rule used for build_troop_fab.
 	{
 		id: 'arsenal',
 		isUnlocked: ({ claimedRewards }) => claimedRewards.has('shadow_ops'),
 		quests: [
 			{ id: 'build_command_core_6', check: ({ nexus }) => nexus.commandCore >= 6 },
 			{
+				// Quest ID preserved (persisted completion key) — only the check
+				// repoints to the renamed Targeting Core field (was `armory`).
 				id: 'build_armory_3',
-				check: ({ nexus }) => (nexus as unknown as Record<string, number>).armory >= 3
+				check: ({ nexus }) => (nexus as unknown as Record<string, number>).targetingCore >= 3
 			},
 			// Quest ID preserved (was build_troop_fab_5 -> RC Lv5). Now points at
 			// Armor Foundry Lv5, since this batch's track-fed unit (Siege Mech)
@@ -221,7 +226,7 @@ export const QUEST_REWARD_BATCHES: QuestBatch[] = [
 			{ id: 'build_command_core_8', check: ({ nexus }) => nexus.commandCore >= 8 },
 			{
 				id: 'build_armory_5',
-				check: ({ nexus }) => (nexus as unknown as Record<string, number>).armory >= 5
+				check: ({ nexus }) => (nexus as unknown as Record<string, number>).targetingCore >= 5
 			},
 			{
 				id: 'build_stealth_array_3',
@@ -280,7 +285,7 @@ export const QUEST_REWARD_BATCHES: QuestBatch[] = [
 			{ id: 'build_command_core_12', check: ({ nexus }) => nexus.commandCore >= 12 },
 			{
 				id: 'build_armory_10',
-				check: ({ nexus }) => (nexus as unknown as Record<string, number>).armory >= 10
+				check: ({ nexus }) => (nexus as unknown as Record<string, number>).targetingCore >= 10
 			},
 			{
 				id: 'build_stealth_array_7',
@@ -956,7 +961,7 @@ export async function updateAllResources(): Promise<void> {
 					armorFoundry: true,
 					lifeSupport: true,
 					shieldGrid: true,
-					armory: true,
+					targetingCore: true,
 					stealthArray: true,
 					sentinelLancer: true,
 					assaultTrooper: true,
@@ -1095,7 +1100,7 @@ export function serializeNexus(
 			alloyForge: v.alloyForge,
 			oreExtractor: v.oreExtractor,
 			shieldGrid: v.shieldGrid,
-			armory: (v as unknown as { armory?: number }).armory ?? 0,
+			targetingCore: (v as unknown as { targetingCore?: number }).targetingCore ?? 0,
 			stealthArray: (v as unknown as { stealthArray?: number }).stealthArray ?? 0
 		},
 		troops: {

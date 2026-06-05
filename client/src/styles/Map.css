@@ -87,10 +87,12 @@
 }
 
 .map-controls button {
+	position: relative;
 	background: var(--color-navy-500);
 	color: var(--text-strong);
 	padding: 4px 10px;
-	border-radius: var(--radius-sm);
+	border-radius: 0;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%);
 	font-size: 12px;
 }
 
@@ -1507,16 +1509,30 @@
 }
 
 .transfer-toggle-btn {
+	position: relative;
 	background: var(--color-navy-700);
 	color: var(--text-muted);
 	border: 1px solid var(--color-navy-500);
-	border-radius: 6px;
+	border-radius: 0;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
 	padding: 8px 16px;
 	font-size: 14px;
 	cursor: pointer;
 	width: 100%;
 	text-align: left;
 	transition: background 0.2s;
+}
+
+.transfer-toggle-btn::after {
+	content: '';
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	width: 9px;
+	height: 1px;
+	background: var(--color-navy-500);
+	transform: rotate(-45deg);
+	transform-origin: bottom right;
 }
 
 .transfer-toggle-btn:hover {
@@ -1599,7 +1615,8 @@
 	background: var(--accent);
 	color: var(--text-on-accent);
 	border: none;
-	border-radius: 6px;
+	border-radius: 0;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
 	padding: 8px 20px;
 	font-size: 14px;
 	font-weight: 600;
@@ -1784,6 +1801,10 @@
 [class*='map-'][class*='-pill'],
 [class*='map-'][class*='-tag'] {
 	border-radius: 0;
+}
+
+[class*='map-'][class*='-btn'] {
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
 }
 
 [class*='map-'][class*='-card'],

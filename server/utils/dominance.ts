@@ -1,15 +1,60 @@
 import prisma from '../lib/prisma.js';
 import { NOTIF, sendPushToUser } from './push.js';
 
+// Engine defaults. Each galaxy may override any of these via its win* columns
+// (see resolveWinConfig); a NULL column falls back to the default here.
 const DOMINANCE_THRESHOLD = 0.65;
 const DOMINANCE_SUSTAIN_MS = 36 * 60 * 60 * 1000;
 const DOMINANCE_MIN_PLAYERS = 15;
 const DOMINANCE_MIN_FACTIONS = 4;
 
+interface GalaxyWinSource {
+	winShare: number | null;
+	winSustainHours: number | null;
+	winMinPlayers: number | null;
+	winMinFactions: number | null;
+}
+
+interface ResolvedWinConfig {
+	threshold: number;
+	sustainMs: number;
+	minPlayers: number;
+	minFactions: number;
+}
+
+// Resolve a galaxy's effective victory config, clamping any admin override into a
+// sane range so a bad value can't make victory unreachable (or instant).
+function resolveWinConfig(g: GalaxyWinSource): ResolvedWinConfig {
+	const share =
+		g.winShare != null && Number.isFinite(g.winShare)
+			? Math.min(0.95, Math.max(0.3, g.winShare))
+			: DOMINANCE_THRESHOLD;
+	const sustainHours =
+		g.winSustainHours != null && Number.isFinite(g.winSustainHours)
+			? Math.min(720, Math.max(0, g.winSustainHours))
+			: DOMINANCE_SUSTAIN_MS / 3_600_000;
+	const minPlayers =
+		g.winMinPlayers != null && Number.isFinite(g.winMinPlayers)
+			? Math.max(1, Math.floor(g.winMinPlayers))
+			: DOMINANCE_MIN_PLAYERS;
+	const minFactions =
+		g.winMinFactions != null && Number.isFinite(g.winMinFactions)
+			? Math.max(1, Math.floor(g.winMinFactions))
+			: DOMINANCE_MIN_FACTIONS;
+	return { threshold: share, sustainMs: sustainHours * 3_600_000, minPlayers, minFactions };
+}
+
 export async function processDominanceVictories(): Promise<void> {
 	const activeGalaxies = await prisma.galaxy.findMany({
 		where: { status: 'active' },
-		select: { id: true, name: true }
+		select: {
+			id: true,
+			name: true,
+			winShare: true,
+			winSustainHours: true,
+			winMinPlayers: true,
+			winMinFactions: true
+		}
 	});
 
 	for (const galaxy of activeGalaxies) {
@@ -21,7 +66,8 @@ export async function processDominanceVictories(): Promise<void> {
 	}
 }
 
-async function processGalaxy(galaxy: { id: number; name: string }): Promise<void> {
+async function processGalaxy(galaxy: { id: number; name: string } & GalaxyWinSource): Promise<void> {
+	const cfg = resolveWinConfig(galaxy);
 	// Get all nexuses in the galaxy. Win share is % of the entire map (owned + neutral),
 	// so a faction can't claim victory by joining the only faction in a sparsely-claimed galaxy.
 	const nexuses = await prisma.nexus.findMany({
@@ -39,7 +85,7 @@ async function processGalaxy(galaxy: { id: number; name: string }): Promise<void
 
 	// Require minimum player count in this galaxy
 	const playerCount = await prisma.galaxyPlayer.count({ where: { galaxyId: galaxy.id } });
-	if (playerCount < DOMINANCE_MIN_PLAYERS) {
+	if (playerCount < cfg.minPlayers) {
 		await prisma.faction.updateMany({
 			where: { galaxyId: galaxy.id, dominanceSince: { not: null } },
 			data: { dominanceSince: null }
@@ -65,7 +111,7 @@ async function processGalaxy(galaxy: { id: number; name: string }): Promise<void
 	}
 
 	// Require minimum distinct faction count
-	if (factionCounts.size < DOMINANCE_MIN_FACTIONS) {
+	if (factionCounts.size < cfg.minFactions) {
 		await prisma.faction.updateMany({
 			where: { galaxyId: galaxy.id, dominanceSince: { not: null } },
 			data: { dominanceSince: null }
@@ -94,7 +140,7 @@ async function processGalaxy(galaxy: { id: number; name: string }): Promise<void
 	const leaderShare = maxCount / nexuses.length;
 
 	// Below threshold: reset all dominance timers
-	if (leaderShare < DOMINANCE_THRESHOLD) {
+	if (leaderShare < cfg.threshold) {
 		await prisma.faction.updateMany({
 			where: { galaxyId: galaxy.id, dominanceSince: { not: null } },
 			data: { dominanceSince: null }
@@ -125,7 +171,7 @@ async function processGalaxy(galaxy: { id: number; name: string }): Promise<void
 	}
 
 	const heldFor = now.getTime() - new Date(leaderFaction.dominanceSince).getTime();
-	if (heldFor < DOMINANCE_SUSTAIN_MS) return;
+	if (heldFor < cfg.sustainMs) return;
 
 	await endGalaxy(galaxy, leaderFactionId);
 }

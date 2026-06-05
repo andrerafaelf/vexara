@@ -8,15 +8,30 @@
 	padding: 6px 12px 6px 10px;
 	background: transparent;
 	border: 1px solid var(--border-default);
-	border-radius: 6px;
+	border-radius: 0;
 	color: var(--text-muted);
 	font-size: 13px;
 	font-weight: 500;
 	cursor: pointer;
+	position: relative;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
 	transition:
 		color 120ms ease,
 		border-color 120ms ease,
 		background 120ms ease;
+}
+
+.inline-back-btn::after {
+	content: '';
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	width: 9px;
+	height: 1px;
+	background: var(--border-default);
+	transform: rotate(-45deg);
+	transform-origin: bottom right;
+	transition: background 120ms ease;
 }
 
 .inline-back-btn:hover,
@@ -25,6 +40,11 @@
 	border-color: var(--accent);
 	background: var(--accent-soft);
 	outline: none;
+}
+
+.inline-back-btn:hover::after,
+.inline-back-btn:focus-visible::after {
+	background: var(--accent);
 }
 
 .inline-back-btn:active {

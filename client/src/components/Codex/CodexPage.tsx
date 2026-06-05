@@ -564,7 +564,7 @@ function ClassCountersPanel() {
 				<span className="cx-class-counters-eyebrow">{'// Class counters'}</span>
 				<p className="cx-class-counters-lede">
 					Every unit belongs to a class. Class advantage adds <strong>+35%</strong> damage on
-					attack; being countered subtracts <strong>20–25%</strong>. The Armory amplifies this gap
+					attack; being countered subtracts <strong>20–25%</strong>. The Targeting Core amplifies this gap
 					by +1.5%/level (capped at +30% extra at Lv20).
 				</p>
 			</div>

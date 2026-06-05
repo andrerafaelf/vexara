@@ -146,11 +146,11 @@ export function computeForcePower(
 }
 
 // Compute class-weighted attack power of an attacker force against a defender force.
-// armoryLevel amplifies counter bonuses beyond 1.0 by (armoryLevel * 0.015) each.
+// targetingCoreLevel amplifies counter bonuses beyond 1.0 by (targetingCoreLevel * 0.015) each.
 export function computeClassWeightedAttack(
 	attackers: Partial<Record<TroopKey, number>> | Record<string, unknown>,
 	defenders: Partial<Record<TroopKey, number>> | Record<string, unknown>,
-	armoryLevel: number = 0
+	targetingCoreLevel: number = 0
 ): number {
 	// Build defender class composition ratios
 	const defenderClassCounts: Record<TroopClass, number> = {
@@ -165,7 +165,7 @@ export function computeClassWeightedAttack(
 	}
 	const totalDefenders = Object.values(defenderClassCounts).reduce((a, b) => a + b, 0);
 
-	const armoryBonus = Math.min(armoryLevel * 0.015, 0.3); // cap at +30% extra bonus at lv20
+	const targetingCoreBonus = Math.min(targetingCoreLevel * 0.015, 0.3); // cap at +30% extra bonus at lv20
 
 	let totalAttack = 0;
 	for (const key of TROOP_KEYS) {
@@ -181,12 +181,12 @@ export function computeClassWeightedAttack(
 			for (const defClass of ['mobile', 'armor', 'fire', 'special'] as TroopClass[]) {
 				const ratio = defenderClassCounts[defClass] / totalDefenders;
 				const baseMult = CLASS_COUNTERS[attackerClass][defClass];
-				// Amplify counter advantage/disadvantage with armory bonus
+				// Amplify counter advantage/disadvantage with Targeting Core bonus
 				const amplifiedMult =
 					baseMult > 1.0
-						? baseMult + armoryBonus
+						? baseMult + targetingCoreBonus
 						: baseMult < 1.0
-							? baseMult - armoryBonus * 0.5
+							? baseMult - targetingCoreBonus * 0.5
 							: 1.0;
 				weightedMult += ratio * amplifiedMult;
 			}
@@ -204,10 +204,10 @@ export function computeClassWeightedAttack(
 // being countered loses some. Uses the (milder) DEF_COUNTER_* spread so the
 // triangle decides composition fights without erasing attacker initiative.
 //
-// Unlike the attack side, defense does NOT take the Armory amplifier — the
-// Armory is an offensive building (it sharpens YOUR strikes), so leaving the
+// Unlike the attack side, defense does NOT take the Targeting Core amplifier — the
+// Targeting Core is an offensive building (it sharpens YOUR strikes), so leaving the
 // defender out of it keeps the building's identity clear and preserves the
-// existing "attacker invests in Armory" lever.
+// existing "attacker invests in Targeting Core" lever.
 export function computeClassWeightedDefense(
 	defenders: Partial<Record<TroopKey, number>> | Record<string, unknown>,
 	attackers: Partial<Record<TroopKey, number>> | Record<string, unknown>

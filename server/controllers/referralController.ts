@@ -49,7 +49,7 @@ const BUILDINGS = [
 	'alloyForge',
 	'oreExtractor',
 	'shieldGrid',
-	'armory',
+	'targetingCore',
 	'stealthArray'
 ] as const;
 
@@ -64,7 +64,7 @@ const BUILDING_MAX: Record<string, number> = {
 	alloyForge: 20,
 	oreExtractor: 20,
 	shieldGrid: 15,
-	armory: 20,
+	targetingCore: 20,
 	stealthArray: 15
 };
 
@@ -79,7 +79,7 @@ const BUILDING_NAMES: Record<string, string> = {
 	alloyForge: 'Alloy Forge',
 	oreExtractor: 'Ore Extractor',
 	shieldGrid: 'Shield Grid',
-	armory: 'Armory',
+	targetingCore: 'Targeting Core',
 	stealthArray: 'Stealth Array'
 };
 

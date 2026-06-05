@@ -45,7 +45,7 @@ const BUILDING_LABELS: Record<string, string> = {
 	alloyForge: 'Alloy Forge',
 	oreExtractor: 'Ore Extractor',
 	shieldGrid: 'Shield Grid',
-	armory: 'Armory',
+	targetingCore: 'Targeting Core',
 	stealthArray: 'Stealth Array'
 };
 
@@ -135,7 +135,7 @@ const BUILDING_MAX: Record<string, number> = {
 	alloyForge: 20,
 	oreExtractor: 20,
 	shieldGrid: 15,
-	armory: 20,
+	targetingCore: 20,
 	stealthArray: 15
 };
 
@@ -149,7 +149,7 @@ const BUILDING_UNLOCK: Record<string, { building: string; level: number }> = {
 	alloyForge: { building: 'oreExtractor', level: 2 },
 	oreExtractor: { building: 'commandCore', level: 1 },
 	shieldGrid: { building: 'commandCore', level: 3 },
-	armory: { building: 'commandCore', level: 5 },
+	targetingCore: { building: 'commandCore', level: 5 },
 	stealthArray: { building: 'commandCore', level: 7 }
 };
 

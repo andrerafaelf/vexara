@@ -44,7 +44,7 @@ const CATEGORY: Record<string, string> = {
 	alloyForge: 'Economy',
 	oreExtractor: 'Economy',
 	shieldGrid: 'Defence',
-	armory: 'Military',
+	targetingCore: 'Military',
 	stealthArray: 'Defence'
 };
 

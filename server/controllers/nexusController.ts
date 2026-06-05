@@ -18,6 +18,12 @@ import { logError, logGameEvent } from '../utils/logger.js';
 
 const MAX_NEXUSES_PER_USER = 10;
 
+// Resources sent to a FACTION-MATE's nexus lose this fraction in transit (the
+// recipient receives 90%). Mirrors the market's 10% commission so gifting is a
+// lossy aid channel, not a frictionless feeding/alt-farming pipe. Transfers
+// between a player's OWN nexuses are lossless (rate 0).
+const FACTION_TRANSFER_TAX = 0.1;
+
 function troopPopulation(troops: unknown): number {
 	if (!troops || typeof troops !== 'object') return 0;
 	return Object.entries(troops as Record<string, unknown>).reduce((sum, [type, amount]) => {
@@ -490,7 +496,8 @@ export async function transferResources(req: AuthRequest, res: Response): Promis
 			res.status(404).json({ error: 'Nexus not found' });
 			return;
 		}
-		if (from.ownerId !== req.userId || to.ownerId !== req.userId) {
+		// The SENDER must always be one of the player's own nexuses.
+		if (from.ownerId !== req.userId) {
 			res.status(403).json({ error: 'Not authorized' });
 			return;
 		}
@@ -499,36 +506,86 @@ export async function transferResources(req: AuthRequest, res: Response): Promis
 			return;
 		}
 
+		// The RECIPIENT is either the player's own nexus (lossless) or a
+		// faction-mate's (taxed). Anything else is rejected.
+		const isOwnNexus = to.ownerId === req.userId;
+		let isFactionSend = false;
+		if (!isOwnNexus) {
+			if (to.ownerId == null) {
+				res.status(403).json({ error: 'You can only send resources to your own or faction nexuses' });
+				return;
+			}
+			const [myMember, recipientMember] = await Promise.all([
+				prisma.factionMember.findUnique({
+					where: { userId_galaxyId: { userId: req.userId!, galaxyId: req.galaxyId! } },
+					select: { factionId: true }
+				}),
+				prisma.factionMember.findUnique({
+					where: { userId_galaxyId: { userId: to.ownerId, galaxyId: req.galaxyId! } },
+					select: { factionId: true }
+				})
+			]);
+			if (!myMember || !recipientMember || myMember.factionId !== recipientMember.factionId) {
+				res
+					.status(403)
+					.json({ error: 'You can only send resources to your own or faction nexuses' });
+				return;
+			}
+			// Don't let an established player load up a newbie-protected ally — that's
+			// the same early-snowball concern that blocks attacking them.
+			if (to.newbieProtectionEndsAt && new Date(to.newbieProtectionEndsAt) > new Date()) {
+				res.status(403).json({
+					error: `${to.name} is under newbie protection and can't receive resources yet.`
+				});
+				return;
+			}
+			isFactionSend = true;
+		}
+		const taxRate = isFactionSend ? FACTION_TRANSFER_TAX : 0;
+
 		// Accumulate pending production before reading resource values so the
 		// stale DB baseline doesn't cause resources to vanish on transfer.
 		[from, to] = await Promise.all([refreshResources(from), refreshResources(to)]);
 
-		// Cap each resource by what the SENDER actually has...
-		let sendBiomass = Math.min(Math.max(0, Math.floor(Number(biomass))), Math.floor(from.biomass));
-		let sendAlloy = Math.min(Math.max(0, Math.floor(Number(alloy))), Math.floor(from.alloy));
-		let sendOre = Math.min(Math.max(0, Math.floor(Number(ore))), Math.floor(from.ore));
+		// Cap each resource by what the SENDER actually has (the amount DEBITED).
+		const spentBiomass = Math.min(Math.max(0, Math.floor(Number(biomass))), Math.floor(from.biomass));
+		const spentAlloy = Math.min(Math.max(0, Math.floor(Number(alloy))), Math.floor(from.alloy));
+		const spentOre = Math.min(Math.max(0, Math.floor(Number(ore))), Math.floor(from.ore));
+		const requestedTotal = spentBiomass + spentAlloy + spentOre;
 
-		// ...and by how much storage headroom the RECEIVER has left. Without this,
-		// a transfer would push the destination over its cap and the overflow would
-		// be silently destroyed on the next production tick (computeResourceUpdate
-		// clamps to maxStorage). Clamp here so we only move what fits.
+		// The receiver gets the post-tax amount (faction sends lose FACTION_TRANSFER_TAX;
+		// own-empire transfers are lossless). Storage headroom limits the RECEIVED
+		// amount, so we back-solve the largest spend whose post-tax delivery still fits
+		// — without this the overflow is silently destroyed on the next production tick.
 		const toMaxStorage = getMaxStorage(to as Parameters<typeof getMaxStorage>[0]);
 		const headroom = {
 			biomass: Math.max(0, Math.floor(toMaxStorage - to.biomass)),
 			alloy: Math.max(0, Math.floor(toMaxStorage - to.alloy)),
 			ore: Math.max(0, Math.floor(toMaxStorage - to.ore))
 		};
-		const requestedTotal = sendBiomass + sendAlloy + sendOre;
-		sendBiomass = Math.min(sendBiomass, headroom.biomass);
-		sendAlloy = Math.min(sendAlloy, headroom.alloy);
-		sendOre = Math.min(sendOre, headroom.ore);
-		const clampedTotal = sendBiomass + sendAlloy + sendOre;
+		const deliver = (spent: number) => Math.floor(spent * (1 - taxRate));
+		// Largest spend whose delivered (post-tax) amount fits the headroom.
+		const clampSpendToHeadroom = (spent: number, room: number) => {
+			if (deliver(spent) <= room) return spent;
+			const maxSpend = taxRate > 0 ? Math.floor(room / (1 - taxRate)) : room;
+			// Guard the floor boundary so deliver(maxSpend) never exceeds room by one.
+			return deliver(maxSpend) > room ? Math.max(0, maxSpend - 1) : maxSpend;
+		};
+		const finalSpentBiomass = clampSpendToHeadroom(spentBiomass, headroom.biomass);
+		const finalSpentAlloy = clampSpendToHeadroom(spentAlloy, headroom.alloy);
+		const finalSpentOre = clampSpendToHeadroom(spentOre, headroom.ore);
+
+		const recvBiomass = deliver(finalSpentBiomass);
+		const recvAlloy = deliver(finalSpentAlloy);
+		const recvOre = deliver(finalSpentOre);
+
+		const spentTotal = finalSpentBiomass + finalSpentAlloy + finalSpentOre;
 
 		if (requestedTotal === 0) {
 			res.status(400).json({ error: 'Nothing to transfer' });
 			return;
 		}
-		if (clampedTotal === 0) {
+		if (spentTotal === 0) {
 			res.status(400).json({
 				error: `${to.name} has no storage capacity left for these resources. Upgrade its Storage Vault or send less.`
 			});
@@ -539,24 +596,33 @@ export async function transferResources(req: AuthRequest, res: Response): Promis
 			from.id,
 			to.id,
 			{
-				biomass: from.biomass - sendBiomass,
-				alloy: from.alloy - sendAlloy,
-				ore: from.ore - sendOre
+				biomass: from.biomass - finalSpentBiomass,
+				alloy: from.alloy - finalSpentAlloy,
+				ore: from.ore - finalSpentOre
 			},
-			{ biomass: to.biomass + sendBiomass, alloy: to.alloy + sendAlloy, ore: to.ore + sendOre }
+			{ biomass: to.biomass + recvBiomass, alloy: to.alloy + recvAlloy, ore: to.ore + recvOre }
 		);
-		const partiallyClamped = clampedTotal < requestedTotal;
+		const partiallyClamped = spentTotal < requestedTotal;
 
-		// Both nexuses belong to the same owner (verified above), so a single user
-		// gets two snapshots. Failures here must not break the HTTP response.
+		// Push a fresh snapshot to each nexus's OWNER. For an own-empire transfer
+		// both go to req.userId; for a faction send the recipient is a different
+		// player, so their nexus snapshot must go to their socket. Failures here
+		// must not break the HTTP response.
 		try {
-			for (const n of [updatedFrom, updatedTo]) {
-				notifyNexusResources(req.userId!, {
-					nexusId: n.id,
-					base: { biomass: n.biomass, alloy: n.alloy, ore: n.ore },
-					production: getResourceProduction(n),
-					storageMax: getMaxStorage(n),
-					lastResourceUpdate: n.lastResourceUpdate
+			notifyNexusResources(req.userId!, {
+				nexusId: updatedFrom.id,
+				base: { biomass: updatedFrom.biomass, alloy: updatedFrom.alloy, ore: updatedFrom.ore },
+				production: getResourceProduction(updatedFrom),
+				storageMax: getMaxStorage(updatedFrom),
+				lastResourceUpdate: updatedFrom.lastResourceUpdate
+			});
+			if (updatedTo.ownerId != null) {
+				notifyNexusResources(updatedTo.ownerId, {
+					nexusId: updatedTo.id,
+					base: { biomass: updatedTo.biomass, alloy: updatedTo.alloy, ore: updatedTo.ore },
+					production: getResourceProduction(updatedTo),
+					storageMax: getMaxStorage(updatedTo),
+					lastResourceUpdate: updatedTo.lastResourceUpdate
 				});
 			}
 		} catch (emitErr) {
@@ -572,13 +638,78 @@ export async function transferResources(req: AuthRequest, res: Response): Promis
 			void incrementQuestProgress(req.userId, req.galaxyId, 'transfer_1', 1);
 		} catch {}
 		res.json({
+			// On a faction send the recipient is another player; only return their
+			// nexus to its owner. The sender always sees their own updated nexus.
 			from: serializeNexus(updatedFrom),
-			to: serializeNexus(updatedTo),
+			to: isFactionSend ? undefined : serializeNexus(updatedTo),
 			// Tells the client some resources were held back because the destination
 			// would have overflowed its storage cap.
 			clamped: partiallyClamped,
-			sent: { biomass: sendBiomass, alloy: sendAlloy, ore: sendOre }
+			factionSend: isFactionSend,
+			taxRate,
+			// Amount DEBITED from the sender vs amount DELIVERED to the recipient
+			// (they differ by the faction tax). Lets the client report both.
+			sent: { biomass: finalSpentBiomass, alloy: finalSpentAlloy, ore: finalSpentOre },
+			received: { biomass: recvBiomass, alloy: recvAlloy, ore: recvOre }
 		});
+	} catch (error) {
+		logError('unhandled_controller_error', {
+			message: (error as Error).message,
+			file: 'nexusController.ts'
+		});
+		res.status(500).json({ error: 'Internal server error' });
+	}
+}
+
+// Faction-mates' nexuses that can RECEIVE a resource send: same faction, not the
+// player's own, and not under newbie protection (which can't be loaded up).
+// Shaped like getMyNexuses so the Send-Resources picker can compute headroom the
+// same way. Returns [] when the player isn't in a faction.
+export async function getFactionNexuses(req: AuthRequest, res: Response): Promise<void> {
+	try {
+		if (req.galaxyId == null) {
+			res.json([]);
+			return;
+		}
+		const myMember = await prisma.factionMember.findUnique({
+			where: { userId_galaxyId: { userId: req.userId!, galaxyId: req.galaxyId } },
+			select: { factionId: true }
+		});
+		if (!myMember) {
+			res.json([]);
+			return;
+		}
+		const mates = await prisma.factionMember.findMany({
+			where: {
+				factionId: myMember.factionId,
+				galaxyId: req.galaxyId,
+				userId: { not: req.userId! }
+			},
+			select: { userId: true }
+		});
+		const mateIds = mates.map((m) => m.userId);
+		if (mateIds.length === 0) {
+			res.json([]);
+			return;
+		}
+		const rawNexuses = await prisma.nexus.findMany({
+			where: { ownerId: { in: mateIds }, galaxyId: req.galaxyId },
+			include: { owner: { select: { username: true } } }
+		});
+		const now = new Date();
+		const eligible = rawNexuses.filter(
+			(n) => !(n.newbieProtectionEndsAt && new Date(n.newbieProtectionEndsAt) > now)
+		);
+		// Refresh each so storage headroom in the picker reflects live balances.
+		// Tag each serialized nexus with its owner's username so the picker can label
+		// "PlayerName · NexusName" without a second lookup.
+		const refreshed = await Promise.all(eligible.map((n) => refreshResources(n)));
+		res.json(
+			refreshed.map((n, i) => ({
+				...serializeNexus(n),
+				ownerUsername: eligible[i].owner?.username ?? null
+			}))
+		);
 	} catch (error) {
 		logError('unhandled_controller_error', {
 			message: (error as Error).message,

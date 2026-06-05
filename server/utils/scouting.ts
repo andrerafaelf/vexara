@@ -3,7 +3,7 @@ import prisma from '../lib/prisma.js';
 import { type BuildingLevels, type ResourceAmounts, type TroopCounts, TROOP_KEYS } from '../types/index.js';
 import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
 import { NEXUS_ACTIVE_WINDOW_MS } from './gameConstants.js';
-// BuildingLevels and TroopCounts are extended via their interfaces to include armory/voidStalker/plasmaTurret
+// BuildingLevels and TroopCounts are extended via their interfaces to include targetingCore/voidStalker/plasmaTurret
 
 interface PublicNexusData {
 	_id: number;
@@ -126,7 +126,7 @@ export function buildDetailedScoutIntel(nexus: Nexus): ScoutIntel {
 			alloyForge: nexus.alloyForge,
 			oreExtractor: nexus.oreExtractor,
 			shieldGrid: nexus.shieldGrid,
-			armory: n['armory'] ?? 0,
+			targetingCore: n['targetingCore'] ?? 0,
 			stealthArray: n['stealthArray'] ?? 0
 		},
 		// Build from the canonical TROOP_KEYS so a new unit is reported

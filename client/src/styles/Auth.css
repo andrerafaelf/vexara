@@ -478,7 +478,8 @@
 	font-size: var(--text-base);
 	font-weight: 700;
 	letter-spacing: 0.03em;
-	border-radius: var(--radius-sm);
+	border-radius: 0;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
 	border: none;
 	cursor: pointer;
 	margin-top: var(--space-2);
@@ -721,12 +722,14 @@
 /* ── About toggle / deep-dive ────────────────────────────────── */
 
 .about-toggle {
+	position: relative;
 	margin-top: var(--space-5);
 	background: transparent;
 	border: 1px solid var(--border-default);
 	color: var(--text-muted);
 	padding: 10px 14px;
-	border-radius: var(--radius-sm);
+	border-radius: 0;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
 	font-size: var(--text-sm);
 	font-weight: 600;
 	letter-spacing: 0.02em;
@@ -738,6 +741,27 @@
 	transition:
 		border-color var(--duration-fast) var(--ease-out),
 		color var(--duration-fast) var(--ease-out);
+}
+
+.about-toggle::after {
+	content: '';
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	width: 9px;
+	height: 1px;
+	background: var(--border-default);
+	transform: rotate(-45deg);
+	transform-origin: bottom right;
+	transition: background var(--duration-fast) var(--ease-out);
+}
+
+.about-toggle:hover::after {
+	background: var(--border-strong);
+}
+
+.about-toggle:focus-visible::after {
+	background: var(--accent);
 }
 
 .about-toggle:hover {

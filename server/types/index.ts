@@ -75,7 +75,7 @@ export interface BuildingLevels {
 	alloyForge: number;
 	oreExtractor: number;
 	shieldGrid: number;
-	armory: number;
+	targetingCore: number;
 	stealthArray: number;
 }
 

@@ -1,36 +1,23 @@
 import React from 'react';
-import alloyforgeImg from '../assets/buildings/alloyforge.png';
-import armoryImg from '../assets/buildings/armory.png';
-import biomassfarmImg from '../assets/buildings/biomassfarm.png';
-import commandcoreImg from '../assets/buildings/commandcore.png';
-import lifesupportImg from '../assets/buildings/lifesupport.png';
-import oreextractorImg from '../assets/buildings/oreextractor.png';
-// Shared placeholder for the three class buildings until per-class art ships.
-import classBuildingPlaceholderImg from '../assets/buildings/recruitmentcore.png';
-import shieldgridImg from '../assets/buildings/shieldgrid.png';
-import stealtharrayImg from '../assets/buildings/stealtharray.png';
-import storagevaultImg from '../assets/buildings/storagevault.png';
 import '../styles/NexusMap.css';
 import { Nexus } from '../types/game';
+// Building art is served from the Cloudflare CDN (data/gameIcons.ts), keyed by
+// building key. Rendered via plain <img src> below, so the URL strings work.
+import { buildingIcon } from '../data/gameIcons';
 
 const BUILDINGS = [
-	{ key: 'commandCore', img: commandcoreImg, name: 'Command Core', short: 'Command' },
-	{ key: 'hangarBay', img: classBuildingPlaceholderImg, name: 'Hangar Bay', short: 'Hangar' },
-	{ key: 'plasmaForge', img: classBuildingPlaceholderImg, name: 'Plasma Forge', short: 'Forge' },
-	{
-		key: 'armorFoundry',
-		img: classBuildingPlaceholderImg,
-		name: 'Armor Foundry',
-		short: 'Foundry'
-	},
-	{ key: 'lifeSupport', img: lifesupportImg, name: 'Life Support', short: 'Life Sup.' },
-	{ key: 'storageVault', img: storagevaultImg, name: 'Storage Vault', short: 'Storage' },
-	{ key: 'biomassFarm', img: biomassfarmImg, name: 'Biomass Farm', short: 'Biomass' },
-	{ key: 'alloyForge', img: alloyforgeImg, name: 'Alloy Forge', short: 'Alloy' },
-	{ key: 'oreExtractor', img: oreextractorImg, name: 'Ore Extractor', short: 'Ore Ext.' },
-	{ key: 'shieldGrid', img: shieldgridImg, name: 'Shield Grid', short: 'Shield' },
-	{ key: 'armory', img: armoryImg, name: 'Armory', short: 'Armory' },
-	{ key: 'stealthArray', img: stealtharrayImg, name: 'Stealth Array', short: 'Stealth' }
+	{ key: 'commandCore', img: buildingIcon('commandCore'), name: 'Command Core', short: 'Command' },
+	{ key: 'hangarBay', img: buildingIcon('hangarBay'), name: 'Hangar Bay', short: 'Hangar' },
+	{ key: 'plasmaForge', img: buildingIcon('plasmaForge'), name: 'Plasma Forge', short: 'Forge' },
+	{ key: 'armorFoundry', img: buildingIcon('armorFoundry'), name: 'Armor Foundry', short: 'Foundry' },
+	{ key: 'lifeSupport', img: buildingIcon('lifeSupport'), name: 'Life Support', short: 'Life Sup.' },
+	{ key: 'storageVault', img: buildingIcon('storageVault'), name: 'Storage Vault', short: 'Storage' },
+	{ key: 'biomassFarm', img: buildingIcon('biomassFarm'), name: 'Biomass Farm', short: 'Biomass' },
+	{ key: 'alloyForge', img: buildingIcon('alloyForge'), name: 'Alloy Forge', short: 'Alloy' },
+	{ key: 'oreExtractor', img: buildingIcon('oreExtractor'), name: 'Ore Extractor', short: 'Ore Ext.' },
+	{ key: 'shieldGrid', img: buildingIcon('shieldGrid'), name: 'Shield Grid', short: 'Shield' },
+	{ key: 'targetingCore', img: buildingIcon('targetingCore'), name: 'Targeting Core', short: 'Targeting' },
+	{ key: 'stealthArray', img: buildingIcon('stealthArray'), name: 'Stealth Array', short: 'Stealth' }
 ];
 
 interface NexusMapProps {
