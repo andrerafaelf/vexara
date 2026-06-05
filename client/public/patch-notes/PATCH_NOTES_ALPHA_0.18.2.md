@@ -34,7 +34,7 @@ actually had room to train:
 
 **Dead troops no longer block training**
 When your attack resolved and troops died in combat, the system kept
-reserving housing for the entire original force — including the dead —
+reserving housing for the entire original force , including the dead ,
 until the survivors physically returned home. Now, dead troops free
 their population slots immediately when combat resolves. You can train
 replacements right away instead of waiting for ghosts to come home.

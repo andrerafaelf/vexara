@@ -283,7 +283,7 @@ const Dashboard: React.FC<DashboardProps> = ({ nexuses, groups, onSelectNexus })
 			},
 			{
 				id: 'expand-logistics',
-				title: 'Expand Logistics',
+				title: 'Expand Supply',
 				description: 'Upgrade Alloy Forge to Lv2.',
 				completed: done('expansion', 'build_alloy_forge_2', b.alloyForge >= 2)
 			},

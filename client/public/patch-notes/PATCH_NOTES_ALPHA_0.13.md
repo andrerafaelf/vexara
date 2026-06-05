@@ -1,4 +1,4 @@
-## Vexara — Alpha Patch Notes v0.13
+## Vexara - Alpha Patch Notes v0.13
 
 In-game navigation just got the polish pass it's been needing.
 Tab state now lives in the URL, so the browser back button (and the

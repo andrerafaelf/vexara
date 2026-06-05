@@ -428,11 +428,11 @@ export default function ReferralsTab({ mode = 'referrals' }: ReferralsTabProps) 
 					{selectedNexus &&
 						(troopGrantPreview === 0 ? (
 							<span className="referrals-error">
-								Not enough population capacity — free up space or choose a different nexus.
+								Not enough population capacity, free up space or choose a different nexus.
 							</span>
 						) : troopGrantPreview < troopGrantFull ? (
 							<span className="referrals-preview referrals-preview--warn">
-								~{troopGrantPreview} of {troopGrantFull} units (CC {ccLevel}, tier {tier + 1}/4) —
+								~{troopGrantPreview} of {troopGrantFull} units (CC {ccLevel}, tier {tier + 1}/4),
 								limited by population capacity
 							</span>
 						) : (

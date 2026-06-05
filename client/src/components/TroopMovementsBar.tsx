@@ -1,13 +1,13 @@
 'use client';
 
 import { getAllAttacks } from '@/services/api';
-import { Countdown } from './Countdown';
+import '@/styles/TroopMovementsBar.css';
 import { formatTimeOfDay } from '@/utils/date';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { startTransition } from 'react';
+import { Countdown } from './Countdown';
 import { useStartProgress } from './NavigationProgress';
-import '@/styles/TroopMovementsBar.css';
 
 interface AttackNexus {
 	_id: string;
@@ -71,7 +71,7 @@ export default function TroopMovementsBar() {
 						type="button"
 						className={`tmb-item tmb-item--incoming${isScout ? ' tmb-item--scout' : ''}`}
 						onClick={() => goToNexus(defenderNexus._id)}
-						title={`${isScout ? 'Incoming scout' : 'Incoming attack'} on ${defenderNexus.name ?? 'your nexus'} — click to view nexus`}
+						title={`${isScout ? 'Incoming scout' : 'Incoming attack'} on ${defenderNexus.name ?? 'your nexus'}, click to view nexus`}
 					>
 						<span className="tmb-pulse" aria-hidden="true" />
 						<span className="tmb-icon" aria-hidden="true">
@@ -85,9 +85,7 @@ export default function TroopMovementsBar() {
 									from <strong>{attackerUsername}</strong>
 								</span>
 							)}
-							{defenderNexus.name && (
-								<span className="tmb-target"> → {defenderNexus.name}</span>
-							)}
+							{defenderNexus.name && <span className="tmb-target"> → {defenderNexus.name}</span>}
 						</span>
 						<span className="tmb-countdown">
 							<Countdown endAt={attack.arrivesAt} completedLabel="Arriving…" />

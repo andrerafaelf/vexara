@@ -255,9 +255,7 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
 				if (w.id !== waveId) return w;
 				const available =
 					(
-						myNexuses.find((n) => n._id === w.nexusId)?.troops as
-							| Record<string, number>
-							| undefined
+						myNexuses.find((n) => n._id === w.nexusId)?.troops as Record<string, number> | undefined
 					)?.[troopType] ?? 0;
 				const cap = perWaveTroopCap(troopType, available);
 				return {
@@ -399,15 +397,10 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
 			const scheduledId: number | null = res.data?.scheduled?.id ?? null;
 			setWaves((prev) =>
 				prev.map((w) =>
-					w.id !== wave.id
-						? w
-						: { ...w, sending: false, scheduledId, scheduledLaunchAt: launchMs }
+					w.id !== wave.id ? w : { ...w, sending: false, scheduledId, scheduledLaunchAt: launchMs }
 				)
 			);
-			toast(
-				`Wave from ${nexus.name} scheduled. Launches in ${formatTimeUntil(launchMs)}`,
-				'info'
-			);
+			toast(`Wave from ${nexus.name} scheduled. Launches in ${formatTimeUntil(launchMs)}`, 'info');
 		} catch (err: any) {
 			const msg = err.response?.data?.error || 'Failed to schedule wave';
 			setWaves((prev) =>
@@ -457,7 +450,7 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
 						onChange={(e) => setArrivalTime(e.target.value)}
 					/>
 					<span className="wplanner-arrival-hint">
-						Scheduled waves launch on the server — you can close this tab
+						Scheduled waves launch on the server, you can close this tab
 					</span>
 				</div>
 

@@ -97,7 +97,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		name: 'Sentinel Lancer',
 		role: 'Fire striker - counters Mobile',
 		description:
-			'Cheap early-game fire striker. Punches above its cost against mobile raiders, but lightly built — keep it attacking, not garrisoning.',
+			'Cheap early-game fire striker. Punches above its cost against mobile raiders, but lightly built, keep it attacking, not garrisoning.',
 		unitClass: 'fire',
 		stats: { attack: 28, defense: 14, speed: 20, carry: 30 },
 		cost: { biomass: 200, alloy: 200, ore: 250, population: 1, time: '53s' },
@@ -108,7 +108,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		name: 'Assault Trooper',
 		role: 'Armor anvil - counters Fire',
 		description:
-			'The cheapest garrison anvil. Durable frontline infantry that holds ground and defends hardest against Fire attackers. Low attack — its job is to survive and keep the line while strikers do the killing.',
+			'The cheapest garrison anvil. Durable frontline infantry that holds ground and defends hardest against Fire attackers. Low attack, its job is to survive and keep the line while strikers do the killing.',
 		unitClass: 'armor',
 		stats: { attack: 16, defense: 30, speed: 18, carry: 60 },
 		cost: { biomass: 150, alloy: 150, ore: 350, population: 1, time: '1m 19s' },
@@ -119,7 +119,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		name: 'Vanguard Breaker',
 		role: 'Mobile striker - counters Armor',
 		description:
-			'Early-game mobile striker. Good damage and cheap to produce, but glass-fragile — its job is to soften armored defenders in the opening phase, not anchor a late-game army.',
+			'Early-game mobile striker. Good damage and cheap to produce, but glass-fragile, its job is to soften armored defenders in the opening phase, not anchor a late-game army.',
 		unitClass: 'mobile',
 		stats: { attack: 32, defense: 14, speed: 16, carry: 40 },
 		cost: { biomass: 250, alloy: 150, ore: 300, population: 1, time: '2m 40s' },
@@ -175,7 +175,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		name: 'Aegis Skirmisher',
 		role: 'Mobile anvil - counters Armor',
 		description:
-			'The mobile-class anvil. The defensive answer to Armor attackers (mobile counters armor on defense too), and fast enough to redeploy where the wall is needed. Defense-first — modest attack keeps it an anchor, not a raider.',
+			'The mobile-class anvil. The defensive answer to Armor attackers (mobile counters armor on defense too), and fast enough to redeploy where the wall is needed. Defense-first, modest attack keeps it an anchor, not a raider.',
 		unitClass: 'mobile',
 		stats: { attack: 34, defense: 64, speed: 24, carry: 30 },
 		cost: { biomass: 500, alloy: 550, ore: 450, population: 2, time: '12m 0s' },
@@ -186,7 +186,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		name: 'Arc Disruptor',
 		role: 'Fire anvil (EMP) - counters Mobile',
 		description:
-			'The fire-class anvil. An EMP interceptor reworked to be the mid-game garrison answer to Mobile raiders — solid defense that the triangle amplifies against incoming mobile forces. Hybrid attack lets it punish what it pins, but its value is on the wall.',
+			'The fire-class anvil. An EMP interceptor reworked to be the mid-game garrison answer to Mobile raiders, solid defense that the triangle amplifies against incoming mobile forces. Hybrid attack lets it punish what it pins, but its value is on the wall.',
 		unitClass: 'fire',
 		stats: { attack: 55, defense: 95, speed: 17, carry: 25 },
 		cost: { biomass: 550, alloy: 750, ore: 650, population: 2, time: '14m 0s' },
@@ -273,7 +273,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		name: 'Overseer',
 		role: 'Conquest / control unit (Special - no counter in either direction)',
 		description:
-			'The Overseer is a high-value command unit that enables nexus conquest. It does not fight - it administers. Sending an Overseer on a victorious strike reduces the target\'s Control Level by an amount that scales with how dominant your attack was: a crushing win (3:1 power advantage or better) drains 50, a clear win drains 34, and a narrow win still drains 15. Control starts at 100; once it reaches 0, the nexus is conquered and changes ownership to you. Two crushing strikes, three clear strikes, or a sustained coalition campaign can all reach conquest. The defending force does not need to be wiped - any victory with a surviving Overseer drains Control. Owned nexuses regenerate +10 Control per hour, so a lone weak attacker cannot grind a target down alone - coordinated waves are required for an attrition path. Overseer strikes travel 3x slower than standard attacks - giving defenders time to react. The Overseer is only useful if the attack wins - if the attack fails, the Overseer is not used and survives the defeat alongside its escort. If every non-Overseer troop in the strike is killed, the Overseer dies too. On the final conquering strike (the one that brings Control to 0), the Overseer is consumed - it does not return. The other surviving attackers are stationed at the newly captured nexus. The conquered nexus keeps its type (Resource Depot, Military Outpost, etc.), its name, and its current building levels - you take it as-is and can rename it yourself. NPC nexus bonuses are acquired at base tier; the doubled tier unlocks when the new owner reaches Command Core 15.',
+			"The Overseer is a high-value command unit that enables nexus conquest. It does not fight - it administers. Sending an Overseer on a victorious strike reduces the target's Control Level by an amount that scales with how dominant your attack was: a crushing win (3:1 power advantage or better) drains 50, a clear win drains 34, and a narrow win still drains 15. Control starts at 100; once it reaches 0, the nexus is conquered and changes ownership to you. Two crushing strikes, three clear strikes, or a sustained coalition campaign can all reach conquest. The defending force does not need to be wiped - any victory with a surviving Overseer drains Control. Owned nexuses regenerate +10 Control per hour, so a lone weak attacker cannot grind a target down alone - coordinated waves are required for an attrition path. Overseer strikes travel 3x slower than standard attacks - giving defenders time to react. The Overseer is only useful if the attack wins - if the attack fails, the Overseer is not used and survives the defeat alongside its escort. If every non-Overseer troop in the strike is killed, the Overseer dies too. On the final conquering strike (the one that brings Control to 0), the Overseer is consumed - it does not return. The other surviving attackers are stationed at the newly captured nexus. The conquered nexus keeps its type (Resource Depot, Military Outpost, etc.), its name, and its current building levels - you take it as-is and can rename it yourself. NPC nexus bonuses are acquired at base tier; the doubled tier unlocks when the new owner reaches Command Core 15.",
 		unitClass: 'special',
 		stats: { attack: 0, defense: 8, speed: 15, carry: 0 },
 		cost: { biomass: 180000, alloy: 140000, ore: 120000, population: 5, time: '4h 0m' },
@@ -391,7 +391,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		],
 		impact: [
 			'Each level multiplies population cap by 1.202× (compounding): floor(100 × 1.202^level).',
-			'Worked example: Lv1 = 120, Lv10 = 629 (+106 over Lv9), Lv20 = 3,963 (+666 over Lv19), Lv25 (max) = 9,945 (+1,672 over Lv24). The last few levels add the most housing — population is the real ceiling on army size, so these are high-value late upgrades.',
+			'Worked example: Lv1 = 120, Lv10 = 629 (+106 over Lv9), Lv20 = 3,963 (+666 over Lv19), Lv25 (max) = 9,945 (+1,672 over Lv24). The last few levels add the most housing, population is the real ceiling on army size, so these are high-value late upgrades.',
 			'⚡ Lv8 unlocks deeper population scaling (requires Storage Vault Lv4).'
 		]
 	},
@@ -411,7 +411,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		impact: [
 			'Each level multiplies cap by 1.48× (compounding): floor(1500 × 1.48^level) per resource.',
 			'Worked example: Lv1 = 2,220, Lv10 = 75,632 (+24,529 over Lv9), Lv20 = 3,813,515 (+1,236,816 over Lv19).',
-			'Storage deliberately grows a touch faster than production, so a full vault is always partly raid-fed — but the gap is bounded (a vault fills from empty in ~3–16h across all levels). Upgrade to widen your raid buffer and avoid overflow waste.'
+			'Storage deliberately grows a touch faster than production, so a full vault is always partly raid-fed, but the gap is bounded (a vault fills from empty in ~3–16h across all levels). Upgrade to widen your raid buffer and avoid overflow waste.'
 		]
 	},
 	{
@@ -495,7 +495,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 			{ level: 10, requires: ['Command Core Lv10', 'Armor Foundry Lv10'] }
 		],
 		impact: [
-			'Each level adds +1.5% amplification to your ATTACK class-counter bonuses (cap +30% at Lv20). Worked example: a ×1.35 counter becomes ×1.50 at Lv10 and ×1.65 at Lv20 — a major force multiplier for well-composed, scouted attacks. (Offensive only: it does not boost a defender\'s counter on the wall.)',
+			"Each level adds +1.5% amplification to your ATTACK class-counter bonuses (cap +30% at Lv20). Worked example: a ×1.35 counter becomes ×1.50 at Lv10 and ×1.65 at Lv20, a major force multiplier for well-composed, scouted attacks. (Offensive only: it does not boost a defender's counter on the wall.)",
 			'⚡ Lv3 unlocks Void Stalker; Lv5 unlocks Plasma Turret AND Siege Colossus.'
 		]
 	},
@@ -535,17 +535,19 @@ export const BUILDING_SCALING_DOC = {
 /* ─────────────────────────────────────────────── RESOURCE TRANSFERS ===== */
 export const RESOURCE_TRANSFER_DOC = {
 	empireTransfer: {
-		description: 'Move resources between your own nexuses instantly. Open the Logistics tab on any nexus to see every base you own with fill bars. Hit Send on any row for a pre-suggested top-up, or use the Send Resources button to open a blank dialog. Transfers within your own empire are lossless and arrive immediately.',
+		description:
+			'Move resources between your own nexuses instantly. Open the Supply tab on any nexus to see every base you own with fill bars. Hit Send on any row for a pre-suggested top-up, or use the Send Resources button to open a blank dialog. Transfers within your own empire are lossless and arrive immediately.'
 	},
 	factionTransfer: {
-		description: 'Send resources to a faction member\'s nexus from the same Send Resources dialog. Switch to the Faction tab, pick any of your faction-mates\' available bases as the destination, and enter amounts. A 10% transit tax applies: the recipient receives 90% of what you send. The dialog shows the tax breakdown before you confirm, and Max buttons account for the tax so the recipient never overflows.',
+		description:
+			"Send resources to a faction member's nexus from the same Send Resources dialog. Switch to the Faction tab, pick any of your faction-mates' available bases as the destination, and enter amounts. A 10% transit tax applies: the recipient receives 90% of what you send. The dialog shows the tax breakdown before you confirm, and Max buttons account for the tax so the recipient never overflows.",
 		taxRate: 0.1,
 		restrictions: [
 			'Sender must own the source nexus.',
 			'Recipient must be in the same faction as the sender.',
-			'Newbie-protected players cannot receive faction transfers.',
-		],
-	},
+			'Newbie-protected players cannot receive faction transfers.'
+		]
+	}
 };
 
 /* ─────────────────────────────────────────────────────── SCOUTING ===== */

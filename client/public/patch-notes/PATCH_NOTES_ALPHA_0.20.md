@@ -7,9 +7,9 @@ less clumpy.
 
 ---
 
-### The Starfield map, rebuilt
+### The Starfield map - rebuilt
 
-The old map moved in **whole-cell jumps** — you'd drag, nothing happened,
+The old map moved in **whole-cell jumps** , you'd drag, nothing happened,
 then it snapped a tile sideways. Every step rebuilt the entire grid, which
 is why panning and zooming felt heavy, especially on mobile.
 
@@ -22,7 +22,7 @@ finger **pixel-for-pixel** with no rebuild between frames.
 - **Drag-to-pan that follows your hand.** No more dead zone, no more
   snapping. The map moves exactly as far as you drag it.
 - **Flick to coast.** Throw the map with a quick drag and it glides to a
-  stop with natural momentum — then settles instantly when you grab it
+  stop with natural momentum , then settles instantly when you grab it
   again.
 - **Smooth, anchored zoom.** Scroll the wheel to zoom toward your cursor;
   pinch to zoom toward your fingers; the point under the pointer stays put
@@ -35,7 +35,7 @@ finger **pixel-for-pixel** with no rebuild between frames.
   budget phones. Zoom back in and full detail returns.
 
 The selected-nexus ring now lives on the tile itself, so it stays locked to
-your selection as you pan and zoom. Everything else is intact — ownership
+your selection as you pan and zoom. Everything else is intact , ownership
 colours, faction/ally tints, faction targets, storm zones, event jumps, the
 Jump box and Reset.
 
@@ -45,8 +45,8 @@ Land next to a bigger fish? Boxed into a corner with nothing to raid? Every
 **fresh signup** now gets a single **relocation token** to fix it.
 
 While you still hold your one starter nexus and your newbie shield is up, open
-the map, select **any** nexus you'd like to set up shop near — an NPC, a
-neighbour, even a heavyweight — and hit **Relocate Here**. Your nexus warps to
+the map, select **any** nexus you'd like to set up shop near , an NPC, a
+neighbour, even a heavyweight , and hit **Relocate Here**. Your nexus warps to
 the nearest open tile beside it, intact: same buildings, same troops, same
 resources, same points. Nothing resets.
 
@@ -56,23 +56,23 @@ A few honest details:
 - **It expires with your shield.** When newbie protection ends (3 days), the
   token does too. Use it while you're settling in, not as a late-game escape.
 - **Single nexus only.** Once you've taken a second nexus, relocation is off
-  the table — you're past the point it's meant for.
+  the table , you're past the point it's meant for.
 - **Not while you're mid-move.** You can't relocate with troops or attacks in
   transit to or from your nexus; let them resolve first.
 
 Worried that someone will warp next to you and strike? They can't. A
-nexus under newbie protection still **cannot attack or scout other players** —
+nexus under newbie protection still **cannot attack or scout other players** ,
 moving next to you buys an opening, not a free hit, and by the time their shield
 drops, the token is long spent.
 
-> Eliminated and respawning? Respawns don't get a relocation token — it's a
+> Eliminated and respawning? Respawns don't get a relocation token , it's a
 > first-footing tool for brand-new commanders, not a way to reroll your spot
 > after a loss.
 
 ### Special NPC nexuses now hold off in young galaxies
 
-Resource Depots, Military Outposts, Supply Caches, and Forward Bases — every
-neutral that carries a type bonus — no longer spawn in a galaxy's **first 5
+Resource Depots, Military Outposts, Supply Caches, and Forward Bases , every
+neutral that carries a type bonus , no longer spawn in a galaxy's **first 5
 days**. New galaxies open with plain **Neutral Settlements** only (the one
 neutral with no special perk); the typed neutrals begin appearing once the
 galaxy is 5 days old.
@@ -88,8 +88,8 @@ galaxies are already past the window and spawn the full mix as before.
 
 ### The map seeds far less clumpy
 
-Neutral nexuses used to scatter with pure random placement, which — counter to
-intuition — clumps. Maps ended up a dense diagonal blob through the middle with
+Neutral nexuses used to scatter with pure random placement, which , counter to
+intuition , clumps. Maps ended up a dense diagonal blob through the middle with
 empty edges. Placement now uses **best-candidate sampling**: each new nexus
 considers several open spots and takes the one farthest from its nearest
 neighbour, so the galaxy fills out evenly instead of piling up.

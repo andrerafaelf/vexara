@@ -1,31 +1,31 @@
 'use client';
 
+import Avatar from '@/components/Avatar';
 import ConnectionStatusBar from '@/components/ConnectionStatusBar';
 import ConqueredModal from '@/components/ConqueredModal';
 import DominanceBar from '@/components/DominanceBar';
+import MobileNexusDrawer from '@/components/MobileNexusDrawer';
 import NewPatchToast from '@/components/NewPatchToast';
+import NexusSidebar from '@/components/NexusSidebar';
 import OnboardingOverlay from '@/components/OnboardingOverlay';
+import SupportTiersCard from '@/components/SupportTiersCard';
 import TroopMovementsBar from '@/components/TroopMovementsBar';
+import { useAuth } from '@/context/AuthContext';
 import { ModalQueueProvider } from '@/context/ModalQueueContext';
 import { OnboardingProvider } from '@/context/OnboardingContext';
-import '@/styles/ConnectionStatusBar.css';
-import MobileNexusDrawer from '@/components/MobileNexusDrawer';
-import NexusSidebar from '@/components/NexusSidebar';
-import { useAuth } from '@/context/AuthContext';
+import { useUserStats } from '@/features/social/useSocial';
 import { useFriendsUnread } from '@/hooks/useFriendsUnread';
 import { useMyNexuses } from '@/hooks/useMyNexuses';
 import { useNotificationBadges } from '@/hooks/useNotificationBadges';
 import { useUnreadReports } from '@/hooks/useUnreadReports';
+import '@/styles/ConnectionStatusBar.css';
 import '@/styles/Game.css';
 import '@/styles/InGameIdentity.css';
 import { Nexus } from '@/types/game';
 import { Building2, ChevronDown, Menu } from 'lucide-react';
-import SupportTiersCard from '@/components/SupportTiersCard';
-import Avatar from '@/components/Avatar';
 import { usePathname, useRouter } from 'next/navigation';
 import { startTransition, useCallback, useEffect, useMemo, useState } from 'react';
 import { useStartProgress } from './NavigationProgress';
-import { useUserStats } from '@/features/social/useSocial';
 
 type ActivePage =
 	| 'dashboard'
@@ -402,7 +402,7 @@ export default function GameLayout({
 										onClick={() => setIsDiscoverOpen((v) => !v)}
 										aria-haspopup="menu"
 										aria-expanded={isDiscoverOpen}
-										title="More features — unlock as you progress"
+										title="More features, unlock as you progress"
 									>
 										<span className="nav-btn-content">
 											More

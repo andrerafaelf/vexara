@@ -1,4 +1,4 @@
-## Vexara — Alpha Patch Notes v0.16.2
+## Vexara - Alpha Patch Notes v0.16.2
 
 Population bug fixes and balance: corrected troop tracking from quest
 rewards, tuned the population cap formula, and fixed a Combat Calculator
@@ -10,14 +10,14 @@ swap bug.
 
 The Life Support building's population formula was compounding too
 aggressively. At level 20 it was handing out ~190,000 capacity, which
-made the system effectively meaningless — you could field an enormous
+made the system effectively meaningless , you could field an enormous
 army with no housing pressure whatsoever.
 
 The growth constant has been pulled back from **1.30 to 1.19** per
 level. Life Support 20 now caps out at roughly **3,166 population**, which
 is still a sizeable late-game army but means housing actually matters
 across all stages of the game. Existing nexuses are corrected
-automatically on this deploy — your `populationMax` will update, and if
+automatically on this deploy , your `populationMax` will update, and if
 your `populationCurrent` was somehow above the new cap it gets clamped
 down too.
 
@@ -36,10 +36,10 @@ claim) now correctly add the population cost of any troops granted
 alongside the flat population reward. Going forward the numbers will
 stay in sync.
 
-### Combat Calculator — swap sides now swaps modifiers
+### Combat Calculator - swap sides now swaps modifiers
 
 When you hit **Swap sides** in the Combat Calculator, the attacker and
-defender forces switched correctly — but **Armory level** and **Shield
+defender forces switched correctly , but **Armory level** and **Shield
 Grid level** stayed on their original sides, so after a swap your
 attacker was running on the defender's shield bonus and vice versa.
 

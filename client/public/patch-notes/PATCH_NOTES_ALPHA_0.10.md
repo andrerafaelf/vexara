@@ -1,4 +1,4 @@
-## Vexara — Alpha Patch Notes v0.10
+## Vexara - Alpha Patch Notes v0.10
 
 Faction wars get teeth. Combat reports go shareable. Late-game training
 shortens. UI polish across arrivals, referrals, and page titles.
@@ -38,7 +38,7 @@ A "Share to Chat" button on every combat report posts a formatted log
 into your faction chat. The chat input and server limit were raised from
 1000 to 4000 characters so a full report fits in one message. The
 receiving end parses the block and renders it inline with the rest of
-the chat — clickable, expandable, no copy-paste.
+the chat , clickable, expandable, no copy-paste.
 
 ---
 
@@ -68,7 +68,7 @@ When a support mission and an attack arrive in the same combat tick,
 the support troops are now stationed first. Previously the attacker
 could resolve against an empty defender even though reinforcements were
 scheduled for the same instant. Allied troop transfer records are now
-guaranteed to exist before combat reads them — fixes a rare crash on
+guaranteed to exist before combat reads them , fixes a rare crash on
 support-heavy battles.
 
 The combat report header was also wrong for supporters: a successful
@@ -83,7 +83,7 @@ perspective.
 Stacking 3 conquest waves on an NPC used to consume **all three
 Overseers**. The first strike conquered the nexus and stationed its
 survivors as your new garrison. The next two waves arrived to find a
-nexus you already owned — but combat ran anyway, you "won" against your
+nexus you already owned , but combat ran anyway, you "won" against your
 own troops, control re-dropped to 0, and conquest re-fired (burning the
 Overseer each time). You also "looted" yourself.
 
@@ -112,7 +112,7 @@ the arithmetic in your head.
 
 Pending referral tokens (Early Scout, Commander's Cache) now have their
 own tab in the Allies section. Padding and spacing of the Referrals tab
-were also fixed — text was butting flush against the panel border on
+were also fixed , text was butting flush against the panel border on
 some panels.
 
 ---
@@ -140,7 +140,7 @@ gets an additional cut from its base-time reduction.
 ### Life Support gives more population per level
 
 Population growth per Life Support level went from **1.28** to **1.30**
-compounding. Same base of 100, steeper curve — late-game nexuses get
+compounding. Same base of 100, steeper curve , late-game nexuses get
 the biggest boost, which is where the previous training-time cuts paid
 off and stacks felt pop-capped instead of time-capped.
 
@@ -178,7 +178,7 @@ clears when you visit the relevant section.
 
 Six unit types (Suppressor Team, Bulwark Guard, Disruptor Unit,
 Interceptor Bike, Annihilator Platform, Overseer) were silently giving
-**zero influence** — you could build 100 Annihilators and your dominance
+**zero influence** , you could build 100 Annihilators and your dominance
 score wouldn't budge. Meanwhile Assault Troopers were worth 2 influence
 each, the best per-resource return in the game, which made low-tier
 spam the most efficient ranking strategy.
@@ -206,7 +206,7 @@ weighted slightly above pure cost to reflect their strategic value:
 
 A 100-Annihilator stack jumps from 0 influence to 1300. A 1000-Assault
 Trooper army drops from 2000 to 1000. Leaderboard positions will shift
-on the next stats refresh — no manual reset needed.
+on the next stats refresh , no manual reset needed.
 
 ---
 

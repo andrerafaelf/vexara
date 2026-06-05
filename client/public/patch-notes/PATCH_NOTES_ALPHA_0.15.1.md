@@ -1,15 +1,15 @@
-## Vexara — Alpha Patch Notes v0.15.1
+## Vexara - Alpha Patch Notes v0.15.1
 
 A focused economy pass. Resource generation was scaling too fast
-at high levels, and Overseers — the only meaningful way to spend
-a large surplus — stayed flat-priced no matter how many nexuses
+at high levels, and Overseers , the only meaningful way to spend
+a large surplus , stayed flat-priced no matter how many nexuses
 you held. Both are addressed here.
 
 ---
 
 ### Resource production growth reduced
 
-Production at low levels is unchanged — the opening sequence and
+Production at low levels is unchanged , the opening sequence and
 early upgrades feel the same as before. What changed is how fast
 output compounds as buildings climb.
 
@@ -24,7 +24,7 @@ That sounds small, but it stacks across 20 levels:
 | 20 | ~141,795/h | ~94,369/h |
 
 A maxed-out 2× Resource Depot nexus goes from ~479k/h per resource
-down to roughly **~189k/h** — still a strong late-game payoff, but
+down to roughly **~189k/h** , still a strong late-game payoff, but
 no longer an amount that's impossible to outspend.
 
 ### Overseer cost scales with your empire size

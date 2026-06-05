@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { transferResources, getFactionNexuses } from '../services/api';
 import { useToast } from '../context/ToastContext';
-import { liveResources, fmtAmount, type LiveResources } from './resourceUtils';
-import ResourceIcon from './ResourceIcon';
-import type { Nexus } from '../types/game';
+import { getFactionNexuses, transferResources } from '../services/api';
 import '../styles/SendResourcesModal.css';
+import type { Nexus } from '../types/game';
+import ResourceIcon from './ResourceIcon';
+import { fmtAmount, liveResources, type LiveResources } from './resourceUtils';
 
 type ResKind = 'biomass' | 'alloy' | 'ore';
 const RES_KINDS: ResKind[] = ['biomass', 'alloy', 'ore'];
@@ -16,7 +16,7 @@ const RES_LABEL: Record<ResKind, string> = { biomass: 'Biomass', alloy: 'Alloy',
 // a faction-mate lose this fraction in transit; own-empire transfers are lossless.
 const FACTION_TRANSFER_TAX = 0.1;
 
-// When opened from a Logistics [Send] button we pre-fill a sensible top-up: bring
+// When opened from a Supply [Send] button we pre-fill a sensible top-up: bring
 // the destination toward this fraction of its cap, clamped to what the source can
 // spare and what the destination can hold. The player can still edit every field.
 const TOPUP_TARGET_RATIO = 0.8;
@@ -75,6 +75,18 @@ export default function SendResourcesModal({ nexuses, prefill, onClose, onTransf
 
 	const taxRate = mode === 'faction' ? FACTION_TRANSFER_TAX : 0;
 
+	useEffect(() => {
+		const lockClass = 'srm-scroll-locked';
+		const hadLockClass = document.body.classList.contains(lockClass);
+		const previousOverflow = document.body.style.overflow;
+		document.body.classList.add(lockClass);
+		document.body.style.overflow = 'hidden';
+		return () => {
+			if (!hadLockClass) document.body.classList.remove(lockClass);
+			document.body.style.overflow = previousOverflow;
+		};
+	}, []);
+
 	// Lazy-load faction nexuses the first time the player switches to Faction mode.
 	useEffect(() => {
 		if (mode !== 'faction' || factionLoaded) return;
@@ -101,10 +113,7 @@ export default function SendResourcesModal({ nexuses, prefill, onClose, onTransf
 	useEffect(() => {
 		const valid = destPool.some((n) => n._id === toId);
 		if (!valid) {
-			const first =
-				mode === 'faction'
-					? destPool[0]
-					: destPool.find((n) => n._id !== fromId);
+			const first = mode === 'faction' ? destPool[0] : destPool.find((n) => n._id !== fromId);
 			setToId(first?._id ?? '');
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -187,7 +196,7 @@ export default function SendResourcesModal({ nexuses, prefill, onClose, onTransf
 					? `${(to as FactionNexus).ownerUsername ?? 'your ally'} · ${to.name}`
 					: to.name;
 			if (res?.data?.clamped) {
-				toast(`Partly sent to ${label} — storage was nearly full.`, 'info');
+				toast(`Partly sent to ${label}, storage was nearly full.`, 'info');
 			} else if (mode === 'faction') {
 				toast(`Resources sent to ${label} (10% transit tax applied).`, 'success');
 			} else {
@@ -283,14 +292,14 @@ export default function SendResourcesModal({ nexuses, prefill, onClose, onTransf
 				{sameNexus && <p className="srm-warn">Pick two different nexuses to transfer between.</p>}
 				{noFactionTargets && (
 					<p className="srm-warn">
-						No faction members to send to — join a faction, or your faction-mates have no
-						eligible nexuses (new players under protection can&apos;t receive).
+						No faction members to send to, join a faction, or your faction-mates have no eligible
+						nexuses (new players under protection can&apos;t receive).
 					</p>
 				)}
 				{mode === 'faction' && !noFactionTargets && (
 					<p className="srm-warn srm-warn--tax">
-						Faction sends pay a <strong>10% transit tax</strong> — the recipient gets 90% of what
-						you send.
+						Faction sends pay a <strong>10% transit tax</strong>, the recipient gets 90% of what you
+						send.
 					</p>
 				)}
 
@@ -335,7 +344,7 @@ export default function SendResourcesModal({ nexuses, prefill, onClose, onTransf
 
 				{willClamp && (
 					<p className="srm-warn srm-warn--clamp">
-						Some amounts exceed what {to?.name ?? 'the destination'} can hold — the extra will be
+						Some amounts exceed what {to?.name ?? 'the destination'} can hold, the extra will be
 						held back automatically.
 					</p>
 				)}

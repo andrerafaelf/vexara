@@ -1,4 +1,4 @@
-## Vexara — Alpha Patch Notes v0.12
+## Vexara - Alpha Patch Notes v0.12
 
 Cancelling training no longer eats units the timer has already produced.
 Command Core's last five levels finally pay rent. Eliminated players get
@@ -16,7 +16,7 @@ entry. Trouble was the per-unit completion timer (the one `checkTrainingQueue`
 trickles into the nexus row over time) wasn't being applied first, so
 any units the timer had already produced but not yet flushed were
 silently dropped on the floor. Andre's case: 100 Assault Troopers
-queued, 15 already shown as built, cancel — and the 15 vanish.
+queued, 15 already shown as built, cancel , and the 15 vanish.
 
 - **Partial-credit runs before the refund.** When a cancel comes in,
   the controller now walks the chain head-down, crediting every unit
@@ -37,13 +37,13 @@ affects cancels that happened on a queue with elapsed per-unit timers.
 
 ---
 
-### Command Core 16-20 — Veteran Tier
+### Command Core 16-20 - Veteran Tier
 
 Once Command Core hit Lv15 the building stopped doing anything
 interesting. CC 16-20 only gave the standard 5% compounding build
-discount and didn't gate any further unlocks — no new troops, no new
+discount and didn't gate any further unlocks , no new troops, no new
 buildings, the derelict bonus already maxed at Lv15. Andre flagged it
-as feeling pointless. The fix is pure quality-of-life — extra queue
+as feeling pointless. The fix is pure quality-of-life , extra queue
 slots, no combat or economy power creep:
 
 - **CC 16 and 17 each add +1 build queue slot.** Cap rises from 5 to
@@ -55,7 +55,7 @@ slots, no combat or economy power creep:
   on each train card shows the new cap.
 - **CC 20 grants nothing extra** beyond the standard 5%-per-level
   build-time discount it already gives. The Veteran perks max out at
-  Lv19 — Lv20 is the prestige cap, not another bonus tier.
+  Lv19 , Lv20 is the prestige cap, not another bonus tier.
 
 Combat math, training times, and the Recruitment Core / Military
 Outpost discounts are all unchanged. The Veteran tier is purely
@@ -63,7 +63,7 @@ Outpost discounts are all unchanged. The Veteran tier is purely
 
 ---
 
-### Eliminated respawn — protection, garrison, and a functional core
+### Eliminated respawn - protection, garrison, and a functional core
 
 The respawn flow was three different kinds of wrong. The eliminated
 screen advertised "24 hours of attack protection" while the Newbie
@@ -74,13 +74,13 @@ window. And there were zero garrison troops, so the moment shields
 dropped the respawn was an open invitation.
 
 The first pass on this fix bumped CC/RC to Lv5/Lv3 and handed out a
-100-troop garrison with a 3-day shield. That was the floor — andre
+100-troop garrison with a 3-day shield. That was the floor , andre
 wanted a respawn that lands closer to a mid-tier nexus and a shorter
 window so the player can't sit untouchable for half a week.
 
 - **1.5 days of protection.** Down from 3. The respawn already lands
   with mid-tier buildings, real defensive structures, and a full
-  garrison — there's no need for a full fresh-signup window on top.
+  garrison , there's no need for a full fresh-signup window on top.
 - **Buildings: CC Lv12, RC Lv7, Life Support Lv12, Shield Grid Lv8,
   resource buildings (Biomass / Alloy / Ore / Storage) at Lv12.**
   Up from the first pass's Lv10 / CC5 / RC3 / Shield Grid 0. RC7 is
@@ -88,7 +88,7 @@ window so the player can't sit untouchable for half a week.
   Suppressor and the deeper troop tree. Shield Grid 8 means a
   returning player has a real building-defence layer instead of bare
   ground.
-- **Starter garrison: 250 troops across six classes** —
+- **Starter garrison: 250 troops across six classes** ,
   100 Assault Troopers, 60 Lancer Drones, 40 Breaker Units,
   20 Recon Operatives, 15 Suppressor Teams, 15 Bulwark Guards.
   Every pick is gated by the buildings the respawn already has, so
@@ -106,14 +106,14 @@ window so the player can't sit untouchable for half a week.
 On desktop the Overview / Buildings / Troops / Deployed / Espionage
 bar lives near the top and is always visible. On mobile, scrolling
 through a long buildings list or a stack of training queue cards
-buried the tab bar above the fold — every tab switch meant scrolling
+buried the tab bar above the fold , every tab switch meant scrolling
 back to the top first.
 
 The tab bar now pins to `top: 56px` (just below the sticky game
 header) on screens under 769px, with the page background and a blur
 so content scrolling underneath stays cleanly hidden. The bar still
 scrolls horizontally on extra-narrow viewports for the Espionage tab,
-just like before — only the vertical pin is new.
+just like before , only the vertical pin is new.
 
 ---
 
@@ -122,7 +122,7 @@ just like before — only the vertical pin is new.
 Losing your final nexus left the app in a dead state on the stale
 `/nexus/<id>` URL. The page tried to `GET /nexus/<lostId>`, got a
 403, and the eliminated-screen gate required the per-nexus query to
-*succeed* (`nexusSucceeded`) — which it never could once ownership
+*succeed* (`nexusSucceeded`) , which it never could once ownership
 was lost. Result: PageSkeleton forever, no "create new nexus" button.
 
 - **403 / 404 on the active nexus is now a terminal signal.** The

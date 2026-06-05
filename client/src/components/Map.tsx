@@ -20,7 +20,6 @@ import { useOnboarding } from '../context/OnboardingContext';
 import { useToast } from '../context/ToastContext';
 import { useGameSocket } from '../hooks/useGameSocket';
 import { useMapCamera } from '../hooks/useMapCamera';
-import { MapCell, type CellKind, type MapCellData } from './MapCell';
 import {
 	getGalaxyEvents,
 	getIncomingAttacks,
@@ -41,6 +40,7 @@ import { Nexus } from '../types/game';
 import { formatDateTime, formatTimeOfDay } from '../utils/date';
 import { transferTravelMinutes, travelMinutes } from '../utils/travel';
 import { Countdown } from './Countdown';
+import { MapCell, type CellKind, type MapCellData } from './MapCell';
 import Username from './Username';
 import WavePlanner from './WavePlanner';
 
@@ -666,7 +666,7 @@ const Map: React.FC<MapProps> = ({
 			// The server clamps to the destination's remaining storage; warn if some
 			// was held back rather than silently dropping it.
 			if (res?.data?.clamped) {
-				toast(`Partly sent to ${selectedNexus.name} — its storage was nearly full.`, 'info');
+				toast(`Partly sent to ${selectedNexus.name}, its storage was nearly full.`, 'info');
 			} else {
 				toast(`Resources sent to ${selectedNexus.name}`, 'success');
 			}
@@ -1147,10 +1147,7 @@ const Map: React.FC<MapProps> = ({
 							linkToProfile
 						/>
 						{!isOwn && selectedNexus.active && (
-							<span
-								className="nexus-active-badge"
-								title="Acted within the last 15 minutes"
-							>
+							<span className="nexus-active-badge" title="Acted within the last 15 minutes">
 								<span className="nexus-active-badge-dot" aria-hidden="true" />
 								Active
 							</span>
@@ -1718,10 +1715,7 @@ const Map: React.FC<MapProps> = ({
 										<EventIcon size={13} aria-hidden="true" />
 										<strong>{ev.title}</strong>
 										{ev.x != null && ev.y != null && (
-											<button
-												className="galaxy-event-goto"
-												onClick={() => moveTo(ev.x!, ev.y!)}
-											>
+											<button className="galaxy-event-goto" onClick={() => moveTo(ev.x!, ev.y!)}>
 												({ev.x}|{ev.y})
 											</button>
 										)}

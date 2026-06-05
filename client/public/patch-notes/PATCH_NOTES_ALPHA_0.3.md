@@ -1,4 +1,4 @@
-## Vexara — Alpha Patch Notes v0.3
+## Vexara - Alpha Patch Notes v0.3
 
 Player-reported combat accuracy and UI clarity pass. Priority was fixing
 lopsided fight outcomes, the attack menu desyncing troop counts, and
@@ -8,7 +8,7 @@ making sure every unit shows up where it should.
 
 ### Combat balance (server)
 
-**Winner loss rate rebalanced — attackers were dying too much on victories.**
+**Winner loss rate rebalanced , attackers were dying too much on victories.**
 
 The previous formula caused winning attackers to lose ~30–50% of their
 troops regardless of how dominant the win was. That made stomping an
@@ -23,7 +23,7 @@ undefended nexus feel painful and made clean victories feel hollow.
   absurd case where 56 Breakers lose half their number to 7 defenders.
 - **Loser survivability corrected.** Higher-defense units (Bulwark
   Guard, Siege Mech) now correctly take fewer losses on a losing side
-  than fragile units — the old formula accidentally inverted this for
+  than fragile units , the old formula accidentally inverted this for
   part of the range.
 - **Single-troop attacks against empty nexuses no longer kill the
   attacker.** Sending 1 Breaker at a nexus with 0 garrison now returns
@@ -38,7 +38,7 @@ undefended nexus feel painful and made clean victories feel hollow.
 
 When you sent troops, the server deducted them from your nexus, then
 the client fetched the updated nexus *and* added the new attack to the
-outgoing list — the `availableTroops` memo subtracted both, cutting the
+outgoing list , the `availableTroops` memo subtracted both, cutting the
 displayed count in half. The fix: `availableTroops` now reads directly
 from the server-authoritative nexus snapshot (already reflects all
 in-flight deductions) without a secondary subtraction. The count in the
@@ -77,7 +77,7 @@ it on some layouts. Fixed:
 
 ### Spy reports (server + client)
 
-**Coordinates are now snapshotted at scout time — renaming a nexus no
+**Coordinates are now snapshotted at scout time , renaming a nexus no
 longer obscures its identity in older reports.**
 
 Previously the scout intel blob stored resources, troops, and buildings
@@ -109,7 +109,7 @@ The Overseer entry now explains the full conquest loop:
 - Each successful strike with a surviving Overseer reduces target
   Control by 50.
 - Two successful strikes conquer any nexus.
-- **On conquest, the Overseer is consumed** — it does not return home.
+- **On conquest, the Overseer is consumed** , it does not return home.
 - The conquered nexus keeps its building levels and nexus type.
 - Conquering a special NPC nexus (non-Neutral Settlement) permanently
   doubles all its type bonuses.

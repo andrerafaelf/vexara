@@ -1,4 +1,25 @@
 import { useQuery } from '@tanstack/react-query';
+import {
+	AlertTriangle,
+	ArrowDownLeft,
+	ArrowUpRight,
+	Building2,
+	Check,
+	ChevronDown,
+	ChevronUp,
+	Hammer,
+	Info,
+	LayoutGrid,
+	Pencil,
+	ShieldCheck,
+	Sparkles,
+	Swords,
+	Trash2,
+	Truck,
+	X,
+	Zap
+} from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -20,77 +41,56 @@ import {
 	trainTroops,
 	upgradeBuilding
 } from '../services/api';
-import {
-	AlertTriangle,
-	ArrowDownLeft,
-	ArrowUpRight,
-	Building2,
-	Check,
-	ChevronDown,
-	ChevronUp,
-	Hammer,
-	Info,
-	LayoutGrid,
-	Pencil,
-	ShieldCheck,
-	Sparkles,
-	Swords,
-	Trash2,
-	Truck,
-	X,
-	Zap
-} from 'lucide-react';
 import '../styles/NexusView.css';
-import Username from './Username';
 import { Nexus, TroopTransfer } from '../types/game';
-import { useRouter } from 'next/navigation';
 import DailyStreaks from './DailyStreaks';
+import DashboardLogistics from './DashboardLogistics';
 import NexusMap from './NexusMap';
 import NexusTypeBadge from './NexusTypeBadge';
-import DashboardLogistics from './DashboardLogistics';
 import SendResourcesModal, { type SendResourcesPrefill } from './SendResourcesModal';
+import Username from './Username';
 // Shared source of truth with server/utils/gameConstants.ts.
 // If you change any number or formula here, change the server mirror in the same commit.
-import {
-	TROOP_COSTS,
-	getBuildingCost as getSharedBuildingCost,
-	MAX_TRAIN_PER_BATCH,
-	TROOP_COMBAT_CLASS,
-	type TroopCombatClass,
-	getCommandBuildQueueBonus,
-	getEffectiveBuildTimeSeconds,
-	getEffectiveTrainTimeSeconds,
-	getMaxTrainingQueueSlots,
-	getOverseerCost,
-	getStealthScoutFailChance,
-	getStealthVaultPerResource,
-	getTrainingChains,
-	getTrainTimeSeconds as getRecruitDiscountedTrainSeconds,
-	trainingBuildingFor,
-	trainingChainFor,
-	type TrainingChain
-} from '../realtime/gameConstants.shared';
-import { useToast } from '../context/ToastContext';
-import { Countdown } from './Countdown';
-import { QueueCountdown } from './QueueCountdown';
-import { LiveResourceStrip } from './LiveResourceStrip';
-import { BuildingCard, LockedBuildingPlot } from './BuildingCard';
 import { useNow } from '@/hooks/useNow';
-import { formatTimeOfDay } from '@/utils/date';
-import { useResourceSnapshot } from '@/realtime/useLiveResources';
-import { realtimeStore } from '@/realtime/store';
 import {
 	getMaxStorage,
 	getResourceProduction,
 	interpolateResources
 } from '@/realtime/economy.shared';
 import { serverNow } from '@/realtime/serverClock';
+import { realtimeStore } from '@/realtime/store';
+import { useResourceSnapshot } from '@/realtime/useLiveResources';
+import { formatTimeOfDay } from '@/utils/date';
 import { useOnboarding } from '../context/OnboardingContext';
+import { useToast } from '../context/ToastContext';
+import {
+	getCommandBuildQueueBonus,
+	getEffectiveBuildTimeSeconds,
+	getEffectiveTrainTimeSeconds,
+	getMaxTrainingQueueSlots,
+	getOverseerCost,
+	getTrainTimeSeconds as getRecruitDiscountedTrainSeconds,
+	getBuildingCost as getSharedBuildingCost,
+	getStealthScoutFailChance,
+	getStealthVaultPerResource,
+	getTrainingChains,
+	MAX_TRAIN_PER_BATCH,
+	trainingBuildingFor,
+	trainingChainFor,
+	TROOP_COMBAT_CLASS,
+	TROOP_COSTS,
+	type TrainingChain,
+	type TroopCombatClass
+} from '../realtime/gameConstants.shared';
+import { BuildingCard, LockedBuildingPlot } from './BuildingCard';
+import { Countdown } from './Countdown';
+import { LiveResourceStrip } from './LiveResourceStrip';
+import { QueueCountdown } from './QueueCountdown';
 
 // Troop + building art is served from the Cloudflare CDN — single source of
 // truth in data/gameIcons.ts (keyed by troop/building key). Rendered via plain
 // <img src> below, so the string URLs work directly.
-import { TROOP_ICONS, BUILDING_ICONS } from '../data/gameIcons';
+import { BUILDING_ICONS, TROOP_ICONS } from '../data/gameIcons';
 
 interface NexusViewProps {
 	nexus: Nexus;
@@ -118,10 +118,10 @@ const TRAINING_CHAIN_META: Record<TrainingChain, { label: string }> = {
 // the visible text; the `.troop-class-badge--<class>` modifier carries the
 // counter-triangle colour. title spells out the matchup for a hover hint.
 const TROOP_CLASS_META: Record<TroopCombatClass, { label: string; title: string }> = {
-	mobile: { label: 'Mobile', title: 'Mobile — beats Armor, weak to Fire' },
-	armor: { label: 'Armor', title: 'Armor — beats Fire, weak to Mobile' },
-	fire: { label: 'Fire', title: 'Fire — beats Mobile, weak to Armor' },
-	special: { label: 'Special', title: 'Special — no counter in either direction' }
+	mobile: { label: 'Mobile', title: 'Mobile - beats Armor, weak to Fire' },
+	armor: { label: 'Armor', title: 'Armor - beats Fire, weak to Mobile' },
+	fire: { label: 'Fire', title: 'Fire - beats Mobile, weak to Armor' },
+	special: { label: 'Special', title: 'Special - no counter in either direction' }
 };
 
 // Gate for the buff banner - labels are derived per-type inline so this
@@ -151,12 +151,9 @@ const BUILDING_NAMES: { [key: string]: string } = {
 const BUILDING_DESCRIPTIONS: { [key: string]: string } = {
 	commandCore:
 		'Unlocks new buildings, units, and progression milestones. Required for nexus expansion.',
-	hangarBay:
-		'Produces mobile-class units. Higher levels reduce mobile-class training time.',
-	plasmaForge:
-		'Produces fire-class units. Higher levels reduce fire-class training time.',
-	armorFoundry:
-		'Produces armor-class units. Higher levels reduce armor-class training time.',
+	hangarBay: 'Produces mobile-class units. Higher levels reduce mobile-class training time.',
+	plasmaForge: 'Produces fire-class units. Higher levels reduce fire-class training time.',
+	armorFoundry: 'Produces armor-class units. Higher levels reduce armor-class training time.',
 	lifeSupport: 'Increases maximum population capacity for housing more troops and workers.',
 	storageVault: 'Increases resource storage capacity. Protects resources from raids.',
 	biomassFarm: 'Produces Biomass per hour. Higher levels increase production rate.',
@@ -553,9 +550,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 				<span className="strikes-card-entry-time">
 					{when && (
 						<>
-							<span className="strikes-card-entry-arrival">
-								@ {formatTimeOfDay(when, true)}
-							</span>{' '}
+							<span className="strikes-card-entry-arrival">@ {formatTimeOfDay(when, true)}</span>{' '}
 							<Countdown endAt={when} className="strikes-card-entry-countdown" />
 						</>
 					)}
@@ -563,7 +558,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 			</div>
 		);
 	};
-	// Send-Resources modal (Logistics). When `sendPrefill` is non-null the modal is
+	// Send-Resources modal (Supply). When `sendPrefill` is non-null the modal is
 	// open; the prefill seeds source/destination and the smart top-up suggestion.
 	const [sendPrefill, setSendPrefill] = useState<SendResourcesPrefill | null>(null);
 	const [destroyPending, setDestroyPending] = useState<string | null>(null);
@@ -1487,11 +1482,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 				id: 'start-fabrication',
 				title: 'Enable Production',
 				description: 'Build an Armor Foundry to Lv1 so you can train troops.',
-				completed: done(
-					'intro',
-					'build_troop_fab_1',
-					(nexus.buildings.armorFoundry ?? 0) >= 1
-				),
+				completed: done('intro', 'build_troop_fab_1', (nexus.buildings.armorFoundry ?? 0) >= 1),
 				tab: 'buildings',
 				tip: (
 					<>
@@ -1576,13 +1567,13 @@ const NexusView: React.FC<NexusViewProps> = ({
 			},
 			{
 				id: 'expand-logistics',
-				title: 'Expand Logistics',
+				title: 'Expand Supply',
 				description: 'Upgrade Alloy Forge to Lv2.',
 				completed: done('expansion', 'build_alloy_forge_2', nexus.buildings.alloyForge >= 2),
 				tab: 'buildings',
 				tip: (
 					<>
-						<strong>Next up:</strong> Upgrade <em>Alloy Forge</em> to Lv2 to expand your logistics.
+						<strong>Next up:</strong> Upgrade <em>Alloy Forge</em> to Lv2 to expand your supply.
 					</>
 				)
 			},
@@ -1730,11 +1721,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 				id: 'troop-logistics',
 				title: 'Heavy Production',
 				description: 'Upgrade Armor Foundry to Lv5.',
-				completed: done(
-					'arsenal',
-					'build_troop_fab_5',
-					(nexus.buildings.armorFoundry ?? 0) >= 5
-				),
+				completed: done('arsenal', 'build_troop_fab_5', (nexus.buildings.armorFoundry ?? 0) >= 5),
 				tab: 'buildings'
 			},
 			{
@@ -1865,7 +1852,11 @@ const NexusView: React.FC<NexusViewProps> = ({
 				id: 'apex-targetingCore',
 				title: 'Apex Targeting Core',
 				description: 'Upgrade Targeting Core to Lv10.',
-				completed: done('annihilator', 'build_armory_10', (nexus.buildings.targetingCore || 0) >= 10),
+				completed: done(
+					'annihilator',
+					'build_armory_10',
+					(nexus.buildings.targetingCore || 0) >= 10
+				),
 				tab: 'buildings'
 			},
 			{
@@ -2255,7 +2246,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 						onClick={() => setActiveTab('logistics')}
 					>
 						<Truck size={14} aria-hidden="true" />
-						<span>Logistics</span>
+						<span>Supply</span>
 					</button>
 				)}
 			</div>
@@ -2392,7 +2383,10 @@ const NexusView: React.FC<NexusViewProps> = ({
 												const src = a.attacker?.nexus ?? a.attackerNexus;
 												const isSupport = a.type === 'support';
 												return (
-													<div key={a._id} className={`strikes-card-entry${isSupport ? ' strikes-card-entry--support' : ''}`}>
+													<div
+														key={a._id}
+														className={`strikes-card-entry${isSupport ? ' strikes-card-entry--support' : ''}`}
+													>
 														<span className="strikes-card-entry-who">
 															{isSupport && (
 																<span className="strikes-card-support-badge">SUPPORT</span>
@@ -2443,9 +2437,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 													incomingCollapsed ? 'Show incoming movements' : 'Hide incoming movements'
 												}
 											>
-												<span>
-													Incoming ({incomingAttacks.length + incomingTransfers.length})
-												</span>
+												<span>Incoming ({incomingAttacks.length + incomingTransfers.length})</span>
 												{incomingCollapsed ? (
 													<ChevronDown size={13} aria-hidden="true" />
 												) : (
@@ -3000,7 +2992,10 @@ const NexusView: React.FC<NexusViewProps> = ({
 																{rows.map(({ type, count }) => {
 																	const isPending = destroyPending === type;
 																	return (
-																		<div key={type} className={`stationed-card${isPending ? ' stationed-card--destroying' : ''}`}>
+																		<div
+																			key={type}
+																			className={`stationed-card${isPending ? ' stationed-card--destroying' : ''}`}
+																		>
 																			{TROOP_IMAGES[type] && (
 																				<div className="stationed-card-image-wrap">
 																					<img
@@ -3011,7 +3006,9 @@ const NexusView: React.FC<NexusViewProps> = ({
 																				</div>
 																			)}
 																			<div className="stationed-card-body">
-																				<div className="stationed-card-name">{TROOP_NAMES[type]}</div>
+																				<div className="stationed-card-name">
+																					{TROOP_NAMES[type]}
+																				</div>
 																				<div className="stationed-card-count">
 																					{count.toLocaleString()}
 																				</div>
@@ -3072,7 +3069,9 @@ const NexusView: React.FC<NexusViewProps> = ({
 										grouped.set(chain, bucket);
 									});
 									// Render lanes in the canonical server order; skip empty ones.
-									const lanes = getTrainingChains(cc).filter((c) => (grouped.get(c)?.length ?? 0) > 0);
+									const lanes = getTrainingChains(cc).filter(
+										(c) => (grouped.get(c)?.length ?? 0) > 0
+									);
 									return (
 										<div className="queue-section queue-section--chains">
 											<h4>Training queue</h4>
@@ -3115,7 +3114,9 @@ const NexusView: React.FC<NexusViewProps> = ({
 																				{TROOP_NAMES[item.troopType] || item.troopType}
 																			</span>
 																			<div className="queue-item-actions">
-																				<span className={isWaiting ? 'queue-time-queued' : 'queue-time'}>
+																				<span
+																					className={isWaiting ? 'queue-time-queued' : 'queue-time'}
+																				>
 																					{label}
 																				</span>
 																				<button
@@ -3357,7 +3358,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 													})}
 													{trainableTroops.length === 0 && lockedTroops.length > 0 && (
 														<p className="troop-locked-empty">
-															No {category} units available yet — upgrade buildings below to unlock.
+															No {category} units available yet, upgrade buildings below to unlock.
 														</p>
 													)}
 												</div>
@@ -3534,10 +3535,9 @@ const NexusView: React.FC<NexusViewProps> = ({
 					className="logistics-tab"
 					style={activeTab !== 'logistics' ? { display: 'none' } : undefined}
 				>
-					<h3 className="section-title">Logistics</h3>
+					<h3 className="section-title">Supply</h3>
 					<DashboardLogistics nexuses={ownNexuses} onSend={(prefill) => setSendPrefill(prefill)} />
 				</div>
-
 			</div>
 
 			{sendPrefill && (
@@ -3597,10 +3597,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 							setDestroyAmount('');
 							onUpdate();
 						} catch (err: any) {
-							showToast(
-								err?.response?.data?.error || 'Failed to decommission troops',
-								'error'
-							);
+							showToast(err?.response?.data?.error || 'Failed to decommission troops', 'error');
 						} finally {
 							setDestroyingTroops(false);
 						}
@@ -3627,10 +3624,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 									<div className="decommission-unit">
 										{TROOP_IMAGES[type] && (
 											<div className="decommission-unit-image">
-												<img
-													src={TROOP_IMAGES[type]}
-													alt={TROOP_NAMES[type]}
-												/>
+												<img src={TROOP_IMAGES[type]} alt={TROOP_NAMES[type]} />
 											</div>
 										)}
 										<div className="decommission-unit-meta">
@@ -3642,8 +3636,8 @@ const NexusView: React.FC<NexusViewProps> = ({
 									</div>
 
 									<p className="decommission-note">
-										Permanently disbands these units to free population. This charges a
-										10% scrap fee — it is not a refund.
+										Permanently disbands these units to free population. This charges a 10% scrap
+										fee, it is not a refund.
 									</p>
 
 									<div className="decommission-field">

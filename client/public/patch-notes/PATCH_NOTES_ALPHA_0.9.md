@@ -1,4 +1,4 @@
-## Vexara — Alpha Patch Notes v0.9
+## Vexara - Alpha Patch Notes v0.9
 
 Support mission logs removed. Reclaimed Outpost reworked.
 Sticky header fix on mobile. Empire overview page in progress.
@@ -12,7 +12,7 @@ battle, you now receive a push notification telling you how many were
 lost and how many survived. Your transfer list also refreshes immediately
 so the updated troop count is visible without a manual reload.
 
-Previously the troops died silently — no notification, no record.
+Previously the troops died silently , no notification, no record.
 
 ---
 
@@ -48,7 +48,7 @@ will now spawn as Forward Base.
 
 ---
 
-### Loot formula reworked — carry is now a threshold, not a hard cap
+### Loot formula reworked - carry is now a threshold, not a hard cap
 
 Previously, loot was capped by your army's raw carry total divided against
 the defender's resource pool. Against a late-game vault of 130,000+
@@ -56,7 +56,7 @@ resources, even a 600-unit army could only carry ~33% of it.
 
 Carry now works as a **threshold**: any army with 8,000+ surviving carry
 capacity takes 100% of lootable resources. Smaller raids still scale
-proportionally below the threshold — a 4,000-carry raid takes 50%.
+proportionally below the threshold , a 4,000-carry raid takes 50%.
 
 This means a solid mid-game striking force (e.g. 50 Interceptor Bikes +
 30 Annihilators) will always loot a vault clean on a clean win.

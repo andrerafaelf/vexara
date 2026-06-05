@@ -1,8 +1,8 @@
 'use client';
 
+import '@/styles/CookieConsent.css';
 import Script from 'next/script';
 import { useCallback, useEffect, useState } from 'react';
-import '@/styles/CookieConsent.css';
 
 // GDPR / ePrivacy consent gate for Google Analytics.
 //
@@ -106,10 +106,9 @@ export default function CookieConsent() {
 					<div className="cookie-consent-body">
 						<p className="cookie-consent-title">Cookies &amp; analytics</p>
 						<p className="cookie-consent-text">
-							Vexara uses Google Analytics to understand how players find and use the game.
-							This sets <code>_ga</code> cookies in your browser. It&apos;s entirely optional —
-							the game works the same either way. See our{' '}
-							<a href="/privacy">Privacy Policy</a> for details.
+							Vexara uses Google Analytics to understand how players find and use the game. This
+							sets <code>_ga</code> cookies in your browser. It&apos;s entirely optional, the game
+							works the same either way. See our <a href="/privacy">Privacy Policy</a> for details.
 						</p>
 					</div>
 					<div className="cookie-consent-actions">

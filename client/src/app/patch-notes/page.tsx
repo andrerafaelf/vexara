@@ -1,9 +1,9 @@
-import type { Metadata } from 'next';
-import Link from 'next/link';
-import SiteFooter from '@/components/SiteFooter';
 import PublicNav from '@/components/PublicNav';
+import SiteFooter from '@/components/SiteFooter';
 import { loadPatchNotes } from '@/lib/patchNotes';
 import '@/styles/PatchNotes.css';
+import type { Metadata } from 'next';
+import Link from 'next/link';
 
 const TITLE = 'Patch Notes - Vexara Alpha Updates';
 const DESCRIPTION =
@@ -37,7 +37,7 @@ export default function PatchNotesPage() {
 					<div className="pn-header-label">{'// TRANSMISSION LOG'}</div>
 					<h1 className="pn-title">Patch Notes</h1>
 					<p className="pn-subtitle">
-						Every change, balance pass, and bug fix since alpha launch. Built by one developer —
+						Every change, balance pass, and bug fix since alpha launch. Built by one developer,
 						patches ship when they ship.
 					</p>
 				</header>

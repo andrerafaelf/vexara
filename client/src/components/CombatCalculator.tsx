@@ -2,8 +2,8 @@
 
 import { Calculator, Crosshair, Shield, Skull, Swords, Trophy } from 'lucide-react';
 import { useMemo } from 'react';
-import { predictCombat, type Force, type TroopKey } from '../utils/combatSim';
 import '../styles/CombatCalculator.css';
+import { predictCombat, type Force, type TroopKey } from '../utils/combatSim';
 
 interface Props {
 	// The force the player is about to send (live from the attack form).
@@ -20,10 +20,10 @@ interface Props {
 }
 
 const MARGIN_COPY: Record<string, string> = {
-	blowout: 'Crushing — you dominate this fight',
-	decisive: 'Decisive — a clear win with light losses',
-	close: 'Close — expect to bleed for it',
-	coinflip: 'Coin-flip — costly even if you win'
+	blowout: 'Crushing, you dominate this fight',
+	decisive: 'Decisive, a clear win with light losses',
+	close: 'Close, expect to bleed for it',
+	coinflip: 'Coin-flip, costly even if you win'
 };
 
 function pct(n: number): string {
@@ -120,14 +120,14 @@ export default function CombatCalculator({
 				<div className={`cc-conquest ${p.conquerCapable ? 'cc-conquest--yes' : 'cc-conquest--no'}`}>
 					<Crosshair size={12} aria-hidden="true" />
 					{p.conquerCapable
-						? 'This strike should clear the garrison — Overseer can drive control down.'
-						: 'Garrison likely survives — Overseer needs the defenders fully wiped to act. Send more force.'}
+						? 'This strike should clear the garrison, Overseer can drive control down.'
+						: 'Garrison likely survives, Overseer needs the defenders fully wiped to act. Send more force.'}
 				</div>
 			)}
 
 			{!hasIntel && (
 				<div className="cc-note">
-					No scout intel on this target — prediction assumes an empty garrison. Scout first for an
+					No scout intel on this target, prediction assumes an empty garrison. Scout first for an
 					accurate estimate.
 				</div>
 			)}

@@ -1,8 +1,8 @@
-## Vexara — Alpha Patch Notes v0.11
+## Vexara - Alpha Patch Notes v0.11
 
 Galaxy events pace down to one roll a day and the Derelict Ship gets a
 real reward. The Sabotage Troops mission label is finally honest about
-what it does. Early game gets quieter — locked content steps out of the
+what it does. Early game gets quieter , locked content steps out of the
 way until a new commander has a reason to care about it.
 
 ---
@@ -11,7 +11,7 @@ way until a new commander has a reason to care about it.
 
 The event roller used to fire every 4 hours at 55%, which averaged ~3
 events per galaxy per day and pinned the active-event cap fast. Three
-players in a row reported "I just see Derelicts" — fast galaxies were
+players in a row reported "I just see Derelicts" , fast galaxies were
 capturing them before the next roll, so the no-duplicate guard kept
 rolling Derelict whenever the slot opened.
 
@@ -48,7 +48,7 @@ states this in-line.
 ### Sabotage Troops renamed to Delay Training
 
 The mission label and tooltip claimed it would "eliminate the largest
-troop group at the target" — which it never did. The actual effect has
+troop group at the target" , which it never did. The actual effect has
 always been to push back every batch in the defender's **training
 queue** by 30 minutes per excess operative. Garrison troops were never
 killed. Renamed to **Delay Training** so the label matches what
@@ -80,13 +80,13 @@ the way until you have a real reason to engage with it.
   for the "loot a nexus" step) so you never lose the breadcrumb.
 - **Top nav softens for new accounts.** Market, Allies, Factions, and
   Players collapse under a `More ▾` menu until you actually have a
-  reason to use them — Market unlocks at Command Core Lv3 or a 5k
+  reason to use them , Market unlocks at Command Core Lv3 or a 5k
   stockpile, Allies at CC Lv2, Factions when you build a Recruitment
   Core, Players on your first combat report. Promotions are sticky:
   once a tab appears in your bar it stays there forever. Direct URLs
   still work for anyone hitting the routes by bookmark.
 
-Veterans keep every tab they ever had — the localStorage promotion
+Veterans keep every tab they ever had , the localStorage promotion
 state carries forward from the first matching condition, so the
 collapsed state only affects players who genuinely haven't crossed the
 threshold yet.

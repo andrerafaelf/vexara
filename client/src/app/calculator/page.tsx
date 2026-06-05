@@ -1,31 +1,31 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import Image from 'next/image';
 import PublicNav from '@/components/PublicNav';
-import {
-	Shield,
-	Swords,
-	Trophy,
-	Skull,
-	Crosshair,
-	RefreshCw,
-	ChevronDown,
-	ChevronUp
-} from 'lucide-react';
-import {
-	predictCombat,
-	TROOP_STATS,
-	TROOP_CLASS,
-	TROOP_CARRY,
-	TROOP_KEYS,
-	forcePower,
-	type Force,
-	type TroopKey,
-	type TroopClass
-} from '@/utils/combatSim';
 import { TROOP_ICONS } from '@/data/gameIcons';
 import '@/styles/Calculator.css';
+import {
+	forcePower,
+	predictCombat,
+	TROOP_CARRY,
+	TROOP_CLASS,
+	TROOP_KEYS,
+	TROOP_STATS,
+	type Force,
+	type TroopClass,
+	type TroopKey
+} from '@/utils/combatSim';
+import {
+	ChevronDown,
+	ChevronUp,
+	Crosshair,
+	RefreshCw,
+	Shield,
+	Skull,
+	Swords,
+	Trophy
+} from 'lucide-react';
+import Image from 'next/image';
+import { useMemo, useState } from 'react';
 
 // ── Static data ────────────────────────────────────────────────────────────
 
@@ -87,10 +87,10 @@ const ALL_TROOP_GROUPS: { cls: TroopClass; keys: TroopKey[] }[] = [
 ];
 
 const MARGIN_COPY: Record<string, string> = {
-	blowout: 'Crushing victory — total dominance',
-	decisive: 'Decisive win — clear outcome, manageable losses',
-	close: 'Close fight — expect to bleed for it',
-	coinflip: 'Coin-flip — costly win even on the good side'
+	blowout: 'Crushing victory, total dominance',
+	decisive: 'Decisive win, clear outcome, manageable losses',
+	close: 'Close fight, expect to bleed for it',
+	coinflip: 'Coin-flip, costly win even on the good side'
 };
 
 function fmt(n: number) {
@@ -427,8 +427,8 @@ function ResultPanel({ atk, def, targetingCore, shieldGrid }: ResultPanelProps) 
 				>
 					<Crosshair size={13} aria-hidden="true" />
 					{r.conquerCapable
-						? 'Garrison cleared — Overseer can drive control down.'
-						: 'Garrison likely survives — Overseer needs full wipe to act.'}
+						? 'Garrison cleared, Overseer can drive control down.'
+						: 'Garrison likely survives, Overseer needs full wipe to act.'}
 				</div>
 			)}
 
@@ -553,7 +553,7 @@ export default function CalculatorPage() {
 				<span style={{ color: CLASS_COLOR.fire }}>Fire</span>
 				<span className="calc-triangle-sep">beats</span>
 				<span style={{ color: CLASS_COLOR.mobile }}>Mobile</span>
-				<span className="calc-triangle-sep">— ×1.35 / ×0.75</span>
+				<span className="calc-triangle-sep">- ×1.35 / ×0.75</span>
 			</div>
 
 			<div className="calc-layout">

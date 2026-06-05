@@ -1,4 +1,4 @@
-## Vexara — Alpha Patch Notes v0.1
+## Vexara - Alpha Patch Notes v0.1
 
 The first patch of the alpha. Focus: smoother first hour, less drift in the
 opening minutes, fewer rough edges around the UI.
@@ -26,11 +26,11 @@ opening minutes, fewer rough edges around the UI.
 
 The intro questline now walks you through the entire opening loop end to end:
 
-1. **Power The Nexus** — Command Core to Lv1
-2. **Reinforce Command** — Command Core to Lv2 (unlocks Recruitment Core)
-3. **Enable Recruitment** — Recruitment Core to Lv1
-4. **Train Your First Troops** — train 5 Assault Troopers
-5. **Loot A Nexus** — send your first scavenge raid from the Starfield
+1. **Power The Nexus** - Command Core to Lv1
+2. **Reinforce Command** - Command Core to Lv2 (unlocks Recruitment Core)
+3. **Enable Recruitment** - Recruitment Core to Lv1
+4. **Train Your First Troops** - train 5 Assault Troopers
+5. **Loot A Nexus** - send your first scavenge raid from the Starfield
 
 The contextual "Next up" tips in your nexus view now match this sequence
 step-by-step, so you should never run out of things to do during the first
@@ -42,8 +42,8 @@ a touch more breathing room when the chapter clears.
 ### UI / Header
 
 - **Login link added** to the landing and codex headers (visible when not
-  signed in) — clearly styled as a secondary button next to **Enlist**.
-- **Upgrade Building button** text is now legible — previously the dark text
+  signed in), clearly styled as a secondary button next to **Enlist**.
+- **Upgrade Building button** text is now legible, previously the dark text
   on a dark amber background was nearly invisible. Same fix applied to the
   troop **Train** button so every primary action shares the same look.
 - New **Players** tab in the in-game header. Browse everyone in your galaxy,
@@ -51,7 +51,7 @@ a touch more breathing room when the chapter clears.
 
 ### Factions & Social
 
-- Faction names in the **All Factions** browser are now **clickable** —
+- Faction names in the **All Factions** browser are now **clickable**,
   selecting one expands the card to show its current members and roles.
 - The new **Players** list (`/players`) shows every player in the galaxy with
   their influence, nexus count, and faction affiliation. Styled to match the
@@ -62,10 +62,10 @@ a touch more breathing room when the chapter clears.
 The map now distinguishes three friendly states so you can read alliances at
 a glance:
 
-- 🟢 **Green** — your own nexuses
-- 🔵 **Cyan** — same-faction members
-- 🟣 **Violet** — individual allies / friends list
-- 🔴 **Red** — everyone else
+- 🟢 **Green** - your own nexuses
+- 🔵 **Cyan** - same-faction members
+- 🟣 **Violet** - individual allies / friends list
+- 🔴 **Red** - everyone else
 
 Legend in the map sidebar updated to match.
 

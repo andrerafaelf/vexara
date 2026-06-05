@@ -10,6 +10,11 @@
 	animation: srm-fade var(--duration-fast) var(--ease-out);
 }
 
+body.srm-scroll-locked .main-content,
+body.srm-scroll-locked .nexus-nav-scroll {
+	overflow: hidden !important;
+}
+
 @keyframes srm-fade {
 	from {
 		opacity: 0;

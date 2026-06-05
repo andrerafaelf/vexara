@@ -1,4 +1,4 @@
-// Shared resource math + formatters for the Dashboard, the empire Logistics
+// Shared resource math + formatters for the Dashboard, the empire Supply
 // view, and the Send-Resources modal. These delegate to the CANONICAL economy
 // functions in realtime/economy.shared.ts (the client mirror of the server's
 // economy.ts) so every surface computes storage caps and production from one

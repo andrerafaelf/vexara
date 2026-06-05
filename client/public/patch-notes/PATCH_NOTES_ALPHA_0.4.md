@@ -1,4 +1,4 @@
-## Vexara — Alpha Patch Notes v0.4
+## Vexara - Alpha Patch Notes v0.4
 
 Nexus specialization and type bonus audit. Military Outpost was running at
 half strength everywhere. The doubling logic for conquered NPC nexuses was
@@ -8,7 +8,7 @@ wired to the wrong event. All corrected end-to-end.
 
 ### Nexus types
 
-**Military Outpost corrected — was running at half its intended power.**
+**Military Outpost corrected , was running at half its intended power.**
 
 The shield efficiency and training speed multipliers were both wrong at the
 data layer, and every label, tooltip, and Codex entry that referenced them.
@@ -19,7 +19,7 @@ All corrected:
 
 **Nexus type doubling now triggers correctly at Command Core 15.**
 
-The previous logic doubled bonuses at conquest time, which was wrong — NPC
+The previous logic doubled bonuses at conquest time, which was wrong , NPC
 nexuses have base-tier bonuses and conquering them doesn't change that.
 Doubling is the reward for investing in the nexus to Command Core 15:
 
@@ -47,7 +47,7 @@ doubled tier.
 
 ---
 
-**Bonus tiers — all nexus types:**
+**Bonus tiers , all nexus types:**
 
 | Type | Base (pre-CC15) | Doubled (CC15 reached) |
 |---|---|---|

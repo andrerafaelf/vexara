@@ -1,5 +1,6 @@
 import { ArrowLeft, Coins, Share2, Skull, Swords, Trophy } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { useToast } from '../context/ToastContext';
 import {
 	getReadReportIds,
 	getReports,
@@ -9,15 +10,13 @@ import {
 	sendFactionMessage
 } from '../services/api';
 import '../styles/Reports.css';
-import { useToast } from '../context/ToastContext';
 import { Attack, Nexus } from '../types/game';
 import { formatDateTime } from '../utils/date';
 import BattleReplay from './BattleReplay';
-import Username from './Username';
-import ScoutIntelCard from './ScoutIntelCard';
-import ResourceIcon from './ResourceIcon';
 import { usePageReady } from './NavigationProgress';
 import PageSkeleton from './PageSkeleton';
+import ScoutIntelCard from './ScoutIntelCard';
+import Username from './Username';
 
 interface ReportsProps {
 	nexus: Nexus;
@@ -424,7 +423,6 @@ const Reports: React.FC<ReportsProps> = ({
 
 	const unreadCount = reports.reduce((acc, r) => (readIds.has(r._id) ? acc : acc + 1), 0);
 
-
 	const handleMarkAllRead = async () => {
 		try {
 			const res = await markAllReportsRead(nexus._id);
@@ -439,7 +437,6 @@ const Reports: React.FC<ReportsProps> = ({
 	if (loading) {
 		return <PageSkeleton variant="rows" count={5} />;
 	}
-
 
 	if (selectedReport) {
 		const currentIndex = reports.findIndex((r) => r._id === selectedReport._id);
@@ -524,8 +521,7 @@ const Reports: React.FC<ReportsProps> = ({
 							{scoutReport ? (
 								selectedReport.result.scoutFailed ? (
 									<span>
-										Scout failed — operatives lost to enemy Stealth Array. No intel
-										returned.
+										Scout failed, operatives lost to enemy Stealth Array. No intel returned.
 									</span>
 								) : (
 									<span>Recon complete. Intelligence updated.</span>
@@ -543,9 +539,9 @@ const Reports: React.FC<ReportsProps> = ({
 								)
 							) : amAlly ? (
 								selectedReport.result.victory ? (
-									<span>Defence lost — the nexus you supported was raided</span>
+									<span>Defence lost, the nexus you supported was raided</span>
 								) : (
-									<span>Defence held — your allied troops helped defend</span>
+									<span>Defence held, your allied troops helped defend</span>
 								)
 							) : selectedReport.result.victory ? (
 								<span>Defeat! Your nexus was raided</span>
@@ -786,7 +782,7 @@ const Reports: React.FC<ReportsProps> = ({
               */}
 							<div className="report-section">
 								<h3>
-									Attacker —{' '}
+									Attacker -{' '}
 									<Username
 										name={attackerName}
 										isSupporter={selectedReport.attacker.user?.isSupporter}
@@ -826,7 +822,7 @@ const Reports: React.FC<ReportsProps> = ({
 
 							<div className="report-section">
 								<h3>
-									Defender —{' '}
+									Defender -{' '}
 									<Username
 										name={defenderName}
 										isSupporter={selectedReport.defender.user?.isSupporter}
@@ -875,7 +871,7 @@ const Reports: React.FC<ReportsProps> = ({
 									return (
 										<div className="report-section" key={contrib.ownerNexusId}>
 											<h3>
-												Allied support — {allyName}
+												Allied support - {allyName}
 												{isMe && <span className="report-force-you"> (You)</span>}
 												<span className="allied-contrib-nexus"> ({contrib.ownerNexusName})</span>
 											</h3>
@@ -1076,100 +1072,98 @@ const Reports: React.FC<ReportsProps> = ({
 			</div>
 
 			<>
-					{reports.length === 0 ? (
-						<div className="no-reports">
-							<p>
-								No combat reports yet. Strike other nexuses or defend yours to see reports here!
-							</p>
-						</div>
-					) : (
-						<div className="reports-list">
-							{reports.map((report) => {
-								const isMyAttack = isAttacker(report);
-								const amAllyReport = isAlly(report);
-								const hasBeenViewed = readIds.has(report._id);
-								const won = isMyAttack ? report.result.victory : !report.result.victory;
-								const scoutReport = isScoutReport(report);
+				{reports.length === 0 ? (
+					<div className="no-reports">
+						<p>No combat reports yet. Strike other nexuses or defend yours to see reports here!</p>
+					</div>
+				) : (
+					<div className="reports-list">
+						{reports.map((report) => {
+							const isMyAttack = isAttacker(report);
+							const amAllyReport = isAlly(report);
+							const hasBeenViewed = readIds.has(report._id);
+							const won = isMyAttack ? report.result.victory : !report.result.victory;
+							const scoutReport = isScoutReport(report);
 
-								return (
-									<div
-										key={report._id}
-										className={`report-item ${hasBeenViewed ? (won ? 'won' : 'lost') : ''}`}
-										onClick={() => setSelectedReport(report)}
-									>
-										<div className="report-icon" aria-hidden="true">
+							return (
+								<div
+									key={report._id}
+									className={`report-item ${hasBeenViewed ? (won ? 'won' : 'lost') : ''}`}
+									onClick={() => setSelectedReport(report)}
+								>
+									<div className="report-icon" aria-hidden="true">
+										{hasBeenViewed ? (
+											won ? (
+												<Trophy size={18} />
+											) : (
+												<Skull size={18} />
+											)
+										) : (
+											<Swords size={18} />
+										)}
+									</div>
+									<div className="report-info">
+										<div className="report-title">
 											{hasBeenViewed ? (
-												won ? (
-													<Trophy size={18} />
+												scoutReport ? (
+													<>
+														Scout report on {report.defender.nexus?.name || 'Unknown'} (
+														{report.defender.nexus?.x ?? '?'}|{report.defender.nexus?.y ?? '?'})
+													</>
+												) : isMyAttack ? (
+													<>
+														Strike on {report.defender.nexus?.name || 'Unknown'} (
+														{report.defender.nexus?.x ?? '?'}|{report.defender.nexus?.y ?? '?'})
+													</>
+												) : amAllyReport ? (
+													<>
+														Allied support at {report.defender.nexus?.name || 'Unknown'} (
+														{report.defender.nexus?.x ?? '?'}|{report.defender.nexus?.y ?? '?'})
+													</>
 												) : (
-													<Skull size={18} />
+													<>
+														Defense against{' '}
+														<Username
+															name={report.attacker.user?.username || 'Unknown'}
+															isSupporter={report.attacker.user?.isSupporter}
+															supporterTier={report.attacker.user?.supporterTier}
+														/>{' '}
+														from {report.attacker.nexus?.name || 'Unknown'} (
+														{report.attacker.nexus?.x ?? '?'}|{report.attacker.nexus?.y ?? '?'})
+													</>
 												)
 											) : (
-												<Swords size={18} />
+												'Combat Report'
 											)}
 										</div>
-										<div className="report-info">
-											<div className="report-title">
-												{hasBeenViewed ? (
-													scoutReport ? (
-														<>
-															Scout report on {report.defender.nexus?.name || 'Unknown'} (
-															{report.defender.nexus?.x ?? '?'}|{report.defender.nexus?.y ?? '?'})
-														</>
-													) : isMyAttack ? (
-														<>
-															Strike on {report.defender.nexus?.name || 'Unknown'} (
-															{report.defender.nexus?.x ?? '?'}|{report.defender.nexus?.y ?? '?'})
-														</>
-													) : amAllyReport ? (
-														<>
-															Allied support at {report.defender.nexus?.name || 'Unknown'} (
-															{report.defender.nexus?.x ?? '?'}|{report.defender.nexus?.y ?? '?'})
-														</>
-													) : (
-														<>
-															Defense against{' '}
-															<Username
-																name={report.attacker.user?.username || 'Unknown'}
-																isSupporter={report.attacker.user?.isSupporter}
-																supporterTier={report.attacker.user?.supporterTier}
-															/>{' '}
-															from {report.attacker.nexus?.name || 'Unknown'} (
-															{report.attacker.nexus?.x ?? '?'}|{report.attacker.nexus?.y ?? '?'})
-														</>
-													)
-												) : (
-													'Combat Report'
-												)}
-											</div>
-											<div className="report-meta">
-												{hasBeenViewed && !scoutReport && (
-													<span className={won ? 'victory' : 'defeat'}>
-														{won ? 'Victory' : 'Defeat'}
+										<div className="report-meta">
+											{hasBeenViewed && !scoutReport && (
+												<span className={won ? 'victory' : 'defeat'}>
+													{won ? 'Victory' : 'Defeat'}
+												</span>
+											)}
+											{hasBeenViewed && scoutReport && <span className="victory">Scout</span>}
+											<span className="report-date">{formatDate(report.arrivesAt)}</span>
+											{hasBeenViewed &&
+												!scoutReport &&
+												isMyAttack &&
+												report.result.resourcesStolen && (
+													<span className="loot">
+														<Coins size={12} aria-hidden="true" />{' '}
+														{report.result.resourcesStolen.biomass +
+															report.result.resourcesStolen.alloy +
+															report.result.resourcesStolen.ore}
 													</span>
 												)}
-												{hasBeenViewed && scoutReport && <span className="victory">Scout</span>}
-												<span className="report-date">{formatDate(report.arrivesAt)}</span>
-												{hasBeenViewed &&
-													!scoutReport &&
-													isMyAttack &&
-													report.result.resourcesStolen && (
-														<span className="loot">
-															<Coins size={12} aria-hidden="true" />{' '}
-															{report.result.resourcesStolen.biomass +
-																report.result.resourcesStolen.alloy +
-																report.result.resourcesStolen.ore}
-														</span>
-													)}
-											</div>
 										</div>
-										<div className="report-arrow">-&gt;</div>
 									</div>
-								);
-							})}
-						</div>
-					)}
-				</>
+									<div className="report-arrow">-&gt;</div>
+								</div>
+							);
+						})}
+					</div>
+				)}
+			</>
 		</div>
 	);
 };

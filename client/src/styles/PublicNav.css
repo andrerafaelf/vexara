@@ -7,19 +7,30 @@
    the component.
    ========================================================================== */
 
+:root {
+	--vx-nav-height: calc(50px + max(0px, var(--safe-top) - 12px));
+}
+
 .vx-nav {
-	position: sticky;
+	position: fixed;
 	top: 0;
-	z-index: 50;
+	left: 0;
+	right: 0;
+	z-index: var(--z-sticky);
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+	min-height: var(--vx-nav-height);
 	padding: 12px 26px;
 	padding-top: max(12px, var(--safe-top));
 	background: rgba(8, 9, 12, 0.78);
 	backdrop-filter: blur(10px);
 	-webkit-backdrop-filter: blur(10px);
 	border-bottom: 1px solid var(--border-default);
+}
+
+.vx-nav + * {
+	margin-top: var(--vx-nav-height);
 }
 
 .vx-nav-mark {
@@ -131,6 +142,10 @@
 }
 
 @media (max-width: 640px) {
+	:root {
+		--vx-nav-height: calc(46px + max(0px, var(--safe-top) - 10px));
+	}
+
 	.vx-nav {
 		padding: 10px 16px;
 		padding-top: max(10px, var(--safe-top));

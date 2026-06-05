@@ -48,7 +48,7 @@ export default function DashboardLogistics({ nexuses, onSend }: Props) {
 				onClick={() => setOpen((v) => !v)}
 				aria-expanded={open}
 			>
-				<h3 className="cc-card-title log-title">Logistics</h3>
+				<h3 className="cc-card-title log-title">Supply</h3>
 				<span className="log-header-right">
 					<span className="log-hint">
 						{nexuses.length} nexuses · send resources where they&apos;re short

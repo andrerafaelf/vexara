@@ -1,4 +1,4 @@
-## Vexara — Alpha Patch Notes v0.18
+## Vexara - Alpha Patch Notes v0.18
 
 A full combat rebalance. The unit tier system has been redrawn from the
 ground up so that endgame armies are built around endgame units, not
@@ -11,7 +11,7 @@ Stalkers finally feel like the apex units the codex says they are.
 ### Why this patch exists
 
 At max Recruitment Core, the Breaker Unit delivered **55 attack per
-population slot** — higher than any other unit in the game, including
+population slot** , higher than any other unit in the game, including
 the Annihilator Platform (42 atk/pop). It cost 160s base to train, it
 fit one pop, and once Recruitment Core was maxed it churned out at
 roughly 24 seconds per unit. There was no late-game reason to ever
@@ -26,37 +26,37 @@ that wandered out of its lane.
 
 ### The new tier contract
 
-**Tier 1 — Early game core (pop 1, fast train):** Lancer Drone,
+**Tier 1 , Early game core (pop 1, fast train):** Lancer Drone,
 Assault Trooper, Breaker Unit, Recon Operative. Cheap, throwaway,
 essential for the first day or two of play. Useful as fodder and
 screening units even late. Never optimal as a mass unit at endgame.
 
-**Tier 2 — Mid-game workhorses (pop 2–3, mid train):** Suppressor
+**Tier 2 , Mid-game workhorses (pop 2–3, mid train):** Suppressor
 Team, Skimmer Bike, Bulwark Guard, Disruptor Unit, Interceptor Bike.
 The class-counter triangle matters most at this tier. Composition
 becomes a real decision.
 
-**Tier 3 — Endgame power (pop 4–5, slow train, two attackers + two
+**Tier 3 , Endgame power (pop 4–5, slow train, two attackers + two
 defenders):**
 
-- **Annihilator Platform** — heavy fire attacker
-- **Void Stalker** — fast mobile attacker (promoted from Tier 2)
-- **Siege Mech** — heavy armor defender
-- **Plasma Turret** — static fire defender
+- **Annihilator Platform** , heavy fire attacker
+- **Void Stalker** , fast mobile attacker (promoted from Tier 2)
+- **Siege Mech** , heavy armor defender
+- **Plasma Turret** , static fire defender
 
 These are the four prestige units of a maxed empire.
 
-### Breaker Unit — pulled back to its Tier 1 role
+### Breaker Unit - pulled back to its Tier 1 role
 
 - **Attack 55 → 35.** Still the strongest pure attacker available
   at Recruitment Core 3, still the right answer to a wall of Bulwark
   Guards in the early game. No longer the strongest attack-per-pop
   unit in the entire roster.
 - **Carry 60 → 40.** Removes the "swarm of Breakers also happens to
-  be the best raiding force" dominance — raiding is still on the
+  be the best raiding force" dominance , raiding is still on the
   table, just not strictly better than dedicated raiders.
 
-### Void Stalker — promoted to Tier 3
+### Void Stalker - promoted to Tier 3
 
 The fastest unit in the game now sits where its codex description
 always suggested it belonged: alongside the Annihilator Platform as
@@ -69,7 +69,7 @@ the mobile half of the endgame attacking line.
 - **Train time 24m → 30m base.** Tier 3 commitment.
 - **Costs raised** to 1,100 / 900 / 1,400 to match Tier 3 bracket.
 
-### Siege Mech — the field anvil
+### Siege Mech - the field anvil
 
 Has always been the anvil. Now actually anvil-shaped.
 
@@ -79,37 +79,37 @@ Has always been the anvil. Now actually anvil-shaped.
 - **Train time 40m → 30m base.** Brought in line with Void Stalker
   so the Tier 3 ground line doesn't take a real-world day to assemble.
 
-### Annihilator Platform — finally an endgame unit
+### Annihilator Platform - finally an endgame unit
 
 The Annihilator had the *stats* of an apex unit and the *training
 time* of a public works project. At 4,080s base (more than an hour),
 even a maxed Recruitment Core left you producing one every six and a
-half minutes — slower than churning out Breakers two-for-one. The
+half minutes , slower than churning out Breakers two-for-one. The
 math made the apex unit a curio.
 
-- **Attack 210 → 320.** Now 64 attack per pop slot — the highest in
+- **Attack 210 → 320.** Now 64 attack per pop slot , the highest in
   the roster, as it should be.
 - **Defense 20 → 35.** Survives its own victories instead of bleeding
   out alongside the screen units.
 - **Carry 160 → 250.** Raids with Annihilators are now genuinely
   worth the train time.
 - **Train time 4,080s → 2,400s base** (40 min). At maxed Recruitment
-  Core, this is roughly **6 minutes per unit** instead of 10 — fast
+  Core, this is roughly **6 minutes per unit** instead of 10 , fast
   enough that a Tier 3 army is something you actually field, not
   something you display in a museum.
 
-### Plasma Turret — small adjustment
+### Plasma Turret - small adjustment
 
 - **Train time 50m → 45m base.** Modest cut to match the rest of the
   Tier 3 retune.
 
-### Combat math — defense actually matters when you win
+### Combat math - defense actually matters when you win
 
 Defense was a *cosmetic* stat for attackers in version 0.17. The
 winner's loss formula used `defFactor = 1 - defense/600`, which
 spread every unit across roughly a 5-percentage-point survival band.
 A Breaker Unit and a Siege Mech took nearly identical casualties on
-the winning side — which broke the entire "tank vs glass cannon"
+the winning side , which broke the entire "tank vs glass cannon"
 identity for attacking armies.
 
 - **Defense divisor steepened from /600 to /250**, with a 10%
@@ -117,11 +117,11 @@ identity for attacking armies.
   meaningful: a Breaker (def 3) takes ~99% of the base loss rate when
   winning, an Annihilator (def 35) takes ~86%, a Bulwark Guard
   (def 130) takes ~48%, and a Siege Mech (def 260) hits the 10%
-  floor — virtually untouchable when winning.
+  floor , virtually untouchable when winning.
 
 Combined with the stat changes, this gives endgame units the
 survivability story they deserve. A Tier 3 force doesn't just hit
-harder than the Breaker swarm — it walks away from the fight.
+harder than the Breaker swarm , it walks away from the fight.
 
 ### The "10 Breakers vs 1 Annihilator" test
 
@@ -142,11 +142,11 @@ the fight and starts wiping the Breakers. In practice, 1 Annihilator
 takes ~10 Breakers in a head-on fight and keeps more survivors at
 half the pop cost. That's the tier contract working as intended.
 
-### Conquest — your effort now matches the outcome
+### Conquest - your effort now matches the outcome
 
 The old rule said: **wipe every single defending unit, or your Overseer
 does nothing.** That created a brutal cliff. Bring 95% of the force you
-needed? Same result as bringing 50% — a failed conquest, heavy losses,
+needed? Same result as bringing 50% , a failed conquest, heavy losses,
 and zero progress. Worse, the wipe check could fail on a single Lancer
 Drone surviving by a rounding remainder. Players couldn't predict it,
 plan it, or learn from it.
@@ -162,7 +162,7 @@ amount scales with the power ratio of the fight:
 | **Narrow win** | razor-thin victory | **–15** | ~7 |
 
 Control still starts at 100 and conquest still triggers at 0. The math
-is the same — the **path to it** is now legible.
+is the same , the **path to it** is now legible.
 
 **Why this matters:**
 
@@ -175,11 +175,11 @@ is the same — the **path to it** is now legible.
   Drone left alive by the loss-rounding formula no longer cancels your
   Overseer's work.
 - **Coalitions have a real tool.** Five faction members each landing a
-  narrow win on a fortified target now collectively drain 75 Control —
+  narrow win on a fortified target now collectively drain 75 Control ,
   enough to crack a defender no single member could break alone. The
   "wolves vs. bear" dynamic is back.
 - **Control regenerates at +10/hour** (unchanged). A solo griefer
-  trickling one narrow strike every 12 hours achieves nothing — the
+  trickling one narrow strike every 12 hours achieves nothing , the
   nexus heals faster than they can drain it. Attrition only works
   when waves land *together*.
 
@@ -203,7 +203,7 @@ new scaled Control-drain system.
 
 A patch about saying no to spam. If you've spent the last few months
 training Breaker Units by the thousand, you don't need to retire them
-— they're still the right Tier 1 mobile attacker. You just have a
+, they're still the right Tier 1 mobile attacker. You just have a
 much better answer waiting for you at the top of the tech tree now.
 
 Conquest finally rewards the work you put into a strike. Bring
@@ -217,7 +217,7 @@ take it in three. Bring your friends, take anything.
 - **Onboarding no longer locks the screen.** The beginner tip overlay
   was capturing every click on the page, leaving new players unable to
   move, scroll, or leave the troops tab. The overlay now only
-  highlights — it never blocks input. The "train troops" tip also no
+  highlights , it never blocks input. The "train troops" tip also no
   longer surfaces before you've built a Recruitment Core, so you
   can't be pushed toward a button that doesn't work yet.
 - **Training queues that exceeded population capacity have been
@@ -230,4 +230,4 @@ take it in three. Bring your friends, take anything.
 
 ---
 
-See you in the dark. — André
+See you in the dark. , André

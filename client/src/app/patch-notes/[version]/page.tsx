@@ -1,10 +1,10 @@
-import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import SiteFooter from '@/components/SiteFooter';
 import PublicNav from '@/components/PublicNav';
-import { loadPatchNotes, loadPatchNote, renderMarkdown } from '@/lib/patchNotes';
+import SiteFooter from '@/components/SiteFooter';
+import { loadPatchNote, loadPatchNotes, renderMarkdown } from '@/lib/patchNotes';
 import '@/styles/PatchNotes.css';
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
 
 interface Props {
 	params: Promise<{ version: string }>;
@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 	const patch = loadPatchNote(version);
 	if (!patch) return {};
 
-	const title = `${patch.label} Patch Notes — Vexara`;
+	const title = `${patch.label} Patch Notes - Vexara`;
 	const description = patch.summary;
 
 	return {
