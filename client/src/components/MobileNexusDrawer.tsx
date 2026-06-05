@@ -10,11 +10,12 @@ import {
 	setGroupNexuses
 } from '../services/api';
 import { NEXUS_GROUPS_KEY } from './NexusSidebar';
-import { Check, Hammer, Pencil, ScrollText, Settings, Swords, Trash2, X } from 'lucide-react';
+import { Check, Pencil, ScrollText, Settings, Trash2, X } from 'lucide-react';
 import '../styles/MobileNexusDrawer.css';
 import { Nexus, NexusGroup } from '../types/game';
 import GalaxyChip from './GalaxyChip';
 import NexusTypeBadge from './NexusTypeBadge';
+import { CombatIcon, ConstructionIcon } from './VexaraIcons';
 
 interface MobileNexusDrawerProps {
 	nexuses: Nexus[];
@@ -121,12 +122,12 @@ const MobileNexusDrawer: React.FC<MobileNexusDrawerProps> = ({
 							<div className="nexus-badges">
 								{nexus.buildQueue.length > 0 && (
 									<span className="nexus-badge" title="Construction in progress">
-										<Hammer size={12} />
+										<ConstructionIcon size={12} />
 									</span>
 								)}
 								{nexus.trainingQueue.length > 0 && (
 									<span className="nexus-badge" title="Training in progress">
-										<Swords size={12} />
+										<CombatIcon size={12} />
 									</span>
 								)}
 								{unreadNexusIds?.has(String(nexus._id)) && (

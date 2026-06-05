@@ -890,10 +890,6 @@
 	gap: 8px;
 }
 
-.overview-shortcut-title svg {
-	color: var(--accent);
-}
-
 .overview-shortcut-status {
 	font-size: var(--text-base);
 	color: var(--accent);
@@ -1885,10 +1881,6 @@
 	background: rgba(255, 158, 61, 0.14);
 	color: var(--accent);
 	box-shadow: inset 0 0 0 1px rgba(255, 158, 61, 0.35);
-}
-
-.troops-subtab-btn svg {
-	flex-shrink: 0;
 }
 
 .troops-subtab-count {

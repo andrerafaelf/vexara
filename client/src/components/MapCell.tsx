@@ -1,4 +1,3 @@
-import { Building, Crosshair, Home, Star } from 'lucide-react';
 import React from 'react';
 import type { MapNexus } from './Map';
 
@@ -69,6 +68,7 @@ function MapCellInner({ data }: { data: MapCellData }) {
 	if (isSpyTarget) classes.push('spy-target');
 	if (isFactionTarget) classes.push('faction-target');
 	if (isSelected) classes.push('selected');
+	const markerKind = kind === 'current' ? 'current' : kind === 'own' ? 'own' : 'nexus';
 
 	return (
 		<div
@@ -87,13 +87,7 @@ function MapCellInner({ data }: { data: MapCellData }) {
 		>
 			{nexus && (
 				<div className={`nexus-marker ${markerClassByKind[kind]}`} aria-hidden="true">
-					{kind === 'current' ? (
-						<Star size={14} />
-					) : kind === 'own' ? (
-						<Building size={14} />
-					) : (
-						<Home size={14} />
-					)}
+					<span className={`nexus-marker-glyph nexus-marker-glyph--${markerKind}`} />
 					{isActive && (
 						<span
 							className="nexus-activity-dot"
@@ -106,7 +100,7 @@ function MapCellInner({ data }: { data: MapCellData }) {
 			{isFactionTarget && (
 				<>
 					<div className="faction-target-badge" aria-label="Faction target" title="Faction Target">
-						<Crosshair size={10} />
+						<span className="faction-target-reticle" />
 					</div>
 					<div className="faction-target-label" title="Marked as a target by your faction">
 						Target

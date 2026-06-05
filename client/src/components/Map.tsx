@@ -9,7 +9,6 @@ import {
 	Shield,
 	Sparkles,
 	Star,
-	Swords,
 	Waves,
 	Zap
 } from 'lucide-react';
@@ -19,6 +18,7 @@ import { useAuth } from '../context/AuthContext';
 import { useOnboarding } from '../context/OnboardingContext';
 import { useToast } from '../context/ToastContext';
 import { useGameSocket } from '../hooks/useGameSocket';
+import { CombatIcon } from './VexaraIcons';
 import { useMapCamera } from '../hooks/useMapCamera';
 import {
 	getGalaxyEvents,
@@ -1302,7 +1302,7 @@ const Map: React.FC<MapProps> = ({
 													: 'Launch attack'
 									}
 								>
-									<Swords size={14} aria-hidden="true" />{' '}
+									<CombatIcon size={14} aria-hidden="true" />{' '}
 									{isConquered ? 'Conquered' : isNewbieProtected ? 'Protected' : 'Attack'}
 								</button>
 								{selectedNexus.isFriendly && selectedNexus.owner && (

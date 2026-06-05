@@ -562,12 +562,61 @@
 
 .nexus-marker {
 	position: relative;
-	font-size: 29px;
 	line-height: 1;
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	width: 28px;
+	height: 28px;
 	filter: drop-shadow(0 0 5px currentColor) drop-shadow(0 0 10px currentColor);
+}
+
+.nexus-marker-glyph {
+	position: relative;
+	display: block;
+	width: 19px;
+	height: 19px;
+	background: currentColor;
+}
+
+.nexus-marker-glyph--current {
+	width: 18px;
+	height: 18px;
+	background: color-mix(in srgb, currentColor 14%, transparent);
+	border: 2px solid currentColor;
+	transform: rotate(45deg);
+}
+
+.nexus-marker-glyph--current::before {
+	content: '';
+	position: absolute;
+	inset: 4px;
+	background: currentColor;
+}
+
+.nexus-marker-glyph--own {
+	clip-path: polygon(50% 8%, 86% 32%, 86% 88%, 14% 88%, 14% 32%);
+}
+
+.nexus-marker-glyph--own::before {
+	content: '';
+	position: absolute;
+	left: 7px;
+	top: 4px;
+	width: 5px;
+	height: 12px;
+	background: rgba(0, 0, 0, 0.38);
+}
+
+.nexus-marker-glyph--nexus {
+	clip-path: polygon(50% 3%, 93% 26%, 93% 74%, 50% 97%, 7% 74%, 7% 26%);
+}
+
+.nexus-marker-glyph--nexus::before {
+	content: '';
+	position: absolute;
+	inset: 5px;
+	border: 1px solid rgba(0, 0, 0, 0.42);
 }
 
 /* "Online" presence pulse — a small green dot pinned to the top-right of any
@@ -683,6 +732,42 @@
 	line-height: 1;
 	filter: drop-shadow(0 0 3px #f97316);
 	z-index: 6;
+	width: 13px;
+	height: 13px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.faction-target-reticle {
+	position: relative;
+	display: block;
+	width: 11px;
+	height: 11px;
+	border: 1px solid currentColor;
+}
+
+.faction-target-reticle::before,
+.faction-target-reticle::after {
+	content: '';
+	position: absolute;
+	background: currentColor;
+}
+
+.faction-target-reticle::before {
+	left: 50%;
+	top: -2px;
+	width: 1px;
+	height: 15px;
+	transform: translateX(-50%);
+}
+
+.faction-target-reticle::after {
+	left: -2px;
+	top: 50%;
+	width: 15px;
+	height: 1px;
+	transform: translateY(-50%);
 }
 
 /* Text label under the marker so a faction-marked nexus reads as a TARGET at a

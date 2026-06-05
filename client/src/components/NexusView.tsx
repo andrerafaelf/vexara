@@ -6,12 +6,10 @@ import {
 	Check,
 	ChevronDown,
 	ChevronUp,
-	Hammer,
 	Info,
 	Pencil,
 	ShieldCheck,
 	Sparkles,
-	Swords,
 	Trash2,
 	X,
 	Zap
@@ -61,7 +59,9 @@ import { formatTimeOfDay } from '@/utils/date';
 import { useOnboarding } from '../context/OnboardingContext';
 import { useToast } from '../context/ToastContext';
 import {
+	COMMAND_BUILD_TIME_FACTOR_PER_LEVEL,
 	getCommandBuildQueueBonus,
+	getClassBuildingTrainFactor,
 	getEffectiveBuildTimeSeconds,
 	getEffectiveTrainTimeSeconds,
 	getMaxTrainingQueueSlots,
@@ -83,6 +83,7 @@ import { BuildingCard, LockedBuildingPlot } from './BuildingCard';
 import { Countdown } from './Countdown';
 import { LiveResourceStrip } from './LiveResourceStrip';
 import { QueueCountdown } from './QueueCountdown';
+import { CombatIcon, ConstructionIcon } from './VexaraIcons';
 
 // Troop + building art is served from the Cloudflare CDN — single source of
 // truth in data/gameIcons.ts (keyed by troop/building key). Rendered via plain
@@ -1307,7 +1308,21 @@ const NexusView: React.FC<NexusViewProps> = ({
 					return unlockSummary;
 				}
 
-				return 'Unlocks: Higher-tier buildings and units';
+				if (building === 'hangarBay' || building === 'plasmaForge' || building === 'armorFoundry') {
+					const currentReduction = Math.round((1 - getClassBuildingTrainFactor(currentLevel)) * 100);
+					const nextReduction = Math.round((1 - getClassBuildingTrainFactor(targetLevel)) * 100);
+					return `Training time reduction: ${currentReduction}% -> ${nextReduction}%`;
+				}
+
+				const currentBuildReduction = Math.round(
+					(1 - Math.pow(COMMAND_BUILD_TIME_FACTOR_PER_LEVEL, Math.max(0, currentLevel || 0))) *
+						100
+				);
+				const nextBuildReduction = Math.round(
+					(1 - Math.pow(COMMAND_BUILD_TIME_FACTOR_PER_LEVEL, Math.max(0, targetLevel || 0))) *
+						100
+				);
+				return `Build time reduction: ${currentBuildReduction}% -> ${nextBuildReduction}%`;
 			}
 			default:
 				return 'Improves this structure';
@@ -2321,7 +2336,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 							onClick={() => setActiveTab('buildings')}
 						>
 							<span className="overview-shortcut-title">
-								<Hammer size={14} aria-hidden="true" /> Construction
+								Construction
 							</span>
 							<span className="overview-shortcut-status">
 								{activeBuild ? 'Active upgrade in progress' : 'No active construction'}
@@ -2343,7 +2358,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 							onClick={() => setActiveTab('troops')}
 						>
 							<span className="overview-shortcut-title">
-								<Swords size={14} aria-hidden="true" /> Training
+								Training
 							</span>
 							<span className="overview-shortcut-status">
 								{activeTraining ? 'Troops are being trained' : 'No active training'}
@@ -2362,7 +2377,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 						</button>
 						<div className="overview-shortcut-card overview-strikes-card">
 							<span className="overview-shortcut-title">
-								<Swords size={14} aria-hidden="true" /> Strikes
+								Strikes
 							</span>
 							<div className="strikes-card-split">
 								<div className="strikes-card-half">
@@ -2488,7 +2503,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 						<div className="overview-queue-summary">
 							<div className="overview-queue-summary-info">
 								<span className="overview-queue-summary-label">
-									<Hammer size={12} aria-hidden="true" /> Building Queue
+									<ConstructionIcon size={12} aria-hidden="true" /> Building Queue
 								</span>
 								<span className="overview-queue-summary-detail">
 									{nexus.buildQueue.length} item{nexus.buildQueue.length !== 1 ? 's' : ''} ·{' '}
@@ -2517,7 +2532,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 						<div className="overview-queue-summary">
 							<div className="overview-queue-summary-info">
 								<span className="overview-queue-summary-label">
-									<Swords size={12} aria-hidden="true" /> Training Queue
+									<CombatIcon size={12} aria-hidden="true" /> Training Queue
 								</span>
 								<span className="overview-queue-summary-detail">
 									{nexus.trainingQueue.length} item{nexus.trainingQueue.length !== 1 ? 's' : ''} ·{' '}
@@ -2912,7 +2927,6 @@ const NexusView: React.FC<NexusViewProps> = ({
 									className={`troops-subtab-btn${troopsSubTab === 'train' ? ' active' : ''}`}
 									onClick={() => setTroopsSubTab('train')}
 								>
-									<Hammer size={13} aria-hidden="true" />
 									<span>Train</span>
 								</button>
 								<button
@@ -2922,7 +2936,6 @@ const NexusView: React.FC<NexusViewProps> = ({
 									className={`troops-subtab-btn${troopsSubTab === 'stationed' ? ' active' : ''}`}
 									onClick={() => setTroopsSubTab('stationed')}
 								>
-									<ShieldCheck size={13} aria-hidden="true" />
 									<span>Stationed</span>
 									{(() => {
 										const total = Object.values(nexus.troops || {}).reduce(
@@ -3416,7 +3429,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 								return (
 									<div key={atk._id} className={`borrowed-entry borrowed-entry-${atk.status}`}>
 										<div className="borrowed-label">
-											<Swords size={12} aria-hidden="true" style={{ marginRight: 4 }} />
+											<CombatIcon size={12} aria-hidden="true" style={{ marginRight: 4 }} />
 											{statusLabel}
 											{countdownEndAt && (
 												<span className="borrowed-countdown">

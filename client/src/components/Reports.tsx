@@ -1,6 +1,7 @@
-import { ArrowLeft, Coins, Share2, Skull, Swords, Trophy } from 'lucide-react';
+import { ArrowLeft, Coins, Share2, Skull, Trophy } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useToast } from '../context/ToastContext';
+import { CombatIcon } from './VexaraIcons';
 import {
 	getReadReportIds,
 	getReports,
@@ -586,7 +587,7 @@ const Reports: React.FC<ReportsProps> = ({
 									</span>
 								</div>
 								<button className="scout-attack-btn" onClick={() => setShowAttackForm((v) => !v)}>
-									<Swords size={14} aria-hidden="true" />{' '}
+									<CombatIcon size={14} aria-hidden="true" />{' '}
 									{showAttackForm ? 'Cancel' : scoutReport ? 'Attack' : 'Attack Again'}
 								</button>
 							</div>
@@ -1112,7 +1113,7 @@ const Reports: React.FC<ReportsProps> = ({
 												<Skull size={18} />
 											)
 										) : (
-											<Swords size={18} />
+											<CombatIcon size={18} />
 										)}
 									</div>
 									<div className="report-info">

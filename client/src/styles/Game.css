@@ -679,11 +679,16 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 18px;
-	height: 18px;
+	width: 21px;
+	height: 21px;
 	border-radius: var(--radius-xs);
 	background: rgba(255, 255, 255, 0.05);
 	color: var(--text-muted);
+}
+
+.nexus-badge svg {
+	width: 15px;
+	height: 15px;
 }
 
 .nexus-item.active .nexus-badge {

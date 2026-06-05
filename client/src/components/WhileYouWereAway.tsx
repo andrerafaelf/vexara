@@ -1,11 +1,12 @@
 'use client';
 
-import { Building2, MapPin, Shield, Swords, Trophy, Users, X, Zap } from 'lucide-react';
+import { Building2, MapPin, Shield, Trophy, Users, X, Zap } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import '../styles/WhileYouWereAway.css';
 import { getActivitySummary } from '../services/api';
 import { serverNow } from '../realtime/serverClock';
+import { CombatIcon } from './VexaraIcons';
 
 const LAST_VISIT_KEY = 'wywa_last_visit';
 // Don't summarize further back than this, even if the stored visit is ancient
@@ -256,7 +257,7 @@ export default function WhileYouWereAway({ onDismiss }: Props) {
 					{data.attacks.length > 0 && (
 						<section className="wywa-section">
 							<div className="wywa-section-header">
-								<Swords size={15} />
+								<CombatIcon size={15} />
 								<span>
 									Combat ({data.attacks.length} battle{data.attacks.length !== 1 ? 's' : ''})
 								</span>

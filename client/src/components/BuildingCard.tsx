@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Hammer, Info, Lock } from 'lucide-react';
+import { Info, Lock } from 'lucide-react';
+import { ConstructionIcon } from './VexaraIcons';
 import { QueueCountdown } from './QueueCountdown';
 import { useFlashOnTrue } from '@/realtime/useFlashOnChange';
 import { useGatedLiveResources, useResourceSnapshot } from '@/realtime/useLiveResources';
@@ -213,7 +214,7 @@ function BuildingCardInner(props: BuildingCardProps) {
 			{isUpgrading && (
 				<div className="upgrading-status">
 					<span className="upgrading-badge">
-						<Hammer size={12} aria-hidden="true" /> Upgrading…
+						<ConstructionIcon size={12} aria-hidden="true" /> Upgrading…
 					</span>
 					{firstQueuedForBuilding && (
 						<QueueCountdown

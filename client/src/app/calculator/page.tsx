@@ -1,6 +1,7 @@
 'use client';
 
 import PublicNav from '@/components/PublicNav';
+import { CombatIcon } from '@/components/VexaraIcons';
 import { TROOP_ICONS } from '@/data/gameIcons';
 import '@/styles/Calculator.css';
 import {
@@ -21,7 +22,6 @@ import {
 	RefreshCw,
 	Shield,
 	Skull,
-	Swords,
 	Trophy
 } from 'lucide-react';
 import Image from 'next/image';
@@ -151,7 +151,7 @@ function ForceEditor({
 			<div className="calc-panel-header">
 				<span className="calc-panel-label">
 					{side === 'atk' ? (
-						<Swords size={14} aria-hidden="true" />
+						<CombatIcon size={14} aria-hidden="true" />
 					) : (
 						<Shield size={14} aria-hidden="true" />
 					)}
@@ -300,7 +300,7 @@ function ResultPanel({ atk, def, targetingCore, shieldGrid }: ResultPanelProps) 
 	if (atkTotal === 0) {
 		return (
 			<div className="calc-result calc-result--idle">
-				<Swords size={20} className="calc-result-idle-icon" aria-hidden="true" />
+				<CombatIcon size={20} className="calc-result-idle-icon" aria-hidden="true" />
 				<p>Enter your attacking force to see the predicted outcome.</p>
 			</div>
 		);
@@ -353,7 +353,7 @@ function ResultPanel({ atk, def, targetingCore, shieldGrid }: ResultPanelProps) 
 			<div className="calc-power-block">
 				<div className="calc-power-row">
 					<span className="calc-power-label">
-						<Swords size={12} aria-hidden="true" /> Attack power
+						<CombatIcon size={12} aria-hidden="true" /> Attack power
 					</span>
 					<span className="calc-power-value calc-power-value--atk">{fmt(r.attackPower)}</span>
 				</div>
@@ -439,7 +439,7 @@ function ResultPanel({ atk, def, targetingCore, shieldGrid }: ResultPanelProps) 
 					<div className="calc-survivors-grid">
 						<div className="calc-survivors-col">
 							<div className="calc-survivors-heading">
-								<Swords size={11} aria-hidden="true" /> Attackers
+								<CombatIcon size={11} aria-hidden="true" /> Attackers
 							</div>
 							{TROOP_KEYS.filter((k) => (atk[k] || 0) > 0).map((k) => (
 								<div key={k} className="calc-survivor-row">
@@ -487,7 +487,7 @@ function ResultPanel({ atk, def, targetingCore, shieldGrid }: ResultPanelProps) 
 							<div className="calc-class-breakdown-bars">
 								<div className="calc-class-bar-row">
 									<span className="calc-class-bar-side">
-										<Swords size={9} aria-hidden="true" />
+										<CombatIcon size={9} aria-hidden="true" />
 									</span>
 									<div className="calc-class-bar-track">
 										<div

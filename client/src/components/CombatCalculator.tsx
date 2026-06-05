@@ -1,9 +1,10 @@
 'use client';
 
-import { Calculator, Crosshair, Shield, Skull, Swords, Trophy } from 'lucide-react';
+import { Calculator, Crosshair, Shield, Skull, Trophy } from 'lucide-react';
 import { useMemo } from 'react';
 import '../styles/CombatCalculator.css';
 import { predictCombat, type Force, type TroopKey } from '../utils/combatSim';
+import { CombatIcon } from './VexaraIcons';
 
 interface Props {
 	// The force the player is about to send (live from the attack form).
@@ -91,7 +92,7 @@ export default function CombatCalculator({
 
 			<div className="cc-power-row">
 				<span className="cc-power cc-power--atk">
-					<Swords size={11} aria-hidden="true" /> {Math.round(p.attackPower).toLocaleString()}
+					<CombatIcon size={11} aria-hidden="true" /> {Math.round(p.attackPower).toLocaleString()}
 				</span>
 				<span className="cc-power-vs">vs</span>
 				<span className="cc-power cc-power--def">
