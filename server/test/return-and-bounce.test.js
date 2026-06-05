@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { RETURN_TRAVEL_MULTIPLIER } from '../utils/gameConstants.js';
+import { normalizeTroopCounts } from '../utils/troopKeys.js';
 
 // --- Return travel time --------------------------------------------------
 // Returns (post-combat survivors, scouts heading home, bounced support, and
@@ -66,4 +67,26 @@ test('isPhantomBounce tolerates missing/empty result', () => {
   assert.equal(isPhantomBounce({ id: 1, result: null }), false);
   assert.equal(isPhantomBounce({ id: 2, result: {} }), false);
   assert.equal(isPhantomBounce({ id: 3 }), false);
+});
+
+test('return landing normalizes legacy survivor troop keys', () => {
+  const survivors = normalizeTroopCounts({
+    skimmerBike: 10,
+    wraithSkimmer: 5,
+    breakerUnit: 3,
+    suppressorTeam: 2,
+    disruptorUnit: 4,
+    lancerDrone: 6,
+    interceptorBike: 7,
+    unknownPrototype: 999
+  });
+
+  assert.deepEqual(survivors, {
+    wraithSkimmer: 15,
+    vanguardBreaker: 3,
+    pyreSuppressor: 2,
+    arcDisruptor: 4,
+    sentinelLancer: 6,
+    phantomLance: 7
+  });
 });

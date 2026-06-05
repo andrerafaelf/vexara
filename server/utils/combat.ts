@@ -30,6 +30,7 @@ import { logInfo, logWarn } from './logger.js';
 import { computeNexusPopulation, getPopulationMax, loadAwayPopulation } from './population.js';
 import { NOTIF, sendPushToUser } from './push.js';
 import { aggregateStationedSupport, buildDetailedScoutIntel } from './scouting.js';
+import { normalizeTroopCounts } from './troopKeys.js';
 
 async function logFactionEvent(
 	userId: number,
@@ -1399,7 +1400,7 @@ async function processReturnedTroops(attack: Attack): Promise<void> {
 			survivingTroops?: Partial<Record<TroopKey, number>>;
 			resourcesStolen?: { biomass: number; alloy: number; ore: number };
 		} | null;
-		const survivingTroops = result?.survivingTroops || {};
+		const survivingTroops = normalizeTroopCounts(result?.survivingTroops || {});
 		const resourcesStolen = result?.resourcesStolen || { biomass: 0, alloy: 0, ore: 0 };
 
 		const attackerNexus = await prisma.nexus.findUnique({ where: { id: attack.attackerNexusId! } });

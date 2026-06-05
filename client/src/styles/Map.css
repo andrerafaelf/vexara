@@ -528,17 +528,22 @@
 
 /* ── Level of detail ────────────────────────────────────────────────────────
    Two independent tiers, each driven by a class the renderer toggles:
-   • .map-viewport--lod-text — cells are too small on screen to read the
-     coordinate / owner / target labels; hide them. Keyed off the *effective*
-     cell pixel size (base × zoom), so it's correct on any device — unlike a
-     raw zoom threshold, which hid coords permanently on mobile.
+   • .map-viewport--lod-text — cells are too small on screen to read the long
+     owner / target labels; hide *those*. Coordinates are deliberately kept on
+     screen — even tiny they're the player's main spatial anchor when scanning
+     a wide sector for a target. They get a tighter font size below.
    • .map-viewport--lod — zoomed far enough out that the heavy per-cell paint
      (multi-layer glows, marker drop-shadows) isn't worth it; drop it to keep a
      wide sector smooth on low-end phones. */
-.map-viewport--lod-text .cell-coords,
 .map-viewport--lod-text .cell-owner-label,
 .map-viewport--lod-text .faction-target-label {
 	display: none;
+}
+
+.map-viewport--lod-text .cell-coords {
+	font-size: 9px;
+	margin-top: 1px;
+	letter-spacing: -0.02em;
 }
 
 .map-viewport--lod .map-cell.current-nexus,
@@ -551,6 +556,27 @@
 
 .map-viewport--lod .nexus-marker {
 	filter: none;
+}
+
+/* Far-zoom: building art + blend-mode pass is wasted detail (the marker
+   is only a few px on screen) and expensive to composite across hundreds
+   of visible cells. Drop the <img> + tint and render the wrapper as a
+   small relation-coloured chip — cheap, still reads as a marker. */
+.map-viewport--lod .nexus-marker-art,
+.map-viewport--lod .nexus-marker-glyph-tint {
+	display: none;
+}
+
+.map-viewport--lod .nexus-marker-glyph {
+	background: currentColor;
+	border-radius: 3px;
+	width: 14px;
+	height: 14px;
+}
+
+.map-viewport--lod .nexus-marker-glyph--current {
+	width: 16px;
+	height: 16px;
 }
 
 .nexus-marker {
@@ -567,52 +593,60 @@
 	opacity: 0.92;
 }
 
+/* Marker = Command Core building art on every nexus. Cell border + glow
+   carry the relation colour (current/own/enemy/faction/ally); the marker
+   stack adds a colour pass on top of the art so the relation also reads
+   *on* the building thumbnail itself.
+   Isolation is required: `mix-blend-mode: color` blends against the
+   nearest stacking context, so without `isolation: isolate` the tint
+   would bleed into the cell tint and the starfield bg behind it. */
 .nexus-marker-glyph {
 	position: relative;
 	display: block;
-	width: 19px;
-	height: 19px;
-	background: currentColor;
+	width: 24px;
+	height: 24px;
+	isolation: isolate;
 }
 
 .nexus-marker-glyph--current {
-	width: 18px;
-	height: 18px;
-	background: color-mix(in srgb, currentColor 14%, transparent);
-	border: 2px solid currentColor;
-	transform: rotate(45deg);
+	width: 26px;
+	height: 26px;
 }
 
-.nexus-marker-glyph--current::before {
-	content: '';
+.nexus-marker-art {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	display: block;
+	user-select: none;
+	-webkit-user-drag: none;
+}
+
+/* Uniform colour pass — applied to every relation kind so the marker is
+   visually consistent. `mix-blend-mode: color` keeps the building's
+   luminance (detail survives) and reads hue+sat off `currentColor`,
+   which is set on the parent `.nexus-marker-{current,own,enemy,...}`.
+   0.4 is the floor where each relation was still distinguishable
+   side-by-side without washing out the building art. */
+.nexus-marker-glyph-tint {
 	position: absolute;
-	inset: 4px;
+	inset: 0;
 	background: currentColor;
+	mix-blend-mode: color;
+	opacity: 0.4;
+	pointer-events: none;
 }
 
-.nexus-marker-glyph--own {
-	clip-path: polygon(50% 8%, 86% 32%, 86% 88%, 14% 88%, 14% 32%);
+/* CDN miss / 404: <img> hides itself in onError and tags the wrapper.
+   The wrapper then renders as a solid relation-coloured puck so the
+   cell still reads as occupied. No blend overlay (it's already the
+   relation colour). */
+.nexus-marker-glyph--fallback {
+	background: currentColor;
+	border-radius: 4px;
 }
-
-.nexus-marker-glyph--own::before {
-	content: '';
-	position: absolute;
-	left: 7px;
-	top: 4px;
-	width: 5px;
-	height: 12px;
-	background: rgba(0, 0, 0, 0.38);
-}
-
-.nexus-marker-glyph--nexus {
-	clip-path: polygon(50% 3%, 93% 26%, 93% 74%, 50% 97%, 7% 74%, 7% 26%);
-}
-
-.nexus-marker-glyph--nexus::before {
-	content: '';
-	position: absolute;
-	inset: 5px;
-	border: 1px solid rgba(0, 0, 0, 0.42);
+.nexus-marker-glyph--fallback .nexus-marker-glyph-tint {
+	display: none;
 }
 
 /* "Online" presence pulse — a small green dot pinned to the top-right of any
@@ -818,7 +852,7 @@
 
 @media (max-height: 700px) {
 	.cell-coords {
-		display: none;
+		font-size: 10px;
 	}
 }
 

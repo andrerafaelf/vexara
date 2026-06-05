@@ -1,5 +1,12 @@
 import React from 'react';
+import { buildingIcon } from '../data/gameIcons';
 import type { MapNexus } from './Map';
+
+// Every nexus on the starfield draws the same Command Core building art —
+// the cell's coloured border + glow (set on `.map-cell.<kind>-nexus`) is
+// what carries ownership/relation. Stable URL → resolved once at module
+// load, browser caches it across the whole grid.
+const COMMAND_CORE_URL = buildingIcon('commandCore');
 
 export type CellKind = 'current' | 'own' | 'faction' | 'ally' | 'enemy' | 'npc' | 'empty';
 
@@ -31,6 +38,30 @@ const markerClassByKind: Record<CellKind, string> = {
 	npc: 'nexus-marker-enemy',
 	empty: ''
 };
+
+type MarkerGlyphKind = 'current' | 'own' | 'nexus';
+
+function NexusMarkerGlyph({ kind }: { kind: MarkerGlyphKind }) {
+	return (
+		<div className={`nexus-marker-glyph nexus-marker-glyph--${kind}`}>
+			<img
+				className="nexus-marker-art"
+				src={COMMAND_CORE_URL}
+				alt=""
+				draggable={false}
+				onError={(e) => {
+					// CDN miss / offline — drop the broken <img> so no alt-text
+					// glyph leaks onto the map and tag the wrapper so it falls
+					// back to a solid relation-coloured puck (see Map.css).
+					const img = e.currentTarget;
+					img.style.display = 'none';
+					img.parentElement?.classList.add('nexus-marker-glyph--fallback');
+				}}
+			/>
+			<span className="nexus-marker-glyph-tint" aria-hidden="true" />
+		</div>
+	);
+}
 
 /**
  * One map tile. Memoized: during pan/zoom the parent layer is transformed via
@@ -68,7 +99,8 @@ function MapCellInner({ data }: { data: MapCellData }) {
 	if (isSpyTarget) classes.push('spy-target');
 	if (isFactionTarget) classes.push('faction-target');
 	if (isSelected) classes.push('selected');
-	const markerKind = kind === 'current' ? 'current' : kind === 'own' ? 'own' : 'nexus';
+	const markerKind: MarkerGlyphKind =
+		kind === 'current' ? 'current' : kind === 'own' ? 'own' : 'nexus';
 
 	return (
 		<div
@@ -87,7 +119,7 @@ function MapCellInner({ data }: { data: MapCellData }) {
 		>
 			{nexus && (
 				<div className={`nexus-marker ${markerClassByKind[kind]}`} aria-hidden="true">
-					<span className={`nexus-marker-glyph nexus-marker-glyph--${markerKind}`} />
+					<NexusMarkerGlyph kind={markerKind} />
 					{isActive && (
 						<span
 							className="nexus-activity-dot"
