@@ -132,7 +132,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		description:
 			'Lightly armed intel gatherer that reveals enemy nexus resources, troops, and defenses. Not a frontline fighter. Scouts must first fight through the defender\'s garrisoned recon operatives before the Stealth Array roll applies, so sending more scouts gives you better odds of breaking through a defended target.',
 		unitClass: 'special',
-		stats: { attack: 1, defense: 20, speed: 25, carry: 10 },
+		stats: { attack: 1, defense: 20, speed: 50, carry: 10 },
 		cost: { biomass: 400, alloy: 150, ore: 400, population: 1, time: '3m 0s' },
 		requirements: ['Command Core Lv3'],
 		notes: ['Send as a scout mission to gather intel. More operatives = better odds against garrisoned defenders.']

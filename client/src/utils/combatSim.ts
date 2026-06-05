@@ -55,7 +55,7 @@ export const TROOP_STATS: Record<TroopKey, { attack: number; defense: number; sp
 	sentinelLancer: { attack: 28, defense: 14, speed: 20 },
 	assaultTrooper: { attack: 16, defense: 30, speed: 16 },
 	vanguardBreaker: { attack: 32, defense: 14, speed: 16 },
-	reconOperative: { attack: 1, defense: 20, speed: 25 },
+	reconOperative: { attack: 1, defense: 20, speed: 50 },
 	wraithSkimmer: { attack: 105, defense: 22, speed: 22 },
 	bulwarkGuard: { attack: 18, defense: 90, speed: 12 },
 	aegisSkirmisher: { attack: 34, defense: 64, speed: 24 },
@@ -192,7 +192,11 @@ export function classComposition(force: Force): Record<TroopClass, number> {
 // ─── Class-weighted attack (mirror of server combatMath) ───────────────────
 // targetingCoreLevel amplifies counter advantage above 1.0 (and slightly deepens
 // disadvantage) up to +30% at Lv20. Mirrors computeClassWeightedAttack.
-export function classWeightedAttack(attackers: Force, defenders: Force, targetingCoreLevel = 0): number {
+export function classWeightedAttack(
+	attackers: Force,
+	defenders: Force,
+	targetingCoreLevel = 0
+): number {
 	const defComp: Record<TroopClass, number> = { mobile: 0, armor: 0, fire: 0, special: 0 };
 	let totalDef = 0;
 	for (const k of TROOP_KEYS) {
@@ -213,7 +217,12 @@ export function classWeightedAttack(attackers: Force, defenders: Force, targetin
 			for (const dc of ['mobile', 'armor', 'fire', 'special'] as TroopClass[]) {
 				const ratio = defComp[dc] / totalDef;
 				const base = CLASS_COUNTERS[TROOP_CLASS[k]][dc];
-				const amp = base > 1.0 ? base + targetingCoreBonus : base < 1.0 ? base - targetingCoreBonus * 0.5 : 1.0;
+				const amp =
+					base > 1.0
+						? base + targetingCoreBonus
+						: base < 1.0
+							? base - targetingCoreBonus * 0.5
+							: 1.0;
 				weighted += ratio * amp;
 			}
 			mult = weighted;
@@ -289,7 +298,8 @@ export function predictCombat(opts: {
 	// Symmetric triangle: defense is class-weighted against the attacker too
 	// (mirror of server resolveCombat), then amplified by the Shield Grid.
 	let defensePower = classWeightedDefense(defender, attacker);
-	defensePower *= 1 + defenderShieldGrid * SHIELD_GRID_DEFENSE_PER_LEVEL * shieldEfficiencyMultiplier;
+	defensePower *=
+		1 + defenderShieldGrid * SHIELD_GRID_DEFENSE_PER_LEVEL * shieldEfficiencyMultiplier;
 
 	const defenderUnits = totalUnits(defender);
 	const attackerUnits = totalUnits(attacker);

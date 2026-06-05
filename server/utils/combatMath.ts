@@ -80,7 +80,7 @@ export const TROOP_STATS: Record<TroopKey, TroopStat> = {
 	sentinelLancer: { attack: 28, defense: 14, speed: 20, carry: 30 }, // fire striker
 	assaultTrooper: { attack: 16, defense: 30, speed: 16, carry: 60 }, // armor anvil
 	vanguardBreaker: { attack: 32, defense: 14, speed: 16, carry: 40 }, // mobile striker
-	reconOperative: { attack: 1, defense: 20, speed: 25, carry: 10 }, // scout (special)
+	reconOperative: { attack: 1, defense: 20, speed: 50, carry: 10 }, // scout (special)
 	// ── Tier 2 (pop 2-3) — workhorses ──
 	pyreSuppressor: { attack: 80, defense: 20, speed: 15, carry: 20 }, // fire striker
 	wraithSkimmer: { attack: 105, defense: 22, speed: 22, carry: 80 }, // mobile striker
