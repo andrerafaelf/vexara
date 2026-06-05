@@ -710,7 +710,7 @@
 }
 
 .main-content--map {
-	padding: 0;
+	padding: 0 var(--space-5);
 	overflow: hidden;
 	display: flex;
 	flex-direction: column;
@@ -1282,6 +1282,12 @@
 		padding-right: calc(14px + env(safe-area-inset-right));
 		padding-bottom: calc(24px + env(safe-area-inset-bottom));
 		overflow: visible;
+	}
+
+	/* On mobile the starfield should still go edge-to-edge — every pixel of
+	   width matters for the grid, and the inspector becomes a modal anyway. */
+	.main-content--map {
+		padding: 0;
 	}
 
 	/* Nav buttons in mobile drawer: full 44px touch target */

@@ -169,7 +169,7 @@ const STATIONABLE_TROOPS = new Set([
 // on screen — the difference is the pan buffer that lets you scroll a good way
 // before the next fetch is needed, and a live prefetch (onCenterMove) starts
 // that fetch while you're still moving rather than after you stop.
-const SERVER_FETCH_RANGE = 16;
+const SERVER_FETCH_RANGE = 20;
 const MAP_SIZE = 50;
 const MAP_MAX_INDEX = MAP_SIZE - 1;
 const MOBILE_BREAKPOINT = 768;
@@ -181,7 +181,7 @@ const MOBILE_BREAKPOINT = 768;
 // the hook enforces a viewport-derived min-zoom floor so you can never scroll
 // past the rendered/fetched window on any screen size.
 const CELL_PX = 72;
-const MIN_ZOOM = 0.55; // nominal lower bound (hook clamps tighter per viewport)
+const MIN_ZOOM = 0.4; // nominal lower bound (hook clamps tighter per viewport)
 const MAX_ZOOM = 2.4; // close-in detail
 const ZOOM_STEP = 0.18; // keyboard / button nudge
 // Radius (in cells) of the rendered DOM window around the *render centre*. Kept
@@ -189,7 +189,7 @@ const ZOOM_STEP = 0.18; // keyboard / button nudge
 // rendered cells. The window re-centres in coarse steps (RENDER_RECENTER_STEP)
 // as you pan, so the visible edge is always populated without rebuilding the
 // grid every frame.
-const RENDER_RADIUS = 12;
+const RENDER_RADIUS = 16;
 // Re-centre the rendered window once the live camera centre drifts this many
 // cells from the current render centre. Coarse enough that a rebuild is rare,
 // fine enough that you can never out-pan the rendered window before it shifts.

@@ -1,11 +1,11 @@
 import type { Response } from 'express';
 import prisma from '../lib/prisma.js';
+import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
 import * as mapService from '../services/mapService.js';
 import type { AuthRequest } from '../types/index.js';
-import { getNexusIntelForUser } from '../utils/scouting.js';
-import { logError } from '../utils/logger.js';
-import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
 import { NEXUS_ACTIVE_WINDOW_MS } from '../utils/gameConstants.js';
+import { logError } from '../utils/logger.js';
+import { getNexusIntelForUser } from '../utils/scouting.js';
 
 export async function getArea(req: AuthRequest, res: Response): Promise<void> {
 	try {
@@ -14,7 +14,7 @@ export async function getArea(req: AuthRequest, res: Response): Promise<void> {
 		// Must stay >= the client's SERVER_FETCH_RANGE (client Map.tsx). The fetched
 		// box is larger than the rendered window so there's a pan buffer the client
 		// can scroll into before the next fetch lands.
-		const range = 16;
+		const range = 20;
 		const nexuses = await mapService.getNexusesInArea(req.galaxyId, x, y, range);
 		const ownerIds = [
 			...new Set(nexuses.map((v) => v.ownerId).filter((id): id is number => id != null))
@@ -75,9 +75,7 @@ export async function getArea(req: AuthRequest, res: Response): Promise<void> {
 			// Presence signal for other players: an owned, recently-acted-on nexus
 			// reads as "active". Neutral nexuses (no owner) are never active.
 			const active =
-				v.ownerId != null &&
-				v.lastActivityAt != null &&
-				v.lastActivityAt.getTime() >= activeCutoff;
+				v.ownerId != null && v.lastActivityAt != null && v.lastActivityAt.getTime() >= activeCutoff;
 			return {
 				_id: String(v.id),
 				id: String(v.id),
