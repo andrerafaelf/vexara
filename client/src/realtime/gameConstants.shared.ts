@@ -256,9 +256,17 @@ export function getOverseerCost(nexusCount: number): {
 	};
 }
 
-export function getTrainTimeSeconds(troopType: string, classBuildingLevel: number): number {
+export function getTrainTimeSeconds(
+	troopType: string,
+	classBuildingLevel: number,
+	stealthArrayLevel = 0
+): number {
 	const baseTime = TROOP_COSTS[troopType].time;
-	if (troopType === 'overseer' || troopType === 'reconOperative') return baseTime;
+	if (troopType === 'overseer') return baseTime;
+	if (troopType === 'reconOperative') {
+		const factor = getClassBuildingTrainFactor(stealthArrayLevel);
+		return Math.max(1, Math.floor(baseTime * factor));
+	}
 	const factor = getClassBuildingTrainFactor(classBuildingLevel);
 	return Math.max(1, Math.floor(baseTime * factor));
 }
@@ -267,9 +275,10 @@ export function getEffectiveTrainTimeSeconds(
 	troopType: string,
 	classBuildingLevel: number,
 	nexusType: string | null | undefined,
-	nexusTypeDoubled: boolean
+	nexusTypeDoubled: boolean,
+	stealthArrayLevel = 0
 ): number {
-	const perUnit = getTrainTimeSeconds(troopType, classBuildingLevel);
+	const perUnit = getTrainTimeSeconds(troopType, classBuildingLevel, stealthArrayLevel);
 	if (troopType === 'overseer') return perUnit;
 	const baseTrainMult = NEXUS_TYPE_TRAINING_MULTIPLIERS[nexusType ?? ''];
 	if (baseTrainMult === undefined) return perUnit;

@@ -519,9 +519,13 @@ const Reports: React.FC<ReportsProps> = ({
 							className={`report-result ${(isMyAttack ? selectedReport.result.victory : !selectedReport.result.victory) ? 'victory' : 'defeat'}`}
 						>
 							{scoutReport ? (
-								selectedReport.result.scoutFailed ? (
+								selectedReport.result.gate1Failed ? (
 									<span>
-										Scout failed, operatives lost to enemy Stealth Array. No intel returned.
+										Scouts defeated by enemy recon garrison. No intel returned.
+									</span>
+								) : selectedReport.result.scoutFailed ? (
+									<span>
+										Scouts broke through but intercepted by Stealth Array. No intel returned.
 									</span>
 								) : (
 									<span>Recon complete. Intelligence updated.</span>
@@ -548,6 +552,15 @@ const Reports: React.FC<ReportsProps> = ({
 							) : (
 								<span>Victory! You defended successfully</span>
 							)}
+						</div>
+					)}
+
+					{scoutReport && selectedReport.result.scoutCombat && (
+						<div className="report-section">
+							<p className="report-scout-combat-summary">
+								Your scouts: {selectedReport.result.scoutCombat.attackerSent} sent, {selectedReport.result.scoutCombat.attackerSurvivorsGate1} survived.
+								{' '}Enemy garrison: {selectedReport.result.scoutCombat.defenderGarrison} recon ops, {selectedReport.result.scoutCombat.defenderLost} lost.
+							</p>
 						</div>
 					)}
 

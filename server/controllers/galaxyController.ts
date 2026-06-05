@@ -44,13 +44,51 @@ function sumRecordValues(value: unknown): number {
 	);
 }
 
+async function getPublicStatusGalaxy() {
+	const now = new Date();
+	const candidates = await prisma.galaxy.findMany({
+		where: {
+			status: 'active',
+			OR: [{ startsAt: null }, { startsAt: { lte: now } }]
+		},
+		select: { id: true, name: true, status: true, createdAt: true }
+	});
+
+	if (candidates.length === 0) return null;
+
+	const galaxyIds = candidates.map((g) => g.id);
+	const [playerCounts, claimedNexusCounts] = await Promise.all([
+		prisma.galaxyPlayer.groupBy({
+			by: ['galaxyId'],
+			where: { galaxyId: { in: galaxyIds } },
+			_count: { id: true }
+		}),
+		prisma.nexus.groupBy({
+			by: ['galaxyId'],
+			where: { galaxyId: { in: galaxyIds }, ownerId: { not: null } },
+			_count: { id: true }
+		})
+	]);
+
+	const playersByGalaxy = new Map(playerCounts.map((row) => [row.galaxyId, row._count.id]));
+	const nexusesByGalaxy = new Map(
+		claimedNexusCounts.map((row) => [row.galaxyId, row._count.id])
+	);
+
+	return candidates.sort((a, b) => {
+		const playerDelta = (playersByGalaxy.get(b.id) ?? 0) - (playersByGalaxy.get(a.id) ?? 0);
+		if (playerDelta !== 0) return playerDelta;
+
+		const nexusDelta = (nexusesByGalaxy.get(b.id) ?? 0) - (nexusesByGalaxy.get(a.id) ?? 0);
+		if (nexusDelta !== 0) return nexusDelta;
+
+		return b.createdAt.getTime() - a.createdAt.getTime();
+	})[0];
+}
+
 export async function getPublicGalaxyStatus(_req: AuthRequest, res: Response): Promise<void> {
 	try {
-		const galaxy = await prisma.galaxy.findFirst({
-			where: { status: 'active' },
-			orderBy: { createdAt: 'desc' },
-			select: { id: true, name: true, status: true, createdAt: true }
-		});
+		const galaxy = await getPublicStatusGalaxy();
 
 		if (!galaxy) {
 			res.json({

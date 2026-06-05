@@ -309,6 +309,15 @@ export interface Attack {
 		// Scout-attack outcome. True when defender's Stealth Array intercepted
 		// the scout - operatives lost, no intel returned (Stage 2c).
 		scoutFailed?: boolean;
+		// True when attacker's scouts were wiped by the defender's recon garrison (Gate 1).
+		gate1Failed?: boolean;
+		// Detail of the scout-vs-scout fight (Gate 1). Null when defender had no recon ops.
+		scoutCombat?: {
+			attackerSent: number;
+			defenderGarrison: number;
+			attackerSurvivorsGate1: number;
+			defenderLost: number;
+		} | null;
 		intel?: {
 			resources: {
 				biomass: number;

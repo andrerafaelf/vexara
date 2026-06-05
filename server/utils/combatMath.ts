@@ -462,3 +462,72 @@ export function computeLossesForWinner(
 	}
 	return losses;
 }
+
+export function computeScoutCombat(
+	attackerCount: number,
+	defenderCount: number,
+	seed: number
+): {
+	attackerSurvivors: number;
+	defenderSurvivors: number;
+	attackerLosses: number;
+	defenderLosses: number;
+} {
+	if (attackerCount <= 0)
+		return {
+			attackerSurvivors: 0,
+			defenderSurvivors: defenderCount,
+			attackerLosses: 0,
+			defenderLosses: 0
+		};
+	if (defenderCount <= 0)
+		return {
+			attackerSurvivors: attackerCount,
+			defenderSurvivors: 0,
+			attackerLosses: 0,
+			defenderLosses: 0
+		};
+
+	let prng = seed ^ 0xdeadbeef;
+	const lcg = () => {
+		prng = (prng * 1664525 + 1013904223) & 0xffffffff;
+		return (prng >>> 0) / 4294967296;
+	};
+
+	const attackerPower = attackerCount * TROOP_STATS.reconOperative.defense;
+	const defenderPower = defenderCount * TROOP_STATS.reconOperative.defense;
+
+	const attackerWins = attackerPower >= defenderPower;
+	const powerRatio =
+		Math.min(attackerPower, defenderPower) / Math.max(attackerPower, defenderPower);
+
+	const jitter = 1 + (lcg() - 0.5) * 0.1;
+
+	const winnerCount = attackerWins ? attackerCount : defenderCount;
+	const loserCount = attackerWins ? defenderCount : attackerCount;
+
+	const winnerLossRate =
+		Math.min(WINNER_COINFLIP_LOSS_RATE, powerRatio * WINNER_COINFLIP_LOSS_RATE) * jitter;
+	const loserLoss = loserLossRate(powerRatio);
+
+	const winnerLost = Math.max(0, Math.round(winnerCount * winnerLossRate));
+	const loserLost = Math.max(0, Math.ceil(loserCount * loserLoss));
+
+	const winnerSurvivors = winnerCount - winnerLost;
+	const loserSurvivors = loserCount - loserLost;
+
+	if (attackerWins) {
+		return {
+			attackerSurvivors: winnerSurvivors,
+			defenderSurvivors: Math.max(0, loserSurvivors),
+			attackerLosses: winnerLost,
+			defenderLosses: loserLost
+		};
+	}
+	return {
+		attackerSurvivors: Math.max(0, loserSurvivors),
+		defenderSurvivors: winnerSurvivors,
+		attackerLosses: loserLost,
+		defenderLosses: winnerLost
+	};
+}

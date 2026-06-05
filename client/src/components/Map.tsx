@@ -1102,7 +1102,7 @@ const Map: React.FC<MapProps> = ({
 			myNexusProtected;
 
 		const attackTroopRows = Object.entries(availableTroops).filter(([type]) => {
-			if (type === 'reconOperative' || type === 'plasmaTurret') return false;
+			if (type === 'plasmaTurret') return false;
 			if (attackMissionType === 'support') return STATIONABLE_TROOPS.has(type);
 			return true;
 		});

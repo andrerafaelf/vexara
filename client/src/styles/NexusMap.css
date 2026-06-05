@@ -59,9 +59,9 @@
 /* ── Image wrapper ── */
 .nexus-map-tile-img-wrap {
 	position: relative;
-	aspect-ratio: 16 / 9;
+	aspect-ratio: 1 / 1;
 	overflow: hidden;
-	background: #15191f;
+	background: var(--bg-surface);
 }
 
 .nexus-map-tile-img {

@@ -197,7 +197,7 @@ function CodexRail({
 							>
 								{icon ? (
 									<span className="cx-rail-link-icon">
-										<Image src={icon} alt="" width={24} height={24} />
+										<Image src={icon} alt="" width={30} height={30} />
 									</span>
 								) : (
 									<span className="cx-rail-link-icon" />
@@ -224,7 +224,7 @@ function CodexRail({
 							>
 								{icon ? (
 									<span className="cx-rail-link-icon">
-										<Image src={icon} alt="" width={24} height={24} />
+										<Image src={icon} alt="" width={30} height={30} />
 									</span>
 								) : (
 									<span className="cx-rail-link-icon" />
@@ -327,7 +327,7 @@ function BuildingEntry({ doc, index }: { doc: (typeof BUILDINGS_DOC)[number]; in
 		<article id={`building-${doc.key}`} className="cx-entry cx-entry-building">
 			<div className="cx-entry-head">
 				<div className="cx-entry-icon">
-					{icon && <Image src={icon} alt="" width={72} height={72} />}
+					{icon && <Image src={icon} alt="" width={84} height={84} />}
 				</div>
 				<div className="cx-entry-titleblock">
 					<span className="cx-entry-idx">№ {index.toString().padStart(2, '0')} / BLD</span>
@@ -453,7 +453,7 @@ function TroopEntry({ doc, index }: { doc: (typeof TROOPS_DOC)[number]; index: n
 		<article id={`troop-${doc.key}`} className="cx-entry cx-entry-troop">
 			<div className="cx-entry-head">
 				<div className="cx-entry-icon">
-					{icon && <Image src={icon} alt="" width={72} height={72} />}
+					{icon && <Image src={icon} alt="" width={84} height={84} />}
 				</div>
 				<div className="cx-entry-titleblock">
 					<span className="cx-entry-idx">№ {index.toString().padStart(2, '0')} / TRP</span>

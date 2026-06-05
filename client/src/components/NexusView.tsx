@@ -3,19 +3,16 @@ import {
 	AlertTriangle,
 	ArrowDownLeft,
 	ArrowUpRight,
-	Building2,
 	Check,
 	ChevronDown,
 	ChevronUp,
 	Hammer,
 	Info,
-	LayoutGrid,
 	Pencil,
 	ShieldCheck,
 	Sparkles,
 	Swords,
 	Trash2,
-	Truck,
 	X,
 	Zap
 } from 'lucide-react';
@@ -2207,7 +2204,6 @@ const NexusView: React.FC<NexusViewProps> = ({
 					className={`nexus-tab-btn${activeTab === 'overview' ? ' active' : ''}`}
 					onClick={() => setActiveTab('overview')}
 				>
-					<LayoutGrid size={14} aria-hidden="true" />
 					<span>Overview</span>
 				</button>
 				<button
@@ -2215,7 +2211,6 @@ const NexusView: React.FC<NexusViewProps> = ({
 					className={`nexus-tab-btn${activeTab === 'buildings' ? ' active' : ''}`}
 					onClick={() => setActiveTab('buildings')}
 				>
-					<Building2 size={14} aria-hidden="true" />
 					<span>Buildings</span>
 					{activeBuild && <span className="nexus-tab-badge" />}
 				</button>
@@ -2224,7 +2219,6 @@ const NexusView: React.FC<NexusViewProps> = ({
 					className={`nexus-tab-btn${activeTab === 'troops' ? ' active' : ''}`}
 					onClick={() => setActiveTab('troops')}
 				>
-					<Swords size={14} aria-hidden="true" />
 					<span>Troops</span>
 					{activeTraining && <span className="nexus-tab-badge" />}
 				</button>
@@ -2233,7 +2227,6 @@ const NexusView: React.FC<NexusViewProps> = ({
 					className={`nexus-tab-btn${activeTab === 'deployed' ? ' active' : ''}`}
 					onClick={() => setActiveTab('deployed')}
 				>
-					<ArrowDownLeft size={14} aria-hidden="true" />
 					<span>Deployed</span>
 					{(troopTransfers.length > 0 || outgoingAttacks.length > 0) && (
 						<span className="nexus-tab-badge" />
@@ -2245,7 +2238,6 @@ const NexusView: React.FC<NexusViewProps> = ({
 						className={`nexus-tab-btn${activeTab === 'logistics' ? ' active' : ''}`}
 						onClick={() => setActiveTab('logistics')}
 					>
-						<Truck size={14} aria-hidden="true" />
 						<span>Supply</span>
 					</button>
 				)}
@@ -3185,14 +3177,15 @@ const NexusView: React.FC<NexusViewProps> = ({
 																	type,
 																	classBuildingLevel,
 																	nexus.nexusType,
-																	nexus.nexusTypeDoubled ?? false
+																	nexus.nexusTypeDoubled ?? false,
+																	nexus.buildings.stealthArray ?? 0
 																)
 															: costs.time;
 														// Pre-bonus time (class-building discount applied, Nexus type NOT applied).
 														// Shown as strikethrough next to the actual time when Military Outpost is active,
 														// so the player can see the bonus working.
 														const preBonusTrainSeconds = canTrain
-															? getRecruitDiscountedTrainSeconds(type, classBuildingLevel)
+															? getRecruitDiscountedTrainSeconds(type, classBuildingLevel, nexus.buildings.stealthArray ?? 0)
 															: costs.time;
 														const militaryBonusActive =
 															nexus.nexusType === 'Military Outpost' &&

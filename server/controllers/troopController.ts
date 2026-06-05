@@ -8,8 +8,9 @@ import {
 	queueToJson,
 	serializeNexus
 } from '../models/Nexus.js';
+import { ResourceConflictError, atomicUpdateNexusResources } from '../services/nexusService.js';
 import * as troopService from '../services/troopService.js';
-import { atomicUpdateNexusResources, ResourceConflictError } from '../services/nexusService.js';
+import { notifyNexusResources } from '../services/warRoomSocket.js';
 import type { AuthRequest } from '../types/index.js';
 import { getMaxStorage, getResourceProduction } from '../utils/economy.js';
 import {
@@ -23,10 +24,9 @@ import {
 	trainingBuildingFor,
 	trainingChainFor
 } from '../utils/gameConstants.js';
-import { parsePositiveInt } from '../utils/validation.js';
-import { computeNexusPopulation } from '../utils/population.js';
 import { logError, logGameEvent } from '../utils/logger.js';
-import { notifyNexusResources } from '../services/warRoomSocket.js';
+import { computeNexusPopulation } from '../utils/population.js';
+import { parsePositiveInt } from '../utils/validation.js';
 
 // Pushes a fresh resource snapshot to the nexus owner. Best-effort: a failed
 // emit must never break the HTTP response, so all callers wrap in try/catch.
@@ -313,11 +313,14 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
 		}
 
 		const doubled = (nexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled ?? false;
+		const stealthArrayLevel =
+			((nexus as unknown as Record<string, number>).stealthArray as number) ?? 0;
 		const perUnitSeconds = getEffectiveTrainTimeSeconds(
 			troopType,
 			trainingBuildingLevel,
 			nexus.nexusType,
-			doubled
+			doubled,
+			stealthArrayLevel
 		);
 		const queueStart =
 			sameChainQueue.length > 0
@@ -735,7 +738,7 @@ export async function destroyTroops(req: AuthRequest, res: Response): Promise<vo
 		}
 		const nexus = await applyCompletedQueues(rawNexus);
 
-		const stationed = ((nexus as unknown as Record<string, number>)[troopType] ?? 0);
+		const stationed = (nexus as unknown as Record<string, number>)[troopType] ?? 0;
 		if (parsedAmount > stationed) {
 			res.status(400).json({ error: 'Not enough stationed troops' });
 			return;
@@ -745,19 +748,15 @@ export async function destroyTroops(req: AuthRequest, res: Response): Promise<vo
 		// Decommission FEE (charged, not refunded) — frees population at a cost.
 		const cost = {
 			biomass: Math.floor(baseCost.biomass * DESTROY_COST_RATE * parsedAmount),
-			alloy:   Math.floor(baseCost.alloy   * DESTROY_COST_RATE * parsedAmount),
-			ore:     Math.floor(baseCost.ore      * DESTROY_COST_RATE * parsedAmount),
+			alloy: Math.floor(baseCost.alloy * DESTROY_COST_RATE * parsedAmount),
+			ore: Math.floor(baseCost.ore * DESTROY_COST_RATE * parsedAmount)
 		};
 		const populationFreed = baseCost.population * parsedAmount;
 
 		const resourceUpdate = computeResourceUpdate(nexus);
 		const current = { ...nexus, ...resourceUpdate } as unknown as Record<string, number>;
 
-		if (
-			current.biomass < cost.biomass ||
-			current.alloy < cost.alloy ||
-			current.ore < cost.ore
-		) {
+		if (current.biomass < cost.biomass || current.alloy < cost.alloy || current.ore < cost.ore) {
 			res.status(400).json({ error: 'Insufficient resources to decommission' });
 			return;
 		}
@@ -767,10 +766,10 @@ export async function destroyTroops(req: AuthRequest, res: Response): Promise<vo
 			updated = await atomicUpdateNexusResources(nexus.id, nexus.lastResourceUpdate, {
 				...resourceUpdate,
 				biomass: current.biomass - cost.biomass,
-				alloy:   current.alloy   - cost.alloy,
-				ore:     current.ore     - cost.ore,
+				alloy: current.alloy - cost.alloy,
+				ore: current.ore - cost.ore,
 				populationCurrent: Math.max(0, current.populationCurrent - populationFreed),
-				[troopType]: stationed - parsedAmount,
+				[troopType]: stationed - parsedAmount
 			});
 		} catch (e) {
 			if (e instanceof ResourceConflictError) {
@@ -794,7 +793,7 @@ export async function destroyTroops(req: AuthRequest, res: Response): Promise<vo
 			nexusId: nexus.id,
 			troopType,
 			amount: parsedAmount,
-			cost,
+			cost
 		});
 
 		res.json({ success: true, cost, nexus: serializeNexus(updated) });

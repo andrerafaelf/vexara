@@ -67,14 +67,14 @@ A coherent sci-fi roster instead of a mix of generic and evocative names.
 Saved troops, in-flight attacks, training queues, and the unit counts on
 every nexus carry over verbatim , only the displayed name changes:
 
-| Old | New |
-|---|---|
-| Lancer Drone | **Sentinel Lancer** |
-| Breaker Unit | **Vanguard Breaker** |
-| Skimmer Bike | **Wraith Skimmer** |
-| Interceptor Bike | **Phantom Lance** |
-| Suppressor Team | **Pyre Suppressor** |
-| Disruptor Unit | **Arc Disruptor** |
+| Old              | New                  |
+| ---------------- | -------------------- |
+| Lancer Drone     | **Sentinel Lancer**  |
+| Breaker Unit     | **Vanguard Breaker** |
+| Skimmer Bike     | **Wraith Skimmer**   |
+| Interceptor Bike | **Phantom Lance**    |
+| Suppressor Team  | **Pyre Suppressor**  |
+| Disruptor Unit   | **Arc Disruptor**    |
 
 Costs, train times, and class are unchanged for all six (their combat
 stats were re-tuned in the combat rebalance below). The Mobile-class
@@ -88,14 +88,14 @@ that day.
 
 ### Two new units join the roster
 
-**Siege Colossus** *(Armor striker)* , the elite siege hammer. The
+**Siege Colossus** _(Armor striker)_ , the elite siege hammer. The
 heaviest single attacker in the game with enough defense to survive its
 own assault, and the slowest speed (6). Built to crack fortified
 Nexuses, and Armor counters Fire on the way in. Pairs with the
 Annihilator Platform as the heavy duo of the endgame line. Unlocks at
 **Armor Foundry Lv13, Command Core Lv10, Targeting Core Lv5**.
 
-**Aegis Skirmisher** *(Mobile anvil)* , the Mobile-class garrison
+**Aegis Skirmisher** _(Mobile anvil)_ , the Mobile-class garrison
 anchor. It's the defensive answer to Armor attackers (Mobile counters
 Armor on defense too) and fast enough (24) to redeploy where the wall
 is needed. Pop 2, same tier as Bulwark Guard. Unlocks at **Hangar Bay
@@ -132,7 +132,7 @@ gate sits earlier in the build order.
 
 "Armory" and "Armor Foundry" were too easy to confuse , they look related
 but do completely different jobs (Armor Foundry produces the Armor combat
-class; the old Armory amplifies your *attack* counters and gates elite
+class; the old Armory amplifies your _attack_ counters and gates elite
 units). The attack-amplifier building is **renamed Targeting Core**. Same
 building, same level, same cost, same effects , only the name changed, and
 your current level carries over untouched.
@@ -146,7 +146,7 @@ each tier unlocks:
 - **Targeting Core Lv5** (unlocks Plasma Turret + Siege Colossus) → requires
   Plasma Forge Lv7 + Shield Grid Lv3
 - **Targeting Core Lv10** (the elite-tier cap) → requires Command Core Lv10
-  + Armor Foundry Lv10
+  - Armor Foundry Lv10
 
 ### Reworked points & raid loot
 
@@ -191,7 +191,7 @@ sitting still.
   they counter.
 
 A glass-cannon striker left on defense barely contributes its tiny
-defense stat *and* can be class-countered on top of it, so a striker
+defense stat _and_ can be class-countered on top of it, so a striker
 garrison folds fast. Garrison with anvils, attack with strikers.
 
 **Every class has an anvil, so every attacker has an answer:**
@@ -212,7 +212,7 @@ defensive drone into a genuine cheap Fire striker, giving the early
 game a real fire attacker.
 
 **Full stat pass.** Every combat unit's attack and defense were
-re-tuned so the *counter* decides equal-resource fights, not whichever
+re-tuned so the _counter_ decides equal-resource fights, not whichever
 unit happens to have the biggest raw number. Attack-per-population AND
 attack-per-resource both rise with tier, so massing the cheapest unit
 is never the optimal army , Tier-1 strikers (Vanguard Breaker, Sentinel
@@ -225,7 +225,7 @@ calculator and scout reports already reflect the new math.
 **Turtles are strong but no longer unbreakable.** A deep defensive
 nexus , anvils, high Shield Grid, a Plasma Turret , is genuinely hard
 to crack. But a correctly-countered, scouted attack with enough
-committed force *will* break it; it just costs you real losses to do
+committed force _will_ break it; it just costs you real losses to do
 it. A blind or wrong-class assault still bounces off, no matter how
 big. (Shield Grid was trimmed from +2% to +1.5% defense per level so a
 high-shield wall can't stack into true invincibility on top of the new
@@ -272,30 +272,30 @@ tier. Population and training times are unchanged; only the
 biomass/alloy/ore totals moved, and each unit keeps its old resource
 mix. The headline fix: the **Siege Colossus was secretly the worst deal
 in the game** , per resource spent, the elite siege hammer delivered
-*less* attack than a Tier-1 Sentinel Lancer, so massing cheap units was
+_less_ attack than a Tier-1 Sentinel Lancer, so massing cheap units was
 cheaper than building the unit designed to crack fortresses. Backwards,
 and fixed.
 
 **Siege Colossus also drops from population 5 to 4.** It was
-double-taxed , worst attack-per-resource *and* worst
+double-taxed , worst attack-per-resource _and_ worst
 attack-per-population among the Tier-3 strikers, which buried the
 flagship in a niche. At pop 4 you can field it as a real elite line.
 (This changes nothing about how a battle resolves , population only
 governs how many troops a nexus can house, never the math of a fight.)
 
-| Unit | Old total cost | New total cost |
-|---|---|---|
-| Sentinel Lancer | 500 | 650 |
-| Pyre Suppressor | 1,300 | 1,500 |
-| Wraith Skimmer | 1,875 | 1,950 |
-| Phantom Lance | 2,250 | 2,350 |
-| Void Stalker | 3,400 | 3,450 |
-| Annihilator Platform | 6,750 | 6,400 |
-| Siege Colossus | 7,200 | **6,200** *(and pop 5 → 4)* |
+| Unit                 | Old total cost | New total cost              |
+| -------------------- | -------------- | --------------------------- |
+| Sentinel Lancer      | 500            | 650                         |
+| Pyre Suppressor      | 1,300          | 1,500                       |
+| Wraith Skimmer       | 1,875          | 1,950                       |
+| Phantom Lance        | 2,250          | 2,350                       |
+| Void Stalker         | 3,400          | 3,450                       |
+| Annihilator Platform | 6,750          | 6,400                       |
+| Siege Colossus       | 7,200          | **6,200** _(and pop 5 → 4)_ |
 
 > **Nothing you own is touched.** Existing troops, in-flight attacks,
-> and garrisons carry over exactly , only the cost of *building new
-> ones* changes. The Codex already shows every unit's new cost.
+> and garrisons carry over exactly , only the cost of _building new
+> ones_ changes. The Codex already shows every unit's new cost.
 
 A re-pricing of **anvil (garrison) units** and a re-check of two elite
 attack/defense ratios were drafted but deliberately **held back** ,
@@ -311,7 +311,7 @@ survivors (and any loot) are on their way home and land almost
 immediately , no more watching a victorious army trudge back across the
 map. The same applies to scouts heading home, bounced support, and any
 garrison you recall. (Outbound travel is unchanged , the distance to
-your target still matters; only the trip *home* is now instant.)
+your target still matters; only the trip _home_ is now instant.)
 
 **Conquered nexuses keep their name.** Take an enemy nexus and it stays
 named what it was , your new prize keeps its identity instead of being
@@ -336,7 +336,7 @@ find a base, eyeball its storage, and guess an amount. (Transfers between your
 own nexuses remain instant.)
 
 **Send resources to faction members.** The same Send Resources dialog now has
-a **Faction** tab alongside *My Empire*. Pick any of your faction-mates'
+a **Faction** tab alongside _My Empire_. Pick any of your faction-mates'
 nexuses as the destination , their bases appear in the dropdown labeled by
 owner name and coordinates. A **10% transit tax** applies: you send 100,
 they receive 90. The tax is shown live in the dialog footer before you
@@ -371,6 +371,43 @@ Small quality-of-life pass on the galaxy selection screen:
   "Locked" tag and a disabled button rather than silently rejecting
   your join attempt. Already-joined players can still enter and play
   normally.
+
+---
+
+### Scout combat rework - two-gate system
+
+Scouting is no longer a flat dice roll against the Stealth Array. It's
+now a proper Tribal Wars-style scout-vs-scout fight followed by the
+Stealth Array interception:
+
+**Gate 1: Recon vs Recon.** Your incoming scouts fight the defender's
+garrisoned Recon Operatives. Both sides take proportional losses (same
+casualty curves as regular combat). If you win, your survivors proceed
+to Gate 2. If the defender wipes your scouts, no intel is returned.
+
+**Gate 2: Stealth Array roll.** If any of your scouts survived Gate 1,
+the Stealth Array still gets its per-level interception chance (1.5%
+per level, max 22.5% at Lv15). If intercepted, remaining scouts are
+lost and no intel comes back.
+
+**What this means:**
+
+- Sending more Recon Operatives now matters. 1 scout into a defended
+  nexus will likely fail. 20 scouts will break through.
+- Defenders can garrison Recon Operatives to block enemy intel.
+  Repeated probing wears down the garrison.
+- The Stealth Array is now a second line of defense, not the only one.
+- Scout the enemy's scout count. Counter-intel is a real game now.
+
+### Recon Operative training time scales with Stealth Array
+
+Recon Operatives now train faster based on your Stealth Array level.
+Same curve as class buildings: -9% per level. At Stealth Array Lv15,
+training time drops from 180s to ~45s.
+
+This rewards investing in your intel infrastructure. A high Stealth
+Array makes you harder to scout AND lets you produce scouts faster to
+probe the enemy.
 
 ---
 

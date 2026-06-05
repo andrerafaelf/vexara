@@ -130,12 +130,12 @@ export const TROOPS_DOC: TroopDoc[] = [
 		name: 'Recon Operative',
 		role: 'Scout / intel gatherer (Special - no counter in either direction)',
 		description:
-			'Lightly armed intel gatherer that reveals enemy nexus resources, troops, and defenses. Not a frontline fighter.',
+			'Lightly armed intel gatherer that reveals enemy nexus resources, troops, and defenses. Not a frontline fighter. Scouts must first fight through the defender\'s garrisoned recon operatives before the Stealth Array roll applies, so sending more scouts gives you better odds of breaking through a defended target.',
 		unitClass: 'special',
 		stats: { attack: 1, defense: 20, speed: 25, carry: 10 },
 		cost: { biomass: 400, alloy: 150, ore: 400, population: 1, time: '3m 0s' },
 		requirements: ['Command Core Lv3'],
-		notes: ['This is the unit used for scouting missions.']
+		notes: ['Send as a scout mission to gather intel. More operatives = better odds against garrisoned defenders.']
 	},
 	{
 		key: 'pyreSuppressor',
@@ -504,7 +504,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		name: 'Stealth Array',
 		role: 'Defensive concealment',
 		description:
-			'Two effects: (1) a hidden vault that protects the first N units of each resource from raids and scout reports; (2) a low chance to intercept incoming scout missions outright, costing the attacker their operatives and returning no intel.',
+			'Two effects: (1) a hidden vault that protects the first N units of each resource from raids and scout reports; (2) a second line of defense against scouts that survive your recon garrison, intercepting them before they can report back.',
 		baseCost: { biomass: 100, alloy: 150, ore: 180, timeSeconds: 210 },
 		maxLevel: 15,
 		unlock: 'Command Core Lv7',
@@ -517,7 +517,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 			'Hidden vault: floor(550 * 1.35^L) units per resource (biomass, alloy, ore each get their own hidden pool). Roughly 1,500 at Lv3, 11,000 at Lv10, 49,000 at Lv15.',
 			'Hidden resources are not lootable in raids and are not visible to scout reports - the defender keeps the full balance, but raiders see only the surplus above the vault.',
 			'Auto-fill: the first units accumulated each tick are placed in the vault until full; anything above the cap sits in normal storage and is fully exposed.',
-			'Scout-fail chance: 1.5% per level, capped at 22.5% at Lv15. Failed scouts lose all operatives sent and return no intel.'
+			'Scout interception (Gate 2): 1.5% per level, capped at 22.5% at Lv15. This roll only applies to scouts that survive the recon garrison fight (Gate 1). Failed scouts lose all remaining operatives and return no intel.'
 		]
 	}
 ];

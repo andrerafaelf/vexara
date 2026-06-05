@@ -239,7 +239,7 @@
 .cx-rail-link {
 	position: relative;
 	display: grid;
-	grid-template-columns: 30px 1fr;
+	grid-template-columns: 34px 1fr;
 	align-items: center;
 	gap: 10px;
 	padding: 8px 12px 8px 16px;
@@ -266,8 +266,8 @@
 }
 
 .cx-rail-link-icon {
-	width: 26px;
-	height: 26px;
+	width: 30px;
+	height: 30px;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -277,8 +277,8 @@
 }
 
 .cx-rail-link-icon img {
-	width: 80%;
-	height: 80%;
+	width: 88%;
+	height: 88%;
 	object-fit: contain;
 }
 
@@ -425,7 +425,7 @@
 
 .cx-entry-head {
 	display: grid;
-	grid-template-columns: 72px minmax(0, 1fr) auto;
+	grid-template-columns: 84px minmax(0, 1fr) auto;
 	gap: 18px;
 	align-items: start;
 	margin-bottom: 14px;
@@ -433,7 +433,7 @@
 
 @media (max-width: 640px) {
 	.cx-entry-head {
-		grid-template-columns: 56px 1fr;
+		grid-template-columns: 64px 1fr;
 		row-gap: 12px;
 	}
 	.cx-entry-meta {
@@ -442,8 +442,8 @@
 }
 
 .cx-entry-icon {
-	width: 72px;
-	height: 72px;
+	width: 84px;
+	height: 84px;
 	background: var(--color-navy-800);
 	border: 1px solid var(--border-default);
 	display: flex;
@@ -454,15 +454,15 @@
 }
 
 .cx-entry-icon img {
-	width: 80%;
-	height: 80%;
+	width: 88%;
+	height: 88%;
 	object-fit: contain;
 }
 
 @media (max-width: 640px) {
 	.cx-entry-icon {
-		width: 56px;
-		height: 56px;
+		width: 64px;
+		height: 64px;
 	}
 }
 

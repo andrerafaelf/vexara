@@ -1,35 +1,35 @@
 import type { Attack, Nexus, Prisma } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 import {
+	notifyAttackUpdate,
+	notifyFactionUpdated,
+	notifyNexusConquered,
+	notifyReportUpdate,
+	notifyTransferUpdate
+} from '../services/warRoomSocket.js';
+import type { TroopKey } from '../types/index.js';
+import {
+	areAllDefendingTroopsEliminated,
 	computeClassWeightedAttack,
 	computeClassWeightedDefense,
+	computeLootStolen,
 	computeLossesForLoser,
 	computeLossesForWinner,
-	computeLootStolen,
+	computeScoutCombat,
 	computeTroopTotal,
-	areAllDefendingTroopsEliminated,
 	TROOP_STATS
 } from './combatMath.js';
-import { aggregateStationedSupport, buildDetailedScoutIntel } from './scouting.js';
-import { NOTIF, sendPushToUser } from './push.js';
+import { getMaxStorage, getNexusTypeEffectiveMultipliers } from './economy.js';
 import { resolveEventForNexus } from './galaxyEvents.js';
 import {
-	notifyAttackUpdate,
-	notifyTransferUpdate,
-	notifyReportUpdate,
-	notifyNexusConquered,
-	notifyFactionUpdated
-} from '../services/warRoomSocket.js';
-import { getNexusTypeEffectiveMultipliers, getMaxStorage } from './economy.js';
-import { computeNexusPopulation, getPopulationMax, loadAwayPopulation } from './population.js';
-import type { TroopKey } from '../types/index.js';
-import { logInfo, logWarn } from './logger.js';
-import {
 	getStealthScoutFailChance,
-	getStealthVaultPerResource,
 	partitionStealthVault,
 	RETURN_TRAVEL_MULTIPLIER
 } from './gameConstants.js';
+import { logInfo, logWarn } from './logger.js';
+import { computeNexusPopulation, getPopulationMax, loadAwayPopulation } from './population.js';
+import { NOTIF, sendPushToUser } from './push.js';
+import { aggregateStationedSupport, buildDetailedScoutIntel } from './scouting.js';
 
 async function logFactionEvent(
 	userId: number,
@@ -365,31 +365,76 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 			const travelMs = attack.arrivesAt!.getTime() - attack.createdAt.getTime();
 			const returnsAt = new Date(Date.now() + travelMs * RETURN_TRAVEL_MULTIPLIER);
 
-			// Stealth Array (Stage 2c) gives the defender a small chance to detect
-			// and intercept the scout outright. On failure the recon operative is
-			// lost, no intel returns, and the defender's report still gets the
-			// mission ping but with no captured data. Chance is 0 when the
-			// defender has no Stealth Array, so the common path is unchanged.
-			const defenderStealthLevel = defenderNexus
-				? ((defenderNexus as unknown as Record<string, number>).stealthArray as number) ?? 0
-				: 0;
-			const scoutFailChance = getStealthScoutFailChance(defenderStealthLevel);
-			const scoutFailed = defenderNexus !== null && Math.random() < scoutFailChance;
-
 			const reconSent = attackTroops.reconOperative || 0;
-			const reconSurviving = scoutFailed ? 0 : reconSent;
+			const defenderReconCount = defenderNexus
+				? (((defenderNexus as unknown as Record<string, number>).reconOperative as number) ?? 0)
+				: 0;
 
-			// Capture stationed allied support into the report so the scout reveals the
-			// REAL defensive force at scout-arrival, not just the nexus's own garrison
-			// (support lives on TroopTransfer rows, not the nexus troop columns).
-			let scoutIntel = !scoutFailed && defenderNexus ? buildDetailedScoutIntel(defenderNexus) : null;
+			// ─── GATE 1: Scout vs Scout Combat ───
+			let reconAfterGate1 = reconSent;
+			let defenderReconLost = 0;
+			let scoutCombatDetail: {
+				attackerSent: number;
+				defenderGarrison: number;
+				attackerSurvivorsGate1: number;
+				defenderLost: number;
+			} | null = null;
+
+			if (defenderReconCount > 0 && reconSent > 0 && defenderNexus) {
+				const seed = attack.id * 2654435761;
+				const result = computeScoutCombat(reconSent, defenderReconCount, seed);
+				reconAfterGate1 = result.attackerSurvivors;
+				defenderReconLost = result.defenderLosses;
+				scoutCombatDetail = {
+					attackerSent: reconSent,
+					defenderGarrison: defenderReconCount,
+					attackerSurvivorsGate1: reconAfterGate1,
+					defenderLost: defenderReconLost
+				};
+
+				if (defenderReconLost > 0) {
+					const newReconCount = Math.max(0, defenderReconCount - defenderReconLost);
+					const defenderAway = await loadAwayPopulation(prisma, defenderNexus.id);
+					const nextPopulationCurrent = computeNexusPopulation({
+						troops: {
+							...(defenderNexus as unknown as Record<string, unknown>),
+							reconOperative: newReconCount
+						},
+						trainingQueue: defenderNexus.trainingQueue,
+						populationMax: defenderNexus.populationMax,
+						...defenderAway
+					});
+					await prisma.nexus.update({
+						where: { id: defenderNexus.id },
+						data: { reconOperative: newReconCount, populationCurrent: nextPopulationCurrent }
+					});
+				}
+			}
+
+			const gate1Failed = reconAfterGate1 <= 0;
+
+			// ─── GATE 2: Stealth Array Interception ───
+			let scoutFailed = gate1Failed;
+			let reconSurviving = reconAfterGate1;
+			let defenderStealthLevel = 0;
+
+			if (!gate1Failed && defenderNexus) {
+				defenderStealthLevel =
+					((defenderNexus as unknown as Record<string, number>).stealthArray as number) ?? 0;
+				const scoutFailChance = getStealthScoutFailChance(defenderStealthLevel);
+				const intercepted = Math.random() < scoutFailChance;
+				if (intercepted) {
+					scoutFailed = true;
+					reconSurviving = 0;
+				}
+			}
+
+			let scoutIntel =
+				!scoutFailed && defenderNexus ? buildDetailedScoutIntel(defenderNexus) : null;
 			if (scoutIntel && defenderNexus) {
 				const support = await aggregateStationedSupport(defenderNexus.id);
 				if (support) scoutIntel.supportTroops = support;
 
-				// Hidden vault: scouts see only the visible (non-hidden) portion
-				// of each resource. Defender's actual stockpile stays untouched
-				// on the nexus row.
 				scoutIntel = {
 					...scoutIntel,
 					resources: {
@@ -400,6 +445,8 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 				};
 			}
 
+			const attackerReconLost = reconSent - reconSurviving;
+
 			await prisma.attack.update({
 				where: { id: attack.id },
 				data: {
@@ -409,10 +456,12 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 						mission: 'scout',
 						victory: !scoutFailed,
 						scoutFailed,
+						gate1Failed,
+						scoutCombat: scoutCombatDetail,
 						intel: scoutIntel,
 						survivingTroops: { reconOperative: reconSurviving },
-						attackerLosses: scoutFailed ? { reconOperative: reconSent } : {},
-						defenderLosses: {},
+						attackerLosses: attackerReconLost > 0 ? { reconOperative: attackerReconLost } : {},
+						defenderLosses: defenderReconLost > 0 ? { reconOperative: defenderReconLost } : {},
 						resourcesStolen: { biomass: 0, alloy: 0, ore: 0 }
 					} as Prisma.InputJsonObject
 				}
@@ -813,11 +862,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 		// so trivial pokes do nothing.
 		const BUILDING_DAMAGE_MIN_ATTACK_POWER = 2000; // ~ a real assault, not a poke
 		const BUILDING_DAMAGE_FULL_OVERFLOW = 20000; // attack power for max (5) hits vs empty
-		if (
-			attackerWins &&
-			allDefenderTroopsWiped &&
-			attackPower >= BUILDING_DAMAGE_MIN_ATTACK_POWER
-		) {
+		if (attackerWins && allDefenderTroopsWiped && attackPower >= BUILDING_DAMAGE_MIN_ATTACK_POWER) {
 			// Overflow = surplus power past the defense, scaled to the siege baseline.
 			// Vs a defended nexus this is (attack-defense)/baseline; vs an empty one
 			// it's the attacker's raw power/baseline — so hits scale with how much
@@ -923,14 +968,8 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 				defenderNexus.biomass,
 				defenderStealthLevel
 			).visible;
-			const alloyVisible = partitionStealthVault(
-				defenderNexus.alloy,
-				defenderStealthLevel
-			).visible;
-			const oreVisible = partitionStealthVault(
-				defenderNexus.ore,
-				defenderStealthLevel
-			).visible;
+			const alloyVisible = partitionStealthVault(defenderNexus.alloy, defenderStealthLevel).visible;
+			const oreVisible = partitionStealthVault(defenderNexus.ore, defenderStealthLevel).visible;
 
 			resourcesStolen = computeLootStolen(
 				{
@@ -964,8 +1003,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 		// factions can grind down a bigger player by stacking narrow wins. Hourly
 		// control regeneration (+10/hr) prevents griefing-by-trickle from a single
 		// attacker — attrition only works when waves land faster than control recovers.
-		const overseerCanAct =
-			attackerWins && overseerSent > 0 && attackerLosses.overseer === 0;
+		const overseerCanAct = attackerWins && overseerSent > 0 && attackerLosses.overseer === 0;
 
 		let controlDrain = 0;
 		if (overseerCanAct) {
@@ -1386,9 +1424,18 @@ async function processReturnedTroops(attack: Attack): Promise<void> {
 			}
 		}
 		const attackerMaxStorage = getMaxStorage(attackerNexus as Parameters<typeof getMaxStorage>[0]);
-		returnData['biomass'] = Math.min(attackerNexus.biomass + (resourcesStolen.biomass || 0), attackerMaxStorage);
-		returnData['alloy'] = Math.min(attackerNexus.alloy + (resourcesStolen.alloy || 0), attackerMaxStorage);
-		returnData['ore'] = Math.min(attackerNexus.ore + (resourcesStolen.ore || 0), attackerMaxStorage);
+		returnData['biomass'] = Math.min(
+			attackerNexus.biomass + (resourcesStolen.biomass || 0),
+			attackerMaxStorage
+		);
+		returnData['alloy'] = Math.min(
+			attackerNexus.alloy + (resourcesStolen.alloy || 0),
+			attackerMaxStorage
+		);
+		returnData['ore'] = Math.min(
+			attackerNexus.ore + (resourcesStolen.ore || 0),
+			attackerMaxStorage
+		);
 
 		// Survivors are now back on the troop columns and this attack row is about to
 		// be 'completed' (no longer counted as away). Recompute housing from the
@@ -1429,7 +1476,6 @@ async function processReturnedTroops(attack: Attack): Promise<void> {
 		console.error(`Error processing returned troops for attack ${attack.id}:`, err);
 	}
 }
-
 
 export async function processArrivedTransfers(): Promise<void> {
 	const now = new Date();
