@@ -12,16 +12,16 @@ export interface BuildingCost {
 
 export const BUILDING_COSTS: Record<string, BuildingCost> = {
 	commandCore: { biomass: 90, alloy: 80, ore: 70, time: 120 },
-	hangarBay: { biomass: 180, alloy: 150, ore: 80, time: 180 },
-	plasmaForge: { biomass: 180, alloy: 150, ore: 80, time: 180 },
-	armorFoundry: { biomass: 180, alloy: 150, ore: 80, time: 180 },
+	hangarBay: { biomass: 170, alloy: 150, ore: 80, time: 180 },
+	plasmaForge: { biomass: 170, alloy: 150, ore: 80, time: 180 },
+	armorFoundry: { biomass: 170, alloy: 150, ore: 80, time: 180 },
 	lifeSupport: { biomass: 80, alloy: 100, ore: 70, time: 150 },
 	storageVault: { biomass: 60, alloy: 50, ore: 70, time: 120 },
 	biomassFarm: { biomass: 50, alloy: 60, ore: 60, time: 120 },
 	alloyForge: { biomass: 65, alloy: 40, ore: 60, time: 120 },
 	oreExtractor: { biomass: 75, alloy: 65, ore: 70, time: 150 },
 	shieldGrid: { biomass: 50, alloy: 100, ore: 60, time: 180 },
-	targetingCore: { biomass: 120, alloy: 180, ore: 140, time: 210 },
+	targetingCore: { biomass: 115, alloy: 170, ore: 135, time: 210 },
 	stealthArray: { biomass: 100, alloy: 150, ore: 180, time: 210 }
 };
 

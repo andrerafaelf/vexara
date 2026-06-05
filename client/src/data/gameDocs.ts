@@ -324,7 +324,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		name: 'Hangar Bay',
 		role: 'Mobile-class production building',
 		description: 'Produces mobile-class units (Breaker, Skimmer, Interceptor, Void Stalker).',
-		baseCost: { biomass: 180, alloy: 150, ore: 80, timeSeconds: 180 },
+		baseCost: { biomass: 170, alloy: 150, ore: 80, timeSeconds: 180 },
 		maxLevel: 20,
 		unlock: 'Command Core Lv2',
 		milestones: [
@@ -344,7 +344,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		role: 'Fire-class production building',
 		description:
 			'Produces fire-class units (Sentinel Lancer, Pyre Suppressor, Arc Disruptor, Plasma Turret, Annihilator Platform).',
-		baseCost: { biomass: 180, alloy: 150, ore: 80, timeSeconds: 180 },
+		baseCost: { biomass: 170, alloy: 150, ore: 80, timeSeconds: 180 },
 		maxLevel: 20,
 		unlock: 'Command Core Lv2',
 		milestones: [
@@ -363,7 +363,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		name: 'Armor Foundry',
 		role: 'Armor-class production building',
 		description: 'Produces armor-class units (Assault Trooper, Bulwark Guard, Siege Mech).',
-		baseCost: { biomass: 180, alloy: 150, ore: 80, timeSeconds: 180 },
+		baseCost: { biomass: 170, alloy: 150, ore: 80, timeSeconds: 180 },
 		maxLevel: 20,
 		unlock: 'Command Core Lv2',
 		milestones: [
@@ -486,7 +486,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		role: 'Counter amplifier + advanced unit unlocks',
 		description:
 			'Amplifies the class-counter damage triangle, and gates training of the Void Stalker and Plasma Turret.',
-		baseCost: { biomass: 120, alloy: 180, ore: 140, timeSeconds: 210 },
+		baseCost: { biomass: 115, alloy: 170, ore: 135, timeSeconds: 210 },
 		maxLevel: 20,
 		unlock: 'Command Core Lv5',
 		milestones: [

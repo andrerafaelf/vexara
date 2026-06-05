@@ -8,9 +8,24 @@ import {
 	computeClassWeightedDefense,
 	computeLootStolen
 } from '../utils/combatMath.js';
-import { calculatePoints, computeResourceUpdate } from '../utils/economy.js';
+import { calculatePoints, computeResourceUpdate, getMaxStorage } from '../utils/economy.js';
 import { getBuildingCost, getOverseerCost, getOverseerCostMultiplier } from '../utils/gameConstants.js';
 import { buildRespawnNexusConfig, RESPAWN_INFLUENCE_FRACTION } from '../utils/starterNexus.js';
+
+const BUILDING_MAX_LEVELS = {
+	commandCore: 20,
+	hangarBay: 20,
+	plasmaForge: 20,
+	armorFoundry: 20,
+	lifeSupport: 25,
+	storageVault: 20,
+	biomassFarm: 20,
+	alloyForge: 20,
+	oreExtractor: 20,
+	shieldGrid: 15,
+	targetingCore: 20,
+	stealthArray: 15
+};
 
 test('computeResourceUpdate increases resources over elapsed time', () => {
 	const now = Date.now();
@@ -56,6 +71,25 @@ test('life support level 25 cost is rescaled to the old level 20 cap', () => {
 		ore: 383120,
 		time: 27914
 	});
+});
+
+test('all building upgrades fit under reachable storage caps', () => {
+	const resources = ['biomass', 'alloy', 'ore'];
+
+	for (const [building, maxLevel] of Object.entries(BUILDING_MAX_LEVELS)) {
+		for (let currentLevel = 0; currentLevel < maxLevel; currentLevel += 1) {
+			const cost = getBuildingCost(building, currentLevel);
+			const storageLevel = building === 'storageVault' ? currentLevel : 20;
+			const maxStorage = Math.floor(getMaxStorage({ storageVault: storageLevel }));
+
+			for (const resource of resources) {
+				assert.ok(
+					cost[resource] <= maxStorage,
+					`${building} Lv${currentLevel + 1} ${resource} cost ${cost[resource]} exceeds storage cap ${maxStorage}`
+				);
+			}
+		}
+	}
 });
 
 test('calculatePoints awards points for buildings and troops', () => {
