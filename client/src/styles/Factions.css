@@ -851,7 +851,6 @@
 	background: var(--color-navy-900);
 	border: 1px solid var(--border-default);
 	border-left: 3px solid var(--border-default);
-	border-radius: 6px;
 	padding: 10px 12px;
 	text-align: left;
 	cursor: pointer;
@@ -882,9 +881,10 @@
 }
 
 .clm-card-outcome {
+	font-family: var(--font-mono);
 	font-size: 0.78rem;
 	font-weight: 700;
-	letter-spacing: 0.04em;
+	letter-spacing: 0.1em;
 	text-transform: uppercase;
 }
 
@@ -968,7 +968,6 @@
 .clm-modal {
 	background: var(--color-navy-800);
 	border: 1px solid var(--border-default);
-	border-radius: 8px;
 	width: 100%;
 	max-width: 560px;
 	max-height: 85vh;
@@ -999,8 +998,11 @@
 }
 
 .clm-title {
+	font-family: var(--font-mono);
 	font-size: 1rem;
 	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
 	color: var(--text-strong);
 	margin: 0;
 }
@@ -1012,7 +1014,6 @@
 	font-size: 1rem;
 	padding: 4px 6px;
 	cursor: pointer;
-	border-radius: 4px;
 	line-height: 1;
 	transition:
 		color 100ms ease-out,
@@ -1033,13 +1034,14 @@
 }
 
 .clm-result {
+	font-family: var(--font-mono);
 	font-size: 0.85rem;
 	font-weight: 700;
-	letter-spacing: 0.06em;
+	letter-spacing: 0.12em;
 	text-transform: uppercase;
 	padding: 8px 12px;
-	border-radius: 4px;
-	text-align: center;
+	text-align: left;
+	border-left: 3px solid currentColor;
 }
 
 .clm-result--victory {
@@ -1063,7 +1065,6 @@
 .clm-section--meta {
 	background: rgba(255, 255, 255, 0.03);
 	border: 1px solid var(--border-default);
-	border-radius: 6px;
 	padding: 10px 12px;
 	gap: 4px;
 }
@@ -1111,7 +1112,6 @@
 	overflow-x: auto;
 	margin: 0;
 	background: rgba(0, 0, 0, 0.2);
-	border-radius: 4px;
 	padding: 8px 10px;
 }
 

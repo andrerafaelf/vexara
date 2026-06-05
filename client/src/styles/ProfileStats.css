@@ -305,6 +305,29 @@
 		padding: 12px;
 	}
 
+	.ps-tabs {
+		flex-wrap: wrap;
+		gap: 6px;
+		border-bottom: 0;
+	}
+
+	.ps-tab {
+		flex: 1 1 calc(50% - 6px);
+		justify-content: center;
+		margin-bottom: 0;
+		border: 1px solid var(--border-default);
+		padding: 10px 8px;
+	}
+
+	.ps-tab--active,
+	.ps-tab--active:hover {
+		border-color: var(--accent);
+	}
+
+	.ps-tab--logout {
+		margin-left: 0;
+	}
+
 	.ps-cards {
 		grid-template-columns: repeat(2, 1fr);
 	}
@@ -410,15 +433,17 @@
 }
 
 /* Section cards get left-rule */
-[class*='ps-card'],
-[class*='ps-panel'],
-[class*='ps-section'] {
+.ps-card,
+.ps-section,
+.ps-notif-panel,
+.ps-security-panel {
 	border-left: 2px solid var(--border-default);
 	transition: border-left-color var(--duration-base) var(--ease-out);
 }
 
-[class*='ps-card']:hover,
-[class*='ps-panel']:hover {
+.ps-card:hover,
+.ps-notif-panel:hover,
+.ps-security-panel:hover {
 	border-left-color: var(--accent);
 }
 

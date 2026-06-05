@@ -202,7 +202,7 @@ function CombatLogCard({ log }: { log: ParsedCombatLog }) {
 			>
 				<div className="clm-card-header">
 					<span className="clm-card-outcome">
-						{isScout ? '🔍 Scout Report' : isVictory ? '⚔ Victory' : '💀 Defeat'}
+						{isScout ? 'Scout Report' : isVictory ? 'Victory' : 'Defeat'}
 					</span>
 					<span className="clm-card-hint">View report →</span>
 				</div>
