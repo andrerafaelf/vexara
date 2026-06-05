@@ -47,11 +47,11 @@ multiple sequential attacks.
 
 ---
 
-### Combat reports (client)
+### combat logs (client)
 
 **Report now shows all participating unit types, not just the first three.**
 
-The `troopNames` lookup table in the combat report was missing Void
+The `troopNames` lookup table in the combat log was missing Void
 Stalker and Plasma Turret. Any report involving either unit silently
 dropped those rows from the table. Both are now mapped, so all 14 unit
 types render correctly.

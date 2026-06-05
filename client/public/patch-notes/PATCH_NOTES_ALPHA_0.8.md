@@ -1,7 +1,7 @@
 ## Vexara - Alpha Patch Notes v0.8
 
 Daily quests and streaks. Faction cap at 10. New Deployed Forces tab.
-Conquered nexus alert. Travel time shown before you send. Combat reports now appear the
+Conquered nexus alert. Travel time shown before you send. combat logs now appear the
 moment the strike lands, not when troops walk home.
 
 ---
@@ -61,9 +61,9 @@ penalty visibly so there are no surprises after you hit send.
 
 ---
 
-### Combat reports appear on strike finish
+### combat logs appear on strike finish
 
-Previously, attackers only saw the combat report after their surviving
+Previously, attackers only saw the combat log after their surviving
 troops walked all the way home. Now both attacker and defender see the
 report the moment the battle resolves. You no longer have to wait an
 hour for your troops to return before finding out what happened.

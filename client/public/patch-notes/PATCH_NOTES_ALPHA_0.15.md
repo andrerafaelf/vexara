@@ -7,7 +7,7 @@ lone Overseer can finally finish off an empty nexus. There's also
 a new live combat preview right on the attack screen so you can
 see roughly how a strike will go before you commit it. On top of
 that: returning eliminated players come back scaled to their old
-strength, combat reports stopped triple-listing the defender,
+strength, combat logs stopped triple-listing the defender,
 public profiles stopped leaking your stockpile, resource transfers
 respect the receiver's storage, and a pile of smaller fixes.
 
@@ -88,9 +88,9 @@ it tells you it's assuming an empty garrison and to scout first for
 an accurate read. Scout the target and the prediction uses their
 actual known troops, shield level, and your Armory bonus.
 
-### Combat reports: two forces, not three
+### combat logs: two forces, not three
 
-Combat reports were showing the defender's troops **twice** when an
+combat logs were showing the defender's troops **twice** when an
 ally supported them , once mixed into a "Defender Forces" table that
 silently combined the garrison with allied support, and again in a
 separate "Allied Forces" table. And if you were the defender, "Your

@@ -96,11 +96,11 @@ function CombatLogModal({ log, onClose }: { log: ParsedCombatLog; onClose: () =>
 			onClick={onClose}
 			role="dialog"
 			aria-modal="true"
-			aria-label="Combat Report"
+			aria-label="combat log"
 		>
 			<div className="clm-modal" onClick={(e) => e.stopPropagation()}>
 				<div className="clm-header">
-					<h2 className="clm-title">{isScout ? 'Scout Report' : 'Combat Report'}</h2>
+					<h2 className="clm-title">{isScout ? 'Scout Report' : 'combat log'}</h2>
 					<button className="clm-close" onClick={onClose} aria-label="Close">
 						✕
 					</button>
@@ -198,7 +198,7 @@ function CombatLogCard({ log }: { log: ParsedCombatLog }) {
 				type="button"
 				className={`clm-card${isVictory ? ' clm-card--victory' : isDefeat ? ' clm-card--defeat' : ' clm-card--scout'}`}
 				onClick={() => setOpen(true)}
-				title="Click to view full combat report"
+				title="Click to view full combat log"
 			>
 				<div className="clm-card-header">
 					<span className="clm-card-outcome">

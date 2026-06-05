@@ -111,9 +111,9 @@ export default function GameLayout({
 		return r.biomass >= 5000 || r.alloy >= 5000 || r.ore >= 5000;
 	});
 
-	// We don't have a "has ever sent an attack" or "has any combat reports"
+	// We don't have a "has ever sent an attack" or "has any combat logs"
 	// signal here without an extra query, so promote Players once the player
-	// has any unread combat report OR has reached CC≥3 (which by then they've
+	// has any unread combat log OR has reached CC≥3 (which by then they've
 	// almost certainly engaged the map). hasUnreadReports is true at least once
 	// for everyone who has received any attack/scout reply.
 	const liveUnlocks = useMemo(
@@ -332,7 +332,7 @@ export default function GameLayout({
 								<span className="nav-btn-content">
 									Combat Logs
 									{hasUnreadReports && (
-										<span className="nav-attention-mark" aria-label="Unread combat reports" />
+										<span className="nav-attention-mark" aria-label="Unread combat logs" />
 									)}
 								</span>
 							</button>
@@ -465,7 +465,7 @@ export default function GameLayout({
 													}}
 												>
 													<span>Players</span>
-													<span className="nav-discover-req">First combat report</span>
+													<span className="nav-discover-req">First combat log</span>
 												</button>
 											)}
 										</div>
@@ -570,7 +570,7 @@ export default function GameLayout({
 								<span className="nav-btn-content">
 									Combat Logs
 									{hasUnreadReports && (
-										<span className="nav-attention-mark" aria-label="Unread combat reports" />
+										<span className="nav-attention-mark" aria-label="Unread combat logs" />
 									)}
 								</span>
 							</button>
@@ -664,7 +664,7 @@ export default function GameLayout({
 											onClick={nav('/players')}
 										>
 											<span>Players</span>
-											<span className="nav-discover-req">First combat report</span>
+											<span className="nav-discover-req">First combat log</span>
 										</button>
 									)}
 								</div>

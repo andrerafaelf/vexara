@@ -42,7 +42,7 @@ const buildingNames: Record<string, string> = {
 
 // Includes legacy keys (lancerDrone, breakerUnit, skimmerBike,
 // suppressorTeam, disruptorUnit, interceptorBike) so completed historical
-// combat reports stored under those keys still resolve to a label. New
+// combat logs stored under those keys still resolve to a label. New
 // reports use the renamed keys per the Stage 2d migration.
 const troopNames: Record<string, string> = {
 	sentinelLancer: 'Sentinel Lancer',
@@ -510,7 +510,7 @@ const Reports: React.FC<ReportsProps> = ({
 							</button>
 						)}
 					</div>
-					<h2>{scoutReport ? 'Scout Report' : 'Combat Report'}</h2>
+					<h2>{scoutReport ? 'Scout Report' : 'combat log'}</h2>
 				</div>
 
 				<div className="report-detail">
@@ -786,7 +786,7 @@ const Reports: React.FC<ReportsProps> = ({
 							</div>
 
 							{/*
-                Combat reports always show exactly two force tables — Attacker
+                combat logs always show exactly two force tables — Attacker
                 and Defender, each labelled with the player's username and a
                 "(You)" marker for whichever side the viewer is on — plus one
                 table per supporting ally. The defender table is garrison-only
@@ -1087,7 +1087,7 @@ const Reports: React.FC<ReportsProps> = ({
 			<>
 				{reports.length === 0 ? (
 					<div className="no-reports">
-						<p>No combat reports yet. Strike other nexuses or defend yours to see reports here!</p>
+						<p>No combat logs yet. Strike other nexuses or defend yours to see reports here!</p>
 					</div>
 				) : (
 					<div className="reports-list">
@@ -1146,7 +1146,7 @@ const Reports: React.FC<ReportsProps> = ({
 													</>
 												)
 											) : (
-												'Combat Report'
+												'combat log'
 											)}
 										</div>
 										<div className="report-meta">

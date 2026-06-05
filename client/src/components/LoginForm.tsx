@@ -14,7 +14,7 @@ const SCREENSHOTS: { src: string; label: string }[] = [
 	{ src: '/vexara-starfield.png', label: 'Galaxy Map' },
 	{ src: '/vexara-factions.png', label: 'Factions' },
 	{ src: '/vexara-diplomacy.png', label: 'Diplomacy' },
-	{ src: '/vexara-combatreport.png', label: 'Combat Report' },
+	{ src: '/vexara-combatreport.png', label: 'combat log' },
 	{ src: '/vexara-troops.png', label: 'Troops' },
 	{ src: '/vexara-buildings.png', label: 'Buildings' },
 	{ src: '/vexara-market.png', label: 'Market' },

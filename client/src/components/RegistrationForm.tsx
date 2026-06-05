@@ -162,7 +162,7 @@ const SCREENSHOTS: { src: string; label: string; caption: string }[] = [
 	},
 	{
 		src: '/vexara-combatreport.png',
-		label: 'Combat Report',
+		label: 'combat log',
 		caption: 'Detailed blow-by-blow after every raid, strike, or conquest'
 	},
 	{

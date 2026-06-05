@@ -24,7 +24,7 @@ Per-nexus influence now includes troops still in flight on outgoing
 strikes (until they actually die in combat). The header total stops
 flickering down at strike-send and back up on return , the only time
 your influence drops on an attack is now when losses are confirmed in
-the combat report.
+the combat log.
 
 ---
 
@@ -121,7 +121,7 @@ upgrades show up without needing a logout.
 ### Coordinates with zero no longer show as "?"
 
 Nexuses on row 0 or column 0 , e.g. (22|0) , were displaying as (22|?)
-across combat reports, scout reports, dashboard outgoing strikes, and admin.
+across combat logs, scout reports, dashboard outgoing strikes, and admin.
 Caused by an `x || '?'` fallback that mistakenly treated `0` as missing.
 Replaced with a nullish-only check so legitimate edge-of-galaxy coords
 render correctly.
@@ -130,7 +130,7 @@ render correctly.
 
 ### "Attack Again" on combat and espionage reports
 
-Combat reports now show an Attack button alongside the existing scout-only
+combat logs now show an Attack button alongside the existing scout-only
 one , open any of your own strike reports and you can re-attack the same
 target without leaving the report.
 

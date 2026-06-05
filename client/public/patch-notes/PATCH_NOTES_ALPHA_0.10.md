@@ -1,6 +1,6 @@
 ## Vexara - Alpha Patch Notes v0.10
 
-Faction wars get teeth. Combat reports go shareable. Late-game training
+Faction wars get teeth. combat logs go shareable. Late-game training
 shortens. UI polish across arrivals, referrals, and page titles.
 
 ---
@@ -34,7 +34,7 @@ when several waves are stacked.
 
 ### Faction chat shares combat logs
 
-A "Share to Chat" button on every combat report posts a formatted log
+A "Share to Chat" button on every combat log posts a formatted log
 into your faction chat. The chat input and server limit were raised from
 1000 to 4000 characters so a full report fits in one message. The
 receiving end parses the block and renders it inline with the rest of
@@ -71,7 +71,7 @@ scheduled for the same instant. Allied troop transfer records are now
 guaranteed to exist before combat reads them , fixes a rare crash on
 support-heavy battles.
 
-The combat report header was also wrong for supporters: a successful
+The combat log header was also wrong for supporters: a successful
 defense (your supported nexus held) was being shown as "Defense lost"
 with a red banner. Win/loss is now correctly displayed from the ally's
 perspective.

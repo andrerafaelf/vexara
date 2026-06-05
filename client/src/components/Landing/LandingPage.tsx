@@ -39,7 +39,7 @@ const FOOTAGE: { src: string; label: string; code: string; caption: string }[] =
 	{
 		src: '/vexara-combatreport.png',
 		code: 'VX-05',
-		label: 'Combat Report',
+		label: 'combat log',
 		caption: 'Blow-by-blow after every raid, strike, or conquest.'
 	},
 	{

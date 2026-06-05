@@ -125,7 +125,7 @@ surfaces too, so the whole app speaks one "back" dialect regardless
 of whether the back action is a route navigation or just a piece of
 component state.
 
-- **Combat report detail** now uses the unified back-button look
+- **combat log detail** now uses the unified back-button look
   (arrow icon, accent hover). Same button, same hover color as the
   BackBar on profiles. Prev/Next/Share stay in the same cluster .
   only the visual language of the back affordance changed.

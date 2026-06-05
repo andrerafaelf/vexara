@@ -35,7 +35,7 @@ const EMPTY_BADGES: NotificationBadges = {
 
 /**
  * Single source of truth for top-nav badges. One request per page navigation
- * covers tokens, faction action items, friends, and combat reports - instead
+ * covers tokens, faction action items, friends, and combat logs - instead
  * of fanning out into three separate /badges endpoints that all compete for
  * the per-user API rate-limit budget.
  */

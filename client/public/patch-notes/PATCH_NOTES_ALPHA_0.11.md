@@ -82,7 +82,7 @@ the way until you have a real reason to engage with it.
   Players collapse under a `More ▾` menu until you actually have a
   reason to use them , Market unlocks at Command Core Lv3 or a 5k
   stockpile, Allies at CC Lv2, Factions when you build a Recruitment
-  Core, Players on your first combat report. Promotions are sticky:
+  Core, Players on your first combat log. Promotions are sticky:
   once a tab appears in your bar it stays there forever. Direct URLs
   still work for anyone hitting the routes by bookmark.
 

@@ -470,7 +470,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 			if (attack.attackerUserId) {
 				void sendPushToUser(attack.attackerUserId, NOTIF.ATTACK_RESOLVED, {
 					title: '🛰️ Scout Returning',
-					body: '🔭 Your scout mission is complete. Combat report ready!',
+					body: '🔭 Your scout mission is complete. combat log ready!',
 					tag: `scout-${attack.id}`,
 					data: { url: '/combat-logs' }
 				});
@@ -1341,9 +1341,9 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 					: 'Attack Repelled',
 				body: attackerWins
 					? conquered
-						? `Your forces conquered ${defenderNexusForNotif?.name || 'a nexus'}! Combat report ready.`
-						: `You won the battle at ${defenderNexusForNotif?.name || 'a nexus'}. Troops returning, combat report ready!`
-					: `Your attack on ${defenderNexusForNotif?.name || 'a nexus'} was repelled. Combat report ready.`,
+						? `Your forces conquered ${defenderNexusForNotif?.name || 'a nexus'}! combat log ready.`
+						: `You won the battle at ${defenderNexusForNotif?.name || 'a nexus'}. Troops returning, combat log ready!`
+					: `Your attack on ${defenderNexusForNotif?.name || 'a nexus'} was repelled. combat log ready.`,
 				tag: `attack-resolved-${attack.id}`,
 				data: { url: '/combat-logs' }
 			});
@@ -1358,9 +1358,9 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 					: 'Attack Repelled',
 				body: attackerWins
 					? conquered
-						? `${attackerNexusForNotif?.name || 'An enemy'} conquered your nexus! Combat report ready.`
-						: `${attackerNexusForNotif?.name || 'An enemy'} raided your nexus and stole resources. Combat report ready.`
-					: `You successfully defended against an attack on ${defenderNexusForNotif?.name || 'your nexus'}. Combat report ready.`,
+						? `${attackerNexusForNotif?.name || 'An enemy'} conquered your nexus! combat log ready.`
+						: `${attackerNexusForNotif?.name || 'An enemy'} raided your nexus and stole resources. combat log ready.`
+					: `You successfully defended against an attack on ${defenderNexusForNotif?.name || 'your nexus'}. combat log ready.`,
 				tag: `defended-${attack.id}`,
 				data: { url: '/combat-logs' }
 			});

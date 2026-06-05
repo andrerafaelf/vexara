@@ -135,7 +135,7 @@ export function notifyBadgeUpdate(userId: number) {
 	emitToUser(userId, 'badges:refresh', { at: Date.now() });
 }
 
-/** Tell a user they have a new unread combat report. */
+/** Tell a user they have a new unread combat log. */
 export function notifyReportUpdate(userId: number) {
 	emitToUser(userId, 'reports:refresh', { at: Date.now() });
 }

@@ -82,7 +82,7 @@ trio (Wraith Skimmer, Phantom Lance, Void Stalker) now reads as a
 coherent "ghost-class" of fast strikers, and the Fire roster tightens
 around energy-weapon language.
 
-Historical combat reports keep their original wording , a 6-month-old
+Historical combat logs keep their original wording , a 6-month-old
 battle log still reads "Skimmer Bike" because that's what was sent
 that day.
 

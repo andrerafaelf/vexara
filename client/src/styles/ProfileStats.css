@@ -1,9 +1,9 @@
 .profile-stats {
-	padding: 24px;
+	padding: 24px 28px 40px;
 	display: flex;
 	flex-direction: column;
 	gap: 24px;
-	max-width: 900px;
+	max-width: 960px;
 	margin: 0 auto;
 }
 
@@ -195,32 +195,34 @@
 	letter-spacing: 0.07em;
 	text-transform: uppercase;
 	margin: 0;
-	padding: 10px 16px;
+	padding: 12px 20px;
 	border-bottom: 1px solid var(--border-default);
 }
 
 .ps-section-body {
-	padding: 16px;
+	padding: 20px 22px 22px;
 	display: flex;
 	flex-direction: column;
-	gap: 16px;
+	gap: 18px;
 }
 
 /* Stat cards grid */
 .ps-cards {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-	gap: 10px;
+	grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+	gap: 12px;
 }
 
 .ps-card {
 	background: var(--bg-surface-3);
 	border: 1px solid var(--border-strong);
 	border-radius: var(--radius-sm);
-	padding: 14px 16px;
+	padding: 17px 18px 16px;
+	min-height: 94px;
 	display: flex;
 	flex-direction: column;
-	gap: 3px;
+	justify-content: center;
+	gap: 5px;
 	transition:
 		border-color var(--duration-fast) var(--ease-out),
 		background var(--duration-fast) var(--ease-out);
@@ -233,9 +235,10 @@
 
 .ps-card-value {
 	color: var(--text-strong);
-	font-size: 22px;
+	font-size: 24px;
 	font-weight: 700;
-	line-height: 1.2;
+	line-height: 1;
+	letter-spacing: 0;
 }
 
 .ps-card-label {
@@ -243,45 +246,49 @@
 	font-size: 11px;
 	text-transform: uppercase;
 	letter-spacing: 0.05em;
+	line-height: 1.35;
 }
 
 .ps-card-sub {
 	color: var(--text-faint);
 	font-size: 11px;
-	margin-top: 2px;
+	line-height: 1.45;
+	margin-top: 1px;
+	overflow-wrap: anywhere;
 }
 
 /* Resource production bars */
 .ps-resource-bars {
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
+	gap: 10px;
+	background: rgba(255, 255, 255, 0.025);
+	border: 1px solid var(--border-default);
+	padding: 14px 16px;
 }
 
 .ps-bar-row {
 	display: flex;
 	align-items: center;
-	gap: 10px;
+	gap: 14px;
 }
 
 .ps-bar-label {
 	font-size: 12px;
 	font-weight: bold;
-	width: 58px;
+	width: 72px;
 	flex-shrink: 0;
 }
 
 .ps-bar-track {
 	flex: 1;
-	height: 8px;
+	height: 9px;
 	background: var(--color-navy-700);
-	border-radius: 4px;
 	overflow: hidden;
 }
 
 .ps-bar-fill {
 	height: 100%;
-	border-radius: 4px;
 	transition: width 0.4s ease;
 }
 

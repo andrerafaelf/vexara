@@ -115,7 +115,7 @@ export async function getBadges(req: AuthRequest, res: Response): Promise<void> 
 			prisma.friendRequest.count({ where: { receiverId: req.userId, status: 'pending' } }),
 			prisma.chatMessage.count({ where: { receiverId: req.userId, readAt: null } }),
 			// Mirror /report/unread-nexus-ids: nexus IDs in the active galaxy that own
-			// at least one unread completed combat report.
+			// at least one unread completed combat log.
 			fetchUnreadNexusIds(req.userId, req.galaxyId),
 			prisma.factionMember.findMany({
 				where: { userId: req.userId },
