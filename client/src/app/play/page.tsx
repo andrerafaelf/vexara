@@ -1,8 +1,9 @@
 'use client';
 
 import { useToast } from '@/context/ToastContext';
-import { createNexus, getMyGalaxy } from '@/services/api';
+import { createNexus, getMyGalaxy, getGalaxies, selectGalaxy } from '@/services/api';
 import GalaxyPicker, { Galaxy } from '@/components/GalaxyPicker';
+import { serverNow } from '@/realtime/serverClock';
 import OnboardingOverlay from '@/components/OnboardingOverlay';
 import { usePageReady } from '@/components/NavigationProgress';
 import { ModalQueueProvider } from '@/context/ModalQueueContext';
@@ -13,6 +14,23 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 const SELECTED_NEXUS_KEY = 'selectedNexusId';
+
+// A galaxy a brand-new player can be auto-dropped into: active, already started
+// (or no startsAt), and not locked to new players. "Most recent" = newest such
+// galaxy by createdAt, matching the "auto-assign to the most recent galaxy" rule.
+function pickMostRecentJoinable(galaxies: Galaxy[]): Galaxy | null {
+	const now = serverNow();
+	const joinable = galaxies.filter(
+		(g) =>
+			g.status === 'active' &&
+			!g.isLocked &&
+			(!g.startsAt || new Date(g.startsAt).getTime() <= now)
+	);
+	if (joinable.length === 0) return null;
+	return joinable.sort(
+		(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+	)[0];
+}
 
 export default function PlayDispatcher() {
 	const router = useRouter();
@@ -31,6 +49,10 @@ export default function PlayDispatcher() {
 	const [activeGalaxy, setActiveGalaxy] = useState<Galaxy | null>(null);
 	const [showGalaxyPicker, setShowGalaxyPicker] = useState(false);
 	const [joiningGalaxy, setJoiningGalaxy] = useState(false);
+	// True while we auto-join a first-time player into the most recent galaxy and
+	// place their starter nexus. Keeps the welcome/picker UI from flashing before
+	// the redirect-to-nexus effect fires.
+	const [autoPlacing, setAutoPlacing] = useState(false);
 
 	useEffect(() => {
 		if (!localStorage.getItem('token')) {
@@ -58,16 +80,52 @@ export default function PlayDispatcher() {
 	}, [joiningGalaxy, hasResolved]);
 
 	useEffect(() => {
-		if (!isLoading && nexuses.length === 0 && !localStorage.getItem(SELECTED_NEXUS_KEY)) {
-			getMyGalaxy()
-				.then((res) => {
-					const g = res.data?.activeGalaxy ?? null;
-					setActiveGalaxy(g);
-					if (!g) setShowGalaxyPicker(true);
-				})
-				.catch(() => setShowGalaxyPicker(true));
-		}
-	}, [isLoading, nexuses.length]);
+		if (isLoading || nexuses.length > 0 || localStorage.getItem(SELECTED_NEXUS_KEY)) return;
+		if (autoPlacing) return;
+		let alive = true;
+		getMyGalaxy()
+			.then(async (res) => {
+				if (!alive) return;
+				const g = res.data?.activeGalaxy ?? null;
+				setActiveGalaxy(g);
+				// Returning player who already has an active galaxy (e.g. eliminated
+				// respawn) — leave the existing welcome/create-nexus flow in place.
+				if (g) return;
+				// Brand-new player: no active galaxy, no nexus. Skip the two-screen
+				// gauntlet — auto-join the most recent joinable galaxy. selectGalaxy
+				// creates the GalaxyPlayer membership AND the starter nexus in one
+				// server transaction, so the redirect-to-nexus effect carries them
+				// straight into the game. Zero clicks to playing.
+				try {
+					const list = await getGalaxies();
+					if (!alive) return;
+					const target = pickMostRecentJoinable((list.data as Galaxy[]) ?? []);
+					if (!target) {
+						// Nothing safely auto-joinable (all locked/pending) — fall back
+						// to the manual picker rather than dead-ending the player.
+						setShowGalaxyPicker(true);
+						return;
+					}
+					setAutoPlacing(true);
+					await selectGalaxy(target.id);
+					if (!alive) return;
+					setActiveGalaxy(target);
+					setJoiningGalaxy(true);
+					invalidateNexuses();
+				} catch {
+					if (alive) {
+						setAutoPlacing(false);
+						setShowGalaxyPicker(true);
+					}
+				}
+			})
+			.catch(() => {
+				if (alive) setShowGalaxyPicker(true);
+			});
+		return () => {
+			alive = false;
+		};
+	}, [isLoading, nexuses.length, autoPlacing, invalidateNexuses]);
 
 	const handleCreateNexus = async () => {
 		if (creating) return;
@@ -88,7 +146,8 @@ export default function PlayDispatcher() {
 		isFetching ||
 		nexuses.length > 0 ||
 		hasStoredNexus ||
-		joiningGalaxy
+		joiningGalaxy ||
+		autoPlacing
 	) {
 		return null;
 	}

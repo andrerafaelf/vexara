@@ -1629,7 +1629,7 @@
       "source_file": "admin-server/controllers/adminController.ts",
       "source_location": "L28",
       "id": "controllers_admincontroller_previewgalaxylivebroadcast",
-      "community": 0,
+      "community": 3,
       "norm_label": "previewgalaxylivebroadcast()"
     },
     {
@@ -1647,7 +1647,7 @@
       "source_file": "admin-server/controllers/adminController.ts",
       "source_location": "L61",
       "id": "controllers_admincontroller_sendgalaxylivebroadcast",
-      "community": 0,
+      "community": 3,
       "norm_label": "sendgalaxylivebroadcast()"
     },
     {
@@ -1719,7 +1719,7 @@
       "source_file": "admin-server/controllers/adminController.ts",
       "source_location": "L217",
       "id": "controllers_admincontroller_deletegalaxy",
-      "community": 101,
+      "community": 0,
       "norm_label": "deletegalaxy()"
     },
     {
@@ -1791,7 +1791,7 @@
       "source_file": "admin-server/controllers/adminController.ts",
       "source_location": "L499",
       "id": "controllers_admincontroller_addtroopstouser",
-      "community": 39,
+      "community": 0,
       "norm_label": "addtroopstouser()"
     },
     {
@@ -1800,7 +1800,7 @@
       "source_file": "admin-server/controllers/adminController.ts",
       "source_location": "L540",
       "id": "controllers_admincontroller_setbuildingforuser",
-      "community": 64,
+      "community": 0,
       "norm_label": "setbuildingforuser()"
     },
     {
@@ -1809,7 +1809,7 @@
       "source_file": "admin-server/controllers/adminController.ts",
       "source_location": "L572",
       "id": "controllers_admincontroller_recountpopulation",
-      "community": 39,
+      "community": 0,
       "norm_label": "recountpopulation()"
     },
     {
@@ -1818,7 +1818,7 @@
       "source_file": "admin-server/controllers/adminController.ts",
       "source_location": "L585",
       "id": "controllers_admincontroller_completestrikeforuser",
-      "community": 0,
+      "community": 16,
       "norm_label": "completestrikeforuser()"
     },
     {
@@ -1827,7 +1827,7 @@
       "source_file": "admin-server/controllers/adminController.ts",
       "source_location": "L603",
       "id": "controllers_admincontroller_completebuildforuser",
-      "community": 64,
+      "community": 0,
       "norm_label": "completebuildforuser()"
     },
     {
@@ -1836,7 +1836,7 @@
       "source_file": "admin-server/controllers/adminController.ts",
       "source_location": "L645",
       "id": "controllers_admincontroller_completetrainingforuser",
-      "community": 39,
+      "community": 0,
       "norm_label": "completetrainingforuser()"
     },
     {
@@ -1863,7 +1863,7 @@
       "source_file": "admin-server/controllers/adminController.ts",
       "source_location": "L734",
       "id": "controllers_admincontroller_giveresourcestonexus",
-      "community": 101,
+      "community": 0,
       "norm_label": "giveresourcestonexus()"
     },
     {
@@ -1872,7 +1872,7 @@
       "source_file": "admin-server/controllers/adminController.ts",
       "source_location": "L754",
       "id": "controllers_admincontroller_addtroopstonexus",
-      "community": 39,
+      "community": 0,
       "norm_label": "addtroopstonexus()"
     },
     {
@@ -1881,7 +1881,7 @@
       "source_file": "admin-server/controllers/adminController.ts",
       "source_location": "L816",
       "id": "controllers_admincontroller_addbuildingstonexus",
-      "community": 64,
+      "community": 0,
       "norm_label": "addbuildingstonexus()"
     },
     {
@@ -1890,7 +1890,7 @@
       "source_file": "admin-server/controllers/adminController.ts",
       "source_location": "L857",
       "id": "controllers_admincontroller_completebuildfornexus",
-      "community": 64,
+      "community": 0,
       "norm_label": "completebuildfornexus()"
     },
     {
@@ -1899,7 +1899,7 @@
       "source_file": "admin-server/controllers/adminController.ts",
       "source_location": "L885",
       "id": "controllers_admincontroller_completetrainingfornexus",
-      "community": 39,
+      "community": 0,
       "norm_label": "completetrainingfornexus()"
     },
     {
@@ -1908,7 +1908,7 @@
       "source_file": "admin-server/controllers/adminController.ts",
       "source_location": "L929",
       "id": "controllers_admincontroller_deletenexus",
-      "community": 101,
+      "community": 0,
       "norm_label": "deletenexus()"
     },
     {
@@ -1926,7 +1926,7 @@
       "source_file": "admin-server/controllers/adminController.ts",
       "source_location": "L1008",
       "id": "controllers_admincontroller_completeattack",
-      "community": 0,
+      "community": 16,
       "norm_label": "completeattack()"
     },
     {
@@ -1935,7 +1935,7 @@
       "source_file": "admin-server/controllers/adminController.ts",
       "source_location": "L1031",
       "id": "controllers_admincontroller_completetransfer",
-      "community": 0,
+      "community": 16,
       "norm_label": "completetransfer()"
     },
     {
@@ -1944,7 +1944,7 @@
       "source_file": "admin-server/controllers/adminController.ts",
       "source_location": "L1054",
       "id": "controllers_admincontroller_resendverificationemail",
-      "community": 38,
+      "community": 37,
       "norm_label": "resendverificationemail()"
     },
     {
@@ -1953,7 +1953,7 @@
       "source_file": "admin-server/controllers/adminController.ts",
       "source_location": "L1077",
       "id": "controllers_admincontroller_granttokens",
-      "community": 101,
+      "community": 0,
       "norm_label": "granttokens()"
     },
     {
@@ -1989,7 +1989,7 @@
       "source_file": "admin-server/controllers/adminController.ts",
       "source_location": "L1187",
       "id": "controllers_admincontroller_testnotification",
-      "community": 0,
+      "community": 76,
       "norm_label": "testnotification()"
     },
     {
@@ -2619,7 +2619,7 @@
       "source_file": "admin-server/services/adminService.ts",
       "source_location": "L259",
       "id": "services_adminservice_createuser",
-      "community": 4,
+      "community": 11,
       "norm_label": "createuser()"
     },
     {
@@ -2637,7 +2637,7 @@
       "source_file": "admin-server/services/adminService.ts",
       "source_location": "L282",
       "id": "services_adminservice_updateusercredentials",
-      "community": 4,
+      "community": 11,
       "norm_label": "updateusercredentials()"
     },
     {
@@ -3654,7 +3654,7 @@
       "source_file": "client/src/app/buildings/page.tsx",
       "source_location": "L53",
       "id": "buildings_page_formattime",
-      "community": 114,
+      "community": 25,
       "norm_label": "formattime()"
     },
     {
@@ -4432,10 +4432,19 @@
       "norm_label": "page.tsx"
     },
     {
+      "label": "pickMostRecentJoinable()",
+      "file_type": "code",
+      "source_file": "client/src/app/play/page.tsx",
+      "source_location": "L21",
+      "id": "play_page_pickmostrecentjoinable",
+      "community": 94,
+      "norm_label": "pickmostrecentjoinable()"
+    },
+    {
       "label": "PlayDispatcher()",
       "file_type": "code",
       "source_file": "client/src/app/play/page.tsx",
-      "source_location": "L17",
+      "source_location": "L35",
       "id": "play_page_playdispatcher",
       "community": 29,
       "norm_label": "playdispatcher()"
@@ -4491,7 +4500,7 @@
       "source_file": "client/src/app/profile/page.tsx",
       "source_location": "L1",
       "id": "profile_page",
-      "community": 70,
+      "community": 35,
       "norm_label": "page.tsx"
     },
     {
@@ -4500,7 +4509,7 @@
       "source_file": "client/src/app/profile/page.tsx",
       "source_location": "L8",
       "id": "profile_page_profilepage",
-      "community": 70,
+      "community": 35,
       "norm_label": "profilepage()"
     },
     {
@@ -5256,7 +5265,7 @@
       "source_file": "client/src/components/Avatar.tsx",
       "source_location": "L1",
       "id": "components_avatar",
-      "community": 70,
+      "community": 35,
       "norm_label": "avatar.tsx"
     },
     {
@@ -5265,7 +5274,7 @@
       "source_file": "client/src/components/Avatar.tsx",
       "source_location": "L5",
       "id": "components_avatar_size",
-      "community": 70,
+      "community": 35,
       "norm_label": "size"
     },
     {
@@ -5274,7 +5283,7 @@
       "source_file": "client/src/components/Avatar.tsx",
       "source_location": "L7",
       "id": "components_avatar_avatarprops",
-      "community": 70,
+      "community": 35,
       "norm_label": "avatarprops"
     },
     {
@@ -5283,7 +5292,7 @@
       "source_file": "client/src/components/Avatar.tsx",
       "source_location": "L22",
       "id": "components_avatar_size_px",
-      "community": 70,
+      "community": 35,
       "norm_label": "size_px"
     },
     {
@@ -5292,7 +5301,7 @@
       "source_file": "client/src/components/Avatar.tsx",
       "source_location": "L29",
       "id": "components_avatar_initialfor",
-      "community": 70,
+      "community": 35,
       "norm_label": "initialfor()"
     },
     {
@@ -5301,7 +5310,7 @@
       "source_file": "client/src/components/Avatar.tsx",
       "source_location": "L38",
       "id": "components_avatar_avatar",
-      "community": 70,
+      "community": 35,
       "norm_label": "avatar()"
     },
     {
@@ -5310,7 +5319,7 @@
       "source_file": "client/src/components/AvatarUpload.tsx",
       "source_location": "L1",
       "id": "components_avatarupload",
-      "community": 70,
+      "community": 35,
       "norm_label": "avatarupload.tsx"
     },
     {
@@ -5319,7 +5328,7 @@
       "source_file": "client/src/components/AvatarUpload.tsx",
       "source_location": "L10",
       "id": "components_avatarupload_avataruploadprops",
-      "community": 70,
+      "community": 35,
       "norm_label": "avataruploadprops"
     },
     {
@@ -5328,7 +5337,7 @@
       "source_file": "client/src/components/AvatarUpload.tsx",
       "source_location": "L21",
       "id": "components_avatarupload_readfileasdataurl",
-      "community": 70,
+      "community": 35,
       "norm_label": "readfileasdataurl()"
     },
     {
@@ -5337,7 +5346,7 @@
       "source_file": "client/src/components/AvatarUpload.tsx",
       "source_location": "L30",
       "id": "components_avatarupload_canvasfromcrop",
-      "community": 70,
+      "community": 35,
       "norm_label": "canvasfromcrop()"
     },
     {
@@ -5346,7 +5355,7 @@
       "source_file": "client/src/components/AvatarUpload.tsx",
       "source_location": "L53",
       "id": "components_avatarupload_canvastoblob",
-      "community": 70,
+      "community": 35,
       "norm_label": "canvastoblob()"
     },
     {
@@ -5355,7 +5364,7 @@
       "source_file": "client/src/components/AvatarUpload.tsx",
       "source_location": "L63",
       "id": "components_avatarupload_avatarupload",
-      "community": 70,
+      "community": 35,
       "norm_label": "avatarupload()"
     },
     {
@@ -5571,7 +5580,7 @@
       "source_file": "client/src/components/BuildingCard.tsx",
       "source_location": "L1",
       "id": "components_buildingcard",
-      "community": 23,
+      "community": 114,
       "norm_label": "buildingcard.tsx"
     },
     {
@@ -5580,7 +5589,7 @@
       "source_file": "client/src/components/BuildingCard.tsx",
       "source_location": "L15",
       "id": "components_buildingcard_lockedbuildingplotprops",
-      "community": 23,
+      "community": 114,
       "norm_label": "lockedbuildingplotprops"
     },
     {
@@ -5589,7 +5598,7 @@
       "source_file": "client/src/components/BuildingCard.tsx",
       "source_location": "L21",
       "id": "components_buildingcard_lockedbuildingplot",
-      "community": 23,
+      "community": 114,
       "norm_label": "lockedbuildingplot"
     },
     {
@@ -5598,7 +5607,7 @@
       "source_file": "client/src/components/BuildingCard.tsx",
       "source_location": "L58",
       "id": "components_buildingcard_buildingcardprops",
-      "community": 23,
+      "community": 114,
       "norm_label": "buildingcardprops"
     },
     {
@@ -5607,7 +5616,7 @@
       "source_file": "client/src/components/BuildingCard.tsx",
       "source_location": "L101",
       "id": "components_buildingcard_buildingcardinner",
-      "community": 23,
+      "community": 114,
       "norm_label": "buildingcardinner()"
     },
     {
@@ -5616,7 +5625,7 @@
       "source_file": "client/src/components/BuildingCard.tsx",
       "source_location": "L315",
       "id": "components_buildingcard_buildingcard",
-      "community": 23,
+      "community": 114,
       "norm_label": "buildingcard"
     },
     {
@@ -6003,7 +6012,7 @@
       "source_file": "client/src/components/Dashboard.tsx",
       "source_location": "L1",
       "id": "components_dashboard",
-      "community": 114,
+      "community": 13,
       "norm_label": "dashboard.tsx"
     },
     {
@@ -6012,7 +6021,7 @@
       "source_file": "client/src/components/Dashboard.tsx",
       "source_location": "L10",
       "id": "components_dashboard_troop_names",
-      "community": 114,
+      "community": 13,
       "norm_label": "troop_names"
     },
     {
@@ -6021,7 +6030,7 @@
       "source_file": "client/src/components/Dashboard.tsx",
       "source_location": "L27",
       "id": "components_dashboard_building_names",
-      "community": 114,
+      "community": 13,
       "norm_label": "building_names"
     },
     {
@@ -6030,7 +6039,7 @@
       "source_file": "client/src/components/Dashboard.tsx",
       "source_location": "L40",
       "id": "components_dashboard_dashboardprops",
-      "community": 114,
+      "community": 13,
       "norm_label": "dashboardprops"
     },
     {
@@ -6039,7 +6048,7 @@
       "source_file": "client/src/components/Dashboard.tsx",
       "source_location": "L46",
       "id": "components_dashboard_dashboardquest",
-      "community": 114,
+      "community": 13,
       "norm_label": "dashboardquest"
     },
     {
@@ -6048,7 +6057,7 @@
       "source_file": "client/src/components/Dashboard.tsx",
       "source_location": "L53",
       "id": "components_dashboard_dashboardquestbatch",
-      "community": 114,
+      "community": 13,
       "norm_label": "dashboardquestbatch"
     },
     {
@@ -6057,7 +6066,7 @@
       "source_file": "client/src/components/Dashboard.tsx",
       "source_location": "L65",
       "id": "components_dashboard_dashboard",
-      "community": 114,
+      "community": 25,
       "norm_label": "dashboard()"
     },
     {
@@ -6372,7 +6381,7 @@
       "source_file": "client/src/components/FactionLeaderboard.tsx",
       "source_location": "L1",
       "id": "components_factionleaderboard",
-      "community": 49,
+      "community": 94,
       "norm_label": "factionleaderboard.tsx"
     },
     {
@@ -6381,7 +6390,7 @@
       "source_file": "client/src/components/FactionLeaderboard.tsx",
       "source_location": "L8",
       "id": "components_factionleaderboard_leaderboardrow",
-      "community": 49,
+      "community": 94,
       "norm_label": "leaderboardrow"
     },
     {
@@ -6390,7 +6399,7 @@
       "source_file": "client/src/components/FactionLeaderboard.tsx",
       "source_location": "L21",
       "id": "components_factionleaderboard_leaderboarddata",
-      "community": 49,
+      "community": 94,
       "norm_label": "leaderboarddata"
     },
     {
@@ -6399,7 +6408,7 @@
       "source_file": "client/src/components/FactionLeaderboard.tsx",
       "source_location": "L34",
       "id": "components_factionleaderboard_factionmemberdetails",
-      "community": 49,
+      "community": 94,
       "norm_label": "factionmemberdetails"
     },
     {
@@ -6408,7 +6417,7 @@
       "source_file": "client/src/components/FactionLeaderboard.tsx",
       "source_location": "L50",
       "id": "components_factionleaderboard_formatdominancecountdown",
-      "community": 49,
+      "community": 94,
       "norm_label": "formatdominancecountdown()"
     },
     {
@@ -6417,7 +6426,7 @@
       "source_file": "client/src/components/FactionLeaderboard.tsx",
       "source_location": "L58",
       "id": "components_factionleaderboard_factionleaderboard",
-      "community": 49,
+      "community": 94,
       "norm_label": "factionleaderboard()"
     },
     {
@@ -6534,7 +6543,7 @@
       "source_file": "client/src/components/FactionsView.tsx",
       "source_location": "L165",
       "id": "components_factionsview_factionsview",
-      "community": 17,
+      "community": 29,
       "norm_label": "factionsview()"
     },
     {
@@ -6624,7 +6633,7 @@
       "source_file": "client/src/components/FriendsView.tsx",
       "source_location": "L82",
       "id": "components_friendsview_friendsview",
-      "community": 14,
+      "community": 29,
       "norm_label": "friendsview()"
     },
     {
@@ -6786,7 +6795,7 @@
       "source_file": "client/src/components/GameLayout.tsx",
       "source_location": "L53",
       "id": "components_gamelayout_gamelayoutprops",
-      "community": 114,
+      "community": 13,
       "norm_label": "gamelayoutprops"
     },
     {
@@ -7047,7 +7056,7 @@
       "source_file": "client/src/components/Map.tsx",
       "source_location": "L68",
       "id": "components_map_mapprops",
-      "community": 114,
+      "community": 13,
       "norm_label": "mapprops"
     },
     {
@@ -7218,7 +7227,7 @@
       "source_file": "client/src/components/Market.tsx",
       "source_location": "L16",
       "id": "components_market_marketprops",
-      "community": 114,
+      "community": 13,
       "norm_label": "marketprops"
     },
     {
@@ -7236,7 +7245,7 @@
       "source_file": "client/src/components/Market.tsx",
       "source_location": "L28",
       "id": "components_market_market",
-      "community": 29,
+      "community": 62,
       "norm_label": "market()"
     },
     {
@@ -7254,7 +7263,7 @@
       "source_file": "client/src/components/MobileNexusDrawer.tsx",
       "source_location": "L20",
       "id": "components_mobilenexusdrawer_mobilenexusdrawerprops",
-      "community": 114,
+      "community": 13,
       "norm_label": "mobilenexusdrawerprops"
     },
     {
@@ -7362,7 +7371,7 @@
       "source_file": "client/src/components/NexusMap.tsx",
       "source_location": "L1",
       "id": "components_nexusmap",
-      "community": 114,
+      "community": 13,
       "norm_label": "nexusmap.tsx"
     },
     {
@@ -7371,7 +7380,7 @@
       "source_file": "client/src/components/NexusMap.tsx",
       "source_location": "L8",
       "id": "components_nexusmap_buildings",
-      "community": 114,
+      "community": 13,
       "norm_label": "buildings"
     },
     {
@@ -7380,7 +7389,7 @@
       "source_file": "client/src/components/NexusMap.tsx",
       "source_location": "L23",
       "id": "components_nexusmap_nexusmapprops",
-      "community": 114,
+      "community": 13,
       "norm_label": "nexusmapprops"
     },
     {
@@ -7389,7 +7398,7 @@
       "source_file": "client/src/components/NexusMap.tsx",
       "source_location": "L29",
       "id": "components_nexusmap_nexusmap",
-      "community": 114,
+      "community": 13,
       "norm_label": "nexusmap()"
     },
     {
@@ -7542,7 +7551,7 @@
       "source_file": "client/src/components/NexusView.tsx",
       "source_location": "L93",
       "id": "components_nexusview_nexusviewprops",
-      "community": 114,
+      "community": 13,
       "norm_label": "nexusviewprops"
     },
     {
@@ -7902,7 +7911,7 @@
       "source_file": "client/src/components/ProfileStats.tsx",
       "source_location": "L1",
       "id": "components_profilestats",
-      "community": 70,
+      "community": 35,
       "norm_label": "profilestats.tsx"
     },
     {
@@ -7911,7 +7920,7 @@
       "source_file": "client/src/components/ProfileStats.tsx",
       "source_location": "L20",
       "id": "components_profilestats_fmt",
-      "community": 70,
+      "community": 35,
       "norm_label": "fmt()"
     },
     {
@@ -7920,7 +7929,7 @@
       "source_file": "client/src/components/ProfileStats.tsx",
       "source_location": "L26",
       "id": "components_profilestats_getstreakmultiplier",
-      "community": 70,
+      "community": 35,
       "norm_label": "getstreakmultiplier()"
     },
     {
@@ -7929,7 +7938,7 @@
       "source_file": "client/src/components/ProfileStats.tsx",
       "source_location": "L31",
       "id": "components_profilestats_statcard",
-      "community": 70,
+      "community": 35,
       "norm_label": "statcard()"
     },
     {
@@ -7938,7 +7947,7 @@
       "source_file": "client/src/components/ProfileStats.tsx",
       "source_location": "L41",
       "id": "components_profilestats_section",
-      "community": 70,
+      "community": 35,
       "norm_label": "section()"
     },
     {
@@ -7947,7 +7956,7 @@
       "source_file": "client/src/components/ProfileStats.tsx",
       "source_location": "L50",
       "id": "components_profilestats_profilestats",
-      "community": 70,
+      "community": 35,
       "norm_label": "profilestats()"
     },
     {
@@ -8037,7 +8046,7 @@
       "source_file": "client/src/components/QueueCountdown.tsx",
       "source_location": "L1",
       "id": "components_queuecountdown",
-      "community": 26,
+      "community": 114,
       "norm_label": "queuecountdown.tsx"
     },
     {
@@ -8046,7 +8055,7 @@
       "source_file": "client/src/components/QueueCountdown.tsx",
       "source_location": "L6",
       "id": "components_queuecountdown_formatdurationseconds",
-      "community": 26,
+      "community": 114,
       "norm_label": "formatdurationseconds()"
     },
     {
@@ -8055,7 +8064,7 @@
       "source_file": "client/src/components/QueueCountdown.tsx",
       "source_location": "L15",
       "id": "components_queuecountdown_queuecountdownresult",
-      "community": 26,
+      "community": 114,
       "norm_label": "queuecountdownresult"
     },
     {
@@ -8064,7 +8073,7 @@
       "source_file": "client/src/components/QueueCountdown.tsx",
       "source_location": "L24",
       "id": "components_queuecountdown_computequeuecountdown",
-      "community": 26,
+      "community": 114,
       "norm_label": "computequeuecountdown()"
     },
     {
@@ -8073,7 +8082,7 @@
       "source_file": "client/src/components/QueueCountdown.tsx",
       "source_location": "L52",
       "id": "components_queuecountdown_queuecountdownprops",
-      "community": 26,
+      "community": 114,
       "norm_label": "queuecountdownprops"
     },
     {
@@ -8082,7 +8091,7 @@
       "source_file": "client/src/components/QueueCountdown.tsx",
       "source_location": "L67",
       "id": "components_queuecountdown_queuecountdowninner",
-      "community": 26,
+      "community": 114,
       "norm_label": "queuecountdowninner()"
     },
     {
@@ -8091,7 +8100,7 @@
       "source_file": "client/src/components/QueueCountdown.tsx",
       "source_location": "L82",
       "id": "components_queuecountdown_queuecountdown",
-      "community": 26,
+      "community": 114,
       "norm_label": "queuecountdown"
     },
     {
@@ -8928,7 +8937,7 @@
       "source_file": "client/src/components/StatsChart.tsx",
       "source_location": "L30",
       "id": "components_statschart_fmtnum",
-      "community": 23,
+      "community": 70,
       "norm_label": "fmtnum()"
     },
     {
@@ -9108,7 +9117,7 @@
       "source_file": "client/src/components/TroopMovementsBar.tsx",
       "source_location": "L51",
       "id": "components_troopmovementsbar_troopmovementsbar",
-      "community": 29,
+      "community": 17,
       "norm_label": "troopmovementsbar()"
     },
     {
@@ -9549,7 +9558,7 @@
       "source_file": "client/src/components/WavePlanner.tsx",
       "source_location": "L93",
       "id": "components_waveplanner_formatlaunchtime",
-      "community": 49,
+      "community": 94,
       "norm_label": "formatlaunchtime()"
     },
     {
@@ -9558,7 +9567,7 @@
       "source_file": "client/src/components/WavePlanner.tsx",
       "source_location": "L105",
       "id": "components_waveplanner_formattimeuntil",
-      "community": 49,
+      "community": 94,
       "norm_label": "formattimeuntil()"
     },
     {
@@ -9729,7 +9738,7 @@
       "source_file": "client/src/components/resourceUtils.ts",
       "source_location": "L1",
       "id": "components_resourceutils",
-      "community": 13,
+      "community": 120,
       "norm_label": "resourceutils.ts"
     },
     {
@@ -9738,7 +9747,7 @@
       "source_file": "client/src/components/resourceUtils.ts",
       "source_location": "L18",
       "id": "components_resourceutils_toeconomynexus",
-      "community": 13,
+      "community": 120,
       "norm_label": "toeconomynexus()"
     },
     {
@@ -9747,7 +9756,7 @@
       "source_file": "client/src/components/resourceUtils.ts",
       "source_location": "L36",
       "id": "components_resourceutils_calcnexusproduction",
-      "community": 13,
+      "community": 120,
       "norm_label": "calcnexusproduction()"
     },
     {
@@ -9756,7 +9765,7 @@
       "source_file": "client/src/components/resourceUtils.ts",
       "source_location": "L45",
       "id": "components_resourceutils_calcnexusstorage",
-      "community": 13,
+      "community": 120,
       "norm_label": "calcnexusstorage()"
     },
     {
@@ -9765,7 +9774,7 @@
       "source_file": "client/src/components/resourceUtils.ts",
       "source_location": "L60",
       "id": "components_resourceutils_liveresources",
-      "community": 13,
+      "community": 120,
       "norm_label": "liveresources"
     },
     {
@@ -9936,7 +9945,7 @@
       "source_file": "client/src/context/OnboardingContext.tsx",
       "source_location": "L1",
       "id": "context_onboardingcontext",
-      "community": 29,
+      "community": 149,
       "norm_label": "onboardingcontext.tsx"
     },
     {
@@ -9945,7 +9954,7 @@
       "source_file": "client/src/context/OnboardingContext.tsx",
       "source_location": "L8",
       "id": "context_onboardingcontext_onboardingstep",
-      "community": 29,
+      "community": 149,
       "norm_label": "onboardingstep"
     },
     {
@@ -9954,7 +9963,7 @@
       "source_file": "client/src/context/OnboardingContext.tsx",
       "source_location": "L29",
       "id": "context_onboardingcontext_onboardinggamestate",
-      "community": 29,
+      "community": 149,
       "norm_label": "onboardinggamestate"
     },
     {
@@ -9963,7 +9972,7 @@
       "source_file": "client/src/context/OnboardingContext.tsx",
       "source_location": "L34",
       "id": "context_onboardingcontext_isnexuspath",
-      "community": 29,
+      "community": 149,
       "norm_label": "isnexuspath()"
     },
     {
@@ -9972,7 +9981,7 @@
       "source_file": "client/src/context/OnboardingContext.tsx",
       "source_location": "L35",
       "id": "context_onboardingcontext_hasclassproductionbuilding",
-      "community": 29,
+      "community": 149,
       "norm_label": "hasclassproductionbuilding()"
     },
     {
@@ -9981,7 +9990,7 @@
       "source_file": "client/src/context/OnboardingContext.tsx",
       "source_location": "L39",
       "id": "context_onboardingcontext_hasqueuedbuilding",
-      "community": 29,
+      "community": 149,
       "norm_label": "hasqueuedbuilding()"
     },
     {
@@ -9990,7 +9999,7 @@
       "source_file": "client/src/context/OnboardingContext.tsx",
       "source_location": "L43",
       "id": "context_onboardingcontext_hascommandcorelevelstarted",
-      "community": 29,
+      "community": 149,
       "norm_label": "hascommandcorelevelstarted()"
     },
     {
@@ -9999,7 +10008,7 @@
       "source_file": "client/src/context/OnboardingContext.tsx",
       "source_location": "L45",
       "id": "context_onboardingcontext_hasarmorfoundrystarted",
-      "community": 29,
+      "community": 149,
       "norm_label": "hasarmorfoundrystarted()"
     },
     {
@@ -10017,7 +10026,7 @@
       "source_file": "client/src/context/OnboardingContext.tsx",
       "source_location": "L145",
       "id": "context_onboardingcontext_onboardingcontextvalue",
-      "community": 29,
+      "community": 149,
       "norm_label": "onboardingcontextvalue"
     },
     {
@@ -10026,7 +10035,7 @@
       "source_file": "client/src/context/OnboardingContext.tsx",
       "source_location": "L154",
       "id": "context_onboardingcontext_onboardingcontext",
-      "community": 29,
+      "community": 149,
       "norm_label": "onboardingcontext"
     },
     {
@@ -10233,7 +10242,7 @@
       "source_file": "client/src/data/gameIcons.ts",
       "source_location": "L22",
       "id": "data_gameicons_buildingicon",
-      "community": 114,
+      "community": 13,
       "norm_label": "buildingicon()"
     },
     {
@@ -11556,7 +11565,7 @@
       "source_file": "client/src/hooks/useNow.ts",
       "source_location": "L1",
       "id": "hooks_usenow",
-      "community": 26,
+      "community": 94,
       "norm_label": "usenow.ts"
     },
     {
@@ -11565,7 +11574,7 @@
       "source_file": "client/src/hooks/useNow.ts",
       "source_location": "L15",
       "id": "hooks_usenow_nowms",
-      "community": 26,
+      "community": 94,
       "norm_label": "nowms"
     },
     {
@@ -11574,7 +11583,7 @@
       "source_file": "client/src/hooks/useNow.ts",
       "source_location": "L16",
       "id": "hooks_usenow_listeners",
-      "community": 26,
+      "community": 94,
       "norm_label": "listeners"
     },
     {
@@ -11583,7 +11592,7 @@
       "source_file": "client/src/hooks/useNow.ts",
       "source_location": "L20",
       "id": "hooks_usenow_tick",
-      "community": 49,
+      "community": 94,
       "norm_label": "tick()"
     },
     {
@@ -11592,7 +11601,7 @@
       "source_file": "client/src/hooks/useNow.ts",
       "source_location": "L25",
       "id": "hooks_usenow_startinterval",
-      "community": 26,
+      "community": 94,
       "norm_label": "startinterval()"
     },
     {
@@ -11601,7 +11610,7 @@
       "source_file": "client/src/hooks/useNow.ts",
       "source_location": "L32",
       "id": "hooks_usenow_stopinterval",
-      "community": 26,
+      "community": 94,
       "norm_label": "stopinterval()"
     },
     {
@@ -11610,7 +11619,7 @@
       "source_file": "client/src/hooks/useNow.ts",
       "source_location": "L38",
       "id": "hooks_usenow_ensurevisibilitybinding",
-      "community": 26,
+      "community": 94,
       "norm_label": "ensurevisibilitybinding()"
     },
     {
@@ -11619,7 +11628,7 @@
       "source_file": "client/src/hooks/useNow.ts",
       "source_location": "L52",
       "id": "hooks_usenow_subscribe",
-      "community": 26,
+      "community": 94,
       "norm_label": "subscribe()"
     },
     {
@@ -11628,7 +11637,7 @@
       "source_file": "client/src/hooks/useNow.ts",
       "source_location": "L64",
       "id": "hooks_usenow_getsnapshot",
-      "community": 26,
+      "community": 94,
       "norm_label": "getsnapshot()"
     },
     {
@@ -11637,7 +11646,7 @@
       "source_file": "client/src/hooks/useNow.ts",
       "source_location": "L66",
       "id": "hooks_usenow_getserversnapshot",
-      "community": 26,
+      "community": 94,
       "norm_label": "getserversnapshot()"
     },
     {
@@ -11655,7 +11664,7 @@
       "source_file": "client/src/hooks/useNow.ts",
       "source_location": "L80",
       "id": "hooks_usenow_noopsubscribe",
-      "community": 26,
+      "community": 94,
       "norm_label": "noopsubscribe()"
     },
     {
@@ -11943,7 +11952,7 @@
       "source_file": "client/src/realtime/economy.shared.ts",
       "source_location": "L1",
       "id": "realtime_economy_shared",
-      "community": 13,
+      "community": 120,
       "norm_label": "economy.shared.ts"
     },
     {
@@ -11961,7 +11970,7 @@
       "source_file": "client/src/realtime/economy.shared.ts",
       "source_location": "L12",
       "id": "realtime_economy_shared_stormbonus",
-      "community": 13,
+      "community": 120,
       "norm_label": "stormbonus"
     },
     {
@@ -11970,7 +11979,7 @@
       "source_file": "client/src/realtime/economy.shared.ts",
       "source_location": "L18",
       "id": "realtime_economy_shared_nexustypebonuses",
-      "community": 13,
+      "community": 120,
       "norm_label": "nexustypebonuses"
     },
     {
@@ -11979,7 +11988,7 @@
       "source_file": "client/src/realtime/economy.shared.ts",
       "source_location": "L29",
       "id": "realtime_economy_shared_nexus_type_bonuses",
-      "community": 13,
+      "community": 118,
       "norm_label": "nexus_type_bonuses"
     },
     {
@@ -11988,7 +11997,7 @@
       "source_file": "client/src/realtime/economy.shared.ts",
       "source_location": "L48",
       "id": "realtime_economy_shared_economynexus",
-      "community": 13,
+      "community": 120,
       "norm_label": "economynexus"
     },
     {
@@ -11997,7 +12006,7 @@
       "source_file": "client/src/realtime/economy.shared.ts",
       "source_location": "L59",
       "id": "realtime_economy_shared_getdoublescale",
-      "community": 13,
+      "community": 120,
       "norm_label": "getdoublescale()"
     },
     {
@@ -12006,7 +12015,7 @@
       "source_file": "client/src/realtime/economy.shared.ts",
       "source_location": "L63",
       "id": "realtime_economy_shared_getderelictmultiplier",
-      "community": 13,
+      "community": 120,
       "norm_label": "getderelictmultiplier()"
     },
     {
@@ -12015,7 +12024,7 @@
       "source_file": "client/src/realtime/economy.shared.ts",
       "source_location": "L67",
       "id": "realtime_economy_shared_getresourceproduction",
-      "community": 13,
+      "community": 120,
       "norm_label": "getresourceproduction()"
     },
     {
@@ -12024,7 +12033,7 @@
       "source_file": "client/src/realtime/economy.shared.ts",
       "source_location": "L85",
       "id": "realtime_economy_shared_getmaxstorage",
-      "community": 13,
+      "community": 120,
       "norm_label": "getmaxstorage()"
     },
     {
@@ -12375,7 +12384,7 @@
       "source_file": "client/src/realtime/serverClock.ts",
       "source_location": "L65",
       "id": "realtime_serverclock_servernow",
-      "community": 49,
+      "community": 94,
       "norm_label": "servernow()"
     },
     {
@@ -12492,7 +12501,7 @@
       "source_file": "client/src/realtime/useFlashOnChange.ts",
       "source_location": "L1",
       "id": "realtime_useflashonchange",
-      "community": 23,
+      "community": 26,
       "norm_label": "useflashonchange.ts"
     },
     {
@@ -12510,7 +12519,7 @@
       "source_file": "client/src/realtime/useFlashOnChange.ts",
       "source_location": "L43",
       "id": "realtime_useflashonchange_useflashontrue",
-      "community": 23,
+      "community": 114,
       "norm_label": "useflashontrue()"
     },
     {
@@ -12546,7 +12555,7 @@
       "source_file": "client/src/realtime/useLiveResources.ts",
       "source_location": "L28",
       "id": "realtime_useliveresources_useresourcesnapshot",
-      "community": 23,
+      "community": 114,
       "norm_label": "useresourcesnapshot()"
     },
     {
@@ -12681,7 +12690,7 @@
       "source_file": "client/src/services/api.ts",
       "source_location": "L121",
       "id": "services_api_getgalaxies",
-      "community": 1,
+      "community": 58,
       "norm_label": "getgalaxies()"
     },
     {
@@ -12708,7 +12717,7 @@
       "source_file": "client/src/services/api.ts",
       "source_location": "L124",
       "id": "services_api_selectgalaxy",
-      "community": 1,
+      "community": 58,
       "norm_label": "selectgalaxy()"
     },
     {
@@ -12744,7 +12753,7 @@
       "source_file": "client/src/services/api.ts",
       "source_location": "L138",
       "id": "services_api_getmynexuses",
-      "community": 70,
+      "community": 35,
       "norm_label": "getmynexuses()"
     },
     {
@@ -12762,7 +12771,7 @@
       "source_file": "client/src/services/api.ts",
       "source_location": "L144",
       "id": "services_api_getnexus",
-      "community": 29,
+      "community": 35,
       "norm_label": "getnexus()"
     },
     {
@@ -13140,7 +13149,7 @@
       "source_file": "client/src/services/api.ts",
       "source_location": "L333",
       "id": "services_api_listfactionsingalaxy",
-      "community": 2,
+      "community": 1,
       "norm_label": "listfactionsingalaxy()"
     },
     {
@@ -13149,7 +13158,7 @@
       "source_file": "client/src/services/api.ts",
       "source_location": "L334",
       "id": "services_api_createfaction",
-      "community": 2,
+      "community": 1,
       "norm_label": "createfaction()"
     },
     {
@@ -13176,7 +13185,7 @@
       "source_file": "client/src/services/api.ts",
       "source_location": "L342",
       "id": "services_api_acceptfactioninvite",
-      "community": 1,
+      "community": 2,
       "norm_label": "acceptfactioninvite()"
     },
     {
@@ -13185,7 +13194,7 @@
       "source_file": "client/src/services/api.ts",
       "source_location": "L344",
       "id": "services_api_declinefactioninvite",
-      "community": 2,
+      "community": 1,
       "norm_label": "declinefactioninvite()"
     },
     {
@@ -13194,7 +13203,7 @@
       "source_file": "client/src/services/api.ts",
       "source_location": "L346",
       "id": "services_api_kickfactionmember",
-      "community": 1,
+      "community": 2,
       "norm_label": "kickfactionmember()"
     },
     {
@@ -13212,7 +13221,7 @@
       "source_file": "client/src/services/api.ts",
       "source_location": "L353",
       "id": "services_api_transferfactionleader",
-      "community": 2,
+      "community": 1,
       "norm_label": "transferfactionleader()"
     },
     {
@@ -13284,7 +13293,7 @@
       "source_file": "client/src/services/api.ts",
       "source_location": "L368",
       "id": "services_api_getfactionwars",
-      "community": 1,
+      "community": 2,
       "norm_label": "getfactionwars()"
     },
     {
@@ -13293,7 +13302,7 @@
       "source_file": "client/src/services/api.ts",
       "source_location": "L369",
       "id": "services_api_declarewar",
-      "community": 1,
+      "community": 2,
       "norm_label": "declarewar()"
     },
     {
@@ -13347,7 +13356,7 @@
       "source_file": "client/src/services/api.ts",
       "source_location": "L381",
       "id": "services_api_requesttojoinfaction",
-      "community": 2,
+      "community": 1,
       "norm_label": "requesttojoinfaction()"
     },
     {
@@ -13374,7 +13383,7 @@
       "source_file": "client/src/services/api.ts",
       "source_location": "L389",
       "id": "services_api_getfactionjoinrequests",
-      "community": 1,
+      "community": 2,
       "norm_label": "getfactionjoinrequests()"
     },
     {
@@ -13518,7 +13527,7 @@
       "source_file": "client/src/services/api.ts",
       "source_location": "L431",
       "id": "services_api_uploadavatar",
-      "community": 70,
+      "community": 35,
       "norm_label": "uploadavatar()"
     },
     {
@@ -13563,7 +13572,7 @@
       "source_file": "client/src/services/api.ts",
       "source_location": "L483",
       "id": "services_api_getuserstats",
-      "community": 70,
+      "community": 35,
       "norm_label": "getuserstats()"
     },
     {
@@ -13923,7 +13932,7 @@
       "source_file": "client/src/services/api.ts",
       "source_location": "L635",
       "id": "services_api_proposetreaty",
-      "community": 1,
+      "community": 2,
       "norm_label": "proposetreaty()"
     },
     {
@@ -13941,7 +13950,7 @@
       "source_file": "client/src/services/api.ts",
       "source_location": "L649",
       "id": "services_api_canceltreaty",
-      "community": 2,
+      "community": 1,
       "norm_label": "canceltreaty()"
     },
     {
@@ -13950,7 +13959,7 @@
       "source_file": "client/src/services/api.ts",
       "source_location": "L652",
       "id": "services_api_getactivetreaties",
-      "community": 2,
+      "community": 1,
       "norm_label": "getactivetreaties()"
     },
     {
@@ -13959,7 +13968,7 @@
       "source_file": "client/src/services/api.ts",
       "source_location": "L655",
       "id": "services_api_getgalaxydiplomacy",
-      "community": 2,
+      "community": 1,
       "norm_label": "getgalaxydiplomacy()"
     },
     {
@@ -14085,7 +14094,7 @@
       "source_file": "client/src/types/game.ts",
       "source_location": "L74",
       "id": "types_game_nexus",
-      "community": 114,
+      "community": 13,
       "norm_label": "nexus"
     },
     {
@@ -14896,7 +14905,7 @@
       "source_file": "server/controllers/attackController.ts",
       "source_location": "L1",
       "id": "controllers_attackcontroller",
-      "community": 64,
+      "community": 77,
       "norm_label": "attackcontroller.ts"
     },
     {
@@ -14905,7 +14914,7 @@
       "source_file": "server/controllers/attackController.ts",
       "source_location": "L20",
       "id": "controllers_attackcontroller_sendattack",
-      "community": 64,
+      "community": 77,
       "norm_label": "sendattack()"
     },
     {
@@ -14914,7 +14923,7 @@
       "source_file": "server/controllers/attackController.ts",
       "source_location": "L81",
       "id": "controllers_attackcontroller_getallattacks",
-      "community": 64,
+      "community": 77,
       "norm_label": "getallattacks()"
     },
     {
@@ -14923,7 +14932,7 @@
       "source_file": "server/controllers/attackController.ts",
       "source_location": "L138",
       "id": "controllers_attackcontroller_getincomingattacks",
-      "community": 64,
+      "community": 77,
       "norm_label": "getincomingattacks()"
     },
     {
@@ -14932,7 +14941,7 @@
       "source_file": "server/controllers/attackController.ts",
       "source_location": "L175",
       "id": "controllers_attackcontroller_getoutgoingattacks",
-      "community": 64,
+      "community": 77,
       "norm_label": "getoutgoingattacks()"
     },
     {
@@ -14941,7 +14950,7 @@
       "source_file": "server/controllers/attackController.ts",
       "source_location": "L211",
       "id": "controllers_attackcontroller_serializescheduledattack",
-      "community": 64,
+      "community": 77,
       "norm_label": "serializescheduledattack()"
     },
     {
@@ -14950,7 +14959,7 @@
       "source_file": "server/controllers/attackController.ts",
       "source_location": "L240",
       "id": "controllers_attackcontroller_scheduleattack",
-      "community": 64,
+      "community": 77,
       "norm_label": "scheduleattack()"
     },
     {
@@ -14959,7 +14968,7 @@
       "source_file": "server/controllers/attackController.ts",
       "source_location": "L377",
       "id": "controllers_attackcontroller_getscheduledattacks",
-      "community": 64,
+      "community": 77,
       "norm_label": "getscheduledattacks()"
     },
     {
@@ -14968,7 +14977,7 @@
       "source_file": "server/controllers/attackController.ts",
       "source_location": "L446",
       "id": "controllers_attackcontroller_cancelscheduledattack",
-      "community": 64,
+      "community": 77,
       "norm_label": "cancelscheduledattack()"
     },
     {
@@ -15076,7 +15085,7 @@
       "source_file": "server/controllers/authController.ts",
       "source_location": "L554",
       "id": "controllers_authcontroller_login",
-      "community": 38,
+      "community": 4,
       "norm_label": "login()"
     },
     {
@@ -15238,7 +15247,7 @@
       "source_file": "server/controllers/chatController.ts",
       "source_location": "L1",
       "id": "controllers_chatcontroller",
-      "community": 15,
+      "community": 76,
       "norm_label": "chatcontroller.ts"
     },
     {
@@ -15247,7 +15256,7 @@
       "source_file": "server/controllers/chatController.ts",
       "source_location": "L15",
       "id": "controllers_chatcontroller_serializemessage",
-      "community": 15,
+      "community": 76,
       "norm_label": "serializemessage()"
     },
     {
@@ -15256,7 +15265,7 @@
       "source_file": "server/controllers/chatController.ts",
       "source_location": "L33",
       "id": "controllers_chatcontroller_listconversations",
-      "community": 15,
+      "community": 64,
       "norm_label": "listconversations()"
     },
     {
@@ -15265,7 +15274,7 @@
       "source_file": "server/controllers/chatController.ts",
       "source_location": "L71",
       "id": "controllers_chatcontroller_getunreadcount",
-      "community": 15,
+      "community": 64,
       "norm_label": "getunreadcount()"
     },
     {
@@ -15274,7 +15283,7 @@
       "source_file": "server/controllers/chatController.ts",
       "source_location": "L84",
       "id": "controllers_chatcontroller_getmessages",
-      "community": 15,
+      "community": 64,
       "norm_label": "getmessages()"
     },
     {
@@ -15283,7 +15292,7 @@
       "source_file": "server/controllers/chatController.ts",
       "source_location": "L112",
       "id": "controllers_chatcontroller_sendmessage",
-      "community": 15,
+      "community": 76,
       "norm_label": "sendmessage()"
     },
     {
@@ -15292,7 +15301,7 @@
       "source_file": "server/controllers/chatController.ts",
       "source_location": "L162",
       "id": "controllers_chatcontroller_markread",
-      "community": 15,
+      "community": 64,
       "norm_label": "markread()"
     },
     {
@@ -15301,7 +15310,7 @@
       "source_file": "server/controllers/diplomacyChatController.ts",
       "source_location": "L1",
       "id": "controllers_diplomacychatcontroller",
-      "community": 15,
+      "community": 8,
       "norm_label": "diplomacychatcontroller.ts"
     },
     {
@@ -15310,7 +15319,7 @@
       "source_file": "server/controllers/diplomacyChatController.ts",
       "source_location": "L9",
       "id": "controllers_diplomacychatcontroller_serializediplomacymessage",
-      "community": 15,
+      "community": 8,
       "norm_label": "serializediplomacymessage()"
     },
     {
@@ -15319,7 +15328,7 @@
       "source_file": "server/controllers/diplomacyChatController.ts",
       "source_location": "L39",
       "id": "controllers_diplomacychatcontroller_getmemberfaction",
-      "community": 15,
+      "community": 8,
       "norm_label": "getmemberfaction()"
     },
     {
@@ -15328,7 +15337,7 @@
       "source_file": "server/controllers/diplomacyChatController.ts",
       "source_location": "L47",
       "id": "controllers_diplomacychatcontroller_gettreatyformember",
-      "community": 15,
+      "community": 8,
       "norm_label": "gettreatyformember()"
     },
     {
@@ -15337,7 +15346,7 @@
       "source_file": "server/controllers/diplomacyChatController.ts",
       "source_location": "L58",
       "id": "controllers_diplomacychatcontroller_getdiplomacymessages",
-      "community": 15,
+      "community": 8,
       "norm_label": "getdiplomacymessages()"
     },
     {
@@ -15346,7 +15355,7 @@
       "source_file": "server/controllers/diplomacyChatController.ts",
       "source_location": "L113",
       "id": "controllers_diplomacychatcontroller_senddiplomacymessage",
-      "community": 15,
+      "community": 8,
       "norm_label": "senddiplomacymessage()"
     },
     {
@@ -15427,7 +15436,7 @@
       "source_file": "server/controllers/factionController.ts",
       "source_location": "L371",
       "id": "controllers_factioncontroller_invitetofaction",
-      "community": 66,
+      "community": 53,
       "norm_label": "invitetofaction()"
     },
     {
@@ -15508,7 +15517,7 @@
       "source_file": "server/controllers/factionController.ts",
       "source_location": "L941",
       "id": "controllers_factioncontroller_getleaderboard",
-      "community": 3,
+      "community": 66,
       "norm_label": "getleaderboard()"
     },
     {
@@ -15616,7 +15625,7 @@
       "source_file": "server/controllers/factionController.ts",
       "source_location": "L1625",
       "id": "controllers_factioncontroller_sendchatmessage",
-      "community": 77,
+      "community": 4,
       "norm_label": "sendchatmessage()"
     },
     {
@@ -15877,7 +15886,7 @@
       "source_file": "server/controllers/friendsController.ts",
       "source_location": "L34",
       "id": "controllers_friendscontroller_listfriends",
-      "community": 53,
+      "community": 64,
       "norm_label": "listfriends()"
     },
     {
@@ -15895,7 +15904,7 @@
       "source_file": "server/controllers/friendsController.ts",
       "source_location": "L135",
       "id": "controllers_friendscontroller_getbadges",
-      "community": 53,
+      "community": 64,
       "norm_label": "getbadges()"
     },
     {
@@ -15904,7 +15913,7 @@
       "source_file": "server/controllers/friendsController.ts",
       "source_location": "L151",
       "id": "controllers_friendscontroller_listrequests",
-      "community": 53,
+      "community": 64,
       "norm_label": "listrequests()"
     },
     {
@@ -16039,7 +16048,7 @@
       "source_file": "server/controllers/internalAdminController.ts",
       "source_location": "L1",
       "id": "controllers_internaladmincontroller",
-      "community": 64,
+      "community": 76,
       "norm_label": "internaladmincontroller.ts"
     },
     {
@@ -16075,7 +16084,7 @@
       "source_file": "server/controllers/internalAdminController.ts",
       "source_location": "L121",
       "id": "controllers_internaladmincontroller_giveresources",
-      "community": 64,
+      "community": 76,
       "norm_label": "giveresources()"
     },
     {
@@ -16084,7 +16093,7 @@
       "source_file": "server/controllers/internalAdminController.ts",
       "source_location": "L144",
       "id": "controllers_internaladmincontroller_addtroops",
-      "community": 39,
+      "community": 0,
       "norm_label": "addtroops()"
     },
     {
@@ -16093,7 +16102,7 @@
       "source_file": "server/controllers/internalAdminController.ts",
       "source_location": "L212",
       "id": "controllers_internaladmincontroller_addbuildings",
-      "community": 64,
+      "community": 0,
       "norm_label": "addbuildings()"
     },
     {
@@ -16102,7 +16111,7 @@
       "source_file": "server/controllers/internalAdminController.ts",
       "source_location": "L256",
       "id": "controllers_internaladmincontroller_resettroops",
-      "community": 39,
+      "community": 0,
       "norm_label": "resettroops()"
     },
     {
@@ -16111,7 +16120,7 @@
       "source_file": "server/controllers/internalAdminController.ts",
       "source_location": "L303",
       "id": "controllers_internaladmincontroller_resetbuildings",
-      "community": 64,
+      "community": 0,
       "norm_label": "resetbuildings()"
     },
     {
@@ -16120,7 +16129,7 @@
       "source_file": "server/controllers/internalAdminController.ts",
       "source_location": "L333",
       "id": "controllers_internaladmincontroller_completebuild",
-      "community": 64,
+      "community": 76,
       "norm_label": "completebuild()"
     },
     {
@@ -16129,7 +16138,7 @@
       "source_file": "server/controllers/internalAdminController.ts",
       "source_location": "L371",
       "id": "controllers_internaladmincontroller_completetraining",
-      "community": 64,
+      "community": 76,
       "norm_label": "completetraining()"
     },
     {
@@ -16138,7 +16147,7 @@
       "source_file": "server/controllers/internalAdminController.ts",
       "source_location": "L416",
       "id": "controllers_internaladmincontroller_deletenexus",
-      "community": 64,
+      "community": 0,
       "norm_label": "deletenexus()"
     },
     {
@@ -16156,7 +16165,7 @@
       "source_file": "server/controllers/internalAdminController.ts",
       "source_location": "L452",
       "id": "controllers_internaladmincontroller_completeattack",
-      "community": 0,
+      "community": 16,
       "norm_label": "completeattack()"
     },
     {
@@ -16165,7 +16174,7 @@
       "source_file": "server/controllers/internalAdminController.ts",
       "source_location": "L476",
       "id": "controllers_internaladmincontroller_granttokens",
-      "community": 64,
+      "community": 3,
       "norm_label": "granttokens()"
     },
     {
@@ -16255,7 +16264,7 @@
       "source_file": "server/controllers/mapController.ts",
       "source_location": "L1",
       "id": "controllers_mapcontroller",
-      "community": 15,
+      "community": 107,
       "norm_label": "mapcontroller.ts"
     },
     {
@@ -16264,7 +16273,7 @@
       "source_file": "server/controllers/mapController.ts",
       "source_location": "L10",
       "id": "controllers_mapcontroller_getarea",
-      "community": 15,
+      "community": 107,
       "norm_label": "getarea()"
     },
     {
@@ -16273,7 +16282,7 @@
       "source_file": "server/controllers/mapController.ts",
       "source_location": "L119",
       "id": "controllers_mapcontroller_getnexusintel",
-      "community": 15,
+      "community": 107,
       "norm_label": "getnexusintel()"
     },
     {
@@ -16282,7 +16291,7 @@
       "source_file": "server/controllers/mapController.ts",
       "source_location": "L140",
       "id": "controllers_mapcontroller_getgalaxyevents",
-      "community": 24,
+      "community": 113,
       "norm_label": "getgalaxyevents()"
     },
     {
@@ -16291,7 +16300,7 @@
       "source_file": "server/controllers/marketController.ts",
       "source_location": "L1",
       "id": "controllers_marketcontroller",
-      "community": 64,
+      "community": 4,
       "norm_label": "marketcontroller.ts"
     },
     {
@@ -16300,7 +16309,7 @@
       "source_file": "server/controllers/marketController.ts",
       "source_location": "L9",
       "id": "controllers_marketcontroller_emitmarket",
-      "community": 64,
+      "community": 4,
       "norm_label": "emitmarket()"
     },
     {
@@ -16309,7 +16318,7 @@
       "source_file": "server/controllers/marketController.ts",
       "source_location": "L17",
       "id": "controllers_marketcontroller_valid_resources",
-      "community": 64,
+      "community": 4,
       "norm_label": "valid_resources"
     },
     {
@@ -16318,7 +16327,7 @@
       "source_file": "server/controllers/marketController.ts",
       "source_location": "L21",
       "id": "controllers_marketcontroller_getlistings",
-      "community": 64,
+      "community": 4,
       "norm_label": "getlistings()"
     },
     {
@@ -16327,7 +16336,7 @@
       "source_file": "server/controllers/marketController.ts",
       "source_location": "L47",
       "id": "controllers_marketcontroller_createlisting",
-      "community": 64,
+      "community": 4,
       "norm_label": "createlisting()"
     },
     {
@@ -16336,7 +16345,7 @@
       "source_file": "server/controllers/marketController.ts",
       "source_location": "L121",
       "id": "controllers_marketcontroller_buylisting",
-      "community": 64,
+      "community": 4,
       "norm_label": "buylisting()"
     },
     {
@@ -16345,7 +16354,7 @@
       "source_file": "server/controllers/marketController.ts",
       "source_location": "L225",
       "id": "controllers_marketcontroller_gethistory",
-      "community": 64,
+      "community": 4,
       "norm_label": "gethistory()"
     },
     {
@@ -16354,7 +16363,7 @@
       "source_file": "server/controllers/marketController.ts",
       "source_location": "L238",
       "id": "controllers_marketcontroller_cancellisting",
-      "community": 64,
+      "community": 4,
       "norm_label": "cancellisting()"
     },
     {
@@ -16363,7 +16372,7 @@
       "source_file": "server/controllers/marketController.ts",
       "source_location": "L278",
       "id": "controllers_marketcontroller_systembuy",
-      "community": 64,
+      "community": 4,
       "norm_label": "systembuy()"
     },
     {
@@ -16480,7 +16489,7 @@
       "source_file": "server/controllers/nexusController.ts",
       "source_location": "L469",
       "id": "controllers_nexuscontroller_transferresources",
-      "community": 64,
+      "community": 4,
       "norm_label": "transferresources()"
     },
     {
@@ -16534,7 +16543,7 @@
       "source_file": "server/controllers/notificationController.ts",
       "source_location": "L1",
       "id": "controllers_notificationcontroller",
-      "community": 101,
+      "community": 64,
       "norm_label": "notificationcontroller.ts"
     },
     {
@@ -16543,7 +16552,7 @@
       "source_file": "server/controllers/notificationController.ts",
       "source_location": "L8",
       "id": "controllers_notificationcontroller_getvapidpublickey",
-      "community": 101,
+      "community": 64,
       "norm_label": "getvapidpublickey()"
     },
     {
@@ -16552,7 +16561,7 @@
       "source_file": "server/controllers/notificationController.ts",
       "source_location": "L17",
       "id": "controllers_notificationcontroller_subscribe",
-      "community": 101,
+      "community": 64,
       "norm_label": "subscribe()"
     },
     {
@@ -16561,7 +16570,7 @@
       "source_file": "server/controllers/notificationController.ts",
       "source_location": "L36",
       "id": "controllers_notificationcontroller_unsubscribe",
-      "community": 101,
+      "community": 64,
       "norm_label": "unsubscribe()"
     },
     {
@@ -16570,7 +16579,7 @@
       "source_file": "server/controllers/notificationController.ts",
       "source_location": "L51",
       "id": "controllers_notificationcontroller_pref_keys",
-      "community": 101,
+      "community": 64,
       "norm_label": "pref_keys"
     },
     {
@@ -16579,7 +16588,7 @@
       "source_file": "server/controllers/notificationController.ts",
       "source_location": "L71",
       "id": "controllers_notificationcontroller_getpreferences",
-      "community": 101,
+      "community": 64,
       "norm_label": "getpreferences()"
     },
     {
@@ -16588,7 +16597,7 @@
       "source_file": "server/controllers/notificationController.ts",
       "source_location": "L87",
       "id": "controllers_notificationcontroller_getbadges",
-      "community": 101,
+      "community": 64,
       "norm_label": "getbadges()"
     },
     {
@@ -16597,7 +16606,7 @@
       "source_file": "server/controllers/notificationController.ts",
       "source_location": "L197",
       "id": "controllers_notificationcontroller_updatepreferences",
-      "community": 101,
+      "community": 64,
       "norm_label": "updatepreferences()"
     },
     {
@@ -16615,7 +16624,7 @@
       "source_file": "server/controllers/referralController.ts",
       "source_location": "L19",
       "id": "controllers_referralcontroller_absorbboostintobuildqueue",
-      "community": 39,
+      "community": 5,
       "norm_label": "absorbboostintobuildqueue()"
     },
     {
@@ -16714,7 +16723,7 @@
       "source_file": "server/controllers/referralController.ts",
       "source_location": "L176",
       "id": "controllers_referralcontroller_redeemtoken",
-      "community": 39,
+      "community": 5,
       "norm_label": "redeemtoken()"
     },
     {
@@ -16723,7 +16732,7 @@
       "source_file": "server/controllers/referralController.ts",
       "source_location": "L327",
       "id": "controllers_referralcontroller_redeemmilestonetoken",
-      "community": 39,
+      "community": 5,
       "norm_label": "redeemmilestonetoken()"
     },
     {
@@ -17092,7 +17101,7 @@
       "source_file": "server/controllers/usersController.ts",
       "source_location": "L1",
       "id": "controllers_userscontroller",
-      "community": 4,
+      "community": 38,
       "norm_label": "userscontroller.ts"
     },
     {
@@ -17101,7 +17110,7 @@
       "source_file": "server/controllers/usersController.ts",
       "source_location": "L13",
       "id": "controllers_userscontroller_friendshipstatus",
-      "community": 4,
+      "community": 38,
       "norm_label": "friendshipstatus"
     },
     {
@@ -17110,7 +17119,7 @@
       "source_file": "server/controllers/usersController.ts",
       "source_location": "L15",
       "id": "controllers_userscontroller_sumtroops",
-      "community": 4,
+      "community": 15,
       "norm_label": "sumtroops()"
     },
     {
@@ -17119,7 +17128,7 @@
       "source_file": "server/controllers/usersController.ts",
       "source_location": "L23",
       "id": "controllers_userscontroller_listplayersingalaxy",
-      "community": 4,
+      "community": 38,
       "norm_label": "listplayersingalaxy()"
     },
     {
@@ -17137,7 +17146,7 @@
       "source_file": "server/controllers/usersController.ts",
       "source_location": "L142",
       "id": "controllers_userscontroller_updateonboardingstep",
-      "community": 4,
+      "community": 38,
       "norm_label": "updateonboardingstep()"
     },
     {
@@ -17146,7 +17155,7 @@
       "source_file": "server/controllers/usersController.ts",
       "source_location": "L162",
       "id": "controllers_userscontroller_changepassword",
-      "community": 4,
+      "community": 38,
       "norm_label": "changepassword()"
     },
     {
@@ -17155,7 +17164,7 @@
       "source_file": "server/controllers/usersController.ts",
       "source_location": "L210",
       "id": "controllers_userscontroller_getpublicprofile",
-      "community": 4,
+      "community": 15,
       "norm_label": "getpublicprofile()"
     },
     {
@@ -17164,7 +17173,7 @@
       "source_file": "server/controllers/usersController.ts",
       "source_location": "L487",
       "id": "controllers_userscontroller_getpublicprofileog",
-      "community": 4,
+      "community": 38,
       "norm_label": "getpublicprofileog()"
     },
     {
@@ -17362,7 +17371,7 @@
       "source_file": "server/controllers/warRoomController.ts",
       "source_location": "L845",
       "id": "controllers_warroomcontroller_postthreadmessage",
-      "community": 32,
+      "community": 15,
       "norm_label": "postthreadmessage()"
     },
     {
@@ -17389,7 +17398,7 @@
       "source_file": "server/lib/prisma.ts",
       "source_location": "L1",
       "id": "lib_prisma",
-      "community": 101,
+      "community": 0,
       "norm_label": "prisma.ts"
     },
     {
@@ -17398,7 +17407,7 @@
       "source_file": "server/lib/prisma.ts",
       "source_location": "L7",
       "id": "lib_prisma_dirname",
-      "community": 101,
+      "community": 0,
       "norm_label": "__dirname"
     },
     {
@@ -17407,7 +17416,7 @@
       "source_file": "server/lib/prisma.ts",
       "source_location": "L10",
       "id": "lib_prisma_adapter",
-      "community": 101,
+      "community": 0,
       "norm_label": "adapter"
     },
     {
@@ -17416,7 +17425,7 @@
       "source_file": "server/lib/prisma.ts",
       "source_location": "L11",
       "id": "lib_prisma_prisma",
-      "community": 101,
+      "community": 0,
       "norm_label": "prisma"
     },
     {
@@ -17605,7 +17614,7 @@
       "source_file": "server/models/Nexus.ts",
       "source_location": "L33",
       "id": "models_nexus_computeresourceupdate",
-      "community": 5,
+      "community": 78,
       "norm_label": "computeresourceupdate()"
     },
     {
@@ -17632,7 +17641,7 @@
       "source_file": "server/models/Nexus.ts",
       "source_location": "L49",
       "id": "models_nexus_questbatch",
-      "community": 78,
+      "community": 142,
       "norm_label": "questbatch"
     },
     {
@@ -17695,7 +17704,7 @@
       "source_file": "server/models/Nexus.ts",
       "source_location": "L595",
       "id": "models_nexus_refreshresources",
-      "community": 64,
+      "community": 4,
       "norm_label": "refreshresources()"
     },
     {
@@ -17785,7 +17794,7 @@
       "source_file": "server/models/Nexus.ts",
       "source_location": "L740",
       "id": "models_nexus_formatlabel",
-      "community": 64,
+      "community": 76,
       "norm_label": "formatlabel()"
     },
     {
@@ -17794,7 +17803,7 @@
       "source_file": "server/models/Nexus.ts",
       "source_location": "L744",
       "id": "models_nexus_processcompletedqueuesandnotify",
-      "community": 5,
+      "community": 76,
       "norm_label": "processcompletedqueuesandnotify()"
     },
     {
@@ -17803,7 +17812,7 @@
       "source_file": "server/models/Nexus.ts",
       "source_location": "L845",
       "id": "models_nexus_recovercontrollevels",
-      "community": 3,
+      "community": 78,
       "norm_label": "recovercontrollevels()"
     },
     {
@@ -17848,7 +17857,7 @@
       "source_file": "server/models/Nexus.ts",
       "source_location": "L1080",
       "id": "models_nexus_serializenexus",
-      "community": 64,
+      "community": 0,
       "norm_label": "serializenexus()"
     },
     {
@@ -17866,7 +17875,7 @@
       "source_file": "server/models/Nexus.ts",
       "source_location": "L1193",
       "id": "models_nexus_serializeattack",
-      "community": 64,
+      "community": 77,
       "norm_label": "serializeattack()"
     },
     {
@@ -17875,7 +17884,7 @@
       "source_file": "server/models/User.ts",
       "source_location": "L1",
       "id": "models_user",
-      "community": 4,
+      "community": 38,
       "norm_label": "user.ts"
     },
     {
@@ -17884,7 +17893,7 @@
       "source_file": "server/models/User.ts",
       "source_location": "L3",
       "id": "models_user_hashpassword",
-      "community": 4,
+      "community": 38,
       "norm_label": "hashpassword()"
     },
     {
@@ -17893,7 +17902,7 @@
       "source_file": "server/models/User.ts",
       "source_location": "L7",
       "id": "models_user_comparepassword",
-      "community": 4,
+      "community": 38,
       "norm_label": "comparepassword()"
     },
     {
@@ -18397,7 +18406,7 @@
       "source_file": "server/routes/admin.ts",
       "source_location": "L1",
       "id": "server_routes_admin_ts_routes_admin",
-      "community": 64,
+      "community": 76,
       "norm_label": "admin.ts"
     },
     {
@@ -18406,7 +18415,7 @@
       "source_file": "server/routes/admin.ts",
       "source_location": "L4",
       "id": "server_routes_admin_ts_routes_admin_router",
-      "community": 64,
+      "community": 76,
       "norm_label": "router"
     },
     {
@@ -18469,7 +18478,7 @@
       "source_file": "server/routes/chat.ts",
       "source_location": "L1",
       "id": "routes_chat",
-      "community": 7,
+      "community": 3,
       "norm_label": "chat.ts"
     },
     {
@@ -18478,7 +18487,7 @@
       "source_file": "server/routes/chat.ts",
       "source_location": "L7",
       "id": "routes_chat_router",
-      "community": 7,
+      "community": 3,
       "norm_label": "router"
     },
     {
@@ -18505,7 +18514,7 @@
       "source_file": "server/routes/friends.ts",
       "source_location": "L1",
       "id": "routes_friends",
-      "community": 7,
+      "community": 3,
       "norm_label": "friends.ts"
     },
     {
@@ -18514,7 +18523,7 @@
       "source_file": "server/routes/friends.ts",
       "source_location": "L7",
       "id": "routes_friends_router",
-      "community": 7,
+      "community": 3,
       "norm_label": "router"
     },
     {
@@ -18649,7 +18658,7 @@
       "source_file": "server/routes/replay.ts",
       "source_location": "L1",
       "id": "routes_replay",
-      "community": 101,
+      "community": 3,
       "norm_label": "replay.ts"
     },
     {
@@ -18658,7 +18667,7 @@
       "source_file": "server/routes/replay.ts",
       "source_location": "L8",
       "id": "routes_replay_router",
-      "community": 101,
+      "community": 3,
       "norm_label": "router"
     },
     {
@@ -19117,7 +19126,7 @@
       "source_file": "server/services/broadcastService.ts",
       "source_location": "L1",
       "id": "services_broadcastservice",
-      "community": 0,
+      "community": 3,
       "norm_label": "broadcastservice.ts"
     },
     {
@@ -19126,7 +19135,7 @@
       "source_file": "server/services/broadcastService.ts",
       "source_location": "L5",
       "id": "services_broadcastservice_broadcastrecipient",
-      "community": 0,
+      "community": 3,
       "norm_label": "broadcastrecipient"
     },
     {
@@ -19135,7 +19144,7 @@
       "source_file": "server/services/broadcastService.ts",
       "source_location": "L11",
       "id": "services_broadcastservice_broadcastresult",
-      "community": 0,
+      "community": 3,
       "norm_label": "broadcastresult"
     },
     {
@@ -19144,7 +19153,7 @@
       "source_file": "server/services/broadcastService.ts",
       "source_location": "L20",
       "id": "services_broadcastservice_collectgalaxyliverecipients",
-      "community": 0,
+      "community": 3,
       "norm_label": "collectgalaxyliverecipients()"
     },
     {
@@ -19153,7 +19162,7 @@
       "source_file": "server/services/broadcastService.ts",
       "source_location": "L60",
       "id": "services_broadcastservice_sleep",
-      "community": 0,
+      "community": 3,
       "norm_label": "sleep()"
     },
     {
@@ -19162,7 +19171,7 @@
       "source_file": "server/services/broadcastService.ts",
       "source_location": "L64",
       "id": "services_broadcastservice_isratelimiterror",
-      "community": 0,
+      "community": 3,
       "norm_label": "isratelimiterror()"
     },
     {
@@ -19171,7 +19180,7 @@
       "source_file": "server/services/broadcastService.ts",
       "source_location": "L69",
       "id": "services_broadcastservice_broadcastoptions",
-      "community": 0,
+      "community": 3,
       "norm_label": "broadcastoptions"
     },
     {
@@ -19180,7 +19189,7 @@
       "source_file": "server/services/broadcastService.ts",
       "source_location": "L77",
       "id": "services_broadcastservice_broadcastgalaxylive",
-      "community": 0,
+      "community": 3,
       "norm_label": "broadcastgalaxylive()"
     },
     {
@@ -19315,7 +19324,7 @@
       "source_file": "server/services/dailyStreakService.ts",
       "source_location": "L1",
       "id": "services_dailystreakservice",
-      "community": 77,
+      "community": 4,
       "norm_label": "dailystreakservice.ts"
     },
     {
@@ -19324,7 +19333,7 @@
       "source_file": "server/services/dailyStreakService.ts",
       "source_location": "L4",
       "id": "services_dailystreakservice_dailyquest",
-      "community": 77,
+      "community": 4,
       "norm_label": "dailyquest"
     },
     {
@@ -19333,7 +19342,7 @@
       "source_file": "server/services/dailyStreakService.ts",
       "source_location": "L13",
       "id": "services_dailystreakservice_quest_templates",
-      "community": 77,
+      "community": 4,
       "norm_label": "quest_templates"
     },
     {
@@ -19342,7 +19351,7 @@
       "source_file": "server/services/dailyStreakService.ts",
       "source_location": "L127",
       "id": "services_dailystreakservice_streak_bonus_mult",
-      "community": 77,
+      "community": 4,
       "norm_label": "streak_bonus_mult"
     },
     {
@@ -19351,7 +19360,7 @@
       "source_file": "server/services/dailyStreakService.ts",
       "source_location": "L129",
       "id": "services_dailystreakservice_getstreakmultiplier",
-      "community": 77,
+      "community": 4,
       "norm_label": "getstreakmultiplier()"
     },
     {
@@ -19360,7 +19369,7 @@
       "source_file": "server/services/dailyStreakService.ts",
       "source_location": "L134",
       "id": "services_dailystreakservice_getnexuslevelmultiplier",
-      "community": 77,
+      "community": 4,
       "norm_label": "getnexuslevelmultiplier()"
     },
     {
@@ -19369,7 +19378,7 @@
       "source_file": "server/services/dailyStreakService.ts",
       "source_location": "L138",
       "id": "services_dailystreakservice_gettodayseed",
-      "community": 77,
+      "community": 4,
       "norm_label": "gettodayseed()"
     },
     {
@@ -19378,7 +19387,7 @@
       "source_file": "server/services/dailyStreakService.ts",
       "source_location": "L143",
       "id": "services_dailystreakservice_selectdailyquests",
-      "community": 77,
+      "community": 4,
       "norm_label": "selectdailyquests()"
     },
     {
@@ -19387,7 +19396,7 @@
       "source_file": "server/services/dailyStreakService.ts",
       "source_location": "L166",
       "id": "services_dailystreakservice_gethighestnexuslevel",
-      "community": 77,
+      "community": 4,
       "norm_label": "gethighestnexuslevel()"
     },
     {
@@ -19396,7 +19405,7 @@
       "source_file": "server/services/dailyStreakService.ts",
       "source_location": "L174",
       "id": "services_dailystreakservice_issameday",
-      "community": 77,
+      "community": 4,
       "norm_label": "issameday()"
     },
     {
@@ -19405,7 +19414,7 @@
       "source_file": "server/services/dailyStreakService.ts",
       "source_location": "L178",
       "id": "services_dailystreakservice_isyesterday",
-      "community": 77,
+      "community": 4,
       "norm_label": "isyesterday()"
     },
     {
@@ -19414,7 +19423,7 @@
       "source_file": "server/services/dailyStreakService.ts",
       "source_location": "L184",
       "id": "services_dailystreakservice_getdailystreakdata",
-      "community": 77,
+      "community": 4,
       "norm_label": "getdailystreakdata()"
     },
     {
@@ -19423,7 +19432,7 @@
       "source_file": "server/services/dailyStreakService.ts",
       "source_location": "L248",
       "id": "services_dailystreakservice_incrementquestprogress",
-      "community": 77,
+      "community": 4,
       "norm_label": "incrementquestprogress()"
     },
     {
@@ -19432,7 +19441,7 @@
       "source_file": "server/services/dailyStreakService.ts",
       "source_location": "L296",
       "id": "services_dailystreakservice_claimdailyrewards",
-      "community": 77,
+      "community": 4,
       "norm_label": "claimdailyrewards()"
     },
     {
@@ -19630,7 +19639,7 @@
       "source_file": "server/services/emailService.ts",
       "source_location": "L584",
       "id": "services_emailservice_sendverifyemail",
-      "community": 38,
+      "community": 37,
       "norm_label": "sendverifyemail()"
     },
     {
@@ -19810,7 +19819,7 @@
       "source_file": "server/services/galaxyService.ts",
       "source_location": "L1",
       "id": "services_galaxyservice",
-      "community": 94,
+      "community": 10,
       "norm_label": "galaxyservice.ts"
     },
     {
@@ -19819,7 +19828,7 @@
       "source_file": "server/services/galaxyService.ts",
       "source_location": "L3",
       "id": "services_galaxyservice_getallgalaxies",
-      "community": 94,
+      "community": 10,
       "norm_label": "getallgalaxies()"
     },
     {
@@ -19828,7 +19837,7 @@
       "source_file": "server/services/galaxyService.ts",
       "source_location": "L7",
       "id": "services_galaxyservice_getmygalaxyplayers",
-      "community": 94,
+      "community": 10,
       "norm_label": "getmygalaxyplayers()"
     },
     {
@@ -19837,7 +19846,7 @@
       "source_file": "server/services/galaxyService.ts",
       "source_location": "L11",
       "id": "services_galaxyservice_getuserwithgalaxy",
-      "community": 94,
+      "community": 10,
       "norm_label": "getuserwithgalaxy()"
     },
     {
@@ -19846,7 +19855,7 @@
       "source_file": "server/services/galaxyService.ts",
       "source_location": "L18",
       "id": "services_galaxyservice_getgalaxybyid",
-      "community": 94,
+      "community": 10,
       "norm_label": "getgalaxybyid()"
     },
     {
@@ -19855,7 +19864,7 @@
       "source_file": "server/services/galaxyService.ts",
       "source_location": "L22",
       "id": "services_galaxyservice_getuserbyid",
-      "community": 94,
+      "community": 10,
       "norm_label": "getuserbyid()"
     },
     {
@@ -19864,7 +19873,7 @@
       "source_file": "server/services/galaxyService.ts",
       "source_location": "L26",
       "id": "services_galaxyservice_isgalaxymember",
-      "community": 94,
+      "community": 10,
       "norm_label": "isgalaxymember()"
     },
     {
@@ -19873,7 +19882,7 @@
       "source_file": "server/services/galaxyService.ts",
       "source_location": "L34",
       "id": "services_galaxyservice_leavegalaxy",
-      "community": 94,
+      "community": 10,
       "norm_label": "leavegalaxy()"
     },
     {
@@ -19882,7 +19891,7 @@
       "source_file": "server/services/galaxyService.ts",
       "source_location": "L67",
       "id": "services_galaxyservice_selectgalaxy",
-      "community": 94,
+      "community": 10,
       "norm_label": "selectgalaxy()"
     },
     {
@@ -19990,7 +19999,7 @@
       "source_file": "server/services/mapService.ts",
       "source_location": "L1",
       "id": "services_mapservice",
-      "community": 15,
+      "community": 107,
       "norm_label": "mapservice.ts"
     },
     {
@@ -19999,7 +20008,7 @@
       "source_file": "server/services/mapService.ts",
       "source_location": "L3",
       "id": "services_mapservice_getnexusesinarea",
-      "community": 15,
+      "community": 107,
       "norm_label": "getnexusesinarea()"
     },
     {
@@ -20008,7 +20017,7 @@
       "source_file": "server/services/mapService.ts",
       "source_location": "L24",
       "id": "services_mapservice_getgalaxyplayerpoints",
-      "community": 15,
+      "community": 107,
       "norm_label": "getgalaxyplayerpoints()"
     },
     {
@@ -20134,7 +20143,7 @@
       "source_file": "server/services/nexusService.ts",
       "source_location": "L5",
       "id": "services_nexusservice_resourceconflicterror",
-      "community": 5,
+      "community": 44,
       "norm_label": "resourceconflicterror"
     },
     {
@@ -20143,7 +20152,7 @@
       "source_file": "server/services/nexusService.ts",
       "source_location": "L6",
       "id": "services_nexusservice_resourceconflicterror_constructor",
-      "community": 5,
+      "community": 44,
       "norm_label": ".constructor()"
     },
     {
@@ -20350,7 +20359,7 @@
       "source_file": "server/services/referralService.ts",
       "source_location": "L1",
       "id": "services_referralservice",
-      "community": 44,
+      "community": 132,
       "norm_label": "referralservice.ts"
     },
     {
@@ -20359,7 +20368,7 @@
       "source_file": "server/services/referralService.ts",
       "source_location": "L14",
       "id": "services_referralservice_randomreferralcode",
-      "community": 44,
+      "community": 132,
       "norm_label": "randomreferralcode()"
     },
     {
@@ -20368,7 +20377,7 @@
       "source_file": "server/services/referralService.ts",
       "source_location": "L22",
       "id": "services_referralservice_generateuniquereferralcode",
-      "community": 44,
+      "community": 132,
       "norm_label": "generateuniquereferralcode()"
     },
     {
@@ -20377,7 +20386,7 @@
       "source_file": "server/services/referralService.ts",
       "source_location": "L36",
       "id": "services_referralservice_getreferralsbyreferrer",
-      "community": 44,
+      "community": 132,
       "norm_label": "getreferralsbyreferrer()"
     },
     {
@@ -20386,7 +20395,7 @@
       "source_file": "server/services/referralService.ts",
       "source_location": "L44",
       "id": "services_referralservice_getpendingtokens",
-      "community": 44,
+      "community": 132,
       "norm_label": "getpendingtokens()"
     },
     {
@@ -20395,7 +20404,7 @@
       "source_file": "server/services/referralService.ts",
       "source_location": "L50",
       "id": "services_referralservice_gettokenbyid",
-      "community": 44,
+      "community": 132,
       "norm_label": "gettokenbyid()"
     },
     {
@@ -20404,7 +20413,7 @@
       "source_file": "server/services/referralService.ts",
       "source_location": "L54",
       "id": "services_referralservice_marktokenredeemed",
-      "community": 44,
+      "community": 132,
       "norm_label": "marktokenredeemed()"
     },
     {
@@ -20413,7 +20422,7 @@
       "source_file": "server/services/referralService.ts",
       "source_location": "L66",
       "id": "services_referralservice_checkandgranttoken",
-      "community": 44,
+      "community": 132,
       "norm_label": "checkandgranttoken()"
     },
     {
@@ -20422,7 +20431,7 @@
       "source_file": "server/services/referralService.ts",
       "source_location": "L135",
       "id": "services_referralservice_getreferralstatus",
-      "community": 44,
+      "community": 132,
       "norm_label": "getreferralstatus()"
     },
     {
@@ -20440,7 +20449,7 @@
       "source_file": "server/services/referralService.ts",
       "source_location": "L211",
       "id": "services_referralservice_getpendingmilestonetokens",
-      "community": 44,
+      "community": 132,
       "norm_label": "getpendingmilestonetokens()"
     },
     {
@@ -20449,7 +20458,7 @@
       "source_file": "server/services/referralService.ts",
       "source_location": "L226",
       "id": "services_referralservice_getmilestonetokenbyid",
-      "community": 44,
+      "community": 132,
       "norm_label": "getmilestonetokenbyid()"
     },
     {
@@ -20458,7 +20467,7 @@
       "source_file": "server/services/referralService.ts",
       "source_location": "L230",
       "id": "services_referralservice_markmilestonetokenredeemed",
-      "community": 44,
+      "community": 132,
       "norm_label": "markmilestonetokenredeemed()"
     },
     {
@@ -20809,7 +20818,7 @@
       "source_file": "server/services/warRoomSocket.ts",
       "source_location": "L78",
       "id": "services_warroomsocket_emittouser",
-      "community": 16,
+      "community": 53,
       "norm_label": "emittouser()"
     },
     {
@@ -20827,7 +20836,7 @@
       "source_file": "server/services/warRoomSocket.ts",
       "source_location": "L95",
       "id": "services_warroomsocket_emittofaction",
-      "community": 53,
+      "community": 66,
       "norm_label": "emittofaction()"
     },
     {
@@ -20845,7 +20854,7 @@
       "source_file": "server/services/warRoomSocket.ts",
       "source_location": "L112",
       "id": "services_warroomsocket_notifytransferupdate",
-      "community": 16,
+      "community": 53,
       "norm_label": "notifytransferupdate()"
     },
     {
@@ -20854,7 +20863,7 @@
       "source_file": "server/services/warRoomSocket.ts",
       "source_location": "L117",
       "id": "services_warroomsocket_notifyfactionchat",
-      "community": 53,
+      "community": 66,
       "norm_label": "notifyfactionchat()"
     },
     {
@@ -20863,7 +20872,7 @@
       "source_file": "server/services/warRoomSocket.ts",
       "source_location": "L122",
       "id": "services_warroomsocket_notifydiplomacychat",
-      "community": 15,
+      "community": 8,
       "norm_label": "notifydiplomacychat()"
     },
     {
@@ -20872,7 +20881,7 @@
       "source_file": "server/services/warRoomSocket.ts",
       "source_location": "L134",
       "id": "services_warroomsocket_notifybadgeupdate",
-      "community": 66,
+      "community": 53,
       "norm_label": "notifybadgeupdate()"
     },
     {
@@ -20917,7 +20926,7 @@
       "source_file": "server/services/warRoomSocket.ts",
       "source_location": "L178",
       "id": "services_warroomsocket_notifynexusqueuecompleted",
-      "community": 78,
+      "community": 53,
       "norm_label": "notifynexusqueuecompleted()"
     },
     {
@@ -20935,7 +20944,7 @@
       "source_file": "server/services/warRoomSocket.ts",
       "source_location": "L199",
       "id": "services_warroomsocket_notifyfactioninviteupdate",
-      "community": 66,
+      "community": 53,
       "norm_label": "notifyfactioninviteupdate()"
     },
     {
@@ -20953,7 +20962,7 @@
       "source_file": "server/services/warRoomSocket.ts",
       "source_location": "L209",
       "id": "services_warroomsocket_notifynexusconquered",
-      "community": 16,
+      "community": 53,
       "norm_label": "notifynexusconquered()"
     },
     {
@@ -20962,7 +20971,7 @@
       "source_file": "server/services/warRoomSocket.ts",
       "source_location": "L214",
       "id": "services_warroomsocket_notifymarketupdated",
-      "community": 64,
+      "community": 4,
       "norm_label": "notifymarketupdated()"
     },
     {
@@ -21025,7 +21034,7 @@
       "source_file": "server/services/warRoomSocket.ts",
       "source_location": "L434",
       "id": "services_warroomsocket_broadcastthreadmessage",
-      "community": 32,
+      "community": 15,
       "norm_label": "broadcastthreadmessage()"
     },
     {
@@ -21070,7 +21079,7 @@
       "source_file": "server/test/economy-combat.test.js",
       "source_location": "L1",
       "id": "test_economy_combat_test",
-      "community": 16,
+      "community": 91,
       "norm_label": "economy-combat.test.js"
     },
     {
@@ -21079,7 +21088,7 @@
       "source_file": "server/test/economy-combat.test.js",
       "source_location": "L15",
       "id": "test_economy_combat_test_building_max_levels",
-      "community": 16,
+      "community": 91,
       "norm_label": "building_max_levels"
     },
     {
@@ -21088,7 +21097,7 @@
       "source_file": "server/test/economy-curves.test.js",
       "source_location": "L1",
       "id": "test_economy_curves_test",
-      "community": 30,
+      "community": 91,
       "norm_label": "economy-curves.test.js"
     },
     {
@@ -21097,7 +21106,7 @@
       "source_file": "server/test/economy-curves.test.js",
       "source_location": "L15",
       "id": "test_economy_curves_test_restotal",
-      "community": 30,
+      "community": 91,
       "norm_label": "restotal()"
     },
     {
@@ -21106,7 +21115,7 @@
       "source_file": "server/test/economy-curves.test.js",
       "source_location": "L16",
       "id": "test_economy_curves_test_atkperkres",
-      "community": 30,
+      "community": 91,
       "norm_label": "atkperkres()"
     },
     {
@@ -21115,7 +21124,7 @@
       "source_file": "server/test/economy-curves.test.js",
       "source_location": "L20",
       "id": "test_economy_curves_test_striker_atk",
-      "community": 30,
+      "community": 91,
       "norm_label": "striker_atk"
     },
     {
@@ -21124,7 +21133,7 @@
       "source_file": "server/test/population.test.js",
       "source_location": "L1",
       "id": "test_population_test",
-      "community": 39,
+      "community": 0,
       "norm_label": "population.test.js"
     },
     {
@@ -21178,7 +21187,7 @@
       "source_file": "server/test/validation.test.js",
       "source_location": "L1",
       "id": "test_validation_test",
-      "community": 8,
+      "community": 77,
       "norm_label": "validation.test.js"
     },
     {
@@ -21187,7 +21196,7 @@
       "source_file": "server/test/validation.test.js",
       "source_location": "L14",
       "id": "test_validation_test_troop_keys",
-      "community": 8,
+      "community": 77,
       "norm_label": "troop_keys"
     },
     {
@@ -21376,7 +21385,7 @@
       "source_file": "server/types/index.ts",
       "source_location": "L38",
       "id": "types_index_troopkey",
-      "community": 78,
+      "community": 142,
       "norm_label": "troopkey"
     },
     {
@@ -21385,7 +21394,7 @@
       "source_file": "server/types/index.ts",
       "source_location": "L40",
       "id": "types_index_troopcounts",
-      "community": 15,
+      "community": 107,
       "norm_label": "troopcounts"
     },
     {
@@ -21421,7 +21430,7 @@
       "source_file": "server/types/index.ts",
       "source_location": "L67",
       "id": "types_index_buildinglevels",
-      "community": 15,
+      "community": 107,
       "norm_label": "buildinglevels"
     },
     {
@@ -21439,7 +21448,7 @@
       "source_file": "server/types/index.ts",
       "source_location": "L84",
       "id": "types_index_resourceamounts",
-      "community": 15,
+      "community": 107,
       "norm_label": "resourceamounts"
     },
     {
@@ -21574,7 +21583,7 @@
       "source_file": "server/utils/combat.ts",
       "source_location": "L239",
       "id": "utils_combat_processarrivedattacks",
-      "community": 0,
+      "community": 16,
       "norm_label": "processarrivedattacks()"
     },
     {
@@ -21592,7 +21601,7 @@
       "source_file": "server/utils/combat.ts",
       "source_location": "L1397",
       "id": "utils_combat_processreturnedtroops",
-      "community": 39,
+      "community": 16,
       "norm_label": "processreturnedtroops()"
     },
     {
@@ -21610,7 +21619,7 @@
       "source_file": "server/utils/combatMath.ts",
       "source_location": "L1",
       "id": "utils_combatmath",
-      "community": 16,
+      "community": 91,
       "norm_label": "combatmath.ts"
     },
     {
@@ -21619,7 +21628,7 @@
       "source_file": "server/utils/combatMath.ts",
       "source_location": "L8",
       "id": "utils_combatmath_troopclass",
-      "community": 16,
+      "community": 91,
       "norm_label": "troopclass"
     },
     {
@@ -21628,7 +21637,7 @@
       "source_file": "server/utils/combatMath.ts",
       "source_location": "L10",
       "id": "utils_combatmath_troop_class",
-      "community": 30,
+      "community": 91,
       "norm_label": "troop_class"
     },
     {
@@ -21637,7 +21646,7 @@
       "source_file": "server/utils/combatMath.ts",
       "source_location": "L32",
       "id": "utils_combatmath_class_counters",
-      "community": 16,
+      "community": 91,
       "norm_label": "class_counters"
     },
     {
@@ -21646,7 +21655,7 @@
       "source_file": "server/utils/combatMath.ts",
       "source_location": "L48",
       "id": "utils_combatmath_defendercountermultiplier",
-      "community": 16,
+      "community": 91,
       "norm_label": "defendercountermultiplier()"
     },
     {
@@ -21655,7 +21664,7 @@
       "source_file": "server/utils/combatMath.ts",
       "source_location": "L73",
       "id": "utils_combatmath_troop_stats",
-      "community": 16,
+      "community": 3,
       "norm_label": "troop_stats"
     },
     {
@@ -21664,7 +21673,7 @@
       "source_file": "server/utils/combatMath.ts",
       "source_location": "L111",
       "id": "utils_combatmath_troop_keys",
-      "community": 16,
+      "community": 91,
       "norm_label": "troop_keys"
     },
     {
@@ -21691,7 +21700,7 @@
       "source_file": "server/utils/combatMath.ts",
       "source_location": "L137",
       "id": "utils_combatmath_computeforcepower",
-      "community": 16,
+      "community": 91,
       "norm_label": "computeforcepower()"
     },
     {
@@ -21700,7 +21709,7 @@
       "source_file": "server/utils/combatMath.ts",
       "source_location": "L150",
       "id": "utils_combatmath_computeclassweightedattack",
-      "community": 16,
+      "community": 91,
       "norm_label": "computeclassweightedattack()"
     },
     {
@@ -21709,7 +21718,7 @@
       "source_file": "server/utils/combatMath.ts",
       "source_location": "L211",
       "id": "utils_combatmath_computeclassweighteddefense",
-      "community": 16,
+      "community": 91,
       "norm_label": "computeclassweighteddefense()"
     },
     {
@@ -21718,7 +21727,7 @@
       "source_file": "server/utils/combatMath.ts",
       "source_location": "L281",
       "id": "utils_combatmath_loserlossrate",
-      "community": 16,
+      "community": 91,
       "norm_label": "loserlossrate()"
     },
     {
@@ -21727,7 +21736,7 @@
       "source_file": "server/utils/combatMath.ts",
       "source_location": "L290",
       "id": "utils_combatmath_computelossesforloser",
-      "community": 16,
+      "community": 91,
       "norm_label": "computelossesforloser()"
     },
     {
@@ -21736,7 +21745,7 @@
       "source_file": "server/utils/combatMath.ts",
       "source_location": "L310",
       "id": "utils_combatmath_resourceamounts",
-      "community": 16,
+      "community": 91,
       "norm_label": "resourceamounts"
     },
     {
@@ -21745,7 +21754,7 @@
       "source_file": "server/utils/combatMath.ts",
       "source_location": "L312",
       "id": "utils_combatmath_computelootstolen",
-      "community": 16,
+      "community": 91,
       "norm_label": "computelootstolen()"
     },
     {
@@ -21754,7 +21763,7 @@
       "source_file": "server/utils/combatMath.ts",
       "source_location": "L374",
       "id": "utils_combatmath_computelossesforwinner",
-      "community": 16,
+      "community": 91,
       "norm_label": "computelossesforwinner()"
     },
     {
@@ -21763,7 +21772,7 @@
       "source_file": "server/utils/combatMath.ts",
       "source_location": "L466",
       "id": "utils_combatmath_computescoutcombat",
-      "community": 16,
+      "community": 91,
       "norm_label": "computescoutcombat()"
     },
     {
@@ -21772,7 +21781,7 @@
       "source_file": "server/utils/dominance.ts",
       "source_location": "L1",
       "id": "utils_dominance",
-      "community": 3,
+      "community": 76,
       "norm_label": "dominance.ts"
     },
     {
@@ -21781,7 +21790,7 @@
       "source_file": "server/utils/dominance.ts",
       "source_location": "L11",
       "id": "utils_dominance_galaxywinsource",
-      "community": 3,
+      "community": 76,
       "norm_label": "galaxywinsource"
     },
     {
@@ -21790,7 +21799,7 @@
       "source_file": "server/utils/dominance.ts",
       "source_location": "L18",
       "id": "utils_dominance_resolvedwinconfig",
-      "community": 3,
+      "community": 76,
       "norm_label": "resolvedwinconfig"
     },
     {
@@ -21799,7 +21808,7 @@
       "source_file": "server/utils/dominance.ts",
       "source_location": "L30",
       "id": "utils_dominance_resolvewinconfig",
-      "community": 3,
+      "community": 66,
       "norm_label": "resolvewinconfig()"
     },
     {
@@ -21808,7 +21817,7 @@
       "source_file": "server/utils/dominance.ts",
       "source_location": "L50",
       "id": "utils_dominance_processdominancevictories",
-      "community": 3,
+      "community": 76,
       "norm_label": "processdominancevictories()"
     },
     {
@@ -21817,7 +21826,7 @@
       "source_file": "server/utils/dominance.ts",
       "source_location": "L72",
       "id": "utils_dominance_processgalaxy",
-      "community": 3,
+      "community": 76,
       "norm_label": "processgalaxy()"
     },
     {
@@ -21826,7 +21835,7 @@
       "source_file": "server/utils/dominance.ts",
       "source_location": "L182",
       "id": "utils_dominance_endgalaxy",
-      "community": 3,
+      "community": 76,
       "norm_label": "endgalaxy()"
     },
     {
@@ -21970,7 +21979,7 @@
       "source_file": "server/utils/galaxyEvents.ts",
       "source_location": "L1",
       "id": "utils_galaxyevents",
-      "community": 24,
+      "community": 113,
       "norm_label": "galaxyevents.ts"
     },
     {
@@ -21979,7 +21988,7 @@
       "source_file": "server/utils/galaxyEvents.ts",
       "source_location": "L8",
       "id": "utils_galaxyevents_notifyownersnearevent",
-      "community": 24,
+      "community": 113,
       "norm_label": "notifyownersnearevent()"
     },
     {
@@ -21988,7 +21997,7 @@
       "source_file": "server/utils/galaxyEvents.ts",
       "source_location": "L48",
       "id": "utils_galaxyevents_geteventsstartat",
-      "community": 24,
+      "community": 113,
       "norm_label": "geteventsstartat()"
     },
     {
@@ -21997,7 +22006,7 @@
       "source_file": "server/utils/galaxyEvents.ts",
       "source_location": "L53",
       "id": "utils_galaxyevents_event_types",
-      "community": 24,
+      "community": 113,
       "norm_label": "event_types"
     },
     {
@@ -22006,7 +22015,7 @@
       "source_file": "server/utils/galaxyEvents.ts",
       "source_location": "L54",
       "id": "utils_galaxyevents_eventtype",
-      "community": 24,
+      "community": 113,
       "norm_label": "eventtype"
     },
     {
@@ -22015,7 +22024,7 @@
       "source_file": "server/utils/galaxyEvents.ts",
       "source_location": "L58",
       "id": "utils_galaxyevents_randint",
-      "community": 24,
+      "community": 113,
       "norm_label": "randint()"
     },
     {
@@ -22024,7 +22033,7 @@
       "source_file": "server/utils/galaxyEvents.ts",
       "source_location": "L64",
       "id": "utils_galaxyevents_pickzone",
-      "community": 24,
+      "community": 113,
       "norm_label": "pickzone()"
     },
     {
@@ -22033,7 +22042,7 @@
       "source_file": "server/utils/galaxyEvents.ts",
       "source_location": "L76",
       "id": "utils_galaxyevents_rollmultiplier",
-      "community": 24,
+      "community": 113,
       "norm_label": "rollmultiplier()"
     },
     {
@@ -22042,7 +22051,7 @@
       "source_file": "server/utils/galaxyEvents.ts",
       "source_location": "L85",
       "id": "utils_galaxyevents_rollaffectedresources",
-      "community": 24,
+      "community": 113,
       "norm_label": "rollaffectedresources()"
     },
     {
@@ -22051,7 +22060,7 @@
       "source_file": "server/utils/galaxyEvents.ts",
       "source_location": "L97",
       "id": "utils_galaxyevents_spawnderelictship",
-      "community": 24,
+      "community": 113,
       "norm_label": "spawnderelictship()"
     },
     {
@@ -22060,7 +22069,7 @@
       "source_file": "server/utils/galaxyEvents.ts",
       "source_location": "L131",
       "id": "utils_galaxyevents_spawnresourcestorm",
-      "community": 24,
+      "community": 113,
       "norm_label": "spawnresourcestorm()"
     },
     {
@@ -22069,7 +22078,7 @@
       "source_file": "server/utils/galaxyEvents.ts",
       "source_location": "L170",
       "id": "utils_galaxyevents_spawnrogueai",
-      "community": 24,
+      "community": 113,
       "norm_label": "spawnrogueai()"
     },
     {
@@ -22078,7 +22087,7 @@
       "source_file": "server/utils/galaxyEvents.ts",
       "source_location": "L231",
       "id": "utils_galaxyevents_expireoldevents",
-      "community": 24,
+      "community": 113,
       "norm_label": "expireoldevents()"
     },
     {
@@ -22087,7 +22096,7 @@
       "source_file": "server/utils/galaxyEvents.ts",
       "source_location": "L253",
       "id": "utils_galaxyevents_processgalaxyevents",
-      "community": 24,
+      "community": 113,
       "norm_label": "processgalaxyevents()"
     },
     {
@@ -22096,7 +22105,7 @@
       "source_file": "server/utils/galaxyEvents.ts",
       "source_location": "L310",
       "id": "utils_galaxyevents_getactivegalaxyevents",
-      "community": 24,
+      "community": 113,
       "norm_label": "getactivegalaxyevents()"
     },
     {
@@ -22132,7 +22141,7 @@
       "source_file": "server/utils/gameConstants.ts",
       "source_location": "L26",
       "id": "utils_gameconstants_building_costs",
-      "community": 18,
+      "community": 5,
       "norm_label": "building_costs"
     },
     {
@@ -22150,7 +22159,7 @@
       "source_file": "server/utils/gameConstants.ts",
       "source_location": "L68",
       "id": "utils_gameconstants_troop_costs",
-      "community": 39,
+      "community": 0,
       "norm_label": "troop_costs"
     },
     {
@@ -22312,7 +22321,7 @@
       "source_file": "server/utils/gameConstants.ts",
       "source_location": "L322",
       "id": "utils_gameconstants_getoverseercostmultiplier",
-      "community": 16,
+      "community": 91,
       "norm_label": "getoverseercostmultiplier()"
     },
     {
@@ -22321,7 +22330,7 @@
       "source_file": "server/utils/gameConstants.ts",
       "source_location": "L330",
       "id": "utils_gameconstants_getoverseercost",
-      "community": 16,
+      "community": 91,
       "norm_label": "getoverseercost()"
     },
     {
@@ -22339,7 +22348,7 @@
       "source_file": "server/utils/gameConstants.ts",
       "source_location": "L367",
       "id": "utils_gameconstants_trainingbuildingfor",
-      "community": 18,
+      "community": 24,
       "norm_label": "trainingbuildingfor()"
     },
     {
@@ -22609,7 +22618,7 @@
       "source_file": "server/utils/neutralNexuses.ts",
       "source_location": "L346",
       "id": "utils_neutralnexuses_levelupneutralnexuses",
-      "community": 24,
+      "community": 0,
       "norm_label": "levelupneutralnexuses()"
     },
     {
@@ -22636,7 +22645,7 @@
       "source_file": "server/utils/population.ts",
       "source_location": "L1",
       "id": "utils_population",
-      "community": 39,
+      "community": 0,
       "norm_label": "population.ts"
     },
     {
@@ -22645,7 +22654,7 @@
       "source_file": "server/utils/population.ts",
       "source_location": "L10",
       "id": "utils_population_getpopulationmax",
-      "community": 64,
+      "community": 0,
       "norm_label": "getpopulationmax()"
     },
     {
@@ -22654,7 +22663,7 @@
       "source_file": "server/utils/population.ts",
       "source_location": "L18",
       "id": "utils_population_mappopulation",
-      "community": 39,
+      "community": 0,
       "norm_label": "mappopulation()"
     },
     {
@@ -22663,7 +22672,7 @@
       "source_file": "server/utils/population.ts",
       "source_location": "L26",
       "id": "utils_population_queuepopulation",
-      "community": 39,
+      "community": 0,
       "norm_label": "queuepopulation()"
     },
     {
@@ -22672,7 +22681,7 @@
       "source_file": "server/utils/population.ts",
       "source_location": "L36",
       "id": "utils_population_recount_troop_keys",
-      "community": 39,
+      "community": 0,
       "norm_label": "recount_troop_keys"
     },
     {
@@ -22681,7 +22690,7 @@
       "source_file": "server/utils/population.ts",
       "source_location": "L54",
       "id": "utils_population_computenexuspopulation",
-      "community": 39,
+      "community": 0,
       "norm_label": "computenexuspopulation()"
     },
     {
@@ -22690,7 +22699,7 @@
       "source_file": "server/utils/population.ts",
       "source_location": "L86",
       "id": "utils_population_loadawaypopulation",
-      "community": 39,
+      "community": 0,
       "norm_label": "loadawaypopulation()"
     },
     {
@@ -22699,7 +22708,7 @@
       "source_file": "server/utils/population.ts",
       "source_location": "L106",
       "id": "utils_population_recountresult",
-      "community": 39,
+      "community": 0,
       "norm_label": "recountresult"
     },
     {
@@ -22708,7 +22717,7 @@
       "source_file": "server/utils/population.ts",
       "source_location": "L117",
       "id": "utils_population_recountallpopulation",
-      "community": 39,
+      "community": 0,
       "norm_label": "recountallpopulation()"
     },
     {
@@ -22789,7 +22798,7 @@
       "source_file": "server/utils/profanity.ts",
       "source_location": "L279",
       "id": "utils_profanity_containsblockedusername",
-      "community": 8,
+      "community": 77,
       "norm_label": "containsblockedusername()"
     },
     {
@@ -22798,7 +22807,7 @@
       "source_file": "server/utils/profanity.ts",
       "source_location": "L283",
       "id": "utils_profanity_containsblockedchatword",
-      "community": 15,
+      "community": 8,
       "norm_label": "containsblockedchatword()"
     },
     {
@@ -22807,7 +22816,7 @@
       "source_file": "server/utils/protectionWarnings.ts",
       "source_location": "L1",
       "id": "utils_protectionwarnings",
-      "community": 3,
+      "community": 76,
       "norm_label": "protectionwarnings.ts"
     },
     {
@@ -22816,7 +22825,7 @@
       "source_file": "server/utils/protectionWarnings.ts",
       "source_location": "L12",
       "id": "utils_protectionwarnings_sendprotectionexpiringwarnings",
-      "community": 3,
+      "community": 76,
       "norm_label": "sendprotectionexpiringwarnings()"
     },
     {
@@ -22825,7 +22834,7 @@
       "source_file": "server/utils/push.ts",
       "source_location": "L1",
       "id": "utils_push",
-      "community": 3,
+      "community": 76,
       "norm_label": "push.ts"
     },
     {
@@ -22834,7 +22843,7 @@
       "source_file": "server/utils/push.ts",
       "source_location": "L13",
       "id": "utils_push_notif",
-      "community": 3,
+      "community": 76,
       "norm_label": "notif"
     },
     {
@@ -22843,7 +22852,7 @@
       "source_file": "server/utils/push.ts",
       "source_location": "L33",
       "id": "utils_push_notifcategory",
-      "community": 3,
+      "community": 76,
       "norm_label": "notifcategory"
     },
     {
@@ -22852,7 +22861,7 @@
       "source_file": "server/utils/push.ts",
       "source_location": "L35",
       "id": "utils_push_pushpayload",
-      "community": 3,
+      "community": 76,
       "norm_label": "pushpayload"
     },
     {
@@ -22861,7 +22870,7 @@
       "source_file": "server/utils/push.ts",
       "source_location": "L43",
       "id": "utils_push_sendpushtouser",
-      "community": 3,
+      "community": 76,
       "norm_label": "sendpushtouser()"
     },
     {
@@ -22969,7 +22978,7 @@
       "source_file": "server/utils/scouting.ts",
       "source_location": "L1",
       "id": "utils_scouting",
-      "community": 15,
+      "community": 107,
       "norm_label": "scouting.ts"
     },
     {
@@ -22978,7 +22987,7 @@
       "source_file": "server/utils/scouting.ts",
       "source_location": "L8",
       "id": "utils_scouting_publicnexusdata",
-      "community": 15,
+      "community": 107,
       "norm_label": "publicnexusdata"
     },
     {
@@ -22987,7 +22996,7 @@
       "source_file": "server/utils/scouting.ts",
       "source_location": "L30",
       "id": "utils_scouting_scoutintel",
-      "community": 15,
+      "community": 107,
       "norm_label": "scoutintel"
     },
     {
@@ -23023,7 +23032,7 @@
       "source_file": "server/utils/scouting.ts",
       "source_location": "L149",
       "id": "utils_scouting_friendlyrelation",
-      "community": 15,
+      "community": 107,
       "norm_label": "friendlyrelation"
     },
     {
@@ -23032,7 +23041,7 @@
       "source_file": "server/utils/scouting.ts",
       "source_location": "L151",
       "id": "utils_scouting_getfriendlyrelation",
-      "community": 15,
+      "community": 107,
       "norm_label": "getfriendlyrelation()"
     },
     {
@@ -23041,7 +23050,7 @@
       "source_file": "server/utils/scouting.ts",
       "source_location": "L180",
       "id": "utils_scouting_getnexusintelforuser",
-      "community": 15,
+      "community": 107,
       "norm_label": "getnexusintelforuser()"
     },
     {
@@ -23050,7 +23059,7 @@
       "source_file": "server/utils/scouting.ts",
       "source_location": "L287",
       "id": "utils_scouting_resolvefactiontarget",
-      "community": 15,
+      "community": 107,
       "norm_label": "resolvefactiontarget()"
     },
     {
@@ -23194,7 +23203,7 @@
       "source_file": "server/utils/validation.ts",
       "source_location": "L1",
       "id": "utils_validation",
-      "community": 8,
+      "community": 77,
       "norm_label": "validation.ts"
     },
     {
@@ -23212,7 +23221,7 @@
       "source_file": "server/utils/validation.ts",
       "source_location": "L14",
       "id": "utils_validation_reserved_usernames",
-      "community": 8,
+      "community": 77,
       "norm_label": "reserved_usernames"
     },
     {
@@ -23221,7 +23230,7 @@
       "source_file": "server/utils/validation.ts",
       "source_location": "L49",
       "id": "utils_validation_parsepositiveint",
-      "community": 64,
+      "community": 77,
       "norm_label": "parsepositiveint()"
     },
     {
@@ -23230,7 +23239,7 @@
       "source_file": "server/utils/validation.ts",
       "source_location": "L55",
       "id": "utils_validation_parsenonnegativeint",
-      "community": 8,
+      "community": 77,
       "norm_label": "parsenonnegativeint()"
     },
     {
@@ -23239,7 +23248,7 @@
       "source_file": "server/utils/validation.ts",
       "source_location": "L74",
       "id": "utils_validation_validateoverseerattackcap",
-      "community": 64,
+      "community": 77,
       "norm_label": "validateoverseerattackcap()"
     },
     {
@@ -23248,7 +23257,7 @@
       "source_file": "server/utils/validation.ts",
       "source_location": "L86",
       "id": "utils_validation_normalizetrooppayload",
-      "community": 8,
+      "community": 77,
       "norm_label": "normalizetrooppayload()"
     },
     {
@@ -23257,7 +23266,7 @@
       "source_file": "server/utils/validation.ts",
       "source_location": "L112",
       "id": "utils_validation_validateusername",
-      "community": 8,
+      "community": 77,
       "norm_label": "validateusername()"
     },
     {
@@ -34661,11 +34670,43 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "client/src/app/play/page.tsx",
+      "source_location": "L21",
+      "weight": 1.0,
+      "source": "play_page",
+      "target": "play_page_pickmostrecentjoinable",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "client/src/app/play/page.tsx",
       "source_location": "L17",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "play_page",
       "target": "play_page_playdispatcher"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "client/src/app/play/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "play_page",
+      "target": "realtime_serverclock",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "client/src/app/play/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "play_page",
+      "target": "realtime_serverclock_servernow",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -34696,9 +34737,42 @@
       "source_file": "client/src/app/play/page.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "source": "play_page",
+      "target": "services_api_getgalaxies",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "client/src/app/play/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
       "confidence_score": 1.0,
       "source": "play_page",
       "target": "services_api_getmygalaxy"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "client/src/app/play/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "play_page",
+      "target": "services_api_selectgalaxy",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "client/src/app/play/page.tsx",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "play_page_pickmostrecentjoinable",
+      "target": "realtime_serverclock_servernow",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -87807,5 +87881,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "34b9cd145f1dcaaaa300eba44b914b2677d1e0d3"
+  "built_at_commit": "8de66813de550b4e2206b230f0eda2e5cc19835b"
 }
