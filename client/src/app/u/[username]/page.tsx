@@ -5,6 +5,7 @@ import BackBar from '@/components/BackBar';
 import GameLayout from '@/components/GameLayout';
 import { usePageReady } from '@/components/NavigationProgress';
 import PageSkeleton from '@/components/PageSkeleton';
+import ProfileBadges from '@/components/ProfileBadges';
 import Username from '@/components/Username';
 import {
 	acceptFriendRequest,
@@ -268,12 +269,11 @@ function PublicProfilePageInner() {
 					/>
 					<div className="ps-header-info">
 						<h2 className="ps-username">
+							{/* Badges live in their own section below, not the header. */}
 							<Username
 								name={profile.username}
 								isSupporter={profile.isSupporter}
 								supporterTier={profile.supporterTier ?? null}
-								isAlphaFounder={profile.isAlphaFounder}
-								badgeSize="lg"
 							/>
 						</h2>
 						<span className="ps-meta">
@@ -322,6 +322,15 @@ function PublicProfilePageInner() {
 						</div>
 					)}
 				</div>
+
+				{(profile.isAlphaFounder || profile.supporterTier === 'commander') && (
+					<Section title="Badges">
+						<ProfileBadges
+							isAlphaFounder={profile.isAlphaFounder}
+							supporterTier={profile.supporterTier ?? null}
+						/>
+					</Section>
+				)}
 
 				{profile.streak && profile.streak.currentStreak > 0 && (
 					<div className="ps-streak-card">

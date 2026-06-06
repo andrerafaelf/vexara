@@ -711,10 +711,68 @@
 	color: var(--text-faint);
 }
 
-[class*='ps-badge'],
 [class*='ps-chip'],
 [class*='ps-tag'],
 [class*='ps-pill'] {
 	font-family: var(--font-mono);
 	letter-spacing: 0.08em;
+}
+
+/* ── Profile "Badges" section ────────────────────────────────
+   Dedicated home for rank badges (Alpha Player / Alpha Commander). Fixed-size
+   art with the name + description as visible text, so meaning never depends on
+   hover (which doesn't work on touch). */
+.ps-badges {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.ps-badge {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 10px 12px;
+	border-radius: var(--radius-sm);
+	border: 1px solid var(--border-default);
+	background: rgba(255, 255, 255, 0.02);
+}
+
+.ps-badge-img {
+	width: 56px;
+	height: 56px;
+	flex: 0 0 auto;
+	object-fit: contain;
+	image-rendering: -webkit-optimize-contrast;
+}
+
+@media (min-width: 768px) {
+	.ps-badge-img {
+		width: 68px;
+		height: 68px;
+	}
+}
+
+.ps-badge-text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.ps-badge-name {
+	font-family: var(--font-mono);
+	font-weight: 700;
+	font-size: 13px;
+	letter-spacing: 0.08em;
+	color: var(--text-strong);
+}
+
+.ps-badge-desc {
+	/* Override the mono-font default inherited via [class*='ps-badge']. */
+	font-family: var(--font-sans, inherit);
+	letter-spacing: normal;
+	font-size: 12px;
+	line-height: 1.4;
+	color: var(--text-muted);
 }

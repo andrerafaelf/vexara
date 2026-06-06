@@ -668,59 +668,10 @@ a:focus-visible,
 }
 
 /* ── Player rank badges (Alpha Player / Alpha Commander) ─────
-   Image badges served from the CDN at /badges/<key>.webp, shown
-   beside a username. Alpha Player = founding player; Alpha
-   Commander = Commander-tier supporter (a player can have both). */
-.username-badges {
-	display: inline-flex;
-	align-items: center;
-	gap: 3px;
-	vertical-align: middle;
-	/* In flex name-rows (commander card) the badges must hold their size while
-	   the name truncates, not the other way around. */
-	flex: 0 0 auto;
-}
-/* Wrapper carries the hover tooltip (title/aria-label) so the whole badge is the
-   hover target and the tooltip fires reliably (native title on a bare <img> can
-   be flaky). Matches the NexusTypeBadge tooltip convention. */
-.username-badge-wrap {
-	display: inline-flex;
-	align-items: center;
-	cursor: help;
-}
-.username-badge {
-	display: inline-block;
-	width: auto;
-	vertical-align: middle;
-	flex: 0 0 auto;
-	/* Hexagonal art has its own internal padding; a touch of negative
-	   margin keeps it snug against the name without inflating line height. */
-	margin-block: -0.35em;
-	/* Sharpen the small raster art when scaled down. */
-	image-rendering: -webkit-optimize-contrast;
-}
-/* Size variants. The art is a padded hexagon so it reads smaller than its box;
-   sizes are deliberately generous. Desktop bumps each up for legibility. */
-.username-badge--sm {
-	height: 1.3em; /* chat rows / tight lists */
-}
-.username-badge--md {
-	height: 1.75em; /* beside a username (default) */
-}
-.username-badge--lg {
-	height: 2.4em; /* commander card, profile header */
-}
-@media (min-width: 768px) {
-	.username-badge--sm {
-		height: 1.45em;
-	}
-	.username-badge--md {
-		height: 2.15em;
-	}
-	.username-badge--lg {
-		height: 2.9em;
-	}
-}
+   Badges are NOT rendered beside usernames (every username sits in a
+   width-constrained row where a badge truncates the name). They live only in
+   the dedicated "Badges" section on the profile page — see .ps-badges in
+   ProfileStats.css. Art served from the CDN at /badges/<key>.webp. */
 
 /* Donor acknowledgment chip inside the SupportTiersCard. Tied to isFounder (the
    legacy "EUR 25+ alpha donor" flag), distinct from the image rank badges above.

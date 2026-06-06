@@ -305,14 +305,6 @@ update. Same discipline that kept the combat rework clean.
 
 ### Quality of life
 
-**Troops return home instantly.** Surviving troops no longer crawl back
-on a full return trip after a strike. The moment a battle resolves, your
-survivors (and any loot) are on their way home and land almost
-immediately , no more watching a victorious army trudge back across the
-map. The same applies to scouts heading home, bounced support, and any
-garrison you recall. (Outbound travel is unchanged , the distance to
-your target still matters; only the trip _home_ is now instant.)
-
 **Conquered nexuses keep their name.** Take an enemy nexus and it stays
 named what it was , your new prize keeps its identity instead of being
 flattened to a generic "Conquered Nexus." Rename it yourself if you like.

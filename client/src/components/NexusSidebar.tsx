@@ -14,7 +14,6 @@ import GalaxyChip from './GalaxyChip';
 import NexusTypeBadge from './NexusTypeBadge';
 import SupportTiersCard from './SupportTiersCard';
 import Avatar from './Avatar';
-import RankBadges from './RankBadges';
 import { CombatIcon, ConstructionIcon } from './VexaraIcons';
 
 export const NEXUS_GROUPS_KEY = ['nexusGroups'] as const;
@@ -164,11 +163,8 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
 								>
 									{user.username}
 								</span>
-								<RankBadges
-									isAlphaFounder={user.isAlphaFounder}
-									supporterTier={user.supporterTier}
-									size="lg"
-								/>
+								{/* No rank badges here: this card is width-constrained and a badge
+								    would truncate the username (see profile page for badges). */}
 							</div>
 							<div className="commander-meta">Commander · {totalPoints.toLocaleString()} inf</div>
 						</div>

@@ -14,6 +14,7 @@ import { usePageReady } from './NavigationProgress';
 import PageSkeleton from './PageSkeleton';
 import SupportTiersCard from './SupportTiersCard';
 import Username from './Username';
+import ProfileBadges from './ProfileBadges';
 import Avatar from './Avatar';
 import AvatarUpload from './AvatarUpload';
 
@@ -243,12 +244,11 @@ export default function ProfileStats() {
 						/>
 						<div className="ps-header-info">
 							<h2 className="ps-username">
+								{/* Badges live in their own section below, not the header. */}
 								<Username
 									name={stats.username}
 									isSupporter={stats.isSupporter}
 									supporterTier={stats.supporterTier ?? null}
-									isAlphaFounder={stats.isAlphaFounder}
-									badgeSize="lg"
 								/>
 							</h2>
 							<span className="ps-meta">
@@ -281,6 +281,15 @@ export default function ProfileStats() {
 								updateUser({ avatarUrl: next.avatarUrl, avatarUrlSm: next.avatarUrlSm });
 							}}
 						/>
+					)}
+
+					{(stats.isAlphaFounder || stats.supporterTier === 'commander') && (
+						<Section title="Badges">
+							<ProfileBadges
+								isAlphaFounder={stats.isAlphaFounder}
+								supporterTier={stats.supporterTier ?? null}
+							/>
+						</Section>
 					)}
 
 					{streak && streak.currentStreak > 0 && (

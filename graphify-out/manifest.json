@@ -410,8 +410,8 @@
     "semantic_hash": ""
   },
   "client/src/app/u/[username]/page.tsx": {
-    "mtime": 1780774412.0118382,
-    "ast_hash": "daf5c9a0818fec0084c8e84dcd243e4a",
+    "mtime": 1780776394.069995,
+    "ast_hash": "5b75bcded07ed519a8001b904cf30bbf",
     "semantic_hash": ""
   },
   "client/src/app/units/page.tsx": {
@@ -560,8 +560,8 @@
     "semantic_hash": ""
   },
   "client/src/components/GameLayout.tsx": {
-    "mtime": 1780771711.5687191,
-    "ast_hash": "262efbefbd27e98464888862e6ae8f12",
+    "mtime": 1780776325.0379162,
+    "ast_hash": "562ba4fca9a9b864d32011a9e5a3b9b5",
     "semantic_hash": ""
   },
   "client/src/components/InlineBackButton.tsx": {
@@ -620,8 +620,8 @@
     "semantic_hash": ""
   },
   "client/src/components/NexusSidebar.tsx": {
-    "mtime": 1780771688.6095998,
-    "ast_hash": "c188da4498559de3ebd1075c2bb5cfe2",
+    "mtime": 1780776304.753901,
+    "ast_hash": "5cda8c182c6f1142de0d4730b85d74b0",
     "semantic_hash": ""
   },
   "client/src/components/NexusTypeBadge.tsx": {
@@ -655,13 +655,13 @@
     "semantic_hash": ""
   },
   "client/src/components/PlayersView.tsx": {
-    "mtime": 1780770316.6011956,
-    "ast_hash": "e24a2c94108aac9497c392066e3e96ad",
+    "mtime": 1780776353.0861712,
+    "ast_hash": "e9cbdc1fd46c01a8dc1bee1ecbf59eef",
     "semantic_hash": ""
   },
   "client/src/components/ProfileStats.tsx": {
-    "mtime": 1780774419.8482351,
-    "ast_hash": "33b55eff1f0fad0d0efd88d1303ee38d",
+    "mtime": 1780776400.407355,
+    "ast_hash": "b0d3e1cee737db950c876a3fa3af34c6",
     "semantic_hash": ""
   },
   "client/src/components/PublicNav.tsx": {
@@ -750,8 +750,8 @@
     "semantic_hash": ""
   },
   "client/src/components/Username.tsx": {
-    "mtime": 1780774405.593921,
-    "ast_hash": "9c8c0274f21a11c94dc6a375d4ef0ed6",
+    "mtime": 1780776387.3240542,
+    "ast_hash": "c6d0ef076e8bfb566ee2d598f503bc5b",
     "semantic_hash": ""
   },
   "client/src/components/VexaraIcons.tsx": {
@@ -1855,8 +1855,8 @@
     "semantic_hash": ""
   },
   "server/utils/gameConstants.ts": {
-    "mtime": 1780693643.4741306,
-    "ast_hash": "3509287b5cfba7c9fbea6e2ce2b2c00b",
+    "mtime": 1780777408.6448412,
+    "ast_hash": "ca4d5bd621259593d864d545ad5878d1",
     "semantic_hash": ""
   },
   "server/utils/logger.ts": {
@@ -2030,8 +2030,8 @@
     "semantic_hash": ""
   },
   "client/public/patch-notes/PATCH_NOTES_ALPHA_0.22.md": {
-    "mtime": 1780683240.3074417,
-    "ast_hash": "7f5af93f3ce7a42d923722c71e8a4f9e",
+    "mtime": 1780777772.497915,
+    "ast_hash": "c494ef2de8d1f8cc9f4a69f3123138ed",
     "semantic_hash": ""
   },
   "client/public/patch-notes/PATCH_NOTES_ALPHA_0.3.md": {
@@ -2364,9 +2364,9 @@
     "ast_hash": "b252dc90044a87f7bc7c8a871052f1f5",
     "semantic_hash": ""
   },
-  "client/src/components/RankBadges.tsx": {
-    "mtime": 1780771617.4256797,
-    "ast_hash": "411902cc9aa83142cf3752cd3c881cff",
+  "client/src/components/ProfileBadges.tsx": {
+    "mtime": 1780776082.9995987,
+    "ast_hash": "c3827a2692cbb54de7102d7447db3646",
     "semantic_hash": ""
   }
 }

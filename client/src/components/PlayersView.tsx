@@ -142,7 +142,6 @@ export default function PlayersView() {
 											name={p.username}
 											isSupporter={p.isSupporter}
 											supporterTier={p.supporterTier ?? null}
-											isAlphaFounder={p.isAlphaFounder}
 											linkToProfile
 											className="factions-browser-card-name"
 										/>

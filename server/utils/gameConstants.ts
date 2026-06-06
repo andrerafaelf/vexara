@@ -10,11 +10,12 @@ export const NEXUS_ACTIVE_WINDOW_MS = 15 * 60 * 1000;
 
 // Return trips (post-combat attack survivors, scouts heading home, bounced
 // support, and recalled transfers) take this fraction of the original ONE-WAY
-// travel time. Set to 0 for near-instant returns: returnsAt collapses to "now",
-// so the troops land on the next process_combat / process_transfers job tick
-// (batched on a 10s interval — that ~10s is the practical floor, not the math).
-// Raise toward 1 to restore a distance-scaled return cost (1 = full round trip).
-export const RETURN_TRAVEL_MULTIPLIER = 0;
+// travel time. 1 = the return leg takes exactly as long as the outbound leg, so
+// a strike is a full, symmetric round trip (the distance there is the distance
+// back). Set to 0 for near-instant returns (returnsAt collapses to "now", troops
+// land on the next process_combat / process_transfers tick); values between 0
+// and 1 give a discounted return.
+export const RETURN_TRAVEL_MULTIPLIER = 1;
 
 export interface BuildingCost {
 	biomass: number;

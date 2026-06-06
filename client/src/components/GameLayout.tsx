@@ -9,7 +9,6 @@ import MobileNexusDrawer from '@/components/MobileNexusDrawer';
 import NewPatchToast from '@/components/NewPatchToast';
 import NexusSidebar from '@/components/NexusSidebar';
 import OnboardingOverlay from '@/components/OnboardingOverlay';
-import RankBadges from '@/components/RankBadges';
 import SupportTiersCard from '@/components/SupportTiersCard';
 import TroopMovementsBar from '@/components/TroopMovementsBar';
 import { useAuth } from '@/context/AuthContext';
@@ -539,11 +538,8 @@ export default function GameLayout({
 										>
 											{user.username}
 										</span>
-										<RankBadges
-											isAlphaFounder={user.isAlphaFounder}
-											supporterTier={user.supporterTier}
-											size="lg"
-										/>
+										{/* No rank badges here: this card is width-constrained and a badge
+										    would truncate the username (see profile page for badges). */}
 									</div>
 									<div className="commander-meta">
 										Commander · {nexuses.reduce((s, n) => s + (n.points ?? 0), 0).toLocaleString()}{' '}
