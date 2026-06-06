@@ -6,6 +6,7 @@ import { formatTimeOfDay } from '@/utils/date';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { startTransition } from 'react';
+import { AlertTriangle, Eye, MapPin, Shield } from 'lucide-react';
 import { Countdown } from './Countdown';
 import { useStartProgress } from './NavigationProgress';
 
@@ -32,6 +33,21 @@ interface Attack {
 	};
 }
 
+type Kind = 'attack' | 'scout' | 'support';
+
+// Resolve the mission kind once so the verb, colour class, and icon all agree.
+function kindOf(type?: string): Kind {
+	if (type === 'scout') return 'scout';
+	if (type === 'support') return 'support';
+	return 'attack';
+}
+
+const VERB: Record<Kind, string> = {
+	attack: 'INCOMING ATTACK',
+	scout: 'INCOMING SCOUT',
+	support: 'INCOMING SUPPORT'
+};
+
 export default function TroopMovementsBar() {
 	const router = useRouter();
 	const startProgress = useStartProgress();
@@ -47,6 +63,18 @@ export default function TroopMovementsBar() {
 
 	if (incoming.length === 0) return null;
 
+	// Hostile movements (attacks + scouts) lead; friendly support follows. A real
+	// strike is the thing the player must react to, so it should never be visually
+	// buried under reinforcements.
+	const sorted = [...incoming].sort((a, b) => {
+		const rank = (t?: string) => (kindOf(t) === 'support' ? 1 : 0);
+		const r = rank(a.type) - rank(b.type);
+		if (r !== 0) return r;
+		return new Date(a.arrivesAt).getTime() - new Date(b.arrivesAt).getTime();
+	});
+
+	const hostileCount = incoming.filter((a) => kindOf(a.type) !== 'support').length;
+
 	const goToNexus = (nexusId: string) => {
 		startProgress();
 		startTransition(() => router.push(`/nexus/${nexusId}`));
@@ -58,34 +86,46 @@ export default function TroopMovementsBar() {
 	};
 
 	return (
-		<div className="troop-movements-bar" role="alert" aria-label="Incoming strikes">
-			{incoming.map((attack) => {
-				const isScout = attack.type === 'scout';
-				const defenderNexus = attack.defender.nexus;
+		<div
+			className="troop-movements-bar"
+			role="alert"
+			aria-label={`${hostileCount} incoming hostile movement${hostileCount === 1 ? '' : 's'}`}
+		>
+			{sorted.map((attack) => {
+				const kind = kindOf(attack.type);
+				const target = attack.defender.nexus;
+				const source = attack.attacker.nexus;
 				const attackerUsername = attack.attacker.user.username;
-				const canShowOnStarfield =
-					typeof defenderNexus.x === 'number' && typeof defenderNexus.y === 'number';
+				const canShowOnStarfield = typeof target.x === 'number' && typeof target.y === 'number';
+				const Icon = kind === 'scout' ? Eye : kind === 'support' ? Shield : AlertTriangle;
 				return (
 					<button
 						key={`in-${attack._id}`}
 						type="button"
-						className={`tmb-item tmb-item--incoming${isScout ? ' tmb-item--scout' : ''}`}
-						onClick={() => goToNexus(defenderNexus._id)}
-						title={`${isScout ? 'Incoming scout' : 'Incoming attack'} on ${defenderNexus.name ?? 'your nexus'}, click to view nexus`}
+						className={`tmb-item tmb-item--${kind}`}
+						onClick={() => goToNexus(target._id)}
+						title={`${VERB[kind]}${attackerUsername ? ` from ${attackerUsername}` : ''} → ${target.name ?? 'your nexus'}. Click to open it.`}
 					>
-						<span className="tmb-pulse" aria-hidden="true" />
+						{kind !== 'support' && <span className="tmb-pulse" aria-hidden="true" />}
 						<span className="tmb-icon" aria-hidden="true">
-							{isScout ? '👁' : '⚠'}
+							<Icon size={13} />
 						</span>
 						<span className="tmb-label">
-							<span className="tmb-verb">{isScout ? 'SCOUT' : 'INCOMING'}</span>
-							{attackerUsername && (
-								<span className="tmb-who">
-									{' '}
-									from <strong>{attackerUsername}</strong>
-								</span>
-							)}
-							{defenderNexus.name && <span className="tmb-target"> → {defenderNexus.name}</span>}
+							<span className="tmb-verb">{VERB[kind]}</span>
+							{/* From: who + which enemy nexus it launched from. */}
+							<span className="tmb-from">
+								{attackerUsername ? <strong>{attackerUsername}</strong> : 'Unknown'}
+								{source?.name ? ` · ${source.name}` : ''}
+								{typeof source?.x === 'number' ? ` (${source.x}|${source.y})` : ''}
+							</span>
+							{/* To: which of YOUR nexuses is the target. */}
+							<span className="tmb-arrow" aria-hidden="true">
+								→
+							</span>
+							<span className="tmb-target">
+								{target.name ?? 'your nexus'}
+								{typeof target.x === 'number' ? ` (${target.x}|${target.y})` : ''}
+							</span>
 						</span>
 						<span className="tmb-countdown">
 							<Countdown endAt={attack.arrivesAt} completedLabel="Arriving…" />
@@ -93,18 +133,26 @@ export default function TroopMovementsBar() {
 							{formatTimeOfDay(attack.arrivesAt, true)}
 						</span>
 						{canShowOnStarfield && (
-							<button
-								type="button"
+							<span
+								role="button"
+								tabIndex={0}
 								className="tmb-map-btn"
 								onClick={(e) => {
 									e.stopPropagation();
-									goToStarfield(defenderNexus.x!, defenderNexus.y!);
+									goToStarfield(target.x!, target.y!);
 								}}
-								title="View on Starfield"
-								aria-label="View on Starfield"
+								onKeyDown={(e) => {
+									if (e.key === 'Enter' || e.key === ' ') {
+										e.preventDefault();
+										e.stopPropagation();
+										goToStarfield(target.x!, target.y!);
+									}
+								}}
+								title="View target on Starfield"
+								aria-label="View target on Starfield"
 							>
-								⊕
-							</button>
+								<MapPin size={12} />
+							</span>
 						)}
 					</button>
 				);

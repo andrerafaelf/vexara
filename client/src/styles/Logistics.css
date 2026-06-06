@@ -1,29 +1,6 @@
 .log-card {
-	padding: 0;
-	overflow: hidden;
-}
-
-.log-header {
-	width: 100%;
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: var(--space-3);
-	background: none;
-	border: none;
-	cursor: pointer;
 	padding: var(--space-5);
-	text-align: left;
-}
-
-.log-title {
-	margin: 0;
-}
-
-.log-header-right {
-	display: flex;
-	align-items: center;
-	gap: var(--space-3);
+	overflow: hidden;
 }
 
 .log-hint {
@@ -31,18 +8,14 @@
 	color: var(--text-faint);
 }
 
-.log-chevron {
-	font-size: 10px;
-	color: var(--text-muted);
-}
-
-.log-body {
-	padding: 0 var(--space-5) var(--space-5);
-}
-
+/* Always-open Supply panel: the hint sits on the left, the Send button on the
+   right (the old collapse header + chevron were removed). */
 .log-toolbar {
 	display: flex;
-	justify-content: flex-end;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	flex-wrap: wrap;
 	margin-bottom: var(--space-3);
 }
 

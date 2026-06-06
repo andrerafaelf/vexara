@@ -1592,22 +1592,35 @@ const Map: React.FC<MapProps> = ({
 					<div className="attacks-section">
 						<h4>Incoming ({incomingAttacks.length})</h4>
 						{incomingAttacks.map((attack: any) => {
-							const isSupport = attack.type === 'support';
-							const fromLabel = isSupport
-								? 'Support from:'
-								: attack.type === 'scout'
-									? 'Scout from:'
-									: 'From:';
+							const kind: 'attack' | 'scout' | 'support' =
+								attack.type === 'support'
+									? 'support'
+									: attack.type === 'scout'
+										? 'scout'
+										: 'attack';
+							const tagLabel =
+								kind === 'support' ? 'SUPPORT' : kind === 'scout' ? 'SCOUT' : 'ATTACK';
+							const src = attack.attacker?.nexus;
+							// Incoming always targets the nexus this panel is for. The per-nexus
+							// endpoint only loads the attacker relation, so use currentNexus for
+							// the target (name + coords) rather than the absent defender relation.
 							return (
-								<div
-									key={attack._id}
-									className={`attack-item incoming${isSupport ? ' support-mission' : ''}`}
-								>
-									<div className="attack-from">
-										{fromLabel} <strong>{attack.attacker?.nexus?.name || 'Unknown'}</strong>
-										{attack.attacker?.user?.username && (
-											<span className="attack-username"> ({attack.attacker.user.username})</span>
-										)}
+								<div key={attack._id} className={`attack-item incoming attack-item--${kind}`}>
+									<div className="attack-headline">
+										<span className={`attack-tag attack-tag--${kind}`}>{tagLabel}</span>
+										<span className="attack-route">
+											<span className="attack-route-from">
+												{attack.attacker?.user?.username || 'Unknown'}
+												{src?.name ? ` · ${src.name}` : ''}
+												{typeof src?.x === 'number' ? ` (${src.x}|${src.y})` : ''}
+											</span>
+											<span className="attack-route-arrow" aria-hidden="true">
+												→
+											</span>
+											<span className="attack-route-to">
+												{currentNexus.name} ({currentNexus.x}|{currentNexus.y})
+											</span>
+										</span>
 									</div>
 									<div className="attack-time">
 										Arrives: <Countdown endAt={attack.arrivesAt} completedLabel="Arriving…" /> @{' '}
@@ -1622,15 +1635,30 @@ const Map: React.FC<MapProps> = ({
 					<div className="attacks-section">
 						<h4>Your returning troops ({returning.length})</h4>
 						{returning.map((attack: any) => {
-							const isSupport = attack.type === 'support';
+							const kind: 'attack' | 'scout' | 'support' =
+								attack.type === 'support'
+									? 'support'
+									: attack.type === 'scout'
+										? 'scout'
+										: 'attack';
+							const tgt = attack.defender?.nexus;
 							return (
 								<div
 									key={attack._id}
-									className={`attack-item incoming returning${isSupport ? ' support-mission' : ''}`}
+									className={`attack-item incoming returning attack-item--${kind}`}
 								>
-									<div className="attack-from">
-										{isSupport ? 'Support returning from:' : 'Returning from:'}{' '}
-										<strong>{attack.defender?.nexus?.name || 'Unknown'}</strong>
+									<div className="attack-headline">
+										<span className="attack-tag attack-tag--returning">RETURNING</span>
+										<span className="attack-route">
+											<span className="attack-route-from">
+												{tgt?.name || 'Unknown'}
+												{typeof tgt?.x === 'number' ? ` (${tgt.x}|${tgt.y})` : ''}
+											</span>
+											<span className="attack-route-arrow" aria-hidden="true">
+												→
+											</span>
+											<span className="attack-route-to">{currentNexus.name}</span>
+										</span>
 									</div>
 									<div className="attack-time">
 										Returns: <Countdown endAt={attack.returnsAt} completedLabel="Arriving…" /> @{' '}
@@ -1645,24 +1673,34 @@ const Map: React.FC<MapProps> = ({
 					<div className="attacks-section">
 						<h4>Your outgoing troops ({traveling.length})</h4>
 						{traveling.map((attack: any) => {
-							const isSupport = attack.type === 'support';
-							const toLabel = isSupport
-								? 'Supporting:'
-								: attack.type === 'scout'
-									? 'Scouting:'
-									: 'Attacking:';
+							const kind: 'attack' | 'scout' | 'support' =
+								attack.type === 'support'
+									? 'support'
+									: attack.type === 'scout'
+										? 'scout'
+										: 'attack';
+							const tagLabel =
+								kind === 'support' ? 'SUPPORT' : kind === 'scout' ? 'SCOUT' : 'ATTACK';
+							// Outgoing always launches from the nexus this panel is for; the
+							// per-nexus endpoint only loads the defender relation, so use
+							// currentNexus for the source.
+							const tgt = attack.defender?.nexus;
 							return (
-								<div
-									key={attack._id}
-									className={`attack-item outgoing${isSupport ? ' support-mission' : ''}`}
-								>
-									<div className="attack-to">
-										{toLabel}{' '}
-										<strong>
-											{attack.defender?.nexus?.name
-												? `${attack.defender.nexus.name} (${attack.defender.nexus.x}|${attack.defender.nexus.y})`
-												: 'Unknown'}
-										</strong>
+								<div key={attack._id} className={`attack-item outgoing attack-item--${kind}`}>
+									<div className="attack-headline">
+										<span className={`attack-tag attack-tag--${kind}`}>{tagLabel}</span>
+										<span className="attack-route">
+											<span className="attack-route-from">
+												{currentNexus.name} ({currentNexus.x}|{currentNexus.y})
+											</span>
+											<span className="attack-route-arrow" aria-hidden="true">
+												→
+											</span>
+											<span className="attack-route-to">
+												{tgt?.name || 'Unknown'}
+												{typeof tgt?.x === 'number' ? ` (${tgt.x}|${tgt.y})` : ''}
+											</span>
+										</span>
 									</div>
 									<div className="attack-time">
 										Arrives: <Countdown endAt={attack.arrivesAt} completedLabel="Arriving…" /> @{' '}

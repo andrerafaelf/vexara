@@ -6,7 +6,13 @@
 	align-items: center;
 	justify-content: center;
 	z-index: 1000;
-	padding: var(--space-4);
+	/* Pad in from the viewport edges, honouring notches/safe areas so the centred
+	   modal never butts against a rounded corner or the status bar on mobile. */
+	padding: max(var(--space-4), env(safe-area-inset-top))
+		max(var(--space-4), env(safe-area-inset-right))
+		max(var(--space-4), env(safe-area-inset-bottom))
+		max(var(--space-4), env(safe-area-inset-left));
+	box-sizing: border-box;
 	animation: srm-fade var(--duration-fast) var(--ease-out);
 }
 
@@ -31,9 +37,17 @@ body.srm-scroll-locked .nexus-nav-scroll {
 	box-shadow: var(--shadow-md);
 	width: 100%;
 	max-width: 460px;
-	max-height: 90vh;
+	/* Cap to the available padded height; dvh tracks the mobile URL bar so the
+	   modal isn't taller than the visible viewport. */
+	max-height: calc(100dvh - 2 * var(--space-4));
 	overflow-y: auto;
 	padding: var(--space-6);
+}
+
+@media (max-width: 480px) {
+	.srm-modal {
+		padding: var(--space-5);
+	}
 }
 
 .srm-header {
@@ -152,14 +166,9 @@ body.srm-scroll-locked .nexus-nav-scroll {
 
 .srm-row {
 	display: grid;
-	grid-template-columns: 20px 64px 1fr auto;
+	grid-template-columns: 72px 1fr auto;
 	align-items: center;
 	gap: var(--space-2);
-}
-
-.srm-row-icon {
-	display: inline-flex;
-	color: var(--text-muted);
 }
 
 .srm-row-label {
@@ -208,7 +217,7 @@ body.srm-scroll-locked .nexus-nav-scroll {
 }
 
 .srm-row-meta {
-	grid-column: 3 / 5;
+	grid-column: 2 / 4;
 	font-size: var(--text-xs);
 	color: var(--text-faint);
 	font-family: var(--font-mono);

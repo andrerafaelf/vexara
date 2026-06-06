@@ -510,8 +510,8 @@
     "semantic_hash": ""
   },
   "client/src/components/DashboardLogistics.tsx": {
-    "mtime": 1780673834.2945468,
-    "ast_hash": "cce06921f043864af057c638879aaccf",
+    "mtime": 1780757965.4815183,
+    "ast_hash": "f35d9d55f12d81b44f7220a7cbd01fda",
     "semantic_hash": ""
   },
   "client/src/components/DiplomacyChat.tsx": {
@@ -585,8 +585,8 @@
     "semantic_hash": ""
   },
   "client/src/components/Map.tsx": {
-    "mtime": 1780681899.6731641,
-    "ast_hash": "fc1d342548dca03386dcd95dbc8d30bb",
+    "mtime": 1780757404.7621465,
+    "ast_hash": "f15c677c21f433f54970715561ff75a6",
     "semantic_hash": ""
   },
   "client/src/components/MapCell.tsx": {
@@ -700,8 +700,8 @@
     "semantic_hash": ""
   },
   "client/src/components/Reports.tsx": {
-    "mtime": 1780682594.1547422,
-    "ast_hash": "769e608b7b3eb987145c89f59bb077e4",
+    "mtime": 1780756320.0171041,
+    "ast_hash": "c2cd393570e790b6adf7fcb303b137e3",
     "semantic_hash": ""
   },
   "client/src/components/ResourceIcon.tsx": {
@@ -720,8 +720,8 @@
     "semantic_hash": ""
   },
   "client/src/components/SendResourcesModal.tsx": {
-    "mtime": 1780673835.0076468,
-    "ast_hash": "e65e79db9500bdc09590373c9da9e9a5",
+    "mtime": 1780758054.3092399,
+    "ast_hash": "c0afa8cb1221c91eb65025f7f724128c",
     "semantic_hash": ""
   },
   "client/src/components/SiteFooter.tsx": {
@@ -745,8 +745,8 @@
     "semantic_hash": ""
   },
   "client/src/components/TroopMovementsBar.tsx": {
-    "mtime": 1780673835.07788,
-    "ast_hash": "0e3dc13f5eddb6b5c5d57703e5c2cea1",
+    "mtime": 1780756507.564162,
+    "ast_hash": "aadb689cf7decd2126bbf5bd22589882",
     "semantic_hash": ""
   },
   "client/src/components/Username.tsx": {

@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useToast } from '../context/ToastContext';
 import { getFactionNexuses, transferResources } from '../services/api';
 import '../styles/SendResourcesModal.css';
 import type { Nexus } from '../types/game';
-import ResourceIcon from './ResourceIcon';
 import { fmtAmount, liveResources, type LiveResources } from './resourceUtils';
 
 type ResKind = 'biomass' | 'alloy' | 'ore';
@@ -221,7 +221,14 @@ export default function SendResourcesModal({ nexuses, prefill, onClose, onTransf
 			? `${(n as FactionNexus).ownerUsername ?? '?'} · ${n.name} (${n.x}|${n.y})`
 			: ownLabel(n);
 
-	return (
+	// Portal to <body>: the modal is rendered deep inside NexusView, where a
+	// transformed/filtered ancestor (animations, mobile drawer, nav progress)
+	// becomes the containing block for `position: fixed` — that's what pinned the
+	// modal off-centre and clipped it on mobile. Mounting on body makes `fixed`
+	// resolve against the viewport so the flex-centered backdrop centres correctly.
+	if (typeof document === 'undefined') return null;
+
+	return createPortal(
 		<div className="srm-backdrop" onClick={onClose}>
 			<div
 				className="srm-modal"
@@ -311,9 +318,6 @@ export default function SendResourcesModal({ nexuses, prefill, onClose, onTransf
 						const over = parsed[res] > max;
 						return (
 							<div key={res} className="srm-row">
-								<span className="srm-row-icon">
-									<ResourceIcon kind={res} size={16} />
-								</span>
 								<span className="srm-row-label">{RES_LABEL[res]}</span>
 								<input
 									type="number"
@@ -367,6 +371,7 @@ export default function SendResourcesModal({ nexuses, prefill, onClose, onTransf
 					</button>
 				</div>
 			</div>
-		</div>
+		</div>,
+		document.body
 	);
 }

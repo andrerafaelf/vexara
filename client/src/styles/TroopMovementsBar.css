@@ -10,8 +10,8 @@
 .tmb-item {
 	display: inline-flex;
 	align-items: center;
-	gap: 6px;
-	padding: 5px 12px 5px 10px;
+	gap: 7px;
+	padding: 6px 12px 6px 10px;
 	border-radius: 0;
 	font-size: 0.75rem;
 	font-weight: 500;
@@ -26,29 +26,65 @@
 	white-space: nowrap;
 }
 
-/* ── Incoming — red urgent ── */
-.tmb-item--incoming {
+.tmb-icon {
+	display: inline-flex;
+	align-items: center;
+	flex-shrink: 0;
+}
+
+/* ── Attack — red urgent ── */
+.tmb-item--attack {
 	color: #fca5a5;
 }
-
-.tmb-item--incoming:hover {
-	background: rgba(248, 81, 73, 0.1);
+.tmb-item--attack:hover {
+	background: rgba(248, 81, 73, 0.12);
+}
+.tmb-item--attack .tmb-verb {
+	color: var(--danger);
+}
+.tmb-item--attack .tmb-pulse {
+	background: var(--danger);
 }
 
-.tmb-item--incoming .tmb-verb {
-	color: var(--danger);
+/* ── Scout incoming — amber ── */
+.tmb-item--scout {
+	color: #fcd34d;
+	border-right-color: rgba(210, 153, 34, 0.18);
+}
+.tmb-item--scout:hover {
+	background: rgba(210, 153, 34, 0.1);
+}
+.tmb-item--scout .tmb-verb {
+	color: var(--warning);
+}
+.tmb-item--scout .tmb-pulse {
+	background: var(--warning);
+}
+
+/* ── Support incoming — green, friendly (reinforcements, not a threat) ── */
+.tmb-item--support {
+	color: #86efac;
+	border-right-color: rgba(86, 211, 100, 0.18);
+}
+.tmb-item--support:hover {
+	background: rgba(86, 211, 100, 0.1);
+}
+.tmb-item--support .tmb-verb {
+	color: var(--success, #56d364);
+}
+
+.tmb-verb {
 	font-family: var(--font-mono);
 	font-size: 0.7rem;
 	font-weight: 700;
-	letter-spacing: 0.1em;
+	letter-spacing: 0.08em;
 }
 
-/* Pulsing dot for incoming */
+/* Pulsing dot — only on hostile movements (attack/scout). */
 .tmb-pulse {
 	width: 6px;
 	height: 6px;
 	border-radius: 50%;
-	background: var(--danger);
 	flex-shrink: 0;
 	animation: tmb-pulse 1.4s ease-in-out infinite;
 }
@@ -65,82 +101,80 @@
 	}
 }
 
-/* ── Scout incoming — muted amber ── */
-.tmb-item--scout {
-	color: #fcd34d;
-	border-right-color: rgba(210, 153, 34, 0.18);
-}
-
-.tmb-item--scout:hover {
-	background: rgba(210, 153, 34, 0.08);
-}
-
-.tmb-item--scout .tmb-verb {
-	color: var(--warning);
-	font-family: var(--font-mono);
-	font-size: 0.7rem;
-	font-weight: 700;
-	letter-spacing: 0.1em;
-}
-
-.tmb-item--scout .tmb-pulse {
-	background: var(--warning);
-}
-
-.tmb-icon {
-	font-size: 0.8rem;
-	flex-shrink: 0;
+@media (prefers-reduced-motion: reduce) {
+	.tmb-pulse {
+		animation: none;
+	}
 }
 
 .tmb-label {
 	display: inline-flex;
 	align-items: center;
-	gap: 3px;
+	gap: 6px;
 	flex-wrap: nowrap;
 }
 
-.tmb-who,
+.tmb-arrow {
+	opacity: 0.55;
+	flex-shrink: 0;
+}
+
+/* "from <enemy>" and "→ <your nexus>" — the two ends of the movement. The target
+   (your nexus) is brightened so the player instantly sees WHICH base is in play. */
+.tmb-from {
+	opacity: 0.85;
+	max-width: 220px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
 .tmb-target {
-	opacity: 0.8;
-	max-width: 120px;
+	font-weight: 600;
+	opacity: 0.95;
+	max-width: 220px;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
 .tmb-countdown {
-	opacity: 0.65;
+	opacity: 0.7;
 	font-family: var(--font-mono);
 	font-variant-numeric: tabular-nums;
 	font-size: 0.7rem;
-	margin-left: 4px;
+	margin-left: 6px;
 	flex-shrink: 0;
 }
 
-/* Starfield jump button */
+/* Starfield jump affordance */
 .tmb-map-btn {
+	display: inline-flex;
+	align-items: center;
 	background: none;
 	border: none;
 	padding: 0 2px;
 	margin-left: 4px;
-	font-size: 0.9rem;
 	line-height: 1;
 	color: inherit;
-	opacity: 0.4;
+	opacity: 0.45;
 	cursor: pointer;
 	transition: opacity 120ms ease-out;
 	flex-shrink: 0;
 	border-radius: 0;
 }
 
-.tmb-map-btn:hover {
+.tmb-map-btn:hover,
+.tmb-map-btn:focus-visible {
 	opacity: 1;
+	outline: none;
 }
 
-/* On small screens collapse the target/who labels to save space */
-@media (max-width: 600px) {
-	.tmb-who,
-	.tmb-target {
+/* Narrow screens: keep the verb + target + countdown (the actionable bits),
+   drop the verbose "from" source to save horizontal space. */
+@media (max-width: 700px) {
+	.tmb-from,
+	.tmb-arrow {
 		display: none;
 	}
 }
