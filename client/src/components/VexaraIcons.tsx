@@ -36,6 +36,23 @@ export function ConstructionIcon(props: VexaraIconProps) {
 	);
 }
 
+// Nexus: a hexagonal command node with a small central core and three short
+// link stubs reaching toward the cell edges — reads as "a base / node in a
+// network", matching the game's tactical-grid language. Replaces the generic
+// lucide building icon on the mobile "Your Nexuses" toggle, which looked like a
+// city-builder skyscraper rather than a sci-fi command node.
+export function NexusIcon(props: VexaraIconProps) {
+	return (
+		<VexaraIcon {...props}>
+			<path d="M8 1.5l5.5 3.25v6.5L8 14.5l-5.5-3.25v-6.5z" />
+			<circle cx="8" cy="8" r="1.9" />
+			<path d="M8 6.1V3.2" />
+			<path d="M9.65 8.95l2.5 1.45" />
+			<path d="M6.35 8.95l-2.5 1.45" />
+		</VexaraIcon>
+	);
+}
+
 // Crossed swords: two diagonal blades forming an X with small cross-guards
 // near each tip and short pommels past the lower intersections. Symmetric
 // so it stays balanced when scaled down to a sidebar badge.

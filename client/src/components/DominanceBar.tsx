@@ -21,6 +21,8 @@ interface LeaderboardData {
 	totalNexuses: number;
 	dominanceThresholdPct: number;
 	dominanceLocked: boolean;
+	/** Hold window (hours) required to win; reflects per-galaxy admin override. */
+	dominanceSustainHours?: number;
 }
 
 const TOP_N = 4;
@@ -59,6 +61,7 @@ const DominanceBar: React.FC = () => {
 
 	const top = data.rows.slice(0, TOP_N);
 	const threshold = data.dominanceThresholdPct;
+	const sustainHours = data.dominanceSustainHours ?? 36;
 	const dominator = top.find((f) => f.isDominating);
 
 	return (
@@ -94,7 +97,7 @@ const DominanceBar: React.FC = () => {
 								{isDom && faction.dominancePct > 0 && (
 									<div
 										className="dom-sustain-track"
-										title={`Holding ${Math.round(faction.dominancePct)}% of the 36h sustain window`}
+										title={`Holding ${Math.round(faction.dominancePct)}% of the ${sustainHours}h sustain window`}
 									>
 										<div
 											className="dom-sustain-fill"

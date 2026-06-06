@@ -23,7 +23,8 @@ import '@/styles/ConnectionStatusBar.css';
 import '@/styles/Game.css';
 import '@/styles/InGameIdentity.css';
 import { Nexus } from '@/types/game';
-import { Building2, ChevronDown, Menu } from 'lucide-react';
+import { ChevronDown, Menu } from 'lucide-react';
+import { NexusIcon } from '@/components/VexaraIcons';
 import { usePathname, useRouter } from 'next/navigation';
 import { startTransition, useCallback, useEffect, useMemo, useState } from 'react';
 import { useStartProgress } from './NavigationProgress';
@@ -484,7 +485,7 @@ export default function GameLayout({
 								aria-expanded={isNexusDrawerOpen}
 								title="Your Nexuses"
 							>
-								<Building2 size={18} />
+								<NexusIcon size={20} />
 							</button>
 						</div>
 					</header>

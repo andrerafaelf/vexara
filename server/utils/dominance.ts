@@ -8,14 +8,14 @@ const DOMINANCE_SUSTAIN_MS = 36 * 60 * 60 * 1000;
 const DOMINANCE_MIN_PLAYERS = 15;
 const DOMINANCE_MIN_FACTIONS = 4;
 
-interface GalaxyWinSource {
+export interface GalaxyWinSource {
 	winShare: number | null;
 	winSustainHours: number | null;
 	winMinPlayers: number | null;
 	winMinFactions: number | null;
 }
 
-interface ResolvedWinConfig {
+export interface ResolvedWinConfig {
 	threshold: number;
 	sustainMs: number;
 	minPlayers: number;
@@ -24,7 +24,10 @@ interface ResolvedWinConfig {
 
 // Resolve a galaxy's effective victory config, clamping any admin override into a
 // sane range so a bad value can't make victory unreachable (or instant).
-function resolveWinConfig(g: GalaxyWinSource): ResolvedWinConfig {
+// Exported so the faction leaderboard (what players SEE) resolves the exact same
+// config the victory engine ACTS on — otherwise an admin win-setting change shows
+// stale defaults in-game while the real threshold is different.
+export function resolveWinConfig(g: GalaxyWinSource): ResolvedWinConfig {
 	const share =
 		g.winShare != null && Number.isFinite(g.winShare)
 			? Math.min(0.95, Math.max(0.3, g.winShare))

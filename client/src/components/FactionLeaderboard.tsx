@@ -27,6 +27,8 @@ interface LeaderboardData {
 	factionCount: number;
 	dominanceMinPlayers: number;
 	dominanceMinFactions: number;
+	/** Hold window (hours) required to win; reflects per-galaxy admin override. */
+	dominanceSustainHours?: number;
 }
 
 interface FactionMemberDetails {
@@ -40,11 +42,14 @@ interface FactionMemberDetails {
 	joinedAt?: string | null;
 }
 
-const DOMINANCE_SUSTAIN_MS = 36 * 60 * 60 * 1000;
+// Fallback only — the live window comes from the server (dominanceSustainHours),
+// which reflects any per-galaxy admin override. Used if an older server build
+// omits the field.
+const DEFAULT_DOMINANCE_SUSTAIN_HOURS = 36;
 
-function formatDominanceCountdown(dominanceSince: string): string {
+function formatDominanceCountdown(dominanceSince: string, sustainMs: number): string {
 	const elapsed = serverNow() - new Date(dominanceSince).getTime();
-	const remaining = Math.max(0, DOMINANCE_SUSTAIN_MS - elapsed);
+	const remaining = Math.max(0, sustainMs - elapsed);
 	const h = Math.floor(remaining / 3600000);
 	const m = Math.floor((remaining % 3600000) / 60000);
 	return `${h}h ${m}m`;
@@ -119,8 +124,11 @@ export default function FactionLeaderboard({ myFactionId }: { myFactionId?: numb
 		galaxyPlayerCount,
 		factionCount,
 		dominanceMinPlayers,
-		dominanceMinFactions
+		dominanceMinFactions,
+		dominanceSustainHours
 	} = data;
+	const sustainMs =
+		(dominanceSustainHours ?? DEFAULT_DOMINANCE_SUSTAIN_HOURS) * 60 * 60 * 1000;
 	const dominating = !dominanceLocked
 		? rows.find((r) => r.isDominating && r.dominanceSince)
 		: undefined;
@@ -155,7 +163,7 @@ export default function FactionLeaderboard({ myFactionId }: { myFactionId?: numb
 					</div>
 					<div className="flb-dominance-footer">
 						<span>{Math.round(dominating.dominancePct)}% of hold time</span>
-						<span>Victory in {formatDominanceCountdown(dominating.dominanceSince!)}</span>
+						<span>Victory in {formatDominanceCountdown(dominating.dominanceSince!, sustainMs)}</span>
 					</div>
 				</div>
 			)}
@@ -222,7 +230,7 @@ export default function FactionLeaderboard({ myFactionId }: { myFactionId?: numb
 										</div>
 										{overThreshold && row.dominanceSince && (
 											<span className="flb-hold-time">
-												{formatDominanceCountdown(row.dominanceSince)} left
+												{formatDominanceCountdown(row.dominanceSince, sustainMs)} left
 											</span>
 										)}
 									</span>

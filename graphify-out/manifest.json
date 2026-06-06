@@ -520,8 +520,8 @@
     "semantic_hash": ""
   },
   "client/src/components/DominanceBar.tsx": {
-    "mtime": 1780673834.3291125,
-    "ast_hash": "b39fdec433b4f7a1cb37b6ac1c392eaf",
+    "mtime": 1780736070.973413,
+    "ast_hash": "dcd8184afc13c5ee3d79c6c2690c661c",
     "semantic_hash": ""
   },
   "client/src/components/FactionActivity.tsx": {
@@ -535,8 +535,8 @@
     "semantic_hash": ""
   },
   "client/src/components/FactionLeaderboard.tsx": {
-    "mtime": 1780673834.385216,
-    "ast_hash": "59ae4fb87d4e27253f15848e3a2b0d09",
+    "mtime": 1780736049.5571487,
+    "ast_hash": "fb8920ee810519f2847c53fd3174bb5d",
     "semantic_hash": ""
   },
   "client/src/components/FactionsView.tsx": {
@@ -560,8 +560,8 @@
     "semantic_hash": ""
   },
   "client/src/components/GameLayout.tsx": {
-    "mtime": 1780701186.651921,
-    "ast_hash": "a5103f17c1879e3cf5eaf23388392b84",
+    "mtime": 1780736427.6209502,
+    "ast_hash": "892602fc761cae27518f2e5319aeb2e7",
     "semantic_hash": ""
   },
   "client/src/components/InlineBackButton.tsx": {
@@ -755,8 +755,8 @@
     "semantic_hash": ""
   },
   "client/src/components/VexaraIcons.tsx": {
-    "mtime": 1780678634.43321,
-    "ast_hash": "81dbb99bbc073e13eebb302f8673fe17",
+    "mtime": 1780736387.658775,
+    "ast_hash": "90ee9b25632890171136a817376b6de6",
     "semantic_hash": ""
   },
   "client/src/components/WarRoom.tsx": {
@@ -1035,8 +1035,8 @@
     "semantic_hash": ""
   },
   "server/controllers/factionController.ts": {
-    "mtime": 1780673836.3819242,
-    "ast_hash": "1ad1f4bb40bab4891fec8f644ab3ddb9",
+    "mtime": 1780735976.4480548,
+    "ast_hash": "819a18ec8a8f509c773eede9d9112036",
     "semantic_hash": ""
   },
   "server/controllers/factionTargetController.ts": {
@@ -1840,8 +1840,8 @@
     "semantic_hash": ""
   },
   "server/utils/dominance.ts": {
-    "mtime": 1780673902.8009605,
-    "ast_hash": "850f75e2626cd37f7c25ce6fc67174d1",
+    "mtime": 1780735903.5116022,
+    "ast_hash": "8fd8bcedd9ba9bf79a9b318fd1e70bd2",
     "semantic_hash": ""
   },
   "server/utils/economy.ts": {

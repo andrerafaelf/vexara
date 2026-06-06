@@ -11,6 +11,7 @@ import { logError, logGameEvent } from '../utils/logger.js';
 import { containsBlockedChatWord } from '../utils/profanity.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
 import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
+import { resolveWinConfig } from '../utils/dominance.js';
 
 const FACTION_NAME_MIN = 3;
 const FACTION_NAME_MAX = 32;
@@ -937,11 +938,6 @@ export async function disbandFaction(req: AuthRequest, res: Response): Promise<v
 
 // ── LEADERBOARD ───────────────────────────────────────────────────────────────
 
-const DOMINANCE_THRESHOLD = 0.65;
-const DOMINANCE_SUSTAIN_MS = 36 * 60 * 60 * 1000;
-const DOMINANCE_MIN_PLAYERS = 10;
-const DOMINANCE_MIN_FACTIONS = 4;
-
 export async function getLeaderboard(req: AuthRequest, res: Response): Promise<void> {
 	try {
 		const user = await prisma.user.findUnique({
@@ -955,30 +951,47 @@ export async function getLeaderboard(req: AuthRequest, res: Response): Promise<v
 
 		const galaxyId = user.activeGalaxyId;
 
-		const [totalNexuses, galaxyPlayerCount, allFactions, memberRows, nexuses] = await Promise.all([
-			prisma.nexus.count({ where: { galaxyId } }),
-			prisma.galaxyPlayer.count({ where: { galaxyId } }),
-			prisma.faction.findMany({
-				where: { galaxyId },
-				select: {
-					id: true,
-					name: true,
-					tag: true,
-					description: true,
-					dominanceSince: true,
-					_count: { select: { members: true } }
-				},
-				orderBy: { createdAt: 'asc' }
-			}),
-			prisma.factionMember.findMany({
-				where: { galaxyId },
-				select: { userId: true, factionId: true }
-			}),
-			prisma.nexus.findMany({
-				where: { galaxyId, ownerId: { not: null } },
-				select: { ownerId: true }
-			})
-		]);
+		const [galaxy, totalNexuses, galaxyPlayerCount, allFactions, memberRows, nexuses] =
+			await Promise.all([
+				// Effective win config lives on the galaxy row (admin overrides). Resolve it the
+				// SAME way the victory engine does so what players see here matches the real
+				// threshold the galaxy will actually end on.
+				prisma.galaxy.findUnique({
+					where: { id: galaxyId },
+					select: {
+						winShare: true,
+						winSustainHours: true,
+						winMinPlayers: true,
+						winMinFactions: true
+					}
+				}),
+				prisma.nexus.count({ where: { galaxyId } }),
+				prisma.galaxyPlayer.count({ where: { galaxyId } }),
+				prisma.faction.findMany({
+					where: { galaxyId },
+					select: {
+						id: true,
+						name: true,
+						tag: true,
+						description: true,
+						dominanceSince: true,
+						_count: { select: { members: true } }
+					},
+					orderBy: { createdAt: 'asc' }
+				}),
+				prisma.factionMember.findMany({
+					where: { galaxyId },
+					select: { userId: true, factionId: true }
+				}),
+				prisma.nexus.findMany({
+					where: { galaxyId, ownerId: { not: null } },
+					select: { ownerId: true }
+				})
+			]);
+
+		const cfg = resolveWinConfig(
+			galaxy ?? { winShare: null, winSustainHours: null, winMinPlayers: null, winMinFactions: null }
+		);
 
 		const userToFaction = new Map(memberRows.map((m: any) => [m.userId, m.factionId]));
 
@@ -990,17 +1003,19 @@ export async function getLeaderboard(req: AuthRequest, res: Response): Promise<v
 
 		const factionCount = allFactions.length;
 		const dominanceLocked =
-			galaxyPlayerCount < DOMINANCE_MIN_PLAYERS || factionCount < DOMINANCE_MIN_FACTIONS;
+			galaxyPlayerCount < cfg.minPlayers || factionCount < cfg.minFactions;
 		const now = Date.now();
 
 		const rows = allFactions.map((f: any) => {
 			const nexusCount = factionNexusCounts.get(f.id) ?? 0;
 			const pct = totalNexuses > 0 ? nexusCount / totalNexuses : 0;
-			const isDominating = !dominanceLocked && pct >= DOMINANCE_THRESHOLD;
+			const isDominating = !dominanceLocked && pct >= cfg.threshold;
 			let dominancePct = 0;
+			// sustainMs can be 0 (instant-win override); guard the divide so we report a
+			// completed (100%) hold rather than NaN/Infinity.
 			if (isDominating && f.dominanceSince) {
 				const dominanceMs = now - new Date(f.dominanceSince).getTime();
-				dominancePct = Math.min(dominanceMs / DOMINANCE_SUSTAIN_MS, 1);
+				dominancePct = cfg.sustainMs > 0 ? Math.min(dominanceMs / cfg.sustainMs, 1) : 1;
 			}
 			return {
 				id: f.id,
@@ -1022,12 +1037,13 @@ export async function getLeaderboard(req: AuthRequest, res: Response): Promise<v
 		res.json({
 			rows,
 			totalNexuses,
-			dominanceThresholdPct: DOMINANCE_THRESHOLD * 100,
+			dominanceThresholdPct: cfg.threshold * 100,
 			dominanceLocked,
 			galaxyPlayerCount,
 			factionCount,
-			dominanceMinPlayers: DOMINANCE_MIN_PLAYERS,
-			dominanceMinFactions: DOMINANCE_MIN_FACTIONS
+			dominanceMinPlayers: cfg.minPlayers,
+			dominanceMinFactions: cfg.minFactions,
+			dominanceSustainHours: Math.round(cfg.sustainMs / 3_600_000)
 		});
 	} catch (error) {
 		logError('unhandled_controller_error', {
