@@ -27,21 +27,15 @@ export const metadata: Metadata = {
 		url: 'https://vexara.world/codex',
 		siteName: 'Vexara',
 		locale: 'en_US',
-		type: 'article',
-		images: [
-			{
-				url: 'https://vexara.world/vexara-overview.png',
-				width: 1280,
-				height: 720,
-				alt: 'Vexara Codex - field manual'
-			}
-		]
+		type: 'article'
+		// OG image comes from the generated card in ./opengraph-image.tsx — Next
+		// only auto-attaches it when `images` isn't set explicitly here.
 	},
 	twitter: {
 		card: 'summary_large_image',
 		title: 'Vexara Codex - Field Manual',
-		description: 'Every building, every unit, every milestone in Vexara.',
-		images: ['https://vexara.world/vexara-overview.png']
+		description: 'Every building, every unit, every milestone in Vexara.'
+		// Twitter image also comes from ./opengraph-image.tsx.
 	},
 	robots: { index: true, follow: true }
 };

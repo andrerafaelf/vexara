@@ -33,6 +33,11 @@ router.patch('/onboarding-step', authNoGalaxy, (req, res) =>
 router.get('/', auth, (req, res) =>
 	usersController.listPlayersInGalaxy(req as AuthRequest, res as Response)
 );
+// Unauthenticated, minimal public aggregates for the /u/<username> social card.
+// No auth so the server-side OG image route can fetch it without a session.
+router.get('/:username/og', (req, res) =>
+	usersController.getPublicProfileOg(req, res as Response)
+);
 router.get('/:username/profile', auth, (req, res) =>
 	usersController.getPublicProfile(req as AuthRequest, res as Response)
 );

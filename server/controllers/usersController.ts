@@ -1,4 +1,4 @@
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import prisma from '../lib/prisma.js';
 import * as friendsService from '../services/friendsService.js';
 import { comparePassword, hashPassword } from '../models/User.js';
@@ -469,6 +469,72 @@ export async function getPublicProfile(req: AuthRequest, res: Response): Promise
 			})),
 			galaxies,
 			friendship
+		});
+	} catch (error) {
+		logError('unhandled_controller_error', {
+			message: (error as Error).message,
+			file: 'usersController.ts'
+		});
+		res.status(500).json({ error: 'Internal server error' });
+	}
+}
+
+// Unauthenticated, minimal public profile for the /u/<username> social card.
+// The full getPublicProfile is auth-gated (it computes viewer-relative bits like
+// friendship and galaxy-scoped stats), but the OG image route runs server-side
+// with no session, so it needs a no-auth endpoint that returns only the
+// genuinely-public career aggregates — nothing operational, nothing viewer-relative.
+export async function getPublicProfileOg(req: Request, res: Response): Promise<void> {
+	try {
+		const username = String(req.params.username || '').trim();
+		if (!username) {
+			res.status(400).json({ error: 'Username required' });
+			return;
+		}
+
+		const user = await prisma.user.findUnique({
+			where: { username },
+			select: { id: true, username: true, isFounder: true, supporterTier: true }
+		});
+		if (!user) {
+			res.status(404).json({ error: 'User not found' });
+			return;
+		}
+
+		const players = await prisma.galaxyPlayer.findMany({
+			where: { userId: user.id },
+			select: {
+				points: true,
+				finalPoints: true,
+				galaxy: { select: { id: true, status: true, winnerUserId: true, winnerFactionId: true } }
+			}
+		});
+
+		const factionMemberships = await prisma.factionMember.findMany({
+			where: { userId: user.id },
+			select: { galaxyId: true, faction: { select: { id: true } } }
+		});
+		const factionByGalaxy = new Map(factionMemberships.map((m) => [m.galaxyId, m.faction.id]));
+
+		let totalInfluence = 0;
+		let galaxiesWon = 0;
+		for (const p of players) {
+			const isEnded = p.galaxy.status === 'ended';
+			const effectivePoints = isEnded ? (p.finalPoints ?? 0) : p.points;
+			totalInfluence += effectivePoints;
+			const isFactionWinner = !!(
+				p.galaxy.winnerFactionId && factionByGalaxy.get(p.galaxy.id) === p.galaxy.winnerFactionId
+			);
+			if (isEnded && (isFactionWinner || p.galaxy.winnerUserId === user.id)) galaxiesWon++;
+		}
+
+		res.json({
+			username: user.username,
+			isFounder: user.isFounder ?? false,
+			supporterTier: user.supporterTier ?? null,
+			totalInfluence,
+			galaxiesWon,
+			galaxiesPlayed: players.length
 		});
 	} catch (error) {
 		logError('unhandled_controller_error', {

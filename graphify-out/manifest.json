@@ -250,8 +250,8 @@
     "semantic_hash": ""
   },
   "client/src/app/codex/page.tsx": {
-    "mtime": 1780673833.3250833,
-    "ast_hash": "6a47c652714d22bf3088926e6e7916a5",
+    "mtime": 1780742623.3823676,
+    "ast_hash": "bc36b0b4fece2fd44beb9b0c83f6989f",
     "semantic_hash": ""
   },
   "client/src/app/combat-logs/page.tsx": {
@@ -315,8 +315,8 @@
     "semantic_hash": ""
   },
   "client/src/app/page.tsx": {
-    "mtime": 1780673833.5452816,
-    "ast_hash": "5b558a7518b99ce30e6f4389b076845e",
+    "mtime": 1780742611.41886,
+    "ast_hash": "0c479f449cd77d656b21c9e2537deca6",
     "semantic_hash": ""
   },
   "client/src/app/palette-preview/page.tsx": {
@@ -1125,8 +1125,8 @@
     "semantic_hash": ""
   },
   "server/controllers/usersController.ts": {
-    "mtime": 1780673836.7159488,
-    "ast_hash": "aa84e51161e252773b366d302df2cd48",
+    "mtime": 1780744550.9541252,
+    "ast_hash": "f515d7206066481b7c9a172e521c8f88",
     "semantic_hash": ""
   },
   "server/controllers/warRoomController.ts": {
@@ -1645,8 +1645,8 @@
     "semantic_hash": ""
   },
   "server/routes/users.ts": {
-    "mtime": 1780673902.4442194,
-    "ast_hash": "78de04db60bb1aafa0b84afab45d7ac9",
+    "mtime": 1780744557.0598779,
+    "ast_hash": "34c75459e8c72dd9150a66e7ef8496c6",
     "semantic_hash": ""
   },
   "server/routes/warRoom.ts": {
@@ -2302,6 +2302,61 @@
   "client/src/constants/social.ts": {
     "mtime": 1780701064.8269484,
     "ast_hash": "d9bc0af353ba3d1297ef3db82bcb9629",
+    "semantic_hash": ""
+  },
+  "client/src/app/patch-notes/[version]/opengraph-image.tsx": {
+    "mtime": 1780742647.2749736,
+    "ast_hash": "1392b27766bf65f18a1c9907b80e1fbd",
+    "semantic_hash": ""
+  },
+  "client/src/app/patch-notes/opengraph-image.tsx": {
+    "mtime": 1780742633.8558917,
+    "ast_hash": "55ce732cd4dee45757d70f27ca734436",
+    "semantic_hash": ""
+  },
+  "client/src/app/buildings/opengraph-image.tsx": {
+    "mtime": 1780742573.542828,
+    "ast_hash": "36c8c36cfd2538dc0eba49ba7694e306",
+    "semantic_hash": ""
+  },
+  "client/src/app/calculator/opengraph-image.tsx": {
+    "mtime": 1780742579.7473586,
+    "ast_hash": "c8349aac2159956989189e727de4110f",
+    "semantic_hash": ""
+  },
+  "client/src/app/codex/opengraph-image.tsx": {
+    "mtime": 1780742556.6250992,
+    "ast_hash": "18ba55bd0fd4991a9e2d52b31b14975a",
+    "semantic_hash": ""
+  },
+  "client/src/app/how-to-play/opengraph-image.tsx": {
+    "mtime": 1780742562.6399572,
+    "ast_hash": "e635400a93a83a1955692d67c50f7c24",
+    "semantic_hash": ""
+  },
+  "client/src/app/opengraph-image.tsx": {
+    "mtime": 1780742550.7988799,
+    "ast_hash": "98445345581dddb5585b99dc59be5a3f",
+    "semantic_hash": ""
+  },
+  "client/src/app/replay/[id]/opengraph-image.tsx": {
+    "mtime": 1780742595.7365143,
+    "ast_hash": "63250c4b1e7754e5e032b5e38b4b9dfb",
+    "semantic_hash": ""
+  },
+  "client/src/app/units/opengraph-image.tsx": {
+    "mtime": 1780742568.277897,
+    "ast_hash": "973088e925a6bafa6ed35484c89780c6",
+    "semantic_hash": ""
+  },
+  "client/src/lib/ogCard.tsx": {
+    "mtime": 1780742541.9472313,
+    "ast_hash": "4de30cc7a98a970469324ddb47e307d0",
+    "semantic_hash": ""
+  },
+  "client/src/app/u/[username]/opengraph-image.tsx": {
+    "mtime": 1780744520.523504,
+    "ast_hash": "17bc9f45e66bdfbeb466cf40e6cf0728",
     "semantic_hash": ""
   }
 }

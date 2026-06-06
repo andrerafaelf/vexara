@@ -15,22 +15,16 @@ export const metadata: Metadata = {
 		url: 'https://vexara.world/',
 		siteName: 'Vexara',
 		locale: 'en_US',
-		type: 'website',
-		images: [
-			{
-				url: 'https://vexara.world/vexara-overview.png',
-				width: 1280,
-				height: 720,
-				alt: 'Vexara nexus overview - 4X strategy in a persistent sci-fi galaxy'
-			}
-		]
+		type: 'website'
+		// OG image comes from the generated card in ./opengraph-image.tsx — Next
+		// only auto-attaches it when `images` isn't set explicitly here.
 	},
 	twitter: {
 		card: 'summary_large_image',
 		title: 'Vexara - Free Browser 4X Strategy',
 		description:
-			'A living sci-fi galaxy shared by real players. Build, conquer, dominate 24/7. No resets. No pay-to-win.',
-		images: ['https://vexara.world/vexara-overview.png']
+			'A living sci-fi galaxy shared by real players. Build, conquer, dominate 24/7. No resets. No pay-to-win.'
+		// Twitter image also comes from ./opengraph-image.tsx.
 	},
 	robots: { index: true, follow: true }
 };
