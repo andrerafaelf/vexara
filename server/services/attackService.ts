@@ -5,7 +5,7 @@ import { incrementQuestProgress } from './dailyStreakService.js';
 import { TROOP_KEYS } from '../types/index.js';
 import { TROOP_STATS } from '../utils/combatMath.js';
 import { NEXUS_TYPE_BONUSES } from '../utils/economy.js';
-import { isStationableTroop } from '../utils/gameConstants.js';
+import { canStationTroop } from '../utils/gameConstants.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
 import {
 	normalizeTroopPayload,
@@ -270,16 +270,17 @@ export async function launchAttack(input: LaunchAttackInput): Promise<LaunchAtta
 		} else {
 			return { ok: false, status: 400, error: 'Cannot send support to an unowned nexus' };
 		}
-		// Support reinforces a defense, so only defensive (stationable) units are
-		// allowed. Reject any offensive/overseer/recon/turret troop in the payload.
+		// Support reinforces a defense, but ANY combat troop may be sent - offensive
+		// units defend poorly yet still contribute, so we let players choose. Only
+		// the non-deployables (Overseer, Plasma Turret, Recon) are rejected.
 		const offending = Object.keys(normalizedTroops).find(
-			(t) => (normalizedTroops[t] || 0) > 0 && !isStationableTroop(t)
+			(t) => (normalizedTroops[t] || 0) > 0 && !canStationTroop(t)
 		);
 		if (offending) {
 			return {
 				ok: false,
 				status: 400,
-				error: 'Support missions can only carry defensive units (no offensive troops or Overseers).'
+				error: 'Support cannot carry Overseers, Plasma Turrets, or Recon Operatives.'
 			};
 		}
 	}

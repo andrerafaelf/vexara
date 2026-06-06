@@ -220,8 +220,30 @@ export const STATIONABLE_TROOPS: readonly string[] = [
 ];
 const STATIONABLE_TROOP_SET = new Set<string>(STATIONABLE_TROOPS);
 
+// STATIONABLE_TROOPS above stays the canonical "anvils" list used by combat
+// balance docs/tuning. It is NO LONGER the deployment gate. Players may station
+// ANY combat troop at another nexus (support to an ally or transfer to your own
+// nexus) - offensive units make poor garrisons but you can still send them if
+// you want. Only these are non-deployable:
+//   - overseer:       a finite offensive conquest tool, inert on defense
+//   - plasmaTurret:   a stationary emplacement; it cannot relocate at all
+//   - reconOperative: scout-only, has no combat (garrison) role
+// canStationTroop is the single deployment gate shared by the support branch
+// (attackService) and troopTransferController so they can never drift again.
+export const NON_STATIONABLE_TROOPS: readonly string[] = [
+	'overseer',
+	'plasmaTurret',
+	'reconOperative'
+];
+const NON_STATIONABLE_TROOP_SET = new Set<string>(NON_STATIONABLE_TROOPS);
+
 export function isStationableTroop(troopType: string): boolean {
 	return STATIONABLE_TROOP_SET.has(troopType);
+}
+
+/** Deployment gate for support + transfer: any troop except the non-deployables. */
+export function canStationTroop(troopType: string): boolean {
+	return !NON_STATIONABLE_TROOP_SET.has(troopType);
 }
 
 const TROOP_COMBAT_CLASS: Record<string, 'mobile' | 'armor' | 'fire' | 'special'> = {

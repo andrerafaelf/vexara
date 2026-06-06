@@ -585,8 +585,8 @@
     "semantic_hash": ""
   },
   "client/src/components/Map.tsx": {
-    "mtime": 1780757404.7621465,
-    "ast_hash": "f15c677c21f433f54970715561ff75a6",
+    "mtime": 1780781230.9118228,
+    "ast_hash": "d097e9ceb3e20949a5645cd61ac01f06",
     "semantic_hash": ""
   },
   "client/src/components/MapCell.tsx": {
@@ -655,8 +655,8 @@
     "semantic_hash": ""
   },
   "client/src/components/PlayersView.tsx": {
-    "mtime": 1780776353.0861712,
-    "ast_hash": "e9cbdc1fd46c01a8dc1bee1ecbf59eef",
+    "mtime": 1780778178.7663946,
+    "ast_hash": "9d76664175c14c5adc334981f55db05c",
     "semantic_hash": ""
   },
   "client/src/components/ProfileStats.tsx": {
@@ -1115,8 +1115,8 @@
     "semantic_hash": ""
   },
   "server/controllers/troopTransferController.ts": {
-    "mtime": 1780673836.672325,
-    "ast_hash": "d9f93b3e878fd1e6e06d5f11587a1182",
+    "mtime": 1780781166.1924884,
+    "ast_hash": "af9ac52269cf46791a62f38d7bd80b7b",
     "semantic_hash": ""
   },
   "server/controllers/unsubscribeController.ts": {
@@ -1660,8 +1660,8 @@
     "semantic_hash": ""
   },
   "server/services/attackService.ts": {
-    "mtime": 1780673902.4836545,
-    "ast_hash": "68fd3aa015487bb37ec4a7e7d274c0d6",
+    "mtime": 1780781118.6841836,
+    "ast_hash": "173b21f9d398d6167ccda0da28aded18",
     "semantic_hash": ""
   },
   "server/services/authService.ts": {
@@ -1790,13 +1790,13 @@
     "semantic_hash": ""
   },
   "server/test/return-and-bounce.test.js": {
-    "mtime": 1780680160.5804226,
-    "ast_hash": "4c4edd815540f4ca10ebe1832a43c117",
+    "mtime": 1780780003.516559,
+    "ast_hash": "c9420146c6c273c3f96f60ac17a84137",
     "semantic_hash": ""
   },
   "server/test/stationable-troops.test.js": {
-    "mtime": 1780668095.6287727,
-    "ast_hash": "12e0f9b3ed425a46ee85a6261c5b1d22",
+    "mtime": 1780781274.555806,
+    "ast_hash": "88cfac3f1917787d80eb84a7c39d864c",
     "semantic_hash": ""
   },
   "server/test/stealth-vault.test.js": {
@@ -1855,8 +1855,8 @@
     "semantic_hash": ""
   },
   "server/utils/gameConstants.ts": {
-    "mtime": 1780777408.6448412,
-    "ast_hash": "ca4d5bd621259593d864d545ad5878d1",
+    "mtime": 1780781103.8783815,
+    "ast_hash": "d443c50445d48aba7b2fb17c7a7a1646",
     "semantic_hash": ""
   },
   "server/utils/logger.ts": {

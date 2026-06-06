@@ -6,11 +6,11 @@ import { normalizeTroopCounts } from '../utils/troopKeys.js';
 // --- Return travel time --------------------------------------------------
 // Returns (post-combat survivors, scouts heading home, bounced support, and
 // recalled transfers) take RETURN_TRAVEL_MULTIPLIER * the original one-way
-// travel time. 0 means near-instant: returnsAt collapses to "now" and the
-// troops land on the next job tick. Guard the intended value so a refactor
-// can't silently restore a full round trip.
-test('RETURN_TRAVEL_MULTIPLIER makes returns near-instant', () => {
-  assert.equal(RETURN_TRAVEL_MULTIPLIER, 0);
+// travel time. The strike is a full, symmetric round trip: the distance home
+// equals the distance out, so the multiplier is 1. Guard the intended value so
+// a refactor can't silently make returns free (0) or overshoot a round trip.
+test('RETURN_TRAVEL_MULTIPLIER makes returns a full round trip', () => {
+  assert.equal(RETURN_TRAVEL_MULTIPLIER, 1);
   assert.ok(
     RETURN_TRAVEL_MULTIPLIER >= 0 && RETURN_TRAVEL_MULTIPLIER <= 1,
     'multiplier must stay within [0,1] (0 = instant, 1 = full round trip)'
@@ -20,7 +20,7 @@ test('RETURN_TRAVEL_MULTIPLIER makes returns near-instant', () => {
 test('return time is the outbound trip scaled by the multiplier', () => {
   const outboundMs = 42 * 60 * 1000; // arbitrary 42-minute one-way trip
   const returnMs = outboundMs * RETURN_TRAVEL_MULTIPLIER;
-  assert.equal(returnMs, 0, 'with the multiplier at 0 the return is instant');
+  assert.equal(returnMs, outboundMs, 'at multiplier 1 the return mirrors the outbound trip');
 });
 
 // --- Self-owned bounce suppression --------------------------------------

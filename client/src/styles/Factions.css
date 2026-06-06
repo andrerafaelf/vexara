@@ -2633,13 +2633,38 @@
 	color: var(--text-faint);
 }
 
+/* Label + name + tag laid out with real gaps so spacing never depends on
+   collapsible JSX whitespace (the old {' '} separators rendered cramped). */
+.players-card-faction {
+	display: inline-flex;
+	align-items: baseline;
+	gap: var(--space-2);
+	min-width: 0;
+}
+
+.players-card-meta-label {
+	color: var(--text-faint);
+	flex-shrink: 0;
+}
+
 .players-card-faction-link {
+	display: inline-flex;
+	align-items: baseline;
+	gap: var(--space-2);
+	min-width: 0;
 	color: var(--accent);
 	text-decoration: none;
 }
 
-.players-card-faction-link:hover {
+.players-card-faction-link:hover .players-card-faction-name {
 	text-decoration: underline;
+}
+
+.players-card-faction-name {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .players-card-faction-tag {
@@ -2647,5 +2672,5 @@
 	font-family: var(--font-mono);
 	font-size: var(--text-xs);
 	letter-spacing: 0.05em;
-	margin-left: 2px;
+	flex-shrink: 0;
 }

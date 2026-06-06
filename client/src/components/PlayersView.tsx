@@ -155,10 +155,10 @@ export default function PlayersView() {
 										<strong>{p.nexuses}</strong> nexus{p.nexuses === 1 ? '' : 'es'}
 									</span>
 									{p.faction ? (
-										<span className="players-card-meta-item">
-											Faction{' '}
+										<span className="players-card-meta-item players-card-faction">
+											<span className="players-card-meta-label">Faction</span>
 											<Link href="/factions" className="players-card-faction-link">
-												{p.faction.name}{' '}
+												<span className="players-card-faction-name">{p.faction.name}</span>
 												<span className="players-card-faction-tag">[{p.faction.tag}]</span>
 											</Link>
 										</span>

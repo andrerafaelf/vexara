@@ -1939,7 +1939,9 @@ label {
 /* ── Nexus items in the sidebar ────────────────────────────────── */
 .nexus-item {
 	border-radius: 0;
-	padding-left: 18px;
+	/* The 3px status bar sits at left:8px (ends at 11px); give the text a full
+	   --space-3 gap from it so the label never crowds the rail. */
+	padding-left: 24px;
 }
 
 .nexus-item::before {
@@ -1948,7 +1950,7 @@ label {
 	width: 3px;
 	height: 14px;
 	background: var(--text-faint);
-	left: 6px;
+	left: 8px;
 	top: 50%;
 	transform: translateY(-50%);
 }
@@ -1956,8 +1958,11 @@ label {
 .nexus-item.active {
 	background: var(--accent-soft);
 	border-color: var(--border-accent);
+	/* Active swaps the thin status bar for a 3px accent rail. Keep total left
+	   inset identical (3px border + 21px pad = 24px) so the text doesn't jump
+	   horizontally when a nexus is selected. */
 	border-left: 3px solid var(--accent);
-	padding-left: 15px;
+	padding-left: 21px;
 }
 
 .nexus-item.active::before {
