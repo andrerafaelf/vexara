@@ -83,7 +83,13 @@ export function selectGalaxy(userId: number, username: string, galaxyId: number)
 				referredById: user?.referredById
 			});
 		}
-		await tx.user.update({ where: { id: userId }, data: { activeGalaxyId: galaxyId } });
+		// Establishing a starter nexus (joining any galaxy) grants Alpha Player /
+		// founding status. Idempotent: only flips false -> true, so re-joining or
+		// joining a second galaxy never resets it.
+		await tx.user.update({
+			where: { id: userId },
+			data: { activeGalaxyId: galaxyId, ...(existing ? {} : { isAlphaFounder: true }) }
+		});
 		return { joined: !existing };
 	});
 }

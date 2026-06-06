@@ -4,18 +4,20 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, type MouseEvent } from 'react';
 import type { SupporterTier } from '@/types/game';
+import { ALPHA_PLAYER_BADGE, ALPHA_COMMANDER_BADGE } from '@/data/gameIcons';
 
 interface UsernameProps {
 	name: string;
 	isSupporter?: boolean | null;
 	supporterTier?: SupporterTier | null;
-	isFounder?: boolean | null;
+	/** Early/founding player. Renders the Alpha Player badge. */
+	isAlphaFounder?: boolean | null;
 	className?: string;
 	title?: string;
 	linkToProfile?: boolean;
-	/** Show the Alpha Commander badge alongside the name when isFounder is true. */
+	/** Show rank badges (Alpha Player / Alpha Commander) alongside the name. */
 	showFounderBadge?: boolean;
-	/** Compact badge form (diamond glyph only, no label) for tight rows like chat. */
+	/** Compact badge form (smaller glyphs) for tight rows like chat. */
 	compactBadge?: boolean;
 }
 
@@ -29,7 +31,7 @@ export default function Username({
 	name,
 	isSupporter,
 	supporterTier,
-	isFounder,
+	isAlphaFounder,
 	className,
 	title,
 	linkToProfile,
@@ -44,24 +46,54 @@ export default function Username({
 
 	const resolvedTitle =
 		title ??
-		(isFounder
-			? 'Alpha Commander - Vexara founding supporter'
-			: supporterTier === 'commander'
-				? 'Commander supporter'
-				: supporterTier === 'officer'
-					? 'Officer supporter'
-					: isSupporter
-						? 'Vexara supporter'
-						: undefined);
+		(supporterTier === 'commander'
+			? 'Commander supporter'
+			: supporterTier === 'officer'
+				? 'Officer supporter'
+				: isSupporter
+					? 'Vexara supporter'
+					: undefined);
 
-	const founderBadge =
-		showFounderBadge && isFounder ? (
-			<span
-				className={`alpha-commander-badge${compactBadge ? ' alpha-commander-badge--compact' : ''}`}
-				title="Alpha Commander - granted during alpha for €25+ donation"
-				aria-label="Alpha Commander badge"
-			>
-				<span>Alpha Commander</span>
+	// Image rank badges, served from the CDN. Alpha Commander (commander tier)
+	// renders alongside Alpha Player when a player has both.
+	const showCommander = supporterTier === 'commander';
+	const showAlphaPlayer = !!isAlphaFounder;
+	const badgeClass = `username-badge${compactBadge ? ' username-badge--compact' : ''}`;
+	const alphaPlayerTip = 'Alpha Player - founding Vexara player';
+	const alphaCommanderTip = 'Alpha Commander - Commander-tier supporter';
+	const rankBadges =
+		showFounderBadge && (showAlphaPlayer || showCommander) ? (
+			<span className="username-badges">
+				{showAlphaPlayer && (
+					<span className="username-badge-wrap" title={alphaPlayerTip} aria-label={alphaPlayerTip}>
+						<img
+							src={ALPHA_PLAYER_BADGE}
+							alt=""
+							className={badgeClass}
+							loading="lazy"
+							decoding="async"
+							draggable={false}
+							aria-hidden
+						/>
+					</span>
+				)}
+				{showCommander && (
+					<span
+						className="username-badge-wrap"
+						title={alphaCommanderTip}
+						aria-label={alphaCommanderTip}
+					>
+						<img
+							src={ALPHA_COMMANDER_BADGE}
+							alt=""
+							className={badgeClass}
+							loading="lazy"
+							decoding="async"
+							draggable={false}
+							aria-hidden
+						/>
+					</span>
+				)}
 			</span>
 		) : null;
 
@@ -85,7 +117,7 @@ export default function Username({
 
 	if (linkToProfile && name) {
 		const baseHref = `/u/${encodeURIComponent(name)}`;
-		if (founderBadge) {
+		if (rankBadges) {
 			return (
 				<span
 					style={{
@@ -104,7 +136,7 @@ export default function Username({
 					>
 						{name}
 					</Link>
-					{founderBadge}
+					{rankBadges}
 				</span>
 			);
 		}
@@ -125,7 +157,7 @@ export default function Username({
 			<span className={classes || undefined} title={resolvedTitle}>
 				{name}
 			</span>
-			{founderBadge}
+			{rankBadges}
 		</>
 	);
 }

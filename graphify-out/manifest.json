@@ -170,8 +170,8 @@
     "semantic_hash": ""
   },
   "admin-server/services/adminService.ts": {
-    "mtime": 1780668095.5666142,
-    "ast_hash": "c07fcb89d560399ade42409d12ed600d",
+    "mtime": 1780770687.5067997,
+    "ast_hash": "a7e412901ba74f80e2d4b25e38831a2c",
     "semantic_hash": ""
   },
   "admin-server/tsconfig.json": {
@@ -410,8 +410,8 @@
     "semantic_hash": ""
   },
   "client/src/app/u/[username]/page.tsx": {
-    "mtime": 1780673833.8902164,
-    "ast_hash": "af5770eb675072dcee4b2ec27cb6f652",
+    "mtime": 1780770328.1480584,
+    "ast_hash": "f469c03fda7a772637d9543272564b9a",
     "semantic_hash": ""
   },
   "client/src/app/units/page.tsx": {
@@ -655,13 +655,13 @@
     "semantic_hash": ""
   },
   "client/src/components/PlayersView.tsx": {
-    "mtime": 1780673834.7952583,
-    "ast_hash": "c159d119e4940aecff763d0e89a1db8e",
+    "mtime": 1780770316.6011956,
+    "ast_hash": "e24a2c94108aac9497c392066e3e96ad",
     "semantic_hash": ""
   },
   "client/src/components/ProfileStats.tsx": {
-    "mtime": 1780673834.8107772,
-    "ast_hash": "b808ccddd11c9872d0ad90165227ffde",
+    "mtime": 1780770333.81784,
+    "ast_hash": "8f9d3f71e54ff8085ce420e3aab12575",
     "semantic_hash": ""
   },
   "client/src/components/PublicNav.tsx": {
@@ -750,8 +750,8 @@
     "semantic_hash": ""
   },
   "client/src/components/Username.tsx": {
-    "mtime": 1780673835.0894008,
-    "ast_hash": "ac1be7c08bf9995f28ab075c114fa6be",
+    "mtime": 1780770809.1250074,
+    "ast_hash": "031d94766bce1a5bf0fd194e133c583f",
     "semantic_hash": ""
   },
   "client/src/components/VexaraIcons.tsx": {
@@ -815,8 +815,8 @@
     "semantic_hash": ""
   },
   "client/src/data/gameIcons.ts": {
-    "mtime": 1780673835.2634037,
-    "ast_hash": "9443dd2abe0194ca3d04cc5af4bb8552",
+    "mtime": 1780770055.1834586,
+    "ast_hash": "88829edf3690b8ddc032eedf70452340",
     "semantic_hash": ""
   },
   "client/src/data/latestPatch.ts": {
@@ -960,8 +960,8 @@
     "semantic_hash": ""
   },
   "client/src/types/game.ts": {
-    "mtime": 1780673835.7608402,
-    "ast_hash": "6b914267b20ff6fc3258875bbe75f164",
+    "mtime": 1780770258.8695025,
+    "ast_hash": "bcbdb24d78e2e2818e56b34149b2dcea",
     "semantic_hash": ""
   },
   "client/src/utils/combatReplay.ts": {
@@ -1105,8 +1105,8 @@
     "semantic_hash": ""
   },
   "server/controllers/statsController.ts": {
-    "mtime": 1780673836.6372647,
-    "ast_hash": "538ab92265a3804cdb9f97e8cf6b997c",
+    "mtime": 1780770221.7235577,
+    "ast_hash": "c46516f4600dc9afb67c7a73e58f20ea",
     "semantic_hash": ""
   },
   "server/controllers/troopController.ts": {
@@ -1125,8 +1125,8 @@
     "semantic_hash": ""
   },
   "server/controllers/usersController.ts": {
-    "mtime": 1780744550.9541252,
-    "ast_hash": "f515d7206066481b7c9a172e521c8f88",
+    "mtime": 1780770163.5067825,
+    "ast_hash": "26b625b1acb15ba88da5ee48fe752ccb",
     "semantic_hash": ""
   },
   "server/controllers/warRoomController.ts": {
@@ -1700,8 +1700,8 @@
     "semantic_hash": ""
   },
   "server/services/galaxyService.ts": {
-    "mtime": 1780673902.5944536,
-    "ast_hash": "535692a1dd839558e4e2b927c624ed22",
+    "mtime": 1780770677.916036,
+    "ast_hash": "18e5a9fe5dbf22516b491cb950687db1",
     "semantic_hash": ""
   },
   "server/services/internalAdminService.ts": {
@@ -1745,8 +1745,8 @@
     "semantic_hash": ""
   },
   "server/services/statsService.ts": {
-    "mtime": 1780673902.7037814,
-    "ast_hash": "b084e970718344cbe7d49ddc0cdeb677",
+    "mtime": 1780770212.595776,
+    "ast_hash": "59b63d6c395e971e8825c1f2a229a2d1",
     "semantic_hash": ""
   },
   "server/services/troopService.ts": {
@@ -2357,6 +2357,11 @@
   "client/src/app/u/[username]/opengraph-image.tsx": {
     "mtime": 1780744520.523504,
     "ast_hash": "17bc9f45e66bdfbeb466cf40e6cf0728",
+    "semantic_hash": ""
+  },
+  "server/prisma/migrations/20260606000000_backfill_alpha_founder_on_nexus/migration.sql": {
+    "mtime": 1780770699.9786596,
+    "ast_hash": "7fca21f6cbff3eec76bd1c1fd8fa9fb8",
     "semantic_hash": ""
   }
 }

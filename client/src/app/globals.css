@@ -667,47 +667,36 @@ a:focus-visible,
 	}
 }
 
-/* ── Alpha Commander badge ──────────────────────────────────
-   Granted permanently to anyone who donates €25+ during alpha.
-   Compact chip form for chat/inline use; expanded form for
-   profile cards. Always cyan to reinforce Commander tier. */
-.alpha-commander-badge {
+/* ── Player rank badges (Alpha Player / Alpha Commander) ─────
+   Image badges served from the CDN at /badges/<key>.webp, shown
+   beside a username. Alpha Player = founding player; Alpha
+   Commander = Commander-tier supporter (a player can have both). */
+.username-badges {
 	display: inline-flex;
 	align-items: center;
-	gap: 4px;
-	padding: 1px 6px;
-	margin-left: 6px;
-	border-radius: 3px;
-	border: 1px solid rgba(91, 227, 255, 0.55);
-	background: rgba(91, 227, 255, 0.08);
-	color: #5be3ff;
-	font-size: 9px;
-	font-weight: 700;
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
-	line-height: 1;
-	white-space: nowrap;
+	gap: 3px;
 	vertical-align: middle;
 }
-.alpha-commander-badge::before {
-	content: '◆';
-	font-size: 8px;
-	line-height: 1;
+/* Wrapper carries the hover tooltip (title/aria-label) so the whole badge is the
+   hover target and the tooltip fires reliably (native title on a bare <img> can
+   be flaky). Matches the NexusTypeBadge tooltip convention. */
+.username-badge-wrap {
+	display: inline-flex;
+	align-items: center;
+	cursor: help;
 }
-.alpha-commander-badge--compact {
-	padding: 0;
-	margin-left: 4px;
-	border: 0;
-	background: transparent;
-	color: #5be3ff;
-	font-size: 10px;
+.username-badge {
+	display: inline-block;
+	height: 1.4em;
+	width: auto;
+	vertical-align: middle;
+	flex: 0 0 auto;
+	/* Hexagonal art has its own internal padding; a touch of negative
+	   margin keeps it visually snug against the name. */
+	margin-block: -0.2em;
 }
-.alpha-commander-badge--compact::before {
-	content: '◆';
-	font-size: 10px;
-}
-.alpha-commander-badge--compact > span {
-	display: none;
+.username-badge--compact {
+	height: 1.1em;
 }
 
 /* ── <Avatar> component ─────────────────────────────────────

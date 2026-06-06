@@ -11,6 +11,7 @@ export function getUserById(userId: number) {
 			isSupporter: true,
 			supporterTier: true,
 			isFounder: true,
+			isAlphaFounder: true,
 			avatarKey: true
 		}
 	});

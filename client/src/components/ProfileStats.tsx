@@ -247,7 +247,7 @@ export default function ProfileStats() {
 									name={stats.username}
 									isSupporter={stats.isSupporter}
 									supporterTier={stats.supporterTier ?? null}
-									isFounder={stats.isFounder}
+									isAlphaFounder={stats.isAlphaFounder}
 								/>
 							</h2>
 							<span className="ps-meta">

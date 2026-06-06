@@ -254,20 +254,17 @@ export function getAdminStatsForGalaxy(galaxyId: number) {
 	]);
 }
 
-const ALPHA_FOUNDER_LIMIT = 150;
-
 export function createUser(username: string, email: string, password: string) {
 	return hashPassword(password).then(async (hashedPassword) => {
-		const userCount = await prisma.user.count();
-		const isAlphaFounder = userCount < ALPHA_FOUNDER_LIMIT;
 		const referralCode = await generateUniqueReferralCode();
 		// Do NOT auto-join a galaxy or create a nexus, the user picks a galaxy themselves on first login.
+		// isAlphaFounder is NOT granted here - it's earned when the player creates
+		// their first nexus (see galaxyService.selectGalaxy). Defaults to false.
 		const user = await prisma.user.create({
 			data: {
 				username,
 				email: email.toLowerCase(),
 				password: hashedPassword,
-				isAlphaFounder,
 				referralCode
 			}
 		});

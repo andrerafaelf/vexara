@@ -7,6 +7,7 @@ export interface User {
 	isSupporter?: boolean;
 	supporterTier?: SupporterTier | null;
 	isFounder?: boolean;
+	isAlphaFounder?: boolean;
 	avatarUrl?: string | null;
 	avatarUrlSm?: string | null;
 }
@@ -29,6 +30,7 @@ export interface UserStats {
 	isSupporter?: boolean;
 	supporterTier?: SupporterTier | null;
 	isFounder?: boolean;
+	isAlphaFounder?: boolean;
 	avatarUrl?: string | null;
 	avatarUrlSm?: string | null;
 	points: number;

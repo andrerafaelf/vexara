@@ -16,6 +16,7 @@ interface GalaxyPlayer {
 	isSupporter: boolean;
 	supporterTier?: SupporterTier | null;
 	isFounder?: boolean;
+	isAlphaFounder?: boolean;
 	avatarUrl?: string | null;
 	avatarUrlSm?: string | null;
 	points: number;
@@ -141,7 +142,7 @@ export default function PlayersView() {
 											name={p.username}
 											isSupporter={p.isSupporter}
 											supporterTier={p.supporterTier ?? null}
-											isFounder={p.isFounder}
+											isAlphaFounder={p.isAlphaFounder}
 											linkToProfile
 											className="factions-browser-card-name"
 										/>

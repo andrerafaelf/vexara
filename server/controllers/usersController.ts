@@ -41,6 +41,7 @@ export async function listPlayersInGalaxy(req: AuthRequest, res: Response): Prom
 							isSupporter: true,
 							supporterTier: true,
 							isFounder: true,
+							isAlphaFounder: true,
 							avatarKey: true
 						}
 					}
@@ -74,6 +75,7 @@ export async function listPlayersInGalaxy(req: AuthRequest, res: Response): Prom
 					isSupporter: p.user?.isSupporter ?? false,
 					supporterTier: p.user?.supporterTier ?? null,
 					isFounder: p.user?.isFounder ?? false,
+					isAlphaFounder: p.user?.isAlphaFounder ?? false,
 					avatarUrl: avatarUrl(p.userId, p.user?.avatarKey ?? null),
 					avatarUrlSm: avatarUrlSm(p.userId, p.user?.avatarKey ?? null),
 					points: p.points,
@@ -223,6 +225,7 @@ export async function getPublicProfile(req: AuthRequest, res: Response): Promise
 				isSupporter: true,
 				supporterTier: true,
 				isFounder: true,
+				isAlphaFounder: true,
 				avatarKey: true,
 				createdAt: true,
 				activeGalaxyId: true
@@ -416,6 +419,7 @@ export async function getPublicProfile(req: AuthRequest, res: Response): Promise
 			isSupporter: user.isSupporter,
 			supporterTier: user.supporterTier ?? null,
 			isFounder: user.isFounder ?? false,
+			isAlphaFounder: user.isAlphaFounder ?? false,
 			avatarUrl: avatarUrl(user.id, user.avatarKey),
 			avatarUrlSm: avatarUrlSm(user.id, user.avatarKey),
 			createdAt: user.createdAt,

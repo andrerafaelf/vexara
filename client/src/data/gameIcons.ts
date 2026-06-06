@@ -23,6 +23,17 @@ export function buildingIcon(key: string): string {
 	return `${CDN_BASE}/buildings/${key}.webp`;
 }
 
+// Player rank/supporter badges, served from the CDN at /badges/<key>.webp.
+// Same upload-not-code convention as troop/building art.
+export function badgeIcon(key: string): string {
+	return `${CDN_BASE}/badges/${key}.webp`;
+}
+
+// Alpha Player: granted to early/founding players (isAlphaFounder).
+export const ALPHA_PLAYER_BADGE = badgeIcon('alphaPlayer_nobg_trimmed');
+// Alpha Commander: granted to the top "commander" supporter tier.
+export const ALPHA_COMMANDER_BADGE = badgeIcon('alphaCommander_nobg_trimmed');
+
 const TROOP_KEYS = [
 	'assaultTrooper',
 	'sentinelLancer',

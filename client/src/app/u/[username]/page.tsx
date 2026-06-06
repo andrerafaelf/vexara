@@ -70,6 +70,7 @@ interface PublicProfile {
 	isSupporter: boolean;
 	supporterTier?: SupporterTier | null;
 	isFounder?: boolean;
+	isAlphaFounder?: boolean;
 	avatarUrl?: string | null;
 	avatarUrlSm?: string | null;
 	createdAt: string;
@@ -271,7 +272,7 @@ function PublicProfilePageInner() {
 								name={profile.username}
 								isSupporter={profile.isSupporter}
 								supporterTier={profile.supporterTier ?? null}
-								isFounder={profile.isFounder}
+								isAlphaFounder={profile.isAlphaFounder}
 							/>
 						</h2>
 						<span className="ps-meta">
