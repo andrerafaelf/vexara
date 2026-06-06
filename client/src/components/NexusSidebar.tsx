@@ -14,6 +14,7 @@ import GalaxyChip from './GalaxyChip';
 import NexusTypeBadge from './NexusTypeBadge';
 import SupportTiersCard from './SupportTiersCard';
 import Avatar from './Avatar';
+import RankBadges from './RankBadges';
 import { CombatIcon, ConstructionIcon } from './VexaraIcons';
 
 export const NEXUS_GROUPS_KEY = ['nexusGroups'] as const;
@@ -163,15 +164,11 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
 								>
 									{user.username}
 								</span>
-								{user.isFounder && (
-									<span
-										className="alpha-commander-badge alpha-commander-badge--compact"
-										title="Alpha Commander - Vexara founding supporter"
-										aria-label="Alpha Commander"
-									>
-										<span>Alpha Commander</span>
-									</span>
-								)}
+								<RankBadges
+									isAlphaFounder={user.isAlphaFounder}
+									supporterTier={user.supporterTier}
+									size="lg"
+								/>
 							</div>
 							<div className="commander-meta">Commander · {totalPoints.toLocaleString()} inf</div>
 						</div>

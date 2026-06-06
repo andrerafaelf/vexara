@@ -248,6 +248,7 @@ export default function ProfileStats() {
 									isSupporter={stats.isSupporter}
 									supporterTier={stats.supporterTier ?? null}
 									isAlphaFounder={stats.isAlphaFounder}
+									badgeSize="lg"
 								/>
 							</h2>
 							<span className="ps-meta">

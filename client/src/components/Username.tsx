@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, type MouseEvent } from 'react';
 import type { SupporterTier } from '@/types/game';
-import { ALPHA_PLAYER_BADGE, ALPHA_COMMANDER_BADGE } from '@/data/gameIcons';
+import RankBadges from './RankBadges';
 
 interface UsernameProps {
 	name: string;
@@ -19,6 +19,9 @@ interface UsernameProps {
 	showFounderBadge?: boolean;
 	/** Compact badge form (smaller glyphs) for tight rows like chat. */
 	compactBadge?: boolean;
+	/** Override rank-badge size. Defaults to 'sm' when compactBadge, else 'md'.
+	 *  Use 'lg' for prominent headers (profile page). */
+	badgeSize?: 'sm' | 'md' | 'lg';
 }
 
 const TIER_CLASS: Record<SupporterTier, string> = {
@@ -36,7 +39,8 @@ export default function Username({
 	title,
 	linkToProfile,
 	showFounderBadge = true,
-	compactBadge
+	compactBadge,
+	badgeSize
 }: UsernameProps) {
 	const router = useRouter();
 	const tierClass = supporterTier ? TIER_CLASS[supporterTier] : null;
@@ -54,48 +58,19 @@ export default function Username({
 					? 'Vexara supporter'
 					: undefined);
 
-	// Image rank badges, served from the CDN. Alpha Commander (commander tier)
-	// renders alongside Alpha Player when a player has both.
-	const showCommander = supporterTier === 'commander';
-	const showAlphaPlayer = !!isAlphaFounder;
-	const badgeClass = `username-badge${compactBadge ? ' username-badge--compact' : ''}`;
-	const alphaPlayerTip = 'Alpha Player - founding Vexara player';
-	const alphaCommanderTip = 'Alpha Commander - Commander-tier supporter';
-	const rankBadges =
-		showFounderBadge && (showAlphaPlayer || showCommander) ? (
-			<span className="username-badges">
-				{showAlphaPlayer && (
-					<span className="username-badge-wrap" title={alphaPlayerTip} aria-label={alphaPlayerTip}>
-						<img
-							src={ALPHA_PLAYER_BADGE}
-							alt=""
-							className={badgeClass}
-							loading="lazy"
-							decoding="async"
-							draggable={false}
-							aria-hidden
-						/>
-					</span>
-				)}
-				{showCommander && (
-					<span
-						className="username-badge-wrap"
-						title={alphaCommanderTip}
-						aria-label={alphaCommanderTip}
-					>
-						<img
-							src={ALPHA_COMMANDER_BADGE}
-							alt=""
-							className={badgeClass}
-							loading="lazy"
-							decoding="async"
-							draggable={false}
-							aria-hidden
-						/>
-					</span>
-				)}
-			</span>
-		) : null;
+	// Image rank badges (Alpha Player / Alpha Commander). Compact rows (chat) use
+	// the small size; everywhere else uses the standard inline size. hasBadges
+	// gates the extra flex wrapper so badge-less usernames keep their bare layout.
+	const hasBadges =
+		showFounderBadge && (!!isAlphaFounder || supporterTier === 'commander');
+	const resolvedBadgeSize = badgeSize ?? (compactBadge ? 'sm' : 'md');
+	const rankBadges = hasBadges ? (
+		<RankBadges
+			isAlphaFounder={isAlphaFounder}
+			supporterTier={supporterTier}
+			size={resolvedBadgeSize}
+		/>
+	) : null;
 
 	// Click handler appends ?from=<current location> at click-time and pushes
 	// via the router, bypassing Next/Link's intercept which would otherwise

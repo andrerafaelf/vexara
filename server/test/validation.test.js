@@ -9,6 +9,7 @@ import {
   validateOverseerAttackCap,
   validatePassword,
   validateUsername,
+  validateUsernameForLogin,
 } from '../utils/validation.js';
 
 const TROOP_KEYS = ['assaultTrooper', 'reconOperative', 'overseer'];
@@ -86,4 +87,18 @@ test('credential validators enforce expected format', () => {
   assert.equal(validateEmail('bad-email'), false);
   assert.equal(validatePassword('12345678'), true);
   assert.equal(validatePassword('short'), false);
+});
+
+test('signup username cap is 16, login grandfathers up to 20', () => {
+  // 16 is the new signup max; 17+ is rejected on signup.
+  assert.equal(validateUsername('a'.repeat(16)), true);
+  assert.equal(validateUsername('a'.repeat(17)), false);
+  assert.equal(validateUsername('a'.repeat(20)), false);
+
+  // Login must still accept grandfathered 17-20 char names, but nothing longer
+  // (the DB column is VarChar(20)) and nothing shorter than the 3-char floor.
+  assert.equal(validateUsernameForLogin('a'.repeat(16)), true);
+  assert.equal(validateUsernameForLogin('a'.repeat(20)), true);
+  assert.equal(validateUsernameForLogin('a'.repeat(21)), false);
+  assert.equal(validateUsernameForLogin('xx'), false);
 });

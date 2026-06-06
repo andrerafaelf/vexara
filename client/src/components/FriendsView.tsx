@@ -368,6 +368,8 @@ export default function FriendsView({
 			{tab === 'friends' && (
 				<div className="friends-panel">
 					<form className="friends-add-form" onSubmit={handleSendRequest}>
+						{/* maxLength stays 20 (old max), not the new 16 signup cap: you must
+						    still be able to type a grandfathered friend's longer name to add them. */}
 						<input
 							type="text"
 							placeholder="Username to add"

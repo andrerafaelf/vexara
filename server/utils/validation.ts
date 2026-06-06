@@ -9,7 +9,10 @@ export function detectEmailTypo(email: string): string | null {
 	if (!suggestion) return null;
 	return `Did you mean ${suggestion.full}?`;
 }
-const USERNAME_RE = /^[a-zA-Z0-9_]{3,20}$/;
+// New signups / changes are capped at 16. The DB column stays VarChar(20) so
+// pre-existing 17-20 char names remain valid (grandfathered) and aren't rejected
+// on actions that re-validate them.
+const USERNAME_RE = /^[a-zA-Z0-9_]{3,16}$/;
 
 const RESERVED_USERNAMES = new Set([
 	'vexara',
@@ -115,6 +118,18 @@ export function validateUsername(username: unknown): boolean {
 	if (!USERNAME_RE.test(trimmed)) return false;
 	if (RESERVED_USERNAMES.has(trimmed.toLowerCase())) return false;
 	return !containsBlockedUsername(trimmed);
+}
+
+// Login-time format check. Looser than validateUsername on purpose: the signup
+// cap is 16, but names created under the old 3-20 rule are grandfathered, so
+// login must still accept up to 20 chars or those users would be locked out.
+// It's only a cheap sanity gate before the DB lookup (the password check is the
+// real auth), so reserved/profanity rules - which only matter at creation - are
+// intentionally skipped here.
+const LOGIN_USERNAME_RE = /^[a-zA-Z0-9_]{3,20}$/;
+export function validateUsernameForLogin(username: unknown): boolean {
+	if (typeof username !== 'string') return false;
+	return LOGIN_USERNAME_RE.test(username.trim());
 }
 
 export function validateEmail(email: unknown): boolean {

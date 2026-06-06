@@ -16,7 +16,7 @@ import {
 	detectEmailTypo,
 	validateEmail,
 	validatePassword,
-	validateUsername
+	validateUsernameForLogin
 } from '../utils/validation.js';
 
 const VERIFY_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -51,10 +51,10 @@ export async function register(req: Request, res: Response): Promise<void> {
 
 		const rawUsername = typeof body.username === 'string' ? body.username.trim() : '';
 		// Username format/length check
-		if (!/^[a-zA-Z0-9_]{3,20}$/.test(rawUsername)) {
+		if (!/^[a-zA-Z0-9_]{3,16}$/.test(rawUsername)) {
 			res
 				.status(400)
-				.json({ error: 'Username must be 3-20 characters: letters, numbers, or underscores.' });
+				.json({ error: 'Username must be 3-16 characters: letters, numbers, or underscores.' });
 			return;
 		}
 		// Profanity/inappropriate check
@@ -557,7 +557,7 @@ export async function login(req: Request, res: Response): Promise<void> {
 		const normalizedUsername = typeof username === 'string' ? username.trim() : '';
 
 		if (
-			!validateUsername(normalizedUsername) ||
+			!validateUsernameForLogin(normalizedUsername) ||
 			typeof password !== 'string' ||
 			password.length === 0
 		) {
@@ -604,7 +604,8 @@ export async function login(req: Request, res: Response): Promise<void> {
 				email: user.email,
 				isSupporter: user.isSupporter,
 				supporterTier: user.supporterTier ?? null,
-				isFounder: user.isFounder ?? false
+				isFounder: user.isFounder ?? false,
+				isAlphaFounder: user.isAlphaFounder ?? false
 			}
 		});
 	} catch (error) {

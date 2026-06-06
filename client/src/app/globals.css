@@ -676,6 +676,9 @@ a:focus-visible,
 	align-items: center;
 	gap: 3px;
 	vertical-align: middle;
+	/* In flex name-rows (commander card) the badges must hold their size while
+	   the name truncates, not the other way around. */
+	flex: 0 0 auto;
 }
 /* Wrapper carries the hover tooltip (title/aria-label) so the whole badge is the
    hover target and the tooltip fires reliably (native title on a bare <img> can
@@ -687,16 +690,63 @@ a:focus-visible,
 }
 .username-badge {
 	display: inline-block;
-	height: 1.4em;
 	width: auto;
 	vertical-align: middle;
 	flex: 0 0 auto;
 	/* Hexagonal art has its own internal padding; a touch of negative
-	   margin keeps it visually snug against the name. */
-	margin-block: -0.2em;
+	   margin keeps it snug against the name without inflating line height. */
+	margin-block: -0.35em;
+	/* Sharpen the small raster art when scaled down. */
+	image-rendering: -webkit-optimize-contrast;
 }
-.username-badge--compact {
-	height: 1.1em;
+/* Size variants. The art is a padded hexagon so it reads smaller than its box;
+   sizes are deliberately generous. Desktop bumps each up for legibility. */
+.username-badge--sm {
+	height: 1.3em; /* chat rows / tight lists */
+}
+.username-badge--md {
+	height: 1.75em; /* beside a username (default) */
+}
+.username-badge--lg {
+	height: 2.4em; /* commander card, profile header */
+}
+@media (min-width: 768px) {
+	.username-badge--sm {
+		height: 1.45em;
+	}
+	.username-badge--md {
+		height: 2.15em;
+	}
+	.username-badge--lg {
+		height: 2.9em;
+	}
+}
+
+/* Donor acknowledgment chip inside the SupportTiersCard. Tied to isFounder (the
+   legacy "EUR 25+ alpha donor" flag), distinct from the image rank badges above.
+   Cyan text chip to reinforce the Commander tier. */
+.alpha-commander-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	margin-left: 6px;
+	padding: 1px 6px;
+	border-radius: 3px;
+	border: 1px solid rgba(91, 227, 255, 0.55);
+	background: rgba(91, 227, 255, 0.08);
+	color: #5be3ff;
+	font-size: 9px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	line-height: 1;
+	white-space: nowrap;
+	vertical-align: middle;
+}
+.alpha-commander-badge::before {
+	content: '◆';
+	font-size: 8px;
+	line-height: 1;
 }
 
 /* ── <Avatar> component ─────────────────────────────────────

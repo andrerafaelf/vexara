@@ -273,6 +273,7 @@ function PublicProfilePageInner() {
 								isSupporter={profile.isSupporter}
 								supporterTier={profile.supporterTier ?? null}
 								isAlphaFounder={profile.isAlphaFounder}
+								badgeSize="lg"
 							/>
 						</h2>
 						<span className="ps-meta">

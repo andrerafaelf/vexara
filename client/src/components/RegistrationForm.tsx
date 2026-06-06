@@ -11,7 +11,7 @@ import DiscordButton from './DiscordButton';
 import '../styles/Auth.css';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
-const USERNAME_RE = /^[a-zA-Z0-9_]{3,20}$/;
+const USERNAME_RE = /^[a-zA-Z0-9_]{3,16}$/;
 const REFERRAL_CODE_RE = /^[A-Z0-9]{4,12}$/;
 
 const KNOWN_EMAIL_DOMAINS = [
@@ -84,7 +84,7 @@ function getUsernameError(username: string): string | null {
 	const trimmed = username.trim();
 	if (trimmed.length === 0) return 'Choose a username.';
 	if (!USERNAME_RE.test(trimmed))
-		return 'Username must be 3-20 characters: letters, numbers, or underscores.';
+		return 'Username must be 3-16 characters: letters, numbers, or underscores.';
 	return null;
 }
 
@@ -485,7 +485,7 @@ const RegistrationForm: React.FC = () => {
 										autoCorrect="off"
 										autoComplete="username"
 										spellCheck={false}
-										maxLength={20}
+										maxLength={16}
 										required
 										aria-invalid={Boolean(error)}
 									/>

@@ -9,6 +9,7 @@ import MobileNexusDrawer from '@/components/MobileNexusDrawer';
 import NewPatchToast from '@/components/NewPatchToast';
 import NexusSidebar from '@/components/NexusSidebar';
 import OnboardingOverlay from '@/components/OnboardingOverlay';
+import RankBadges from '@/components/RankBadges';
 import SupportTiersCard from '@/components/SupportTiersCard';
 import TroopMovementsBar from '@/components/TroopMovementsBar';
 import { useAuth } from '@/context/AuthContext';
@@ -524,18 +525,25 @@ export default function GameLayout({
 									ariaHidden
 								/>
 								<div className="commander-info">
-									<div
-										className={[
-											'commander-name',
-											user.isSupporter ? 'supporter-name' : null,
-											user.supporterTier === 'recruit' ? 'supporter-tier-recruit' : null,
-											user.supporterTier === 'officer' ? 'supporter-tier-officer' : null,
-											user.supporterTier === 'commander' ? 'supporter-tier-commander' : null
-										]
-											.filter(Boolean)
-											.join(' ')}
-									>
-										{user.username}
+									<div className="commander-name-row">
+										<span
+											className={[
+												'commander-name',
+												user.isSupporter ? 'supporter-name' : null,
+												user.supporterTier === 'recruit' ? 'supporter-tier-recruit' : null,
+												user.supporterTier === 'officer' ? 'supporter-tier-officer' : null,
+												user.supporterTier === 'commander' ? 'supporter-tier-commander' : null
+											]
+												.filter(Boolean)
+												.join(' ')}
+										>
+											{user.username}
+										</span>
+										<RankBadges
+											isAlphaFounder={user.isAlphaFounder}
+											supporterTier={user.supporterTier}
+											size="lg"
+										/>
 									</div>
 									<div className="commander-meta">
 										Commander · {nexuses.reduce((s, n) => s + (n.points ?? 0), 0).toLocaleString()}{' '}

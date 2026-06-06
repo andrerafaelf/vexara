@@ -170,8 +170,8 @@
     "semantic_hash": ""
   },
   "admin-server/services/adminService.ts": {
-    "mtime": 1780770687.5067997,
-    "ast_hash": "a7e412901ba74f80e2d4b25e38831a2c",
+    "mtime": 1780770892.6625543,
+    "ast_hash": "de6ad6eae612b3fd3ba9cc92373cd34b",
     "semantic_hash": ""
   },
   "admin-server/tsconfig.json": {
@@ -410,8 +410,8 @@
     "semantic_hash": ""
   },
   "client/src/app/u/[username]/page.tsx": {
-    "mtime": 1780770328.1480584,
-    "ast_hash": "f469c03fda7a772637d9543272564b9a",
+    "mtime": 1780774412.0118382,
+    "ast_hash": "daf5c9a0818fec0084c8e84dcd243e4a",
     "semantic_hash": ""
   },
   "client/src/app/units/page.tsx": {
@@ -545,8 +545,8 @@
     "semantic_hash": ""
   },
   "client/src/components/FriendsView.tsx": {
-    "mtime": 1780673834.4217792,
-    "ast_hash": "abc3bab80716fe0177ae889a09209c9e",
+    "mtime": 1780773684.9789865,
+    "ast_hash": "5c9af2d6300fb92ad09ce9725077dc91",
     "semantic_hash": ""
   },
   "client/src/components/GalaxyChip.tsx": {
@@ -560,8 +560,8 @@
     "semantic_hash": ""
   },
   "client/src/components/GameLayout.tsx": {
-    "mtime": 1780736427.6209502,
-    "ast_hash": "892602fc761cae27518f2e5319aeb2e7",
+    "mtime": 1780771711.5687191,
+    "ast_hash": "262efbefbd27e98464888862e6ae8f12",
     "semantic_hash": ""
   },
   "client/src/components/InlineBackButton.tsx": {
@@ -620,8 +620,8 @@
     "semantic_hash": ""
   },
   "client/src/components/NexusSidebar.tsx": {
-    "mtime": 1780676584.3913572,
-    "ast_hash": "9e72aa4eddc23832f166d7bef88e8343",
+    "mtime": 1780771688.6095998,
+    "ast_hash": "c188da4498559de3ebd1075c2bb5cfe2",
     "semantic_hash": ""
   },
   "client/src/components/NexusTypeBadge.tsx": {
@@ -660,8 +660,8 @@
     "semantic_hash": ""
   },
   "client/src/components/ProfileStats.tsx": {
-    "mtime": 1780770333.81784,
-    "ast_hash": "8f9d3f71e54ff8085ce420e3aab12575",
+    "mtime": 1780774419.8482351,
+    "ast_hash": "33b55eff1f0fad0d0efd88d1303ee38d",
     "semantic_hash": ""
   },
   "client/src/components/PublicNav.tsx": {
@@ -695,8 +695,8 @@
     "semantic_hash": ""
   },
   "client/src/components/RegistrationForm.tsx": {
-    "mtime": 1780701141.7177908,
-    "ast_hash": "f0dc5c6523c3ebf49a54124384c4b5a0",
+    "mtime": 1780773664.5099702,
+    "ast_hash": "ab8ee003ea2d16dd00d207a01ecba162",
     "semantic_hash": ""
   },
   "client/src/components/Reports.tsx": {
@@ -750,8 +750,8 @@
     "semantic_hash": ""
   },
   "client/src/components/Username.tsx": {
-    "mtime": 1780770809.1250074,
-    "ast_hash": "031d94766bce1a5bf0fd194e133c583f",
+    "mtime": 1780774405.593921,
+    "ast_hash": "9c8c0274f21a11c94dc6a375d4ef0ed6",
     "semantic_hash": ""
   },
   "client/src/components/VexaraIcons.tsx": {
@@ -1010,8 +1010,8 @@
     "semantic_hash": ""
   },
   "server/controllers/authController.ts": {
-    "mtime": 1780673836.2967036,
-    "ast_hash": "657842b48089386fa873e742896194ec",
+    "mtime": 1780772928.345741,
+    "ast_hash": "d753e2576cc843950db1a4e2329c4691",
     "semantic_hash": ""
   },
   "server/controllers/avatarController.ts": {
@@ -1125,8 +1125,8 @@
     "semantic_hash": ""
   },
   "server/controllers/usersController.ts": {
-    "mtime": 1780770163.5067825,
-    "ast_hash": "26b625b1acb15ba88da5ee48fe752ccb",
+    "mtime": 1780771546.6566412,
+    "ast_hash": "8958d7ea6564da9ed12f0a1a4041bf2e",
     "semantic_hash": ""
   },
   "server/controllers/warRoomController.ts": {
@@ -1810,8 +1810,8 @@
     "semantic_hash": ""
   },
   "server/test/validation.test.js": {
-    "mtime": 1780644997.8680422,
-    "ast_hash": "efb10e926819bbaba8778659cfbd593b",
+    "mtime": 1780773712.1775992,
+    "ast_hash": "44180c32bf7b685ed25e41c4526dacb2",
     "semantic_hash": ""
   },
   "server/tsconfig.json": {
@@ -1915,8 +1915,8 @@
     "semantic_hash": ""
   },
   "server/utils/validation.ts": {
-    "mtime": 1780673902.9950595,
-    "ast_hash": "775e689ba44ba5224f1876b46263bb33",
+    "mtime": 1780772881.8234549,
+    "ast_hash": "fe7893b2dbb726f9fa85a098d115b0d0",
     "semantic_hash": ""
   },
   ".github/workflows/ci-cd.yml": {
@@ -2360,8 +2360,13 @@
     "semantic_hash": ""
   },
   "server/prisma/migrations/20260606000000_backfill_alpha_founder_on_nexus/migration.sql": {
-    "mtime": 1780770699.9786596,
-    "ast_hash": "7fca21f6cbff3eec76bd1c1fd8fa9fb8",
+    "mtime": 1780770902.391338,
+    "ast_hash": "b252dc90044a87f7bc7c8a871052f1f5",
+    "semantic_hash": ""
+  },
+  "client/src/components/RankBadges.tsx": {
+    "mtime": 1780771617.4256797,
+    "ast_hash": "411902cc9aa83142cf3752cd3c881cff",
     "semantic_hash": ""
   }
 }
