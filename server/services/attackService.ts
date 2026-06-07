@@ -61,9 +61,9 @@ export function computeTravelMinutes(
 			: source.nexusTypeDoubled
 				? Math.pow(baseTravel, 2)
 				: baseTravel;
-	if (attackType === 'scout') {
-		return distance * 4 * travelSpeedMultiplier;
-	}
+	// Scouts no longer use a flat-rate path; a scout mission is pure Recon
+	// Operative (enforced by hasOnlyRecon), so the standard speed-based formula
+	// naturally resolves to Recon's speed (50) — the fastest mission in the game.
 	const OVERSEER_EFFECTIVE_SPEED = 6;
 	const OVERSEER_TRAVEL_MULTIPLIER = 3;
 	let minSpeed = Infinity;
@@ -94,6 +94,11 @@ export interface LaunchAttackInput {
 	troops: unknown;
 	type?: string;
 	clientRequestId?: unknown;
+	// Coordinated Assault PR1 pointers (mutually exclusive — enforced by the DB
+	// check constraint attack_one_coordination). PR2 reads these in the resolver
+	// to merge same-coordination waves into one combat; PR1 only writes them.
+	wavePlanId?: number | null;
+	warOperationSlotId?: number | null;
 }
 
 export interface LaunchAttackError {
@@ -307,30 +312,44 @@ export async function launchAttack(input: LaunchAttackInput): Promise<LaunchAtta
 		(attackerNexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled ?? false;
 	const travelSpeedMultiplier =
 		baseTravel === 1 ? 1 : nexusDoubledForTravel ? Math.pow(baseTravel, 2) : baseTravel;
-	let travelTimeMinutes: number;
-	if (attackType === 'scout') {
-		travelTimeMinutes = distance * 4 * travelSpeedMultiplier;
-	} else {
-		const OVERSEER_EFFECTIVE_SPEED = 6;
-		const OVERSEER_TRAVEL_MULTIPLIER = 3;
-		let minSpeed = Infinity;
-		for (const [troopType, amount] of Object.entries(normalizedTroops)) {
-			if (amount > 0 && (TROOP_STATS as Record<string, { speed: number }>)[troopType]) {
-				const speed =
-					troopType === 'overseer'
-						? OVERSEER_EFFECTIVE_SPEED
-						: (TROOP_STATS as Record<string, { speed: number }>)[troopType].speed;
-				if (speed < minSpeed) minSpeed = speed;
-			}
+	// All missions (including scout) use the speed-based formula. A scout is pure
+	// Recon Operative, so minSpeed resolves to 50 → the fastest mission in the game.
+	const OVERSEER_EFFECTIVE_SPEED = 6;
+	const OVERSEER_TRAVEL_MULTIPLIER = 3;
+	let minSpeed = Infinity;
+	for (const [troopType, amount] of Object.entries(normalizedTroops)) {
+		if (amount > 0 && (TROOP_STATS as Record<string, { speed: number }>)[troopType]) {
+			const speed =
+				troopType === 'overseer'
+					? OVERSEER_EFFECTIVE_SPEED
+					: (TROOP_STATS as Record<string, { speed: number }>)[troopType].speed;
+			if (speed < minSpeed) minSpeed = speed;
 		}
-		const hasOverseer = (normalizedTroops.overseer || 0) > 0;
-		travelTimeMinutes =
-			distance *
-			(4 + (28 - minSpeed) / 10) *
-			(hasOverseer ? OVERSEER_TRAVEL_MULTIPLIER : 1) *
-			travelSpeedMultiplier;
 	}
+	const hasOverseer = (normalizedTroops.overseer || 0) > 0;
+	const travelTimeMinutes =
+		distance *
+		(4 + (28 - minSpeed) / 10) *
+		(hasOverseer ? OVERSEER_TRAVEL_MULTIPLIER : 1) *
+		travelSpeedMultiplier;
 	const arrivesAt = new Date(Date.now() + travelTimeMinutes * 60 * 1000);
+
+	// Coordinated Assault PR1: resolve coordination pointers. Mutually exclusive
+	// and only meaningful for attack-type missions. Validated against the
+	// caller's identity and target so a stale/wrong hint can't poison the row —
+	// the DB check constraint backs this up but we'd rather 400 than CHECK fail.
+	const coordination = await resolveCoordinationPointers({
+		attackType,
+		userId,
+		galaxyId,
+		targetNexusId: parsedToNexusId,
+		sourceNexusId: parsedFromNexusId,
+		wavePlanId: input.wavePlanId ?? null,
+		warOperationSlotId: input.warOperationSlotId ?? null
+	});
+	if (!coordination.ok) {
+		return { ok: false, status: 400, error: coordination.error };
+	}
 
 	const { attack, updatedAttackerNexus, reused } = await createAttackAndDeductTroops(
 		{
@@ -342,7 +361,9 @@ export async function launchAttack(input: LaunchAttackInput): Promise<LaunchAtta
 			troops: normalizedTroops,
 			arrivesAt,
 			type: attackType,
-			clientRequestId: normalizedClientRequestId
+			clientRequestId: normalizedClientRequestId,
+			wavePlanId: coordination.wavePlanId,
+			warOperationWaveId: coordination.warOperationWaveId
 		} as Parameters<typeof prisma.attack.create>[0]['data'],
 		attackerNexus.id,
 		normalizedTroops
@@ -374,6 +395,77 @@ export async function launchAttack(input: LaunchAttackInput): Promise<LaunchAtta
 		defenderOwnerId: defenderNexus.ownerId ?? null,
 		defenderName: defenderNexus.name
 	};
+}
+
+/**
+ * Coordinated Assault PR1 — validate and resolve the at-launch coordination
+ * pointers.
+ *
+ * - Both pointers null → returns nulls (uncoordinated wave, the common case).
+ * - Both pointers set → reject. They're mutually exclusive (the DB also
+ *   enforces this via attack_one_coordination, but we'd rather 400 than CHECK
+ *   fail).
+ * - Either pointer set with a non-attack mission → reject. Scouts and supports
+ *   are not part of the merge model in the design.
+ * - wavePlanId → must exist, belong to this user + galaxy + target.
+ * - warOperationSlotId → must exist, belong to this user, source nexus, and
+ *   target the same nexus. We resolve the slot to its waveId here so the
+ *   caller never needs to know about the wave object.
+ */
+async function resolveCoordinationPointers(params: {
+	attackType: AttackType;
+	userId: number;
+	galaxyId: number;
+	targetNexusId: number;
+	sourceNexusId: number;
+	wavePlanId: number | null;
+	warOperationSlotId: number | null;
+}): Promise<
+	| { ok: true; wavePlanId: number | null; warOperationWaveId: number | null }
+	| { ok: false; error: string }
+> {
+	const { attackType, userId, galaxyId, targetNexusId, sourceNexusId } = params;
+	const wavePlanId = params.wavePlanId && params.wavePlanId > 0 ? params.wavePlanId : null;
+	const warOperationSlotId =
+		params.warOperationSlotId && params.warOperationSlotId > 0 ? params.warOperationSlotId : null;
+
+	if (!wavePlanId && !warOperationSlotId) {
+		return { ok: true, wavePlanId: null, warOperationWaveId: null };
+	}
+	if (wavePlanId && warOperationSlotId) {
+		return { ok: false, error: 'Specify at most one coordination pointer' };
+	}
+	if (attackType !== 'attack') {
+		return { ok: false, error: 'Coordination is only allowed on attack missions' };
+	}
+
+	if (wavePlanId) {
+		const plan = await prisma.wavePlan.findUnique({ where: { id: wavePlanId } });
+		if (
+			!plan ||
+			plan.userId !== userId ||
+			plan.galaxyId !== galaxyId ||
+			plan.targetNexusId !== targetNexusId
+		) {
+			return { ok: false, error: 'Invalid wavePlanId' };
+		}
+		return { ok: true, wavePlanId: plan.id, warOperationWaveId: null };
+	}
+
+	// warOperationSlotId path
+	const slot = await prisma.warOperationSlot.findUnique({
+		where: { id: warOperationSlotId! },
+		include: { wave: { include: { operation: { select: { targetNexusId: true } } } } }
+	});
+	if (
+		!slot ||
+		slot.userId !== userId ||
+		slot.fromNexusId !== sourceNexusId ||
+		slot.wave.operation.targetNexusId !== targetNexusId
+	) {
+		return { ok: false, error: 'Invalid warOperationSlotId' };
+	}
+	return { ok: true, wavePlanId: null, warOperationWaveId: slot.waveId };
 }
 
 async function recordLaunchQuestProgress(
@@ -580,7 +672,11 @@ export async function processScheduledAttacks(): Promise<void> {
 				troops: row.troops,
 				type: row.type,
 				// Reuse the schedule's requestId so a crash mid-launch can't double-send.
-				clientRequestId: row.clientRequestId ?? `sched:${row.id}`
+				clientRequestId: row.clientRequestId ?? `sched:${row.id}`,
+				// Coordinated Assault PR1: propagate the plan from the schedule row.
+				// WarRoom slots don't use this path; they go through sendAttack with
+				// warOperationSlotId on the request body.
+				wavePlanId: row.wavePlanId ?? null
 			});
 			if (result.ok) {
 				await prisma.scheduledAttack.update({

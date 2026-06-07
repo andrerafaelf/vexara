@@ -83,7 +83,7 @@ const PILLARS = [
 	{
 		idx: '03',
 		title: 'Scout, raid, intercept in real time',
-		body: 'Travel times are real. Send Recon Operatives to map a target, then commit a strike fleet. Or embed an operative inside their walls.'
+		body: 'Travel times are real. Send Recon Operatives - the fastest unit in the game - to map a target, then commit a strike fleet before the picture goes stale.'
 	},
 	{
 		idx: '04',
@@ -92,8 +92,8 @@ const PILLARS = [
 	},
 	{
 		idx: '05',
-		title: 'Run covert operations',
-		body: 'Sabotage troops and build queues. Embed operatives for live intel. Counter enemy spies with a fortified Shield Grid. Every move carries risk.'
+		title: 'Win the intel war',
+		body: 'Scout before you strike, and deny the same to your enemies. Station Recon Operatives and raise your Stealth Array to make hostile scouts fight through your recon, risk interception, and hide a portion of your resources from raiders. Every move carries risk.'
 	},
 	{
 		idx: '06',

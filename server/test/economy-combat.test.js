@@ -6,7 +6,9 @@ import {
 	computeLossesForWinner,
 	computeClassWeightedAttack,
 	computeClassWeightedDefense,
-	computeLootStolen
+	computeLootStolen,
+	splitProportionalByForce,
+	splitLootByCarry
 } from '../utils/combatMath.js';
 import { calculatePoints, computeResourceUpdate, getMaxStorage } from '../utils/economy.js';
 import { getBuildingCost, getOverseerCost, getOverseerCostMultiplier } from '../utils/gameConstants.js';
@@ -296,4 +298,316 @@ test('respawn config scales to ~55% of peak influence and respects the floor', (
 		bigPts >= target * 0.6,
 		`respawn influence ${bigPts} is in the neighbourhood of target ${target}`
 	);
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+// Coordinated Assault PR2 — conservation property tests.
+// These are load-bearing: if the splits don't conserve, the merged path
+// silently creates or destroys troops/resources. Treat any failure here as
+// a release blocker, not a flaky test.
+// ───────────────────────────────────────────────────────────────────────────
+
+function sumTroopsByType(perParticipantMap) {
+	const summed = {};
+	for (const partial of perParticipantMap.values()) {
+		for (const [k, v] of Object.entries(partial)) {
+			summed[k] = (summed[k] ?? 0) + v;
+		}
+	}
+	return summed;
+}
+
+function fuzzRng(seed) {
+	let s = seed >>> 0;
+	return () => {
+		s = (s * 1664525 + 1013904223) >>> 0;
+		return s / 4294967296;
+	};
+}
+
+test('splitProportionalByForce: sum of participant losses equals merged total', () => {
+	const participants = [
+		{ id: 1, troops: { vanguardBreaker: 100, sentinelLancer: 50 } },
+		{ id: 2, troops: { vanguardBreaker: 50, assaultTrooper: 200 } },
+		{ id: 3, troops: { sentinelLancer: 80, voidStalker: 30 } }
+	];
+	const totalLosses = {
+		vanguardBreaker: 73,
+		sentinelLancer: 41,
+		assaultTrooper: 137,
+		voidStalker: 19
+	};
+	const result = splitProportionalByForce(
+		participants,
+		(p, k) => p.troops[k] ?? 0,
+		totalLosses
+	);
+	const summed = sumTroopsByType(result);
+	for (const [k, total] of Object.entries(totalLosses)) {
+		assert.equal(summed[k] ?? 0, total, `troop ${k}: sum ${summed[k] ?? 0} !== total ${total}`);
+	}
+});
+
+test('splitProportionalByForce: per-participant losses never exceed contribution', () => {
+	const participants = [
+		{ id: 1, troops: { vanguardBreaker: 5 } },
+		{ id: 2, troops: { vanguardBreaker: 95 } }
+	];
+	// Total exactly equals combined contribution — both must be fully wiped.
+	const result = splitProportionalByForce(
+		participants,
+		(p, k) => p.troops[k] ?? 0,
+		{ vanguardBreaker: 100 }
+	);
+	for (const p of participants) {
+		const loss = result.get(p).vanguardBreaker ?? 0;
+		assert.ok(
+			loss <= p.troops.vanguardBreaker,
+			`participant ${p.id}: lost ${loss} of ${p.troops.vanguardBreaker} brought`
+		);
+	}
+	assert.equal(result.get(participants[0]).vanguardBreaker, 5);
+	assert.equal(result.get(participants[1]).vanguardBreaker, 95);
+});
+
+test('splitProportionalByForce: tiny contributor with rounding can be clamped, overflow re-distributes', () => {
+	// Tiny participant brings 1, big brings 999. Loss = 100. Tiny's raw share is
+	// 0.1, big's is 99.9. Floors: 0 and 99. Remainder 1. The remainder goes to
+	// the largest fractional, which is the big participant (0.9) — not the tiny
+	// one (0.1) — so we never clamp here. Tiny stays alive (losses=0).
+	const tiny = { id: 1, troops: { vanguardBreaker: 1 } };
+	const big = { id: 2, troops: { vanguardBreaker: 999 } };
+	const result = splitProportionalByForce(
+		[tiny, big],
+		(p, k) => p.troops[k] ?? 0,
+		{ vanguardBreaker: 100 }
+	);
+	assert.equal(result.get(tiny).vanguardBreaker ?? 0, 0);
+	assert.equal(result.get(big).vanguardBreaker, 100);
+});
+
+test('splitProportionalByForce: zero total losses returns empty per participant', () => {
+	const participants = [
+		{ id: 1, troops: { vanguardBreaker: 100 } },
+		{ id: 2, troops: { vanguardBreaker: 200 } }
+	];
+	const result = splitProportionalByForce(participants, (p, k) => p.troops[k] ?? 0, {});
+	for (const p of participants) {
+		assert.deepEqual(result.get(p), {});
+	}
+});
+
+test('splitProportionalByForce: fuzz — 200 random shapes, conservation holds for every troop type', () => {
+	const rand = fuzzRng(0xc001d00d);
+	const troopKeys = ['vanguardBreaker', 'sentinelLancer', 'assaultTrooper', 'siegeMech', 'voidStalker'];
+	for (let trial = 0; trial < 200; trial++) {
+		const n = 1 + Math.floor(rand() * 7); // 1..7 participants
+		const participants = [];
+		for (let i = 0; i < n; i++) {
+			const troops = {};
+			for (const k of troopKeys) {
+				if (rand() < 0.6) troops[k] = Math.floor(rand() * 500);
+			}
+			participants.push({ id: i, troops });
+		}
+		// Generate plausible total losses bounded by combined contribution per type.
+		const combined = {};
+		for (const k of troopKeys) {
+			combined[k] = participants.reduce((s, p) => s + (p.troops[k] ?? 0), 0);
+		}
+		const totalLosses = {};
+		for (const k of troopKeys) {
+			if (combined[k] > 0) totalLosses[k] = Math.floor(rand() * (combined[k] + 1));
+		}
+		const result = splitProportionalByForce(
+			participants,
+			(p, k) => p.troops[k] ?? 0,
+			totalLosses
+		);
+		const summed = sumTroopsByType(result);
+		for (const k of troopKeys) {
+			const expected = totalLosses[k] ?? 0;
+			const got = summed[k] ?? 0;
+			assert.equal(got, expected, `trial ${trial} type ${k}: sum ${got} !== total ${expected}`);
+		}
+		for (const p of participants) {
+			for (const k of troopKeys) {
+				const lost = result.get(p)[k] ?? 0;
+				assert.ok(
+					lost <= (p.troops[k] ?? 0),
+					`trial ${trial} participant ${p.id} type ${k}: lost ${lost} > brought ${p.troops[k] ?? 0}`
+				);
+			}
+		}
+	}
+});
+
+test('splitLootByCarry: sum of participant loot equals merged total', () => {
+	const participants = [
+		{ id: 1, carry: 200 },
+		{ id: 2, carry: 350 },
+		{ id: 3, carry: 75 }
+	];
+	const totalLoot = { biomass: 13337, alloy: 5051, ore: 9999 };
+	const result = splitLootByCarry(participants, (p) => p.carry, totalLoot);
+	let biomass = 0, alloy = 0, ore = 0;
+	for (const r of result.values()) {
+		biomass += r.biomass;
+		alloy += r.alloy;
+		ore += r.ore;
+	}
+	assert.equal(biomass, totalLoot.biomass);
+	assert.equal(alloy, totalLoot.alloy);
+	assert.equal(ore, totalLoot.ore);
+});
+
+test('splitLootByCarry: zero surviving carry leaves loot undistributed (evaporates correctly)', () => {
+	const participants = [
+		{ id: 1, carry: 0 },
+		{ id: 2, carry: 0 }
+	];
+	const result = splitLootByCarry(participants, (p) => p.carry, {
+		biomass: 100,
+		alloy: 50,
+		ore: 25
+	});
+	for (const p of participants) {
+		assert.deepEqual(result.get(p), { biomass: 0, alloy: 0, ore: 0 });
+	}
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+// partitionByCoordination — group-by behavior.
+// ───────────────────────────────────────────────────────────────────────────
+
+import { partitionByCoordination } from '../utils/combat.js';
+
+function fakeAttack(overrides) {
+	return {
+		id: 1,
+		type: 'attack',
+		troops: { vanguardBreaker: 10 },
+		defenderNexusId: 100,
+		warOperationWaveId: null,
+		wavePlanId: null,
+		arrivesAt: new Date('2026-06-07T12:00:00.000Z'),
+		...overrides
+	};
+}
+
+test('partitionByCoordination: same WarOperationWave merges', () => {
+	const attacks = [
+		fakeAttack({ id: 1, warOperationWaveId: 9 }),
+		fakeAttack({ id: 2, warOperationWaveId: 9 }),
+		fakeAttack({ id: 3, warOperationWaveId: 10 })
+	];
+	const groups = partitionByCoordination(attacks);
+	assert.equal(groups.length, 2);
+	const merged = groups.find((g) => g.length === 2);
+	const solo = groups.find((g) => g.length === 1);
+	assert.ok(merged);
+	assert.ok(solo);
+	assert.deepEqual(
+		merged.map((a) => a.id).sort(),
+		[1, 2]
+	);
+	assert.equal(solo[0].id, 3);
+});
+
+test('partitionByCoordination: same WavePlan + same arrivesAt merges; different arrivesAt does not', () => {
+	const t0 = new Date('2026-06-07T12:00:00.000Z');
+	const t1 = new Date('2026-06-07T12:05:00.000Z');
+	const attacks = [
+		fakeAttack({ id: 1, wavePlanId: 7, arrivesAt: t0 }),
+		fakeAttack({ id: 2, wavePlanId: 7, arrivesAt: t0 }),
+		fakeAttack({ id: 3, wavePlanId: 7, arrivesAt: t1 })
+	];
+	const groups = partitionByCoordination(attacks);
+	assert.equal(groups.length, 2);
+	const merged = groups.find((g) => g.length === 2);
+	const stagger = groups.find((g) => g.length === 1);
+	assert.deepEqual(merged.map((a) => a.id).sort(), [1, 2]);
+	assert.equal(stagger[0].id, 3);
+});
+
+test('partitionByCoordination: WavePlan and WarOperationWave on same target do NOT cross-merge', () => {
+	const attacks = [
+		fakeAttack({ id: 1, wavePlanId: 7 }),
+		fakeAttack({ id: 2, warOperationWaveId: 9 })
+	];
+	const groups = partitionByCoordination(attacks);
+	assert.equal(groups.length, 2);
+	for (const g of groups) assert.equal(g.length, 1);
+});
+
+test('partitionByCoordination: soft-fail when group has >1 Overseer', () => {
+	const attacks = [
+		fakeAttack({
+			id: 1,
+			warOperationWaveId: 9,
+			troops: { vanguardBreaker: 10, overseer: 1 }
+		}),
+		fakeAttack({
+			id: 2,
+			warOperationWaveId: 9,
+			troops: { vanguardBreaker: 10, overseer: 1 }
+		})
+	];
+	const groups = partitionByCoordination(attacks);
+	assert.equal(groups.length, 2, 'group should soft-fail to two singletons');
+	for (const g of groups) assert.equal(g.length, 1);
+});
+
+test('partitionByCoordination: non-attack types are forced singleton', () => {
+	const attacks = [
+		fakeAttack({ id: 1, type: 'scout', warOperationWaveId: 9 }),
+		fakeAttack({ id: 2, type: 'attack', warOperationWaveId: 9 })
+	];
+	const groups = partitionByCoordination(attacks);
+	assert.equal(groups.length, 2);
+	for (const g of groups) assert.equal(g.length, 1);
+});
+
+test('partitionByCoordination: uncoordinated attacks remain singletons', () => {
+	const attacks = [
+		fakeAttack({ id: 1 }),
+		fakeAttack({ id: 2 }),
+		fakeAttack({ id: 3 })
+	];
+	const groups = partitionByCoordination(attacks);
+	assert.equal(groups.length, 3);
+	for (const g of groups) assert.equal(g.length, 1);
+});
+
+test('splitLootByCarry: fuzz — 200 random shapes, conservation holds for every resource', () => {
+	const rand = fuzzRng(0xfeed5eed);
+	for (let trial = 0; trial < 200; trial++) {
+		const n = 1 + Math.floor(rand() * 6);
+		const participants = Array.from({ length: n }, (_, i) => ({
+			id: i,
+			carry: Math.floor(rand() * 1000)
+		}));
+		const totalLoot = {
+			biomass: Math.floor(rand() * 20000),
+			alloy: Math.floor(rand() * 20000),
+			ore: Math.floor(rand() * 20000)
+		};
+		const result = splitLootByCarry(participants, (p) => p.carry, totalLoot);
+		const totalCarry = participants.reduce((s, p) => s + p.carry, 0);
+		let biomass = 0, alloy = 0, ore = 0;
+		for (const r of result.values()) {
+			biomass += r.biomass;
+			alloy += r.alloy;
+			ore += r.ore;
+		}
+		if (totalCarry === 0) {
+			assert.equal(biomass, 0);
+			assert.equal(alloy, 0);
+			assert.equal(ore, 0);
+		} else {
+			assert.equal(biomass, totalLoot.biomass, `trial ${trial}: biomass`);
+			assert.equal(alloy, totalLoot.alloy, `trial ${trial}: alloy`);
+			assert.equal(ore, totalLoot.ore, `trial ${trial}: ore`);
+		}
+	}
 });

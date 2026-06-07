@@ -510,7 +510,7 @@ const Reports: React.FC<ReportsProps> = ({
 							</button>
 						)}
 					</div>
-					<h2>{scoutReport ? 'Scout Report' : 'Combat Log'}</h2>
+					<h2>{scoutReport ? 'Recon Operative Log' : 'Combat Log'}</h2>
 				</div>
 
 				<div className="report-detail">
@@ -1134,7 +1134,7 @@ const Reports: React.FC<ReportsProps> = ({
 													</>
 												)
 											) : scoutReport ? (
-												'Scout Report'
+												'Recon Operative Log'
 											) : (
 												'Combat Log'
 											)}

@@ -6,7 +6,7 @@ export const TROOP_SPEED: Record<string, number> = {
 	sentinelLancer: 20,
 	assaultTrooper: 18,
 	vanguardBreaker: 16,
-	reconOperative: 25,
+	reconOperative: 50,
 	wraithSkimmer: 22,
 	siegeMech: 10,
 	bulwarkGuard: 12,
@@ -60,15 +60,17 @@ export function travelMinutes(
 	source: TravelSource,
 	target: TravelTarget,
 	troops: Record<string, number>,
-	mission: TravelMission = 'attack'
+	// Retained for call-site compatibility; travel time is now purely speed-based
+	// for every mission (scouts included), so the kind no longer affects it.
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	_mission: TravelMission = 'attack'
 ): number {
 	const dist = Math.sqrt((target.x - source.x) ** 2 + (target.y - source.y) ** 2);
 	const multiplier = travelMultiplier(source);
 
-	if (mission === 'scout') {
-		return dist * 4 * multiplier;
-	}
-
+	// Scout missions are pure Recon Operative, so the standard speed-based formula
+	// resolves to Recon's speed (50) — the fastest mission in the game. No flat-rate
+	// special case; keep this in lockstep with server computeTravelMinutes.
 	let minSpeed = Infinity;
 	for (const [type, count] of Object.entries(troops)) {
 		if (count > 0 && TROOP_SPEED[type]) {

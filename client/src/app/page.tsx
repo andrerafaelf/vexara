@@ -46,7 +46,7 @@ const faqSchema = {
 			name: 'What kind of game is Vexara?',
 			acceptedAnswer: {
 				'@type': 'Answer',
-				text: 'Vexara is a browser-based 4X (eXplore, eXpand, eXploit, eXterminate) strategy game set in a persistent sci-fi galaxy shared by real players. It blends real-time strategy, diplomacy, espionage, and MMO-style faction warfare.'
+				text: 'Vexara is a browser-based 4X (eXplore, eXpand, eXploit, eXterminate) strategy game set in a persistent sci-fi galaxy shared by real players. It blends real-time strategy, diplomacy, scouting, and MMO-style faction warfare.'
 			}
 		},
 		{

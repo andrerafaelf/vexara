@@ -166,9 +166,13 @@ body.srm-scroll-locked .nexus-nav-scroll {
 
 .srm-row {
 	display: grid;
-	grid-template-columns: 72px 1fr auto;
+	/* label | input (flexes) | Max (snug after input). The input flexing keeps
+	   Max anchored at the row's right edge but the input fills the gap so the
+	   two never read as disconnected. */
+	grid-template-columns: 72px minmax(0, 1fr) auto;
 	align-items: center;
-	gap: var(--space-2);
+	column-gap: var(--space-3);
+	row-gap: var(--space-1);
 }
 
 .srm-row-label {

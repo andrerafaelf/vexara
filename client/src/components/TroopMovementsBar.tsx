@@ -6,7 +6,7 @@ import { formatTimeOfDay } from '@/utils/date';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { startTransition } from 'react';
-import { AlertTriangle, Eye, MapPin, Shield } from 'lucide-react';
+import { AlertTriangle, MapPin, Shield } from 'lucide-react';
 import { Countdown } from './Countdown';
 import { useStartProgress } from './NavigationProgress';
 
@@ -33,18 +33,19 @@ interface Attack {
 	};
 }
 
-type Kind = 'attack' | 'scout' | 'support';
+type Kind = 'attack' | 'support';
 
 // Resolve the mission kind once so the verb, colour class, and icon all agree.
+// Scouts are deliberately surfaced to the DEFENDER as a generic incoming attack:
+// the target should not be able to tell a recon mission from a real strike and
+// safely ignore it. (Mechanics are unchanged — it's still a no-damage scout.)
 function kindOf(type?: string): Kind {
-	if (type === 'scout') return 'scout';
 	if (type === 'support') return 'support';
 	return 'attack';
 }
 
 const VERB: Record<Kind, string> = {
 	attack: 'INCOMING ATTACK',
-	scout: 'INCOMING SCOUT',
 	support: 'INCOMING SUPPORT'
 };
 
@@ -97,7 +98,7 @@ export default function TroopMovementsBar() {
 				const source = attack.attacker.nexus;
 				const attackerUsername = attack.attacker.user.username;
 				const canShowOnStarfield = typeof target.x === 'number' && typeof target.y === 'number';
-				const Icon = kind === 'scout' ? Eye : kind === 'support' ? Shield : AlertTriangle;
+				const Icon = kind === 'support' ? Shield : AlertTriangle;
 				return (
 					<button
 						key={`in-${attack._id}`}

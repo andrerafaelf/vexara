@@ -1588,14 +1588,12 @@ const Map: React.FC<MapProps> = ({
 					<div className="attacks-section">
 						<h4>Incoming ({incomingAttacks.length})</h4>
 						{incomingAttacks.map((attack: any) => {
-							const kind: 'attack' | 'scout' | 'support' =
-								attack.type === 'support'
-									? 'support'
-									: attack.type === 'scout'
-										? 'scout'
-										: 'attack';
-							const tagLabel =
-								kind === 'support' ? 'SUPPORT' : kind === 'scout' ? 'SCOUT' : 'ATTACK';
+							// Defender perspective: a scout is shown as a generic incoming ATTACK so
+							// the target can't tell recon from a real strike and ignore it. The
+							// attacker's own outgoing view (below) still labels it as a scout.
+							const kind: 'attack' | 'support' =
+								attack.type === 'support' ? 'support' : 'attack';
+							const tagLabel = kind === 'support' ? 'SUPPORT' : 'ATTACK';
 							const src = attack.attacker?.nexus;
 							// Incoming always targets the nexus this panel is for. The per-nexus
 							// endpoint only loads the attacker relation, so use currentNexus for

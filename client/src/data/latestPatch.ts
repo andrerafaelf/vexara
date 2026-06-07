@@ -15,7 +15,7 @@
 // If "I forgot to bump it" becomes a real pattern, swap to a build step
 // that globs the directory and writes this file. Until then: simpler wins.
 
-export const LATEST_PATCH_VERSION = '0.22';
-export const LATEST_PATCH_LABEL = 'Alpha v0.22';
+export const LATEST_PATCH_VERSION = '0.23';
+export const LATEST_PATCH_LABEL = 'Alpha v0.23';
 export const LATEST_PATCH_HEADLINE =
-	'The biggest update since alpha began: combat is rebalanced so the counter triangle works on attack AND defense, the economy is overhauled so resources matter again, espionage is retired, Recruitment Core becomes three class buildings, six units are renamed, two new units join the roster, and Stealth Array gains a hidden vault.';
+	'The Recon Operative becomes the fastest unit in the game, scout missions now read as a real incoming strike to the target, the intel report is renamed the Recon Operative Log, and the scout travel math is fixed so quoted times match the clock.';

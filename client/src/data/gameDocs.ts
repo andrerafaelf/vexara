@@ -76,7 +76,38 @@ Vexara uses a rock-paper-scissors class triangle: Mobile beats Armor, Armor beat
 
 **How losses scale - win or lose:** Combat is no longer all-or-nothing. Both sides' casualties scale with how close the fight was (the loser/winner power ratio). The losing side takes heavy losses - a blowout near-wipes them, but a narrow defeat leaves a real remnant (~85% lost, not 100%). The winning side stays light on a dominant win but bleeds badly on a coin-flip (up to ~45% lost when the fight was nearly even). The lesson: attacking a force of comparable strength is costly even when you win, and being slightly outgunned no longer means automatic annihilation. Use the in-game combat preview on the attack screen to gauge the outcome before committing.
 
-**Conquest is a gradient, not a cliff:** When an Overseer rides with a winning attack, it drains the defender's Control Level by an amount that scales with how dominant the strike was. The same power ratio that decides casualties also decides Control drain - crushing wins (3:1 or better) drain 50, clear wins drain 34, and narrow wins still drain 15. A nexus is conquered the moment its Control hits 0. This means a dominant attacker can take a nexus in two strikes; a careful planned attacker takes it in three; and a coalition of smaller players can grind down a fortified target together. Control regenerates at +10 per hour for owned nexuses, so a lone trickle of weak strikes will never succeed - coordinated waves do.
+**Conquest is a gradient, not a cliff:** When an Overseer rides with a winning attack, it drains the defender's Control Level by an amount that scales with how dominant the strike was. The same power ratio that decides casualties also decides Control drain - crushing wins (3:1 or better) drain 50, clear wins drain 34, and narrow wins still drain 15. A nexus is conquered the moment its Control hits 0. This means a dominant attacker can take a nexus in two strikes; a careful planned attacker takes it in three; and a coalition of smaller players can grind down a fortified target together. Control regenerates at +10 per hour for owned nexuses, so a lone trickle of weak strikes will never succeed - coordinated waves do, and the Coordinated Assault system is how you make "coordinated" mean something the engine actually rewards.
+`;
+
+// Coordinated Assault — added in v0.23. Documents the asymmetry fix between
+// defender-side support stacking and the previously-throwaway "coordination"
+// of multi-attacker strikes. Stays in lockstep with COORDINATED_ASSAULT.md
+// (the design contract) and COORDINATED_ASSAULT_IMPL.md (the build spec).
+export const COORDINATED_ASSAULT_CODEX = `
+**Coordinated Assault**
+
+A defender can already concentrate force: their garrison plus every allied support transfer collapses into one combined wall when an attack arrives. Before v0.23 the attacker could not do the same. Even when ten waves landed on the same nexus in the same minute, the engine resolved them one at a time, each one fighting the full combined wall by itself. Coordinated offense was something players could attempt but the engine ignored.
+
+Coordinated Assault fixes that asymmetry. Waves that come from a declared coordination - the Wave Planner (solo) or a War Room operation (multi-player) - now merge at the moment they land. One combined attacker force fights one combined defender force, in a single resolution. Loose "everyone click at the same time" dogpiles that did NOT go through a coordination tool still resolve as separate strikes, exactly as they always did. The skill of timing waves is preserved; the payoff is finally there.
+
+**Wave Planner (solo coordination):** Open the Wave Planner against a target and schedule multiple waves from multiple of your own nexuses to land at the same arrival time. Every wave you schedule in that session is automatically grouped into one Wave Plan on the server. At landing, all waves in the plan that share an arrival time merge into one combined attack. Waves with different arrival times in the same plan stay separate strikes - the merge is per-arrival, not per-plan, so staggering waves on purpose still works exactly like before.
+
+**War Room (multi-player coordination):** A faction operation already lets multiple players claim slots under one shared target and arrival time. Those slots now merge at landing - all the contributors' troops fight as one combined force. A five-player War Room strike is one big battle instead of five solo duels, which is the only realistic way for a faction to crack a wall held by another organized faction.
+
+**The trade - no recall.** Joining a coordination is a commitment. Once a wave has launched its troops cannot be pulled out of the coordination before resolution. This is the entire cost: concentration earns you the merged battle, but you accept attacker-grade finality in exchange. The defender's reactive support has no equivalent constraint, so you give up flexibility to gain force.
+
+**One Overseer per coordination.** A coordinated strike is one conquest attempt with concentrated force behind it - not many. If a group somehow ends up carrying more than one Overseer, the engine soft-fails and resolves the waves individually so nobody loses an Overseer to an unexpected merge. As an attacker, plan one Overseer per coordinated wave.
+
+**How the merged combat math works.** It is the same math as a single fight, run once on the combined force. Class counters, Shield Grid, Targeting Core, anvils vs strikers, scout intel - all unchanged. The differences are:
+
+- **Targeting Core uses the BEST Armory** across the participating attacker nexuses, not an average. The contributor with the highest Targeting Core directs fire for the merged force, so investing in your own Armory pays off even when you join someone else's strike.
+- **Losses are split back proportionally.** A merged combat returns a total loss per troop type; each participant absorbs that loss in proportion to how many of that troop type they contributed. No troop is ever lost from a participant who did not bring one.
+- **Loot is split back by surviving carry.** The participant with more living troops at the end carries more loot home, the same way carry capacity already works for a solo strike.
+- **Control drains once, building damage applies once, conquest happens once.** A merged strike is one conquest attempt, not N. If it conquers, the conqueror is whoever brought the Overseer - which is unambiguous by the one-Overseer rule above.
+
+**The tactical shift.** Before v0.23, an organized defense could not be cracked one solo wave at a time - even a faction's worth of attackers fighting one wall got chewed up serially. After v0.23, concentration is the answer to concentration: scout the target, agree on the right counter class, declare the coordination, and commit the force. The triangle still decides the fight, but the fight is finally happening at the right scale.
+
+**What the defender sees.** Defenders keep everything they had: full information on incoming waves and unlimited reactive support. We did not nerf defense to fix this. The change is purely additive on the attacker side. Reactive support that arrives in time still stacks on the wall exactly as before - the merged attacker just has the weight to push through it when it brings the right composition.
 `;
 
 export type BuildingDoc = {
@@ -135,7 +166,11 @@ export const TROOPS_DOC: TroopDoc[] = [
 		stats: { attack: 1, defense: 20, speed: 50, carry: 10 },
 		cost: { biomass: 400, alloy: 150, ore: 400, population: 1, time: '3m 0s' },
 		requirements: ['Command Core Lv3'],
-		notes: ['Send as a scout mission to gather intel. More operatives = better odds against garrisoned defenders.']
+		notes: [
+			'Send as a scout mission to gather intel. More operatives = better odds against garrisoned defenders.',
+			'Fastest unit in the game (speed 50) - scout missions arrive faster than any strike.',
+			'Deals no damage and takes no part in normal combat; it only fights other recon (scout-vs-scout) when breaking through to gather intel.'
+		]
 	},
 	{
 		key: 'pyreSuppressor',
@@ -209,13 +244,13 @@ export const TROOPS_DOC: TroopDoc[] = [
 		name: 'Void Stalker',
 		role: 'Endgame mobile striker - counters Armor',
 		description:
-			'Tier-3 fast striker. The fastest unit in the game and the mobile half of the endgame line - pairs with the Annihilator Platform as the two top-end offensive units. Cracks armored defensive lines at speed; still lightly armored, so use its speed and shock value rather than slugging it out.',
+			'Tier-3 fast striker. The fastest combat unit in the game (only the non-combat Recon Operative is faster) and the mobile half of the endgame line - pairs with the Annihilator Platform as the two top-end offensive units. Cracks armored defensive lines at speed; still lightly armored, so use its speed and shock value rather than slugging it out.',
 		unitClass: 'mobile',
 		stats: { attack: 215, defense: 36, speed: 32, carry: 60 },
 		cost: { biomass: 1120, alloy: 910, ore: 1420, population: 3, time: '27m 0s' },
 		requirements: ['Hangar Bay Lv9', 'Alloy Forge Lv8', 'Targeting Core Lv3'],
 		notes: [
-			'Speed 32 - the fastest unit in the roster.',
+			'Speed 32 - the fastest combat unit in the roster (the non-combat Recon Operative is faster at 50).',
 			'Mobile class is countered BY Fire (Suppressor / Lancer / Disruptor / Annihilator / Plasma Turret).',
 			'Fire class is countered BY Armor (Assault Trooper / Bulwark Guard / Siege Mech).'
 		]

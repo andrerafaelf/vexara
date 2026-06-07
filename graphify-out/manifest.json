@@ -280,8 +280,8 @@
     "semantic_hash": ""
   },
   "client/src/app/how-to-play/page.tsx": {
-    "mtime": 1780673833.437958,
-    "ast_hash": "47b3296647d963d41f20accc996e8c02",
+    "mtime": 1780788430.5738318,
+    "ast_hash": "f676433747fcfedfa7bc149b6a1c78ba",
     "semantic_hash": ""
   },
   "client/src/app/layout.tsx": {
@@ -315,8 +315,8 @@
     "semantic_hash": ""
   },
   "client/src/app/page.tsx": {
-    "mtime": 1780742611.41886,
-    "ast_hash": "0c479f449cd77d656b21c9e2537deca6",
+    "mtime": 1780788436.6693597,
+    "ast_hash": "a72fe1f2463e2ea3c14b50ab2157b41f",
     "semantic_hash": ""
   },
   "client/src/app/palette-preview/page.tsx": {
@@ -530,8 +530,8 @@
     "semantic_hash": ""
   },
   "client/src/components/FactionChat.tsx": {
-    "mtime": 1780674812.9316866,
-    "ast_hash": "3b535644d41deebb72ca2b6d53fa980c",
+    "mtime": 1780788085.140184,
+    "ast_hash": "6d255190ba7d903b0a344cdc4162a93d",
     "semantic_hash": ""
   },
   "client/src/components/FactionLeaderboard.tsx": {
@@ -570,8 +570,8 @@
     "semantic_hash": ""
   },
   "client/src/components/Landing/LandingPage.tsx": {
-    "mtime": 1780702258.3576043,
-    "ast_hash": "4a350f65ff264a51d32e322219a2b4f0",
+    "mtime": 1780788420.831115,
+    "ast_hash": "cc8141c0b31a7accb0d3240335be8839",
     "semantic_hash": ""
   },
   "client/src/components/LiveResourceStrip.tsx": {
@@ -585,8 +585,8 @@
     "semantic_hash": ""
   },
   "client/src/components/Map.tsx": {
-    "mtime": 1780781230.9118228,
-    "ast_hash": "d097e9ceb3e20949a5645cd61ac01f06",
+    "mtime": 1780788004.3656433,
+    "ast_hash": "15f5cccffde60a238055710479742aa5",
     "semantic_hash": ""
   },
   "client/src/components/MapCell.tsx": {
@@ -700,8 +700,8 @@
     "semantic_hash": ""
   },
   "client/src/components/Reports.tsx": {
-    "mtime": 1780756320.0171041,
-    "ast_hash": "c2cd393570e790b6adf7fcb303b137e3",
+    "mtime": 1780788052.66429,
+    "ast_hash": "1ddd9e52da5281dcfe992c99f4d0f7fa",
     "semantic_hash": ""
   },
   "client/src/components/ResourceIcon.tsx": {
@@ -745,8 +745,8 @@
     "semantic_hash": ""
   },
   "client/src/components/TroopMovementsBar.tsx": {
-    "mtime": 1780756507.564162,
-    "ast_hash": "aadb689cf7decd2126bbf5bd22589882",
+    "mtime": 1780787984.112512,
+    "ast_hash": "4dfd0345a13b3ad2b15727c20b6c3ada",
     "semantic_hash": ""
   },
   "client/src/components/Username.tsx": {
@@ -810,8 +810,8 @@
     "semantic_hash": ""
   },
   "client/src/data/gameDocs.ts": {
-    "mtime": 1780693643.4756296,
-    "ast_hash": "1a4771d40504e493c7c014b8cd71c049",
+    "mtime": 1780787956.5679822,
+    "ast_hash": "90a6cdbd7613930df193e7d814673537",
     "semantic_hash": ""
   },
   "client/src/data/gameIcons.ts": {
@@ -820,8 +820,8 @@
     "semantic_hash": ""
   },
   "client/src/data/latestPatch.ts": {
-    "mtime": 1780673835.2804544,
-    "ast_hash": "027d21e541f18c3716761572d051327d",
+    "mtime": 1780788478.2638996,
+    "ast_hash": "89893eee18ba8cbbe75605df9724dc78",
     "semantic_hash": ""
   },
   "client/src/features/combat/useCombat.ts": {
@@ -980,8 +980,8 @@
     "semantic_hash": ""
   },
   "client/src/utils/travel.ts": {
-    "mtime": 1780673835.822926,
-    "ast_hash": "2871e83b69f3706e435c95847cd290f0",
+    "mtime": 1780788718.0539396,
+    "ast_hash": "82e3451f163ee22cc97c6a1b1a0bedbd",
     "semantic_hash": ""
   },
   "client/tsconfig.json": {
@@ -1660,8 +1660,8 @@
     "semantic_hash": ""
   },
   "server/services/attackService.ts": {
-    "mtime": 1780781118.6841836,
-    "ast_hash": "173b21f9d398d6167ccda0da28aded18",
+    "mtime": 1780787869.5983028,
+    "ast_hash": "a68c4e4b682a0f35711b23ed432b2e51",
     "semantic_hash": ""
   },
   "server/services/authService.ts": {
@@ -1830,8 +1830,8 @@
     "semantic_hash": ""
   },
   "server/utils/combat.ts": {
-    "mtime": 1780680160.579922,
-    "ast_hash": "5366f3e2ba640e12608aedcca313eb95",
+    "mtime": 1780788095.2817805,
+    "ast_hash": "045a1d5685cbe811d8a7c3e7e9bdc3d8",
     "semantic_hash": ""
   },
   "server/utils/combatMath.ts": {
@@ -2145,8 +2145,8 @@
     "semantic_hash": ""
   },
   "server/TROOPS.md": {
-    "mtime": 1780668095.613251,
-    "ast_hash": "9feebdc92c8c1fab9e27b49e831c7cac",
+    "mtime": 1780787928.9897287,
+    "ast_hash": "8986822fa9ceb6b04dd8e648bdeaf68e",
     "semantic_hash": ""
   },
   "util/docker-compose.yml": {
@@ -2367,6 +2367,11 @@
   "client/src/components/ProfileBadges.tsx": {
     "mtime": 1780776082.9995987,
     "ast_hash": "c3827a2692cbb54de7102d7447db3646",
+    "semantic_hash": ""
+  },
+  "client/public/patch-notes/PATCH_NOTES_ALPHA_0.23.md": {
+    "mtime": 1780788466.738705,
+    "ast_hash": "19f9b740403f52c836953aff2f96a229",
     "semantic_hash": ""
   }
 }

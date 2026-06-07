@@ -6,7 +6,7 @@ import '@/styles/GuidePages.css';
 
 const TITLE = 'How to Play Vexara - Browser MMO RTS Beginner Guide';
 const DESCRIPTION =
-	'New to Vexara? Learn how to build your nexus, train troops, raid enemies, run espionage, and conquer territory in this free browser MMO RTS. No download required.';
+	'New to Vexara? Learn how to build your nexus, train troops, scout and raid enemies, and conquer territory in this free browser MMO RTS. No download required.';
 
 export const metadata: Metadata = {
 	title: TITLE,
@@ -78,6 +78,14 @@ const faqSchema = {
 		},
 		{
 			'@type': 'Question',
+			name: 'How do coordinated attacks work in Vexara?',
+			acceptedAnswer: {
+				'@type': 'Answer',
+				text: 'Use the Wave Planner (solo) or a War Room operation (faction) to schedule multiple waves against the same target at the same arrival time. Coordinated waves now merge into one combined battle instead of resolving as separate fights. This lets you concentrate force the way a defender already concentrates support, which is the only realistic way to crack an organized garrison. Loose simultaneous attacks that did not go through a coordination tool still resolve separately - the merge requires committing through the planner.'
+			}
+		},
+		{
+			'@type': 'Question',
 			name: 'Is Vexara pay-to-win?',
 			acceptedAnswer: {
 				'@type': 'Answer',
@@ -106,7 +114,7 @@ const STEPS = [
 	{
 		num: '04',
 		title: 'Scout before you strike',
-		body: "Train a Recon Operative and send it to scout targets before committing a raid. Scouts reveal troops, resources, buildings, and active queues. Better option: use the Espionage tab to embed the operative as a permanent asset - you'll get live intel on demand until the spy is detected."
+		body: "Train a Recon Operative and send it at a target to scout it before committing a raid. Scouts reveal troops, resources, buildings, and active queues, and the report comes straight back to your logs. The Recon Operative is the fastest unit in the game (speed 50), so a scout arrives ahead of any strike - send it first. It deals no damage; if the defender keeps recon stationed, your scouts have to fight through theirs (more operatives = better odds) before the intel comes home."
 	},
 	{
 		num: '05',
@@ -116,7 +124,7 @@ const STEPS = [
 	{
 		num: '06',
 		title: 'Defend with Shield Grid and garrison',
-		body: "Each level of Shield Grid adds +2% to your entire garrison's effective defence power - multiplicative with every troop's defence stat. Keep Recon Operatives stationed at home to block enemy sabotage missions. A Military Outpost nexus doubles your Shield Grid efficiency."
+		body: "Each level of Shield Grid adds +2% to your entire garrison's effective defence power - multiplicative with every troop's defence stat. Keep Recon Operatives stationed at home and raise your Stealth Array to make enemy scouts fight through your recon and risk interception before they learn anything. A Military Outpost nexus doubles your Shield Grid efficiency."
 	},
 	{
 		num: '07',
@@ -127,6 +135,11 @@ const STEPS = [
 		num: '08',
 		title: 'Conquer with Overseers',
 		body: 'To take a nexus permanently you need an Overseer - a slow, expensive command unit (4h training, max 3 per nexus). Each successful strike with a surviving Overseer drops enemy control by 34. Control starts at 100, so three clean hits conquer any nexus. The Overseer is consumed on the final strike.'
+	},
+	{
+		num: '09',
+		title: 'Coordinate strikes through Wave Planner or War Room',
+		body: 'Once you can build Overseers you will run into organized defenders who stack allied support on the same wall. A solo wave usually cannot crack that. Use the Wave Planner to schedule multiple waves from your own nexuses to land at the same time, or join a War Room operation to combine force with faction-mates. Coordinated waves merge into one battle at landing instead of fighting the wall one at a time - the only realistic way to break a prepared defense. The trade: once a coordinated wave has launched its troops cannot be recalled before the fight resolves.'
 	}
 ];
 

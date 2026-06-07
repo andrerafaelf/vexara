@@ -131,6 +131,11 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
 	const [waves, setWaves] = useState<Wave[]>([]);
 	const [arrivalTime, setArrivalTime] = useState<string>('');
 	const [now, setNow] = useState(() => serverNow());
+	// Coordinated Assault PR1: session-scoped wave plan id. Set from the first
+	// schedule response and replayed on every subsequent schedule in this
+	// session, so all waves planned in one WavePlanner sitting share one plan.
+	// Resets cleanly when the modal closes (component unmounts).
+	const [wavePlanId, setWavePlanId] = useState<number | null>(null);
 	const [sendingAll, setSendingAll] = useState(false);
 
 	// Tick `now` every second so countdowns + isPast checks stay live without calling
@@ -392,9 +397,14 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
 				troops: wave.troops,
 				type: mission,
 				launchAt: new Date(launchMs).toISOString(),
-				clientRequestId: wave.requestId
+				clientRequestId: wave.requestId,
+				// First schedule has no hint; subsequent schedules in this session
+				// pass back the id the server returned, so they all share one plan.
+				wavePlanId: wavePlanId ?? undefined
 			});
 			const scheduledId: number | null = res.data?.scheduled?.id ?? null;
+			const returnedPlanId: number | null = res.data?.scheduled?.wavePlanId ?? null;
+			if (returnedPlanId && wavePlanId == null) setWavePlanId(returnedPlanId);
 			setWaves((prev) =>
 				prev.map((w) =>
 					w.id !== wave.id ? w : { ...w, sending: false, scheduledId, scheduledLaunchAt: launchMs }

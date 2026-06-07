@@ -463,6 +463,149 @@ export function computeLossesForWinner(
 	return losses;
 }
 
+/**
+ * Coordinated Assault PR2 — split a per-troop-type loss total across the
+ * participants in a merged combat, proportional to each participant's
+ * contribution of that troop type.
+ *
+ * Conservation invariant (the conservation property test asserts this):
+ *   for every troop type k: sum_i(out[i][k]) === totalLosses[k]
+ *
+ * Algorithm: largest-remainder rounding. Each participant first absorbs
+ * floor(share). Any leftover (totalLosses[k] - sum of floors) is distributed
+ * one unit at a time to participants in descending order of fractional
+ * remainder. Stable tiebreak by index so the function is deterministic.
+ *
+ * Each participant is also clamped to its own contribution: a participant who
+ * brought 5 of a unit can never lose more than 5 of that unit, even if their
+ * share rounded high. The clamp can only happen at the unit level if a tiny
+ * contributor + a rounding remainder collide; the clamped overflow rolls to
+ * the next participant by remainder order until all losses are placed.
+ */
+export function splitProportionalByForce<P>(
+	participants: P[],
+	getContribution: (participant: P, troopType: TroopKey) => number,
+	totalLosses: Partial<Record<TroopKey, number>>
+): Map<P, Partial<Record<TroopKey, number>>> {
+	const out = new Map<P, Partial<Record<TroopKey, number>>>();
+	for (const p of participants) out.set(p, {});
+
+	for (const k of TROOP_KEYS) {
+		const total = Math.max(0, Math.floor(totalLosses[k] ?? 0));
+		if (total === 0) continue;
+
+		const contribs = participants.map((p, idx) => ({
+			participant: p,
+			idx,
+			contrib: Math.max(0, Math.floor(getContribution(p, k)))
+		}));
+		const totalContrib = contribs.reduce((s, c) => s + c.contrib, 0);
+		if (totalContrib === 0) continue; // nobody brought this troop — nobody loses it
+
+		// Stage 1 — floor share per participant.
+		const floors = contribs.map((c) => {
+			const raw = (c.contrib * total) / totalContrib;
+			return { ...c, floor: Math.floor(raw), frac: raw - Math.floor(raw) };
+		});
+		let placed = 0;
+		for (const f of floors) {
+			const lost = Math.min(f.floor, f.contrib);
+			placed += lost;
+			(out.get(f.participant)! as Record<string, number>)[k] = lost;
+		}
+
+		// Stage 2 — distribute the remainder by largest fractional first, stable
+		// by index. Skip participants already at their contribution cap.
+		let remainder = total - placed;
+		if (remainder > 0) {
+			const order = [...floors].sort((a, b) =>
+				b.frac !== a.frac ? b.frac - a.frac : a.idx - b.idx
+			);
+			let pass = 0;
+			// Loop in case clamping forces a re-distribution; bounded by participants.
+			while (remainder > 0 && pass < order.length) {
+				for (const f of order) {
+					if (remainder <= 0) break;
+					const cur = (out.get(f.participant)! as Record<string, number>)[k] || 0;
+					const room = f.contrib - cur;
+					if (room <= 0) continue;
+					(out.get(f.participant)! as Record<string, number>)[k] = cur + 1;
+					remainder--;
+				}
+				pass++;
+			}
+			// If remainder is still positive here, sum of contributions was lower
+			// than the loss total — caller error; the math already clamped per
+			// participant, so we simply leave the residue undistributed rather than
+			// corrupt the conservation invariant downstream.
+		}
+	}
+
+	// Strip zero entries so the result is clean for consumers that check key
+	// presence (combat result writes, notifications).
+	for (const [p, partial] of out) {
+		for (const k of Object.keys(partial) as TroopKey[]) {
+			if (!partial[k]) delete partial[k];
+		}
+	}
+	return out;
+}
+
+/**
+ * Coordinated Assault PR2 — split merged loot across participants by surviving
+ * carry capacity. Loot belongs to the wave that can carry it home: a
+ * participant who took heavy losses brings less back, naturally.
+ *
+ * Conservation invariant:
+ *   for every resource r: sum_i(out[i][r]) === totalLoot[r]
+ *
+ * Largest-remainder, same shape as splitProportionalByForce. If every
+ * participant lost everything (totalCarry === 0) loot evaporates — there's
+ * literally nobody to carry it. This matches resolveCombat's existing
+ * single-attack behavior where loot is bounded by survivor carry.
+ */
+type LootResources = { biomass: number; alloy: number; ore: number };
+export function splitLootByCarry<P>(
+	participants: P[],
+	getSurvivingCarry: (participant: P) => number,
+	totalLoot: LootResources
+): Map<P, LootResources> {
+	const out = new Map<P, LootResources>();
+	for (const p of participants) out.set(p, { biomass: 0, alloy: 0, ore: 0 });
+
+	const carries = participants.map((p, idx) => ({
+		participant: p,
+		idx,
+		carry: Math.max(0, Math.floor(getSurvivingCarry(p)))
+	}));
+	const totalCarry = carries.reduce((s, c) => s + c.carry, 0);
+	if (totalCarry === 0) return out;
+
+	for (const r of ['biomass', 'alloy', 'ore'] as const) {
+		const total = Math.max(0, Math.floor(totalLoot[r] || 0));
+		if (total === 0) continue;
+		const shares = carries.map((c) => {
+			const raw = (c.carry * total) / totalCarry;
+			return { ...c, floor: Math.floor(raw), frac: raw - Math.floor(raw) };
+		});
+		let placed = 0;
+		for (const s of shares) {
+			out.get(s.participant)![r] = s.floor;
+			placed += s.floor;
+		}
+		let remainder = total - placed;
+		const order = [...shares].sort((a, b) =>
+			b.frac !== a.frac ? b.frac - a.frac : a.idx - b.idx
+		);
+		for (const s of order) {
+			if (remainder <= 0) break;
+			out.get(s.participant)![r] += 1;
+			remainder--;
+		}
+	}
+	return out;
+}
+
 export function computeScoutCombat(
 	attackerCount: number,
 	defenderCount: number,

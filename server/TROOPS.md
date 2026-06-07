@@ -95,7 +95,7 @@ _Ordered weakest → strongest by overall combat value._
 
 - Role: Scout / support unit (Special class, no counter bonus)
 - Class: Special
-- Stats: Attack 1, Defense 20, Speed 25, Carry 10
+- Stats: Attack 1, Defense 20, Speed 50, Carry 10
 - Cost: Biomass 400, Alloy 150, Ore 400
 - Population: 1
 - Training Time: 3m 0s
@@ -104,6 +104,7 @@ _Ordered weakest → strongest by overall combat value._
   - Command Core Lv3
 - Notes:
   - Primary scouting unit
+  - Fastest unit in the game (speed 50) — scout missions arrive faster than any strike
 
 ### Suppressor Team
 
@@ -178,7 +179,7 @@ _Ordered weakest → strongest by overall combat value._
   - Alloy Forge Lv8
   - Armory Lv3
 - Notes:
-  - Fastest unit in the game (speed 32)
+  - Fastest combat unit in the game (speed 32) — only the non-combat Recon Operative (50) is faster
   - Hard countered by Fire class (Suppressor Team, Lancer Drone, Disruptor Unit, Annihilator Platform, Plasma Turret)
 
 ### Siege Mech

@@ -1346,7 +1346,11 @@ function SendNowBar({
 				String(op.targetNexusId),
 				slot.troops,
 				'attack',
-				`warroom:${slot.id}`
+				`warroom:${slot.id}`,
+				// Coordinated Assault PR1: stamps Attack.warOperationWaveId at the
+				// source — no race with markWarRoomSlotSent (which keeps doing its
+				// UI bookkeeping job: bump op rev + broadcast to other contributors).
+				{ warOperationSlotId: slot.id }
 			);
 			const attackId = res.data?.attack?._id ?? res.data?.attack?.id;
 			if (attackId) {

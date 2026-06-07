@@ -24,13 +24,17 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
 			toNexusId,
 			troops,
 			type = 'attack',
-			clientRequestId
+			clientRequestId,
+			wavePlanId,
+			warOperationSlotId
 		} = req.body as {
 			fromNexusId?: unknown;
 			toNexusId?: unknown;
 			troops?: unknown;
 			type?: string;
 			clientRequestId?: unknown;
+			wavePlanId?: unknown;
+			warOperationSlotId?: unknown;
 		};
 
 		const result = await attackService.launchAttack({
@@ -40,7 +44,11 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
 			toNexusId,
 			troops,
 			type,
-			clientRequestId
+			clientRequestId,
+			// Coordinated Assault PR1 — both are mutually exclusive and validated
+			// inside launchAttack against the caller's identity + target.
+			wavePlanId: parsePositiveInt(wavePlanId),
+			warOperationSlotId: parsePositiveInt(warOperationSlotId)
 		});
 		if (!result.ok) {
 			const payload: Record<string, unknown> = { error: result.error };
@@ -218,6 +226,7 @@ function serializeScheduledAttack(row: {
 	status: string;
 	error: string | null;
 	createdAt: Date;
+	wavePlanId: number | null;
 }) {
 	return {
 		id: row.id,
@@ -228,8 +237,65 @@ function serializeScheduledAttack(row: {
 		launchAt: row.launchAt.toISOString(),
 		status: row.status,
 		error: row.error,
-		createdAt: row.createdAt.toISOString()
+		createdAt: row.createdAt.toISOString(),
+		wavePlanId: row.wavePlanId
 	};
+}
+
+/**
+ * Coordinated Assault PR1 — solo coordination grouping.
+ *
+ * If the caller passes a wavePlanId hint, validate it belongs to this user +
+ * galaxy + target and reuse it. Returns 'invalid' if the hint is bad so the
+ * caller surfaces 400 (silent fallback would hide client bugs).
+ *
+ * If no hint, find the user's most recent reusable plan for this target —
+ * defined as "has a pending ScheduledAttack or an unresolved Attack against
+ * this target." Session boundary is implicit: once all the previous plan's
+ * waves are done, the next schedule starts a fresh plan.
+ */
+async function resolveOrCreateWavePlan(params: {
+	userId: number;
+	galaxyId: number;
+	targetNexusId: number;
+	hintWavePlanId: unknown;
+}): Promise<number | 'invalid'> {
+	const { userId, galaxyId, targetNexusId, hintWavePlanId } = params;
+	const hint = parsePositiveInt(hintWavePlanId);
+	if (hintWavePlanId != null && hintWavePlanId !== '' && !hint) return 'invalid';
+	if (hint) {
+		const existing = await prisma.wavePlan.findUnique({ where: { id: hint } });
+		if (
+			!existing ||
+			existing.userId !== userId ||
+			existing.galaxyId !== galaxyId ||
+			existing.targetNexusId !== targetNexusId
+		) {
+			return 'invalid';
+		}
+		return existing.id;
+	}
+
+	const reusable = await prisma.wavePlan.findFirst({
+		where: {
+			userId,
+			galaxyId,
+			targetNexusId,
+			OR: [
+				{ scheduledAttacks: { some: { status: 'pending' } } },
+				{ attacks: { some: { status: { in: ['traveling', 'returning'] } } } }
+			]
+		},
+		orderBy: { createdAt: 'desc' },
+		select: { id: true }
+	});
+	if (reusable) return reusable.id;
+
+	const created = await prisma.wavePlan.create({
+		data: { userId, galaxyId, targetNexusId },
+		select: { id: true }
+	});
+	return created.id;
 }
 
 // POST /attack/schedule — queue a wave to launch server-side at launchAt.
@@ -245,7 +311,8 @@ export async function scheduleAttack(req: AuthRequest, res: Response): Promise<v
 			troops,
 			type = 'attack',
 			launchAt,
-			clientRequestId
+			clientRequestId,
+			wavePlanId
 		} = req.body as {
 			fromNexusId?: unknown;
 			toNexusId?: unknown;
@@ -253,6 +320,7 @@ export async function scheduleAttack(req: AuthRequest, res: Response): Promise<v
 			type?: string;
 			launchAt?: unknown;
 			clientRequestId?: unknown;
+			wavePlanId?: unknown;
 		};
 
 		const parsedFromNexusId = parsePositiveInt(fromNexusId);
@@ -347,6 +415,23 @@ export async function scheduleAttack(req: AuthRequest, res: Response): Promise<v
 			}
 		}
 
+		// Resolve coordination (Coordinated Assault PR1). Only stamped on attack
+		// missions — scouts and supports are not part of the merge model (one
+		// Recon mission, one support transfer per send).
+		const resolvedWavePlanId =
+			type === 'attack'
+				? await resolveOrCreateWavePlan({
+						userId: req.userId!,
+						galaxyId: req.galaxyId!,
+						targetNexusId: parsedToNexusId,
+						hintWavePlanId: wavePlanId
+					})
+				: null;
+		if (type === 'attack' && resolvedWavePlanId === 'invalid') {
+			res.status(400).json({ error: 'Invalid wavePlanId' });
+			return;
+		}
+
 		const row = await prisma.scheduledAttack.create({
 			data: {
 				galaxyId: req.galaxyId!,
@@ -356,7 +441,8 @@ export async function scheduleAttack(req: AuthRequest, res: Response): Promise<v
 				troops: normalizedTroops,
 				type: type as any,
 				launchAt: new Date(launchMs),
-				clientRequestId: normalizedClientRequestId
+				clientRequestId: normalizedClientRequestId,
+				wavePlanId: resolvedWavePlanId === 'invalid' ? null : resolvedWavePlanId
 			}
 		});
 		res.json({ success: true, scheduled: serializeScheduledAttack(row) });

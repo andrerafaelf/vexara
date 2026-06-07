@@ -59,6 +59,8 @@ model User {
   lastSeenWarsAt   DateTime?
   lastPlayedAt     DateTime?
 
+  wavePlans WavePlan[]
+
   beginnerTipsEnabled Boolean  @default(true)
   onboardingStep      String?  @db.VarChar(64)
   referralClickCount  Int      @default(0)
@@ -111,6 +113,7 @@ model Galaxy {
   factions           Faction[]
   galaxyEvents       GalaxyEvent[]
   factionTreaties    FactionTreaty[]
+  wavePlans          WavePlan[]
 }
 
 model GalaxyPlayer {
@@ -339,6 +342,7 @@ model Nexus {
   marketListings     MarketListing[]
   troopsSent         TroopTransfer[]  @relation("OwnerNexus")
   troopsHosted       TroopTransfer[]  @relation("HostNexus")
+  wavePlansTargeting WavePlan[]       @relation("WavePlanTarget")
 
   @@index([galaxyId])
   @@index([ownerId, galaxyId])
@@ -461,10 +465,21 @@ model Attack {
   clientRequestId String? @unique
   createdAt DateTime @default(now())
 
+  // Coordination pointers (PR1 of coordinated assault). At most ONE is set on
+  // any Attack — enforced by the attack_one_coordination CHECK constraint added
+  // in the migration. The resolver groups arriving Attacks by these in PR2;
+  // PR1 only writes them.
+  wavePlanId         Int?
+  wavePlan           WavePlan?         @relation(fields: [wavePlanId], references: [id], onDelete: SetNull)
+  warOperationWaveId Int?
+  warOperationWave   WarOperationWave? @relation(fields: [warOperationWaveId], references: [id], onDelete: SetNull)
+
   @@index([galaxyId])
   @@index([status, arrivesAt])
   @@index([attackerNexusId, status])
   @@index([defenderNexusId, status])
+  @@index([arrivesAt, status, wavePlanId])
+  @@index([arrivesAt, status, warOperationWaveId])
 }
 
 // A wave/attack queued to launch at a future moment. Persisted server-side so it
@@ -490,12 +505,47 @@ model ScheduledAttack {
   // Forwarded to launchAttack so the resulting Attack is idempotent on retries.
   clientRequestId String? @unique
 
+  // Coordination pointer (PR1 of coordinated assault). Stamped at schedule time
+  // and propagated onto the resulting Attack at launch. SetNull keeps a row's
+  // lineage queryable even if the plan is later deleted.
+  wavePlanId Int?
+  wavePlan   WavePlan? @relation(fields: [wavePlanId], references: [id], onDelete: SetNull)
+
   createdAt   DateTime  @default(now())
   processedAt DateTime?
 
   @@index([status, launchAt])
   @@index([userId])
   @@index([galaxyId])
+  @@index([wavePlanId])
+}
+
+// A solo player's wave plan against a single target. Created/reused by the
+// scheduleAttack endpoint when the call carries a wavePlanId hint (or when the
+// player's most recent active plan for that target is reusable). Invisible to
+// the player UI — it's the server-side glue that lets multiple WavePlanner
+// waves landing at the same arrivesAt resolve as one merged combat (PR2).
+//
+// Mirrors WarOperationWave for the multi-player case. There is no lifecycle
+// status here: a WavePlan is "active" as long as any of its ScheduledAttacks
+// are still pending or its Attacks haven't all resolved; otherwise it's just
+// historical metadata kept for queryability and combat-log lineage.
+model WavePlan {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  galaxyId      Int
+  targetNexusId Int
+  createdAt     DateTime @default(now())
+
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  galaxy      Galaxy  @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
+  targetNexus Nexus   @relation("WavePlanTarget", fields: [targetNexusId], references: [id], onDelete: Cascade)
+
+  scheduledAttacks ScheduledAttack[]
+  attacks          Attack[]
+
+  @@index([userId, galaxyId, targetNexusId])
+  @@index([createdAt])
 }
 
 model Faction {
@@ -797,6 +847,7 @@ model WarOperationWave {
 
   operation WarOperation       @relation(fields: [operationId], references: [id], onDelete: Cascade)
   slots     WarOperationSlot[]
+  attacks   Attack[]
 
   @@index([operationId, ordinal])
 }

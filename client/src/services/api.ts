@@ -240,11 +240,23 @@ export const sendAttack = (
 	toNexusId: string,
 	troops: any,
 	type: string = 'attack',
-	clientRequestId?: string
+	clientRequestId?: string,
+	// Coordinated Assault PR1 — exactly one of these should be set (or neither).
+	// warOperationSlotId is used by WarRoom sends; wavePlanId by a future
+	// "send now from an open plan" path. Server validates both.
+	coordination?: { wavePlanId?: number; warOperationSlotId?: number }
 ) =>
 	apiRequest('/attack/send', {
 		method: 'POST',
-		body: JSON.stringify({ fromNexusId, toNexusId, troops, type, clientRequestId })
+		body: JSON.stringify({
+			fromNexusId,
+			toNexusId,
+			troops,
+			type,
+			clientRequestId,
+			wavePlanId: coordination?.wavePlanId,
+			warOperationSlotId: coordination?.warOperationSlotId
+		})
 	});
 
 // Server-side scheduled waves — fire whether or not the planning tab is open.
@@ -255,6 +267,11 @@ export const scheduleAttack = (params: {
 	type?: string;
 	launchAt: string;
 	clientRequestId?: string;
+	// Coordinated Assault PR1 — the WavePlanner threads a session-scoped plan
+	// id through here. Server creates a plan on the first call (no hint) and
+	// returns its id in the response; subsequent calls in the same session
+	// replay that id so all the session's waves share one plan.
+	wavePlanId?: number;
 }) =>
 	apiRequest('/attack/schedule', {
 		method: 'POST',
