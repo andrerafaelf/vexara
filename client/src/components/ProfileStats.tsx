@@ -3,7 +3,7 @@
 import { useAuth } from '@/context/AuthContext';
 import { getUserStats, changePassword, getMyNexuses, getDailyStreak } from '@/services/api';
 import { Nexus, UserStats } from '@/types/game';
-import { Bell, ExternalLink, Lock, LogOut, MapPin, User as UserIcon } from 'lucide-react';
+import { Bell, Eye, ExternalLink, Lock, LogOut, MapPin, User as UserIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -58,13 +58,31 @@ export default function ProfileStats() {
 	);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
-	const [tab, setTab] = useState<'stats' | 'notifications' | 'security'>('stats');
+	const [tab, setTab] = useState<'stats' | 'notifications' | 'security' | 'accessibility'>('stats');
 	const [pwCurrent, setPwCurrent] = useState('');
 	const [pwNew, setPwNew] = useState('');
 	const [pwConfirm, setPwConfirm] = useState('');
 	const [pwError, setPwError] = useState<string | null>(null);
 	const [pwSuccess, setPwSuccess] = useState(false);
 	const [pwLoading, setPwLoading] = useState(false);
+
+	type CvdMode = 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia';
+	const [cvdMode, setCvdMode] = useState<CvdMode>(() => {
+		if (typeof window === 'undefined') return 'none';
+		return (localStorage.getItem('vx-cvd') as CvdMode) ?? 'none';
+	});
+
+	function applyCvd(mode: CvdMode) {
+		setCvdMode(mode);
+		if (mode === 'none') {
+			document.body.removeAttribute('data-cvd');
+			localStorage.removeItem('vx-cvd');
+		} else {
+			document.body.setAttribute('data-cvd', mode);
+			localStorage.setItem('vx-cvd', mode);
+		}
+	}
+
 	usePageReady(!loading, 'profile');
 
 	async function handleChangePassword(e: React.FormEvent) {
@@ -162,6 +180,13 @@ export default function ProfileStats() {
 					<Lock size={14} aria-hidden="true" />
 					<span>Security</span>
 				</button>
+				<button
+					className={`ps-tab ${tab === 'accessibility' ? 'ps-tab--active' : ''}`}
+					onClick={() => setTab('accessibility')}
+				>
+					<Eye size={14} aria-hidden="true" />
+					<span>Accessibility</span>
+				</button>
 				<button className="ps-tab ps-tab--logout" onClick={logout}>
 					<LogOut size={14} aria-hidden="true" />
 					<span>Logout</span>
@@ -228,6 +253,43 @@ export default function ProfileStats() {
 							{pwLoading ? 'Saving…' : 'Change password'}
 						</button>
 					</form>
+				</div>
+			)}
+
+			{tab === 'accessibility' && (
+				<div className="ps-accessibility-panel">
+					<h3 className="ps-section-title">Colour vision mode</h3>
+					<p className="ps-accessibility-desc">
+						Remaps the six nexus colours on the Starfield so they stay distinguishable under common colour vision deficiencies. The legend updates instantly — no reload required.
+					</p>
+					<div className="ps-cvd-options" role="radiogroup" aria-label="Colour vision mode">
+						{([
+							{ value: 'none',         label: 'Default',      desc: 'Standard palette' },
+							{ value: 'deuteranopia', label: 'Deuteranopia', desc: 'Red-green (green-weak, most common)' },
+							{ value: 'protanopia',   label: 'Protanopia',   desc: 'Red-green (red-weak)' },
+							{ value: 'tritanopia',   label: 'Tritanopia',   desc: 'Blue-yellow (rare)' },
+						] as { value: CvdMode; label: string; desc: string }[]).map(({ value, label, desc }) => (
+							<button
+								key={value}
+								role="radio"
+								aria-checked={cvdMode === value}
+								className={`ps-cvd-option${cvdMode === value ? ' ps-cvd-option--active' : ''}`}
+								onClick={() => applyCvd(value)}
+							>
+								<span className="ps-cvd-swatches" aria-hidden="true">
+									<span className={`ps-cvd-swatch ps-cvd-swatch--own${value !== 'none' ? ` ps-cvd-swatch--own-${value}` : ''}`} />
+									<span className={`ps-cvd-swatch ps-cvd-swatch--enemy${value !== 'none' ? ` ps-cvd-swatch--enemy-${value}` : ''}`} />
+									<span className={`ps-cvd-swatch ps-cvd-swatch--faction${value !== 'none' ? ` ps-cvd-swatch--faction-${value}` : ''}`} />
+									<span className={`ps-cvd-swatch ps-cvd-swatch--ally${value !== 'none' ? ` ps-cvd-swatch--ally-${value}` : ''}`} />
+								</span>
+								<span className="ps-cvd-option-text">
+									<span className="ps-cvd-option-label">{label}</span>
+									<span className="ps-cvd-option-desc">{desc}</span>
+								</span>
+								{cvdMode === value && <span className="ps-cvd-active-mark" aria-hidden="true" />}
+							</button>
+						))}
+					</div>
 				</div>
 			)}
 

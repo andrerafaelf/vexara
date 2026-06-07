@@ -37,11 +37,11 @@ export default async function Image({ params }: { params: Promise<{ id: string }
 	const data = await fetchReplay(id);
 
 	if (!data) {
-		return renderOgCard({
+		return await renderOgCard({
 			eyebrow: 'Combat Replay',
 			title: 'Battle Replay',
 			subtitle: 'Watch a deterministic 30-second Vexara battle replay.',
-			footer: 'vexara.world / replay'
+			footer: 'vexara.world // replay'
 		});
 	}
 
@@ -56,14 +56,14 @@ export default async function Image({ params }: { params: Promise<{ id: string }
 	const totalA = sum(data.attackerInitial);
 	const totalD = sum(data.defenderInitial);
 
-	return renderOgCard({
+	return await renderOgCard({
 		eyebrow: 'Combat Replay',
 		kicker: `${totalA.toLocaleString()} vs ${totalD.toLocaleString()} units engaged`,
 		title,
 		// Long names can make the outcome wide; ease the title size down a touch.
 		titleSize: title.length > 28 ? 84 : 100,
 		subtitle: 'Watch the deterministic 30-second replay, blow by blow.',
-		footer: 'vexara.world / replay',
+		footer: 'vexara.world // replay',
 		badge: data.conquered ? 'CONQUERED' : data.victory ? 'ATTACKER WIN' : 'DEFENDER WIN'
 	});
 }

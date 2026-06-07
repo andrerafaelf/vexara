@@ -776,3 +776,112 @@
 	line-height: 1.4;
 	color: var(--text-muted);
 }
+
+/* ── Accessibility tab ───────────────────────────────────────────────── */
+.ps-accessibility-panel {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-5);
+}
+
+.ps-accessibility-desc {
+	font-size: var(--text-sm);
+	color: var(--text-muted);
+	line-height: 1.6;
+	max-width: 560px;
+}
+
+.ps-cvd-options {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.ps-cvd-option {
+	display: flex;
+	align-items: center;
+	gap: var(--space-4);
+	padding: var(--space-4) var(--space-5);
+	background: var(--color-navy-900);
+	border: 1px solid var(--border-default);
+	border-left: 3px solid transparent;
+	text-align: left;
+	cursor: pointer;
+	transition:
+		border-color var(--duration-fast) var(--ease-out),
+		background var(--duration-fast) var(--ease-out);
+	position: relative;
+}
+
+.ps-cvd-option:hover {
+	border-color: var(--border-strong);
+	background: rgba(255, 255, 255, 0.025);
+}
+
+.ps-cvd-option--active {
+	border-left-color: var(--accent);
+	background: rgba(255, 158, 61, 0.05);
+	border-color: var(--border-accent);
+}
+
+/* Swatch strip — four colour dots previewing each mode */
+.ps-cvd-swatches {
+	display: flex;
+	gap: 4px;
+	flex-shrink: 0;
+}
+
+.ps-cvd-swatch {
+	width: 16px;
+	height: 16px;
+	border-radius: 2px;
+}
+
+/* Default palette */
+.ps-cvd-swatch--own     { background: var(--success); }
+.ps-cvd-swatch--enemy   { background: var(--danger); }
+.ps-cvd-swatch--faction { background: #5a9ee6; }
+.ps-cvd-swatch--ally    { background: #a877e8; }
+
+/* Deuteranopia / Protanopia shared palette */
+.ps-cvd-swatch--own-deuteranopia,
+.ps-cvd-swatch--own-protanopia     { background: #E6B800; }
+.ps-cvd-swatch--enemy-deuteranopia,
+.ps-cvd-swatch--enemy-protanopia   { background: #0072B2; }
+.ps-cvd-swatch--faction-deuteranopia,
+.ps-cvd-swatch--faction-protanopia { background: #009E73; }
+.ps-cvd-swatch--ally-deuteranopia,
+.ps-cvd-swatch--ally-protanopia    { background: #CC79A7; }
+
+/* Tritanopia */
+.ps-cvd-swatch--own-tritanopia     { background: var(--success); }
+.ps-cvd-swatch--enemy-tritanopia   { background: var(--danger); }
+.ps-cvd-swatch--faction-tritanopia { background: #CC0099; }
+.ps-cvd-swatch--ally-tritanopia    { background: #E55C00; }
+
+.ps-cvd-option-text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	flex: 1;
+}
+
+.ps-cvd-option-label {
+	font-size: var(--text-sm);
+	font-weight: 600;
+	color: var(--text-strong);
+}
+
+.ps-cvd-option-desc {
+	font-size: var(--text-xs);
+	color: var(--text-muted);
+}
+
+.ps-cvd-active-mark {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--accent);
+	box-shadow: 0 0 6px rgba(255, 158, 61, 0.6);
+	flex-shrink: 0;
+}

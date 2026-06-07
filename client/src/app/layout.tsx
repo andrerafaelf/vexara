@@ -183,6 +183,14 @@ export default function RootLayout({
 				/>
 			</head>
 			<body suppressHydrationWarning>
+				{/* Reads CVD preference from localStorage and applies it before first paint
+				    to avoid a colour flash. dangerouslySetInnerHTML is intentional — this
+				    must be an inline blocking script, not a module. */}
+				<script
+					dangerouslySetInnerHTML={{
+						__html: `(function(){try{var m=localStorage.getItem('vx-cvd');if(m&&m!=='none')document.body.setAttribute('data-cvd',m);}catch(e){}})();`
+					}}
+				/>
 				<AuthProvider>
 					<QueryProvider>
 						<ToastProvider>

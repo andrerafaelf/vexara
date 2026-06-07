@@ -38,7 +38,7 @@ export default async function Image({ params }: { params: Promise<{ username: st
 	const data = await fetchProfile(username);
 
 	if (!data) {
-		return renderOgCard({
+		return await renderOgCard({
 			eyebrow: 'Commander',
 			title: decodeURIComponent(username),
 			subtitle: 'A commander in the persistent galaxy of Vexara.',
@@ -59,14 +59,14 @@ export default async function Image({ params }: { params: Promise<{ username: st
 			? data.supporterTier.toUpperCase()
 			: undefined;
 
-	return renderOgCard({
+	return await renderOgCard({
 		eyebrow: 'Commander',
 		kicker: 'Commander dossier',
 		title: data.username,
 		// Usernames can be long; ease the size down so they don't clip.
 		titleSize: data.username.length > 14 ? 84 : 112,
 		subtitle: subtitleParts.join('  ·  '),
-		footer: `vexara.world / u / ${data.username}`,
+		footer: `vexara.world // u // ${data.username}`,
 		badge
 	});
 }

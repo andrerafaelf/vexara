@@ -5,11 +5,9 @@ export const OG_CONTENT_TYPE = 'image/png';
 
 // Brand tokens (mirrors globals.css)
 const C = {
-	bg: '#0d1117', // --color-navy-800
-	surface: '#161b22', // --color-navy-700
-	border: '#30363d', // --border-default
-	borderStrong: '#444c56', // --border-strong
-	accent: '#ff9e3d', // --color-cyan-500
+	bg: '#0d1117',
+	border: '#30363d',
+	accent: '#ff9e3d',
 	accentSoft: 'rgba(255,158,61,0.08)',
 	textStrong: '#f0f6fc',
 	textDefault: '#c9d1d9',
@@ -26,12 +24,33 @@ interface OgCardOptions {
 	title: string;
 	/** One- or two-line supporting copy under the title. */
 	subtitle?: string;
-	/** Footer path, e.g. "vexara.world / codex". */
+	/** Footer path, e.g. "vexara.world / patch-notes". */
 	footer?: string;
 	/** Optional pill in the bottom-right, e.g. "Latest · ALPHA v0.22". */
 	badge?: string;
 	/** Title font size override (px). Default 104; drop for long titles. */
 	titleSize?: number;
+}
+
+// Cache font buffers across requests (module-level, survives hot reloads in dev).
+let _interRegular: ArrayBuffer | null = null;
+let _interBold: ArrayBuffer | null = null;
+
+async function loadFonts() {
+	if (_interRegular && _interBold) return { regular: _interRegular, bold: _interBold };
+
+	const [regular, bold] = await Promise.all([
+		fetch(
+			'https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiJ-Ek-_EeA.woff2'
+		).then((r) => r.arrayBuffer()),
+		fetch(
+			'https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuI6fAZ9hiJ-Ek-_EeA.woff2'
+		).then((r) => r.arrayBuffer())
+	]);
+
+	_interRegular = regular;
+	_interBold = bold;
+	return { regular, bold };
 }
 
 function HexGlyph() {
@@ -46,27 +65,19 @@ function HexGlyph() {
 			}}
 		>
 			<svg width="520" height="520" viewBox="0 0 16 16" fill="none">
-				{/* Outermost ring — very faint */}
 				<path
 					d="M8 0.8l6.2 3.6v7.2L8 15.2l-6.2-3.6V4.4z"
 					stroke={C.accent}
 					strokeWidth="0.18"
 					opacity="0.4"
 				/>
-				{/* Main hex */}
-				<path
-					d="M8 1.8l5.4 3.1v6.2L8 14.2l-5.4-3.1V4.9z"
-					stroke={C.accent}
-					strokeWidth="0.32"
-				/>
-				{/* Inner hex */}
+				<path d="M8 1.8l5.4 3.1v6.2L8 14.2l-5.4-3.1V4.9z" stroke={C.accent} strokeWidth="0.32" />
 				<path
 					d="M8 3.6l3.7 2.15v4.5L8 12.4l-3.7-2.15v-4.5z"
 					stroke={C.accent}
 					strokeWidth="0.22"
 					opacity="0.7"
 				/>
-				{/* Cross-hairs */}
 				<line x1="8" y1="1.8" x2="8" y2="14.2" stroke={C.accent} strokeWidth="0.12" opacity="0.3" />
 				<line
 					x1="2.6"
@@ -86,10 +97,8 @@ function HexGlyph() {
 					strokeWidth="0.12"
 					opacity="0.3"
 				/>
-				{/* Centre node */}
 				<circle cx="8" cy="8" r="1.6" stroke={C.accent} strokeWidth="0.28" />
 				<circle cx="8" cy="8" r="0.7" fill={C.accent} />
-				{/* Corner nodes */}
 				<circle cx="8" cy="1.8" r="0.25" fill={C.accent} opacity="0.6" />
 				<circle cx="13.4" cy="4.9" r="0.25" fill={C.accent} opacity="0.6" />
 				<circle cx="13.4" cy="11.1" r="0.25" fill={C.accent} opacity="0.6" />
@@ -101,7 +110,7 @@ function HexGlyph() {
 	);
 }
 
-export function renderOgCard({
+export async function renderOgCard({
 	eyebrow = 'Vexara',
 	kicker,
 	title,
@@ -110,6 +119,8 @@ export function renderOgCard({
 	badge,
 	titleSize = 104
 }: OgCardOptions) {
+	const { regular, bold } = await loadFonts();
+
 	return new ImageResponse(
 		(
 			<div
@@ -120,12 +131,12 @@ export function renderOgCard({
 					flexDirection: 'column',
 					background: C.bg,
 					color: C.textDefault,
-					fontFamily: 'sans-serif',
+					fontFamily: '"Inter", sans-serif',
 					position: 'relative',
 					overflow: 'hidden'
 				}}
 			>
-				{/* Amber top-border accent — the Vexara panel signature */}
+				{/* Amber top-border accent */}
 				<div
 					style={{
 						position: 'absolute',
@@ -138,7 +149,7 @@ export function renderOgCard({
 					}}
 				/>
 
-				{/* Subtle radial glow from top-right — matches landing page veil */}
+				{/* Radial glow from top-right */}
 				<div
 					style={{
 						position: 'absolute',
@@ -148,7 +159,7 @@ export function renderOgCard({
 					}}
 				/>
 
-				{/* Tactical scanlines — matches .lp-hero-bg-scanlines */}
+				{/* Scanlines */}
 				<div
 					style={{
 						position: 'absolute',
@@ -159,7 +170,7 @@ export function renderOgCard({
 					}}
 				/>
 
-				{/* Subtle grid wash */}
+				{/* Grid wash */}
 				<div
 					style={{
 						position: 'absolute',
@@ -171,10 +182,8 @@ export function renderOgCard({
 					}}
 				/>
 
-				{/* Hex command-node motif bleeding off right */}
 				<HexGlyph />
 
-				{/* Inner panel with left amber border (matches .vx-error-panel / .lp-hero-title-edge) */}
 				<div
 					style={{
 						position: 'absolute',
@@ -184,20 +193,19 @@ export function renderOgCard({
 						padding: '56px 72px 52px 72px'
 					}}
 				>
-					{/* Eyebrow — monospace, uppercase, amber — matches .lp-hero-stamp */}
+					{/* Eyebrow */}
 					<div
 						style={{
 							display: 'flex',
 							alignItems: 'center',
 							gap: 14,
-							fontFamily: 'monospace',
 							fontSize: 18,
+							fontWeight: 400,
 							letterSpacing: '0.2em',
 							textTransform: 'uppercase',
 							color: C.accent
 						}}
 					>
-						{/* Amber square dot — matches .lp-hero-stamp-dot */}
 						<div
 							style={{
 								width: 8,
@@ -210,7 +218,7 @@ export function renderOgCard({
 						<div style={{ display: 'flex' }}>Vexara // {eyebrow}</div>
 					</div>
 
-					{/* Headline block — lower half */}
+					{/* Headline block */}
 					<div
 						style={{
 							display: 'flex',
@@ -235,14 +243,8 @@ export function renderOgCard({
 							</div>
 						)}
 
-						{/* Title with left amber accent border — matches .lp-hero-title-edge */}
-						<div
-							style={{
-								display: 'flex',
-								alignItems: 'flex-start',
-								gap: 0
-							}}
-						>
+						{/* Title with left amber accent bar */}
+						<div style={{ display: 'flex', alignItems: 'flex-start', gap: 0 }}>
 							<div
 								style={{
 									width: 4,
@@ -260,7 +262,6 @@ export function renderOgCard({
 									fontWeight: 900,
 									letterSpacing: '-0.045em',
 									lineHeight: 0.92,
-									// gradient white→light-grey — matches .lp-hero-title-shout
 									color: '#ffffff'
 								}}
 							>
@@ -274,7 +275,7 @@ export function renderOgCard({
 							style={{
 								display: 'flex',
 								marginTop: 32,
-								marginLeft: 32, // align with title text (past the border)
+								marginLeft: 32,
 								maxWidth: 680,
 								fontSize: 26,
 								lineHeight: 1.45,
@@ -299,8 +300,8 @@ export function renderOgCard({
 						<div
 							style={{
 								display: 'flex',
-								fontFamily: 'monospace',
 								fontSize: 16,
+								fontWeight: 400,
 								letterSpacing: '0.16em',
 								textTransform: 'uppercase',
 								color: C.textFaint
@@ -317,7 +318,6 @@ export function renderOgCard({
 									gap: 10,
 									fontSize: 20,
 									fontWeight: 700,
-									fontFamily: 'monospace',
 									letterSpacing: '0.06em',
 									color: C.accent,
 									border: `1px solid rgba(255,158,61,0.45)`,
@@ -332,6 +332,12 @@ export function renderOgCard({
 				</div>
 			</div>
 		),
-		{ ...OG_SIZE }
+		{
+			...OG_SIZE,
+			fonts: [
+				{ name: 'Inter', data: regular, weight: 400, style: 'normal' },
+				{ name: 'Inter', data: bold, weight: 900, style: 'normal' }
+			]
+		}
 	);
 }

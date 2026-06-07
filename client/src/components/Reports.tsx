@@ -421,14 +421,22 @@ const Reports: React.FC<ReportsProps> = ({
 
 	const unreadCount = reports.reduce((acc, r) => (readIds.has(r._id) ? acc : acc + 1), 0);
 
+	const [markingAllRead, setMarkingAllRead] = useState(false);
+
 	const handleMarkAllRead = async () => {
+		if (markingAllRead) return;
+		setMarkingAllRead(true);
 		try {
 			const res = await markAllReportsRead(nexus._id);
-			const ids: string[] = res.data?.ids || reports.map((r) => r._id);
+			// Server returns { ids: string[] }; fall back to all local report IDs.
+			const ids: string[] = res.data?.ids?.length ? res.data.ids : reports.map((r) => r._id);
 			setReadIds((prev) => new Set([...prev, ...ids]));
 			onReadStateChange?.();
 		} catch (err) {
 			console.error('Error marking all reports as read:', err);
+			toast('Failed to mark all as read', 'error');
+		} finally {
+			setMarkingAllRead(false);
 		}
 	};
 
@@ -664,8 +672,8 @@ const Reports: React.FC<ReportsProps> = ({
 				<div className="reports-header-row">
 					<h2>Combat Logs</h2>
 					{unreadCount > 0 && (
-						<button className="btn-read-all" onClick={handleMarkAllRead}>
-							Mark all read ({unreadCount})
+						<button className="btn-read-all" onClick={handleMarkAllRead} disabled={markingAllRead}>
+							{markingAllRead ? 'Marking…' : `Mark all read (${unreadCount})`}
 						</button>
 					)}
 				</div>

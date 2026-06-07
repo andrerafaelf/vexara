@@ -199,10 +199,10 @@
 .plb-pod-ring {
 	position: absolute;
 	inset: -3px;
-	border-radius: 50%;
+	border-radius: 0;
 	pointer-events: none;
 }
-.plb-pod--1 .plb-pod-ring { box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.55), 0 0 12px rgba(255, 215, 0, 0.2); }
+.plb-pod--1 .plb-pod-ring { box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.55); }
 .plb-pod--2 .plb-pod-ring { box-shadow: 0 0 0 2px rgba(176, 184, 196, 0.4); }
 .plb-pod--3 .plb-pod-ring { box-shadow: 0 0 0 2px rgba(205, 127, 50, 0.45); }
 

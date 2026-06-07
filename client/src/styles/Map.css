@@ -2105,3 +2105,124 @@
 .galaxy-event-zone {
 	font-family: var(--font-mono);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Colorblind vision modes — applied via [data-cvd] on <body>.
+   Each mode remaps the six map nexus colours to a palette that remains
+   distinguishable under the relevant colour vision deficiency.
+
+   Palette decisions (verified against CVD simulators):
+   ─ Protanopia / Deuteranopia (red-green, ~8% of males):
+       own     : amber/gold  (#E6B800) — was green, gold still pops
+       enemy   : blue        (#0072B2) — was red, blue is safe
+       faction : cyan        (#009E73) — was mid-blue, shifted to cyan-green
+       ally    : violet      (#CC79A7) — purple is still distinct
+       target  : orange      (#D55E00) — was orange, kept (safe for RG)
+       current : unchanged   (amber accent)
+   ─ Tritanopia (blue-yellow, ~0.01%):
+       faction : magenta     (#CC0099) — was blue, magenta is distinct
+       ally    : red-orange  (#E55C00) — was purple, shifted away from blue
+       own     : unchanged   (green is safe for tritan)
+       enemy   : unchanged   (red is safe for tritan)
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ── Protanopia / Deuteranopia ──────────────────────────────────────── */
+[data-cvd='protanopia'],
+[data-cvd='deuteranopia'] {
+	--cvd-own:     #E6B800;
+	--cvd-enemy:   #0072B2;
+	--cvd-faction: #009E73;
+	--cvd-ally:    #CC79A7;
+	--cvd-target:  #D55E00;
+}
+
+/* ── Tritanopia ─────────────────────────────────────────────────────── */
+[data-cvd='tritanopia'] {
+	--cvd-own:     var(--success); /* green — safe for tritan */
+	--cvd-enemy:   var(--danger);  /* red   — safe for tritan */
+	--cvd-faction: #CC0099;
+	--cvd-ally:    #E55C00;
+	--cvd-target:  #f97316;        /* orange — same as default */
+}
+
+/* ── Apply to map cells ─────────────────────────────────────────────── */
+[data-cvd='protanopia'] .map-cell.own-nexus,
+[data-cvd='deuteranopia'] .map-cell.own-nexus {
+	background: rgba(230, 184, 0, 0.11);
+	border-color: rgba(230, 184, 0, 0.6);
+	box-shadow: inset 0 0 9px rgba(230, 184, 0, 0.16), 0 0 5px rgba(230, 184, 0, 0.14);
+}
+[data-cvd='protanopia'] .map-cell.enemy-nexus,
+[data-cvd='deuteranopia'] .map-cell.enemy-nexus {
+	background: rgba(0, 114, 178, 0.09);
+	border-color: rgba(0, 114, 178, 0.55);
+	box-shadow: inset 0 0 8px rgba(0, 114, 178, 0.12), 0 0 5px rgba(0, 114, 178, 0.14);
+}
+[data-cvd='protanopia'] .map-cell.faction-nexus,
+[data-cvd='deuteranopia'] .map-cell.faction-nexus {
+	background: rgba(0, 158, 115, 0.11);
+	border-color: rgba(0, 158, 115, 0.55);
+	box-shadow: inset 0 0 9px rgba(0, 158, 115, 0.16), 0 0 5px rgba(0, 158, 115, 0.14);
+}
+[data-cvd='protanopia'] .map-cell.ally-nexus,
+[data-cvd='deuteranopia'] .map-cell.ally-nexus {
+	background: rgba(204, 121, 167, 0.1);
+	border-color: rgba(204, 121, 167, 0.55);
+	box-shadow: inset 0 0 9px rgba(204, 121, 167, 0.14), 0 0 5px rgba(204, 121, 167, 0.12);
+}
+[data-cvd='protanopia'] .map-cell.faction-target,
+[data-cvd='deuteranopia'] .map-cell.faction-target {
+	outline-color: #D55E00;
+}
+
+[data-cvd='tritanopia'] .map-cell.faction-nexus {
+	background: rgba(204, 0, 153, 0.1);
+	border-color: rgba(204, 0, 153, 0.55);
+	box-shadow: inset 0 0 9px rgba(204, 0, 153, 0.14), 0 0 5px rgba(204, 0, 153, 0.12);
+}
+[data-cvd='tritanopia'] .map-cell.ally-nexus {
+	background: rgba(229, 92, 0, 0.1);
+	border-color: rgba(229, 92, 0, 0.55);
+	box-shadow: inset 0 0 9px rgba(229, 92, 0, 0.14), 0 0 5px rgba(229, 92, 0, 0.12);
+}
+
+/* ── Apply to nexus marker glyphs (text colour) ─────────────────────── */
+[data-cvd='protanopia'] .nexus-marker-own,
+[data-cvd='deuteranopia'] .nexus-marker-own    { color: #E6B800; }
+[data-cvd='protanopia'] .nexus-marker-enemy,
+[data-cvd='deuteranopia'] .nexus-marker-enemy  { color: #0072B2; }
+[data-cvd='protanopia'] .nexus-marker-faction,
+[data-cvd='deuteranopia'] .nexus-marker-faction { color: #009E73; }
+[data-cvd='protanopia'] .nexus-marker-ally,
+[data-cvd='deuteranopia'] .nexus-marker-ally   { color: #CC79A7; }
+
+[data-cvd='tritanopia'] .nexus-marker-faction  { color: #CC0099; }
+[data-cvd='tritanopia'] .nexus-marker-ally     { color: #E55C00; }
+
+/* ── Apply to map legend dots ───────────────────────────────────────── */
+[data-cvd='protanopia'] .map-legend-item--own::before,
+[data-cvd='deuteranopia'] .map-legend-item--own::before    { background: #E6B800; }
+[data-cvd='protanopia'] .map-legend-item--enemy::before,
+[data-cvd='deuteranopia'] .map-legend-item--enemy::before  { background: #0072B2; }
+[data-cvd='protanopia'] .map-legend-item--faction::before,
+[data-cvd='deuteranopia'] .map-legend-item--faction::before { background: #009E73; }
+[data-cvd='protanopia'] .map-legend-item--ally::before,
+[data-cvd='deuteranopia'] .map-legend-item--ally::before   { background: #CC79A7; }
+[data-cvd='protanopia'] .map-legend-item--target::before,
+[data-cvd='deuteranopia'] .map-legend-item--target::before  { background: #D55E00; }
+
+[data-cvd='tritanopia'] .map-legend-item--faction::before  { background: #CC0099; }
+[data-cvd='tritanopia'] .map-legend-item--ally::before     { background: #E55C00; }
+
+/* ── Apply to inspect-drawer legend rows (sidebar) ──────────────────── */
+[data-cvd='protanopia'] .legend-row-own::before,
+[data-cvd='deuteranopia'] .legend-row-own::before    { background: #E6B800; }
+[data-cvd='protanopia'] .legend-row-enemy::before,
+[data-cvd='deuteranopia'] .legend-row-enemy::before  { background: #0072B2; }
+[data-cvd='protanopia'] .legend-row-faction::before,
+[data-cvd='deuteranopia'] .legend-row-faction::before { background: #009E73; }
+[data-cvd='protanopia'] .legend-row-ally::before,
+[data-cvd='deuteranopia'] .legend-row-ally::before   { background: #CC79A7; }
+
+[data-cvd='tritanopia'] .legend-row-faction::before  { background: #CC0099; }
+[data-cvd='tritanopia'] .legend-row-ally::before     { background: #E55C00; }

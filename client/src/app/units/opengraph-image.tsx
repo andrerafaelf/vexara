@@ -4,12 +4,12 @@ export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 export const alt = 'Vexara units guide';
 
-export default function Image() {
-	return renderOgCard({
+export default async function Image() {
+	return await renderOgCard({
 		eyebrow: 'Roster',
 		kicker: 'Composition wins fights.',
 		title: 'Units',
 		subtitle: 'All 16 troop types — stats, costs, unlocks, and the class counter triangle.',
-		footer: 'vexara.world / units'
+		footer: 'vexara.world // units'
 	});
 }

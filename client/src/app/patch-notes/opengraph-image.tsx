@@ -10,11 +10,11 @@ export const alt = 'Vexara Patch Notes';
 
 export default async function Image() {
 	const latest = loadPatchNotes()[0]?.label ?? null;
-	return renderOgCard({
+	return await renderOgCard({
 		eyebrow: 'Transmission Log',
 		kicker: 'Every change since launch.',
 		title: 'Patch Notes',
-		footer: 'vexara.world / patch-notes',
+		footer: 'vexara.world // patch-notes',
 		badge: latest ? `Latest · ${latest}` : undefined
 	});
 }

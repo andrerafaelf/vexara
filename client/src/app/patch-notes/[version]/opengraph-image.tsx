@@ -54,12 +54,12 @@ export default async function Image({ params }: Props) {
 		? clampSummary(summaryParagraph(patch.raw) || patch.summary)
 		: 'Patch notes for the persistent galaxy.';
 
-	return renderOgCard({
+	return await renderOgCard({
 		eyebrow: 'Transmission Log',
 		kicker: 'Patch Notes',
 		title: label,
 		titleSize: 128,
 		subtitle: summary,
-		footer: 'vexara.world / patch-notes'
+		footer: 'vexara.world // patch-notes'
 	});
 }

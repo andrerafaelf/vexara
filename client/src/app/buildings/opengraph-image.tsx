@@ -4,12 +4,12 @@ export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 export const alt = 'Vexara buildings guide';
 
-export default function Image() {
-	return renderOgCard({
+export default async function Image() {
+	return await renderOgCard({
 		eyebrow: 'Infrastructure',
 		kicker: 'Command Core to Stealth Array.',
 		title: 'Buildings',
 		subtitle: 'All 10 core structures — costs, max levels, milestones, and production scaling.',
-		footer: 'vexara.world / buildings'
+		footer: 'vexara.world // buildings'
 	});
 }

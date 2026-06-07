@@ -4,8 +4,8 @@ export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 export const alt = 'Vexara — free browser MMO RTS';
 
-export default function Image() {
-	return renderOgCard({
+export default async function Image() {
+	return await renderOgCard({
 		eyebrow: 'Live Galaxy',
 		kicker: 'A persistent galaxy.',
 		title: 'Real opponents.',
