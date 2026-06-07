@@ -1,4 +1,6 @@
 import { ImageResponse } from 'next/og';
+import fs from 'fs';
+import path from 'path';
 
 export const OG_SIZE = { width: 1200, height: 630 } as const;
 export const OG_CONTENT_TYPE = 'image/png';
@@ -36,21 +38,13 @@ interface OgCardOptions {
 let _interRegular: ArrayBuffer | null = null;
 let _interBold: ArrayBuffer | null = null;
 
-async function loadFonts() {
+function loadFonts() {
 	if (_interRegular && _interBold) return { regular: _interRegular, bold: _interBold };
 
-	const [regular, bold] = await Promise.all([
-		fetch(
-			'https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiJ-Ek-_EeA.woff2'
-		).then((r) => r.arrayBuffer()),
-		fetch(
-			'https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuI6fAZ9hiJ-Ek-_EeA.woff2'
-		).then((r) => r.arrayBuffer())
-	]);
-
-	_interRegular = regular;
-	_interBold = bold;
-	return { regular, bold };
+	const fontsDir = path.join(process.cwd(), 'public', 'fonts');
+	_interRegular = fs.readFileSync(path.join(fontsDir, 'Inter-Regular.woff')).buffer as ArrayBuffer;
+	_interBold = fs.readFileSync(path.join(fontsDir, 'Inter-Bold.woff')).buffer as ArrayBuffer;
+	return { regular: _interRegular, bold: _interBold };
 }
 
 function HexGlyph() {
@@ -119,7 +113,7 @@ export async function renderOgCard({
 	badge,
 	titleSize = 104
 }: OgCardOptions) {
-	const { regular, bold } = await loadFonts();
+	const { regular, bold } = loadFonts();
 
 	return new ImageResponse(
 		(
