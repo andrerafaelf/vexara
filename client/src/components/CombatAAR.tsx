@@ -292,11 +292,20 @@ const CombatAAR: React.FC<CombatAARProps> = ({ report, isMyAttack, amAlly }) => 
 					{allies.map((contrib) => {
 						const contribTotal = Object.values(contrib.initial).reduce((s, n) => s + n, 0);
 						const contribEntries = positiveEntries(contrib.initial);
+						const contribUsername = contrib.ownerUsername ?? contrib.ownerNexusName;
+						const contribNexus = contrib.ownerNexusName && contrib.ownerNexusName !== contribUsername
+							? contrib.ownerNexusName
+							: null;
 						return (
 							<div key={contrib.ownerNexusId} className="aar-contrib-block">
 								<div className="aar-contrib-row">
 									<span className="aar-contrib-name">
-										{contrib.ownerUsername ?? contrib.ownerNexusName}
+										<span className="aar-contrib-identity">
+											{contribUsername}
+											{contribNexus && (
+												<span className="aar-contrib-nexus-label">{contribNexus}</span>
+											)}
+										</span>
 										<span className="aar-contrib-badge aar-contrib-badge--support">SUPPORT</span>
 									</span>
 									<span className="aar-contrib-total">{contribTotal.toLocaleString()}</span>

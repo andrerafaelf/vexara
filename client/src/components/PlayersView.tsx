@@ -45,28 +45,30 @@ function PodiumCard({ player, rank }: { player: GalaxyPlayer; rank: 1 | 2 | 3 })
 				<span className="plb-pod-ring" aria-hidden />
 			</div>
 
-			<div className="plb-pod-name">
-				<Username
-					name={player.username}
-					isSupporter={player.isSupporter}
-					supporterTier={player.supporterTier ?? null}
-					linkToProfile
-				/>
+			{/* identity: name + faction always stack vertically */}
+			<div className="plb-pod-identity">
+				<div className="plb-pod-name">
+					<Username
+						name={player.username}
+						isSupporter={player.isSupporter}
+						supporterTier={player.supporterTier ?? null}
+						linkToProfile
+					/>
+				</div>
+				{player.faction ? (
+					<Link href="/factions" className="plb-pod-faction">
+						{player.faction.name}
+						<span className="plb-pod-faction-tag">[{player.faction.tag}]</span>
+					</Link>
+				) : (
+					<span className="plb-pod-unaffiliated">Unaffiliated</span>
+				)}
 			</div>
 
 			<div className="plb-pod-stats">
 				<span className="plb-pod-influence">{player.points.toLocaleString()} inf</span>
 				<span className="plb-pod-sub">{player.nexuses} nexus{player.nexuses === 1 ? '' : 'es'}</span>
 			</div>
-
-			{player.faction ? (
-				<Link href="/factions" className="plb-pod-faction">
-					{player.faction.name}
-					<span style={{ opacity: 0.6, fontSize: '10px' }}>[{player.faction.tag}]</span>
-				</Link>
-			) : (
-				<span className="plb-pod-unaffiliated">Unaffiliated</span>
-			)}
 		</div>
 	);
 }

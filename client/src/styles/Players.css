@@ -159,6 +159,17 @@
 	transition: border-color var(--duration-fast) var(--ease-out);
 }
 
+/* desktop: identity block centered like the rest of the column */
+.plb-pod .plb-pod-identity {
+	align-items: center;
+	width: 100%;
+}
+
+.plb-pod .plb-pod-stats {
+	align-items: center;
+	width: 100%;
+}
+
 /* Gold / silver / bronze accent tops */
 .plb-pod--1 { border-top-color: #ffd700; }
 .plb-pod--2 { border-top-color: #b0b8c4; }
@@ -195,12 +206,20 @@
 .plb-pod--2 .plb-pod-ring { box-shadow: 0 0 0 2px rgba(176, 184, 196, 0.4); }
 .plb-pod--3 .plb-pod-ring { box-shadow: 0 0 0 2px rgba(205, 127, 50, 0.45); }
 
+/* identity block — name + faction always stack vertically */
+.plb-pod-identity {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+	flex: 1;
+}
+
 .plb-pod-name {
 	font-size: var(--text-sm);
 	font-weight: 700;
 	color: var(--text-strong);
 	min-width: 0;
-	max-width: 100%;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -210,7 +229,8 @@
 	display: flex;
 	flex-direction: column;
 	gap: 4px;
-	width: 100%;
+	flex-shrink: 0;
+	text-align: right;
 }
 
 .plb-pod-influence {
@@ -242,10 +262,17 @@
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	text-decoration: none;
+	align-self: flex-start;
 }
 
 .plb-pod-faction:hover {
 	background: rgba(255, 158, 61, 0.14);
+}
+
+.plb-pod-faction-tag {
+	opacity: 0.6;
+	font-size: 10px;
+	flex-shrink: 0;
 }
 
 .plb-pod-unaffiliated {
@@ -453,14 +480,26 @@
 	.plb-pod-medal {
 		position: static;
 		align-self: center;
+		flex-shrink: 0;
+	}
+
+	.plb-pod .plb-pod-identity {
+		align-items: flex-start;
+		flex: 1;
+		min-width: 0;
+		width: auto;
+	}
+
+	.plb-pod .plb-pod-stats {
+		align-items: flex-end;
+		width: auto;
 	}
 
 	.plb-pod-stats {
-		flex-direction: row;
-		align-items: center;
-		justify-content: flex-end;
-		flex: 1;
-		gap: var(--space-3);
+		flex-direction: column;
+		align-items: flex-end;
+		flex-shrink: 0;
+		gap: 2px;
 	}
 
 	.plb-pod-influence { font-size: var(--text-sm); }
