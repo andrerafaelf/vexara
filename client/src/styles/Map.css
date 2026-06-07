@@ -206,18 +206,55 @@
 	position: absolute;
 	inset: 0;
 	background-image:
-		radial-gradient(1px 1px at 12% 18%, rgba(255, 255, 255, 0.55) 0%, transparent 100%),
-		radial-gradient(1px 1px at 28% 72%, rgba(255, 255, 255, 0.4) 0%, transparent 100%),
-		radial-gradient(1.5px 1.5px at 45% 35%, rgba(255, 255, 255, 0.35) 0%, transparent 100%),
-		radial-gradient(1px 1px at 61% 88%, rgba(255, 255, 255, 0.5) 0%, transparent 100%),
-		radial-gradient(1px 1px at 78% 12%, rgba(255, 255, 255, 0.45) 0%, transparent 100%),
-		radial-gradient(1px 1px at 88% 55%, rgba(255, 255, 255, 0.3) 0%, transparent 100%),
-		radial-gradient(1.5px 1.5px at 5% 60%, rgba(255, 255, 255, 0.4) 0%, transparent 100%),
-		radial-gradient(1px 1px at 35% 92%, rgba(255, 255, 255, 0.35) 0%, transparent 100%),
-		radial-gradient(1px 1px at 93% 30%, rgba(255, 255, 255, 0.5) 0%, transparent 100%),
-		radial-gradient(1px 1px at 55% 5%, rgba(255, 255, 255, 0.4) 0%, transparent 100%),
-		radial-gradient(1px 1px at 18% 44%, rgba(255, 158, 61, 0.3) 0%, transparent 100%),
-		radial-gradient(1px 1px at 72% 68%, rgba(86, 211, 100, 0.25) 0%, transparent 100%);
+		/* ── Layer 1: fine white stars (dim, dense) ─────────────────── */
+		radial-gradient(1px 1px at 4% 11%, rgba(255, 255, 255, 0.45) 0%, transparent 100%),
+		radial-gradient(1px 1px at 9% 67%, rgba(255, 255, 255, 0.35) 0%, transparent 100%),
+		radial-gradient(1px 1px at 14% 38%, rgba(255, 255, 255, 0.5) 0%, transparent 100%),
+		radial-gradient(1px 1px at 19% 83%, rgba(255, 255, 255, 0.3) 0%, transparent 100%),
+		radial-gradient(1px 1px at 23% 22%, rgba(255, 255, 255, 0.4) 0%, transparent 100%),
+		radial-gradient(1px 1px at 27% 56%, rgba(255, 255, 255, 0.35) 0%, transparent 100%),
+		radial-gradient(1px 1px at 32% 9%, rgba(255, 255, 255, 0.5) 0%, transparent 100%),
+		radial-gradient(1px 1px at 37% 74%, rgba(255, 255, 255, 0.4) 0%, transparent 100%),
+		radial-gradient(1px 1px at 41% 47%, rgba(255, 255, 255, 0.3) 0%, transparent 100%),
+		radial-gradient(1px 1px at 46% 91%, rgba(255, 255, 255, 0.45) 0%, transparent 100%),
+		radial-gradient(1px 1px at 51% 28%, rgba(255, 255, 255, 0.35) 0%, transparent 100%),
+		radial-gradient(1px 1px at 56% 61%, rgba(255, 255, 255, 0.4) 0%, transparent 100%),
+		radial-gradient(1px 1px at 61% 15%, rgba(255, 255, 255, 0.5) 0%, transparent 100%),
+		radial-gradient(1px 1px at 65% 79%, rgba(255, 255, 255, 0.3) 0%, transparent 100%),
+		radial-gradient(1px 1px at 70% 44%, rgba(255, 255, 255, 0.45) 0%, transparent 100%),
+		radial-gradient(1px 1px at 74% 7%, rgba(255, 255, 255, 0.35) 0%, transparent 100%),
+		radial-gradient(1px 1px at 79% 88%, rgba(255, 255, 255, 0.4) 0%, transparent 100%),
+		radial-gradient(1px 1px at 83% 33%, rgba(255, 255, 255, 0.5) 0%, transparent 100%),
+		radial-gradient(1px 1px at 88% 68%, rgba(255, 255, 255, 0.35) 0%, transparent 100%),
+		radial-gradient(1px 1px at 92% 19%, rgba(255, 255, 255, 0.45) 0%, transparent 100%),
+		radial-gradient(1px 1px at 96% 53%, rgba(255, 255, 255, 0.3) 0%, transparent 100%),
+		radial-gradient(1px 1px at 7% 95%, rgba(255, 255, 255, 0.4) 0%, transparent 100%),
+		radial-gradient(1px 1px at 48% 4%, rgba(255, 255, 255, 0.45) 0%, transparent 100%),
+		radial-gradient(1px 1px at 16% 51%, rgba(255, 255, 255, 0.3) 0%, transparent 100%),
+		radial-gradient(1px 1px at 85% 49%, rgba(255, 255, 255, 0.35) 0%, transparent 100%),
+		/* ── Layer 2: medium stars (slightly brighter) ──────────────── */
+		radial-gradient(1.5px 1.5px at 6% 29%, rgba(255, 255, 255, 0.6) 0%, transparent 100%),
+		radial-gradient(1.5px 1.5px at 21% 64%, rgba(255, 255, 255, 0.55) 0%, transparent 100%),
+		radial-gradient(1.5px 1.5px at 38% 18%, rgba(255, 255, 255, 0.5) 0%, transparent 100%),
+		radial-gradient(1.5px 1.5px at 54% 85%, rgba(255, 255, 255, 0.6) 0%, transparent 100%),
+		radial-gradient(1.5px 1.5px at 67% 38%, rgba(255, 255, 255, 0.55) 0%, transparent 100%),
+		radial-gradient(1.5px 1.5px at 81% 13%, rgba(255, 255, 255, 0.5) 0%, transparent 100%),
+		radial-gradient(1.5px 1.5px at 94% 72%, rgba(255, 255, 255, 0.6) 0%, transparent 100%),
+		radial-gradient(1.5px 1.5px at 43% 55%, rgba(255, 255, 255, 0.5) 0%, transparent 100%),
+		radial-gradient(1.5px 1.5px at 12% 76%, rgba(255, 255, 255, 0.55) 0%, transparent 100%),
+		radial-gradient(1.5px 1.5px at 76% 97%, rgba(255, 255, 255, 0.5) 0%, transparent 100%),
+		/* ── Layer 3: bright accent stars (coloured) ────────────────── */
+		radial-gradient(2px 2px at 15% 32%, rgba(255, 240, 200, 0.75) 0%, transparent 100%),
+		radial-gradient(2px 2px at 58% 70%, rgba(200, 225, 255, 0.7) 0%, transparent 100%),
+		radial-gradient(2px 2px at 89% 25%, rgba(255, 240, 200, 0.65) 0%, transparent 100%),
+		radial-gradient(1.5px 1.5px at 33% 90%, rgba(200, 225, 255, 0.6) 0%, transparent 100%),
+		radial-gradient(2px 2px at 71% 55%, rgba(255, 210, 160, 0.55) 0%, transparent 100%),
+		/* ── Layer 4: nebula-tinted micro-stars ─────────────────────── */
+		radial-gradient(1px 1px at 18% 44%, rgba(255, 158, 61, 0.28) 0%, transparent 100%),
+		radial-gradient(1px 1px at 72% 68%, rgba(86, 211, 100, 0.22) 0%, transparent 100%),
+		radial-gradient(1px 1px at 44% 22%, rgba(86, 156, 214, 0.3) 0%, transparent 100%),
+		radial-gradient(1px 1px at 29% 77%, rgba(168, 119, 232, 0.22) 0%, transparent 100%),
+		radial-gradient(1px 1px at 63% 41%, rgba(255, 158, 61, 0.2) 0%, transparent 100%);
 	pointer-events: none;
 	z-index: 0;
 }
@@ -275,6 +312,70 @@
 
 .map-zoom-btn:active {
 	transform: translateY(1px);
+}
+
+/* ── Map legend bar (persistent overlay at bottom of viewport) ──────────────
+   Positioned above the zoom controls so both sit in the bottom strip.
+   Floats left; zoom controls float right — they share the same bottom rail. */
+.map-legend-bar {
+	position: absolute;
+	bottom: 12px;
+	left: 12px;
+	right: 60px; /* clear the zoom buttons (34px btn + 12px right margin + 2px) */
+	z-index: 30;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	pointer-events: none;
+}
+
+.map-legend-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 3px 8px 3px 6px;
+	background: rgba(8, 12, 28, 0.82);
+	border: 1px solid var(--border-default);
+	backdrop-filter: blur(4px);
+	font-family: var(--font-mono);
+	font-size: 10px;
+	color: var(--text-muted);
+	white-space: nowrap;
+	letter-spacing: 0.04em;
+}
+
+.map-legend-item::before {
+	content: '';
+	width: 8px;
+	height: 8px;
+	flex: 0 0 8px;
+	border-radius: 1px;
+}
+
+.map-legend-item--current::before { background: var(--accent); }
+.map-legend-item--own::before     { background: var(--success); }
+.map-legend-item--faction::before { background: #5a9ee6; }
+.map-legend-item--ally::before    { background: #a877e8; }
+.map-legend-item--enemy::before   { background: var(--danger); }
+.map-legend-item--target::before  { background: #f97316; }
+
+@media (max-width: 480px) {
+	.map-legend-bar {
+		right: 12px;
+		bottom: 60px; /* stack above zoom controls on very small screens */
+		gap: 4px;
+	}
+
+	.map-legend-item {
+		font-size: 9px;
+		padding: 2px 6px 2px 5px;
+	}
+
+	.map-legend-item::before {
+		width: 7px;
+		height: 7px;
+		flex: 0 0 7px;
+	}
 }
 
 /* box-sizing: border-box keeps the outer cell footprint constant when the

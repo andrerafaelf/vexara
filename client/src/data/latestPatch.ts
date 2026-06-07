@@ -15,7 +15,7 @@
 // If "I forgot to bump it" becomes a real pattern, swap to a build step
 // that globs the directory and writes this file. Until then: simpler wins.
 
-export const LATEST_PATCH_VERSION = '0.23';
-export const LATEST_PATCH_LABEL = 'Alpha v0.23';
+export const LATEST_PATCH_VERSION = '0.23.1';
+export const LATEST_PATCH_LABEL = 'Alpha v0.23.1';
 export const LATEST_PATCH_HEADLINE =
-	'The Recon Operative becomes the fastest unit in the game, scout missions now read as a real incoming strike to the target, the intel report is renamed the Recon Operative Log, and the scout travel math is fixed so quoted times match the clock.';
+	'A UI-focused patch. The headline is a complete rebuild of the Combat After-Action Report - the old BattleReplay is replaced by a proper military HUD that shows you everything that mattered in a fight at a glance.';

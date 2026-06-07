@@ -58,6 +58,10 @@ export default function SiteFooter() {
 				</span>
 				<span className="site-footer-baseline-line" aria-hidden="true" />
 			</div>
+			<div className="site-footer-copyright">
+				&copy; {new Date().getFullYear()} André Ferreira. All rights reserved. Vexara and its
+				visual identity, code, and assets may not be copied or reproduced without permission.
+			</div>
 		</footer>
 	);
 }

@@ -24,7 +24,7 @@ export default function TermsPage() {
 				}}
 			>
 			<h1 style={{ color: '#fff', fontSize: 28, marginBottom: 8 }}>Terms of Service</h1>
-			<p style={{ color: '#8a90a0', marginBottom: 32 }}>Last updated: May 2026</p>
+			<p style={{ color: '#8a90a0', marginBottom: 32 }}>Last updated: June 2026</p>
 
 			<p>
 				Vexara is a browser-based strategy game operated as a solo project. By creating an account
@@ -68,7 +68,21 @@ export default function TermsPage() {
 				your account at any time by contacting support@vexara.world.
 			</p>
 
-			<h2 style={{ color: '#fff', fontSize: 18, marginTop: 32 }}>7. Contact</h2>
+			<h2 style={{ color: '#fff', fontSize: 18, marginTop: 32 }}>7. Intellectual property</h2>
+			<p>
+				Vexara, including its name, logo, visual design, user interface, game mechanics as expressed
+				in code, artwork, and all written content, is the exclusive property of André Ferreira and
+				is protected by copyright and applicable intellectual property law.
+			</p>
+			<p style={{ marginTop: 12 }}>
+				You may not copy, reproduce, distribute, or create derivative works based on any part of
+				Vexara — including its UI, art assets, or branding — without explicit written permission.
+				This includes AI-generated reproductions of Vexara&apos;s visual identity or brand. Fan art
+				is welcome, but must be clearly labelled as unofficial and may not be presented as or
+				mistaken for official Vexara content.
+			</p>
+
+			<h2 style={{ color: '#fff', fontSize: 18, marginTop: 32 }}>8. Contact</h2>
 			<p>
 				Questions? Email{' '}
 				<a href="mailto:support@vexara.world" style={{ color: '#7aa2ff' }}>

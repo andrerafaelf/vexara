@@ -181,7 +181,7 @@ const MOBILE_BREAKPOINT = 768;
 // past the rendered/fetched window on any screen size.
 const CELL_PX = 72;
 const MIN_ZOOM = 0.4; // nominal lower bound (hook clamps tighter per viewport)
-const MAX_ZOOM = 2.4; // close-in detail
+const MAX_ZOOM = 3.2; // close-in detail
 const ZOOM_STEP = 0.18; // keyboard / button nudge
 // Radius (in cells) of the rendered DOM window around the *render centre*. Kept
 // smaller than SERVER_FETCH_RANGE so the fetched data always extends past the
@@ -1905,6 +1905,14 @@ const Map: React.FC<MapProps> = ({
 						>
 							<Minus size={16} />
 						</button>
+					</div>
+					<div className="map-legend-bar" aria-label="Map legend">
+						<span className="map-legend-item map-legend-item--current">Active Nexus</span>
+						<span className="map-legend-item map-legend-item--own">Your Nexus</span>
+						<span className="map-legend-item map-legend-item--faction">Faction</span>
+						<span className="map-legend-item map-legend-item--ally">Ally</span>
+						<span className="map-legend-item map-legend-item--enemy">Enemy</span>
+						<span className="map-legend-item map-legend-item--target">Target</span>
 					</div>
 				</div>
 

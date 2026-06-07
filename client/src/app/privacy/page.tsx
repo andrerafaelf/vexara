@@ -25,7 +25,7 @@ export default function PrivacyPage() {
 				}}
 			>
 			<h1 style={{ color: '#fff', fontSize: 28, marginBottom: 8 }}>Privacy Policy</h1>
-			<p style={{ color: '#8a90a0', marginBottom: 32 }}>Last updated: May 2026</p>
+			<p style={{ color: '#8a90a0', marginBottom: 32 }}>Last updated: June 2026</p>
 
 			<p>
 				Vexara is a solo-developed browser game. This policy explains what data we collect and how
