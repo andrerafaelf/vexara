@@ -188,6 +188,9 @@ services:
       # admin.conf is empty if the admin SSL cert is missing
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - /var/www/certbot:/var/www/certbot
+      - /var/www/treble-quest:/var/www/treble-quest:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - app_net
       - monitor_net
