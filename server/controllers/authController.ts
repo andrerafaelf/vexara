@@ -34,6 +34,7 @@ function normalizeEmail(value: unknown): string | null {
 }
 
 function pickUtm(value: unknown): string | null {
+	// UTM parameters are optional and have no strict format, but we want to enforce a reasonable max length
 	return typeof value === 'string' && value.length > 0 ? value.slice(0, 64) : null;
 }
 
@@ -578,12 +579,10 @@ export async function login(req: Request, res: Response): Promise<void> {
 		}
 
 		if (!user.emailVerifiedAt) {
-			res
-				.status(403)
-				.json({
-					error: 'Please confirm your email before logging in.',
-					code: 'EMAIL_NOT_VERIFIED'
-				});
+			res.status(403).json({
+				error: 'Please confirm your email before logging in.',
+				code: 'EMAIL_NOT_VERIFIED'
+			});
 			return;
 		}
 
