@@ -4,20 +4,20 @@ import { STATIONABLE_TROOPS, isStationableTroop } from '../utils/gameConstants.j
 
 // Stationing (support to an ally OR transfer to your own nexus) is defense-only.
 // This is the single source of truth both code paths share.
-test('only the five defenders are stationable', () => {
+test('only the five anvils are stationable', () => {
   assert.deepEqual([...STATIONABLE_TROOPS].sort(), [
     'aegisSkirmisher',
+    'arcDisruptor',
     'assaultTrooper',
     'bulwarkGuard',
-    'sentinelLancer',
     'siegeMech',
   ]);
 });
 
-test('isStationableTroop accepts defensive units', () => {
+test('isStationableTroop accepts defensive (anvil) units', () => {
   for (const t of [
     'assaultTrooper',
-    'sentinelLancer',
+    'arcDisruptor',
     'siegeMech',
     'bulwarkGuard',
     'aegisSkirmisher',
@@ -26,12 +26,12 @@ test('isStationableTroop accepts defensive units', () => {
   }
 });
 
-test('isStationableTroop rejects offensive / special / stationary units', () => {
+test('isStationableTroop rejects striker / special / stationary units', () => {
   for (const t of [
     'vanguardBreaker',
     'wraithSkimmer',
     'pyreSuppressor',
-    'arcDisruptor',
+    'sentinelLancer', // now a Fire striker, no longer a defender
     'phantomLance',
     'annihilatorPlatform',
     'voidStalker', // offensive mobile unit - not a logistics shortcut

@@ -5,6 +5,7 @@ import type { AuthRequest } from '../types/index.js';
 import { getNexusIntelForUser } from '../utils/scouting.js';
 import { logError } from '../utils/logger.js';
 import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
+import { NEXUS_ACTIVE_WINDOW_MS } from '../utils/gameConstants.js';
 
 export async function getArea(req: AuthRequest, res: Response): Promise<void> {
 	try {
@@ -68,8 +69,15 @@ export async function getArea(req: AuthRequest, res: Response): Promise<void> {
 		}
 
 		const now = new Date();
+		const activeCutoff = now.getTime() - NEXUS_ACTIVE_WINDOW_MS;
 		const result = nexuses.map((v) => {
 			const relation = relationFor(v.ownerId ?? null);
+			// Presence signal for other players: an owned, recently-acted-on nexus
+			// reads as "active". Neutral nexuses (no owner) are never active.
+			const active =
+				v.ownerId != null &&
+				v.lastActivityAt != null &&
+				v.lastActivityAt.getTime() >= activeCutoff;
 			return {
 				_id: String(v.id),
 				id: String(v.id),
@@ -96,7 +104,8 @@ export async function getArea(req: AuthRequest, res: Response): Promise<void> {
 						: null,
 				isFriendly: relation !== null,
 				relation,
-				isFactionTarget: factionTargetSet.has(v.id)
+				isFactionTarget: factionTargetSet.has(v.id),
+				active
 			};
 		});
 		res.json(result);

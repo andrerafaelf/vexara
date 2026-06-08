@@ -93,7 +93,7 @@ export interface Nexus {
 		alloyForge: number;
 		oreExtractor: number;
 		shieldGrid: number;
-		armory: number;
+		targetingCore: number;
 		stealthArray: number;
 	};
 	troops: {
@@ -326,7 +326,7 @@ export interface Attack {
 				alloyForge: number;
 				oreExtractor: number;
 				shieldGrid: number;
-				armory: number;
+				targetingCore: number;
 				stealthArray: number;
 			};
 			troops: {

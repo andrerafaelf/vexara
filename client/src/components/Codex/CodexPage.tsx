@@ -448,7 +448,7 @@ function MilestoneTrack({ doc }: { doc: (typeof BUILDINGS_DOC)[number] }) {
 function TroopEntry({ doc, index }: { doc: (typeof TROOPS_DOC)[number]; index: number }) {
 	const icon = TROOP_ICONS[doc.key];
 	// Normalize stat bars to a per-page max so the visual is comparable.
-	const STAT_MAX = { attack: 220, defense: 220, speed: 30, carry: 110 };
+	const STAT_MAX = { attack: 360, defense: 340, speed: 32, carry: 250 };
 	return (
 		<article id={`troop-${doc.key}`} className="cx-entry cx-entry-troop">
 			<div className="cx-entry-head">
@@ -564,7 +564,7 @@ function ClassCountersPanel() {
 				<span className="cx-class-counters-eyebrow">{'// Class counters'}</span>
 				<p className="cx-class-counters-lede">
 					Every unit belongs to a class. Class advantage adds <strong>+35%</strong> damage on
-					attack; being countered subtracts <strong>20–25%</strong>. The Armory amplifies this gap
+					attack; being countered subtracts <strong>20–25%</strong>. The Targeting Core amplifies this gap
 					by +1.5%/level (capped at +30% extra at Lv20).
 				</p>
 			</div>

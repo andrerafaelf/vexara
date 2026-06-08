@@ -88,18 +88,18 @@ export default function GameLayout({
 	// Soft-gate secondary nav (Market / Allies / Factions / Players) for fresh
 	// players so the top bar doesn't look like an airline cockpit on day one.
 	// Each tab promotes itself once the player has organically hit the bar for
-	// using it (e.g. Recruitment Core built → Factions matters). Promotion is
+	// using it (e.g. a production building built -> Factions matters). Promotion is
 	// sticky via localStorage so veterans never see the collapsed state.
 	//
-	// The whole nav still renders if the route is hit directly — this is purely
+	// The whole nav still renders if the route is hit directly - this is purely
 	// visual hierarchy, not a route gate. Bookmarks keep working.
 	const maxCommandCore = nexuses.reduce(
 		(max, n) => Math.max(max, n.buildings?.commandCore ?? 0),
 		0
 	);
-	// "Has any class building" — the post-Recruitment-Core successor signal.
+	// "Has any class building" - the post-Recruitment-Core successor signal.
 	// Used to know when the player has built at least one production building.
-	const anyRecruitmentCore = nexuses.some(
+	const anyProductionBuilding = nexuses.some(
 		(n) =>
 			(n.buildings?.hangarBay ?? 0) >= 1 ||
 			(n.buildings?.plasmaForge ?? 0) >= 1 ||
@@ -120,10 +120,10 @@ export default function GameLayout({
 		() => ({
 			market: maxCommandCore >= 3 || anyResourceStockpile,
 			allies: maxCommandCore >= 2,
-			factions: anyRecruitmentCore,
+			factions: anyProductionBuilding,
 			players: maxCommandCore >= 3 || hasUnreadReports
 		}),
-		[maxCommandCore, anyResourceStockpile, anyRecruitmentCore, hasUnreadReports]
+		[maxCommandCore, anyResourceStockpile, anyProductionBuilding, hasUnreadReports]
 	);
 
 	// Sticky promotion: once any of these tabs has been unlocked, remember it so
@@ -654,7 +654,7 @@ export default function GameLayout({
 											onClick={nav('/factions')}
 										>
 											<span>Factions</span>
-											<span className="nav-discover-req">Build Recruitment Core</span>
+											<span className="nav-discover-req">Build a production building</span>
 										</button>
 									)}
 									{!showPlayers && (

@@ -15,7 +15,7 @@
 // If "I forgot to bump it" becomes a real pattern, swap to a build step
 // that globs the directory and writes this file. Until then: simpler wins.
 
-export const LATEST_PATCH_VERSION = '0.20';
-export const LATEST_PATCH_LABEL = 'Alpha v0.20';
+export const LATEST_PATCH_VERSION = '0.22';
+export const LATEST_PATCH_LABEL = 'Alpha v0.22';
 export const LATEST_PATCH_HEADLINE =
-	'A rebuilt Starfield map with buttery pan/zoom, a one-time relocation token for fresh commanders, and far less clumpy map seeding.';
+	'The biggest update since alpha began: combat is rebalanced so the counter triangle works on attack AND defense, the economy is overhauled so resources matter again, espionage is retired, Recruitment Core becomes three class buildings, six units are renamed, two new units join the roster, and Stealth Array gains a hidden vault.';

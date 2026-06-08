@@ -96,7 +96,7 @@ const STEPS = [
 	{
 		num: '02',
 		title: 'Unlock troops through your Command Core',
-		body: 'The Command Core is your progression gate. Level it to 2 to unlock the three class production buildings (Hangar Bay for mobile units, Plasma Forge for fire units, Armor Foundry for armor units). Higher Command Core levels unlock the Shield Grid, Armory, and Stealth Array. Rush it alongside your economy buildings - most unlock chains run through it.'
+		body: 'The Command Core is your progression gate. Level it to 2 to unlock the three class production buildings (Hangar Bay for mobile units, Plasma Forge for fire units, Armor Foundry for armor units). Higher Command Core levels unlock the Shield Grid, Targeting Core, and Stealth Array. Rush it alongside your economy buildings - most unlock chains run through it.'
 	},
 	{
 		num: '03',

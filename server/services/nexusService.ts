@@ -24,7 +24,11 @@ export async function atomicUpdateNexusResources(
 ) {
 	const { count } = await prisma.nexus.updateMany({
 		where: { id, lastResourceUpdate: expectedLastUpdate },
-		data
+		// Every caller of this CAS path is a deliberate owner action (train, build,
+		// cancel, decommission), so stamp the activity timestamp here. Passive
+		// queue-completion ticks use plain updateNexus and are intentionally
+		// excluded. A caller may override by passing its own lastActivityAt.
+		data: { lastActivityAt: new Date(), ...data }
 	});
 	if (count === 0) throw new ResourceConflictError();
 	return prisma.nexus.findUniqueOrThrow({ where: { id } });

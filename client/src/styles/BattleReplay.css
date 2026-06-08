@@ -493,4 +493,5 @@
 /* Buttons in the replay */
 [class*='replay-'][class*='-btn'] {
 	border-radius: 0;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
 }

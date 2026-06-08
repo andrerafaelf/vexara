@@ -83,7 +83,8 @@
 	color: white;
 	border: none;
 	padding: 5px 10px;
-	border-radius: 5px;
+	border-radius: 0;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%);
 	cursor: pointer;
 	font-size: 12px;
 	margin: 2px;
@@ -113,7 +114,8 @@
 	color: white;
 	border: none;
 	padding: 8px 15px;
-	border-radius: 5px;
+	border-radius: 0;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%);
 	cursor: pointer;
 	font-size: 14px;
 }
@@ -226,6 +228,7 @@
 	align-items: center;
 	justify-content: center;
 	opacity: 0.7;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%);
 }
 
 .modal-close:hover {
@@ -280,7 +283,8 @@
 .btn-secondary {
 	padding: 10px 20px;
 	border: none;
-	border-radius: 5px;
+	border-radius: 0;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
 	font-size: 14px;
 	font-weight: bold;
 	cursor: pointer;

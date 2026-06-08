@@ -18,7 +18,7 @@ export interface BroadcastResult {
 }
 
 export async function collectGalaxyLiveRecipients(): Promise<BroadcastRecipient[]> {
-	const [users, signups] = await Promise.all([
+	const [users, signups, optedOut] = await Promise.all([
 		prisma.user.findMany({
 			where: { emailVerifiedAt: { not: null } },
 			select: { email: true, username: true }
@@ -26,20 +26,30 @@ export async function collectGalaxyLiveRecipients(): Promise<BroadcastRecipient[
 		prisma.alphaSignup.findMany({
 			where: { unsubscribedAt: null },
 			select: { email: true }
+		}),
+		// AlphaSignup is the single source of truth for email opt-outs (see
+		// getOrCreateUnsubscribeToken in emailService). A registered user who
+		// unsubscribes gets an AlphaSignup row with unsubscribedAt set, so we must
+		// honor it for the `users` branch too — otherwise their unsubscribe is
+		// silently ignored and they keep receiving broadcasts (PECR/GDPR breach).
+		prisma.alphaSignup.findMany({
+			where: { unsubscribedAt: { not: null } },
+			select: { email: true }
 		})
 	]);
 
+	const optedOutEmails = new Set(optedOut.map((s) => s.email.trim().toLowerCase()));
 	const byEmail = new Map<string, BroadcastRecipient>();
 
 	for (const u of users) {
 		const key = u.email.trim().toLowerCase();
-		if (!key) continue;
+		if (!key || optedOutEmails.has(key)) continue;
 		byEmail.set(key, { email: u.email, displayName: u.username, source: 'user' });
 	}
 
 	for (const s of signups) {
 		const key = s.email.trim().toLowerCase();
-		if (!key) continue;
+		if (!key || optedOutEmails.has(key)) continue;
 		if (byEmail.has(key)) continue;
 		byEmail.set(key, { email: s.email, source: 'alphaSignup' });
 	}

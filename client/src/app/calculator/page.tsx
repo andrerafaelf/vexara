@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import Image, { type StaticImageData } from 'next/image';
+import Image from 'next/image';
 import PublicNav from '@/components/PublicNav';
 import {
 	Shield,
@@ -24,25 +24,7 @@ import {
 	type TroopKey,
 	type TroopClass
 } from '@/utils/combatSim';
-import annihilatorplatformImg from '@/assets/troops/annihilatorplatform.png';
-import assaulttrooperImg from '@/assets/troops/assaulttrooper.png';
-import bulwarkguardImg from '@/assets/troops/bulwarkguard.png';
-import overseerImg from '@/assets/troops/overseer.png';
-import plasmaturretImg from '@/assets/troops/plasmaturret.png';
-import reconoperativeImg from '@/assets/troops/reconoperative.png';
-import siegemechImg from '@/assets/troops/siegemech.png';
-import voidstalkerImg from '@/assets/troops/voidstalker.png';
-// Renamed units (Stage 2d) - PNG files keep legacy names; import aliases match
-// the new troop keys. New units (Siege Colossus, Aegis Skirmisher) reuse
-// existing art as placeholders until per-unit art ships.
-import vanguardBreakerImg from '@/assets/troops/breakerunit.png';
-import arcDisruptorImg from '@/assets/troops/disruptorunit.png';
-import phantomLanceImg from '@/assets/troops/interceptorbike.png';
-import sentinelLancerImg from '@/assets/troops/lancerdrone.png';
-import wraithSkimmerImg from '@/assets/troops/skimmerbike.png';
-import pyreSuppressorImg from '@/assets/troops/suppressorteam.png';
-import siegeColossusImg from '@/assets/troops/siegemech.png';
-import aegisSkirmisherImg from '@/assets/troops/bulwarkguard.png';
+import { TROOP_ICONS } from '@/data/gameIcons';
 import '@/styles/Calculator.css';
 
 // ── Static data ────────────────────────────────────────────────────────────
@@ -80,24 +62,8 @@ const CLASS_COLOR: Record<TroopClass, string> = {
 	special: '#a78bfa'
 };
 
-const TROOP_IMAGES: Record<TroopKey, StaticImageData> = {
-	sentinelLancer: sentinelLancerImg,
-	assaultTrooper: assaulttrooperImg,
-	vanguardBreaker: vanguardBreakerImg,
-	reconOperative: reconoperativeImg,
-	wraithSkimmer: wraithSkimmerImg,
-	bulwarkGuard: bulwarkguardImg,
-	aegisSkirmisher: aegisSkirmisherImg,
-	pyreSuppressor: pyreSuppressorImg,
-	arcDisruptor: arcDisruptorImg,
-	phantomLance: phantomLanceImg,
-	siegeMech: siegemechImg,
-	annihilatorPlatform: annihilatorplatformImg,
-	voidStalker: voidstalkerImg,
-	plasmaTurret: plasmaturretImg,
-	siegeColossus: siegeColossusImg,
-	overseer: overseerImg
-};
+// CDN-backed troop art, keyed by troop key (see data/gameIcons.ts).
+const TROOP_IMAGES: Record<TroopKey, string> = TROOP_ICONS as Record<TroopKey, string>;
 
 // Both panels expose the full roster so the calculator can model oddball
 // scenarios, including sending defensive units as attackers.
@@ -142,10 +108,10 @@ interface ForceEditorProps {
 	force: Force;
 	groups: { cls: TroopClass; keys: TroopKey[] }[];
 	shieldGrid: number;
-	armory: number;
+	targetingCore: number;
 	onChange: (force: Force) => void;
 	onShieldChange: (v: number) => void;
-	onArmoryChange: (v: number) => void;
+	onTargetingCoreChange: (v: number) => void;
 }
 
 function ForceEditor({
@@ -154,10 +120,10 @@ function ForceEditor({
 	force,
 	groups,
 	shieldGrid,
-	armory,
+	targetingCore,
 	onChange,
 	onShieldChange,
-	onArmoryChange
+	onTargetingCoreChange
 }: ForceEditorProps) {
 	const [collapsed, setCollapsed] = useState<Record<TroopClass, boolean>>({
 		mobile: false,
@@ -257,20 +223,20 @@ function ForceEditor({
 			<div className="calc-modifiers">
 				{side === 'atk' && (
 					<label className="calc-mod-row">
-						<span className="calc-mod-label">Armory level</span>
+						<span className="calc-mod-label">Targeting Core level</span>
 						<input
 							className="calc-mod-input"
 							type="number"
 							min={0}
 							max={20}
-							value={armory || ''}
+							value={targetingCore || ''}
 							placeholder="0"
 							onChange={(e) =>
-								onArmoryChange(Math.min(20, Math.max(0, parseInt(e.target.value, 10) || 0)))
+								onTargetingCoreChange(Math.min(20, Math.max(0, parseInt(e.target.value, 10) || 0)))
 							}
 						/>
 						<span className="calc-mod-hint">
-							+{Math.min(armory * 1.5, 30).toFixed(0)}% counter bonus
+							+{Math.min(targetingCore * 1.5, 30).toFixed(0)}% counter bonus
 						</span>
 					</label>
 				)}
@@ -299,11 +265,11 @@ function ForceEditor({
 interface ResultPanelProps {
 	atk: Force;
 	def: Force;
-	armory: number;
+	targetingCore: number;
 	shieldGrid: number;
 }
 
-function ResultPanel({ atk, def, armory, shieldGrid }: ResultPanelProps) {
+function ResultPanel({ atk, def, targetingCore, shieldGrid }: ResultPanelProps) {
 	const atkTotal = TROOP_KEYS.reduce((s, k) => s + (atk[k] || 0), 0);
 	const defTotal = TROOP_KEYS.reduce((s, k) => s + (def[k] || 0), 0);
 
@@ -312,10 +278,10 @@ function ResultPanel({ atk, def, armory, shieldGrid }: ResultPanelProps) {
 		return predictCombat({
 			attacker: atk,
 			defender: def,
-			attackerArmory: armory,
+			attackerTargetingCore: targetingCore,
 			defenderShieldGrid: shieldGrid
 		});
-	}, [atk, def, armory, shieldGrid, atkTotal]);
+	}, [atk, def, targetingCore, shieldGrid, atkTotal]);
 
 	// Surviving unit estimates
 	const survivors = useMemo(() => {
@@ -561,14 +527,14 @@ function ResultPanel({ atk, def, armory, shieldGrid }: ResultPanelProps) {
 export default function CalculatorPage() {
 	const [atk, setAtk] = useState<Force>({});
 	const [def, setDef] = useState<Force>({});
-	const [armory, setArmory] = useState(0);
+	const [targetingCore, setTargetingCore] = useState(0);
 	const [shieldGrid, setShieldGrid] = useState(0);
 
 	const swap = () => {
 		setAtk(def);
 		setDef(atk);
-		setArmory(shieldGrid);
-		setShieldGrid(armory);
+		setTargetingCore(shieldGrid);
+		setShieldGrid(targetingCore);
 	};
 
 	return (
@@ -597,14 +563,14 @@ export default function CalculatorPage() {
 					force={atk}
 					groups={ALL_TROOP_GROUPS}
 					shieldGrid={shieldGrid}
-					armory={armory}
+					targetingCore={targetingCore}
 					onChange={setAtk}
 					onShieldChange={setShieldGrid}
-					onArmoryChange={setArmory}
+					onTargetingCoreChange={setTargetingCore}
 				/>
 
 				<div className="calc-center">
-					<ResultPanel atk={atk} def={def} armory={armory} shieldGrid={shieldGrid} />
+					<ResultPanel atk={atk} def={def} targetingCore={targetingCore} shieldGrid={shieldGrid} />
 					<button
 						className="calc-swap-btn"
 						onClick={swap}
@@ -620,10 +586,10 @@ export default function CalculatorPage() {
 					force={def}
 					groups={ALL_TROOP_GROUPS}
 					shieldGrid={shieldGrid}
-					armory={armory}
+					targetingCore={targetingCore}
 					onChange={setDef}
 					onShieldChange={setShieldGrid}
-					onArmoryChange={setArmory}
+					onTargetingCoreChange={setTargetingCore}
 				/>
 			</div>
 		</div>

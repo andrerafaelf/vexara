@@ -37,7 +37,7 @@ const buildingNames: Record<string, string> = {
 	biomassFarm: 'Biomass Farm',
 	alloyForge: 'Alloy Forge',
 	oreExtractor: 'Ore Extractor',
-	armory: 'Armory',
+	targetingCore: 'Targeting Core',
 	stealthArray: 'Stealth Array'
 };
 

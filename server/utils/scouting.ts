@@ -2,7 +2,8 @@ import type { Nexus } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 import { type BuildingLevels, type ResourceAmounts, type TroopCounts, TROOP_KEYS } from '../types/index.js';
 import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
-// BuildingLevels and TroopCounts are extended via their interfaces to include armory/voidStalker/plasmaTurret
+import { NEXUS_ACTIVE_WINDOW_MS } from './gameConstants.js';
+// BuildingLevels and TroopCounts are extended via their interfaces to include targetingCore/voidStalker/plasmaTurret
 
 interface PublicNexusData {
 	_id: number;
@@ -22,6 +23,8 @@ interface PublicNexusData {
 		points: number;
 	} | null;
 	intelLevel: string;
+	// Presence signal: owner took a deliberate action within the active window.
+	active: boolean;
 }
 
 export interface ScoutIntel {
@@ -96,7 +99,11 @@ function buildPublicNexusData(
 					points: ownerPoints ?? 0
 				}
 			: null,
-		intelLevel: 'public'
+		intelLevel: 'public',
+		active:
+			nexus.ownerId != null &&
+			nexus.lastActivityAt != null &&
+			nexus.lastActivityAt.getTime() >= Date.now() - NEXUS_ACTIVE_WINDOW_MS
 	};
 }
 
@@ -119,7 +126,7 @@ export function buildDetailedScoutIntel(nexus: Nexus): ScoutIntel {
 			alloyForge: nexus.alloyForge,
 			oreExtractor: nexus.oreExtractor,
 			shieldGrid: nexus.shieldGrid,
-			armory: n['armory'] ?? 0,
+			targetingCore: n['targetingCore'] ?? 0,
 			stealthArray: n['stealthArray'] ?? 0
 		},
 		// Build from the canonical TROOP_KEYS so a new unit is reported

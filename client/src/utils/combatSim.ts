@@ -1,6 +1,6 @@
 // Deterministic combat simulator.
 //
-// Pure function: same (seed, forces, armoryLevel, shieldGrid) → same timeline.
+// Pure function: same (seed, forces, targetingCoreLevel, shieldGrid) → same timeline.
 // Used by the client to render watchable battle replays from a stored seed.
 //
 // The server uses combatMath.ts to determine the *final* losses; this sim
@@ -47,22 +47,26 @@ export const TROOP_CLASS: Record<TroopKey, TroopClass> = {
 	overseer: 'special'
 };
 
+// Mirror of server combatMath TROOP_STATS (v0.22 symmetric-triangle rebalance).
+// Strikers = high attack / low defense; anvils = high defense / low attack.
+// Every class has an anvil so every attacker has an equal-resource answer on
+// defense. Keep in lockstep with server/utils/combatMath.ts.
 export const TROOP_STATS: Record<TroopKey, { attack: number; defense: number; speed: number }> = {
-	sentinelLancer: { attack: 3, defense: 22, speed: 20 },
-	assaultTrooper: { attack: 5, defense: 45, speed: 18 },
-	vanguardBreaker: { attack: 35, defense: 3, speed: 16 },
+	sentinelLancer: { attack: 28, defense: 14, speed: 20 },
+	assaultTrooper: { attack: 16, defense: 30, speed: 16 },
+	vanguardBreaker: { attack: 32, defense: 14, speed: 16 },
 	reconOperative: { attack: 1, defense: 20, speed: 25 },
-	wraithSkimmer: { attack: 80, defense: 10, speed: 22 },
-	bulwarkGuard: { attack: 3, defense: 130, speed: 12 },
-	aegisSkirmisher: { attack: 50, defense: 90, speed: 24 },
-	pyreSuppressor: { attack: 65, defense: 8, speed: 15 },
-	arcDisruptor: { attack: 75, defense: 9, speed: 17 },
-	phantomLance: { attack: 95, defense: 13, speed: 28 },
-	siegeMech: { attack: 40, defense: 260, speed: 10 },
-	annihilatorPlatform: { attack: 320, defense: 35, speed: 8 },
-	voidStalker: { attack: 150, defense: 15, speed: 32 },
-	plasmaTurret: { attack: 0, defense: 160, speed: 0 },
-	siegeColossus: { attack: 280, defense: 280, speed: 6 },
+	wraithSkimmer: { attack: 105, defense: 22, speed: 22 },
+	bulwarkGuard: { attack: 18, defense: 90, speed: 12 },
+	aegisSkirmisher: { attack: 34, defense: 64, speed: 24 },
+	pyreSuppressor: { attack: 80, defense: 20, speed: 15 },
+	arcDisruptor: { attack: 55, defense: 95, speed: 17 },
+	phantomLance: { attack: 125, defense: 26, speed: 28 },
+	siegeMech: { attack: 70, defense: 215, speed: 10 },
+	annihilatorPlatform: { attack: 360, defense: 55, speed: 8 },
+	voidStalker: { attack: 215, defense: 36, speed: 32 },
+	plasmaTurret: { attack: 0, defense: 340, speed: 0 },
+	siegeColossus: { attack: 300, defense: 130, speed: 6 },
 	overseer: { attack: 0, defense: 8, speed: 15 }
 };
 
@@ -72,6 +76,21 @@ export const CLASS_COUNTERS: Record<TroopClass, Record<TroopClass, number>> = {
 	fire: { mobile: 1.35, armor: 0.75, fire: 1.0, special: 1.0 },
 	special: { mobile: 1.0, armor: 1.0, fire: 1.0, special: 1.0 }
 };
+
+// Defender-side counter spread (milder than the attack side's 1.35/0.75 so the
+// attacker keeps a slight initiative). Mirror of server combatMath
+// DEF_COUNTER_ADVANTAGE / DEF_COUNTER_DISADVANTAGE.
+export const DEF_COUNTER_ADVANTAGE = 1.25;
+export const DEF_COUNTER_DISADVANTAGE = 0.8;
+export function defenderCounterMultiplier(baseAttackMult: number): number {
+	if (baseAttackMult > 1.0) return DEF_COUNTER_ADVANTAGE;
+	if (baseAttackMult < 1.0) return DEF_COUNTER_DISADVANTAGE;
+	return 1.0;
+}
+
+// Per-level Shield Grid bonus to defensive power. Mirror of server combat.ts
+// (trimmed 0.02 → 0.015 in v0.22 alongside symmetric defense).
+export const SHIELD_GRID_DEFENSE_PER_LEVEL = 0.015;
 
 export const TROOP_KEYS = Object.keys(TROOP_STATS) as TroopKey[];
 
@@ -171,9 +190,9 @@ export function classComposition(force: Force): Record<TroopClass, number> {
 }
 
 // ─── Class-weighted attack (mirror of server combatMath) ───────────────────
-// armoryLevel amplifies counter advantage above 1.0 (and slightly deepens
+// targetingCoreLevel amplifies counter advantage above 1.0 (and slightly deepens
 // disadvantage) up to +30% at Lv20. Mirrors computeClassWeightedAttack.
-export function classWeightedAttack(attackers: Force, defenders: Force, armoryLevel = 0): number {
+export function classWeightedAttack(attackers: Force, defenders: Force, targetingCoreLevel = 0): number {
 	const defComp: Record<TroopClass, number> = { mobile: 0, armor: 0, fire: 0, special: 0 };
 	let totalDef = 0;
 	for (const k of TROOP_KEYS) {
@@ -183,7 +202,7 @@ export function classWeightedAttack(attackers: Force, defenders: Force, armoryLe
 			totalDef += n;
 		}
 	}
-	const armoryBonus = Math.min(armoryLevel * 0.015, 0.3);
+	const targetingCoreBonus = Math.min(targetingCoreLevel * 0.015, 0.3);
 	let total = 0;
 	for (const k of TROOP_KEYS) {
 		const n = attackers[k] || 0;
@@ -194,12 +213,44 @@ export function classWeightedAttack(attackers: Force, defenders: Force, armoryLe
 			for (const dc of ['mobile', 'armor', 'fire', 'special'] as TroopClass[]) {
 				const ratio = defComp[dc] / totalDef;
 				const base = CLASS_COUNTERS[TROOP_CLASS[k]][dc];
-				const amp = base > 1.0 ? base + armoryBonus : base < 1.0 ? base - armoryBonus * 0.5 : 1.0;
+				const amp = base > 1.0 ? base + targetingCoreBonus : base < 1.0 ? base - targetingCoreBonus * 0.5 : 1.0;
 				weighted += ratio * amp;
 			}
 			mult = weighted;
 		}
 		total += n * TROOP_STATS[k].attack * mult;
+	}
+	return total;
+}
+
+// Class-weighted DEFENSE (mirror of server computeClassWeightedDefense). A
+// defender whose class counters the attacker composition has its defense
+// amplified (×1.25) and one being countered loses some (×0.80). Defense does
+// NOT take the Targeting Core amplifier — Targeting Core is an offensive building.
+export function classWeightedDefense(defenders: Force, attackers: Force): number {
+	const attComp: Record<TroopClass, number> = { mobile: 0, armor: 0, fire: 0, special: 0 };
+	let totalAtt = 0;
+	for (const k of TROOP_KEYS) {
+		const n = attackers[k] || 0;
+		if (n > 0) {
+			attComp[TROOP_CLASS[k]] += n;
+			totalAtt += n;
+		}
+	}
+	let total = 0;
+	for (const k of TROOP_KEYS) {
+		const n = defenders[k] || 0;
+		if (n <= 0) continue;
+		let mult = 1.0;
+		if (totalAtt > 0) {
+			let weighted = 0;
+			for (const ac of ['mobile', 'armor', 'fire', 'special'] as TroopClass[]) {
+				const ratio = attComp[ac] / totalAtt;
+				weighted += ratio * defenderCounterMultiplier(CLASS_COUNTERS[TROOP_CLASS[k]][ac]);
+			}
+			mult = weighted;
+		}
+		total += n * TROOP_STATS[k].defense * mult;
 	}
 	return total;
 }
@@ -222,21 +273,23 @@ export interface CombatPrediction {
 export function predictCombat(opts: {
 	attacker: Force;
 	defender: Force;
-	attackerArmory?: number;
+	attackerTargetingCore?: number;
 	defenderShieldGrid?: number;
 	shieldEfficiencyMultiplier?: number; // 2 for Military Outpost, etc.
 }): CombatPrediction {
 	const {
 		attacker,
 		defender,
-		attackerArmory = 0,
+		attackerTargetingCore = 0,
 		defenderShieldGrid = 0,
 		shieldEfficiencyMultiplier = 1
 	} = opts;
 
-	const attackPower = classWeightedAttack(attacker, defender, attackerArmory);
-	let defensePower = forcePower(defender, 'defense');
-	defensePower *= 1 + defenderShieldGrid * 0.02 * shieldEfficiencyMultiplier;
+	const attackPower = classWeightedAttack(attacker, defender, attackerTargetingCore);
+	// Symmetric triangle: defense is class-weighted against the attacker too
+	// (mirror of server resolveCombat), then amplified by the Shield Grid.
+	let defensePower = classWeightedDefense(defender, attacker);
+	defensePower *= 1 + defenderShieldGrid * SHIELD_GRID_DEFENSE_PER_LEVEL * shieldEfficiencyMultiplier;
 
 	const defenderUnits = totalUnits(defender);
 	const attackerUnits = totalUnits(attacker);

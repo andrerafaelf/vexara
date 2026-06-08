@@ -23,7 +23,7 @@ export const BUILDING_KEYS = [
 	'alloyForge',
 	'oreExtractor',
 	'shieldGrid',
-	'armory',
+	'targetingCore',
 	'stealthArray'
 ] as const;
 export type BuildingKey = (typeof BUILDING_KEYS)[number];
@@ -115,6 +115,13 @@ export interface Galaxy {
 	createdAt: string;
 	playerCount: number;
 	nexusCount: number;
+	// When true, no new players may join (existing members keep playing).
+	isLocked: boolean;
+	// Per-galaxy win config overrides. null = use engine default (0.65 / 36h / 15 / 4).
+	winShare: number | null;
+	winSustainHours: number | null;
+	winMinPlayers: number | null;
+	winMinFactions: number | null;
 }
 
 export type AdminFetch = (url: string, options?: RequestInit) => Promise<Response>;

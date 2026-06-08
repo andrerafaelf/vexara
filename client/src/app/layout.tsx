@@ -3,6 +3,7 @@ import { ToastProvider } from '@/context/ToastContext';
 import QueryProvider from '@/context/QueryProvider';
 import ScrollToTop from '@/components/ScrollToTop';
 import NavigationProgress from '@/components/NavigationProgress';
+import CookieConsent from '@/components/CookieConsent';
 import type { Metadata, Viewport } from 'next';
 import { Suspense } from 'react';
 import './globals.css';
@@ -167,12 +168,6 @@ export default function RootLayout({
 	return (
 		<html lang="en">
 			<head>
-				<script async src="https://www.googletagmanager.com/gtag/js?id=G-561C095VR9" />
-				<script
-					dangerouslySetInnerHTML={{
-						__html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-561C095VR9');`
-					}}
-				/>
 				<script
 					type="application/ld+json"
 					dangerouslySetInnerHTML={{ __html: JSON.stringify(videoGameSchema) }}
@@ -196,6 +191,7 @@ export default function RootLayout({
 							<Suspense fallback={null}>
 								<NavigationProgress>{children}</NavigationProgress>
 							</Suspense>
+							<CookieConsent />
 						</ToastProvider>
 					</QueryProvider>
 				</AuthProvider>

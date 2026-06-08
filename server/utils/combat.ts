@@ -1,8 +1,8 @@
 import type { Attack, Nexus, Prisma } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 import {
-	computeForcePower,
 	computeClassWeightedAttack,
+	computeClassWeightedDefense,
 	computeLossesForLoser,
 	computeLossesForWinner,
 	computeLootStolen,
@@ -27,7 +27,8 @@ import { logInfo, logWarn } from './logger.js';
 import {
 	getStealthScoutFailChance,
 	getStealthVaultPerResource,
-	partitionStealthVault
+	partitionStealthVault,
+	RETURN_TRAVEL_MULTIPLIER
 } from './gameConstants.js';
 
 async function logFactionEvent(
@@ -150,10 +151,10 @@ async function destroyInvalidInboundSupport(
 
 	const now = Date.now();
 	for (const support of invalidSupport) {
-		// Troops were still in transit — bounce them home. Travel time back equals
-		// the original one-way trip duration so the round trip is symmetric.
+		// Troops were still in transit — bounce them home. Return time is the
+		// one-way trip scaled by RETURN_TRAVEL_MULTIPLIER (0 = near-instant).
 		const travelMs = support.arrivesAt!.getTime() - support.createdAt.getTime();
-		const returnsAt = new Date(now + travelMs);
+		const returnsAt = new Date(now + travelMs * RETURN_TRAVEL_MULTIPLIER);
 		await prisma.attack.update({
 			where: { id: support.id },
 			data: {
@@ -362,7 +363,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 
 		if (attack.type === 'scout') {
 			const travelMs = attack.arrivesAt!.getTime() - attack.createdAt.getTime();
-			const returnsAt = new Date(Date.now() + travelMs);
+			const returnsAt = new Date(Date.now() + travelMs * RETURN_TRAVEL_MULTIPLIER);
 
 			// Stealth Array (Stage 2c) gives the defender a small chance to detect
 			// and intercept the scout outright. On failure the recon operative is
@@ -442,7 +443,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 			defenderNexus.ownerId === attack.attackerUserId
 		) {
 			const travelMs = attack.arrivesAt!.getTime() - attack.createdAt.getTime();
-			const returnsAt = new Date(Date.now() + travelMs);
+			const returnsAt = new Date(Date.now() + travelMs * RETURN_TRAVEL_MULTIPLIER);
 			await prisma.attack.update({
 				where: { id: attack.id },
 				data: {
@@ -530,27 +531,35 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 				(supportTroops[key] || 0);
 		}
 
-		// Attacker armory level amplifies class-counter bonuses
-		const attackerNexusForArmory = await prisma.nexus.findUnique({
+		// Attacker Targeting Core level amplifies class-counter bonuses
+		const attackerNexusForTargeting = await prisma.nexus.findUnique({
 			where: { id: attack.attackerNexusId! }
 		});
-		const attackerArmoryLevel =
-			(attackerNexusForArmory as unknown as { armory?: number } | null)?.armory ?? 0;
+		const attackerTargetingCoreLevel =
+			(attackerNexusForTargeting as unknown as { targetingCore?: number } | null)?.targetingCore ??
+			0;
 
-		// Class-weighted attack power vs raw defense power
+		// Symmetric counter triangle (v0.22): BOTH attack and defense are now
+		// class-weighted. The attacker's strikes are amplified against the classes
+		// they counter (computeClassWeightedAttack), and the defender's garrison is
+		// amplified when its class counters the incoming attacker
+		// (computeClassWeightedDefense). This makes scouting + bringing the right
+		// counter the deciding factor instead of raw stat stacking.
 		let attackPower = computeClassWeightedAttack(
 			attackTroops,
 			mergedDefenderForce,
-			attackerArmoryLevel
+			attackerTargetingCoreLevel
 		);
-		let defensePower = computeForcePower(mergedDefenderForce, 'defense');
+		let defensePower = computeClassWeightedDefense(mergedDefenderForce, attackTroops);
 
 		const baseShieldEff = defenderNexus.nexusType === 'Military Outpost' ? 2.0 : 1;
 		const nexusDoubled =
 			(defenderNexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled ?? false;
 		const shieldEfficiencyMultiplier =
 			baseShieldEff === 1 ? 1 : 1 + (baseShieldEff - 1) * (nexusDoubled ? 2 : 1);
-		defensePower *= 1 + defenderNexus.shieldGrid * 0.02 * shieldEfficiencyMultiplier;
+		// Shield Grid trimmed 0.02 → 0.015/level so a high-shield turtle can't stack
+		// an unbreakable wall on top of class-counter-amplified anvil defense.
+		defensePower *= 1 + defenderNexus.shieldGrid * 0.015 * shieldEfficiencyMultiplier;
 
 		// An empty nexus (no defending troops) is taken unopposed. Without this an
 		// attack with zero effective attack power — notably a lone follow-up
@@ -832,7 +841,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 				'biomassFarm',
 				'alloyForge',
 				'oreExtractor',
-				'armory',
+				'targetingCore',
 				'stealthArray'
 			] as const;
 			type BuildingKey = (typeof BUILDING_PRIORITY)[number];
@@ -983,7 +992,9 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 				});
 				const newOwnerId = attackerNexus!.ownerId;
 				defenderTroopUpdates['ownerId'] = newOwnerId;
-				defenderTroopUpdates['name'] = 'Conquered Nexus';
+				// Preserve the nexus's existing name on conquest — the conqueror keeps
+				// whatever it was called (player-given name or NPC type label), rather
+				// than wiping it to a generic "Conquered Nexus".
 				const NPC_TYPE_NAMES = [
 					'Resource Depot',
 					'Military Outpost',
@@ -1145,7 +1156,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 		}
 
 		const travelMs = attack.arrivesAt!.getTime() - attack.createdAt.getTime();
-		const returnsAt = new Date(Date.now() + travelMs);
+		const returnsAt = new Date(Date.now() + travelMs * RETURN_TRAVEL_MULTIPLIER);
 
 		// Capture the defender's force composition at engagement time so replays are
 		// reproducible. Without this, an observer only knows defender *losses*, not

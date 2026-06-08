@@ -101,6 +101,7 @@
 }
 
 .calc-clear-btn {
+	position: relative;
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
@@ -108,16 +109,32 @@
 	color: var(--text-muted);
 	background: transparent;
 	border: 1px solid var(--border-default);
-	border-radius: 4px;
+	border-radius: 0;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%);
 	padding: 3px 7px;
 	cursor: pointer;
 	transition:
 		color 0.15s,
 		border-color 0.15s;
 }
+.calc-clear-btn::after {
+	content: '';
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	width: 6px;
+	height: 1px;
+	background: var(--border-default);
+	transform: rotate(-45deg);
+	transform-origin: bottom right;
+	transition: background 0.15s;
+}
 .calc-clear-btn:hover {
 	color: var(--text-strong);
 	border-color: var(--border-strong);
+}
+.calc-clear-btn:hover::after {
+	background: var(--border-strong);
 }
 
 /* ── Class group ── */
@@ -306,6 +323,7 @@
 }
 
 .calc-swap-btn {
+	position: relative;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -313,7 +331,8 @@
 	width: 100%;
 	padding: 8px 12px;
 	border: 1px solid var(--border-default);
-	border-radius: 6px;
+	border-radius: 0;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
 	background: rgba(255, 255, 255, 0.03);
 	color: var(--text-muted);
 	font-size: 12.5px;
@@ -323,9 +342,24 @@
 		background 0.15s,
 		color 0.15s;
 }
+.calc-swap-btn::after {
+	content: '';
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	width: 9px;
+	height: 1px;
+	background: var(--border-default);
+	transform: rotate(-45deg);
+	transform-origin: bottom right;
+	transition: background 0.15s;
+}
 .calc-swap-btn:hover {
 	background: rgba(255, 255, 255, 0.07);
 	color: var(--text-strong);
+}
+.calc-swap-btn:hover::after {
+	background: var(--border-strong);
 }
 
 /* ── Result panel ── */

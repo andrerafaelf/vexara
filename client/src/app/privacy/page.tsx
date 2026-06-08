@@ -5,7 +5,7 @@ import SiteFooter from '@/components/SiteFooter';
 export const metadata: Metadata = {
 	title: 'Privacy Policy - Vexara',
 	description:
-		'How Vexara collects, uses, and protects your data. No advertising trackers, no third-party analytics, no data sales.',
+		'How Vexara collects, uses, and protects your data. No advertising trackers, no data sales. Optional, consent-based analytics only.',
 	alternates: { canonical: '/privacy' },
 	robots: { index: true, follow: true }
 };
@@ -52,7 +52,22 @@ export default function PrivacyPage() {
 			</ul>
 
 			<h2 style={{ color: '#fff', fontSize: 18, marginTop: 32 }}>What we don&apos;t collect</h2>
-			<p>We do not use advertising trackers, third-party analytics, or sell your data to anyone.</p>
+			<p>We do not use advertising trackers, and we never sell your data to anyone.</p>
+
+			<h2 style={{ color: '#fff', fontSize: 18, marginTop: 32 }}>Cookies and analytics</h2>
+			<p>
+				The game itself only uses a session cookie that is strictly necessary to keep you signed
+				in. That cookie requires no consent.
+			</p>
+			<p>
+				We also offer optional <strong>Google Analytics</strong> to understand how players find
+				and use Vexara. If you accept it via the cookie banner, Google Analytics sets{' '}
+				<code>_ga</code> and <code>_ga_*</code> cookies in your browser (typically retained for up
+				to 13 months) and processes your IP address and usage data. This is entirely optional: the
+				game works identically whether you accept or reject, and analytics cookies are never set
+				until you opt in. You can change or withdraw your choice at any time using the{' '}
+				<strong>Cookie settings</strong> link in the footer.
+			</p>
 
 			<h2 style={{ color: '#fff', fontSize: 18, marginTop: 32 }}>How we use your data</h2>
 			<ul style={{ paddingLeft: 20 }}>
@@ -73,6 +88,11 @@ export default function PrivacyPage() {
 				<li>
 					<strong>Ko-fi</strong> - if you make a voluntary donation, Ko-fi processes the payment. We
 					receive a webhook with your public Ko-fi profile name and email.
+				</li>
+				<li>
+					<strong>Google Analytics</strong> - loaded only if you opt in via the cookie banner.
+					Sets <code>_ga</code> cookies and sends usage data to Google. See the Cookies and
+					analytics section above.
 				</li>
 			</ul>
 

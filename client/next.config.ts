@@ -7,6 +7,20 @@ const nextConfig: NextConfig = {
   // Compress responses, Next.js gzip by default; Cloudflare handles Brotli at edge
   compress: true,
 
+  // Troop/building art is served from the Cloudflare CDN (see data/gameIcons.ts).
+  // next/image <Image> needs the remote host allowlisted; plain <img> tags don't.
+  // Left optimizer ON globally (avatars + /public images still benefit); the CDN
+  // icons are tiny and already .webp, so passing them through is negligible.
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'cdn.vexara.world',
+        pathname: '/**',
+      },
+    ],
+  },
+
   async rewrites() {
     const apiUrl = process.env.INTERNAL_API_URL ?? 'http://localhost:3001';
     return [

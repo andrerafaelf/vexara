@@ -328,7 +328,14 @@ export async function getActivitySummary(req: AuthRequest, res: Response): Promi
 			}
 		}
 
-		const attacks = completedAttacks.map((a) => {
+		const attacks = completedAttacks
+			// Drop self-owned bounces — a wave that turned around because the target was
+			// already yours isn't a real engagement and must not read as a defeat.
+			.filter(
+				(a) =>
+					(a.result as { reason?: string } | null)?.reason !== 'target_self_owned'
+			)
+			.map((a) => {
 			const r = a.result as { victory?: boolean } | null;
 			const isMyAttack = a.attackerUserId === req.userId;
 			const result =
@@ -427,18 +434,23 @@ export async function getNexusHistory(req: AuthRequest, res: Response): Promise<
 			}
 		});
 
-		const history = attacks.map((a) => {
-			const r = a.result as { victory?: boolean; conquered?: boolean } | null;
-			return {
-				id: a.id,
-				attackerNexus: a.attackerNexus?.name ?? 'Unknown',
-				defenderNexus: a.defenderNexus?.name ?? 'Unknown',
-				victory: r?.victory ?? null,
-				conquered: r?.conquered ?? false,
-				isScout: a.type === 'scout',
-				createdAt: a.createdAt
-			};
-		});
+		const history = attacks
+			// Self-owned bounces aren't real engagements — keep them out of history.
+			.filter(
+				(a) => (a.result as { reason?: string } | null)?.reason !== 'target_self_owned'
+			)
+			.map((a) => {
+				const r = a.result as { victory?: boolean; conquered?: boolean } | null;
+				return {
+					id: a.id,
+					attackerNexus: a.attackerNexus?.name ?? 'Unknown',
+					defenderNexus: a.defenderNexus?.name ?? 'Unknown',
+					victory: r?.victory ?? null,
+					conquered: r?.conquered ?? false,
+					isScout: a.type === 'scout',
+					createdAt: a.createdAt
+				};
+			});
 
 		res.json(history);
 	} catch (error) {

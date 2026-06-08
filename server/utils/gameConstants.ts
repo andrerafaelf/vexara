@@ -3,6 +3,19 @@
 // same convention as economy.ts / economy.shared.ts. If you change a
 // number or formula here, change it in the client mirror in the same commit.
 
+// A nexus is shown to OTHER players as "active" (online) for this long after its
+// owner's last deliberate action (train/build/cancel/decommission). Mirrors the
+// familiar 15-minute "recent activity" window from games like OGame.
+export const NEXUS_ACTIVE_WINDOW_MS = 15 * 60 * 1000;
+
+// Return trips (post-combat attack survivors, scouts heading home, bounced
+// support, and recalled transfers) take this fraction of the original ONE-WAY
+// travel time. Set to 0 for near-instant returns: returnsAt collapses to "now",
+// so the troops land on the next process_combat / process_transfers job tick
+// (batched on a 10s interval — that ~10s is the practical floor, not the math).
+// Raise toward 1 to restore a distance-scaled return cost (1 = full round trip).
+export const RETURN_TRAVEL_MULTIPLIER = 0;
+
 export interface BuildingCost {
 	biomass: number;
 	alloy: number;
@@ -25,7 +38,7 @@ export const BUILDING_COSTS: Record<string, BuildingCost> = {
 	alloyForge: { biomass: 65, alloy: 40, ore: 60, time: 120 },
 	oreExtractor: { biomass: 75, alloy: 65, ore: 70, time: 150 },
 	shieldGrid: { biomass: 50, alloy: 100, ore: 60, time: 180 },
-	armory: { biomass: 120, alloy: 180, ore: 140, time: 210 },
+	targetingCore: { biomass: 120, alloy: 180, ore: 140, time: 210 },
 	stealthArray: { biomass: 100, alloy: 150, ore: 180, time: 210 }
 };
 
@@ -37,32 +50,48 @@ export interface TroopCost {
 	time: number;
 }
 
+// v0.22 economy overhaul: STRIKER resource costs (biomass/alloy/ore) re-tuned so
+// atk-per-1k-res lands in monotonic tier bands — the cost curve now reinforces
+// the combat tier invariant instead of fighting it (pre-rework the elite Siege
+// Colossus was the LEAST resource-efficient striker in the game). Per-resource
+// SPLITS preserve each unit's prior ratio; only totals moved. Stats and train
+// `time` are FROZEN (combat-owned). The ONE population change is Siege Colossus
+// 5→4 (see below). Full rationale + bands: server/ECONOMY_BALANCE.md §3.4 / §3.6.
+//
+// ANVILS DELIBERATELY UNCHANGED. A proposed anvil def-per-resource re-pricing
+// (assaultTrooper / bulwarkGuard / aegisSkirmisher / arcDisruptor / siegeMech /
+// plasmaTurret) was DROPPED: it moved the canonical equal-resource ratios the
+// combat doc documents (COMBAT_BALANCE §2.1: r≈0.54→0.30) and anvil cost trades
+// off directly against that ratio, so there's no version that cuts anvils without
+// perturbing combat's equilibrium — and anvils weren't a fault. See
+// ECONOMY_BALANCE §8.1. Anvil rows below are at their pre-rework values.
 export const TROOP_COSTS: Record<string, TroopCost> = {
-	sentinelLancer: { biomass: 150, alloy: 150, ore: 200, population: 1, time: 53 },
+	sentinelLancer: { biomass: 200, alloy: 200, ore: 250, population: 1, time: 53 },
 	assaultTrooper: { biomass: 150, alloy: 150, ore: 350, population: 1, time: 79 },
 	vanguardBreaker: { biomass: 250, alloy: 150, ore: 300, population: 1, time: 160 },
 	reconOperative: { biomass: 400, alloy: 150, ore: 400, population: 1, time: 180 },
-	pyreSuppressor: { biomass: 450, alloy: 400, ore: 450, population: 2, time: 540 },
-	wraithSkimmer: { biomass: 625, alloy: 500, ore: 750, population: 3, time: 720 },
+	pyreSuppressor: { biomass: 520, alloy: 460, ore: 520, population: 2, time: 540 },
+	wraithSkimmer: { biomass: 650, alloy: 520, ore: 780, population: 3, time: 720 },
 	bulwarkGuard: { biomass: 400, alloy: 600, ore: 500, population: 2, time: 720 },
-	// Aegis Skirmisher (new) - Mobile defender, peer to Bulwark Guard. Lower
-	// defense than Bulwark (90 vs 130) but mobile + intercepts incoming mobile
-	// attackers. Pop 2 matches Bulwark; cost and train-time scaled to the
-	// same tier so it competes as a defensive choice, not a strictly better
-	// or worse one.
 	aegisSkirmisher: { biomass: 500, alloy: 550, ore: 450, population: 2, time: 720 },
 	arcDisruptor: { biomass: 550, alloy: 750, ore: 650, population: 2, time: 840 },
-	phantomLance: { biomass: 750, alloy: 600, ore: 900, population: 3, time: 1080 },
-	voidStalker: { biomass: 1100, alloy: 900, ore: 1400, population: 3, time: 1620 },
+	phantomLance: { biomass: 780, alloy: 630, ore: 940, population: 3, time: 1080 },
+	voidStalker: { biomass: 1120, alloy: 910, ore: 1420, population: 3, time: 1620 },
 	siegeMech: { biomass: 1250, alloy: 1000, ore: 2000, population: 4, time: 1800 },
 	plasmaTurret: { biomass: 1500, alloy: 1200, ore: 2500, population: 3, time: 2700 },
-	annihilatorPlatform: { biomass: 2000, alloy: 1750, ore: 3000, population: 4, time: 2400 },
-	// Siege Colossus (new) - tier-3 Armor attacker peer to Annihilator and
-	// Void Stalker. Heaviest single unit (pop 5, slowest speed 6), longest
-	// train time, designed to crack fortified Nexuses. Slightly cheaper than
-	// Annihilator (the fire endgame) but more expensive than Void Stalker
-	// (the mobile endgame). The hammer of the late-game army.
-	siegeColossus: { biomass: 1800, alloy: 2200, ore: 3200, population: 5, time: 3000 },
+	annihilatorPlatform: { biomass: 1900, alloy: 1660, ore: 2840, population: 4, time: 2400 },
+	// Siege Colossus - tier-3 Armor striker, the siege hammer. v0.22: population
+	// 5→4. It was the worst T3 striker on BOTH resource- and population-efficiency
+	// (atk/pop 60, below Void Stalker's 72); the pop-5 tax buried the flagship.
+	// pop 4 lifts atk/pop to 75 (above Void Stalker, below Annihilator — coherent).
+	// Combat resolution is pop-blind (pop only drives housing), verified against
+	// the COMBAT_BALANCE §2 sims (ECONOMY_BALANCE §3.6 / §5.6). Heaviest single
+	// unit, slowest speed 6, longest train time. The hammer of the late-game army.
+	// Resource total 6200 (softened from the first 5150 draft): keeps Fault C fixed
+	// (eff 48.4 > T1's 45.7) AND restores the COMBAT_BALANCE §2.1 colossus→aegis
+	// ratio to ~0.50 (the 5150 draft pushed it to 0.63). Same softening applied to
+	// Annihilator (6400). See ECONOMY_BALANCE §8.
+	siegeColossus: { biomass: 1550, alloy: 1890, ore: 2760, population: 4, time: 3000 },
 	overseer: { biomass: 180000, alloy: 140000, ore: 120000, population: 5, time: 14400 }
 };
 
@@ -176,14 +205,17 @@ export function getMaxTrainingQueueSlots(commandLevel: number): number {
 // leave a nexus via an attack; Recon is scout-only; Overseer is a conquest tool;
 // Plasma Turret is stationary. Single source of truth for both code paths
 // (attackService support branch + troopTransferController) so they never drift.
+// The five ANVILS, one per tier/class niche. v0.22: the list now tracks the
+// rebalanced roles rather than the old hand-picked set. Sentinel Lancer left
+// (it became a Fire striker, atk34/def14 - no longer a defender), and Arc
+// Disruptor joined (reworked into the Fire-class anvil, def95) so the Fire class
+// finally has a lendable mobile-stopping garrison unit.
 export const STATIONABLE_TROOPS: readonly string[] = [
 	'assaultTrooper',
-	'sentinelLancer',
-	'siegeMech',
 	'bulwarkGuard',
-	// Aegis Skirmisher (Stage 2d): Mobile defender, joins the stationable
-	// roster so allies can lend it as a fast-response reinforcement.
-	'aegisSkirmisher'
+	'siegeMech',
+	'aegisSkirmisher',
+	'arcDisruptor'
 ];
 const STATIONABLE_TROOP_SET = new Set<string>(STATIONABLE_TROOPS);
 

@@ -119,7 +119,7 @@ const RESPAWN_FLOOR = {
 		alloyForge: 12,
 		oreExtractor: 12,
 		shieldGrid: 8,
-		armory: 0,
+		targetingCore: 0,
 		stealthArray: 0
 	},
 	troops: {

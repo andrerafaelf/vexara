@@ -11,7 +11,7 @@ interface Props {
 	// Best-known enemy garrison. Null when the target hasn't been scouted.
 	defender: Force | null;
 	defenderShieldGrid?: number;
-	attackerArmory?: number;
+	attackerTargetingCore?: number;
 	// Military Outpost (and doubled variants) boost shield efficiency.
 	shieldEfficiencyMultiplier?: number;
 	// Whether we actually have intel on the defender. Without it the prediction is
@@ -34,7 +34,7 @@ export default function CombatCalculator({
 	attacker,
 	defender,
 	defenderShieldGrid = 0,
-	attackerArmory = 0,
+	attackerTargetingCore = 0,
 	shieldEfficiencyMultiplier = 1,
 	hasIntel
 }: Props) {
@@ -48,14 +48,14 @@ export default function CombatCalculator({
 		return predictCombat({
 			attacker,
 			defender: defender ?? {},
-			attackerArmory,
+			attackerTargetingCore,
 			defenderShieldGrid,
 			shieldEfficiencyMultiplier
 		});
 	}, [
 		attacker,
 		defender,
-		attackerArmory,
+		attackerTargetingCore,
 		defenderShieldGrid,
 		shieldEfficiencyMultiplier,
 		totalAttacker

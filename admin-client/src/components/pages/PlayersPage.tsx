@@ -41,7 +41,7 @@ const BUILDING_LABELS: Record<BuildingKey, string> = {
 	alloyForge: 'Alloy Forge',
 	oreExtractor: 'Ore Extractor',
 	shieldGrid: 'Shield Grid',
-	armory: 'Armory',
+	targetingCore: 'Targeting Core',
 	stealthArray: 'Stealth Array'
 };
 const TROOP_LABELS: Record<TroopKey, string> = {

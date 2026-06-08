@@ -53,7 +53,7 @@ interface NexusForEconomy {
 	armorFoundry?: number;
 	lifeSupport?: number;
 	shieldGrid?: number;
-	armory?: number;
+	targetingCore?: number;
 	[key: string]: unknown;
 }
 
@@ -83,8 +83,15 @@ export function getResourceProduction(nexus: NexusForEconomy, storm?: StormBonus
 		: rawMultiplier === 1
 			? 1
 			: 1 + (rawMultiplier - 1) * getDoubleScale(nexus);
+	// Growth 1.35 (v0.22 economy overhaul, was 1.32). Lifts mid-late production so
+	// the resource axis actually binds — see server/ECONOMY_BALANCE.md §3.1. Base
+	// 800 unchanged, so early game is identical. 1.35 is the disciplined ceiling:
+	// an earlier flat-1.35 build drew "too much production" complaints, but that
+	// was a no-resource-sink economy; this pass adds sinks (storage flatten +
+	// unit-cost re-tune) so 1.35 now feeds an economy that consumes it. 1.36 was
+	// tested and overshoots (re-trivializes resources at the top end).
 	const prod = (level: number, stormMult: number) =>
-		level <= 0 ? 0 : baseProduction * Math.pow(1.32, level - 1) * productionMultiplier * stormMult;
+		level <= 0 ? 0 : baseProduction * Math.pow(1.35, level - 1) * productionMultiplier * stormMult;
 	return {
 		biomass: prod(nexus.biomassFarm, storm?.biomass ?? 1),
 		alloy: prod(nexus.alloyForge, storm?.alloy ?? 1),
@@ -96,9 +103,13 @@ export function getMaxStorage(nexus: NexusForEconomy): number {
 	const rawMultiplier = NEXUS_TYPE_BONUSES[nexus.nexusType ?? '']?.storageMultiplier ?? 1;
 	const storageMultiplier =
 		rawMultiplier === 1 ? 1 : 1 + (rawMultiplier - 1) * getDoubleScale(nexus);
-	// Base 1500 means Lv1 caps at 2250, so the buffed 1500 starting stockpile
+	// Base 1500 means Lv1 caps at ~2,220, so the buffed 1500 starting stockpile
 	// has headroom from spawn instead of capping farms instantly.
-	return 1500 * Math.pow(1.5, nexus.storageVault) * storageMultiplier;
+	// Growth 1.48 (v0.22 economy overhaul, was 1.50): a mild flatten that closes
+	// the runaway storage-vs-production gap (fill-time at Lv20 drops 31.9h→15.9h)
+	// while keeping storage ahead of production at every level so raiding still
+	// pays. See server/ECONOMY_BALANCE.md §3.2–3.3.
+	return 1500 * Math.pow(1.48, nexus.storageVault) * storageMultiplier;
 }
 
 export function getNexusTypeEffectiveMultipliers(nexus: NexusForEconomy): NexusTypeBonuses | null {
@@ -194,6 +205,13 @@ export function calculateTroopInfluence(troops: Record<string, number | undefine
 	return points;
 }
 
+// Influence is reported to players as a single "Influence" number. It was
+// scaling a touch too aggressively, so we trim the headline total by a flat
+// ~15%. Every nexus is scaled by the same factor, so relative ordering between
+// players is unchanged — only the magnitude is dialed back slightly. Building/
+// troop weights below keep their original relative balance.
+export const INFLUENCE_SCALE = 0.85;
+
 export function calculatePoints(nexus: NexusForEconomy & Partial<Record<string, unknown>>): number {
 	let points = 0;
 	const buildingPoints: Record<string, number> = {
@@ -212,11 +230,11 @@ export function calculatePoints(nexus: NexusForEconomy & Partial<Record<string, 
 		alloyForge: 6,
 		oreExtractor: 6,
 		shieldGrid: 8,
-		armory: 12
+		targetingCore: 12
 	};
 	for (const [building, pts] of Object.entries(buildingPoints)) {
 		points += pts * (Number(nexus[building]) || 0);
 	}
 	points += calculateTroopInfluence(nexus as Record<string, number | undefined | null>);
-	return Math.floor(points);
+	return Math.floor(points * INFLUENCE_SCALE);
 }

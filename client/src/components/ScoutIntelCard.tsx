@@ -30,31 +30,34 @@ interface ScoutIntelCardProps {
 	scoutedAt?: string;
 }
 
+// Mirror of combatSim.ts TROOP_STATS (v0.22 rebalance) - kept local so the
+// scout threat score matches resolved combat. If combatSim changes, change here.
 const TROOP_STATS: Record<string, { attack: number; defense: number }> = {
-	sentinelLancer: { attack: 3, defense: 22 },
-	assaultTrooper: { attack: 5, defense: 45 },
-	vanguardBreaker: { attack: 35, defense: 3 },
+	sentinelLancer: { attack: 28, defense: 14 },
+	assaultTrooper: { attack: 16, defense: 30 },
+	vanguardBreaker: { attack: 32, defense: 14 },
 	reconOperative: { attack: 1, defense: 20 },
-	wraithSkimmer: { attack: 80, defense: 10 },
-	siegeMech: { attack: 40, defense: 260 },
-	bulwarkGuard: { attack: 3, defense: 130 },
-	aegisSkirmisher: { attack: 50, defense: 90 },
-	pyreSuppressor: { attack: 65, defense: 8 },
-	arcDisruptor: { attack: 75, defense: 9 },
-	phantomLance: { attack: 95, defense: 13 },
-	voidStalker: { attack: 150, defense: 15 },
-	plasmaTurret: { attack: 0, defense: 160 },
-	annihilatorPlatform: { attack: 320, defense: 35 },
-	siegeColossus: { attack: 280, defense: 280 },
+	wraithSkimmer: { attack: 105, defense: 22 },
+	siegeMech: { attack: 70, defense: 215 },
+	bulwarkGuard: { attack: 18, defense: 90 },
+	aegisSkirmisher: { attack: 34, defense: 64 },
+	pyreSuppressor: { attack: 80, defense: 20 },
+	arcDisruptor: { attack: 55, defense: 95 },
+	phantomLance: { attack: 125, defense: 26 },
+	voidStalker: { attack: 215, defense: 36 },
+	plasmaTurret: { attack: 0, defense: 340 },
+	annihilatorPlatform: { attack: 360, defense: 55 },
+	siegeColossus: { attack: 300, defense: 130 },
 	overseer: { attack: 0, defense: 8 },
 	// Legacy keys preserved so a historical scout report stored under the
-	// pre-Stage-2d names still scores threat correctly.
-	lancerDrone: { attack: 3, defense: 22 },
-	breakerUnit: { attack: 35, defense: 3 },
-	skimmerBike: { attack: 80, defense: 10 },
-	suppressorTeam: { attack: 65, defense: 8 },
-	disruptorUnit: { attack: 75, defense: 9 },
-	interceptorBike: { attack: 95, defense: 13 }
+	// pre-Stage-2d names still scores threat correctly (mapped to the current
+	// rebalanced values of the same unit).
+	lancerDrone: { attack: 28, defense: 14 },
+	breakerUnit: { attack: 32, defense: 14 },
+	skimmerBike: { attack: 105, defense: 22 },
+	suppressorTeam: { attack: 80, defense: 20 },
+	disruptorUnit: { attack: 55, defense: 95 },
+	interceptorBike: { attack: 125, defense: 26 }
 };
 
 const TROOP_NAMES: Record<string, string> = {

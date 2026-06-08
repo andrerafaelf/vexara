@@ -189,14 +189,45 @@
 .factions-btn-primary,
 .factions-btn-danger,
 .factions-btn-small {
+	position: relative;
 	padding: var(--space-2) var(--space-4);
 	border: none;
-	border-radius: var(--radius-sm);
+	border-radius: 0;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
 	font-weight: 600;
 	font-size: var(--text-sm);
 	cursor: pointer;
 	transition: background var(--duration-fast) var(--ease-out);
 	white-space: nowrap;
+}
+
+.factions-btn-danger::after,
+.factions-btn-small::after {
+	content: '';
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	width: 9px;
+	height: 1px;
+	transform: rotate(-45deg);
+	transform-origin: bottom right;
+	transition: background var(--duration-fast) var(--ease-out);
+}
+
+.factions-btn-danger::after {
+	background: rgba(248, 81, 73, 0.35);
+}
+
+.factions-btn-danger:hover:not(:disabled)::after {
+	background: rgba(248, 81, 73, 0.55);
+}
+
+.factions-btn-small::after {
+	background: var(--border-accent);
+}
+
+.factions-btn-small:hover:not(:disabled)::after {
+	background: rgba(255, 158, 61, 0.4);
 }
 
 .factions-btn-primary {
@@ -2378,6 +2409,10 @@
 [class*='factions-'][class*='-chip'],
 [class*='factions-'][class*='-pill'] {
 	border-radius: 0;
+}
+
+[class*='factions-'][class*='-btn'] {
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
 }
 
 [class*='factions-'][class*='-btn-primary'] {

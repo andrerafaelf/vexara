@@ -36,36 +36,76 @@ export const CLASS_COUNTERS: Record<TroopClass, Record<TroopClass, number>> = {
 	special: { mobile: 1.0, armor: 1.0, fire: 1.0, special: 1.0 }
 };
 
-// Tiered for proper RTS progression: T1 = early game (pop 1, fast train),
-// T2 = mid-game workhorses (pop 2-3), T3 = endgame power units (pop 4-5,
-// 2 attackers + 2 defenders). Attack-per-pop should grow with tier so
-// spamming the cheapest unit is never the optimal late-game answer.
+// Defender-side counter multipliers. The triangle is now SYMMETRIC: a defender
+// whose class counters the incoming attacker gets its defense amplified, and a
+// defender being countered loses some defensive value. We use a SMALLER spread
+// than the attack side (1.25 / 0.80 vs 1.35 / 0.75) on purpose — it preserves a
+// slight "attacker initiative" so a defender can't win a mirror just by sitting
+// still, while still making the right garrison composition matter enormously.
+// Special is neutral both ways. Mirrors the client combatSim DEF_COUNTER_* knobs.
+export const DEF_COUNTER_ADVANTAGE = 1.25;
+export const DEF_COUNTER_DISADVANTAGE = 0.8;
+export function defenderCounterMultiplier(baseAttackMult: number): number {
+	if (baseAttackMult > 1.0) return DEF_COUNTER_ADVANTAGE;
+	if (baseAttackMult < 1.0) return DEF_COUNTER_DISADVANTAGE;
+	return 1.0;
+}
+
+// ── Combat rebalance (v0.22): symmetric-triangle stat matrix ────────────────
+// With the counter triangle now applied to BOTH attack and defense, raw stats
+// were re-tuned so the COUNTER (not a unit's raw stat lead) decides equal-
+// resource fights. The roster is organised by class × role:
+//
+//   STRIKERS  – high attack, low defense. Their job is to deal damage; the
+//               triangle rewards them when they hit the class they counter.
+//   ANVILS    – high defense, low attack. Their job is to hold a nexus; the
+//               triangle rewards them when they defend against the class they
+//               counter. EVERY class has an anvil so every attacker has an
+//               equal-resource answer on defense:
+//                 armor anvils → Assault Trooper / Bulwark Guard / Siege Mech
+//                 mobile anvil → Aegis Skirmisher
+//                 fire anvils  → Arc Disruptor (EMP) / Plasma Turret (static)
+//
+// Attack-per-pop rises with tier (T1<T2<T3) so cheap-unit spam is never the
+// optimal late-game army. Glass-cannon strikers make TERRIBLE garrisons by
+// design — defend with anvils, attack with strikers, and scout so you bring the
+// class that counters what you find. Keep in lockstep with client combatSim.ts.
 export const TROOP_STATS: Record<TroopKey, TroopStat> = {
-	sentinelLancer: { attack: 3, defense: 22, speed: 20, carry: 30 },
-	assaultTrooper: { attack: 5, defense: 45, speed: 18, carry: 60 },
-	vanguardBreaker: { attack: 35, defense: 3, speed: 16, carry: 40 },
-	reconOperative: { attack: 1, defense: 20, speed: 25, carry: 10 },
-	wraithSkimmer: { attack: 80, defense: 10, speed: 22, carry: 80 },
-	bulwarkGuard: { attack: 3, defense: 130, speed: 12, carry: 25 },
-	// Aegis Skirmisher (Stage 2d): Mobile defender. Lower defense than the
-	// Armor-class Bulwark (90 vs 130) so it's not a strictly better choice;
-	// higher speed (24 vs Bulwark's 12) lets it intercept incoming Mobile
-	// attackers. Modest attack so it's defensive-first, not a hybrid raider.
-	aegisSkirmisher: { attack: 50, defense: 90, speed: 24, carry: 30 },
-	pyreSuppressor: { attack: 65, defense: 8, speed: 15, carry: 20 },
-	arcDisruptor: { attack: 75, defense: 9, speed: 17, carry: 25 },
-	phantomLance: { attack: 95, defense: 13, speed: 28, carry: 100 },
-	siegeMech: { attack: 40, defense: 260, speed: 10, carry: 20 },
-	annihilatorPlatform: { attack: 320, defense: 35, speed: 8, carry: 250 },
-	voidStalker: { attack: 150, defense: 15, speed: 32, carry: 60 },
-	plasmaTurret: { attack: 0, defense: 160, speed: 0, carry: 0 },
-	overseer: { attack: 0, defense: 8, speed: 15, carry: 0 },
-	// Siege Colossus (Stage 2d): elite Armor attacker. Highest attack of any
-	// armor unit (280 vs Siege Mech's 40), comparable defense to Siege Mech
-	// (280 vs 260). Slowest at speed 6, heaviest at pop 5. Costed above the
-	// Void Stalker (mobile endgame) and slightly below Annihilator (fire
-	// endgame); paired with the Annihilator as the elite siege duo.
-	siegeColossus: { attack: 280, defense: 280, speed: 6, carry: 150 }
+	// ── Tier 1 (pop 1) — cheap openers ──
+	// Attack deliberately trimmed (~-20% vs the first rebalance draft) so T1
+	// resource-efficiency sits CLEARLY below T2/T3. Resources are abundant early,
+	// so without this gap cheap-unit spam stayed near-optimal in the early-mid
+	// window before population/training caps bind. T1 still wins its counter
+	// matchups — it's just no longer a substitute for teching up.
+	sentinelLancer: { attack: 28, defense: 14, speed: 20, carry: 30 }, // fire striker
+	assaultTrooper: { attack: 16, defense: 30, speed: 16, carry: 60 }, // armor anvil
+	vanguardBreaker: { attack: 32, defense: 14, speed: 16, carry: 40 }, // mobile striker
+	reconOperative: { attack: 1, defense: 20, speed: 25, carry: 10 }, // scout (special)
+	// ── Tier 2 (pop 2-3) — workhorses ──
+	pyreSuppressor: { attack: 80, defense: 20, speed: 15, carry: 20 }, // fire striker
+	wraithSkimmer: { attack: 105, defense: 22, speed: 22, carry: 80 }, // mobile striker
+	bulwarkGuard: { attack: 18, defense: 90, speed: 12, carry: 25 }, // armor anvil
+	// Aegis Skirmisher: the MOBILE-class anvil. High defense + speed lets it
+	// intercept incoming Armor attackers (mobile counters armor on defense).
+	// Defensive-first — modest attack so it's not a hybrid raider.
+	aegisSkirmisher: { attack: 34, defense: 64, speed: 24, carry: 30 },
+	// Arc Disruptor reworked into the T2 FIRE-class anvil (EMP interceptor). Fire
+	// counters Mobile, so this is the mid-game answer to mobile raiders that the
+	// old glass-cannon Arc could never be. Hybrid defense lead, modest attack.
+	arcDisruptor: { attack: 55, defense: 95, speed: 17, carry: 25 },
+	phantomLance: { attack: 125, defense: 26, speed: 28, carry: 100 }, // mobile raider
+	// ── Tier 3 (pop 3-5) — endgame ──
+	voidStalker: { attack: 215, defense: 36, speed: 32, carry: 60 }, // mobile striker (fastest)
+	siegeMech: { attack: 70, defense: 215, speed: 10, carry: 20 }, // armor anvil (the great wall)
+	// Plasma Turret: static FIRE emplacement and the heavy anti-mobile anchor.
+	// Highest single-unit defense; can't leave the nexus that built it.
+	plasmaTurret: { attack: 0, defense: 340, speed: 0, carry: 0 },
+	annihilatorPlatform: { attack: 360, defense: 55, speed: 8, carry: 250 }, // fire artillery striker
+	overseer: { attack: 0, defense: 8, speed: 15, carry: 0 }, // conquest (special)
+	// Siege Colossus: T3 ARMOR striker — the siege hammer. High attack with
+	// enough defense to survive its own assault; armor counters fire on the way
+	// in. Paired with the Annihilator as the elite siege duo.
+	siegeColossus: { attack: 300, defense: 130, speed: 6, carry: 150 }
 };
 
 const TROOP_KEYS = Object.keys(TROOP_STATS) as TroopKey[];
@@ -106,11 +146,11 @@ export function computeForcePower(
 }
 
 // Compute class-weighted attack power of an attacker force against a defender force.
-// armoryLevel amplifies counter bonuses beyond 1.0 by (armoryLevel * 0.015) each.
+// targetingCoreLevel amplifies counter bonuses beyond 1.0 by (targetingCoreLevel * 0.015) each.
 export function computeClassWeightedAttack(
 	attackers: Partial<Record<TroopKey, number>> | Record<string, unknown>,
 	defenders: Partial<Record<TroopKey, number>> | Record<string, unknown>,
-	armoryLevel: number = 0
+	targetingCoreLevel: number = 0
 ): number {
 	// Build defender class composition ratios
 	const defenderClassCounts: Record<TroopClass, number> = {
@@ -125,7 +165,7 @@ export function computeClassWeightedAttack(
 	}
 	const totalDefenders = Object.values(defenderClassCounts).reduce((a, b) => a + b, 0);
 
-	const armoryBonus = Math.min(armoryLevel * 0.015, 0.3); // cap at +30% extra bonus at lv20
+	const targetingCoreBonus = Math.min(targetingCoreLevel * 0.015, 0.3); // cap at +30% extra bonus at lv20
 
 	let totalAttack = 0;
 	for (const key of TROOP_KEYS) {
@@ -141,12 +181,12 @@ export function computeClassWeightedAttack(
 			for (const defClass of ['mobile', 'armor', 'fire', 'special'] as TroopClass[]) {
 				const ratio = defenderClassCounts[defClass] / totalDefenders;
 				const baseMult = CLASS_COUNTERS[attackerClass][defClass];
-				// Amplify counter advantage/disadvantage with armory bonus
+				// Amplify counter advantage/disadvantage with Targeting Core bonus
 				const amplifiedMult =
 					baseMult > 1.0
-						? baseMult + armoryBonus
+						? baseMult + targetingCoreBonus
 						: baseMult < 1.0
-							? baseMult - armoryBonus * 0.5
+							? baseMult - targetingCoreBonus * 0.5
 							: 1.0;
 				weightedMult += ratio * amplifiedMult;
 			}
@@ -156,6 +196,58 @@ export function computeClassWeightedAttack(
 		totalAttack += count * stat * effectiveMultiplier;
 	}
 	return totalAttack;
+}
+
+// Compute class-weighted DEFENSE power of a defender force against an attacker
+// force. Symmetric counterpart to computeClassWeightedAttack: a defender whose
+// class counters the attacker composition has its defense amplified, and one
+// being countered loses some. Uses the (milder) DEF_COUNTER_* spread so the
+// triangle decides composition fights without erasing attacker initiative.
+//
+// Unlike the attack side, defense does NOT take the Targeting Core amplifier — the
+// Targeting Core is an offensive building (it sharpens YOUR strikes), so leaving the
+// defender out of it keeps the building's identity clear and preserves the
+// existing "attacker invests in Targeting Core" lever.
+export function computeClassWeightedDefense(
+	defenders: Partial<Record<TroopKey, number>> | Record<string, unknown>,
+	attackers: Partial<Record<TroopKey, number>> | Record<string, unknown>
+): number {
+	// Build attacker class composition ratios.
+	const attackerClassCounts: Record<TroopClass, number> = {
+		mobile: 0,
+		armor: 0,
+		fire: 0,
+		special: 0
+	};
+	for (const key of TROOP_KEYS) {
+		const count = Number((attackers as Record<string, unknown>)[key] || 0);
+		if (count > 0) attackerClassCounts[TROOP_CLASS[key]] += count;
+	}
+	const totalAttackers = Object.values(attackerClassCounts).reduce((a, b) => a + b, 0);
+
+	let totalDefense = 0;
+	for (const key of TROOP_KEYS) {
+		const count = Number((defenders as Record<string, unknown>)[key] || 0);
+		if (count <= 0) continue;
+		const stat = TROOP_STATS[key].defense;
+		const defenderClass = TROOP_CLASS[key];
+
+		// Weighted average of the defender's counter multipliers against the
+		// attacker composition.
+		let effectiveMultiplier = 1.0;
+		if (totalAttackers > 0) {
+			let weightedMult = 0;
+			for (const attClass of ['mobile', 'armor', 'fire', 'special'] as TroopClass[]) {
+				const ratio = attackerClassCounts[attClass] / totalAttackers;
+				const baseMult = CLASS_COUNTERS[defenderClass][attClass];
+				weightedMult += ratio * defenderCounterMultiplier(baseMult);
+			}
+			effectiveMultiplier = weightedMult;
+		}
+
+		totalDefense += count * stat * effectiveMultiplier;
+	}
+	return totalDefense;
 }
 
 // Compute per-unit loss count for a force that lost the engagement.

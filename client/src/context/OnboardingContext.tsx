@@ -32,6 +32,18 @@ export interface OnboardingGameState {
 }
 
 const isNexusPath = (pathname: string) => pathname === '/nexus' || pathname.startsWith('/nexus/');
+const hasClassProductionBuilding = (nexus: Nexus) =>
+	(nexus.buildings?.hangarBay ?? 0) >= 1 ||
+	(nexus.buildings?.plasmaForge ?? 0) >= 1 ||
+	(nexus.buildings?.armorFoundry ?? 0) >= 1;
+const hasQueuedBuilding = (nexus: Nexus, building: string, targetLevel = 1) =>
+	(nexus.buildQueue ?? []).some(
+		(item) => item.building === building && Number(item.targetLevel) >= targetLevel
+	);
+const hasCommandCoreLevelStarted = (nexus: Nexus, level: number) =>
+	(nexus.buildings?.commandCore ?? 0) >= level || hasQueuedBuilding(nexus, 'commandCore', level);
+const hasArmorFoundryStarted = (nexus: Nexus) =>
+	(nexus.buildings?.armorFoundry ?? 0) >= 1 || hasQueuedBuilding(nexus, 'armorFoundry');
 
 // Ordered list of beginner steps. Each targetAttr must match a
 // data-onboarding="<value>" attribute somewhere in the DOM.
@@ -49,9 +61,28 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 		targetAttr: 'upgrade-building',
 		title: 'Upgrade a Building',
 		message:
-			'Upgrade your Command Core first — it unlocks every other building and increases your build queue.',
+			'Upgrade your Command Core first - it unlocks your production buildings and expands your build queue.',
 		isReady: (s) => s.nexuses.length > 0 && isNexusPath(s.pathname),
-		isComplete: (s) => s.nexuses.some((n) => (n.buildings?.commandCore ?? 1) >= 2)
+		isComplete: (s) => s.nexuses.some((n) => hasCommandCoreLevelStarted(n, 1))
+	},
+	{
+		id: 'reinforce_command',
+		targetAttr: 'upgrade-building',
+		title: 'Reinforce Command',
+		message:
+			'Upgrade Command Core to Lv2 next - this opens the production buildings you need before training troops.',
+		isReady: (s) =>
+			isNexusPath(s.pathname) && s.nexuses.some((n) => (n.buildings?.commandCore ?? 0) >= 1),
+		isComplete: (s) => s.nexuses.some((n) => hasCommandCoreLevelStarted(n, 2))
+	},
+	{
+		id: 'build_production',
+		targetAttr: 'build-production',
+		title: 'Build Troop Production',
+		message: 'Build an Armor Foundry first - it unlocks Assault Troopers for your first raid.',
+		isReady: (s) =>
+			isNexusPath(s.pathname) && s.nexuses.some((n) => (n.buildings?.commandCore ?? 0) >= 2),
+		isComplete: (s) => s.nexuses.some((n) => hasArmorFoundryStarted(n))
 	},
 	{
 		id: 'train_troops',
@@ -59,17 +90,11 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 		title: 'Train Your First Troops',
 		message:
 			'Troops defend your nexus and let you attack others. Queue a few Assault Troopers to get started.',
-		// Only surface this once the player has at least one class production
-		// building (Hangar Bay / Plasma Forge / Armor Foundry). Without one, the
-		// troop card is locked - prompting the player to click it just frustrates.
+		// Only surface this once Armor Foundry exists. The spotlight points at
+		// Assault Troopers, and that card is locked until Armor Foundry Lv1.
 		isReady: (s) =>
 			isNexusPath(s.pathname) &&
-			s.nexuses.some(
-				(n) =>
-					(n.buildings?.hangarBay ?? 0) >= 1 ||
-					(n.buildings?.plasmaForge ?? 0) >= 1 ||
-					(n.buildings?.armorFoundry ?? 0) >= 1
-			),
+			s.nexuses.some((n) => (n.buildings?.armorFoundry ?? 0) >= 1),
 		isComplete: (s) =>
 			s.nexuses.some((n) => {
 				// Already has something in the training queue → done.
@@ -104,13 +129,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 		targetAttr: 'open-factions',
 		title: 'Open Factions',
 		message: 'Open the Factions page to find allies and join a coordinated force.',
-		isReady: (s) =>
-			s.nexuses.some(
-				(n) =>
-					(n.buildings?.hangarBay ?? 0) >= 1 ||
-					(n.buildings?.plasmaForge ?? 0) >= 1 ||
-					(n.buildings?.armorFoundry ?? 0) >= 1
-			),
+		isReady: (s) => s.nexuses.some((n) => hasClassProductionBuilding(n)),
 		isComplete: (s) => s.pathname === '/factions'
 	},
 	{

@@ -559,7 +559,8 @@
 .dashboard-quest-open-btn {
 	background: var(--color-navy-500);
 	color: var(--text-muted);
-	border-radius: 4px;
+	border-radius: 0;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%);
 	padding: 5px 10px;
 	font-size: 12px;
 }
@@ -760,7 +761,8 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	border-radius: 4px;
+	border-radius: 0;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%);
 	transition: background 0.2s ease;
 }
 
@@ -1151,7 +1153,8 @@
 .dashboard-quest-open-btn {
 	background: var(--color-navy-500);
 	color: var(--text-muted);
-	border-radius: 4px;
+	border-radius: 0;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%);
 	padding: 5px 10px;
 	font-size: 12px;
 }
@@ -1326,7 +1329,8 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	border-radius: 4px;
+	border-radius: 0;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%);
 	transition: background 0.2s ease;
 }
 
@@ -1518,4 +1522,5 @@
 /* ── Generic dashboard buttons sharpening ─────────────────────── */
 .dashboard button[class*='-btn']:not(.cc-manage-btn):not(.create-nexus-btn) {
 	border-radius: 0;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%);
 }

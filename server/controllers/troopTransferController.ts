@@ -4,7 +4,11 @@ import * as transferService from '../services/troopTransferService.js';
 import type { AuthRequest } from '../types/index.js';
 import { logError } from '../utils/logger.js';
 import { NEXUS_TYPE_BONUSES } from '../utils/economy.js';
-import { STATIONABLE_TROOPS, isStationableTroop } from '../utils/gameConstants.js';
+import {
+	STATIONABLE_TROOPS,
+	isStationableTroop,
+	RETURN_TRAVEL_MULTIPLIER
+} from '../utils/gameConstants.js';
 
 // A transfer parks a garrison at another of YOUR nexuses - the same "station
 // troops elsewhere" operation as a support mission to an ally, just same-owner.
@@ -23,6 +27,16 @@ function calcArrivesAt(
 	const base = NEXUS_TYPE_BONUSES[fromNexus.nexusType ?? '']?.travelTimeMultiplier ?? 1;
 	const travelMult = base === 1 ? 1 : fromNexus.nexusTypeDoubled ? Math.pow(base, 2) : base;
 	return new Date(Date.now() + distance * TRAVEL_MINUTES_PER_UNIT * travelMult * 60 * 1000);
+}
+
+// Scale a forward-looking arrival Date down to a return arrival by
+// RETURN_TRAVEL_MULTIPLIER (0 = near-instant). Operates on the remaining time
+// from now, so it works for both a full one-way calcArrivesAt and a partial
+// recall (elapsed-so-far) without re-deriving distance.
+function toReturnArrival(arrivesAt: Date): Date {
+	const now = Date.now();
+	const remaining = Math.max(0, arrivesAt.getTime() - now);
+	return new Date(now + remaining * RETURN_TRAVEL_MULTIPLIER);
 }
 
 function serializeTransfer(t: {
@@ -162,7 +176,7 @@ export async function recallTroops(req: AuthRequest, res: Response): Promise<voi
 			const now = Date.now();
 			const totalMs = transfer.arrivesAt!.getTime() - transfer.createdAt.getTime();
 			const elapsedMs = Math.min(now - transfer.createdAt.getTime(), totalMs);
-			const returnsAt = new Date(now + elapsedMs);
+			const returnsAt = toReturnArrival(new Date(now + elapsedMs));
 			const updated = await transferService.updateTransfer(transfer.id, {
 				status: 'returning',
 				returnsAt,
@@ -172,7 +186,7 @@ export async function recallTroops(req: AuthRequest, res: Response): Promise<voi
 			return;
 		}
 
-		const returnsAt = calcArrivesAt(transfer.hostNexus, transfer.ownerNexus);
+		const returnsAt = toReturnArrival(calcArrivesAt(transfer.hostNexus, transfer.ownerNexus));
 		const updated = await transferService.updateTransfer(transfer.id, {
 			status: 'returning',
 			returnsAt,
@@ -203,7 +217,7 @@ export async function sendBack(req: AuthRequest, res: Response): Promise<void> {
 			res.status(400).json({ error: 'Troops are not currently stationed here' });
 			return;
 		}
-		const returnsAt = calcArrivesAt(transfer.hostNexus, transfer.ownerNexus);
+		const returnsAt = toReturnArrival(calcArrivesAt(transfer.hostNexus, transfer.ownerNexus));
 		const updated = await transferService.updateTransfer(transfer.id, {
 			status: 'returning',
 			returnsAt,

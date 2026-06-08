@@ -1,5 +1,13 @@
 # Vexara - Troops Guide
 
+> ⚠️ **OUTDATED — pre-v0.22.** This guide predates the v0.22 combat rework and
+> the earlier building/unit restructure. Its stat values, "Recruitment Core"
+> references, unit names, attack-only counter description, and stationing advice
+> are all stale. For the current combat model, stats, and balance intent see
+> **[COMBAT_BALANCE.md](./COMBAT_BALANCE.md)**; for live numbers see
+> `utils/combatMath.ts` and the in-game Codex. Kept here only as historical
+> reference until this catalog is rewritten.
+
 ## Overview
 
 Vexara features 14 troop types across 4 unit classes. Units are trained in the Recruitment Core and consume population capacity.

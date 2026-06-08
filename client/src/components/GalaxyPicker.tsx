@@ -15,6 +15,7 @@ export interface Galaxy {
 	winnerUserId: number | null;
 	winnerFactionId: number | null;
 	createdAt: string;
+	isLocked: boolean;
 	isJoined: boolean;
 }
 
@@ -62,6 +63,31 @@ function formatCountdown(ms: number): string {
 	if (h > 0) return `${h}h ${m}m ${s}s`;
 	if (m > 0) return `${m}m ${s}s`;
 	return `${s}s`;
+}
+
+// Reference zones shown under a pending galaxy. Each local time is derived from the
+// galaxy's actual startsAt instant via Intl, so it's always correct and DST-aware
+// instead of the old hardcoded offsets.
+const START_ZONES: { label: string; tz: string }[] = [
+	{ label: 'UTC', tz: 'UTC' },
+	{ label: 'Lisbon', tz: 'Europe/Lisbon' },
+	{ label: 'Paris', tz: 'Europe/Paris' },
+	{ label: 'New York', tz: 'America/New_York' },
+	{ label: 'Los Angeles', tz: 'America/Los_Angeles' }
+];
+
+function formatStartZones(startsAt: string): string {
+	const date = new Date(startsAt);
+	if (isNaN(date.getTime())) return '';
+	return START_ZONES.map(({ label, tz }) => {
+		const time = new Intl.DateTimeFormat('en-GB', {
+			hour: '2-digit',
+			minute: '2-digit',
+			hour12: false,
+			timeZone: tz
+		}).format(date);
+		return `${time} ${label}`;
+	}).join(' · ');
 }
 
 const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) => {
@@ -202,11 +228,18 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
 						const startsAtMs = g.startsAt ? new Date(g.startsAt).getTime() : null;
 						const isPending = !isEnded && startsAtMs !== null && startsAtMs > now;
 						const countdownMs = isPending ? startsAtMs! - now : 0;
+						// A running galaxy that won't accept this player. Already-joined members
+						// (and ended/pending galaxies) are unaffected.
+						const isJoinLocked = g.isLocked && !g.isJoined && !isEnded && !isPending;
+						// The instant the galaxy went/goes live: explicit startsAt if set, else
+						// its creation time (galaxies with no startsAt are live from creation).
+						const startInstant = g.startsAt ?? g.createdAt;
 						const cardClass = [
 							'gp-card',
 							isRecentlyEnded ? 'gp-card-ended-recent' : '',
 							isEnded && !isRecentlyEnded ? 'gp-card-ended-old' : '',
 							isPending ? 'gp-card-pending' : '',
+							isJoinLocked ? 'gp-card-locked' : '',
 							g.isJoined && !isEnded && !isPending ? 'gp-card-joined' : ''
 						]
 							.filter(Boolean)
@@ -225,12 +258,19 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
 										{isPending && (
 											<span className="gp-card-tag gp-card-tag-pending">Starting soon</span>
 										)}
+										{isJoinLocked && (
+											<span className="gp-card-tag gp-card-tag-locked">Locked</span>
+										)}
 										{g.isJoined && !isEnded && !isPending && (
 											<span className="gp-card-tag gp-card-tag-joined">Joined</span>
 										)}
 									</div>
 									<div className="gp-card-meta">
-										<span>Created {new Date(g.createdAt).toLocaleDateString()}</span>
+										{isPending ? (
+											<span>Starts on {new Date(startInstant).toLocaleDateString()}</span>
+										) : (
+											<span>Started {new Date(startInstant).toLocaleDateString()}</span>
+										)}
 										{isRecentlyEnded && g.endedAt && (
 											<span className="gp-card-meta-ended">
 												· Ended {new Date(g.endedAt).toLocaleDateString()}
@@ -242,10 +282,8 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
 											</span>
 										)}
 									</div>
-									{isPending && (
-										<div className="gp-card-tz">
-											15:30 UTC · 16:30 Lisbon · 17:30 Paris · 11:30 New York · 08:30 Los Angeles
-										</div>
+									{isPending && g.startsAt && (
+										<div className="gp-card-tz">{formatStartZones(g.startsAt)}</div>
 									)}
 								</div>
 								<div className="gp-card-actions">
@@ -260,17 +298,20 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
 									)}
 									{!isEnded && (
 										<button
-											className={`gp-btn ${isPending ? 'gp-btn-pending' : 'gp-btn-primary'}`}
-											disabled={selecting !== null || isPending}
+											className={`gp-btn ${isPending || isJoinLocked ? 'gp-btn-pending' : 'gp-btn-primary'}`}
+											disabled={selecting !== null || isPending || isJoinLocked}
+											title={isJoinLocked ? 'This galaxy is not accepting new players' : undefined}
 											onClick={() => requestSelect(g)}
 										>
 											{selecting === g.id
 												? '…'
 												: isPending
 													? 'Locked'
-													: g.isJoined
-														? 'Enter'
-														: 'Join'}
+													: isJoinLocked
+														? 'Locked'
+														: g.isJoined
+															? 'Enter'
+															: 'Join'}
 										</button>
 									)}
 									{g.isJoined && !isEnded && !isPending && (

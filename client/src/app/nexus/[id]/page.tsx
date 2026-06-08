@@ -17,10 +17,16 @@ import { useEffect, useRef, useState } from 'react';
 
 const SELECTED_NEXUS_KEY = 'selectedNexusId';
 
-type NexusTab = 'overview' | 'buildings' | 'troops' | 'deployed';
+type NexusTab = 'overview' | 'buildings' | 'troops' | 'deployed' | 'logistics';
 
 function parseTab(value: string | null): NexusTab {
-	if (value === 'buildings' || value === 'troops' || value === 'deployed') return value;
+	if (
+		value === 'buildings' ||
+		value === 'troops' ||
+		value === 'deployed' ||
+		value === 'logistics'
+	)
+		return value;
 	return 'overview';
 }
 

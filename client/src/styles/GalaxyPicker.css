@@ -115,14 +115,36 @@
 	font-size: 11px;
 	letter-spacing: 0.12em;
 	text-transform: uppercase;
+	/* Cut the bottom-right corner to match the modal's clipped silhouette. The
+	   border is drawn separately (::after) because clip-path hides the cut edge. */
+	position: relative;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%);
 	transition:
 		border-color var(--duration-fast) var(--ease-out),
 		color var(--duration-fast) var(--ease-out);
 }
 
+/* Diagonal hairline closing off the clipped corner so the border reads as continuous. */
+.gp-close::after {
+	content: '';
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	width: 10px;
+	height: 1px;
+	background: var(--border-default);
+	transform: rotate(-45deg);
+	transform-origin: bottom right;
+	transition: background var(--duration-fast) var(--ease-out);
+}
+
 .gp-close:hover {
 	border-color: var(--border-strong);
 	color: var(--text-strong);
+}
+
+.gp-close:hover::after {
+	background: var(--border-strong);
 }
 
 .gp-intro {
@@ -195,6 +217,11 @@
 	border-left-color: var(--accent-2);
 }
 
+.gp-card-locked {
+	border-left-color: var(--text-faint);
+	opacity: 0.85;
+}
+
 .gp-card-ended-recent {
 	border-left-color: var(--warning);
 }
@@ -241,6 +268,9 @@
 }
 .gp-card-tag-pending {
 	color: var(--accent-2);
+}
+.gp-card-tag-locked {
+	color: var(--text-muted);
 }
 .gp-card-tag-joined {
 	color: var(--success);
