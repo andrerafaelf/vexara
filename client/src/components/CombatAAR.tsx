@@ -112,8 +112,10 @@ const CombatAAR: React.FC<CombatAARProps> = ({ report, isMyAttack, amAlly }) => 
 	const maxPow = Math.max(attackerPow, defenderPow, 1);
 	const attackerPct = Math.round((attackerPow / maxPow) * 100);
 	const defenderPct = Math.round((defenderPow / maxPow) * 100);
-	const ratio = defenderPow > 0 ? (defenderPow / attackerPow) : 0;
-	const ratioStr = ratio > 0 ? `1 : ${ratio.toFixed(1)}` : '—';
+	const ratio = defenderPow > 0 && attackerPow > 0 ? (defenderPow / attackerPow) : 0;
+	const ratioStr = ratio > 0
+		? `1 : ${ratio >= 100 ? fmt(Math.round(ratio)) : ratio.toFixed(1)}`
+		: '—';
 
 	// Loot
 	const loot = result.resourcesStolen ?? { biomass: 0, alloy: 0, ore: 0 };
