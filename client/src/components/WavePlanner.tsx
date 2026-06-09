@@ -576,7 +576,11 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
 															updateWaveTroop(wave.id, troopType, parseInt(e.target.value) || 0)
 														}
 													/>
-													<span className="wplanner-troop-avail">/{cap}</span>
+													<span
+								className="wplanner-troop-avail"
+								style={{ cursor: 'pointer' }}
+								onClick={() => updateWaveTroop(wave.id, troopType, cap)}
+							>/{cap}</span>
 												</div>
 											);
 										})}
