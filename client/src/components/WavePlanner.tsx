@@ -45,6 +45,27 @@ const TROOP_KEYS = [
 	'overseer'
 ] as const;
 
+const ATTACK_TROOPS: ReadonlySet<string> = new Set([
+	'sentinelLancer',
+	'vanguardBreaker',
+	'pyreSuppressor',
+	'wraithSkimmer',
+	'phantomLance',
+	'voidStalker',
+	'annihilatorPlatform',
+	'siegeColossus'
+]);
+
+const DEFENCE_TROOPS: ReadonlySet<string> = new Set([
+	'assaultTrooper',
+	'bulwarkGuard',
+	'aegisSkirmisher',
+	'arcDisruptor',
+	'siegeMech'
+]);
+
+const SPECIAL_TROOPS: ReadonlySet<string> = new Set(['reconOperative', 'overseer']);
+
 // Per-wave hard cap. Mirrors the server rule in
 // server/services/attackService.ts (`Maximum 1 Overseer per strike`).
 // Each wave sends one army, so the server limit IS the per-wave limit.
@@ -558,35 +579,52 @@ const WavePlanner: React.FC<WavePlanner_Props> = ({ target, onClose }) => {
 
 								{!wave.sent && !scheduled && (
 									<div className="wplanner-troop-grid">
-										{TROOP_KEYS.filter((k) => (nexus?.troops as any)?.[k] > 0).map((troopType) => {
-											const available = (nexus?.troops as any)?.[troopType] ?? 0;
-											const cap = perWaveTroopCap(troopType, available);
-											const current = wave.troops[troopType] ?? 0;
-											return (
-												<div key={troopType} className="wplanner-troop-row">
-													<span className="wplanner-troop-label">{TROOP_LABELS[troopType]}</span>
-													<input
-														type="number"
-														min={0}
-														max={cap}
-														value={current || ''}
-														placeholder="0"
-														className="wplanner-troop-input"
-														onChange={(e) =>
-															updateWaveTroop(wave.id, troopType, parseInt(e.target.value) || 0)
-														}
-													/>
-													<span
-								className="wplanner-troop-avail"
-								style={{ cursor: 'pointer' }}
-								onClick={() => updateWaveTroop(wave.id, troopType, cap)}
-							>/{cap}</span>
-												</div>
-											);
-										})}
-										{nexus && TROOP_KEYS.every((k) => !((nexus.troops as any)?.[k] > 0)) && (
-											<span className="wplanner-no-troops">No troops at this nexus</span>
-										)}
+										{(() => {
+											const availableKeys = TROOP_KEYS.filter((k) => (nexus?.troops as any)?.[k] > 0);
+											if (availableKeys.length === 0) {
+												return nexus ? <span className="wplanner-no-troops">No troops at this nexus</span> : null;
+											}
+											const sections: { label: string; set: ReadonlySet<string> }[] = [
+												{ label: 'Attack', set: ATTACK_TROOPS },
+												{ label: 'Defence', set: DEFENCE_TROOPS },
+												{ label: 'Special', set: SPECIAL_TROOPS }
+											];
+											return sections.map(({ label, set }) => {
+												const sectionKeys = availableKeys.filter((k) => set.has(k));
+												if (sectionKeys.length === 0) return null;
+												return (
+													<React.Fragment key={label}>
+														<div className="wplanner-troop-section-label">{label}</div>
+														{sectionKeys.map((troopType) => {
+															const available = (nexus?.troops as any)?.[troopType] ?? 0;
+															const cap = perWaveTroopCap(troopType, available);
+															const current = wave.troops[troopType] ?? 0;
+															return (
+																<div key={troopType} className="wplanner-troop-row">
+																	<span className="wplanner-troop-label">{TROOP_LABELS[troopType]}</span>
+																	<input
+																		type="number"
+																		min={0}
+																		max={cap}
+																		value={current || ''}
+																		placeholder="0"
+																		className="wplanner-troop-input"
+																		onChange={(e) =>
+																			updateWaveTroop(wave.id, troopType, parseInt(e.target.value) || 0)
+																		}
+																	/>
+																	<span
+																		className="wplanner-troop-avail"
+																		style={{ cursor: 'pointer' }}
+																		onClick={() => updateWaveTroop(wave.id, troopType, cap)}
+																	>/{cap}</span>
+																</div>
+															);
+														})}
+													</React.Fragment>
+												);
+											});
+										})()}
 									</div>
 								)}
 

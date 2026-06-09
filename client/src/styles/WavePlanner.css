@@ -300,6 +300,19 @@
 	color: var(--accent, #7c6af7);
 }
 
+.wplanner-troop-section-label {
+	grid-column: 1 / -1;
+	padding: 4px 2px 2px;
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	opacity: 0.6;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+	margin-bottom: 2px;
+}
+
 .wplanner-no-troops {
 	grid-column: 1 / -1;
 	padding: 10px;
