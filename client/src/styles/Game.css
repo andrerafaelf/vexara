@@ -251,15 +251,9 @@
 	background: var(--accent-soft);
 }
 
-/* Below the wide breakpoint, collapse utility links to icon-only to save room. */
+/* Hide the utility links once the header gets tight; they remain reachable in
+   the mobile drawer. */
 @media (max-width: 1100px) {
-	.header-utility-label {
-		display: none;
-	}
-}
-
-/* On mobile the utility links live in the drawer instead. */
-@media (max-width: 768px) {
 	.header-utility {
 		display: none;
 	}

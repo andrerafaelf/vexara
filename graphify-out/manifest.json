@@ -560,8 +560,8 @@
     "semantic_hash": ""
   },
   "client/src/components/GameLayout.tsx": {
-    "mtime": 1781274772.049467,
-    "ast_hash": "44b668ca0b1bbeb570231fba1d78459c",
+    "mtime": 1781275284.638337,
+    "ast_hash": "deb0504ef569bb1e5bdd5b400214283e",
     "semantic_hash": ""
   },
   "client/src/components/InlineBackButton.tsx": {

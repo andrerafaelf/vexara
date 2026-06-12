@@ -26,7 +26,7 @@ import '@/styles/ConnectionStatusBar.css';
 import '@/styles/Game.css';
 import '@/styles/InGameIdentity.css';
 import { Nexus } from '@/types/game';
-import { BookOpen, Calculator, ChevronDown, Menu } from 'lucide-react';
+import { ChevronDown, Menu } from 'lucide-react';
 import { NexusIcon } from '@/components/VexaraIcons';
 import { usePathname, useRouter } from 'next/navigation';
 import { startTransition, useCallback, useEffect, useMemo, useState } from 'react';
@@ -509,8 +509,7 @@ export default function GameLayout({
 									className="header-utility-link"
 									title="Codex — game reference"
 								>
-									<BookOpen size={16} aria-hidden="true" />
-									<span className="header-utility-label">Codex</span>
+									Codex
 								</a>
 								<a
 									href="/calculator"
@@ -519,8 +518,7 @@ export default function GameLayout({
 									className="header-utility-link"
 									title="Battle calculator"
 								>
-									<Calculator size={16} aria-hidden="true" />
-									<span className="header-utility-label">Calculator</span>
+									Calculator
 								</a>
 							</div>
 							<DiscordButton variant="pill" label="Discord" utm="ingame_header" />
