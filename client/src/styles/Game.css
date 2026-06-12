@@ -89,7 +89,11 @@
 	gap: 2px;
 	flex: 1;
 	min-width: 0;
-	overflow: hidden;
+	/* Must NOT clip: the "More" dropdown is absolutely positioned inside this
+	   row and overflow:hidden was swallowing it whole (empty-looking menu). The
+	   nav item count is bounded by progressive disclosure, so there's nothing to
+	   clip here anyway. */
+	overflow: visible;
 }
 
 .nav-btn {
@@ -2408,14 +2412,17 @@ label {
 .nav-discover-menu {
 	position: absolute;
 	top: calc(100% + 8px);
-	right: 0;
-	min-width: 220px;
+	left: 50%;
+	transform: translateX(-50%);
+	min-width: 240px;
 	background: var(--bg-surface);
 	border: 1px solid var(--border-default);
 	border-radius: var(--radius-md);
 	box-shadow: var(--shadow-lg);
 	padding: 8px;
-	z-index: 50;
+	/* Above the header's own stacking (header is z-index 1050) so the menu is
+	   never occluded by sibling header chrome. */
+	z-index: 1100;
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
