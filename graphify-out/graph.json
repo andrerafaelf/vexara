@@ -4437,7 +4437,7 @@
       "source_file": "client/src/app/play/page.tsx",
       "source_location": "L1",
       "id": "play_page",
-      "community": 64,
+      "community": 29,
       "norm_label": "page.tsx"
     },
     {
@@ -4455,7 +4455,7 @@
       "source_file": "client/src/app/play/page.tsx",
       "source_location": "L35",
       "id": "play_page_playdispatcher",
-      "community": 64,
+      "community": 29,
       "norm_label": "playdispatcher()"
     },
     {
@@ -5148,7 +5148,7 @@
       "source_file": "client/src/app/verify-email/page.tsx",
       "source_location": "L1",
       "id": "verify_email_page",
-      "community": 29,
+      "community": 211,
       "norm_label": "page.tsx"
     },
     {
@@ -5157,7 +5157,7 @@
       "source_file": "client/src/app/verify-email/page.tsx",
       "source_location": "L11",
       "id": "verify_email_page_status",
-      "community": 29,
+      "community": 211,
       "norm_label": "status"
     },
     {
@@ -5166,7 +5166,7 @@
       "source_file": "client/src/app/verify-email/page.tsx",
       "source_location": "L13",
       "id": "verify_email_page_verifyemailinner",
-      "community": 29,
+      "community": 211,
       "norm_label": "verifyemailinner()"
     },
     {
@@ -5175,7 +5175,7 @@
       "source_file": "client/src/app/verify-email/page.tsx",
       "source_location": "L129",
       "id": "verify_email_page_verifyemailpage",
-      "community": 29,
+      "community": 211,
       "norm_label": "verifyemailpage()"
     },
     {
@@ -7542,7 +7542,7 @@
       "source_file": "client/src/components/NexusMap.tsx",
       "source_location": "L1",
       "id": "components_nexusmap",
-      "community": 17,
+      "community": 19,
       "norm_label": "nexusmap.tsx"
     },
     {
@@ -7551,7 +7551,7 @@
       "source_file": "client/src/components/NexusMap.tsx",
       "source_location": "L8",
       "id": "components_nexusmap_buildings",
-      "community": 17,
+      "community": 19,
       "norm_label": "buildings"
     },
     {
@@ -7560,7 +7560,7 @@
       "source_file": "client/src/components/NexusMap.tsx",
       "source_location": "L23",
       "id": "components_nexusmap_nexusmapprops",
-      "community": 17,
+      "community": 19,
       "norm_label": "nexusmapprops"
     },
     {
@@ -7569,7 +7569,7 @@
       "source_file": "client/src/components/NexusMap.tsx",
       "source_location": "L29",
       "id": "components_nexusmap_nexusmap",
-      "community": 17,
+      "community": 19,
       "norm_label": "nexusmap()"
     },
     {
@@ -7857,14 +7857,14 @@
       "source_file": "client/src/components/NexusView.tsx",
       "source_location": "L442",
       "id": "components_nexusview_nexusview",
-      "community": 3,
+      "community": 62,
       "norm_label": "nexusview()"
     },
     {
       "label": "TrainAmountControlsProps",
       "file_type": "code",
       "source_file": "client/src/components/NexusView.tsx",
-      "source_location": "L3806",
+      "source_location": "L3753",
       "id": "components_nexusview_trainamountcontrolsprops",
       "community": 9,
       "norm_label": "trainamountcontrolsprops"
@@ -7873,7 +7873,7 @@
       "label": "TrainAmountControls",
       "file_type": "code",
       "source_file": "client/src/components/NexusView.tsx",
-      "source_location": "L3816",
+      "source_location": "L3763",
       "id": "components_nexusview_trainamountcontrols",
       "community": 9,
       "norm_label": "trainamountcontrols"
@@ -7882,7 +7882,7 @@
       "label": "NewbieProtectionBanner",
       "file_type": "code",
       "source_file": "client/src/components/NexusView.tsx",
-      "source_location": "L3863",
+      "source_location": "L3810",
       "id": "components_nexusview_newbieprotectionbanner",
       "community": 9,
       "norm_label": "newbieprotectionbanner"
@@ -9144,7 +9144,7 @@
       "source_file": "client/src/components/StatsChart.tsx",
       "source_location": "L1",
       "id": "components_statschart",
-      "community": 3,
+      "community": 62,
       "norm_label": "statschart.tsx"
     },
     {
@@ -9153,7 +9153,7 @@
       "source_file": "client/src/components/StatsChart.tsx",
       "source_location": "L18",
       "id": "components_statschart_ranges",
-      "community": 3,
+      "community": 62,
       "norm_label": "ranges"
     },
     {
@@ -9162,7 +9162,7 @@
       "source_file": "client/src/components/StatsChart.tsx",
       "source_location": "L24",
       "id": "components_statschart_tabs",
-      "community": 3,
+      "community": 62,
       "norm_label": "tabs"
     },
     {
@@ -9171,7 +9171,7 @@
       "source_file": "client/src/components/StatsChart.tsx",
       "source_location": "L28",
       "id": "components_statschart_tabid",
-      "community": 3,
+      "community": 62,
       "norm_label": "tabid"
     },
     {
@@ -9189,7 +9189,7 @@
       "source_file": "client/src/components/StatsChart.tsx",
       "source_location": "L37",
       "id": "components_statschart_tooltip_style",
-      "community": 3,
+      "community": 62,
       "norm_label": "tooltip_style"
     },
     {
@@ -9198,7 +9198,7 @@
       "source_file": "client/src/components/StatsChart.tsx",
       "source_location": "L47",
       "id": "components_statschart_cursor_style",
-      "community": 3,
+      "community": 62,
       "norm_label": "cursor_style"
     },
     {
@@ -9207,7 +9207,7 @@
       "source_file": "client/src/components/StatsChart.tsx",
       "source_location": "L49",
       "id": "components_statschart_statschart",
-      "community": 3,
+      "community": 62,
       "norm_label": "statschart()"
     },
     {
@@ -9306,7 +9306,7 @@
       "source_file": "client/src/components/TroopMovementsBar.tsx",
       "source_location": "L1",
       "id": "components_troopmovementsbar",
-      "community": 29,
+      "community": 62,
       "norm_label": "troopmovementsbar.tsx"
     },
     {
@@ -9315,7 +9315,7 @@
       "source_file": "client/src/components/TroopMovementsBar.tsx",
       "source_location": "L13",
       "id": "components_troopmovementsbar_attacknexus",
-      "community": 29,
+      "community": 62,
       "norm_label": "attacknexus"
     },
     {
@@ -9324,7 +9324,7 @@
       "source_file": "client/src/components/TroopMovementsBar.tsx",
       "source_location": "L21",
       "id": "components_troopmovementsbar_attack",
-      "community": 29,
+      "community": 62,
       "norm_label": "attack"
     },
     {
@@ -9333,7 +9333,7 @@
       "source_file": "client/src/components/TroopMovementsBar.tsx",
       "source_location": "L36",
       "id": "components_troopmovementsbar_kind",
-      "community": 29,
+      "community": 62,
       "norm_label": "kind"
     },
     {
@@ -9342,7 +9342,7 @@
       "source_file": "client/src/components/TroopMovementsBar.tsx",
       "source_location": "L42",
       "id": "components_troopmovementsbar_kindof",
-      "community": 29,
+      "community": 62,
       "norm_label": "kindof()"
     },
     {
@@ -9351,7 +9351,7 @@
       "source_file": "client/src/components/TroopMovementsBar.tsx",
       "source_location": "L47",
       "id": "components_troopmovementsbar_verb",
-      "community": 29,
+      "community": 62,
       "norm_label": "verb"
     },
     {
@@ -10098,7 +10098,7 @@
       "source_file": "client/src/context/AuthContext.tsx",
       "source_location": "L1",
       "id": "context_authcontext",
-      "community": 17,
+      "community": 211,
       "norm_label": "authcontext.tsx"
     },
     {
@@ -10107,7 +10107,7 @@
       "source_file": "client/src/context/AuthContext.tsx",
       "source_location": "L7",
       "id": "context_authcontext_authcontexttype",
-      "community": 17,
+      "community": 211,
       "norm_label": "authcontexttype"
     },
     {
@@ -10116,7 +10116,7 @@
       "source_file": "client/src/context/AuthContext.tsx",
       "source_location": "L16",
       "id": "context_authcontext_authcontext",
-      "community": 17,
+      "community": 211,
       "norm_label": "authcontext"
     },
     {
@@ -10125,7 +10125,7 @@
       "source_file": "client/src/context/AuthContext.tsx",
       "source_location": "L18",
       "id": "context_authcontext_readstoredauth",
-      "community": 17,
+      "community": 211,
       "norm_label": "readstoredauth()"
     },
     {
@@ -10332,7 +10332,7 @@
       "source_file": "client/src/context/OnboardingContext.tsx",
       "source_location": "L206",
       "id": "context_onboardingcontext_onboardingprovider",
-      "community": 64,
+      "community": 29,
       "norm_label": "onboardingprovider()"
     },
     {
@@ -10530,7 +10530,7 @@
       "source_file": "client/src/data/gameIcons.ts",
       "source_location": "L22",
       "id": "data_gameicons_buildingicon",
-      "community": 17,
+      "community": 19,
       "norm_label": "buildingicon()"
     },
     {
@@ -11745,7 +11745,7 @@
       "source_file": "client/src/hooks/useMyNexuses.ts",
       "source_location": "L55",
       "id": "hooks_usemynexuses_useinvalidatenexuses",
-      "community": 64,
+      "community": 29,
       "norm_label": "useinvalidatenexuses()"
     },
     {
@@ -13032,7 +13032,7 @@
       "source_file": "client/src/services/api.ts",
       "source_location": "L121",
       "id": "services_api_getgalaxies",
-      "community": 64,
+      "community": 29,
       "norm_label": "getgalaxies()"
     },
     {
@@ -13923,7 +13923,7 @@
       "source_file": "client/src/services/api.ts",
       "source_location": "L501",
       "id": "services_api_getstatstimeline",
-      "community": 3,
+      "community": 62,
       "norm_label": "getstatstimeline()"
     },
     {
@@ -14373,7 +14373,7 @@
       "source_file": "client/src/types/game.ts",
       "source_location": "L1",
       "id": "types_game",
-      "community": 17,
+      "community": 19,
       "norm_label": "game.ts"
     },
     {
@@ -14391,7 +14391,7 @@
       "source_file": "client/src/types/game.ts",
       "source_location": "L3",
       "id": "types_game_user",
-      "community": 17,
+      "community": 211,
       "norm_label": "user"
     },
     {
@@ -14400,7 +14400,7 @@
       "source_file": "client/src/types/game.ts",
       "source_location": "L15",
       "id": "types_game_timelineday",
-      "community": 3,
+      "community": 62,
       "norm_label": "timelineday"
     },
     {
@@ -14409,7 +14409,7 @@
       "source_file": "client/src/types/game.ts",
       "source_location": "L28",
       "id": "types_game_userstats",
-      "community": 17,
+      "community": 19,
       "norm_label": "userstats"
     },
     {
@@ -14427,7 +14427,7 @@
       "source_file": "client/src/types/game.ts",
       "source_location": "L63",
       "id": "types_game_trooptransfer",
-      "community": 17,
+      "community": 19,
       "norm_label": "trooptransfer"
     },
     {
@@ -14445,7 +14445,7 @@
       "source_file": "client/src/types/game.ts",
       "source_location": "L145",
       "id": "types_game_marketlisting",
-      "community": 17,
+      "community": 19,
       "norm_label": "marketlisting"
     },
     {
@@ -14454,7 +14454,7 @@
       "source_file": "client/src/types/game.ts",
       "source_location": "L163",
       "id": "types_game_buildqueueitem",
-      "community": 17,
+      "community": 19,
       "norm_label": "buildqueueitem"
     },
     {
@@ -14463,7 +14463,7 @@
       "source_file": "client/src/types/game.ts",
       "source_location": "L169",
       "id": "types_game_trainingqueueitem",
-      "community": 17,
+      "community": 19,
       "norm_label": "trainingqueueitem"
     },
     {
@@ -14913,7 +14913,7 @@
       "source_file": "client/src/utils/date.ts",
       "source_location": "L1",
       "id": "utils_date",
-      "community": 3,
+      "community": 62,
       "norm_label": "date.ts"
     },
     {
@@ -14931,7 +14931,7 @@
       "source_file": "client/src/utils/date.ts",
       "source_location": "L8",
       "id": "utils_date_formatdatetime",
-      "community": 3,
+      "community": 62,
       "norm_label": "formatdatetime()"
     },
     {
@@ -14940,7 +14940,7 @@
       "source_file": "client/src/utils/date.ts",
       "source_location": "L20",
       "id": "utils_date_formattimeofday",
-      "community": 3,
+      "community": 62,
       "norm_label": "formattimeofday()"
     },
     {
@@ -14949,7 +14949,7 @@
       "source_file": "client/src/utils/date.ts",
       "source_location": "L34",
       "id": "utils_date_formatshortdate",
-      "community": 3,
+      "community": 62,
       "norm_label": "formatshortdate()"
     },
     {
@@ -45129,9 +45129,9 @@
       "source_file": "client/src/components/NexusSidebar.tsx",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "components_nexussidebar",
-      "target": "services_api_renamenexus",
-      "confidence_score": 1.0
+      "target": "services_api_renamenexus"
     },
     {
       "relation": "imports",
@@ -91551,5 +91551,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "a75624e1a58f72c3df7a0f4081cea2a6229d7ffd"
+  "built_at_commit": "91f7aa327c04e9c6097e39a8db9ed9e733c74f3a"
 }

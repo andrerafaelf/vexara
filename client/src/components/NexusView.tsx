@@ -448,28 +448,8 @@ const NexusView: React.FC<NexusViewProps> = ({
 	const router = useRouter();
 	const { currentStep } = useOnboarding();
 	const [activeTab, setActiveTabState] = useState<NexusTab>(initialTab);
-	// Tab bar "stuck" detection: a zero-height sentinel sits just above the sticky
-	// tab bar. When it scrolls out of the top of the scroll container, the bar is
-	// pinned — we add .is-stuck so the gap-fill padding applies ONLY while stuck,
-	// leaving the at-rest layout untouched.
-	const tabStickySentinelRef = useRef<HTMLDivElement | null>(null);
-	const [tabBarStuck, setTabBarStuck] = useState(false);
-
-	useEffect(() => {
-		const sentinel = tabStickySentinelRef.current;
-		if (!sentinel || typeof IntersectionObserver === 'undefined') return;
-		const scrollRoot = sentinel.closest('.main-content') as HTMLElement | null;
-		// rootMargin top is shrunk by the scroll container's top padding so the
-		// sentinel registers "gone" exactly when the bar reaches the pinned position,
-		// not 32px early. Falls back to viewport root on mobile (.main-content is
-		// overflow: visible) where the sticky pins under the 56px header instead.
-		const observer = new IntersectionObserver(
-			([entry]) => setTabBarStuck(entry.intersectionRatio === 0),
-			{ root: scrollRoot, rootMargin: '-32px 0px 0px 0px', threshold: [0, 1] }
-		);
-		observer.observe(sentinel);
-		return () => observer.disconnect();
-	}, []);
+	// The section nav is now the vertical .nexus-inner-nav (position: sticky), so
+	// the old horizontal-tab-bar sticky-sentinel detection was removed.
 	const setActiveTab = (tab: NexusTab) => {
 		setActiveTabState(tab);
 		onTabChange?.(tab);
@@ -1985,55 +1965,63 @@ const NexusView: React.FC<NexusViewProps> = ({
 	// each tick just to recompute these strings.)
 
 	return (
-		<div className="nexus-view">
-			<div ref={tabStickySentinelRef} className="nexus-tab-sticky-sentinel" aria-hidden="true" />
-			<div className={`nexus-tab-bar${tabBarStuck ? ' is-stuck' : ''}`}>
-				<button
-					type="button"
-					className={`nexus-tab-btn${activeTab === 'overview' ? ' active' : ''}`}
-					onClick={() => setActiveTab('overview')}
-				>
-					<span>Overview</span>
-				</button>
-				<button
-					type="button"
-					className={`nexus-tab-btn${activeTab === 'buildings' ? ' active' : ''}`}
-					onClick={() => setActiveTab('buildings')}
-				>
-					<span>Buildings</span>
-					{activeBuild && <span className="nexus-tab-badge" />}
-				</button>
-				<button
-					type="button"
-					className={`nexus-tab-btn${activeTab === 'troops' ? ' active' : ''}`}
-					onClick={() => setActiveTab('troops')}
-				>
-					<span>Troops</span>
-					{activeTraining && <span className="nexus-tab-badge" />}
-				</button>
-				<button
-					type="button"
-					className={`nexus-tab-btn${activeTab === 'deployed' ? ' active' : ''}`}
-					onClick={() => setActiveTab('deployed')}
-				>
-					<span>Deployed</span>
-					{(troopTransfers.length > 0 || outgoingAttacks.length > 0) && (
-						<span className="nexus-tab-badge" />
-					)}
-				</button>
-				{ownNexuses.length > 1 && (
+		<div className="nexus-view nexus-view--split">
+			{/* Inner-left section nav: nexus name header + vertical tab column. Sits
+			    inside the content area (distinct from the outer rail that lists your
+			    nexuses) and scrolls with the page. Anchors the tabs to a real edge. */}
+			<aside className="nexus-inner-nav">
+				<div className="nexus-inner-nav-name" title={nexus.name}>
+					{nexus.name}
+				</div>
+				<nav className="nexus-inner-nav-tabs" aria-label="Nexus sections">
 					<button
 						type="button"
-						className={`nexus-tab-btn${activeTab === 'logistics' ? ' active' : ''}`}
-						onClick={() => setActiveTab('logistics')}
+						className={`nexus-inner-tab${activeTab === 'overview' ? ' active' : ''}`}
+						onClick={() => setActiveTab('overview')}
 					>
-						<span>Supply</span>
+						<span>Overview</span>
 					</button>
-				)}
-			</div>
+					<button
+						type="button"
+						className={`nexus-inner-tab${activeTab === 'buildings' ? ' active' : ''}`}
+						onClick={() => setActiveTab('buildings')}
+					>
+						<span>Buildings</span>
+						{activeBuild && <span className="nexus-tab-badge" />}
+					</button>
+					<button
+						type="button"
+						className={`nexus-inner-tab${activeTab === 'troops' ? ' active' : ''}`}
+						onClick={() => setActiveTab('troops')}
+					>
+						<span>Troops</span>
+						{activeTraining && <span className="nexus-tab-badge" />}
+					</button>
+					<button
+						type="button"
+						className={`nexus-inner-tab${activeTab === 'deployed' ? ' active' : ''}`}
+						onClick={() => setActiveTab('deployed')}
+					>
+						<span>Deployed</span>
+						{(troopTransfers.length > 0 || outgoingAttacks.length > 0) && (
+							<span className="nexus-tab-badge" />
+						)}
+					</button>
+					{ownNexuses.length > 1 && (
+						<button
+							type="button"
+							className={`nexus-inner-tab${activeTab === 'logistics' ? ' active' : ''}`}
+							onClick={() => setActiveTab('logistics')}
+						>
+							<span>Supply</span>
+						</button>
+					)}
+				</nav>
+			</aside>
 
-			{/* Nexus-type buff banner — a thin status strip, now sits just under the
-			    tab bar instead of inside the removed name header. */}
+			<div className="nexus-content-col">
+			{/* Nexus-type buff banner — a thin status strip at the top of the content
+			    column. */}
 			<div className="nexus-buff-banner-row">
 				{nexus.nexusType &&
 					NEXUS_TYPES_WITH_BUFF.has(nexus.nexusType) &&
@@ -2192,52 +2180,10 @@ const NexusView: React.FC<NexusViewProps> = ({
 						</div>
 					</div>
 
-					<div className="overview-shortcuts">
-						<button
-							type="button"
-							className="overview-shortcut-card"
-							onClick={() => setActiveTab('buildings')}
-						>
-							<span className="overview-shortcut-title">
-								Construction
-							</span>
-							<span className="overview-shortcut-status">
-								{activeBuild ? 'Active upgrade in progress' : 'No active construction'}
-							</span>
-							<span className="overview-shortcut-subtitle">
-								{activeBuild ? (
-									<>
-										{BUILDING_NAMES[activeBuild.building] || activeBuild.building} → Lv
-										{activeBuild.targetLevel} • <Countdown endAt={activeBuild.completesAt} />
-									</>
-								) : (
-									'Open Buildings'
-								)}
-							</span>
-						</button>
-						<button
-							type="button"
-							className="overview-shortcut-card"
-							onClick={() => setActiveTab('troops')}
-						>
-							<span className="overview-shortcut-title">
-								Training
-							</span>
-							<span className="overview-shortcut-status">
-								{activeTraining ? 'Troops are being trained' : 'No active training'}
-							</span>
-							<span className="overview-shortcut-subtitle">
-								{activeTraining ? (
-									<>
-										{activeTraining.amount}x{' '}
-										{TROOP_NAMES[activeTraining.troopType] || activeTraining.troopType} •{' '}
-										<Countdown endAt={activeTraining.completesAt} />
-									</>
-								) : (
-									'Open Troops'
-								)}
-							</span>
-						</button>
+					{/* Construction/Training shortcut cards removed — they duplicated the
+					    Buildings/Troops tabs and the queue-summary rows below. Strikes
+					    stays: it shows live attack movements with no tab of its own. */}
+					<div className="overview-shortcuts overview-shortcuts--strikes-only">
 						<div className="overview-shortcut-card overview-strikes-card">
 							<span className="overview-shortcut-title">
 								Strikes
@@ -3799,6 +3745,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 					</div>
 				</div>
 			)}
+			</div>
 		</div>
 	);
 };

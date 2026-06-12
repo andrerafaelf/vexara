@@ -3,10 +3,135 @@
 	border-radius: 0;
 	padding: 0;
 	min-height: 600px;
-	/* The name header was removed, so the centered tab bar now leads. Pull the
-	   view up to cancel the main-content top padding — otherwise that padding
-	   reads as an empty gap above the tabs. */
-	margin-top: calc(var(--space-5) * -1);
+}
+
+/* Two-column nexus layout: an inner-left section nav (nexus name + vertical
+   Overview/Buildings/Troops/… tabs) beside the content column. The inner nav
+   gives the tabs a real left anchor instead of floating; it scrolls with the
+   page (sticky so it stays in view on long content). */
+.nexus-view--split {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-5);
+}
+
+.nexus-inner-nav {
+	flex: 0 0 168px;
+	width: 168px;
+	position: sticky;
+	top: var(--space-3);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+.nexus-inner-nav-name {
+	font-size: var(--text-lg);
+	font-weight: 700;
+	color: var(--text-strong);
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	padding: 0 var(--space-2) var(--space-2);
+	border-bottom: 1px solid var(--border-default);
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.nexus-inner-nav-tabs {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.nexus-inner-tab {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	text-align: left;
+	background: transparent;
+	color: var(--text-muted);
+	border: none;
+	border-left: 2px solid transparent;
+	border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+	padding: 9px 12px;
+	font-size: var(--text-base);
+	font-weight: 600;
+	cursor: pointer;
+	transition:
+		color var(--duration-fast) var(--ease-out),
+		background var(--duration-fast) var(--ease-out),
+		border-color var(--duration-fast) var(--ease-out);
+}
+
+.nexus-inner-tab:hover {
+	color: var(--text-strong);
+	background: rgba(255, 255, 255, 0.03);
+}
+
+.nexus-inner-tab.active {
+	color: var(--accent);
+	background: var(--accent-soft);
+	border-left-color: var(--accent);
+}
+
+.nexus-content-col {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+/* On narrow screens the inner nav collapses to a horizontal scroll row across
+   the top so the content gets full width. */
+@media (max-width: 900px) {
+	.nexus-view--split {
+		flex-direction: column;
+		gap: var(--space-3);
+	}
+	.nexus-inner-nav {
+		flex-basis: auto;
+		width: 100%;
+		flex-direction: row;
+		align-items: center;
+		gap: var(--space-2);
+		border-bottom: 1px solid var(--border-default);
+		padding-bottom: var(--space-2);
+		overflow-x: auto;
+		scrollbar-width: none;
+		/* Pin the section nav under the fixed game header while scrolling — the
+		   horizontal switcher stays one tap away on long pages (matches the old
+		   mobile tab-bar behavior). Mobile scroll root is the window. */
+		position: sticky;
+		top: calc(56px + var(--safe-top));
+		z-index: 1040;
+		background: color-mix(in srgb, var(--bg-app) 94%, transparent);
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
+	}
+	.nexus-inner-nav::-webkit-scrollbar {
+		display: none;
+	}
+	.nexus-inner-nav-name {
+		border-bottom: none;
+		padding: 0 var(--space-2) 0 0;
+		white-space: nowrap;
+		flex-shrink: 0;
+	}
+	.nexus-inner-nav-tabs {
+		flex-direction: row;
+		gap: 2px;
+	}
+	.nexus-inner-tab {
+		border-left: none;
+		border-bottom: 2px solid transparent;
+		border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+		white-space: nowrap;
+		padding: 8px 12px;
+	}
+	.nexus-inner-tab.active {
+		border-left-color: transparent;
+		border-bottom-color: var(--accent);
+	}
 }
 
 /* The full-height nexus name header was removed — the name + rename now live
@@ -343,57 +468,7 @@
 	white-space: nowrap;
 }
 
-.nexus-tab-bar {
-	display: flex;
-	justify-content: center;
-	gap: var(--space-1);
-	margin-bottom: var(--space-4);
-	border-bottom: 1px solid var(--border-default);
-	padding-bottom: 0;
-	overflow-x: auto;
-	overflow-y: hidden;
-	touch-action: pan-x;
-	-webkit-overflow-scrolling: touch;
-	scrollbar-width: none;
-	background: var(--bg-app);
-	position: sticky;
-	/* Desktop scroll root is .main-content (var(--space-7) top padding). At rest
-	   the bar sits in normal flow under the resource strip — untouched. When it
-	   sticks, `top: 0` would pin it at the padding EDGE, leaving a 32px strip of
-	   app background above it (the gap). So we pin 32px higher and add 32px of
-	   padding-top, but ONLY while stuck — the .is-stuck class is toggled by an
-	   IntersectionObserver sentinel in NexusView. While stuck the padding fills
-	   the strip and the buttons stay flush at the viewport top; at rest neither
-	   applies, so the resting layout is exactly as before. Mobile resets below. */
-	top: 0;
-	z-index: 10;
-}
-
-/* Desktop-only: the gap-fill applies while stuck. Scoped to >=769px so it can't
-   override the mobile pinning rule below (which pins under the 56px header).
-   Matches the main-content top padding (--space-5) so the bar pins flush at the
-   viewport top with no background strip above it. */
-@media (min-width: 769px) {
-	.nexus-tab-bar.is-stuck {
-		top: calc(var(--space-5) * -1);
-		padding-top: var(--space-5);
-	}
-}
-
-/* Zero-impact marker the IntersectionObserver watches to know when the tab bar
-   has pinned. Must not affect layout. */
-.nexus-tab-sticky-sentinel {
-	height: 0;
-	margin: 0;
-	padding: 0;
-	pointer-events: none;
-}
-
-.nexus-tab-bar::-webkit-scrollbar {
-	display: none;
-}
-
-/* Relocated nexus-type buff banner: a thin status strip just under the tab bar. */
+/* Nexus-type buff banner — a thin status strip at the top of the content col. */
 .nexus-buff-banner-row:empty {
 	display: none;
 }
@@ -401,76 +476,9 @@
 	margin-bottom: var(--space-3);
 }
 
-/* Mobile: pin the tab bar below the sticky game header so the
-   Overview / Buildings / Troops switcher stays one tap away while the user
-   scrolls through long lists.
-   - top offset accounts for the 56px header AND the safe-area inset on
-     notched devices (.game-header height is calc(56px + safe-area-inset-top))
-   - z-index must beat the page content but stay below .game-header (1050)
-     so this bar pins right under the header instead of overlapping it. */
-@media (max-width: 768px) {
-	.nexus-tab-bar {
-		position: sticky;
-		top: calc(56px + var(--safe-top));
-		z-index: 1040;
-		background: color-mix(in srgb, var(--bg-app) 92%, transparent);
-		/* Mobile scroll root is the window (.main-content is overflow: visible), so
-		   there's no scroll-container top padding to cancel — undo the desktop
-		   padding-compensation and pin below the 56px fixed header instead. */
-		margin-top: 0;
-		padding-top: 0;
-		margin-left: calc(var(--space-3) * -1);
-		margin-right: calc(var(--space-3) * -1);
-		margin-bottom: var(--space-3);
-		padding-left: var(--space-3);
-		padding-right: var(--space-3);
-		backdrop-filter: blur(10px);
-		-webkit-backdrop-filter: blur(10px);
-		box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
-	}
-}
-
-.nexus-tab-btn {
-	position: relative;
-	background: transparent;
-	color: var(--text-muted);
-	border: none;
-	border-bottom: 3px solid transparent;
-	border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-	/* Larger hit area + type so the switcher reads as the primary navigation of
-	   the nexus view rather than a faint text row. */
-	padding: 13px 20px;
-	font-size: var(--text-lg);
-	font-weight: 600;
-	letter-spacing: 0.01em;
-	cursor: pointer;
-	margin-bottom: -1px;
-	transition:
-		color var(--duration-fast) var(--ease-out),
-		background var(--duration-fast) var(--ease-out),
-		border-color var(--duration-fast) var(--ease-out);
-	white-space: nowrap;
-	display: inline-flex;
-	align-items: center;
-	gap: 8px;
-}
-
-.nexus-tab-btn svg {
-	flex-shrink: 0;
-}
-
-.nexus-tab-btn:hover {
-	color: var(--text-strong);
-	background: rgba(255, 255, 255, 0.03);
-	border-bottom-color: var(--border-strong);
-}
-
-.nexus-tab-btn.active {
-	color: var(--accent);
-	background: var(--accent-soft);
-	border-bottom-color: var(--accent);
-	font-weight: 700;
-}
+/* (Legacy horizontal .nexus-tab-bar / .nexus-tab-btn removed — section nav is
+   now the vertical .nexus-inner-nav defined near the top of this file. The
+   .nexus-tab-badge below is reused by the new inner tabs.) */
 
 .nexus-tab-badge {
 	display: inline-block;
@@ -897,6 +905,11 @@
 	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: 12px;
 	margin-bottom: 16px;
+}
+
+/* With only the Strikes card left, let it span the full width. */
+.overview-shortcuts--strikes-only {
+	grid-template-columns: minmax(0, 1fr);
 }
 
 @media (max-width: 767px) and (min-width: 480px) {
@@ -4314,30 +4327,6 @@
 
 .nexus-type-buff-banner {
 	border-left-color: var(--warning);
-}
-
-/* ── Tab bar ───────────────────────────────────────────────────── */
-.nexus-tab-btn {
-	border-radius: 0;
-	font-family: var(--font-sans);
-	letter-spacing: 0.02em;
-	position: relative;
-}
-
-.nexus-tab-btn.active {
-	background: linear-gradient(180deg, rgba(255, 158, 61, 0.1), var(--bg-app) 80%);
-	color: var(--text-strong);
-}
-
-.nexus-tab-btn.active::before {
-	content: '';
-	position: absolute;
-	left: 0;
-	top: 50%;
-	transform: translateY(-50%);
-	width: 3px;
-	height: 16px;
-	background: var(--accent);
 }
 
 .nexus-tab-badge {

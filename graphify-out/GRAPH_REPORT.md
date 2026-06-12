@@ -1,7 +1,7 @@
 # Graph Report - vexara  (2026-06-12)
 
 ## Corpus Check
-- 449 files · ~529,002 words
+- 449 files · ~528,826 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `a75624e1`
+- Built from commit: `91f7aa32`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -245,8 +245,8 @@ Cohesion: 0.03
 Nodes (129): Faction, FACTION_TABS, FactionInvite, FactionTreaty, FactionWar, GalaxyFaction, JoinRequest, MyJoinRequest (+121 more)
 
 ### Community 3 - "Community 3"
-Cohesion: 0.05
-Nodes (40): CurrentObjective(), STEP_DESTINATION, GalaxyEvent, Map(), MapNexus, NON_STATIONABLE_TROOPS, NPC_NAME_FRAGMENTS, OFFENSE_TROOPS (+32 more)
+Cohesion: 0.07
+Nodes (29): CurrentObjective(), STEP_DESTINATION, GalaxyEvent, Map(), MapNexus, NON_STATIONABLE_TROOPS, NPC_NAME_FRAGMENTS, OFFENSE_TROOPS (+21 more)
 
 ### Community 4 - "Community 4"
 Cohesion: 0.07
@@ -301,16 +301,16 @@ Cohesion: 0.09
 Nodes (49): emitToUser(), notifyAttackUpdate(), notifyNexusConquered(), notifyReportUpdate(), notifyTransferUpdate(), BUILDING_MAX_LEVELS, atkPerKRes(), resTotal() (+41 more)
 
 ### Community 17 - "Community 17"
-Cohesion: 0.06
-Nodes (38): BUILDING_NAMES, DashboardProps, DashboardQuest, DashboardQuestBatch, TROOP_NAMES, GameLayoutProps, MapProps, MarketProps (+30 more)
+Cohesion: 0.09
+Nodes (27): BUILDING_NAMES, DashboardProps, DashboardQuest, DashboardQuestBatch, TROOP_NAMES, GameLayoutProps, MapProps, MarketProps (+19 more)
 
 ### Community 18 - "Community 18"
 Cohesion: 0.09
 Nodes (26): sameTrainingChain(), BUILDING_COSTS, BuildingCost, canStationTroop(), COST_SCALING, getClassBuildingTrainFactor(), getCommandTrainingQueueBonus(), getEffectiveTrainTimeSeconds() (+18 more)
 
 ### Community 19 - "Community 19"
-Cohesion: 0.09
-Nodes (17): GalaxyPlayer, MEDAL_LABELS, SortKey, BadgeDef, ProfileBadgesProps, SupportTiersCardProps, TIER_RANK, TierDef (+9 more)
+Cohesion: 0.07
+Nodes (25): BUILDINGS, NexusMapProps, GalaxyPlayer, MEDAL_LABELS, SortKey, BadgeDef, ProfileBadgesProps, SupportTiersCardProps (+17 more)
 
 ### Community 20 - "Community 20"
 Cohesion: 0.09
@@ -349,8 +349,8 @@ Cohesion: 0.08
 Nodes (25): dependencies, lucide-react, next, react, react-dom, recharts, devDependencies, eslint (+17 more)
 
 ### Community 29 - "Community 29"
-Cohesion: 0.06
-Nodes (41): CombatLogsPage(), FactionsView(), FriendsView(), ActivePage, GameLayout(), PAGE_TITLES, Market(), Ctx (+33 more)
+Cohesion: 0.07
+Nodes (39): CombatLogsPage(), FactionsView(), FriendsView(), ActivePage, GameLayout(), PAGE_TITLES, Market(), Ctx (+31 more)
 
 ### Community 30 - "Community 30"
 Cohesion: 0.08
@@ -469,16 +469,16 @@ Cohesion: 0.17
 Nodes (11): 1. The problem (data-confirmed), 2. The mechanic — honor declared coordination at resolution, 3. Design invariants, 4. Known risk / open question (read before shipping), 5. Playtest signals, Chosen rules (decided 2026-06-07), Resolution, The coordination tools already exist — the engine ignores them (+3 more)
 
 ### Community 62 - "Community 62"
-Cohesion: 0.15
-Nodes (8): RESOURCE_LABELS, marketKeys, buyMarketListing(), cancelMarketListing(), createMarketListing(), getMarketHistory(), getMarketListings(), systemBuyResource()
+Cohesion: 0.07
+Nodes (23): RESOURCE_LABELS, NexusView(), CURSOR_STYLE, RANGES, TabId, TABS, TOOLTIP_STYLE, Attack (+15 more)
 
 ### Community 63 - "Community 63"
 Cohesion: 0.12
 Nodes (16): A note on map and starter changes (already in 0.20), Combat rebalance: the counter triangle now cuts both ways, Economy overhaul: resources matter again, Espionage is retired, Galaxy picker & lobby polish (0.22 continued), Quality of life, Recon Operative training time scales with Stealth Array, Recruitment Core is retired; three class buildings take over (+8 more)
 
 ### Community 64 - "Community 64"
-Cohesion: 0.13
-Nodes (14): MY_GALAXY_KEY, Props, FactionEntry, Galaxy, PlayerEntry, Props, START_ZONES, WinResults (+6 more)
+Cohesion: 0.14
+Nodes (10): MY_GALAXY_KEY, Props, FactionEntry, Galaxy, PlayerEntry, Props, START_ZONES, WinResults (+2 more)
 
 ### Community 65 - "Community 65"
 Cohesion: 0.14
@@ -817,8 +817,8 @@ Cohesion: 0.36
 Nodes (7): TROOP_STATS, COMBAT_TROOP_KEYS, CombatTroopKey, distanceTiles(), minTroopSpeed(), pickRaidTroops(), processRogueAiRaids()
 
 ### Community 211 - "Community 211"
-Cohesion: 0.33
-Nodes (3): LoginForm(), SCREENSHOTS, metadata
+Cohesion: 0.14
+Nodes (8): LoginForm(), SCREENSHOTS, AuthContext, AuthContextType, metadata, User, Status, VerifyEmailInner()
 
 ## Knowledge Gaps
 - **1153 isolated node(s):** `allow`, `PreToolUse`, `allow`, `additionalDirectories`, `eslintConfig` (+1148 more)
@@ -839,6 +839,6 @@ _Questions this graph is uniquely positioned to answer:_
 - **Should `Community 2` be split into smaller, more focused modules?**
   _Cohesion score 0.02593167701863354 - nodes in this community are weakly interconnected._
 - **Should `Community 3` be split into smaller, more focused modules?**
-  _Cohesion score 0.04915824915824916 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06707317073170732 - nodes in this community are weakly interconnected._
 - **Should `Community 4` be split into smaller, more focused modules?**
   _Cohesion score 0.07246376811594203 - nodes in this community are weakly interconnected._
