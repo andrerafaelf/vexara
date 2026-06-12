@@ -84,6 +84,15 @@ export default function GameLayout({
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 	const [isNexusDrawerOpen, setIsNexusDrawerOpen] = useState(false);
 	const [isDiscoverOpen, setIsDiscoverOpen] = useState(false);
+	// `user` comes from AuthContext, which reads localStorage — so it's null
+	// during SSR + the first client render but populated immediately after. Any
+	// auth-dependent chrome (the commander cards) must therefore wait until after
+	// mount, or the server HTML (no card) won't match the first client render
+	// (card present) and React throws a hydration mismatch. mounted is false on
+	// both server and first client render, then flips true on the next tick.
+	const [mounted, setMounted] = useState(false);
+	useEffect(() => setMounted(true), []);
+	const authUser = mounted ? user : null;
 
 	const resolvedSelectedId =
 		externalSelectedId ?? (hookSelectedNexus ? String(hookSelectedNexus._id) : null);
@@ -525,14 +534,14 @@ export default function GameLayout({
 					/>
 
 					<aside className={`mobile-drawer ${isMobileMenuOpen ? 'open' : ''}`}>
-						{user && (
+						{authUser && (
 							<div className="commander-card commander-card-mobile">
 								<Avatar
-									username={user.username}
-									avatarUrl={user.avatarUrl ?? null}
-									avatarUrlSm={user.avatarUrlSm ?? null}
+									username={authUser.username}
+									avatarUrl={authUser.avatarUrl ?? null}
+									avatarUrlSm={authUser.avatarUrlSm ?? null}
 									size="md"
-									className={`commander-avatar${user.supporterTier === 'officer' ? ' supporter-border supporter-border-officer' : ''}${user.supporterTier === 'commander' ? ' supporter-border supporter-border-commander' : ''}`}
+									className={`commander-avatar${authUser.supporterTier === 'officer' ? ' supporter-border supporter-border-officer' : ''}${authUser.supporterTier === 'commander' ? ' supporter-border supporter-border-commander' : ''}`}
 									ariaHidden
 								/>
 								<div className="commander-info">
@@ -540,15 +549,15 @@ export default function GameLayout({
 										<span
 											className={[
 												'commander-name',
-												user.isSupporter ? 'supporter-name' : null,
-												user.supporterTier === 'recruit' ? 'supporter-tier-recruit' : null,
-												user.supporterTier === 'officer' ? 'supporter-tier-officer' : null,
-												user.supporterTier === 'commander' ? 'supporter-tier-commander' : null
+												authUser.isSupporter ? 'supporter-name' : null,
+												authUser.supporterTier === 'recruit' ? 'supporter-tier-recruit' : null,
+												authUser.supporterTier === 'officer' ? 'supporter-tier-officer' : null,
+												authUser.supporterTier === 'commander' ? 'supporter-tier-commander' : null
 											]
 												.filter(Boolean)
 												.join(' ')}
 										>
-											{user.username}
+											{authUser.username}
 										</span>
 										{/* No rank badges here: this card is width-constrained and a badge
 										    would truncate the username (see profile page for badges). */}
@@ -696,9 +705,9 @@ export default function GameLayout({
 							)}
 							<SupportTiersCard
 								variant="compact"
-								currentTier={user?.supporterTier ?? null}
-								isFounder={user?.isFounder}
-								isSupporter={user?.isSupporter}
+								currentTier={authUser?.supporterTier ?? null}
+								isFounder={authUser?.isFounder}
+								isSupporter={authUser?.isSupporter}
 							/>
 						</div>
 					</aside>
@@ -709,7 +718,7 @@ export default function GameLayout({
 							selectedNexusId={resolvedSelectedId}
 							onSelectNexus={handleSelectNexus}
 							unreadNexusIds={unreadNexusIds}
-							user={user}
+							user={authUser}
 						/>
 						<main className={`main-content${mainClassName ? ` ${mainClassName}` : ''}`}>
 							{children}

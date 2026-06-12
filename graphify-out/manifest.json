@@ -15,8 +15,8 @@
     "semantic_hash": ""
   },
   "admin-client/next-env.d.ts": {
-    "mtime": 1778831944.9182727,
-    "ast_hash": "b698cdd97fe8e3bd16dcd74899ad7cef",
+    "mtime": 1781267588.673851,
+    "ast_hash": "29f60a376e12bf72b67d4994fcc84214",
     "semantic_hash": ""
   },
   "admin-client/next.config.ts": {
@@ -460,8 +460,8 @@
     "semantic_hash": ""
   },
   "client/src/components/BuildingCard.tsx": {
-    "mtime": 1781264686.1942296,
-    "ast_hash": "d294e22a812663f084db9185dc4e16eb",
+    "mtime": 1781268038.8954048,
+    "ast_hash": "d81d0711df7895e10de601f6ba79c6d0",
     "semantic_hash": ""
   },
   "client/src/components/Codex/CodexPage.tsx": {
@@ -560,8 +560,8 @@
     "semantic_hash": ""
   },
   "client/src/components/GameLayout.tsx": {
-    "mtime": 1781260243.132424,
-    "ast_hash": "2b54154e9e58f6302167002829c74d9b",
+    "mtime": 1781267962.4579813,
+    "ast_hash": "2520196fffcab07ce45eaebb6da4b044",
     "semantic_hash": ""
   },
   "client/src/components/InlineBackButton.tsx": {
@@ -575,8 +575,8 @@
     "semantic_hash": ""
   },
   "client/src/components/LiveResourceStrip.tsx": {
-    "mtime": 1781264829.6496606,
-    "ast_hash": "2ab0da0cc2125cd2048a2673fcba167b",
+    "mtime": 1781267980.470863,
+    "ast_hash": "45d602fa0efec3f2e6e517b78c8dd803",
     "semantic_hash": ""
   },
   "client/src/components/LoginForm.tsx": {
@@ -630,8 +630,8 @@
     "semantic_hash": ""
   },
   "client/src/components/NexusView.tsx": {
-    "mtime": 1781264715.4984076,
-    "ast_hash": "7c0b9411a183ec981e7d8c581b82e9fa",
+    "mtime": 1781268038.9460568,
+    "ast_hash": "94009746f13a8c5fecb768322e9d0092",
     "semantic_hash": ""
   },
   "client/src/components/NotificationSettings.tsx": {
@@ -2432,6 +2432,11 @@
   "client/public/resources/ore.webp": {
     "mtime": 1781264544.638,
     "ast_hash": "d3d3152aac01eea217c640d15ce91cc1",
+    "semantic_hash": ""
+  },
+  "server/prisma/migrations/20260527230000_add_control_recovery_cursor/migration.sql": {
+    "mtime": 1781267123.715147,
+    "ast_hash": "c2f706682d63ff1e8822d0ff62cd3c7b",
     "semantic_hash": ""
   }
 }

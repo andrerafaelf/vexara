@@ -3326,15 +3326,15 @@ const NexusView: React.FC<NexusViewProps> = ({
 																</div>
 																<div className="train-costs">
 																	<span className="cost-pill">
-																		<ResourceIcon kind="biomass" size={14} className="cost-pill-icon" />
+																		<ResourceIcon kind="biomass" size={20} className="cost-pill-icon" />
 																		{costs.biomass}
 																	</span>
 																	<span className="cost-pill">
-																		<ResourceIcon kind="alloy" size={14} className="cost-pill-icon" />
+																		<ResourceIcon kind="alloy" size={20} className="cost-pill-icon" />
 																		{costs.alloy}
 																	</span>
 																	<span className="cost-pill">
-																		<ResourceIcon kind="ore" size={14} className="cost-pill-icon" />
+																		<ResourceIcon kind="ore" size={20} className="cost-pill-icon" />
 																		{costs.ore}
 																	</span>
 																	<span className="cost-pill">

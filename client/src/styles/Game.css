@@ -268,10 +268,12 @@
 
 .header-res {
 	display: grid;
-	grid-template-columns: auto 1fr;
+	/* Icon column (left, spans both rows) + value/rate stacked on the right. */
+	grid-template-columns: auto auto;
 	grid-template-rows: auto auto;
-	column-gap: 10px;
-	padding: 6px 14px;
+	align-items: center;
+	column-gap: 9px;
+	padding: 4px 14px;
 	min-width: 96px;
 }
 
@@ -280,13 +282,8 @@
 }
 
 .header-res-label {
-	grid-column: 1 / -1;
-	font-size: 10px;
-	font-weight: 700;
-	color: var(--text-faint);
-	text-transform: uppercase;
-	letter-spacing: 0.1em;
-	line-height: 1.4;
+	grid-column: 1;
+	grid-row: 1 / -1;
 	display: flex;
 	align-items: center;
 }
@@ -299,7 +296,9 @@
 }
 
 .header-res-value {
-	grid-column: 1;
+	grid-column: 2;
+	grid-row: 1;
+	align-self: end;
 	font-size: var(--text-lg);
 	font-weight: 700;
 	letter-spacing: -0.01em;
@@ -308,12 +307,12 @@
 
 .header-res-rate {
 	grid-column: 2;
-	align-self: end;
+	grid-row: 2;
+	align-self: start;
 	font-size: 10px;
 	font-weight: 600;
 	color: var(--text-muted);
 	line-height: 1.4;
-	padding-bottom: 2px;
 }
 
 .header-res-biomass .header-res-value {
@@ -454,6 +453,11 @@
 	}
 	.header-resources .header-res-value {
 		font-size: 13px;
+	}
+	/* Scale the 30px desktop icon down on phones so the strip stays compact. */
+	.header-resources .header-res-icon {
+		width: 22px;
+		height: 22px;
 	}
 	/* Drop the "/cap" denominator on phones — too cramped to be legible. */
 	.header-resources .header-res-value > span {
