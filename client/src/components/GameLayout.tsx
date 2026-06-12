@@ -26,7 +26,7 @@ import '@/styles/ConnectionStatusBar.css';
 import '@/styles/Game.css';
 import '@/styles/InGameIdentity.css';
 import { Nexus } from '@/types/game';
-import { ChevronDown, Menu } from 'lucide-react';
+import { BookOpen, Calculator, ChevronDown, Menu } from 'lucide-react';
 import { NexusIcon } from '@/components/VexaraIcons';
 import { usePathname, useRouter } from 'next/navigation';
 import { startTransition, useCallback, useEffect, useMemo, useState } from 'react';
@@ -43,10 +43,10 @@ type ActivePage =
 	| 'profile';
 
 const PAGE_TITLES: Record<ActivePage, string> = {
-	dashboard: 'Dashboard',
-	starfield: 'Starfield',
+	dashboard: 'My Nexus',
+	starfield: 'Galaxy',
 	market: 'Market',
-	'combat-logs': 'Combat Logs',
+	'combat-logs': 'Reports',
 	allies: 'Allies',
 	factions: 'Factions',
 	players: 'Players',
@@ -330,7 +330,7 @@ export default function GameLayout({
 								onMouseEnter={prefetchOnHover(`/nexus/${resolvedSelectedId ?? ''}`)}
 								onFocus={prefetchOnHover(`/nexus/${resolvedSelectedId ?? ''}`)}
 							>
-								Dashboard
+								My Nexus
 							</button>
 							<button
 								className={`nav-btn${is('starfield') ? ' active' : ''}`}
@@ -339,7 +339,7 @@ export default function GameLayout({
 								onFocus={prefetchOnHover('/starfield')}
 								data-onboarding="open-starfield"
 							>
-								Starfield
+								Galaxy
 							</button>
 							{showMarket && (
 								<button
@@ -358,7 +358,7 @@ export default function GameLayout({
 								onFocus={prefetchOnHover('/combat-logs')}
 							>
 								<span className="nav-btn-content">
-									Combat Logs
+									Reports
 									{hasUnreadReports && (
 										<span className="nav-attention-mark" aria-label="Unread combat logs" />
 									)}
@@ -416,12 +416,6 @@ export default function GameLayout({
 							>
 								Profile
 							</button>
-							<a href="/codex" target="_blank" rel="noopener noreferrer" className="nav-btn">
-								Codex
-							</a>
-							<a href="/calculator" target="_blank" rel="noopener noreferrer" className="nav-btn">
-								Calculator
-							</a>
 							{hiddenCount > 0 && (
 								<div className="nav-discover-wrap">
 									<button
@@ -504,6 +498,31 @@ export default function GameLayout({
 
 						<div className="header-right">
 							{headerNexus && <HeaderResourceStrip nexus={headerNexus} />}
+							{/* Reference tools — demoted out of the primary game-loop nav into a
+							    compact utility cluster so the center nav stays focused on the
+							    core loops (My Nexus / Galaxy / Reports / …). */}
+							<div className="header-utility">
+								<a
+									href="/codex"
+									target="_blank"
+									rel="noopener noreferrer"
+									className="header-utility-link"
+									title="Codex — game reference"
+								>
+									<BookOpen size={16} aria-hidden="true" />
+									<span className="header-utility-label">Codex</span>
+								</a>
+								<a
+									href="/calculator"
+									target="_blank"
+									rel="noopener noreferrer"
+									className="header-utility-link"
+									title="Battle calculator"
+								>
+									<Calculator size={16} aria-hidden="true" />
+									<span className="header-utility-label">Calculator</span>
+								</a>
+							</div>
 							<DiscordButton variant="pill" label="Discord" utm="ingame_header" />
 							<button
 								className={`nexus-drawer-toggle${isNexusDrawerOpen ? ' active' : ''}`}
@@ -580,14 +599,14 @@ export default function GameLayout({
 								className={`nav-btn${is('dashboard') ? ' active' : ''}`}
 								onClick={nav(`/nexus/${resolvedSelectedId ?? ''}`)}
 							>
-								Dashboard
+								My Nexus
 							</button>
 							<button
 								className={`nav-btn${is('starfield') ? ' active' : ''}`}
 								onClick={nav('/starfield')}
 								data-onboarding="open-starfield"
 							>
-								Starfield
+								Galaxy
 							</button>
 							{showMarket && (
 								<button
@@ -602,7 +621,7 @@ export default function GameLayout({
 								onClick={nav('/combat-logs')}
 							>
 								<span className="nav-btn-content">
-									Combat Logs
+									Reports
 									{hasUnreadReports && (
 										<span className="nav-attention-mark" aria-label="Unread combat logs" />
 									)}

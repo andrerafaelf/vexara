@@ -823,20 +823,23 @@
 
 .nexus-stat-bar-track {
 	margin-top: 8px;
-	height: 3px;
+	height: 4px;
 	background: rgba(255, 255, 255, 0.06);
-	border-radius: var(--radius-pill);
+	border-radius: var(--radius-xl);
 	overflow: hidden;
 }
 
 .nexus-stat-bar-fill {
 	height: 100%;
-	border-radius: var(--radius-pill);
+	border-radius: var(--radius-xl);
 	transition: width 0.6s var(--ease-out);
 }
 
+/* Class name kept for back-compat, but it's the primary accent (amber), not
+   cyan — the --color-cyan-* token holds the amber value. Use the semantic
+   --accent alias so the name stops lying about the rendered color. */
 .nexus-stat-bar-fill-cyan {
-	background: var(--color-cyan-500);
+	background: var(--accent);
 }
 
 .nexus-stat-coords {
