@@ -776,19 +776,45 @@
 }
 
 .nexus-stat {
+	position: relative;
 	background: var(--bg-surface);
 	border: 1px solid var(--border-default);
 	border-radius: var(--radius-sm);
-	padding: 12px 14px 14px;
+	padding: 13px 14px 14px;
 	display: flex;
 	flex-direction: column;
 	gap: 6px;
 	min-width: 0;
-	transition: border-color var(--duration-base) var(--ease-out);
+	transition:
+		border-color var(--duration-base) var(--ease-out),
+		background var(--duration-base) var(--ease-out);
+}
+
+/* Thin industrial accent rule along the top edge — ties the stat cards into the
+   header's amber-bezel language and gives the status HUD a clear top edge. */
+.nexus-stat::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 2px;
+	background: linear-gradient(
+		90deg,
+		var(--accent) 0%,
+		rgba(255, 158, 61, 0.25) 45%,
+		transparent 80%
+	);
+	opacity: 0.5;
 }
 
 .nexus-stat:hover {
 	border-color: var(--border-strong);
+	background: var(--bg-surface-3);
+}
+
+.nexus-stat:hover::before {
+	opacity: 0.85;
 }
 
 .nexus-stat-label {
