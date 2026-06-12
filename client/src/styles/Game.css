@@ -287,6 +287,15 @@
 	text-transform: uppercase;
 	letter-spacing: 0.1em;
 	line-height: 1.4;
+	display: flex;
+	align-items: center;
+}
+
+/* The resource icon replaces the written label in the strip. It carries a
+   subtle drop shadow so the hex-framed art reads against the dark header. */
+.header-res-icon {
+	display: block;
+	filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
 }
 
 .header-res-value {

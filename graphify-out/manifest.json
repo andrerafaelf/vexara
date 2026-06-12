@@ -190,7 +190,7 @@
     "semantic_hash": ""
   },
   "client/next-env.d.ts": {
-    "mtime": 1781260984.9095922,
+    "mtime": 1781264763.3096955,
     "ast_hash": "b698cdd97fe8e3bd16dcd74899ad7cef",
     "semantic_hash": ""
   },
@@ -460,8 +460,8 @@
     "semantic_hash": ""
   },
   "client/src/components/BuildingCard.tsx": {
-    "mtime": 1781259940.5945811,
-    "ast_hash": "18b017dc715b914f75e0d7bfe4ec0837",
+    "mtime": 1781264686.1942296,
+    "ast_hash": "d294e22a812663f084db9185dc4e16eb",
     "semantic_hash": ""
   },
   "client/src/components/Codex/CodexPage.tsx": {
@@ -575,8 +575,8 @@
     "semantic_hash": ""
   },
   "client/src/components/LiveResourceStrip.tsx": {
-    "mtime": 1780673834.5497448,
-    "ast_hash": "1d694ec591932cf8c5c7cdfa31e5045c",
+    "mtime": 1781264829.6496606,
+    "ast_hash": "2ab0da0cc2125cd2048a2673fcba167b",
     "semantic_hash": ""
   },
   "client/src/components/LoginForm.tsx": {
@@ -630,8 +630,8 @@
     "semantic_hash": ""
   },
   "client/src/components/NexusView.tsx": {
-    "mtime": 1781260638.0752003,
-    "ast_hash": "902c41f12c6a080c578df0f09377b991",
+    "mtime": 1781264715.4984076,
+    "ast_hash": "7c0b9411a183ec981e7d8c581b82e9fa",
     "semantic_hash": ""
   },
   "client/src/components/NotificationSettings.tsx": {
@@ -705,13 +705,13 @@
     "semantic_hash": ""
   },
   "client/src/components/ResourceIcon.tsx": {
-    "mtime": 1780673834.9533944,
-    "ast_hash": "010d6062d1221367c58be08ee9d95d04",
+    "mtime": 1781264599.6388977,
+    "ast_hash": "563d43d1688818a8b3395116b2a39655",
     "semantic_hash": ""
   },
   "client/src/components/ScoutIntelCard.tsx": {
-    "mtime": 1780673834.978973,
-    "ast_hash": "c42a111a23f1d67dfefc594762008aea",
+    "mtime": 1781264791.2782729,
+    "ast_hash": "050394d8afe0ce1f168edbbca9dce708",
     "semantic_hash": ""
   },
   "client/src/components/ScrollToTop.tsx": {
@@ -2417,6 +2417,21 @@
   "server/COORDINATED_ASSAULT_IMPL.md": {
     "mtime": 1780835277.5679371,
     "ast_hash": "4f9cf738fd530c4b7a85c42868dcf80c",
+    "semantic_hash": ""
+  },
+  "client/public/resources/alloy.webp": {
+    "mtime": 1781264544.61,
+    "ast_hash": "0f1ac3e8c931f1ab7f756bbe6f0713c6",
+    "semantic_hash": ""
+  },
+  "client/public/resources/biomass.webp": {
+    "mtime": 1781264544.577,
+    "ast_hash": "ed18aef24053eb124e385f3eb5d2427a",
+    "semantic_hash": ""
+  },
+  "client/public/resources/ore.webp": {
+    "mtime": 1781264544.638,
+    "ast_hash": "d3d3152aac01eea217c640d15ce91cc1",
     "semantic_hash": ""
   }
 }

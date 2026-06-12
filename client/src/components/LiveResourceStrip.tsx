@@ -3,6 +3,7 @@
 import React from 'react';
 import { useNow } from '@/hooks/useNow';
 import { useFlashOnChange } from '@/realtime/useFlashOnChange';
+import ResourceIcon from './ResourceIcon';
 
 interface LiveResourceStripProps {
 	baseResources: { biomass: number; alloy: number; ore: number };
@@ -76,7 +77,12 @@ function LiveResourceStripInner({
 						key={key}
 						className={`header-res header-res-${key} ${fullCls}${flashFresh ? ' header-res-flash' : ''}`}
 					>
-						<span className="header-res-label">{label}</span>
+						{/* The written-out resource name is replaced by its icon; hovering
+						    the icon shows the name (title tooltip). label retained only as
+						    the icon's accessible fallback context. */}
+						<span className="header-res-label" aria-label={label}>
+							<ResourceIcon kind={key} size={22} className="header-res-icon" />
+						</span>
 						<span className="header-res-value">
 							{fmt(val)}
 							<span style={{ fontSize: '0.65em', opacity: 0.6, fontWeight: 400 }}>

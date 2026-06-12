@@ -8,6 +8,7 @@ import { useFlashOnTrue } from '@/realtime/useFlashOnChange';
 import { useGatedLiveResources, useResourceSnapshot } from '@/realtime/useLiveResources';
 import { isFirstBuild } from '@/realtime/gameConstants.shared';
 import { Zap } from 'lucide-react';
+import ResourceIcon from './ResourceIcon';
 import type { Nexus } from '@/types/game';
 
 // Minimal placeholder rendered for buildings whose unlock prerequisite isn't met
@@ -232,15 +233,15 @@ function BuildingCardInner(props: BuildingCardProps) {
 				<div className="building-cost">
 					<div className="cost-details">
 						<span className="cost-pill">
-							<span className="cost-pill-label">Biomass</span>
+							<ResourceIcon kind="biomass" size={14} className="cost-pill-icon" />
 							{fmtNum(cost.biomass)}
 						</span>
 						<span className="cost-pill">
-							<span className="cost-pill-label">Alloy</span>
+							<ResourceIcon kind="alloy" size={14} className="cost-pill-icon" />
 							{fmtNum(cost.alloy)}
 						</span>
 						<span className="cost-pill">
-							<span className="cost-pill-label">Ore</span>
+							<ResourceIcon kind="ore" size={14} className="cost-pill-icon" />
 							{fmtNum(cost.ore)}
 						</span>
 					</div>

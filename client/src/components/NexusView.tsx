@@ -86,6 +86,7 @@ import { CombatIcon, ConstructionIcon } from './VexaraIcons';
 // Combat-legibility helpers (beta): pure derivations over the canonical client
 // combat mirror — surface the meta to new players, never change it.
 import { classMatchup, troopRole, TROOP_ROLE_META, type TroopRole } from '../utils/combatSim';
+import ResourceIcon from './ResourceIcon';
 
 // Troop + building art is served from the Cloudflare CDN — single source of
 // truth in data/gameIcons.ts (keyed by troop/building key). Rendered via plain
@@ -3325,15 +3326,15 @@ const NexusView: React.FC<NexusViewProps> = ({
 																</div>
 																<div className="train-costs">
 																	<span className="cost-pill">
-																		<span className="cost-pill-label">Biomass</span>
+																		<ResourceIcon kind="biomass" size={14} className="cost-pill-icon" />
 																		{costs.biomass}
 																	</span>
 																	<span className="cost-pill">
-																		<span className="cost-pill-label">Alloy</span>
+																		<ResourceIcon kind="alloy" size={14} className="cost-pill-icon" />
 																		{costs.alloy}
 																	</span>
 																	<span className="cost-pill">
-																		<span className="cost-pill-label">Ore</span>
+																		<ResourceIcon kind="ore" size={14} className="cost-pill-icon" />
 																		{costs.ore}
 																	</span>
 																	<span className="cost-pill">
