@@ -341,6 +341,7 @@
 
 .nexus-tab-bar {
 	display: flex;
+	justify-content: center;
 	gap: var(--space-1);
 	margin-bottom: var(--space-4);
 	border-bottom: 1px solid var(--border-default);
@@ -384,71 +385,6 @@
 
 .nexus-tab-bar::-webkit-scrollbar {
 	display: none;
-}
-
-/* ── Tab bar with inline nexus identity ──────────────────────────────────────
-   The full-height nexus name header was removed; the name + rename now ride on
-   the left of the tab bar so the tabs lead the screen and the wasted top space
-   is gone. The identity block + a divider precede the tab buttons. */
-.nexus-tab-bar--with-identity {
-	align-items: stretch;
-	gap: 0;
-}
-
-.nexus-tab-identity {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	padding-right: var(--space-3);
-	flex-shrink: 0;
-}
-
-.nexus-tab-identity-name {
-	font-size: var(--text-lg);
-	font-weight: 700;
-	color: var(--text-strong);
-	letter-spacing: -0.01em;
-	white-space: nowrap;
-	max-width: 240px;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-/* The rename pencil sits quietly next to the name; it only gains presence on
-   hover so it doesn't compete with the tabs. */
-.nexus-tab-bar--with-identity .nexus-rename-btn {
-	width: 26px;
-	height: 26px;
-	border-color: transparent;
-	color: var(--text-faint);
-}
-
-.nexus-tab-bar--with-identity .nexus-rename-btn:hover {
-	border-color: var(--border-default);
-	color: var(--text-strong);
-}
-
-/* Inline rename input replaces the name in place, kept compact for the bar. */
-.nexus-tab-bar--with-identity .nexus-rename-input {
-	font-size: var(--text-base);
-	padding: 5px 8px;
-	min-width: 160px;
-	max-width: 240px;
-}
-
-.nexus-tab-bar-divider {
-	width: 1px;
-	align-self: center;
-	height: 22px;
-	margin-right: var(--space-2);
-	background: var(--border-default);
-	flex-shrink: 0;
-}
-
-/* Restore the inter-tab gap inside the identity variant (the wrapper zeroed it
-   so the identity block hugs the left edge). */
-.nexus-tab-bar--with-identity .nexus-tab-btn + .nexus-tab-btn {
-	margin-left: var(--space-1);
 }
 
 /* Relocated nexus-type buff banner: a thin status strip just under the tab bar. */

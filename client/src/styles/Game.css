@@ -888,6 +888,88 @@
 	white-space: nowrap;
 }
 
+/* Inline rename of a nexus in the sidebar list (the in-content name header was
+   removed, so editing lives here with the name). The pencil only shows on the
+   active item and is quiet until hover. */
+.nexus-name-edit {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	margin-left: auto;
+	width: 22px;
+	height: 22px;
+	padding: 0;
+	background: transparent;
+	border: none;
+	border-radius: var(--radius-sm);
+	color: var(--text-faint);
+	cursor: pointer;
+	transition:
+		color var(--duration-fast) var(--ease-out),
+		background var(--duration-fast) var(--ease-out);
+}
+
+.nexus-name-edit:hover {
+	color: var(--text-strong);
+	background: rgba(255, 255, 255, 0.06);
+}
+
+.nexus-rename-row {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	width: 100%;
+}
+
+.nexus-rename-input-sm {
+	flex: 1;
+	min-width: 0;
+	background: var(--color-navy-900);
+	color: var(--text-strong);
+	border: 1px solid var(--border-accent);
+	border-radius: var(--radius-sm);
+	padding: 4px 7px;
+	font-size: var(--text-sm);
+	font-weight: 600;
+}
+
+.nexus-rename-input-sm:focus {
+	outline: none;
+	box-shadow: 0 0 0 2px rgba(255, 158, 61, 0.2);
+}
+
+.nexus-rename-btn-sm {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	border: 1px solid var(--border-default);
+	border-radius: var(--radius-sm);
+	background: var(--bg-surface);
+	cursor: pointer;
+	transition:
+		color var(--duration-fast) var(--ease-out),
+		border-color var(--duration-fast) var(--ease-out);
+}
+
+.nexus-rename-btn-sm.save {
+	color: var(--success);
+}
+.nexus-rename-btn-sm.save:hover {
+	border-color: var(--success);
+}
+.nexus-rename-btn-sm.cancel {
+	color: var(--text-muted);
+}
+.nexus-rename-btn-sm.cancel:hover {
+	border-color: var(--border-strong);
+	color: var(--text-strong);
+}
+
 .nexus-type-badge {
 	display: inline-flex;
 	align-items: center;

@@ -4,6 +4,7 @@ import {
 	createNexusGroup,
 	deleteNexusGroup,
 	getNexusGroups,
+	renameNexus,
 	renameNexusGroup,
 	setGroupNexuses
 } from '../services/api';
@@ -40,6 +41,44 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
 	const qc = useQueryClient();
 	const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
 	const [showGroupManager, setShowGroupManager] = useState(false);
+	// Inline rename of a nexus, lives here so name-editing sits with the name in
+	// the sidebar list (the old in-content name header was removed).
+	const [renamingId, setRenamingId] = useState<string | null>(null);
+	const [renameValue, setRenameValue] = useState('');
+	const [savingRename, setSavingRename] = useState(false);
+
+	const beginRename = useCallback((nexus: Nexus) => {
+		setRenamingId(String(nexus._id));
+		setRenameValue(nexus.name);
+	}, []);
+
+	const cancelRename = useCallback(() => {
+		setRenamingId(null);
+		setRenameValue('');
+	}, []);
+
+	const submitRename = useCallback(
+		async (nexusId: string) => {
+			const trimmed = renameValue.trim();
+			if (trimmed.length < 3 || trimmed.length > 32) {
+				cancelRename();
+				return;
+			}
+			setSavingRename(true);
+			try {
+				await renameNexus(nexusId, trimmed);
+				// Refresh the nexus list everywhere it's read.
+				await qc.invalidateQueries({ queryKey: ['myNexuses'] });
+				setRenamingId(null);
+				setRenameValue('');
+			} catch {
+				/* keep the editor open so the user can retry */
+			} finally {
+				setSavingRename(false);
+			}
+		},
+		[renameValue, qc, cancelRename]
+	);
 
 	const { data: groups = [] } = useQuery<NexusGroup[]>({
 		queryKey: NEXUS_GROUPS_KEY,
@@ -103,15 +142,67 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
 						</div>
 					)}
 
-					{visibleNexuses.map((nexus) => (
+					{visibleNexuses.map((nexus) => {
+						const isRenaming = renamingId === String(nexus._id);
+						const isSelected = String(nexus._id) === selectedNexusId;
+						return (
 						<div
 							key={nexus._id}
-							className={`nexus-item ${String(nexus._id) === selectedNexusId ? 'active' : ''}`}
-							onClick={() => onSelectNexus(nexus)}
+							className={`nexus-item ${isSelected ? 'active' : ''}`}
+							onClick={() => !isRenaming && onSelectNexus(nexus)}
 						>
 							<div className="nexus-name">
-								<span className="nexus-name-text">{nexus.name}</span>
-								<NexusTypeBadge type={nexus.nexusType} doubled={nexus.nexusTypeDoubled} />
+								{isRenaming ? (
+									<div className="nexus-rename-row" onClick={(e) => e.stopPropagation()}>
+										<input
+											className="nexus-rename-input-sm"
+											value={renameValue}
+											onChange={(e) => setRenameValue(e.target.value)}
+											onKeyDown={(e) => {
+												if (e.key === 'Enter') submitRename(String(nexus._id));
+												if (e.key === 'Escape') cancelRename();
+											}}
+											autoFocus
+											maxLength={32}
+											aria-label="Rename nexus"
+										/>
+										<button
+											className="nexus-rename-btn-sm save"
+											disabled={savingRename}
+											onClick={() => submitRename(String(nexus._id))}
+											title="Save"
+											aria-label="Save name"
+										>
+											<Check size={13} />
+										</button>
+										<button
+											className="nexus-rename-btn-sm cancel"
+											onClick={cancelRename}
+											title="Cancel"
+											aria-label="Cancel rename"
+										>
+											<X size={13} />
+										</button>
+									</div>
+								) : (
+									<>
+										<span className="nexus-name-text">{nexus.name}</span>
+										<NexusTypeBadge type={nexus.nexusType} doubled={nexus.nexusTypeDoubled} />
+										{isSelected && (
+											<button
+												className="nexus-name-edit"
+												onClick={(e) => {
+													e.stopPropagation();
+													beginRename(nexus);
+												}}
+												title="Rename nexus"
+												aria-label="Rename nexus"
+											>
+												<Pencil size={12} />
+											</button>
+										)}
+									</>
+								)}
 							</div>
 							<div className="nexus-coords">
 								({nexus.x}|{nexus.y})
@@ -135,7 +226,8 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
 								)}
 							</div>
 						</div>
-					))}
+						);
+					})}
 				</div>
 
 				{user && (

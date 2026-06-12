@@ -620,8 +620,8 @@
     "semantic_hash": ""
   },
   "client/src/components/NexusSidebar.tsx": {
-    "mtime": 1781272709.5454526,
-    "ast_hash": "5cda8c182c6f1142de0d4730b85d74b0",
+    "mtime": 1781295580.415095,
+    "ast_hash": "c7be0ee6c7d1677ee8ea97799cfffde0",
     "semantic_hash": ""
   },
   "client/src/components/NexusTypeBadge.tsx": {
@@ -630,8 +630,8 @@
     "semantic_hash": ""
   },
   "client/src/components/NexusView.tsx": {
-    "mtime": 1781295111.5300038,
-    "ast_hash": "795918e77c0c4b48bbd216f28c11d9ec",
+    "mtime": 1781295748.7179246,
+    "ast_hash": "8ff0d78c54a324ece2abee41ee977aa1",
     "semantic_hash": ""
   },
   "client/src/components/NotificationSettings.tsx": {

@@ -7,7 +7,6 @@ import {
 	ChevronDown,
 	ChevronUp,
 	Info,
-	Pencil,
 	ShieldCheck,
 	Sparkles,
 	Trash2,
@@ -31,7 +30,6 @@ import {
 	getNexusTroopTransfers,
 	getOutgoingAttacks,
 	recallTroops,
-	renameNexus,
 	sendBackTroops,
 	trainTroops,
 	upgradeBuilding
@@ -480,9 +478,6 @@ const NexusView: React.FC<NexusViewProps> = ({
 	// Incoming strikes panel collapse toggle. Defaults expanded so an active
 	// threat is visible without a click, but can be shrunk when it's crowded.
 	const [incomingCollapsed, setIncomingCollapsed] = useState(false);
-	const [isRenamingNexus, setIsRenamingNexus] = useState(false);
-	const [renameValue, setRenameValue] = useState(nexus.name);
-	const [isSavingNexusName, setIsSavingNexusName] = useState(false);
 	const showToastGlobal = useToast();
 	const { data: galaxyEvents = [] } = useQuery({
 		queryKey: ['galaxyEvents'],
@@ -580,40 +575,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 		setInfoModal({ title, description, codexHref });
 	};
 
-	const submitNexusRename = async () => {
-		const trimmed = renameValue.trim();
-		if (trimmed.length < 3 || trimmed.length > 32) {
-			showToast('Nexus name must be between 3 and 32 characters', 'error');
-			return;
-		}
-
-		if (trimmed === nexus.name) {
-			setIsRenamingNexus(false);
-			return;
-		}
-
-		try {
-			setIsSavingNexusName(true);
-			await renameNexus(nexus._id, trimmed);
-			showToast('Nexus renamed successfully', 'success');
-			setIsRenamingNexus(false);
-			onUpdate();
-		} catch (err: any) {
-			showToast(err.response?.data?.error || 'Error renaming nexus', 'error');
-		} finally {
-			setIsSavingNexusName(false);
-		}
-	};
-
-	const beginNexusRename = () => {
-		setRenameValue(nexus.name);
-		setIsRenamingNexus(true);
-	};
-
-	const cancelNexusRename = () => {
-		setRenameValue(nexus.name);
-		setIsRenamingNexus(false);
-	};
+	// Nexus rename now lives in the sidebar list (NexusSidebar), next to the name.
 
 	const handleClaimQuestReward = async (batchId: string) => {
 		if (claimingBatch) return;
@@ -757,12 +719,6 @@ const NexusView: React.FC<NexusViewProps> = ({
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [nexus._id, nexus.buildQueue.length, nexus.trainingQueue.length]);
-
-	useEffect(() => {
-		if (!isRenamingNexus) {
-			setRenameValue(nexus.name);
-		}
-	}, [isRenamingNexus, nexus.name]);
 
 	const refreshTroopTransfers = () => {
 		refetchTransfers();
@@ -2031,67 +1987,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 	return (
 		<div className="nexus-view">
 			<div ref={tabStickySentinelRef} className="nexus-tab-sticky-sentinel" aria-hidden="true" />
-			<div className={`nexus-tab-bar nexus-tab-bar--with-identity${tabBarStuck ? ' is-stuck' : ''}`}>
-				{/* Nexus identity (name + rename) lives inline on the tab bar so the
-				    tabs lead the screen — the old full-height name header is gone. */}
-				<div className="nexus-tab-identity">
-					{isRenamingNexus ? (
-						<>
-							<input
-								className="nexus-rename-input"
-								value={renameValue}
-								onChange={(e) => setRenameValue(e.target.value)}
-								onKeyDown={(e) => {
-									if (e.key === 'Enter') {
-										e.preventDefault();
-										submitNexusRename();
-									}
-									if (e.key === 'Escape') {
-										e.preventDefault();
-										cancelNexusRename();
-									}
-								}}
-								maxLength={32}
-								autoFocus
-								aria-label="Edit nexus name"
-							/>
-							<button
-								type="button"
-								className="nexus-rename-action save"
-								onClick={submitNexusRename}
-								disabled={isSavingNexusName}
-								title="Save Nexus Name"
-								aria-label="Save Nexus Name"
-							>
-								{isSavingNexusName ? '…' : <Check size={14} />}
-							</button>
-							<button
-								type="button"
-								className="nexus-rename-action cancel"
-								onClick={cancelNexusRename}
-								disabled={isSavingNexusName}
-								title="Cancel Rename"
-								aria-label="Cancel Rename"
-							>
-								<X size={14} />
-							</button>
-						</>
-					) : (
-						<>
-							<span className="nexus-tab-identity-name">{nexus.name}</span>
-							<button
-								type="button"
-								className="nexus-rename-btn"
-								onClick={beginNexusRename}
-								title="Rename Nexus"
-								aria-label="Rename Nexus"
-							>
-								<Pencil size={13} />
-							</button>
-						</>
-					)}
-				</div>
-				<div className="nexus-tab-bar-divider" aria-hidden="true" />
+			<div className={`nexus-tab-bar${tabBarStuck ? ' is-stuck' : ''}`}>
 				<button
 					type="button"
 					className={`nexus-tab-btn${activeTab === 'overview' ? ' active' : ''}`}
