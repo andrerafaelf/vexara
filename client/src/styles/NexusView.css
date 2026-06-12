@@ -345,6 +345,26 @@
 	font-weight: 700;
 }
 
+/* First-build acceleration chip (beta). Sits beside the build time on a
+   brand-new player's first Command Core upgrade to signal the one-time speed-up
+   without implying later builds will be this fast. */
+.build-time-accelerated {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	margin-left: 8px;
+	padding: 1px 7px;
+	border-radius: var(--radius-sm, 6px);
+	background: var(--success-soft, rgba(74, 222, 128, 0.14));
+	color: var(--success, #4ade80);
+	font-size: 10px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	vertical-align: middle;
+	white-space: nowrap;
+}
+
 .nexus-tab-bar {
 	display: flex;
 	gap: var(--space-1);
@@ -1925,6 +1945,33 @@
 	border-radius: var(--radius-sm);
 }
 
+/* Glass-cannon garrison warning (beta): shown above the stationed grid when a
+   nexus is held mostly by strikers, nudging the player toward anvils on defense.
+   Amber/caution styling, consistent with the daily-streak expiry warning. */
+.garrison-warning {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	padding: 9px 12px;
+	margin-bottom: 16px;
+	background: rgba(210, 153, 34, 0.1);
+	border: 1px solid rgba(210, 153, 34, 0.28);
+	border-radius: var(--radius-sm);
+	color: var(--warning);
+	font-size: var(--text-sm);
+	line-height: 1.45;
+}
+
+.garrison-warning svg {
+	flex-shrink: 0;
+	margin-top: 1px;
+}
+
+.garrison-warning strong {
+	color: var(--text-strong);
+	font-weight: 700;
+}
+
 .troops-stationed-summary-label {
 	font-size: var(--text-xs);
 	text-transform: uppercase;
@@ -2567,6 +2614,47 @@
 .troop-class-badge--special {
 	color: #c4b5fd;
 	background: rgba(196, 181, 253, 0.08);
+}
+
+/* Directional matchup hint appended to the class badge ("Mobile ▸ Armor"),
+   teaching what the class beats at the point of training. Slightly dimmed so the
+   class label stays primary. */
+.troop-class-beats {
+	opacity: 0.7;
+	font-weight: 600;
+}
+
+/* Per-unit ROLE badge (beta): Striker / Anvil / Scout / Conquest. Sits beside
+   the class badge so a new player can read both "what it counters" (class) and
+   "what it's for" (role) without opening the codex. Roles are derived from the
+   canonical stat table (see troopRole), so they can't drift from balance. */
+.troop-role-badge {
+	font-size: 9px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	padding: 2px 6px;
+	border-radius: var(--radius-sm);
+	border: 1px solid transparent;
+	line-height: 1.2;
+	white-space: nowrap;
+}
+/* Striker = offensive (warm), Anvil = defensive (cool), Scout/Conquest = utility. */
+.troop-role-badge--striker {
+	color: #fda4af;
+	background: rgba(253, 164, 175, 0.1);
+	border-color: rgba(253, 164, 175, 0.25);
+}
+.troop-role-badge--anvil {
+	color: #86efac;
+	background: rgba(134, 239, 172, 0.1);
+	border-color: rgba(134, 239, 172, 0.25);
+}
+.troop-role-badge--scout,
+.troop-role-badge--conquest {
+	color: #c4b5fd;
+	background: rgba(196, 181, 253, 0.1);
+	border-color: rgba(196, 181, 253, 0.25);
 }
 
 .troop-header h5 {

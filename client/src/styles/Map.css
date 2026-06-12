@@ -1397,6 +1397,57 @@
 	border-color: var(--border-default);
 }
 
+/* Pre-attack matchup hint (beta): class-triangle verdict for the current
+   composition vs the scouted defender, plus a contextual link to the battle
+   calculator. Color keys to the verdict — green favoured, amber countered,
+   neutral even — so the read is instant. UI-only; no balance impact. */
+.attack-matchup-hint {
+	display: flex;
+	align-items: flex-start;
+	flex-wrap: wrap;
+	gap: 6px;
+	padding: 7px 10px;
+	margin-bottom: 10px;
+	border-radius: var(--radius-sm);
+	font-size: var(--text-xs);
+	line-height: 1.4;
+}
+
+.attack-matchup-hint svg {
+	flex-shrink: 0;
+	margin-top: 1px;
+}
+
+.attack-matchup-hint--favored {
+	color: #86efac;
+	background: rgba(134, 239, 172, 0.08);
+	border: 1px solid rgba(134, 239, 172, 0.22);
+}
+
+.attack-matchup-hint--countered {
+	color: var(--warning);
+	background: rgba(210, 153, 34, 0.1);
+	border: 1px solid rgba(210, 153, 34, 0.26);
+}
+
+.attack-matchup-hint--even {
+	color: var(--text-muted);
+	background: rgba(255, 255, 255, 0.03);
+	border: 1px solid var(--border-default);
+}
+
+.attack-matchup-calc-link {
+	flex-basis: 100%;
+	color: var(--accent);
+	font-weight: 700;
+	text-decoration: none;
+	font-family: var(--font-mono);
+}
+
+.attack-matchup-calc-link:hover {
+	text-decoration: underline;
+}
+
 .attack-travel-estimate strong {
 	color: var(--text-strong);
 }

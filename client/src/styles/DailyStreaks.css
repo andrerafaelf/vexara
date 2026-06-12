@@ -352,3 +352,61 @@
 	margin-top: var(--space-3);
 	padding: 8px;
 }
+
+/* ── Rail variant (beta) ─────────────────────────────────────────────────────
+   Condensed Daily Quests for the persistent left sidebar. The full reward
+   breakdown lives on the overview panel; here each quest collapses to a stacked
+   title + progress row so it fits the ~220px rail and reads as an at-a-glance
+   objectives widget visible on every tab. */
+.daily-streaks--rail {
+	margin-top: var(--space-2);
+	margin-bottom: var(--space-3);
+	padding: var(--space-2);
+}
+
+.daily-streaks--rail .daily-streaks-header {
+	margin: calc(var(--space-2) * -1) calc(var(--space-2) * -1) var(--space-2);
+	padding: 0 8px;
+	min-height: 26px;
+}
+
+.daily-streaks--rail .daily-streaks-title-row {
+	gap: 6px;
+}
+
+/* The streak bonus chip is nice-to-have; drop it in the narrow rail so the
+   title + streak badge don't wrap. */
+.daily-streaks--rail .daily-streaks-bonus {
+	display: none;
+}
+
+.daily-streaks--rail .daily-quest {
+	flex-direction: column;
+	align-items: stretch;
+	gap: 5px;
+	padding: 6px 8px;
+}
+
+.daily-streaks--rail .daily-quest-desc {
+	display: none;
+}
+
+.daily-streaks--rail .daily-quest-right {
+	width: 100%;
+	gap: 6px;
+}
+
+.daily-streaks--rail .daily-quest-progress {
+	flex: 1;
+	width: auto;
+}
+
+.daily-streaks--rail .daily-streaks-claim {
+	padding: 8px;
+	font-size: var(--text-xs);
+}
+
+.daily-streaks--rail .daily-streaks-claimed {
+	font-size: var(--text-xs);
+	padding: 6px 4px;
+}

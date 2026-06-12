@@ -147,6 +147,26 @@ export function getCommandTimeFactor(commandLevel: number): number {
 	return Math.pow(COMMAND_BUILD_TIME_FACTOR_PER_LEVEL, Math.max(0, commandLevel || 0));
 }
 
+// First-build acceleration (beta): a brand-new player's very first build is the
+// Command Core 0 -> 1 upgrade, which at base is 120s with no Command discount
+// (getCommandTimeFactor(0) = 1.0). That ~2-minute dead-time on a player's first
+// session is an onboarding drop-off risk, so we collapse JUST that one build to
+// a short fixed time. The trigger (commandCore at level 0) is one-time by
+// construction — a nexus can only sit at CC0 before its first build — so this
+// needs no extra DB column and can never re-fire on later upgrades.
+//
+// IMPORTANT: build-queue only. This must never touch troop/training/combat
+// timing — early-raid viability is a tuned balance lever and combat is
+// pop-blind, so accelerating anything but this single build risks the meta.
+export const FIRST_BUILD_BUILDING = 'commandCore';
+export const FIRST_BUILD_TIME_SECONDS = 25;
+
+// True only for the single Command-Core-0->1 upgrade that is a nexus's first
+// build. Shared shape with the client mirror in gameConstants.shared.ts.
+export function isFirstBuild(building: string, currentLevel: number): boolean {
+	return building === FIRST_BUILD_BUILDING && currentLevel === 0;
+}
+
 // Extra build queue slots from the Veteran tier: +1 at CC 16, +1 at CC 17.
 // Capped at +2 so CC 18-20 don't keep stacking.
 export function getCommandBuildQueueBonus(commandLevel: number): number {
@@ -435,6 +455,10 @@ export function getEffectiveBuildTimeSeconds(
 	nexusType: string | null | undefined,
 	nexusTypeDoubled: boolean
 ): number {
+	// First-ever build is collapsed to a short fixed time so new players aren't
+	// stuck watching a ~2-minute timer in their first session. One-time by
+	// construction (only fires at Command Core level 0). See isFirstBuild.
+	if (isFirstBuild(building, currentLevel)) return FIRST_BUILD_TIME_SECONDS;
 	const cost = getBuildingCost(building, currentLevel);
 	const baseBuildMult = NEXUS_TYPE_BUILD_TIME_MULTIPLIERS[nexusType ?? ''];
 	const nexusFactor =

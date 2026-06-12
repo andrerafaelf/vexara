@@ -15,7 +15,7 @@
 // If "I forgot to bump it" becomes a real pattern, swap to a build step
 // that globs the directory and writes this file. Until then: simpler wins.
 
-export const LATEST_PATCH_VERSION = '0.23.2';
-export const LATEST_PATCH_LABEL = 'Alpha v0.23.2';
+export const LATEST_PATCH_VERSION = '0.24';
+export const LATEST_PATCH_LABEL = 'Alpha v0.24';
 export const LATEST_PATCH_HEADLINE =
-	'A polish patch. Social preview cards are rebuilt to match the site design, the Players leaderboard gets square avatar frames, the Combat Log card fixes a text overflow, and the Mark All Read button is fixed.';
+	'An onboarding and legibility pass. The first build is accelerated to ~25s, the resource bar is pinned to the top on every page, Daily Quests follow you across tabs, and the combat class triangle is finally taught in-context — with no change to any combat number.';

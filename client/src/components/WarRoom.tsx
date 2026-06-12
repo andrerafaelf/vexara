@@ -39,6 +39,11 @@ import {
 } from '../services/api';
 import { serverNow } from '../realtime/serverClock';
 import { travelMinutes } from '../utils/travel';
+// Combat-legibility (beta): summarize a pledge's class mix so contributors don't
+// commit a single-class wave that a defender can hard-counter. No defender intel
+// needed (the operation doesn't carry it), so this is composition-only — the full
+// matchup verdict lives in the Map attack flow.
+import { describeComposition, type Force } from '../utils/combatSim';
 import '../styles/WarRoom.css';
 import type { Nexus } from '../types/game';
 import StarfieldMap, { type MapNexus } from './Map';
@@ -164,6 +169,17 @@ const TROOP_LABELS: Record<string, string> = {
 	siegeColossus: 'Colossus',
 	overseer: 'Overseer'
 };
+
+// Display label for a combat class, used by the composition-coaching hint.
+function classLabel(cls: string): string {
+	const map: Record<string, string> = {
+		mobile: 'Mobile',
+		armor: 'Armor',
+		fire: 'Fire',
+		special: 'Special'
+	};
+	return map[cls] ?? cls;
+}
 
 function formatCountdown(ms: number): string {
 	if (ms < 0) return 'past';
@@ -1090,6 +1106,24 @@ function SlotRow({
 
 			<div className="warroom-slot-troops">
 				{troopSummary || <span className="muted">(no troops set)</span>}
+				{(() => {
+					// At-a-glance class lean for this pledge so the faction can spot
+					// composition gaps across the wave without opening each slot.
+					const comp = describeComposition(slot.troops as Force);
+					if (!comp.dominant) return null;
+					return (
+						<span
+							className={`warroom-slot-comp warroom-slot-comp--${comp.dominant}${comp.vulnerableTo ? ' warroom-slot-comp--warn' : ''}`}
+							title={
+								comp.vulnerableTo
+									? `${comp.label} — vulnerable to ${classLabel(comp.vulnerableTo)}`
+									: comp.label
+							}
+						>
+							{comp.label}
+						</span>
+					);
+				})()}
 			</div>
 
 			<div className="warroom-slot-launch">
@@ -1268,6 +1302,37 @@ function ClaimForm({
 					);
 				})}
 			</div>
+
+			{total > 0 &&
+				(() => {
+					// Class-composition coaching for the pledge in progress. We don't
+					// have the defender's garrison here, so this is about not bringing a
+					// single-class wave that's easy to hard-counter — see describeComposition.
+					const comp = describeComposition(troops as Force);
+					if (!comp.dominant) return null;
+					return (
+						<div
+							className={`warroom-comp-hint${comp.vulnerableTo ? ' warroom-comp-hint--warn' : ''}`}
+							role="note"
+						>
+							{comp.vulnerableTo ? <AlertCircle size={12} /> : <Crosshair size={12} />}
+							<span>
+								Your pledge is <strong>{comp.label}</strong>.
+								{comp.vulnerableTo
+									? ` A defender heavy in ${classLabel(comp.vulnerableTo)} hard-counters it — mix in another class or coordinate classes across the wave.`
+									: ' A balanced wave is harder for a defender to hard-counter.'}
+							</span>
+							<a
+								href="/calculator"
+								target="_blank"
+								rel="noopener noreferrer"
+								className="warroom-comp-calc-link"
+							>
+								Calculator
+							</a>
+						</div>
+					);
+				})()}
 
 			<div className="warroom-claim-actions">
 				<span className="warroom-claim-total">

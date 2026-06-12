@@ -109,7 +109,7 @@ const STEPS = [
 	{
 		num: '03',
 		title: 'Train troops with composition in mind',
-		body: "Vexara uses a class triangle: Mobile beats Armor, Armor beats Fire, Fire beats Mobile. Your early roster (Assault Troopers, Sentinel Lancers, Vanguard Breakers) covers all three classes. Don't spam one type - a mixed force handles unknown defenders and won't be hard-countered."
+		body: "Vexara uses a class triangle: Mobile beats Armor, Armor beats Fire, Fire beats Mobile. Your early roster (Assault Troopers, Sentinel Lancers, Vanguard Breakers) covers all three classes. Don't spam one type - a mixed force handles unknown defenders and won't be hard-countered. Each unit card shows its class (and what it beats) plus its role - Strikers are for attacking, Anvils for defending - so keep anvils home to hold your nexus and send strikers out. Once you've scouted a target, the attack screen tells you whether your composition is favoured or countered before you commit."
 	},
 	{
 		num: '04',

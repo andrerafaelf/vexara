@@ -6,6 +6,8 @@ import { ConstructionIcon } from './VexaraIcons';
 import { QueueCountdown } from './QueueCountdown';
 import { useFlashOnTrue } from '@/realtime/useFlashOnChange';
 import { useGatedLiveResources, useResourceSnapshot } from '@/realtime/useLiveResources';
+import { isFirstBuild } from '@/realtime/gameConstants.shared';
+import { Zap } from 'lucide-react';
 import type { Nexus } from '@/types/game';
 
 // Minimal placeholder rendered for buildings whose unlock prerequisite isn't met
@@ -244,6 +246,14 @@ function BuildingCardInner(props: BuildingCardProps) {
 					</div>
 					<p className="build-time">
 						<span className="build-time-effective">{formatDurationSeconds(cost.time)}</span>
+						{isFirstBuild(key, plannedLevel) && (
+							<span
+								className="build-time-accelerated"
+								title="Your first build is sped up to get you started. Later builds take their normal time."
+							>
+								<Zap size={11} aria-hidden="true" /> Accelerated first build
+							</span>
+						)}
 					</p>
 				</div>
 			) : (

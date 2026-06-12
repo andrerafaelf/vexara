@@ -7,7 +7,13 @@ import { usePathname } from 'next/navigation';
 
 export interface OnboardingStep {
 	id: string;
-	// data-onboarding attribute value on the target element
+	// 'spotlight' (default) points at a DOM element via data-onboarding and dims
+	// the rest of the page. 'panel' has no target — it renders a centered teaching
+	// card, used for concept beats that aren't tied to a single button (e.g. the
+	// "while you build" primer shown during the accelerated first upgrade).
+	kind?: 'spotlight' | 'panel';
+	// data-onboarding attribute value on the target element. Ignored for 'panel'
+	// steps (they have no spotlight target), so those can pass an empty string.
 	targetAttr: string;
 	message: string;
 	// Optional title shown above the message
@@ -42,6 +48,11 @@ const hasQueuedBuilding = (nexus: Nexus, building: string, targetLevel = 1) =>
 	);
 const hasCommandCoreLevelStarted = (nexus: Nexus, level: number) =>
 	(nexus.buildings?.commandCore ?? 0) >= level || hasQueuedBuilding(nexus, 'commandCore', level);
+// The accelerated first build (Command Core 0 -> 1) is in flight: the upgrade is
+// queued but hasn't completed yet. This is the window the "while you build"
+// panel beat fills so the ~25s wait teaches instead of idling.
+const isFirstBuildInProgress = (nexus: Nexus) =>
+	(nexus.buildings?.commandCore ?? 0) < 1 && hasQueuedBuilding(nexus, 'commandCore', 1);
 const hasArmorFoundryStarted = (nexus: Nexus) =>
 	(nexus.buildings?.armorFoundry ?? 0) >= 1 || hasQueuedBuilding(nexus, 'armorFoundry');
 
@@ -66,6 +77,19 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 		isComplete: (s) => s.nexuses.some((n) => hasCommandCoreLevelStarted(n, 1))
 	},
 	{
+		id: 'while_you_build',
+		kind: 'panel',
+		targetAttr: '',
+		title: 'While Your Core Builds',
+		message:
+			'Your first upgrade is sped up, so this is quick. Two things to know while it finishes: the resource bar up top shows your Biomass, Alloy and Ore (and how fast they grow), and your build queue lines up upgrades to run back-to-back. When the Core lands it unlocks your production buildings.',
+		// Only show this beat while the accelerated first build is actually
+		// running. If the player already pushed past it (build done), isComplete
+		// auto-advances so the panel never lingers on a stale state.
+		isReady: (s) => isNexusPath(s.pathname) && s.nexuses.some((n) => isFirstBuildInProgress(n)),
+		isComplete: (s) => s.nexuses.some((n) => (n.buildings?.commandCore ?? 0) >= 1)
+	},
+	{
 		id: 'reinforce_command',
 		targetAttr: 'upgrade-building',
 		title: 'Reinforce Command',
@@ -83,6 +107,26 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 		isReady: (s) =>
 			isNexusPath(s.pathname) && s.nexuses.some((n) => (n.buildings?.commandCore ?? 0) >= 2),
 		isComplete: (s) => s.nexuses.some((n) => hasArmorFoundryStarted(n))
+	},
+	{
+		id: 'counter_triangle',
+		kind: 'panel',
+		targetAttr: '',
+		title: 'How Combat Works',
+		message:
+			'Every unit has a class, and classes counter each other: Mobile beats Armor, Armor beats Fire, Fire beats Mobile. Each unit is also a Striker (attack — send these out) or an Anvil (defense — keep these home). The badges on each unit show both. Bring the class that counters what your enemy fields, and scout first so you know what that is.',
+		// Show this right before the player trains their first troops, once the
+		// production building exists so the class/role badges are on screen to
+		// look at. Completes when they actually start training (same signal as
+		// train_troops) or dismiss it.
+		isReady: (s) =>
+			isNexusPath(s.pathname) && s.nexuses.some((n) => (n.buildings?.armorFoundry ?? 0) >= 1),
+		isComplete: (s) =>
+			s.nexuses.some((n) => {
+				if ((n.trainingQueue?.length ?? 0) > 0) return true;
+				const trained = Number(n.troopsTrained?.assaultTrooper ?? 0);
+				return trained >= 5;
+			})
 	},
 	{
 		id: 'train_troops',

@@ -381,6 +381,77 @@
 	}
 }
 
+/* ── Persistent header resource strip (beta) ─────────────────────────────────
+   The strip moved out of NexusView's body into the always-on GameLayout header
+   (HeaderResourceStrip). In the 56px header it needs to be denser than the
+   in-page version: tighter padding, smaller min-width, and the per-hour rate
+   tucked under the value. The .header-resources wrapper scopes these overrides
+   so the in-page styling elsewhere is untouched. */
+.header-resources {
+	display: flex;
+	align-items: center;
+	min-width: 0;
+}
+
+.header-resources .header-resource-strip {
+	background: transparent;
+	border: none;
+	border-radius: 0;
+}
+
+.header-resources .header-res {
+	padding: 2px 12px;
+	min-width: 0;
+	column-gap: 8px;
+}
+
+.header-resources .header-res-value {
+	font-size: var(--text-md, 15px);
+}
+
+/* Below the desktop nav breakpoint the centered nav collapses; keep the strip a
+   compact single horizontal row (NOT the in-page vertical stack) so it still
+   fits the header. Hide the capacity denominator and per-hour rate to save
+   space — the raw stockpile is what a player glances at mid-action. Tap-through
+   to the nexus overview still shows the full breakdown. */
+@media (max-width: 900px) {
+	.header-resources .header-res-rate {
+		display: none;
+	}
+}
+
+@media (max-width: 600px) {
+	.header-resources {
+		/* On phones the strip sits at the far right of the 56px header; shrink it
+		   hard so the wordmark and menu toggle keep priority. */
+		max-width: 52vw;
+		overflow: hidden;
+	}
+	.header-resources .header-resource-strip {
+		flex-direction: row;
+		width: auto;
+		border: none;
+	}
+	.header-resources .header-res {
+		padding: 2px 7px;
+	}
+	.header-resources .header-res + .header-res {
+		border-left: none;
+		border-top: none;
+	}
+	.header-resources .header-res-label {
+		font-size: 8px;
+		letter-spacing: 0.06em;
+	}
+	.header-resources .header-res-value {
+		font-size: 13px;
+	}
+	/* Drop the "/cap" denominator on phones — too cramped to be legible. */
+	.header-resources .header-res-value > span {
+		display: none;
+	}
+}
+
 .logout-btn {
 	background: transparent;
 	color: var(--text-muted);
@@ -1228,6 +1299,13 @@
 
 	.header-center,
 	.nexus-nav {
+		display: none;
+	}
+
+	/* The in-header Discord pill is redundant on phones — there's a Discord
+	   button in the mobile drawer — so hide it to give the persistent resource
+	   strip room in the right side of the 56px header. */
+	.header-right .discord-btn--pill {
 		display: none;
 	}
 

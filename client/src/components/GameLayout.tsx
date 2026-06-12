@@ -5,6 +5,7 @@ import ConnectionStatusBar from '@/components/ConnectionStatusBar';
 import ConqueredModal from '@/components/ConqueredModal';
 import DiscordButton from '@/components/DiscordButton';
 import DominanceBar from '@/components/DominanceBar';
+import { HeaderResourceStrip } from '@/components/HeaderResourceStrip';
 import MobileNexusDrawer from '@/components/MobileNexusDrawer';
 import NewPatchToast from '@/components/NewPatchToast';
 import NexusSidebar from '@/components/NexusSidebar';
@@ -86,6 +87,16 @@ export default function GameLayout({
 
 	const resolvedSelectedId =
 		externalSelectedId ?? (hookSelectedNexus ? String(hookSelectedNexus._id) : null);
+
+	// The nexus whose economy feeds the persistent header resource strip. Prefer
+	// the externally-driven selection (the nexus page passes selectedNexusId), and
+	// fall back to the hook's selection so other pages (Starfield, Market…) still
+	// show the player's current nexus economy. Looked up from the loaded list so a
+	// bare id from localStorage resolves to a full Nexus.
+	const headerNexus =
+		(resolvedSelectedId
+			? nexuses.find((n) => String(n._id) === resolvedSelectedId)
+			: null) ?? hookSelectedNexus ?? null;
 
 	// Soft-gate secondary nav (Market / Allies / Factions / Players) for fresh
 	// players so the top bar doesn't look like an airline cockpit on day one.
@@ -477,6 +488,7 @@ export default function GameLayout({
 						</div>
 
 						<div className="header-right">
+							{headerNexus && <HeaderResourceStrip nexus={headerNexus} />}
 							<DiscordButton variant="pill" label="Discord" utm="ingame_header" />
 							<button
 								className={`nexus-drawer-toggle${isNexusDrawerOpen ? ' active' : ''}`}

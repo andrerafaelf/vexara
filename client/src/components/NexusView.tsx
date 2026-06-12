@@ -81,9 +81,11 @@ import {
 } from '../realtime/gameConstants.shared';
 import { BuildingCard, LockedBuildingPlot } from './BuildingCard';
 import { Countdown } from './Countdown';
-import { LiveResourceStrip } from './LiveResourceStrip';
 import { QueueCountdown } from './QueueCountdown';
 import { CombatIcon, ConstructionIcon } from './VexaraIcons';
+// Combat-legibility helpers (beta): pure derivations over the canonical client
+// combat mirror — surface the meta to new players, never change it.
+import { classMatchup, troopRole, TROOP_ROLE_META, type TroopRole } from '../utils/combatSim';
 
 // Troop + building art is served from the Cloudflare CDN — single source of
 // truth in data/gameIcons.ts (keyed by troop/building key). Rendered via plain
@@ -2204,12 +2206,9 @@ const NexusView: React.FC<NexusViewProps> = ({
 							</div>
 						);
 					})()}
-				<LiveResourceStrip
-					baseResources={nexus.resources}
-					production={production}
-					storageCapacity={storageCapacity}
-					lastResourceUpdate={nexus.lastResourceUpdate}
-				/>
+				{/* The live resource strip now lives in the persistent GameLayout
+				    header (see HeaderResourceStrip), so it stays visible on every
+				    tab/page instead of scrolling away with the overview body. */}
 			</div>
 
 			<div ref={tabStickySentinelRef} className="nexus-tab-sticky-sentinel" aria-hidden="true" />
@@ -2987,6 +2986,38 @@ const NexusView: React.FC<NexusViewProps> = ({
 														{totalCount.toLocaleString()}
 													</span>
 												</div>
+												{(() => {
+													// Glass-cannon garrison warning (beta): strikers are high-
+													// attack / low-defense and make poor defenders by design.
+													// If most of what's sitting home is strikers, nudge the
+													// player to keep anvils for defense. Scouts/conquest units
+													// are excluded — they're neither the problem nor the fix.
+													let strikerCount = 0;
+													let anvilCount = 0;
+													for (const { rows } of entries) {
+														for (const { type, count } of rows) {
+															const role = troopRole(type as any);
+															if (role === 'striker') strikerCount += count;
+															else if (role === 'anvil') anvilCount += count;
+														}
+													}
+													const fighting = strikerCount + anvilCount;
+													const mostlyStrikers =
+														fighting >= 5 && anvilCount === 0
+															? true
+															: fighting > 0 && strikerCount / fighting >= 0.8 && anvilCount < strikerCount;
+													if (!mostlyStrikers) return null;
+													return (
+														<div className="garrison-warning" role="note">
+															<AlertTriangle size={14} aria-hidden="true" />
+															<span>
+																This nexus is held mostly by <strong>Strikers</strong> — they
+																hit hard on attack but defend poorly. Train an{' '}
+																<strong>Anvil</strong> (high-defense unit) to hold your nexus.
+															</span>
+														</div>
+													);
+												})()}
 												{entries.map(({ category, rows }) =>
 													rows.length === 0 ? null : (
 														<div key={category} className="troop-category-section">
@@ -3244,16 +3275,36 @@ const NexusView: React.FC<NexusViewProps> = ({
 																	<h5>{TROOP_NAMES[type]}</h5>
 																	<div className="troop-header-right">
 																		{(() => {
+																			const role = troopRole(type as any) as TroopRole;
+																			const roleMeta = TROOP_ROLE_META[role];
+																			return (
+																				<span
+																					className={`troop-role-badge troop-role-badge--${role}`}
+																					title={roleMeta.title}
+																				>
+																					{roleMeta.label}
+																				</span>
+																			);
+																		})()}
+																		{(() => {
 																			const cls = TROOP_COMBAT_CLASS[type];
 																			const meta = cls ? TROOP_CLASS_META[cls] : null;
-																			return meta ? (
+																			if (!meta) return null;
+																			const matchup = classMatchup(cls as any);
+																			return (
 																				<span
 																					className={`troop-class-badge troop-class-badge--${cls}`}
 																					title={meta.title}
 																				>
 																					{meta.label}
+																					{matchup.beats && (
+																						<span className="troop-class-beats" aria-hidden="true">
+																							{' ▸ '}
+																							{TROOP_CLASS_META[matchup.beats].label}
+																						</span>
+																					)}
 																				</span>
-																			) : null;
+																			);
 																		})()}
 																		<button
 																			type="button"

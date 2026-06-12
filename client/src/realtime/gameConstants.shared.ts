@@ -117,6 +117,19 @@ export function getCommandTimeFactor(commandLevel: number): number {
 	return Math.pow(COMMAND_BUILD_TIME_FACTOR_PER_LEVEL, Math.max(0, commandLevel || 0));
 }
 
+// First-build acceleration (beta). Mirror of server/utils/gameConstants.ts —
+// keep both in lockstep (CLAUDE.md rule). A brand-new player's first build is
+// the Command Core 0 -> 1 upgrade; we collapse just that one build to a short
+// fixed time so the first session isn't a 2-minute idle wait. One-time by
+// construction (a nexus only sits at CC0 before its first build). Build-queue
+// only — never touches troop/training/combat timing.
+export const FIRST_BUILD_BUILDING = 'commandCore';
+export const FIRST_BUILD_TIME_SECONDS = 25;
+
+export function isFirstBuild(building: string, currentLevel: number): boolean {
+	return building === FIRST_BUILD_BUILDING && currentLevel === 0;
+}
+
 export function getCommandBuildQueueBonus(commandLevel: number): number {
 	const veteran = Math.max(0, (commandLevel || 0) - COMMAND_VETERAN_THRESHOLD);
 	return Math.min(2, veteran);
@@ -293,6 +306,9 @@ export function getEffectiveBuildTimeSeconds(
 	nexusType: string | null | undefined,
 	nexusTypeDoubled: boolean
 ): number {
+	// First-ever build is collapsed to a short fixed time (see isFirstBuild and
+	// the server mirror). One-time by construction; build-queue only.
+	if (isFirstBuild(building, currentLevel)) return FIRST_BUILD_TIME_SECONDS;
 	const cost = getBuildingCost(building, currentLevel);
 	const baseBuildMult = NEXUS_TYPE_BUILD_TIME_MULTIPLIERS[nexusType ?? ''];
 	const nexusFactor =
