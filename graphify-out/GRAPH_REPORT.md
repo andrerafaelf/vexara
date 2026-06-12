@@ -1,16 +1,16 @@
 # Graph Report - vexara  (2026-06-12)
 
 ## Corpus Check
-- 449 files · ~528,826 words
+- 449 files · ~529,021 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 3126 nodes · 6011 edges · 212 communities (172 shown, 40 thin omitted)
+- 3126 nodes · 6011 edges · 211 communities (171 shown, 40 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 19 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `91f7aa32`
+- Built from commit: `1adf6a02`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -201,7 +201,6 @@
 - [[_COMMUNITY_Community 207|Community 207]]
 - [[_COMMUNITY_Community 209|Community 209]]
 - [[_COMMUNITY_Community 210|Community 210]]
-- [[_COMMUNITY_Community 211|Community 211]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `logError()` - 203 edges
@@ -230,7 +229,7 @@
 ## Import Cycles
 - 3-file cycle: `client/src/features/combat/useCombat.ts -> client/src/hooks/useNotificationBadges.ts -> client/src/hooks/useGameSocket.ts -> client/src/features/combat/useCombat.ts`
 
-## Communities (212 total, 40 thin omitted)
+## Communities (211 total, 40 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.06
@@ -245,8 +244,8 @@ Cohesion: 0.03
 Nodes (129): Faction, FACTION_TABS, FactionInvite, FactionTreaty, FactionWar, GalaxyFaction, JoinRequest, MyJoinRequest (+121 more)
 
 ### Community 3 - "Community 3"
-Cohesion: 0.07
-Nodes (29): CurrentObjective(), STEP_DESTINATION, GalaxyEvent, Map(), MapNexus, NON_STATIONABLE_TROOPS, NPC_NAME_FRAGMENTS, OFFENSE_TROOPS (+21 more)
+Cohesion: 0.18
+Nodes (11): CurrentObjective(), STEP_DESTINATION, hasArmorFoundryStarted(), hasCommandCoreLevelStarted(), hasQueuedBuilding(), isFirstBuildInProgress(), OnboardingContext, OnboardingContextValue (+3 more)
 
 ### Community 4 - "Community 4"
 Cohesion: 0.07
@@ -301,8 +300,8 @@ Cohesion: 0.09
 Nodes (49): emitToUser(), notifyAttackUpdate(), notifyNexusConquered(), notifyReportUpdate(), notifyTransferUpdate(), BUILDING_MAX_LEVELS, atkPerKRes(), resTotal() (+41 more)
 
 ### Community 17 - "Community 17"
-Cohesion: 0.09
-Nodes (27): BUILDING_NAMES, DashboardProps, DashboardQuest, DashboardQuestBatch, TROOP_NAMES, GameLayoutProps, MapProps, MarketProps (+19 more)
+Cohesion: 0.05
+Nodes (45): BUILDING_NAMES, DashboardProps, DashboardQuest, DashboardQuestBatch, TROOP_NAMES, GameLayoutProps, GalaxyEvent, Map() (+37 more)
 
 ### Community 18 - "Community 18"
 Cohesion: 0.09
@@ -349,8 +348,8 @@ Cohesion: 0.08
 Nodes (25): dependencies, lucide-react, next, react, react-dom, recharts, devDependencies, eslint (+17 more)
 
 ### Community 29 - "Community 29"
-Cohesion: 0.07
-Nodes (39): CombatLogsPage(), FactionsView(), FriendsView(), ActivePage, GameLayout(), PAGE_TITLES, Market(), Ctx (+31 more)
+Cohesion: 0.05
+Nodes (47): CombatLogsPage(), FactionsView(), FriendsView(), ActivePage, GameLayout(), PAGE_TITLES, LoginForm(), SCREENSHOTS (+39 more)
 
 ### Community 30 - "Community 30"
 Cohesion: 0.08
@@ -816,10 +815,6 @@ Nodes (6): getBuildingCost(), getCommandTimeFactor(), getEffectiveBuildTimeSecon
 Cohesion: 0.36
 Nodes (7): TROOP_STATS, COMBAT_TROOP_KEYS, CombatTroopKey, distanceTiles(), minTroopSpeed(), pickRaidTroops(), processRogueAiRaids()
 
-### Community 211 - "Community 211"
-Cohesion: 0.14
-Nodes (8): LoginForm(), SCREENSHOTS, AuthContext, AuthContextType, metadata, User, Status, VerifyEmailInner()
-
 ## Knowledge Gaps
 - **1153 isolated node(s):** `allow`, `PreToolUse`, `allow`, `additionalDirectories`, `eslintConfig` (+1148 more)
   These have ≤1 connection - possible missing edges or undocumented components.
@@ -830,7 +825,7 @@ _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `logError()` connect `Community 4` to `Community 0`, `Community 1`, `Community 132`, `Community 5`, `Community 10`, `Community 15`, `Community 26`, `Community 30`, `Community 32`, `Community 39`, `Community 49`, `Community 53`, `Community 184`, `Community 185`, `Community 66`, `Community 78`, `Community 210`, `Community 83`, `Community 91`, `Community 101`, `Community 103`, `Community 104`, `Community 107`?**
   _High betweenness centrality (0.017) - this node is a cross-community bridge._
-- **Why does `Force` connect `Community 153` to `Community 3`, `Community 6`, `Community 76`, `Community 20`, `Community 94`?**
+- **Why does `Force` connect `Community 153` to `Community 6`, `Community 76`, `Community 17`, `Community 20`, `Community 94`?**
   _High betweenness centrality (0.007) - this node is a cross-community bridge._
 - **What connects `allow`, `PreToolUse`, `allow` to the rest of the system?**
   _1153 weakly-connected nodes found - possible documentation gaps or missing edges._
@@ -838,7 +833,7 @@ _Questions this graph is uniquely positioned to answer:_
   _Cohesion score 0.05552617662612375 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
   _Cohesion score 0.02593167701863354 - nodes in this community are weakly interconnected._
-- **Should `Community 3` be split into smaller, more focused modules?**
-  _Cohesion score 0.06707317073170732 - nodes in this community are weakly interconnected._
 - **Should `Community 4` be split into smaller, more focused modules?**
   _Cohesion score 0.07246376811594203 - nodes in this community are weakly interconnected._
+- **Should `Community 5` be split into smaller, more focused modules?**
+  _Cohesion score 0.11396011396011396 - nodes in this community are weakly interconnected._

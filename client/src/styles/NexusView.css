@@ -25,16 +25,68 @@
 	gap: var(--space-3);
 }
 
+.nexus-inner-nav-head {
+	padding: 0 var(--space-2) var(--space-2);
+	border-bottom: 1px solid var(--border-default);
+}
+
+.nexus-inner-nav-eyebrow {
+	display: block;
+	font-family: var(--font-mono);
+	font-size: 9px;
+	font-weight: 700;
+	letter-spacing: 0.16em;
+	color: var(--accent);
+	text-transform: uppercase;
+	margin-bottom: 3px;
+}
+
 .nexus-inner-nav-name {
+	display: flex;
+	align-items: center;
+	gap: 4px;
 	font-size: var(--text-lg);
 	font-weight: 700;
 	color: var(--text-strong);
 	letter-spacing: -0.01em;
 	line-height: 1.2;
-	padding: 0 var(--space-2) var(--space-2);
-	border-bottom: 1px solid var(--border-default);
+	min-width: 0;
+}
+
+.nexus-inner-nav-name-text {
 	overflow: hidden;
 	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Quiet rename pencil next to the inner-nav name; gains presence on hover. */
+.nexus-inner-nav-edit {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: 22px;
+	height: 22px;
+	padding: 0;
+	background: transparent;
+	border: none;
+	border-radius: var(--radius-sm);
+	color: var(--text-faint);
+	cursor: pointer;
+	transition:
+		color var(--duration-fast) var(--ease-out),
+		background var(--duration-fast) var(--ease-out);
+}
+
+.nexus-inner-nav-edit:hover {
+	color: var(--text-strong);
+	background: rgba(255, 255, 255, 0.06);
+}
+
+.nexus-inner-rename {
+	display: flex;
+	align-items: center;
+	gap: 4px;
 }
 
 .nexus-inner-nav-tabs {

@@ -7,6 +7,7 @@ import {
 	ChevronDown,
 	ChevronUp,
 	Info,
+	Pencil,
 	ShieldCheck,
 	Sparkles,
 	Trash2,
@@ -30,6 +31,7 @@ import {
 	getNexusTroopTransfers,
 	getOutgoingAttacks,
 	recallTroops,
+	renameNexus,
 	sendBackTroops,
 	trainTroops,
 	upgradeBuilding
@@ -450,6 +452,41 @@ const NexusView: React.FC<NexusViewProps> = ({
 	const [activeTab, setActiveTabState] = useState<NexusTab>(initialTab);
 	// The section nav is now the vertical .nexus-inner-nav (position: sticky), so
 	// the old horizontal-tab-bar sticky-sentinel detection was removed.
+
+	// Inline rename of this nexus, edited from the inner-nav name.
+	const [isRenamingNexus, setIsRenamingNexus] = useState(false);
+	const [renameValue, setRenameValue] = useState(nexus.name);
+	const [isSavingNexusName, setIsSavingNexusName] = useState(false);
+	const beginNexusRename = () => {
+		setRenameValue(nexus.name);
+		setIsRenamingNexus(true);
+	};
+	const cancelNexusRename = () => {
+		setIsRenamingNexus(false);
+		setRenameValue(nexus.name);
+	};
+	const submitNexusRename = async () => {
+		const trimmed = renameValue.trim();
+		if (trimmed.length < 3 || trimmed.length > 32) {
+			showToast('Nexus name must be 3–32 characters', 'error');
+			return;
+		}
+		if (trimmed === nexus.name) {
+			setIsRenamingNexus(false);
+			return;
+		}
+		try {
+			setIsSavingNexusName(true);
+			await renameNexus(nexus._id, trimmed);
+			showToast('Nexus renamed', 'success');
+			setIsRenamingNexus(false);
+			onUpdate();
+		} catch (err: any) {
+			showToast(err.response?.data?.error || 'Error renaming nexus', 'error');
+		} finally {
+			setIsSavingNexusName(false);
+		}
+	};
 	const setActiveTab = (tab: NexusTab) => {
 		setActiveTabState(tab);
 		onTabChange?.(tab);
@@ -1970,8 +2007,54 @@ const NexusView: React.FC<NexusViewProps> = ({
 			    inside the content area (distinct from the outer rail that lists your
 			    nexuses) and scrolls with the page. Anchors the tabs to a real edge. */}
 			<aside className="nexus-inner-nav">
-				<div className="nexus-inner-nav-name" title={nexus.name}>
-					{nexus.name}
+				<div className="nexus-inner-nav-head">
+					<span className="nexus-inner-nav-eyebrow">// COMMAND NEXUS</span>
+					{isRenamingNexus ? (
+						<div className="nexus-inner-rename" onClick={(e) => e.stopPropagation()}>
+							<input
+								className="nexus-rename-input-sm"
+								value={renameValue}
+								onChange={(e) => setRenameValue(e.target.value)}
+								onKeyDown={(e) => {
+									if (e.key === 'Enter') submitNexusRename();
+									if (e.key === 'Escape') cancelNexusRename();
+								}}
+								autoFocus
+								maxLength={32}
+								aria-label="Rename nexus"
+							/>
+							<button
+								className="nexus-rename-btn-sm save"
+								disabled={isSavingNexusName}
+								onClick={submitNexusRename}
+								title="Save"
+								aria-label="Save name"
+							>
+								<Check size={13} />
+							</button>
+							<button
+								className="nexus-rename-btn-sm cancel"
+								onClick={cancelNexusRename}
+								title="Cancel"
+								aria-label="Cancel rename"
+							>
+								<X size={13} />
+							</button>
+						</div>
+					) : (
+						<div className="nexus-inner-nav-name" title={nexus.name}>
+							<span className="nexus-inner-nav-name-text">{nexus.name}</span>
+							<button
+								type="button"
+								className="nexus-inner-nav-edit"
+								onClick={beginNexusRename}
+								title="Rename nexus"
+								aria-label="Rename nexus"
+							>
+								<Pencil size={12} />
+							</button>
+						</div>
+					)}
 				</div>
 				<nav className="nexus-inner-nav-tabs" aria-label="Nexus sections">
 					<button

@@ -4086,7 +4086,7 @@
       "source_file": "client/src/app/login/page.tsx",
       "source_location": "L1",
       "id": "login_page",
-      "community": 211,
+      "community": 29,
       "norm_label": "page.tsx"
     },
     {
@@ -4095,7 +4095,7 @@
       "source_file": "client/src/app/login/page.tsx",
       "source_location": "L4",
       "id": "login_page_metadata",
-      "community": 211,
+      "community": 29,
       "norm_label": "metadata"
     },
     {
@@ -4104,7 +4104,7 @@
       "source_file": "client/src/app/login/page.tsx",
       "source_location": "L11",
       "id": "login_page_loginpage",
-      "community": 211,
+      "community": 29,
       "norm_label": "loginpage()"
     },
     {
@@ -5148,7 +5148,7 @@
       "source_file": "client/src/app/verify-email/page.tsx",
       "source_location": "L1",
       "id": "verify_email_page",
-      "community": 211,
+      "community": 29,
       "norm_label": "page.tsx"
     },
     {
@@ -5157,7 +5157,7 @@
       "source_file": "client/src/app/verify-email/page.tsx",
       "source_location": "L11",
       "id": "verify_email_page_status",
-      "community": 211,
+      "community": 29,
       "norm_label": "status"
     },
     {
@@ -5166,7 +5166,7 @@
       "source_file": "client/src/app/verify-email/page.tsx",
       "source_location": "L13",
       "id": "verify_email_page_verifyemailinner",
-      "community": 211,
+      "community": 29,
       "norm_label": "verifyemailinner()"
     },
     {
@@ -5175,7 +5175,7 @@
       "source_file": "client/src/app/verify-email/page.tsx",
       "source_location": "L129",
       "id": "verify_email_page_verifyemailpage",
-      "community": 211,
+      "community": 29,
       "norm_label": "verifyemailpage()"
     },
     {
@@ -7173,7 +7173,7 @@
       "source_file": "client/src/components/LoginForm.tsx",
       "source_location": "L1",
       "id": "components_loginform",
-      "community": 211,
+      "community": 29,
       "norm_label": "loginform.tsx"
     },
     {
@@ -7182,7 +7182,7 @@
       "source_file": "client/src/components/LoginForm.tsx",
       "source_location": "L13",
       "id": "components_loginform_screenshots",
-      "community": 211,
+      "community": 29,
       "norm_label": "screenshots"
     },
     {
@@ -7191,7 +7191,7 @@
       "source_file": "client/src/components/LoginForm.tsx",
       "source_location": "L25",
       "id": "components_loginform_loginform",
-      "community": 211,
+      "community": 29,
       "norm_label": "loginform()"
     },
     {
@@ -7200,7 +7200,7 @@
       "source_file": "client/src/components/Map.tsx",
       "source_location": "L1",
       "id": "components_map",
-      "community": 3,
+      "community": 17,
       "norm_label": "map.tsx"
     },
     {
@@ -7209,7 +7209,7 @@
       "source_file": "client/src/components/Map.tsx",
       "source_location": "L48",
       "id": "components_map_galaxyevent",
-      "community": 3,
+      "community": 17,
       "norm_label": "galaxyevent"
     },
     {
@@ -7227,7 +7227,7 @@
       "source_file": "client/src/components/Map.tsx",
       "source_location": "L77",
       "id": "components_map_mapnexus",
-      "community": 3,
+      "community": 17,
       "norm_label": "mapnexus"
     },
     {
@@ -7236,7 +7236,7 @@
       "source_file": "client/src/components/Map.tsx",
       "source_location": "L118",
       "id": "components_map_npc_name_fragments",
-      "community": 3,
+      "community": 17,
       "norm_label": "npc_name_fragments"
     },
     {
@@ -7245,7 +7245,7 @@
       "source_file": "client/src/components/Map.tsx",
       "source_location": "L125",
       "id": "components_map_isnpcnexusname",
-      "community": 3,
+      "community": 17,
       "norm_label": "isnpcnexusname()"
     },
     {
@@ -7254,7 +7254,7 @@
       "source_file": "client/src/components/Map.tsx",
       "source_location": "L127",
       "id": "components_map_troop_labels",
-      "community": 3,
+      "community": 17,
       "norm_label": "troop_labels"
     },
     {
@@ -7263,7 +7263,7 @@
       "source_file": "client/src/components/Map.tsx",
       "source_location": "L145",
       "id": "components_map_offense_troops",
-      "community": 3,
+      "community": 17,
       "norm_label": "offense_troops"
     },
     {
@@ -7272,7 +7272,7 @@
       "source_file": "client/src/components/Map.tsx",
       "source_location": "L163",
       "id": "components_map_non_stationable_troops",
-      "community": 3,
+      "community": 17,
       "norm_label": "non_stationable_troops"
     },
     {
@@ -7281,7 +7281,7 @@
       "source_file": "client/src/components/Map.tsx",
       "source_location": "L164",
       "id": "components_map_canstationtroop",
-      "community": 3,
+      "community": 17,
       "norm_label": "canstationtroop()"
     },
     {
@@ -7290,7 +7290,7 @@
       "source_file": "client/src/components/Map.tsx",
       "source_location": "L198",
       "id": "components_map_useismobile",
-      "community": 3,
+      "community": 17,
       "norm_label": "useismobile()"
     },
     {
@@ -7299,7 +7299,7 @@
       "source_file": "client/src/components/Map.tsx",
       "source_location": "L214",
       "id": "components_map_map",
-      "community": 3,
+      "community": 17,
       "norm_label": "map()"
     },
     {
@@ -7308,7 +7308,7 @@
       "source_file": "client/src/components/MapCell.tsx",
       "source_location": "L1",
       "id": "components_mapcell",
-      "community": 3,
+      "community": 17,
       "norm_label": "mapcell.tsx"
     },
     {
@@ -7317,7 +7317,7 @@
       "source_file": "client/src/components/MapCell.tsx",
       "source_location": "L9",
       "id": "components_mapcell_command_core_url",
-      "community": 3,
+      "community": 17,
       "norm_label": "command_core_url"
     },
     {
@@ -7326,7 +7326,7 @@
       "source_file": "client/src/components/MapCell.tsx",
       "source_location": "L11",
       "id": "components_mapcell_cellkind",
-      "community": 3,
+      "community": 17,
       "norm_label": "cellkind"
     },
     {
@@ -7335,7 +7335,7 @@
       "source_file": "client/src/components/MapCell.tsx",
       "source_location": "L13",
       "id": "components_mapcell_mapcelldata",
-      "community": 3,
+      "community": 17,
       "norm_label": "mapcelldata"
     },
     {
@@ -7344,7 +7344,7 @@
       "source_file": "client/src/components/MapCell.tsx",
       "source_location": "L32",
       "id": "components_mapcell_markerclassbykind",
-      "community": 3,
+      "community": 17,
       "norm_label": "markerclassbykind"
     },
     {
@@ -7353,7 +7353,7 @@
       "source_file": "client/src/components/MapCell.tsx",
       "source_location": "L42",
       "id": "components_mapcell_markerglyphkind",
-      "community": 3,
+      "community": 17,
       "norm_label": "markerglyphkind"
     },
     {
@@ -7362,7 +7362,7 @@
       "source_file": "client/src/components/MapCell.tsx",
       "source_location": "L44",
       "id": "components_mapcell_nexusmarkerglyph",
-      "community": 3,
+      "community": 17,
       "norm_label": "nexusmarkerglyph()"
     },
     {
@@ -7371,7 +7371,7 @@
       "source_file": "client/src/components/MapCell.tsx",
       "source_location": "L72",
       "id": "components_mapcell_mapcellinner",
-      "community": 3,
+      "community": 17,
       "norm_label": "mapcellinner()"
     },
     {
@@ -7380,7 +7380,7 @@
       "source_file": "client/src/components/MapCell.tsx",
       "source_location": "L152",
       "id": "components_mapcell_mapcell",
-      "community": 3,
+      "community": 17,
       "norm_label": "mapcell"
     },
     {
@@ -7720,7 +7720,7 @@
       "label": "NexusViewProps",
       "file_type": "code",
       "source_file": "client/src/components/NexusView.tsx",
-      "source_location": "L94",
+      "source_location": "L96",
       "id": "components_nexusview_nexusviewprops",
       "community": 17,
       "norm_label": "nexusviewprops"
@@ -7729,7 +7729,7 @@
       "label": "NexusTab",
       "file_type": "code",
       "source_file": "client/src/components/NexusView.tsx",
-      "source_location": "L101",
+      "source_location": "L103",
       "id": "components_nexusview_nexustab",
       "community": 9,
       "norm_label": "nexustab"
@@ -7738,7 +7738,7 @@
       "label": "TRAINING_CHAIN_META",
       "file_type": "code",
       "source_file": "client/src/components/NexusView.tsx",
-      "source_location": "L108",
+      "source_location": "L110",
       "id": "components_nexusview_training_chain_meta",
       "community": 9,
       "norm_label": "training_chain_meta"
@@ -7747,7 +7747,7 @@
       "label": "TROOP_CLASS_META",
       "file_type": "code",
       "source_file": "client/src/components/NexusView.tsx",
-      "source_location": "L119",
+      "source_location": "L121",
       "id": "components_nexusview_troop_class_meta",
       "community": 9,
       "norm_label": "troop_class_meta"
@@ -7756,7 +7756,7 @@
       "label": "NEXUS_TYPES_WITH_BUFF",
       "file_type": "code",
       "source_file": "client/src/components/NexusView.tsx",
-      "source_location": "L128",
+      "source_location": "L130",
       "id": "components_nexusview_nexus_types_with_buff",
       "community": 9,
       "norm_label": "nexus_types_with_buff"
@@ -7765,7 +7765,7 @@
       "label": "BUILDING_NAMES",
       "file_type": "code",
       "source_file": "client/src/components/NexusView.tsx",
-      "source_location": "L135",
+      "source_location": "L137",
       "id": "components_nexusview_building_names",
       "community": 9,
       "norm_label": "building_names"
@@ -7774,7 +7774,7 @@
       "label": "BUILDING_DESCRIPTIONS",
       "file_type": "code",
       "source_file": "client/src/components/NexusView.tsx",
-      "source_location": "L150",
+      "source_location": "L152",
       "id": "components_nexusview_building_descriptions",
       "community": 9,
       "norm_label": "building_descriptions"
@@ -7783,7 +7783,7 @@
       "label": "BUILDING_RULES",
       "file_type": "code",
       "source_file": "client/src/components/NexusView.tsx",
-      "source_location": "L168",
+      "source_location": "L170",
       "id": "components_nexusview_building_rules",
       "community": 9,
       "norm_label": "building_rules"
@@ -7792,7 +7792,7 @@
       "label": "TROOP_NAMES",
       "file_type": "code",
       "source_file": "client/src/components/NexusView.tsx",
-      "source_location": "L300",
+      "source_location": "L302",
       "id": "components_nexusview_troop_names",
       "community": 9,
       "norm_label": "troop_names"
@@ -7801,7 +7801,7 @@
       "label": "TROOP_DESCRIPTIONS",
       "file_type": "code",
       "source_file": "client/src/components/NexusView.tsx",
-      "source_location": "L322",
+      "source_location": "L324",
       "id": "components_nexusview_troop_descriptions",
       "community": 9,
       "norm_label": "troop_descriptions"
@@ -7810,7 +7810,7 @@
       "label": "TROOP_REQUIREMENTS",
       "file_type": "code",
       "source_file": "client/src/components/NexusView.tsx",
-      "source_location": "L357",
+      "source_location": "L359",
       "id": "components_nexusview_troop_requirements",
       "community": 9,
       "norm_label": "troop_requirements"
@@ -7819,7 +7819,7 @@
       "label": "TROOP_CATEGORIES",
       "file_type": "code",
       "source_file": "client/src/components/NexusView.tsx",
-      "source_location": "L383",
+      "source_location": "L385",
       "id": "components_nexusview_troop_categories",
       "community": 9,
       "norm_label": "troop_categories"
@@ -7828,7 +7828,7 @@
       "label": "IntroQuest",
       "file_type": "code",
       "source_file": "client/src/components/NexusView.tsx",
-      "source_location": "L402",
+      "source_location": "L404",
       "id": "components_nexusview_introquest",
       "community": 9,
       "norm_label": "introquest"
@@ -7837,7 +7837,7 @@
       "label": "QuestBatch",
       "file_type": "code",
       "source_file": "client/src/components/NexusView.tsx",
-      "source_location": "L420",
+      "source_location": "L422",
       "id": "components_nexusview_questbatch",
       "community": 9,
       "norm_label": "questbatch"
@@ -7846,7 +7846,7 @@
       "label": "InfoModalState",
       "file_type": "code",
       "source_file": "client/src/components/NexusView.tsx",
-      "source_location": "L436",
+      "source_location": "L438",
       "id": "components_nexusview_infomodalstate",
       "community": 9,
       "norm_label": "infomodalstate"
@@ -7855,7 +7855,7 @@
       "label": "NexusView()",
       "file_type": "code",
       "source_file": "client/src/components/NexusView.tsx",
-      "source_location": "L442",
+      "source_location": "L444",
       "id": "components_nexusview_nexusview",
       "community": 62,
       "norm_label": "nexusview()"
@@ -7864,7 +7864,7 @@
       "label": "TrainAmountControlsProps",
       "file_type": "code",
       "source_file": "client/src/components/NexusView.tsx",
-      "source_location": "L3753",
+      "source_location": "L3836",
       "id": "components_nexusview_trainamountcontrolsprops",
       "community": 9,
       "norm_label": "trainamountcontrolsprops"
@@ -7873,7 +7873,7 @@
       "label": "TrainAmountControls",
       "file_type": "code",
       "source_file": "client/src/components/NexusView.tsx",
-      "source_location": "L3763",
+      "source_location": "L3846",
       "id": "components_nexusview_trainamountcontrols",
       "community": 9,
       "norm_label": "trainamountcontrols"
@@ -7882,7 +7882,7 @@
       "label": "NewbieProtectionBanner",
       "file_type": "code",
       "source_file": "client/src/components/NexusView.tsx",
-      "source_location": "L3810",
+      "source_location": "L3893",
       "id": "components_nexusview_newbieprotectionbanner",
       "community": 9,
       "norm_label": "newbieprotectionbanner"
@@ -10098,7 +10098,7 @@
       "source_file": "client/src/context/AuthContext.tsx",
       "source_location": "L1",
       "id": "context_authcontext",
-      "community": 211,
+      "community": 29,
       "norm_label": "authcontext.tsx"
     },
     {
@@ -10107,7 +10107,7 @@
       "source_file": "client/src/context/AuthContext.tsx",
       "source_location": "L7",
       "id": "context_authcontext_authcontexttype",
-      "community": 211,
+      "community": 29,
       "norm_label": "authcontexttype"
     },
     {
@@ -10116,7 +10116,7 @@
       "source_file": "client/src/context/AuthContext.tsx",
       "source_location": "L16",
       "id": "context_authcontext_authcontext",
-      "community": 211,
+      "community": 29,
       "norm_label": "authcontext"
     },
     {
@@ -10125,7 +10125,7 @@
       "source_file": "client/src/context/AuthContext.tsx",
       "source_location": "L18",
       "id": "context_authcontext_readstoredauth",
-      "community": 211,
+      "community": 29,
       "norm_label": "readstoredauth()"
     },
     {
@@ -11664,7 +11664,7 @@
       "source_file": "client/src/hooks/useMapCamera.ts",
       "source_location": "L1",
       "id": "hooks_usemapcamera",
-      "community": 3,
+      "community": 17,
       "norm_label": "usemapcamera.ts"
     },
     {
@@ -11673,7 +11673,7 @@
       "source_file": "client/src/hooks/useMapCamera.ts",
       "source_location": "L23",
       "id": "hooks_usemapcamera_mapcameraoptions",
-      "community": 3,
+      "community": 17,
       "norm_label": "mapcameraoptions"
     },
     {
@@ -11682,7 +11682,7 @@
       "source_file": "client/src/hooks/useMapCamera.ts",
       "source_location": "L57",
       "id": "hooks_usemapcamera_mapcamera",
-      "community": 3,
+      "community": 17,
       "norm_label": "mapcamera"
     },
     {
@@ -11691,7 +11691,7 @@
       "source_file": "client/src/hooks/useMapCamera.ts",
       "source_location": "L76",
       "id": "hooks_usemapcamera_clamp",
-      "community": 3,
+      "community": 17,
       "norm_label": "clamp()"
     },
     {
@@ -11700,7 +11700,7 @@
       "source_file": "client/src/hooks/useMapCamera.ts",
       "source_location": "L78",
       "id": "hooks_usemapcamera_usemapcamera",
-      "community": 3,
+      "community": 17,
       "norm_label": "usemapcamera()"
     },
     {
@@ -14391,7 +14391,7 @@
       "source_file": "client/src/types/game.ts",
       "source_location": "L3",
       "id": "types_game_user",
-      "community": 211,
+      "community": 29,
       "norm_label": "user"
     },
     {
@@ -28161,7 +28161,7 @@
       "file_type": "code",
       "source_file": "client/src/components/Map.tsx",
       "source_location": "L160",
-      "community": 3,
+      "community": 17,
       "norm_label": "stationable_troops",
       "id": "components_map_stationable_troops"
     }
@@ -91551,5 +91551,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "91f7aa327c04e9c6097e39a8db9ed9e733c74f3a"
+  "built_at_commit": "1adf6a022264fcedb608eb41732962eee6430201"
 }
