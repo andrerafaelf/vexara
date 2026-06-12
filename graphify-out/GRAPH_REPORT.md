@@ -1,7 +1,7 @@
 # Graph Report - vexara  (2026-06-12)
 
 ## Corpus Check
-- 449 files · ~528,921 words
+- 449 files · ~528,994 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `c2efe596`
+- Built from commit: `5f75ad9d`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -396,8 +396,8 @@ Cohesion: 0.08
 Nodes (23): Annihilator Platform, Assault Trooper, Breaker Unit, Bulwark Guard, Conquest Flow, Core Combat Notes, Disruptor Unit, Interceptor Bike (+15 more)
 
 ### Community 41 - "Community 41"
-Cohesion: 0.16
-Nodes (16): BuildingCard, BuildingCardInner(), BuildingCardProps, LockedBuildingPlot, LockedBuildingPlotProps, computeQueueCountdown(), formatDurationSeconds(), QueueCountdown (+8 more)
+Cohesion: 0.18
+Nodes (15): BuildingCard, BuildingCardInner(), BuildingCardProps, LockedBuildingPlot, LockedBuildingPlotProps, computeQueueCountdown(), formatDurationSeconds(), QueueCountdown (+7 more)
 
 ### Community 44 - "Community 44"
 Cohesion: 0.07
@@ -664,8 +664,8 @@ Cohesion: 0.40
 Nodes (4): Colorblind accessibility modes, Combat AAR: Allied Support now shows source nexus, Mobile podium: faction name now visible under username, Vexara - Alpha Patch Notes v0.23.2
 
 ### Community 114 - "Community 114"
-Cohesion: 0.13
-Nodes (13): Countdown, CountdownInner(), CountdownProps, formatDefault(), LiveResourceStripInner(), LiveResourceStripProps, ensureVisibilityBinding(), listeners (+5 more)
+Cohesion: 0.12
+Nodes (14): Countdown, CountdownInner(), CountdownProps, formatDefault(), LiveResourceStripInner(), LiveResourceStripProps, ensureVisibilityBinding(), listeners (+6 more)
 
 ### Community 115 - "Community 115"
 Cohesion: 0.25

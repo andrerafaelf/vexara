@@ -5,34 +5,8 @@
 	min-height: 600px;
 }
 
-.nexus-header {
-	margin-bottom: var(--space-3);
-	padding-bottom: var(--space-2);
-	border-bottom: 1px solid var(--border-default);
-}
-
-/* The <h2> renders a "// NEXUS · COMMAND" pseudo-label above the title text
- * (see .nexus-header h2::before below). That makes the heading a two-line
- * stacked block. Centering against that block visually pushes the rename
- * button up out of line with the title, so align to the bottom of the row -
- * the title sits at the bottom of its own stacked block, putting the button
- * on the title's baseline. */
-.nexus-title-row {
-	display: flex;
-	align-items: flex-end;
-	gap: var(--space-3);
-	margin-bottom: 0;
-	line-height: 1;
-}
-
-.nexus-header h2 {
-	color: var(--text-strong);
-	margin-bottom: 0;
-	font-size: var(--text-2xl);
-	font-weight: 700;
-	letter-spacing: -0.025em;
-	line-height: 1;
-}
+/* The full-height nexus name header was removed — the name + rename now live
+   inline on the tab bar (.nexus-tab-identity). */
 
 .nexus-rename-btn {
 	background: transparent;
@@ -410,6 +384,79 @@
 
 .nexus-tab-bar::-webkit-scrollbar {
 	display: none;
+}
+
+/* ── Tab bar with inline nexus identity ──────────────────────────────────────
+   The full-height nexus name header was removed; the name + rename now ride on
+   the left of the tab bar so the tabs lead the screen and the wasted top space
+   is gone. The identity block + a divider precede the tab buttons. */
+.nexus-tab-bar--with-identity {
+	align-items: stretch;
+	gap: 0;
+}
+
+.nexus-tab-identity {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding-right: var(--space-3);
+	flex-shrink: 0;
+}
+
+.nexus-tab-identity-name {
+	font-size: var(--text-lg);
+	font-weight: 700;
+	color: var(--text-strong);
+	letter-spacing: -0.01em;
+	white-space: nowrap;
+	max-width: 240px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* The rename pencil sits quietly next to the name; it only gains presence on
+   hover so it doesn't compete with the tabs. */
+.nexus-tab-bar--with-identity .nexus-rename-btn {
+	width: 26px;
+	height: 26px;
+	border-color: transparent;
+	color: var(--text-faint);
+}
+
+.nexus-tab-bar--with-identity .nexus-rename-btn:hover {
+	border-color: var(--border-default);
+	color: var(--text-strong);
+}
+
+/* Inline rename input replaces the name in place, kept compact for the bar. */
+.nexus-tab-bar--with-identity .nexus-rename-input {
+	font-size: var(--text-base);
+	padding: 5px 8px;
+	min-width: 160px;
+	max-width: 240px;
+}
+
+.nexus-tab-bar-divider {
+	width: 1px;
+	align-self: center;
+	height: 22px;
+	margin-right: var(--space-2);
+	background: var(--border-default);
+	flex-shrink: 0;
+}
+
+/* Restore the inter-tab gap inside the identity variant (the wrapper zeroed it
+   so the identity block hugs the left edge). */
+.nexus-tab-bar--with-identity .nexus-tab-btn + .nexus-tab-btn {
+	margin-left: var(--space-1);
+}
+
+/* Relocated nexus-type buff banner: a thin status strip just under the tab bar. */
+.nexus-buff-banner-row:empty {
+	display: none;
+}
+.nexus-buff-banner-row {
+	margin-bottom: var(--space-3);
 }
 
 /* Mobile: pin the tab bar below the sticky game header so the
@@ -4076,17 +4123,8 @@
 	padding: 6px 0;
 }
 
-/* ── Nexus header: wrap cleanly on small screens ────────────── */
+/* ── Small screens ──────────────────────────────────────────── */
 @media (max-width: 540px) {
-	.nexus-header h2 {
-		font-size: var(--text-2xl);
-	}
-
-	.nexus-title-row {
-		flex-wrap: wrap;
-		gap: var(--space-2);
-	}
-
 	/* Resource cards: 2-up then full on tiny screens */
 	.resource {
 		padding: 10px 12px;
@@ -4268,26 +4306,6 @@
    ╚══════════════════════════════════════════════════════════════════╝ */
 
 /* ── Page header ───────────────────────────────────────────────── */
-.nexus-header h2 {
-	font-size: clamp(26px, 3vw, 36px);
-	font-weight: 800;
-	letter-spacing: -0.03em;
-	line-height: 1.05;
-	position: relative;
-}
-
-.nexus-header h2::before {
-	content: '// NEXUS · COMMAND';
-	display: block;
-	font-family: var(--font-mono);
-	font-size: 10px;
-	font-weight: 700;
-	letter-spacing: 0.18em;
-	color: var(--accent);
-	text-transform: uppercase;
-	margin-bottom: 3px;
-}
-
 .nexus-rename-btn,
 .nexus-rename-action,
 .nexus-rename-input {

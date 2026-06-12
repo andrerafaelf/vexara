@@ -2030,8 +2030,11 @@ const NexusView: React.FC<NexusViewProps> = ({
 
 	return (
 		<div className="nexus-view">
-			<div className="nexus-header">
-				<div className="nexus-title-row">
+			<div ref={tabStickySentinelRef} className="nexus-tab-sticky-sentinel" aria-hidden="true" />
+			<div className={`nexus-tab-bar nexus-tab-bar--with-identity${tabBarStuck ? ' is-stuck' : ''}`}>
+				{/* Nexus identity (name + rename) lives inline on the tab bar so the
+				    tabs lead the screen — the old full-height name header is gone. */}
+				<div className="nexus-tab-identity">
 					{isRenamingNexus ? (
 						<>
 							<input
@@ -2075,7 +2078,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 						</>
 					) : (
 						<>
-							<h2>{nexus.name}</h2>
+							<span className="nexus-tab-identity-name">{nexus.name}</span>
 							<button
 								type="button"
 								className="nexus-rename-btn"
@@ -2083,11 +2086,59 @@ const NexusView: React.FC<NexusViewProps> = ({
 								title="Rename Nexus"
 								aria-label="Rename Nexus"
 							>
-								<Pencil size={14} />
+								<Pencil size={13} />
 							</button>
 						</>
 					)}
 				</div>
+				<div className="nexus-tab-bar-divider" aria-hidden="true" />
+				<button
+					type="button"
+					className={`nexus-tab-btn${activeTab === 'overview' ? ' active' : ''}`}
+					onClick={() => setActiveTab('overview')}
+				>
+					<span>Overview</span>
+				</button>
+				<button
+					type="button"
+					className={`nexus-tab-btn${activeTab === 'buildings' ? ' active' : ''}`}
+					onClick={() => setActiveTab('buildings')}
+				>
+					<span>Buildings</span>
+					{activeBuild && <span className="nexus-tab-badge" />}
+				</button>
+				<button
+					type="button"
+					className={`nexus-tab-btn${activeTab === 'troops' ? ' active' : ''}`}
+					onClick={() => setActiveTab('troops')}
+				>
+					<span>Troops</span>
+					{activeTraining && <span className="nexus-tab-badge" />}
+				</button>
+				<button
+					type="button"
+					className={`nexus-tab-btn${activeTab === 'deployed' ? ' active' : ''}`}
+					onClick={() => setActiveTab('deployed')}
+				>
+					<span>Deployed</span>
+					{(troopTransfers.length > 0 || outgoingAttacks.length > 0) && (
+						<span className="nexus-tab-badge" />
+					)}
+				</button>
+				{ownNexuses.length > 1 && (
+					<button
+						type="button"
+						className={`nexus-tab-btn${activeTab === 'logistics' ? ' active' : ''}`}
+						onClick={() => setActiveTab('logistics')}
+					>
+						<span>Supply</span>
+					</button>
+				)}
+			</div>
+
+			{/* Nexus-type buff banner — a thin status strip, now sits just under the
+			    tab bar instead of inside the removed name header. */}
+			<div className="nexus-buff-banner-row">
 				{nexus.nexusType &&
 					NEXUS_TYPES_WITH_BUFF.has(nexus.nexusType) &&
 					(() => {
@@ -2167,55 +2218,6 @@ const NexusView: React.FC<NexusViewProps> = ({
 							</div>
 						);
 					})()}
-				{/* The live resource strip now lives in the persistent GameLayout
-				    header (see HeaderResourceStrip), so it stays visible on every
-				    tab/page instead of scrolling away with the overview body. */}
-			</div>
-
-			<div ref={tabStickySentinelRef} className="nexus-tab-sticky-sentinel" aria-hidden="true" />
-			<div className={`nexus-tab-bar${tabBarStuck ? ' is-stuck' : ''}`}>
-				<button
-					type="button"
-					className={`nexus-tab-btn${activeTab === 'overview' ? ' active' : ''}`}
-					onClick={() => setActiveTab('overview')}
-				>
-					<span>Overview</span>
-				</button>
-				<button
-					type="button"
-					className={`nexus-tab-btn${activeTab === 'buildings' ? ' active' : ''}`}
-					onClick={() => setActiveTab('buildings')}
-				>
-					<span>Buildings</span>
-					{activeBuild && <span className="nexus-tab-badge" />}
-				</button>
-				<button
-					type="button"
-					className={`nexus-tab-btn${activeTab === 'troops' ? ' active' : ''}`}
-					onClick={() => setActiveTab('troops')}
-				>
-					<span>Troops</span>
-					{activeTraining && <span className="nexus-tab-badge" />}
-				</button>
-				<button
-					type="button"
-					className={`nexus-tab-btn${activeTab === 'deployed' ? ' active' : ''}`}
-					onClick={() => setActiveTab('deployed')}
-				>
-					<span>Deployed</span>
-					{(troopTransfers.length > 0 || outgoingAttacks.length > 0) && (
-						<span className="nexus-tab-badge" />
-					)}
-				</button>
-				{ownNexuses.length > 1 && (
-					<button
-						type="button"
-						className={`nexus-tab-btn${activeTab === 'logistics' ? ' active' : ''}`}
-						onClick={() => setActiveTab('logistics')}
-					>
-						<span>Supply</span>
-					</button>
-				)}
 			</div>
 
 			<div className="tab-content">

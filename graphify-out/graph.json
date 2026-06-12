@@ -7864,7 +7864,7 @@
       "label": "TrainAmountControlsProps",
       "file_type": "code",
       "source_file": "client/src/components/NexusView.tsx",
-      "source_location": "L3908",
+      "source_location": "L3910",
       "id": "components_nexusview_trainamountcontrolsprops",
       "community": 9,
       "norm_label": "trainamountcontrolsprops"
@@ -7873,7 +7873,7 @@
       "label": "TrainAmountControls",
       "file_type": "code",
       "source_file": "client/src/components/NexusView.tsx",
-      "source_location": "L3918",
+      "source_location": "L3920",
       "id": "components_nexusview_trainamountcontrols",
       "community": 9,
       "norm_label": "trainamountcontrols"
@@ -7882,7 +7882,7 @@
       "label": "NewbieProtectionBanner",
       "file_type": "code",
       "source_file": "client/src/components/NexusView.tsx",
-      "source_location": "L3965",
+      "source_location": "L3967",
       "id": "components_nexusview_newbieprotectionbanner",
       "community": 9,
       "norm_label": "newbieprotectionbanner"
@@ -11988,7 +11988,7 @@
       "source_file": "client/src/hooks/useNow.ts",
       "source_location": "L96",
       "id": "hooks_usenow_usegatednow",
-      "community": 41,
+      "community": 114,
       "norm_label": "usegatednow()"
     },
     {
@@ -12843,7 +12843,7 @@
       "source_file": "client/src/realtime/useFlashOnChange.ts",
       "source_location": "L1",
       "id": "realtime_useflashonchange",
-      "community": 41,
+      "community": 114,
       "norm_label": "useflashonchange.ts"
     },
     {
@@ -39500,9 +39500,9 @@
       "source_file": "client/src/components/CurrentObjective.tsx",
       "source_location": "L33",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "components_currentobjective",
-      "target": "components_currentobjective_currentobjective",
-      "confidence_score": 1.0
+      "target": "components_currentobjective_currentobjective"
     },
     {
       "relation": "contains",
@@ -39510,9 +39510,9 @@
       "source_file": "client/src/components/CurrentObjective.tsx",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "components_currentobjective",
-      "target": "components_currentobjective_step_destination",
-      "confidence_score": 1.0
+      "target": "components_currentobjective_step_destination"
     },
     {
       "relation": "imports_from",
@@ -39521,9 +39521,9 @@
       "source_file": "client/src/components/CurrentObjective.tsx",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "components_currentobjective",
-      "target": "context_onboardingcontext",
-      "confidence_score": 1.0
+      "target": "context_onboardingcontext"
     },
     {
       "relation": "imports",
@@ -39532,9 +39532,9 @@
       "source_file": "client/src/components/CurrentObjective.tsx",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "components_currentobjective",
-      "target": "context_onboardingcontext_useonboarding",
-      "confidence_score": 1.0
+      "target": "context_onboardingcontext_useonboarding"
     },
     {
       "relation": "imports_from",
@@ -39543,9 +39543,9 @@
       "source_file": "client/src/components/GameLayout.tsx",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "components_gamelayout",
-      "target": "components_currentobjective",
-      "confidence_score": 1.0
+      "target": "components_currentobjective"
     },
     {
       "relation": "calls",
@@ -91540,5 +91540,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "c2efe5962d594a99bcabb98e5c3afe65b5054620"
+  "built_at_commit": "5f75ad9d24b92711e62883db25bd33d1158a67e3"
 }

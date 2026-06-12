@@ -630,8 +630,8 @@
     "semantic_hash": ""
   },
   "client/src/components/NexusView.tsx": {
-    "mtime": 1781273458.1654,
-    "ast_hash": "65626fc3ae20e7d44a18d2ea7ab1cc55",
+    "mtime": 1781295111.5300038,
+    "ast_hash": "795918e77c0c4b48bbd216f28c11d9ec",
     "semantic_hash": ""
   },
   "client/src/components/NotificationSettings.tsx": {
