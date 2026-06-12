@@ -24,7 +24,7 @@ import {
 	trainingBuildingFor,
 	trainingChainFor
 } from '../utils/gameConstants.js';
-import { logError, logGameEvent } from '../utils/logger.js';
+import { logError, logGameEvent, logGameEventOnce } from '../utils/logger.js';
 import { computeNexusPopulation } from '../utils/population.js';
 import { parsePositiveInt } from '../utils/validation.js';
 
@@ -379,10 +379,9 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
 				await incrementQuestProgress(req.userId, req.galaxyId, 'train_30', parsedAmount);
 			})();
 		} catch {}
-		// Emit first_train only when the training queue was previously empty.
-		if (trainingQueue.length === 0) {
-			logGameEvent('first_train', req.userId, req.galaxyId, { troopType, amount: parsedAmount });
-		}
+		// True funnel milestone: fired once per user on their first-ever training
+		// order (logGameEventOnce dedups on userId+event).
+		logGameEventOnce('first_train', req.userId, req.galaxyId, { troopType, amount: parsedAmount });
 		res.json({ success: true, completesAt, nexus: serializeNexus(rewardApplied) });
 	} catch (error) {
 		logError('unhandled_controller_error', {

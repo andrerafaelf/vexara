@@ -5,7 +5,7 @@ import { comparePassword, hashPassword } from '../models/User.js';
 import { sendPasswordChanged } from '../services/emailService.js';
 import { type AuthRequest, TROOP_KEYS } from '../types/index.js';
 import { validatePassword } from '../utils/validation.js';
-import { logError } from '../utils/logger.js';
+import { logError, logGameEvent, logGameEventOnce } from '../utils/logger.js';
 import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
 import { getResourceProduction } from '../utils/economy.js';
 import { sortOwnedNexuses } from '../services/nexusService.js';
@@ -153,6 +153,22 @@ export async function updateOnboardingStep(req: AuthRequest, res: Response): Pro
 		const data: Record<string, unknown> = { onboardingStep: step };
 		if (step === '__disabled__') data.beginnerTipsEnabled = false;
 		await prisma.user.update({ where: { id: req.userId }, data });
+
+		// Funnel instrumentation (beta): record onboarding progression so we can
+		// see where new players drop off in the tutorial. '__disabled__' is a
+		// distinct opt-out signal (the player turned tips off). Each real step is a
+		// once-per-user milestone; the step id is folded into the event NAME
+		// (onboarding_step:<id>) so the once-per-user dedup is per-step — otherwise
+		// only the first step the user ever completed would log. The step is also
+		// kept in meta for convenience. A cohort query over event LIKE
+		// 'onboarding_step:%' charts how far players get through the guided flow.
+		if (req.userId) {
+			if (step === '__disabled__') {
+				logGameEvent('onboarding_disabled', req.userId, req.galaxyId);
+			} else {
+				logGameEventOnce(`onboarding_step:${step}`, req.userId, req.galaxyId, { step });
+			}
+		}
 		res.json({ success: true });
 	} catch (error) {
 		logError('unhandled_controller_error', {

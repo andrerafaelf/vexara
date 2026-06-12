@@ -80,14 +80,15 @@ all exactly as they were; we just made them readable.
   target and your current selection and tells you whether the triangle
   **favours or counters** your composition before you commit — with a
   one-click link straight to the battle calculator.
-- **War Room composition coaching.** When you pledge troops to a
-  coordinated operation, the War Room now shows your pledge's class mix
-  and warns if it's lopsided enough to be hard-countered, and every
-  committed slot shows its class lean so the faction can spot gaps across
-  a wave at a glance. (The War Room doesn't carry the target's scouted
-  garrison, so this is composition guidance, not the full favoured/
-  countered verdict you get in the solo attack panel — that's a planned
-  follow-up.)
+- **War Room matchup verdict.** When you pledge troops to a coordinated
+  operation, the War Room now reads your own scout intel on the target
+  and tells you whether your pledge is **favoured or countered** by the
+  actual defending garrison — the same verdict as the solo attack panel —
+  and every committed slot shows a ✓ / ✕ matchup chip so the whole
+  faction can see which pledges have the class edge. If nobody's scouted
+  the target yet, it falls back to composition coaching (don't pledge a
+  single-class wave that's easy to hard-counter) and prompts you to scout
+  for a precise read.
 
 ### Notes
 

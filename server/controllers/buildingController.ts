@@ -19,7 +19,7 @@ import {
 } from '../utils/gameConstants.js';
 import { notifyNexusResources } from '../services/warRoomSocket.js';
 import { getPopulationMax } from '../utils/population.js';
-import { logError, logGameEvent } from '../utils/logger.js';
+import { logError, logGameEventOnce } from '../utils/logger.js';
 
 const BASE_MAX_BUILD_QUEUE = 5;
 
@@ -342,10 +342,10 @@ export async function upgradeBuilding(req: AuthRequest, res: Response): Promise<
 				await incrementQuestProgress(req.userId, req.galaxyId, 'upgrade_2', 1);
 			})();
 		} catch {}
-		// Emit first_build only when the queue was previously empty (this is truly the first queued build).
-		if (buildQueue.length === 0) {
-			logGameEvent('first_build', req.userId, req.galaxyId, { building, nexusId: nexus.id });
-		}
+		// True funnel milestone: fired at most once per user, the first time they
+		// ever queue a build (logGameEventOnce dedups on userId+event). The old
+		// "queue was empty" guard fired on every later build too.
+		logGameEventOnce('first_build', req.userId, req.galaxyId, { building, nexusId: nexus.id });
 		res.json({ success: true, completesAt, nexus: serializeNexus(rewardApplied) });
 	} catch (error) {
 		logError('unhandled_controller_error', {

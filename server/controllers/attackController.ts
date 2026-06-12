@@ -4,7 +4,7 @@ import prisma from '../lib/prisma.js';
 import { serializeAttack } from '../models/Nexus.js';
 import * as attackService from '../services/attackService.js';
 import { type AuthRequest, TROOP_KEYS } from '../types/index.js';
-import { logError, logGameEvent } from '../utils/logger.js';
+import { logError, logGameEventOnce } from '../utils/logger.js';
 import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
 import {
 	normalizeTroopPayload,
@@ -61,12 +61,14 @@ export async function sendAttack(req: AuthRequest, res: Response): Promise<void>
 
 		// Quest / streak progress is recorded inside launchAttack so scheduled
 		// waves and send-now strikes count through the same shared path.
+		// True funnel milestones: logGameEventOnce dedups on userId+event so these
+		// fire only on the user's first-ever attack / scout, not every strike.
 		if (!reused) {
 			if (attackType === 'attack')
-				logGameEvent('first_attack', req.userId, req.galaxyId, {
+				logGameEventOnce('first_attack', req.userId, req.galaxyId, {
 					defenderUserId: defenderOwnerId
 				});
-			else if (attackType === 'scout') logGameEvent('first_scout', req.userId, req.galaxyId);
+			else if (attackType === 'scout') logGameEventOnce('first_scout', req.userId, req.galaxyId);
 		}
 		res.json({ success: true, attack: serializeAttack(attack) });
 	} catch (error) {
