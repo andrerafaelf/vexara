@@ -4,6 +4,7 @@ import Avatar from '@/components/Avatar';
 import ConnectionStatusBar from '@/components/ConnectionStatusBar';
 import ConqueredModal from '@/components/ConqueredModal';
 import DiscordButton from '@/components/DiscordButton';
+import DailyStreaks from '@/components/DailyStreaks';
 import DominanceBar from '@/components/DominanceBar';
 import { HeaderResourceStrip } from '@/components/HeaderResourceStrip';
 import MobileNexusDrawer from '@/components/MobileNexusDrawer';
@@ -93,6 +94,10 @@ export default function GameLayout({
 	const [mounted, setMounted] = useState(false);
 	useEffect(() => setMounted(true), []);
 	const authUser = mounted ? user : null;
+
+	// The Starfield/Map page is full-bleed (its own --map padding) and a right
+	// rail would crowd it, so the Daily Quests rail is suppressed there.
+	const isMapPage = activePage === 'starfield' || (mainClassName ?? '').includes('main-content--map');
 
 	const resolvedSelectedId =
 		externalSelectedId ?? (hookSelectedNexus ? String(hookSelectedNexus._id) : null);
@@ -723,6 +728,15 @@ export default function GameLayout({
 						<main className={`main-content${mainClassName ? ` ${mainClassName}` : ''}`}>
 							{children}
 						</main>
+						{/* Right rail: Daily Quests live here so the left rail is free for the
+						    nexus list (which grows as the player takes more nexuses). Hidden
+						    on the full-bleed map page, where a side rail would crowd the
+						    starfield. Collapses below the content breakpoint (see CSS). */}
+						{!isMapPage && (
+							<aside className="game-rail-right" aria-label="Daily quests">
+								<DailyStreaks variant="rail" />
+							</aside>
+						)}
 					</div>
 					<OnboardingOverlay />
 				</div>

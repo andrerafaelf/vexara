@@ -81,7 +81,7 @@ function LiveResourceStripInner({
 						    the icon shows the name (title tooltip). label retained only as
 						    the icon's accessible fallback context. */}
 						<span className="header-res-label" aria-label={label}>
-							<ResourceIcon kind={key} size={34} className="header-res-icon" />
+							<ResourceIcon kind={key} size={38} className="header-res-icon" />
 						</span>
 						<span className="header-res-value">
 							{fmt(val)}

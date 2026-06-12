@@ -505,6 +505,37 @@
 	min-height: 0;
 }
 
+/* Right rail — Daily Quests (and room for future right-side widgets). Mirrors
+   the left rail's chrome on the opposite edge. Scrolls independently of the
+   main content. Collapses on narrower screens so mid-size viewports don't get
+   squeezed; the quest panel still renders inside the Overview tab there. */
+.game-rail-right {
+	width: 280px;
+	flex-shrink: 0;
+	background: var(--color-navy-800);
+	border-left: 1px solid var(--border-default);
+	overflow-y: auto;
+	min-height: 0;
+	padding: 16px 14px;
+}
+
+@media (max-width: 1180px) {
+	.game-rail-right {
+		display: none;
+	}
+}
+
+/* Daily Quests live in the right rail on wide screens, so hide the in-overview
+   copy there; it reappears once the rail collapses (≤1180px) as the fallback. */
+.overview-daily-streaks {
+	display: none;
+}
+@media (max-width: 1180px) {
+	.overview-daily-streaks {
+		display: block;
+	}
+}
+
 .nexus-nav-scroll {
 	flex: 1 1 auto;
 	overflow-y: auto;
@@ -795,7 +826,9 @@
 .main-content {
 	flex: 1;
 	min-height: 0;
-	padding: var(--space-7) var(--space-7) var(--space-9);
+	/* Tightened top padding (was --space-7/32px) so content sits higher and the
+	   dead space above the nexus tab bar shrinks. */
+	padding: var(--space-5) var(--space-7) var(--space-9);
 	overflow-y: auto;
 	contain: layout style;
 }

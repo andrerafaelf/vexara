@@ -6,8 +6,8 @@
 }
 
 .nexus-header {
-	margin-bottom: var(--space-6);
-	padding-bottom: var(--space-5);
+	margin-bottom: var(--space-4);
+	padding-bottom: var(--space-4);
 	border-bottom: 1px solid var(--border-default);
 }
 
@@ -368,7 +368,7 @@
 .nexus-tab-bar {
 	display: flex;
 	gap: var(--space-1);
-	margin-bottom: var(--space-5);
+	margin-bottom: var(--space-4);
 	border-bottom: 1px solid var(--border-default);
 	padding-bottom: 0;
 	overflow-x: auto;
@@ -446,16 +446,19 @@
 	background: transparent;
 	color: var(--text-muted);
 	border: none;
-	border-bottom: 2px solid transparent;
-	border-radius: 0;
-	padding: 10px 14px;
-	font-size: var(--text-base);
-	font-weight: 500;
+	border-bottom: 3px solid transparent;
+	border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+	/* Larger hit area + type so the switcher reads as the primary navigation of
+	   the nexus view rather than a faint text row. */
+	padding: 13px 20px;
+	font-size: var(--text-lg);
+	font-weight: 600;
 	letter-spacing: 0.01em;
 	cursor: pointer;
 	margin-bottom: -1px;
 	transition:
 		color var(--duration-fast) var(--ease-out),
+		background var(--duration-fast) var(--ease-out),
 		border-color var(--duration-fast) var(--ease-out);
 	white-space: nowrap;
 	display: inline-flex;
@@ -469,13 +472,15 @@
 
 .nexus-tab-btn:hover {
 	color: var(--text-strong);
+	background: rgba(255, 255, 255, 0.03);
 	border-bottom-color: var(--border-strong);
 }
 
 .nexus-tab-btn.active {
 	color: var(--accent);
+	background: var(--accent-soft);
 	border-bottom-color: var(--accent);
-	font-weight: 600;
+	font-weight: 700;
 }
 
 .nexus-tab-badge {

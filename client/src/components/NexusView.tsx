@@ -2267,7 +2267,12 @@ const NexusView: React.FC<NexusViewProps> = ({
 						<NewbieProtectionBanner endsAt={nexus.newbieProtectionEndsAt} />
 					)}
 					<NexusMap nexus={nexus} onClickBuilding={() => setActiveTab('buildings')} />
-					<DailyStreaks active={activeTab === 'overview'} />
+					{/* Overview copy of Daily Quests. On wide screens the right rail
+					    (GameLayout) shows them, so this is hidden to avoid duplication;
+					    below the rail's breakpoint it reappears as the fallback. */}
+					<div className="overview-daily-streaks">
+						<DailyStreaks active={activeTab === 'overview'} />
+					</div>
 
 					<div className="nexus-stats-row" aria-label="Nexus key stats">
 						<div className="nexus-stat">
@@ -3326,15 +3331,15 @@ const NexusView: React.FC<NexusViewProps> = ({
 																</div>
 																<div className="train-costs">
 																	<span className="cost-pill">
-																		<ResourceIcon kind="biomass" size={24} className="cost-pill-icon" />
+																		<ResourceIcon kind="biomass" size={30} className="cost-pill-icon" />
 																		{costs.biomass}
 																	</span>
 																	<span className="cost-pill">
-																		<ResourceIcon kind="alloy" size={24} className="cost-pill-icon" />
+																		<ResourceIcon kind="alloy" size={30} className="cost-pill-icon" />
 																		{costs.alloy}
 																	</span>
 																	<span className="cost-pill">
-																		<ResourceIcon kind="ore" size={24} className="cost-pill-icon" />
+																		<ResourceIcon kind="ore" size={30} className="cost-pill-icon" />
 																		{costs.ore}
 																	</span>
 																	<span className="cost-pill">

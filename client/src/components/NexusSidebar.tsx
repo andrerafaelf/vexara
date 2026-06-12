@@ -10,7 +10,6 @@ import {
 
 import { Check, Pencil, ScrollText, Settings, Trash2, X } from 'lucide-react';
 import { Nexus, NexusGroup, User } from '../types/game';
-import DailyStreaks from './DailyStreaks';
 import GalaxyChip from './GalaxyChip';
 import NexusTypeBadge from './NexusTypeBadge';
 import SupportTiersCard from './SupportTiersCard';
@@ -138,12 +137,6 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
 						</div>
 					))}
 				</div>
-
-				{/* Daily Quests live in the persistent rail (beta) so objectives stay
-				    visible on every tab — the full reward breakdown still renders on
-				    the overview. Sits above the Commander/Support cards; the
-				    monetization surface keeps its slot. */}
-				<DailyStreaks variant="rail" />
 
 				{user && (
 					<div className="commander-card" aria-label="Commander summary">

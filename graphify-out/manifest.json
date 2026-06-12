@@ -460,8 +460,8 @@
     "semantic_hash": ""
   },
   "client/src/components/BuildingCard.tsx": {
-    "mtime": 1781272341.3813934,
-    "ast_hash": "ac87c1f7a686f50bda815d9556b1d2de",
+    "mtime": 1781272554.4684694,
+    "ast_hash": "b1dbf8e0aae94973651cee4cff8271ee",
     "semantic_hash": ""
   },
   "client/src/components/Codex/CodexPage.tsx": {
@@ -560,8 +560,8 @@
     "semantic_hash": ""
   },
   "client/src/components/GameLayout.tsx": {
-    "mtime": 1781267962.4579813,
-    "ast_hash": "2520196fffcab07ce45eaebb6da4b044",
+    "mtime": 1781272748.9352765,
+    "ast_hash": "d42934cd17585a7cc1c56af7c9276c7b",
     "semantic_hash": ""
   },
   "client/src/components/InlineBackButton.tsx": {
@@ -575,8 +575,8 @@
     "semantic_hash": ""
   },
   "client/src/components/LiveResourceStrip.tsx": {
-    "mtime": 1781272303.238969,
-    "ast_hash": "6c066046bd1fdd6bae384561258228ee",
+    "mtime": 1781272559.4550078,
+    "ast_hash": "3f1a3d06cc94c9c40961f19a0364f8ab",
     "semantic_hash": ""
   },
   "client/src/components/LoginForm.tsx": {
@@ -620,8 +620,8 @@
     "semantic_hash": ""
   },
   "client/src/components/NexusSidebar.tsx": {
-    "mtime": 1781260406.8598366,
-    "ast_hash": "dfd0043477eacabee9b75805ce9e0a3c",
+    "mtime": 1781272709.5454526,
+    "ast_hash": "5cda8c182c6f1142de0d4730b85d74b0",
     "semantic_hash": ""
   },
   "client/src/components/NexusTypeBadge.tsx": {
@@ -630,8 +630,8 @@
     "semantic_hash": ""
   },
   "client/src/components/NexusView.tsx": {
-    "mtime": 1781272341.4440005,
-    "ast_hash": "6a8bb13195e65451d395bc0ada6545ff",
+    "mtime": 1781272776.4350703,
+    "ast_hash": "86a1ba96ef4fd98c40fb37121a39d665",
     "semantic_hash": ""
   },
   "client/src/components/NotificationSettings.tsx": {
