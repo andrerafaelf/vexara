@@ -460,8 +460,8 @@
     "semantic_hash": ""
   },
   "client/src/components/BuildingCard.tsx": {
-    "mtime": 1781268038.8954048,
-    "ast_hash": "d81d0711df7895e10de601f6ba79c6d0",
+    "mtime": 1781272341.3813934,
+    "ast_hash": "ac87c1f7a686f50bda815d9556b1d2de",
     "semantic_hash": ""
   },
   "client/src/components/Codex/CodexPage.tsx": {
@@ -575,8 +575,8 @@
     "semantic_hash": ""
   },
   "client/src/components/LiveResourceStrip.tsx": {
-    "mtime": 1781267980.470863,
-    "ast_hash": "45d602fa0efec3f2e6e517b78c8dd803",
+    "mtime": 1781272303.238969,
+    "ast_hash": "6c066046bd1fdd6bae384561258228ee",
     "semantic_hash": ""
   },
   "client/src/components/LoginForm.tsx": {
@@ -630,8 +630,8 @@
     "semantic_hash": ""
   },
   "client/src/components/NexusView.tsx": {
-    "mtime": 1781268038.9460568,
-    "ast_hash": "94009746f13a8c5fecb768322e9d0092",
+    "mtime": 1781272341.4440005,
+    "ast_hash": "6a8bb13195e65451d395bc0ada6545ff",
     "semantic_hash": ""
   },
   "client/src/components/NotificationSettings.tsx": {
@@ -2420,18 +2420,18 @@
     "semantic_hash": ""
   },
   "client/public/resources/alloy.webp": {
-    "mtime": 1781264544.61,
-    "ast_hash": "0f1ac3e8c931f1ab7f756bbe6f0713c6",
+    "mtime": 1781272274.254,
+    "ast_hash": "6611ba381e20ee30fd9d2bbbdda919ff",
     "semantic_hash": ""
   },
   "client/public/resources/biomass.webp": {
-    "mtime": 1781264544.577,
-    "ast_hash": "ed18aef24053eb124e385f3eb5d2427a",
+    "mtime": 1781272274.23,
+    "ast_hash": "02ee121b8cd4c223a2ed256e9096d059",
     "semantic_hash": ""
   },
   "client/public/resources/ore.webp": {
-    "mtime": 1781264544.638,
-    "ast_hash": "d3d3152aac01eea217c640d15ce91cc1",
+    "mtime": 1781272274.281,
+    "ast_hash": "113d8f81a4117a120f1eac0bfe70ff2e",
     "semantic_hash": ""
   },
   "server/prisma/migrations/20260527230000_add_control_recovery_cursor/migration.sql": {

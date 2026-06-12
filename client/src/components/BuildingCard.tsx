@@ -233,15 +233,15 @@ function BuildingCardInner(props: BuildingCardProps) {
 				<div className="building-cost">
 					<div className="cost-details">
 						<span className="cost-pill">
-							<ResourceIcon kind="biomass" size={20} className="cost-pill-icon" />
+							<ResourceIcon kind="biomass" size={24} className="cost-pill-icon" />
 							{fmtNum(cost.biomass)}
 						</span>
 						<span className="cost-pill">
-							<ResourceIcon kind="alloy" size={20} className="cost-pill-icon" />
+							<ResourceIcon kind="alloy" size={24} className="cost-pill-icon" />
 							{fmtNum(cost.alloy)}
 						</span>
 						<span className="cost-pill">
-							<ResourceIcon kind="ore" size={20} className="cost-pill-icon" />
+							<ResourceIcon kind="ore" size={24} className="cost-pill-icon" />
 							{fmtNum(cost.ore)}
 						</span>
 					</div>

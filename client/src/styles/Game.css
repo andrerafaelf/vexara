@@ -272,8 +272,8 @@
 	grid-template-columns: auto auto;
 	grid-template-rows: auto auto;
 	align-items: center;
-	column-gap: 9px;
-	padding: 4px 14px;
+	column-gap: 10px;
+	padding: 5px 16px;
 	min-width: 96px;
 }
 
@@ -288,11 +288,15 @@
 	align-items: center;
 }
 
-/* The resource icon replaces the written label in the strip. It carries a
-   subtle drop shadow so the hex-framed art reads against the dark header. */
+/* The (now circular, frame-cropped) resource icon replaces the written label.
+   A faint inset ring + drop shadow seat it into the dark header so it reads as
+   a deliberate token rather than a floating sprite. */
 .header-res-icon {
 	display: block;
-	filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+	border-radius: 50%;
+	box-shadow:
+		inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+		0 1px 3px rgba(0, 0, 0, 0.45);
 }
 
 .header-res-value {
@@ -454,10 +458,10 @@
 	.header-resources .header-res-value {
 		font-size: 13px;
 	}
-	/* Scale the 30px desktop icon down on phones so the strip stays compact. */
+	/* Scale the desktop icon down on phones so the strip stays compact. */
 	.header-resources .header-res-icon {
-		width: 22px;
-		height: 22px;
+		width: 26px;
+		height: 26px;
 	}
 	/* Drop the "/cap" denominator on phones — too cramped to be legible. */
 	.header-resources .header-res-value > span {
