@@ -3,6 +3,10 @@
 	border-radius: 0;
 	padding: 0;
 	min-height: 600px;
+	/* The name header was removed, so the centered tab bar now leads. Pull the
+	   view up to cancel the main-content top padding — otherwise that padding
+	   reads as an empty gap above the tabs. */
+	margin-top: calc(var(--space-5) * -1);
 }
 
 /* The full-height nexus name header was removed — the name + rename now live
@@ -366,11 +370,13 @@
 }
 
 /* Desktop-only: the gap-fill applies while stuck. Scoped to >=769px so it can't
-   override the mobile pinning rule below (which pins under the 56px header). */
+   override the mobile pinning rule below (which pins under the 56px header).
+   Matches the main-content top padding (--space-5) so the bar pins flush at the
+   viewport top with no background strip above it. */
 @media (min-width: 769px) {
 	.nexus-tab-bar.is-stuck {
-		top: calc(var(--space-7) * -1);
-		padding-top: var(--space-7);
+		top: calc(var(--space-5) * -1);
+		padding-top: var(--space-5);
 	}
 }
 
