@@ -653,6 +653,84 @@
 	font-weight: 700;
 }
 
+/* ── Rail cards (movements + future status widgets) ─────────────────────────
+   Generic card chrome for the right-rail widgets so the rail reads as a real
+   activity column, not just the daily-quests list. */
+.rail-card {
+	margin-bottom: var(--space-3);
+	padding: 10px 12px;
+	background: var(--bg-surface);
+	border: 1px solid var(--border-default);
+	border-radius: var(--radius-md);
+}
+
+.rail-card-head {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-bottom: 8px;
+	color: var(--text-muted);
+}
+
+.rail-card-title {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+}
+
+.rail-movements-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	text-align: left;
+	background: transparent;
+	border: none;
+	border-radius: var(--radius-sm);
+	padding: 6px 7px;
+	color: var(--text-default);
+	font-size: var(--text-sm);
+	cursor: pointer;
+	transition: background var(--duration-fast) var(--ease-out);
+}
+
+.rail-movements-row + .rail-movements-row {
+	margin-top: 2px;
+}
+
+.rail-movements-row:hover {
+	background: rgba(255, 255, 255, 0.04);
+}
+
+.rail-movements-icon {
+	display: inline-flex;
+	color: var(--text-muted);
+	flex-shrink: 0;
+}
+
+/* Incoming strikes are a threat — make them read as such. */
+.rail-movements-row--incoming {
+	color: var(--danger);
+}
+.rail-movements-row--incoming .rail-movements-icon {
+	color: var(--danger);
+}
+
+.rail-movements-label {
+	flex: 1;
+	min-width: 0;
+	font-weight: 600;
+}
+
+.rail-movements-eta {
+	font-family: var(--font-mono);
+	font-size: var(--text-xs);
+	color: var(--text-muted);
+	flex-shrink: 0;
+}
+
 /* Daily Quests live in the right rail on wide screens, so hide the in-overview
    copy there; it reappears once the rail collapses (≤1180px) as the fallback. */
 .overview-daily-streaks {

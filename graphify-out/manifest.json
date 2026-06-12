@@ -560,8 +560,8 @@
     "semantic_hash": ""
   },
   "client/src/components/GameLayout.tsx": {
-    "mtime": 1781275284.638337,
-    "ast_hash": "deb0504ef569bb1e5bdd5b400214283e",
+    "mtime": 1781298850.8806145,
+    "ast_hash": "2e5d4fe2e7dd0600e4f1214d4c933c86",
     "semantic_hash": ""
   },
   "client/src/components/InlineBackButton.tsx": {
@@ -2442,6 +2442,11 @@
   "client/src/components/CurrentObjective.tsx": {
     "mtime": 1781273389.3609607,
     "ast_hash": "b3f113fa24e070df8c019674d040d689",
+    "semantic_hash": ""
+  },
+  "client/src/components/RailMovements.tsx": {
+    "mtime": 1781298832.886089,
+    "ast_hash": "1f1e29af000a6088f9ce087e90e6880d",
     "semantic_hash": ""
   }
 }

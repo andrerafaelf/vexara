@@ -7,6 +7,7 @@ import DiscordButton from '@/components/DiscordButton';
 import CurrentObjective from '@/components/CurrentObjective';
 import DailyStreaks from '@/components/DailyStreaks';
 import DominanceBar from '@/components/DominanceBar';
+import { RailMovements } from '@/components/RailMovements';
 import { HeaderResourceStrip } from '@/components/HeaderResourceStrip';
 import MobileNexusDrawer from '@/components/MobileNexusDrawer';
 import NewPatchToast from '@/components/NewPatchToast';
@@ -751,8 +752,9 @@ export default function GameLayout({
 						    on the full-bleed map page, where a side rail would crowd the
 						    starfield. Collapses below the content breakpoint (see CSS). */}
 						{!isMapPage && (
-							<aside className="game-rail-right" aria-label="Objectives and daily quests">
+							<aside className="game-rail-right" aria-label="Activity">
 								<CurrentObjective />
+								<RailMovements />
 								<DailyStreaks variant="rail" />
 							</aside>
 						)}
