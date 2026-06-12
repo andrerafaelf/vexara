@@ -25,9 +25,11 @@
 }
 
 .game-header {
+	/* Industrial gunmetal + faint amber top sheen (merged from the former Pass C
+	   override so this element is styled in exactly one place). */
 	background:
-		linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0%, rgba(255, 255, 255, 0) 100%),
-		rgba(11, 15, 35, 0.85);
+		linear-gradient(180deg, rgba(255, 158, 61, 0.025) 0%, transparent 30%),
+		var(--color-navy-900);
 	padding: 10px 24px;
 	padding-top: max(10px, var(--safe-top));
 	padding-left: calc(24px + env(safe-area-inset-left));
@@ -103,9 +105,11 @@
 	border: none;
 	border-bottom: 2px solid transparent;
 	border-radius: 0;
+	font-family: var(--font-sans);
 	font-size: var(--text-sm);
 	font-weight: 500;
-	letter-spacing: 0.01em;
+	text-transform: none;
+	letter-spacing: 0.02em;
 	transition:
 		color var(--duration-fast) var(--ease-out),
 		border-color var(--duration-fast) var(--ease-out);
@@ -159,9 +163,19 @@
 }
 
 .nav-btn.active {
-	background: transparent;
-	color: var(--accent);
+	color: var(--text-strong);
 	border-bottom-color: var(--accent);
+	background: linear-gradient(180deg, rgba(255, 158, 61, 0.06), transparent);
+}
+
+/* Active-tab leading dot (merged from the former Pass C override). */
+.nav-btn.active::before {
+	content: '';
+	display: inline-block;
+	width: 4px;
+	height: 4px;
+	background: var(--accent);
+	margin-right: 2px;
 }
 
 .nav-btn:disabled {
@@ -2032,12 +2046,8 @@ label {
    ╚══════════════════════════════════════════════════════════════════╝ */
 
 /* ── Game header: industrial bezel ──────────────────────────────── */
-.game-header {
-	background:
-		linear-gradient(180deg, rgba(255, 158, 61, 0.025) 0%, transparent 30%), var(--color-navy-900);
-	border-bottom: 1px solid var(--border-default);
-	position: sticky;
-}
+/* (The .game-header rule that was here is now merged into the canonical
+   definition at the top of this file — single source of truth.) */
 
 /* Amber under-rule when scrolling content sits beneath the header */
 .game-header::after {
@@ -2067,26 +2077,8 @@ label {
 }
 
 /* ── Nav tabs ──────────────────────────────────────────────────── */
-.nav-btn {
-	font-family: var(--font-sans);
-	text-transform: none;
-	letter-spacing: 0.02em;
-}
-
-.nav-btn.active {
-	color: var(--text-strong);
-	border-bottom-color: var(--accent);
-	background: linear-gradient(180deg, rgba(255, 158, 61, 0.06), transparent);
-}
-
-.nav-btn.active::before {
-	content: '';
-	display: inline-block;
-	width: 4px;
-	height: 4px;
-	background: var(--accent);
-	margin-right: 2px;
-}
+/* (.nav-btn and .nav-btn.active overrides merged into the canonical rules
+   above — single source of truth.) */
 
 /* ── Sidebar (left rail) ───────────────────────────────────────── */
 .nexus-nav {
