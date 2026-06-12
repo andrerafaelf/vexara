@@ -2022,25 +2022,6 @@ const NexusView: React.FC<NexusViewProps> = ({
 		return null;
 	};
 
-	// Single "next action" surfacing across all tabs — finds the first incomplete
-	// intro-chapter quest regardless of which tab it lives on, so the player has
-	// a persistent breadcrumb in the header. The per-tab getNextTip stays for the
-	// inline tab tooltips; this is the global form used by the header chip.
-	// Returns the destination tab so clicking the chip can route the player to
-	// the right place ('map' redirects to Starfield navigation instead).
-	const getNextAction = (): { id: string; title: string; tab: IntroQuest['tab'] } | null => {
-		if (allQuestsComplete) return null;
-		for (const batchId of TIP_BATCH_IDS) {
-			const batch = questBatches.find((b) => b.id === batchId);
-			if (!batch) continue;
-			const quest = batch.quests.find((q) => !q.completed);
-			if (quest) return { id: `next-${batchId}-${quest.id}`, title: quest.title, tab: quest.tab };
-			// Stop at the first batch with any incomplete quests — same reasoning as getNextTip.
-			if (batch.quests.some((q) => !q.completed)) return null;
-		}
-		return null;
-	};
-	const nextAction = getNextAction();
 	const activeBuild = nexus.buildQueue[0];
 	const activeTraining = nexus.trainingQueue[0];
 	// (`activeBuildTimer` and `activeTrainingTimer` were removed, the live countdown labels are
@@ -2107,27 +2088,6 @@ const NexusView: React.FC<NexusViewProps> = ({
 						</>
 					)}
 				</div>
-				{nextAction && (
-					<button
-						type="button"
-						className="next-action-chip"
-						onClick={() => {
-							if (nextAction.tab === 'map') {
-								router.push('/starfield');
-								return;
-							}
-							setActiveTab(nextAction.tab);
-						}}
-						aria-label={`Next action: ${nextAction.title}`}
-					>
-						<Sparkles size={12} aria-hidden="true" />
-						<span className="next-action-chip-label">Next:</span>
-						<span className="next-action-chip-title">{nextAction.title}</span>
-						<span className="next-action-chip-arrow" aria-hidden="true">
-							→
-						</span>
-					</button>
-				)}
 				{nexus.nexusType &&
 					NEXUS_TYPES_WITH_BUFF.has(nexus.nexusType) &&
 					(() => {

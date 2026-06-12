@@ -560,8 +560,8 @@
     "semantic_hash": ""
   },
   "client/src/components/GameLayout.tsx": {
-    "mtime": 1781272748.9352765,
-    "ast_hash": "d42934cd17585a7cc1c56af7c9276c7b",
+    "mtime": 1781273422.478501,
+    "ast_hash": "6066706c2fa1149b94a84cacd098b3a6",
     "semantic_hash": ""
   },
   "client/src/components/InlineBackButton.tsx": {
@@ -630,8 +630,8 @@
     "semantic_hash": ""
   },
   "client/src/components/NexusView.tsx": {
-    "mtime": 1781272776.4350703,
-    "ast_hash": "86a1ba96ef4fd98c40fb37121a39d665",
+    "mtime": 1781273458.1654,
+    "ast_hash": "65626fc3ae20e7d44a18d2ea7ab1cc55",
     "semantic_hash": ""
   },
   "client/src/components/NotificationSettings.tsx": {
@@ -2437,6 +2437,11 @@
   "server/prisma/migrations/20260527230000_add_control_recovery_cursor/migration.sql": {
     "mtime": 1781267123.715147,
     "ast_hash": "c2f706682d63ff1e8822d0ff62cd3c7b",
+    "semantic_hash": ""
+  },
+  "client/src/components/CurrentObjective.tsx": {
+    "mtime": 1781273389.3609607,
+    "ast_hash": "b3f113fa24e070df8c019674d040d689",
     "semantic_hash": ""
   }
 }

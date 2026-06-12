@@ -434,36 +434,46 @@
 
 @media (max-width: 600px) {
 	.header-resources {
-		/* On phones the strip sits at the far right of the 56px header; shrink it
-		   hard so the wordmark and menu toggle keep priority. */
-		max-width: 52vw;
+		max-width: 58vw;
 		overflow: hidden;
 	}
 	.header-resources .header-resource-strip {
 		flex-direction: row;
 		width: auto;
 		border: none;
+		gap: 2px;
 	}
+	/* Collapse each resource to a tight icon + value pair on one line. The
+	   desktop two-row grid (icon | value / rate) wastes vertical space and
+	   crowds the 56px mobile header, so flatten it: icon left, value right, no
+	   rate, no capacity denominator. */
 	.header-resources .header-res {
-		padding: 2px 7px;
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		padding: 2px 6px;
+		min-width: 0;
 	}
 	.header-resources .header-res + .header-res {
 		border-left: none;
 		border-top: none;
 	}
 	.header-resources .header-res-label {
-		font-size: 8px;
-		letter-spacing: 0.06em;
+		display: inline-flex;
+	}
+	.header-resources .header-res-icon {
+		width: 20px;
+		height: 20px;
 	}
 	.header-resources .header-res-value {
 		font-size: 13px;
+		line-height: 1;
 	}
-	/* Scale the desktop icon down on phones so the strip stays compact. */
-	.header-resources .header-res-icon {
-		width: 26px;
-		height: 26px;
+	/* Hide the per-hour rate and the "/cap" denominator on phones — both too
+	   cramped to read; the raw stockpile is what matters mid-action. */
+	.header-resources .header-res-rate {
+		display: none;
 	}
-	/* Drop the "/cap" denominator on phones — too cramped to be legible. */
 	.header-resources .header-res-value > span {
 		display: none;
 	}
@@ -523,6 +533,69 @@
 	.game-rail-right {
 		display: none;
 	}
+}
+
+/* Current-objective card in the right rail — the single next onboarding step,
+   replacing the old header NEXT chip. Accent-edged and fully clickable so it
+   reads as the rail's primary "do this next" call to action. */
+.objective-card {
+	display: block;
+	width: 100%;
+	text-align: left;
+	margin-bottom: var(--space-3);
+	padding: 12px 14px;
+	background: var(--accent-soft);
+	border: 1px solid var(--border-accent);
+	border-left: 3px solid var(--accent);
+	border-radius: var(--radius-md);
+	cursor: pointer;
+	transition:
+		background var(--duration-fast) var(--ease-out),
+		border-color var(--duration-fast) var(--ease-out);
+}
+
+.objective-card:hover {
+	background: color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.objective-card-head {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	color: var(--accent);
+	margin-bottom: 6px;
+}
+
+.objective-card-kicker {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+}
+
+.objective-card-title {
+	color: var(--text-strong);
+	font-size: var(--text-base);
+	font-weight: 700;
+	margin: 0 0 4px;
+	line-height: 1.25;
+}
+
+.objective-card-message {
+	color: var(--text-muted);
+	font-size: var(--text-sm);
+	line-height: 1.45;
+	margin: 0 0 10px;
+}
+
+.objective-card-cta {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	color: var(--accent);
+	font-size: var(--text-sm);
+	font-weight: 700;
 }
 
 /* Daily Quests live in the right rail on wide screens, so hide the in-overview

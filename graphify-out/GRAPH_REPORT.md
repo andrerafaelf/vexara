@@ -1,16 +1,16 @@
 # Graph Report - vexara  (2026-06-12)
 
 ## Corpus Check
-- 448 files · ~528,803 words
+- 449 files · ~528,921 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 3123 nodes · 6004 edges · 201 communities (160 shown, 41 thin omitted)
+- 3126 nodes · 6010 edges · 210 communities (170 shown, 40 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 19 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `d7450888`
+- Built from commit: `c2efe596`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -105,6 +105,7 @@
 - [[_COMMUNITY_Community 90|Community 90]]
 - [[_COMMUNITY_Community 91|Community 91]]
 - [[_COMMUNITY_Community 92|Community 92]]
+- [[_COMMUNITY_Community 93|Community 93]]
 - [[_COMMUNITY_Community 94|Community 94]]
 - [[_COMMUNITY_Community 95|Community 95]]
 - [[_COMMUNITY_Community 96|Community 96]]
@@ -177,6 +178,8 @@
 - [[_COMMUNITY_Community 172|Community 172]]
 - [[_COMMUNITY_Community 174|Community 174]]
 - [[_COMMUNITY_Community 175|Community 175]]
+- [[_COMMUNITY_Community 184|Community 184]]
+- [[_COMMUNITY_Community 185|Community 185]]
 - [[_COMMUNITY_Community 187|Community 187]]
 - [[_COMMUNITY_Community 188|Community 188]]
 - [[_COMMUNITY_Community 189|Community 189]]
@@ -194,6 +197,10 @@
 - [[_COMMUNITY_Community 201|Community 201]]
 - [[_COMMUNITY_Community 202|Community 202]]
 - [[_COMMUNITY_Community 203|Community 203]]
+- [[_COMMUNITY_Community 204|Community 204]]
+- [[_COMMUNITY_Community 205|Community 205]]
+- [[_COMMUNITY_Community 207|Community 207]]
+- [[_COMMUNITY_Community 209|Community 209]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `logError()` - 203 edges
@@ -208,53 +215,53 @@
 10. `getPopulationMax()` - 27 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `completeAttack()` --calls--> `processArrivedAttacks()`  [EXTRACTED]
+  admin-server/controllers/adminController.ts → server/utils/combat.ts
 - `completeTransfer()` --calls--> `processArrivedTransfers()`  [EXTRACTED]
   admin-server/controllers/adminController.ts → server/utils/combat.ts
+- `resendVerificationEmail()` --calls--> `sendVerifyEmail()`  [INFERRED]
+  admin-server/controllers/adminController.ts → server/services/emailService.ts
 - `testNotification()` --calls--> `sendPushToUser()`  [EXTRACTED]
   admin-server/controllers/adminController.ts → server/utils/push.ts
-- `createUser()` --calls--> `hashPassword()`  [EXTRACTED]
-  admin-server/services/adminService.ts → server/models/User.ts
-- `updateUserCredentials()` --calls--> `hashPassword()`  [EXTRACTED]
-  admin-server/services/adminService.ts → server/models/User.ts
 - `resendAlphaRegistrationEmail()` --calls--> `sendAlphaInviteAnnouncement()`  [INFERRED]
   admin-server/controllers/adminController.ts → server/services/emailService.ts
 
 ## Import Cycles
 - 3-file cycle: `client/src/features/combat/useCombat.ts -> client/src/hooks/useNotificationBadges.ts -> client/src/hooks/useGameSocket.ts -> client/src/features/combat/useCombat.ts`
 
-## Communities (201 total, 41 thin omitted)
+## Communities (210 total, 40 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.06
-Nodes (41): router, addBuildingsToNexus(), addResourcesToUser(), addTroopsToUser(), BUILDING_KEYS, completeAttack(), completeBuildForNexus(), completeBuildForUser() (+33 more)
+Nodes (40): router, addBuildingsToNexus(), addResourcesToUser(), addTroopsToNexus(), addTroopsToUser(), BUILDING_KEYS, completeAttack(), completeBuildForNexus() (+32 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.17
-Nodes (21): alphaSignup(), alphaSignupCount(), generateToken(), login(), normalizeEmail(), pickUtm(), register(), requestPasswordReset() (+13 more)
+Cohesion: 0.16
+Nodes (24): alphaSignup(), alphaSignupCount(), generateToken(), login(), normalizeEmail(), pickUtm(), register(), requestPasswordReset() (+16 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.02
-Nodes (133): FactionRow, LeaderboardData, Faction, FACTION_TABS, FactionInvite, FactionTreaty, FactionWar, GalaxyFaction (+125 more)
+Cohesion: 0.03
+Nodes (130): Faction, FACTION_TABS, FactionInvite, FactionTreaty, FactionWar, GalaxyFaction, JoinRequest, MyJoinRequest (+122 more)
 
 ### Community 3 - "Community 3"
-Cohesion: 0.06
-Nodes (30): formatTime(), Dashboard(), ChatMessage, DiplomacyChat(), Props, ChatMessage, FactionChat(), ParsedCombatLog (+22 more)
+Cohesion: 0.07
+Nodes (29): CurrentObjective(), STEP_DESTINATION, GalaxyEvent, Map(), MapNexus, NON_STATIONABLE_TROOPS, NPC_NAME_FRAGMENTS, OFFENSE_TROOPS (+21 more)
 
 ### Community 4 - "Community 4"
 Cohesion: 0.07
-Nodes (42): getMessages(), getUnreadCount(), listConversations(), markRead(), sendMessage(), serializeMessage(), acceptRequest(), cancelRequest() (+34 more)
+Nodes (31): addBuildings(), addTroops(), completeAttack(), completeBuild(), completeTraining(), deleteNexus(), deleteUser(), getAttacks() (+23 more)
 
 ### Community 5 - "Community 5"
-Cohesion: 0.12
-Nodes (19): ActiveStorm, AttackWithNexuses, EconomyNexus, GalaxyPlayerForQuests, getResourceProduction(), getStormBonus(), loadActiveStorms(), NexusWithQuests (+11 more)
+Cohesion: 0.11
+Nodes (25): claimQuestReward(), ActiveStorm, AttackWithNexuses, calculatePoints(), claimQuestBatchReward(), computeResourceUpdate(), EconomyNexus, GalaxyPlayerForQuests (+17 more)
 
 ### Community 6 - "Community 6"
 Cohesion: 0.12
 Nodes (24): attackMatchupVerdict(), CLASS_LABEL, classMatchup(), classWeightedAttack(), classWeightedDefense(), cloneForce(), CombatPrediction, CompositionSummary (+16 more)
 
 ### Community 7 - "Community 7"
-Cohesion: 0.05
-Nodes (47): auth(), CacheEntry, READ_METHODS, userCache, recoverControlLevels(), router, router, router (+39 more)
+Cohesion: 0.07
+Nodes (32): auth(), CacheEntry, READ_METHODS, userCache, router, router, router, router (+24 more)
 
 ### Community 8 - "Community 8"
 Cohesion: 0.10
@@ -270,43 +277,43 @@ Nodes (9): getGalaxyWinResults(), getMyGalaxy(), getPublicGalaxyStatus(), getPub
 
 ### Community 11 - "Community 11"
 Cohesion: 0.05
-Nodes (9): createUser(), daysAgo(), distinctUsersWithEvent(), findTargetNexus(), getActivationFunnel(), getEngagementStats(), toInt(), TROOP_KEYS (+1 more)
+Nodes (7): daysAgo(), distinctUsersWithEvent(), findTargetNexus(), getActivationFunnel(), getEngagementStats(), toInt(), TROOP_KEYS
 
 ### Community 12 - "Community 12"
-Cohesion: 0.06
-Nodes (36): BattleReplayProps, TROOP_SHORT, calcPower(), CombatAAR(), CombatAARProps, fmt(), positiveEntries(), TROOP_ATTACK (+28 more)
+Cohesion: 0.11
+Nodes (21): BattleReplayProps, TROOP_SHORT, calcPower(), CombatAAR(), CombatAARProps, fmt(), positiveEntries(), TROOP_ATTACK (+13 more)
 
 ### Community 13 - "Community 13"
-Cohesion: 0.13
-Nodes (18): Props, RES_KINDS, ResKind, calcNexusProduction(), calcNexusStorage(), fmtAmount(), fmtRate(), liveResources (+10 more)
+Cohesion: 0.14
+Nodes (17): Props, RES_KINDS, ResKind, calcNexusProduction(), calcNexusStorage(), fmtAmount(), fmtRate(), liveResources (+9 more)
 
 ### Community 14 - "Community 14"
-Cohesion: 0.06
-Nodes (25): ALLIES_TABS, ChatMessage, Conversation, Friend, FriendRequestItem, FriendsViewProps, TabId, useTabParam() (+17 more)
+Cohesion: 0.04
+Nodes (36): ALLIES_TABS, ChatMessage, Conversation, Friend, FriendRequestItem, FriendsView(), FriendsViewProps, TabId (+28 more)
 
 ### Community 15 - "Community 15"
-Cohesion: 0.10
-Nodes (36): ALLOWED_MIME, avatarUpload, deleteAvatar(), ELIGIBLE_TIERS, requireAvatarTier(), uploadAvatar(), getDiplomacyMessages(), getMemberFaction() (+28 more)
+Cohesion: 0.15
+Nodes (24): ALLOWED_MIME, avatarUpload, deleteAvatar(), ELIGIBLE_TIERS, requireAvatarTier(), uploadAvatar(), sendChatMessage(), serializeFriend() (+16 more)
 
 ### Community 16 - "Community 16"
-Cohesion: 0.08
-Nodes (54): runWithPgAdvisoryLock(), emitToUser(), NexusQueueCompletionPayload, NexusResourceSnapshotPayload, notifyAttackUpdate(), notifyNexusConquered(), notifyNexusQueueCompleted(), notifyReportUpdate() (+46 more)
+Cohesion: 0.09
+Nodes (50): emitToUser(), notifyAttackUpdate(), notifyNexusConquered(), notifyReportUpdate(), notifyTransferUpdate(), BUILDING_MAX_LEVELS, atkPerKRes(), resTotal() (+42 more)
 
 ### Community 17 - "Community 17"
-Cohesion: 0.08
-Nodes (28): BUILDING_NAMES, DashboardProps, DashboardQuest, DashboardQuestBatch, TROOP_NAMES, GameLayoutProps, MapProps, MarketProps (+20 more)
+Cohesion: 0.06
+Nodes (38): BUILDING_NAMES, DashboardProps, DashboardQuest, DashboardQuestBatch, TROOP_NAMES, GameLayoutProps, MapProps, MarketProps (+30 more)
 
 ### Community 18 - "Community 18"
-Cohesion: 0.05
-Nodes (43): sameTrainingChain(), calcArrivesAt(), getTransfersForNexus(), recallTroops(), sendBack(), sendTroops(), serializeTransfer(), toReturnArrival() (+35 more)
+Cohesion: 0.09
+Nodes (26): sameTrainingChain(), BUILDING_COSTS, BuildingCost, canStationTroop(), COST_SCALING, getClassBuildingTrainFactor(), getCommandTrainingQueueBonus(), getEffectiveTrainTimeSeconds() (+18 more)
 
 ### Community 19 - "Community 19"
-Cohesion: 0.05
-Nodes (33): GalaxyPlayer, MEDAL_LABELS, PlayersView(), SortKey, BadgeDef, ProfileBadgesProps, fmt(), getStreakMultiplier() (+25 more)
+Cohesion: 0.09
+Nodes (17): GalaxyPlayer, MEDAL_LABELS, SortKey, BadgeDef, ProfileBadgesProps, SupportTiersCardProps, TIER_RANK, TierDef (+9 more)
 
 ### Community 20 - "Community 20"
-Cohesion: 0.07
-Nodes (29): InlineBackButtonProps, AddWaveForm(), ArrivalCountdown(), ClaimForm(), colorForUser(), fmtShortTime(), fmtTime(), formatCountdown() (+21 more)
+Cohesion: 0.09
+Nodes (21): AddWaveForm(), ArrivalCountdown(), ClaimForm(), colorForUser(), fmtShortTime(), fmtTime(), formatCountdown(), initials() (+13 more)
 
 ### Community 21 - "Community 21"
 Cohesion: 0.06
@@ -317,20 +324,20 @@ Cohesion: 0.10
 Nodes (6): CLASS_LABELS, CODEX_TABS, CodexPage(), STAT_TOOLTIPS, Tab, metadata
 
 ### Community 23 - "Community 23"
-Cohesion: 0.11
-Nodes (22): BuildingCard, BuildingCardInner(), BuildingCardProps, LockedBuildingPlot, LockedBuildingPlotProps, fmtNum(), useGatedNow(), interpolateResources() (+14 more)
+Cohesion: 0.17
+Nodes (11): ResourceAmounts, Listener, listeners, realtimeStore, ResourceSnapshot, snapshots, CanAffordResult, Cost (+3 more)
 
 ### Community 24 - "Community 24"
-Cohesion: 0.08
-Nodes (36): getGalaxyEvents(), RelocationError, RelocationFailure, EVENT_TYPES, EventType, expireOldEvents(), getActiveGalaxyEvents(), getEventsStartAt() (+28 more)
+Cohesion: 0.16
+Nodes (19): trainingBuildingFor(), buildNeutralNexusData(), createNeutralNexus(), dailyNexusGrowth(), ensureNeutralNexusPool(), ensureNeutralNexusPoolForGalaxy(), findOpenCoordinates(), galaxyAgeMs() (+11 more)
 
 ### Community 25 - "Community 25"
 Cohesion: 0.06
-Nodes (29): ConnectionStatusBar(), ConqueredModal(), _attacksHandlers, AttacksRefreshHandler, BadgeHandler, _badgeHandlers, buildOrigin(), ChatHandler (+21 more)
+Nodes (30): ConnectionStatusBar(), ConqueredModal(), _attacksHandlers, AttacksRefreshHandler, BadgeHandler, _badgeHandlers, buildOrigin(), ChatHandler (+22 more)
 
 ### Community 26 - "Community 26"
-Cohesion: 0.17
-Nodes (7): Avatar(), AvatarProps, initialFor(), Size, SIZE_PX, AvatarUploadProps, uploadAvatar()
+Cohesion: 0.12
+Nodes (22): getChatMessages(), markChatRead(), requestToJoin(), acceptRequest(), cancelRequest(), declineRequest(), getBadges(), listFriends() (+14 more)
 
 ### Community 27 - "Community 27"
 Cohesion: 0.07
@@ -341,12 +348,12 @@ Cohesion: 0.08
 Nodes (25): dependencies, lucide-react, next, react, react-dom, recharts, devDependencies, eslint (+17 more)
 
 ### Community 29 - "Community 29"
-Cohesion: 0.05
-Nodes (44): CombatLogsPage(), FriendsView(), ActivePage, GameLayout(), PAGE_TITLES, LoginForm(), SCREENSHOTS, Ctx (+36 more)
+Cohesion: 0.08
+Nodes (30): CombatLogsPage(), FactionsView(), ActivePage, PAGE_TITLES, Market(), Ctx, LoadingBarCtx, usePageReady() (+22 more)
 
 ### Community 30 - "Community 30"
 Cohesion: 0.08
-Nodes (38): claimQuestReward(), createNexus(), getMyNexuses(), getNexus(), liveAttackTroops(), relocateNexus(), renameNexus(), specializeNexus() (+30 more)
+Nodes (35): createGroup(), deleteGroup(), getFactionNexuses(), getGroups(), getMyNexuses(), liveAttackTroops(), relocateNexus(), renameGroup() (+27 more)
 
 ### Community 31 - "Community 31"
 Cohesion: 0.11
@@ -373,8 +380,8 @@ Cohesion: 0.09
 Nodes (23): ADMIN_REASON_COPY, BUILDING_KEYS, BUILDING_LABELS, BUILDING_MAX, BUILDING_UNLOCK, ccTier(), getTokenDisplay(), NexusSummary (+15 more)
 
 ### Community 37 - "Community 37"
-Cohesion: 0.21
-Nodes (27): resendAlphaRegistrationEmail(), resendVerificationEmail(), sendGalaxyLiveTest(), buttonHtml(), client(), escapeHtml(), getOrCreateUnsubscribeToken(), LayoutOptions (+19 more)
+Cohesion: 0.23
+Nodes (25): resendAlphaRegistrationEmail(), sendGalaxyLiveTest(), buttonHtml(), client(), escapeHtml(), getOrCreateUnsubscribeToken(), LayoutOptions, RenderedEmail (+17 more)
 
 ### Community 38 - "Community 38"
 Cohesion: 0.26
@@ -389,12 +396,12 @@ Cohesion: 0.08
 Nodes (23): Annihilator Platform, Assault Trooper, Breaker Unit, Bulwark Guard, Conquest Flow, Core Combat Notes, Disruptor Unit, Interceptor Bike (+15 more)
 
 ### Community 41 - "Community 41"
-Cohesion: 0.27
-Nodes (9): cancelScheduledAttack(), getAllAttacks(), getIncomingAttacks(), getOutgoingAttacks(), getScheduledAttacks(), resolveOrCreateWavePlan(), scheduleAttack(), serializeScheduledAttack() (+1 more)
+Cohesion: 0.16
+Nodes (16): BuildingCard, BuildingCardInner(), BuildingCardProps, LockedBuildingPlot, LockedBuildingPlotProps, computeQueueCountdown(), formatDurationSeconds(), QueueCountdown (+8 more)
 
 ### Community 44 - "Community 44"
 Cohesion: 0.07
-Nodes (6): OwnedNexusOrderFields, sortOwnedNexuses(), updateGalaxyPlayerPoints(), checkAndGrantMilestoneToken(), generateUniqueReferralCode(), randomReferralCode()
+Nodes (7): OwnedNexusOrderFields, sortOwnedNexuses(), updateGalaxyPlayerPoints(), checkAndGrantMilestoneToken(), checkAndGrantToken(), generateUniqueReferralCode(), randomReferralCode()
 
 ### Community 45 - "Community 45"
 Cohesion: 0.10
@@ -413,28 +420,28 @@ Cohesion: 0.09
 Nodes (13): PasswordFieldProps, getEmailTypoWarning(), isSpamRiskDomain(), KNOWN_EMAIL_DOMAINS, levenshtein(), RegistrationForm(), SCREENSHOTS, SPAM_DOMAINS (+5 more)
 
 ### Community 49 - "Community 49"
-Cohesion: 0.12
-Nodes (26): addTroopsToNexus(), completeTrainingForNexus(), recountPopulation(), addTroops(), resetTroops(), absorbBoostIntoBuildQueue(), BUILDING_MAX, BUILDING_NAMES (+18 more)
+Cohesion: 0.15
+Nodes (14): absorbBoostIntoBuildQueue(), BUILDING_MAX, BUILDING_NAMES, BUILDINGS, commandCoreTier(), getMyPendingTokens(), getMyReferralCode(), getMyReferrals() (+6 more)
 
 ### Community 50 - "Community 50"
 Cohesion: 0.15
 Nodes (18): BUILDING_LABELS, DraftMap, GalaxiesPage(), orderNexuses(), RESOURCE_KEYS, RESOURCE_LABELS, ResourceKey, TROOP_LABELS (+10 more)
 
 ### Community 51 - "Community 51"
-Cohesion: 0.12
-Nodes (15): FactionLeaderboard(), FactionMemberDetails, formatDominanceCountdown(), LeaderboardData, LeaderboardRow, formatLaunchTime(), formatTimeUntil(), ensureVisibilityBinding() (+7 more)
+Cohesion: 0.22
+Nodes (6): FactionRow, LeaderboardData, FactionMemberDetails, LeaderboardData, LeaderboardRow, getFactionLeaderboard()
 
 ### Community 52 - "Community 52"
-Cohesion: 0.18
-Nodes (7): BUILDINGS, NexusMapProps, BUILDING_ICONS, BUILDING_KEYS, buildingIcon(), TROOP_ICONS, TROOP_KEYS
+Cohesion: 0.14
+Nodes (12): formatTime(), Dashboard(), ChatMessage, DiplomacyChat(), Props, ChatMessage, FactionChat(), ParsedCombatLog (+4 more)
 
 ### Community 53 - "Community 53"
-Cohesion: 0.18
-Nodes (13): TROOP_KEYS, BLOCKED_ALWAYS, containsBlockedUsername(), HOMOGLYPH_MAP, HOMOGLYPH_RE, isBlocked(), normalize(), WORD_LIST_RE (+5 more)
+Cohesion: 0.20
+Nodes (14): getDiplomacyMessages(), getMemberFaction(), getTreatyForMember(), sendDiplomacyMessage(), serializeDiplomacyMessage(), notifyDiplomacyChat(), BLOCKED_ALWAYS, containsBlockedChatWord() (+6 more)
 
 ### Community 54 - "Community 54"
-Cohesion: 0.12
-Nodes (5): faqSchema, metadata, FOOTAGE, PILLARS, PublicGalaxyStatus
+Cohesion: 0.11
+Nodes (6): faqSchema, metadata, BUILDING_ICONS, FOOTAGE, PILLARS, PublicGalaxyStatus
 
 ### Community 55 - "Community 55"
 Cohesion: 0.11
@@ -443,6 +450,10 @@ Nodes (18): 🔩 ARMOR class (steel-blue `#7c93b3`), Brand palette (locked from 
 ### Community 56 - "Community 56"
 Cohesion: 0.11
 Nodes (17): compilerOptions, declaration, declarationMap, esModuleInterop, module, moduleResolution, outDir, paths (+9 more)
+
+### Community 58 - "Community 58"
+Cohesion: 0.06
+Nodes (15): Avatar(), AvatarProps, initialFor(), Size, SIZE_PX, AvatarUploadProps, fmt(), getStreakMultiplier() (+7 more)
 
 ### Community 59 - "Community 59"
 Cohesion: 0.11
@@ -457,24 +468,24 @@ Cohesion: 0.17
 Nodes (11): 1. The problem (data-confirmed), 2. The mechanic — honor declared coordination at resolution, 3. Design invariants, 4. Known risk / open question (read before shipping), 5. Playtest signals, Chosen rules (decided 2026-06-07), Resolution, The coordination tools already exist — the engine ignores them (+3 more)
 
 ### Community 62 - "Community 62"
-Cohesion: 0.14
-Nodes (9): Market(), RESOURCE_LABELS, marketKeys, buyMarketListing(), cancelMarketListing(), createMarketListing(), getMarketHistory(), getMarketListings() (+1 more)
+Cohesion: 0.06
+Nodes (25): RESOURCE_LABELS, useStartProgress(), NexusView(), CURSOR_STYLE, RANGES, TabId, TABS, TOOLTIP_STYLE (+17 more)
 
 ### Community 63 - "Community 63"
 Cohesion: 0.12
 Nodes (16): A note on map and starter changes (already in 0.20), Combat rebalance: the counter triangle now cuts both ways, Economy overhaul: resources matter again, Espionage is retired, Galaxy picker & lobby polish (0.22 continued), Quality of life, Recon Operative training time scales with Stealth Array, Recruitment Core is retired; three class buildings take over (+8 more)
 
 ### Community 64 - "Community 64"
-Cohesion: 0.08
-Nodes (22): MY_GALAXY_KEY, Props, FactionEntry, Galaxy, PlayerEntry, Props, START_ZONES, WinResults (+14 more)
+Cohesion: 0.14
+Nodes (10): MY_GALAXY_KEY, Props, FactionEntry, Galaxy, PlayerEntry, Props, START_ZONES, WinResults (+2 more)
 
 ### Community 65 - "Community 65"
-Cohesion: 0.11
-Nodes (7): DiscordButtonProps, PublicNavProps, faqSchema, metadata, STEPS, metadata, metadata
+Cohesion: 0.14
+Nodes (6): PublicNavProps, faqSchema, metadata, STEPS, metadata, metadata
 
 ### Community 66 - "Community 66"
 Cohesion: 0.10
-Nodes (36): acceptInvite(), approveJoinRequest(), cancelJoinRequest(), createFaction(), declineInvite(), declineJoinRequest(), disbandFaction(), getChatMessages() (+28 more)
+Nodes (32): acceptInvite(), approveJoinRequest(), cancelJoinRequest(), createFaction(), declineInvite(), declineJoinRequest(), disbandFaction(), getEvents() (+24 more)
 
 ### Community 67 - "Community 67"
 Cohesion: 0.12
@@ -517,8 +528,8 @@ Cohesion: 0.10
 Nodes (16): createAttackAndDeductTroops(), DuplicateRequestIdError, getNexusById(), InsufficientTroopsError, isSameAttackRequest(), launchAttack(), LaunchAttackError, LaunchAttackInput (+8 more)
 
 ### Community 78 - "Community 78"
-Cohesion: 0.12
-Nodes (36): sendAttack(), BUILDING_NAMES, BUILDING_RULES, cancelBuildQueue(), checkBuildQueue(), getMaxBuildQueue(), getMissingRequirements(), getPlannedBuildingLevels() (+28 more)
+Cohesion: 0.16
+Nodes (30): BUILDING_NAMES, BUILDING_RULES, cancelBuildQueue(), checkBuildQueue(), getMaxBuildQueue(), getMissingRequirements(), getPlannedBuildingLevels(), getRequirementsForTargetLevel() (+22 more)
 
 ### Community 79 - "Community 79"
 Cohesion: 0.14
@@ -537,8 +548,8 @@ Cohesion: 0.14
 Nodes (14): devDependencies, nodemon, prettier, prisma, tsx, @types/bcryptjs, @types/cors, @types/express (+6 more)
 
 ### Community 83 - "Community 83"
-Cohesion: 0.18
-Nodes (11): getArea(), getNexusIntel(), BuildingLevels, ResourceAmounts, TroopCounts, FriendlyRelation, getFriendlyRelation(), getNexusIntelForUser() (+3 more)
+Cohesion: 0.16
+Nodes (14): getArea(), getNexusIntel(), BuildingLevels, ResourceAmounts, TroopCounts, aggregateStationedSupport(), buildDetailedScoutIntel(), buildPublicNexusData() (+6 more)
 
 ### Community 84 - "Community 84"
 Cohesion: 0.15
@@ -569,16 +580,20 @@ Cohesion: 0.20
 Nodes (7): breadcrumbSchema(), EMPTY, fetchGalaxyStatus(), GalaxyStatus, metadata, StateOfGalaxyPage(), UpdatedAgoProps
 
 ### Community 91 - "Community 91"
-Cohesion: 0.22
-Nodes (7): MapNexus, CellKind, COMMAND_CORE_URL, MapCell, MapCellData, markerClassByKind, MarkerGlyphKind
+Cohesion: 0.24
+Nodes (15): getGalaxyEvents(), EVENT_TYPES, EventType, expireOldEvents(), getActiveGalaxyEvents(), getEventsStartAt(), notifyOwnersNearEvent(), pickZone() (+7 more)
 
 ### Community 92 - "Community 92"
 Cohesion: 0.29
 Nodes (6): Combat After-Action Report replaces BattleReplay, Map legend added, Map zoom ceiling raised, Players page rebuilt as a ranked leaderboard, Starfield density pass, Vexara - Alpha Patch Notes v0.23.1
 
+### Community 93 - "Community 93"
+Cohesion: 0.10
+Nodes (6): adapter, __dirname, prisma, router, RelocationError, RelocationFailure
+
 ### Community 94 - "Community 94"
-Cohesion: 0.16
-Nodes (13): ALL_TROOP_GROUPS, CLASS_COLOR, CLASS_LABEL, fmt(), ForceEditor(), MARGIN_COPY, pct(), ResultPanel() (+5 more)
+Cohesion: 0.15
+Nodes (14): ALL_TROOP_GROUPS, CLASS_COLOR, CLASS_LABEL, fmt(), ForceEditor(), MARGIN_COPY, pct(), ResultPanel() (+6 more)
 
 ### Community 95 - "Community 95"
 Cohesion: 0.22
@@ -600,25 +615,29 @@ Nodes (11): scripts, build, db:deploy, db:generate, db:migrate, db:push, db:stud
 Cohesion: 0.15
 Nodes (11): ActivityData, AttackSummary, BUILDING_LABELS, BuildingSummary, FactionWarSummary, formatDuration(), NearbyConquestSummary, Props (+3 more)
 
+### Community 101 - "Community 101"
+Cohesion: 0.21
+Nodes (12): changePassword(), FriendshipStatus, getPublicProfile(), getPublicProfileOg(), listPlayersInGalaxy(), sumTroops(), updateOnboardingStep(), comparePassword() (+4 more)
+
 ### Community 102 - "Community 102"
-Cohesion: 0.17
-Nodes (9): EVENT_COLORS, EVENT_ICONS, EVENT_LABELS, FactionEvent, formatRelative(), Props, median(), recordServerTimeSample() (+1 more)
+Cohesion: 0.12
+Nodes (16): EVENT_COLORS, EVENT_ICONS, EVENT_LABELS, FactionEvent, formatRelative(), Props, FactionLeaderboard(), formatDominanceCountdown() (+8 more)
 
 ### Community 103 - "Community 103"
-Cohesion: 0.33
-Nodes (10): buyListing(), cancelListing(), createListing(), emitMarket(), getHistory(), getListings(), systemBuy(), VALID_RESOURCES (+2 more)
+Cohesion: 0.16
+Nodes (21): cancelScheduledAttack(), getAllAttacks(), getIncomingAttacks(), getOutgoingAttacks(), getScheduledAttacks(), resolveOrCreateWavePlan(), scheduleAttack(), sendAttack() (+13 more)
 
 ### Community 104 - "Community 104"
-Cohesion: 0.12
-Nodes (28): getLeaderboard(), acceptCeasefire(), canManageWars(), declareWar(), declineCeasefire(), getMembership(), getWars(), proposeCeasefire() (+20 more)
+Cohesion: 0.10
+Nodes (26): getMessages(), getUnreadCount(), listConversations(), markRead(), sendMessage(), serializeMessage(), getLeaderboard(), handleKofiWebhook() (+18 more)
 
 ### Community 105 - "Community 105"
 Cohesion: 0.31
 Nodes (7): fetchReplay(), generateMetadata(), ReplayPage(), ReplayPayload, buildReplayTitle(), ReplayClient(), ReplayPayload
 
 ### Community 107 - "Community 107"
-Cohesion: 0.36
-Nodes (7): TROOP_STATS, COMBAT_TROOP_KEYS, CombatTroopKey, distanceTiles(), minTroopSpeed(), pickRaidTroops(), processRogueAiRaids()
+Cohesion: 0.11
+Nodes (24): extractToken(), renderConfirmation(), renderInvalidLink(), unsubscribe(), router, allowedCorsOrigins, app, backfillResourceBuildingFloor() (+16 more)
 
 ### Community 108 - "Community 108"
 Cohesion: 0.22
@@ -645,8 +664,8 @@ Cohesion: 0.40
 Nodes (4): Colorblind accessibility modes, Combat AAR: Allied Support now shows source nexus, Mobile podium: faction name now visible under username, Vexara - Alpha Patch Notes v0.23.2
 
 ### Community 114 - "Community 114"
-Cohesion: 0.15
-Nodes (14): Countdown, CountdownInner(), CountdownProps, formatDefault(), LiveResourceStripInner(), LiveResourceStripProps, computeQueueCountdown(), formatDurationSeconds() (+6 more)
+Cohesion: 0.13
+Nodes (13): Countdown, CountdownInner(), CountdownProps, formatDefault(), LiveResourceStripInner(), LiveResourceStripProps, ensureVisibilityBinding(), listeners (+5 more)
 
 ### Community 115 - "Community 115"
 Cohesion: 0.25
@@ -665,16 +684,16 @@ Cohesion: 0.10
 Nodes (20): ATTACK_TROOPS, DEFENCE_TROOPS, missionForTroops(), SPECIAL_TROOPS, TargetNexus, TROOP_KEYS, TROOP_LABELS, TroopMap (+12 more)
 
 ### Community 119 - "Community 119"
-Cohesion: 0.08
-Nodes (18): combatKeys, ATTACKABLE_TROOP_TYPES, buildingNames, formatNumber(), getDefenderSurvivors(), getRemainingResources(), getTroopEntries(), Reports() (+10 more)
+Cohesion: 0.07
+Nodes (19): combatKeys, ATTACKABLE_TROOP_TYPES, buildingNames, formatNumber(), getDefenderSurvivors(), getRemainingResources(), getTroopEntries(), Reports() (+11 more)
 
 ### Community 120 - "Community 120"
-Cohesion: 0.27
-Nodes (10): HeaderResourceStrip, HeaderResourceStripInner(), HeaderResourceStripProps, LiveResourceStrip, getDerelictMultiplier(), getDoubleScale(), getMaxStorage(), getResourceProduction() (+2 more)
+Cohesion: 0.22
+Nodes (12): HeaderResourceStrip, HeaderResourceStripInner(), HeaderResourceStripProps, LiveResourceStrip, EconomyNexus, getDerelictMultiplier(), getDoubleScale(), getMaxStorage() (+4 more)
 
 ### Community 122 - "Community 122"
-Cohesion: 0.17
-Nodes (6): organizationSchema, videoGameSchema, websiteSchema, metadata, viewport, AuthProvider()
+Cohesion: 0.12
+Nodes (7): organizationSchema, videoGameSchema, websiteSchema, metadata, viewport, DiscordButtonProps, AuthProvider()
 
 ### Community 123 - "Community 123"
 Cohesion: 0.29
@@ -761,8 +780,8 @@ Cohesion: 0.16
 Nodes (11): BUILDING_SCALING_DOC, BuildingDoc, CLASS_COUNTERED_BY, CLASS_COUNTERS, RESOURCE_TRANSFER_DOC, TroopClass, TroopDoc, TROOPS_DOC (+3 more)
 
 ### Community 151 - "Community 151"
-Cohesion: 0.50
-Nodes (3): BASE_GROWTH, INITIAL_TROOP_CEILING, processRogueAiGrowth()
+Cohesion: 0.27
+Nodes (9): BUILDING_LABELS, computeDefensePower(), getThreatLevel(), IntelData, mergeTroops(), ScoutIntelCard(), ScoutIntelCardProps, TROOP_NAMES (+1 more)
 
 ### Community 153 - "Community 153"
 Cohesion: 0.27
@@ -772,29 +791,49 @@ Nodes (9): ForceEditorProps, UnitDot, CombatCalculator(), MARGIN_COPY, pct(), Pr
 Cohesion: 0.25
 Nodes (7): "Combat Log" becomes "Recon Operative Log" for scouts, Coordinated Assault: waves you planned together finally fight together, Fixes & polish, Scouts now look like a real strike to your target, The Recon Operative is the fastest unit in the game, The Recon Operative stays a no-damage Special unit, Vexara - Alpha Patch Notes v0.23
 
+### Community 184 - "Community 184"
+Cohesion: 0.38
+Nodes (9): calcArrivesAt(), getTransfersForNexus(), recallTroops(), sendBack(), sendTroops(), serializeTransfer(), toReturnArrival(), TROOP_FIELDS (+1 more)
+
+### Community 185 - "Community 185"
+Cohesion: 0.58
+Nodes (8): acceptCeasefire(), canManageWars(), declareWar(), declineCeasefire(), getMembership(), getWars(), proposeCeasefire(), serializeWar()
+
 ### Community 203 - "Community 203"
-Cohesion: 0.70
-Nodes (4): extractToken(), renderConfirmation(), renderInvalidLink(), unsubscribe()
+Cohesion: 0.25
+Nodes (6): ART, GLYPH, ICON, LABELS, ResourceIconProps, ResourceKind
+
+### Community 204 - "Community 204"
+Cohesion: 0.25
+Nodes (7): WarRoom(), Peer, PeerCursor, PeerTyping, useWarRoomSocket(), UseWarRoomSocketResult, WarRoomEvent
+
+### Community 205 - "Community 205"
+Cohesion: 0.32
+Nodes (5): TROOP_KEYS, LEGACY_TROOP_KEY_ALIASES, normalizeTroopCounts(), normalizeTroopKey(), TROOP_KEY_SET
+
+### Community 207 - "Community 207"
+Cohesion: 0.43
+Nodes (6): getBuildingCost(), getCommandTimeFactor(), getEffectiveBuildTimeSeconds(), getLifeSupportCostCurveLevel(), getTieredMultiplier(), isFirstBuild()
 
 ## Knowledge Gaps
-- **1152 isolated node(s):** `allow`, `PreToolUse`, `allow`, `additionalDirectories`, `eslintConfig` (+1147 more)
+- **1153 isolated node(s):** `allow`, `PreToolUse`, `allow`, `additionalDirectories`, `eslintConfig` (+1148 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **41 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **40 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `logError()` connect `Community 4` to `Community 0`, `Community 1`, `Community 132`, `Community 7`, `Community 10`, `Community 15`, `Community 16`, `Community 18`, `Community 151`, `Community 24`, `Community 30`, `Community 32`, `Community 39`, `Community 41`, `Community 49`, `Community 66`, `Community 203`, `Community 78`, `Community 83`, `Community 103`, `Community 104`, `Community 107`?**
+- **Why does `logError()` connect `Community 4` to `Community 0`, `Community 1`, `Community 132`, `Community 5`, `Community 10`, `Community 15`, `Community 26`, `Community 30`, `Community 32`, `Community 39`, `Community 49`, `Community 53`, `Community 184`, `Community 185`, `Community 66`, `Community 78`, `Community 83`, `Community 91`, `Community 101`, `Community 103`, `Community 104`, `Community 107`?**
   _High betweenness centrality (0.017) - this node is a cross-community bridge._
 - **Why does `Force` connect `Community 153` to `Community 3`, `Community 6`, `Community 76`, `Community 20`, `Community 94`?**
   _High betweenness centrality (0.007) - this node is a cross-community bridge._
 - **What connects `allow`, `PreToolUse`, `allow` to the rest of the system?**
-  _1152 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _1153 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.05555555555555555 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05552617662612375 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
-  _Cohesion score 0.0248899790779886 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.02576489533011272 - nodes in this community are weakly interconnected._
 - **Should `Community 3` be split into smaller, more focused modules?**
-  _Cohesion score 0.06341463414634146 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06707317073170732 - nodes in this community are weakly interconnected._
 - **Should `Community 4` be split into smaller, more focused modules?**
-  _Cohesion score 0.07123034227567067 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07246376811594203 - nodes in this community are weakly interconnected._

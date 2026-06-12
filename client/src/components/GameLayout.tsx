@@ -4,6 +4,7 @@ import Avatar from '@/components/Avatar';
 import ConnectionStatusBar from '@/components/ConnectionStatusBar';
 import ConqueredModal from '@/components/ConqueredModal';
 import DiscordButton from '@/components/DiscordButton';
+import CurrentObjective from '@/components/CurrentObjective';
 import DailyStreaks from '@/components/DailyStreaks';
 import DominanceBar from '@/components/DominanceBar';
 import { HeaderResourceStrip } from '@/components/HeaderResourceStrip';
@@ -733,7 +734,8 @@ export default function GameLayout({
 						    on the full-bleed map page, where a side rail would crowd the
 						    starfield. Collapses below the content breakpoint (see CSS). */}
 						{!isMapPage && (
-							<aside className="game-rail-right" aria-label="Daily quests">
+							<aside className="game-rail-right" aria-label="Objectives and daily quests">
+								<CurrentObjective />
 								<DailyStreaks variant="rail" />
 							</aside>
 						)}
