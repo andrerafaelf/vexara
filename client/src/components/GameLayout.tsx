@@ -2,6 +2,7 @@
 
 import Avatar from '@/components/Avatar';
 import ConnectionStatusBar from '@/components/ConnectionStatusBar';
+import CampaignComplete from '@/components/CampaignComplete';
 import ConqueredModal from '@/components/ConqueredModal';
 import DiscordButton from '@/components/DiscordButton';
 import CurrentObjective from '@/components/CurrentObjective';
@@ -539,6 +540,7 @@ export default function GameLayout({
 					<TroopMovementsBar />
 					<DominanceBar />
 					<ConqueredModal />
+					<CampaignComplete />
 					<NewPatchToast />
 
 					<MobileNexusDrawer

@@ -114,7 +114,10 @@ export async function getMe(req: AuthRequest, res: Response): Promise<void> {
 				isAlphaFounder: true,
 				avatarKey: true,
 				beginnerTipsEnabled: true,
-				onboardingStep: true
+				onboardingStep: true,
+				galaxiesWon: true,
+				galaxiesPlayed: true,
+				lifetimePoints: true
 			}
 		});
 		if (!user) {
@@ -132,7 +135,10 @@ export async function getMe(req: AuthRequest, res: Response): Promise<void> {
 			avatarUrl: avatarUrl(user.id, user.avatarKey),
 			avatarUrlSm: avatarUrlSm(user.id, user.avatarKey),
 			beginnerTipsEnabled: user.beginnerTipsEnabled,
-			onboardingStep: user.onboardingStep ?? null
+			onboardingStep: user.onboardingStep ?? null,
+			galaxiesWon: user.galaxiesWon,
+			galaxiesPlayed: user.galaxiesPlayed,
+			lifetimePoints: user.lifetimePoints
 		});
 	} catch (error) {
 		logError('unhandled_controller_error', {

@@ -196,10 +196,10 @@ async function endGalaxy(
 		data: { status: 'ended', endedAt: new Date(), winnerFactionId, winnerUserId: factionLeader }
 	});
 
-	// Notify all players
+	// Gather all participants and winner-faction members
 	const allPlayers = await prisma.galaxyPlayer.findMany({
 		where: { galaxyId: galaxy.id },
-		select: { userId: true }
+		select: { userId: true, points: true }
 	});
 
 	const factionMembers = await prisma.factionMember.findMany({
@@ -217,6 +217,21 @@ async function endGalaxy(
       WHERE "galaxyId" = ${galaxy.id}
         AND "userId" = ANY(${Array.from(winnerIds)}::int[])
     `;
+	}
+
+	// Write permanent commander stats for every participant — winners and
+	// non-winners alike. Winners get galaxiesWon incremented; everyone gets
+	// galaxiesPlayed and their final influence added to lifetimePoints.
+	for (const p of allPlayers) {
+		const isWinner = winnerIds.has(p.userId);
+		await prisma.user.update({
+			where: { id: p.userId },
+			data: {
+				galaxiesPlayed: { increment: 1 },
+				lifetimePoints: { increment: p.points },
+				...(isWinner ? { galaxiesWon: { increment: 1 } } : {})
+			}
+		});
 	}
 
 	for (const p of allPlayers) {

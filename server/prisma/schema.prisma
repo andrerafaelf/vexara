@@ -68,6 +68,10 @@ model User {
   isFlagged        Boolean   @default(false)
   flagReason       String?   @db.VarChar(200)
   flaggedAt        DateTime?
+
+  galaxiesWon      Int       @default(0)
+  galaxiesPlayed   Int       @default(0)
+  lifetimePoints   Int       @default(0)
 }
 
 enum GalaxyStatus {

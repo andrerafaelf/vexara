@@ -10,6 +10,9 @@ export interface User {
 	isAlphaFounder?: boolean;
 	avatarUrl?: string | null;
 	avatarUrlSm?: string | null;
+	galaxiesWon?: number;
+	galaxiesPlayed?: number;
+	lifetimePoints?: number;
 }
 
 export interface TimelineDay {
