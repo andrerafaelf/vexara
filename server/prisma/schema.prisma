@@ -74,8 +74,9 @@ model User {
   galaxiesPlayed   Int       @default(0)
   lifetimePoints   Int       @default(0)
 
-  // Supporter credit balance in euro cents (€0.01 each), awarded by battle pass rewards.
-  supporterCreditCents Int   @default(0)
+  // Vex Points balance. Earned via battle pass rewards; spent on the pass itself
+  // (1,000 VP = one paid pass) and future shop items. €4.99 purchase grants 1,000 VP.
+  vexPoints Int @default(0)
 }
 
 enum GalaxyStatus {

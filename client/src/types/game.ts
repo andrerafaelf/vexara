@@ -13,6 +13,7 @@ export interface User {
 	galaxiesWon?: number;
 	galaxiesPlayed?: number;
 	lifetimePoints?: number;
+	vexPoints?: number;
 	commanderTitle?: string | null;
 }
 

@@ -92,7 +92,7 @@ export default function RailBattlePass() {
 				<div className="rail-bp-upgrade">
 					<div className="rail-bp-upgrade-copy">
 						<Lock size={11} aria-hidden="true" />
-						<span>Unlock Premium — <strong>€4.99</strong></span>
+						<span>Unlock — <strong>1,000 Vex Points</strong></span>
 					</div>
 					{purchaseError && (
 						<p className="rail-bp-error">{purchaseError}</p>

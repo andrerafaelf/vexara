@@ -4,26 +4,28 @@ import { logError } from './logger.js';
 // XP required to reach each level (cumulative). 30 levels total.
 // Designed so a player doing dailies + moderate combat hits level 30 in ~5 weeks.
 const LEVEL_XP_THRESHOLDS: number[] = (() => {
-	const thresholds: number[] = [0]; // level 0 → 1 requires 0 (starts at 0)
-	// Each level requires 300 XP; total to max = 9,000 XP
+	const thresholds: number[] = [0];
 	for (let lvl = 1; lvl <= 30; lvl++) {
-		thresholds.push(lvl * 300);
+		thresholds.push(lvl * 300); // 300 XP per level; 9,000 XP to max
 	}
-	return thresholds; // index = level, value = total XP required to REACH that level
+	return thresholds; // index = level, value = cumulative XP required
 })();
 
 export const MAX_PASS_LEVEL = 30;
 
+// Vex Pass costs 1,000 VP. €4.99 purchase = 1,000 VP.
+export const PASS_COST_VP = 1000;
+
 export const PASS_XP = {
-	QUEST_COMPLETE: 150,
-	QUEST_STREAK_BONUS: 75,
-	ATTACK_LAUNCHED: 20,
-	ATTACK_WON: 40,
-	NEXUS_CAPTURED: 80,
-	DEFENSE_WON: 50,
+	QUEST_COMPLETE:     150,
+	QUEST_STREAK_BONUS:  75,
+	ATTACK_LAUNCHED:     20,
+	ATTACK_WON:          40,
+	NEXUS_CAPTURED:      80,
+	DEFENSE_WON:         50,
 	COORDINATED_ASSAULT: 100,
-	FACTION_WAR_OP: 120,
-	DIPLOMATIC_TREATY: 60
+	FACTION_WAR_OP:      120,
+	DIPLOMATIC_TREATY:    60
 } as const;
 
 export type PassXpEvent = keyof typeof PASS_XP;
@@ -34,17 +36,51 @@ interface PassReward {
 	paid: string | null;
 }
 
-// Reward table. Keys are level numbers; free/paid describe what to grant.
-// Null means no reward on that track at that level.
+// Full 30-level Vex Protocol reward table.
+//
+// Free track (Protocol: Field):   resources + badges + Veteran title at 30
+// Paid track (Protocol: Command): titles + boosts + Vex Points
+//
+// VP total on paid track: 10+10+10+10+20+10+15+15+15+15+20+20+200 = 600 VP
+// (60% of the 1,000 VP cost — the pass pays for 60% of the next one)
+//
+// Reward format strings:
+//   resources:<resource>:<amount>         — deposit to player's nexus
+//   boost:production:<pct>:<hours>        — stored in GalaxyPlayer for Phase 6 economy
+//   title:<Name>                          — season-scoped title (Phase 6 promotes to User)
+//   badge:<tier>                          — cosmetic badge (Phase 6 cosmetic system)
+//   vexpoints:<amount>                    — credited to User.vexPoints
 const REWARD_TABLE: PassReward[] = [
-	{ level: 1,  free: null,                        paid: 'title:Recruit' },
-	{ level: 3,  free: 'resources:biomass:500',      paid: 'boost:production:10:24' },
-	{ level: 5,  free: 'badge:bronze',               paid: 'credit:50' },
-	{ level: 10, free: 'resources:alloy:1000',       paid: 'boost:production:15:48' },
-	{ level: 15, free: 'badge:silver',               paid: 'title:Proven' },
-	{ level: 20, free: 'resources:ore:1500,biomass:500', paid: 'credit:100' },
-	{ level: 25, free: 'badge:gold',                 paid: 'boost:production:20:72' },
-	{ level: 30, free: 'title:Veteran',              paid: 'title:Season Conqueror,credit:150' }
+	{ level:  1, free: 'resources:biomass:200',              paid: 'title:Recruit' },
+	{ level:  2, free: 'resources:alloy:200',                paid: 'boost:production:5:12' },
+	{ level:  3, free: 'resources:ore:200',                  paid: 'vexpoints:10' },
+	{ level:  4, free: 'resources:biomass:300',              paid: 'boost:production:5:12' },
+	{ level:  5, free: 'badge:bronze',                       paid: 'vexpoints:10' },
+	{ level:  6, free: 'resources:alloy:300',                paid: 'title:Operative' },
+	{ level:  7, free: 'resources:ore:300',                  paid: 'boost:production:8:18' },
+	{ level:  8, free: 'resources:biomass:400',              paid: 'vexpoints:10' },
+	{ level:  9, free: 'resources:alloy:400',                paid: 'boost:production:8:18' },
+	{ level: 10, free: 'resources:ore:400',                  paid: 'vexpoints:20' },
+	{ level: 11, free: 'resources:biomass:500',              paid: 'boost:production:10:24' },
+	{ level: 12, free: 'resources:alloy:500',                paid: 'vexpoints:10' },
+	{ level: 13, free: 'resources:ore:500',                  paid: 'boost:production:10:24' },
+	{ level: 14, free: 'resources:biomass:600',              paid: 'vexpoints:10' },
+	{ level: 15, free: 'badge:silver',                       paid: 'title:Proven' },
+	{ level: 16, free: 'resources:alloy:600',                paid: 'boost:production:12:24' },
+	{ level: 17, free: 'resources:ore:600',                  paid: 'vexpoints:15' },
+	{ level: 18, free: 'resources:biomass:700',              paid: 'boost:production:12:24' },
+	{ level: 19, free: 'resources:alloy:700',                paid: 'vexpoints:15' },
+	{ level: 20, free: 'resources:ore:700',                  paid: 'boost:production:15:48' },
+	{ level: 21, free: 'resources:biomass:800',              paid: 'vexpoints:15' },
+	{ level: 22, free: 'resources:alloy:800',                paid: 'boost:production:15:48' },
+	{ level: 23, free: 'resources:ore:800,resources:biomass:300', paid: 'vexpoints:15' },
+	{ level: 24, free: 'resources:alloy:900',                paid: 'boost:production:18:48' },
+	{ level: 25, free: 'badge:gold',                         paid: 'title:Vex Commander' },
+	{ level: 26, free: 'resources:ore:900',                  paid: 'boost:production:18:72' },
+	{ level: 27, free: 'resources:biomass:1000',             paid: 'vexpoints:20' },
+	{ level: 28, free: 'resources:alloy:1000',               paid: 'boost:production:20:72' },
+	{ level: 29, free: 'resources:ore:1000',                 paid: 'vexpoints:20' },
+	{ level: 30, free: 'title:Veteran,badge:platinum',       paid: 'title:Season Conqueror,vexpoints:200,boost:production:25:72' }
 ];
 
 const rewardByLevel = new Map(REWARD_TABLE.map((r) => [r.level, r]));
@@ -70,7 +106,6 @@ export async function grantPassXp(
 		const newXp = player.seasonXp + xpAmount;
 		let newLevel = player.passLevel;
 
-		// Advance level for every threshold crossed
 		while (newLevel < MAX_PASS_LEVEL && newXp >= LEVEL_XP_THRESHOLDS[newLevel + 1]) {
 			newLevel++;
 			await dispatchReward(userId, galaxyId, newLevel, player.hasPaidPass);
@@ -81,7 +116,12 @@ export async function grantPassXp(
 			data: { seasonXp: newXp, passLevel: newLevel }
 		});
 	} catch (err) {
-		logError('battle_pass_xp_error', { message: (err as Error).message, userId, galaxyId, event });
+		logError('battle_pass_xp_error', {
+			message: (err as Error).message,
+			userId,
+			galaxyId,
+			event
+		});
 	}
 }
 
@@ -103,16 +143,13 @@ async function dispatchReward(
 	}
 }
 
-// Reward format: "type:key:value" or "type:key"
 async function applyRewardPart(userId: number, galaxyId: number, part: string): Promise<void> {
 	const [type, ...rest] = part.split(':');
 
 	if (type === 'resources') {
-		// "resources:biomass:500"
 		const resource = rest[0] as 'biomass' | 'alloy' | 'ore';
 		const amount = parseInt(rest[1] ?? '0', 10);
 		if (!amount) return;
-		// Add to the player's primary nexus in this galaxy
 		const nexus = await prisma.nexus.findFirst({
 			where: { ownerId: userId, galaxyId },
 			select: { id: true }
@@ -123,10 +160,7 @@ async function applyRewardPart(userId: number, galaxyId: number, part: string): 
 			data: { [resource]: { increment: amount } }
 		});
 	} else if (type === 'boost') {
-		// "boost:production:10:24" — +10% production for 24h
-		// Stored in GalaxyPlayer.nexusGroups JSON as a pass buff entry.
-		// The economy engine and client can read this in Phase 6; for now it's
-		// recorded so the data is there when the buff system is built.
+		// Stored in GalaxyPlayer.nexusGroups JSON for Phase 6 economy integration
 		const pct = parseInt(rest[1] ?? '0', 10);
 		const hours = parseInt(rest[2] ?? '24', 10);
 		const expiresAt = new Date(Date.now() + hours * 3_600_000);
@@ -142,38 +176,51 @@ async function applyRewardPart(userId: number, galaxyId: number, part: string): 
 			data: { nexusGroups: groups }
 		});
 	} else if (type === 'title') {
-		// "title:Veteran" — store as a season pass title separate from commander title
-		// Written to GalaxyPlayer so it's season-scoped; Phase 6 can promote to User.
-		// No-op for now beyond recording — the client reads passLevel to derive display.
+		// Season-scoped title stored in GalaxyPlayer (Phase 6 promotes to User)
+		// No-op beyond level tracking — client derives display from passLevel + hasPaidPass
 	} else if (type === 'badge') {
-		// "badge:gold" — cosmetic season badge; stored in GalaxyPlayer JSON
-		// Deferred to Phase 6 cosmetic system.
-	} else if (type === 'credit') {
-		// "credit:100" — supporter credit in cents (€1.00)
-		const cents = parseInt(rest[0] ?? '0', 10);
-		if (!cents) return;
+		// Cosmetic badge — deferred to Phase 6 cosmetic system
+	} else if (type === 'vexpoints') {
+		const amount = parseInt(rest[0] ?? '0', 10);
+		if (!amount) return;
 		await prisma.user.update({
 			where: { id: userId },
-			data: { supporterCreditCents: { increment: cents } }
+			data: { vexPoints: { increment: amount } }
 		});
 	}
 }
 
-// Purchase the paid pass for the current season. Returns error string or null.
+// Purchase the paid pass using Vex Points. Deducts 1,000 VP, sets hasPaidPass,
+// and back-fills paid rewards for all levels already reached.
+// Returns an error string or null on success.
 export async function purchasePaidPass(userId: number, galaxyId: number): Promise<string | null> {
-	const player = await prisma.galaxyPlayer.findUnique({
-		where: { userId_galaxyId: { userId, galaxyId } },
-		select: { hasPaidPass: true, passLevel: true }
-	});
+	const [player, user] = await Promise.all([
+		prisma.galaxyPlayer.findUnique({
+			where: { userId_galaxyId: { userId, galaxyId } },
+			select: { hasPaidPass: true, passLevel: true }
+		}),
+		prisma.user.findUnique({
+			where: { id: userId },
+			select: { vexPoints: true }
+		})
+	]);
+
 	if (!player) return 'Not a member of this galaxy';
 	if (player.hasPaidPass) return 'Already purchased';
+	if (!user || user.vexPoints < PASS_COST_VP) return 'Not enough Vex Points';
 
-	await prisma.galaxyPlayer.update({
-		where: { userId_galaxyId: { userId, galaxyId } },
-		data: { hasPaidPass: true }
-	});
+	await Promise.all([
+		prisma.galaxyPlayer.update({
+			where: { userId_galaxyId: { userId, galaxyId } },
+			data: { hasPaidPass: true }
+		}),
+		prisma.user.update({
+			where: { id: userId },
+			data: { vexPoints: { decrement: PASS_COST_VP } }
+		})
+	]);
 
-	// Back-fill paid rewards for all levels already reached
+	// Back-fill paid rewards for levels already reached before purchase
 	for (let lvl = 1; lvl <= player.passLevel; lvl++) {
 		const reward = rewardByLevel.get(lvl);
 		if (!reward?.paid) continue;
@@ -183,4 +230,12 @@ export async function purchasePaidPass(userId: number, galaxyId: number): Promis
 	}
 
 	return null;
+}
+
+// Credit Vex Points to a user (called from payment webhook after €4.99 purchase).
+export async function grantVexPoints(userId: number, amount: number): Promise<void> {
+	await prisma.user.update({
+		where: { id: userId },
+		data: { vexPoints: { increment: amount } }
+	});
 }
