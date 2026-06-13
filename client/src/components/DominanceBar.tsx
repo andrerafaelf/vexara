@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Timer } from 'lucide-react';
 import { getFactionLeaderboard, getMyFaction } from '../services/api';
 import '../styles/DominanceBar.css';
 
@@ -23,6 +24,34 @@ interface LeaderboardData {
 	dominanceLocked: boolean;
 	/** Hold window (hours) required to win; reflects per-galaxy admin override. */
 	dominanceSustainHours?: number;
+	/** ISO timestamp when this season ends; null if no timer set. */
+	seasonEndsAt?: string | null;
+}
+
+function useSeasonCountdown(seasonEndsAt: string | null | undefined): string | null {
+	const [label, setLabel] = useState<string | null>(null);
+
+	useEffect(() => {
+		if (!seasonEndsAt) { setLabel(null); return; }
+
+		function tick() {
+			const ms = new Date(seasonEndsAt!).getTime() - Date.now();
+			if (ms <= 0) { setLabel(null); return; }
+			const totalSecs = Math.floor(ms / 1000);
+			const d = Math.floor(totalSecs / 86400);
+			const h = Math.floor((totalSecs % 86400) / 3600);
+			const m = Math.floor((totalSecs % 3600) / 60);
+			if (d > 0) setLabel(`${d}d ${h}h`);
+			else if (h > 0) setLabel(`${h}h ${m}m`);
+			else setLabel(`${m}m`);
+		}
+
+		tick();
+		const id = setInterval(tick, 60_000);
+		return () => clearInterval(id);
+	}, [seasonEndsAt]);
+
+	return label;
 }
 
 const TOP_N = 4;
@@ -63,6 +92,7 @@ const DominanceBar: React.FC = () => {
 	const threshold = data.dominanceThresholdPct;
 	const sustainHours = data.dominanceSustainHours ?? 36;
 	const dominator = top.find((f) => f.isDominating);
+	const seasonCountdown = useSeasonCountdown(data.seasonEndsAt);
 
 	return (
 		<div className="dom-bar" role="status" aria-label="Galaxy dominance">
@@ -109,6 +139,13 @@ const DominanceBar: React.FC = () => {
 						);
 					})}
 				</div>
+
+				{seasonCountdown && (
+					<span className="dom-season-timer" title="Season ends in">
+						<Timer size={11} aria-hidden="true" />
+						{seasonCountdown}
+					</span>
+				)}
 
 				{dominator && (
 					<span className="dom-bar-alert" aria-live="polite">

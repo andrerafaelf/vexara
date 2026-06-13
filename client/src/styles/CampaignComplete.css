@@ -104,6 +104,31 @@
 	color: var(--text-default);
 }
 
+.cc-title-awarded {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	background: rgba(255, 196, 0, 0.06);
+	border: 1px solid rgba(255, 196, 0, 0.2);
+	border-radius: var(--radius-md);
+	padding: var(--space-2) var(--space-4);
+}
+
+.cc-title-awarded-label {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--text-muted);
+}
+
+.cc-title-awarded-value {
+	font-size: var(--text-sm);
+	font-weight: 700;
+	color: var(--accent);
+	letter-spacing: 0.04em;
+}
+
 .cc-stats-grid {
 	display: grid;
 	grid-template-columns: 1fr 1fr;

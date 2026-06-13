@@ -98,6 +98,10 @@ model Galaxy {
   // When true, no new players may join (existing members keep playing). Set by admins.
   isLocked     Boolean      @default(false)
 
+  // Optional season end date. When set, a background job ends the galaxy at this
+  // time if the dominance condition hasn't already fired. NULL = no timer.
+  seasonEndsAt DateTime?
+
   // Per-galaxy dominance victory config. NULL = fall back to the engine defaults in
   // utils/dominance.ts (0.65 share, 36h sustain, 15 players, 4 factions). Lets admins
   // tune the win condition per world without a redeploy.

@@ -70,6 +70,7 @@ export default function CampaignComplete() {
 	const totalWins = user?.galaxiesWon ?? 0;
 	const totalPlayed = user?.galaxiesPlayed ?? 0;
 	const lifetimePoints = user?.lifetimePoints ?? 0;
+	const title = user?.commanderTitle ?? null;
 
 	const handleJoinNext = () => {
 		setDismissed(true);
@@ -99,6 +100,13 @@ export default function CampaignComplete() {
 							<span>
 								<strong>[{winnerFaction.tag}] {winnerFaction.name}</strong> achieved galactic dominance
 							</span>
+						</div>
+					)}
+
+					{title && (
+						<div className="cc-title-awarded">
+							<span className="cc-title-awarded-label">Title earned</span>
+							<span className="cc-title-awarded-value">{title}</span>
 						</div>
 					)}
 

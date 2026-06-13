@@ -1,5 +1,6 @@
 import prisma from '../lib/prisma.js';
 import { NOTIF, sendPushToUser } from './push.js';
+import { logError } from './logger.js';
 
 // Engine defaults. Each galaxy may override any of these via its win* columns
 // (see resolveWinConfig); a NULL column falls back to the default here.
@@ -251,4 +252,68 @@ async function endGalaxy(
 		where: { activeGalaxyId: galaxy.id },
 		data: { activeGalaxyId: null }
 	});
+}
+
+// Ends any active galaxies whose seasonEndsAt has passed. The winner is the
+// faction with the most nexuses at the moment the timer fires. If no factions
+// own any nexuses the galaxy ends with no winner (rare edge case).
+export async function processSeasonExpiry(): Promise<void> {
+	const expired = await prisma.galaxy.findMany({
+		where: {
+			status: 'active',
+			seasonEndsAt: { lte: new Date() }
+		},
+		select: { id: true, name: true }
+	});
+
+	for (const galaxy of expired) {
+		try {
+			// Determine faction nexus counts to pick a winner
+			const members = await prisma.factionMember.findMany({
+				where: { galaxyId: galaxy.id },
+				select: { userId: true, factionId: true }
+			});
+			const userToFaction = new Map(members.map((m) => [m.userId, m.factionId]));
+
+			const nexuses = await prisma.nexus.findMany({
+				where: { galaxyId: galaxy.id, ownerId: { not: null } },
+				select: { ownerId: true }
+			});
+
+			const factionCounts = new Map<number, number>();
+			for (const n of nexuses) {
+				const fid = userToFaction.get(n.ownerId!);
+				if (fid) factionCounts.set(fid, (factionCounts.get(fid) ?? 0) + 1);
+			}
+
+			let winnerFactionId: number | null = null;
+			let maxCount = 0;
+			for (const [fid, count] of factionCounts) {
+				if (count > maxCount) {
+					maxCount = count;
+					winnerFactionId = fid;
+				}
+			}
+
+			if (!winnerFactionId) {
+				// No faction owns any nexuses — just close the galaxy with no winner
+				await prisma.galaxy.update({
+					where: { id: galaxy.id },
+					data: { status: 'ended', endedAt: new Date() }
+				});
+				await prisma.user.updateMany({
+					where: { activeGalaxyId: galaxy.id },
+					data: { activeGalaxyId: null }
+				});
+				continue;
+			}
+
+			await endGalaxy(galaxy, winnerFactionId);
+		} catch (err) {
+			logError('season_expiry_failed', {
+				message: (err as Error).message,
+				galaxyId: galaxy.id
+			});
+		}
+	}
 }

@@ -8,6 +8,7 @@ import { validatePassword } from '../utils/validation.js';
 import { logError, logGameEvent, logGameEventOnce } from '../utils/logger.js';
 import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
 import { getResourceProduction } from '../utils/economy.js';
+import { resolveTitle } from '../utils/commanderTitle.js';
 import { sortOwnedNexuses } from '../services/nexusService.js';
 
 type FriendshipStatus = 'self' | 'none' | 'pending_outgoing' | 'pending_incoming' | 'friends';
@@ -138,7 +139,8 @@ export async function getMe(req: AuthRequest, res: Response): Promise<void> {
 			onboardingStep: user.onboardingStep ?? null,
 			galaxiesWon: user.galaxiesWon,
 			galaxiesPlayed: user.galaxiesPlayed,
-			lifetimePoints: user.lifetimePoints
+			lifetimePoints: user.lifetimePoints,
+			commanderTitle: resolveTitle(user)
 		});
 	} catch (error) {
 		logError('unhandled_controller_error', {

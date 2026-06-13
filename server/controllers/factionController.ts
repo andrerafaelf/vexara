@@ -962,7 +962,8 @@ export async function getLeaderboard(req: AuthRequest, res: Response): Promise<v
 						winShare: true,
 						winSustainHours: true,
 						winMinPlayers: true,
-						winMinFactions: true
+						winMinFactions: true,
+						seasonEndsAt: true
 					}
 				}),
 				prisma.nexus.count({ where: { galaxyId } }),
@@ -1043,7 +1044,8 @@ export async function getLeaderboard(req: AuthRequest, res: Response): Promise<v
 			factionCount,
 			dominanceMinPlayers: cfg.minPlayers,
 			dominanceMinFactions: cfg.minFactions,
-			dominanceSustainHours: Math.round(cfg.sustainMs / 3_600_000)
+			dominanceSustainHours: Math.round(cfg.sustainMs / 3_600_000),
+			seasonEndsAt: galaxy?.seasonEndsAt ?? null
 		});
 	} catch (error) {
 		logError('unhandled_controller_error', {
