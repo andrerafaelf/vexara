@@ -31,6 +31,7 @@ import {
 import { logInfo, logWarn } from './logger.js';
 import { computeNexusPopulation, getPopulationMax, loadAwayPopulation } from './population.js';
 import { NOTIF, sendPushToUser } from './push.js';
+import { grantPassXp } from './battlePass.js';
 import { aggregateStationedSupport, buildDetailedScoutIntel } from './scouting.js';
 import { normalizeTroopCounts } from './troopKeys.js';
 
@@ -1210,6 +1211,17 @@ async function resolveCoordinatedCombat(attacks: AttackWithNexuses[]): Promise<v
 			);
 		}
 
+		// Battle pass XP — coordinated assault bonus for all participants
+		for (const attackerUserId of distinctAttackerUserIds) {
+			void grantPassXp(attackerUserId, lead.galaxyId, 'ATTACK_LAUNCHED');
+			void grantPassXp(attackerUserId, lead.galaxyId, 'COORDINATED_ASSAULT');
+			if (attackerWins) void grantPassXp(attackerUserId, lead.galaxyId, 'ATTACK_WON');
+			if (conquered) void grantPassXp(attackerUserId, lead.galaxyId, 'NEXUS_CAPTURED');
+		}
+		if (defenderUserId && !attackerWins) {
+			void grantPassXp(defenderUserId, lead.galaxyId, 'DEFENSE_WON');
+		}
+
 		console.log(
 			`Coordinated combat resolved: lead Attack ${lead.id} (group ${participantAttackIds.length}) - ${attackerWins ? 'Attackers' : 'Defender'} win${conquered ? ' - NEXUS CONQUERED!' : ''}`
 		);
@@ -2376,6 +2388,16 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 				defenderNexusForNotif?.name || 'Unknown Nexus',
 				attackerNexusForNotif?.name || 'Unknown'
 			);
+		}
+
+		// Battle pass XP
+		if (attack.attackerUserId && attack.galaxyId) {
+			void grantPassXp(attack.attackerUserId, attack.galaxyId, 'ATTACK_LAUNCHED');
+			if (attackerWins) void grantPassXp(attack.attackerUserId, attack.galaxyId, 'ATTACK_WON');
+			if (conquered) void grantPassXp(attack.attackerUserId, attack.galaxyId, 'NEXUS_CAPTURED');
+		}
+		if (attack.defenderUserId && attack.galaxyId && !attackerWins) {
+			void grantPassXp(attack.defenderUserId, attack.galaxyId, 'DEFENSE_WON');
 		}
 
 		console.log(

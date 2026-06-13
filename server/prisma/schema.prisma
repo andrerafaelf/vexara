@@ -30,7 +30,8 @@ model User {
   activeGalaxyId Int?
   activeGalaxy   Galaxy? @relation("UserActiveGalaxy", fields: [activeGalaxyId], references: [id])
 
-  galaxyPlayers GalaxyPlayer[]
+  galaxyPlayers  GalaxyPlayer[]
+  seasonRecords  SeasonRecord[]
 
   friendshipsA       Friendship[]    @relation("FriendshipUserA")
   friendshipsB       Friendship[]    @relation("FriendshipUserB")
@@ -72,6 +73,9 @@ model User {
   galaxiesWon      Int       @default(0)
   galaxiesPlayed   Int       @default(0)
   lifetimePoints   Int       @default(0)
+
+  // Supporter credit balance in euro cents (€0.01 each), awarded by battle pass rewards.
+  supporterCreditCents Int   @default(0)
 }
 
 enum GalaxyStatus {
@@ -143,11 +147,36 @@ model GalaxyPlayer {
 
   dominanceSince DateTime?
 
+  seasonXp    Int     @default(0)
+  passLevel   Int     @default(0)
+  hasPaidPass Boolean @default(false)
+
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   galaxy Galaxy @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
 
   @@unique([userId, galaxyId])
   @@index([galaxyId])
+}
+
+// Permanent per-user record of each galaxy they participated in.
+// Written by endGalaxy() so the Hall of Champions has a stable snapshot
+// that survives GalaxyPlayer row mutations and player deletions.
+model SeasonRecord {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  galaxyId     Int
+  galaxyName   String   @db.VarChar(64)
+  endedAt      DateTime
+  points       Int
+  won          Boolean
+  factionName  String?  @db.VarChar(32)
+  factionTag   String?  @db.VarChar(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([galaxyId])
+  @@index([endedAt])
 }
 
 model AlphaSignup {

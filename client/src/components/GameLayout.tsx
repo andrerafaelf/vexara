@@ -9,6 +9,7 @@ import CurrentObjective from '@/components/CurrentObjective';
 import DailyStreaks from '@/components/DailyStreaks';
 import DominanceBar from '@/components/DominanceBar';
 import { RailMovements } from '@/components/RailMovements';
+import RailBattlePass from '@/components/RailBattlePass';
 import { HeaderResourceStrip } from '@/components/HeaderResourceStrip';
 import MobileNexusDrawer from '@/components/MobileNexusDrawer';
 import NewPatchToast from '@/components/NewPatchToast';
@@ -42,7 +43,8 @@ type ActivePage =
 	| 'allies'
 	| 'factions'
 	| 'players'
-	| 'profile';
+	| 'profile'
+	| 'hall-of-fame';
 
 const PAGE_TITLES: Record<ActivePage, string> = {
 	dashboard: 'My Nexus',
@@ -52,7 +54,8 @@ const PAGE_TITLES: Record<ActivePage, string> = {
 	allies: 'Allies',
 	factions: 'Factions',
 	players: 'Players',
-	profile: 'Profile'
+	profile: 'Profile',
+	'hall-of-fame': 'Hall of Champions'
 };
 
 interface GameLayoutProps {
@@ -757,6 +760,7 @@ export default function GameLayout({
 							<aside className="game-rail-right" aria-label="Activity">
 								<CurrentObjective />
 								<RailMovements />
+								<RailBattlePass />
 								<DailyStreaks variant="rail" />
 							</aside>
 						)}

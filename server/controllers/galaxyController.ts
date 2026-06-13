@@ -1,4 +1,4 @@
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { invalidateAuthCache } from '../middleware/auth.js';
 import prisma from '../lib/prisma.js';
 import * as galaxyService from '../services/galaxyService.js';
@@ -360,6 +360,81 @@ export async function leaveGalaxy(req: AuthRequest, res: Response): Promise<void
 		} else {
 			res.status(status).json({ error: (error as Error).message });
 		}
+	}
+}
+
+// Public — no auth required. Returns the 20 most recent ended galaxies, each
+// with their winning faction and top 3 commanders by points.
+export async function getHallOfFame(_req: Request, res: Response): Promise<void> {
+	try {
+		const ended = await prisma.galaxy.findMany({
+			where: { status: 'ended' },
+			orderBy: { endedAt: 'desc' },
+			take: 20,
+			select: {
+				id: true,
+				name: true,
+				endedAt: true,
+				winnerFactionId: true
+			}
+		});
+
+		const galaxyIds = ended.map((g) => g.id);
+
+		const [factions, records] = await Promise.all([
+			prisma.faction.findMany({
+				where: { id: { in: ended.map((g) => g.winnerFactionId).filter(Boolean) as number[] } },
+				select: { id: true, name: true, tag: true }
+			}),
+			prisma.seasonRecord.findMany({
+				where: { galaxyId: { in: galaxyIds } },
+				orderBy: [{ galaxyId: 'asc' }, { points: 'desc' }],
+				select: {
+					galaxyId: true,
+					points: true,
+					won: true,
+					factionName: true,
+					factionTag: true,
+					user: { select: { id: true, username: true, avatarKey: true } }
+				}
+			})
+		]);
+
+		const factionById = new Map(factions.map((f) => [f.id, f]));
+
+		// Group records by galaxy, keep top 3 per galaxy
+		const recordsByGalaxy = new Map<number, typeof records>();
+		for (const r of records) {
+			const list = recordsByGalaxy.get(r.galaxyId) ?? [];
+			if (list.length < 3) list.push(r);
+			recordsByGalaxy.set(r.galaxyId, list);
+		}
+
+		const seasons = ended.map((g) => ({
+			id: g.id,
+			name: g.name,
+			endedAt: g.endedAt,
+			winnerFaction: g.winnerFactionId ? (factionById.get(g.winnerFactionId) ?? null) : null,
+			topCommanders: (recordsByGalaxy.get(g.id) ?? []).map((r, i) => ({
+				rank: i + 1,
+				userId: r.user.id,
+				username: r.user.username,
+				avatarUrl: avatarUrl(r.user.id, r.user.avatarKey),
+				points: r.points,
+				won: r.won,
+				factionName: r.factionName,
+				factionTag: r.factionTag
+			}))
+		}));
+
+		res.setHeader('Cache-Control', 'public, max-age=300');
+		res.json({ seasons });
+	} catch (error) {
+		logError('unhandled_controller_error', {
+			message: (error as Error).message,
+			file: 'galaxyController.ts'
+		});
+		res.status(500).json({ error: 'Internal server error' });
 	}
 }
 

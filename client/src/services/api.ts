@@ -127,6 +127,9 @@ export const leaveGalaxy = (galaxyId: number | string) =>
 	apiRequest(`/galaxies/${galaxyId}/leave`, { method: 'POST' });
 export const getGalaxyWinResults = (galaxyId: number | string) =>
 	apiRequest(`/galaxies/${galaxyId}/win-results`);
+export const getHallOfFame = () => apiRequest('/galaxies/hall-of-fame');
+export const getBattlePass = () => apiRequest('/battle-pass');
+export const purchaseBattlePass = () => apiRequest('/battle-pass/purchase', { method: 'POST' });
 
 // Nexuses
 export const createNexus = (name?: string) =>

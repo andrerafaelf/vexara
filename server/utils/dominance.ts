@@ -197,17 +197,27 @@ async function endGalaxy(
 		data: { status: 'ended', endedAt: new Date(), winnerFactionId, winnerUserId: factionLeader }
 	});
 
-	// Gather all participants and winner-faction members
-	const allPlayers = await prisma.galaxyPlayer.findMany({
-		where: { galaxyId: galaxy.id },
-		select: { userId: true, points: true }
-	});
+	// Gather all participants, all faction memberships, and faction details
+	const [allPlayers, allFactionMembers, allFactions] = await Promise.all([
+		prisma.galaxyPlayer.findMany({
+			where: { galaxyId: galaxy.id },
+			select: { userId: true, points: true }
+		}),
+		prisma.factionMember.findMany({
+			where: { galaxyId: galaxy.id },
+			select: { userId: true, factionId: true }
+		}),
+		prisma.faction.findMany({
+			where: { galaxyId: galaxy.id },
+			select: { id: true, name: true, tag: true }
+		})
+	]);
 
-	const factionMembers = await prisma.factionMember.findMany({
-		where: { factionId: winnerFactionId, galaxyId: galaxy.id },
-		select: { userId: true }
-	});
-	const winnerIds = new Set(factionMembers.map((m) => m.userId));
+	const factionById = new Map(allFactions.map((f) => [f.id, f]));
+	const userFactionId = new Map(allFactionMembers.map((m) => [m.userId, m.factionId]));
+	const winnerIds = new Set(
+		allFactionMembers.filter((m) => m.factionId === winnerFactionId).map((m) => m.userId)
+	);
 
 	if (winnerIds.size > 0) {
 		// Snapshot influence for winning-faction members. Raw SQL because Prisma can't
@@ -220,19 +230,36 @@ async function endGalaxy(
     `;
 	}
 
-	// Write permanent commander stats for every participant — winners and
-	// non-winners alike. Winners get galaxiesWon incremented; everyone gets
-	// galaxiesPlayed and their final influence added to lifetimePoints.
+	const now = new Date();
+
+	// Write permanent commander stats + season records for every participant
 	for (const p of allPlayers) {
 		const isWinner = winnerIds.has(p.userId);
-		await prisma.user.update({
-			where: { id: p.userId },
-			data: {
-				galaxiesPlayed: { increment: 1 },
-				lifetimePoints: { increment: p.points },
-				...(isWinner ? { galaxiesWon: { increment: 1 } } : {})
-			}
-		});
+		const fid = userFactionId.get(p.userId);
+		const factionInfo = fid != null ? factionById.get(fid) : undefined;
+
+		await Promise.all([
+			prisma.user.update({
+				where: { id: p.userId },
+				data: {
+					galaxiesPlayed: { increment: 1 },
+					lifetimePoints: { increment: p.points },
+					...(isWinner ? { galaxiesWon: { increment: 1 } } : {})
+				}
+			}),
+			prisma.seasonRecord.create({
+				data: {
+					userId: p.userId,
+					galaxyId: galaxy.id,
+					galaxyName: galaxy.name,
+					endedAt: now,
+					points: p.points,
+					won: isWinner,
+					factionName: factionInfo?.name ?? null,
+					factionTag: factionInfo?.tag ?? null
+				}
+			})
+		]);
 	}
 
 	for (const p of allPlayers) {
