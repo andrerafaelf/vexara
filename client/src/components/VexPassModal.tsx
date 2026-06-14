@@ -3,9 +3,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-	X, Sparkles, Award, Shield, Zap, Star, Crown, Lock, ChevronRight
-} from 'lucide-react';
+import { X, Sparkles, Award, Lock, ChevronRight } from 'lucide-react';
 import { purchaseBattlePass } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { KOFI_URL } from '../constants/support';
@@ -27,42 +25,112 @@ const MAX_LEVEL = 50;
 const XP_PER_LEVEL = 300;
 const PASS_COST_VP = 1000;
 
-// Representative rewards shown per act in the modal.
-// Free shows the resource/badge highlights. Paid shows boosts + VP + titles.
-const ACTS = [
-	{
-		label: 'Act I — Enlistment',
-		levels: '1–10',
-		free: ['500–1,200 Resources', 'Bronze Badge at L10', '20 VP'],
-		paid: ['Title: Recruit at L1', 'Title: Operative at L8', '+12% Prod 36h', '25 VP']
-	},
-	{
-		label: 'Act II — Field Ops',
-		levels: '11–20',
-		free: ['1,500–3,000 Resources', '20 VP at L15/20'],
-		paid: ['Title: Proven at L18', '+20% Prod 72h', '65 VP']
-	},
-	{
-		label: 'Act III — Warfront',
-		levels: '21–30',
-		free: ['3,500–6,000 Resources', 'Silver Badge + VP at L25', '30 VP at L30'],
-		paid: ['Title: Vex Commander at L30', '+25% Prod 96h', '90 VP']
-	},
-	{
-		label: 'Act IV — High Command',
-		levels: '31–40',
-		free: ['7,000–12,000 Resources', 'Gold Badge + Veteran Title at L40', '35 VP'],
-		paid: ['+30% Prod 120h', '95 VP']
-	},
-	{
-		label: 'Act V — Vex Reckoning',
-		levels: '41–50',
-		free: ['13,000–22,000 Resources', 'Platinum Badge + 20 VP at L50'],
-		paid: ['Title: High Commander at L45', '+35% Prod 120h at L46', '35 VP at L45']
-	}
+// ── Reward string → human-readable label ─────────────────────────────────────
+function fmtReward(raw: string | null): React.ReactNode[] {
+	if (!raw) return [];
+	return raw.split(',').map((part, i) => {
+		const seg = part.trim();
+		const [type, ...rest] = seg.split(':');
+		let label = '';
+		let className = '';
+
+		if (type === 'resources') {
+			const res = rest[0] ?? '';
+			const amt = Number(rest[1] ?? 0).toLocaleString();
+			const icon = res === 'biomass' ? '🌿' : res === 'alloy' ? '⚙️' : '🪨';
+			label = `${icon} ${amt} ${res.charAt(0).toUpperCase() + res.slice(1)}`;
+			className = 'vpm-r vpm-r--res';
+		} else if (type === 'boost') {
+			const pct = rest[1] ?? '?';
+			const hrs = rest[2] ?? '?';
+			label = `⚡ +${pct}% Prod ${hrs}h`;
+			className = 'vpm-r vpm-r--boost';
+		} else if (type === 'title') {
+			label = `🏆 ${rest.join(':')}`;
+			className = 'vpm-r vpm-r--title';
+		} else if (type === 'badge') {
+			const tier = rest[0] ?? '';
+			label = `🎖️ ${tier.charAt(0).toUpperCase() + tier.slice(1)} Badge`;
+			className = 'vpm-r vpm-r--badge';
+		} else if (type === 'vexpoints') {
+			label = `💎 ${rest[0]} VP`;
+			className = 'vpm-r vpm-r--vp';
+		} else {
+			label = seg;
+			className = 'vpm-r';
+		}
+
+		return <span key={i} className={className}>{label}</span>;
+	});
+}
+
+// All 50 levels of the reward table — mirrors server/utils/battlePass.ts exactly.
+// Keep in sync if the server table changes.
+const LEVELS: Array<{ level: number; free: string | null; paid: string | null }> = [
+	// Act I: Enlistment (1–10)
+	{ level:  1, free: 'resources:biomass:500',                                             paid: 'title:Recruit' },
+	{ level:  2, free: 'resources:alloy:500',                                               paid: 'boost:production:5:12' },
+	{ level:  3, free: 'resources:ore:500',                                                 paid: 'vexpoints:10' },
+	{ level:  4, free: 'resources:biomass:750,resources:alloy:500',                         paid: 'boost:production:8:18' },
+	{ level:  5, free: 'resources:ore:750,vexpoints:10',                                    paid: 'vexpoints:10' },
+	{ level:  6, free: 'resources:biomass:1000',                                            paid: 'boost:production:10:24' },
+	{ level:  7, free: 'resources:alloy:1000',                                              paid: 'boost:production:10:24' },
+	{ level:  8, free: 'resources:ore:1000',                                                paid: 'title:Operative,vexpoints:10' },
+	{ level:  9, free: 'resources:biomass:1200,resources:alloy:800',                        paid: 'boost:production:12:24' },
+	{ level: 10, free: 'badge:bronze,vexpoints:20',                                         paid: 'vexpoints:15,boost:production:12:36' },
+	// Act II: Field Ops (11–20)
+	{ level: 11, free: 'resources:biomass:1500',                                            paid: 'boost:production:15:36' },
+	{ level: 12, free: 'resources:alloy:1500',                                              paid: 'boost:production:15:36' },
+	{ level: 13, free: 'resources:ore:1500',                                                paid: 'vexpoints:10' },
+	{ level: 14, free: 'resources:biomass:2000,resources:ore:1000',                         paid: 'boost:production:15:48' },
+	{ level: 15, free: 'resources:alloy:2000,vexpoints:20',                                 paid: 'vexpoints:15' },
+	{ level: 16, free: 'resources:ore:2000',                                                paid: 'boost:production:18:48' },
+	{ level: 17, free: 'resources:biomass:2500,resources:alloy:1500',                       paid: 'boost:production:18:48' },
+	{ level: 18, free: 'resources:ore:2500',                                                paid: 'title:Proven,vexpoints:15' },
+	{ level: 19, free: 'resources:biomass:3000,resources:alloy:2000',                       paid: 'boost:production:20:48' },
+	{ level: 20, free: 'resources:ore:3000,vexpoints:25',                                   paid: 'vexpoints:20,boost:production:20:72' },
+	// Act III: Warfront (21–30)
+	{ level: 21, free: 'resources:biomass:3500,resources:alloy:2500',                       paid: 'boost:production:22:72' },
+	{ level: 22, free: 'resources:ore:3500',                                                paid: 'boost:production:22:72' },
+	{ level: 23, free: 'resources:biomass:4000,resources:alloy:3000',                       paid: 'vexpoints:15' },
+	{ level: 24, free: 'resources:ore:4000',                                                paid: 'boost:production:22:72' },
+	{ level: 25, free: 'badge:silver,resources:biomass:4000,vexpoints:25',                  paid: 'vexpoints:20' },
+	{ level: 26, free: 'resources:alloy:4500,resources:ore:3000',                           paid: 'boost:production:25:72' },
+	{ level: 27, free: 'resources:biomass:5000',                                            paid: 'boost:production:25:72' },
+	{ level: 28, free: 'resources:alloy:5000,resources:ore:3500',                           paid: 'vexpoints:15' },
+	{ level: 29, free: 'resources:biomass:6000,resources:alloy:4000',                       paid: 'boost:production:25:96' },
+	{ level: 30, free: 'resources:ore:6000,vexpoints:30',                                   paid: 'title:Vex Commander,vexpoints:25,boost:production:25:96' },
+	// Act IV: High Command (31–40)
+	{ level: 31, free: 'resources:biomass:7000,resources:alloy:5000',                       paid: 'boost:production:28:96' },
+	{ level: 32, free: 'resources:ore:7000',                                                paid: 'boost:production:28:96' },
+	{ level: 33, free: 'resources:biomass:8000,resources:alloy:5000,resources:ore:4000',    paid: 'vexpoints:15' },
+	{ level: 34, free: 'resources:biomass:8000,resources:ore:6000',                         paid: 'boost:production:28:96' },
+	{ level: 35, free: 'resources:alloy:9000,resources:biomass:6000,vexpoints:30',          paid: 'vexpoints:25' },
+	{ level: 36, free: 'resources:ore:9000,resources:alloy:6000',                           paid: 'boost:production:30:96' },
+	{ level: 37, free: 'resources:biomass:10000,resources:alloy:7000',                      paid: 'boost:production:30:96' },
+	{ level: 38, free: 'resources:ore:10000,resources:biomass:7000',                        paid: 'vexpoints:20' },
+	{ level: 39, free: 'resources:biomass:12000,resources:alloy:8000,resources:ore:6000',   paid: 'boost:production:30:120' },
+	{ level: 40, free: 'badge:gold,title:Veteran,vexpoints:35',                             paid: 'vexpoints:30,boost:production:30:120' },
+	// Act V: Vex Reckoning (41–50)
+	{ level: 41, free: 'resources:biomass:13000,resources:alloy:9000',                      paid: 'boost:production:32:120' },
+	{ level: 42, free: 'resources:ore:13000,resources:biomass:9000',                        paid: 'boost:production:32:120' },
+	{ level: 43, free: 'resources:biomass:15000,resources:alloy:10000,resources:ore:8000',  paid: 'vexpoints:20' },
+	{ level: 44, free: 'resources:biomass:15000,resources:alloy:12000',                     paid: 'boost:production:33:120' },
+	{ level: 45, free: 'resources:ore:15000,resources:biomass:10000,vexpoints:35',          paid: 'title:High Commander,vexpoints:35,boost:production:33:120' },
+	{ level: 46, free: 'resources:biomass:18000,resources:alloy:13000',                     paid: 'boost:production:35:120' },
+	{ level: 47, free: 'resources:ore:18000,resources:alloy:14000',                         paid: 'boost:production:35:120' },
+	{ level: 48, free: 'resources:biomass:20000,resources:alloy:15000,resources:ore:12000', paid: 'vexpoints:25' },
+	{ level: 49, free: 'resources:biomass:22000,resources:alloy:18000,resources:ore:15000', paid: 'boost:production:35:120' },
+	{ level: 50, free: 'badge:platinum,vexpoints:20',                                       paid: 'title:Season Conqueror,vexpoints:170,boost:production:35:120' },
 ];
 
-const ACT_ICONS = [Shield, Zap, Star, Crown, Sparkles];
+const ACT_LABELS: Record<number, string> = {
+	1:  'Act I — Enlistment',
+	11: 'Act II — Field Ops',
+	21: 'Act III — Warfront',
+	31: 'Act IV — High Command',
+	41: 'Act V — Vex Reckoning',
+};
 
 export default function VexPassModal({ pass, onClose }: Props) {
 	const { user } = useAuth();
@@ -87,7 +155,6 @@ export default function VexPassModal({ pass, onClose }: Props) {
 		}
 	});
 
-	// Lock scroll
 	React.useEffect(() => {
 		const prev = document.body.style.overflow;
 		document.body.style.overflow = 'hidden';
@@ -147,59 +214,56 @@ export default function VexPassModal({ pass, onClose }: Props) {
 					</div>
 				</div>
 
-				{/* ── Track columns header ── */}
-				<div className="vpm-track-header">
-					<div className="vpm-track-col vpm-track-col--free">
+				{/* ── Column headers (sticky) ── */}
+				<div className="vpm-col-headers">
+					<div className="vpm-col-lv">LV</div>
+					<div className="vpm-col-free">
 						<span className="vpm-track-badge vpm-track-badge--free">Free</span>
-						<span className="vpm-track-name">Protocol: Field</span>
-						<span className="vpm-track-vp">250 VP included</span>
+						Protocol: Field
 					</div>
-					<div className="vpm-track-col vpm-track-col--paid">
+					<div className="vpm-col-paid">
 						<span className="vpm-track-badge vpm-track-badge--paid">Premium</span>
-						<span className="vpm-track-name">Protocol: Command</span>
-						<span className="vpm-track-vp">500 VP + boosts + titles</span>
+						Protocol: Command
 					</div>
 				</div>
 
-				{/* ── Act rows ── */}
-				<div className="vpm-acts">
-					{ACTS.map((act, i) => {
-						const Icon = ACT_ICONS[i];
+				{/* ── Per-level rows ── */}
+				<div className="vpm-rows-scroll">
+					{LEVELS.map((row) => {
+						const isActHeader = ACT_LABELS[row.level];
+						const isCurrentLevel = row.level === pass.passLevel + 1;
+						const isEarned = row.level <= pass.passLevel;
+						const isCapstone = row.level === 50;
+
 						return (
-							<div key={act.label} className="vpm-act">
-								<div className="vpm-act-label">
-									<Icon size={11} aria-hidden="true" />
-									<span>{act.label}</span>
-									<span className="vpm-act-levels">L{act.levels}</span>
+							<React.Fragment key={row.level}>
+								{isActHeader && (
+									<div className="vpm-act-divider">{isActHeader}</div>
+								)}
+								<div className={[
+									'vpm-row',
+									isEarned ? 'vpm-row--earned' : '',
+									isCurrentLevel ? 'vpm-row--current' : '',
+									isCapstone ? 'vpm-row--capstone' : '',
+								].filter(Boolean).join(' ')}>
+									<div className="vpm-row-lv">
+										{isEarned ? (
+											<span className="vpm-row-lv-check">✓</span>
+										) : (
+											<span className={isCurrentLevel ? 'vpm-row-lv-num vpm-row-lv-num--next' : 'vpm-row-lv-num'}>{row.level}</span>
+										)}
+									</div>
+									<div className="vpm-row-free">
+										{fmtReward(row.free)}
+									</div>
+									<div className={`vpm-row-paid${pass.hasPaidPass ? '' : ' vpm-row-paid--locked'}`}>
+										{!pass.hasPaidPass && <Lock size={9} className="vpm-row-lock" aria-hidden="true" />}
+										{fmtReward(row.paid)}
+									</div>
 								</div>
-								<div className="vpm-act-cols">
-									<ul className="vpm-reward-list vpm-reward-list--free">
-										{act.free.map((r) => <li key={r}>{r}</li>)}
-									</ul>
-									<ul className={`vpm-reward-list vpm-reward-list--paid${pass.hasPaidPass ? '' : ' vpm-reward-list--locked'}`}>
-										{!pass.hasPaidPass && <Lock size={10} className="vpm-lock-icon" aria-hidden="true" />}
-										{act.paid.map((r) => <li key={r}>{r}</li>)}
-									</ul>
-								</div>
-							</div>
+							</React.Fragment>
 						);
 					})}
-
-					{/* L50 capstone row */}
-					<div className="vpm-act vpm-act--capstone">
-						<div className="vpm-act-label">
-							<Crown size={11} aria-hidden="true" />
-							<span>L50 Capstone</span>
-						</div>
-						<div className="vpm-act-cols">
-							<div className="vpm-capstone-reward vpm-capstone-reward--free">
-								Platinum Badge + 20 VP
-							</div>
-							<div className={`vpm-capstone-reward vpm-capstone-reward--paid${pass.hasPaidPass ? '' : ' vpm-capstone-reward--locked'}`}>
-								Season Conqueror + 170 VP + +35% Prod 120h
-							</div>
-						</div>
-					</div>
 				</div>
 
 				{/* ── Footer CTA ── */}
@@ -211,7 +275,6 @@ export default function VexPassModal({ pass, onClose }: Props) {
 								{vexPoints.toLocaleString()} VP
 							</span>
 						</div>
-
 						<div className="vpm-footer-actions">
 							{error && <p className="vpm-error">{error}</p>}
 							{canAfford ? (
