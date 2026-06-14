@@ -6,10 +6,10 @@ import { Sparkles, Lock, ChevronRight, Award } from 'lucide-react';
 import { getBattlePass, purchaseBattlePass } from '../services/api';
 import '../styles/RailBattlePass.css';
 
-const MAX_LEVEL = 30;
+const MAX_LEVEL = 50;
 const XP_PER_LEVEL = 300;
 
-const MILESTONE_LEVELS = [5, 10, 15, 20, 25, 30];
+const MILESTONE_LEVELS = [10, 20, 25, 30, 40, 50];
 
 interface PassState {
 	seasonXp: number;
