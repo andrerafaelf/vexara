@@ -166,6 +166,7 @@ export async function updateOnboardingStep(req: AuthRequest, res: Response): Pro
 		}
 		const data: Record<string, unknown> = { onboardingStep: step };
 		if (step === '__disabled__') data.beginnerTipsEnabled = false;
+		if (step === '__enabled__') { data.beginnerTipsEnabled = true; data.onboardingStep = null; }
 		await prisma.user.update({ where: { id: req.userId }, data });
 
 		// Funnel instrumentation (beta): record onboarding progression so we can
@@ -179,7 +180,7 @@ export async function updateOnboardingStep(req: AuthRequest, res: Response): Pro
 		if (req.userId) {
 			if (step === '__disabled__') {
 				logGameEvent('onboarding_disabled', req.userId, req.galaxyId);
-			} else {
+			} else if (step !== '__enabled__') {
 				logGameEventOnce(`onboarding_step:${step}`, req.userId, req.galaxyId, { step });
 			}
 		}

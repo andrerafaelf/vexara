@@ -191,8 +191,8 @@ interface OnboardingContextValue {
 	isEnabled: boolean;
 	advance: () => void;
 	dismiss: () => void;
-	// Call this after the user permanently turns off tips
 	disableTips: () => void;
+	reenableTips: () => void;
 }
 
 const OnboardingContext = createContext<OnboardingContextValue>({
@@ -200,7 +200,8 @@ const OnboardingContext = createContext<OnboardingContextValue>({
 	isEnabled: false,
 	advance: () => {},
 	dismiss: () => {},
-	disableTips: () => {}
+	disableTips: () => {},
+	reenableTips: () => {}
 });
 
 export function OnboardingProvider({ children }: { children: React.ReactNode }) {
@@ -290,9 +291,15 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 		void updateOnboardingStep('__disabled__').catch(() => {});
 	}, []);
 
+	const reenableTips = useCallback(() => {
+		void updateOnboardingStep('__enabled__').catch(() => {});
+		setEnabled(true);
+		setStepIndex(0);
+	}, []);
+
 	return (
 		<OnboardingContext.Provider
-			value={{ currentStep, isEnabled: enabled, advance, dismiss, disableTips }}
+			value={{ currentStep, isEnabled: enabled, advance, dismiss, disableTips, reenableTips }}
 		>
 			{children}
 		</OnboardingContext.Provider>

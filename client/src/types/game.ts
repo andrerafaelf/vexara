@@ -17,6 +17,8 @@ export interface User {
 	passTitle?: string | null;
 	earnedBadges?: string[];
 	commanderTitle?: string | null;
+	beginnerTipsEnabled?: boolean;
+	onboardingStep?: string | null;
 }
 
 export interface TimelineDay {
