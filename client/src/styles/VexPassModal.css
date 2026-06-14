@@ -240,8 +240,6 @@
 	color: var(--text-faint);
 	background: rgba(255, 255, 255, 0.015);
 	border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-	position: sticky;
-	top: 0;
 }
 
 /* ── Per-level row ────────────────────────────────────────────────────────── */
@@ -326,6 +324,9 @@
 
 /* ── Reward chip types ────────────────────────────────────────────────────── */
 .vpm-r {
+	display: flex;
+	align-items: center;
+	gap: 4px;
 	font-size: 11px;
 	line-height: 1.4;
 	color: var(--text-muted);

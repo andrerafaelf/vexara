@@ -3,10 +3,11 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { X, Sparkles, Award, Lock, ChevronRight } from 'lucide-react';
+import { X, Sparkles, Award, Lock, ChevronRight, Zap, Trophy, Medal } from 'lucide-react';
 import { purchaseBattlePass } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { KOFI_URL } from '../constants/support';
+import ResourceIcon from './ResourceIcon';
 import '../styles/VexPassModal.css';
 
 interface PassState {
@@ -31,36 +32,53 @@ function fmtReward(raw: string | null): React.ReactNode[] {
 	return raw.split(',').map((part, i) => {
 		const seg = part.trim();
 		const [type, ...rest] = seg.split(':');
-		let label = '';
-		let className = '';
 
 		if (type === 'resources') {
-			const res = rest[0] ?? '';
+			const res = rest[0] as 'biomass' | 'alloy' | 'ore';
 			const amt = Number(rest[1] ?? 0).toLocaleString();
-			const icon = res === 'biomass' ? '🌿' : res === 'alloy' ? '⚙️' : '🪨';
-			label = `${icon} ${amt} ${res.charAt(0).toUpperCase() + res.slice(1)}`;
-			className = 'vpm-r vpm-r--res';
-		} else if (type === 'boost') {
+			return (
+				<span key={i} className="vpm-r vpm-r--res">
+					<ResourceIcon kind={res} size={11} labelled={false} />
+					{amt} {res.charAt(0).toUpperCase() + res.slice(1)}
+				</span>
+			);
+		}
+		if (type === 'boost') {
 			const pct = rest[1] ?? '?';
 			const hrs = rest[2] ?? '?';
-			label = `⚡ +${pct}% Prod ${hrs}h`;
-			className = 'vpm-r vpm-r--boost';
-		} else if (type === 'title') {
-			label = `🏆 ${rest.join(':')}`;
-			className = 'vpm-r vpm-r--title';
-		} else if (type === 'badge') {
-			const tier = rest[0] ?? '';
-			label = `🎖️ ${tier.charAt(0).toUpperCase() + tier.slice(1)} Badge`;
-			className = 'vpm-r vpm-r--badge';
-		} else if (type === 'vexpoints') {
-			label = `💎 ${rest[0]} VP`;
-			className = 'vpm-r vpm-r--vp';
-		} else {
-			label = seg;
-			className = 'vpm-r';
+			return (
+				<span key={i} className="vpm-r vpm-r--boost">
+					<Zap size={10} aria-hidden="true" />
+					+{pct}% Prod {hrs}h
+				</span>
+			);
 		}
-
-		return <span key={i} className={className}>{label}</span>;
+		if (type === 'title') {
+			return (
+				<span key={i} className="vpm-r vpm-r--title">
+					<Trophy size={10} aria-hidden="true" />
+					{rest.join(':')}
+				</span>
+			);
+		}
+		if (type === 'badge') {
+			const tier = rest[0] ?? '';
+			return (
+				<span key={i} className="vpm-r vpm-r--badge">
+					<Medal size={10} aria-hidden="true" />
+					{tier.charAt(0).toUpperCase() + tier.slice(1)} Badge
+				</span>
+			);
+		}
+		if (type === 'vexpoints') {
+			return (
+				<span key={i} className="vpm-r vpm-r--vp">
+					<Sparkles size={10} aria-hidden="true" />
+					{rest[0]} VP
+				</span>
+			);
+		}
+		return <span key={i} className="vpm-r">{seg}</span>;
 	});
 }
 
