@@ -220,9 +220,21 @@ export default function OnboardingOverlay() {
 				className={`ob-tooltip ob-tooltip--${tooltipSide}`}
 				style={{
 					position: 'fixed',
-					left: Math.min(Math.max(rect.left + rect.width / 2 - 160, 16), window.innerWidth - 336),
+					left: Math.min(
+						Math.max(rect.left + rect.width / 2 - 160, 16),
+						window.innerWidth - 336 - 16
+					),
 					...(tooltipSide === 'bottom'
-						? { top: rect.top + rect.height + 14 }
+						? {
+								// On mobile the bottom nav is ~56px + safe area. Clamp the tooltip
+								// so it never renders behind it. CSS env() isn't available in JS so
+								// we use 80px as a safe floor that covers nav + safe area on all
+								// current phones (iPhone safe area is ≤34px).
+								top: Math.min(
+									rect.top + rect.height + 14,
+									window.innerHeight - 200 - (window.innerWidth <= 768 ? 80 : 0)
+								)
+							}
 						: { bottom: window.innerHeight - rect.top + 14 })
 				}}
 			>

@@ -16,8 +16,8 @@ import SiteFooter from '@/components/SiteFooter';
 import { useTabParam } from '@/hooks/useTabParam';
 import '@/styles/Codex.css';
 
-type Tab = 'buildings' | 'troops' | 'scaling';
-const CODEX_TABS: readonly Tab[] = ['buildings', 'troops', 'scaling'] as const;
+type Tab = 'buildings' | 'troops' | 'scaling' | 'diplomacy';
+const CODEX_TABS: readonly Tab[] = ['buildings', 'troops', 'scaling', 'diplomacy'] as const;
 
 export default function CodexPage() {
 	const [tab, setTab] = useTabParam<Tab>(CODEX_TABS, 'buildings');
@@ -116,6 +116,17 @@ export default function CodexPage() {
 								lede="Cost and time multipliers per construction stage."
 							/>
 							<ScalingPanel />
+						</section>
+					)}
+
+					{tab === 'diplomacy' && (
+						<section className="cx-stream" aria-label="Diplomacy">
+							<CodexStreamHead
+								eyebrow="DOSSIER · DIPLOMACY"
+								title="Treaties"
+								lede="Factions can form three types of binding agreements. Each carries real mechanical effects — not just labels."
+							/>
+							<DiplomacyPanel />
 						</section>
 					)}
 				</main>
@@ -249,6 +260,27 @@ function CodexRail({
 						<span className="cx-rail-link-name">Scaling math</span>
 					</a>
 				</CodexRailGroup>
+
+				<CodexRailGroup
+					title="// Diplomacy"
+					isOpen={tab === 'diplomacy'}
+					onClick={() => setTab('diplomacy')}
+				>
+					{(['nap', 'trade', 'vassal'] as const).map((type) => (
+						<a
+							key={type}
+							href={`#treaty-${type}`}
+							className={`cx-rail-link ${activeAnchor === `treaty-${type}` ? 'is-active' : ''}`}
+						>
+							<span className="cx-rail-link-icon cx-rail-link-icon-text">
+								{type === 'nap' ? '⚖' : type === 'trade' ? '⇄' : '◈'}
+							</span>
+							<span className="cx-rail-link-name">
+								{type === 'nap' ? 'Non-Aggression Pact' : type === 'trade' ? 'Trade Agreement' : 'Vassalage'}
+							</span>
+						</a>
+					))}
+				</CodexRailGroup>
 			</div>
 		</aside>
 	);
@@ -283,7 +315,7 @@ function CodexRailGroup({
 function CodexTabs({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
 	return (
 		<div className="cx-tabs" role="tablist" aria-label="Section selection">
-			{(['buildings', 'troops', 'scaling'] as Tab[]).map((t) => (
+			{(['buildings', 'troops', 'scaling', 'diplomacy'] as Tab[]).map((t) => (
 				<button
 					key={t}
 					role="tab"
@@ -294,6 +326,7 @@ function CodexTabs({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
 					{t === 'buildings' && 'Buildings'}
 					{t === 'troops' && 'Troops'}
 					{t === 'scaling' && 'Scaling'}
+					{t === 'diplomacy' && 'Diplomacy'}
 				</button>
 			))}
 		</div>
@@ -708,6 +741,81 @@ function ScalingPanel() {
 					))}
 				</ul>
 			</aside>
+		</div>
+	);
+}
+
+/* ─────────────────────────────────────────────── DIPLOMACY PANEL ===== */
+
+const TREATY_DOCS = [
+	{
+		type: 'nap',
+		name: 'Non-Aggression Pact',
+		symbol: '⚖',
+		duration: '1–90 days, negotiated on proposal',
+		effect: 'No mechanical enforcement — a declared ceasefire backed by social contract. Breaking it is visible to all faction members and will be logged in the treaty history.',
+		mechanics: [
+			'Both faction leaders must accept the pact for it to activate.',
+			'Either party can cancel the treaty at any time; cancellation is instant.',
+			'An active NAP is visible to both factions\' members in the Diplomacy tab.',
+			'Breaking a NAP before expiry has no in-game penalty, but the treaty log records the breach.'
+		],
+		tip: 'Use NAPs to stabilise a front while you expand elsewhere. A broken NAP is a statement — other factions will notice.'
+	},
+	{
+		type: 'trade',
+		name: 'Trade Agreement',
+		symbol: '⇄',
+		duration: '1–90 days, negotiated on proposal',
+		effect: 'Waives the 10% faction transfer tax on resource sends between member nexuses of both factions.',
+		mechanics: [
+			'Without a Trade Agreement, sending resources to a faction-mate costs a 10% transit tax.',
+			'With an active Trade Agreement, the tax is completely waived — 100% of the sent amount arrives.',
+			'The agreement applies to all members of both factions, not just the leaders.',
+			'Tax waiver is active as long as the treaty status is "active"; it stops immediately on cancellation or expiry.'
+		],
+		tip: 'A Trade Agreement pays for itself within hours during active resupply operations. Pair it with a NAP to lock in a reliable supply corridor.'
+	},
+	{
+		type: 'vassal',
+		name: 'Vassalage',
+		symbol: '◈',
+		duration: '1–90 days, negotiated on proposal',
+		effect: 'Formalises a protectorate relationship. The vassal faction gains the suzerain\'s diplomatic umbrella; the suzerain gains a declared tributary ally.',
+		mechanics: [
+			'Proposed by the stronger faction (suzerain) to the weaker (vassal). Either side can propose.',
+			'The vassal\'s enemies implicitly become the suzerain\'s enemies — though this is a social contract, not an automated war declaration.',
+			'Vassal factions appear marked in both factions\' diplomacy tabs, signalling the relationship to members.',
+			'Either party can cancel; early cancellation carries the same reputational weight as breaking a NAP.'
+		],
+		tip: 'Vassalage is useful for absorbing a smaller ally without merging factions. It also signals to attackers that hitting the vassal means dealing with the suzerain.'
+	}
+] as const;
+
+function DiplomacyPanel() {
+	return (
+		<div className="cx-diplomacy">
+			{TREATY_DOCS.map((t) => (
+				<div key={t.type} id={`treaty-${t.type}`} className="cx-treaty-card">
+					<div className="cx-treaty-header">
+						<span className="cx-treaty-symbol">{t.symbol}</span>
+						<div>
+							<h3 className="cx-treaty-name">{t.name}</h3>
+							<span className="cx-treaty-duration">Duration: {t.duration}</span>
+						</div>
+					</div>
+					<p className="cx-treaty-effect">{t.effect}</p>
+					<ul className="cx-treaty-mechanics">
+						{t.mechanics.map((m, i) => (
+							<li key={i}>{m}</li>
+						))}
+					</ul>
+					<aside className="cx-callout cx-treaty-tip">
+						<span className="cx-callout-tag">STRATEGY</span>
+						<p>{t.tip}</p>
+					</aside>
+				</div>
+			))}
 		</div>
 	);
 }

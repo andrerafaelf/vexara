@@ -71,11 +71,16 @@
 	border: none;
 	color: var(--text-muted);
 	cursor: pointer;
-	padding: 2px;
+	width: 44px;
+	height: 44px;
 	display: flex;
 	align-items: center;
+	justify-content: center;
+	touch-action: manipulation;
+	-webkit-tap-highlight-color: transparent;
 	transition: color 0.15s;
 	flex-shrink: 0;
+	margin: -10px -10px -10px 0;
 }
 
 .wywa-close:hover {
@@ -237,10 +242,13 @@
 	color: var(--text-on-accent);
 	border: none;
 	border-radius: 7px;
-	padding: 8px 22px;
+	padding: 11px 22px;
+	min-height: 44px;
 	font-size: 13px;
 	font-weight: 600;
 	cursor: pointer;
+	touch-action: manipulation;
+	-webkit-tap-highlight-color: transparent;
 	transition: background 0.15s;
 }
 

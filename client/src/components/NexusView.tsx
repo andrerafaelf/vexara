@@ -2103,6 +2103,41 @@ const NexusView: React.FC<NexusViewProps> = ({
 			</aside>
 
 			<div className="nexus-content-col">
+			{/* Mobile-only: nexus name + rename, shown below the sticky tab bar.
+			    Hidden on desktop where the name lives in nexus-inner-nav-head. */}
+			<div className="nexus-mobile-identity">
+				{isRenamingNexus ? (
+					<div className="nexus-inner-rename" onClick={(e) => e.stopPropagation()}>
+						<input
+							className="nexus-rename-input-sm"
+							value={renameValue}
+							onChange={(e) => setRenameValue(e.target.value)}
+							onKeyDown={(e) => {
+								if (e.key === 'Enter') submitNexusRename();
+								if (e.key === 'Escape') cancelNexusRename();
+							}}
+							autoFocus
+							maxLength={32}
+							aria-label="Rename nexus"
+						/>
+						<button className="nexus-rename-btn-sm save" disabled={isSavingNexusName} onClick={submitNexusRename} title="Save" aria-label="Save name">
+							<Check size={13} />
+						</button>
+						<button className="nexus-rename-btn-sm cancel" onClick={cancelNexusRename} title="Cancel" aria-label="Cancel rename">
+							<X size={13} />
+						</button>
+					</div>
+				) : (
+					<>
+						<span className="nexus-inner-nav-eyebrow">// {nexus.nexusType ? nexus.nexusType.replace(/([A-Z])/g, ' $1').trim().toUpperCase() : 'COMMAND NEXUS'}</span>
+						<span className="nexus-inner-nav-name-text" style={{ fontWeight: 700, color: 'var(--text-strong)', fontSize: 'var(--text-md)' }}>{nexus.name}</span>
+						<button type="button" className="nexus-inner-nav-edit" onClick={beginNexusRename} title="Rename nexus" aria-label="Rename nexus">
+							<Pencil size={12} />
+						</button>
+					</>
+				)}
+			</div>
+
 			{/* Nexus-type buff banner — a thin status strip at the top of the content
 			    column. */}
 			<div className="nexus-buff-banner-row">

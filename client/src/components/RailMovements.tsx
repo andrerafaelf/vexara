@@ -62,7 +62,7 @@ function RailMovementsInner() {
 				<button
 					type="button"
 					className="rail-movements-row rail-movements-row--incoming"
-					onClick={() => router.push('/combat-logs')}
+					onClick={() => router.push('/reports')}
 				>
 					<span className="rail-movements-icon">
 						<Swords size={13} aria-hidden="true" />
@@ -80,7 +80,7 @@ function RailMovementsInner() {
 				<button
 					type="button"
 					className="rail-movements-row"
-					onClick={() => router.push('/combat-logs')}
+					onClick={() => router.push('/reports')}
 				>
 					<span className="rail-movements-icon">
 						<Send size={13} aria-hidden="true" />

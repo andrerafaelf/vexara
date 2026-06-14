@@ -122,6 +122,8 @@ export interface Galaxy {
 	winSustainHours: number | null;
 	winMinPlayers: number | null;
 	winMinFactions: number | null;
+	// Speed world multiplier. 1 = normal, 5 = 5× speed. Default 1.0.
+	speedMultiplier: number;
 }
 
 export type AdminFetch = (url: string, options?: RequestInit) => Promise<Response>;

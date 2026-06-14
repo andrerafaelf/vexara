@@ -112,6 +112,55 @@ export async function getOverviewStats() {
 	};
 }
 
+// Per-galaxy health metrics: player counts, recent activity, churn signals.
+export async function getGalaxyHealth() {
+	const cutoff7d = new Date(Date.now() - 7 * 24 * 3600 * 1000);
+	const cutoff24h = new Date(Date.now() - 24 * 3600 * 1000);
+
+	const activeGalaxies = await prisma.galaxy.findMany({
+		where: { status: 'active' },
+		select: {
+			id: true,
+			name: true,
+			speedMultiplier: true,
+			seasonEndsAt: true,
+			_count: { select: { players: true, nexuses: true } }
+		},
+		orderBy: { createdAt: 'asc' }
+	});
+
+	const health = await Promise.all(
+		activeGalaxies.map(async (g) => {
+			const [attacks24h, attacks7d, newPlayers7d, factionCount] = await Promise.all([
+				prisma.attack.count({
+					where: { galaxyId: g.id, createdAt: { gte: cutoff24h } }
+				}),
+				prisma.attack.count({
+					where: { galaxyId: g.id, createdAt: { gte: cutoff7d } }
+				}),
+				prisma.galaxyPlayer.count({
+					where: { galaxyId: g.id, joinedAt: { gte: cutoff7d } }
+				}),
+				prisma.faction.count({ where: { galaxyId: g.id } })
+			]);
+			return {
+				id: g.id,
+				name: g.name,
+				speedMultiplier: g.speedMultiplier,
+				seasonEndsAt: g.seasonEndsAt,
+				players: g._count.players,
+				nexuses: g._count.nexuses,
+				factions: factionCount,
+				attacks24h,
+				attacks7d,
+				newPlayers7d
+			};
+		})
+	);
+
+	return health;
+}
+
 export const toInt = (value: unknown, fallback = 0) => {
 	const parsed = Number.parseInt(String(value), 10);
 	return Number.isFinite(parsed) ? parsed : fallback;
@@ -147,6 +196,7 @@ export function updateGalaxy(
 		winSustainHours?: number | null;
 		winMinPlayers?: number | null;
 		winMinFactions?: number | null;
+		speedMultiplier?: number;
 	}
 ) {
 	return prisma.galaxy.update({ where: { id }, data });

@@ -178,3 +178,10 @@
 		display: none;
 	}
 }
+
+@media (max-width: 768px) {
+	.tmb-item {
+		font-size: 0.875rem;
+		padding: 10px 14px 10px 12px;
+	}
+}

@@ -275,6 +275,9 @@
 .gp-card-tag-joined {
 	color: var(--success);
 }
+.gp-card-tag-speed {
+	color: #f59e0b;
+}
 
 .gp-card-meta {
 	font-family: var(--font-mono);

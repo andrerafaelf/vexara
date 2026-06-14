@@ -95,15 +95,20 @@
 
 .ob-close {
 	position: absolute;
-	top: 10px;
-	right: 10px;
+	top: 4px;
+	right: 4px;
 	background: none;
 	border: none;
 	color: var(--text-muted, #6e7681);
 	cursor: pointer;
-	padding: 2px;
+	/* 44px hit target */
+	width: 44px;
+	height: 44px;
 	display: flex;
 	align-items: center;
+	justify-content: center;
+	touch-action: manipulation;
+	-webkit-tap-highlight-color: transparent;
 	transition: color 0.15s;
 }
 
@@ -124,7 +129,7 @@
 	font-size: 14px;
 	font-weight: 700;
 	color: var(--text-strong, #f0f6fc);
-	padding-right: 20px;
+	padding-right: 32px;
 }
 
 .ob-message {
@@ -145,10 +150,13 @@
 .ob-btn {
 	border: none;
 	border-radius: 6px;
-	padding: 6px 14px;
-	font-size: 12px;
+	padding: 10px 16px;
+	min-height: 44px;
+	font-size: 13px;
 	font-weight: 600;
 	cursor: pointer;
+	touch-action: manipulation;
+	-webkit-tap-highlight-color: transparent;
 	transition: opacity 0.15s;
 }
 
@@ -195,8 +203,9 @@
 	pointer-events: none;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
+	/* Clear the 56px mobile bottom nav + safe-area-inset-bottom */
 	.ob-panel-card {
-		bottom: 16px;
+		bottom: calc(56px + env(safe-area-inset-bottom) + 12px);
 	}
 }

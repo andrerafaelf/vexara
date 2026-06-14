@@ -7,9 +7,9 @@ export const alt = 'Vexara — free browser MMO RTS';
 export default async function Image() {
 	return await renderOgCard({
 		eyebrow: 'Live Galaxy',
-		kicker: 'A persistent galaxy.',
+		kicker: 'Seasonal galaxies. Permanent legacy.',
 		title: 'Real opponents.',
-		subtitle: 'Free browser MMO-RTS. One living galaxy, 24/7. No resets. No pay-to-win.',
+		subtitle: 'Free browser MMO-RTS. Galaxies run to a winner. Your record carries forever. No pay-to-win.',
 		footer: 'vexara.world'
 	});
 }

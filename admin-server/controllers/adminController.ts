@@ -142,6 +142,15 @@ export async function getOverview(_req: Request, res: Response): Promise<void> {
 	}
 }
 
+export async function getGalaxyHealth(_req: Request, res: Response): Promise<void> {
+	try {
+		const data = await adminService.getGalaxyHealth();
+		res.json(data);
+	} catch (error) {
+		res.status(500).json({ error: (error as Error).message });
+	}
+}
+
 export async function listGalaxies(_req: Request, res: Response): Promise<void> {
 	try {
 		const galaxies = await adminService.getAllGalaxies();
@@ -161,7 +170,8 @@ export async function listGalaxies(_req: Request, res: Response): Promise<void> 
 				winShare: g.winShare,
 				winSustainHours: g.winSustainHours,
 				winMinPlayers: g.winMinPlayers,
-				winMinFactions: g.winMinFactions
+				winMinFactions: g.winMinFactions,
+				speedMultiplier: g.speedMultiplier
 			}))
 		);
 	} catch (error) {
@@ -206,7 +216,8 @@ export async function createGalaxy(req: Request, res: Response): Promise<void> {
 				winShare: galaxy.winShare,
 				winSustainHours: galaxy.winSustainHours,
 				winMinPlayers: galaxy.winMinPlayers,
-				winMinFactions: galaxy.winMinFactions
+				winMinFactions: galaxy.winMinFactions,
+				speedMultiplier: galaxy.speedMultiplier
 			}
 		});
 	} catch (error) {
@@ -249,6 +260,7 @@ export async function updateGalaxy(req: Request, res: Response): Promise<void> {
 			winSustainHours?: number | null;
 			winMinPlayers?: number | null;
 			winMinFactions?: number | null;
+			speedMultiplier?: number;
 		} = {};
 
 		if ('isLocked' in body) data.isLocked = Boolean(body.isLocked);
@@ -286,6 +298,15 @@ export async function updateGalaxy(req: Request, res: Response): Promise<void> {
 			(data as Record<string, number | null>)[key] = result.value;
 		}
 
+		if ('speedMultiplier' in body) {
+			const sp = Number(body.speedMultiplier);
+			if (!Number.isFinite(sp) || sp <= 0 || sp > 100) {
+				res.status(400).json({ error: 'speedMultiplier must be > 0 and ≤ 100' });
+				return;
+			}
+			data.speedMultiplier = sp;
+		}
+
 		if (Object.keys(data).length === 0) {
 			res.status(400).json({ error: 'No updatable fields provided' });
 			return;
@@ -307,7 +328,8 @@ export async function updateGalaxy(req: Request, res: Response): Promise<void> {
 				winShare: updated.winShare,
 				winSustainHours: updated.winSustainHours,
 				winMinPlayers: updated.winMinPlayers,
-				winMinFactions: updated.winMinFactions
+				winMinFactions: updated.winMinFactions,
+				speedMultiplier: updated.speedMultiplier
 			}
 		});
 	} catch (error) {

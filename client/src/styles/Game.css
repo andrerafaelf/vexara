@@ -64,6 +64,11 @@
 	display: contents;
 }
 
+/* Compact inline resource strip — only shown on mobile (inside header-mobile-row) */
+.header-resources-inline {
+	display: none;
+}
+
 .header-left {
 	display: flex;
 	align-items: center;
@@ -464,12 +469,8 @@
 	}
 }
 
-/* ── Persistent header resource strip (beta) ─────────────────────────────────
-   The strip moved out of NexusView's body into the always-on GameLayout header
-   (HeaderResourceStrip). In the 56px header it needs to be denser than the
-   in-page version: tighter padding, smaller min-width, and the per-hour rate
-   tucked under the value. The .header-resources wrapper scopes these overrides
-   so the in-page styling elsewhere is untouched. */
+/* ── Persistent header resource strip (desktop) ──────────────────────────────
+   Tight padding, transparent bg, rate tucked under value. */
 .header-resources {
 	display: flex;
 	align-items: center;
@@ -492,20 +493,62 @@
 	font-size: var(--text-md, 15px);
 }
 
-/* Below the desktop nav breakpoint the centered nav collapses; keep the strip a
-   compact single horizontal row (NOT the in-page vertical stack) so it still
-   fits the header. Hide the capacity denominator and per-hour rate to save
-   space — the raw stockpile is what a player glances at mid-action. Tap-through
-   to the nexus overview still shows the full breakdown. */
 @media (max-width: 900px) {
 	.header-resources .header-res-rate {
 		display: none;
 	}
 }
 
-/* Mobile resource styling moved to the @media (max-width: 768px) block
-   under .header-mobile-resources, which wraps the strip in a second row
-   below the header nav controls. Nothing extra needed here. */
+/* ── Compact resource strip (mobile header) ───────────────────────────────────
+   Flat single-row: [icon value] × 3. No grid, no rate, no cap denominator.
+   Rendered via LiveResourceStrip compact={true}. */
+.header-resources-compact {
+	display: flex;
+	align-items: center;
+	min-width: 0;
+	flex: 1;
+}
+
+.header-res-compact-strip {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0;
+	flex: 1;
+	min-width: 0;
+}
+
+.header-res-compact {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 5px;
+	flex: 1;
+	min-width: 0;
+	padding: 0 6px;
+}
+
+.header-res-compact + .header-res-compact {
+	border-left: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.header-res-compact-value {
+	font-family: var(--font-mono);
+	font-size: 13px;
+	font-weight: 700;
+	letter-spacing: -0.01em;
+	line-height: 1;
+	white-space: nowrap;
+}
+
+.header-res-compact.header-res-biomass .header-res-compact-value { color: var(--success); }
+.header-res-compact.header-res-alloy   .header-res-compact-value { color: var(--accent); }
+.header-res-compact.header-res-ore     .header-res-compact-value { color: var(--warning); }
+.header-res-compact.header-res-near    .header-res-compact-value { color: var(--warning); }
+.header-res-compact.header-res-full    .header-res-compact-value {
+	color: var(--danger);
+	animation: header-res-pulse 1.4s ease-in-out infinite;
+}
 
 .logout-btn {
 	background: transparent;
@@ -1569,125 +1612,202 @@
 	font-size: 17px;
 }
 
+/* ── Mobile bottom nav bar ─────────────────────────────────────────────
+   Primary navigation on mobile. Five slots: Nexus · Galaxy · Reports ·
+   Factions · More. Sits above the home indicator / safe area on iOS.
+   z-index above all content but below modals (1040).
+────────────────────────────────────────────────────────────────────── */
+.mobile-bottom-nav {
+	display: none;
+}
+
+@media (max-width: 768px) {
+	.mobile-bottom-nav {
+		display: flex;
+		align-items: stretch;
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		height: calc(56px + env(safe-area-inset-bottom));
+		padding-bottom: env(safe-area-inset-bottom);
+		padding-left: env(safe-area-inset-left);
+		padding-right: env(safe-area-inset-right);
+		background: var(--color-navy-900);
+		border-top: 1px solid var(--border-default);
+		/* Amber top-edge glow mirrors the header's amber underline */
+		box-shadow:
+			0 -1px 0 0 rgba(255, 158, 61, 0.18),
+			0 -4px 20px rgba(0, 0, 0, 0.5);
+		z-index: 1045;
+	}
+
+	.mobile-bottom-nav-btn {
+		flex: 1;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: center;
+		background: transparent;
+		border: none;
+		border-top: 2px solid transparent;
+		color: var(--text-faint);
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		font-family: var(--font-mono);
+		cursor: pointer;
+		padding: 0 4px;
+		position: relative;
+		transition:
+			color var(--duration-fast) var(--ease-out),
+			border-color var(--duration-fast) var(--ease-out);
+		touch-action: manipulation;
+		-webkit-tap-highlight-color: transparent;
+		text-decoration: none;
+		min-width: 0;
+	}
+
+	.mobile-bottom-nav-btn:active {
+		background: rgba(255, 255, 255, 0.03);
+	}
+
+	.mobile-bottom-nav-btn.active {
+		color: var(--accent);
+		border-top-color: var(--accent);
+	}
+
+	/* Notification dot — sits after the label text */
+	.mobile-bottom-nav-dot {
+		display: inline-block;
+		width: 6px;
+		height: 6px;
+		background: var(--danger);
+		border-radius: 50%;
+		margin-left: 4px;
+		flex-shrink: 0;
+		box-shadow: 0 0 5px rgba(248, 81, 73, 0.7);
+	}
+
+	.mobile-bottom-nav-dot--accent {
+		background: var(--accent);
+		box-shadow: 0 0 5px rgba(255, 158, 61, 0.7);
+	}
+
+	/* Icons are hidden — text-only nav */
+	.mobile-bottom-nav-icon {
+		display: none;
+	}
+
+	.mobile-bottom-nav-label {
+		line-height: 1;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+}
+
 @media (max-width: 768px) {
 	.ad-banner-top,
 	.ad-banner-bottom {
 		display: none;
 	}
 
+	/* ── Single-row slim header on mobile ──────────────────────────
+	   52px total. Logo stamp only (no wordmark text). Resources
+	   rendered inline in the right slot. No second row.
+	─────────────────────────────────────────────────────────────── */
 	.game-header {
 		padding: 0;
 		position: sticky;
 		top: 0;
 		z-index: 1050;
-		/* Two-row layout: flex-column so row 1 (nav) + row 2 (resources) stack */
 		display: flex;
-		flex-direction: column;
-		height: auto;
-		padding-top: var(--safe-top);
-	}
-
-	/* Row 1: hamburger + logo + nexus toggle */
-	.header-mobile-row {
-		display: flex;
+		flex-direction: row;
 		align-items: center;
-		height: 56px;
-		padding: 0 16px;
-		padding-left: calc(16px + env(safe-area-inset-left));
-		padding-right: calc(16px + env(safe-area-inset-right));
-		gap: 10px;
-		width: 100%;
-		box-sizing: border-box;
+		height: calc(52px + var(--safe-top, 0px));
+		padding-top: var(--safe-top, 0px);
+		padding-left: calc(14px + env(safe-area-inset-left));
+		padding-right: calc(14px + env(safe-area-inset-right));
+		gap: 8px;
 	}
 
-	/* Desktop resource wrapper hidden on mobile */
+	/* On mobile this wrapper is a normal flex row inside the header */
+	.header-mobile-row {
+		display: contents;
+	}
+
+	/* Desktop resource wrapper hidden on mobile — resources go inline */
 	.header-resources-desktop {
 		display: none;
 	}
 
-	/* Row 2: full-width resource strip */
+	/* Resource row 2 — gone on mobile, resources are now inline */
 	.header-mobile-resources {
-		display: flex;
-		align-items: center;
-		padding: 0 16px 8px;
-		padding-left: calc(16px + env(safe-area-inset-left));
-		padding-right: calc(16px + env(safe-area-inset-right));
-		border-top: 1px solid rgba(255,255,255,0.05);
-	}
-
-	.header-mobile-resources .header-resources {
-		max-width: 100%;
-		overflow: visible;
-		width: 100%;
-	}
-
-	.header-mobile-resources .header-resource-strip {
-		width: 100%;
-		flex-direction: row;
-		border: none;
-		background: transparent;
-		gap: 0;
-	}
-
-	.header-mobile-resources .header-res {
-		flex: 1;
-		display: flex;
-		align-items: center;
-		gap: 5px;
-		padding: 4px 6px;
-		min-width: 0;
-		border-left: none !important;
-		border-top: none !important;
-	}
-
-	.header-mobile-resources .header-res-label {
-		display: inline-flex;
-	}
-
-	.header-mobile-resources .header-res-icon {
-		width: 18px;
-		height: 18px;
-	}
-
-	.header-mobile-resources .header-res-value {
-		font-size: 13px;
-		font-weight: 600;
-		line-height: 1;
-	}
-
-	.header-mobile-resources .header-res-rate,
-	.header-mobile-resources .header-res-value > span {
 		display: none;
 	}
 
-	.menu-toggle {
-		display: inline-flex;
-		width: 44px;
-		height: 44px;
-		touch-action: manipulation;
+	/* Compact resource strip — centered between logo and nexus toggle */
+	.header-resources-inline {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex: 1;
+		min-width: 0;
+		overflow: hidden;
 	}
 
+	.header-resources-inline .header-resources-compact {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	/* Hide desktop resource wrapper on mobile */
+	.header-resources-desktop {
+		display: none;
+	}
+
+	/* Wordmark: stamp only, no text on mobile */
 	.header-left {
-		gap: 10px;
+		gap: 0;
 		min-width: 0;
+		flex-shrink: 0;
+	}
+
+	.vx-wordmark-name {
+		display: none;
 	}
 
 	.header-left h1 {
-		font-size: 20px;
+		font-size: 0;
+		line-height: 1;
+	}
+
+	.vx-wordmark-stamp {
+		width: 28px;
+		height: 28px;
 	}
 
 	.username {
 		display: none;
 	}
 
+	/* Nexus drawer toggle: visible, 44px tap target */
 	.nexus-drawer-toggle {
 		display: inline-flex;
 		width: 44px;
 		height: 44px;
+		flex-shrink: 0;
+	}
+
+	/* Hide the menu toggle — navigation is in the bottom bar now */
+	.menu-toggle {
+		display: none;
 	}
 
 	.logout-btn {
-		/* Tuck logout to mobile drawer on small screens */
 		display: none;
 	}
 
@@ -1696,35 +1816,46 @@
 		display: none;
 	}
 
-	/* The in-header Discord pill is redundant on phones — there's a Discord
-	   button in the mobile drawer — so hide it to give the persistent resource
-	   strip room in the right side of the 56px header. */
-	.header-right .discord-btn--pill {
+	/* header-right: only show the nexus drawer toggle, hide everything else */
+	.header-right {
+		gap: 0;
+		margin-left: 0;
+		flex-shrink: 0;
+	}
+
+	.header-right .discord-btn--pill,
+	.header-right .header-utility {
 		display: none;
 	}
 
+	/* Mobile drawer: slides up from the bottom (above the bottom nav bar) */
 	.mobile-drawer {
 		display: block;
 		position: fixed;
-		top: calc(100px + var(--safe-top));
+		/* Sit above the 56px bottom nav + safe area */
+		bottom: calc(56px + env(safe-area-inset-bottom));
 		left: 0;
 		right: 0;
-		max-height: calc(100dvh - 100px - var(--safe-top));
+		max-height: calc(100dvh - 52px - var(--safe-top, 0px) - 56px - env(safe-area-inset-bottom));
 		overflow-y: auto;
 		-webkit-overflow-scrolling: touch;
 		background: var(--color-navy-800);
-		border-bottom: 2px solid var(--color-navy-700);
+		border-top: 2px solid var(--border-default);
+		/* Amber top-edge accent on the drawer, matching header language */
+		box-shadow:
+			0 -1px 0 0 rgba(255, 158, 61, 0.25),
+			0 -12px 40px rgba(0, 0, 0, 0.55);
 		padding: 16px;
 		padding-left: calc(16px + env(safe-area-inset-left));
 		padding-right: calc(16px + env(safe-area-inset-right));
-		z-index: 1040;
+		z-index: 1044;
 		opacity: 0;
 		visibility: hidden;
-		transform: translateY(-6px);
+		transform: translateY(8px);
 		transition:
-			opacity 0.2s ease,
-			transform 0.2s ease,
-			visibility 0.2s;
+			opacity 0.22s ease,
+			transform 0.22s ease,
+			visibility 0.22s;
 		pointer-events: none;
 	}
 
@@ -1735,8 +1866,8 @@
 		border: 0;
 		margin: 0;
 		padding: 0;
-		background: rgba(0, 0, 0, 0.45);
-		z-index: 1030;
+		background: rgba(0, 0, 0, 0.5);
+		z-index: 1043;
 	}
 
 	.mobile-drawer.open {
@@ -1761,14 +1892,15 @@
 		padding: 14px;
 		padding-left: calc(14px + env(safe-area-inset-left));
 		padding-right: calc(14px + env(safe-area-inset-right));
-		padding-bottom: calc(24px + env(safe-area-inset-bottom));
+		/* Bottom padding clears the fixed bottom nav + safe area */
+		padding-bottom: calc(72px + env(safe-area-inset-bottom));
 		overflow: visible;
 	}
 
-	/* On mobile the starfield should still go edge-to-edge — every pixel of
-	   width matters for the grid, and the inspector becomes a modal anyway. */
+	/* Starfield stays edge-to-edge */
 	.main-content--map {
 		padding: 0;
+		padding-bottom: calc(56px + env(safe-area-inset-bottom));
 	}
 
 	/* Nav buttons in mobile drawer: full 44px touch target */
@@ -1874,6 +2006,7 @@
 	align-items: center;
 	justify-content: center;
 	z-index: 2000;
+	padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
 .group-modal {
@@ -2185,6 +2318,9 @@ label {
 
 /* ── Group modal: stack to single column on narrow screens ── */
 @media (max-width: 640px) {
+	.group-name-input {
+		font-size: 16px;
+	}
 	.group-modal {
 		width: 100%;
 		max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 32px);

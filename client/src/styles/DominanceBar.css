@@ -233,6 +233,9 @@
 	.dom-faction:nth-child(n + 4) {
 		display: none;
 	}
+	.dom-faction-tag {
+		font-size: 12px;
+	}
 }
 
 /* ╔══════════════════════════════════════════════════════════════════╗

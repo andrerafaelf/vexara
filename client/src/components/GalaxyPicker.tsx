@@ -17,6 +17,7 @@ export interface Galaxy {
 	createdAt: string;
 	isLocked: boolean;
 	isJoined: boolean;
+	speedMultiplier?: number;
 }
 
 interface FactionEntry {
@@ -263,6 +264,9 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
 										)}
 										{g.isJoined && !isEnded && !isPending && (
 											<span className="gp-card-tag gp-card-tag-joined">Joined</span>
+										)}
+										{g.speedMultiplier != null && g.speedMultiplier > 1 && (
+											<span className="gp-card-tag gp-card-tag-speed">{g.speedMultiplier}×</span>
 										)}
 									</div>
 									<div className="gp-card-meta">

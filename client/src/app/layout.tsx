@@ -13,7 +13,7 @@ const SITE_URL = 'https://vexara.world';
 const SITE_NAME = 'Vexara';
 const DEFAULT_TITLE = 'Vexara - Free Browser MMO RTS | 4X Strategy Game';
 const DEFAULT_DESCRIPTION =
-	'Vexara is a free browser MMO RTS set in a persistent sci-fi galaxy. Build your nexus, command 12 unit types, forge alliances, and wage real-time war with players worldwide. No download. No resets. No pay-to-win.';
+	'Vexara is a free browser MMO RTS. Galaxies run to a winner — your commander record, titles, and Vex Points carry forward permanently. Build your nexus, command 12 unit types, forge alliances, and wage real-time war with players worldwide. No download. No account wipes. No pay-to-win.';
 const DEFAULT_OG_IMAGE = `${SITE_URL}/vexara-overview.png`;
 
 export const metadata: Metadata = {
@@ -74,7 +74,7 @@ export const metadata: Metadata = {
 		card: 'summary_large_image',
 		title: DEFAULT_TITLE,
 		description:
-			'Free browser-based 4X strategy in a living sci-fi galaxy. Build, conquer, dominate 24/7. No resets. No pay-to-win.',
+			'Free browser-based 4X strategy in a living sci-fi galaxy. Galaxies run to a winner. Your record carries forever. No pay-to-win.',
 		images: [DEFAULT_OG_IMAGE]
 	},
 	appleWebApp: {

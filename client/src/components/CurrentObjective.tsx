@@ -17,10 +17,12 @@ const STEP_DESTINATION: Record<string, { href: string; label: string }> = {
 	build_production: { href: '/nexus', label: 'Buildings' },
 	counter_triangle: { href: '/nexus', label: 'Troops' },
 	train_troops: { href: '/nexus', label: 'Troops' },
+	troops_training: { href: '/nexus', label: 'Troops' },
 	open_starfield: { href: '/starfield', label: 'Starfield' },
 	send_attack: { href: '/starfield', label: 'Starfield' },
 	open_factions: { href: '/factions', label: 'Factions' },
-	join_faction: { href: '/factions', label: 'Factions' }
+	join_faction: { href: '/factions', label: 'Factions' },
+	tutorial_complete: { href: '/factions', label: 'Factions' }
 };
 
 /**

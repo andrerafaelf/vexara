@@ -8,6 +8,8 @@ import type { Nexus } from '@/types/game';
 interface HeaderResourceStripProps {
 	/** The currently selected nexus whose economy is shown in the persistent header. */
 	nexus: Nexus;
+	/** Compact flat-row layout for tight spaces (mobile header). */
+	compact?: boolean;
 }
 
 /**
@@ -23,7 +25,7 @@ interface HeaderResourceStripProps {
  * It is intentionally thin: the actual 1Hz interpolation and rendering stay in
  * LiveResourceStrip, which is the single source of truth for the strip markup.
  */
-function HeaderResourceStripInner({ nexus }: HeaderResourceStripProps) {
+function HeaderResourceStripInner({ nexus, compact = false }: HeaderResourceStripProps) {
 	const production = getResourceProduction({
 		nexusType: nexus.nexusType,
 		nexusTypeDoubled: nexus.nexusTypeDoubled,
@@ -44,12 +46,13 @@ function HeaderResourceStripInner({ nexus }: HeaderResourceStripProps) {
 	});
 
 	return (
-		<div className="header-resources" data-onboarding="resource-strip">
+		<div className={compact ? 'header-resources-compact' : 'header-resources'} data-onboarding="resource-strip">
 			<LiveResourceStrip
 				baseResources={nexus.resources}
 				production={production}
 				storageCapacity={storageCapacity}
 				lastResourceUpdate={nexus.lastResourceUpdate}
+				compact={compact}
 			/>
 		</div>
 	);

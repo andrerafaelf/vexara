@@ -29,7 +29,7 @@ import '@/styles/ConnectionStatusBar.css';
 import '@/styles/Game.css';
 import '@/styles/InGameIdentity.css';
 import { Nexus } from '@/types/game';
-import { ChevronDown, Menu } from 'lucide-react';
+import { ChevronDown, Menu, Home, Globe, FileText, MoreHorizontal, Swords } from 'lucide-react';
 import { NexusIcon } from '@/components/VexaraIcons';
 import { usePathname, useRouter } from 'next/navigation';
 import { startTransition, useCallback, useEffect, useMemo, useState } from 'react';
@@ -225,7 +225,7 @@ export default function GameLayout({
 				resolvedSelectedId ? `/nexus/${resolvedSelectedId}` : null,
 				'/starfield',
 				'/market',
-				'/combat-logs',
+				'/reports',
 				'/allies',
 				'/factions',
 				'/players',
@@ -360,14 +360,14 @@ export default function GameLayout({
 							)}
 							<button
 								className={`nav-btn${is('combat-logs') ? ' active' : ''}`}
-								onClick={nav('/combat-logs')}
-								onMouseEnter={prefetchOnHover('/combat-logs')}
-								onFocus={prefetchOnHover('/combat-logs')}
+								onClick={nav('/reports')}
+								onMouseEnter={prefetchOnHover('/reports')}
+								onFocus={prefetchOnHover('/reports')}
 							>
 								<span className="nav-btn-content">
 									Reports
 									{hasUnreadReports && (
-										<span className="nav-attention-mark" aria-label="Unread combat logs" />
+										<span className="nav-attention-mark" aria-label="Unread reports" />
 									)}
 								</span>
 							</button>
@@ -503,8 +503,16 @@ export default function GameLayout({
 							)}
 						</div>
 
+						{/* ── Mobile: compact resources inline in single-row header ──
+						    On desktop this is display:none; the desktop strip is in header-right below. */}
+						{headerNexus && (
+							<div className="header-resources-inline">
+								<HeaderResourceStrip nexus={headerNexus} compact />
+							</div>
+						)}
+
 						<div className="header-right">
-							{/* Resources hidden on mobile — shown in header-mobile-resources row below */}
+							{/* Resources on desktop — hidden on mobile (see header-resources-inline above) */}
 							<div className="header-resources-desktop">
 								{headerNexus && <HeaderResourceStrip nexus={headerNexus} />}
 							</div>
@@ -540,13 +548,6 @@ export default function GameLayout({
 							</button>
 						</div>
 						</div>{/* end header-mobile-row */}
-
-						{/* ── Mobile row 2: resource strip full width ── */}
-						{headerNexus && (
-							<div className="header-mobile-resources">
-								<HeaderResourceStrip nexus={headerNexus} />
-							</div>
-						)}
 					</header>
 
 					<ConnectionStatusBar />
@@ -635,12 +636,12 @@ export default function GameLayout({
 							)}
 							<button
 								className={`nav-btn${is('combat-logs') ? ' active' : ''}`}
-								onClick={nav('/combat-logs')}
+								onClick={nav('/reports')}
 							>
 								<span className="nav-btn-content">
 									Reports
 									{hasUnreadReports && (
-										<span className="nav-attention-mark" aria-label="Unread combat logs" />
+										<span className="nav-attention-mark" aria-label="Unread reports" />
 									)}
 								</span>
 							</button>
@@ -779,6 +780,73 @@ export default function GameLayout({
 						)}
 					</div>
 					<OnboardingOverlay />
+
+					{/* ── Mobile bottom navigation bar ── */}
+					<nav className="mobile-bottom-nav" aria-label="Main navigation">
+						<button
+							className={`mobile-bottom-nav-btn${is('dashboard') ? ' active' : ''}`}
+							onClick={nav(`/nexus/${resolvedSelectedId ?? ''}`)}
+							onMouseEnter={prefetchOnHover(`/nexus/${resolvedSelectedId ?? ''}`)}
+							aria-label="My Nexus"
+						>
+							<span className="mobile-bottom-nav-icon">
+								<Home size={20} />
+							</span>
+							<span className="mobile-bottom-nav-label">Nexus</span>
+						</button>
+						<button
+							className={`mobile-bottom-nav-btn${is('starfield') ? ' active' : ''}`}
+							onClick={nav('/starfield')}
+							onMouseEnter={prefetchOnHover('/starfield')}
+							data-onboarding="open-starfield"
+							aria-label="Galaxy map"
+						>
+							<span className="mobile-bottom-nav-icon">
+								<Globe size={20} />
+							</span>
+							<span className="mobile-bottom-nav-label">Galaxy</span>
+						</button>
+						<button
+							className={`mobile-bottom-nav-btn${is('combat-logs') ? ' active' : ''}`}
+							onClick={nav('/reports')}
+							onMouseEnter={prefetchOnHover('/reports')}
+							aria-label="Combat reports"
+						>
+							<span className="mobile-bottom-nav-icon">
+								<FileText size={20} />
+								{hasUnreadReports && <span className="mobile-bottom-nav-dot" aria-label="Unread reports" />}
+							</span>
+							<span className="mobile-bottom-nav-label">Reports</span>
+						</button>
+						{(showFactions || showAllies) && (
+							<button
+								className={`mobile-bottom-nav-btn${is('factions') || is('allies') ? ' active' : ''}`}
+								onClick={nav(showFactions ? '/factions' : '/allies')}
+								onMouseEnter={prefetchOnHover(showFactions ? '/factions' : '/allies')}
+								data-onboarding="open-factions"
+								aria-label={showFactions ? 'Factions' : 'Allies'}
+							>
+								<span className="mobile-bottom-nav-icon">
+									<Swords size={20} />
+									{(hasFactionAttention || hasUnreadFriends || hasTokens) && (
+										<span className="mobile-bottom-nav-dot mobile-bottom-nav-dot--accent" aria-label="Action required" />
+									)}
+								</span>
+								<span className="mobile-bottom-nav-label">{showFactions ? 'Factions' : 'Allies'}</span>
+							</button>
+						)}
+						<button
+							className={`mobile-bottom-nav-btn${isMobileMenuOpen ? ' active' : ''}`}
+							onClick={() => setIsMobileMenuOpen((p) => !p)}
+							aria-label="More options"
+							aria-expanded={isMobileMenuOpen}
+						>
+							<span className="mobile-bottom-nav-icon">
+								<MoreHorizontal size={20} />
+							</span>
+							<span className="mobile-bottom-nav-label">More</span>
+						</button>
+					</nav>
 				</div>
 			</OnboardingProvider>
 		</ModalQueueProvider>

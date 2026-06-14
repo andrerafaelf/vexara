@@ -670,7 +670,7 @@ const Reports: React.FC<ReportsProps> = ({
 		<div className="reports-container">
 			<div className="reports-header">
 				<div className="reports-header-row">
-					<h2>Combat Logs</h2>
+					<h2>Reports</h2>
 					{unreadCount > 0 && (
 						<button className="btn-read-all" onClick={handleMarkAllRead} disabled={markingAllRead}>
 							{markingAllRead ? 'Marking…' : `Mark all read (${unreadCount})`}
@@ -682,7 +682,7 @@ const Reports: React.FC<ReportsProps> = ({
 			<>
 				{reports.length === 0 ? (
 					<div className="no-reports">
-						<p>No combat logs yet. Strike other nexuses or defend yours to see reports here!</p>
+						<p>No reports yet. Strike other nexuses or defend yours to see reports here!</p>
 					</div>
 				) : (
 					<div className="reports-list">

@@ -81,12 +81,12 @@
 	}
 }
 
-/* Mobile: keep the breakout but pin below the two-row mobile header (~100px).
+/* Mobile: keep the breakout but pin below the single-row mobile header (52px).
    .main-content padding shrinks to 14px under 768px; mirror those numbers
    so the back button sits at the same visual edge as page content. */
 @media (max-width: 768px) {
 	.backbar {
-		top: 100px;
+		top: calc(52px + var(--safe-top, 0px));
 		padding: 8px 14px;
 		margin: -14px -14px var(--space-4);
 		min-height: 40px;

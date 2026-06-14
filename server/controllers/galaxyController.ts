@@ -17,6 +17,7 @@ function serializeGalaxy(
 		winnerFactionId?: number | null;
 		createdAt: Date;
 		isLocked?: boolean;
+		speedMultiplier?: number | null;
 	},
 	opts: { isJoined?: boolean } = {}
 ) {
@@ -30,6 +31,7 @@ function serializeGalaxy(
 		winnerFactionId: g.winnerFactionId ?? null,
 		createdAt: g.createdAt,
 		isLocked: g.isLocked ?? false,
+		speedMultiplier: g.speedMultiplier ?? 1.0,
 		isJoined: opts.isJoined ?? false
 	};
 }

@@ -138,52 +138,78 @@
 @media (max-width: 900px) {
 	.nexus-view--split {
 		flex-direction: column;
-		gap: var(--space-3);
+		gap: 0;
 	}
+
+	/* Sticky tab bar — only the tabs, no name header */
 	.nexus-inner-nav {
 		flex-basis: auto;
 		width: 100%;
 		flex-direction: row;
 		align-items: center;
-		gap: var(--space-2);
+		gap: 0;
 		border-bottom: 1px solid var(--border-default);
-		padding-bottom: var(--space-2);
+		padding-bottom: 0;
 		overflow-x: auto;
 		scrollbar-width: none;
-		/* Pin the section nav under the fixed game header while scrolling — the
-		   horizontal switcher stays one tap away on long pages (matches the old
-		   mobile tab-bar behavior). Mobile scroll root is the window. */
 		position: sticky;
-		top: calc(100px + var(--safe-top));
+		top: calc(52px + var(--safe-top, 0px));
 		z-index: 1040;
-		background: color-mix(in srgb, var(--bg-app) 94%, transparent);
-		backdrop-filter: blur(10px);
-		-webkit-backdrop-filter: blur(10px);
+		background: color-mix(in srgb, var(--bg-app) 96%, transparent);
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
 	}
+
 	.nexus-inner-nav::-webkit-scrollbar {
 		display: none;
 	}
-	.nexus-inner-nav-name {
-		border-bottom: none;
-		padding: 0 var(--space-2) 0 0;
-		white-space: nowrap;
-		flex-shrink: 0;
+
+	/* Hide the name/eyebrow header from the sticky tab bar on mobile —
+	   it reappears as .nexus-mobile-identity below the tab bar. */
+	.nexus-inner-nav-head {
+		display: none;
 	}
+
 	.nexus-inner-nav-tabs {
 		flex-direction: row;
-		gap: 2px;
+		gap: 0;
+		flex: 1;
 	}
+
 	.nexus-inner-tab {
 		border-left: none;
 		border-bottom: 2px solid transparent;
-		border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+		border-radius: 0;
 		white-space: nowrap;
-		padding: 8px 12px;
+		padding: 10px 14px;
+		flex: 1;
+		justify-content: center;
+		font-size: var(--text-sm);
 	}
+
 	.nexus-inner-tab.active {
 		border-left-color: transparent;
 		border-bottom-color: var(--accent);
 	}
+
+	/* Nexus identity row: eyebrow + name + pencil, shown below the tab bar */
+	.nexus-mobile-identity {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 8px 0 10px;
+		border-bottom: 1px solid var(--border-subtle);
+		margin-bottom: var(--space-3);
+	}
+
+	.nexus-content-col {
+		padding-top: 0;
+	}
+}
+
+/* On desktop the mobile identity row is hidden — the name lives in nexus-inner-nav-head */
+.nexus-mobile-identity {
+	display: none;
 }
 
 /* The full-height nexus name header was removed — the name + rename now live
@@ -1449,9 +1475,11 @@
 	align-items: center;
 	justify-content: center;
 	padding: 16px;
+	padding-bottom: max(16px, env(safe-area-inset-bottom));
+	padding-left: max(16px, env(safe-area-inset-left));
+	padding-right: max(16px, env(safe-area-inset-right));
 	z-index: 9999;
 	animation: fadeIn 0.2s ease;
-	/* Overflow scroll so the modal never gets clipped on short viewports */
 	overflow-y: auto;
 }
 
@@ -1595,7 +1623,7 @@
 
 .buildings-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
 	gap: var(--space-3);
 }
 
@@ -2089,7 +2117,7 @@
 
 .troops-stationed-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
 	gap: 12px;
 }
 
@@ -2511,6 +2539,15 @@
 }
 
 @media (max-width: 600px) {
+	/* Prevent iOS auto-zoom on input focus — font-size must be ≥ 16px */
+	.nexus-rename-input,
+	.nexus-rename-input-sm,
+	.decommission-input,
+	.group-name-input,
+	.eliminated-name-input {
+		font-size: 16px;
+	}
+
 	.troops-stationed-panel {
 		padding: 14px;
 	}
@@ -2588,7 +2625,7 @@
 
 .train-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr));
 	gap: 15px;
 }
 

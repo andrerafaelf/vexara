@@ -131,7 +131,7 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
 									</span>
 								)}
 								{unreadNexusIds?.has(String(nexus._id)) && (
-									<span className="nexus-badge nexus-badge-unread" title="Unread combat logs">
+									<span className="nexus-badge nexus-badge-unread" title="Unread reports">
 										<ScrollText size={12} />
 									</span>
 								)}

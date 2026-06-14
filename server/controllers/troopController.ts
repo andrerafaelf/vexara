@@ -9,6 +9,7 @@ import {
 	serializeNexus
 } from '../models/Nexus.js';
 import { ResourceConflictError, atomicUpdateNexusResources } from '../services/nexusService.js';
+import prisma from '../lib/prisma.js';
 import * as troopService from '../services/troopService.js';
 import { notifyNexusResources } from '../services/warRoomSocket.js';
 import type { AuthRequest } from '../types/index.js';
@@ -25,6 +26,7 @@ import {
 	trainingChainFor
 } from '../utils/gameConstants.js';
 import { logError, logGameEvent, logGameEventOnce } from '../utils/logger.js';
+import { getActiveProductionBoostPct } from '../utils/battlePass.js';
 import { computeNexusPopulation } from '../utils/population.js';
 import { parsePositiveInt } from '../utils/validation.js';
 
@@ -258,7 +260,12 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
 			}
 		}
 
-		const resourceUpdate = computeResourceUpdate(nexus);
+		const [galaxyForTrain, trainBoostPct] = await Promise.all([
+			prisma.galaxy.findUnique({ where: { id: req.galaxyId! }, select: { speedMultiplier: true } }),
+			getActiveProductionBoostPct(req.userId!, req.galaxyId!)
+		]);
+		const trainSpeedMultiplier = galaxyForTrain?.speedMultiplier ?? 1.0;
+		const resourceUpdate = computeResourceUpdate(nexus, undefined, trainSpeedMultiplier, trainBoostPct);
 		const current = { ...nexus, ...resourceUpdate } as unknown as Record<string, number>;
 		const baseCost = TROOP_COSTS[troopType];
 		const cost =
@@ -315,13 +322,14 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
 		const doubled = (nexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled ?? false;
 		const stealthArrayLevel =
 			((nexus as unknown as Record<string, number>).stealthArray as number) ?? 0;
-		const perUnitSeconds = getEffectiveTrainTimeSeconds(
-			troopType,
-			trainingBuildingLevel,
-			nexus.nexusType,
-			doubled,
-			stealthArrayLevel
-		);
+		const perUnitSeconds =
+			getEffectiveTrainTimeSeconds(
+				troopType,
+				trainingBuildingLevel,
+				nexus.nexusType,
+				doubled,
+				stealthArrayLevel
+			) / trainSpeedMultiplier;
 		const queueStart =
 			sameChainQueue.length > 0
 				? new Date(sameChainQueue[sameChainQueue.length - 1].completesAt as string).getTime()
@@ -548,7 +556,11 @@ export async function cancelTrainingQueue(req: AuthRequest, res: Response): Prom
 			if (qty > 0) troopUpdates[troopType] = (nexusRecord[troopType] || 0) + qty;
 		}
 
-		const resourceUpdate = computeResourceUpdate(nexus);
+		const [galaxyForCancel, cancelTrainBoostPct] = await Promise.all([
+			prisma.galaxy.findUnique({ where: { id: req.galaxyId! }, select: { speedMultiplier: true } }),
+			getActiveProductionBoostPct(req.userId!, req.galaxyId!)
+		]);
+		const resourceUpdate = computeResourceUpdate(nexus, undefined, galaxyForCancel?.speedMultiplier ?? 1.0, cancelTrainBoostPct);
 		const current = { ...nexus, ...resourceUpdate } as unknown as Record<string, number>;
 		// Recompute populationCurrent from the post-mutation state (troops with the
 		// trained-credit delta applied + the trimmed queue + troops still away on
@@ -671,7 +683,11 @@ export async function checkTrainingQueue(req: AuthRequest, res: Response): Promi
 				(e: { troopType: string }) => trainingChainFor(e.troopType, nexus.commandCore) === chain
 			);
 		}
-		const resourceUpdate = computeResourceUpdate(nexus);
+		const [galaxyForClaim, claimTrainBoostPct] = await Promise.all([
+			prisma.galaxy.findUnique({ where: { id: req.galaxyId! }, select: { speedMultiplier: true } }),
+			getActiveProductionBoostPct(req.userId!, req.galaxyId!)
+		]);
+		const resourceUpdate = computeResourceUpdate(nexus, undefined, galaxyForClaim?.speedMultiplier ?? 1.0, claimTrainBoostPct);
 		const nexusUpdate: Record<string, unknown> = {
 			...resourceUpdate,
 			...troopUpdates,
@@ -752,7 +768,11 @@ export async function destroyTroops(req: AuthRequest, res: Response): Promise<vo
 		};
 		const populationFreed = baseCost.population * parsedAmount;
 
-		const resourceUpdate = computeResourceUpdate(nexus);
+		const [galaxyForDestroy, destroyBoostPct] = await Promise.all([
+			prisma.galaxy.findUnique({ where: { id: req.galaxyId! }, select: { speedMultiplier: true } }),
+			getActiveProductionBoostPct(req.userId!, req.galaxyId!)
+		]);
+		const resourceUpdate = computeResourceUpdate(nexus, undefined, galaxyForDestroy?.speedMultiplier ?? 1.0, destroyBoostPct);
 		const current = { ...nexus, ...resourceUpdate } as unknown as Record<string, number>;
 
 		if (current.biomass < cost.biomass || current.alloy < cost.alloy || current.ore < cost.ore) {

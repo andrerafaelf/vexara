@@ -11,14 +11,14 @@ import { getMyFaction } from '@/services/api';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-export default function CombatLogsPage() {
+export default function ReportsPage() {
 	const { selectedNexus } = useMyNexuses();
 	const { refresh: refreshUnreadReports } = useUnreadReports();
 	const { user } = useAuth();
 	const router = useRouter();
 	const [factionId, setFactionId] = useState<number | undefined>();
 
-	usePageReady(!!selectedNexus, 'combat-logs');
+	usePageReady(!!selectedNexus, 'reports');
 
 	useEffect(() => {
 		if (typeof window !== 'undefined' && !localStorage.getItem('token')) {

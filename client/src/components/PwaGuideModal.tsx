@@ -73,9 +73,10 @@ export default function PwaGuideModal({ onClose }: Props) {
 					<div className="pwa-modal-icon" aria-hidden="true">
 						<Bell size={28} />
 					</div>
-					<h2 className="pwa-modal-title">Enable Notifications</h2>
+					<h2 className="pwa-modal-title">Stay in the Fight</h2>
 					<p className="pwa-modal-subtitle">
-						Follow the steps for your device to receive push notifications.
+						The galaxy runs 24/7. Troops move, buildings complete, and enemies attack while you are
+						away. Notifications tell you the moment something needs your attention.
 					</p>
 				</div>
 

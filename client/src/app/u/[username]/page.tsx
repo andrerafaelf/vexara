@@ -39,7 +39,7 @@ function labelForFrom(from: string | null): string {
 	if (path === '/factions') return tab ? `Factions . ${titleCase(tab)}` : 'Factions';
 	if (path === '/allies') return tab ? `Allies . ${titleCase(tab)}` : 'Allies';
 	if (path === '/players') return 'Players';
-	if (path === '/combat-logs') return 'Combat Logs';
+	if (path === '/reports') return 'Reports';
 	if (path === '/market') return 'Market';
 	if (path === '/profile') return tab ? `Profile . ${titleCase(tab)}` : 'Profile';
 	if (path.startsWith('/nexus/')) return tab ? `Nexus . ${titleCase(tab)}` : 'Nexus';

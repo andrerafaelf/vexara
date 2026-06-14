@@ -13,6 +13,7 @@ router.post('/broadcast/galaxy-live/test', adminController.sendGalaxyLiveTest);
 router.post('/broadcast/galaxy-live', adminController.sendGalaxyLiveBroadcast);
 
 router.get('/overview', adminController.getOverview);
+router.get('/galaxy-health', adminController.getGalaxyHealth);
 router.get('/galaxies', adminController.listGalaxies);
 router.post('/galaxies', adminController.createGalaxy);
 router.patch('/galaxies/:galaxyId', adminController.updateGalaxy);

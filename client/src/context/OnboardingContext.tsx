@@ -62,17 +62,17 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 	{
 		id: 'create_nexus',
 		targetAttr: 'create-nexus',
-		title: 'Create Your First Nexus',
+		title: 'Claim Your Nexus',
 		message:
-			'Your nexus is your base. Click here to place it on the galaxy map and begin your conquest.',
+			'This is your base — it generates resources and trains your army. Tap here to place it on the galaxy map. Everything starts here.',
 		isComplete: (s) => s.nexuses.length > 0
 	},
 	{
 		id: 'upgrade_building',
 		targetAttr: 'upgrade-building',
-		title: 'Upgrade a Building',
+		title: 'Upgrade the Command Core',
 		message:
-			'Upgrade your Command Core first - it unlocks your production buildings and expands your build queue.',
+			'This is your first move. Upgrading the Command Core to Lv1 unlocks everything else — production buildings, troops, the works. Tap Upgrade.',
 		isReady: (s) => s.nexuses.length > 0 && isNexusPath(s.pathname),
 		isComplete: (s) => s.nexuses.some((n) => hasCommandCoreLevelStarted(n, 1))
 	},
@@ -80,21 +80,18 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 		id: 'while_you_build',
 		kind: 'panel',
 		targetAttr: '',
-		title: 'While Your Core Builds',
+		title: 'Your First Build is Accelerated',
 		message:
-			'Your first upgrade is sped up, so this is quick. Two things to know while it finishes: the resource bar up top shows your Biomass, Alloy and Ore (and how fast they grow), and your build queue lines up upgrades to run back-to-back. When the Core lands it unlocks your production buildings.',
-		// Only show this beat while the accelerated first build is actually
-		// running. If the player already pushed past it (build done), isComplete
-		// auto-advances so the panel never lingers on a stale state.
+			"This one's fast — about 25 seconds. While it runs: the resource bar at the top shows your Biomass, Alloy, and Ore ticking up in real time. The game keeps running when you close the tab. Come back in a few minutes and your queue will have made progress.",
 		isReady: (s) => isNexusPath(s.pathname) && s.nexuses.some((n) => isFirstBuildInProgress(n)),
 		isComplete: (s) => s.nexuses.some((n) => (n.buildings?.commandCore ?? 0) >= 1)
 	},
 	{
 		id: 'reinforce_command',
 		targetAttr: 'upgrade-building',
-		title: 'Reinforce Command',
+		title: 'Push to Command Core Lv2',
 		message:
-			'Upgrade Command Core to Lv2 next - this opens the production buildings you need before training troops.',
+			'One more upgrade unlocks your production buildings. Queue it now and it will run automatically after the current build finishes.',
 		isReady: (s) =>
 			isNexusPath(s.pathname) && s.nexuses.some((n) => (n.buildings?.commandCore ?? 0) >= 1),
 		isComplete: (s) => s.nexuses.some((n) => hasCommandCoreLevelStarted(n, 2))
@@ -102,8 +99,9 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 	{
 		id: 'build_production',
 		targetAttr: 'build-production',
-		title: 'Build Troop Production',
-		message: 'Build an Armor Foundry first - it unlocks Assault Troopers for your first raid.',
+		title: 'Build the Armor Foundry',
+		message:
+			'This unlocks Assault Troopers — your first raid unit. Queue it now. The game is running while you wait; check back when it is done.',
 		isReady: (s) =>
 			isNexusPath(s.pathname) && s.nexuses.some((n) => (n.buildings?.commandCore ?? 0) >= 2),
 		isComplete: (s) => s.nexuses.some((n) => hasArmorFoundryStarted(n))
@@ -112,13 +110,9 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 		id: 'counter_triangle',
 		kind: 'panel',
 		targetAttr: '',
-		title: 'How Combat Works',
+		title: 'Before You Train: How Combat Works',
 		message:
-			'Every unit has a class, and classes counter each other: Mobile beats Armor, Armor beats Fire, Fire beats Mobile. Each unit is also a Striker (attack — send these out) or an Anvil (defense — keep these home). The badges on each unit show both. Bring the class that counters what your enemy fields, and scout first so you know what that is.',
-		// Show this right before the player trains their first troops, once the
-		// production building exists so the class/role badges are on screen to
-		// look at. Completes when they actually start training (same signal as
-		// train_troops) or dismiss it.
+			'Units have classes: Mobile beats Armor, Armor beats Fire, Fire beats Mobile. Each card shows a role too — Strikers attack, Anvils defend. Send Strikers out, keep Anvils home. A mixed force beats a one-class army. The attack screen will tell you if your composition is favoured before you commit.',
 		isReady: (s) =>
 			isNexusPath(s.pathname) && s.nexuses.some((n) => (n.buildings?.armorFoundry ?? 0) >= 1),
 		isComplete: (s) =>
@@ -131,17 +125,14 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 	{
 		id: 'train_troops',
 		targetAttr: 'train-troops',
-		title: 'Train Your First Troops',
+		title: 'Train Assault Troopers',
 		message:
-			'Troops defend your nexus and let you attack others. Queue a few Assault Troopers to get started.',
-		// Only surface this once Armor Foundry exists. The spotlight points at
-		// Assault Troopers, and that card is locked until Armor Foundry Lv1.
+			'Queue at least 10. They raid neutrals, carry loot back, and defend your nexus. Training runs in the background — you do not need to stay on this screen.',
 		isReady: (s) =>
 			isNexusPath(s.pathname) &&
 			s.nexuses.some((n) => (n.buildings?.armorFoundry ?? 0) >= 1),
 		isComplete: (s) =>
 			s.nexuses.some((n) => {
-				// Already has something in the training queue → done.
 				if ((n.trainingQueue?.length ?? 0) > 0) return true;
 				const trained = Number(n.troopsTrained?.assaultTrooper ?? 0);
 				if (trained >= 5) return true;
@@ -151,38 +142,64 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 			})
 	},
 	{
+		id: 'troops_training',
+		kind: 'panel',
+		targetAttr: '',
+		title: 'Troops are Training',
+		message:
+			"Your Assault Troopers are in the queue — training takes a few minutes. You don't need to wait. Close the app, come back when they're done, and the Starfield step will be waiting for you. The game never stops.",
+		// Show while training is queued but no troops have finished yet.
+		isReady: (s) =>
+			isNexusPath(s.pathname) &&
+			s.nexuses.some((n) => (n.trainingQueue?.length ?? 0) > 0 && (n.totalTroops ?? 0) === 0),
+		isComplete: (s) => s.nexuses.some((n) => (n.totalTroops ?? 0) > 0)
+	},
+	{
 		id: 'open_starfield',
 		targetAttr: 'open-starfield',
-		title: 'Open The Starfield',
-		message: 'Head to the Starfield when your troops are ready, then pick a neutral nexus to raid.',
-		isReady: (s) => s.nexuses.length > 0,
+		title: 'Head to the Starfield',
+		message:
+			'Your troops are ready. The Starfield is the galaxy map — every nexus you can see belongs to a real player or is a neutral target. Tap here.',
+		// Gate on having actual troops so the player doesn't walk into the map empty-handed.
+		isReady: (s) => s.nexuses.some((n) => (n.totalTroops ?? 0) > 0),
 		isComplete: (s) => s.pathname === '/starfield'
 	},
 	{
 		id: 'send_attack',
 		targetAttr: 'send-attack',
-		title: 'Launch Your First Strike',
-		message: 'Find a neutral nexus on the map and attack it to earn resources and score points.',
+		title: 'Attack a Neutral Nexus',
+		message:
+			'Grey nexuses are neutral — no owner, low risk. Tap one, then tap Attack. Loot comes home when your troops return. This is how you grow early.',
 		isReady: (s) => s.pathname === '/starfield'
-		// No reliable client-side signal for "ever attacked"; only completes via
-		// the explicit "Got it" or because the user navigates past it after the
-		// target appears in the DOM.
+		// No reliable client-side signal for "ever attacked"; completes on "Got it"
+		// or when the player navigates away after the target appears.
 	},
 	{
 		id: 'open_factions',
 		targetAttr: 'open-factions',
-		title: 'Open Factions',
-		message: 'Open the Factions page to find allies and join a coordinated force.',
+		title: 'Find a Faction',
+		message:
+			'Solo players get outgunned fast. Factions coordinate attacks, share intel, and fight for the season together. The faction that wins gets named in the Hall of Champions. Tap here.',
 		isReady: (s) => s.nexuses.some((n) => hasClassProductionBuilding(n)),
 		isComplete: (s) => s.pathname === '/factions'
 	},
 	{
 		id: 'join_faction',
 		targetAttr: 'join-faction',
-		title: 'Join a Faction',
+		title: 'Apply to a Faction',
 		message:
-			'Factions unlock coordinated attacks, war rooms, and diplomacy. Find one to join here.',
+			'Find one with open slots and apply. Once you are in, you get shared chat, war room access, and allied troops that can station at your nexus. This is how the game opens up.',
 		isReady: (s) => s.pathname === '/factions'
+	},
+	{
+		id: 'tutorial_complete',
+		kind: 'panel',
+		targetAttr: '',
+		title: "You're Set",
+		message:
+			"That's the core loop: build your economy, train troops, raid for resources, win the season with your faction. The galaxy is live right now — other players are already moving. Daily quests in the sidebar give you a goal each session. Good luck, commander.",
+		isReady: (s) => s.pathname === '/factions',
+		// No isComplete — this is the final beat, player dismisses it manually.
 	}
 ];
 

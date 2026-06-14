@@ -53,7 +53,7 @@ export default function SiteFooter() {
 			<div className="site-footer-baseline">
 				<span className="site-footer-baseline-line" aria-hidden="true" />
 				<span className="site-footer-baseline-text">
-					TRANSMISSION CLOSED &nbsp;//&nbsp; NO RESETS &nbsp;//&nbsp; NO PAY-TO-WIN &nbsp;//&nbsp;
+					TRANSMISSION CLOSED &nbsp;//&nbsp; NO ACCOUNT WIPES &nbsp;//&nbsp; NO PAY-TO-WIN &nbsp;//&nbsp;
 					SOLO DEV {new Date().getFullYear()}
 				</span>
 				<span className="site-footer-baseline-line" aria-hidden="true" />

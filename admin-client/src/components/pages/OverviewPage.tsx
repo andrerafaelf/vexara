@@ -47,6 +47,19 @@ interface OverviewData {
 	}[];
 }
 
+interface GalaxyHealthRow {
+	id: number;
+	name: string;
+	speedMultiplier: number;
+	seasonEndsAt: string | null;
+	players: number;
+	nexuses: number;
+	factions: number;
+	attacks24h: number;
+	attacks7d: number;
+	newPlayers7d: number;
+}
+
 interface Props {
 	adminFetch: AdminFetch;
 }
@@ -55,13 +68,19 @@ const CHART_COLORS = { users: '#4A9EB0', attacks: '#F85149' };
 
 export default function OverviewPage({ adminFetch }: Props) {
 	const [data, setData] = useState<OverviewData | null>(null);
+	const [health, setHealth] = useState<GalaxyHealthRow[]>([]);
 	const [loading, setLoading] = useState(true);
 
 	const load = useCallback(async () => {
 		try {
-			const res = await adminFetch(`${API}/overview`);
-			const json = await res.json().catch(() => null);
+			const [overviewRes, healthRes] = await Promise.all([
+				adminFetch(`${API}/overview`),
+				adminFetch(`${API}/galaxy-health`)
+			]);
+			const json = await overviewRes.json().catch(() => null);
+			const healthJson = await healthRes.json().catch(() => []);
 			if (json) setData(json);
+			if (Array.isArray(healthJson)) setHealth(healthJson);
 		} catch {
 			/* silent */
 		} finally {
@@ -225,6 +244,75 @@ export default function OverviewPage({ adminFetch }: Props) {
 					</ResponsiveContainer>
 				</div>
 			</div>
+
+			{/* Galaxy Health */}
+			{health.length > 0 && (
+				<div className="section">
+					<div className="section-header">
+						<span className="section-title">
+							<Globe size={14} /> Galaxy Health
+						</span>
+					</div>
+					<div className="table-wrap">
+						<table className="data-table">
+							<thead>
+								<tr>
+									<th>Galaxy</th>
+									<th>Players</th>
+									<th>Nexuses</th>
+									<th>Factions</th>
+									<th>Attacks 24h</th>
+									<th>Attacks 7d</th>
+									<th>New 7d</th>
+									<th>Season Ends</th>
+								</tr>
+							</thead>
+							<tbody>
+								{health.map((g) => {
+									const endsIn = g.seasonEndsAt
+										? Math.max(0, Math.ceil((new Date(g.seasonEndsAt).getTime() - Date.now()) / 86_400_000))
+										: null;
+									return (
+										<tr key={g.id}>
+											<td className="col-strong">
+												{g.name}
+												{g.speedMultiplier > 1 && (
+													<span style={{ color: '#f59e0b', marginLeft: 6, fontSize: 11 }}>
+														{g.speedMultiplier}×
+													</span>
+												)}
+											</td>
+											<td>{g.players}</td>
+											<td>{g.nexuses}</td>
+											<td>{g.factions}</td>
+											<td>
+												<span style={{ color: g.attacks24h > 0 ? '#F85149' : 'var(--text-muted)' }}>
+													{g.attacks24h}
+												</span>
+											</td>
+											<td>{g.attacks7d}</td>
+											<td>
+												<span style={{ color: g.newPlayers7d > 0 ? '#56D364' : 'var(--text-muted)' }}>
+													{g.newPlayers7d > 0 ? `+${g.newPlayers7d}` : '0'}
+												</span>
+											</td>
+											<td>
+												{endsIn !== null ? (
+													<span style={{ color: endsIn <= 2 ? '#F85149' : '#8B949E', fontSize: 12 }}>
+														{endsIn === 0 ? 'today' : `${endsIn}d`}
+													</span>
+												) : (
+													<span style={{ color: 'var(--text-muted)', fontSize: 12 }}>—</span>
+												)}
+											</td>
+										</tr>
+									);
+								})}
+							</tbody>
+						</table>
+					</div>
+				</div>
+			)}
 
 			{/* Recent attacks */}
 			{recentAttacks.length > 0 && (
