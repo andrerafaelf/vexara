@@ -154,7 +154,7 @@
 		   horizontal switcher stays one tap away on long pages (matches the old
 		   mobile tab-bar behavior). Mobile scroll root is the window. */
 		position: sticky;
-		top: calc(56px + var(--safe-top));
+		top: calc(100px + var(--safe-top));
 		z-index: 1040;
 		background: color-mix(in srgb, var(--bg-app) 94%, transparent);
 		backdrop-filter: blur(10px);

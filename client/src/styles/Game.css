@@ -48,6 +48,22 @@
 	height: 56px;
 }
 
+/* On desktop this wrapper is invisible to flex layout (display:contents).
+   On mobile it becomes the actual 56px nav row. */
+.header-mobile-row {
+	display: contents;
+}
+
+/* Resource row only visible on mobile — hidden on desktop */
+.header-mobile-resources {
+	display: none;
+}
+
+/* Desktop resource wrapper — becomes display:none on mobile */
+.header-resources-desktop {
+	display: contents;
+}
+
 .header-left {
 	display: flex;
 	align-items: center;
@@ -487,52 +503,9 @@
 	}
 }
 
-@media (max-width: 600px) {
-	.header-resources {
-		max-width: 58vw;
-		overflow: hidden;
-	}
-	.header-resources .header-resource-strip {
-		flex-direction: row;
-		width: auto;
-		border: none;
-		gap: 2px;
-	}
-	/* Collapse each resource to a tight icon + value pair on one line. The
-	   desktop two-row grid (icon | value / rate) wastes vertical space and
-	   crowds the 56px mobile header, so flatten it: icon left, value right, no
-	   rate, no capacity denominator. */
-	.header-resources .header-res {
-		display: inline-flex;
-		align-items: center;
-		gap: 5px;
-		padding: 2px 6px;
-		min-width: 0;
-	}
-	.header-resources .header-res + .header-res {
-		border-left: none;
-		border-top: none;
-	}
-	.header-resources .header-res-label {
-		display: inline-flex;
-	}
-	.header-resources .header-res-icon {
-		width: 20px;
-		height: 20px;
-	}
-	.header-resources .header-res-value {
-		font-size: 13px;
-		line-height: 1;
-	}
-	/* Hide the per-hour rate and the "/cap" denominator on phones — both too
-	   cramped to read; the raw stockpile is what matters mid-action. */
-	.header-resources .header-res-rate {
-		display: none;
-	}
-	.header-resources .header-res-value > span {
-		display: none;
-	}
-}
+/* Mobile resource styling moved to the @media (max-width: 768px) block
+   under .header-mobile-resources, which wraps the strip in a second row
+   below the header nav controls. Nothing extra needed here. */
 
 .logout-btn {
 	background: transparent;
@@ -1341,6 +1314,17 @@
 	margin: 8px 0;
 }
 
+/* Battle pass rail card in the mobile drawer */
+.mobile-drawer-pass {
+	margin-bottom: 12px;
+	padding-bottom: 12px;
+	border-bottom: 1px solid var(--border-subtle);
+}
+
+.mobile-drawer-pass .rail-bp--btn {
+	width: 100%;
+}
+
 .mobile-drawer-nexuses {
 	border-top: 1px solid var(--color-navy-700);
 	padding-top: 14px;
@@ -1592,16 +1576,88 @@
 	}
 
 	.game-header {
-		padding: 0 16px;
-		padding-left: calc(16px + env(safe-area-inset-left));
-		padding-right: calc(16px + env(safe-area-inset-right));
+		padding: 0;
 		position: sticky;
 		top: 0;
 		z-index: 1050;
-		/* Extend background under the status bar. var(--safe-top) carries an Android
-       PWA floor so the hamburger/logo don't hide under the clock & battery. */
+		/* Two-row layout: flex-column so row 1 (nav) + row 2 (resources) stack */
+		display: flex;
+		flex-direction: column;
+		height: auto;
 		padding-top: var(--safe-top);
-		height: calc(56px + var(--safe-top));
+	}
+
+	/* Row 1: hamburger + logo + nexus toggle */
+	.header-mobile-row {
+		display: flex;
+		align-items: center;
+		height: 56px;
+		padding: 0 16px;
+		padding-left: calc(16px + env(safe-area-inset-left));
+		padding-right: calc(16px + env(safe-area-inset-right));
+		gap: 10px;
+		width: 100%;
+		box-sizing: border-box;
+	}
+
+	/* Desktop resource wrapper hidden on mobile */
+	.header-resources-desktop {
+		display: none;
+	}
+
+	/* Row 2: full-width resource strip */
+	.header-mobile-resources {
+		display: flex;
+		align-items: center;
+		padding: 0 16px 8px;
+		padding-left: calc(16px + env(safe-area-inset-left));
+		padding-right: calc(16px + env(safe-area-inset-right));
+		border-top: 1px solid rgba(255,255,255,0.05);
+	}
+
+	.header-mobile-resources .header-resources {
+		max-width: 100%;
+		overflow: visible;
+		width: 100%;
+	}
+
+	.header-mobile-resources .header-resource-strip {
+		width: 100%;
+		flex-direction: row;
+		border: none;
+		background: transparent;
+		gap: 0;
+	}
+
+	.header-mobile-resources .header-res {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		gap: 5px;
+		padding: 4px 6px;
+		min-width: 0;
+		border-left: none !important;
+		border-top: none !important;
+	}
+
+	.header-mobile-resources .header-res-label {
+		display: inline-flex;
+	}
+
+	.header-mobile-resources .header-res-icon {
+		width: 18px;
+		height: 18px;
+	}
+
+	.header-mobile-resources .header-res-value {
+		font-size: 13px;
+		font-weight: 600;
+		line-height: 1;
+	}
+
+	.header-mobile-resources .header-res-rate,
+	.header-mobile-resources .header-res-value > span {
+		display: none;
 	}
 
 	.menu-toggle {
@@ -1650,10 +1706,10 @@
 	.mobile-drawer {
 		display: block;
 		position: fixed;
-		top: calc(56px + var(--safe-top));
+		top: calc(100px + var(--safe-top));
 		left: 0;
 		right: 0;
-		max-height: calc(100dvh - 56px - var(--safe-top));
+		max-height: calc(100dvh - 100px - var(--safe-top));
 		overflow-y: auto;
 		-webkit-overflow-scrolling: touch;
 		background: var(--color-navy-800);

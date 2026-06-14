@@ -308,25 +308,27 @@ export default function GameLayout({
 			<OnboardingProvider>
 				<div className="game-container">
 					<header className="game-header">
-						<div className="header-left">
-							<button
-								className="menu-toggle"
-								onClick={() => setIsMobileMenuOpen((p) => !p)}
-								aria-label="Toggle navigation menu"
-								aria-expanded={isMobileMenuOpen}
-							>
-								<Menu size={18} />
-							</button>
-							<h1 className="vx-wordmark game-wordmark">
-								<img
-									src="/vexara-logo.png"
-									alt=""
-									aria-hidden="true"
-									className="vx-wordmark-stamp"
-								/>
-								<span className="vx-wordmark-name">Vexara</span>
-							</h1>
-						</div>
+						{/* ── Mobile row 1: hamburger + logo + nexus toggle ── */}
+						<div className="header-mobile-row">
+							<div className="header-left">
+								<button
+									className="menu-toggle"
+									onClick={() => setIsMobileMenuOpen((p) => !p)}
+									aria-label="Toggle navigation menu"
+									aria-expanded={isMobileMenuOpen}
+								>
+									<Menu size={18} />
+								</button>
+								<h1 className="vx-wordmark game-wordmark">
+									<img
+										src="/vexara-logo.png"
+										alt=""
+										aria-hidden="true"
+										className="vx-wordmark-stamp"
+									/>
+									<span className="vx-wordmark-name">Vexara</span>
+								</h1>
+							</div>
 
 						<div className="header-center">
 							<button
@@ -502,10 +504,10 @@ export default function GameLayout({
 						</div>
 
 						<div className="header-right">
-							{headerNexus && <HeaderResourceStrip nexus={headerNexus} />}
-							{/* Reference tools — demoted out of the primary game-loop nav into a
-							    compact utility cluster so the center nav stays focused on the
-							    core loops (My Nexus / Galaxy / Reports / …). */}
+							{/* Resources hidden on mobile — shown in header-mobile-resources row below */}
+							<div className="header-resources-desktop">
+								{headerNexus && <HeaderResourceStrip nexus={headerNexus} />}
+							</div>
 							<div className="header-utility">
 								<a
 									href="/codex"
@@ -537,6 +539,14 @@ export default function GameLayout({
 								<NexusIcon size={20} />
 							</button>
 						</div>
+						</div>{/* end header-mobile-row */}
+
+						{/* ── Mobile row 2: resource strip full width ── */}
+						{headerNexus && (
+							<div className="header-mobile-resources">
+								<HeaderResourceStrip nexus={headerNexus} />
+							</div>
+						)}
 					</header>
 
 					<ConnectionStatusBar />
@@ -598,6 +608,9 @@ export default function GameLayout({
 								</div>
 							</div>
 						)}
+						<div className="mobile-drawer-pass">
+							<RailBattlePass />
+						</div>
 						<div className="mobile-drawer-links">
 							<button
 								className={`nav-btn${is('dashboard') ? ' active' : ''}`}
