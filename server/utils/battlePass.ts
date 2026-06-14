@@ -176,10 +176,27 @@ async function applyRewardPart(userId: number, galaxyId: number, part: string): 
 			data: { nexusGroups: groups }
 		});
 	} else if (type === 'title') {
-		// Season-scoped title stored in GalaxyPlayer (Phase 6 promotes to User)
-		// No-op beyond level tracking — client derives display from passLevel + hasPaidPass
+		const titleName = rest.join(':').trim();
+		if (!titleName) return;
+		await prisma.galaxyPlayer.update({
+			where: { userId_galaxyId: { userId, galaxyId } },
+			data: { passTitle: titleName }
+		});
 	} else if (type === 'badge') {
-		// Cosmetic badge — deferred to Phase 6 cosmetic system
+		const tier = rest[0]?.trim();
+		if (!tier) return;
+		const user = await prisma.user.findUnique({
+			where: { id: userId },
+			select: { earnedBadges: true }
+		});
+		if (!user) return;
+		const badges = (user.earnedBadges as string[]) ?? [];
+		if (!badges.includes(tier)) {
+			await prisma.user.update({
+				where: { id: userId },
+				data: { earnedBadges: [...badges, tier] }
+			});
+		}
 	} else if (type === 'vexpoints') {
 		const amount = parseInt(rest[0] ?? '0', 10);
 		if (!amount) return;
@@ -188,6 +205,24 @@ async function applyRewardPart(userId: number, galaxyId: number, part: string): 
 			data: { vexPoints: { increment: amount } }
 		});
 	}
+}
+
+// Returns the active production boost pct for a player (0 if none or expired).
+export async function getActiveProductionBoostPct(userId: number, galaxyId: number): Promise<number> {
+	const player = await prisma.galaxyPlayer.findUnique({
+		where: { userId_galaxyId: { userId, galaxyId } },
+		select: { nexusGroups: true }
+	});
+	if (!player) return 0;
+	const groups = (player.nexusGroups as Array<{ type: string; pct?: number; expiresAt?: string }> | null) ?? [];
+	const now = new Date();
+	let maxPct = 0;
+	for (const g of groups) {
+		if (g.type === 'production_boost' && typeof g.pct === 'number' && g.expiresAt) {
+			if (new Date(g.expiresAt) > now) maxPct = Math.max(maxPct, g.pct);
+		}
+	}
+	return maxPct;
 }
 
 // Purchase the paid pass using Vex Points. Deducts 1,000 VP, sets hasPaidPass,
@@ -237,5 +272,42 @@ export async function grantVexPoints(userId: number, amount: number): Promise<vo
 	await prisma.user.update({
 		where: { id: userId },
 		data: { vexPoints: { increment: amount } }
+	});
+}
+
+// Pass title rank — higher index = more prestigious. Used to ensure we never
+// downgrade a user's permanent title when a new season ends.
+const PASS_TITLE_RANK: Record<string, number> = {
+	Recruit: 1,
+	Operative: 2,
+	Proven: 3,
+	'Vex Commander': 4,
+	'Season Conqueror': 5
+};
+
+// Called by endGalaxy() for each participant. Promotes the player's season
+// passTitle to User.passTitle if it outranks their current permanent title.
+export async function promotePassTitle(userId: number, galaxyId: number): Promise<void> {
+	const [player, user] = await Promise.all([
+		prisma.galaxyPlayer.findUnique({
+			where: { userId_galaxyId: { userId, galaxyId } },
+			select: { passTitle: true }
+		}),
+		prisma.user.findUnique({
+			where: { id: userId },
+			select: { passTitle: true }
+		})
+	]);
+
+	const newTitle = player?.passTitle;
+	if (!newTitle) return;
+
+	const currentRank = user?.passTitle ? (PASS_TITLE_RANK[user.passTitle] ?? 0) : 0;
+	const newRank = PASS_TITLE_RANK[newTitle] ?? 0;
+	if (newRank <= currentRank) return;
+
+	await prisma.user.update({
+		where: { id: userId },
+		data: { passTitle: newTitle }
 	});
 }

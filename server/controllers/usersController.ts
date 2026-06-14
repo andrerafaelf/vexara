@@ -119,7 +119,9 @@ export async function getMe(req: AuthRequest, res: Response): Promise<void> {
 				galaxiesWon: true,
 				galaxiesPlayed: true,
 				lifetimePoints: true,
-				vexPoints: true
+				vexPoints: true,
+				passTitle: true,
+				earnedBadges: true
 			}
 		});
 		if (!user) {
@@ -142,6 +144,8 @@ export async function getMe(req: AuthRequest, res: Response): Promise<void> {
 			galaxiesPlayed: user.galaxiesPlayed,
 			lifetimePoints: user.lifetimePoints,
 			vexPoints: user.vexPoints,
+			passTitle: user.passTitle ?? null,
+			earnedBadges: (user.earnedBadges as string[]) ?? [],
 			commanderTitle: resolveTitle(user)
 		});
 	} catch (error) {

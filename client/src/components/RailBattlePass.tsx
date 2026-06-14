@@ -2,20 +2,20 @@
 
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Sparkles, Lock, ChevronRight } from 'lucide-react';
+import { Sparkles, Lock, ChevronRight, Award } from 'lucide-react';
 import { getBattlePass, purchaseBattlePass } from '../services/api';
 import '../styles/RailBattlePass.css';
 
 const MAX_LEVEL = 30;
 const XP_PER_LEVEL = 300;
 
-// Reward labels shown on the track at their level
 const MILESTONE_LEVELS = [5, 10, 15, 20, 25, 30];
 
 interface PassState {
 	seasonXp: number;
 	passLevel: number;
 	hasPaidPass: boolean;
+	passTitle: string | null;
 }
 
 export default function RailBattlePass() {
@@ -45,7 +45,7 @@ export default function RailBattlePass() {
 
 	if (!data) return null;
 
-	const { seasonXp, passLevel, hasPaidPass } = data;
+	const { seasonXp, passLevel, hasPaidPass, passTitle } = data;
 	const xpIntoLevel = seasonXp - passLevel * XP_PER_LEVEL;
 	const xpPct = Math.min((xpIntoLevel / XP_PER_LEVEL) * 100, 100);
 	const isMaxed = passLevel >= MAX_LEVEL;
@@ -72,7 +72,6 @@ export default function RailBattlePass() {
 				<div className="rail-bp-bar" role="progressbar" aria-valuenow={xpPct} aria-valuemin={0} aria-valuemax={100}>
 					<div className="rail-bp-bar-fill" style={{ width: `${xpPct}%` }} />
 
-					{/* milestone pips */}
 					{MILESTONE_LEVELS.map((lvl) => {
 						const pct = ((lvl - passLevel - 1) / (MAX_LEVEL - passLevel)) * 100;
 						if (pct < 0 || pct > 100) return null;
@@ -85,6 +84,13 @@ export default function RailBattlePass() {
 							/>
 						);
 					})}
+				</div>
+			)}
+
+			{passTitle && (
+				<div className="rail-bp-title-row">
+					<Award size={11} aria-hidden="true" />
+					<span className="rail-bp-title-label">{passTitle}</span>
 				</div>
 			)}
 

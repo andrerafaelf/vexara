@@ -14,6 +14,8 @@ export interface User {
 	galaxiesPlayed?: number;
 	lifetimePoints?: number;
 	vexPoints?: number;
+	passTitle?: string | null;
+	earnedBadges?: string[];
 	commanderTitle?: string | null;
 }
 

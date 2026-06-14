@@ -74,6 +74,23 @@
 	border-color: var(--accent);
 }
 
+/* ── Active title ─────────────────────────────────────── */
+.rail-bp-title-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	margin-top: var(--space-2);
+	font-size: 10px;
+	color: var(--accent);
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	font-weight: 600;
+}
+
+.rail-bp-title-label {
+	font-family: var(--font-mono);
+}
+
 /* ── Upgrade CTA ──────────────────────────────────────── */
 .rail-bp-upgrade {
 	margin-top: var(--space-3);

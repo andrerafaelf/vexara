@@ -77,6 +77,15 @@ model User {
   // Vex Points balance. Earned via battle pass rewards; spent on the pass itself
   // (1,000 VP = one paid pass) and future shop items. €4.99 purchase grants 1,000 VP.
   vexPoints Int @default(0)
+
+  // Best Vex Protocol pass title ever earned across all seasons (promoted from
+  // GalaxyPlayer.passTitle at season end). Separate from commanderTitle which
+  // is derived from combat/galaxy stats via resolveTitle().
+  passTitle     String? @db.VarChar(32)
+
+  // Permanent badge collection. Array of tier strings granted by the battle pass:
+  // ["bronze", "silver", "gold", "platinum"]. Highest tier badge wins display.
+  earnedBadges  Json    @default("[]")
 }
 
 enum GalaxyStatus {
@@ -115,6 +124,11 @@ model Galaxy {
   winMinPlayers   Int?   // minimum players in the galaxy for victory to be eligible
   winMinFactions  Int?   // minimum distinct factions for victory to be eligible
 
+  // Speed world multiplier. 1.0 = normal, 5.0 = 5× speed. Divides all duration-based
+  // calculations (travel, builds, training, production elapsed-time). Default 1.0 is a
+  // no-op so all existing galaxies are unaffected.
+  speedMultiplier Float @default(1.0)
+
   activeUsers        User[]              @relation("UserActiveGalaxy")
   players            GalaxyPlayer[]
   nexuses            Nexus[]
@@ -151,6 +165,8 @@ model GalaxyPlayer {
   seasonXp    Int     @default(0)
   passLevel   Int     @default(0)
   hasPaidPass Boolean @default(false)
+  // Highest pass title earned this season. Promoted to User.passTitle at season end.
+  passTitle   String? @db.VarChar(32)
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   galaxy Galaxy @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
@@ -595,6 +611,11 @@ model Faction {
   motd            String?   @db.VarChar(512)
   createdAt       DateTime  @default(now())
   dominanceSince  DateTime?
+
+  // Shared faction treasury. Members donate; officers/leaders spend on faction buffs.
+  treasuryBiomass Float @default(0)
+  treasuryAlloy   Float @default(0)
+  treasuryOre     Float @default(0)
 
   galaxy   Galaxy           @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
   members      FactionMember[]

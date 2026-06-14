@@ -18,7 +18,7 @@ router.get('/', auth, async (req, res: Response) => {
 		}
 		const player = await prisma.galaxyPlayer.findUnique({
 			where: { userId_galaxyId: { userId: authReq.userId, galaxyId: authReq.galaxyId } },
-			select: { seasonXp: true, passLevel: true, hasPaidPass: true }
+			select: { seasonXp: true, passLevel: true, hasPaidPass: true, passTitle: true }
 		});
 		if (!player) {
 			res.status(404).json({ error: 'Not a member of this galaxy' });

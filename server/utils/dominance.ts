@@ -1,6 +1,7 @@
 import prisma from '../lib/prisma.js';
 import { NOTIF, sendPushToUser } from './push.js';
 import { logError } from './logger.js';
+import { promotePassTitle } from './battlePass.js';
 
 // Engine defaults. Each galaxy may override any of these via its win* columns
 // (see resolveWinConfig); a NULL column falls back to the default here.
@@ -14,6 +15,7 @@ export interface GalaxyWinSource {
 	winSustainHours: number | null;
 	winMinPlayers: number | null;
 	winMinFactions: number | null;
+	speedMultiplier?: number | null;
 }
 
 export interface ResolvedWinConfig {
@@ -33,10 +35,14 @@ export function resolveWinConfig(g: GalaxyWinSource): ResolvedWinConfig {
 		g.winShare != null && Number.isFinite(g.winShare)
 			? Math.min(0.95, Math.max(0.3, g.winShare))
 			: DOMINANCE_THRESHOLD;
-	const sustainHours =
+	const speed = g.speedMultiplier != null && Number.isFinite(g.speedMultiplier) && g.speedMultiplier > 0
+		? g.speedMultiplier
+		: 1.0;
+	const rawSustainHours =
 		g.winSustainHours != null && Number.isFinite(g.winSustainHours)
 			? Math.min(720, Math.max(0, g.winSustainHours))
 			: DOMINANCE_SUSTAIN_MS / 3_600_000;
+	const sustainHours = rawSustainHours / speed;
 	const minPlayers =
 		g.winMinPlayers != null && Number.isFinite(g.winMinPlayers)
 			? Math.max(1, Math.floor(g.winMinPlayers))
@@ -57,7 +63,8 @@ export async function processDominanceVictories(): Promise<void> {
 			winShare: true,
 			winSustainHours: true,
 			winMinPlayers: true,
-			winMinFactions: true
+			winMinFactions: true,
+			speedMultiplier: true
 		}
 	});
 
@@ -258,7 +265,8 @@ async function endGalaxy(
 					factionName: factionInfo?.name ?? null,
 					factionTag: factionInfo?.tag ?? null
 				}
-			})
+			}),
+			promotePassTitle(p.userId, galaxy.id)
 		]);
 	}
 
