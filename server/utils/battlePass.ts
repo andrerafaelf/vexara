@@ -41,22 +41,21 @@ interface PassReward {
 // Full 50-level Vex Protocol reward table.
 //
 // Free track  (Protocol: Field):
-//   Resources scale from 500 → 25,000 per reward. Badge milestones at L10/25/40.
-//   Free VP at L10/20/30/40/50 (100 VP total — tastes the currency, can't buy a pass alone).
-//   Veteran title at L40. Platinum badge + 30 VP at L50.
+//   Resources scale from 500 → 22,000+ per reward across 5 acts.
+//   Badge milestones at L10(bronze) / L25(silver) / L40(gold) / L50(platinum).
+//   Veteran title at L40. Platinum badge at L50.
+//   VP at L5/10/15/20/25/30/35/40/45/50 = 250 VP total.
+//     L5:10 + L10:20 + L15:20 + L20:25 + L25:25 + L30:30 + L35:30 + L40:35 + L45:35 + L50:20 = 250 ✓
 //
 // Paid track  (Protocol: Command):
 //   Titles: Recruit(1) → Operative(8) → Proven(18) → Vex Commander(30) → High Commander(45) → Season Conqueror(50)
-//   Boosts escalate from +5% 12h → +35% 120h. VP chunks grow every act.
-//   L50 paid: Season Conqueror + 300 VP + +35% prod 120h — the capstone that justifies the pass.
+//   Boosts escalate from +5% 12h → +35% 120h.
+//   VP at 20 levels = 500 VP total.
+//     L3:10 + L5:10 + L8:10 + L10:15 + L13:10 + L15:15 + L18:15 + L20:20 +
+//     L23:15 + L25:20 + L28:15 + L30:25 + L33:15 + L35:25 + L38:20 + L40:30 +
+//     L43:20 + L45:35 + L48:25 + L50:170 = 500 ✓
 //
-// VP total on paid track (verified):
-//   L3:10 + L5:15 + L8:15 + L10:25 + L13:15 + L15:20 + L18:20 + L20:30 +
-//   L23:20 + L25:30 + L28:25 + L30:35 + L33:25 + L35:35 + L38:30 + L40:40 +
-//   L43:30 + L45:45 + L48:35 + L50:300
-//   = 750 VP  (75% of the 1,000 VP cost returned)
-//
-// Free VP total: L10:10 + L20:15 + L30:20 + L40:25 + L50:30 = 100 VP
+// Combined total returned to player: 250 (free) + 500 (paid) = 750 VP on a 1,000 VP pass.
 //
 // Reward format strings:
 //   resources:<resource>:<amount>         — deposited to player's nexus
@@ -66,76 +65,69 @@ interface PassReward {
 //   vexpoints:<amount>                    — credited to User.vexPoints
 const REWARD_TABLE: PassReward[] = [
 	// ── Act I: Enlistment (1–10) ─────────────────────────────────────────────────
-	// Early hook. Resources feel immediately useful. Recruit title + first VP taste.
 	{ level:  1, free: 'resources:biomass:500',                                              paid: 'title:Recruit' },
 	{ level:  2, free: 'resources:alloy:500',                                                paid: 'boost:production:5:12' },
 	{ level:  3, free: 'resources:ore:500',                                                  paid: 'vexpoints:10' },
 	{ level:  4, free: 'resources:biomass:750,resources:alloy:500',                          paid: 'boost:production:8:18' },
-	{ level:  5, free: 'resources:ore:750',                                                  paid: 'vexpoints:15' },
+	{ level:  5, free: 'resources:ore:750,vexpoints:10',                                     paid: 'vexpoints:10' },
 	{ level:  6, free: 'resources:biomass:1000',                                             paid: 'boost:production:10:24' },
 	{ level:  7, free: 'resources:alloy:1000',                                               paid: 'boost:production:10:24' },
-	{ level:  8, free: 'resources:ore:1000',                                                 paid: 'title:Operative,vexpoints:15' },
+	{ level:  8, free: 'resources:ore:1000',                                                 paid: 'title:Operative,vexpoints:10' },
 	{ level:  9, free: 'resources:biomass:1200,resources:alloy:800',                         paid: 'boost:production:12:24' },
-	{ level: 10, free: 'badge:bronze,vexpoints:10',                                          paid: 'vexpoints:25,boost:production:12:36' },
+	{ level: 10, free: 'badge:bronze,vexpoints:20',                                          paid: 'vexpoints:15,boost:production:12:36' },
 
 	// ── Act II: Field Ops (11–20) ────────────────────────────────────────────────
-	// Resources grow fast. Paid track starts delivering real boost windows.
 	{ level: 11, free: 'resources:biomass:1500',                                             paid: 'boost:production:15:36' },
 	{ level: 12, free: 'resources:alloy:1500',                                               paid: 'boost:production:15:36' },
-	{ level: 13, free: 'resources:ore:1500',                                                 paid: 'vexpoints:15' },
+	{ level: 13, free: 'resources:ore:1500',                                                 paid: 'vexpoints:10' },
 	{ level: 14, free: 'resources:biomass:2000,resources:ore:1000',                          paid: 'boost:production:15:48' },
-	{ level: 15, free: 'resources:alloy:2000',                                               paid: 'vexpoints:20' },
+	{ level: 15, free: 'resources:alloy:2000,vexpoints:20',                                  paid: 'vexpoints:15' },
 	{ level: 16, free: 'resources:ore:2000',                                                 paid: 'boost:production:18:48' },
 	{ level: 17, free: 'resources:biomass:2500,resources:alloy:1500',                        paid: 'boost:production:18:48' },
-	{ level: 18, free: 'resources:ore:2500',                                                 paid: 'title:Proven,vexpoints:20' },
+	{ level: 18, free: 'resources:ore:2500',                                                 paid: 'title:Proven,vexpoints:15' },
 	{ level: 19, free: 'resources:biomass:3000,resources:alloy:2000',                        paid: 'boost:production:20:48' },
-	{ level: 20, free: 'resources:ore:3000,vexpoints:15',                                    paid: 'vexpoints:30,boost:production:20:72' },
+	{ level: 20, free: 'resources:ore:3000,vexpoints:25',                                    paid: 'vexpoints:20,boost:production:20:72' },
 
 	// ── Act III: Warfront (21–30) ────────────────────────────────────────────────
-	// Resources are now serious war-chest drops. Boosts cross into 72h territory.
 	{ level: 21, free: 'resources:biomass:3500,resources:alloy:2500',                        paid: 'boost:production:22:72' },
 	{ level: 22, free: 'resources:ore:3500',                                                 paid: 'boost:production:22:72' },
-	{ level: 23, free: 'resources:biomass:4000,resources:alloy:3000',                        paid: 'vexpoints:20' },
+	{ level: 23, free: 'resources:biomass:4000,resources:alloy:3000',                        paid: 'vexpoints:15' },
 	{ level: 24, free: 'resources:ore:4000',                                                 paid: 'boost:production:22:72' },
-	{ level: 25, free: 'badge:silver,resources:biomass:4000',                                paid: 'vexpoints:30' },
+	{ level: 25, free: 'badge:silver,resources:biomass:4000,vexpoints:25',                   paid: 'vexpoints:20' },
 	{ level: 26, free: 'resources:alloy:4500,resources:ore:3000',                            paid: 'boost:production:25:72' },
 	{ level: 27, free: 'resources:biomass:5000',                                             paid: 'boost:production:25:72' },
-	{ level: 28, free: 'resources:alloy:5000,resources:ore:3500',                            paid: 'vexpoints:25' },
+	{ level: 28, free: 'resources:alloy:5000,resources:ore:3500',                            paid: 'vexpoints:15' },
 	{ level: 29, free: 'resources:biomass:6000,resources:alloy:4000',                        paid: 'boost:production:25:96' },
-	{ level: 30, free: 'resources:ore:6000,vexpoints:20',                                    paid: 'title:Vex Commander,vexpoints:35,boost:production:25:96' },
+	{ level: 30, free: 'resources:ore:6000,vexpoints:30',                                    paid: 'title:Vex Commander,vexpoints:25,boost:production:25:96' },
 
 	// ── Act IV: High Command (31–40) ─────────────────────────────────────────────
-	// Resources are genuinely impactful now. Boosts hit 96h+. VP gets serious.
 	{ level: 31, free: 'resources:biomass:7000,resources:alloy:5000',                        paid: 'boost:production:28:96' },
 	{ level: 32, free: 'resources:ore:7000',                                                 paid: 'boost:production:28:96' },
-	{ level: 33, free: 'resources:biomass:8000,resources:alloy:5000,resources:ore:4000',     paid: 'vexpoints:25' },
+	{ level: 33, free: 'resources:biomass:8000,resources:alloy:5000,resources:ore:4000',     paid: 'vexpoints:15' },
 	{ level: 34, free: 'resources:biomass:8000,resources:ore:6000',                          paid: 'boost:production:28:96' },
-	{ level: 35, free: 'resources:alloy:9000,resources:biomass:6000',                        paid: 'vexpoints:35' },
+	{ level: 35, free: 'resources:alloy:9000,resources:biomass:6000,vexpoints:30',           paid: 'vexpoints:25' },
 	{ level: 36, free: 'resources:ore:9000,resources:alloy:6000',                            paid: 'boost:production:30:96' },
 	{ level: 37, free: 'resources:biomass:10000,resources:alloy:7000',                       paid: 'boost:production:30:96' },
-	{ level: 38, free: 'resources:ore:10000,resources:biomass:7000',                         paid: 'vexpoints:30' },
+	{ level: 38, free: 'resources:ore:10000,resources:biomass:7000',                         paid: 'vexpoints:20' },
 	{ level: 39, free: 'resources:biomass:12000,resources:alloy:8000,resources:ore:6000',    paid: 'boost:production:30:120' },
-	{ level: 40, free: 'badge:gold,title:Veteran,vexpoints:25',                              paid: 'vexpoints:40,boost:production:30:120' },
+	{ level: 40, free: 'badge:gold,title:Veteran,vexpoints:35',                              paid: 'vexpoints:30,boost:production:30:120' },
 
 	// ── Act V: The Vex Reckoning (41–50) ─────────────────────────────────────────
-	// End-game. Resources at this tier are war-defining drops. Paid track rewards
-	// are the best in the game. L50 is the single most valuable level in Vexara history.
 	{ level: 41, free: 'resources:biomass:13000,resources:alloy:9000',                       paid: 'boost:production:32:120' },
 	{ level: 42, free: 'resources:ore:13000,resources:biomass:9000',                         paid: 'boost:production:32:120' },
-	{ level: 43, free: 'resources:biomass:15000,resources:alloy:10000,resources:ore:8000',   paid: 'vexpoints:30' },
+	{ level: 43, free: 'resources:biomass:15000,resources:alloy:10000,resources:ore:8000',   paid: 'vexpoints:20' },
 	{ level: 44, free: 'resources:biomass:15000,resources:alloy:12000',                      paid: 'boost:production:33:120' },
-	{ level: 45, free: 'resources:ore:15000,resources:biomass:10000',                        paid: 'title:High Commander,vexpoints:45,boost:production:33:120' },
+	{ level: 45, free: 'resources:ore:15000,resources:biomass:10000,vexpoints:35',           paid: 'title:High Commander,vexpoints:35,boost:production:33:120' },
 	{ level: 46, free: 'resources:biomass:18000,resources:alloy:13000',                      paid: 'boost:production:35:120' },
 	{ level: 47, free: 'resources:ore:18000,resources:alloy:14000',                          paid: 'boost:production:35:120' },
-	{ level: 48, free: 'resources:biomass:20000,resources:alloy:15000,resources:ore:12000',  paid: 'vexpoints:35' },
+	{ level: 48, free: 'resources:biomass:20000,resources:alloy:15000,resources:ore:12000',  paid: 'vexpoints:25' },
 	{ level: 49, free: 'resources:biomass:22000,resources:alloy:18000,resources:ore:15000',  paid: 'boost:production:35:120' },
 
 	// ── L50: The Capstone ─────────────────────────────────────────────────────────
-	// Free: Platinum badge + 30 VP. The rarest badge in the game. Proof you played.
-	// Paid: Season Conqueror title + 300 VP (biggest single VP grant) + +35% prod 120h.
-	//       300 VP alone is 40% of the pass cost. With 750 total this pass nearly
-	//       funds the next one outright. Absolutely insane. You earned it.
-	{ level: 50, free: 'badge:platinum,vexpoints:30',                                        paid: 'title:Season Conqueror,vexpoints:300,boost:production:35:120' },
+	// Free: Platinum badge + 20 VP. Rarest badge in the game. Proof you went the distance.
+	// Paid: Season Conqueror + 170 VP (biggest single grant) + +35% prod 120h.
+	//       Combined with free VP: 750 total returned on a 1,000 VP pass.
+	{ level: 50, free: 'badge:platinum,vexpoints:20',                                        paid: 'title:Season Conqueror,vexpoints:170,boost:production:35:120' },
 ];
 
 const rewardByLevel = new Map(REWARD_TABLE.map((r) => [r.level, r]));
