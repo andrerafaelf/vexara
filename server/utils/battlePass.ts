@@ -38,49 +38,64 @@ interface PassReward {
 
 // Full 30-level Vex Protocol reward table.
 //
-// Free track (Protocol: Field):   resources + badges + Veteran title at 30
-// Paid track (Protocol: Command): titles + boosts + Vex Points
+// Free track  (Protocol: Field):   escalating resources + milestone badges + Veteran title at 30
+// Paid track  (Protocol: Command): VP + production boosts + prestige titles
 //
-// VP total on paid track: 10+10+10+10+20+10+15+15+15+15+20+20+200 = 600 VP
-// (60% of the 1,000 VP cost — the pass pays for 60% of the next one)
+// VP total on paid track (verified):
+//   L3:15 + L5:25 + L8:20 + L10:40 + L12:20 + L14:25 +
+//   L17:30 + L19:30 + L21:35 + L23:35 + L25:35 + L27:50 + L29:65 + L30:325
+//   = 750 VP  (75% of the 1,000 VP cost returned — nearly the next pass free)
 //
 // Reward format strings:
-//   resources:<resource>:<amount>         — deposit to player's nexus
-//   boost:production:<pct>:<hours>        — stored in GalaxyPlayer for Phase 6 economy
-//   title:<Name>                          — season-scoped title (Phase 6 promotes to User)
-//   badge:<tier>                          — cosmetic badge (Phase 6 cosmetic system)
+//   resources:<resource>:<amount>         — deposited to player's nexus
+//   boost:production:<pct>:<hours>        — time-limited production multiplier
+//   title:<Name>                          — season-scoped prestige title
+//   badge:<tier>                          — permanent career badge
 //   vexpoints:<amount>                    — credited to User.vexPoints
 const REWARD_TABLE: PassReward[] = [
-	{ level:  1, free: 'resources:biomass:200',              paid: 'title:Recruit' },
-	{ level:  2, free: 'resources:alloy:200',                paid: 'boost:production:5:12' },
-	{ level:  3, free: 'resources:ore:200',                  paid: 'vexpoints:10' },
-	{ level:  4, free: 'resources:biomass:300',              paid: 'boost:production:5:12' },
-	{ level:  5, free: 'badge:bronze',                       paid: 'vexpoints:10' },
-	{ level:  6, free: 'resources:alloy:300',                paid: 'title:Operative' },
-	{ level:  7, free: 'resources:ore:300',                  paid: 'boost:production:8:18' },
-	{ level:  8, free: 'resources:biomass:400',              paid: 'vexpoints:10' },
-	{ level:  9, free: 'resources:alloy:400',                paid: 'boost:production:8:18' },
-	{ level: 10, free: 'resources:ore:400',                  paid: 'vexpoints:20' },
-	{ level: 11, free: 'resources:biomass:500',              paid: 'boost:production:10:24' },
-	{ level: 12, free: 'resources:alloy:500',                paid: 'vexpoints:10' },
-	{ level: 13, free: 'resources:ore:500',                  paid: 'boost:production:10:24' },
-	{ level: 14, free: 'resources:biomass:600',              paid: 'vexpoints:10' },
-	{ level: 15, free: 'badge:silver',                       paid: 'title:Proven' },
-	{ level: 16, free: 'resources:alloy:600',                paid: 'boost:production:12:24' },
-	{ level: 17, free: 'resources:ore:600',                  paid: 'vexpoints:15' },
-	{ level: 18, free: 'resources:biomass:700',              paid: 'boost:production:12:24' },
-	{ level: 19, free: 'resources:alloy:700',                paid: 'vexpoints:15' },
-	{ level: 20, free: 'resources:ore:700',                  paid: 'boost:production:15:48' },
-	{ level: 21, free: 'resources:biomass:800',              paid: 'vexpoints:15' },
-	{ level: 22, free: 'resources:alloy:800',                paid: 'boost:production:15:48' },
-	{ level: 23, free: 'resources:ore:800,resources:biomass:300', paid: 'vexpoints:15' },
-	{ level: 24, free: 'resources:alloy:900',                paid: 'boost:production:18:48' },
-	{ level: 25, free: 'badge:gold',                         paid: 'title:Vex Commander' },
-	{ level: 26, free: 'resources:ore:900',                  paid: 'boost:production:18:72' },
-	{ level: 27, free: 'resources:biomass:1000',             paid: 'vexpoints:20' },
-	{ level: 28, free: 'resources:alloy:1000',               paid: 'boost:production:20:72' },
-	{ level: 29, free: 'resources:ore:1000',                 paid: 'vexpoints:20' },
-	{ level: 30, free: 'title:Veteran,badge:platinum',       paid: 'title:Season Conqueror,vexpoints:200,boost:production:25:72' }
+	// ── Act I: Enlistment (1–10) ───────────────────────────────────────────────
+	// Trickle of resources + early title. The hook that gets players to level up.
+	{ level:  1, free: 'resources:biomass:300',                           paid: 'title:Recruit' },
+	{ level:  2, free: 'resources:alloy:300',                             paid: 'boost:production:5:12' },
+	{ level:  3, free: 'resources:ore:300',                               paid: 'vexpoints:15' },
+	{ level:  4, free: 'resources:biomass:400,resources:alloy:200',       paid: 'boost:production:8:18' },
+	{ level:  5, free: 'resources:ore:400',                               paid: 'vexpoints:25' },
+	{ level:  6, free: 'resources:biomass:500',                           paid: 'title:Operative,boost:production:10:18' },
+	{ level:  7, free: 'resources:alloy:500',                             paid: 'boost:production:10:24' },
+	{ level:  8, free: 'resources:ore:500',                               paid: 'vexpoints:20' },
+	{ level:  9, free: 'resources:biomass:600,resources:alloy:300',       paid: 'boost:production:12:24' },
+	{ level: 10, free: 'badge:bronze',                                    paid: 'vexpoints:40,boost:production:12:24' },
+
+	// ── Act II: Proving Ground (11–20) ────────────────────────────────────────
+	// Resources balloon. Paid track opens up serious boost windows + VP chunks.
+	{ level: 11, free: 'resources:biomass:700',                           paid: 'boost:production:15:24' },
+	{ level: 12, free: 'resources:alloy:700',                             paid: 'vexpoints:20' },
+	{ level: 13, free: 'resources:ore:700',                               paid: 'boost:production:15:36' },
+	{ level: 14, free: 'resources:biomass:800,resources:ore:400',         paid: 'vexpoints:25' },
+	{ level: 15, free: 'resources:alloy:800',                             paid: 'title:Proven,boost:production:18:36' },
+	{ level: 16, free: 'resources:ore:800',                               paid: 'boost:production:18:48' },
+	{ level: 17, free: 'resources:biomass:900,resources:alloy:500',       paid: 'vexpoints:30' },
+	{ level: 18, free: 'resources:ore:900',                               paid: 'boost:production:20:48' },
+	{ level: 19, free: 'resources:biomass:1000',                          paid: 'vexpoints:30' },
+	{ level: 20, free: 'badge:silver',                                    paid: 'boost:production:20:72,vexpoints:35' },
+
+	// ── Act III: Vex Command (21–29) ──────────────────────────────────────────
+	// Resources are now serious war-chest bundles. Paid track is genuinely powerful.
+	{ level: 21, free: 'resources:alloy:1000,resources:ore:500',          paid: 'vexpoints:35' },
+	{ level: 22, free: 'resources:biomass:1200',                          paid: 'boost:production:22:72' },
+	{ level: 23, free: 'resources:alloy:1200,resources:biomass:600',      paid: 'vexpoints:35' },
+	{ level: 24, free: 'resources:ore:1200',                              paid: 'boost:production:22:72' },
+	{ level: 25, free: 'resources:biomass:1500,resources:alloy:800',      paid: 'title:Vex Commander,vexpoints:35' },
+	{ level: 26, free: 'resources:ore:1500',                              paid: 'boost:production:25:72' },
+	{ level: 27, free: 'resources:biomass:1800,resources:alloy:1000',     paid: 'vexpoints:50' },
+	{ level: 28, free: 'resources:ore:1800',                              paid: 'boost:production:25:96' },
+	{ level: 29, free: 'resources:biomass:2000,resources:alloy:1200,resources:ore:1000', paid: 'vexpoints:65' },
+
+	// ── Act IV: The Finale (30) ───────────────────────────────────────────────
+	// Free: Veteran title (permanent) + Gold badge. You earned it.
+	// Paid: Season Conqueror title + 325 VP (nearly a third of the pass cost back
+	//       in one shot) + +30% production for 96h. Absolutely insane capstone.
+	{ level: 30, free: 'title:Veteran,badge:gold',                        paid: 'title:Season Conqueror,vexpoints:325,boost:production:30:96' }
 ];
 
 const rewardByLevel = new Map(REWARD_TABLE.map((r) => [r.level, r]));
@@ -281,8 +296,9 @@ const PASS_TITLE_RANK: Record<string, number> = {
 	Recruit: 1,
 	Operative: 2,
 	Proven: 3,
-	'Vex Commander': 4,
-	'Season Conqueror': 5
+	Veteran: 4,
+	'Vex Commander': 5,
+	'Season Conqueror': 6
 };
 
 // Called by endGalaxy() for each participant. Promotes the player's season
