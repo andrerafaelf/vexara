@@ -33,5 +33,8 @@ router.post('/:id/leave', authNoGalaxy, (req, res) =>
 router.post('/:id/select', authNoGalaxy, (req, res) =>
 	galaxyController.selectGalaxy(req as AuthRequest, res as Response)
 );
+router.post('/:id/alert', authNoGalaxy, (req, res) =>
+	galaxyController.registerGalaxyAlert(req as AuthRequest, res as Response)
+);
 
 export default router;

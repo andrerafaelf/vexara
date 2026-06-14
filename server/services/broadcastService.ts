@@ -1,5 +1,5 @@
 import prisma from '../lib/prisma.js';
-import { sendGalaxyLive } from './emailService.js';
+import { sendGalaxyAlert, sendGalaxyLive } from './emailService.js';
 import { logError, logInfo, logWarn } from '../utils/logger.js';
 
 export interface BroadcastRecipient {
@@ -149,6 +149,118 @@ export async function broadcastGalaxyLive(
 
 	result.durationMs = Date.now() - startedAt;
 	logInfo('broadcast_galaxy_live_done', {
+		total: result.total,
+		sent: result.sent,
+		failed: result.failed,
+		skipped: result.skipped,
+		durationMs: result.durationMs
+	});
+	return result;
+}
+
+// Send launch-alert emails to everyone who opted in for a specific galaxy,
+// then mark each row sentAt so re-runs skip already-notified addresses.
+export async function broadcastGalaxyAlert(
+	galaxyId: number,
+	options: BroadcastOptions = {}
+): Promise<BroadcastResult> {
+	const ratePerSecond = Math.max(1, options.ratePerSecond ?? 2);
+	const abortThreshold = options.abortAfterConsecutiveFailures ?? 10;
+	const minIntervalMs = Math.ceil(1000 / ratePerSecond);
+	const startedAt = Date.now();
+
+	const galaxy = await prisma.galaxy.findUnique({ where: { id: galaxyId } });
+	if (!galaxy) throw new Error(`Galaxy ${galaxyId} not found`);
+	if (!galaxy.startsAt) throw new Error(`Galaxy ${galaxyId} has no startsAt set`);
+
+	// Only unsent alerts for this galaxy
+	const alerts = await prisma.galaxyAlert.findMany({
+		where: { galaxyId, sentAt: null }
+	});
+
+	// Resolve display names for registered users
+	const emails = alerts.map((a) => a.email);
+	const users = await prisma.user.findMany({
+		where: { email: { in: emails } },
+		select: { email: true, username: true }
+	});
+	const nameByEmail = new Map(users.map((u) => [u.email.toLowerCase(), u.username]));
+
+	logInfo('broadcast_galaxy_alert_start', {
+		galaxyId,
+		total: alerts.length,
+		ratePerSecond,
+		dryRun: !!options.dryRun
+	});
+
+	const result: BroadcastResult = {
+		total: alerts.length,
+		sent: 0,
+		failed: 0,
+		skipped: 0,
+		failures: [],
+		durationMs: 0
+	};
+
+	if (options.dryRun) {
+		result.skipped = alerts.length;
+		result.durationMs = Date.now() - startedAt;
+		return result;
+	}
+
+	let consecutiveFailures = 0;
+
+	for (let i = 0; i < alerts.length; i++) {
+		const alert = alerts[i];
+		const displayName = nameByEmail.get(alert.email.toLowerCase());
+		const tickStart = Date.now();
+		try {
+			await sendGalaxyAlert(alert.email, galaxy.name, galaxy.startsAt, displayName);
+			await prisma.galaxyAlert.update({
+				where: { id: alert.id },
+				data: { sentAt: new Date() }
+			});
+			result.sent++;
+			consecutiveFailures = 0;
+		} catch (err) {
+			if (isRateLimitError(err)) {
+				logWarn('broadcast_galaxy_alert_rate_limited', { email: alert.email });
+				await sleep(2000);
+				try {
+					await sendGalaxyAlert(alert.email, galaxy.name, galaxy.startsAt, displayName);
+					await prisma.galaxyAlert.update({
+						where: { id: alert.id },
+						data: { sentAt: new Date() }
+					});
+					result.sent++;
+					consecutiveFailures = 0;
+				} catch (retryErr) {
+					result.failed++;
+					consecutiveFailures++;
+					result.failures.push({ email: alert.email, error: (retryErr as Error).message });
+				}
+			} else {
+				result.failed++;
+				consecutiveFailures++;
+				result.failures.push({ email: alert.email, error: (err as Error).message });
+			}
+		}
+
+		if (consecutiveFailures >= abortThreshold) {
+			logError('broadcast_galaxy_alert_aborted', { consecutiveFailures, sentSoFar: result.sent });
+			result.skipped = alerts.length - (i + 1);
+			break;
+		}
+
+		const elapsed = Date.now() - tickStart;
+		if (elapsed < minIntervalMs && i < alerts.length - 1) {
+			await sleep(minIntervalMs - elapsed);
+		}
+	}
+
+	result.durationMs = Date.now() - startedAt;
+	logInfo('broadcast_galaxy_alert_done', {
+		galaxyId,
 		total: result.total,
 		sent: result.sent,
 		failed: result.failed,

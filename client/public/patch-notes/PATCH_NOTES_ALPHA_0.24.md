@@ -1,6 +1,11 @@
-## Vexara - Alpha Patch Notes v0.24
+## Vexara - Beta Patch Notes v0.24
 
-This one is about your first hour. New commanders told us the opening
+**Beta #1 opens 28 June 2026.** The late-alpha period wraps up with
+this patch and the next galaxy launches as the first official Beta test.
+You can opt in to an email alert on the galaxy selection screen so we'll
+ping you the moment it goes live.
+
+This patch is about your first hour. New commanders told us the opening
 felt like staring at a timer, that resources kept scrolling out of
 sight, and that combat's whole reason for existing — the class triangle
 — was invisible until you lost an army to it. So this patch is an

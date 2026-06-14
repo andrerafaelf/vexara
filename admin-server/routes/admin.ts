@@ -12,6 +12,10 @@ router.get('/broadcast/galaxy-live/preview', adminController.previewGalaxyLiveBr
 router.post('/broadcast/galaxy-live/test', adminController.sendGalaxyLiveTest);
 router.post('/broadcast/galaxy-live', adminController.sendGalaxyLiveBroadcast);
 
+// Per-galaxy opt-in alert broadcast (notify subscribers when a pending galaxy goes live)
+router.get('/broadcast/galaxy-alert/:id/preview', adminController.previewGalaxyAlertBroadcast);
+router.post('/broadcast/galaxy-alert/:id', adminController.sendGalaxyAlertBroadcast);
+
 router.get('/overview', adminController.getOverview);
 router.get('/galaxy-health', adminController.getGalaxyHealth);
 router.get('/galaxies', adminController.listGalaxies);

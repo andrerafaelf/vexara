@@ -349,6 +349,7 @@ export default function ProfileStats() {
 						<Section title="Badges">
 							<ProfileBadges
 								isAlphaFounder={stats.isAlphaFounder}
+								isFounder={stats.isFounder}
 								supporterTier={stats.supporterTier ?? null}
 							/>
 						</Section>

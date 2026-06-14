@@ -486,3 +486,58 @@ export async function selectGalaxy(req: AuthRequest, res: Response): Promise<voi
 		res.status(500).json({ error: 'Internal server error' });
 	}
 }
+
+// POST /api/galaxies/:id/alert
+// Register an email to be notified when a pending galaxy goes live.
+// Works for both authenticated users (email auto-filled) and guests (email in body).
+export async function registerGalaxyAlert(req: AuthRequest, res: Response): Promise<void> {
+	try {
+		const galaxyId = parseInt(req.params.id, 10);
+		if (!Number.isFinite(galaxyId)) {
+			res.status(400).json({ error: 'Invalid galaxy id' });
+			return;
+		}
+
+		// Resolve email: from auth token if logged in, else from request body
+		let email: string | undefined;
+		if (req.userId) {
+			const user = await prisma.user.findUnique({
+				where: { id: req.userId },
+				select: { email: true }
+			});
+			email = user?.email;
+		}
+		if (!email) {
+			const body = req.body as { email?: string };
+			email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : undefined;
+		}
+		if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+			res.status(400).json({ error: 'A valid email address is required' });
+			return;
+		}
+
+		const galaxy = await prisma.galaxy.findUnique({ where: { id: galaxyId } });
+		if (!galaxy) {
+			res.status(404).json({ error: 'Galaxy not found' });
+			return;
+		}
+		if (!galaxy.startsAt || new Date(galaxy.startsAt) <= new Date()) {
+			res.status(400).json({ error: 'This galaxy is already live' });
+			return;
+		}
+
+		await prisma.galaxyAlert.upsert({
+			where: { galaxyId_email: { galaxyId, email } },
+			create: { galaxyId, email },
+			update: {}
+		});
+
+		res.json({ success: true });
+	} catch (error) {
+		logError('unhandled_controller_error', {
+			message: (error as Error).message,
+			file: 'galaxyController.ts'
+		});
+		res.status(500).json({ error: 'Internal server error' });
+	}
+}

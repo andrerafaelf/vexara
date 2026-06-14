@@ -4,7 +4,7 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Sparkles, Award, Lock, ChevronRight, Zap, Trophy, Medal } from 'lucide-react';
-import { purchaseBattlePass } from '../services/api';
+import { giftBattlePass, purchaseBattlePass } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { KOFI_URL } from '../constants/support';
 import ResourceIcon from './ResourceIcon';
@@ -154,6 +154,10 @@ export default function VexPassModal({ pass, onClose }: Props) {
 	const { user } = useAuth();
 	const queryClient = useQueryClient();
 	const [error, setError] = React.useState<string | null>(null);
+	const [giftUsername, setGiftUsername] = React.useState('');
+	const [giftError, setGiftError] = React.useState<string | null>(null);
+	const [giftDone, setGiftDone] = React.useState<string | null>(null);
+	const [showGift, setShowGift] = React.useState(false);
 
 	const vexPoints = user?.vexPoints ?? 0;
 	const canAfford = vexPoints >= PASS_COST_VP;
@@ -170,6 +174,19 @@ export default function VexPassModal({ pass, onClose }: Props) {
 		},
 		onError: (err: any) => {
 			setError(err?.response?.data?.error ?? 'Purchase failed');
+		}
+	});
+
+	const giftMutation = useMutation({
+		mutationFn: () => giftBattlePass(giftUsername.trim()).then((r) => r.data),
+		onSuccess: (data: any) => {
+			setGiftDone(data?.recipientUsername ?? giftUsername.trim());
+			setGiftUsername('');
+			setGiftError(null);
+			queryClient.invalidateQueries({ queryKey: ['user'] });
+		},
+		onError: (err: any) => {
+			setGiftError(err?.message ?? 'Gift failed');
 		}
 	});
 
@@ -330,6 +347,59 @@ export default function VexPassModal({ pass, onClose }: Props) {
 					<div className="vpm-footer vpm-footer--owned">
 						<Sparkles size={14} aria-hidden="true" />
 						<span>Protocol: Command active — earn XP to unlock all rewards</span>
+					</div>
+				)}
+
+				{/* ── Gift a pass ── available whenever the user has ≥1,000 VP */}
+				{vexPoints >= PASS_COST_VP && (
+					<div className="vpm-gift-section">
+						{!showGift && !giftDone && (
+							<button className="vpm-gift-toggle" onClick={() => setShowGift(true)}>
+								Gift a pass to a galaxy mate — 1,000 VP
+							</button>
+						)}
+						{showGift && !giftDone && (
+							<form
+								className="vpm-gift-form"
+								onSubmit={(e) => { e.preventDefault(); giftMutation.mutate(); }}
+							>
+								<span className="vpm-gift-label">Gift Protocol: Command to</span>
+								<input
+									className="vpm-gift-input"
+									type="text"
+									placeholder="commander username"
+									value={giftUsername}
+									onChange={(e) => setGiftUsername(e.target.value)}
+									required
+									autoFocus
+									disabled={giftMutation.isPending}
+								/>
+								<div className="vpm-gift-actions">
+									{giftError && <p className="vpm-error">{giftError}</p>}
+									<button
+										type="button"
+										className="vpm-gift-cancel"
+										onClick={() => { setShowGift(false); setGiftError(null); }}
+										disabled={giftMutation.isPending}
+									>
+										Cancel
+									</button>
+									<button
+										type="submit"
+										className="vpm-unlock-btn vpm-unlock-btn--gift"
+										disabled={giftMutation.isPending || !giftUsername.trim()}
+									>
+										{giftMutation.isPending ? 'Sending…' : 'Send gift — 1,000 VP'}
+									</button>
+								</div>
+							</form>
+						)}
+						{giftDone && (
+							<div className="vpm-gift-done">
+								<Sparkles size={13} aria-hidden="true" />
+								Pass gifted to <strong>{giftDone}</strong> — they're ready for Protocol: Command.
+							</div>
+						)}
 					</div>
 				)}
 			</div>

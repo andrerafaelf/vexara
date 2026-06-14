@@ -327,6 +327,7 @@ function PublicProfilePageInner() {
 					<Section title="Badges">
 						<ProfileBadges
 							isAlphaFounder={profile.isAlphaFounder}
+							isFounder={profile.isFounder}
 							supporterTier={profile.supporterTier ?? null}
 						/>
 					</Section>

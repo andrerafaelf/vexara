@@ -71,6 +71,44 @@ export async function sendGalaxyLiveBroadcast(req: Request, res: Response): Prom
 		res.status(500).json({ error: (error as Error).message });
 	}
 }
+
+// Preview opt-in alert list for a pending galaxy (no emails sent)
+export async function previewGalaxyAlertBroadcast(req: Request, res: Response): Promise<void> {
+	try {
+		const galaxyId = parseInt((req.params as { id?: string }).id ?? '', 10);
+		if (!Number.isFinite(galaxyId)) {
+			res.status(400).json({ error: 'Invalid galaxy id' });
+			return;
+		}
+		const alerts = await prisma.galaxyAlert.findMany({
+			where: { galaxyId, sentAt: null },
+			select: { email: true, createdAt: true }
+		});
+		res.json({ total: alerts.length, sample: alerts.slice(0, 10) });
+	} catch (error) {
+		res.status(500).json({ error: (error as Error).message });
+	}
+}
+
+// Send launch-alert emails to all opt-in subscribers for a pending galaxy
+export async function sendGalaxyAlertBroadcast(req: Request, res: Response): Promise<void> {
+	try {
+		const galaxyId = parseInt((req.params as { id?: string }).id ?? '', 10);
+		if (!Number.isFinite(galaxyId)) {
+			res.status(400).json({ error: 'Invalid galaxy id' });
+			return;
+		}
+		const body = (req.body ?? {}) as { dryRun?: boolean; ratePerSecond?: number };
+		const { broadcastGalaxyAlert } = await import('../../server/services/broadcastService.js');
+		const result = await broadcastGalaxyAlert(galaxyId, {
+			dryRun: body.dryRun === true,
+			ratePerSecond: typeof body.ratePerSecond === 'number' ? body.ratePerSecond : undefined
+		});
+		res.json(result);
+	} catch (error) {
+		res.status(500).json({ error: (error as Error).message });
+	}
+}
 import type { Request, Response } from 'express';
 import prisma from '../../server/lib/prisma.js';
 import { serializeNexus } from '../../server/models/Nexus.js';

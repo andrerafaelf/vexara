@@ -581,6 +581,108 @@ export async function sendGalaxyLive(email: string, displayName?: string): Promi
 	await send(email, tplGalaxyLive(email, token, displayName), token);
 }
 
+function tplGalaxyAlert(
+	email: string,
+	unsubscribeToken: string | null,
+	galaxyName: string,
+	startsAt: Date,
+	displayName?: string
+): RenderedEmail {
+	const playUrl = `${SITE_URL}/galaxies`;
+	const greeting = displayName ? `Commander ${escapeHtml(displayName)},` : 'Commander,';
+
+	const dateStr = startsAt.toUTCString().replace(' GMT', ' UTC');
+
+	const zones = [
+		{ label: 'UTC', tz: 'UTC' },
+		{ label: 'Lisbon', tz: 'Europe/Lisbon' },
+		{ label: 'Paris', tz: 'Europe/Paris' },
+		{ label: 'New York', tz: 'America/New_York' },
+		{ label: 'Los Angeles', tz: 'America/Los_Angeles' }
+	]
+		.map(({ label, tz }) => {
+			const t = new Intl.DateTimeFormat('en-GB', {
+				hour: '2-digit',
+				minute: '2-digit',
+				hour12: false,
+				timeZone: tz
+			}).format(startsAt);
+			return `${t} ${label}`;
+		})
+		.join(' &middot; ');
+
+	const body = `
+    <p style="margin:0 0 8px;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#7aa2ff;font-weight:700;">// Transmission inbound</p>
+    <h1 style="margin:0 0 16px;font-size:26px;line-height:1.25;color:#ffffff;font-weight:700;letter-spacing:-0.01em;">${escapeHtml(galaxyName)} goes live soon.</h1>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#c8ccd6;">${greeting}</p>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#c8ccd6;">
+      You asked us to let you know. ${escapeHtml(galaxyName)} opens shortly &mdash; be ready to claim your nexus before the borders fill in around you.
+    </p>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:16px 0 24px;width:100%;">
+      <tr>
+        <td style="padding:18px 22px;background:#0b0d12;border:1px solid #1c2230;border-radius:10px;">
+          <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#7aa2ff;margin-bottom:8px;font-weight:700;">// Launch Window</div>
+          <div style="font-size:20px;font-weight:700;color:#ffffff;margin-bottom:6px;">${escapeHtml(dateStr)}</div>
+          <div style="font-size:12px;color:#8a90a0;">${zones}</div>
+        </td>
+      </tr>
+    </table>
+    <div style="text-align:center;">${buttonHtml(playUrl, 'Enter the galaxy', '#3b82f6')}</div>
+    <h2 style="margin:24px 0 12px;font-size:15px;line-height:1.4;color:#ffffff;font-weight:600;">First moves matter</h2>
+    <ul style="margin:0 0 16px;padding:0 0 0 20px;font-size:15px;line-height:1.7;color:#c8ccd6;">
+      <li>Claim your starting nexus before the map fills around you.</li>
+      <li>Build the Command Core early &mdash; it accelerates every upgrade that follows.</li>
+      <li>Scout neighbours before you strike. Recon is cheaper than a wiped fleet.</li>
+      <li>Find a faction. Galaxies are won by groups, not lone commanders.</li>
+    </ul>
+    <div style="text-align:center;">${buttonHtml(DISCORD_URL, 'Join the Discord')}</div>
+    <p style="margin:16px 0 0;font-size:14px;line-height:1.6;color:#8a90a0;">See you in the dark. Questions? Just reply to this email &mdash; it reaches a real person.</p>
+  `;
+	const text = [
+		`${galaxyName} goes live soon.`,
+		'',
+		displayName ? `Commander ${displayName},` : 'Commander,',
+		'',
+		`You asked us to let you know. ${galaxyName} opens shortly.`,
+		'',
+		`Launch: ${dateStr}`,
+		'',
+		`Enter the galaxy: ${playUrl}`,
+		'',
+		'First moves matter:',
+		'  - Claim your starting nexus before the map fills around you.',
+		'  - Build the Command Core early.',
+		'  - Scout neighbours before you strike.',
+		'  - Find a faction.',
+		'',
+		`Discord: ${DISCORD_URL}`,
+		'',
+		'See you in the dark. Questions? Just reply to this email.',
+		...renderTextFooter(true, unsubscribeToken)
+	].join('\n');
+	void email;
+	return {
+		subject: `${galaxyName} opens soon — be ready`,
+		html: renderLayout({
+			preheader: `${galaxyName} is about to go live. Claim your nexus before the borders fill in.`,
+			bodyHtml: body,
+			unsubscribeToken
+		}),
+		text,
+		showUnsubscribe: true
+	};
+}
+
+export async function sendGalaxyAlert(
+	email: string,
+	galaxyName: string,
+	startsAt: Date,
+	displayName?: string
+): Promise<void> {
+	const token = await getOrCreateUnsubscribeToken(email);
+	await send(email, tplGalaxyAlert(email, token, galaxyName, startsAt, displayName), token);
+}
+
 export async function sendVerifyEmail(
 	email: string,
 	username: string,

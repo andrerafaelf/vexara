@@ -3,6 +3,13 @@ import prisma from '../lib/prisma.js';
 import { logError, logInfo, logWarn } from '../utils/logger.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
 import { notifyBadgeUpdate } from '../services/warRoomSocket.js';
+import { grantVexPoints } from '../utils/battlePass.js';
+
+interface KofiShopItem {
+	direct_link_code?: string;
+	variation_name?: string;
+	quantity?: number;
+}
 
 interface KofiPayload {
 	verification_token?: string;
@@ -14,7 +21,13 @@ interface KofiPayload {
 	kofi_transaction_id?: string;
 	is_subscription_payment?: boolean;
 	is_first_subscription_payment?: boolean;
+	shop_items?: KofiShopItem[];
+	message?: string;
 }
+
+// Ko-fi shop item name for the 1,000 VP bundle. Must match exactly what you enter in Ko-fi Shop.
+const VEX_POINTS_ITEM_NAME = 'Vex Points — Vexara';
+const VEX_POINTS_AMOUNT = 1000;
 
 type SupporterTier = 'recruit' | 'officer' | 'commander';
 
@@ -33,6 +46,22 @@ function resolveTier(amountEur: number): TierGrant {
 	if (amountEur >= 10) return { tier: 'officer', tokens: 3 };
 	if (amountEur >= 5) return { tier: 'recruit', tokens: 1 };
 	return { tier: null, tokens: 1 };
+}
+
+function isVexPointsOrder(payload: KofiPayload): boolean {
+	if (payload.type !== 'Shop Order') return false;
+	if (!Array.isArray(payload.shop_items)) return false;
+	// Match by direct_link_code env var (stable) or fall back to display name.
+	const linkCode = process.env.KOFI_VEX_POINTS_LINK_CODE;
+	return payload.shop_items.some((item) => {
+		if (linkCode && typeof item.direct_link_code === 'string') {
+			return item.direct_link_code === linkCode;
+		}
+		return (
+			typeof item.variation_name === 'string' &&
+			item.variation_name.trim() === VEX_POINTS_ITEM_NAME
+		);
+	});
 }
 
 function parseAmount(raw: string | undefined): number {
@@ -223,6 +252,30 @@ export async function handleKofiWebhook(req: Request, res: Response): Promise<vo
 			}
 			if (duplicate) {
 				logInfo('kofi_token_duplicate', { userId: user.id, transactionId: txId });
+			}
+		}
+
+		// Vex Points shop order: credit 1,000 VP to the buyer's account.
+		// They spend VP in-game to unlock the battle pass (or gift it to another player).
+		if (isVexPointsOrder(payload)) {
+			try {
+				await grantVexPoints(user.id, VEX_POINTS_AMOUNT);
+				logInfo('kofi_vex_points_granted', {
+					userId: user.id,
+					vp: VEX_POINTS_AMOUNT,
+					transactionId: txId
+				});
+				void sendPushToUser(user.id, NOTIF.TOKEN_GRANTED, {
+					title: `${VEX_POINTS_AMOUNT.toLocaleString()} Vex Points credited`,
+					body: 'Spend VP to unlock the Vex Protocol battle pass — or gift it to a fellow commander.',
+					tag: `vex-points-${txId ?? user.id}`,
+					data: { url: '/pass' }
+				});
+			} catch (vpError) {
+				logError('kofi_vex_points_error', {
+					userId: user.id,
+					message: (vpError as Error).message
+				});
 			}
 		}
 

@@ -1,10 +1,12 @@
 'use client';
 
 import type { SupporterTier } from '@/types/game';
-import { ALPHA_PLAYER_BADGE, ALPHA_COMMANDER_BADGE } from '@/data/gameIcons';
+import { ALPHA_PLAYER_BADGE, ALPHA_COMMANDER_BADGE, VANGUARD_BADGE } from '@/data/gameIcons';
 
 interface ProfileBadgesProps {
 	isAlphaFounder?: boolean | null;
+	/** True if the user was granted the Commander tier during alpha (isFounder on User). */
+	isFounder?: boolean | null;
 	supporterTier?: SupporterTier | null;
 }
 
@@ -20,8 +22,9 @@ interface BadgeDef {
  * text (no reliance on hover, which doesn't work on touch). Renders nothing when
  * the player has earned no badges, so callers can drop it in unconditionally.
  */
-export default function ProfileBadges({ isAlphaFounder, supporterTier }: ProfileBadgesProps) {
+export default function ProfileBadges({ isAlphaFounder, isFounder, supporterTier }: ProfileBadgesProps) {
 	const badges: BadgeDef[] = [];
+
 	if (isAlphaFounder) {
 		badges.push({
 			src: ALPHA_PLAYER_BADGE,
@@ -29,13 +32,25 @@ export default function ProfileBadges({ isAlphaFounder, supporterTier }: Profile
 			description: 'Founding Vexara player - earned by establishing a Nexus during alpha.'
 		});
 	}
+
 	if (supporterTier === 'commander') {
-		badges.push({
-			src: ALPHA_COMMANDER_BADGE,
-			name: 'Alpha Commander',
-			description: 'Commander-tier supporter - thank you for backing Vexara.'
-		});
+		if (isFounder) {
+			// Backed at Commander tier during alpha — permanent historical badge.
+			badges.push({
+				src: ALPHA_COMMANDER_BADGE,
+				name: 'Alpha Commander',
+				description: 'Commander-tier supporter who backed Vexara during alpha.'
+			});
+		} else {
+			// Commander-tier supporter from beta onwards.
+			badges.push({
+				src: VANGUARD_BADGE,
+				name: 'Vanguard',
+				description: 'Commander-tier supporter - thank you for backing Vexara.'
+			});
+		}
 	}
+
 	if (badges.length === 0) return null;
 
 	return (

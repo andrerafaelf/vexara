@@ -582,6 +582,57 @@
 	margin-top: 20px;
 }
 
+/* ── Galaxy alert opt-in ────────────────────────────────────────── */
+.gp-btn-alert {
+	background: transparent;
+	color: var(--accent-2);
+	border-color: rgba(99, 179, 237, 0.4);
+	min-width: 90px;
+}
+
+.gp-btn-alert:hover:not(:disabled) {
+	background: rgba(99, 179, 237, 0.08);
+	border-color: var(--accent-2);
+}
+
+.gp-alert-done {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--success);
+	margin-top: 8px;
+}
+
+.gp-alert-form {
+	display: flex;
+	gap: 6px;
+	align-items: center;
+	margin-top: 8px;
+	flex-wrap: wrap;
+}
+
+.gp-alert-input {
+	flex: 1;
+	min-width: 160px;
+	background: var(--color-navy-900);
+	border: 1px solid var(--border-strong);
+	color: var(--text-default);
+	padding: 6px 10px;
+	font-size: 13px;
+	font-family: var(--font-sans);
+	outline: none;
+}
+
+.gp-alert-input:focus {
+	border-color: var(--accent-2);
+}
+
+.gp-alert-input::placeholder {
+	color: var(--text-faint);
+}
+
 /* ── Mobile ─────────────────────────────────────────────────────── */
 @media (max-width: 540px) {
 	.gp-modal {

@@ -141,6 +141,22 @@ model Galaxy {
   galaxyEvents       GalaxyEvent[]
   factionTreaties    FactionTreaty[]
   wavePlans          WavePlan[]
+  galaxyAlerts       GalaxyAlert[]
+}
+
+// Email alert opt-in for a scheduled (pending) galaxy. One row per email per galaxy.
+// Sent via broadcastGalaxyAlert() when the admin triggers the launch notification.
+model GalaxyAlert {
+  id        Int       @id @default(autoincrement())
+  galaxyId  Int
+  email     String    @db.VarChar(254)
+  sentAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  galaxy Galaxy @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
+
+  @@unique([galaxyId, email])
+  @@index([galaxyId])
 }
 
 model GalaxyPlayer {

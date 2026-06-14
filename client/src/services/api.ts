@@ -125,11 +125,18 @@ export const selectGalaxy = (galaxyId: number | string) =>
 	apiRequest(`/galaxies/${galaxyId}/select`, { method: 'POST' });
 export const leaveGalaxy = (galaxyId: number | string) =>
 	apiRequest(`/galaxies/${galaxyId}/leave`, { method: 'POST' });
+export const registerGalaxyAlert = (galaxyId: number | string, email?: string) =>
+	apiRequest(`/galaxies/${galaxyId}/alert`, {
+		method: 'POST',
+		body: JSON.stringify(email ? { email } : {})
+	});
 export const getGalaxyWinResults = (galaxyId: number | string) =>
 	apiRequest(`/galaxies/${galaxyId}/win-results`);
 export const getHallOfFame = () => apiRequest('/galaxies/hall-of-fame');
 export const getBattlePass = () => apiRequest('/battle-pass');
 export const purchaseBattlePass = () => apiRequest('/battle-pass/purchase', { method: 'POST' });
+export const giftBattlePass = (username: string) =>
+	apiRequest('/battle-pass/gift', { method: 'POST', body: JSON.stringify({ username }) });
 
 // Nexuses
 export const createNexus = (name?: string) =>

@@ -441,3 +441,90 @@
 	color: var(--color-red-400, #f87171);
 	margin: 0;
 }
+
+/* ── Gift a pass ─────────────────────────────────────────────────────────── */
+.vpm-gift-section {
+	border-top: 1px solid var(--border-default);
+	padding: var(--space-3) var(--space-4) var(--space-4);
+}
+
+.vpm-gift-toggle {
+	width: 100%;
+	background: transparent;
+	border: 1px dashed var(--border-strong);
+	color: var(--text-muted);
+	padding: var(--space-2) var(--space-3);
+	font-size: var(--text-xs);
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	cursor: pointer;
+	transition: border-color 0.15s, color 0.15s;
+}
+.vpm-gift-toggle:hover {
+	border-color: var(--accent-2);
+	color: var(--accent-2);
+}
+
+.vpm-gift-form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.vpm-gift-label {
+	font-size: var(--text-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.07em;
+	color: var(--text-faint);
+}
+
+.vpm-gift-input {
+	background: var(--color-navy-900);
+	border: 1px solid var(--border-strong);
+	color: var(--text-default);
+	padding: var(--space-2) var(--space-3);
+	font-size: var(--text-sm);
+	font-family: var(--font-sans);
+	width: 100%;
+	box-sizing: border-box;
+	outline: none;
+}
+.vpm-gift-input:focus { border-color: var(--accent-2); }
+.vpm-gift-input::placeholder { color: var(--text-faint); }
+
+.vpm-gift-actions {
+	display: flex;
+	gap: var(--space-2);
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.vpm-gift-cancel {
+	background: transparent;
+	border: 1px solid var(--border-default);
+	color: var(--text-muted);
+	padding: var(--space-2) var(--space-3);
+	font-size: var(--text-xs);
+	font-weight: 600;
+	cursor: pointer;
+}
+.vpm-gift-cancel:hover:not(:disabled) { border-color: var(--border-strong); color: var(--text-default); }
+
+.vpm-unlock-btn--gift {
+	flex: 1;
+	width: auto;
+	background: transparent;
+	color: var(--accent-2);
+	border: 1px solid var(--accent-2);
+}
+.vpm-unlock-btn--gift:hover:not(:disabled) { background: rgba(99,179,237,0.08); }
+
+.vpm-gift-done {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	font-size: var(--text-sm);
+	color: var(--success);
+}
+.vpm-gift-done strong { color: var(--text-strong); }
