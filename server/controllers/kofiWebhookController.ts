@@ -25,9 +25,12 @@ interface KofiPayload {
 	message?: string;
 }
 
-// Ko-fi shop item name for the 1,000 VP bundle. Must match exactly what you enter in Ko-fi Shop.
-const VEX_POINTS_ITEM_NAME = 'Vex Points — Vexara';
-const VEX_POINTS_AMOUNT = 1000;
+// VP packs sold in the Ko-fi shop. variation_name must match exactly what's in Ko-fi.
+const VP_PACKS: Array<{ name: string; vp: number }> = [
+	{ name: 'Starter — 1,000 VP',       vp: 1000 },
+	{ name: 'Commander Pack — 2,500 VP', vp: 2500 },
+	{ name: 'Warlord Pack — 6,000 VP',   vp: 6000 },
+];
 
 type SupporterTier = 'recruit' | 'officer' | 'commander';
 
@@ -48,20 +51,17 @@ function resolveTier(amountEur: number): TierGrant {
 	return { tier: null, tokens: 1 };
 }
 
-function isVexPointsOrder(payload: KofiPayload): boolean {
-	if (payload.type !== 'Shop Order') return false;
-	if (!Array.isArray(payload.shop_items)) return false;
-	// Match by direct_link_code env var (stable) or fall back to display name.
-	const linkCode = process.env.KOFI_VEX_POINTS_LINK_CODE;
-	return payload.shop_items.some((item) => {
-		if (linkCode && typeof item.direct_link_code === 'string') {
-			return item.direct_link_code === linkCode;
-		}
-		return (
-			typeof item.variation_name === 'string' &&
-			item.variation_name.trim() === VEX_POINTS_ITEM_NAME
-		);
-	});
+// Returns VP amount if this payload is a VP shop order, otherwise 0.
+// Shop Orders never trigger tier/token grants — only Donations do.
+function resolveVpOrder(payload: KofiPayload): number {
+	if (payload.type !== 'Shop Order') return 0;
+	if (!Array.isArray(payload.shop_items)) return 0;
+	for (const item of payload.shop_items) {
+		const name = typeof item.variation_name === 'string' ? item.variation_name.trim() : '';
+		const pack = VP_PACKS.find((p) => p.name === name);
+		if (pack) return pack.vp;
+	}
+	return 0;
 }
 
 function parseAmount(raw: string | undefined): number {
@@ -141,7 +141,9 @@ export async function handleKofiWebhook(req: Request, res: Response): Promise<vo
 		}
 
 		const amountEur = parseAmount(payload.amount);
-		const { tier, tokens } = resolveTier(amountEur);
+		// Tier and tokens only apply to Donations, not Shop Orders.
+		const isDonation = payload.type === 'Donation' || payload.type === 'Subscription';
+		const { tier, tokens } = isDonation ? resolveTier(amountEur) : { tier: null, tokens: 0 };
 
 		// Tier-up: highest tier ever achieved wins (we never downgrade).
 		const currentRank = user.supporterTier
@@ -160,6 +162,7 @@ export async function handleKofiWebhook(req: Request, res: Response): Promise<vo
 			supporterTier?: SupporterTier;
 			supporterTierSince?: Date;
 			isFounder?: boolean;
+			earnedTitles?: string[];
 		} = {};
 		if (!user.isSupporter) {
 			updateData.isSupporter = true;
@@ -171,6 +174,28 @@ export async function handleKofiWebhook(req: Request, res: Response): Promise<vo
 		}
 		if (grantFounder) {
 			updateData.isFounder = true;
+		}
+
+		// Append the supporter title to earnedTitles when a tier is newly granted.
+		// Titles are cumulative — upgrading from Recruit to Officer keeps both.
+		const SUPPORTER_TITLES: Record<string, string> = {
+			recruit:   'Recruit',
+			officer:   'Officer',
+			commander: 'Commander',
+		};
+		if (upgradeToTier) {
+			const fullUser = await prisma.user.findUnique({
+				where: { id: user.id },
+				select: { earnedTitles: true }
+			});
+			const earned = (fullUser?.earnedTitles as string[]) ?? [];
+			const titlesToAdd = Object.entries(SUPPORTER_TITLES)
+				.filter(([t]) => TIER_RANK[t as SupporterTier] <= TIER_RANK[upgradeToTier])
+				.map(([, title]) => title)
+				.filter((title) => !earned.includes(title));
+			if (titlesToAdd.length > 0) {
+				updateData.earnedTitles = [...earned, ...titlesToAdd] as any;
+			}
 		}
 
 		if (Object.keys(updateData).length > 0) {
@@ -255,18 +280,19 @@ export async function handleKofiWebhook(req: Request, res: Response): Promise<vo
 			}
 		}
 
-		// Vex Points shop order: credit 1,000 VP to the buyer's account.
-		// They spend VP in-game to unlock the battle pass (or gift it to another player).
-		if (isVexPointsOrder(payload)) {
+		// Vex Points shop order: credit VP to the buyer's account.
+		// Shop Orders never grant tiers or tokens — only Donations do.
+		const vpAmount = resolveVpOrder(payload);
+		if (vpAmount > 0) {
 			try {
-				await grantVexPoints(user.id, VEX_POINTS_AMOUNT);
+				await grantVexPoints(user.id, vpAmount);
 				logInfo('kofi_vex_points_granted', {
 					userId: user.id,
-					vp: VEX_POINTS_AMOUNT,
+					vp: vpAmount,
 					transactionId: txId
 				});
 				void sendPushToUser(user.id, NOTIF.TOKEN_GRANTED, {
-					title: `${VEX_POINTS_AMOUNT.toLocaleString()} Vex Points credited`,
+					title: `${vpAmount.toLocaleString()} Vex Points credited`,
 					body: 'Spend VP to unlock the Vex Protocol battle pass — or gift it to a fellow commander.',
 					tag: `vex-points-${txId ?? user.id}`,
 					data: { url: '/pass' }

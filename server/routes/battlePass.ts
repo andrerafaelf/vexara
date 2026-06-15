@@ -2,7 +2,7 @@ import { Router } from 'express';
 import type { Response } from 'express';
 import auth from '../middleware/auth.js';
 import type { AuthRequest } from '../types/index.js';
-import { purchasePaidPass, grantVexPoints, PASS_COST_VP } from '../utils/battlePass.js';
+import { purchasePaidPass, grantVexPoints, PASS_COST_VP, claimPassLevel, PASS_TITLE_RANK } from '../utils/battlePass.js';
 import prisma from '../lib/prisma.js';
 import { logError, logInfo } from '../utils/logger.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
@@ -19,17 +19,101 @@ router.get('/', auth, async (req, res: Response) => {
 		}
 		const player = await prisma.galaxyPlayer.findUnique({
 			where: { userId_galaxyId: { userId: authReq.userId, galaxyId: authReq.galaxyId } },
-			select: { seasonXp: true, passLevel: true, hasPaidPass: true, passTitle: true }
+			select: { seasonXp: true, passLevel: true, hasPaidPass: true, passTitle: true, claimedLevels: true }
 		});
 		if (!player) {
 			res.status(404).json({ error: 'Not a member of this galaxy' });
 			return;
 		}
-		res.json(player);
+		res.json({
+			...player,
+			claimedLevels: (player.claimedLevels as number[]) ?? []
+		});
 	} catch (error) {
 		logError('unhandled_controller_error', {
 			message: (error as Error).message,
 			file: 'battlePass route'
+		});
+		res.status(500).json({ error: 'Internal server error' });
+	}
+});
+
+// POST /api/battle-pass/claim/:level — claim a specific level's reward
+// Body: { nexusId: number }
+router.post('/claim/:level', auth, async (req, res: Response) => {
+	const authReq = req as AuthRequest;
+	try {
+		if (!authReq.galaxyId) {
+			res.status(409).json({ error: 'No active galaxy' });
+			return;
+		}
+		const level = parseInt(req.params.level ?? '', 10);
+		if (!Number.isFinite(level) || level < 1 || level > 50) {
+			res.status(400).json({ error: 'Invalid level' });
+			return;
+		}
+		const nexusId = typeof req.body?.nexusId === 'number' ? req.body.nexusId : null;
+		if (!nexusId) {
+			res.status(400).json({ error: 'nexusId is required' });
+			return;
+		}
+		const err = await claimPassLevel(authReq.userId, authReq.galaxyId, level, nexusId);
+		if (err) {
+			res.status(400).json({ error: err });
+			return;
+		}
+		res.json({ success: true });
+	} catch (error) {
+		logError('unhandled_controller_error', {
+			message: (error as Error).message,
+			file: 'battlePass route /claim/:level'
+		});
+		res.status(500).json({ error: 'Internal server error' });
+	}
+});
+
+// PATCH /api/battle-pass/title — set active display title
+// Body: { title: string | null }
+router.patch('/title', auth, async (req, res: Response) => {
+	const authReq = req as AuthRequest;
+	try {
+		const { title } = req.body as { title?: string | null };
+
+		if (title === null || title === undefined || title === '') {
+			// Clear active title
+			await prisma.user.update({
+				where: { id: authReq.userId },
+				data: { activeTitle: null }
+			});
+			res.json({ success: true, activeTitle: null });
+			return;
+		}
+
+		if (typeof title !== 'string' || title.length > 32) {
+			res.status(400).json({ error: 'Invalid title' });
+			return;
+		}
+
+		// Verify the player has actually earned this title
+		const user = await prisma.user.findUnique({
+			where: { id: authReq.userId },
+			select: { earnedTitles: true }
+		});
+		const earned = (user?.earnedTitles as string[]) ?? [];
+		if (!earned.includes(title)) {
+			res.status(403).json({ error: 'Title not earned' });
+			return;
+		}
+
+		await prisma.user.update({
+			where: { id: authReq.userId },
+			data: { activeTitle: title }
+		});
+		res.json({ success: true, activeTitle: title });
+	} catch (error) {
+		logError('unhandled_controller_error', {
+			message: (error as Error).message,
+			file: 'battlePass route /title'
 		});
 		res.status(500).json({ error: 'Internal server error' });
 	}
@@ -74,7 +158,6 @@ router.post('/gift', auth, async (req, res: Response) => {
 			return;
 		}
 
-		// Gifter must have enough VP
 		const gifter = await prisma.user.findUnique({
 			where: { id: authReq.userId },
 			select: { id: true, username: true, vexPoints: true }
@@ -92,7 +175,6 @@ router.post('/gift', auth, async (req, res: Response) => {
 			return;
 		}
 
-		// Recipient must exist and be in the same galaxy
 		const recipient = await prisma.user.findFirst({
 			where: { username: { equals: username, mode: 'insensitive' } },
 			select: { id: true, username: true }
@@ -114,18 +196,14 @@ router.post('/gift', auth, async (req, res: Response) => {
 			return;
 		}
 
-		// Deduct VP from gifter, then activate pass for recipient (which internally
-		// grants and immediately spends PASS_COST_VP on the recipient side).
 		await prisma.user.update({
 			where: { id: gifter.id },
 			data: { vexPoints: { decrement: PASS_COST_VP } }
 		});
 
-		// Grant VP to recipient so purchasePaidPass can spend them
 		await grantVexPoints(recipient.id, PASS_COST_VP);
 		const passErr = await purchasePaidPass(recipient.id, authReq.galaxyId);
 		if (passErr) {
-			// Roll back gifter's VP and recipient's VP on failure
 			await prisma.user.update({
 				where: { id: gifter.id },
 				data: { vexPoints: { increment: PASS_COST_VP } }

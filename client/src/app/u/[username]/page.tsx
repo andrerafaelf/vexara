@@ -17,7 +17,7 @@ import {
 } from '@/services/api';
 import '@/styles/ProfileStats.css';
 import type { SupporterTier } from '@/types/game';
-import { Clock, Crown, MapPin, UserCheck, UserMinus, UserPlus } from 'lucide-react';
+import { Clock, Crown, MapPin, Trophy, UserCheck, UserMinus, UserPlus } from 'lucide-react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
@@ -78,6 +78,9 @@ interface PublicProfile {
 	accountAgeDays: number;
 	totalInfluence: number;
 	bestSingleGalaxy: number;
+	earnedBadges?: string[];
+	earnedTitles?: string[];
+	activeTitle?: string | null;
 	galaxiesWon: number;
 	galaxiesPlayed: number;
 	points: number;
@@ -269,13 +272,18 @@ function PublicProfilePageInner() {
 					/>
 					<div className="ps-header-info">
 						<h2 className="ps-username">
-							{/* Badges live in their own section below, not the header. */}
 							<Username
 								name={profile.username}
 								isSupporter={profile.isSupporter}
 								supporterTier={profile.supporterTier ?? null}
 							/>
 						</h2>
+						{profile.activeTitle && (
+							<span className="ps-active-title">
+								<Trophy size={11} aria-hidden="true" />
+								{profile.activeTitle}
+							</span>
+						)}
 						<span className="ps-meta">
 							{profile.points.toLocaleString()} influence &middot; {profile.nexusCount} nexus
 							{profile.nexusCount !== 1 ? 'es' : ''} &middot; {profile.accountAgeDays}d played
@@ -323,13 +331,30 @@ function PublicProfilePageInner() {
 					)}
 				</div>
 
-				{(profile.isAlphaFounder || profile.supporterTier === 'commander') && (
+				{(profile.isAlphaFounder || profile.supporterTier === 'commander' || (profile.earnedBadges && profile.earnedBadges.length > 0)) && (
 					<Section title="Badges">
 						<ProfileBadges
 							isAlphaFounder={profile.isAlphaFounder}
 							isFounder={profile.isFounder}
 							supporterTier={profile.supporterTier ?? null}
+							earnedBadges={profile.earnedBadges}
 						/>
+					</Section>
+				)}
+
+				{profile.earnedTitles && profile.earnedTitles.length > 0 && (
+					<Section title="Titles">
+						<div className="ps-titles-list">
+							{profile.earnedTitles.map((title) => (
+								<div key={title} className={`ps-title-row${profile.activeTitle === title ? ' ps-title-row--active' : ''}`}>
+									<Trophy size={12} className="ps-title-icon" aria-hidden="true" />
+									<span className="ps-title-name">{title}</span>
+									{profile.activeTitle === title && (
+										<span className="ps-title-equipped">Equipped</span>
+									)}
+								</div>
+							))}
+						</div>
 					</Section>
 				)}
 

@@ -242,6 +242,45 @@
 	border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
+/* ── Nexus selector bar ──────────────────────────────────────────────────── */
+.vpm-nexus-bar {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-2) var(--space-5);
+	border-bottom: 1px solid var(--border-subtle);
+	background: rgba(255, 255, 255, 0.015);
+	flex-shrink: 0;
+	flex-wrap: wrap;
+}
+
+.vpm-nexus-bar-label {
+	font-size: 11px;
+	color: var(--text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	white-space: nowrap;
+}
+
+.vpm-nexus-select {
+	background: var(--bg-surface-3);
+	border: 1px solid var(--border-strong);
+	color: var(--text-default);
+	font-size: var(--text-sm);
+	padding: 4px 8px;
+	cursor: pointer;
+	outline: none;
+	flex: 1;
+	min-width: 0;
+}
+.vpm-nexus-select:focus { border-color: var(--accent); }
+
+.vpm-claim-error {
+	font-size: 11px;
+	color: var(--danger);
+	width: 100%;
+}
+
 /* ── Per-level row ────────────────────────────────────────────────────────── */
 .vpm-row {
 	display: grid;
@@ -256,21 +295,44 @@
 	background: rgba(255, 255, 255, 0.025);
 }
 
-.vpm-row--earned {
-	opacity: 0.45;
+.vpm-row--claimed {
+	opacity: 0.38;
+}
+
+.vpm-row--claimable {
+	background: rgba(255, 196, 0, 0.04) !important;
 }
 
 .vpm-row--current {
 	background: rgba(255, 196, 0, 0.05) !important;
 	border-left: 2px solid var(--accent);
-	opacity: 1;
 }
 
 .vpm-row--capstone {
 	background: linear-gradient(90deg, rgba(255, 196, 0, 0.07), transparent) !important;
 	border-bottom: none;
-	opacity: 1;
 }
+
+/* Claim button occupies full row width below rewards on claimable rows */
+.vpm-row-claim {
+	grid-column: 1 / -1;
+	padding: 4px var(--space-3) 6px;
+}
+
+.vpm-claim-btn {
+	background: var(--accent);
+	border: none;
+	color: var(--bg-base);
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	padding: 5px 18px;
+	cursor: pointer;
+	transition: opacity 0.12s;
+}
+.vpm-claim-btn:hover:not(:disabled) { opacity: 0.85; }
+.vpm-claim-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ── Level number cell ────────────────────────────────────────────────────── */
 .vpm-row-lv {
@@ -295,6 +357,15 @@
 .vpm-row-lv-check {
 	font-size: 10px;
 	color: rgba(255, 196, 0, 0.4);
+}
+
+.vpm-row-lv-done {
+	color: rgba(255, 196, 0, 0.35);
+}
+
+.vpm-row-lv-num--ready {
+	color: var(--accent);
+	font-weight: 700;
 }
 
 /* ── Free / Paid reward cells ─────────────────────────────────────────────── */
@@ -332,11 +403,12 @@
 	color: var(--text-muted);
 }
 
-.vpm-r--res  { color: var(--text-muted); }
+.vpm-r--res   { color: var(--text-muted); flex-wrap: wrap; gap: 3px 6px; }
 .vpm-r--boost { color: #60c0ff; }
 .vpm-r--title { color: var(--accent); font-weight: 600; }
 .vpm-r--badge { color: #d4af37; font-weight: 600; }
-.vpm-r--vp   { color: #a78bfa; font-weight: 600; }
+.vpm-r--vp    { color: #a78bfa; font-weight: 600; }
+.vpm-r--token { color: #4ade80; font-weight: 600; }
 
 /* ── Footer ───────────────────────────────────────────────────────────────── */
 .vpm-footer {

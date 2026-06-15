@@ -86,6 +86,13 @@ model User {
   // Permanent badge collection. Array of tier strings granted by the battle pass:
   // ["bronze", "silver", "gold", "platinum"]. Highest tier badge wins display.
   earnedBadges  Json    @default("[]")
+
+  // All pass titles ever earned across seasons. Superset of passTitle.
+  earnedTitles  Json    @default("[]")
+
+  // The title the player has chosen to display on their public profile (max 1).
+  // Must be a member of earnedTitles. Null = no title shown.
+  activeTitle   String? @db.VarChar(32)
 }
 
 enum GalaxyStatus {
@@ -178,11 +185,13 @@ model GalaxyPlayer {
 
   dominanceSince DateTime?
 
-  seasonXp    Int     @default(0)
-  passLevel   Int     @default(0)
-  hasPaidPass Boolean @default(false)
-  // Highest pass title earned this season. Promoted to User.passTitle at season end.
-  passTitle   String? @db.VarChar(32)
+  seasonXp      Int     @default(0)
+  passLevel     Int     @default(0)
+  hasPaidPass   Boolean @default(false)
+  // Highest pass title earned this season. Promoted to User.earnedTitles at season end.
+  passTitle     String? @db.VarChar(32)
+  // JSON array of level numbers the player has already claimed rewards for.
+  claimedLevels Json    @default("[]")
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   galaxy Galaxy @relation(fields: [galaxyId], references: [id], onDelete: Cascade)

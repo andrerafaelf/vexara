@@ -16,6 +16,7 @@ interface PassState {
 	passLevel: number;
 	hasPaidPass: boolean;
 	passTitle: string | null;
+	claimedLevels: number[];
 }
 
 export default function RailBattlePass() {

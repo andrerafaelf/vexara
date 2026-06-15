@@ -1,9 +1,9 @@
 'use client';
 
 import { useAuth } from '@/context/AuthContext';
-import { getUserStats, changePassword, getMyNexuses, getDailyStreak } from '@/services/api';
+import { getUserStats, changePassword, getMyNexuses, getDailyStreak, setActiveTitle } from '@/services/api';
 import { Nexus, UserStats } from '@/types/game';
-import { Bell, Eye, ExternalLink, Lock, LogOut, MapPin, User as UserIcon } from 'lucide-react';
+import { Bell, Eye, ExternalLink, Lock, LogOut, MapPin, User as UserIcon, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -59,6 +59,7 @@ export default function ProfileStats() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [tab, setTab] = useState<'stats' | 'notifications' | 'security' | 'accessibility'>('stats');
+	const [titleBusy, setTitleBusy] = useState(false);
 	const [pwCurrent, setPwCurrent] = useState('');
 	const [pwNew, setPwNew] = useState('');
 	const [pwConfirm, setPwConfirm] = useState('');
@@ -306,13 +307,18 @@ export default function ProfileStats() {
 						/>
 						<div className="ps-header-info">
 							<h2 className="ps-username">
-								{/* Badges live in their own section below, not the header. */}
 								<Username
 									name={stats.username}
 									isSupporter={stats.isSupporter}
 									supporterTier={stats.supporterTier ?? null}
 								/>
 							</h2>
+							{stats.activeTitle && (
+								<span className="ps-active-title">
+									<Trophy size={11} aria-hidden="true" />
+									{stats.activeTitle}
+								</span>
+							)}
 							<span className="ps-meta">
 								{stats.points.toLocaleString()} influence · {stats.nexusCount} nexus
 								{stats.nexusCount !== 1 ? 'es' : ''} · {stats.accountAgeDays}d played
@@ -339,19 +345,53 @@ export default function ProfileStats() {
 										? { ...prev, avatarUrl: next.avatarUrl, avatarUrlSm: next.avatarUrlSm }
 										: prev
 								);
-								// Mirror the new URLs into AuthContext so the sidebar updates immediately.
 								updateUser({ avatarUrl: next.avatarUrl, avatarUrlSm: next.avatarUrlSm });
 							}}
 						/>
 					)}
 
-					{(stats.isAlphaFounder || stats.supporterTier === 'commander') && (
+					{(stats.isAlphaFounder || stats.supporterTier === 'commander' || (stats.earnedBadges && stats.earnedBadges.length > 0)) && (
 						<Section title="Badges">
 							<ProfileBadges
 								isAlphaFounder={stats.isAlphaFounder}
 								isFounder={stats.isFounder}
 								supporterTier={stats.supporterTier ?? null}
+								earnedBadges={stats.earnedBadges}
 							/>
+						</Section>
+					)}
+
+					{stats.earnedTitles && stats.earnedTitles.length > 0 && (
+						<Section title="Titles">
+							<div className="ps-titles-list">
+								{stats.earnedTitles.map((title) => {
+									const isActive = stats.activeTitle === title;
+									return (
+										<div key={title} className={`ps-title-row${isActive ? ' ps-title-row--active' : ''}`}>
+											<Trophy size={12} className="ps-title-icon" aria-hidden="true" />
+											<span className="ps-title-name">{title}</span>
+											<button
+												className={`ps-title-btn${isActive ? ' ps-title-btn--active' : ''}`}
+												disabled={titleBusy}
+												onClick={async () => {
+													setTitleBusy(true);
+													try {
+														const next = isActive ? null : title;
+														await setActiveTitle(next);
+														setStats((prev) => prev ? { ...prev, activeTitle: next } : prev);
+														updateUser({ activeTitle: next });
+													} finally {
+														setTitleBusy(false);
+													}
+												}}
+											>
+												{isActive ? 'Unequip' : 'Equip'}
+											</button>
+										</div>
+									);
+								})}
+							</div>
+							<p className="ps-titles-hint">Equipped title appears under your name on your public profile.</p>
 						</Section>
 					)}
 

@@ -16,6 +16,8 @@ export interface User {
 	vexPoints?: number;
 	passTitle?: string | null;
 	earnedBadges?: string[];
+	earnedTitles?: string[];
+	activeTitle?: string | null;
 	commanderTitle?: string | null;
 	beginnerTipsEnabled?: boolean;
 	onboardingStep?: string | null;
@@ -42,6 +44,9 @@ export interface UserStats {
 	isAlphaFounder?: boolean;
 	avatarUrl?: string | null;
 	avatarUrlSm?: string | null;
+	earnedBadges?: string[];
+	earnedTitles?: string[];
+	activeTitle?: string | null;
 	points: number;
 	accountAgeDays: number;
 	nexusCount: number;

@@ -121,7 +121,9 @@ export async function getMe(req: AuthRequest, res: Response): Promise<void> {
 				lifetimePoints: true,
 				vexPoints: true,
 				passTitle: true,
-				earnedBadges: true
+				earnedBadges: true,
+				earnedTitles: true,
+				activeTitle: true
 			}
 		});
 		if (!user) {
@@ -146,6 +148,8 @@ export async function getMe(req: AuthRequest, res: Response): Promise<void> {
 			vexPoints: user.vexPoints,
 			passTitle: user.passTitle ?? null,
 			earnedBadges: (user.earnedBadges as string[]) ?? [],
+			earnedTitles: (user.earnedTitles as string[]) ?? [],
+			activeTitle: user.activeTitle ?? null,
 			commanderTitle: resolveTitle(user)
 		});
 	} catch (error) {
@@ -261,7 +265,10 @@ export async function getPublicProfile(req: AuthRequest, res: Response): Promise
 				isAlphaFounder: true,
 				avatarKey: true,
 				createdAt: true,
-				activeGalaxyId: true
+				activeGalaxyId: true,
+				earnedBadges: true,
+				earnedTitles: true,
+				activeTitle: true
 			}
 		});
 		if (!user) {
@@ -505,7 +512,10 @@ export async function getPublicProfile(req: AuthRequest, res: Response): Promise
 				points: n.points
 			})),
 			galaxies,
-			friendship
+			friendship,
+			earnedBadges: (user.earnedBadges as string[]) ?? [],
+			earnedTitles: (user.earnedTitles as string[]) ?? [],
+			activeTitle: user.activeTitle ?? null
 		});
 	} catch (error) {
 		logError('unhandled_controller_error', {
