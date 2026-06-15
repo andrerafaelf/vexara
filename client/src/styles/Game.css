@@ -77,7 +77,9 @@
 	justify-content: center;
 	background: transparent;
 	border-bottom: none;
-	padding: 8px 32px;
+	/* Pull out of main-content's padding so we control spacing symmetrically */
+	margin: -20px -32px 20px;
+	padding: 10px 32px;
 }
 
 /* The strip itself fills the bar horizontally, borderless in this context */
