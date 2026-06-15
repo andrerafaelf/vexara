@@ -222,7 +222,7 @@ export default function OverviewPage({ adminFetch }: Props) {
 					<div style={{ display: 'flex', gap: 8, alignSelf: 'flex-end' }}>
 						<button
 							className="btn btn-primary"
-							onClick={saveSeason}
+							onClick={() => saveSeason()}
 							disabled={seasonSaving}
 							style={{ fontSize: 12 }}
 						>
