@@ -2,7 +2,7 @@
 
 import { Heart, Check } from 'lucide-react';
 import type { SupporterTier } from '@/types/game';
-import { KOFI_URL } from '@/constants/support';
+import { KOFI_URL, SUPPORTER_TIERS } from '@/constants/support';
 import '../styles/SupportTiers.css';
 
 interface SupportTiersCardProps {
@@ -20,35 +20,39 @@ interface TierDef {
 	tokens: number;
 	perks: string[];
 	highlight?: boolean;
+	url: string;
 }
 
 const TIERS: TierDef[] = [
 	{
 		key: 'recruit',
 		amount: '€5',
-		label: 'Recruit',
+		label: 'Recruit Supporter',
 		tokens: 1,
-		perks: ['Glowing name in chat', '1 Supporter Token']
+		perks: ['Glowing name in chat', '1 Supporter Token', '"Recruit" title in-game'],
+		url: SUPPORTER_TIERS[0].url,
 	},
 	{
 		key: 'officer',
 		amount: '€10',
-		label: 'Officer',
+		label: 'Officer Supporter',
 		tokens: 3,
-		perks: ['Brighter glow', 'Animated profile border', '3 Supporter Tokens'],
-		highlight: true
+		perks: ['Brighter glow', 'Animated profile border', '3 Supporter Tokens', '"Officer" title in-game'],
+		highlight: true,
+		url: SUPPORTER_TIERS[1].url,
 	},
 	{
 		key: 'commander',
 		amount: '€25',
-		label: 'Commander',
+		label: 'Commander Supporter',
 		tokens: 8,
 		perks: [
 			'Cyan elite glow',
 			'Animated profile border',
-			'Permanent ALPHA COMMANDER badge',
-			'8 Supporter Tokens'
-		]
+			'8 Supporter Tokens',
+			'"Commander" title in-game',
+		],
+		url: SUPPORTER_TIERS[2].url,
 	}
 ];
 
@@ -70,8 +74,9 @@ export default function SupportTiersCard({
 					<span className="vx-support-card-title">Support Vexara</span>
 				</div>
 				<div className="vx-support-card-pitch">
-					Alpha is funded by donors. Tiers unlock glow, borders, and{' '}
-					<span className="vx-support-tier-cmd">ALPHA COMMANDER</span> - only available now.
+					Vexara runs on community support. Donate to unlock glow, borders, supporter tokens, and
+					an{' '}
+					<span className="vx-support-tier-cmd">exclusive in-game title</span>.
 				</div>
 				<ul className="vx-support-card-tier-list">
 					<li>
@@ -81,7 +86,7 @@ export default function SupportTiersCard({
 						<strong>€10</strong> Officer · 3 tokens + border
 					</li>
 					<li>
-						<strong>€25</strong> Commander · 8 tokens + Founder badge
+						<strong>€25</strong> Commander · 8 tokens + elite glow
 					</li>
 				</ul>
 				<a
@@ -107,16 +112,16 @@ export default function SupportTiersCard({
 						{isFounder && (
 							<span
 								className="alpha-commander-badge"
-								title="Alpha Commander - granted for €25+ donations during alpha. Permanent."
+								title="Alpha Founder — granted for supporting Vexara during alpha. Permanent."
 							>
-								<span>Alpha Commander</span>
+								<span>Alpha Founder</span>
 							</span>
 						)}
 					</div>
 					<div className="vx-support-card-subtitle">
 						{isSupporter
-							? 'Pick a higher tier any time - your highest tier sticks forever, and tokens always stack.'
-							: 'Vexara is in alpha and runs on a small server. Donations keep the lights on and unlock supporter perks.'}
+							? 'Pick a higher tier any time — your highest tier sticks forever, and tokens always stack.'
+							: 'Vexara runs on a small server. Donations keep the lights on and unlock exclusive supporter perks that last forever.'}
 					</div>
 				</div>
 			</div>
@@ -158,7 +163,7 @@ export default function SupportTiersCard({
 								))}
 							</ul>
 							<a
-								href={KOFI_URL}
+								href={tier.url}
 								target="_blank"
 								rel="noopener noreferrer"
 								className="vx-support-tier-cta"
@@ -171,8 +176,8 @@ export default function SupportTiersCard({
 			</div>
 
 			<p className="vx-support-card-footnote">
-				ALPHA COMMANDER badge can only be earned during alpha - it disappears at launch. After that,
-				€25 donations still grant Commander cosmetics, but the Founder mark is locked forever.
+				Supporter perks and titles are permanent — your highest tier is locked in forever.
+				Tokens stack across donations and can be spent in-game.
 			</p>
 		</div>
 	);

@@ -70,10 +70,9 @@ function parseAmount(raw: string | undefined): number {
 	return Number.isFinite(n) && n > 0 ? n : 0;
 }
 
+// Alpha is permanently closed. isFounder / Alpha Commander badge can never be granted again.
 function isAlphaActive(): boolean {
-	// Defaults to true so Founder badges still grant during alpha if the env var
-	// is unset. Flip ALPHA_ACTIVE=false at launch to lock the badge forever.
-	return (process.env.ALPHA_ACTIVE ?? 'true').toLowerCase() !== 'false';
+	return false;
 }
 
 export async function handleKofiWebhook(req: Request, res: Response): Promise<void> {

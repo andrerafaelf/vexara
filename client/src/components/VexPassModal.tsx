@@ -6,7 +6,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Sparkles, Award, Lock, ChevronRight, Zap, Trophy, Medal, CheckCircle2, Gift } from 'lucide-react';
 import { giftBattlePass, purchaseBattlePass, claimBattlePassLevel, getMyNexuses } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { KOFI_URL } from '../constants/support';
+import { VP_PACKS } from '../constants/support';
 import ResourceIcon from './ResourceIcon';
 import '../styles/VexPassModal.css';
 
@@ -416,17 +416,22 @@ export default function VexPassModal({ pass, onClose }: Props) {
 								<div className="vpm-need-vp">
 									<p className="vpm-need-vp-text">
 										You need <strong>{(PASS_COST_VP - vexPoints).toLocaleString()} more VP</strong>.
-										Get 1,000 VP for <strong>€4.99</strong> on Ko-fi.
+										Buy a pack below to top up and unlock the premium track.
 									</p>
-									<a
-										className="vpm-kofi-btn"
-										href={KOFI_URL}
-										target="_blank"
-										rel="noopener noreferrer"
-									>
-										Get Vex Points on Ko-fi
-										<ChevronRight size={14} />
-									</a>
+									<div className="vpm-vp-packs">
+										{VP_PACKS.map((pack) => (
+											<a
+												key={pack.label}
+												className="vpm-vp-pack-btn"
+												href={pack.url}
+												target="_blank"
+												rel="noopener noreferrer"
+											>
+												<span className="vpm-vp-pack-vp">{pack.vp.toLocaleString()} VP</span>
+												<span className="vpm-vp-pack-price">{pack.price}</span>
+											</a>
+										))}
+									</div>
 								</div>
 							)}
 						</div>

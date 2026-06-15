@@ -490,6 +490,31 @@
 }
 .vpm-need-vp-text strong { color: var(--text-default); }
 
+.vpm-vp-packs {
+	display: flex;
+	gap: var(--space-2);
+	flex-wrap: wrap;
+}
+
+.vpm-vp-pack-btn {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2px;
+	padding: var(--space-2) var(--space-3);
+	border: 1px solid var(--color-accent);
+	border-radius: var(--radius-md);
+	background: rgba(255, 196, 0, 0.05);
+	color: var(--text-default);
+	text-decoration: none;
+	transition: background 0.15s, border-color 0.15s;
+	flex: 1;
+	min-width: 90px;
+}
+.vpm-vp-pack-btn:hover { background: rgba(255, 196, 0, 0.12); border-color: var(--color-accent-bright, var(--color-accent)); }
+.vpm-vp-pack-vp { font-size: var(--text-sm); font-weight: 700; color: var(--color-accent); }
+.vpm-vp-pack-price { font-size: 11px; color: var(--text-muted); }
+
 .vpm-kofi-btn {
 	display: flex;
 	align-items: center;

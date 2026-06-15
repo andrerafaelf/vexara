@@ -1,7 +1,7 @@
 'use client';
 
 import type { SupporterTier } from '@/types/game';
-import { ALPHA_PLAYER_BADGE, ALPHA_COMMANDER_BADGE, VANGUARD_BADGE } from '@/data/gameIcons';
+import { ALPHA_PLAYER_BADGE, ALPHA_COMMANDER_BADGE, VANGUARD_BADGE, badgeIcon } from '@/data/gameIcons';
 
 interface ProfileBadgesProps {
 	isAlphaFounder?: boolean | null;
@@ -19,10 +19,10 @@ interface BadgeDef {
 }
 
 const PASS_BADGE_DEFS: Record<string, Omit<BadgeDef, 'key'>> = {
-	bronze:   { emoji: '🥉', name: 'Bronze Protocol',   description: 'Reached Level 10 of the Vex Protocol battle pass.' },
-	silver:   { emoji: '🥈', name: 'Silver Protocol',   description: 'Reached Level 25 of the Vex Protocol battle pass.' },
-	gold:     { emoji: '🏅', name: 'Gold Protocol',     description: 'Reached Level 40 of the Vex Protocol battle pass.' },
-	platinum: { emoji: '🏆', name: 'Platinum Protocol', description: 'Reached Level 50 — completed the full Vex Protocol pass.' },
+	bronze:   { src: badgeIcon('bronzeProtocol'),   name: 'Bronze Protocol',   description: 'Reached Level 10 of the Vex Protocol battle pass — Season 1.' },
+	silver:   { src: badgeIcon('silverProtocol'),   name: 'Silver Protocol',   description: 'Reached Level 25 of the Vex Protocol battle pass — Season 1.' },
+	gold:     { src: badgeIcon('goldProtocol'),     name: 'Gold Protocol',     description: 'Reached Level 40 of the Vex Protocol battle pass — Season 1.' },
+	platinum: { src: badgeIcon('platinumProtocol'), name: 'Platinum Protocol', description: 'Reached Level 50 — completed the full Vex Protocol pass — Season 1.' },
 };
 
 export default function ProfileBadges({ isAlphaFounder, isFounder, supporterTier, earnedBadges }: ProfileBadgesProps) {
@@ -59,7 +59,7 @@ export default function ProfileBadges({ isAlphaFounder, isFounder, supporterTier
 	for (const tier of ['bronze', 'silver', 'gold', 'platinum'] as const) {
 		if (earnedBadges?.includes(tier)) {
 			const def = PASS_BADGE_DEFS[tier];
-			badges.push({ key: tier, emoji: def.emoji, name: def.name, description: def.description });
+			badges.push({ key: tier, src: def.src, name: def.name, description: def.description });
 		}
 	}
 
