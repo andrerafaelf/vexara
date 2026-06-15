@@ -1,11 +1,18 @@
 'use client';
 
-import React from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getShop, shopPurchase, shopPurchaseBundle, shopEquipBorder, shopRename, shopGiftPass } from '../services/api';
+import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import Avatar from './Avatar';
+import {
+	getShop,
+	shopEquipBorder,
+	shopGiftPass,
+	shopPurchase,
+	shopPurchaseBundle,
+	shopRename
+} from '../services/api';
 import '../styles/Shop.css';
+import Avatar from './Avatar';
 
 type Tab = 'titles' | 'borders' | 'rename' | 'gift';
 
@@ -44,7 +51,13 @@ function msUntilRefresh(refreshesAt: string): string {
 	return `${h}h ${m}m`;
 }
 
-function BorderPreview({ borderKey, name, username, avatarUrl, avatarUrlSm }: {
+function BorderPreview({
+	borderKey,
+	name,
+	username,
+	avatarUrl,
+	avatarUrlSm
+}: {
 	borderKey: string;
 	name: string;
 	username: string;
@@ -78,6 +91,9 @@ export default function ShopPage() {
 	const [giftUsername, setGiftUsername] = React.useState('');
 	const [renameValue, setRenameValue] = React.useState('');
 	const [busyKey, setBusyKey] = React.useState<string | null>(null);
+	const [pendingConfirmKey, setPendingConfirmKey] = React.useState<string | null>(null);
+	const [confirmingRename, setConfirmingRename] = React.useState(false);
+	const [confirmingGift, setConfirmingGift] = React.useState(false);
 
 	const { data: shopRaw, isLoading } = useQuery({
 		queryKey: ['shop'],
@@ -102,6 +118,24 @@ export default function ShopPage() {
 			setError(null);
 			setSuccess(null);
 		}, 3500);
+	}
+
+	function handleBuyClick(key: string) {
+		if (pendingConfirmKey === key) {
+			setPendingConfirmKey(null);
+			buyMutation.mutate(key);
+		} else {
+			setPendingConfirmKey(key);
+		}
+	}
+
+	function handleBundleClick(collectionKey: string) {
+		if (pendingConfirmKey === `bundle_${collectionKey}`) {
+			setPendingConfirmKey(null);
+			bundleMutation.mutate(collectionKey);
+		} else {
+			setPendingConfirmKey(`bundle_${collectionKey}`);
+		}
 	}
 
 	function selectTab(nextTab: Tab) {
@@ -143,7 +177,9 @@ export default function ShopPage() {
 		onSuccess: (_data, collectionKey) => {
 			queryClient.invalidateQueries({ queryKey: ['shop'] });
 			queryClient.invalidateQueries({ queryKey: ['user'] });
-			flash(`${collectionKey.charAt(0).toUpperCase() + collectionKey.slice(1)} collection acquired.`);
+			flash(
+				`${collectionKey.charAt(0).toUpperCase() + collectionKey.slice(1)} collection acquired.`
+			);
 		},
 		onError: (err: any) => flash(err?.response?.data?.error ?? 'Purchase failed', true)
 	});
@@ -277,7 +313,7 @@ export default function ShopPage() {
 												<button
 													className="shop-buy-btn"
 													disabled={!canAfford || busy}
-													onClick={() => buyMutation.mutate(item.key)}
+													onClick={() => handleBuyClick(item.key)}
 												>
 													{busy ? 'Working...' : canAfford ? 'Requisition' : 'Insufficient VP'}
 												</button>
@@ -291,109 +327,124 @@ export default function ShopPage() {
 				)}
 
 				{/* BORDERS */}
-				{!isLoading && tab === 'borders' && shop && (() => {
-					const { collectionKey, collectionName, borders } = shop.borderCollection;
-					const ownedBorderKeys = new Set(shop.ownedKeys.filter((k) => k.startsWith('border_')));
-					const collectionOwned = borders.filter((b) => ownedBorderKeys.has(b.key));
-					const allCollectionOwned = collectionOwned.length === borders.length;
-					const bundleBusy = busyKey === `bundle_${collectionKey}`;
-					return (
-						<div className="shop-section">
-							{/* Today's collection */}
-							<div className="shop-section-intro">
-								<div className="shop-section-label">Today's collection — {collectionName}</div>
-								<p className="shop-section-hint">
-									Six frames from the {collectionName} series. Buy individually for 75 VP each,
-									or grab the full set for 300 VP.
-								</p>
-							</div>
-
-							<div className="shop-border-collection">
-								<div className="shop-items shop-items--border">
-									{borders.map((item, idx) => {
-										const owned = ownedBorderKeys.has(item.key);
-										const equipped = shop.equippedBorder === item.key;
-										const canAfford = vp >= item.vpCost;
-										const busy = busyKey === item.key;
-										return (
-											<div
-												key={item.key}
-												className={`shop-item shop-item--border${owned ? ' shop-item--owned' : ''}${equipped ? ' shop-item--equipped' : ''}`}
-											>
-												<div className="shop-item-header">
-													<span className="shop-stock-number">
-														{collectionName.toUpperCase()} / {String(idx + 1).padStart(2, '0')}
-													</span>
-													{owned && <span className="shop-status-stamp">{equipped ? 'Fitted' : 'Owned'}</span>}
-												</div>
-												<BorderPreview
-												borderKey={item.key}
-												name={item.name}
-												username={user?.username ?? 'V'}
-												avatarUrl={user?.avatarUrl}
-												avatarUrlSm={user?.avatarUrlSm}
-											/>
-												<div className="shop-item-name">{item.name}</div>
-												<div className="shop-item-footer">
-													{owned ? (
-														equipped ? (
-															<button
-																className="shop-buy-btn shop-buy-btn--unequip"
-																onClick={() => equipMutation.mutate(null)}
-																disabled={busyKey === '__unequip__'}
-															>
-																Remove
-															</button>
-														) : (
-															<button
-																className="shop-buy-btn shop-buy-btn--equip"
-																onClick={() => equipMutation.mutate(item.key)}
-																disabled={busy}
-															>
-																{busy ? '…' : 'Equip'}
-															</button>
-														)
-													) : (
-														<>
-															<span className="shop-item-cost">{item.vpCost} VP</span>
-															<button
-																className="shop-buy-btn"
-																disabled={!canAfford || busy}
-																onClick={() => buyMutation.mutate(item.key)}
-															>
-																{busy ? 'Working...' : canAfford ? 'Requisition' : 'Insufficient VP'}
-															</button>
-														</>
-													)}
-												</div>
-											</div>
-										);
-									})}
+				{!isLoading &&
+					tab === 'borders' &&
+					shop &&
+					(() => {
+						const { collectionKey, collectionName, borders } = shop.borderCollection;
+						const ownedBorderKeys = new Set(shop.ownedKeys.filter((k) => k.startsWith('border_')));
+						const collectionOwned = borders.filter((b) => ownedBorderKeys.has(b.key));
+						const allCollectionOwned = collectionOwned.length === borders.length;
+						const bundleBusy = busyKey === `bundle_${collectionKey}`;
+						return (
+							<div className="shop-section">
+								{/* Today's collection */}
+								<div className="shop-section-intro">
+									<div className="shop-section-label">Today's collection — {collectionName}</div>
+									<p className="shop-section-hint">
+										Six frames from the {collectionName} series. Buy individually for 75 VP each, or
+										grab the full set for 300 VP.
+									</p>
 								</div>
 
-								{/* Bundle CTA */}
-								{!allCollectionOwned && (
-									<div className="shop-bundle-bar">
-										<div className="shop-bundle-bar-text">
-											<span className="shop-bundle-name">{collectionName} Collection Bundle</span>
-											<span className="shop-bundle-desc">
-												All 6 frames · 300 VP
-												{collectionOwned.length > 0 && ` · You own ${collectionOwned.length}/6`}
-											</span>
-										</div>
-										<button
-											className="shop-buy-btn shop-buy-btn--bundle"
-											disabled={vp < 300 || bundleBusy}
-											onClick={() => bundleMutation.mutate(collectionKey)}
-										>
-											{bundleBusy ? 'Working...' : vp >= 300 ? 'Buy bundle (300 VP)' : 'Insufficient VP'}
-										</button>
+								<div className="shop-border-collection">
+									<div className="shop-items shop-items--border">
+										{borders.map((item, idx) => {
+											const owned = ownedBorderKeys.has(item.key);
+											const equipped = shop.equippedBorder === item.key;
+											const canAfford = vp >= item.vpCost;
+											const busy = busyKey === item.key;
+											return (
+												<div
+													key={item.key}
+													className={`shop-item shop-item--border${owned ? ' shop-item--owned' : ''}${equipped ? ' shop-item--equipped' : ''}`}
+												>
+													<div className="shop-item-header">
+														<span className="shop-stock-number">
+															{collectionName.toUpperCase()} / {String(idx + 1).padStart(2, '0')}
+														</span>
+														{owned && (
+															<span className="shop-status-stamp">
+																{equipped ? 'Fitted' : 'Owned'}
+															</span>
+														)}
+													</div>
+													<BorderPreview
+														borderKey={item.key}
+														name={item.name}
+														username={user?.username ?? 'V'}
+														avatarUrl={user?.avatarUrl}
+														avatarUrlSm={user?.avatarUrlSm}
+													/>
+													<div className="shop-item-name">{item.name}</div>
+													<div className="shop-item-footer">
+														{owned ? (
+															equipped ? (
+																<button
+																	className="shop-buy-btn shop-buy-btn--unequip"
+																	onClick={() => equipMutation.mutate(null)}
+																	disabled={busyKey === '__unequip__'}
+																>
+																	Remove
+																</button>
+															) : (
+																<button
+																	className="shop-buy-btn shop-buy-btn--equip"
+																	onClick={() => equipMutation.mutate(item.key)}
+																	disabled={busy}
+																>
+																	{busy ? '…' : 'Equip'}
+																</button>
+															)
+														) : (
+															<>
+																<span className="shop-item-cost">{item.vpCost} VP</span>
+																<button
+																	className="shop-buy-btn"
+																	disabled={!canAfford || busy}
+																	onClick={() => handleBuyClick(item.key)}
+																>
+																	{busy
+																		? 'Working...'
+																		: canAfford
+																			? 'Requisition'
+																			: 'Insufficient VP'}
+																</button>
+															</>
+														)}
+													</div>
+												</div>
+											);
+										})}
 									</div>
-								)}
+
+									{/* Bundle CTA */}
+									{!allCollectionOwned && (
+										<div className="shop-bundle-bar">
+											<div className="shop-bundle-bar-text">
+												<span className="shop-bundle-name">{collectionName} Collection Bundle</span>
+												<span className="shop-bundle-desc">
+													All 6 frames · 300 VP
+													{collectionOwned.length > 0 && ` · You own ${collectionOwned.length}/6`}
+												</span>
+											</div>
+											<button
+												className="shop-buy-btn shop-buy-btn--bundle"
+												disabled={vp < 300 || bundleBusy}
+												onClick={() => handleBundleClick(collectionKey)}
+											>
+												{bundleBusy
+													? 'Working...'
+													: vp >= 300
+														? 'Buy bundle (300 VP)'
+														: 'Insufficient VP'}
+											</button>
+										</div>
+									)}
+								</div>
 							</div>
-						</div>
-					);
-				})()}
+						);
+					})()}
 
 				{/* RENAME */}
 				{tab === 'rename' && (
@@ -417,7 +468,12 @@ export default function ShopPage() {
 									className="shop-rename-form"
 									onSubmit={(e) => {
 										e.preventDefault();
-										renameMutation.mutate();
+										if (!confirmingRename) {
+											setConfirmingRename(true);
+										} else {
+											setConfirmingRename(false);
+											renameMutation.mutate();
+										}
 									}}
 								>
 									<input
@@ -425,24 +481,38 @@ export default function ShopPage() {
 										type="text"
 										placeholder="New commander name"
 										value={renameValue}
-										onChange={(e) => setRenameValue(e.target.value)}
+										onChange={(e) => {
+											setRenameValue(e.target.value);
+											setConfirmingRename(false);
+										}}
 										minLength={3}
 										maxLength={20}
 										pattern="[a-zA-Z0-9_]+"
-										disabled={renameMutation.isPending}
+										disabled={renameMutation.isPending || confirmingRename}
 										required
 									/>
 									<button
 										type="submit"
-										className="shop-buy-btn"
+										className={`shop-buy-btn${confirmingRename ? ' shop-buy-btn--confirm' : ''}`}
 										disabled={renameMutation.isPending || !renameValue.trim() || vp < 500}
 									>
 										{renameMutation.isPending
 											? 'Filing...'
-											: vp >= 500
-												? 'Update record (500 VP)'
-												: 'Insufficient VP'}
+											: confirmingRename
+												? 'Confirm — 500 VP?'
+												: vp >= 500
+													? 'Update record (500 VP)'
+													: 'Insufficient VP'}
 									</button>
+									{confirmingRename && (
+										<button
+											type="button"
+											className="shop-cancel-btn"
+											onClick={() => setConfirmingRename(false)}
+										>
+											Cancel
+										</button>
+									)}
 								</form>
 							)}
 						</div>
@@ -464,7 +534,12 @@ export default function ShopPage() {
 								className="shop-rename-form"
 								onSubmit={(e) => {
 									e.preventDefault();
-									giftMutation.mutate();
+									if (!confirmingGift) {
+										setConfirmingGift(true);
+									} else {
+										setConfirmingGift(false);
+										giftMutation.mutate();
+									}
 								}}
 							>
 								<input
@@ -472,21 +547,35 @@ export default function ShopPage() {
 									type="text"
 									placeholder="Commander name"
 									value={giftUsername}
-									onChange={(e) => setGiftUsername(e.target.value)}
-									disabled={giftMutation.isPending}
+									onChange={(e) => {
+										setGiftUsername(e.target.value);
+										setConfirmingGift(false);
+									}}
+									disabled={giftMutation.isPending || confirmingGift}
 									required
 								/>
 								<button
 									type="submit"
-									className="shop-buy-btn"
+									className={`shop-buy-btn${confirmingGift ? ' shop-buy-btn--confirm' : ''}`}
 									disabled={giftMutation.isPending || !giftUsername.trim() || vp < 1000}
 								>
 									{giftMutation.isPending
 										? 'Issuing...'
-										: vp >= 1000
-											? 'Issue pass (1,000 VP)'
-											: 'Insufficient VP'}
+										: confirmingGift
+											? `Gift to ${giftUsername}? (1,000 VP)`
+											: vp >= 1000
+												? 'Issue pass (1,000 VP)'
+												: 'Insufficient VP'}
 								</button>
+								{confirmingGift && (
+									<button
+										type="button"
+										className="shop-cancel-btn"
+										onClick={() => setConfirmingGift(false)}
+									>
+										Cancel
+									</button>
+								)}
 							</form>
 						</div>
 					</div>

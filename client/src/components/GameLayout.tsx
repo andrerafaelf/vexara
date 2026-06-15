@@ -583,7 +583,7 @@ export default function GameLayout({
 									avatarUrlSm={authUser.avatarUrlSm ?? null}
 									size="md"
 									borderKey={authUser.avatarBorder ?? null}
-									className={`commander-avatar${authUser.supporterTier === 'officer' ? ' supporter-border supporter-border-officer' : ''}${authUser.supporterTier === 'vanguard' ? ' supporter-border supporter-border-vanguard' : ''}${authUser.supporterTier === 'commander' && authUser.isFounder ? ' supporter-border supporter-border-commander' : ''}`}
+									className={`commander-avatar${authUser.supporterTier === 'officer' ? ' supporter-border supporter-border-officer' : ''}${authUser.supporterTier === 'vanguard' ? ' supporter-border supporter-border-vanguard' : ''}${authUser.supporterTier === 'commander' ? ' supporter-border supporter-border-commander' : ''}`}
 									ariaHidden
 								/>
 								<div className="commander-info">
@@ -595,7 +595,7 @@ export default function GameLayout({
 												authUser.supporterTier === 'recruit' ? 'supporter-tier-recruit' : null,
 												authUser.supporterTier === 'officer' ? 'supporter-tier-officer' : null,
 												authUser.supporterTier === 'vanguard' ? 'supporter-tier-vanguard' : null,
-												authUser.supporterTier === 'commander' && authUser.isFounder ? 'supporter-tier-commander' : null
+												authUser.supporterTier === 'commander' ? 'supporter-tier-commander' : null
 											]
 												.filter(Boolean)
 												.join(' ')}

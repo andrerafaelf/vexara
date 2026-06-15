@@ -1,17 +1,21 @@
 'use client';
 
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+	CheckCircle2,
+	ChevronRight,
+	Clock,
+	Gift,
+	Shield,
+	Sparkles,
+	Tag,
+	UserPen,
+	X
+} from 'lucide-react';
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { X, Sparkles, Tag, Shield, UserPen, Gift, Clock, CheckCircle2, ChevronRight } from 'lucide-react';
-import {
-	getShop,
-	shopPurchase,
-	shopEquipBorder,
-	shopRename,
-	shopGiftPass,
-} from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { getShop, shopEquipBorder, shopGiftPass, shopPurchase, shopRename } from '../services/api';
 import '../styles/Shop.css';
 
 type Tab = 'titles' | 'borders' | 'rename' | 'gift';
@@ -50,10 +54,7 @@ function msUntilRefresh(refreshesAt: string): string {
 }
 
 function TierBadge({ vpCost }: { vpCost: number }) {
-	const tier =
-		vpCost >= 400 ? 'rare'
-		: vpCost >= 250 ? 'uncommon'
-		: 'common';
+	const tier = vpCost >= 400 ? 'rare' : vpCost >= 250 ? 'uncommon' : 'common';
 	return <span className={`shop-tier shop-tier--${tier}`}>{tier}</span>;
 }
 
@@ -79,17 +80,22 @@ export default function ShopModal({ onClose }: Props) {
 	const [giftUsername, setGiftUsername] = React.useState('');
 	const [renameValue, setRenameValue] = React.useState('');
 	const [busyKey, setBusyKey] = React.useState<string | null>(null);
+	const [pendingConfirmKey, setPendingConfirmKey] = React.useState<string | null>(null);
+	const [confirmingRename, setConfirmingRename] = React.useState(false);
+	const [confirmingGift, setConfirmingGift] = React.useState(false);
 
 	React.useEffect(() => {
 		const prev = document.body.style.overflow;
 		document.body.style.overflow = 'hidden';
-		return () => { document.body.style.overflow = prev; };
+		return () => {
+			document.body.style.overflow = prev;
+		};
 	}, []);
 
 	const { data: shopRaw, isLoading } = useQuery({
 		queryKey: ['shop'],
 		queryFn: () => getShop().then((r) => r.data as ShopData),
-		staleTime: 60_000,
+		staleTime: 60_000
 	});
 
 	const shop = shopRaw ?? null;
@@ -98,7 +104,19 @@ export default function ShopModal({ onClose }: Props) {
 	function flash(msg: string, isError = false) {
 		setError(isError ? msg : null);
 		setSuccess(isError ? null : msg);
-		setTimeout(() => { setError(null); setSuccess(null); }, 3500);
+		setTimeout(() => {
+			setError(null);
+			setSuccess(null);
+		}, 3500);
+	}
+
+	function handleBuyClick(key: string) {
+		if (pendingConfirmKey === key) {
+			setPendingConfirmKey(null);
+			buyMutation.mutate(key);
+		} else {
+			setPendingConfirmKey(key);
+		}
 	}
 
 	// ── Buy title or border ────────────────────────────────────────────────────
@@ -115,11 +133,14 @@ export default function ShopModal({ onClose }: Props) {
 			if (item && item.type === 'title' && user) {
 				const existing = user.earnedTitles ?? [];
 				if (!existing.includes(item.name)) {
-					updateUser({ earnedTitles: [...existing, item.name], vexPoints: (user.vexPoints ?? 0) - item.vpCost });
+					updateUser({
+						earnedTitles: [...existing, item.name],
+						vexPoints: (user.vexPoints ?? 0) - item.vpCost
+					});
 				}
 			}
 		},
-		onError: (err: any) => flash(err?.response?.data?.error ?? 'Purchase failed', true),
+		onError: (err: any) => flash(err?.response?.data?.error ?? 'Purchase failed', true)
 	});
 
 	// ── Equip border ──────────────────────────────────────────────────────────
@@ -133,7 +154,7 @@ export default function ShopModal({ onClose }: Props) {
 			updateUser({ avatarBorder: borderKey });
 			flash(borderKey ? 'Border equipped.' : 'Border removed.');
 		},
-		onError: (err: any) => flash(err?.response?.data?.error ?? 'Failed to equip', true),
+		onError: (err: any) => flash(err?.response?.data?.error ?? 'Failed to equip', true)
 	});
 
 	// ── Rename ────────────────────────────────────────────────────────────────
@@ -146,7 +167,7 @@ export default function ShopModal({ onClose }: Props) {
 			setRenameValue('');
 			flash(`Username changed to "${data.username}".`);
 		},
-		onError: (err: any) => flash(err?.response?.data?.error ?? 'Rename failed', true),
+		onError: (err: any) => flash(err?.response?.data?.error ?? 'Rename failed', true)
 	});
 
 	// ── Gift pass ─────────────────────────────────────────────────────────────
@@ -159,15 +180,19 @@ export default function ShopModal({ onClose }: Props) {
 			setGiftUsername('');
 			flash(`Pass gifted to ${data.recipientUsername}.`);
 		},
-		onError: (err: any) => flash(err?.response?.data?.error ?? 'Gift failed', true),
+		onError: (err: any) => flash(err?.response?.data?.error ?? 'Gift failed', true)
 	});
 
 	if (typeof document === 'undefined') return null;
 
 	return createPortal(
 		<div className="shop-backdrop" onClick={onClose}>
-			<div className="shop-modal" role="dialog" aria-label="Vex Shop" onClick={(e) => e.stopPropagation()}>
-
+			<div
+				className="shop-modal"
+				role="dialog"
+				aria-label="Vex Shop"
+				onClick={(e) => e.stopPropagation()}
+			>
 				{/* ── Header ── */}
 				<div className="shop-header">
 					<div className="shop-header-left">
@@ -196,20 +221,27 @@ export default function ShopModal({ onClose }: Props) {
 
 				{/* ── Tabs ── */}
 				<div className="shop-tabs" role="tablist">
-					{([
-						['titles', <Tag size={13} key="t" />, 'Titles'],
-						['borders', <Shield size={13} key="b" />, 'Borders'],
-						['rename', <UserPen size={13} key="r" />, 'Rename'],
-						['gift', <Gift size={13} key="g" />, 'Gift Pass'],
-					] as [Tab, React.ReactNode, string][]).map(([id, icon, label]) => (
+					{(
+						[
+							['titles', <Tag size={13} key="t" />, 'Titles'],
+							['borders', <Shield size={13} key="b" />, 'Borders'],
+							['rename', <UserPen size={13} key="r" />, 'Rename'],
+							['gift', <Gift size={13} key="g" />, 'Gift Pass']
+						] as [Tab, React.ReactNode, string][]
+					).map(([id, icon, label]) => (
 						<button
 							key={id}
 							role="tab"
 							aria-selected={tab === id}
 							className={`shop-tab${tab === id ? ' shop-tab--active' : ''}`}
-							onClick={() => { setTab(id); setError(null); setSuccess(null); }}
+							onClick={() => {
+								setTab(id);
+								setError(null);
+								setSuccess(null);
+							}}
 						>
-							{icon}{label}
+							{icon}
+							{label}
 						</button>
 					))}
 				</div>
@@ -228,7 +260,9 @@ export default function ShopModal({ onClose }: Props) {
 					{/* TITLES */}
 					{!isLoading && tab === 'titles' && shop && (
 						<div className="shop-section">
-							<p className="shop-section-hint">3 titles rotate daily. They are added permanently to your title collection.</p>
+							<p className="shop-section-hint">
+								3 titles rotate daily. They are added permanently to your title collection.
+							</p>
 							<div className="shop-items">
 								{shop.titles.map((item) => {
 									const owned = shop.ownedKeys.includes(item.key);
@@ -253,9 +287,19 @@ export default function ShopModal({ onClose }: Props) {
 													<button
 														className="shop-buy-btn"
 														disabled={!canAfford || busy}
-														onClick={() => buyMutation.mutate(item.key)}
+														onClick={() => handleBuyClick(item.key)}
 													>
-														{busy ? '…' : canAfford ? <>Buy <ChevronRight size={11} /></> : 'Need VP'}
+														{busy ? (
+															'…'
+														) : pendingConfirmKey === item.key ? (
+															`Confirm (${item.vpCost.toLocaleString()} VP)`
+														) : canAfford ? (
+															<>
+																Buy <ChevronRight size={11} />
+															</>
+														) : (
+															'Need VP'
+														)}
 													</button>
 												)}
 											</div>
@@ -269,7 +313,9 @@ export default function ShopModal({ onClose }: Props) {
 					{/* BORDERS */}
 					{!isLoading && tab === 'borders' && shop && (
 						<div className="shop-section">
-							<p className="shop-section-hint">3 borders rotate daily. Equip them from your collection after purchase.</p>
+							<p className="shop-section-hint">
+								3 borders rotate daily. Equip them from your collection after purchase.
+							</p>
 							<div className="shop-items shop-items--border">
 								{shop.borders.map((item) => {
 									const owned = shop.ownedKeys.includes(item.key);
@@ -278,13 +324,26 @@ export default function ShopModal({ onClose }: Props) {
 									const busy = busyKey === item.key;
 									const equipBusy = busyKey === item.key + '_equip';
 									return (
-										<div key={item.key} className={`shop-item shop-item--border${owned ? ' shop-item--owned' : ''}${item.isPremiumTier ? ' shop-item--premium' : ''}`}>
+										<div
+											key={item.key}
+											className={`shop-item shop-item--border${owned ? ' shop-item--owned' : ''}${item.isPremiumTier ? ' shop-item--premium' : ''}`}
+										>
 											<BorderPreview cssClass={item.cssClass ?? ''} name={item.name} />
 											<div className="shop-item-header">
-												{item.isPremiumTier && <span className="shop-tier shop-tier--premium">Commander</span>}
-												{!item.isPremiumTier && <span className={`shop-tier shop-tier--${item.vpCost >= 900 ? 'rare' : item.vpCost >= 500 ? 'uncommon' : 'common'}`}>
-													{item.vpCost >= 900 ? 'rare' : item.vpCost >= 500 ? 'uncommon' : 'common'}
-												</span>}
+												{item.isPremiumTier && (
+													<span className="shop-tier shop-tier--premium">Commander</span>
+												)}
+												{!item.isPremiumTier && (
+													<span
+														className={`shop-tier shop-tier--${item.vpCost >= 900 ? 'rare' : item.vpCost >= 500 ? 'uncommon' : 'common'}`}
+													>
+														{item.vpCost >= 900
+															? 'rare'
+															: item.vpCost >= 500
+																? 'uncommon'
+																: 'common'}
+													</span>
+												)}
 												{equipped && <CheckCircle2 size={13} className="shop-item-owned-icon" />}
 											</div>
 											<div className="shop-item-name">{item.name}</div>
@@ -298,9 +357,19 @@ export default function ShopModal({ onClose }: Props) {
 													<button
 														className="shop-buy-btn"
 														disabled={!canAfford || busy}
-														onClick={() => buyMutation.mutate(item.key)}
+														onClick={() => handleBuyClick(item.key)}
 													>
-														{busy ? '…' : canAfford ? <>Buy <ChevronRight size={11} /></> : 'Need VP'}
+														{busy ? (
+															'…'
+														) : pendingConfirmKey === item.key ? (
+															`Confirm (${item.vpCost.toLocaleString()} VP)`
+														) : canAfford ? (
+															<>
+																Buy <ChevronRight size={11} />
+															</>
+														) : (
+															'Need VP'
+														)}
 													</button>
 												)}
 												{owned && !equipped && (
@@ -327,20 +396,30 @@ export default function ShopModal({ onClose }: Props) {
 							</div>
 
 							{/* Owned borders not in today's rotation */}
-							{shop.ownedKeys.filter((k) => k.startsWith('border_') && !shop.borders.some((b) => b.key === k)).length > 0 && (
+							{shop.ownedKeys.filter(
+								(k) => k.startsWith('border_') && !shop.borders.some((b) => b.key === k)
+							).length > 0 && (
 								<div className="shop-owned-borders">
 									<div className="shop-owned-borders-title">Your borders</div>
 									<div className="shop-items shop-items--border">
 										{shop.ownedKeys
 											.filter((k) => k.startsWith('border_'))
 											.map((key) => {
-												const ALL_BORDERS_IMPORT: Record<string, { cssClass?: string; name: string; vpCost: number }> = {};
+												const ALL_BORDERS_IMPORT: Record<
+													string,
+													{ cssClass?: string; name: string; vpCost: number }
+												> = {};
 												const equipped = shop.equippedBorder === key;
 												const cssClass = key.replace('border_', '').replace(/_/g, '-');
 												return (
-													<div key={key} className={`shop-item shop-item--border shop-item--owned${equipped ? ' shop-item--equipped' : ''}`}>
+													<div
+														key={key}
+														className={`shop-item shop-item--border shop-item--owned${equipped ? ' shop-item--equipped' : ''}`}
+													>
 														<BorderPreview cssClass={cssClass} name={key} />
-														<div className="shop-item-name">{key.replace('border_', '').replace(/_/g, ' ')}</div>
+														<div className="shop-item-name">
+															{key.replace('border_', '').replace(/_/g, ' ')}
+														</div>
 														<div className="shop-item-footer">
 															{!equipped ? (
 																<button
@@ -372,10 +451,13 @@ export default function ShopModal({ onClose }: Props) {
 					{tab === 'rename' && (
 						<div className="shop-section shop-section--utility">
 							<div className="shop-utility-card">
-								<div className="shop-utility-icon"><UserPen size={22} /></div>
+								<div className="shop-utility-icon">
+									<UserPen size={22} />
+								</div>
 								<div className="shop-utility-name">Commander Rename</div>
 								<div className="shop-utility-desc">
-									Change your username. Only letters, numbers, and underscores. 30-day cooldown after use.
+									Change your username. Only letters, numbers, and underscores. 30-day cooldown
+									after use.
 								</div>
 								<div className="shop-utility-cost">
 									<Sparkles size={11} aria-hidden="true" />
@@ -384,33 +466,60 @@ export default function ShopModal({ onClose }: Props) {
 								{shop?.renameCooldownDays != null && (
 									<div className="shop-cooldown">
 										<Clock size={11} aria-hidden="true" />
-										Available in {shop.renameCooldownDays} day{shop.renameCooldownDays !== 1 ? 's' : ''}
+										Available in {shop.renameCooldownDays} day
+										{shop.renameCooldownDays !== 1 ? 's' : ''}
 									</div>
 								)}
-								{(shop?.renameCooldownDays == null) && (
+								{shop?.renameCooldownDays == null && (
 									<form
 										className="shop-rename-form"
-										onSubmit={(e) => { e.preventDefault(); renameMutation.mutate(); }}
+										onSubmit={(e) => {
+											e.preventDefault();
+											if (!confirmingRename) {
+												setConfirmingRename(true);
+											} else {
+												setConfirmingRename(false);
+												renameMutation.mutate();
+											}
+										}}
 									>
 										<input
 											className="shop-rename-input"
 											type="text"
 											placeholder="new username"
 											value={renameValue}
-											onChange={(e) => setRenameValue(e.target.value)}
+											onChange={(e) => {
+												setRenameValue(e.target.value);
+												setConfirmingRename(false);
+											}}
 											minLength={3}
 											maxLength={20}
 											pattern="[a-zA-Z0-9_]+"
-											disabled={renameMutation.isPending}
+											disabled={renameMutation.isPending || confirmingRename}
 											required
 										/>
 										<button
 											type="submit"
-											className="shop-buy-btn"
-											disabled={renameMutation.isPending || !renameValue.trim() || (vp < 500)}
+											className={`shop-buy-btn${confirmingRename ? ' shop-buy-btn--confirm' : ''}`}
+											disabled={renameMutation.isPending || !renameValue.trim() || vp < 500}
 										>
-											{renameMutation.isPending ? '…' : vp >= 500 ? 'Confirm — 500 VP' : 'Need VP'}
+											{renameMutation.isPending
+												? '…'
+												: confirmingRename
+													? 'Are you sure? (500 VP)'
+													: vp >= 500
+														? 'Rename — 500 VP'
+														: 'Need VP'}
 										</button>
+										{confirmingRename && (
+											<button
+												type="button"
+												className="shop-cancel-btn"
+												onClick={() => setConfirmingRename(false)}
+											>
+												Cancel
+											</button>
+										)}
 									</form>
 								)}
 							</div>
@@ -421,10 +530,13 @@ export default function ShopModal({ onClose }: Props) {
 					{tab === 'gift' && (
 						<div className="shop-section shop-section--utility">
 							<div className="shop-utility-card">
-								<div className="shop-utility-icon"><Gift size={22} /></div>
+								<div className="shop-utility-icon">
+									<Gift size={22} />
+								</div>
 								<div className="shop-utility-name">Gift Vex Protocol Pass</div>
 								<div className="shop-utility-desc">
-									Unlock the battle pass premium track for a galaxy mate. They must be in your active galaxy and not already have the pass.
+									Unlock the battle pass premium track for a galaxy mate. They must be in your
+									active galaxy and not already have the pass.
 								</div>
 								<div className="shop-utility-cost">
 									<Sparkles size={11} aria-hidden="true" />
@@ -432,24 +544,50 @@ export default function ShopModal({ onClose }: Props) {
 								</div>
 								<form
 									className="shop-rename-form"
-									onSubmit={(e) => { e.preventDefault(); giftMutation.mutate(); }}
+									onSubmit={(e) => {
+										e.preventDefault();
+										if (!confirmingGift) {
+											setConfirmingGift(true);
+										} else {
+											setConfirmingGift(false);
+											giftMutation.mutate();
+										}
+									}}
 								>
 									<input
 										className="shop-rename-input"
 										type="text"
 										placeholder="commander username"
 										value={giftUsername}
-										onChange={(e) => setGiftUsername(e.target.value)}
-										disabled={giftMutation.isPending}
+										onChange={(e) => {
+											setGiftUsername(e.target.value);
+											setConfirmingGift(false);
+										}}
+										disabled={giftMutation.isPending || confirmingGift}
 										required
 									/>
 									<button
 										type="submit"
-										className="shop-buy-btn"
-										disabled={giftMutation.isPending || !giftUsername.trim() || (vp < 1000)}
+										className={`shop-buy-btn${confirmingGift ? ' shop-buy-btn--confirm' : ''}`}
+										disabled={giftMutation.isPending || !giftUsername.trim() || vp < 1000}
 									>
-										{giftMutation.isPending ? '…' : vp >= 1000 ? 'Gift — 1,000 VP' : 'Need VP'}
+										{giftMutation.isPending
+											? '…'
+											: confirmingGift
+												? `Gift to ${giftUsername}? (1,000 VP)`
+												: vp >= 1000
+													? 'Gift — 1,000 VP'
+													: 'Need VP'}
 									</button>
+									{confirmingGift && (
+										<button
+											type="button"
+											className="shop-cancel-btn"
+											onClick={() => setConfirmingGift(false)}
+										>
+											Cancel
+										</button>
+									)}
 								</form>
 							</div>
 						</div>

@@ -91,18 +91,36 @@ export function upsertReportRead(userId: number, attackId: number, galaxyId: num
 	});
 }
 
-export function getCompletedAttacksForNexus(nexusId: number, galaxyId: number) {
-	return prisma.attack.findMany({
-		where: {
-			galaxyId,
-			type: { not: 'support' },
-			OR: [
-				{ attackerNexusId: nexusId, status: { in: ['returning', 'completed'] } },
-				{ defenderNexusId: nexusId, status: { in: ['returning', 'completed'] } }
-			]
-		},
-		select: { id: true }
-	});
+export async function getCompletedAttacksForNexus(nexusId: number, galaxyId: number) {
+	const [direct, alliedRows] = await Promise.all([
+		prisma.attack.findMany({
+			where: {
+				galaxyId,
+				type: { not: 'support' },
+				OR: [
+					{ attackerNexusId: nexusId, status: { in: ['returning', 'completed'] } },
+					{ defenderNexusId: nexusId, status: { in: ['returning', 'completed'] } }
+				]
+			},
+			select: { id: true }
+		}),
+		prisma.$queryRaw<{ id: number }[]>`
+      SELECT id FROM "Attack"
+      WHERE "galaxyId" = ${galaxyId}
+        AND status IN ('returning', 'completed')
+        AND type != 'support'
+        AND result->'alliedNexusIds' @> ${JSON.stringify([nexusId])}::jsonb
+    `
+	]);
+	const seen = new Set<number>();
+	const all: { id: number }[] = [];
+	for (const a of [...direct, ...alliedRows]) {
+		if (!seen.has(a.id)) {
+			seen.add(a.id);
+			all.push({ id: a.id });
+		}
+	}
+	return all;
 }
 
 export async function markAllRead(userId: number, attacks: { id: number }[], galaxyId: number) {
@@ -112,7 +130,7 @@ export async function markAllRead(userId: number, attacks: { id: number }[], gal
 			prisma.reportRead.upsert({
 				where: { userId_attackId: { userId, attackId: a.id } },
 				create: { userId, attackId: a.id, galaxyId },
-				update: { readAt: now }
+				update: { readAt: now, galaxyId }
 			})
 		)
 	);

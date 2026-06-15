@@ -9,7 +9,6 @@ import {
 	getDailyTitles,
 	getDailyBorderCollection,
 	getCollectionBorders,
-	BORDER_ALPHA_COMMANDER,
 	BORDER_BUNDLE_COST,
 } from '../utils/shopCatalog.js';
 import { purchasePaidPass, PASS_COST_VP } from '../utils/battlePass.js';
@@ -29,7 +28,7 @@ router.get('/', auth, async (req, res: Response) => {
 
 		const user = await prisma.user.findUnique({
 			where: { id: authReq.userId },
-			select: { vexPoints: true, avatarBorder: true, usernameChangedAt: true, isFounder: true, supporterTier: true }
+			select: { vexPoints: true, avatarBorder: true, usernameChangedAt: true }
 		});
 		if (!user) {
 			res.status(404).json({ error: 'User not found' });
@@ -42,11 +41,6 @@ router.get('/', auth, async (req, res: Response) => {
 			select: { itemKey: true }
 		});
 		const ownedKeys = new Set(purchases.map((p) => p.itemKey));
-
-		// Inject entitlement borders — no purchase record required
-		if (user.isFounder && user.supporterTier === 'commander') {
-			ownedKeys.add(BORDER_ALPHA_COMMANDER.key);
-		}
 
 		// Username rename cooldown info
 		let renameCooldownDays: number | null = null;
@@ -235,26 +229,13 @@ router.post('/equip-border', auth, async (req, res: Response) => {
 			return;
 		}
 
-		// Check entitlement borders first (no purchase record needed)
-		const isEntitlement = borderKey === BORDER_ALPHA_COMMANDER.key;
-		if (isEntitlement) {
-			const user = await prisma.user.findUnique({
-				where: { id: authReq.userId },
-				select: { isFounder: true, supporterTier: true }
-			});
-			if (!user?.isFounder || user.supporterTier !== 'commander') {
-				res.status(403).json({ error: 'Border not owned' });
-				return;
-			}
-		} else {
-			// Verify ownership via purchase ledger
-			const owned = await prisma.shopPurchase.findFirst({
-				where: { userId: authReq.userId, itemKey: borderKey }
-			});
-			if (!owned) {
-				res.status(403).json({ error: 'Border not owned' });
-				return;
-			}
+		// Verify ownership via purchase ledger
+		const owned = await prisma.shopPurchase.findFirst({
+			where: { userId: authReq.userId, itemKey: borderKey }
+		});
+		if (!owned) {
+			res.status(403).json({ error: 'Border not owned' });
+			return;
 		}
 
 		await prisma.user.update({ where: { id: authReq.userId }, data: { avatarBorder: borderKey } });

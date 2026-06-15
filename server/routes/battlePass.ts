@@ -1,9 +1,14 @@
-import { Router } from 'express';
 import type { Response } from 'express';
+import { Router } from 'express';
+import prisma from '../lib/prisma.js';
 import auth from '../middleware/auth.js';
 import type { AuthRequest } from '../types/index.js';
-import { purchasePaidPass, grantVexPoints, PASS_COST_VP, claimPassLevel, PASS_TITLE_RANK } from '../utils/battlePass.js';
-import prisma from '../lib/prisma.js';
+import {
+	claimPassLevel,
+	grantVexPoints,
+	PASS_COST_VP,
+	purchasePaidPass
+} from '../utils/battlePass.js';
 import { logError, logInfo } from '../utils/logger.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
 
@@ -17,17 +22,30 @@ router.get('/', auth, async (req, res: Response) => {
 			res.status(409).json({ error: 'No active galaxy' });
 			return;
 		}
-		const player = await prisma.galaxyPlayer.findUnique({
-			where: { userId_galaxyId: { userId: authReq.userId, galaxyId: authReq.galaxyId } },
-			select: { seasonXp: true, passLevel: true, hasPaidPass: true, passTitle: true, claimedLevels: true }
-		});
+		const [player, galaxy] = await Promise.all([
+			prisma.galaxyPlayer.findUnique({
+				where: { userId_galaxyId: { userId: authReq.userId, galaxyId: authReq.galaxyId } },
+				select: {
+					seasonXp: true,
+					passLevel: true,
+					hasPaidPass: true,
+					passTitle: true,
+					claimedLevels: true
+				}
+			}),
+			prisma.galaxy.findUnique({
+				where: { id: authReq.galaxyId },
+				select: { seasonEndsAt: true }
+			})
+		]);
 		if (!player) {
 			res.status(404).json({ error: 'Not a member of this galaxy' });
 			return;
 		}
 		res.json({
 			...player,
-			claimedLevels: (player.claimedLevels as number[]) ?? []
+			claimedLevels: (player.claimedLevels as number[]) ?? [],
+			seasonEndsAt: galaxy?.seasonEndsAt?.toISOString() ?? null
 		});
 	} catch (error) {
 		logError('unhandled_controller_error', {
@@ -167,7 +185,9 @@ router.post('/gift', auth, async (req, res: Response) => {
 			return;
 		}
 		if (gifter.vexPoints < PASS_COST_VP) {
-			res.status(400).json({ error: `Not enough Vex Points (need ${PASS_COST_VP}, have ${gifter.vexPoints})` });
+			res
+				.status(400)
+				.json({ error: `Not enough Vex Points (need ${PASS_COST_VP}, have ${gifter.vexPoints})` });
 			return;
 		}
 		if (gifter.username.toLowerCase() === username.toLowerCase()) {

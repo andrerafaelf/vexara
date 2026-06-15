@@ -252,19 +252,6 @@ export function getCollectionBorders(collectionKey: string): ShopItem[] {
 	return ALL_BORDERS.filter((b) => b.collection === collectionKey);
 }
 
-// Alpha Commander border: entitlement for alpha commander-tier supporters.
-// Not purchasable — injected into ownedKeys server-side.
-export const BORDER_ALPHA_COMMANDER: ShopItem = {
-	key: 'border_alpha_commander',
-	type: 'border',
-	name: 'Alpha Commander',
-	description: 'Exclusive portrait frame for commander-tier supporters who backed Vexara during alpha.',
-	vpCost: 0,
-	cssClass: 'alpha-commander',
-	collection: 'alpha',
-	variant: 1,
-};
-
 // ── Utility items (fixed, always available) ───────────────────────────────────
 export const UTILITY_ITEMS: ShopItem[] = [
 	{

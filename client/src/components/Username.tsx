@@ -1,9 +1,9 @@
 'use client';
 
+import type { SupporterTier } from '@/types/game';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, type MouseEvent } from 'react';
-import type { SupporterTier } from '@/types/game';
 
 interface UsernameProps {
 	name: string;
@@ -40,11 +40,7 @@ export default function Username({
 	linkToProfile
 }: UsernameProps) {
 	const router = useRouter();
-	// Cyan commander glow is for alpha founders only; non-founder commanders
-	// fall back to vanguard-style if they somehow hold the legacy tier.
-	const effectiveTier =
-		supporterTier === 'commander' && !isFounder ? 'vanguard' : supporterTier;
-	const tierClass = effectiveTier ? TIER_CLASS[effectiveTier] : null;
+	const tierClass = supporterTier ? TIER_CLASS[supporterTier] : null;
 	const classes = [className, isSupporter ? 'supporter-name' : null, tierClass]
 		.filter(Boolean)
 		.join(' ');

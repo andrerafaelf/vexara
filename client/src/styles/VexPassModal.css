@@ -72,6 +72,14 @@
 	text-transform: uppercase;
 }
 
+.vpm-season-timer {
+	font-size: 11px;
+	color: var(--warning);
+	margin-top: 4px;
+	font-weight: 600;
+	letter-spacing: 0.03em;
+}
+
 .vpm-close {
 	background: none;
 	border: none;
@@ -523,6 +531,28 @@
 .vpm-unlock-btn:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
+}
+
+.vpm-confirm-row {
+	display: flex;
+	gap: var(--space-2);
+}
+.vpm-confirm-row .vpm-unlock-btn {
+	flex: 1;
+}
+.vpm-cancel-btn {
+	padding: var(--space-3) var(--space-4);
+	background: none;
+	border: 1px solid var(--border-default);
+	color: var(--text-muted);
+	border-radius: var(--radius-sm);
+	font-size: var(--text-sm);
+	cursor: pointer;
+	white-space: nowrap;
+}
+.vpm-cancel-btn:hover {
+	color: var(--text-primary);
+	border-color: var(--border-strong);
 }
 
 .vpm-need-vp {

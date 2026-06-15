@@ -149,7 +149,7 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
 							avatarUrlSm={user.avatarUrlSm ?? null}
 							size="md"
 							borderKey={user.avatarBorder ?? null}
-							className={`commander-avatar${user.supporterTier === 'officer' ? ' supporter-border supporter-border-officer' : ''}${user.supporterTier === 'vanguard' ? ' supporter-border supporter-border-vanguard' : ''}${user.supporterTier === 'commander' && user.isFounder ? ' supporter-border supporter-border-commander' : ''}`}
+							className={`commander-avatar${user.supporterTier === 'officer' ? ' supporter-border supporter-border-officer' : ''}${user.supporterTier === 'vanguard' ? ' supporter-border supporter-border-vanguard' : ''}${user.supporterTier === 'commander' ? ' supporter-border supporter-border-commander' : ''}`}
 							ariaHidden
 						/>
 						<div className="commander-info">
@@ -161,7 +161,7 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
 										user.supporterTier === 'recruit' ? 'supporter-tier-recruit' : null,
 										user.supporterTier === 'officer' ? 'supporter-tier-officer' : null,
 										user.supporterTier === 'vanguard' ? 'supporter-tier-vanguard' : null,
-										user.supporterTier === 'commander' && user.isFounder ? 'supporter-tier-commander' : null
+										user.supporterTier === 'commander' ? 'supporter-tier-commander' : null
 									]
 										.filter(Boolean)
 										.join(' ')}

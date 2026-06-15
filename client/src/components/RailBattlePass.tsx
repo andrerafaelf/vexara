@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, startTransition } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getBattlePass } from '../services/api';
-import { useAuth } from '../context/AuthContext';
-import VexPassModal from './VexPassModal';
-import { useStartProgress } from './NavigationProgress';
 import { useRouter } from 'next/navigation';
+import { startTransition, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { getBattlePass } from '../services/api';
 import '../styles/RailBattlePass.css';
+import { useStartProgress } from './NavigationProgress';
+import VexPassModal from './VexPassModal';
 
 const MAX_LEVEL = 50;
 const XP_PER_LEVEL = 300;
@@ -19,6 +19,7 @@ interface PassState {
 	hasPaidPass: boolean;
 	passTitle: string | null;
 	claimedLevels: number[];
+	seasonEndsAt?: string | null;
 }
 
 export default function RailBattlePass() {
@@ -99,7 +100,7 @@ export default function RailBattlePass() {
 				{!hasPaidPass && <div className="rail-bp-cta">Add Command Issue</div>}
 			</button>
 
-			{modalOpen && <VexPassModal pass={data} onClose={() => setModalOpen(false)} />}
+			{modalOpen && <VexPassModal pass={data} seasonEndsAt={data.seasonEndsAt} onClose={() => setModalOpen(false)} />}
 
 			<button
 				className="rail-shop-btn"
@@ -109,7 +110,6 @@ export default function RailBattlePass() {
 				}}
 				aria-label="Open quartermaster"
 			>
-				<span className="rail-shop-icon">🏪</span>
 				<span className="rail-shop-text">
 					<span className="rail-shop-label">Quartermaster</span>
 					<span className="rail-shop-sub">Titles, borders, campaign pass</span>

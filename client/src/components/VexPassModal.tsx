@@ -1,14 +1,14 @@
 'use client';
 
-import React from 'react';
-import { createPortal } from 'react-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X } from 'lucide-react';
-import { purchaseBattlePass, claimBattlePassLevel, getMyNexuses } from '../services/api';
-import { useAuth } from '../context/AuthContext';
+import React from 'react';
+import { createPortal } from 'react-dom';
 import { VP_PACKS } from '../constants/support';
-import ResourceIcon from './ResourceIcon';
+import { useAuth } from '../context/AuthContext';
+import { claimBattlePassLevel, getMyNexuses, purchaseBattlePass } from '../services/api';
 import '../styles/VexPassModal.css';
+import ResourceIcon from './ResourceIcon';
 
 interface PassState {
 	seasonXp: number;
@@ -26,6 +26,7 @@ interface Nexus {
 interface Props {
 	pass: PassState;
 	onClose: () => void;
+	seasonEndsAt?: string | null;
 }
 
 const MAX_LEVEL = 50;
@@ -197,7 +198,7 @@ const ACT_LABELS: Record<number, string> = {
 	41: 'Act V: Final Offensive'
 };
 
-export default function VexPassModal({ pass, onClose }: Props) {
+export default function VexPassModal({ pass, onClose, seasonEndsAt }: Props) {
 	const { user } = useAuth();
 	const queryClient = useQueryClient();
 	const [error, setError] = React.useState<string | null>(null);
@@ -205,6 +206,7 @@ export default function VexPassModal({ pass, onClose }: Props) {
 	const [selectedNexusId, setSelectedNexusId] = React.useState<number | null>(null);
 	const [claimingLevel, setClaimingLevel] = React.useState<number | null>(null);
 	const [claimError, setClaimError] = React.useState<string | null>(null);
+	const [confirmingPurchase, setConfirmingPurchase] = React.useState(false);
 	// Local shadow of claimed levels so UI updates instantly without a refetch
 	const [localClaimed, setLocalClaimed] = React.useState<number[]>(pass.claimedLevels ?? []);
 
@@ -214,6 +216,18 @@ export default function VexPassModal({ pass, onClose }: Props) {
 	const xpIntoLevel = pass.seasonXp - pass.passLevel * XP_PER_LEVEL;
 	const xpPct = Math.min((xpIntoLevel / XP_PER_LEVEL) * 100, 100);
 	const isMaxed = pass.passLevel >= MAX_LEVEL;
+
+	const seasonEndLabel = React.useMemo(() => {
+		if (!seasonEndsAt) return null;
+		const ms = new Date(seasonEndsAt).getTime() - Date.now();
+		if (ms <= 0) return 'Season ended';
+		const days = Math.ceil(ms / 86400000);
+		const date = new Date(seasonEndsAt).toLocaleDateString(undefined, {
+			month: 'short',
+			day: 'numeric'
+		});
+		return `Season ends ${date} · ${days}d left`;
+	}, [seasonEndsAt]);
 
 	// Load nexuses once for the claim selector
 	React.useEffect(() => {
@@ -288,6 +302,7 @@ export default function VexPassModal({ pass, onClose }: Props) {
 							<div className="vpm-kicker">Commander service ledger</div>
 							<div className="vpm-title">Season One Campaign</div>
 							<div className="vpm-subtitle">Campaign record / 50 ranks</div>
+							{seasonEndLabel && <div className="vpm-season-timer">{seasonEndLabel}</div>}
 						</div>
 					</div>
 					<button className="vpm-close" onClick={onClose} aria-label="Close">
@@ -442,13 +457,31 @@ export default function VexPassModal({ pass, onClose }: Props) {
 						<div className="vpm-footer-actions">
 							{error && <p className="vpm-error">{error}</p>}
 							{canAfford ? (
-								<button
-									className="vpm-unlock-btn"
-									onClick={() => mutation.mutate()}
-									disabled={mutation.isPending}
-								>
-									{mutation.isPending ? 'Authorizing...' : 'Add Command Issue (1,000 VP)'}
-								</button>
+								confirmingPurchase ? (
+									<div className="vpm-confirm-row">
+										<button
+											className="vpm-unlock-btn"
+											onClick={() => {
+												setConfirmingPurchase(false);
+												mutation.mutate();
+											}}
+											disabled={mutation.isPending}
+										>
+											{mutation.isPending ? 'Authorizing...' : 'Confirm — spend 1,000 VP'}
+										</button>
+										<button className="vpm-cancel-btn" onClick={() => setConfirmingPurchase(false)}>
+											Cancel
+										</button>
+									</div>
+								) : (
+									<button
+										className="vpm-unlock-btn"
+										onClick={() => setConfirmingPurchase(true)}
+										disabled={mutation.isPending}
+									>
+										Add Command Issue (1,000 VP)
+									</button>
+								)
 							) : (
 								<div className="vpm-need-vp">
 									<p className="vpm-need-vp-text">

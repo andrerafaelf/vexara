@@ -25,17 +25,17 @@ interface BadgeDef {
 const PASS_BADGE_DEFS: Record<string, Omit<BadgeDef, 'key'>> = {
 	bronze: {
 		src: badgeIcon('bronzeProtocol'),
-		name: 'Bronze Service Ribbon',
+		name: 'Bronze Service Badge',
 		description: 'Awarded at rank 10 of the Season One campaign.'
 	},
 	silver: {
 		src: badgeIcon('silverProtocol'),
-		name: 'Silver Service Ribbon',
+		name: 'Silver Service Badge',
 		description: 'Awarded at rank 25 of the Season One campaign.'
 	},
 	gold: {
 		src: badgeIcon('goldProtocol'),
-		name: 'Gold Service Ribbon',
+		name: 'Gold Service Badge',
 		description: 'Awarded at rank 40 of the Season One campaign.'
 	},
 	platinum: {
@@ -80,7 +80,7 @@ export default function ProfileBadges({
 		}
 	}
 
-	// Campaign ribbons in ascending order so the highest award reads last.
+	// Campaign badges in ascending order so the highest award reads last.
 	for (const tier of ['bronze', 'silver', 'gold', 'platinum'] as const) {
 		if (earnedBadges?.includes(tier)) {
 			const def = PASS_BADGE_DEFS[tier];
