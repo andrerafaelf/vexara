@@ -81,7 +81,6 @@ export default function ProfileStats() {
 	const [pwSuccess, setPwSuccess] = useState(false);
 	const [pwLoading, setPwLoading] = useState(false);
 	const [borderData, setBorderData] = useState<BorderShopData | null>(null);
-	const [borderBusy, setBorderBusy] = useState<string | null>(null);
 
 	type CvdMode = 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia';
 	const [cvdMode, setCvdMode] = useState<CvdMode>(() => {
@@ -357,6 +356,7 @@ export default function ProfileStats() {
 								);
 								updateUser({ avatarUrl: next.avatarUrl, avatarUrlSm: next.avatarUrlSm });
 							}}
+							supporterTier={stats.supporterTier ?? null}
 						/>
 						<div className="ps-header-info">
 							<p className="ps-dossier-kicker">Commander dossier</p>
@@ -440,98 +440,6 @@ export default function ProfileStats() {
 						</Section>
 					)}
 
-					{borderData && borderData.ownedKeys.filter((k) => k.startsWith('border_')).length > 0 && (
-						<Section title="Portrait frames">
-							<div className="ps-frame-list">
-								{borderData.ownedKeys
-									.filter((k) => k.startsWith('border_'))
-									.sort((a, b) => {
-										if (a === borderData.equippedBorder) return -1;
-										if (b === borderData.equippedBorder) return 1;
-										return 0;
-									})
-									.map((key) => {
-										const equipped = borderData.equippedBorder === key;
-										const cssClass = key.replace('border_', '').replace(/_/g, '-');
-										const displayName = key.replace('border_', '').replace(/_/g, ' ');
-										const busy = borderBusy === key || (equipped && borderBusy === '__unequip__');
-										return (
-											<div
-												key={key}
-												className={`ps-frame-row${equipped ? ' ps-frame-row--active' : ''}`}
-											>
-												<div
-													className="ps-frame-preview"
-													aria-label={`${displayName} border`}
-												>
-													<div className={`ps-frame-preview-box border-${cssClass}`}>
-														<div className="ps-frame-preview-avatar">
-															<Avatar
-																username={stats.username}
-																avatarUrl={stats.avatarUrl ?? null}
-																avatarUrlSm={stats.avatarUrlSm ?? null}
-																ariaHidden
-															/>
-														</div>
-													</div>
-												</div>
-												<div className="ps-frame-info">
-													<span className="ps-frame-name">{displayName}</span>
-													{equipped && <span className="ps-frame-status">Fitted to dossier</span>}
-												</div>
-												<div className="ps-frame-actions">
-													{!equipped ? (
-														<button
-															className="ps-frame-btn"
-															disabled={busy}
-															onClick={async () => {
-																setBorderBusy(key);
-																try {
-																	await shopEquipBorder(key);
-																	updateUser({ avatarBorder: key });
-																	setBorderData((prev) =>
-																		prev ? { ...prev, equippedBorder: key } : prev
-																	);
-																} finally {
-																	setBorderBusy(null);
-																}
-															}}
-														>
-															{busy ? 'Fitting...' : 'Fit frame'}
-														</button>
-													) : (
-														<button
-															className="ps-frame-btn ps-frame-btn--muted"
-															disabled={busy}
-															onClick={async () => {
-																setBorderBusy('__unequip__');
-																try {
-																	await shopEquipBorder(null);
-																	updateUser({ avatarBorder: null });
-																	setBorderData((prev) =>
-																		prev ? { ...prev, equippedBorder: null } : prev
-																	);
-																} finally {
-																	setBorderBusy(null);
-																}
-															}}
-														>
-															{busy ? 'Removing...' : 'Remove frame'}
-														</button>
-													)}
-												</div>
-											</div>
-										);
-									})}
-							</div>
-							<p className="ps-titles-hint">
-								The fitted frame appears around your portrait.{' '}
-								<Link href="/shop?tab=borders" className="ps-meta">
-									Review quartermaster stock
-								</Link>
-							</p>
-						</Section>
-					)}
 
 					{streak && streak.currentStreak > 0 && (
 						<div className="ps-streak-card">

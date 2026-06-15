@@ -78,8 +78,8 @@
 	background: transparent;
 	border-bottom: none;
 	/* Pull out of main-content's padding so we control spacing symmetrically */
-	margin: -20px -32px 20px;
-	padding: 10px 32px;
+	margin: -20px -32px 8px;
+	padding: 6px 32px;
 }
 
 /* The strip itself fills the bar horizontally, borderless in this context */

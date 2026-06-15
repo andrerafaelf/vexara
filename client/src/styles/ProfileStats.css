@@ -400,6 +400,46 @@
 	line-height: 1.2;
 }
 
+/* ── Custom upload row (officer / commander only) ── */
+.ps-avatar-upload-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-3) 0 var(--space-2);
+	border-bottom: 1px solid var(--border-subtle);
+	margin-bottom: var(--space-3);
+}
+.ps-avatar-upload-input {
+	display: none;
+}
+.ps-avatar-upload-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: 6px 14px;
+	background: var(--bg-surface-raised);
+	border: 1px solid var(--border-default);
+	border-radius: var(--radius-sm);
+	color: var(--text-primary);
+	font-size: var(--text-sm);
+	font-weight: 600;
+	cursor: pointer;
+	transition: border-color 0.15s, background 0.15s;
+	white-space: nowrap;
+}
+.ps-avatar-upload-btn:hover:not(:disabled) {
+	border-color: var(--accent);
+	background: var(--bg-surface-hover);
+}
+.ps-avatar-upload-btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+.ps-avatar-upload-hint {
+	font-size: var(--text-xs);
+	color: var(--text-muted);
+}
+
 /* ── Troop picker grid ── */
 .ps-avatar-pick-grid {
 	display: grid;

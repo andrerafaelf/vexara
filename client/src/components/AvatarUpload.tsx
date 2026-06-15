@@ -1,10 +1,10 @@
 'use client';
 
-import { Pencil, X } from 'lucide-react';
-import React, { useState } from 'react';
+import { Pencil, X, Upload } from 'lucide-react';
+import React, { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { CDN_BASE } from '../data/gameIcons';
-import { setAvatarPreset, setActiveTitle, shopEquipBorder } from '../services/api';
+import { setAvatarPreset, setActiveTitle, shopEquipBorder, uploadAvatar } from '../services/api';
 import Avatar from './Avatar';
 
 const TROOP_KEYS = [
@@ -58,6 +58,8 @@ interface AvatarUploadProps {
 	ownedBorderKeys?: string[];
 	equippedBorder?: string | null;
 	onBorderChange?: (next: string | null) => void;
+
+	supporterTier?: string | null;
 }
 
 const AvatarUpload: React.FC<AvatarUploadProps> = ({
@@ -73,12 +75,15 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
 	ownedBorderKeys = [],
 	equippedBorder = null,
 	onBorderChange,
+	supporterTier,
 }) => {
 	const [open, setOpen] = useState(false);
 	const [tab, setTab] = useState<ModalTab>('avatar');
 	const [busy, setBusy] = useState<string | null>(null);
 	const [err, setErr] = useState<string | null>(null);
+	const fileInputRef = useRef<HTMLInputElement>(null);
 	const selected = currentPresetKey(avatarUrl);
+	const canUpload = supporterTier === 'officer' || supporterTier === 'commander';
 
 	const ownedBorders = ownedBorderKeys.filter((k) => k.startsWith('border_'));
 	const hasTitles = earnedTitles.length > 0 && !!onTitleChange;
@@ -111,6 +116,21 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
 			onTitleChange(title);
 		} catch (e) {
 			setErr((e as Error).message || 'Could not set title.');
+		} finally {
+			setBusy(null);
+		}
+	}
+
+	async function uploadCustom(file: File) {
+		if (busy) return;
+		setBusy('__upload__');
+		setErr(null);
+		try {
+			const { data } = await uploadAvatar(file);
+			onChange({ avatarUrl: data.avatarUrl, avatarUrlSm: data.avatarUrlSm });
+			setOpen(false);
+		} catch (e) {
+			setErr((e as Error).message || 'Upload failed.');
 		} finally {
 			setBusy(null);
 		}
@@ -195,29 +215,57 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
 
 						{/* AVATAR */}
 						{tab === 'avatar' && (
-							<div className="ps-avatar-pick-grid">
-								{TROOP_KEYS.map((key) => {
-									const isSelected = selected === key;
-									const isBusy = busy === key;
-									return (
+							<>
+								{canUpload && (
+									<div className="ps-avatar-upload-row">
+										<input
+											ref={fileInputRef}
+											type="file"
+											accept="image/jpeg,image/png,image/webp"
+											className="ps-avatar-upload-input"
+											aria-label="Upload custom avatar"
+											onChange={(e) => {
+												const file = e.target.files?.[0];
+												if (file) uploadCustom(file);
+												e.target.value = '';
+											}}
+										/>
 										<button
-											key={key}
 											type="button"
-											className={`ps-avatar-pick-tile${isSelected ? ' ps-avatar-pick-tile--active' : ''}`}
-											onClick={() => pick(key)}
+											className="ps-avatar-upload-btn"
 											disabled={!!busy}
-											title={troopLabel(key)}
-											aria-label={troopLabel(key)}
-											aria-pressed={isSelected}
+											onClick={() => fileInputRef.current?.click()}
 										>
-											{/* eslint-disable-next-line @next/next/no-img-element */}
-											<img src={`${CDN_BASE}/troops/${key}.webp`} alt="" width={56} height={56} loading="lazy" draggable={false} />
-											{isBusy && <span className="ps-avatar-pick-spinner" aria-hidden="true" />}
-											{isSelected && <span className="ps-avatar-pick-check" aria-hidden="true" />}
+											<Upload size={14} />
+											{busy === '__upload__' ? 'Uploading...' : 'Upload image'}
 										</button>
-									);
-								})}
-							</div>
+										<span className="ps-avatar-upload-hint">JPEG · PNG · WebP · max 4 MB</span>
+									</div>
+								)}
+								<div className="ps-avatar-pick-grid">
+									{TROOP_KEYS.map((key) => {
+										const isSelected = selected === key;
+										const isBusy = busy === key;
+										return (
+											<button
+												key={key}
+												type="button"
+												className={`ps-avatar-pick-tile${isSelected ? ' ps-avatar-pick-tile--active' : ''}`}
+												onClick={() => pick(key)}
+												disabled={!!busy}
+												title={troopLabel(key)}
+												aria-label={troopLabel(key)}
+												aria-pressed={isSelected}
+											>
+												{/* eslint-disable-next-line @next/next/no-img-element */}
+												<img src={`${CDN_BASE}/troops/${key}.webp`} alt="" width={56} height={56} loading="lazy" draggable={false} />
+												{isBusy && <span className="ps-avatar-pick-spinner" aria-hidden="true" />}
+												{isSelected && <span className="ps-avatar-pick-check" aria-hidden="true" />}
+											</button>
+										);
+									})}
+								</div>
+							</>
 						)}
 
 						{/* TITLE */}
