@@ -1226,6 +1226,10 @@
 	min-height: 0;
 }
 
+.main-content--map .resource-subheader {
+	margin-top: 0;
+}
+
 .no-nexuses {
 	max-width: 560px;
 	margin: 100px auto;

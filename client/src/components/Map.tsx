@@ -1181,7 +1181,7 @@ const Map: React.FC<MapProps> = ({
 					</div>
 				)}
 
-				{hasIntel && selectedNexus.resources && (
+				{selectedNexus.intelLevel === 'scouted' && selectedNexus.resources && (
 					<>
 						<div className="detail-line">
 							<span>Biomass</span>
