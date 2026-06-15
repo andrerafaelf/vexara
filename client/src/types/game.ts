@@ -156,6 +156,7 @@ export interface Nexus {
 	conqueredAt?: string | null;
 	intelLevel?: 'public' | 'scouted' | 'owned';
 	scoutedAt?: string;
+	totalTroops?: number;
 }
 
 export interface MarketListing {

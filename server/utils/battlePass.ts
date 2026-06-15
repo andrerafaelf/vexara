@@ -2,14 +2,15 @@ import prisma from '../lib/prisma.js';
 import { logError } from './logger.js';
 
 // XP required to reach each level (cumulative). 50 levels total.
-// 300 XP/level = 15,000 XP to max.
-// Active player (~375 XP/day: dailies + streak + combat): L50 in ~40 days.
-// Very active (~505 XP/day: above + ops/treaties): L50 in ~30 days (week 4-5 of a 6-week season).
-// Casual player (~150 XP/day: daily quests only): earns meaningful rewards every session.
+// 200 XP/level = 10,000 XP to max.
+// Active player (~400 XP/day: dailies + streak + 1 combat win): L50 in ~25 days.
+// Very active (~680 XP/day: above + ops/treaties + captures): L50 in ~15 days.
+// Casual player (~200 XP/day: daily quests only): earns meaningful rewards every session.
+// Season target: 28 days.
 const LEVEL_XP_THRESHOLDS: number[] = (() => {
 	const thresholds: number[] = [0];
 	for (let lvl = 1; lvl <= 50; lvl++) {
-		thresholds.push(lvl * 300); // flat 300 XP per level
+		thresholds.push(lvl * 200); // flat 200 XP per level
 	}
 	return thresholds; // index = level, value = cumulative XP required
 })();
@@ -20,13 +21,13 @@ export const MAX_PASS_LEVEL = 50;
 export const PASS_COST_VP = 1000;
 
 export const PASS_XP = {
-	QUEST_COMPLETE:     150,
+	QUEST_COMPLETE:     200,
 	QUEST_STREAK_BONUS:  75,
-	ATTACK_LAUNCHED:     20,
-	ATTACK_WON:          40,
-	NEXUS_CAPTURED:      80,
-	DEFENSE_WON:         50,
-	COORDINATED_ASSAULT: 100,
+	ATTACK_LAUNCHED:     25,
+	ATTACK_WON:         100,
+	NEXUS_CAPTURED:     150,
+	DEFENSE_WON:         75,
+	COORDINATED_ASSAULT: 120,
 	FACTION_WAR_OP:      120,
 	DIPLOMATIC_TREATY:    60
 } as const;
