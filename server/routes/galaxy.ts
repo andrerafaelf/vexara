@@ -15,6 +15,9 @@ function authNoGalaxy(req: Request, res: Response, next: NextFunction) {
 router.get('/public/status', (req, res) =>
 	galaxyController.getPublicGalaxyStatus(req as AuthRequest, res as Response)
 );
+router.get('/hall-of-fame', (req, res) =>
+	galaxyController.getHallOfFame(req, res as Response)
+);
 router.get('/', authNoGalaxy, (req, res) =>
 	galaxyController.listGalaxies(req as AuthRequest, res as Response)
 );
@@ -29,6 +32,9 @@ router.post('/:id/leave', authNoGalaxy, (req, res) =>
 );
 router.post('/:id/select', authNoGalaxy, (req, res) =>
 	galaxyController.selectGalaxy(req as AuthRequest, res as Response)
+);
+router.post('/:id/alert', authNoGalaxy, (req, res) =>
+	galaxyController.registerGalaxyAlert(req as AuthRequest, res as Response)
 );
 
 export default router;

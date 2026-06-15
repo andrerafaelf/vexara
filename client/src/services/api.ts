@@ -125,8 +125,35 @@ export const selectGalaxy = (galaxyId: number | string) =>
 	apiRequest(`/galaxies/${galaxyId}/select`, { method: 'POST' });
 export const leaveGalaxy = (galaxyId: number | string) =>
 	apiRequest(`/galaxies/${galaxyId}/leave`, { method: 'POST' });
+export const registerGalaxyAlert = (galaxyId: number | string, email?: string) =>
+	apiRequest(`/galaxies/${galaxyId}/alert`, {
+		method: 'POST',
+		body: JSON.stringify(email ? { email } : {})
+	});
 export const getGalaxyWinResults = (galaxyId: number | string) =>
 	apiRequest(`/galaxies/${galaxyId}/win-results`);
+export const getHallOfFame = () => apiRequest('/galaxies/hall-of-fame');
+export const getBattlePass = () => apiRequest('/battle-pass');
+export const purchaseBattlePass = () => apiRequest('/battle-pass/purchase', { method: 'POST' });
+export const claimBattlePassLevel = (level: number, nexusId: number) =>
+	apiRequest(`/battle-pass/claim/${level}`, { method: 'POST', body: JSON.stringify({ nexusId }) });
+export const setActiveTitle = (title: string | null) =>
+	apiRequest('/battle-pass/title', { method: 'PATCH', body: JSON.stringify({ title }) });
+export const giftBattlePass = (username: string) =>
+	apiRequest('/battle-pass/gift', { method: 'POST', body: JSON.stringify({ username }) });
+
+// Shop
+export const getShop = () => apiRequest('/shop');
+export const shopPurchase = (itemKey: string) =>
+	apiRequest('/shop/purchase', { method: 'POST', body: JSON.stringify({ itemKey }) });
+export const shopPurchaseBundle = (collectionKey: string) =>
+	apiRequest('/shop/purchase-bundle', { method: 'POST', body: JSON.stringify({ collectionKey }) });
+export const shopEquipBorder = (borderKey: string | null) =>
+	apiRequest('/shop/equip-border', { method: 'POST', body: JSON.stringify({ borderKey }) });
+export const shopRename = (username: string) =>
+	apiRequest('/shop/rename', { method: 'POST', body: JSON.stringify({ username }) });
+export const shopGiftPass = (username: string) =>
+	apiRequest('/shop/gift-pass', { method: 'POST', body: JSON.stringify({ username }) });
 
 // Nexuses
 export const createNexus = (name?: string) =>
@@ -482,6 +509,9 @@ export const uploadAvatar = async (
 		data: data as { avatarKey: string; avatarUrl: string | null; avatarUrlSm: string | null }
 	};
 };
+
+export const setAvatarPreset = (troopKey: string) =>
+	apiRequest('/users/me/avatar/preset', { method: 'POST', body: JSON.stringify({ troopKey }) });
 
 export const deleteAvatar = () => apiRequest('/users/me/avatar', { method: 'DELETE' });
 

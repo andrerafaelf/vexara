@@ -1,5 +1,7 @@
 import prisma from '../lib/prisma.js';
 import { NOTIF, sendPushToUser } from './push.js';
+import { logError } from './logger.js';
+import { promotePassTitle } from './battlePass.js';
 
 // Engine defaults. Each galaxy may override any of these via its win* columns
 // (see resolveWinConfig); a NULL column falls back to the default here.
@@ -13,6 +15,7 @@ export interface GalaxyWinSource {
 	winSustainHours: number | null;
 	winMinPlayers: number | null;
 	winMinFactions: number | null;
+	speedMultiplier?: number | null;
 }
 
 export interface ResolvedWinConfig {
@@ -32,10 +35,14 @@ export function resolveWinConfig(g: GalaxyWinSource): ResolvedWinConfig {
 		g.winShare != null && Number.isFinite(g.winShare)
 			? Math.min(0.95, Math.max(0.3, g.winShare))
 			: DOMINANCE_THRESHOLD;
-	const sustainHours =
+	const speed = g.speedMultiplier != null && Number.isFinite(g.speedMultiplier) && g.speedMultiplier > 0
+		? g.speedMultiplier
+		: 1.0;
+	const rawSustainHours =
 		g.winSustainHours != null && Number.isFinite(g.winSustainHours)
 			? Math.min(720, Math.max(0, g.winSustainHours))
 			: DOMINANCE_SUSTAIN_MS / 3_600_000;
+	const sustainHours = rawSustainHours / speed;
 	const minPlayers =
 		g.winMinPlayers != null && Number.isFinite(g.winMinPlayers)
 			? Math.max(1, Math.floor(g.winMinPlayers))
@@ -56,7 +63,8 @@ export async function processDominanceVictories(): Promise<void> {
 			winShare: true,
 			winSustainHours: true,
 			winMinPlayers: true,
-			winMinFactions: true
+			winMinFactions: true,
+			speedMultiplier: true
 		}
 	});
 
@@ -196,17 +204,27 @@ async function endGalaxy(
 		data: { status: 'ended', endedAt: new Date(), winnerFactionId, winnerUserId: factionLeader }
 	});
 
-	// Notify all players
-	const allPlayers = await prisma.galaxyPlayer.findMany({
-		where: { galaxyId: galaxy.id },
-		select: { userId: true }
-	});
+	// Gather all participants, all faction memberships, and faction details
+	const [allPlayers, allFactionMembers, allFactions] = await Promise.all([
+		prisma.galaxyPlayer.findMany({
+			where: { galaxyId: galaxy.id },
+			select: { userId: true, points: true }
+		}),
+		prisma.factionMember.findMany({
+			where: { galaxyId: galaxy.id },
+			select: { userId: true, factionId: true }
+		}),
+		prisma.faction.findMany({
+			where: { galaxyId: galaxy.id },
+			select: { id: true, name: true, tag: true }
+		})
+	]);
 
-	const factionMembers = await prisma.factionMember.findMany({
-		where: { factionId: winnerFactionId, galaxyId: galaxy.id },
-		select: { userId: true }
-	});
-	const winnerIds = new Set(factionMembers.map((m) => m.userId));
+	const factionById = new Map(allFactions.map((f) => [f.id, f]));
+	const userFactionId = new Map(allFactionMembers.map((m) => [m.userId, m.factionId]));
+	const winnerIds = new Set(
+		allFactionMembers.filter((m) => m.factionId === winnerFactionId).map((m) => m.userId)
+	);
 
 	if (winnerIds.size > 0) {
 		// Snapshot influence for winning-faction members. Raw SQL because Prisma can't
@@ -217,6 +235,39 @@ async function endGalaxy(
       WHERE "galaxyId" = ${galaxy.id}
         AND "userId" = ANY(${Array.from(winnerIds)}::int[])
     `;
+	}
+
+	const now = new Date();
+
+	// Write permanent commander stats + season records for every participant
+	for (const p of allPlayers) {
+		const isWinner = winnerIds.has(p.userId);
+		const fid = userFactionId.get(p.userId);
+		const factionInfo = fid != null ? factionById.get(fid) : undefined;
+
+		await Promise.all([
+			prisma.user.update({
+				where: { id: p.userId },
+				data: {
+					galaxiesPlayed: { increment: 1 },
+					lifetimePoints: { increment: p.points },
+					...(isWinner ? { galaxiesWon: { increment: 1 } } : {})
+				}
+			}),
+			prisma.seasonRecord.create({
+				data: {
+					userId: p.userId,
+					galaxyId: galaxy.id,
+					galaxyName: galaxy.name,
+					endedAt: now,
+					points: p.points,
+					won: isWinner,
+					factionName: factionInfo?.name ?? null,
+					factionTag: factionInfo?.tag ?? null
+				}
+			}),
+			promotePassTitle(p.userId, galaxy.id)
+		]);
 	}
 
 	for (const p of allPlayers) {
@@ -236,4 +287,68 @@ async function endGalaxy(
 		where: { activeGalaxyId: galaxy.id },
 		data: { activeGalaxyId: null }
 	});
+}
+
+// Ends any active galaxies whose seasonEndsAt has passed. The winner is the
+// faction with the most nexuses at the moment the timer fires. If no factions
+// own any nexuses the galaxy ends with no winner (rare edge case).
+export async function processSeasonExpiry(): Promise<void> {
+	const expired = await prisma.galaxy.findMany({
+		where: {
+			status: 'active',
+			seasonEndsAt: { lte: new Date() }
+		},
+		select: { id: true, name: true }
+	});
+
+	for (const galaxy of expired) {
+		try {
+			// Determine faction nexus counts to pick a winner
+			const members = await prisma.factionMember.findMany({
+				where: { galaxyId: galaxy.id },
+				select: { userId: true, factionId: true }
+			});
+			const userToFaction = new Map(members.map((m) => [m.userId, m.factionId]));
+
+			const nexuses = await prisma.nexus.findMany({
+				where: { galaxyId: galaxy.id, ownerId: { not: null } },
+				select: { ownerId: true }
+			});
+
+			const factionCounts = new Map<number, number>();
+			for (const n of nexuses) {
+				const fid = userToFaction.get(n.ownerId!);
+				if (fid) factionCounts.set(fid, (factionCounts.get(fid) ?? 0) + 1);
+			}
+
+			let winnerFactionId: number | null = null;
+			let maxCount = 0;
+			for (const [fid, count] of factionCounts) {
+				if (count > maxCount) {
+					maxCount = count;
+					winnerFactionId = fid;
+				}
+			}
+
+			if (!winnerFactionId) {
+				// No faction owns any nexuses — just close the galaxy with no winner
+				await prisma.galaxy.update({
+					where: { id: galaxy.id },
+					data: { status: 'ended', endedAt: new Date() }
+				});
+				await prisma.user.updateMany({
+					where: { activeGalaxyId: galaxy.id },
+					data: { activeGalaxyId: null }
+				});
+				continue;
+			}
+
+			await endGalaxy(galaxy, winnerFactionId);
+		} catch (err) {
+			logError('season_expiry_failed', {
+				message: (err as Error).message,
+				galaxyId: galaxy.id
+			});
+		}
+	}
 }

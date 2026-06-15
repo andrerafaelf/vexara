@@ -1,0 +1,308 @@
+/* ── Rail card wrapper (now a button) ─────────────────────────────────────── */
+.rail-bp--btn {
+	cursor: pointer;
+	text-align: left;
+	width: 100%;
+	background: none;
+	border: none;
+	padding: 0;
+	transition: background 0.15s;
+}
+
+.rail-bp--btn:hover {
+	background: rgba(255, 255, 255, 0.02);
+}
+
+.rail-bp .rail-card-head {
+	gap: var(--space-2);
+}
+
+.rail-bp-chevron {
+	margin-left: auto;
+	color: var(--text-faint);
+	flex-shrink: 0;
+}
+
+/* ── Track badges ─────────────────────────────────────────────────────────── */
+.rail-bp-paid-badge,
+.rail-bp-free-badge {
+	font-size: 9px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	border-radius: 999px;
+	padding: 1px 6px;
+}
+
+.rail-bp-paid-badge {
+	color: var(--accent);
+	background: rgba(255, 196, 0, 0.1);
+	border: 1px solid rgba(255, 196, 0, 0.25);
+}
+
+.rail-bp-free-badge {
+	color: var(--text-faint);
+	background: rgba(255, 255, 255, 0.05);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ── Level row ────────────────────────────────────────────────────────────── */
+.rail-bp-level-row {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	margin-top: var(--space-2);
+}
+
+.rail-bp-level {
+	font-size: var(--text-base);
+	font-weight: 700;
+	color: var(--text-strong);
+}
+
+.rail-bp-level-max {
+	font-size: 11px;
+	font-weight: 400;
+	color: var(--text-faint);
+}
+
+.rail-bp-xp-label {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	color: var(--text-muted);
+}
+
+.rail-bp-maxed {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	color: var(--accent);
+	letter-spacing: 0.06em;
+}
+
+/* ── XP bar ───────────────────────────────────────────────────────────────── */
+.rail-bp-bar {
+	position: relative;
+	height: 5px;
+	background: rgba(255, 255, 255, 0.06);
+	border-radius: 999px;
+	margin-top: var(--space-2);
+	overflow: visible;
+}
+
+.rail-bp-bar-fill {
+	height: 100%;
+	background: var(--accent);
+	border-radius: 999px;
+	transition: width 0.4s ease;
+}
+
+.rail-bp-pip {
+	position: absolute;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	width: 4px;
+	height: 4px;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.15);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.rail-bp-pip--reached {
+	background: var(--accent);
+	border-color: var(--accent);
+}
+
+/* ── Active title ─────────────────────────────────────────────────────────── */
+.rail-bp-title-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	margin-top: var(--space-2);
+	font-size: 10px;
+	color: var(--accent);
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	font-weight: 600;
+}
+
+.rail-bp-title-label {
+	font-family: var(--font-mono);
+}
+
+/* ── Upgrade nudge ────────────────────────────────────────────────────────── */
+.rail-bp-cta {
+	margin-top: var(--space-3);
+	padding: var(--space-2) var(--space-3);
+	background: rgba(255, 196, 0, 0.07);
+	border: 1px solid rgba(255, 196, 0, 0.18);
+	border-radius: var(--radius-sm);
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--accent);
+	letter-spacing: 0.03em;
+	text-align: center;
+}
+
+/* ── Vex Shop button (lives below the battle pass card) ───────────────────── */
+.rail-shop-btn {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	width: 100%;
+	background: none;
+	border: none;
+	cursor: pointer;
+	color: #718096;
+	font-size: 12px;
+	padding: 8px 12px;
+	border-radius: 6px;
+	transition:
+		background 0.15s,
+		color 0.15s;
+	margin-top: 4px;
+	text-align: left;
+}
+.rail-shop-btn:hover {
+	background: rgba(255, 255, 255, 0.03);
+	color: #a0aec0;
+}
+.rail-shop-label {
+	font-weight: 500;
+	flex: 1;
+}
+.rail-shop-vp {
+	display: flex;
+	align-items: center;
+	gap: 3px;
+	font-size: 11px;
+	font-weight: 600;
+	color: #63b3ed;
+}
+
+/* Campaign record treatment */
+.rail-bp--btn {
+	padding: 12px 13px 13px;
+	background: #171918;
+	border: 1px solid #3c3a34;
+	border-left: 3px solid #75664e;
+}
+
+.rail-bp--btn:hover {
+	background: #1c1e1d;
+}
+
+.rail-bp .rail-card-head {
+	align-items: flex-start;
+	flex-wrap: wrap;
+}
+
+.rail-bp .rail-card-title {
+	flex: 1 0 100%;
+	font-family: var(--font-display);
+	font-size: 17px;
+	line-height: 1.05;
+	letter-spacing: 0.03em;
+	color: var(--text-strong);
+}
+
+.rail-bp-paid-badge,
+.rail-bp-free-badge {
+	padding: 0;
+	background: none;
+	border: 0;
+	border-radius: 0;
+	font-family: var(--font-mono);
+	font-size: 8px;
+	letter-spacing: 0.1em;
+}
+
+.rail-bp-paid-badge {
+	color: #b99a68;
+}
+
+.rail-bp-free-badge {
+	color: var(--text-faint);
+}
+
+.rail-bp-level {
+	font-family: var(--font-display);
+	font-size: 20px;
+}
+
+.rail-bp-bar {
+	height: 4px;
+	background: #292a27;
+	border: 1px solid #383832;
+	border-radius: 0;
+}
+
+.rail-bp-bar-fill {
+	background: #a66d32;
+	border-radius: 0;
+	transition: none;
+}
+
+.rail-bp-pip {
+	width: 3px;
+	height: 8px;
+	border: 0;
+	border-radius: 0;
+	background: #4c4a43;
+}
+
+.rail-bp-pip--reached {
+	background: #c48745;
+}
+
+.rail-bp-title-row {
+	color: var(--text-muted);
+	letter-spacing: 0;
+	text-transform: none;
+}
+
+.rail-bp-title-label {
+	font-family: var(--font-sans);
+}
+
+.rail-bp-cta {
+	padding: 7px 9px;
+	background: transparent;
+	border-color: #5b5143;
+	border-radius: 0;
+	color: var(--text-default);
+	letter-spacing: 0;
+}
+
+.rail-shop-btn {
+	border: 1px solid transparent;
+	border-radius: 0;
+	color: var(--text-muted);
+}
+
+.rail-shop-btn:hover {
+	background: #171918;
+	border-color: #3c3a34;
+	color: var(--text-strong);
+}
+
+.rail-shop-vp {
+	font-family: var(--font-mono);
+	color: var(--text-muted);
+}
+
+.rail-bp-paid-badge,
+.rail-bp-free-badge {
+	font-size: 10px;
+}
+
+.rail-bp-xp-label,
+.rail-bp-maxed,
+.rail-bp-title-row,
+.rail-bp-cta,
+.rail-shop-vp {
+	font-size: 11px;
+}
+
+.rail-shop-btn {
+	font-size: 13px;
+}

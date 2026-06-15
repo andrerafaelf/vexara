@@ -217,6 +217,12 @@
 	color: var(--accent);
 }
 
+.notif-section--tips {
+	padding-bottom: 16px;
+	margin-bottom: 4px;
+	border-bottom: 1px solid var(--border-subtle);
+}
+
 .notif-disable-btn:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;

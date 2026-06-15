@@ -1,0 +1,3 @@
+-- No-op placeholder.
+-- The control recovery timestamp column is added by
+-- 20260602200000_add_control_recover_anchor.

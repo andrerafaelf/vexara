@@ -3,6 +3,13 @@ import prisma from '../lib/prisma.js';
 import { logError, logInfo, logWarn } from '../utils/logger.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
 import { notifyBadgeUpdate } from '../services/warRoomSocket.js';
+import { grantVexPoints } from '../utils/battlePass.js';
+
+interface KofiShopItem {
+	direct_link_code?: string;
+	variation_name?: string;
+	quantity?: number;
+}
 
 interface KofiPayload {
 	verification_token?: string;
@@ -14,7 +21,16 @@ interface KofiPayload {
 	kofi_transaction_id?: string;
 	is_subscription_payment?: boolean;
 	is_first_subscription_payment?: boolean;
+	shop_items?: KofiShopItem[];
+	message?: string;
 }
+
+// VP packs sold in the Ko-fi shop. variation_name must match exactly what's in Ko-fi.
+const VP_PACKS: Array<{ name: string; vp: number }> = [
+	{ name: 'Starter — 1,000 VP',       vp: 1000 },
+	{ name: 'Commander Pack — 2,500 VP', vp: 2500 },
+	{ name: 'Warlord Pack — 6,000 VP',   vp: 6000 },
+];
 
 type SupporterTier = 'recruit' | 'officer' | 'commander';
 
@@ -35,16 +51,28 @@ function resolveTier(amountEur: number): TierGrant {
 	return { tier: null, tokens: 1 };
 }
 
+// Returns VP amount if this payload is a VP shop order, otherwise 0.
+// Shop Orders never trigger tier/token grants — only Donations do.
+function resolveVpOrder(payload: KofiPayload): number {
+	if (payload.type !== 'Shop Order') return 0;
+	if (!Array.isArray(payload.shop_items)) return 0;
+	for (const item of payload.shop_items) {
+		const name = typeof item.variation_name === 'string' ? item.variation_name.trim() : '';
+		const pack = VP_PACKS.find((p) => p.name === name);
+		if (pack) return pack.vp;
+	}
+	return 0;
+}
+
 function parseAmount(raw: string | undefined): number {
 	if (!raw) return 0;
 	const n = parseFloat(raw);
 	return Number.isFinite(n) && n > 0 ? n : 0;
 }
 
+// Alpha is permanently closed. isFounder / Alpha Commander badge can never be granted again.
 function isAlphaActive(): boolean {
-	// Defaults to true so Founder badges still grant during alpha if the env var
-	// is unset. Flip ALPHA_ACTIVE=false at launch to lock the badge forever.
-	return (process.env.ALPHA_ACTIVE ?? 'true').toLowerCase() !== 'false';
+	return false;
 }
 
 export async function handleKofiWebhook(req: Request, res: Response): Promise<void> {
@@ -112,7 +140,9 @@ export async function handleKofiWebhook(req: Request, res: Response): Promise<vo
 		}
 
 		const amountEur = parseAmount(payload.amount);
-		const { tier, tokens } = resolveTier(amountEur);
+		// Tier and tokens only apply to Donations, not Shop Orders.
+		const isDonation = payload.type === 'Donation' || payload.type === 'Subscription';
+		const { tier, tokens } = isDonation ? resolveTier(amountEur) : { tier: null, tokens: 0 };
 
 		// Tier-up: highest tier ever achieved wins (we never downgrade).
 		const currentRank = user.supporterTier
@@ -131,6 +161,7 @@ export async function handleKofiWebhook(req: Request, res: Response): Promise<vo
 			supporterTier?: SupporterTier;
 			supporterTierSince?: Date;
 			isFounder?: boolean;
+			earnedTitles?: string[];
 		} = {};
 		if (!user.isSupporter) {
 			updateData.isSupporter = true;
@@ -142,6 +173,28 @@ export async function handleKofiWebhook(req: Request, res: Response): Promise<vo
 		}
 		if (grantFounder) {
 			updateData.isFounder = true;
+		}
+
+		// Append the supporter title to earnedTitles when a tier is newly granted.
+		// Titles are cumulative — upgrading from Recruit to Officer keeps both.
+		const SUPPORTER_TITLES: Record<string, string> = {
+			recruit:   'Recruit',
+			officer:   'Officer',
+			commander: 'Commander',
+		};
+		if (upgradeToTier) {
+			const fullUser = await prisma.user.findUnique({
+				where: { id: user.id },
+				select: { earnedTitles: true }
+			});
+			const earned = (fullUser?.earnedTitles as string[]) ?? [];
+			const titlesToAdd = Object.entries(SUPPORTER_TITLES)
+				.filter(([t]) => TIER_RANK[t as SupporterTier] <= TIER_RANK[upgradeToTier])
+				.map(([, title]) => title)
+				.filter((title) => !earned.includes(title));
+			if (titlesToAdd.length > 0) {
+				updateData.earnedTitles = [...earned, ...titlesToAdd] as any;
+			}
 		}
 
 		if (Object.keys(updateData).length > 0) {
@@ -223,6 +276,31 @@ export async function handleKofiWebhook(req: Request, res: Response): Promise<vo
 			}
 			if (duplicate) {
 				logInfo('kofi_token_duplicate', { userId: user.id, transactionId: txId });
+			}
+		}
+
+		// Vex Points shop order: credit VP to the buyer's account.
+		// Shop Orders never grant tiers or tokens — only Donations do.
+		const vpAmount = resolveVpOrder(payload);
+		if (vpAmount > 0) {
+			try {
+				await grantVexPoints(user.id, vpAmount);
+				logInfo('kofi_vex_points_granted', {
+					userId: user.id,
+					vp: vpAmount,
+					transactionId: txId
+				});
+				void sendPushToUser(user.id, NOTIF.TOKEN_GRANTED, {
+					title: `${vpAmount.toLocaleString()} Vex Points credited`,
+					body: 'Spend VP to unlock the Vex Protocol battle pass — or gift it to a fellow commander.',
+					tag: `vex-points-${txId ?? user.id}`,
+					data: { url: '/pass' }
+				});
+			} catch (vpError) {
+				logError('kofi_vex_points_error', {
+					userId: user.id,
+					message: (vpError as Error).message
+				});
 			}
 		}
 

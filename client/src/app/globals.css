@@ -1,3 +1,9 @@
+@import '@fontsource/barlow-condensed/600.css';
+@import '@fontsource/barlow-condensed/700.css';
+@import '@fontsource/source-sans-3/400.css';
+@import '@fontsource/source-sans-3/600.css';
+@import '@fontsource/source-sans-3/700.css';
+
 /* ============================================================
    Vexara - Design Tokens
    Industrial military sci-fi. Gunmetal base, amber primary,
@@ -7,40 +13,40 @@
 :root {
 	/* ── Brand palette (gunmetal scale, kept under --color-navy-* names
         so consumers across the codebase still resolve) ────────── */
-	--color-navy-900: #08090c; /* app background, deepest layer */
-	--color-navy-800: #0d1117; /* page background */
-	--color-navy-700: #161b22; /* primary surface */
-	--color-navy-600: #1c232c; /* elevated surface */
-	--color-navy-500: #222831; /* secondary panel */
-	--color-navy-400: #2a323c; /* hover panel */
-	--color-navy-300: #3d4651; /* borders, dividers when prominent */
+	--color-navy-900: #0b0c0c; /* app background, deepest layer */
+	--color-navy-800: #101211; /* page background */
+	--color-navy-700: #171918; /* primary surface */
+	--color-navy-600: #1c1f1e; /* elevated surface */
+	--color-navy-500: #232522; /* secondary panel */
+	--color-navy-400: #2d302c; /* hover panel */
+	--color-navy-300: #45443e; /* borders, dividers when prominent */
 
 	/* Primary accent: amber (industrial warning/HUD color). Kept under
      --color-cyan-* names so existing consumers keep working. */
-	--color-cyan-500: #ff9e3d; /* amber accent (primary action) */
-	--color-cyan-600: #f58a1f; /* amber hover */
-	--color-cyan-700: #d87718; /* amber pressed */
+	--color-cyan-500: #cf8838; /* ochre command accent */
+	--color-cyan-600: #dc984d; /* hover */
+	--color-cyan-700: #a9692c; /* pressed */
 
 	/* Secondary accent: desaturated steel-teal (used sparingly for info).
      Kept under --color-teal-* names. */
-	--color-teal-500: #4a9eb0;
-	--color-teal-600: #3b8090;
-	--color-teal-700: #2e6571;
+	--color-teal-500: #71818a;
+	--color-teal-600: #5d6d75;
+	--color-teal-700: #49575e;
 
 	/* Status: green / amber-warn / red */
-	--color-lime-500: #56d364; /* success / gain */
-	--color-lime-600: #3fb14c;
-	--color-lime-700: #2f8a39;
+	--color-lime-500: #7f9a68; /* success / gain */
+	--color-lime-600: #6e8759;
+	--color-lime-700: #586d48;
 
-	--color-amber-500: #d29922; /* warning / resources */
-	--color-rose-500: #f85149; /* danger / loss */
-	--color-rose-600: #da3e37;
+	--color-amber-500: #b48a45; /* warning / resources */
+	--color-rose-500: #b65d55; /* danger / loss */
+	--color-rose-600: #9d4c46;
 
 	/* ── Text ─────────────────────────────────────────────────── */
-	--text-strong: #f0f6fc; /* primary text */
-	--text-default: #c9d1d9;
-	--text-muted: #8b949e; /* secondary text */
-	--text-faint: #6e7681;
+	--text-strong: #ebe4d7; /* warm paper-white, primary text */
+	--text-default: #c9c1b4;
+	--text-muted: #978f83; /* secondary text */
+	--text-faint: #746e65;
 	--text-on-accent: #0d1117; /* text on amber buttons */
 
 	/* ── Semantic surfaces ────────────────────────────────────── */
@@ -55,24 +61,25 @@
 	--border-subtle: rgba(255, 255, 255, 0.04);
 	--border-default: #30363d;
 	--border-strong: #444c56;
-	--border-accent: rgba(255, 158, 61, 0.45);
+	--border-accent: rgba(207, 136, 56, 0.45);
 
 	/* ── Accents (semantic aliases) ───────────────────────────── */
 	--accent: var(--color-cyan-500);
+	--command: var(--color-cyan-500);
 	--accent-hover: var(--color-cyan-600);
 	--accent-pressed: var(--color-cyan-700);
-	--accent-soft: rgba(255, 158, 61, 0.12);
-	--accent-soft-hover: rgba(255, 158, 61, 0.2);
+	--accent-soft: rgba(207, 136, 56, 0.12);
+	--accent-soft-hover: rgba(207, 136, 56, 0.2);
 
 	--accent-2: var(--color-teal-500);
-	--accent-2-soft: rgba(74, 158, 176, 0.14);
+	--accent-2-soft: rgba(113, 129, 138, 0.14);
 
 	--success: var(--color-lime-500);
-	--success-soft: rgba(86, 211, 100, 0.14);
+	--success-soft: rgba(127, 154, 104, 0.14);
 	--warning: var(--color-amber-500);
-	--warning-soft: rgba(210, 153, 34, 0.14);
+	--warning-soft: rgba(180, 138, 69, 0.14);
 	--danger: var(--color-rose-500);
-	--danger-soft: rgba(248, 81, 73, 0.14);
+	--danger-soft: rgba(182, 93, 85, 0.14);
 
 	/* -- Radii (sharpened for industrial look - Pass C: near-zero) -- */
 	--radius-xs: 0;
@@ -100,19 +107,21 @@
 	--space-9: 56px;
 
 	/* ── Typography ───────────────────────────────────────────── */
-	--font-sans:
-		'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
-	--font-mono: 'JetBrains Mono', source-code-pro, Menlo, Monaco, Consolas, monospace;
+	/* Condensed command headings with a clear humanist interface face.
+	   Mono remains reserved for coordinates, timers, and measured data. */
+	--font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+	--font-sans: 'Source Sans 3', 'Segoe UI', Arial, sans-serif;
+	--font-mono: 'IBM Plex Mono', 'Cascadia Mono', Consolas, monospace;
 
-	--text-xs: 11px;
-	--text-sm: 12px;
-	--text-base: 14px;
-	--text-md: 15px;
-	--text-lg: 17px;
-	--text-xl: 20px;
-	--text-2xl: 24px;
-	--text-3xl: 30px;
-	--text-4xl: 36px;
+	--text-xs: 12px;
+	--text-sm: 13px;
+	--text-base: 15px;
+	--text-md: 16px;
+	--text-lg: 18px;
+	--text-xl: 21px;
+	--text-2xl: 25px;
+	--text-3xl: 31px;
+	--text-4xl: 37px;
 
 	/* ── Elevation (subtle, layered) ──────────────────────────── */
 	--shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35);
@@ -123,13 +132,13 @@
 
 	/* Glows neutralised - industrial palette is flat. Kept as
      1px insets so existing consumers still render a visible cue. */
-	--glow-accent: 0 0 0 1px rgba(255, 158, 61, 0.45);
-	--glow-accent-soft: 0 0 0 1px rgba(255, 158, 61, 0.25);
-	--glow-success: 0 0 0 1px rgba(86, 211, 100, 0.4);
-	--glow-danger: 0 0 0 1px rgba(248, 81, 73, 0.4);
+	--glow-accent: 0 0 0 1px rgba(207, 136, 56, 0.45);
+	--glow-accent-soft: 0 0 0 1px rgba(207, 136, 56, 0.25);
+	--glow-success: 0 0 0 1px rgba(127, 154, 104, 0.4);
+	--glow-danger: 0 0 0 1px rgba(182, 93, 85, 0.4);
 
 	/* ── Focus ring ───────────────────────────────────────────── */
-	--ring: 0 0 0 2px var(--color-navy-800), 0 0 0 4px rgba(255, 158, 61, 0.65);
+	--ring: 0 0 0 2px var(--color-navy-800), 0 0 0 4px rgba(207, 136, 56, 0.65);
 
 	/* ── Motion ───────────────────────────────────────────────── */
 	--ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -238,6 +247,13 @@ h6 {
 	font-weight: 600;
 	letter-spacing: -0.01em;
 	line-height: 1.25;
+}
+
+h1,
+h2 {
+	font-family: var(--font-display);
+	font-weight: 700;
+	letter-spacing: 0.01em;
 }
 
 a {
@@ -725,126 +741,91 @@ img.vx-avatar {
 	display: inline-block;
 }
 
-/* ── <AvatarUpload> (Officer/Commander only) ─────────────── */
-.vx-avatar-upload {
-	margin: 16px 0;
-	padding: 16px;
+/* ── <AvatarUpload> troop picker ─────────────────────────── */
+.vx-avatar-pick {
+	margin: var(--space-4) 0;
+	padding: var(--space-4);
 	background: var(--bg-surface);
 	border: 1px solid var(--border-default);
 	border-radius: var(--radius-md);
-}
-.vx-avatar-upload__row {
-	display: flex;
-	gap: 16px;
-	align-items: flex-start;
-}
-.vx-avatar-upload__info {
 	display: flex;
 	flex-direction: column;
-	gap: 6px;
-	min-width: 0;
-	flex: 1;
+	gap: var(--space-3);
 }
-.vx-avatar-upload__title {
-	color: var(--text-strong);
+.vx-avatar-pick__label {
+	font-size: var(--text-sm);
 	font-weight: 600;
-}
-.vx-avatar-upload__desc {
 	color: var(--text-muted);
-	font-size: var(--text-sm);
-	line-height: 1.4;
+	text-transform: uppercase;
+	letter-spacing: 0.07em;
 }
-.vx-avatar-upload__actions {
-	display: flex;
-	gap: 8px;
-	margin-top: 4px;
-	flex-wrap: wrap;
+.vx-avatar-pick__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+	gap: var(--space-2);
 }
-.vx-avatar-upload__btn {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	padding: 6px 12px;
-	background: var(--bg-surface);
-	color: var(--text-strong);
-	border: 1px solid var(--border-default);
+.vx-avatar-pick__tile {
+	position: relative;
+	width: 64px;
+	height: 64px;
+	padding: 0;
+	background: var(--bg-surface-2);
+	border: 2px solid var(--border-default);
 	border-radius: var(--radius-sm);
-	font-size: var(--text-sm);
-	font-weight: 600;
 	cursor: pointer;
-	transition:
-		border-color var(--duration-fast) var(--ease-out),
-		background var(--duration-fast) var(--ease-out);
+	overflow: hidden;
+	transition: border-color 0.15s;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
-.vx-avatar-upload__btn:hover:not(:disabled) {
+.vx-avatar-pick__tile img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+.vx-avatar-pick__tile:hover:not(:disabled) {
 	border-color: var(--border-strong);
 }
-.vx-avatar-upload__btn:disabled {
-	opacity: 0.5;
+.vx-avatar-pick__tile--active {
+	border-color: var(--accent);
+	box-shadow: 0 0 0 1px var(--accent);
+}
+.vx-avatar-pick__tile:disabled {
+	opacity: 0.6;
 	cursor: not-allowed;
 }
-.vx-avatar-upload__btn--primary {
-	background: var(--color-cyan-500);
-	color: var(--text-on-accent);
-	border-color: var(--color-cyan-500);
-}
-.vx-avatar-upload__btn--primary:hover:not(:disabled) {
-	background: var(--color-cyan-600, var(--color-cyan-500));
-	border-color: var(--color-cyan-600, var(--color-cyan-500));
-}
-.vx-avatar-upload__btn--danger {
-	color: #ff6b6b;
-	border-color: rgba(255, 107, 107, 0.4);
-}
-.vx-avatar-upload__btn--danger:hover:not(:disabled) {
-	border-color: rgba(255, 107, 107, 0.8);
-}
-.vx-avatar-upload__err {
-	margin-top: 6px;
-	padding: 6px 10px;
-	background: rgba(255, 107, 107, 0.08);
-	color: #ff6b6b;
-	border: 1px solid rgba(255, 107, 107, 0.3);
-	border-radius: var(--radius-sm);
-	font-size: var(--text-sm);
-}
-
-.vx-avatar-upload__modal {
-	position: fixed;
+.vx-avatar-pick__spinner {
+	position: absolute;
 	inset: 0;
-	background: rgba(0, 0, 0, 0.78);
+	background: rgba(0, 0, 0, 0.5);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	z-index: 9999;
-	padding: 16px;
 }
-.vx-avatar-upload__modal-inner {
-	background: var(--bg-surface);
-	border: 1px solid var(--border-default);
-	border-radius: var(--radius-md);
-	padding: 20px;
-	max-width: min(720px, 100%);
-	max-height: 90vh;
-	display: flex;
-	flex-direction: column;
-	gap: 14px;
-	overflow: hidden;
+.vx-avatar-pick__spinner::after {
+	content: '';
+	width: 18px;
+	height: 18px;
+	border: 2px solid rgba(255, 255, 255, 0.3);
+	border-top-color: var(--accent);
+	border-radius: 50%;
+	animation: vx-spin 0.7s linear infinite;
 }
-.vx-avatar-upload__modal-title {
-	color: var(--text-strong);
-	font-weight: 600;
-	font-size: var(--text-lg);
+@keyframes vx-spin {
+	to {
+		transform: rotate(360deg);
+	}
 }
-.vx-avatar-upload__crop {
-	overflow: auto;
-	display: flex;
-	justify-content: center;
-}
-.vx-avatar-upload__modal-actions {
-	display: flex;
-	gap: 8px;
-	justify-content: flex-end;
+
+.vx-avatar-pick__err {
+	padding: var(--space-1) var(--space-3);
+	background: var(--danger-soft);
+	color: var(--danger);
+	border: 1px solid rgba(248, 81, 73, 0.3);
+	border-radius: var(--radius-sm);
+	font-size: var(--text-sm);
 }
 
 /* ==========================================================================
@@ -868,13 +849,35 @@ img.vx-avatar {
    - Pure icons / close affordances where the notch reads as a glitch
    - Form inputs (handled separately via the input ruleset above)
    ========================================================================== */
-a[class*='-btn']:not(.no-cut):not([class*='-icon']):not([class*='-close']):not([class*='close-btn']):not([class*='-link']):not([class*='-nav-link']):not([class*='-chip']):not([class*='-panel']):not([class*='-card']):not([class*='-tile']):not([class*='-modal']):not([class*='-container']):not([class*='-wrap']):not([class*='-row']):not([class*='-cell']):not([class*='-bar']):not([class*='-track']):not([class*='-rail']):not([class*='-mark']):not([class*='-stamp']):not([class*='-badge']),
+a[class*='-btn']:not(.no-cut):not([class*='-icon']):not([class*='-close']):not(
+		[class*='close-btn']
+	):not([class*='-link']):not([class*='-nav-link']):not([class*='-chip']):not(
+		[class*='-panel']
+	):not([class*='-card']):not([class*='-tile']):not([class*='-modal']):not(
+		[class*='-container']
+	):not([class*='-wrap']):not([class*='-row']):not([class*='-cell']):not([class*='-bar']):not(
+		[class*='-track']
+	):not([class*='-rail']):not([class*='-mark']):not([class*='-stamp']):not([class*='-badge']),
 a[class*='-cta']:not(.no-cut):not([class*='-text']):not([class*='-block']):not([class*='-link']),
 a[class*='-submit']:not(.no-cut),
-button[class*='-btn']:not(.no-cut):not([class*='-icon']):not([class*='-close']):not([class*='close-btn']):not([class*='-link']):not([class*='-nav-link']):not([class*='-chip']):not([class*='-panel']):not([class*='-card']):not([class*='-tile']):not([class*='-modal']):not([class*='-container']):not([class*='-wrap']):not([class*='-row']):not([class*='-cell']):not([class*='-bar']):not([class*='-track']):not([class*='-rail']):not([class*='-mark']):not([class*='-stamp']):not([class*='-badge']),
-button[class*='-cta']:not(.no-cut):not([class*='-text']):not([class*='-block']):not([class*='-link']),
+button[class*='-btn']:not(.no-cut):not([class*='-icon']):not([class*='-close']):not(
+		[class*='close-btn']
+	):not([class*='-link']):not([class*='-nav-link']):not([class*='-chip']):not(
+		[class*='-panel']
+	):not([class*='-card']):not([class*='-tile']):not([class*='-modal']):not(
+		[class*='-container']
+	):not([class*='-wrap']):not([class*='-row']):not([class*='-cell']):not([class*='-bar']):not(
+		[class*='-track']
+	):not([class*='-rail']):not([class*='-mark']):not([class*='-stamp']):not([class*='-badge']),
+button[class*='-cta']:not(.no-cut):not([class*='-text']):not([class*='-block']):not(
+		[class*='-link']
+	),
 button[class*='-submit']:not(.no-cut),
-[role='button']:not(.no-cut):not([class*='-icon']):not([class*='-close']):not([class*='close-btn']):not([class*='-chip']):not([class*='-panel']):not([class*='-card']):not([class*='-tile']):not([class*='-modal']):not([class*='-container']) {
+[role='button']:not(.no-cut):not([class*='-icon']):not([class*='-close']):not(
+		[class*='close-btn']
+	):not([class*='-chip']):not([class*='-panel']):not([class*='-card']):not([class*='-tile']):not(
+		[class*='-modal']
+	):not([class*='-container']) {
 	clip-path: polygon(
 		0 0,
 		100% 0,
@@ -904,8 +907,7 @@ button[class*='-submit']:not(.no-cut),
 	justify-content: center;
 	padding: var(--space-6);
 	background:
-		radial-gradient(120% 80% at 50% -10%, rgba(255, 158, 61, 0.06), transparent 60%),
-		var(--bg-app);
+		radial-gradient(120% 80% at 50% -10%, rgba(255, 158, 61, 0.06), transparent 60%), var(--bg-app);
 }
 
 .vx-error-panel {

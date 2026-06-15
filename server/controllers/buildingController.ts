@@ -9,17 +9,21 @@ import {
 } from '../models/Nexus.js';
 import * as buildingService from '../services/buildingService.js';
 import { atomicUpdateNexusResources, ResourceConflictError } from '../services/nexusService.js';
+import prisma from '../lib/prisma.js';
 import type { AuthRequest } from '../types/index.js';
 import { getMaxStorage, getResourceProduction } from '../utils/economy.js';
 import {
 	BUILDING_COSTS,
 	getBuildingCost,
 	getCommandBuildQueueBonus,
-	getEffectiveBuildTimeSeconds
+	getEffectiveBuildTimeSeconds,
+	isOnboardingBuildEligible,
+	ONBOARDING_BUILD_TIME_SECONDS
 } from '../utils/gameConstants.js';
 import { notifyNexusResources } from '../services/warRoomSocket.js';
 import { getPopulationMax } from '../utils/population.js';
-import { logError, logGameEvent } from '../utils/logger.js';
+import { logError, logGameEventOnce } from '../utils/logger.js';
+import { getActiveProductionBoostPct } from '../utils/battlePass.js';
 
 const BASE_MAX_BUILD_QUEUE = 5;
 
@@ -274,7 +278,16 @@ export async function upgradeBuilding(req: AuthRequest, res: Response): Promise<
 			res.status(400).json({ error: `Requirements not met: ${text}` });
 			return;
 		}
-		const resourceUpdate = computeResourceUpdate(nexus);
+		const [galaxy, boostPct, userForBuild] = await Promise.all([
+			prisma.galaxy.findUnique({ where: { id: req.galaxyId! }, select: { speedMultiplier: true } }),
+			getActiveProductionBoostPct(req.userId!, req.galaxyId!),
+			prisma.user.findUnique({
+				where: { id: req.userId! },
+				select: { beginnerTipsEnabled: true, onboardingStep: true }
+			})
+		]);
+		const speedMultiplier = galaxy?.speedMultiplier ?? 1.0;
+		const resourceUpdate = computeResourceUpdate(nexus, undefined, speedMultiplier, boostPct);
 		const current = { ...nexus, ...resourceUpdate };
 		const cost = getBuildingCost(building, currentLevel);
 		if (
@@ -291,14 +304,22 @@ export async function upgradeBuilding(req: AuthRequest, res: Response): Promise<
 				: Date.now();
 		const buildDoubled =
 			(nexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled ?? false;
-		const buildSeconds = getEffectiveBuildTimeSeconds(
+		const onboardingBuild = isOnboardingBuildEligible(
 			building,
 			currentLevel,
-			nexus.commandCore,
-			nexus.nexusType,
-			buildDoubled
+			userForBuild?.beginnerTipsEnabled ?? false,
+			userForBuild?.onboardingStep ?? null
 		);
-		const completesAt = new Date(queueStart + buildSeconds * 1000);
+		const buildSeconds = onboardingBuild
+			? ONBOARDING_BUILD_TIME_SECONDS
+			: getEffectiveBuildTimeSeconds(
+					building,
+					currentLevel,
+					nexus.commandCore,
+					nexus.nexusType,
+					buildDoubled
+				);
+		const completesAt = new Date(queueStart + (buildSeconds * 1000) / speedMultiplier);
 		const newQueue = [...buildQueue, { building, targetLevel: currentLevel + 1, completesAt }];
 		let updated;
 		try {
@@ -342,10 +363,10 @@ export async function upgradeBuilding(req: AuthRequest, res: Response): Promise<
 				await incrementQuestProgress(req.userId, req.galaxyId, 'upgrade_2', 1);
 			})();
 		} catch {}
-		// Emit first_build only when the queue was previously empty (this is truly the first queued build).
-		if (buildQueue.length === 0) {
-			logGameEvent('first_build', req.userId, req.galaxyId, { building, nexusId: nexus.id });
-		}
+		// True funnel milestone: fired at most once per user, the first time they
+		// ever queue a build (logGameEventOnce dedups on userId+event). The old
+		// "queue was empty" guard fired on every later build too.
+		logGameEventOnce('first_build', req.userId, req.galaxyId, { building, nexusId: nexus.id });
 		res.json({ success: true, completesAt, nexus: serializeNexus(rewardApplied) });
 	} catch (error) {
 		logError('unhandled_controller_error', {
@@ -393,7 +414,11 @@ export async function cancelBuildQueue(req: AuthRequest, res: Response): Promise
 				newQueue[i] = { ...newQueue[i], completesAt: new Date(oldAt - duration) };
 			}
 		}
-		const resourceUpdate = computeResourceUpdate(nexus);
+		const [galaxyForCancel, cancelBoostPct] = await Promise.all([
+			prisma.galaxy.findUnique({ where: { id: req.galaxyId! }, select: { speedMultiplier: true } }),
+			getActiveProductionBoostPct(req.userId!, req.galaxyId!)
+		]);
+		const resourceUpdate = computeResourceUpdate(nexus, undefined, galaxyForCancel?.speedMultiplier ?? 1.0, cancelBoostPct);
 		const current = { ...nexus, ...resourceUpdate } as unknown as Record<string, number>;
 		let updated;
 		try {
@@ -457,7 +482,11 @@ export async function checkBuildQueue(req: AuthRequest, res: Response): Promise<
 			}
 		}
 		data.buildQueue = queueToJson(buildQueue);
-		const resourceUpdate = computeResourceUpdate(nexus);
+		const [galaxyForClaim, claimBoostPct] = await Promise.all([
+			prisma.galaxy.findUnique({ where: { id: req.galaxyId! }, select: { speedMultiplier: true } }),
+			getActiveProductionBoostPct(req.userId!, req.galaxyId!)
+		]);
+		const resourceUpdate = computeResourceUpdate(nexus, undefined, galaxyForClaim?.speedMultiplier ?? 1.0, claimBoostPct);
 		const updated = await buildingService.updateNexus(nexus.id, { ...resourceUpdate, ...data });
 		const rewardApplied = await applyQuestRewards(updated);
 		try {

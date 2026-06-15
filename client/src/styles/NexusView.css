@@ -5,34 +5,215 @@
 	min-height: 600px;
 }
 
-.nexus-header {
-	margin-bottom: var(--space-6);
-	padding-bottom: var(--space-5);
+/* Two-column nexus layout: an inner-left section nav (nexus name + vertical
+   Overview/Buildings/Troops/… tabs) beside the content column. The inner nav
+   gives the tabs a real left anchor instead of floating; it scrolls with the
+   page (sticky so it stays in view on long content). */
+.nexus-view--split {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-5);
+}
+
+.nexus-inner-nav {
+	flex: 0 0 168px;
+	width: 168px;
+	position: sticky;
+	top: var(--space-3);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+.nexus-inner-nav-head {
+	padding: 0 var(--space-2) var(--space-2);
 	border-bottom: 1px solid var(--border-default);
 }
 
-/* The <h2> renders a "// NEXUS · COMMAND" pseudo-label above the title text
- * (see .nexus-header h2::before below). That makes the heading a two-line
- * stacked block. Centering against that block visually pushes the rename
- * button up out of line with the title, so align to the bottom of the row -
- * the title sits at the bottom of its own stacked block, putting the button
- * on the title's baseline. */
-.nexus-title-row {
-	display: flex;
-	align-items: flex-end;
-	gap: var(--space-3);
-	margin-bottom: var(--space-3);
-	line-height: 1;
+.nexus-inner-nav-eyebrow {
+	display: block;
+	font-family: var(--font-mono);
+	font-size: 9px;
+	font-weight: 700;
+	letter-spacing: 0.16em;
+	color: var(--accent);
+	text-transform: uppercase;
+	margin-bottom: 3px;
 }
 
-.nexus-header h2 {
-	color: var(--text-strong);
-	margin-bottom: 0;
-	font-size: var(--text-3xl);
+.nexus-inner-nav-name {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	font-size: var(--text-lg);
 	font-weight: 700;
-	letter-spacing: -0.025em;
-	line-height: 1;
+	color: var(--text-strong);
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	min-width: 0;
 }
+
+.nexus-inner-nav-name-text {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Quiet rename pencil next to the inner-nav name; gains presence on hover. */
+.nexus-inner-nav-edit {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: 22px;
+	height: 22px;
+	padding: 0;
+	background: transparent;
+	border: none;
+	border-radius: var(--radius-sm);
+	color: var(--text-faint);
+	cursor: pointer;
+	transition:
+		color var(--duration-fast) var(--ease-out),
+		background var(--duration-fast) var(--ease-out);
+}
+
+.nexus-inner-nav-edit:hover {
+	color: var(--text-strong);
+	background: rgba(255, 255, 255, 0.06);
+}
+
+.nexus-inner-rename {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.nexus-inner-nav-tabs {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.nexus-inner-tab {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	text-align: left;
+	background: transparent;
+	color: var(--text-muted);
+	border: none;
+	border-left: 2px solid transparent;
+	border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+	padding: 9px 12px;
+	font-size: var(--text-base);
+	font-weight: 600;
+	cursor: pointer;
+	transition:
+		color var(--duration-fast) var(--ease-out),
+		background var(--duration-fast) var(--ease-out),
+		border-color var(--duration-fast) var(--ease-out);
+}
+
+.nexus-inner-tab:hover {
+	color: var(--text-strong);
+	background: rgba(255, 255, 255, 0.03);
+}
+
+.nexus-inner-tab.active {
+	color: var(--accent);
+	background: var(--accent-soft);
+	border-left-color: var(--accent);
+}
+
+.nexus-content-col {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+/* On narrow screens the inner nav collapses to a horizontal scroll row across
+   the top so the content gets full width. */
+@media (max-width: 900px) {
+	.nexus-view--split {
+		flex-direction: column;
+		gap: 0;
+	}
+
+	/* Sticky tab bar — only the tabs, no name header */
+	.nexus-inner-nav {
+		flex-basis: auto;
+		width: 100%;
+		flex-direction: row;
+		align-items: center;
+		gap: 0;
+		border-bottom: 1px solid var(--border-default);
+		padding-bottom: 0;
+		overflow-x: auto;
+		scrollbar-width: none;
+		position: sticky;
+		top: calc(52px + var(--safe-top, 0px));
+		z-index: 1040;
+		background: color-mix(in srgb, var(--bg-app) 96%, transparent);
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
+	}
+
+	.nexus-inner-nav::-webkit-scrollbar {
+		display: none;
+	}
+
+	/* Hide the name/eyebrow header from the sticky tab bar on mobile —
+	   it reappears as .nexus-mobile-identity below the tab bar. */
+	.nexus-inner-nav-head {
+		display: none;
+	}
+
+	.nexus-inner-nav-tabs {
+		flex-direction: row;
+		gap: 0;
+		flex: 1;
+	}
+
+	.nexus-inner-tab {
+		border-left: none;
+		border-bottom: 2px solid transparent;
+		border-radius: 0;
+		white-space: nowrap;
+		padding: 10px 14px;
+		flex: 1;
+		justify-content: center;
+		font-size: var(--text-sm);
+	}
+
+	.nexus-inner-tab.active {
+		border-left-color: transparent;
+		border-bottom-color: var(--accent);
+	}
+
+	/* Nexus identity row: eyebrow + name + pencil, shown below the tab bar */
+	.nexus-mobile-identity {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 8px 0 10px;
+		border-bottom: 1px solid var(--border-subtle);
+		margin-bottom: var(--space-3);
+	}
+
+	.nexus-content-col {
+		padding-top: var(--space-3);
+	}
+}
+
+/* On desktop the mobile identity row is hidden — the name lives in nexus-inner-nav-head */
+.nexus-mobile-identity {
+	display: none;
+}
+
+/* The full-height nexus name header was removed — the name + rename now live
+   inline on the tab bar (.nexus-tab-identity). */
 
 .nexus-rename-btn {
 	background: transparent;
@@ -345,118 +526,37 @@
 	font-weight: 700;
 }
 
-.nexus-tab-bar {
-	display: flex;
-	gap: var(--space-1);
-	margin-bottom: var(--space-5);
-	border-bottom: 1px solid var(--border-default);
-	padding-bottom: 0;
-	overflow-x: auto;
-	overflow-y: hidden;
-	touch-action: pan-x;
-	-webkit-overflow-scrolling: touch;
-	scrollbar-width: none;
-	background: var(--bg-app);
-	position: sticky;
-	/* Desktop scroll root is .main-content (var(--space-7) top padding). At rest
-	   the bar sits in normal flow under the resource strip — untouched. When it
-	   sticks, `top: 0` would pin it at the padding EDGE, leaving a 32px strip of
-	   app background above it (the gap). So we pin 32px higher and add 32px of
-	   padding-top, but ONLY while stuck — the .is-stuck class is toggled by an
-	   IntersectionObserver sentinel in NexusView. While stuck the padding fills
-	   the strip and the buttons stay flush at the viewport top; at rest neither
-	   applies, so the resting layout is exactly as before. Mobile resets below. */
-	top: 0;
-	z-index: 10;
-}
-
-/* Desktop-only: the gap-fill applies while stuck. Scoped to >=769px so it can't
-   override the mobile pinning rule below (which pins under the 56px header). */
-@media (min-width: 769px) {
-	.nexus-tab-bar.is-stuck {
-		top: calc(var(--space-7) * -1);
-		padding-top: var(--space-7);
-	}
-}
-
-/* Zero-impact marker the IntersectionObserver watches to know when the tab bar
-   has pinned. Must not affect layout. */
-.nexus-tab-sticky-sentinel {
-	height: 0;
-	margin: 0;
-	padding: 0;
-	pointer-events: none;
-}
-
-.nexus-tab-bar::-webkit-scrollbar {
-	display: none;
-}
-
-/* Mobile: pin the tab bar below the sticky game header so the
-   Overview / Buildings / Troops switcher stays one tap away while the user
-   scrolls through long lists.
-   - top offset accounts for the 56px header AND the safe-area inset on
-     notched devices (.game-header height is calc(56px + safe-area-inset-top))
-   - z-index must beat the page content but stay below .game-header (1050)
-     so this bar pins right under the header instead of overlapping it. */
-@media (max-width: 768px) {
-	.nexus-tab-bar {
-		position: sticky;
-		top: calc(56px + var(--safe-top));
-		z-index: 1040;
-		background: color-mix(in srgb, var(--bg-app) 92%, transparent);
-		/* Mobile scroll root is the window (.main-content is overflow: visible), so
-		   there's no scroll-container top padding to cancel — undo the desktop
-		   padding-compensation and pin below the 56px fixed header instead. */
-		margin-top: 0;
-		padding-top: 0;
-		margin-left: calc(var(--space-3) * -1);
-		margin-right: calc(var(--space-3) * -1);
-		margin-bottom: var(--space-3);
-		padding-left: var(--space-3);
-		padding-right: var(--space-3);
-		backdrop-filter: blur(10px);
-		-webkit-backdrop-filter: blur(10px);
-		box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
-	}
-}
-
-.nexus-tab-btn {
-	position: relative;
-	background: transparent;
-	color: var(--text-muted);
-	border: none;
-	border-bottom: 2px solid transparent;
-	border-radius: 0;
-	padding: 10px 14px;
-	font-size: var(--text-base);
-	font-weight: 500;
-	letter-spacing: 0.01em;
-	cursor: pointer;
-	margin-bottom: -1px;
-	transition:
-		color var(--duration-fast) var(--ease-out),
-		border-color var(--duration-fast) var(--ease-out);
-	white-space: nowrap;
+/* First-build acceleration chip (beta). Sits beside the build time on a
+   brand-new player's first Command Core upgrade to signal the one-time speed-up
+   without implying later builds will be this fast. */
+.build-time-accelerated {
 	display: inline-flex;
 	align-items: center;
-	gap: 8px;
+	gap: 3px;
+	margin-left: 8px;
+	padding: 1px 7px;
+	border-radius: var(--radius-sm, 6px);
+	background: var(--success-soft, rgba(74, 222, 128, 0.14));
+	color: var(--success, #4ade80);
+	font-size: 10px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	vertical-align: middle;
+	white-space: nowrap;
 }
 
-.nexus-tab-btn svg {
-	flex-shrink: 0;
+/* Nexus-type buff banner — a thin status strip at the top of the content col. */
+.nexus-buff-banner-row:empty {
+	display: none;
+}
+.nexus-buff-banner-row {
+	margin-bottom: var(--space-3);
 }
 
-.nexus-tab-btn:hover {
-	color: var(--text-strong);
-	border-bottom-color: var(--border-strong);
-}
-
-.nexus-tab-btn.active {
-	color: var(--accent);
-	border-bottom-color: var(--accent);
-	font-weight: 600;
-}
+/* (Legacy horizontal .nexus-tab-bar / .nexus-tab-btn removed — section nav is
+   now the vertical .nexus-inner-nav defined near the top of this file. The
+   .nexus-tab-badge below is reused by the new inner tabs.) */
 
 .nexus-tab-badge {
 	display: inline-block;
@@ -751,19 +851,45 @@
 }
 
 .nexus-stat {
+	position: relative;
 	background: var(--bg-surface);
 	border: 1px solid var(--border-default);
 	border-radius: var(--radius-sm);
-	padding: 12px 14px 14px;
+	padding: 13px 14px 14px;
 	display: flex;
 	flex-direction: column;
 	gap: 6px;
 	min-width: 0;
-	transition: border-color var(--duration-base) var(--ease-out);
+	transition:
+		border-color var(--duration-base) var(--ease-out),
+		background var(--duration-base) var(--ease-out);
+}
+
+/* Thin industrial accent rule along the top edge — ties the stat cards into the
+   header's amber-bezel language and gives the status HUD a clear top edge. */
+.nexus-stat::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 2px;
+	background: linear-gradient(
+		90deg,
+		var(--accent) 0%,
+		rgba(255, 158, 61, 0.25) 45%,
+		transparent 80%
+	);
+	opacity: 0.5;
 }
 
 .nexus-stat:hover {
 	border-color: var(--border-strong);
+	background: var(--bg-surface-3);
+}
+
+.nexus-stat:hover::before {
+	opacity: 0.85;
 }
 
 .nexus-stat-label {
@@ -798,20 +924,23 @@
 
 .nexus-stat-bar-track {
 	margin-top: 8px;
-	height: 3px;
+	height: 4px;
 	background: rgba(255, 255, 255, 0.06);
-	border-radius: var(--radius-pill);
+	border-radius: var(--radius-xl);
 	overflow: hidden;
 }
 
 .nexus-stat-bar-fill {
 	height: 100%;
-	border-radius: var(--radius-pill);
+	border-radius: var(--radius-xl);
 	transition: width 0.6s var(--ease-out);
 }
 
+/* Class name kept for back-compat, but it's the primary accent (amber), not
+   cyan — the --color-cyan-* token holds the amber value. Use the semantic
+   --accent alias so the name stops lying about the rendered color. */
 .nexus-stat-bar-fill-cyan {
-	background: var(--color-cyan-500);
+	background: var(--accent);
 }
 
 .nexus-stat-coords {
@@ -854,6 +983,11 @@
 	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: 12px;
 	margin-bottom: 16px;
+}
+
+/* With only the Strikes card left, let it span the full width. */
+.overview-shortcuts--strikes-only {
+	grid-template-columns: minmax(0, 1fr);
 }
 
 @media (max-width: 767px) and (min-width: 480px) {
@@ -1119,7 +1253,7 @@
 	border-left: 3px solid var(--success);
 	border-radius: var(--radius-sm);
 	padding: 10px 12px;
-	margin-bottom: 12px;
+	margin: 12px 0;
 	font-size: 13px;
 }
 
@@ -1341,9 +1475,11 @@
 	align-items: center;
 	justify-content: center;
 	padding: 16px;
+	padding-bottom: max(16px, env(safe-area-inset-bottom));
+	padding-left: max(16px, env(safe-area-inset-left));
+	padding-right: max(16px, env(safe-area-inset-right));
 	z-index: 9999;
 	animation: fadeIn 0.2s ease;
-	/* Overflow scroll so the modal never gets clipped on short viewports */
 	overflow-y: auto;
 }
 
@@ -1487,13 +1623,13 @@
 
 .buildings-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+	grid-template-columns: repeat(4, minmax(0, 1fr));
 	gap: var(--space-3);
 }
 
 .building-card {
 	background: var(--bg-surface);
-	padding: var(--space-4);
+	padding: 12px;
 	border-radius: var(--radius-sm);
 	position: relative;
 	overflow: hidden;
@@ -1546,16 +1682,12 @@
 }
 
 .building-card-image {
-	width: calc(100% + 32px);
-	aspect-ratio: 1 / 1;
+	width: calc(100% + 24px);
 	height: auto;
-	object-fit: contain;
-	object-position: center center;
-	margin: -16px -16px 12px;
+	display: block;
+	margin: -12px -12px 10px;
 	border-radius: 0;
 	border-bottom: 1px solid rgba(0, 0, 0, 0.25);
-	background: radial-gradient(circle at 50% 45%, rgba(255, 158, 61, 0.08), transparent 48%),
-		var(--bg-surface-2);
 	filter: saturate(0.9);
 }
 
@@ -1598,7 +1730,7 @@
 .building-card h4 {
 	color: var(--text-strong);
 	margin: 0;
-	font-size: var(--text-md);
+	font-size: var(--text-sm);
 	font-weight: 600;
 	letter-spacing: -0.005em;
 	line-height: 1.3;
@@ -1695,6 +1827,17 @@
 	letter-spacing: 0.04em;
 	color: var(--text-muted);
 	line-height: 1;
+}
+
+/* Resource icon in a cost pill, in place of the written resource name. Hovering
+   shows the name via the icon's title tooltip. Circular, frame-cropped art with
+   a faint ring so it seats into the card. */
+.cost-pill-icon {
+	display: block;
+	border-radius: 50%;
+	box-shadow:
+		inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+		0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 .build-time {
@@ -1925,6 +2068,33 @@
 	border-radius: var(--radius-sm);
 }
 
+/* Glass-cannon garrison warning (beta): shown above the stationed grid when a
+   nexus is held mostly by strikers, nudging the player toward anvils on defense.
+   Amber/caution styling, consistent with the daily-streak expiry warning. */
+.garrison-warning {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	padding: 9px 12px;
+	margin-bottom: 16px;
+	background: rgba(210, 153, 34, 0.1);
+	border: 1px solid rgba(210, 153, 34, 0.28);
+	border-radius: var(--radius-sm);
+	color: var(--warning);
+	font-size: var(--text-sm);
+	line-height: 1.45;
+}
+
+.garrison-warning svg {
+	flex-shrink: 0;
+	margin-top: 1px;
+}
+
+.garrison-warning strong {
+	color: var(--text-strong);
+	font-weight: 700;
+}
+
 .troops-stationed-summary-label {
 	font-size: var(--text-xs);
 	text-transform: uppercase;
@@ -1943,7 +2113,7 @@
 
 .troops-stationed-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
 	gap: 12px;
 }
 
@@ -2060,9 +2230,7 @@
 .stationed-card--destroying {
 	border-left-color: var(--danger);
 	border-color: rgba(248, 81, 73, 0.32);
-	background:
-		linear-gradient(90deg, rgba(248, 81, 73, 0.08), transparent 54%),
-		var(--bg-app);
+	background: linear-gradient(90deg, rgba(248, 81, 73, 0.08), transparent 54%), var(--bg-app);
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -2365,6 +2533,15 @@
 }
 
 @media (max-width: 600px) {
+	/* Prevent iOS auto-zoom on input focus — font-size must be ≥ 16px */
+	.nexus-rename-input,
+	.nexus-rename-input-sm,
+	.decommission-input,
+	.group-name-input,
+	.eliminated-name-input {
+		font-size: 16px;
+	}
+
 	.troops-stationed-panel {
 		padding: 14px;
 	}
@@ -2442,13 +2619,13 @@
 
 .train-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
 	gap: 15px;
 }
 
 .train-card {
 	background: var(--bg-surface);
-	padding: 15px;
+	padding: 12px;
 	border-radius: var(--radius-sm);
 	position: relative;
 	overflow: hidden;
@@ -2470,10 +2647,11 @@
 
 .troop-card-image-wrap {
 	position: relative;
-	width: calc(100% + 30px);
-	aspect-ratio: 1 / 1;
-	margin: -15px -15px 12px;
-	background: radial-gradient(circle at 50% 45%, rgba(80, 210, 255, 0.08), transparent 48%),
+	width: calc(100% + 24px);
+	aspect-ratio: 3 / 2;
+	margin: -12px -12px 10px;
+	background:
+		radial-gradient(circle at 50% 45%, rgba(80, 210, 255, 0.08), transparent 48%),
 		var(--bg-surface-2);
 	border-bottom: 1px solid rgba(0, 0, 0, 0.25);
 }
@@ -2518,17 +2696,25 @@
 
 .troop-header {
 	display: flex;
-	justify-content: space-between;
+	flex-direction: column;
 	align-items: flex-start;
 	margin-bottom: 8px;
 	gap: 6px;
 }
 
-.troop-header-right {
+.troop-header-top {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	width: 100%;
+	gap: 6px;
+}
+
+.troop-header-badges {
 	display: flex;
 	align-items: center;
 	gap: 6px;
-	flex-shrink: 0;
+	flex-wrap: wrap;
 }
 
 /* Per-unit combat-class badge on train cards. Colors match the Codex's
@@ -2567,6 +2753,47 @@
 .troop-class-badge--special {
 	color: #c4b5fd;
 	background: rgba(196, 181, 253, 0.08);
+}
+
+/* Directional matchup hint appended to the class badge ("Mobile ▸ Armor"),
+   teaching what the class beats at the point of training. Slightly dimmed so the
+   class label stays primary. */
+.troop-class-beats {
+	opacity: 0.7;
+	font-weight: 600;
+}
+
+/* Per-unit ROLE badge (beta): Striker / Anvil / Scout / Conquest. Sits beside
+   the class badge so a new player can read both "what it counters" (class) and
+   "what it's for" (role) without opening the codex. Roles are derived from the
+   canonical stat table (see troopRole), so they can't drift from balance. */
+.troop-role-badge {
+	font-size: 9px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	padding: 2px 6px;
+	border-radius: var(--radius-sm);
+	border: 1px solid transparent;
+	line-height: 1.2;
+	white-space: nowrap;
+}
+/* Striker = offensive (warm), Anvil = defensive (cool), Scout/Conquest = utility. */
+.troop-role-badge--striker {
+	color: #fda4af;
+	background: rgba(253, 164, 175, 0.1);
+	border-color: rgba(253, 164, 175, 0.25);
+}
+.troop-role-badge--anvil {
+	color: #86efac;
+	background: rgba(134, 239, 172, 0.1);
+	border-color: rgba(134, 239, 172, 0.25);
+}
+.troop-role-badge--scout,
+.troop-role-badge--conquest {
+	color: #c4b5fd;
+	background: rgba(196, 181, 253, 0.1);
+	border-color: rgba(196, 181, 253, 0.25);
 }
 
 .troop-header h5 {
@@ -2794,6 +3021,10 @@
 		flex: 1 1 calc(50% - 6px);
 		min-width: 0;
 		padding: 12px 14px;
+	}
+
+	.buildings-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 
 	.map-tab {
@@ -3943,17 +4174,8 @@
 	padding: 6px 0;
 }
 
-/* ── Nexus header: wrap cleanly on small screens ────────────── */
+/* ── Small screens ──────────────────────────────────────────── */
 @media (max-width: 540px) {
-	.nexus-header h2 {
-		font-size: var(--text-2xl);
-	}
-
-	.nexus-title-row {
-		flex-wrap: wrap;
-		gap: var(--space-2);
-	}
-
 	/* Resource cards: 2-up then full on tiny screens */
 	.resource {
 		padding: 10px 12px;
@@ -4135,26 +4357,6 @@
    ╚══════════════════════════════════════════════════════════════════╝ */
 
 /* ── Page header ───────────────────────────────────────────────── */
-.nexus-header h2 {
-	font-size: clamp(26px, 3vw, 36px);
-	font-weight: 800;
-	letter-spacing: -0.03em;
-	line-height: 1.05;
-	position: relative;
-}
-
-.nexus-header h2::before {
-	content: '// NEXUS · COMMAND';
-	display: block;
-	font-family: var(--font-mono);
-	font-size: 10px;
-	font-weight: 700;
-	letter-spacing: 0.18em;
-	color: var(--accent);
-	text-transform: uppercase;
-	margin-bottom: 6px;
-}
-
 .nexus-rename-btn,
 .nexus-rename-action,
 .nexus-rename-input {
@@ -4221,30 +4423,6 @@
 
 .nexus-type-buff-banner {
 	border-left-color: var(--warning);
-}
-
-/* ── Tab bar ───────────────────────────────────────────────────── */
-.nexus-tab-btn {
-	border-radius: 0;
-	font-family: var(--font-sans);
-	letter-spacing: 0.02em;
-	position: relative;
-}
-
-.nexus-tab-btn.active {
-	background: linear-gradient(180deg, rgba(255, 158, 61, 0.1), var(--bg-app) 80%);
-	color: var(--text-strong);
-}
-
-.nexus-tab-btn.active::before {
-	content: '';
-	position: absolute;
-	left: 0;
-	top: 50%;
-	transform: translateY(-50%);
-	width: 3px;
-	height: 16px;
-	background: var(--accent);
 }
 
 .nexus-tab-badge {
@@ -5490,53 +5668,26 @@
 	font-style: italic;
 }
 
-/* ── "Next action" chip in nexus header ──
-   Persistent breadcrumb sourced from the active intro-chapter quest. Clicking
-   it switches to the relevant tab (or routes to Starfield for map quests). */
-.next-action-chip {
-	/* Block-level flex so the chip occupies its own row inside the
-	   non-flex .nexus-header parent. Previously this was inline-flex, which
-	   put it on the same line as the inline-flex .header-resource-strip and
-	   the chip ended up beside the resource pills. */
-	display: flex;
-	width: fit-content;
-	max-width: 100%;
-	align-items: center;
-	gap: 8px;
-	background: var(--success-soft);
-	border: 1px solid rgba(86, 211, 100, 0.3);
-	border-left: 3px solid var(--success);
-	border-radius: var(--radius-sm);
-	padding: 6px 12px;
-	margin-top: 8px;
-	margin-bottom: var(--space-3);
-	color: var(--text-default);
-	font-size: 13px;
-	cursor: pointer;
-	transition:
-		background var(--duration-fast) var(--ease-out),
-		border-color var(--duration-fast) var(--ease-out);
+/* Overview readability pass */
+.nexus-inner-nav-eyebrow,
+.buff-tag {
+	font-size: 10px;
 }
 
-.next-action-chip:hover {
-	background: rgba(86, 211, 100, 0.12);
-	border-color: rgba(86, 211, 100, 0.55);
-}
-
-.next-action-chip-label {
-	color: var(--success);
-	font-weight: 700;
-	letter-spacing: 0.02em;
-	text-transform: uppercase;
+.production-rate,
+.nexus-type-tier-chip,
+.nexus-stat-label,
+.strikes-card-label {
 	font-size: 11px;
 }
 
-.next-action-chip-title {
-	color: var(--text-strong);
-	font-weight: 600;
+.newbie-protection-banner,
+.newbie-protection-subtext,
+.building-level,
+.building-card-locked-req,
+.troop-locked-req {
+	font-size: 12px;
 }
 
-.next-action-chip-arrow {
-	color: var(--success);
-	font-weight: 700;
-}
+/* The header "Next action" chip was removed — its role is now the right-rail
+   CurrentObjective card (see .objective-card in Game.css). */

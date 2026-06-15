@@ -187,17 +187,17 @@ const ScoutIntelCard: React.FC<ScoutIntelCardProps> = ({ intel, targetName, targ
 				<div className="intel-section-heading">Resources on Hand</div>
 				<div className="intel-resources">
 					<div className="intel-resource-item">
-						<ResourceIcon kind="biomass" size={13} />
+						<ResourceIcon kind="biomass" size={13} labelled={false} />
 						<span className="intel-resource-label">Biomass</span>
 						<span className="intel-resource-value">{intel.resources.biomass.toLocaleString()}</span>
 					</div>
 					<div className="intel-resource-item">
-						<ResourceIcon kind="alloy" size={13} />
+						<ResourceIcon kind="alloy" size={13} labelled={false} />
 						<span className="intel-resource-label">Alloy</span>
 						<span className="intel-resource-value">{intel.resources.alloy.toLocaleString()}</span>
 					</div>
 					<div className="intel-resource-item">
-						<ResourceIcon kind="ore" size={13} />
+						<ResourceIcon kind="ore" size={13} labelled={false} />
 						<span className="intel-resource-label">Ore</span>
 						<span className="intel-resource-value">{intel.resources.ore.toLocaleString()}</span>
 					</div>

@@ -25,12 +25,23 @@ interface StreakData {
 	quests: DailyQuest[];
 }
 
-export default function DailyStreaks({ active = true }: { active?: boolean }) {
+interface DailyStreaksProps {
+	active?: boolean;
+	// 'full' is the rich overview panel (per-quest reward breakdowns). 'rail' is a
+	// condensed version for the persistent left sidebar (beta): same data and
+	// claim action, but it drops the per-quest reward triple and tightens spacing
+	// so it reads as an at-a-glance objectives widget that stays visible across
+	// every tab — not just the overview.
+	variant?: 'full' | 'rail';
+}
+
+export default function DailyStreaks({ active = true, variant = 'full' }: DailyStreaksProps) {
 	const [data, setData] = useState<StreakData | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [claiming, setClaiming] = useState(false);
 	const [collapsed, setCollapsed] = useState(false);
 	const toast = useToast();
+	const isRail = variant === 'rail';
 
 	const load = useCallback(async () => {
 		try {
@@ -82,7 +93,9 @@ export default function DailyStreaks({ active = true }: { active?: boolean }) {
 	const completedCount = data.quests.filter((q) => q.completed).length;
 
 	return (
-		<div className={`daily-streaks${data.claimed && collapsed ? ' daily-streaks--collapsed' : ''}`}>
+		<div
+			className={`daily-streaks${isRail ? ' daily-streaks--rail' : ''}${data.claimed && collapsed ? ' daily-streaks--collapsed' : ''}`}
+		>
 			<div className="daily-streaks-header">
 				{data.currentStreak > 3 && <div className="daily-streaks-fire-bg" />}
 				<div className="daily-streaks-title-row">
@@ -151,17 +164,19 @@ export default function DailyStreaks({ active = true }: { active?: boolean }) {
 										{Math.min(q.progress, q.target)}/{q.target}
 									</span>
 								</div>
-								<div className="daily-quest-reward">
-									<span className="daily-quest-reward-amount">
-										+{q.reward.biomass.toLocaleString()} Biomass
-									</span>
-									<span className="daily-quest-reward-amount">
-										+{q.reward.alloy.toLocaleString()} Alloy
-									</span>
-									<span className="daily-quest-reward-amount">
-										+{q.reward.ore.toLocaleString()} Ore
-									</span>
-								</div>
+								{!isRail && (
+									<div className="daily-quest-reward">
+										<span className="daily-quest-reward-amount">
+											+{q.reward.biomass.toLocaleString()} Biomass
+										</span>
+										<span className="daily-quest-reward-amount">
+											+{q.reward.alloy.toLocaleString()} Alloy
+										</span>
+										<span className="daily-quest-reward-amount">
+											+{q.reward.ore.toLocaleString()} Ore
+										</span>
+									</div>
+								)}
 							</div>
 						))}
 					</div>

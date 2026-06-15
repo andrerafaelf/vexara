@@ -1,0 +1,202 @@
+.cc-backdrop {
+	position: fixed;
+	inset: 0;
+	z-index: 9998;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(0, 0, 0, 0.8);
+	backdrop-filter: blur(6px);
+	animation: cc-fade-in 0.35s ease;
+}
+
+@keyframes cc-fade-in {
+	from { opacity: 0; }
+	to   { opacity: 1; }
+}
+
+.cc-modal {
+	background: var(--bg-surface);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: var(--radius-lg);
+	max-width: 460px;
+	width: 92vw;
+	overflow: hidden;
+	animation: cc-scale-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes cc-scale-in {
+	from { transform: scale(0.88); opacity: 0; }
+	to   { transform: scale(1);    opacity: 1; }
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+.cc-header {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-8) var(--space-6) var(--space-6);
+	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+	text-align: center;
+}
+
+.cc-header--victory {
+	background: linear-gradient(160deg, rgba(255, 196, 0, 0.08) 0%, transparent 60%);
+}
+
+.cc-header--defeat {
+	background: linear-gradient(160deg, rgba(100, 130, 180, 0.07) 0%, transparent 60%);
+}
+
+.cc-header-icon {
+	color: var(--accent);
+	opacity: 0.9;
+	margin-bottom: var(--space-1);
+}
+
+.cc-header--defeat .cc-header-icon {
+	color: var(--text-muted);
+}
+
+.cc-eyebrow {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--accent);
+}
+
+.cc-header--defeat .cc-eyebrow {
+	color: var(--text-muted);
+}
+
+.cc-galaxy-name {
+	font-size: var(--text-2xl);
+	font-weight: 800;
+	color: var(--text-strong);
+	margin: 0;
+	letter-spacing: 0.03em;
+}
+
+/* ── Body ────────────────────────────────────────────────── */
+.cc-body {
+	padding: var(--space-5) var(--space-6);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+}
+
+.cc-winner-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	font-size: var(--text-sm);
+	color: var(--text-muted);
+}
+
+.cc-winner-row svg {
+	color: var(--accent);
+	flex-shrink: 0;
+}
+
+.cc-winner-row strong {
+	color: var(--text-default);
+}
+
+.cc-title-awarded {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	background: rgba(255, 196, 0, 0.06);
+	border: 1px solid rgba(255, 196, 0, 0.2);
+	border-radius: var(--radius-md);
+	padding: var(--space-2) var(--space-4);
+}
+
+.cc-title-awarded-label {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--text-muted);
+}
+
+.cc-title-awarded-value {
+	font-size: var(--text-sm);
+	font-weight: 700;
+	color: var(--accent);
+	letter-spacing: 0.04em;
+}
+
+.cc-stats-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: var(--space-3);
+}
+
+.cc-stat {
+	background: var(--bg-elevated);
+	border: 1px solid rgba(255, 255, 255, 0.05);
+	border-radius: var(--radius-md);
+	padding: var(--space-3) var(--space-4);
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.cc-stat-label {
+	font-size: 10px;
+	font-family: var(--font-mono);
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--text-muted);
+}
+
+.cc-stat-value {
+	font-size: var(--text-xl);
+	font-weight: 700;
+	color: var(--text-strong);
+	font-variant-numeric: tabular-nums;
+}
+
+/* ── Actions ─────────────────────────────────────────────── */
+.cc-actions {
+	padding: var(--space-4) var(--space-6) var(--space-6);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.cc-btn {
+	width: 100%;
+	padding: var(--space-3) var(--space-4);
+	border-radius: var(--radius-sm);
+	font-weight: 700;
+	font-size: var(--text-sm);
+	letter-spacing: 0.04em;
+	cursor: pointer;
+	transition: background 0.15s, opacity 0.15s;
+	text-align: center;
+}
+
+.cc-btn--primary {
+	background: var(--accent);
+	color: var(--bg-base);
+	border: none;
+}
+
+.cc-btn--primary:hover {
+	opacity: 0.88;
+}
+
+.cc-btn--ghost {
+	background: transparent;
+	color: var(--text-muted);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cc-btn--ghost:hover {
+	background: rgba(255, 255, 255, 0.04);
+	color: var(--text-default);
+}

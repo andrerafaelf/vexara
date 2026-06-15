@@ -3,6 +3,7 @@
 import React from 'react';
 import { useNow } from '@/hooks/useNow';
 import { useFlashOnChange } from '@/realtime/useFlashOnChange';
+import ResourceIcon from './ResourceIcon';
 
 interface LiveResourceStripProps {
 	baseResources: { biomass: number; alloy: number; ore: number };
@@ -12,6 +13,8 @@ interface LiveResourceStripProps {
 	storageCapacity: number;
 	/** Timestamp of the last server-side resource snapshot (anchor for interpolation). */
 	lastResourceUpdate?: string | Date | null;
+	/** Compact flat-row layout for tight spaces (e.g. mobile header). */
+	compact?: boolean;
 }
 
 function fmt(v: number): string {
@@ -33,7 +36,8 @@ function LiveResourceStripInner({
 	baseResources,
 	production,
 	storageCapacity,
-	lastResourceUpdate
+	lastResourceUpdate,
+	compact = false
 }: LiveResourceStripProps) {
 	const now = useNow();
 	const anchorMs = lastResourceUpdate
@@ -66,6 +70,26 @@ function LiveResourceStripInner({
 		},
 		{ key: 'ore', label: 'ORE', val: Math.min(storageCapacity, live.ore), rate: production.ore }
 	] as const;
+	if (compact) {
+		return (
+			<div className="header-res-compact-strip">
+				{entries.map(({ key, label, val }) => {
+					const ratio = val / storageCapacity;
+					const fullCls = ratio >= 0.98 ? 'header-res-full' : ratio >= 0.85 ? 'header-res-near' : '';
+					return (
+						<div
+							key={key}
+							className={`header-res-compact header-res-${key} ${fullCls}${flashFresh ? ' header-res-flash' : ''}`}
+						>
+							<ResourceIcon kind={key} size={18} className="header-res-icon" labelled={false} />
+							<span className="header-res-compact-value">{fmt(val)}</span>
+						</div>
+					);
+				})}
+			</div>
+		);
+	}
+
 	return (
 		<div className="header-resource-strip">
 			{entries.map(({ key, label, val, rate }) => {
@@ -76,7 +100,12 @@ function LiveResourceStripInner({
 						key={key}
 						className={`header-res header-res-${key} ${fullCls}${flashFresh ? ' header-res-flash' : ''}`}
 					>
-						<span className="header-res-label">{label}</span>
+						{/* The written-out resource name is replaced by its icon; hovering
+						    the icon shows the name (title tooltip). label retained only as
+						    the icon's accessible fallback context. */}
+						<span className="header-res-label" aria-label={label}>
+							<ResourceIcon kind={key} size={38} className="header-res-icon" />
+						</span>
 						<span className="header-res-value">
 							{fmt(val)}
 							<span style={{ fontSize: '0.65em', opacity: 0.6, fontWeight: 400 }}>

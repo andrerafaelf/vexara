@@ -1,4 +1,4 @@
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { invalidateAuthCache } from '../middleware/auth.js';
 import prisma from '../lib/prisma.js';
 import * as galaxyService from '../services/galaxyService.js';
@@ -17,6 +17,7 @@ function serializeGalaxy(
 		winnerFactionId?: number | null;
 		createdAt: Date;
 		isLocked?: boolean;
+		speedMultiplier?: number | null;
 	},
 	opts: { isJoined?: boolean } = {}
 ) {
@@ -30,6 +31,7 @@ function serializeGalaxy(
 		winnerFactionId: g.winnerFactionId ?? null,
 		createdAt: g.createdAt,
 		isLocked: g.isLocked ?? false,
+		speedMultiplier: g.speedMultiplier ?? 1.0,
 		isJoined: opts.isJoined ?? false
 	};
 }
@@ -363,6 +365,81 @@ export async function leaveGalaxy(req: AuthRequest, res: Response): Promise<void
 	}
 }
 
+// Public — no auth required. Returns the 20 most recent ended galaxies, each
+// with their winning faction and top 3 commanders by points.
+export async function getHallOfFame(_req: Request, res: Response): Promise<void> {
+	try {
+		const ended = await prisma.galaxy.findMany({
+			where: { status: 'ended' },
+			orderBy: { endedAt: 'desc' },
+			take: 20,
+			select: {
+				id: true,
+				name: true,
+				endedAt: true,
+				winnerFactionId: true
+			}
+		});
+
+		const galaxyIds = ended.map((g) => g.id);
+
+		const [factions, records] = await Promise.all([
+			prisma.faction.findMany({
+				where: { id: { in: ended.map((g) => g.winnerFactionId).filter(Boolean) as number[] } },
+				select: { id: true, name: true, tag: true }
+			}),
+			prisma.seasonRecord.findMany({
+				where: { galaxyId: { in: galaxyIds } },
+				orderBy: [{ galaxyId: 'asc' }, { points: 'desc' }],
+				select: {
+					galaxyId: true,
+					points: true,
+					won: true,
+					factionName: true,
+					factionTag: true,
+					user: { select: { id: true, username: true, avatarKey: true } }
+				}
+			})
+		]);
+
+		const factionById = new Map(factions.map((f) => [f.id, f]));
+
+		// Group records by galaxy, keep top 3 per galaxy
+		const recordsByGalaxy = new Map<number, typeof records>();
+		for (const r of records) {
+			const list = recordsByGalaxy.get(r.galaxyId) ?? [];
+			if (list.length < 3) list.push(r);
+			recordsByGalaxy.set(r.galaxyId, list);
+		}
+
+		const seasons = ended.map((g) => ({
+			id: g.id,
+			name: g.name,
+			endedAt: g.endedAt,
+			winnerFaction: g.winnerFactionId ? (factionById.get(g.winnerFactionId) ?? null) : null,
+			topCommanders: (recordsByGalaxy.get(g.id) ?? []).map((r, i) => ({
+				rank: i + 1,
+				userId: r.user.id,
+				username: r.user.username,
+				avatarUrl: avatarUrl(r.user.id, r.user.avatarKey),
+				points: r.points,
+				won: r.won,
+				factionName: r.factionName,
+				factionTag: r.factionTag
+			}))
+		}));
+
+		res.setHeader('Cache-Control', 'public, max-age=300');
+		res.json({ seasons });
+	} catch (error) {
+		logError('unhandled_controller_error', {
+			message: (error as Error).message,
+			file: 'galaxyController.ts'
+		});
+		res.status(500).json({ error: 'Internal server error' });
+	}
+}
+
 export async function selectGalaxy(req: AuthRequest, res: Response): Promise<void> {
 	try {
 		const galaxyId = parseInt(req.params.id, 10);
@@ -401,6 +478,61 @@ export async function selectGalaxy(req: AuthRequest, res: Response): Promise<voi
 			joined: result.joined,
 			activeGalaxy: serializeGalaxy(galaxy, { isJoined: true })
 		});
+	} catch (error) {
+		logError('unhandled_controller_error', {
+			message: (error as Error).message,
+			file: 'galaxyController.ts'
+		});
+		res.status(500).json({ error: 'Internal server error' });
+	}
+}
+
+// POST /api/galaxies/:id/alert
+// Register an email to be notified when a pending galaxy goes live.
+// Works for both authenticated users (email auto-filled) and guests (email in body).
+export async function registerGalaxyAlert(req: AuthRequest, res: Response): Promise<void> {
+	try {
+		const galaxyId = parseInt(req.params.id, 10);
+		if (!Number.isFinite(galaxyId)) {
+			res.status(400).json({ error: 'Invalid galaxy id' });
+			return;
+		}
+
+		// Resolve email: from auth token if logged in, else from request body
+		let email: string | undefined;
+		if (req.userId) {
+			const user = await prisma.user.findUnique({
+				where: { id: req.userId },
+				select: { email: true }
+			});
+			email = user?.email;
+		}
+		if (!email) {
+			const body = req.body as { email?: string };
+			email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : undefined;
+		}
+		if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+			res.status(400).json({ error: 'A valid email address is required' });
+			return;
+		}
+
+		const galaxy = await prisma.galaxy.findUnique({ where: { id: galaxyId } });
+		if (!galaxy) {
+			res.status(404).json({ error: 'Galaxy not found' });
+			return;
+		}
+		if (!galaxy.startsAt || new Date(galaxy.startsAt) <= new Date()) {
+			res.status(400).json({ error: 'This galaxy is already live' });
+			return;
+		}
+
+		await prisma.galaxyAlert.upsert({
+			where: { galaxyId_email: { galaxyId, email } },
+			create: { galaxyId, email },
+			update: {}
+		});
+
+		res.json({ success: true });
 	} catch (error) {
 		logError('unhandled_controller_error', {
 			message: (error as Error).message,

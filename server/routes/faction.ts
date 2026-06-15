@@ -5,6 +5,7 @@ import * as warController from '../controllers/factionWarController.js';
 import * as treatyController from '../controllers/factionTreatyController.js';
 import * as diplomacyChatController from '../controllers/diplomacyChatController.js';
 import * as targetController from '../controllers/factionTargetController.js';
+import * as treasuryController from '../controllers/factionTreasuryController.js';
 import auth from '../middleware/auth.js';
 import type { AuthRequest } from '../types/index.js';
 
@@ -125,6 +126,17 @@ router.post('/:id/chat', auth, (req, res) =>
 );
 router.get('/:id/events', auth, (req, res) =>
 	factionController.getEvents(req as AuthRequest, res as Response)
+);
+
+// Treasury
+router.get('/:id/treasury', auth, (req, res) =>
+	treasuryController.getTreasury(req as AuthRequest, res as Response)
+);
+router.post('/:id/treasury/donate', auth, (req, res) =>
+	treasuryController.donate(req as AuthRequest, res as Response)
+);
+router.post('/:id/treasury/spend', auth, (req, res) =>
+	treasuryController.spend(req as AuthRequest, res as Response)
 );
 
 // War list + declare

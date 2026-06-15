@@ -29,10 +29,13 @@ export function badgeIcon(key: string): string {
 	return `${CDN_BASE}/badges/${key}.webp`;
 }
 
-// Alpha Player: granted to early/founding players (isAlphaFounder).
+// Alpha Player: granted to early/founding players (isAlphaFounder). Permanent historical badge.
 export const ALPHA_PLAYER_BADGE = badgeIcon('alphaPlayer_nobg_trimmed');
-// Alpha Commander: granted to the top "commander" supporter tier.
+// Alpha Commander: granted to commander-tier supporters during alpha. Frozen — no new grants after 28 Jun 2026.
 export const ALPHA_COMMANDER_BADGE = badgeIcon('alphaCommander_nobg_trimmed');
+// Vanguard: replaces Alpha Commander for new commander-tier supporters from 28 Jun 2026 onwards.
+// Upload badge art to cdn.vexara.world/badges/vanguard_nobg_trimmed.webp to activate.
+export const VANGUARD_BADGE = badgeIcon('vanguard_nobg_trimmed');
 
 const TROOP_KEYS = [
 	'assaultTrooper',

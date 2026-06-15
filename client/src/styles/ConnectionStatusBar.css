@@ -54,6 +54,13 @@
 	background: rgba(255, 255, 255, 0.16);
 }
 
+@media (max-width: 768px) {
+	.connection-status-action {
+		min-height: 44px;
+		padding: 0 0.9rem;
+	}
+}
+
 @keyframes connection-status-slide-in {
 	from {
 		transform: translateY(-100%);

@@ -4,6 +4,7 @@ import type { AuthRequest } from '../types/index.js';
 import { logError } from '../utils/logger.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
 import { notifyBadgeUpdate } from '../services/warRoomSocket.js';
+import { grantPassXp } from '../utils/battlePass.js';
 
 const TREATY_LABELS: Record<string, string> = {
 	nap: 'Non-Aggression Pact',
@@ -203,6 +204,14 @@ export async function acceptTreaty(req: AuthRequest, res: Response): Promise<voi
 			`[${member.faction.tag}] ${member.faction.name} accepted your ${TREATY_LABELS[treaty.type] ?? treaty.type}.`,
 			`treaty-accepted-${treaty.id}`
 		);
+
+		// Battle pass XP for both sides when a treaty is signed
+		void grantPassXp(req.userId, req.galaxyId, 'DIPLOMATIC_TREATY');
+		const proposerLeader = await prisma.factionMember.findFirst({
+			where: { factionId: treaty.proposerFactionId, galaxyId: req.galaxyId, role: 'leader' },
+			select: { userId: true }
+		});
+		if (proposerLeader) void grantPassXp(proposerLeader.userId, req.galaxyId, 'DIPLOMATIC_TREATY');
 
 		res.json(updated);
 	} catch (error) {

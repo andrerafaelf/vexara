@@ -157,17 +157,20 @@ export function getNexusTypeEffectiveMultipliers(nexus: NexusForEconomy): NexusT
 
 export function computeResourceUpdate(
 	nexus: NexusForEconomy,
-	storm?: StormBonus
+	storm?: StormBonus,
+	speedMultiplier = 1.0,
+	productionBoostPct = 0
 ): ResourceAmounts & { lastResourceUpdate: Date } {
 	const now = new Date();
 	const hoursSinceLastUpdate =
-		(now.getTime() - nexus.lastResourceUpdate.getTime()) / (1000 * 60 * 60);
+		((now.getTime() - nexus.lastResourceUpdate.getTime()) / (1000 * 60 * 60)) * speedMultiplier;
 	const production = getResourceProduction(nexus, storm);
+	const boostMult = 1 + productionBoostPct / 100;
 	const maxStorage = getMaxStorage(nexus);
 	return {
-		biomass: Math.min(nexus.biomass + production.biomass * hoursSinceLastUpdate, maxStorage),
-		alloy: Math.min(nexus.alloy + production.alloy * hoursSinceLastUpdate, maxStorage),
-		ore: Math.min(nexus.ore + production.ore * hoursSinceLastUpdate, maxStorage),
+		biomass: Math.min(nexus.biomass + production.biomass * boostMult * hoursSinceLastUpdate, maxStorage),
+		alloy: Math.min(nexus.alloy + production.alloy * boostMult * hoursSinceLastUpdate, maxStorage),
+		ore: Math.min(nexus.ore + production.ore * boostMult * hoursSinceLastUpdate, maxStorage),
 		lastResourceUpdate: now
 	};
 }

@@ -10,6 +10,18 @@ export interface User {
 	isAlphaFounder?: boolean;
 	avatarUrl?: string | null;
 	avatarUrlSm?: string | null;
+	galaxiesWon?: number;
+	galaxiesPlayed?: number;
+	lifetimePoints?: number;
+	vexPoints?: number;
+	passTitle?: string | null;
+	earnedBadges?: string[];
+	earnedTitles?: string[];
+	activeTitle?: string | null;
+	avatarBorder?: string | null;
+	commanderTitle?: string | null;
+	beginnerTipsEnabled?: boolean;
+	onboardingStep?: string | null;
 }
 
 export interface TimelineDay {
@@ -33,6 +45,10 @@ export interface UserStats {
 	isAlphaFounder?: boolean;
 	avatarUrl?: string | null;
 	avatarUrlSm?: string | null;
+	earnedBadges?: string[];
+	earnedTitles?: string[];
+	activeTitle?: string | null;
+	avatarBorder?: string | null;
 	points: number;
 	accountAgeDays: number;
 	nexusCount: number;
@@ -140,6 +156,7 @@ export interface Nexus {
 	conqueredAt?: string | null;
 	intelLevel?: 'public' | 'scouted' | 'owned';
 	scoutedAt?: string;
+	totalTroops?: number;
 }
 
 export interface MarketListing {

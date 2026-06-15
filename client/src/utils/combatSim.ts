@@ -77,6 +77,137 @@ export const CLASS_COUNTERS: Record<TroopClass, Record<TroopClass, number>> = {
 	special: { mobile: 1.0, armor: 1.0, fire: 1.0, special: 1.0 }
 };
 
+// ─── Combat legibility (beta, UI-only) ──────────────────────────────────────
+// Pure read-side helpers over the canonical stat/counter tables above. They make
+// the existing meta legible to new players — what a unit's job is and which class
+// beats which — without touching any balance number. Derived from TROOP_STATS /
+// CLASS_COUNTERS so they can never drift from the real math.
+
+export type TroopRole = 'striker' | 'anvil' | 'scout' | 'conquest';
+
+// A unit's battlefield role. Special-class units have dedicated jobs (recon =
+// scout, overseer = conquest); everyone else is classified by whether their
+// stat budget leans into attack (striker) or defense (anvil). This mirrors the
+// design intent spelled out in server/utils/combatMath.ts: "defend with anvils,
+// attack with strikers."
+export function troopRole(key: TroopKey): TroopRole {
+	if (key === 'reconOperative') return 'scout';
+	if (key === 'overseer') return 'conquest';
+	const { attack, defense } = TROOP_STATS[key];
+	return attack >= defense ? 'striker' : 'anvil';
+}
+
+export const TROOP_ROLE_META: Record<TroopRole, { label: string; title: string }> = {
+	striker: {
+		label: 'Striker',
+		title: 'Striker — high attack, low defense. Send these on attacks; they make poor garrisons.'
+	},
+	anvil: {
+		label: 'Anvil',
+		title: 'Anvil — high defense, low attack. Keep these home to hold your nexus.'
+	},
+	scout: { label: 'Scout', title: 'Scout — gathers intel on enemy nexuses. Send before you strike.' },
+	conquest: {
+		label: 'Conquest',
+		title: 'Conquest — reduces enemy Control on a successful strike. Not a frontline fighter.'
+	}
+};
+
+// Which class a class beats / loses to, for at-a-glance matchup glyphs. Returns
+// null entries for 'special' (no counters in either direction).
+export function classMatchup(cls: TroopClass): { beats: TroopClass | null; losesTo: TroopClass | null } {
+	if (cls === 'special') return { beats: null, losesTo: null };
+	const row = CLASS_COUNTERS[cls];
+	const beats = (Object.keys(row) as TroopClass[]).find((c) => row[c] > 1.0) ?? null;
+	// "Loses to" = the class whose attack row counters us.
+	const losesTo =
+		(['mobile', 'armor', 'fire'] as TroopClass[]).find(
+			(c) => c !== cls && CLASS_COUNTERS[c][cls] > 1.0
+		) ?? null;
+	return { beats, losesTo };
+}
+
+// Aggregate attacker-vs-defender class relation for the pre-attack matchup hint
+// (C3). Compares the class-weighted attack the attacker force would deal against
+// the defender composition vs. a class-neutral baseline; > 1 means the
+// attacker's composition is favoured by the triangle, < 1 means it's countered.
+// Reads classWeightedAttack (defined below) so it always tracks the real model.
+export type MatchupVerdict = 'favored' | 'even' | 'countered';
+export function attackMatchupVerdict(attackers: Force, defenders: Force): MatchupVerdict {
+	const weighted = classWeightedAttack(attackers, defenders);
+	const neutral = forcePower(attackers, 'attack');
+	if (neutral <= 0) return 'even';
+	const ratio = weighted / neutral;
+	if (ratio >= 1.06) return 'favored';
+	if (ratio <= 0.94) return 'countered';
+	return 'even';
+}
+
+// Human-readable class-composition summary for a force, for places where we know
+// the attacker's own troops but NOT the defender's (e.g. the War Room, where the
+// operation carries the target but no scouted garrison). Reports the dominant
+// fighting class as a percentage and flags a lopsided force as vulnerable to the
+// class that counters it — the most common War Room mistake is pledging a
+// single-class wave that a defender can hard-counter. 'special' units (scouts /
+// overseers) are excluded from the fighting mix. UI-only; no balance impact.
+const CLASS_LABEL: Record<TroopClass, string> = {
+	mobile: 'Mobile',
+	armor: 'Armor',
+	fire: 'Fire',
+	special: 'Special'
+};
+export interface CompositionSummary {
+	// Fighting-class ratios (mobile/armor/fire), re-normalized to exclude special.
+	ratios: Record<'mobile' | 'armor' | 'fire', number>;
+	dominant: 'mobile' | 'armor' | 'fire' | null;
+	dominantPct: number; // 0..1 share of the fighting force in the dominant class
+	// Non-null when the force is lopsided enough (>=70% one class) to be hard-
+	// countered: the class that beats the dominant one.
+	vulnerableTo: TroopClass | null;
+	label: string; // e.g. "100% Mobile" or "Mixed (Mobile/Fire)"
+}
+export function describeComposition(force: Force): CompositionSummary {
+	const counts = { mobile: 0, armor: 0, fire: 0 };
+	let fighting = 0;
+	for (const k of TROOP_KEYS) {
+		const n = force[k] || 0;
+		if (n <= 0) continue;
+		const cls = TROOP_CLASS[k];
+		if (cls === 'special') continue;
+		counts[cls] += n;
+		fighting += n;
+	}
+	if (fighting === 0) {
+		return {
+			ratios: { mobile: 0, armor: 0, fire: 0 },
+			dominant: null,
+			dominantPct: 0,
+			vulnerableTo: null,
+			label: 'No fighting units'
+		};
+	}
+	const ratios = {
+		mobile: counts.mobile / fighting,
+		armor: counts.armor / fighting,
+		fire: counts.fire / fighting
+	};
+	const dominant = (['mobile', 'armor', 'fire'] as const).reduce((a, b) =>
+		ratios[b] > ratios[a] ? b : a
+	);
+	const dominantPct = ratios[dominant];
+	const present = (['mobile', 'armor', 'fire'] as const).filter((c) => ratios[c] > 0);
+	const label =
+		dominantPct >= 0.99
+			? `100% ${CLASS_LABEL[dominant]}`
+			: present.length === 1
+				? `${Math.round(dominantPct * 100)}% ${CLASS_LABEL[dominant]}`
+				: `Mixed (${present.map((c) => CLASS_LABEL[c]).join('/')})`;
+	// Lopsided (>=70% one class) → flag the class that hard-counters it.
+	const vulnerableTo =
+		dominantPct >= 0.7 ? classMatchup(dominant).losesTo : null;
+	return { ratios, dominant, dominantPct, vulnerableTo, label };
+}
+
 // Defender-side counter spread (milder than the attack side's 1.35/0.75 so the
 // attacker keeps a slight initiative). Mirror of server combatMath
 // DEF_COUNTER_ADVANTAGE / DEF_COUNTER_DISADVANTAGE.

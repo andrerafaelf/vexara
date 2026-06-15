@@ -1,7 +1,13 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { getGalaxies, getGalaxyWinResults, leaveGalaxy, selectGalaxy } from '../services/api';
+import {
+	getGalaxies,
+	getGalaxyWinResults,
+	leaveGalaxy,
+	registerGalaxyAlert,
+	selectGalaxy
+} from '../services/api';
 import { serverNow } from '../realtime/serverClock';
 import Username from './Username';
 import '../styles/GalaxyPicker.css';
@@ -17,6 +23,7 @@ export interface Galaxy {
 	createdAt: string;
 	isLocked: boolean;
 	isJoined: boolean;
+	speedMultiplier?: number;
 }
 
 interface FactionEntry {
@@ -105,6 +112,10 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
 	// `now` is server-anchored so the start-countdown stays accurate even if
 	// the local clock drifts. startsAt and endedAt are server-issued.
 	const [now, setNow] = useState(() => serverNow());
+	// Per-galaxy alert opt-in state. 'input' = showing email form, 'done' = registered.
+	const [alertState, setAlertState] = useState<Record<number, 'input' | 'done' | 'loading'>>({});
+	const [alertEmail, setAlertEmail] = useState<Record<number, string>>({});
+	const isLoggedIn = typeof window !== 'undefined' && !!localStorage.getItem('token');
 
 	useEffect(() => {
 		const hasUpcoming = galaxies.some(
@@ -170,6 +181,16 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
 	const requestLeave = (galaxy: Galaxy) => {
 		setLeaveTarget(galaxy);
 		setLeaveStep(1);
+	};
+
+	const doAlert = async (galaxyId: number, email?: string) => {
+		setAlertState((s) => ({ ...s, [galaxyId]: 'loading' }));
+		try {
+			await registerGalaxyAlert(galaxyId, email);
+			setAlertState((s) => ({ ...s, [galaxyId]: 'done' }));
+		} catch {
+			setAlertState((s) => ({ ...s, [galaxyId]: 'input' }));
+		}
 	};
 
 	const doLeave = async () => {
@@ -264,6 +285,9 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
 										{g.isJoined && !isEnded && !isPending && (
 											<span className="gp-card-tag gp-card-tag-joined">Joined</span>
 										)}
+										{g.speedMultiplier != null && g.speedMultiplier > 1 && (
+											<span className="gp-card-tag gp-card-tag-speed">{g.speedMultiplier}×</span>
+										)}
 									</div>
 									<div className="gp-card-meta">
 										{isPending ? (
@@ -285,6 +309,39 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
 									{isPending && g.startsAt && (
 										<div className="gp-card-tz">{formatStartZones(g.startsAt)}</div>
 									)}
+									{isPending && (() => {
+										const st = alertState[g.id];
+										if (st === 'done') {
+											return <div className="gp-alert-done">✓ We'll email you when it's live</div>;
+										}
+										if (st === 'input') {
+											return (
+												<form
+													className="gp-alert-form"
+													onSubmit={(e) => {
+														e.preventDefault();
+														void doAlert(g.id, alertEmail[g.id]);
+													}}
+												>
+													<input
+														className="gp-alert-input"
+														type="email"
+														placeholder="your@email.com"
+														value={alertEmail[g.id] ?? ''}
+														onChange={(e) =>
+															setAlertEmail((m) => ({ ...m, [g.id]: e.target.value }))
+														}
+														required
+														autoFocus
+													/>
+													<button className="gp-btn gp-btn-alert" type="submit">
+														Notify me
+													</button>
+												</form>
+											);
+										}
+										return null;
+									})()}
 								</div>
 								<div className="gp-card-actions">
 									{isRecentlyEnded && (
@@ -296,6 +353,29 @@ const GalaxyPicker: React.FC<Props> = ({ forced = false, onClose, onSelected }) 
 											{loadingWin ? '...' : 'Results'}
 										</button>
 									)}
+									{isPending && (() => {
+										const st = alertState[g.id];
+										if (st === 'done') return null;
+										if (st === 'loading') {
+											return <button className="gp-btn gp-btn-alert" disabled>…</button>;
+										}
+										if (st === 'input') return null;
+										// Not yet triggered — show the button
+										return (
+											<button
+												className="gp-btn gp-btn-alert"
+												onClick={() => {
+													if (isLoggedIn) {
+														void doAlert(g.id);
+													} else {
+														setAlertState((s) => ({ ...s, [g.id]: 'input' }));
+													}
+												}}
+											>
+												Notify me
+											</button>
+										);
+									})()}
 									{!isEnded && (
 										<button
 											className={`gp-btn ${isPending || isJoinLocked ? 'gp-btn-pending' : 'gp-btn-primary'}`}

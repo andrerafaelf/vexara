@@ -64,8 +64,12 @@ export default function OnboardingOverlay() {
 	// next modal (patch notes) once tips are disabled or all steps are done.
 	const canShow = useModalSlot('onboarding', currentStep !== null);
 
+	const isPanel = currentStep?.kind === 'panel';
+
 	useEffect(() => {
-		if (!currentStep || !canShow) {
+		if (!currentStep || !canShow || isPanel) {
+			// Panel steps have no spotlight target, so skip all the rect/scroll
+			// tracking and let the centered-card branch below render directly.
 			setRect(null);
 			lastScrolledStepRef.current = null;
 			lastScrollAtRef.current = 0;
@@ -133,9 +137,41 @@ export default function OnboardingOverlay() {
 
 		rafRef.current = requestAnimationFrame(update);
 		return () => cancelAnimationFrame(rafRef.current);
-	}, [currentStep, canShow]);
+	}, [currentStep, canShow, isPanel]);
 
-	if (!currentStep || !canShow || rect === null) return null;
+	if (!currentStep || !canShow) return null;
+
+	// Panel steps are target-less concept beats — render a centered card with no
+	// spotlight cutout. Same actions (Got it / Disable tips) as the spotlight
+	// tooltip so progression is consistent.
+	if (isPanel) {
+		return (
+			<div className="ob-root ob-root--panel" aria-live="polite">
+				<div className="ob-backdrop ob-backdrop--panel" />
+				<div className="ob-tooltip ob-panel-card" role="dialog" aria-modal="false">
+					<button className="ob-close" onClick={dismiss} aria-label="Dismiss tip">
+						<X size={14} />
+					</button>
+					<div className="ob-step-label">
+						Step {ONBOARDING_STEPS.findIndex((s) => s.id === currentStep.id) + 1} of{' '}
+						{ONBOARDING_STEPS.length}
+					</div>
+					{currentStep.title && <div className="ob-title">{currentStep.title}</div>}
+					<p className="ob-message">{currentStep.message}</p>
+					<div className="ob-actions">
+						<button className="ob-btn ob-btn--ghost" onClick={disableTips}>
+							Disable tips
+						</button>
+						<button className="ob-btn ob-btn--primary" onClick={advance}>
+							Got it
+						</button>
+					</div>
+				</div>
+			</div>
+		);
+	}
+
+	if (rect === null) return null;
 
 	// Past this point the spotlight target is present in the DOM, so we render
 	// a focused spotlight rather than a centered fallback bubble. The fallback
@@ -184,9 +220,21 @@ export default function OnboardingOverlay() {
 				className={`ob-tooltip ob-tooltip--${tooltipSide}`}
 				style={{
 					position: 'fixed',
-					left: Math.min(Math.max(rect.left + rect.width / 2 - 160, 16), window.innerWidth - 336),
+					left: Math.min(
+						Math.max(rect.left + rect.width / 2 - 160, 16),
+						window.innerWidth - 336 - 16
+					),
 					...(tooltipSide === 'bottom'
-						? { top: rect.top + rect.height + 14 }
+						? {
+								// On mobile the bottom nav is ~56px + safe area. Clamp the tooltip
+								// so it never renders behind it. CSS env() isn't available in JS so
+								// we use 80px as a safe floor that covers nav + safe area on all
+								// current phones (iPhone safe area is ≤34px).
+								top: Math.min(
+									rect.top + rect.height + 14,
+									window.innerHeight - 200 - (window.innerWidth <= 768 ? 80 : 0)
+								)
+							}
 						: { bottom: window.innerHeight - rect.top + 14 })
 				}}
 			>

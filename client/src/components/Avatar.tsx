@@ -17,6 +17,8 @@ interface AvatarProps {
 	px?: number;
 	/** Hide from screen readers (use when adjacent text already names the user). */
 	ariaHidden?: boolean;
+	/** Shop border key (e.g. "border_plasma_arc"). Wraps avatar in a bordered div. */
+	borderKey?: string | null;
 }
 
 const SIZE_PX: Record<Size, number> = {
@@ -42,7 +44,8 @@ const Avatar: React.FC<AvatarProps> = ({
 	size = 'md',
 	className,
 	px,
-	ariaHidden
+	ariaHidden,
+	borderKey,
 }) => {
 	const dim = px ?? SIZE_PX[size];
 	const isSmall = (px ?? SIZE_PX[size]) <= SIZE_PX.sm;
@@ -55,24 +58,24 @@ const Avatar: React.FC<AvatarProps> = ({
 
 	const cls = ['vx-avatar', className].filter(Boolean).join(' ');
 
-	if (src) {
-		return (
-			<img
-				src={src}
-				alt={ariaHidden ? '' : `${username}'s avatar`}
-				width={dim}
-				height={dim}
-				loading="lazy"
-				decoding="async"
-				draggable={false}
-				className={cls}
-				style={style}
-				aria-hidden={ariaHidden || undefined}
-			/>
-		);
-	}
+	const borderCssClass = borderKey
+		? borderKey.replace('border_', '').replace(/_/g, '-')
+		: null;
 
-	return (
+	const inner = src ? (
+		<img
+			src={src}
+			alt={ariaHidden ? '' : `${username}'s avatar`}
+			width={dim}
+			height={dim}
+			loading="lazy"
+			decoding="async"
+			draggable={false}
+			className={cls}
+			style={style}
+			aria-hidden={ariaHidden || undefined}
+		/>
+	) : (
 		<div
 			className={cls}
 			style={style}
@@ -80,6 +83,25 @@ const Avatar: React.FC<AvatarProps> = ({
 			aria-label={ariaHidden ? undefined : `${username}'s avatar`}
 		>
 			{initialFor(username)}
+		</div>
+	);
+
+	if (!borderCssClass) return inner;
+
+	// Image-based borders are PNG frames overlaid via ::before at inset:0, so the
+	// border is exactly the same box as the avatar — no padding, no extra size.
+	return (
+		<div
+			className={`vx-avatar-bordered border-${borderCssClass}`}
+			style={{
+				width: dim,
+				height: dim,
+				flexShrink: 0
+			}}
+		>
+			<div className="vx-avatar-clip" style={{ width: dim, height: dim }}>
+				{inner}
+			</div>
 		</div>
 	);
 };

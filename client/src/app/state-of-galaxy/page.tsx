@@ -140,7 +140,7 @@ export default async function StateOfGalaxyPage() {
 					<h1 className="gp-title">Vexara - Live Galaxy Status</h1>
 					<p className="gp-subtitle">
 						Real-time status of the Vexara MMO galaxy: active commanders, ongoing battles, top
-						factions, and recent conquests. Free in the browser. No download, no resets, no
+						factions, and recent conquests. Free in the browser. No download, no account wipes, no
 						pay-to-win.
 					</p>
 					<p className="gp-updated">
@@ -246,22 +246,39 @@ export default async function StateOfGalaxyPage() {
 						<div className="gp-step">
 							<div className="gp-step-num">01</div>
 							<div className="gp-step-body">
-								<h3 className="gp-step-title">Claim your starter nexus</h3>
+								<h3 className="gp-step-title">Your first build takes ~25 seconds</h3>
 								<p className="gp-step-text">
-									You start protected, with guided quests and a one-time relocation token if your
-									first position feels wrong. Review the{' '}
-									<Link href="/buildings">10 core buildings</Link> before you spend your first
-									resources.
+									The opening Command Core upgrade — the one build every new commander hits first —
+									is accelerated to a fixed ~25 seconds. The game opens up immediately. While it
+									builds, a short coaching card walks you through the resource bar and build queue
+									so the brief wait teaches instead of idles. Everything after that takes its
+									normal time.
 								</p>
 							</div>
 						</div>
 						<div className="gp-step">
 							<div className="gp-step-num">02</div>
 							<div className="gp-step-body">
+								<h3 className="gp-step-title">The combat triangle is taught, not discovered</h3>
+								<p className="gp-step-text">
+									Mobile beats Armor, Armor beats Fire, Fire beats Mobile. A primer appears before
+									you train your first troop. Every unit card shows its class and what it counters.
+									The attack screen reads your scout data and tells you whether your composition is
+									favoured before you commit. Review the{' '}
+									<Link href="/buildings">10 core buildings</Link> and{' '}
+									<Link href="/units">units guide</Link> before you spend your first resources.
+								</p>
+							</div>
+						</div>
+						<div className="gp-step">
+							<div className="gp-step-num">03</div>
+							<div className="gp-step-body">
 								<h3 className="gp-step-title">Join a faction quickly</h3>
 								<p className="gp-step-text">
 									Factions are where Vexara becomes social: shared chat, invitations, support
-									troops, war planning, treaties, and rivalries. Find a faction recruiting on the{' '}
+									troops, war planning, treaties, and rivalries. Faction dominance drives the
+									season — the first faction to cross the threshold wins naming rights and a
+									permanent Hall of Champions entry. Find a faction recruiting on the{' '}
 									<a href={DISCORD_URL} target="_blank" rel="noopener noreferrer">
 										Vexara Discord
 									</a>
@@ -270,7 +287,7 @@ export default async function StateOfGalaxyPage() {
 							</div>
 						</div>
 						<div className="gp-step">
-							<div className="gp-step-num">03</div>
+							<div className="gp-step-num">04</div>
 							<div className="gp-step-body">
 								<h3 className="gp-step-title">Scout, raid, and share the replay</h3>
 								<p className="gp-step-text">

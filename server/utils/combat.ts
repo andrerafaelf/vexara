@@ -31,6 +31,7 @@ import {
 import { logInfo, logWarn } from './logger.js';
 import { computeNexusPopulation, getPopulationMax, loadAwayPopulation } from './population.js';
 import { NOTIF, sendPushToUser } from './push.js';
+import { grantPassXp } from './battlePass.js';
 import { aggregateStationedSupport, buildDetailedScoutIntel } from './scouting.js';
 import { normalizeTroopCounts } from './troopKeys.js';
 
@@ -1173,7 +1174,7 @@ async function resolveCoordinatedCombat(attacks: AttackWithNexuses[]): Promise<v
 						: `Your coordinated strike won the battle at ${defenderNexusForNotif?.name || 'a nexus'}. Combat log ready!`
 					: `Your coordinated strike on ${defenderNexusForNotif?.name || 'a nexus'} was repelled. Combat log ready.`,
 				tag: `coordinated-attack-${lead.id}-${attackerUserId}`,
-				data: { url: '/combat-logs' }
+				data: { url: '/reports' }
 			});
 			notifyReportUpdate(attackerUserId);
 		}
@@ -1190,7 +1191,7 @@ async function resolveCoordinatedCombat(attacks: AttackWithNexuses[]): Promise<v
 						: `A coordinated strike raided your nexus and stole resources. Combat log ready.`
 					: `You successfully defended against a coordinated strike on ${defenderNexusForNotif?.name || 'your nexus'}. Combat log ready.`,
 				tag: `coordinated-defended-${lead.id}`,
-				data: { url: '/combat-logs' }
+				data: { url: '/reports' }
 			});
 			notifyReportUpdate(defenderUserId);
 		}
@@ -1208,6 +1209,17 @@ async function resolveCoordinatedCombat(attacks: AttackWithNexuses[]): Promise<v
 				defenderNexusForNotif?.name || 'Unknown Nexus',
 				attackerNexusForNotif?.name || 'Unknown'
 			);
+		}
+
+		// Battle pass XP — coordinated assault bonus for all participants
+		for (const attackerUserId of distinctAttackerUserIds) {
+			void grantPassXp(attackerUserId, lead.galaxyId, 'ATTACK_LAUNCHED');
+			void grantPassXp(attackerUserId, lead.galaxyId, 'COORDINATED_ASSAULT');
+			if (attackerWins) void grantPassXp(attackerUserId, lead.galaxyId, 'ATTACK_WON');
+			if (conquered) void grantPassXp(attackerUserId, lead.galaxyId, 'NEXUS_CAPTURED');
+		}
+		if (defenderUserId && !attackerWins) {
+			void grantPassXp(defenderUserId, lead.galaxyId, 'DEFENSE_WON');
 		}
 
 		console.log(
@@ -1465,7 +1477,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 					title: '🛰️ Scout Returning',
 					body: '🔭 Your scout mission is complete. Recon Operative Log ready!',
 					tag: `scout-${attack.id}`,
-					data: { url: '/combat-logs' }
+					data: { url: '/reports' }
 				});
 			}
 			notifyAttackUpdate(attack.attackerUserId, null, attack.attackerNexusId!);
@@ -2338,7 +2350,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 						: `You won the battle at ${defenderNexusForNotif?.name || 'a nexus'}. Troops returning, combat log ready!`
 					: `Your attack on ${defenderNexusForNotif?.name || 'a nexus'} was repelled. combat log ready.`,
 				tag: `attack-resolved-${attack.id}`,
-				data: { url: '/combat-logs' }
+				data: { url: '/reports' }
 			});
 		}
 
@@ -2355,7 +2367,7 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 						: `${attackerNexusForNotif?.name || 'An enemy'} raided your nexus and stole resources. combat log ready.`
 					: `You successfully defended against an attack on ${defenderNexusForNotif?.name || 'your nexus'}. combat log ready.`,
 				tag: `defended-${attack.id}`,
-				data: { url: '/combat-logs' }
+				data: { url: '/reports' }
 			});
 		}
 
@@ -2376,6 +2388,16 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 				defenderNexusForNotif?.name || 'Unknown Nexus',
 				attackerNexusForNotif?.name || 'Unknown'
 			);
+		}
+
+		// Battle pass XP
+		if (attack.attackerUserId && attack.galaxyId) {
+			void grantPassXp(attack.attackerUserId, attack.galaxyId, 'ATTACK_LAUNCHED');
+			if (attackerWins) void grantPassXp(attack.attackerUserId, attack.galaxyId, 'ATTACK_WON');
+			if (conquered) void grantPassXp(attack.attackerUserId, attack.galaxyId, 'NEXUS_CAPTURED');
+		}
+		if (attack.defenderUserId && attack.galaxyId && !attackerWins) {
+			void grantPassXp(attack.defenderUserId, attack.galaxyId, 'DEFENSE_WON');
 		}
 
 		console.log(
@@ -2459,7 +2481,7 @@ async function processReturnedTroops(attack: Attack): Promise<void> {
 						? `${totalReturned} troop${totalReturned !== 1 ? 's' : ''} returned${hasLoot ? ' with loot' : ''}.`
 						: 'Your troops have returned (no survivors).',
 				tag: `returned-${attack.id}`,
-				data: { url: '/combat-logs' }
+				data: { url: '/reports' }
 			});
 		}
 

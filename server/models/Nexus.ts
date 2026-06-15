@@ -30,8 +30,8 @@ export function getResourceProduction(nexus: EconomyNexus) {
 export function getMaxStorage(nexus: EconomyNexus) {
 	return getMaxStorageBase(nexus);
 }
-export function computeResourceUpdate(nexus: EconomyNexus, storm?: StormBonus) {
-	return computeResourceUpdateBase(nexus, storm);
+export function computeResourceUpdate(nexus: EconomyNexus, storm?: StormBonus, speedMultiplier = 1.0, productionBoostPct = 0) {
+	return computeResourceUpdateBase(nexus, storm, speedMultiplier, productionBoostPct);
 }
 export function calculatePoints(nexus: Nexus & Record<string, unknown>) {
 	return calculatePointsBase(nexus);
@@ -592,8 +592,8 @@ export async function claimQuestBatchReward(
 // keeping displayed values accurate on every read.
 const LAZY_WRITE_THRESHOLD_MS = 5 * 60 * 1000;
 
-export async function refreshResources(nexus: Nexus): Promise<Nexus> {
-	const resourceUpdate = computeResourceUpdate(nexus);
+export async function refreshResources(nexus: Nexus, speedMultiplier = 1.0, productionBoostPct = 0): Promise<Nexus> {
+	const resourceUpdate = computeResourceUpdate(nexus, undefined, speedMultiplier, productionBoostPct);
 	const points = calculatePoints({ ...nexus, ...resourceUpdate });
 	const staleMs = resourceUpdate.lastResourceUpdate.getTime() - nexus.lastResourceUpdate.getTime();
 	if (staleMs < LAZY_WRITE_THRESHOLD_MS) {
@@ -935,7 +935,7 @@ function getStormBonus(
 export async function updateAllResources(): Promise<void> {
 	try {
 		// Select only columns needed for computation, avoids loading queues/troops/etc.
-		const [nexuses, activeStorms] = await Promise.all([
+		const [nexuses, activeStorms, galaxies, galaxyPlayers] = await Promise.all([
 			prisma.nexus.findMany({
 				select: {
 					id: true,
@@ -975,10 +975,30 @@ export async function updateAllResources(): Promise<void> {
 					aegisSkirmisher: true
 				}
 			}),
-			loadActiveStorms()
+			loadActiveStorms(),
+			prisma.galaxy.findMany({ select: { id: true, speedMultiplier: true } }),
+			prisma.galaxyPlayer.findMany({
+				select: { userId: true, galaxyId: true, nexusGroups: true }
+			})
 		]);
 
 		if (nexuses.length === 0) return;
+
+		const galaxySpeed = new Map(galaxies.map((g) => [g.id, g.speedMultiplier]));
+
+		// Build a map of userId+galaxyId → active production boost pct (max of stacked boosts)
+		const now = new Date();
+		const playerBoost = new Map<string, number>();
+		for (const gp of galaxyPlayers) {
+			const groups = (gp.nexusGroups as Array<{ type: string; pct?: number; expiresAt?: string }> | null) ?? [];
+			let maxPct = 0;
+			for (const g of groups) {
+				if (g.type === 'production_boost' && typeof g.pct === 'number' && g.expiresAt) {
+					if (new Date(g.expiresAt) > now) maxPct = Math.max(maxPct, g.pct);
+				}
+			}
+			if (maxPct > 0) playerBoost.set(`${gp.userId}:${gp.galaxyId}`, maxPct);
+		}
 
 		// Compute all updates in memory, pure JS, no DB round-trips
 		const rows: Array<{
@@ -993,7 +1013,9 @@ export async function updateAllResources(): Promise<void> {
 
 		for (const nexus of nexuses) {
 			const storm = getStormBonus(nexus, activeStorms);
-			const resourceUpdate = computeResourceUpdate(nexus, storm);
+			const speedMultiplier = galaxySpeed.get(nexus.galaxyId) ?? 1.0;
+			const boostPct = nexus.ownerId ? (playerBoost.get(`${nexus.ownerId}:${nexus.galaxyId}`) ?? 0) : 0;
+			const resourceUpdate = computeResourceUpdate(nexus, storm, speedMultiplier, boostPct);
 			const points = calculatePoints({ ...nexus, ...resourceUpdate } as Nexus &
 				Record<string, unknown>);
 			const maxStorage = getMaxStorage(nexus);

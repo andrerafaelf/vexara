@@ -77,13 +77,13 @@ const PILLARS = [
 	},
 	{
 		idx: '02',
-		title: 'Train sixteen unit types',
-		body: 'From 53s Sentinel Lancers to 4h Overseers. Each unit has attack, defense, speed, and carry. Composition wins fights, not raw numbers.'
+		title: 'Train twelve unit types across three classes',
+		body: 'From 53s Sentinel Lancers to 4h Overseers. Mobile beats Armor, Armor beats Fire, Fire beats Mobile. Every unit card shows its class, its role (Striker / Anvil / Scout / Conquest), and what it counters — so you know before you commit.'
 	},
 	{
 		idx: '03',
 		title: 'Scout, raid, intercept in real time',
-		body: 'Travel times are real. Send Recon Operatives - the fastest unit in the game - to map a target, then commit a strike fleet before the picture goes stale.'
+		body: 'Travel times are real. Send Recon Operatives - the fastest unit in the game - to map a target, then commit a strike fleet before the picture goes stale. The attack screen reads your scout data and tells you whether your composition is favoured before you send a single troop.'
 	},
 	{
 		idx: '04',
@@ -92,13 +92,13 @@ const PILLARS = [
 	},
 	{
 		idx: '05',
-		title: 'Win the intel war',
-		body: 'Scout before you strike, and deny the same to your enemies. Station Recon Operatives and raise your Stealth Array to make hostile scouts fight through your recon, risk interception, and hide a portion of your resources from raiders. Every move carries risk.'
+		title: 'Compete in seasons. Build a permanent record.',
+		body: 'Every galaxy runs to a winner. The champion faction earns naming rights and a permanent Hall of Champions entry. Your Vex Points carry to the next galaxy. Permanent commander titles — Veteran, Iron Commander, Conqueror, Warlord — are earned by galaxies played and won, not purchased. Every season you play compounds into a record no wipe can touch.'
 	},
 	{
 		idx: '06',
 		title: 'Faction diplomacy and wars',
-		body: 'Declare war on rivals or sign non-aggression pacts, trade agreements, and vassal treaties. Every alliance is public.'
+		body: 'Declare war on rivals or sign non-aggression pacts, trade agreements, and vassal treaties. Coordinate strikes through the War Room, where every faction-mate\'s pledge shows a live matchup verdict against the actual defending garrison. Every alliance is public.'
 	}
 ];
 
@@ -150,6 +150,7 @@ export default function LandingPage() {
 			<Pillars />
 			<Footage items={FOOTAGE} />
 			<RosterTeaser />
+			<Seasons />
 			<Founder />
 			<BuiltBy />
 			<Enlist />
@@ -185,15 +186,16 @@ function Hero() {
 				</div>
 
 				<h1 id="lp-hero-title" className="lp-hero-title">
-					<span className="lp-hero-title-thin">A persistent galaxy.</span>
+					<span className="lp-hero-title-thin">A living galaxy.</span>
 					<span className="lp-hero-title-shout">Real opponents.</span>
 					<span className="lp-hero-title-edge">Every move counts.</span>
 				</h1>
 
 				<p className="lp-hero-sub">
-					Browser-based 4X strategy. A living galaxy shared by real players, running 24/7.
-					<br className="lp-hero-sub-br" /> No resets. No pay-to-win. Just you, your nexus, and the
-					cold math of empire.
+					Browser-based 4X strategy. Galaxies run to a winner — your record, titles, and Vex
+					Points carry forward forever.
+					<br className="lp-hero-sub-br" /> No account wipes. No pay-to-win. Just you, your nexus,
+					and the cold math of empire.
 				</p>
 
 				<div className="lp-hero-ctas">
@@ -222,8 +224,8 @@ function Hero() {
 						<dd>24/7</dd>
 					</div>
 					<div>
-						<dt>Reset cycle</dt>
-						<dd>NONE</dd>
+						<dt>Account wipe</dt>
+						<dd>NEVER</dd>
 					</div>
 				</dl>
 			</div>
@@ -353,10 +355,12 @@ function Marquee() {
 		'12 UNIT TYPES',
 		'08 CORE BUILDINGS',
 		'24/7 LIVE GALAXY',
-		'NO RESETS',
+		'SEASONAL GALAXIES',
 		'NO PAY-TO-WIN',
 		'REAL TRAVEL TIMES',
-		'ONE SOLO DEV',
+		'COMMANDER LEGACY',
+		'HALL OF CHAMPIONS',
+		'BATTLE PASS',
 		'PERSISTENT WORLD'
 	];
 	const doubled = [...items, ...items];
@@ -532,11 +536,77 @@ function RosterTeaser() {
 
 /* ──────────────────────────────────────────────────────────── */
 
+const PASS_TIERS = [
+	{ level: 1,  track: 'Free',  reward: 'Resources: Biomass' },
+	{ level: 1,  track: 'Paid',  reward: 'Season title: Recruit' },
+	{ level: 5,  track: 'Free',  reward: 'Bronze badge' },
+	{ level: 6,  track: 'Paid',  reward: 'Season title: Operative' },
+	{ level: 15, track: 'Free',  reward: 'Silver badge' },
+	{ level: 15, track: 'Paid',  reward: 'Season title: Proven' },
+	{ level: 25, track: 'Free',  reward: 'Gold badge' },
+	{ level: 25, track: 'Paid',  reward: 'Season title: Vex Commander' },
+	{ level: 30, track: 'Free',  reward: 'Title: Veteran + Platinum badge' },
+	{ level: 30, track: 'Paid',  reward: 'Title: Season Conqueror + 200 Vex Points + +25% production 72h' }
+];
+
+function Seasons() {
+	return (
+		<section className="lp-section lp-seasons" aria-labelledby="lp-seasons-title">
+			<SectionHead
+				label="TRANSMISSION 05"
+				title="Seasons &amp; the Vex Pass"
+				subtitle="Every galaxy ends with a winner. Your Vex Points carry forward."
+				titleId="lp-seasons-title"
+			/>
+
+			<div className="lp-seasons-grid">
+				<div className="lp-seasons-desc">
+					<p>
+						Each galaxy runs to a dominance threshold. When a faction crosses the line, the season
+						closes: the winning faction earns naming rights and a permanent{' '}
+						<strong>Hall of Champions</strong> entry. Then a fresh galaxy opens.
+					</p>
+					<p>
+						<strong>Vex Points</strong> carry across every galaxy. Permanent commander titles —
+						Veteran, Iron Commander, Conqueror, Warlord — are earned through galaxies played and
+						won, not purchased.
+					</p>
+					<p>
+						A 30-level <strong>Vex Pass</strong> runs alongside every season. The free track
+						(included for everyone) gives resources and badges as you play. The paid track costs
+						1,000 Vex Points — equivalent to €4.99 — and adds season-scoped titles, temporary
+						production boosts, and 600 Vex Points back over 30 levels. No pass reward touches
+						combat stats or troop power.
+					</p>
+				</div>
+
+				<div className="lp-seasons-pass">
+					<div className="lp-seasons-pass-head">
+						<span className="lp-seasons-pass-label">// VEX PASS · KEY REWARDS</span>
+					</div>
+					<ol className="lp-seasons-pass-list">
+						{PASS_TIERS.map((tier, i) => (
+							<li key={i} className="lp-seasons-pass-tier">
+								<span className="lp-seasons-pass-lvl">LV {tier.level}</span>
+								<span className={`lp-seasons-pass-track lp-seasons-pass-track--${tier.track.toLowerCase()}`}>{tier.track}</span>
+								<span className="lp-seasons-pass-reward">{tier.reward}</span>
+							</li>
+						))}
+					</ol>
+					<p className="lp-seasons-pass-note">Paid track: 1,000 Vex Points (€4.99). Free track included for all players.</p>
+				</div>
+			</div>
+		</section>
+	);
+}
+
+/* ──────────────────────────────────────────────────────────── */
+
 function Founder() {
 	return (
 		<section className="lp-section lp-founder" aria-labelledby="lp-founder-title">
 			<SectionHead
-				label="TRANSMISSION 05"
+				label="TRANSMISSION 06"
 				title="Founders cohort"
 				subtitle="Permanent. Never re-issued."
 				titleId="lp-founder-title"
@@ -553,19 +623,27 @@ function Founder() {
 					<li>
 						<span className="lp-founder-bullet">◆</span>
 						<span>
-							<strong>Leaderboard mark</strong> on all rankings.
+							<strong>Leaderboard mark</strong> on all rankings, every galaxy.
 						</span>
 					</li>
 					<li>
 						<span className="lp-founder-bullet">◆</span>
 						<span>
-							<strong>Hall of fame</strong> entry with join date.
+							<strong>Hall of Champions entry</strong> — when your faction wins a galaxy season, your
+							name is engraved permanently. No future player can claim that slot.
 						</span>
 					</li>
 					<li>
 						<span className="lp-founder-bullet">◆</span>
 						<span>
-							<strong>Naming rights</strong> if your faction wins.
+							<strong>Naming rights</strong> if your faction wins the current season.
+						</span>
+					</li>
+					<li>
+						<span className="lp-founder-bullet">◆</span>
+						<span>
+							<strong>Permanent commander title</strong> earned through galaxies played — Veteran,
+							Iron Commander, Conqueror, Warlord. Never purchased, never reset.
 						</span>
 					</li>
 					<li>
@@ -634,7 +712,7 @@ function Enlist() {
 	return (
 		<section className="lp-section lp-enlist" aria-labelledby="lp-enlist-title">
 			<div className="lp-enlist-inner">
-				<span className="lp-enlist-eyebrow">{'// TRANSMISSION 06 · FINAL'}</span>
+				<span className="lp-enlist-eyebrow">{'// TRANSMISSION 07 · FINAL'}</span>
 				<h2 id="lp-enlist-title" className="lp-enlist-title">
 					The galaxy
 					<br />

@@ -12,7 +12,10 @@ export function getUserById(userId: number) {
 			supporterTier: true,
 			isFounder: true,
 			isAlphaFounder: true,
-			avatarKey: true
+			avatarKey: true,
+			earnedBadges: true,
+			earnedTitles: true,
+			activeTitle: true
 		}
 	});
 }

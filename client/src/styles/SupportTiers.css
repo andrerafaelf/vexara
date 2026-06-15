@@ -280,3 +280,13 @@
 		grid-template-columns: 1fr;
 	}
 }
+
+.vx-support-card--compact .vx-support-card-title {
+	font-size: 13px;
+}
+
+.vx-support-card-pitch,
+.vx-support-card-tier-list,
+.vx-support-card-cta {
+	font-size: 12px;
+}

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useNotifications, NotificationPreferences } from '@/hooks/useNotifications';
+import { useOnboarding } from '@/context/OnboardingContext';
 import PwaGuideModal from './PwaGuideModal';
 import '@/styles/NotificationSettings.css';
 
@@ -96,6 +97,7 @@ export default function NotificationSettings() {
 		unsubscribe,
 		updatePreference
 	} = useNotifications();
+	const { isEnabled: tipsEnabled, disableTips, reenableTips } = useOnboarding();
 	const [showGuide, setShowGuide] = useState(false);
 
 	if (permission === 'unsupported') {
@@ -110,7 +112,26 @@ export default function NotificationSettings() {
 		<>
 			{showGuide && <PwaGuideModal onClose={() => setShowGuide(false)} />}
 			<div className="notif-settings">
-				<div className="notif-header">
+				<div className="notif-section notif-section--tips">
+				<div className="notif-pref-row">
+					<div className="notif-pref-text">
+						<span className="notif-pref-label">Beginner Tips</span>
+						<span className="notif-pref-desc">Step-by-step tooltips to guide new players</span>
+					</div>
+					<div
+						className={`notif-toggle ${tipsEnabled ? 'notif-toggle--on' : ''}`}
+						role="switch"
+						aria-checked={tipsEnabled}
+						tabIndex={0}
+						onClick={() => tipsEnabled ? disableTips() : reenableTips()}
+						onKeyDown={(e) => e.key === 'Enter' && (tipsEnabled ? disableTips() : reenableTips())}
+					>
+						<span className="notif-toggle-thumb" />
+					</div>
+				</div>
+			</div>
+
+			<div className="notif-header">
 					<h3 className="notif-title">Push Notifications</h3>
 					<div className="notif-header-right">
 						<button

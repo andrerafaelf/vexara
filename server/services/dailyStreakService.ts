@@ -1,5 +1,6 @@
 import prisma from '../lib/prisma.js';
 import { createHash } from 'crypto';
+import { grantPassXp } from '../utils/battlePass.js';
 
 export interface DailyQuest {
 	id: string;
@@ -335,6 +336,10 @@ export async function claimDailyRewards(userId: number, galaxyId: number) {
 			}
 		})
 	]);
+
+	// Battle pass XP: quest claim + streak bonus when on a streak
+	void grantPassXp(userId, galaxyId, 'QUEST_COMPLETE');
+	if (newStreak >= 3) void grantPassXp(userId, galaxyId, 'QUEST_STREAK_BONUS');
 
 	return {
 		success: true,

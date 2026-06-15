@@ -1,256 +1,301 @@
 'use client';
 
-import React, { useCallback, useRef, useState } from 'react';
-import ReactCrop, { centerCrop, makeAspectCrop, type Crop, type PixelCrop } from 'react-image-crop';
-import 'react-image-crop/dist/ReactCrop.css';
-import { Upload, Trash2 } from 'lucide-react';
-import { uploadAvatar as apiUploadAvatar, deleteAvatar as apiDeleteAvatar } from '../services/api';
+import { Pencil, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
+import { CDN_BASE } from '../data/gameIcons';
+import { setAvatarPreset, setActiveTitle, shopEquipBorder } from '../services/api';
 import Avatar from './Avatar';
+
+const TROOP_KEYS = [
+	'assaultTrooper',
+	'sentinelLancer',
+	'vanguardBreaker',
+	'reconOperative',
+	'wraithSkimmer',
+	'bulwarkGuard',
+	'aegisSkirmisher',
+	'pyreSuppressor',
+	'arcDisruptor',
+	'phantomLance',
+	'voidStalker',
+	'siegeMech',
+	'plasmaTurret',
+	'annihilatorPlatform',
+	'siegeColossus',
+	'overseer',
+] as const;
+
+type TroopKey = typeof TROOP_KEYS[number];
+
+function troopLabel(key: string): string {
+	return key.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase()).trim();
+}
+
+function currentPresetKey(avatarUrl: string | null): string | null {
+	if (!avatarUrl) return null;
+	const match = avatarUrl.match(/\/troops\/([^.]+)\.webp$/);
+	return match ? match[1] : null;
+}
+
+type ModalTab = 'avatar' | 'title' | 'border';
 
 interface AvatarUploadProps {
 	username: string;
 	avatarUrl: string | null;
 	avatarUrlSm: string | null;
+	borderKey?: string | null;
+	/** Square dimension in px for the displayed avatar. Defaults to 56. */
+	px?: number;
 	onChange: (next: { avatarUrl: string | null; avatarUrlSm: string | null }) => void;
-}
 
-const MAX_INPUT_BYTES = 4 * 1024 * 1024;
-const CROP_OUTPUT_PX = 512; // upload at 2× display size for retina sharpness
-const ACCEPT = 'image/jpeg,image/png,image/webp';
+	// ── Title selection ──
+	earnedTitles?: string[];
+	activeTitle?: string | null;
+	onTitleChange?: (next: string | null) => void;
 
-function readFileAsDataUrl(file: File): Promise<string> {
-	return new Promise((resolve, reject) => {
-		const fr = new FileReader();
-		fr.onload = () => resolve(String(fr.result));
-		fr.onerror = () => reject(fr.error ?? new Error('Read failed'));
-		fr.readAsDataURL(file);
-	});
-}
-
-function canvasFromCrop(image: HTMLImageElement, crop: PixelCrop): HTMLCanvasElement {
-	const scaleX = image.naturalWidth / image.width;
-	const scaleY = image.naturalHeight / image.height;
-	const canvas = document.createElement('canvas');
-	canvas.width = CROP_OUTPUT_PX;
-	canvas.height = CROP_OUTPUT_PX;
-	const ctx = canvas.getContext('2d');
-	if (!ctx) throw new Error('Canvas unsupported');
-	ctx.imageSmoothingQuality = 'high';
-	ctx.drawImage(
-		image,
-		crop.x * scaleX,
-		crop.y * scaleY,
-		crop.width * scaleX,
-		crop.height * scaleY,
-		0,
-		0,
-		CROP_OUTPUT_PX,
-		CROP_OUTPUT_PX
-	);
-	return canvas;
-}
-
-function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
-	return new Promise((resolve, reject) => {
-		canvas.toBlob(
-			(blob) => (blob ? resolve(blob) : reject(new Error('Encode failed'))),
-			'image/webp',
-			0.9
-		);
-	});
+	// ── Border selection ──
+	ownedBorderKeys?: string[];
+	equippedBorder?: string | null;
+	onBorderChange?: (next: string | null) => void;
 }
 
 const AvatarUpload: React.FC<AvatarUploadProps> = ({
 	username,
 	avatarUrl,
 	avatarUrlSm,
-	onChange
+	borderKey,
+	px = 56,
+	onChange,
+	earnedTitles = [],
+	activeTitle = null,
+	onTitleChange,
+	ownedBorderKeys = [],
+	equippedBorder = null,
+	onBorderChange,
 }) => {
-	const inputRef = useRef<HTMLInputElement>(null);
-	const imgRef = useRef<HTMLImageElement>(null);
-	const [src, setSrc] = useState<string | null>(null);
-	const [crop, setCrop] = useState<Crop | undefined>(undefined);
-	const [completedCrop, setCompletedCrop] = useState<PixelCrop | undefined>(undefined);
-	const [busy, setBusy] = useState(false);
+	const [open, setOpen] = useState(false);
+	const [tab, setTab] = useState<ModalTab>('avatar');
+	const [busy, setBusy] = useState<string | null>(null);
 	const [err, setErr] = useState<string | null>(null);
+	const selected = currentPresetKey(avatarUrl);
 
-	const onPickFile = useCallback(async (file: File) => {
-		setErr(null);
-		if (file.size > MAX_INPUT_BYTES) {
-			setErr('Image is too large (max 4 MB).');
-			return;
-		}
-		if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-			setErr('Only JPEG, PNG, or WebP images are allowed.');
-			return;
-		}
-		try {
-			const dataUrl = await readFileAsDataUrl(file);
-			setSrc(dataUrl);
-			setCrop(undefined);
-			setCompletedCrop(undefined);
-		} catch {
-			setErr('Could not read this file.');
-		}
-	}, []);
+	const ownedBorders = ownedBorderKeys.filter((k) => k.startsWith('border_'));
+	const hasTitles = earnedTitles.length > 0 && !!onTitleChange;
+	const hasBorders = ownedBorders.length > 0 && !!onBorderChange;
 
-	const onImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
-		const { width, height } = e.currentTarget;
-		const initial = centerCrop(
-			makeAspectCrop({ unit: '%', width: 90 }, 1, width, height),
-			width,
-			height
-		);
-		setCrop(initial);
-	}, []);
-
-	const cancelCrop = useCallback(() => {
-		setSrc(null);
-		setCrop(undefined);
-		setCompletedCrop(undefined);
-		setErr(null);
-		if (inputRef.current) inputRef.current.value = '';
-	}, []);
-
-	const submitCrop = useCallback(async () => {
-		if (!imgRef.current || !completedCrop || completedCrop.width === 0) {
-			setErr('Select a crop area.');
-			return;
-		}
-		setBusy(true);
+	async function pick(key: TroopKey) {
+		if (busy || key === selected) { setOpen(false); return; }
+		setBusy(key);
 		setErr(null);
 		try {
-			const canvas = canvasFromCrop(imgRef.current, completedCrop);
-			const blob = await canvasToBlob(canvas);
-			const { data } = await apiUploadAvatar(blob);
-			onChange({ avatarUrl: data.avatarUrl ?? null, avatarUrlSm: data.avatarUrlSm ?? null });
-			cancelCrop();
+			const { data } = await setAvatarPreset(key);
+			onChange({
+				avatarUrl: (data as any).avatarUrl ?? null,
+				avatarUrlSm: (data as any).avatarUrlSm ?? null,
+			});
+			setOpen(false);
 		} catch (e) {
-			setErr((e as Error).message || 'Upload failed.');
+			setErr((e as Error).message || 'Could not set avatar.');
 		} finally {
-			setBusy(false);
+			setBusy(null);
 		}
-	}, [completedCrop, onChange, cancelCrop]);
+	}
 
-	const onRemove = useCallback(async () => {
-		if (!avatarUrl) return;
-		if (!window.confirm('Remove your custom avatar?')) return;
-		setBusy(true);
+	async function pickTitle(title: string | null) {
+		if (busy || !onTitleChange) return;
+		setBusy(title ?? '__cleartitle__');
 		setErr(null);
 		try {
-			await apiDeleteAvatar();
-			onChange({ avatarUrl: null, avatarUrlSm: null });
+			await setActiveTitle(title);
+			onTitleChange(title);
 		} catch (e) {
-			setErr((e as Error).message || 'Could not remove avatar.');
+			setErr((e as Error).message || 'Could not set title.');
 		} finally {
-			setBusy(false);
+			setBusy(null);
 		}
-	}, [avatarUrl, onChange]);
+	}
+
+	async function pickBorder(key: string | null) {
+		if (busy || !onBorderChange) return;
+		setBusy(key ?? '__clearborder__');
+		setErr(null);
+		try {
+			await shopEquipBorder(key);
+			onBorderChange(key);
+		} catch (e) {
+			setErr((e as Error).message || 'Could not fit frame.');
+		} finally {
+			setBusy(null);
+		}
+	}
 
 	return (
-		<div className="vx-avatar-upload">
-			<div className="vx-avatar-upload__row">
+		<>
+			{/* Clickable avatar with pencil overlay */}
+			<div className="ps-avatar-wrap" role="button" tabIndex={0} aria-label="Change avatar" onClick={() => setOpen(true)} onKeyDown={(e) => e.key === 'Enter' && setOpen(true)}>
 				<Avatar
 					username={username}
 					avatarUrl={avatarUrl}
 					avatarUrlSm={avatarUrlSm}
-					size="lg"
+					px={px}
+					borderKey={borderKey ?? null}
 					ariaHidden
 				/>
-				<div className="vx-avatar-upload__info">
-					<div className="vx-avatar-upload__title">Custom avatar</div>
-					<div className="vx-avatar-upload__desc">
-						Square image, JPEG / PNG / WebP, up to 4 MB. Crop tool will square it for you.
-					</div>
-					<div className="vx-avatar-upload__actions">
-						<button
-							type="button"
-							className="vx-avatar-upload__btn vx-avatar-upload__btn--primary"
-							onClick={() => inputRef.current?.click()}
-							disabled={busy}
-						>
-							<Upload size={14} aria-hidden="true" />
-							<span>{avatarUrl ? 'Replace' : 'Upload'}</span>
-						</button>
-						{avatarUrl && (
-							<button
-								type="button"
-								className="vx-avatar-upload__btn vx-avatar-upload__btn--danger"
-								onClick={onRemove}
-								disabled={busy}
-							>
-								<Trash2 size={14} aria-hidden="true" />
-								<span>Remove</span>
-							</button>
-						)}
-					</div>
-					{err && <div className="vx-avatar-upload__err">{err}</div>}
+				<div className="ps-avatar-edit-overlay" aria-hidden="true">
+					<Pencil size={14} />
 				</div>
+				<span className="ps-avatar-edit-badge" aria-hidden="true">
+					<Pencil size={12} />
+				</span>
 			</div>
 
-			<input
-				ref={inputRef}
-				type="file"
-				accept={ACCEPT}
-				style={{ display: 'none' }}
-				onChange={(e) => {
-					const f = e.target.files?.[0];
-					if (f) void onPickFile(f);
-				}}
-			/>
+			{/* Picker modal */}
+			{open && typeof document !== 'undefined' && createPortal(
+				<div className="ps-avatar-modal-backdrop" onClick={() => setOpen(false)}>
+					<div className="ps-avatar-modal" role="dialog" aria-label="Choose your identity" onClick={(e) => e.stopPropagation()}>
+						<div className="ps-avatar-modal-header">
+							<span className="ps-avatar-modal-title">Choose your identity</span>
+							<button className="ps-avatar-modal-close" onClick={() => setOpen(false)} aria-label="Close">
+								<X size={16} />
+							</button>
+						</div>
 
-			{src && (
-				<div
-					className="vx-avatar-upload__modal"
-					role="dialog"
-					aria-modal="true"
-					aria-label="Crop avatar"
-				>
-					<div className="vx-avatar-upload__modal-inner">
-						<div className="vx-avatar-upload__modal-title">Crop avatar</div>
-						<div className="vx-avatar-upload__crop">
-							<ReactCrop
-								crop={crop}
-								onChange={(c) => setCrop(c)}
-								onComplete={(c) => setCompletedCrop(c)}
-								aspect={1}
-								circularCrop={false}
-								keepSelection
-								minWidth={32}
-							>
-								{/* eslint-disable-next-line @next/next/no-img-element */}
-								<img
-									ref={imgRef}
-									src={src}
-									alt=""
-									onLoad={onImageLoad}
-									style={{ maxHeight: '60vh' }}
-								/>
-							</ReactCrop>
-						</div>
-						{err && <div className="vx-avatar-upload__err">{err}</div>}
-						<div className="vx-avatar-upload__modal-actions">
+						{/* Tabs */}
+						<div className="ps-identity-tabs" role="tablist">
 							<button
-								type="button"
-								className="vx-avatar-upload__btn"
-								onClick={cancelCrop}
-								disabled={busy}
+								role="tab"
+								aria-selected={tab === 'avatar'}
+								className={`ps-identity-tab${tab === 'avatar' ? ' ps-identity-tab--active' : ''}`}
+								onClick={() => setTab('avatar')}
 							>
-								Cancel
+								Avatar
 							</button>
-							<button
-								type="button"
-								className="vx-avatar-upload__btn vx-avatar-upload__btn--primary"
-								onClick={submitCrop}
-								disabled={busy || !completedCrop || completedCrop.width === 0}
-							>
-								{busy ? 'Uploading…' : 'Save avatar'}
-							</button>
+							{hasTitles && (
+								<button
+									role="tab"
+									aria-selected={tab === 'title'}
+									className={`ps-identity-tab${tab === 'title' ? ' ps-identity-tab--active' : ''}`}
+									onClick={() => setTab('title')}
+								>
+									Title
+								</button>
+							)}
+							{hasBorders && (
+								<button
+									role="tab"
+									aria-selected={tab === 'border'}
+									className={`ps-identity-tab${tab === 'border' ? ' ps-identity-tab--active' : ''}`}
+									onClick={() => setTab('border')}
+								>
+									Border
+								</button>
+							)}
 						</div>
+
+						{/* AVATAR */}
+						{tab === 'avatar' && (
+							<div className="ps-avatar-pick-grid">
+								{TROOP_KEYS.map((key) => {
+									const isSelected = selected === key;
+									const isBusy = busy === key;
+									return (
+										<button
+											key={key}
+											type="button"
+											className={`ps-avatar-pick-tile${isSelected ? ' ps-avatar-pick-tile--active' : ''}`}
+											onClick={() => pick(key)}
+											disabled={!!busy}
+											title={troopLabel(key)}
+											aria-label={troopLabel(key)}
+											aria-pressed={isSelected}
+										>
+											{/* eslint-disable-next-line @next/next/no-img-element */}
+											<img src={`${CDN_BASE}/troops/${key}.webp`} alt="" width={56} height={56} loading="lazy" draggable={false} />
+											{isBusy && <span className="ps-avatar-pick-spinner" aria-hidden="true" />}
+											{isSelected && <span className="ps-avatar-pick-check" aria-hidden="true" />}
+										</button>
+									);
+								})}
+							</div>
+						)}
+
+						{/* TITLE */}
+						{tab === 'title' && hasTitles && (
+							<div className="ps-identity-title-list">
+								{[...earnedTitles]
+									.sort((a, b) => (a === activeTitle ? -1 : b === activeTitle ? 1 : 0))
+									.map((title) => {
+										const isActive = activeTitle === title;
+										const isBusy = busy === title;
+										return (
+											<button
+												key={title}
+												type="button"
+												className={`ps-identity-title-row${isActive ? ' ps-identity-title-row--active' : ''}`}
+												disabled={!!busy}
+												onClick={() => pickTitle(isActive ? null : title)}
+											>
+												<span className="ps-identity-title-name">{title}</span>
+												<span className="ps-identity-title-state">
+													{isBusy ? '…' : isActive ? 'Equipped — tap to clear' : 'Equip'}
+												</span>
+											</button>
+										);
+									})}
+							</div>
+						)}
+
+						{/* BORDER */}
+						{tab === 'border' && hasBorders && (
+							<div className="ps-identity-border-grid">
+								<button
+									type="button"
+									className={`ps-identity-border-tile ps-identity-border-tile--none${equippedBorder == null ? ' ps-identity-border-tile--active' : ''}`}
+									disabled={!!busy}
+									onClick={() => pickBorder(null)}
+									title="No frame"
+								>
+									<div className="ps-identity-border-box">
+										<div className="ps-identity-border-avatar">
+											<Avatar username={username} avatarUrl={avatarUrl} avatarUrlSm={avatarUrlSm} ariaHidden />
+										</div>
+									</div>
+									<span className="ps-identity-border-label">None</span>
+								</button>
+								{[...ownedBorders]
+									.sort((a, b) => (a === equippedBorder ? -1 : b === equippedBorder ? 1 : 0))
+									.map((key) => {
+										const isActive = equippedBorder === key;
+										const cssClass = key.replace('border_', '').replace(/_/g, '-');
+										const label = key.replace('border_', '').replace(/_/g, ' ');
+										return (
+											<button
+												key={key}
+												type="button"
+												className={`ps-identity-border-tile${isActive ? ' ps-identity-border-tile--active' : ''}`}
+												disabled={!!busy}
+												onClick={() => pickBorder(isActive ? null : key)}
+												title={label}
+											>
+												<div className={`ps-identity-border-box border-${cssClass}`}>
+													<div className="ps-identity-border-avatar">
+														<Avatar username={username} avatarUrl={avatarUrl} avatarUrlSm={avatarUrlSm} ariaHidden />
+													</div>
+												</div>
+												<span className="ps-identity-border-label">{label}</span>
+											</button>
+										);
+									})}
+							</div>
+						)}
+
+						{err && <div className="ps-avatar-pick-err">{err}</div>}
 					</div>
-				</div>
+				</div>,
+				document.body
 			)}
-		</div>
+		</>
 	);
 };
 

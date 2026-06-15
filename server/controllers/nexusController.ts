@@ -541,7 +541,36 @@ export async function transferResources(req: AuthRequest, res: Response): Promis
 			}
 			isFactionSend = true;
 		}
-		const taxRate = isFactionSend ? FACTION_TRANSFER_TAX : 0;
+		// Trade treaty between the two factions waives the transfer tax.
+		let hasTradeTreaty = false;
+		if (isFactionSend) {
+			const [myMem, recipMem] = await Promise.all([
+				prisma.factionMember.findUnique({
+					where: { userId_galaxyId: { userId: req.userId!, galaxyId: req.galaxyId! } },
+					select: { factionId: true }
+				}),
+				prisma.factionMember.findUnique({
+					where: { userId_galaxyId: { userId: to.ownerId!, galaxyId: req.galaxyId! } },
+					select: { factionId: true }
+				})
+			]);
+			if (myMem && recipMem) {
+				const treaty = await prisma.factionTreaty.findFirst({
+					where: {
+						galaxyId: req.galaxyId!,
+						type: 'trade',
+						status: 'active',
+						OR: [
+							{ proposerFactionId: myMem.factionId, targetFactionId: recipMem.factionId },
+							{ proposerFactionId: recipMem.factionId, targetFactionId: myMem.factionId }
+						]
+					},
+					select: { id: true }
+				});
+				hasTradeTreaty = treaty != null;
+			}
+		}
+		const taxRate = isFactionSend && !hasTradeTreaty ? FACTION_TRANSFER_TAX : 0;
 
 		// Accumulate pending production before reading resource values so the
 		// stale DB baseline doesn't cause resources to vanish on transfer.

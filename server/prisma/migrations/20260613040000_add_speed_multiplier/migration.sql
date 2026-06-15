@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Galaxy" ADD COLUMN "speedMultiplier" DOUBLE PRECISION NOT NULL DEFAULT 1.0;

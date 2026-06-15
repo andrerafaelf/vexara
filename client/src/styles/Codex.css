@@ -1039,3 +1039,98 @@
 	font-size: 18px;
 	line-height: 1;
 }
+
+/* ── Diplomacy panel ── */
+.cx-diplomacy {
+	display: flex;
+	flex-direction: column;
+	gap: 32px;
+	padding: 24px 0 48px;
+}
+
+.cx-treaty-card {
+	border: 1px solid var(--border);
+	background: var(--surface-1);
+	padding: 24px 28px;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+
+.cx-treaty-header {
+	display: flex;
+	align-items: flex-start;
+	gap: 16px;
+}
+
+.cx-treaty-symbol {
+	font-size: 28px;
+	line-height: 1;
+	flex-shrink: 0;
+	margin-top: 2px;
+	color: var(--accent);
+}
+
+.cx-treaty-name {
+	font-family: var(--font-mono);
+	font-size: 15px;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--text-default);
+	margin: 0 0 4px;
+}
+
+.cx-treaty-duration {
+	font-family: var(--font-mono);
+	font-size: 11px;
+	color: var(--text-muted);
+	letter-spacing: 0.08em;
+}
+
+.cx-treaty-effect {
+	font-size: 13px;
+	line-height: 1.6;
+	color: var(--text-secondary);
+	border-left: 2px solid var(--accent);
+	padding-left: 12px;
+	margin: 0;
+}
+
+.cx-treaty-mechanics {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.cx-treaty-mechanics li {
+	font-size: 13px;
+	line-height: 1.55;
+	color: var(--text-default);
+	padding-left: 16px;
+	position: relative;
+}
+
+.cx-treaty-mechanics li::before {
+	content: '·';
+	position: absolute;
+	left: 2px;
+	top: -2px;
+	color: var(--accent);
+	font-size: 18px;
+	line-height: 1;
+}
+
+.cx-treaty-tip {
+	margin-top: 4px;
+}
+
+.cx-treaty-tip p {
+	margin: 0;
+	font-size: 13px;
+	line-height: 1.55;
+	color: var(--text-default);
+}

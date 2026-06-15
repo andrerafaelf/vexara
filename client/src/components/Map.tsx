@@ -38,6 +38,7 @@ import {
 import '../styles/Map.css';
 import { Nexus } from '../types/game';
 import { formatDateTime, formatTimeOfDay } from '../utils/date';
+import { attackMatchupVerdict, type Force } from '../utils/combatSim';
 import { transferTravelMinutes, travelMinutes } from '../utils/travel';
 import { Countdown } from './Countdown';
 import { MapCell, type CellKind, type MapCellData } from './MapCell';
@@ -1409,6 +1410,57 @@ const Map: React.FC<MapProps> = ({
 										);
 									})}
 								</div>
+								{/* Pre-attack matchup hint (beta, UI-only). When the player has
+								    scouted the target and selected troops for a real attack, read
+								    the same CLASS_COUNTERS the server uses and tell them whether
+								    their composition is favoured or countered by the triangle.
+								    Reads scouted defender troops; changes no combat math. */}
+								{attackMissionType === 'attack' &&
+									hasIntel &&
+									selectedNexus.troops &&
+									(() => {
+										const selectedTotal = Object.values(attackTroops).reduce(
+											(a, b) => a + Number(b || 0),
+											0
+										);
+										const defenderTotal = Object.values(selectedNexus.troops).reduce(
+											(a, b) => a + Number(b || 0),
+											0
+										);
+										if (selectedTotal <= 0 || defenderTotal <= 0) return null;
+										const verdict = attackMatchupVerdict(
+											attackTroops as Force,
+											selectedNexus.troops as Force
+										);
+										const copy = {
+											favored: {
+												text: 'Your composition counters their garrison — the class triangle favours you.',
+												icon: <Zap size={13} aria-hidden="true" />
+											},
+											countered: {
+												text: 'Their garrison counters your composition. Consider bringing the class that beats what they field.',
+												icon: <AlertTriangle size={13} aria-hidden="true" />
+											},
+											even: {
+												text: 'No class advantage either way — this comes down to raw power.',
+												icon: <Shield size={13} aria-hidden="true" />
+											}
+										}[verdict];
+										return (
+											<div className={`attack-matchup-hint attack-matchup-hint--${verdict}`} role="note">
+												{copy.icon}
+												<span>{copy.text}</span>
+												<a
+													href="/calculator"
+													target="_blank"
+													rel="noopener noreferrer"
+													className="attack-matchup-calc-link"
+												>
+													Open battle calculator
+												</a>
+											</div>
+										);
+									})()}
 								<div className="attack-form-actions">
 									<button
 										className="send-all-btn"

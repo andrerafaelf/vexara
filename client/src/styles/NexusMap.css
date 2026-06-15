@@ -211,3 +211,17 @@
 	font-family: var(--font-mono);
 	letter-spacing: 0.08em;
 }
+
+/* Building labels are persistent navigation, not incidental metadata. */
+.nexus-map-tile-footer {
+	padding: 5px 8px;
+}
+
+.nexus-map-tile-name,
+.nexus-map-tile-level {
+	font-size: 12px;
+}
+
+.nexus-map-badge {
+	font-size: 11px;
+}

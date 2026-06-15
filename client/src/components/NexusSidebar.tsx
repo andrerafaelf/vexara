@@ -103,10 +103,12 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
 						</div>
 					)}
 
-					{visibleNexuses.map((nexus) => (
+					{visibleNexuses.map((nexus) => {
+						const isSelected = String(nexus._id) === selectedNexusId;
+						return (
 						<div
 							key={nexus._id}
-							className={`nexus-item ${String(nexus._id) === selectedNexusId ? 'active' : ''}`}
+							className={`nexus-item ${isSelected ? 'active' : ''}`}
 							onClick={() => onSelectNexus(nexus)}
 						>
 							<div className="nexus-name">
@@ -129,13 +131,14 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
 									</span>
 								)}
 								{unreadNexusIds?.has(String(nexus._id)) && (
-									<span className="nexus-badge nexus-badge-unread" title="Unread combat logs">
+									<span className="nexus-badge nexus-badge-unread" title="Unread reports">
 										<ScrollText size={12} />
 									</span>
 								)}
 							</div>
 						</div>
-					))}
+						);
+					})}
 				</div>
 
 				{user && (
@@ -145,6 +148,7 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
 							avatarUrl={user.avatarUrl ?? null}
 							avatarUrlSm={user.avatarUrlSm ?? null}
 							size="md"
+							borderKey={user.avatarBorder ?? null}
 							className={`commander-avatar${user.supporterTier === 'officer' ? ' supporter-border supporter-border-officer' : ''}${user.supporterTier === 'commander' ? ' supporter-border supporter-border-commander' : ''}`}
 							ariaHidden
 						/>
@@ -166,6 +170,9 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
 								{/* No rank badges here: this card is width-constrained and a badge
 								    would truncate the username (see profile page for badges). */}
 							</div>
+							{user.activeTitle && (
+								<div className="commander-title">{user.activeTitle}</div>
+							)}
 							<div className="commander-meta">Commander · {totalPoints.toLocaleString()} inf</div>
 						</div>
 					</div>

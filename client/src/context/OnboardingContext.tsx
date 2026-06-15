@@ -4,10 +4,17 @@ import { getProfile, updateOnboardingStep } from '../services/api';
 import { useMyNexuses } from '../hooks/useMyNexuses';
 import type { Nexus } from '../types/game';
 import { usePathname } from 'next/navigation';
+import { isOnboardingTrainEligible } from '../realtime/gameConstants.shared';
 
 export interface OnboardingStep {
 	id: string;
-	// data-onboarding attribute value on the target element
+	// 'spotlight' (default) points at a DOM element via data-onboarding and dims
+	// the rest of the page. 'panel' has no target — it renders a centered teaching
+	// card, used for concept beats that aren't tied to a single button (e.g. the
+	// "while you build" primer shown during the accelerated first upgrade).
+	kind?: 'spotlight' | 'panel';
+	// data-onboarding attribute value on the target element. Ignored for 'panel'
+	// steps (they have no spotlight target), so those can pass an empty string.
 	targetAttr: string;
 	message: string;
 	// Optional title shown above the message
@@ -42,6 +49,11 @@ const hasQueuedBuilding = (nexus: Nexus, building: string, targetLevel = 1) =>
 	);
 const hasCommandCoreLevelStarted = (nexus: Nexus, level: number) =>
 	(nexus.buildings?.commandCore ?? 0) >= level || hasQueuedBuilding(nexus, 'commandCore', level);
+// The accelerated first build (Command Core 0 -> 1) is in flight: the upgrade is
+// queued but hasn't completed yet. This is the window the "while you build"
+// panel beat fills so the ~25s wait teaches instead of idling.
+const isFirstBuildInProgress = (nexus: Nexus) =>
+	(nexus.buildings?.commandCore ?? 0) < 1 && hasQueuedBuilding(nexus, 'commandCore', 1);
 const hasArmorFoundryStarted = (nexus: Nexus) =>
 	(nexus.buildings?.armorFoundry ?? 0) >= 1 || hasQueuedBuilding(nexus, 'armorFoundry');
 
@@ -51,26 +63,36 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 	{
 		id: 'create_nexus',
 		targetAttr: 'create-nexus',
-		title: 'Create Your First Nexus',
+		title: 'Claim Your Nexus',
 		message:
-			'Your nexus is your base. Click here to place it on the galaxy map and begin your conquest.',
+			'This is your base — it generates resources and trains your army. Tap here to place it on the galaxy map. Everything starts here.',
 		isComplete: (s) => s.nexuses.length > 0
 	},
 	{
 		id: 'upgrade_building',
 		targetAttr: 'upgrade-building',
-		title: 'Upgrade a Building',
+		title: 'Upgrade the Command Core',
 		message:
-			'Upgrade your Command Core first - it unlocks your production buildings and expands your build queue.',
+			'This is your first move. Upgrading the Command Core to Lv1 unlocks everything else — production buildings, troops, the works. Tap Upgrade.',
 		isReady: (s) => s.nexuses.length > 0 && isNexusPath(s.pathname),
 		isComplete: (s) => s.nexuses.some((n) => hasCommandCoreLevelStarted(n, 1))
 	},
 	{
+		id: 'while_you_build',
+		kind: 'panel',
+		targetAttr: '',
+		title: 'While Your Command Core Upgrades',
+		message:
+			"It finishes in about 25 seconds. While it runs: the resource bar at the top shows your Biomass, Alloy, and Ore ticking up in real time. Resources accumulate even when you're not here — the game never stops.",
+		isReady: (s) => isNexusPath(s.pathname) && s.nexuses.some((n) => isFirstBuildInProgress(n)),
+		isComplete: (s) => s.nexuses.some((n) => (n.buildings?.commandCore ?? 0) >= 1)
+	},
+	{
 		id: 'reinforce_command',
 		targetAttr: 'upgrade-building',
-		title: 'Reinforce Command',
+		title: 'Push to Command Core Lv2',
 		message:
-			'Upgrade Command Core to Lv2 next - this opens the production buildings you need before training troops.',
+			'One more upgrade unlocks your production buildings. Tap Upgrade — it queues instantly after the current build.',
 		isReady: (s) =>
 			isNexusPath(s.pathname) && s.nexuses.some((n) => (n.buildings?.commandCore ?? 0) >= 1),
 		isComplete: (s) => s.nexuses.some((n) => hasCommandCoreLevelStarted(n, 2))
@@ -78,26 +100,42 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 	{
 		id: 'build_production',
 		targetAttr: 'build-production',
-		title: 'Build Troop Production',
-		message: 'Build an Armor Foundry first - it unlocks Assault Troopers for your first raid.',
+		title: 'Build the Armor Foundry',
+		message:
+			'This unlocks Assault Troopers — your first raid unit. Tap Build. It completes in seconds.',
 		isReady: (s) =>
 			isNexusPath(s.pathname) && s.nexuses.some((n) => (n.buildings?.commandCore ?? 0) >= 2),
 		isComplete: (s) => s.nexuses.some((n) => hasArmorFoundryStarted(n))
 	},
 	{
+		id: 'counter_triangle',
+		kind: 'panel',
+		targetAttr: '',
+		title: 'Before You Train: How Combat Works',
+		message:
+			'Units have classes: Mobile beats Armor, Armor beats Fire, Fire beats Mobile. Each card shows a role — Strikers attack, Anvils defend. Send Strikers out, keep Anvils home. A mixed force beats a one-class army every time.',
+		// Show as soon as the Armor Foundry is queued (not yet built) so the lesson
+		// fills the short build wait rather than leaving the player idle.
+		isReady: (s) =>
+			isNexusPath(s.pathname) && s.nexuses.some((n) => hasArmorFoundryStarted(n)),
+		isComplete: (s) =>
+			s.nexuses.some((n) => {
+				if ((n.trainingQueue?.length ?? 0) > 0) return true;
+				const trained = Number(n.troopsTrained?.assaultTrooper ?? 0);
+				return trained >= 5;
+			})
+	},
+	{
 		id: 'train_troops',
 		targetAttr: 'train-troops',
-		title: 'Train Your First Troops',
+		title: 'Train 5 Assault Troopers',
 		message:
-			'Troops defend your nexus and let you attack others. Queue a few Assault Troopers to get started.',
-		// Only surface this once Armor Foundry exists. The spotlight points at
-		// Assault Troopers, and that card is locked until Armor Foundry Lv1.
+			'Queue 5 Assault Troopers — training is free during the tutorial and takes seconds. They raid neutrals, carry loot back, and defend your nexus.',
 		isReady: (s) =>
 			isNexusPath(s.pathname) &&
 			s.nexuses.some((n) => (n.buildings?.armorFoundry ?? 0) >= 1),
 		isComplete: (s) =>
 			s.nexuses.some((n) => {
-				// Already has something in the training queue → done.
 				if ((n.trainingQueue?.length ?? 0) > 0) return true;
 				const trained = Number(n.troopsTrained?.assaultTrooper ?? 0);
 				if (trained >= 5) return true;
@@ -107,62 +145,100 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 			})
 	},
 	{
+		id: 'troops_training',
+		kind: 'panel',
+		targetAttr: '',
+		title: 'Troops Ready in Seconds',
+		message:
+			'Your Assault Troopers are training now — they finish in about 25 seconds total. Once they land, the Starfield step unlocks automatically.',
+		// Show while training is queued but no troops have finished yet.
+		isReady: (s) =>
+			isNexusPath(s.pathname) &&
+			s.nexuses.some((n) => (n.trainingQueue?.length ?? 0) > 0 && (n.totalTroops ?? 0) === 0),
+		isComplete: (s) => s.nexuses.some((n) => (n.totalTroops ?? 0) > 0)
+	},
+	{
 		id: 'open_starfield',
 		targetAttr: 'open-starfield',
-		title: 'Open The Starfield',
-		message: 'Head to the Starfield when your troops are ready, then pick a neutral nexus to raid.',
-		isReady: (s) => s.nexuses.length > 0,
+		title: 'Head to the Starfield',
+		message:
+			'Your troops are ready. The Starfield is the galaxy map — every nexus you can see belongs to a real player or is a neutral target. Tap here.',
+		// Gate on having actual troops so the player doesn't walk into the map empty-handed.
+		isReady: (s) => s.nexuses.some((n) => (n.totalTroops ?? 0) > 0),
 		isComplete: (s) => s.pathname === '/starfield'
 	},
 	{
 		id: 'send_attack',
 		targetAttr: 'send-attack',
-		title: 'Launch Your First Strike',
-		message: 'Find a neutral nexus on the map and attack it to earn resources and score points.',
+		title: 'Attack a Neutral Nexus',
+		message:
+			'Grey nexuses are neutral — no owner, low risk. Tap one, then tap Attack. Loot comes home when your troops return. This is how you grow early.',
 		isReady: (s) => s.pathname === '/starfield'
-		// No reliable client-side signal for "ever attacked"; only completes via
-		// the explicit "Got it" or because the user navigates past it after the
-		// target appears in the DOM.
+		// No reliable client-side signal for "ever attacked"; completes on "Got it"
+		// or when the player navigates away after the target appears.
 	},
 	{
 		id: 'open_factions',
 		targetAttr: 'open-factions',
-		title: 'Open Factions',
-		message: 'Open the Factions page to find allies and join a coordinated force.',
+		title: 'Find a Faction',
+		message:
+			'Solo players get outgunned fast. Factions coordinate attacks, share intel, and fight for the season together. The faction that wins gets named in the Hall of Champions. Tap here.',
 		isReady: (s) => s.nexuses.some((n) => hasClassProductionBuilding(n)),
 		isComplete: (s) => s.pathname === '/factions'
 	},
 	{
 		id: 'join_faction',
 		targetAttr: 'join-faction',
-		title: 'Join a Faction',
+		title: 'Apply to a Faction',
 		message:
-			'Factions unlock coordinated attacks, war rooms, and diplomacy. Find one to join here.',
+			'Find one with open slots and apply. Once you are in, you get shared chat, war room access, and allied troops that can station at your nexus. This is how the game opens up.',
 		isReady: (s) => s.pathname === '/factions'
+	},
+	{
+		id: 'tutorial_complete',
+		kind: 'panel',
+		targetAttr: '',
+		title: "You're Set",
+		message:
+			"That's the core loop: build your economy, train troops, raid for resources, win the season with your faction. The galaxy is live right now — other players are already moving. Daily quests in the sidebar give you a goal each session. Good luck, commander.",
+		isReady: (s) => s.pathname === '/factions',
+		// No isComplete — this is the final beat, player dismisses it manually.
 	}
 ];
 
 interface OnboardingContextValue {
 	currentStep: OnboardingStep | null;
 	isEnabled: boolean;
+	// True while the player is eligible for the free Assault Trooper training
+	// discount (beginnerTipsEnabled and hasn't yet completed train_troops).
+	isTroopDiscountActive: boolean;
+	// The id of the last completed onboarding step (null = none yet). Exposed
+	// so call sites can compute onboarding build-time discounts client-side.
+	lastCompletedStep: string | null;
 	advance: () => void;
 	dismiss: () => void;
-	// Call this after the user permanently turns off tips
 	disableTips: () => void;
+	reenableTips: () => void;
 }
 
 const OnboardingContext = createContext<OnboardingContextValue>({
 	currentStep: null,
 	isEnabled: false,
+	isTroopDiscountActive: false,
+	lastCompletedStep: null,
 	advance: () => {},
 	dismiss: () => {},
-	disableTips: () => {}
+	disableTips: () => {},
+	reenableTips: () => {}
 });
 
 export function OnboardingProvider({ children }: { children: React.ReactNode }) {
 	const [stepIndex, setStepIndex] = useState<number | null>(null);
 	const [enabled, setEnabled] = useState(false);
 	const [ready, setReady] = useState(false);
+	// The id of the last completed onboarding step, as stored on the server.
+	// Null means the player hasn't completed any step yet.
+	const [lastCompletedStep, setLastCompletedStep] = useState<string | null>(null);
 	const { nexuses } = useMyNexuses();
 	const pathname = usePathname();
 	// Track which step ids we've already auto-completed in this session so we
@@ -183,10 +259,12 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 				setEnabled(true);
 				// onboardingStep stores the id of the LAST COMPLETED step.
 				// We show the next one after it (or the first if null).
-				if (!user.onboardingStep) {
+				const completedId: string | null = user.onboardingStep ?? null;
+				setLastCompletedStep(completedId);
+				if (!completedId) {
 					setStepIndex(0);
 				} else {
-					const lastIdx = ONBOARDING_STEPS.findIndex((s) => s.id === user.onboardingStep);
+					const lastIdx = ONBOARDING_STEPS.findIndex((s) => s.id === completedId);
 					const next = lastIdx + 1;
 					setStepIndex(next < ONBOARDING_STEPS.length ? next : null);
 				}
@@ -210,6 +288,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 			if (!autoSentRef.current.has(step.id)) {
 				autoSentRef.current.add(step.id);
 				void updateOnboardingStep(step.id).catch(() => {});
+				setLastCompletedStep(step.id);
 			}
 			const next = stepIndex + 1;
 			setStepIndex(next < ONBOARDING_STEPS.length ? next : null);
@@ -230,6 +309,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 		const completedStep = ONBOARDING_STEPS[stepIndex];
 		if (completedStep) {
 			void updateOnboardingStep(completedStep.id).catch(() => {});
+			setLastCompletedStep(completedStep.id);
 		}
 		const next = stepIndex + 1;
 		setStepIndex(next < ONBOARDING_STEPS.length ? next : null);
@@ -246,9 +326,21 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 		void updateOnboardingStep('__disabled__').catch(() => {});
 	}, []);
 
+	const reenableTips = useCallback(() => {
+		void updateOnboardingStep('__enabled__').catch(() => {});
+		setEnabled(true);
+		setStepIndex(0);
+	}, []);
+
+	const isTroopDiscountActive = isOnboardingTrainEligible(
+		'assaultTrooper',
+		enabled,
+		lastCompletedStep
+	);
+
 	return (
 		<OnboardingContext.Provider
-			value={{ currentStep, isEnabled: enabled, advance, dismiss, disableTips }}
+			value={{ currentStep, isEnabled: enabled, isTroopDiscountActive, lastCompletedStep, advance, dismiss, disableTips, reenableTips }}
 		>
 			{children}
 		</OnboardingContext.Provider>

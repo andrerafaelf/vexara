@@ -1,0 +1,194 @@
+.hof-view {
+	max-width: 860px;
+	margin: 0 auto;
+	padding: var(--space-6) var(--space-4);
+}
+
+/* ── Hero ─────────────────────────────────────────────── */
+.hof-hero {
+	text-align: center;
+	padding: var(--space-10) var(--space-4) var(--space-8);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-3);
+}
+
+.hof-hero-icon {
+	color: var(--accent);
+}
+
+.hof-hero-title {
+	font-size: var(--text-3xl);
+	font-weight: 800;
+	color: var(--text-strong);
+	letter-spacing: 0.04em;
+	margin: 0;
+}
+
+.hof-hero-sub {
+	font-size: var(--text-sm);
+	color: var(--text-muted);
+	max-width: 400px;
+	margin: 0;
+	line-height: 1.6;
+}
+
+/* ── Grid ─────────────────────────────────────────────── */
+.hof-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+	gap: var(--space-4);
+}
+
+.hof-loading,
+.hof-empty {
+	text-align: center;
+	color: var(--text-muted);
+	font-size: var(--text-sm);
+	padding: var(--space-12) var(--space-4);
+}
+
+/* ── Season card ──────────────────────────────────────── */
+.hof-card {
+	background: var(--bg-surface);
+	border: 1px solid rgba(255, 255, 255, 0.06);
+	border-radius: var(--radius-lg);
+	overflow: hidden;
+	transition: border-color 0.15s;
+}
+
+.hof-card:hover {
+	border-color: rgba(255, 255, 255, 0.12);
+}
+
+.hof-card-header {
+	padding: var(--space-4) var(--space-5);
+	border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+	background: linear-gradient(135deg, rgba(255, 196, 0, 0.04) 0%, transparent 60%);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.hof-card-title-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+.hof-card-trophy {
+	color: var(--accent);
+	flex-shrink: 0;
+}
+
+.hof-card-name {
+	font-weight: 700;
+	color: var(--text-strong);
+	font-size: var(--text-base);
+	flex: 1;
+}
+
+.hof-card-date {
+	font-family: var(--font-mono);
+	font-size: 11px;
+	color: var(--text-muted);
+}
+
+.hof-card-winner {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+.hof-card-winner-label {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--text-muted);
+	flex-shrink: 0;
+}
+
+.hof-card-winner-faction {
+	font-size: var(--text-sm);
+	font-weight: 600;
+	color: var(--accent);
+}
+
+/* ── Commander list ───────────────────────────────────── */
+.hof-commanders {
+	list-style: none;
+	margin: 0;
+	padding: var(--space-2) 0;
+}
+
+.hof-commander {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-2) var(--space-5);
+	transition: background 0.1s;
+}
+
+.hof-commander:hover {
+	background: rgba(255, 255, 255, 0.03);
+}
+
+.hof-commander-rank {
+	width: 18px;
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.hof-commander--rank1 .hof-commander-rank { color: #ffd700; }
+.hof-commander--rank2 .hof-commander-rank { color: #c0c0c0; }
+.hof-commander--rank3 .hof-commander-rank { color: #cd7f32; }
+
+.hof-commander-avatar {
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+	object-fit: cover;
+	flex-shrink: 0;
+	background: var(--bg-elevated);
+}
+
+.hof-commander-name {
+	font-weight: 600;
+	color: var(--text-default);
+	font-size: var(--text-sm);
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.hof-commander-faction {
+	font-size: 11px;
+	color: var(--text-muted);
+	font-family: var(--font-mono);
+	flex-shrink: 0;
+}
+
+.hof-commander-won-badge {
+	font-size: 10px;
+	font-weight: 700;
+	color: var(--accent);
+	background: rgba(255, 196, 0, 0.1);
+	border: 1px solid rgba(255, 196, 0, 0.25);
+	border-radius: 999px;
+	padding: 1px 6px;
+	flex-shrink: 0;
+	letter-spacing: 0.04em;
+}
+
+.hof-commander-points {
+	font-family: var(--font-mono);
+	font-size: 11px;
+	color: var(--text-muted);
+	flex-shrink: 0;
+}

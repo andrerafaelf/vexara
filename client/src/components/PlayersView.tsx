@@ -19,6 +19,8 @@ interface GalaxyPlayer {
 	isAlphaFounder?: boolean;
 	avatarUrl?: string | null;
 	avatarUrlSm?: string | null;
+	avatarBorder?: string | null;
+	activeTitle?: string | null;
 	points: number;
 	joinedAt: string;
 	nexuses: number;
@@ -40,9 +42,9 @@ function PodiumCard({ player, rank }: { player: GalaxyPlayer; rank: 1 | 2 | 3 })
 					avatarUrl={player.avatarUrl ?? null}
 					avatarUrlSm={player.avatarUrlSm ?? null}
 					size="md"
+					borderKey={player.avatarBorder ?? null}
 					ariaHidden
 				/>
-				<span className="plb-pod-ring" aria-hidden />
 			</div>
 
 			{/* identity: name + faction always stack vertically */}
@@ -55,6 +57,7 @@ function PodiumCard({ player, rank }: { player: GalaxyPlayer; rank: 1 | 2 | 3 })
 						linkToProfile
 					/>
 				</div>
+				{player.activeTitle && <span className="plb-pod-title">{player.activeTitle}</span>}
 				{player.faction ? (
 					<Link href="/factions" className="plb-pod-faction">
 						{player.faction.name}
@@ -223,14 +226,20 @@ export default function PlayersView() {
 													avatarUrl={p.avatarUrl ?? null}
 													avatarUrlSm={p.avatarUrlSm ?? null}
 													size="sm"
+													borderKey={p.avatarBorder ?? null}
 													ariaHidden
 												/>
-												<Username
-													name={p.username}
-													isSupporter={p.isSupporter}
-													supporterTier={p.supporterTier ?? null}
-													linkToProfile
-												/>
+												<div className="plb-td-identity">
+													<Username
+														name={p.username}
+														isSupporter={p.isSupporter}
+														supporterTier={p.supporterTier ?? null}
+														linkToProfile
+													/>
+													{p.activeTitle && (
+														<span className="plb-td-title">{p.activeTitle}</span>
+													)}
+												</div>
 											</div>
 
 											{/* Faction */}

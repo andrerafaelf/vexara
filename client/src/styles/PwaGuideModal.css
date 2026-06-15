@@ -26,16 +26,22 @@
 
 .pwa-modal-close {
 	position: absolute;
-	top: 14px;
-	right: 16px;
+	top: 6px;
+	right: 8px;
 	background: none;
 	border: none;
 	color: var(--text-muted);
 	font-size: 22px;
 	line-height: 1;
 	cursor: pointer;
-	padding: 2px 6px;
+	width: 44px;
+	height: 44px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	border-radius: 4px;
+	touch-action: manipulation;
+	-webkit-tap-highlight-color: transparent;
 	transition: color 0.15s;
 }
 
@@ -200,10 +206,13 @@
 	color: var(--text-on-accent);
 	border: none;
 	border-radius: 6px;
-	padding: 11px 16px;
+	padding: 13px 16px;
+	min-height: 44px;
 	font-size: 14px;
 	font-weight: 600;
 	cursor: pointer;
+	touch-action: manipulation;
+	-webkit-tap-highlight-color: transparent;
 	transition: background 0.2s;
 }
 

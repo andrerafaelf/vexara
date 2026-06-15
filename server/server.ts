@@ -34,9 +34,11 @@ import statsRoutes from './routes/stats.js';
 import troopRoutes from './routes/troop.js';
 import troopTransferRoutes from './routes/troopTransfer.js';
 import usersRoutes from './routes/users.js';
+import battlePassRoutes from './routes/battlePass.js';
+import shopRoutes from './routes/shop.js';
 import { processArrivedAttacks, processArrivedTransfers } from './utils/combat.js';
 import { processScheduledAttacks } from './services/attackService.js';
-import { processDominanceVictories } from './utils/dominance.js';
+import { processDominanceVictories, processSeasonExpiry } from './utils/dominance.js';
 import { logError, logInfo, logWarn } from './utils/logger.js';
 import {
 	ensureNeutralNexusPool,
@@ -192,6 +194,8 @@ app.use('/api/faction', factionRoutes);
 app.use('/api/warroom', warRoomRoutes);
 app.use('/api/referral', referralRoutes);
 app.use('/api/users', usersRoutes);
+app.use('/api/battle-pass', battlePassRoutes);
+app.use('/api/shop', shopRoutes);
 
 const JOB_LOCKS = {
 	updateResources: 9101,
@@ -208,7 +212,8 @@ const JOB_LOCKS = {
 	rogueAiRaids: 9113,
 	rogueAiGrowth: 9114,
 	purgeNexuslessMembers: 9115,
-	processScheduledAttacks: 9116
+	processScheduledAttacks: 9116,
+	processSeasonExpiry: 9117
 };
 
 async function runWithPgAdvisoryLock(
@@ -348,6 +353,14 @@ prisma
 			() => {
 				void runWithPgAdvisoryLock(JOB_LOCKS.processDominance, 'process_dominance', () =>
 					processDominanceVictories()
+				);
+			},
+			10 * 60 * 1000
+		);
+		setInterval(
+			() => {
+				void runWithPgAdvisoryLock(JOB_LOCKS.processSeasonExpiry, 'process_season_expiry', () =>
+					processSeasonExpiry()
 				);
 			},
 			10 * 60 * 1000

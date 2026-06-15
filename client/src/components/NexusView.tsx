@@ -72,6 +72,11 @@ import {
 	getStealthVaultPerResource,
 	getTrainingChains,
 	MAX_TRAIN_PER_BATCH,
+	isOnboardingBuildEligible,
+	ONBOARDING_BUILD_TIME_SECONDS,
+	ONBOARDING_TRAIN_TIME_SECONDS,
+	ONBOARDING_TROOP_COST,
+	ONBOARDING_TROOP_TYPE,
 	trainingBuildingFor,
 	trainingChainFor,
 	TROOP_COMBAT_CLASS,
@@ -81,9 +86,12 @@ import {
 } from '../realtime/gameConstants.shared';
 import { BuildingCard, LockedBuildingPlot } from './BuildingCard';
 import { Countdown } from './Countdown';
-import { LiveResourceStrip } from './LiveResourceStrip';
 import { QueueCountdown } from './QueueCountdown';
 import { CombatIcon, ConstructionIcon } from './VexaraIcons';
+// Combat-legibility helpers (beta): pure derivations over the canonical client
+// combat mirror — surface the meta to new players, never change it.
+import { classMatchup, troopRole, TROOP_ROLE_META, type TroopRole } from '../utils/combatSim';
+import ResourceIcon from './ResourceIcon';
 
 // Troop + building art is served from the Cloudflare CDN — single source of
 // truth in data/gameIcons.ts (keyed by troop/building key). Rendered via plain
@@ -445,30 +453,45 @@ const NexusView: React.FC<NexusViewProps> = ({
 	onTabChange
 }) => {
 	const router = useRouter();
-	const { currentStep } = useOnboarding();
+	const { currentStep, isTroopDiscountActive, isEnabled, lastCompletedStep } = useOnboarding();
 	const [activeTab, setActiveTabState] = useState<NexusTab>(initialTab);
-	// Tab bar "stuck" detection: a zero-height sentinel sits just above the sticky
-	// tab bar. When it scrolls out of the top of the scroll container, the bar is
-	// pinned — we add .is-stuck so the gap-fill padding applies ONLY while stuck,
-	// leaving the at-rest layout untouched.
-	const tabStickySentinelRef = useRef<HTMLDivElement | null>(null);
-	const [tabBarStuck, setTabBarStuck] = useState(false);
+	// The section nav is now the vertical .nexus-inner-nav (position: sticky), so
+	// the old horizontal-tab-bar sticky-sentinel detection was removed.
 
-	useEffect(() => {
-		const sentinel = tabStickySentinelRef.current;
-		if (!sentinel || typeof IntersectionObserver === 'undefined') return;
-		const scrollRoot = sentinel.closest('.main-content') as HTMLElement | null;
-		// rootMargin top is shrunk by the scroll container's top padding so the
-		// sentinel registers "gone" exactly when the bar reaches the pinned position,
-		// not 32px early. Falls back to viewport root on mobile (.main-content is
-		// overflow: visible) where the sticky pins under the 56px header instead.
-		const observer = new IntersectionObserver(
-			([entry]) => setTabBarStuck(entry.intersectionRatio === 0),
-			{ root: scrollRoot, rootMargin: '-32px 0px 0px 0px', threshold: [0, 1] }
-		);
-		observer.observe(sentinel);
-		return () => observer.disconnect();
-	}, []);
+	// Inline rename of this nexus, edited from the inner-nav name.
+	const [isRenamingNexus, setIsRenamingNexus] = useState(false);
+	const [renameValue, setRenameValue] = useState(nexus.name);
+	const [isSavingNexusName, setIsSavingNexusName] = useState(false);
+	const beginNexusRename = () => {
+		setRenameValue(nexus.name);
+		setIsRenamingNexus(true);
+	};
+	const cancelNexusRename = () => {
+		setIsRenamingNexus(false);
+		setRenameValue(nexus.name);
+	};
+	const submitNexusRename = async () => {
+		const trimmed = renameValue.trim();
+		if (trimmed.length < 3 || trimmed.length > 32) {
+			showToast('Nexus name must be 3–32 characters', 'error');
+			return;
+		}
+		if (trimmed === nexus.name) {
+			setIsRenamingNexus(false);
+			return;
+		}
+		try {
+			setIsSavingNexusName(true);
+			await renameNexus(nexus._id, trimmed);
+			showToast('Nexus renamed', 'success');
+			setIsRenamingNexus(false);
+			onUpdate();
+		} catch (err: any) {
+			showToast(err.response?.data?.error || 'Error renaming nexus', 'error');
+		} finally {
+			setIsSavingNexusName(false);
+		}
+	};
 	const setActiveTab = (tab: NexusTab) => {
 		setActiveTabState(tab);
 		onTabChange?.(tab);
@@ -477,9 +500,6 @@ const NexusView: React.FC<NexusViewProps> = ({
 	// Incoming strikes panel collapse toggle. Defaults expanded so an active
 	// threat is visible without a click, but can be shrunk when it's crowded.
 	const [incomingCollapsed, setIncomingCollapsed] = useState(false);
-	const [isRenamingNexus, setIsRenamingNexus] = useState(false);
-	const [renameValue, setRenameValue] = useState(nexus.name);
-	const [isSavingNexusName, setIsSavingNexusName] = useState(false);
 	const showToastGlobal = useToast();
 	const { data: galaxyEvents = [] } = useQuery({
 		queryKey: ['galaxyEvents'],
@@ -577,40 +597,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 		setInfoModal({ title, description, codexHref });
 	};
 
-	const submitNexusRename = async () => {
-		const trimmed = renameValue.trim();
-		if (trimmed.length < 3 || trimmed.length > 32) {
-			showToast('Nexus name must be between 3 and 32 characters', 'error');
-			return;
-		}
-
-		if (trimmed === nexus.name) {
-			setIsRenamingNexus(false);
-			return;
-		}
-
-		try {
-			setIsSavingNexusName(true);
-			await renameNexus(nexus._id, trimmed);
-			showToast('Nexus renamed successfully', 'success');
-			setIsRenamingNexus(false);
-			onUpdate();
-		} catch (err: any) {
-			showToast(err.response?.data?.error || 'Error renaming nexus', 'error');
-		} finally {
-			setIsSavingNexusName(false);
-		}
-	};
-
-	const beginNexusRename = () => {
-		setRenameValue(nexus.name);
-		setIsRenamingNexus(true);
-	};
-
-	const cancelNexusRename = () => {
-		setRenameValue(nexus.name);
-		setIsRenamingNexus(false);
-	};
+	// Nexus rename now lives in the sidebar list (NexusSidebar), next to the name.
 
 	const handleClaimQuestReward = async (batchId: string) => {
 		if (claimingBatch) return;
@@ -754,12 +741,6 @@ const NexusView: React.FC<NexusViewProps> = ({
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [nexus._id, nexus.buildQueue.length, nexus.trainingQueue.length]);
-
-	useEffect(() => {
-		if (!isRenamingNexus) {
-			setRenameValue(nexus.name);
-		}
-	}, [isRenamingNexus, nexus.name]);
 
 	const refreshTroopTransfers = () => {
 		refetchTransfers();
@@ -1068,6 +1049,13 @@ const NexusView: React.FC<NexusViewProps> = ({
 	) => {
 		if (!canTrain) return { maxTrainable: 0, shortageReasons: [] };
 
+		// During onboarding the Assault Trooper is effectively free so the player
+		// can complete the train step without needing to have accumulated resources.
+		const effectiveCosts =
+			isTroopDiscountActive && troopType === ONBOARDING_TROOP_TYPE
+				? { ...costs, ...ONBOARDING_TROOP_COST }
+				: costs;
+
 		// Interpolate from the server snapshot at this render. This does NOT
 		// tick - values only refresh when the snapshot does (refetch or push).
 		// Real-time ticking for the troop cards lives in a future <TroopCard>
@@ -1087,14 +1075,14 @@ const NexusView: React.FC<NexusViewProps> = ({
 		const availableOre = interpolated?.ore ?? nexus.resources.ore;
 
 		const byBiomass =
-			costs.biomass > 0 ? Math.floor(availableBiomass / costs.biomass) : Number.POSITIVE_INFINITY;
+			effectiveCosts.biomass > 0 ? Math.floor(availableBiomass / effectiveCosts.biomass) : Number.POSITIVE_INFINITY;
 		const byAlloy =
-			costs.alloy > 0 ? Math.floor(availableAlloy / costs.alloy) : Number.POSITIVE_INFINITY;
-		const byOre = costs.ore > 0 ? Math.floor(availableOre / costs.ore) : Number.POSITIVE_INFINITY;
+			effectiveCosts.alloy > 0 ? Math.floor(availableAlloy / effectiveCosts.alloy) : Number.POSITIVE_INFINITY;
+		const byOre = effectiveCosts.ore > 0 ? Math.floor(availableOre / effectiveCosts.ore) : Number.POSITIVE_INFINITY;
 		const remainingPopulation = Math.max(0, nexus.population.max - nexus.population.current);
 		const byPopulation =
-			costs.population > 0
-				? Math.floor(remainingPopulation / costs.population)
+			effectiveCosts.population > 0
+				? Math.floor(remainingPopulation / effectiveCosts.population)
 				: Number.POSITIVE_INFINITY;
 
 		let maxTrainable = Math.max(0, Math.floor(Math.min(byBiomass, byAlloy, byOre, byPopulation)));
@@ -1115,11 +1103,11 @@ const NexusView: React.FC<NexusViewProps> = ({
 		const shortageReasons: string[] = [];
 		if (maxTrainable === 0) {
 			if (byBiomass === 0)
-				shortageReasons.push(`Biomass ${Math.floor(availableBiomass)}/${costs.biomass}`);
-			if (byAlloy === 0) shortageReasons.push(`Alloy ${Math.floor(availableAlloy)}/${costs.alloy}`);
-			if (byOre === 0) shortageReasons.push(`Ore ${Math.floor(availableOre)}/${costs.ore}`);
+				shortageReasons.push(`Biomass ${Math.floor(availableBiomass)}/${effectiveCosts.biomass}`);
+			if (byAlloy === 0) shortageReasons.push(`Alloy ${Math.floor(availableAlloy)}/${effectiveCosts.alloy}`);
+			if (byOre === 0) shortageReasons.push(`Ore ${Math.floor(availableOre)}/${effectiveCosts.ore}`);
 			if (byPopulation === 0)
-				shortageReasons.push(`Population ${remainingPopulation}/${costs.population} free`);
+				shortageReasons.push(`Population ${remainingPopulation}/${effectiveCosts.population} free`);
 		}
 
 		return { maxTrainable, shortageReasons };
@@ -1187,13 +1175,21 @@ const NexusView: React.FC<NexusViewProps> = ({
 		// un-discounted base; we display the discounted wall-clock time, so swap
 		// it for the effective build seconds (Command Core + Nexus type applied).
 		const baseCost = getSharedBuildingCost(building, currentLevel);
-		const time = getEffectiveBuildTimeSeconds(
+		const onboardingBuild = isOnboardingBuildEligible(
 			building,
 			currentLevel,
-			nexus.buildings.commandCore,
-			nexus.nexusType,
-			nexus.nexusTypeDoubled ?? false
+			isEnabled,
+			lastCompletedStep
 		);
+		const time = onboardingBuild
+			? ONBOARDING_BUILD_TIME_SECONDS
+			: getEffectiveBuildTimeSeconds(
+					building,
+					currentLevel,
+					nexus.buildings.commandCore,
+					nexus.nexusType,
+					nexus.nexusTypeDoubled ?? false
+				);
 		return { biomass: baseCost.biomass, alloy: baseCost.alloy, ore: baseCost.ore, time };
 	};
 
@@ -2019,25 +2015,6 @@ const NexusView: React.FC<NexusViewProps> = ({
 		return null;
 	};
 
-	// Single "next action" surfacing across all tabs — finds the first incomplete
-	// intro-chapter quest regardless of which tab it lives on, so the player has
-	// a persistent breadcrumb in the header. The per-tab getNextTip stays for the
-	// inline tab tooltips; this is the global form used by the header chip.
-	// Returns the destination tab so clicking the chip can route the player to
-	// the right place ('map' redirects to Starfield navigation instead).
-	const getNextAction = (): { id: string; title: string; tab: IntroQuest['tab'] } | null => {
-		if (allQuestsComplete) return null;
-		for (const batchId of TIP_BATCH_IDS) {
-			const batch = questBatches.find((b) => b.id === batchId);
-			if (!batch) continue;
-			const quest = batch.quests.find((q) => !q.completed);
-			if (quest) return { id: `next-${batchId}-${quest.id}`, title: quest.title, tab: quest.tab };
-			// Stop at the first batch with any incomplete quests — same reasoning as getNextTip.
-			if (batch.quests.some((q) => !q.completed)) return null;
-		}
-		return null;
-	};
-	const nextAction = getNextAction();
 	const activeBuild = nexus.buildQueue[0];
 	const activeTraining = nexus.trainingQueue[0];
 	// (`activeBuildTimer` and `activeTrainingTimer` were removed, the live countdown labels are
@@ -2045,86 +2022,145 @@ const NexusView: React.FC<NexusViewProps> = ({
 	// each tick just to recompute these strings.)
 
 	return (
-		<div className="nexus-view">
-			<div className="nexus-header">
-				<div className="nexus-title-row">
+		<div className="nexus-view nexus-view--split">
+			{/* Inner-left section nav: nexus name header + vertical tab column. Sits
+			    inside the content area (distinct from the outer rail that lists your
+			    nexuses) and scrolls with the page. Anchors the tabs to a real edge. */}
+			<aside className="nexus-inner-nav">
+				<div className="nexus-inner-nav-head">
+					<span className="nexus-inner-nav-eyebrow">// COMMAND NEXUS</span>
 					{isRenamingNexus ? (
-						<>
+						<div className="nexus-inner-rename" onClick={(e) => e.stopPropagation()}>
 							<input
-								className="nexus-rename-input"
+								className="nexus-rename-input-sm"
 								value={renameValue}
 								onChange={(e) => setRenameValue(e.target.value)}
 								onKeyDown={(e) => {
-									if (e.key === 'Enter') {
-										e.preventDefault();
-										submitNexusRename();
-									}
-									if (e.key === 'Escape') {
-										e.preventDefault();
-										cancelNexusRename();
-									}
+									if (e.key === 'Enter') submitNexusRename();
+									if (e.key === 'Escape') cancelNexusRename();
 								}}
-								maxLength={32}
 								autoFocus
-								aria-label="Edit nexus name"
+								maxLength={32}
+								aria-label="Rename nexus"
 							/>
 							<button
-								type="button"
-								className="nexus-rename-action save"
+								className="nexus-rename-btn-sm save"
+								disabled={isSavingNexusName}
 								onClick={submitNexusRename}
-								disabled={isSavingNexusName}
-								title="Save Nexus Name"
-								aria-label="Save Nexus Name"
+								title="Save"
+								aria-label="Save name"
 							>
-								{isSavingNexusName ? '…' : <Check size={14} />}
+								<Check size={13} />
 							</button>
 							<button
-								type="button"
-								className="nexus-rename-action cancel"
+								className="nexus-rename-btn-sm cancel"
 								onClick={cancelNexusRename}
-								disabled={isSavingNexusName}
-								title="Cancel Rename"
-								aria-label="Cancel Rename"
+								title="Cancel"
+								aria-label="Cancel rename"
 							>
-								<X size={14} />
+								<X size={13} />
 							</button>
-						</>
+						</div>
 					) : (
-						<>
-							<h2>{nexus.name}</h2>
+						<div className="nexus-inner-nav-name" title={nexus.name}>
+							<span className="nexus-inner-nav-name-text">{nexus.name}</span>
 							<button
 								type="button"
-								className="nexus-rename-btn"
+								className="nexus-inner-nav-edit"
 								onClick={beginNexusRename}
-								title="Rename Nexus"
-								aria-label="Rename Nexus"
+								title="Rename nexus"
+								aria-label="Rename nexus"
 							>
-								<Pencil size={14} />
+								<Pencil size={12} />
 							</button>
-						</>
+						</div>
 					)}
 				</div>
-				{nextAction && (
+				<nav className="nexus-inner-nav-tabs" aria-label="Nexus sections">
 					<button
 						type="button"
-						className="next-action-chip"
-						onClick={() => {
-							if (nextAction.tab === 'map') {
-								router.push('/starfield');
-								return;
-							}
-							setActiveTab(nextAction.tab);
-						}}
-						aria-label={`Next action: ${nextAction.title}`}
+						className={`nexus-inner-tab${activeTab === 'overview' ? ' active' : ''}`}
+						onClick={() => setActiveTab('overview')}
 					>
-						<Sparkles size={12} aria-hidden="true" />
-						<span className="next-action-chip-label">Next:</span>
-						<span className="next-action-chip-title">{nextAction.title}</span>
-						<span className="next-action-chip-arrow" aria-hidden="true">
-							→
-						</span>
+						<span>Overview</span>
 					</button>
+					<button
+						type="button"
+						className={`nexus-inner-tab${activeTab === 'buildings' ? ' active' : ''}`}
+						onClick={() => setActiveTab('buildings')}
+					>
+						<span>Buildings</span>
+						{activeBuild && <span className="nexus-tab-badge" />}
+					</button>
+					<button
+						type="button"
+						className={`nexus-inner-tab${activeTab === 'troops' ? ' active' : ''}`}
+						onClick={() => setActiveTab('troops')}
+					>
+						<span>Troops</span>
+						{activeTraining && <span className="nexus-tab-badge" />}
+					</button>
+					<button
+						type="button"
+						className={`nexus-inner-tab${activeTab === 'deployed' ? ' active' : ''}`}
+						onClick={() => setActiveTab('deployed')}
+					>
+						<span>Deployed</span>
+						{(troopTransfers.length > 0 || outgoingAttacks.length > 0) && (
+							<span className="nexus-tab-badge" />
+						)}
+					</button>
+					{ownNexuses.length > 1 && (
+						<button
+							type="button"
+							className={`nexus-inner-tab${activeTab === 'logistics' ? ' active' : ''}`}
+							onClick={() => setActiveTab('logistics')}
+						>
+							<span>Supply</span>
+						</button>
+					)}
+				</nav>
+			</aside>
+
+			<div className="nexus-content-col">
+			{/* Mobile-only: nexus name + rename, shown below the sticky tab bar.
+			    Hidden on desktop where the name lives in nexus-inner-nav-head. */}
+			<div className="nexus-mobile-identity">
+				{isRenamingNexus ? (
+					<div className="nexus-inner-rename" onClick={(e) => e.stopPropagation()}>
+						<input
+							className="nexus-rename-input-sm"
+							value={renameValue}
+							onChange={(e) => setRenameValue(e.target.value)}
+							onKeyDown={(e) => {
+								if (e.key === 'Enter') submitNexusRename();
+								if (e.key === 'Escape') cancelNexusRename();
+							}}
+							autoFocus
+							maxLength={32}
+							aria-label="Rename nexus"
+						/>
+						<button className="nexus-rename-btn-sm save" disabled={isSavingNexusName} onClick={submitNexusRename} title="Save" aria-label="Save name">
+							<Check size={13} />
+						</button>
+						<button className="nexus-rename-btn-sm cancel" onClick={cancelNexusRename} title="Cancel" aria-label="Cancel rename">
+							<X size={13} />
+						</button>
+					</div>
+				) : (
+					<>
+						<span className="nexus-inner-nav-eyebrow">// {nexus.nexusType ? nexus.nexusType.replace(/([A-Z])/g, ' $1').trim().toUpperCase() : 'COMMAND NEXUS'}</span>
+						<span className="nexus-inner-nav-name-text" style={{ fontWeight: 700, color: 'var(--text-strong)', fontSize: 'var(--text-md)' }}>{nexus.name}</span>
+						<button type="button" className="nexus-inner-nav-edit" onClick={beginNexusRename} title="Rename nexus" aria-label="Rename nexus">
+							<Pencil size={12} />
+						</button>
+					</>
 				)}
+			</div>
+
+			{/* Nexus-type buff banner — a thin status strip at the top of the content
+			    column. */}
+			<div className="nexus-buff-banner-row">
 				{nexus.nexusType &&
 					NEXUS_TYPES_WITH_BUFF.has(nexus.nexusType) &&
 					(() => {
@@ -2204,58 +2240,6 @@ const NexusView: React.FC<NexusViewProps> = ({
 							</div>
 						);
 					})()}
-				<LiveResourceStrip
-					baseResources={nexus.resources}
-					production={production}
-					storageCapacity={storageCapacity}
-					lastResourceUpdate={nexus.lastResourceUpdate}
-				/>
-			</div>
-
-			<div ref={tabStickySentinelRef} className="nexus-tab-sticky-sentinel" aria-hidden="true" />
-			<div className={`nexus-tab-bar${tabBarStuck ? ' is-stuck' : ''}`}>
-				<button
-					type="button"
-					className={`nexus-tab-btn${activeTab === 'overview' ? ' active' : ''}`}
-					onClick={() => setActiveTab('overview')}
-				>
-					<span>Overview</span>
-				</button>
-				<button
-					type="button"
-					className={`nexus-tab-btn${activeTab === 'buildings' ? ' active' : ''}`}
-					onClick={() => setActiveTab('buildings')}
-				>
-					<span>Buildings</span>
-					{activeBuild && <span className="nexus-tab-badge" />}
-				</button>
-				<button
-					type="button"
-					className={`nexus-tab-btn${activeTab === 'troops' ? ' active' : ''}`}
-					onClick={() => setActiveTab('troops')}
-				>
-					<span>Troops</span>
-					{activeTraining && <span className="nexus-tab-badge" />}
-				</button>
-				<button
-					type="button"
-					className={`nexus-tab-btn${activeTab === 'deployed' ? ' active' : ''}`}
-					onClick={() => setActiveTab('deployed')}
-				>
-					<span>Deployed</span>
-					{(troopTransfers.length > 0 || outgoingAttacks.length > 0) && (
-						<span className="nexus-tab-badge" />
-					)}
-				</button>
-				{ownNexuses.length > 1 && (
-					<button
-						type="button"
-						className={`nexus-tab-btn${activeTab === 'logistics' ? ' active' : ''}`}
-						onClick={() => setActiveTab('logistics')}
-					>
-						<span>Supply</span>
-					</button>
-				)}
 			</div>
 
 			<div className="tab-content">
@@ -2267,7 +2251,12 @@ const NexusView: React.FC<NexusViewProps> = ({
 						<NewbieProtectionBanner endsAt={nexus.newbieProtectionEndsAt} />
 					)}
 					<NexusMap nexus={nexus} onClickBuilding={() => setActiveTab('buildings')} />
-					<DailyStreaks active={activeTab === 'overview'} />
+					{/* Overview copy of Daily Quests. On wide screens the right rail
+					    (GameLayout) shows them, so this is hidden to avoid duplication;
+					    below the rail's breakpoint it reappears as the fallback. */}
+					<div className="overview-daily-streaks">
+						<DailyStreaks active={activeTab === 'overview'} />
+					</div>
 
 					<div className="nexus-stats-row" aria-label="Nexus key stats">
 						<div className="nexus-stat">
@@ -2329,52 +2318,10 @@ const NexusView: React.FC<NexusViewProps> = ({
 						</div>
 					</div>
 
-					<div className="overview-shortcuts">
-						<button
-							type="button"
-							className="overview-shortcut-card"
-							onClick={() => setActiveTab('buildings')}
-						>
-							<span className="overview-shortcut-title">
-								Construction
-							</span>
-							<span className="overview-shortcut-status">
-								{activeBuild ? 'Active upgrade in progress' : 'No active construction'}
-							</span>
-							<span className="overview-shortcut-subtitle">
-								{activeBuild ? (
-									<>
-										{BUILDING_NAMES[activeBuild.building] || activeBuild.building} → Lv
-										{activeBuild.targetLevel} • <Countdown endAt={activeBuild.completesAt} />
-									</>
-								) : (
-									'Open Buildings'
-								)}
-							</span>
-						</button>
-						<button
-							type="button"
-							className="overview-shortcut-card"
-							onClick={() => setActiveTab('troops')}
-						>
-							<span className="overview-shortcut-title">
-								Training
-							</span>
-							<span className="overview-shortcut-status">
-								{activeTraining ? 'Troops are being trained' : 'No active training'}
-							</span>
-							<span className="overview-shortcut-subtitle">
-								{activeTraining ? (
-									<>
-										{activeTraining.amount}x{' '}
-										{TROOP_NAMES[activeTraining.troopType] || activeTraining.troopType} •{' '}
-										<Countdown endAt={activeTraining.completesAt} />
-									</>
-								) : (
-									'Open Troops'
-								)}
-							</span>
-						</button>
+					{/* Construction/Training shortcut cards removed — they duplicated the
+					    Buildings/Troops tabs and the queue-summary rows below. Strikes
+					    stays: it shows live attack movements with no tab of its own. */}
+					<div className="overview-shortcuts overview-shortcuts--strikes-only">
 						<div className="overview-shortcut-card overview-strikes-card">
 							<span className="overview-shortcut-title">
 								Strikes
@@ -2987,6 +2934,38 @@ const NexusView: React.FC<NexusViewProps> = ({
 														{totalCount.toLocaleString()}
 													</span>
 												</div>
+												{(() => {
+													// Glass-cannon garrison warning (beta): strikers are high-
+													// attack / low-defense and make poor defenders by design.
+													// If most of what's sitting home is strikers, nudge the
+													// player to keep anvils for defense. Scouts/conquest units
+													// are excluded — they're neither the problem nor the fix.
+													let strikerCount = 0;
+													let anvilCount = 0;
+													for (const { rows } of entries) {
+														for (const { type, count } of rows) {
+															const role = troopRole(type as any);
+															if (role === 'striker') strikerCount += count;
+															else if (role === 'anvil') anvilCount += count;
+														}
+													}
+													const fighting = strikerCount + anvilCount;
+													const mostlyStrikers =
+														fighting >= 5 && anvilCount === 0
+															? true
+															: fighting > 0 && strikerCount / fighting >= 0.8 && anvilCount < strikerCount;
+													if (!mostlyStrikers) return null;
+													return (
+														<div className="garrison-warning" role="note">
+															<AlertTriangle size={14} aria-hidden="true" />
+															<span>
+																This nexus is held mostly by <strong>Strikers</strong> — they
+																hit hard on attack but defend poorly. Train an{' '}
+																<strong>Anvil</strong> (high-defense unit) to hold your nexus.
+															</span>
+														</div>
+													);
+												})()}
 												{entries.map(({ category, rows }) =>
 													rows.length === 0 ? null : (
 														<div key={category} className="troop-category-section">
@@ -3185,22 +3164,28 @@ const NexusView: React.FC<NexusViewProps> = ({
 															(nexus.buildings as unknown as Record<string, number>)[
 																trainingBuildingFor(type)
 															] ?? 0;
-														const trainSeconds = canTrain
-															? getEffectiveTrainTimeSeconds(
-																	type,
-																	classBuildingLevel,
-																	nexus.nexusType,
-																	nexus.nexusTypeDoubled ?? false,
-																	nexus.buildings.stealthArray ?? 0
-																)
-															: costs.time;
+														const isOnboardingUnit = isTroopDiscountActive && type === ONBOARDING_TROOP_TYPE;
+														const trainSeconds = isOnboardingUnit
+															? ONBOARDING_TRAIN_TIME_SECONDS
+															: canTrain
+																? getEffectiveTrainTimeSeconds(
+																		type,
+																		classBuildingLevel,
+																		nexus.nexusType,
+																		nexus.nexusTypeDoubled ?? false,
+																		nexus.buildings.stealthArray ?? 0
+																	)
+																: costs.time;
 														// Pre-bonus time (class-building discount applied, Nexus type NOT applied).
 														// Shown as strikethrough next to the actual time when Military Outpost is active,
 														// so the player can see the bonus working.
-														const preBonusTrainSeconds = canTrain
-															? getRecruitDiscountedTrainSeconds(type, classBuildingLevel, nexus.buildings.stealthArray ?? 0)
-															: costs.time;
+														const preBonusTrainSeconds = isOnboardingUnit
+															? ONBOARDING_TRAIN_TIME_SECONDS
+															: canTrain
+																? getRecruitDiscountedTrainSeconds(type, classBuildingLevel, nexus.buildings.stealthArray ?? 0)
+																: costs.time;
 														const militaryBonusActive =
+															!isOnboardingUnit &&
 															nexus.nexusType === 'Military Outpost' &&
 															type !== 'overseer' &&
 															preBonusTrainSeconds !== trainSeconds;
@@ -3241,20 +3226,8 @@ const NexusView: React.FC<NexusViewProps> = ({
 																	</div>
 																)}
 																<div className="troop-header">
-																	<h5>{TROOP_NAMES[type]}</h5>
-																	<div className="troop-header-right">
-																		{(() => {
-																			const cls = TROOP_COMBAT_CLASS[type];
-																			const meta = cls ? TROOP_CLASS_META[cls] : null;
-																			return meta ? (
-																				<span
-																					className={`troop-class-badge troop-class-badge--${cls}`}
-																					title={meta.title}
-																				>
-																					{meta.label}
-																				</span>
-																			) : null;
-																		})()}
+																	<div className="troop-header-top">
+																		<h5>{TROOP_NAMES[type]}</h5>
 																		<button
 																			type="button"
 																			className="troop-info"
@@ -3271,18 +3244,52 @@ const NexusView: React.FC<NexusViewProps> = ({
 																			<Info size={14} />
 																		</button>
 																	</div>
+																	<div className="troop-header-badges">
+																		{(() => {
+																			const role = troopRole(type as any) as TroopRole;
+																			const roleMeta = TROOP_ROLE_META[role];
+																			return (
+																				<span
+																					className={`troop-role-badge troop-role-badge--${role}`}
+																					title={roleMeta.title}
+																				>
+																					{roleMeta.label}
+																				</span>
+																			);
+																		})()}
+																		{(() => {
+																			const cls = TROOP_COMBAT_CLASS[type];
+																			const meta = cls ? TROOP_CLASS_META[cls] : null;
+																			if (!meta) return null;
+																			const matchup = classMatchup(cls as any);
+																			return (
+																				<span
+																					className={`troop-class-badge troop-class-badge--${cls}`}
+																					title={meta.title}
+																				>
+																					{meta.label}
+																					{matchup.beats && (
+																						<span className="troop-class-beats" aria-hidden="true">
+																							{' ▸ '}
+																							{TROOP_CLASS_META[matchup.beats].label}
+																						</span>
+																					)}
+																				</span>
+																			);
+																		})()}
+																	</div>
 																</div>
 																<div className="train-costs">
 																	<span className="cost-pill">
-																		<span className="cost-pill-label">Biomass</span>
+																		<ResourceIcon kind="biomass" size={30} className="cost-pill-icon" />
 																		{costs.biomass}
 																	</span>
 																	<span className="cost-pill">
-																		<span className="cost-pill-label">Alloy</span>
+																		<ResourceIcon kind="alloy" size={30} className="cost-pill-icon" />
 																		{costs.alloy}
 																	</span>
 																	<span className="cost-pill">
-																		<span className="cost-pill-label">Ore</span>
+																		<ResourceIcon kind="ore" size={30} className="cost-pill-icon" />
 																		{costs.ore}
 																	</span>
 																	<span className="cost-pill">
@@ -3884,6 +3891,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 					</div>
 				</div>
 			)}
+			</div>
 		</div>
 	);
 };

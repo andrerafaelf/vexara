@@ -113,7 +113,8 @@ export default function GalaxiesPage({ adminFetch, showToast }: Props) {
 		winShare: '',
 		winSustainHours: '',
 		winMinPlayers: '',
-		winMinFactions: ''
+		winMinFactions: '',
+		speedMultiplier: ''
 	});
 	const [savingConfig, setSavingConfig] = useState(false);
 
@@ -307,7 +308,8 @@ export default function GalaxiesPage({ adminFetch, showToast }: Props) {
 			winShare: g.winShare != null ? String(Math.round(g.winShare * 100)) : '',
 			winSustainHours: g.winSustainHours != null ? String(g.winSustainHours) : '',
 			winMinPlayers: g.winMinPlayers != null ? String(g.winMinPlayers) : '',
-			winMinFactions: g.winMinFactions != null ? String(g.winMinFactions) : ''
+			winMinFactions: g.winMinFactions != null ? String(g.winMinFactions) : '',
+			speedMultiplier: g.speedMultiplier != null && g.speedMultiplier !== 1 ? String(g.speedMultiplier) : ''
 		});
 		setConfigGalaxy(g);
 	};
@@ -320,7 +322,8 @@ export default function GalaxiesPage({ adminFetch, showToast }: Props) {
 			winShare: configForm.winShare.trim(),
 			winSustainHours: configForm.winSustainHours.trim(),
 			winMinPlayers: configForm.winMinPlayers.trim(),
-			winMinFactions: configForm.winMinFactions.trim()
+			winMinFactions: configForm.winMinFactions.trim(),
+			speedMultiplier: configForm.speedMultiplier.trim()
 		};
 		if (trimmed.winShare !== '') {
 			const pct = Number(trimmed.winShare);
@@ -329,11 +332,19 @@ export default function GalaxiesPage({ adminFetch, showToast }: Props) {
 				return;
 			}
 		}
+		if (trimmed.speedMultiplier !== '') {
+			const sp = Number(trimmed.speedMultiplier);
+			if (!Number.isFinite(sp) || sp <= 0 || sp > 100) {
+				showToast('Speed multiplier must be > 0 and ≤ 100', 'error');
+				return;
+			}
+		}
 		const body: Record<string, number | null> = {
 			winShare: trimmed.winShare === '' ? null : Number(trimmed.winShare) / 100,
 			winSustainHours: trimmed.winSustainHours === '' ? null : Number(trimmed.winSustainHours),
 			winMinPlayers: trimmed.winMinPlayers === '' ? null : Number(trimmed.winMinPlayers),
-			winMinFactions: trimmed.winMinFactions === '' ? null : Number(trimmed.winMinFactions)
+			winMinFactions: trimmed.winMinFactions === '' ? null : Number(trimmed.winMinFactions),
+			speedMultiplier: trimmed.speedMultiplier === '' ? 1.0 : Number(trimmed.speedMultiplier)
 		};
 		setSavingConfig(true);
 		try {
@@ -758,6 +769,7 @@ export default function GalaxiesPage({ adminFetch, showToast }: Props) {
 										{new Date(g.createdAt).toLocaleDateString()}
 										{g.startsAt ? ` · Starts ${new Date(g.startsAt).toLocaleString()}` : ''}
 										{` · Win ${g.winShare != null ? `${Math.round(g.winShare * 100)}%` : '65%'}/${g.winSustainHours != null ? g.winSustainHours : 36}h`}
+										{g.speedMultiplier != null && g.speedMultiplier !== 1 ? ` · ${g.speedMultiplier}×` : ''}
 									</div>
 								</div>
 								<div className="galaxy-item-actions">
@@ -1501,6 +1513,20 @@ export default function GalaxiesPage({ adminFetch, showToast }: Props) {
 										value={configForm.winMinFactions}
 										onChange={(e) =>
 											setConfigForm({ ...configForm, winMinFactions: e.target.value })
+										}
+									/>
+								</div>
+								<div className="form-field">
+									<label className="form-label">Speed multiplier (default 1×)</label>
+									<input
+										type="number"
+										min={0.1}
+										max={100}
+										step={0.1}
+										placeholder="1"
+										value={configForm.speedMultiplier}
+										onChange={(e) =>
+											setConfigForm({ ...configForm, speedMultiplier: e.target.value })
 										}
 									/>
 								</div>

@@ -5,9 +5,10 @@ import { comparePassword, hashPassword } from '../models/User.js';
 import { sendPasswordChanged } from '../services/emailService.js';
 import { type AuthRequest, TROOP_KEYS } from '../types/index.js';
 import { validatePassword } from '../utils/validation.js';
-import { logError } from '../utils/logger.js';
+import { logError, logGameEvent, logGameEventOnce } from '../utils/logger.js';
 import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
 import { getResourceProduction } from '../utils/economy.js';
+import { resolveTitle } from '../utils/commanderTitle.js';
 import { sortOwnedNexuses } from '../services/nexusService.js';
 
 type FriendshipStatus = 'self' | 'none' | 'pending_outgoing' | 'pending_incoming' | 'friends';
@@ -42,7 +43,9 @@ export async function listPlayersInGalaxy(req: AuthRequest, res: Response): Prom
 							supporterTier: true,
 							isFounder: true,
 							isAlphaFounder: true,
-							avatarKey: true
+							avatarKey: true,
+							avatarBorder: true,
+							activeTitle: true
 						}
 					}
 				},
@@ -78,6 +81,8 @@ export async function listPlayersInGalaxy(req: AuthRequest, res: Response): Prom
 					isAlphaFounder: p.user?.isAlphaFounder ?? false,
 					avatarUrl: avatarUrl(p.userId, p.user?.avatarKey ?? null),
 					avatarUrlSm: avatarUrlSm(p.userId, p.user?.avatarKey ?? null),
+					avatarBorder: p.user?.avatarBorder ?? null,
+					activeTitle: p.user?.activeTitle ?? null,
 					points: p.points,
 					joinedAt: p.joinedAt,
 					nexuses: nexusByOwner.get(p.userId) || 0,
@@ -114,7 +119,16 @@ export async function getMe(req: AuthRequest, res: Response): Promise<void> {
 				isAlphaFounder: true,
 				avatarKey: true,
 				beginnerTipsEnabled: true,
-				onboardingStep: true
+				onboardingStep: true,
+				galaxiesWon: true,
+				galaxiesPlayed: true,
+				lifetimePoints: true,
+				vexPoints: true,
+				passTitle: true,
+				earnedBadges: true,
+				earnedTitles: true,
+				activeTitle: true,
+				avatarBorder: true
 			}
 		});
 		if (!user) {
@@ -132,7 +146,17 @@ export async function getMe(req: AuthRequest, res: Response): Promise<void> {
 			avatarUrl: avatarUrl(user.id, user.avatarKey),
 			avatarUrlSm: avatarUrlSm(user.id, user.avatarKey),
 			beginnerTipsEnabled: user.beginnerTipsEnabled,
-			onboardingStep: user.onboardingStep ?? null
+			onboardingStep: user.onboardingStep ?? null,
+			galaxiesWon: user.galaxiesWon,
+			galaxiesPlayed: user.galaxiesPlayed,
+			lifetimePoints: user.lifetimePoints,
+			vexPoints: user.vexPoints,
+			passTitle: user.passTitle ?? null,
+			earnedBadges: (user.earnedBadges as string[]) ?? [],
+			earnedTitles: (user.earnedTitles as string[]) ?? [],
+			activeTitle: user.activeTitle ?? null,
+			avatarBorder: user.avatarBorder ?? null,
+			commanderTitle: resolveTitle(user)
 		});
 	} catch (error) {
 		logError('unhandled_controller_error', {
@@ -152,7 +176,24 @@ export async function updateOnboardingStep(req: AuthRequest, res: Response): Pro
 		}
 		const data: Record<string, unknown> = { onboardingStep: step };
 		if (step === '__disabled__') data.beginnerTipsEnabled = false;
+		if (step === '__enabled__') { data.beginnerTipsEnabled = true; data.onboardingStep = null; }
 		await prisma.user.update({ where: { id: req.userId }, data });
+
+		// Funnel instrumentation (beta): record onboarding progression so we can
+		// see where new players drop off in the tutorial. '__disabled__' is a
+		// distinct opt-out signal (the player turned tips off). Each real step is a
+		// once-per-user milestone; the step id is folded into the event NAME
+		// (onboarding_step:<id>) so the once-per-user dedup is per-step — otherwise
+		// only the first step the user ever completed would log. The step is also
+		// kept in meta for convenience. A cohort query over event LIKE
+		// 'onboarding_step:%' charts how far players get through the guided flow.
+		if (req.userId) {
+			if (step === '__disabled__') {
+				logGameEvent('onboarding_disabled', req.userId, req.galaxyId);
+			} else if (step !== '__enabled__') {
+				logGameEventOnce(`onboarding_step:${step}`, req.userId, req.galaxyId, { step });
+			}
+		}
 		res.json({ success: true });
 	} catch (error) {
 		logError('unhandled_controller_error', {
@@ -230,7 +271,11 @@ export async function getPublicProfile(req: AuthRequest, res: Response): Promise
 				isAlphaFounder: true,
 				avatarKey: true,
 				createdAt: true,
-				activeGalaxyId: true
+				activeGalaxyId: true,
+				earnedBadges: true,
+				earnedTitles: true,
+				activeTitle: true,
+				avatarBorder: true
 			}
 		});
 		if (!user) {
@@ -474,7 +519,11 @@ export async function getPublicProfile(req: AuthRequest, res: Response): Promise
 				points: n.points
 			})),
 			galaxies,
-			friendship
+			friendship,
+			earnedBadges: (user.earnedBadges as string[]) ?? [],
+			earnedTitles: (user.earnedTitles as string[]) ?? [],
+			activeTitle: user.activeTitle ?? null,
+			avatarBorder: user.avatarBorder ?? null
 		});
 	} catch (error) {
 		logError('unhandled_controller_error', {

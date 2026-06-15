@@ -332,7 +332,12 @@ export async function launchAttack(input: LaunchAttackInput): Promise<LaunchAtta
 		(4 + (28 - minSpeed) / 10) *
 		(hasOverseer ? OVERSEER_TRAVEL_MULTIPLIER : 1) *
 		travelSpeedMultiplier;
-	const arrivesAt = new Date(Date.now() + travelTimeMinutes * 60 * 1000);
+	const galaxyForSpeed = await prisma.galaxy.findUnique({
+		where: { id: galaxyId },
+		select: { speedMultiplier: true }
+	});
+	const galaxySpeedMultiplier = galaxyForSpeed?.speedMultiplier ?? 1.0;
+	const arrivesAt = new Date(Date.now() + (travelTimeMinutes * 60 * 1000) / galaxySpeedMultiplier);
 
 	// Coordinated Assault PR1: resolve coordination pointers. Mutually exclusive
 	// and only meaningful for attack-type missions. Validated against the

@@ -238,6 +238,10 @@ export async function register(req: Request, res: Response): Promise<void> {
 		const verificationToken = generateToken();
 		const verificationExpiry = new Date(Date.now() + VERIFY_TOKEN_TTL_MS);
 
+		// 500 VP welcome grant for anyone who registers before 2028-06-30.
+		const EARLY_ACCESS_DEADLINE = new Date('2028-07-01T23:59:59Z');
+		const signupVp = new Date() <= EARLY_ACCESS_DEADLINE ? 500 : 0;
+
 		const user = await prisma.user.create({
 			data: {
 				username: rawUsername,
@@ -250,7 +254,9 @@ export async function register(req: Request, res: Response): Promise<void> {
 				utmMedium: pickUtm(body.utm_medium),
 				utmCampaign: pickUtm(body.utm_campaign),
 				emailVerificationToken: verificationToken,
-				emailVerificationTokenExpiresAt: verificationExpiry
+				emailVerificationTokenExpiresAt: verificationExpiry,
+				avatarKey: 'preset:assaultTrooper',
+				vexPoints: signupVp,
 			},
 			select: { id: true, username: true, email: true }
 		});

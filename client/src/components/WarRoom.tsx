@@ -29,6 +29,7 @@ import {
 	deleteWarRoomOperation,
 	deleteWarRoomWave,
 	getMyNexuses,
+	getNexusInfo,
 	getWarRoomOperation,
 	listWarRoomOperations,
 	markWarRoomSlotSent,
@@ -39,6 +40,11 @@ import {
 } from '../services/api';
 import { serverNow } from '../realtime/serverClock';
 import { travelMinutes } from '../utils/travel';
+// Combat-legibility (beta): summarize a pledge's class mix so contributors don't
+// commit a single-class wave that a defender can hard-counter. No defender intel
+// needed (the operation doesn't carry it), so this is composition-only — the full
+// matchup verdict lives in the Map attack flow.
+import { attackMatchupVerdict, describeComposition, type Force } from '../utils/combatSim';
 import '../styles/WarRoom.css';
 import type { Nexus } from '../types/game';
 import StarfieldMap, { type MapNexus } from './Map';
@@ -165,6 +171,17 @@ const TROOP_LABELS: Record<string, string> = {
 	overseer: 'Overseer'
 };
 
+// Display label for a combat class, used by the composition-coaching hint.
+function classLabel(cls: string): string {
+	const map: Record<string, string> = {
+		mobile: 'Mobile',
+		armor: 'Armor',
+		fire: 'Fire',
+		special: 'Special'
+	};
+	return map[cls] ?? cls;
+}
+
 function formatCountdown(ms: number): string {
 	if (ms < 0) return 'past';
 	const totalSec = Math.floor(ms / 1000);
@@ -230,6 +247,12 @@ export default function WarRoom({ factionId, myRole }: Props) {
 	const [selectedOpId, setSelectedOpId] = useState<number | null>(null);
 	const [selectedOp, setSelectedOp] = useState<Operation | null>(null);
 	const [opLoading, setOpLoading] = useState(false);
+	// Scouted defender composition for the operation's target, fetched per-viewer
+	// from the same intel endpoint Map.tsx uses. Non-null troops only when THIS
+	// viewer (or their faction) has live scout intel — otherwise the claim/slot
+	// hints fall back to composition-only coaching. Enables the full
+	// favoured/countered matchup verdict without any war-operation backend change.
+	const [targetDefenders, setTargetDefenders] = useState<Record<string, number> | null>(null);
 	const [now, setNow] = useState(serverNow());
 	const [myNexuses, setMyNexuses] = useState<Nexus[]>([]);
 	const [showCreate, setShowCreate] = useState(false);
@@ -329,6 +352,35 @@ export default function WarRoom({ factionId, myRole }: Props) {
 		loadOperation(selectedOpId);
 		setFocus(selectedOpId);
 	}, [selectedOpId, loadOperation, setFocus]);
+
+	// Fetch the target's scouted defender composition for the matchup verdict.
+	// Uses the per-viewer intel endpoint, so troops come back only when this
+	// viewer has live scout intel on the target; otherwise we clear it and the
+	// hints degrade to composition-only coaching. Keyed on the target nexus id so
+	// it refetches when the selected operation's target changes, not on every
+	// op:update socket refresh.
+	const targetNexusId = selectedOp?.targetNexusId ?? null;
+	useEffect(() => {
+		if (targetNexusId == null) {
+			setTargetDefenders(null);
+			return;
+		}
+		let cancelled = false;
+		getNexusInfo(String(targetNexusId))
+			.then((res) => {
+				if (cancelled) return;
+				const data = res.data as { intelLevel?: string; troops?: Record<string, number> } | null;
+				const scouted =
+					data?.intelLevel === 'scouted' || data?.intelLevel === 'owned';
+				setTargetDefenders(scouted && data?.troops ? data.troops : null);
+			})
+			.catch(() => {
+				if (!cancelled) setTargetDefenders(null);
+			});
+		return () => {
+			cancelled = true;
+		};
+	}, [targetNexusId]);
 
 	// socket event handler, keep list + selected op in sync without polling
 	useEffect(() => {
@@ -471,6 +523,7 @@ export default function WarRoom({ factionId, myRole }: Props) {
 							op={selectedOp}
 							now={now}
 							myNexuses={myNexuses}
+							targetDefenders={targetDefenders}
 							currentUserId={currentUserId}
 							canManage={canManage}
 							peers={socket.peers.filter((p) => p.focusOpId === selectedOp.id)}
@@ -685,6 +738,7 @@ function OperationBoard({
 	op,
 	now,
 	myNexuses,
+	targetDefenders,
 	currentUserId,
 	canManage,
 	peers,
@@ -696,6 +750,7 @@ function OperationBoard({
 	op: Operation;
 	now: number;
 	myNexuses: Nexus[];
+	targetDefenders: Record<string, number> | null;
 	currentUserId: number;
 	canManage: boolean;
 	peers: { userId: number; username: string; focusOpId: number | null }[];
@@ -788,6 +843,7 @@ function OperationBoard({
 						op={op}
 						now={now}
 						myNexuses={myNexuses}
+						targetDefenders={targetDefenders}
 						currentUserId={currentUserId}
 						canManage={canManage}
 						onReload={onReload}
@@ -883,6 +939,7 @@ function WaveCard({
 	op,
 	now,
 	myNexuses,
+	targetDefenders,
 	currentUserId,
 	canManage,
 	onReload
@@ -891,6 +948,7 @@ function WaveCard({
 	op: Operation;
 	now: number;
 	myNexuses: Nexus[];
+	targetDefenders: Record<string, number> | null;
 	currentUserId: number;
 	canManage: boolean;
 	onReload: () => void;
@@ -984,6 +1042,7 @@ function WaveCard({
 						canRelease={slot.userId === currentUserId || canManage}
 						onRelease={() => handleRelease(slot.id)}
 						target={{ x: op.targetX, y: op.targetY }}
+						targetDefenders={targetDefenders}
 						arrivalMs={arrivalMs}
 						now={now}
 					/>
@@ -1001,6 +1060,7 @@ function WaveCard({
 							wave={wave}
 							op={op}
 							myNexuses={myNexuses}
+							targetDefenders={targetDefenders}
 							onCancel={() => setShowClaim(false)}
 							onClaimed={() => {
 								setShowClaim(false);
@@ -1033,6 +1093,7 @@ function SlotRow({
 	canRelease,
 	onRelease,
 	target,
+	targetDefenders,
 	arrivalMs,
 	now
 }: {
@@ -1041,6 +1102,7 @@ function SlotRow({
 	canRelease: boolean;
 	onRelease: () => void;
 	target: { x: number; y: number };
+	targetDefenders: Record<string, number> | null;
 	arrivalMs: number;
 	now: number;
 }) {
@@ -1090,6 +1152,40 @@ function SlotRow({
 
 			<div className="warroom-slot-troops">
 				{troopSummary || <span className="muted">(no troops set)</span>}
+				{(() => {
+					// At-a-glance class lean for this pledge so the faction can spot
+					// composition gaps across the wave without opening each slot. When we
+					// have scout intel on the target, upgrade the chip to the real
+					// favoured/countered verdict against the actual defender garrison.
+					const comp = describeComposition(slot.troops as Force);
+					if (!comp.dominant) return null;
+					const verdict =
+						targetDefenders && sumTroops(slot.troops) > 0
+							? attackMatchupVerdict(slot.troops as Force, targetDefenders as Force)
+							: null;
+					const verdictClass = verdict ? ` warroom-slot-comp--${verdict}` : '';
+					const warnClass =
+						!verdict && comp.vulnerableTo ? ' warroom-slot-comp--warn' : '';
+					const title = verdict
+						? verdict === 'favored'
+							? `${comp.label} — counters the scouted defenders`
+							: verdict === 'countered'
+								? `${comp.label} — countered by the scouted defenders`
+								: `${comp.label} — no class edge vs the scouted defenders`
+						: comp.vulnerableTo
+							? `${comp.label} — vulnerable to ${classLabel(comp.vulnerableTo)}`
+							: comp.label;
+					return (
+						<span
+							className={`warroom-slot-comp warroom-slot-comp--${comp.dominant}${verdictClass}${warnClass}`}
+							title={title}
+						>
+							{comp.label}
+							{verdict === 'favored' && ' ✓'}
+							{verdict === 'countered' && ' ✕'}
+						</span>
+					);
+				})()}
 			</div>
 
 			<div className="warroom-slot-launch">
@@ -1126,12 +1222,14 @@ function ClaimForm({
 	wave,
 	op,
 	myNexuses,
+	targetDefenders,
 	onCancel,
 	onClaimed
 }: {
 	wave: Wave;
 	op: Operation;
 	myNexuses: Nexus[];
+	targetDefenders: Record<string, number> | null;
 	onCancel: () => void;
 	onClaimed: () => void;
 }) {
@@ -1268,6 +1366,74 @@ function ClaimForm({
 					);
 				})}
 			</div>
+
+			{total > 0 &&
+				(() => {
+					const comp = describeComposition(troops as Force);
+					if (!comp.dominant) return null;
+					// If we have scout intel on the target, show the REAL matchup
+					// verdict against its garrison (favoured/countered/even) — same as
+					// the solo attack flow. Without intel, fall back to composition-only
+					// coaching (don't pledge a single-class wave that's easy to counter).
+					const verdict = targetDefenders
+						? attackMatchupVerdict(troops as Force, targetDefenders as Force)
+						: null;
+					let className = 'warroom-comp-hint';
+					let icon = <Crosshair size={12} />;
+					let body: React.ReactNode;
+					if (verdict === 'favored') {
+						className += ' warroom-comp-hint--good';
+						body = (
+							<>
+								Your pledge is <strong>{comp.label}</strong> — it <strong>counters</strong> the
+								scouted defenders. Good pick.
+							</>
+						);
+					} else if (verdict === 'countered') {
+						className += ' warroom-comp-hint--warn';
+						icon = <AlertCircle size={12} />;
+						body = (
+							<>
+								Your pledge is <strong>{comp.label}</strong> — the scouted defenders{' '}
+								<strong>counter</strong> it. Bring the class that beats their garrison, or
+								coordinate classes across the wave.
+							</>
+						);
+					} else if (verdict === 'even') {
+						body = (
+							<>
+								Your pledge is <strong>{comp.label}</strong> — no class edge against the scouted
+								defenders. This comes down to raw power.
+							</>
+						);
+					} else {
+						// No intel — composition-only coaching.
+						if (comp.vulnerableTo) className += ' warroom-comp-hint--warn';
+						if (comp.vulnerableTo) icon = <AlertCircle size={12} />;
+						body = (
+							<>
+								Your pledge is <strong>{comp.label}</strong>.
+								{comp.vulnerableTo
+									? ` A defender heavy in ${classLabel(comp.vulnerableTo)} hard-counters it — mix in another class or coordinate classes across the wave. Scout the target for a precise read.`
+									: ' A balanced wave is harder for a defender to hard-counter.'}
+							</>
+						);
+					}
+					return (
+						<div className={className} role="note">
+							{icon}
+							<span>{body}</span>
+							<a
+								href="/calculator"
+								target="_blank"
+								rel="noopener noreferrer"
+								className="warroom-comp-calc-link"
+							>
+								Calculator
+							</a>
+						</div>
+					);
+				})()}
 
 			<div className="warroom-claim-actions">
 				<span className="warroom-claim-total">

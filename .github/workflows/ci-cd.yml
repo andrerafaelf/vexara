@@ -340,6 +340,7 @@ jobs:
             GRAFANA_PASSWORD=${{ secrets.GRAFANA_PASSWORD }}
             PGADMIN_EMAIL=${{ secrets.PGADMIN_EMAIL }}
             PGADMIN_PASSWORD=${{ secrets.PGADMIN_PASSWORD }}
+            ADMIN_ALLOW_IPS=${{ vars.ADMIN_ALLOW_IPS }}
             PGADMIN_ALLOW_IPS=${{ vars.PGADMIN_ALLOW_IPS }}
             RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
             KOFI_VERIFICATION_TOKEN=${{ secrets.KOFI_VERIFICATION_TOKEN }}

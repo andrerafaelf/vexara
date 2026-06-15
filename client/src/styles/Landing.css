@@ -118,8 +118,33 @@
 
 @media (max-width: 480px) {
 	.lp-hero-grid {
-		padding: 72px 16px 56px;
-		gap: 22px;
+		padding: 72px 16px 48px;
+		gap: 16px;
+	}
+}
+
+/* On very short phones (SE, landscape tablets) ensure the CTA row is visible */
+@media (max-width: 480px) and (max-height: 700px) {
+	.lp-hero-grid {
+		padding-top: 64px;
+		gap: 12px;
+	}
+	.lp-hero-title-thin {
+		font-size: clamp(22px, 5.5vw, 28px);
+	}
+	.lp-hero-title-shout {
+		font-size: clamp(32px, 9vw, 40px);
+	}
+	.lp-hero-title-edge {
+		font-size: clamp(20px, 4vw, 28px);
+	}
+	.lp-hero-sub {
+		font-size: 14px;
+		margin-top: 8px;
+	}
+	.lp-hero-stats {
+		margin-top: 16px;
+		padding-top: 16px;
 	}
 }
 
@@ -350,6 +375,8 @@
 	overflow: hidden;
 	border: 1px solid transparent;
 	cursor: pointer;
+	touch-action: manipulation;
+	-webkit-tap-highlight-color: transparent;
 	transition:
 		transform var(--duration-fast) var(--ease-out),
 		color var(--duration-base) var(--ease-out),
@@ -931,6 +958,8 @@
 	cursor: pointer;
 	text-align: left;
 	font-family: inherit;
+	touch-action: manipulation;
+	-webkit-tap-highlight-color: transparent;
 	transition:
 		background var(--duration-fast) var(--ease-out),
 		color var(--duration-fast) var(--ease-out);
@@ -1223,6 +1252,116 @@
 .lp-founder-stamp-arc-top,
 .lp-founder-stamp-arc-bot {
 	font-size: 9px;
+}
+
+/* =========================================================== SEASONS ==== */
+
+.lp-seasons-grid {
+	display: grid;
+	grid-template-columns: 1.2fr 1fr;
+	gap: 56px;
+	align-items: start;
+}
+
+@media (max-width: 880px) {
+	.lp-seasons-grid {
+		grid-template-columns: 1fr;
+		gap: 32px;
+	}
+}
+
+.lp-seasons-desc {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	color: var(--text-default);
+	line-height: 1.65;
+}
+
+.lp-seasons-desc p {
+	margin: 0;
+}
+
+.lp-seasons-desc strong {
+	color: var(--text-strong);
+	font-weight: 700;
+}
+
+.lp-seasons-pass {
+	background: var(--color-navy-700);
+	border: 1px solid var(--border-default);
+	border-top: 2px solid var(--accent);
+}
+
+.lp-seasons-pass-head {
+	padding: 14px 20px 12px;
+	border-bottom: 1px solid var(--border-default);
+}
+
+.lp-seasons-pass-label {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--accent);
+}
+
+.lp-seasons-pass-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.lp-seasons-pass-tier {
+	display: grid;
+	grid-template-columns: 44px 42px 1fr;
+	gap: 10px;
+	align-items: center;
+	padding: 10px 20px;
+	border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
+	font-size: 13px;
+}
+
+.lp-seasons-pass-lvl {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	letter-spacing: 0.1em;
+	color: var(--accent);
+	font-weight: 700;
+}
+
+.lp-seasons-pass-track {
+	font-family: var(--font-mono);
+	font-size: 9px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	padding: 2px 5px;
+	border-radius: 2px;
+	font-weight: 700;
+	white-space: nowrap;
+}
+
+.lp-seasons-pass-track--free {
+	background: rgba(255, 255, 255, 0.06);
+	color: var(--text-muted);
+}
+
+.lp-seasons-pass-track--paid {
+	background: rgba(255, 158, 61, 0.12);
+	color: var(--accent);
+}
+
+.lp-seasons-pass-reward {
+	color: var(--text-default);
+}
+
+.lp-seasons-pass-note {
+	margin: 0;
+	padding: 12px 20px;
+	font-size: 11px;
+	font-family: var(--font-mono);
+	color: var(--text-muted);
+	letter-spacing: 0.04em;
 }
 
 /* =========================================================== BUILTBY ==== */

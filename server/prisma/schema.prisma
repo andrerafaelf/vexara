@@ -30,7 +30,8 @@ model User {
   activeGalaxyId Int?
   activeGalaxy   Galaxy? @relation("UserActiveGalaxy", fields: [activeGalaxyId], references: [id])
 
-  galaxyPlayers GalaxyPlayer[]
+  galaxyPlayers  GalaxyPlayer[]
+  seasonRecords  SeasonRecord[]
 
   friendshipsA       Friendship[]    @relation("FriendshipUserA")
   friendshipsB       Friendship[]    @relation("FriendshipUserB")
@@ -68,6 +69,60 @@ model User {
   isFlagged        Boolean   @default(false)
   flagReason       String?   @db.VarChar(200)
   flaggedAt        DateTime?
+
+  galaxiesWon      Int       @default(0)
+  galaxiesPlayed   Int       @default(0)
+  lifetimePoints   Int       @default(0)
+
+  // Vex Points balance. Earned via battle pass rewards; spent on the pass itself
+  // (1,000 VP = one paid pass) and future shop items. €4.99 purchase grants 1,000 VP.
+  vexPoints Int @default(0)
+
+  // Best Vex Protocol pass title ever earned across all seasons (promoted from
+  // GalaxyPlayer.passTitle at season end). Separate from commanderTitle which
+  // is derived from combat/galaxy stats via resolveTitle().
+  passTitle     String? @db.VarChar(32)
+
+  // Permanent badge collection. Array of tier strings granted by the battle pass:
+  // ["bronze", "silver", "gold", "platinum"]. Highest tier badge wins display.
+  earnedBadges  Json    @default("[]")
+
+  // All pass titles ever earned across seasons. Superset of passTitle.
+  earnedTitles  Json    @default("[]")
+
+  // The title the player has chosen to display on their public profile (max 1).
+  // Must be a member of earnedTitles. Null = no title shown.
+  activeTitle   String? @db.VarChar(32)
+
+  // Key of the avatar border purchased from the shop and currently equipped.
+  // References ShopItem.key where type='border'. Null = no border.
+  avatarBorder  String? @db.VarChar(64)
+
+  // Timestamp of last username change. Enforces the 30-day cooldown.
+  usernameChangedAt DateTime?
+
+  // Set to true by the 20260615030000 migration that granted 1,000 VP to all
+  // pre-launch users. Prevents double-grants on re-run.
+  earlyAccessVpGranted Boolean @default(false)
+
+  shopPurchases ShopPurchase[]
+}
+
+// Permanent record of every shop purchase. Used for de-duplication
+// (one-time items), audit trail, and restoring inventory after rollbacks.
+model ShopPurchase {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  itemKey   String   @db.VarChar(64)
+  itemType  String   @db.VarChar(32)
+  vpSpent   Int
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, itemKey])
+  @@index([userId, createdAt])
 }
 
 enum GalaxyStatus {
@@ -94,6 +149,10 @@ model Galaxy {
   // When true, no new players may join (existing members keep playing). Set by admins.
   isLocked     Boolean      @default(false)
 
+  // Optional season end date. When set, a background job ends the galaxy at this
+  // time if the dominance condition hasn't already fired. NULL = no timer.
+  seasonEndsAt DateTime?
+
   // Per-galaxy dominance victory config. NULL = fall back to the engine defaults in
   // utils/dominance.ts (0.65 share, 36h sustain, 15 players, 4 factions). Lets admins
   // tune the win condition per world without a redeploy.
@@ -101,6 +160,11 @@ model Galaxy {
   winSustainHours Int?   // hours that share must be sustained before the galaxy ends
   winMinPlayers   Int?   // minimum players in the galaxy for victory to be eligible
   winMinFactions  Int?   // minimum distinct factions for victory to be eligible
+
+  // Speed world multiplier. 1.0 = normal, 5.0 = 5× speed. Divides all duration-based
+  // calculations (travel, builds, training, production elapsed-time). Default 1.0 is a
+  // no-op so all existing galaxies are unaffected.
+  speedMultiplier Float @default(1.0)
 
   activeUsers        User[]              @relation("UserActiveGalaxy")
   players            GalaxyPlayer[]
@@ -114,6 +178,22 @@ model Galaxy {
   galaxyEvents       GalaxyEvent[]
   factionTreaties    FactionTreaty[]
   wavePlans          WavePlan[]
+  galaxyAlerts       GalaxyAlert[]
+}
+
+// Email alert opt-in for a scheduled (pending) galaxy. One row per email per galaxy.
+// Sent via broadcastGalaxyAlert() when the admin triggers the launch notification.
+model GalaxyAlert {
+  id        Int       @id @default(autoincrement())
+  galaxyId  Int
+  email     String    @db.VarChar(254)
+  sentAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  galaxy Galaxy @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
+
+  @@unique([galaxyId, email])
+  @@index([galaxyId])
 }
 
 model GalaxyPlayer {
@@ -135,11 +215,40 @@ model GalaxyPlayer {
 
   dominanceSince DateTime?
 
+  seasonXp      Int     @default(0)
+  passLevel     Int     @default(0)
+  hasPaidPass   Boolean @default(false)
+  // Highest pass title earned this season. Promoted to User.earnedTitles at season end.
+  passTitle     String? @db.VarChar(32)
+  // JSON array of level numbers the player has already claimed rewards for.
+  claimedLevels Json    @default("[]")
+
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   galaxy Galaxy @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
 
   @@unique([userId, galaxyId])
   @@index([galaxyId])
+}
+
+// Permanent per-user record of each galaxy they participated in.
+// Written by endGalaxy() so the Hall of Champions has a stable snapshot
+// that survives GalaxyPlayer row mutations and player deletions.
+model SeasonRecord {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  galaxyId     Int
+  galaxyName   String   @db.VarChar(64)
+  endedAt      DateTime
+  points       Int
+  won          Boolean
+  factionName  String?  @db.VarChar(32)
+  factionTag   String?  @db.VarChar(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([galaxyId])
+  @@index([endedAt])
 }
 
 model AlphaSignup {
@@ -557,6 +666,11 @@ model Faction {
   motd            String?   @db.VarChar(512)
   createdAt       DateTime  @default(now())
   dominanceSince  DateTime?
+
+  // Shared faction treasury. Members donate; officers/leaders spend on faction buffs.
+  treasuryBiomass Float @default(0)
+  treasuryAlloy   Float @default(0)
+  treasuryOre     Float @default(0)
 
   galaxy   Galaxy           @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
   members      FactionMember[]

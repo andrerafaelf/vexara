@@ -117,6 +117,79 @@ export function getCommandTimeFactor(commandLevel: number): number {
 	return Math.pow(COMMAND_BUILD_TIME_FACTOR_PER_LEVEL, Math.max(0, commandLevel || 0));
 }
 
+// First-build acceleration (beta). Mirror of server/utils/gameConstants.ts —
+// keep both in lockstep (CLAUDE.md rule). A brand-new player's first build is
+// the Command Core 0 -> 1 upgrade; we collapse just that one build to a short
+// fixed time so the first session isn't a 2-minute idle wait. One-time by
+// construction (a nexus only sits at CC0 before its first build). Build-queue
+// only — never touches troop/training/combat timing.
+export const FIRST_BUILD_BUILDING = 'commandCore';
+export const FIRST_BUILD_TIME_SECONDS = 25;
+
+export function isFirstBuild(building: string, currentLevel: number): boolean {
+	return building === FIRST_BUILD_BUILDING && currentLevel === 0;
+}
+
+// Onboarding troop discount — mirrors server/utils/gameConstants.ts.
+// Applies while beginnerTipsEnabled is true and the player hasn't yet reached
+// the train_troops step. Keep both files in lockstep.
+export const ONBOARDING_TROOP_TYPE = 'assaultTrooper';
+export const ONBOARDING_TROOP_COST: Pick<TroopCost, 'biomass' | 'alloy' | 'ore'> = {
+	biomass: 1,
+	alloy: 1,
+	ore: 1
+};
+export const ONBOARDING_TRAIN_TIME_SECONDS = 5;
+
+const ONBOARDING_STEPS_BEFORE_TRAIN = new Set([
+	'create_nexus',
+	'upgrade_building',
+	'while_you_build',
+	'reinforce_command',
+	'build_production',
+	'counter_triangle'
+]);
+
+export function isOnboardingTrainEligible(
+	troopType: string,
+	beginnerTipsEnabled: boolean,
+	lastCompletedStep: string | null | undefined
+): boolean {
+	if (!beginnerTipsEnabled) return false;
+	if (troopType !== ONBOARDING_TROOP_TYPE) return false;
+	if (!lastCompletedStep) return true;
+	return ONBOARDING_STEPS_BEFORE_TRAIN.has(lastCompletedStep);
+}
+
+// Onboarding build-time overrides — mirrors server/utils/gameConstants.ts.
+// CC Lv1→2 and Armor Foundry Lv0→1 collapse to 20s during onboarding so the
+// player reaches troops without waiting multiple minutes doing nothing.
+export const ONBOARDING_BUILD_TIME_SECONDS = 20;
+
+const ONBOARDING_BUILD_OVERRIDES = new Set([
+	'commandCore@1',
+	'armorFoundry@0'
+]);
+
+const ONBOARDING_STEPS_BEFORE_BUILD = new Set([
+	'create_nexus',
+	'upgrade_building',
+	'while_you_build',
+	'reinforce_command'
+]);
+
+export function isOnboardingBuildEligible(
+	building: string,
+	currentLevel: number,
+	beginnerTipsEnabled: boolean,
+	lastCompletedStep: string | null | undefined
+): boolean {
+	if (!beginnerTipsEnabled) return false;
+	if (!ONBOARDING_BUILD_OVERRIDES.has(`${building}@${currentLevel}`)) return false;
+	if (!lastCompletedStep) return true;
+	return ONBOARDING_STEPS_BEFORE_BUILD.has(lastCompletedStep);
+}
+
 export function getCommandBuildQueueBonus(commandLevel: number): number {
 	const veteran = Math.max(0, (commandLevel || 0) - COMMAND_VETERAN_THRESHOLD);
 	return Math.min(2, veteran);
@@ -293,6 +366,9 @@ export function getEffectiveBuildTimeSeconds(
 	nexusType: string | null | undefined,
 	nexusTypeDoubled: boolean
 ): number {
+	// First-ever build is collapsed to a short fixed time (see isFirstBuild and
+	// the server mirror). One-time by construction; build-queue only.
+	if (isFirstBuild(building, currentLevel)) return FIRST_BUILD_TIME_SECONDS;
 	const cost = getBuildingCost(building, currentLevel);
 	const baseBuildMult = NEXUS_TYPE_BUILD_TIME_MULTIPLIERS[nexusType ?? ''];
 	const nexusFactor =
