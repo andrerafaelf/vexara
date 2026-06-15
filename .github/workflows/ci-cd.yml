@@ -262,6 +262,47 @@ jobs:
           cache-from: type=gha,scope=admin-client
           cache-to: type=gha,mode=max,scope=admin-client,ignore-error=true
 
+  # ─── One-time: backfill cumulative supporter titles ──────────────────────────
+  backfill-supporter-titles:
+    name: Backfill supporter titles (one-time)
+    runs-on: ubuntu-latest
+    needs: [deploy]
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Upload script to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "server/scripts/backfill-supporter-titles.ts"
+          target: "/tmp"
+
+      - name: Run backfill inside server container
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+            SENTINEL="/opt/vexara/.backfill-supporter-titles-done"
+            if [ -f "$SENTINEL" ]; then
+              echo "Backfill already ran — skipping."
+              exit 0
+            fi
+            docker cp /tmp/server/scripts/backfill-supporter-titles.ts vx-server:/app/scripts/backfill-supporter-titles.ts
+            docker exec vx-server npx tsx scripts/backfill-supporter-titles.ts
+            docker exec vx-server rm scripts/backfill-supporter-titles.ts
+            rm -rf /tmp/server
+            touch "$SENTINEL"
+            echo "Backfill complete."
+
   # ─── Deploy to VPS ───────────────────────────────────────────────────────────
   deploy:
     name: Deploy
