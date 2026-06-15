@@ -6,7 +6,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	z-index: 1000;
+	z-index: 1050;
 	padding: var(--space-4);
 	box-sizing: border-box;
 	animation: vpm-fade 0.15s ease-out;
@@ -248,6 +248,8 @@
 /* ── Scrollable rows area ─────────────────────────────────────────────────── */
 .vpm-rows-scroll {
 	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+	overscroll-behavior: contain;
 	flex: 1;
 	min-height: 0;
 }
