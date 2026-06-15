@@ -26,6 +26,7 @@ import Username from './Username';
 import ProfileBadges from './ProfileBadges';
 import AvatarUpload from './AvatarUpload';
 import Avatar from './Avatar';
+import { TITLE_META } from '@/constants/titles';
 
 interface BorderShopData {
 	equippedBorder: string | null;
@@ -412,7 +413,12 @@ export default function ProfileStats() {
 											key={title}
 											className={`ps-title-row${isActive ? ' ps-title-row--active' : ''}`}
 										>
-											<span className="ps-title-name">{title}</span>
+											<div className="ps-title-body">
+												<span className="ps-title-name">{title}</span>
+												{TITLE_META[title] && (
+													<span className="ps-title-desc">{TITLE_META[title]}</span>
+												)}
+											</div>
 											<button
 												className={`ps-title-btn${isActive ? ' ps-title-btn--active' : ''}`}
 												disabled={titleBusy}
