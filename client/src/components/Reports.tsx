@@ -427,9 +427,10 @@ const Reports: React.FC<ReportsProps> = ({
 		if (markingAllRead) return;
 		setMarkingAllRead(true);
 		try {
-			const res = await markAllReportsRead(nexus._id);
-			// Server returns { ids: string[] }; fall back to all local report IDs.
-			const ids: string[] = res.data?.ids?.length ? res.data.ids : reports.map((r) => r._id);
+			await markAllReportsRead(nexus._id);
+			// Server IDs are SQL integers, not the _id values used by the client.
+			// Mark every currently loaded report as read instead.
+			const ids = reports.map((r) => r._id);
 			setReadIds((prev) => new Set([...prev, ...ids]));
 			onReadStateChange?.();
 		} catch (err) {

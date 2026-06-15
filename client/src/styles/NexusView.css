@@ -128,6 +128,12 @@
 	border-left-color: var(--accent);
 }
 
+/* On desktop the mobile identity row is hidden — the name lives in nexus-inner-nav-head.
+   Must come BEFORE the @media block so the media query override wins on narrow screens. */
+.nexus-mobile-identity {
+	display: none;
+}
+
 .nexus-content-col {
 	flex: 1 1 auto;
 	min-width: 0;
@@ -205,11 +211,6 @@
 	.nexus-content-col {
 		padding-top: var(--space-3);
 	}
-}
-
-/* On desktop the mobile identity row is hidden — the name lives in nexus-inner-nav-head */
-.nexus-mobile-identity {
-	display: none;
 }
 
 /* The full-height nexus name header was removed — the name + rename now live

@@ -143,40 +143,60 @@
 	text-align: center;
 }
 
-/* ── Vex Shop button (lives below the battle pass card) ───────────────────── */
+/* ── Quartermaster entry (lives below the battle pass card) ───────────────── */
 .rail-shop-btn {
 	display: flex;
 	align-items: center;
-	gap: 6px;
+	gap: 10px;
 	width: 100%;
-	background: none;
-	border: none;
+	background: #0e1412;
+	border: 1px solid #2e3830;
+	border-left: 3px solid #4a7c5e;
+	border-radius: 0;
 	cursor: pointer;
-	color: #718096;
-	font-size: 12px;
-	padding: 8px 12px;
-	border-radius: 6px;
+	padding: 10px 13px;
+	margin-top: 6px;
+	text-align: left;
 	transition:
 		background 0.15s,
-		color 0.15s;
-	margin-top: 4px;
-	text-align: left;
+		border-color 0.15s;
 }
 .rail-shop-btn:hover {
-	background: rgba(255, 255, 255, 0.03);
-	color: #a0aec0;
+	background: #131a17;
+	border-color: #3f6650;
+	border-left-color: #6aab85;
+}
+.rail-shop-icon {
+	font-size: 16px;
+	line-height: 1;
+	flex-shrink: 0;
+	opacity: 0.85;
+}
+.rail-shop-text {
+	flex: 1;
+	min-width: 0;
 }
 .rail-shop-label {
-	font-weight: 500;
-	flex: 1;
+	display: block;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: #7aae92;
+}
+.rail-shop-sub {
+	display: block;
+	font-size: 10px;
+	color: var(--text-faint);
+	margin-top: 1px;
 }
 .rail-shop-vp {
-	display: flex;
-	align-items: center;
-	gap: 3px;
-	font-size: 11px;
-	font-weight: 600;
+	font-family: var(--font-mono);
+	font-size: 12px;
+	font-weight: 700;
 	color: #63b3ed;
+	flex-shrink: 0;
+	letter-spacing: 0.02em;
 }
 
 /* Campaign record treatment */
@@ -273,23 +293,6 @@
 	letter-spacing: 0;
 }
 
-.rail-shop-btn {
-	border: 1px solid transparent;
-	border-radius: 0;
-	color: var(--text-muted);
-}
-
-.rail-shop-btn:hover {
-	background: #171918;
-	border-color: #3c3a34;
-	color: var(--text-strong);
-}
-
-.rail-shop-vp {
-	font-family: var(--font-mono);
-	color: var(--text-muted);
-}
-
 .rail-bp-paid-badge,
 .rail-bp-free-badge {
 	font-size: 10px;
@@ -298,11 +301,6 @@
 .rail-bp-xp-label,
 .rail-bp-maxed,
 .rail-bp-title-row,
-.rail-bp-cta,
-.rail-shop-vp {
+.rail-bp-cta {
 	font-size: 11px;
-}
-
-.rail-shop-btn {
-	font-size: 13px;
 }

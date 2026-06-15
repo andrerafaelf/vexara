@@ -595,7 +595,13 @@ a:focus-visible,
 	animation: vx-supporter-pulse 3s ease-in-out infinite;
 }
 
-/* Commander: cyan/electric blue, reads as elite vs. amber UI */
+/* Vanguard (€25 post-alpha): violet/purple, distinct from amber and cyan */
+.supporter-name.supporter-tier-vanguard {
+	color: #c084fc !important;
+	animation: vx-supporter-pulse-vanguard 3s ease-in-out infinite;
+}
+
+/* Commander (alpha founder only): cyan/electric blue, reads as elite vs. amber UI */
 .supporter-name.supporter-tier-commander {
 	color: #5be3ff !important;
 	animation: vx-supporter-pulse-commander 3s ease-in-out infinite;
@@ -626,6 +632,19 @@ a:focus-visible,
 	}
 }
 
+@keyframes vx-supporter-pulse-vanguard {
+	0%,
+	100% {
+		text-shadow: none;
+	}
+	50% {
+		text-shadow:
+			0 0 24px rgba(192, 132, 252, 1),
+			0 0 54px rgba(192, 132, 252, 0.9),
+			0 0 96px rgba(192, 132, 252, 0.5);
+	}
+}
+
 @keyframes vx-supporter-pulse-commander {
 	0%,
 	100% {
@@ -650,6 +669,10 @@ a:focus-visible,
 	box-shadow: 0 0 0 1px rgba(255, 158, 61, 0.55);
 	animation: vx-border-pulse-officer 3s ease-in-out infinite;
 }
+.supporter-border-vanguard {
+	box-shadow: 0 0 0 1px rgba(192, 132, 252, 0.6);
+	animation: vx-border-pulse-vanguard 3s ease-in-out infinite;
+}
 .supporter-border-commander {
 	box-shadow: 0 0 0 1px rgba(91, 227, 255, 0.65);
 	animation: vx-border-pulse-commander 3s ease-in-out infinite;
@@ -666,6 +689,20 @@ a:focus-visible,
 		box-shadow:
 			0 0 0 1px rgba(255, 158, 61, 0.95),
 			0 0 18px 2px rgba(255, 158, 61, 0.45);
+	}
+}
+
+@keyframes vx-border-pulse-vanguard {
+	0%,
+	100% {
+		box-shadow:
+			0 0 0 1px rgba(192, 132, 252, 0.6),
+			0 0 0 0 rgba(192, 132, 252, 0);
+	}
+	50% {
+		box-shadow:
+			0 0 0 1px rgba(192, 132, 252, 1),
+			0 0 20px 3px rgba(192, 132, 252, 0.5);
 	}
 }
 

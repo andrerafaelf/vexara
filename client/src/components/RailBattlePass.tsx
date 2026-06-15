@@ -102,14 +102,18 @@ export default function RailBattlePass() {
 			{modalOpen && <VexPassModal pass={data} onClose={() => setModalOpen(false)} />}
 
 			<button
-				className="rail-card rail-shop-btn"
+				className="rail-shop-btn"
 				onClick={() => {
 					startProgress();
 					startTransition(() => router.push('/shop'));
 				}}
 				aria-label="Open quartermaster"
 			>
-				<span className="rail-shop-label">Quartermaster</span>
+				<span className="rail-shop-icon">🏪</span>
+				<span className="rail-shop-text">
+					<span className="rail-shop-label">Quartermaster</span>
+					<span className="rail-shop-sub">Titles, borders, campaign pass</span>
+				</span>
 				{user?.vexPoints != null && (
 					<span className="rail-shop-vp">{user.vexPoints.toLocaleString()} VP</span>
 				)}

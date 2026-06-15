@@ -115,7 +115,7 @@ const CombatAAR: React.FC<CombatAARProps> = ({ report, isMyAttack, amAlly }) => 
 	const ratio = defenderPow > 0 && attackerPow > 0 ? (defenderPow / attackerPow) : 0;
 	const ratioStr = ratio > 0
 		? `1 : ${ratio >= 100 ? fmt(Math.round(ratio)) : ratio.toFixed(1)}`
-		: '—';
+		: 'n/a';
 
 	// Loot
 	const loot = result.resourcesStolen ?? { biomass: 0, alloy: 0, ore: 0 };
@@ -234,7 +234,7 @@ const CombatAAR: React.FC<CombatAARProps> = ({ report, isMyAttack, amAlly }) => 
 											) : isOverseerRow && overseerInbound ? (
 												<span className="aar-inbound-tag">INBOUND</span>
 											) : (
-												<span className="aar-loss-zero">—</span>
+												<span className="aar-loss-zero">0</span>
 											)}
 										</span>
 										<span className="aar-loss-survived">

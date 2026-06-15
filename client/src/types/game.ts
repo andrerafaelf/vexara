@@ -1,4 +1,4 @@
-export type SupporterTier = 'recruit' | 'officer' | 'commander';
+export type SupporterTier = 'recruit' | 'officer' | 'vanguard' | 'commander';
 
 export interface User {
 	id: string;

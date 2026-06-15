@@ -289,15 +289,15 @@ async function endGalaxy(
 	});
 }
 
-// Ends any active galaxies whose seasonEndsAt has passed. The winner is the
-// faction with the most nexuses at the moment the timer fires. If no factions
-// own any nexuses the galaxy ends with no winner (rare edge case).
+// Ends any active galaxies when the global season timer (AppConfig.seasonEndsAt)
+// has passed. The winner is the faction with the most nexuses at expiry.
+// If no factions own nexuses the galaxy ends with no winner (rare edge case).
 export async function processSeasonExpiry(): Promise<void> {
+	const config = await prisma.appConfig.findUnique({ where: { id: 1 } });
+	if (!config?.seasonEndsAt || config.seasonEndsAt > new Date()) return;
+
 	const expired = await prisma.galaxy.findMany({
-		where: {
-			status: 'active',
-			seasonEndsAt: { lte: new Date() }
-		},
+		where: { status: 'active' },
 		select: { id: true, name: true }
 	});
 

@@ -248,7 +248,7 @@ export default async function StateOfGalaxyPage() {
 							<div className="gp-step-body">
 								<h3 className="gp-step-title">Your first build takes ~25 seconds</h3>
 								<p className="gp-step-text">
-									The opening Command Core upgrade — the one build every new commander hits first —
+									The opening Command Core upgrade (the one build every new commander hits first)
 									is accelerated to a fixed ~25 seconds. The game opens up immediately. While it
 									builds, a short coaching card walks you through the resource bar and build queue
 									so the brief wait teaches instead of idles. Everything after that takes its
@@ -277,7 +277,7 @@ export default async function StateOfGalaxyPage() {
 								<p className="gp-step-text">
 									Factions are where Vexara becomes social: shared chat, invitations, support
 									troops, war planning, treaties, and rivalries. Faction dominance drives the
-									season — the first faction to cross the threshold wins naming rights and a
+									season. The first faction to cross the threshold wins naming rights and a
 									permanent Hall of Champions entry. Find a faction recruiting on the{' '}
 									<a href={DISCORD_URL} target="_blank" rel="noopener noreferrer">
 										Vexara Discord

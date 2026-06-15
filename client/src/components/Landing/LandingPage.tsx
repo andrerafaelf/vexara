@@ -78,7 +78,7 @@ const PILLARS = [
 	{
 		idx: '02',
 		title: 'Train twelve unit types across three classes',
-		body: 'From 53s Sentinel Lancers to 4h Overseers. Mobile beats Armor, Armor beats Fire, Fire beats Mobile. Every unit card shows its class, its role (Striker / Anvil / Scout / Conquest), and what it counters — so you know before you commit.'
+		body: 'From 53s Sentinel Lancers to 4h Overseers. Mobile beats Armor, Armor beats Fire, Fire beats Mobile. Every unit card shows its class, its role (Striker / Anvil / Scout / Conquest), and what it counters. You know before you commit.'
 	},
 	{
 		idx: '03',
@@ -93,7 +93,7 @@ const PILLARS = [
 	{
 		idx: '05',
 		title: 'Compete in seasons. Build a permanent record.',
-		body: 'Every galaxy runs to a winner. The champion faction earns naming rights and a permanent Hall of Champions entry. Your Vex Points carry to the next galaxy. Permanent commander titles — Veteran, Iron Commander, Conqueror, Warlord — are earned by galaxies played and won, not purchased. Every season you play compounds into a record no wipe can touch.'
+		body: 'Every galaxy runs to a winner. The champion faction earns naming rights and a permanent Hall of Champions entry. Your Vex Points carry to the next galaxy. Permanent commander titles (Veteran, Iron Commander, Conqueror, Warlord) are earned by galaxies played and won, not purchased. Every season you play compounds into a record no wipe can touch.'
 	},
 	{
 		idx: '06',
@@ -192,7 +192,7 @@ function Hero() {
 				</h1>
 
 				<p className="lp-hero-sub">
-					Browser-based 4X strategy. Galaxies run to a winner — your record, titles, and Vex
+					Browser-based 4X strategy. Galaxies run to a winner. Your record, titles, and Vex
 					Points carry forward forever.
 					<br className="lp-hero-sub-br" /> No account wipes. No pay-to-win. Just you, your nexus,
 					and the cold math of empire.
@@ -567,14 +567,14 @@ function Seasons() {
 						<strong>Hall of Champions</strong> entry. Then a fresh galaxy opens.
 					</p>
 					<p>
-						<strong>Vex Points</strong> carry across every galaxy. Permanent commander titles —
-						Veteran, Iron Commander, Conqueror, Warlord — are earned through galaxies played and
+						<strong>Vex Points</strong> carry across every galaxy. Permanent commander titles
+						(Veteran, Iron Commander, Conqueror, Warlord) are earned through galaxies played and
 						won, not purchased.
 					</p>
 					<p>
 						A 30-level <strong>Vex Pass</strong> runs alongside every season. The free track
 						(included for everyone) gives resources and badges as you play. The paid track costs
-						1,000 Vex Points — equivalent to €4.99 — and adds season-scoped titles, temporary
+						1,000 Vex Points (equivalent to €4.99), which adds season-scoped titles, temporary
 						production boosts, and 600 Vex Points back over 30 levels. No pass reward touches
 						combat stats or troop power.
 					</p>
@@ -629,7 +629,7 @@ function Founder() {
 					<li>
 						<span className="lp-founder-bullet">◆</span>
 						<span>
-							<strong>Hall of Champions entry</strong> — when your faction wins a galaxy season, your
+							<strong>Hall of Champions entry:</strong> when your faction wins a galaxy season, your
 							name is engraved permanently. No future player can claim that slot.
 						</span>
 					</li>
@@ -642,7 +642,7 @@ function Founder() {
 					<li>
 						<span className="lp-founder-bullet">◆</span>
 						<span>
-							<strong>Permanent commander title</strong> earned through galaxies played — Veteran,
+							<strong>Permanent commander title</strong> earned through galaxies played: Veteran,
 							Iron Commander, Conqueror, Warlord. Never purchased, never reset.
 						</span>
 					</li>

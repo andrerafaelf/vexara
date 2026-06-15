@@ -238,7 +238,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
 											>
 												<span className="ps-identity-title-name">{title}</span>
 												<span className="ps-identity-title-state">
-													{isBusy ? '…' : isActive ? 'Equipped — tap to clear' : 'Equip'}
+													{isBusy ? '…' : isActive ? 'Equipped / tap to clear' : 'Equip'}
 												</span>
 											</button>
 										);

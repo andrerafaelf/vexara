@@ -251,6 +251,15 @@ model SeasonRecord {
   @@index([endedAt])
 }
 
+// Singleton global config row (always id = 1). Use upsert to read/write.
+model AppConfig {
+  id           Int       @id @default(1)
+  // Global season end date. When set, all active galaxies end at this time
+  // (winner = faction with most nexuses). NULL = no active season timer.
+  seasonEndsAt DateTime?
+  updatedAt    DateTime  @updatedAt
+}
+
 model AlphaSignup {
   id                Int       @id @default(autoincrement())
   email             String    @unique @db.VarChar(254)

@@ -124,7 +124,7 @@ export default function CodexPage() {
 							<CodexStreamHead
 								eyebrow="DOSSIER · DIPLOMACY"
 								title="Treaties"
-								lede="Factions can form three types of binding agreements. Each carries real mechanical effects — not just labels."
+								lede="Factions can form three types of binding agreements. Each carries real mechanical effects, not just labels."
 							/>
 							<DiplomacyPanel />
 						</section>
@@ -753,14 +753,14 @@ const TREATY_DOCS = [
 		name: 'Non-Aggression Pact',
 		symbol: '⚖',
 		duration: '1–90 days, negotiated on proposal',
-		effect: 'No mechanical enforcement — a declared ceasefire backed by social contract. Breaking it is visible to all faction members and will be logged in the treaty history.',
+		effect: 'No mechanical enforcement. A declared ceasefire backed by social contract. Breaking it is visible to all faction members and will be logged in the treaty history.',
 		mechanics: [
 			'Both faction leaders must accept the pact for it to activate.',
 			'Either party can cancel the treaty at any time; cancellation is instant.',
 			'An active NAP is visible to both factions\' members in the Diplomacy tab.',
 			'Breaking a NAP before expiry has no in-game penalty, but the treaty log records the breach.'
 		],
-		tip: 'Use NAPs to stabilise a front while you expand elsewhere. A broken NAP is a statement — other factions will notice.'
+		tip: 'Use NAPs to stabilise a front while you expand elsewhere. A broken NAP is a statement; other factions will notice.'
 	},
 	{
 		type: 'trade',
@@ -770,7 +770,7 @@ const TREATY_DOCS = [
 		effect: 'Waives the 10% faction transfer tax on resource sends between member nexuses of both factions.',
 		mechanics: [
 			'Without a Trade Agreement, sending resources to a faction-mate costs a 10% transit tax.',
-			'With an active Trade Agreement, the tax is completely waived — 100% of the sent amount arrives.',
+			'With an active Trade Agreement, the tax is completely waived: 100% of the sent amount arrives.',
 			'The agreement applies to all members of both factions, not just the leaders.',
 			'Tax waiver is active as long as the treaty status is "active"; it stops immediately on cancellation or expiry.'
 		],
@@ -784,7 +784,7 @@ const TREATY_DOCS = [
 		effect: 'Formalises a protectorate relationship. The vassal faction gains the suzerain\'s diplomatic umbrella; the suzerain gains a declared tributary ally.',
 		mechanics: [
 			'Proposed by the stronger faction (suzerain) to the weaker (vassal). Either side can propose.',
-			'The vassal\'s enemies implicitly become the suzerain\'s enemies — though this is a social contract, not an automated war declaration.',
+			'The vassal\'s enemies implicitly become the suzerain\'s enemies, though this is a social contract, not an automated war declaration.',
 			'Vassal factions appear marked in both factions\' diplomacy tabs, signalling the relationship to members.',
 			'Either party can cancel; early cancellation carries the same reputational weight as breaking a NAP.'
 		],

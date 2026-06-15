@@ -1,4 +1,4 @@
-// List alpha signups who haven't created an account yet
+﻿// List alpha signups who haven't created an account yet
 export async function listPendingAlphaSignups(_req: Request, res: Response): Promise<void> {
 	try {
 		const pending = await adminService.getPendingAlphaSignups();
@@ -209,7 +209,8 @@ export async function listGalaxies(_req: Request, res: Response): Promise<void> 
 				winSustainHours: g.winSustainHours,
 				winMinPlayers: g.winMinPlayers,
 				winMinFactions: g.winMinFactions,
-				speedMultiplier: g.speedMultiplier
+				speedMultiplier: g.speedMultiplier,
+					seasonEndsAt: g.seasonEndsAt
 			}))
 		);
 	} catch (error) {
@@ -367,9 +368,43 @@ export async function updateGalaxy(req: Request, res: Response): Promise<void> {
 				winSustainHours: updated.winSustainHours,
 				winMinPlayers: updated.winMinPlayers,
 				winMinFactions: updated.winMinFactions,
-				speedMultiplier: updated.speedMultiplier
+				speedMultiplier: updated.speedMultiplier,
+
 			}
 		});
+	} catch (error) {
+		res.status(500).json({ error: (error as Error).message });
+	}
+}
+
+export async function getAppConfig(_req: Request, res: Response): Promise<void> {
+	try {
+		const config = await adminService.getAppConfig();
+		res.json({ seasonEndsAt: config?.seasonEndsAt ?? null });
+	} catch (error) {
+		res.status(500).json({ error: (error as Error).message });
+	}
+}
+
+export async function updateAppConfig(req: Request, res: Response): Promise<void> {
+	try {
+		const body = (req.body ?? {}) as Record<string, unknown>;
+		const data: { seasonEndsAt?: Date | null } = {};
+		if ('seasonEndsAt' in body) {
+			const raw = body.seasonEndsAt;
+			if (raw === null || raw === '') {
+				data.seasonEndsAt = null;
+			} else {
+				const d = new Date(raw as string);
+				if (isNaN(d.getTime())) {
+					res.status(400).json({ error: 'seasonEndsAt must be a valid ISO date or null' });
+					return;
+				}
+				data.seasonEndsAt = d;
+			}
+		}
+		const config = await adminService.setAppConfig(data);
+		res.json({ seasonEndsAt: config.seasonEndsAt ?? null });
 	} catch (error) {
 		res.status(500).json({ error: (error as Error).message });
 	}

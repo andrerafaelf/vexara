@@ -58,8 +58,8 @@ export default function TermsPage() {
 
 			<h2 style={{ color: '#fff', fontSize: 18, marginTop: 32 }}>5. Purchases and virtual currency</h2>
 			<p>
-				Vexara offers real-money purchases through Ko-fi, including <strong>Vex Points (VP)</strong> —
-				a virtual in-game currency — and supporter tiers. By completing a purchase you agree to the
+				Vexara offers real-money purchases through Ko-fi, including <strong>Vex Points (VP)</strong>,
+				a virtual in-game currency, and supporter tiers. By completing a purchase you agree to the
 				following:
 			</p>
 			<ul style={{ paddingLeft: 20, marginTop: 8 }}>
@@ -111,7 +111,7 @@ export default function TermsPage() {
 			</p>
 			<p style={{ marginTop: 12 }}>
 				You may not copy, reproduce, distribute, or create derivative works based on any part of
-				Vexara — including its UI, art assets, or branding — without explicit written permission.
+				Vexara (including its UI, art assets, or branding) without explicit written permission.
 				This includes AI-generated reproductions of Vexara&apos;s visual identity or brand. Fan art
 				is welcome, but must be clearly labelled as unofficial and may not be presented as or
 				mistaken for official Vexara content.

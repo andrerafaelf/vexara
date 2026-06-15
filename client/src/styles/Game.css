@@ -68,6 +68,54 @@
 	display: none;
 }
 
+/* ── Resource sub-header strip ───────────────────────────────────────────────
+   Slim bar directly below the nav. Desktop only — hidden on mobile where
+   resources live inline in the compact header row. */
+.resource-subheader {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 38px;
+	background: rgba(6, 10, 20, 0.72);
+	border-bottom: 1px solid var(--border-default);
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+	position: sticky;
+	top: 56px;
+	z-index: calc(var(--z-sticky) - 1);
+	padding: 0 24px;
+}
+
+/* The strip itself fills the bar horizontally, borderless in this context */
+.resource-subheader .header-resource-strip {
+	background: transparent;
+	border: none;
+	border-radius: 0;
+	height: 100%;
+}
+
+/* Slimmer cells — less vertical padding than the old header variant */
+.resource-subheader .header-res {
+	padding: 0 20px;
+	min-width: 112px;
+}
+
+/* Dividers between cells become subtler verticals */
+.resource-subheader .header-res + .header-res {
+	border-left: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Slightly smaller numbers since we have more breathing room horizontally */
+.resource-subheader .header-res-value {
+	font-size: var(--text-base);
+}
+
+@media (max-width: 899px) {
+	.resource-subheader {
+		display: none;
+	}
+}
+
 .header-left {
 	display: flex;
 	align-items: center;

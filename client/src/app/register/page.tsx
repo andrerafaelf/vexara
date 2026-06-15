@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 	openGraph: {
 		title: 'Join Vexara - Free Browser 4X Strategy',
 		description:
-			'Pick a username, claim your nexus, and command your first fleet. Galaxies run to a winner — your record and Vex Points carry forward. No account wipes. No pay-to-win.',
+			'Pick a username, claim your nexus, and command your first fleet. Galaxies run to a winner. Your record and Vex Points carry forward. No account wipes. No pay-to-win.',
 		url: 'https://vexara.world/register',
 		siteName: 'Vexara',
 		locale: 'en_US',

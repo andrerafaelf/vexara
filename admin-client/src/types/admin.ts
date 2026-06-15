@@ -124,6 +124,8 @@ export interface Galaxy {
 	winMinFactions: number | null;
 	// Speed world multiplier. 1 = normal, 5 = 5× speed. Default 1.0.
 	speedMultiplier: number;
+	// Season end timestamp. null = no active season timer.
+	seasonEndsAt: string | null;
 }
 
 export type AdminFetch = (url: string, options?: RequestInit) => Promise<Response>;

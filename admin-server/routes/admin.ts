@@ -16,6 +16,10 @@ router.post('/broadcast/galaxy-live', adminController.sendGalaxyLiveBroadcast);
 router.get('/broadcast/galaxy-alert/:id/preview', adminController.previewGalaxyAlertBroadcast);
 router.post('/broadcast/galaxy-alert/:id', adminController.sendGalaxyAlertBroadcast);
 
+// Global app config (season end date, etc.)
+router.get('/config', adminController.getAppConfig);
+router.patch('/config', adminController.updateAppConfig);
+
 router.get('/overview', adminController.getOverview);
 router.get('/galaxy-health', adminController.getGalaxyHealth);
 router.get('/galaxies', adminController.listGalaxies);

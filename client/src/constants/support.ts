@@ -7,7 +7,7 @@ export const VP_PACKS = [
 ] as const;
 
 export const SUPPORTER_TIERS = [
-	{ key: 'recruit',   label: 'Recruit Supporter',   amount: '€5',  url: 'https://ko-fi.com/s/4e180806f6' },
-	{ key: 'officer',   label: 'Officer Supporter',   amount: '€10', url: 'https://ko-fi.com/s/9bf84f5154' },
-	{ key: 'commander', label: 'Commander Supporter', amount: '€25', url: 'https://ko-fi.com/s/35e981fe6e' },
+	{ key: 'recruit',  label: 'Recruit Supporter',  amount: '€5',  url: 'https://ko-fi.com/s/4e180806f6' },
+	{ key: 'officer',  label: 'Officer Supporter',  amount: '€10', url: 'https://ko-fi.com/s/9bf84f5154' },
+	{ key: 'vanguard', label: 'Vanguard Supporter', amount: '€25', url: 'https://ko-fi.com/s/35e981fe6e' },
 ] as const;

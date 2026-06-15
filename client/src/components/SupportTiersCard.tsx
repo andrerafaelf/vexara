@@ -37,26 +37,26 @@ const TIERS: TierDef[] = [
 		amount: '€10',
 		label: 'Officer Supporter',
 		tokens: 3,
-		perks: ['Brighter glow', 'Animated profile border', '3 Supporter Tokens', '"Officer" title in-game'],
+		perks: ['Brighter amber glow', 'Animated profile border', '3 Supporter Tokens', '"Officer" title in-game'],
 		highlight: true,
 		url: SUPPORTER_TIERS[1].url,
 	},
 	{
-		key: 'commander',
+		key: 'vanguard',
 		amount: '€25',
-		label: 'Commander Supporter',
+		label: 'Vanguard Supporter',
 		tokens: 8,
 		perks: [
-			'Cyan elite glow',
+			'Violet elite glow',
 			'Animated profile border',
 			'8 Supporter Tokens',
-			'"Commander" title in-game',
+			'"Vanguard" title in-game',
 		],
 		url: SUPPORTER_TIERS[2].url,
 	}
 ];
 
-const TIER_RANK: Record<SupporterTier, number> = { recruit: 1, officer: 2, commander: 3 };
+const TIER_RANK: Record<SupporterTier, number> = { recruit: 1, officer: 2, vanguard: 3, commander: 4 };
 
 export default function SupportTiersCard({
 	variant,
@@ -86,7 +86,7 @@ export default function SupportTiersCard({
 						<strong>€10</strong> Officer · 3 tokens + border
 					</li>
 					<li>
-						<strong>€25</strong> Commander · 8 tokens + elite glow
+						<strong>€25</strong> Vanguard · 8 tokens + violet glow
 					</li>
 				</ul>
 				<a

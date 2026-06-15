@@ -123,7 +123,6 @@ export async function getGalaxyHealth() {
 			id: true,
 			name: true,
 			speedMultiplier: true,
-			seasonEndsAt: true,
 			_count: { select: { players: true, nexuses: true } }
 		},
 		orderBy: { createdAt: 'asc' }
@@ -147,7 +146,6 @@ export async function getGalaxyHealth() {
 				id: g.id,
 				name: g.name,
 				speedMultiplier: g.speedMultiplier,
-				seasonEndsAt: g.seasonEndsAt,
 				players: g._count.players,
 				nexuses: g._count.nexuses,
 				factions: factionCount,
@@ -188,6 +186,18 @@ export function getGalaxyById(id: number) {
 // Admin update for a galaxy's lock state and per-galaxy win config. Only the keys
 // present in `data` are written; pass null for a win* field to clear an override and
 // fall back to the engine default in server/utils/dominance.ts.
+export function getAppConfig() {
+	return prisma.appConfig.findUnique({ where: { id: 1 } });
+}
+
+export function setAppConfig(data: { seasonEndsAt?: Date | null }) {
+	return prisma.appConfig.upsert({
+		where: { id: 1 },
+		create: { id: 1, ...data },
+		update: { ...data },
+	});
+}
+
 export function updateGalaxy(
 	id: number,
 	data: {

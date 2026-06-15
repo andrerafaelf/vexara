@@ -502,7 +502,7 @@ export default function GameLayout({
 							</div>
 
 							{/* ── Mobile: compact resources inline in single-row header ──
-						    On desktop this is display:none; the desktop strip is in header-right below. */}
+						    On desktop this is display:none; the full strip is in .resource-subheader below the header. */}
 							{headerNexus && (
 								<div className="header-resources-inline">
 									<HeaderResourceStrip nexus={headerNexus} compact />
@@ -510,10 +510,6 @@ export default function GameLayout({
 							)}
 
 							<div className="header-right">
-								{/* Resources on desktop — hidden on mobile (see header-resources-inline above) */}
-								<div className="header-resources-desktop">
-									{headerNexus && <HeaderResourceStrip nexus={headerNexus} />}
-								</div>
 								<div className="header-utility">
 									<a
 										href="/codex"
@@ -549,6 +545,12 @@ export default function GameLayout({
 						{/* end header-mobile-row */}
 					</header>
 
+					{headerNexus && (
+						<div className="resource-subheader">
+							<HeaderResourceStrip nexus={headerNexus} />
+						</div>
+					)}
+
 					<ConnectionStatusBar />
 					<TroopMovementsBar />
 					<DominanceBar />
@@ -581,7 +583,7 @@ export default function GameLayout({
 									avatarUrlSm={authUser.avatarUrlSm ?? null}
 									size="md"
 									borderKey={authUser.avatarBorder ?? null}
-									className={`commander-avatar${authUser.supporterTier === 'officer' ? ' supporter-border supporter-border-officer' : ''}${authUser.supporterTier === 'commander' ? ' supporter-border supporter-border-commander' : ''}`}
+									className={`commander-avatar${authUser.supporterTier === 'officer' ? ' supporter-border supporter-border-officer' : ''}${authUser.supporterTier === 'vanguard' ? ' supporter-border supporter-border-vanguard' : ''}${authUser.supporterTier === 'commander' && authUser.isFounder ? ' supporter-border supporter-border-commander' : ''}`}
 									ariaHidden
 								/>
 								<div className="commander-info">
@@ -592,7 +594,8 @@ export default function GameLayout({
 												authUser.isSupporter ? 'supporter-name' : null,
 												authUser.supporterTier === 'recruit' ? 'supporter-tier-recruit' : null,
 												authUser.supporterTier === 'officer' ? 'supporter-tier-officer' : null,
-												authUser.supporterTier === 'commander' ? 'supporter-tier-commander' : null
+												authUser.supporterTier === 'vanguard' ? 'supporter-tier-vanguard' : null,
+												authUser.supporterTier === 'commander' && authUser.isFounder ? 'supporter-tier-commander' : null
 											]
 												.filter(Boolean)
 												.join(' ')}

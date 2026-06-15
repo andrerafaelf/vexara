@@ -8,6 +8,7 @@ import type { SupporterTier } from '@/types/game';
 interface UsernameProps {
 	name: string;
 	isSupporter?: boolean | null;
+	isFounder?: boolean | null;
 	supporterTier?: SupporterTier | null;
 	className?: string;
 	title?: string;
@@ -17,6 +18,7 @@ interface UsernameProps {
 const TIER_CLASS: Record<SupporterTier, string> = {
 	recruit: 'supporter-tier-recruit',
 	officer: 'supporter-tier-officer',
+	vanguard: 'supporter-tier-vanguard',
 	commander: 'supporter-tier-commander'
 };
 
@@ -31,13 +33,18 @@ const TIER_CLASS: Record<SupporterTier, string> = {
 export default function Username({
 	name,
 	isSupporter,
+	isFounder,
 	supporterTier,
 	className,
 	title,
 	linkToProfile
 }: UsernameProps) {
 	const router = useRouter();
-	const tierClass = supporterTier ? TIER_CLASS[supporterTier] : null;
+	// Cyan commander glow is for alpha founders only; non-founder commanders
+	// fall back to vanguard-style if they somehow hold the legacy tier.
+	const effectiveTier =
+		supporterTier === 'commander' && !isFounder ? 'vanguard' : supporterTier;
+	const tierClass = effectiveTier ? TIER_CLASS[effectiveTier] : null;
 	const classes = [className, isSupporter ? 'supporter-name' : null, tierClass]
 		.filter(Boolean)
 		.join(' ');
@@ -45,12 +52,14 @@ export default function Username({
 	const resolvedTitle =
 		title ??
 		(supporterTier === 'commander'
-			? 'Commander supporter'
-			: supporterTier === 'officer'
-				? 'Officer supporter'
-				: isSupporter
-					? 'Vexara supporter'
-					: undefined);
+			? 'Alpha Commander'
+			: supporterTier === 'vanguard'
+				? 'Vanguard supporter'
+				: supporterTier === 'officer'
+					? 'Officer supporter'
+					: isSupporter
+						? 'Vexara supporter'
+						: undefined);
 
 	// Click handler appends ?from=<current location> at click-time and pushes
 	// via the router, bypassing Next/Link's intercept which would otherwise

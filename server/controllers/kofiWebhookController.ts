@@ -32,9 +32,11 @@ const VP_PACKS: Array<{ name: string; vp: number }> = [
 	{ name: 'Warlord Pack — 6,000 VP',   vp: 6000 },
 ];
 
-type SupporterTier = 'recruit' | 'officer' | 'commander';
+// 'commander' is a frozen legacy tier — only alpha founders can hold it.
+// Post-alpha €25 supporters receive 'vanguard' instead.
+type SupporterTier = 'recruit' | 'officer' | 'vanguard' | 'commander';
 
-const TIER_RANK: Record<SupporterTier, number> = { recruit: 1, officer: 2, commander: 3 };
+const TIER_RANK: Record<SupporterTier, number> = { recruit: 1, officer: 2, vanguard: 3, commander: 4 };
 
 interface TierGrant {
 	tier: SupporterTier | null;
@@ -45,7 +47,9 @@ interface TierGrant {
 // disproportionately generous to nudge donors up. Sub-€5 donations still grant
 // supporter status + 1 token (we don't punish small donors) but get no tier badge.
 function resolveTier(amountEur: number): TierGrant {
-	if (amountEur >= 25) return { tier: 'commander', tokens: 8 };
+	// Alpha is closed — new €25+ donors receive 'vanguard', not 'commander'.
+	// 'commander' is reserved for isFounder alpha donors; isAlphaActive() is always false.
+	if (amountEur >= 25) return { tier: 'vanguard', tokens: 8 };
 	if (amountEur >= 10) return { tier: 'officer', tokens: 3 };
 	if (amountEur >= 5) return { tier: 'recruit', tokens: 1 };
 	return { tier: null, tokens: 1 };
@@ -177,10 +181,12 @@ export async function handleKofiWebhook(req: Request, res: Response): Promise<vo
 
 		// Append the supporter title to earnedTitles when a tier is newly granted.
 		// Titles are cumulative — upgrading from Recruit to Officer keeps both.
+		// Alpha Commander replaces Commander for founder-tier donations during alpha.
 		const SUPPORTER_TITLES: Record<string, string> = {
 			recruit:   'Recruit',
 			officer:   'Officer',
-			commander: 'Commander',
+			vanguard:  'Vanguard',
+			commander: grantFounder ? 'Alpha Commander' : 'Commander',
 		};
 		if (upgradeToTier) {
 			const fullUser = await prisma.user.findUnique({

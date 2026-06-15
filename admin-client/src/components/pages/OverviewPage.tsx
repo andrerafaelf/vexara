@@ -1,24 +1,25 @@
 'use client';
 import {
-	Activity,
-	AlertTriangle,
-	Building2,
-	Flag,
-	Globe,
-	ShoppingCart,
-	Shield,
-	Swords,
-	Users
+    Activity,
+    AlertTriangle,
+    Building2,
+    Calendar,
+    Flag,
+    Globe,
+    Shield,
+    ShoppingCart,
+    Swords,
+    Users
 } from 'lucide-react';
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
-	Area,
-	AreaChart,
-	CartesianGrid,
-	ResponsiveContainer,
-	Tooltip,
-	XAxis,
-	YAxis
+    Area,
+    AreaChart,
+    CartesianGrid,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis
 } from 'recharts';
 import type { AdminFetch } from '../../types/admin';
 
@@ -51,13 +52,16 @@ interface GalaxyHealthRow {
 	id: number;
 	name: string;
 	speedMultiplier: number;
-	seasonEndsAt: string | null;
 	players: number;
 	nexuses: number;
 	factions: number;
 	attacks24h: number;
 	attacks7d: number;
 	newPlayers7d: number;
+}
+
+interface AppConfig {
+	seasonEndsAt: string | null;
 }
 
 interface Props {
@@ -69,24 +73,61 @@ const CHART_COLORS = { users: '#4A9EB0', attacks: '#F85149' };
 export default function OverviewPage({ adminFetch }: Props) {
 	const [data, setData] = useState<OverviewData | null>(null);
 	const [health, setHealth] = useState<GalaxyHealthRow[]>([]);
+	const [config, setConfig] = useState<AppConfig | null>(null);
+	const [seasonInput, setSeasonInput] = useState('');
+	const [seasonSaving, setSeasonSaving] = useState(false);
 	const [loading, setLoading] = useState(true);
 
 	const load = useCallback(async () => {
 		try {
-			const [overviewRes, healthRes] = await Promise.all([
+			const [overviewRes, healthRes, configRes] = await Promise.all([
 				adminFetch(`${API}/overview`),
-				adminFetch(`${API}/galaxy-health`)
+				adminFetch(`${API}/galaxy-health`),
+				adminFetch(`${API}/config`)
 			]);
 			const json = await overviewRes.json().catch(() => null);
 			const healthJson = await healthRes.json().catch(() => []);
+			const configJson = await configRes.json().catch(() => null);
 			if (json) setData(json);
 			if (Array.isArray(healthJson)) setHealth(healthJson);
+			if (configJson) {
+				setConfig(configJson);
+				setSeasonInput(
+					configJson.seasonEndsAt
+						? new Date(configJson.seasonEndsAt).toISOString().slice(0, 16)
+						: ''
+				);
+			}
 		} catch {
 			/* silent */
 		} finally {
 			setLoading(false);
 		}
 	}, [adminFetch]);
+
+	const saveSeason = async (overrideValue?: string | null) => {
+		setSeasonSaving(true);
+		try {
+			const value = overrideValue !== undefined ? overrideValue : seasonInput;
+			const body = value ? { seasonEndsAt: new Date(value).toISOString() } : { seasonEndsAt: null };
+			const res = await adminFetch(`${API}/config`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(body)
+			});
+			const updated = await res.json().catch(() => null);
+			if (updated) {
+				setConfig(updated);
+				setSeasonInput(
+					updated.seasonEndsAt
+						? new Date(updated.seasonEndsAt).toISOString().slice(0, 16)
+						: ''
+				);
+			}
+		} finally {
+			setSeasonSaving(false);
+		}
+	};
 
 	useEffect(() => {
 		load();
@@ -152,6 +193,68 @@ export default function OverviewPage({ adminFetch }: Props) {
 
 	return (
 		<div className="page-body">
+			{/* Season Config */}
+			<div className="section">
+				<div className="section-header">
+					<span className="section-title">
+						<Calendar size={14} /> Season Config
+					</span>
+				</div>
+				<div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+					<div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+						<label style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+							Season End Date (UTC)
+						</label>
+						<input
+							type="datetime-local"
+							value={seasonInput}
+							onChange={(e) => setSeasonInput(e.target.value)}
+							style={{
+								background: 'var(--bg-input, #161B22)',
+								border: '1px solid #30363D',
+								borderRadius: 4,
+								color: '#C9D1D9',
+								fontSize: 13,
+								padding: '5px 10px'
+							}}
+						/>
+					</div>
+					<div style={{ display: 'flex', gap: 8, alignSelf: 'flex-end' }}>
+						<button
+							className="btn btn-primary"
+							onClick={saveSeason}
+							disabled={seasonSaving}
+							style={{ fontSize: 12 }}
+						>
+							{seasonSaving ? 'Saving…' : 'Save'}
+						</button>
+						{config?.seasonEndsAt && (
+							<button
+								className="btn btn-danger"
+								onClick={() => saveSeason(null)}
+								disabled={seasonSaving}
+								style={{ fontSize: 12 }}
+							>
+								Clear
+							</button>
+						)}
+					</div>
+					{config?.seasonEndsAt && (
+						<span style={{ fontSize: 12, color: 'var(--text-muted)', alignSelf: 'flex-end', paddingBottom: 2 }}>
+							Current:{' '}
+							<strong style={{ color: '#C9D1D9' }}>
+								{new Date(config.seasonEndsAt).toUTCString()}
+							</strong>
+						</span>
+					)}
+					{!config?.seasonEndsAt && (
+						<span style={{ fontSize: 12, color: 'var(--text-muted)', alignSelf: 'flex-end', paddingBottom: 2 }}>
+							No season end date set — galaxies won't expire automatically.
+						</span>
+					)}
+				</div>
+			</div>
+
 			{/* Stat cards */}
 			<div className="stat-grid">
 				{stats.map(({ label, value, icon, variant }) => (
@@ -264,50 +367,35 @@ export default function OverviewPage({ adminFetch }: Props) {
 									<th>Attacks 24h</th>
 									<th>Attacks 7d</th>
 									<th>New 7d</th>
-									<th>Season Ends</th>
 								</tr>
 							</thead>
 							<tbody>
-								{health.map((g) => {
-									const endsIn = g.seasonEndsAt
-										? Math.max(0, Math.ceil((new Date(g.seasonEndsAt).getTime() - Date.now()) / 86_400_000))
-										: null;
-									return (
-										<tr key={g.id}>
-											<td className="col-strong">
-												{g.name}
-												{g.speedMultiplier > 1 && (
-													<span style={{ color: '#f59e0b', marginLeft: 6, fontSize: 11 }}>
-														{g.speedMultiplier}×
-													</span>
-												)}
-											</td>
-											<td>{g.players}</td>
-											<td>{g.nexuses}</td>
-											<td>{g.factions}</td>
-											<td>
-												<span style={{ color: g.attacks24h > 0 ? '#F85149' : 'var(--text-muted)' }}>
-													{g.attacks24h}
+								{health.map((g) => (
+									<tr key={g.id}>
+										<td className="col-strong">
+											{g.name}
+											{g.speedMultiplier > 1 && (
+												<span style={{ color: '#f59e0b', marginLeft: 6, fontSize: 11 }}>
+													{g.speedMultiplier}×
 												</span>
-											</td>
-											<td>{g.attacks7d}</td>
-											<td>
-												<span style={{ color: g.newPlayers7d > 0 ? '#56D364' : 'var(--text-muted)' }}>
-													{g.newPlayers7d > 0 ? `+${g.newPlayers7d}` : '0'}
-												</span>
-											</td>
-											<td>
-												{endsIn !== null ? (
-													<span style={{ color: endsIn <= 2 ? '#F85149' : '#8B949E', fontSize: 12 }}>
-														{endsIn === 0 ? 'today' : `${endsIn}d`}
-													</span>
-												) : (
-													<span style={{ color: 'var(--text-muted)', fontSize: 12 }}>—</span>
-												)}
-											</td>
-										</tr>
-									);
-								})}
+											)}
+										</td>
+										<td>{g.players}</td>
+										<td>{g.nexuses}</td>
+										<td>{g.factions}</td>
+										<td>
+											<span style={{ color: g.attacks24h > 0 ? '#F85149' : 'var(--text-muted)' }}>
+												{g.attacks24h}
+											</span>
+										</td>
+										<td>{g.attacks7d}</td>
+										<td>
+											<span style={{ color: g.newPlayers7d > 0 ? '#56D364' : 'var(--text-muted)' }}>
+												{g.newPlayers7d > 0 ? `+${g.newPlayers7d}` : '0'}
+											</span>
+										</td>
+									</tr>
+								))}
 							</tbody>
 						</table>
 					</div>
