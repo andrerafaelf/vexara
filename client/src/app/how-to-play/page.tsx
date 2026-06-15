@@ -89,7 +89,39 @@ const faqSchema = {
 			name: 'What are seasons in Vexara?',
 			acceptedAnswer: {
 				'@type': 'Answer',
-				text: "Each galaxy runs until a faction crosses the dominance threshold. The winning faction earns naming rights and a permanent Hall of Champions entry, then a fresh galaxy opens. Your Vex Points carry across every galaxy. Permanent commander titles — Veteran, Iron Commander, Conqueror, Warlord — are earned through galaxies played and won, not purchased."
+				text: "Each galaxy runs until a faction crosses the dominance threshold. The winning faction earns naming rights and a permanent Hall of Champions entry, then a fresh galaxy opens. Your Vex Points and earned commander titles carry across every galaxy — nothing resets. Titles earned through the Vex Protocol (Veteran, Vex Commander, High Commander, Season Conqueror) are permanent and show on your profile forever."
+			}
+		},
+		{
+			'@type': 'Question',
+			name: 'What is the Vex Protocol?',
+			acceptedAnswer: {
+				'@type': 'Answer',
+				text: "The Vex Protocol is the season battle pass — 50 levels, reset each galaxy. Everyone plays the free track (Protocol: Field) at no cost: every level awards all three resources, scaling from 500 each at L1 to 140,000 each at L49, plus badge milestones at L10 (Bronze), L25 (Silver), L40 (Gold), and a Platinum badge at L50. The paid track (Protocol: Command) costs 1,000 Vex Points (~€4.99) and adds commander titles, production boosts up to +35% for 120 hours, and up to 4 relocation tokens. The paid track also returns 500 VP across 20 reward levels, so the effective net cost is 500 VP. Earn XP by completing Daily Quests (200 XP), winning attacks (100 XP), capturing a nexus (150 XP), winning defences (75 XP), and coordinating faction operations (120 XP). 200 XP unlocks each level; a casual player hits L50 in about 28 days."
+			}
+		},
+		{
+			'@type': 'Question',
+			name: 'What is the Vexara Shop?',
+			acceptedAnswer: {
+				'@type': 'Answer',
+				text: "The Shop lets you spend Vex Points on cosmetic items. Three titles rotate daily (100–400 VP each), plus one border collection (6 variants at 75 VP each, or 300 VP for the full bundle). Utility items are always available: Commander Rename (500 VP, 30-day cooldown), and Gift Vex Protocol Pass (1,000 VP, unlocks the paid pass for a galaxy mate). Border collections rotate through 12 themes — Banner, Cube, Edge, Frame, Glitch, Gridlock, Mist, Monolith, Portal, Runner, Sunfall, and Terminal. Alpha Commander supporters receive an exclusive non-purchasable border automatically."
+			}
+		},
+		{
+			'@type': 'Question',
+			name: 'What are commander titles in Vexara?',
+			acceptedAnswer: {
+				'@type': 'Answer',
+				text: "Titles are permanent cosmetic labels that appear next to your name. Some are earned free through the Vex Protocol pass (Veteran at L40, plus paid-track titles Recruit, Operative, Proven, Vex Commander, High Commander, and Season Conqueror). Others are available in the daily Shop rotation (100–400 VP). Titles earned in any galaxy stay on your account forever. You can set which title shows on your profile at any time."
+			}
+		},
+		{
+			'@type': 'Question',
+			name: 'What is the Hall of Champions?',
+			acceptedAnswer: {
+				'@type': 'Answer',
+				text: "When a galaxy ends, the winning faction's roster is inscribed in the Hall of Champions — a permanent record visible to everyone at vexara.world/hall-of-fame. Each entry shows the galaxy name, the winning faction, the final date, and every champion's profile. Your Hall of Champions entries accumulate across every galaxy you help win."
 			}
 		},
 		{
@@ -97,7 +129,7 @@ const faqSchema = {
 			name: 'Is Vexara pay-to-win?',
 			acceptedAnswer: {
 				'@type': 'Answer',
-				text: 'No. Combat power — troops, buildings, attack and defense stats — cannot be purchased. The paid Vex Pass track (1,000 Vex Points, equivalent to €4.99) adds season-scoped titles, temporary production boosts, and 600 Vex Points back over 30 levels. Production boosts are time-limited economic perks, not combat multipliers. The free pass track — resources and badges — is included for every player with no purchase required.'
+				text: "No. Combat power — troops, buildings, attack and defense stats — cannot be purchased. The paid Vex Protocol track adds commander titles, temporary production boosts (economic, not combat), and relocation tokens. Production boosts expire in hours and affect resource income only. Every combat-relevant stat is earned purely through gameplay. The free pass track gives resources and badges to every player with no purchase required."
 			}
 		}
 	]
@@ -158,6 +190,16 @@ const STEPS = [
 		num: '11',
 		title: 'Coordinate strikes through Wave Planner or War Room',
 		body: "Once you can build Overseers you will run into organized defenders who stack allied support on the same wall. A solo wave usually cannot crack that. Use the Wave Planner to schedule multiple waves from your own nexuses to land at the same time, or join a War Room operation to combine force with faction-mates. The War Room reads your scout intel and shows every pledge's matchup verdict — so the whole faction can see which commits have the class edge before anyone launches. Coordinated waves merge into one battle at landing. The trade: once launched, troops cannot be recalled before the fight resolves."
+	},
+	{
+		num: '12',
+		title: 'Earn XP and level the Vex Protocol each season',
+		body: "Every galaxy has a Vex Protocol — a 50-level seasonal pass that resets when the galaxy ends. The free track (Protocol: Field) is available to everyone and awards resources at every level, scaling from 500 of each at L1 up to 140k each near L50, plus career badges at L10, L25, L40, and a Platinum badge at L50. Earn XP by completing Daily Quests (200 XP each), winning attacks (100 XP), capturing nexuses (150 XP), winning defences (75 XP), and running faction war operations (120 XP). Each level costs 200 XP — a casual daily-quest player reaches L50 in roughly 28 days. Upgrade to the paid track (Protocol: Command, 1,000 VP) to add commander titles, production boosts, and relocation tokens on top of the free rewards."
+	},
+	{
+		num: '13',
+		title: 'Spend Vex Points in the Shop',
+		body: "Vex Points (VP) are your persistent currency — they carry across every galaxy. Spend them in the Shop on cosmetic titles, portrait borders, a Commander Rename (500 VP, 30-day cooldown), or to gift a Vex Protocol pass to a galaxy mate (1,000 VP). Three titles rotate daily at 100–400 VP. One border collection (6 variants) rotates daily at 75 VP each or 300 VP for the bundle — 12 collections cycle through over 12 days. VP earned from the Protocol pass reduces the effective cost of the paid track to around 500 VP net."
 	}
 ];
 
@@ -188,11 +230,12 @@ export default function HowToPlayPage() {
 					<h2 className="gp-section-title">The core loop</h2>
 					<p className="gp-prose">
 						Vexara is a real-time strategy game that runs in your browser 24/7. You start with one
-						nexus - a base that generates three resources (Biomass, Alloy, Ore) and trains troops.
+						nexus — a base that generates three resources (Biomass, Alloy, Ore) and trains troops.
 						You use those resources to build, expand, raid, and eventually conquer other nexuses
 						from neutral spawns or rival players. Galaxies run until a faction wins, then a fresh
-						one opens — but your Vex Points, commander titles, and Hall of Champions entries carry
-						forward permanently. Every action you take has real consequences.
+						one opens. Your Vex Points, earned commander titles, badges, and Hall of Champions
+						entries carry forward permanently — your record never resets. Every action you take
+						has real consequences.
 					</p>
 				</section>
 

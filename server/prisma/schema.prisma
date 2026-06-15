@@ -101,6 +101,10 @@ model User {
   // Timestamp of last username change. Enforces the 30-day cooldown.
   usernameChangedAt DateTime?
 
+  // Set to true by the 20260615030000 migration that granted 1,000 VP to all
+  // pre-launch users. Prevents double-grants on re-run.
+  earlyAccessVpGranted Boolean @default(false)
+
   shopPurchases ShopPurchase[]
 }
 
