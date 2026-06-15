@@ -538,7 +538,7 @@ function RosterTeaser() {
 
 const PASS_TIERS = [
 	{ level: 1,  track: 'Free',  reward: 'Resources: Biomass' },
-	{ level: 1,  track: 'Paid',  reward: 'Season title: Recruit' },
+	{ level: 1,  track: 'Paid',  reward: 'Season title: Conscript' },
 	{ level: 5,  track: 'Free',  reward: 'Bronze badge' },
 	{ level: 6,  track: 'Paid',  reward: 'Season title: Operative' },
 	{ level: 15, track: 'Free',  reward: 'Silver badge' },

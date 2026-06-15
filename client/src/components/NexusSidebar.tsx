@@ -173,7 +173,7 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
 							{user.activeTitle && (
 								<div className="commander-title">{user.activeTitle}</div>
 							)}
-							<div className="commander-meta">Commander · {totalPoints.toLocaleString()} inf</div>
+							<div className="commander-meta">{totalPoints.toLocaleString()} inf</div>
 						</div>
 					</div>
 				)}

@@ -52,7 +52,7 @@ interface PassReward {
 //     L15:20 + L25:25 + L35:30 + L45:35 = 110 ✓  total = 250
 //
 // Paid track  (Protocol: Command):
-//   Titles: Recruit(1) → Operative(8) → Proven(18) → Vex Commander(30) → High Commander(45) → Season Conqueror(50)
+//   Titles: Conscript(1) → Operative(8) → Proven(18) → Vex Commander(30) → High Commander(45) → Season Conqueror(50)
 //   Boosts escalate from +5% 12h → +35% 120h.
 //   Tokens: 1 token at L20, 1 at L35, 2 at L50 (total 4 tokens on full paid pass).
 //   VP at 20 levels = 500 VP total.
@@ -68,7 +68,7 @@ interface PassReward {
 //   token:<count>                              — MilestoneToken rows (rewardType: 'battle_pass')
 const REWARD_TABLE: PassReward[] = [
 	// ── Act I: Enlistment (1–10) ─────────────────────────────────────────────────
-	{ level:  1, free: 'resources:500:500:500',                                         paid: 'title:Recruit' },
+	{ level:  1, free: 'resources:500:500:500',                                         paid: 'title:Conscript' },
 	{ level:  2, free: 'resources:800:800:800',                                         paid: 'boost:production:5:12' },
 	{ level:  3, free: 'resources:1000:1000:1000',                                      paid: 'vexpoints:10' },
 	{ level:  4, free: 'resources:1200:1200:1200',                                      paid: 'boost:production:8:18' },
@@ -379,7 +379,7 @@ export async function grantVexPoints(userId: number, amount: number): Promise<vo
 // Pass title rank — higher index = more prestigious. Used to ensure we never
 // downgrade a user's permanent title when a new season ends.
 export const PASS_TITLE_RANK: Record<string, number> = {
-	Recruit: 1,
+	Conscript: 1,
 	Operative: 2,
 	Proven: 3,
 	Veteran: 4,

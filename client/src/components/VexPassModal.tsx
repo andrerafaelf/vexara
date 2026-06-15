@@ -106,7 +106,7 @@ function fmtReward(raw: string | null): React.ReactNode[] {
 // All 50 levels of the reward table — mirrors server/utils/battlePass.ts exactly.
 const LEVELS: Array<{ level: number; free: string | null; paid: string | null }> = [
 	// Act I: Enlistment (1–10)
-	{ level: 1, free: 'resources:500:500:500', paid: 'title:Recruit' },
+	{ level: 1, free: 'resources:500:500:500', paid: 'title:Conscript' },
 	{ level: 2, free: 'resources:800:800:800', paid: 'boost:production:5:12' },
 	{ level: 3, free: 'resources:1000:1000:1000', paid: 'vexpoints:10' },
 	{ level: 4, free: 'resources:1200:1200:1200', paid: 'boost:production:8:18' },

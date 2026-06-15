@@ -600,8 +600,7 @@ export default function GameLayout({
 										    would truncate the username (see profile page for badges). */}
 									</div>
 									<div className="commander-meta">
-										Commander · {nexuses.reduce((s, n) => s + (n.points ?? 0), 0).toLocaleString()}{' '}
-										inf
+										{nexuses.reduce((s, n) => s + (n.points ?? 0), 0).toLocaleString()} inf
 									</div>
 								</div>
 							</div>

@@ -18,7 +18,32 @@ import {
 import '@/styles/ProfileStats.css';
 import '@/styles/Shop.css';
 import type { SupporterTier } from '@/types/game';
-import { Clock, Crown, MapPin, Trophy, UserCheck, UserMinus, UserPlus } from 'lucide-react';
+import { Clock, Crown, MapPin, UserCheck, UserMinus, UserPlus } from 'lucide-react';
+
+const TITLE_META: Record<string, string> = {
+	// Supporter titles (Ko-fi)
+	'Recruit':          'Supporter who backed Vexara at the €5 tier.',
+	'Officer':          'Supporter who backed Vexara at the €10 tier.',
+	'Vanguard':         'Supporter who backed Vexara at the €25 tier.',
+	'Commander':        'Supporter who backed Vexara at the Commander tier.',
+	'Alpha Commander':  'Commander-tier supporter who backed Vexara during alpha.',
+	// Season / faction titles
+	'Conqueror':        'Won a galaxy season.',
+	'Warlord':          'Won two or more galaxy seasons.',
+	'Veteran':          'Played three or more galaxy seasons.',
+	'Iron Commander':   'Played every galaxy season since joining — loyalty rewarded.',
+	// Faction titles (earned in-galaxy)
+	'Iron Pact':        'Earned by completing the Iron Pact faction campaign.',
+	'Eternal Vanguard': 'Earned by completing the Eternal Vanguard faction campaign.',
+	'Static Eye':       'Earned by completing the Static Eye faction campaign.',
+	// Battle pass titles
+	'Conscript':        'Unlocked at rank 1 of the Season One paid campaign.',
+	'Operative':        'Unlocked at rank 8 of the Season One paid campaign.',
+	'Proven':           'Unlocked at rank 18 of the Season One paid campaign.',
+	'Vex Commander':    'Unlocked at rank 30 of the Season One paid campaign.',
+	'High Commander':   'Unlocked at rank 45 of the Season One paid campaign.',
+	'Season Conqueror': 'Unlocked by completing all 50 ranks of the Season One paid campaign.',
+};
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
@@ -283,10 +308,7 @@ function PublicProfilePageInner() {
 							/>
 						</h2>
 						{profile.activeTitle && (
-							<span className="ps-active-title">
-								<Trophy size={11} aria-hidden="true" />
-								{profile.activeTitle}
-							</span>
+							<span className="ps-active-title">{profile.activeTitle}</span>
 						)}
 						<span className="ps-meta">
 							{profile.points.toLocaleString()} influence &middot; {profile.nexusCount} nexus
@@ -355,8 +377,12 @@ function PublicProfilePageInner() {
 								return 0;
 							}).map((title) => (
 								<div key={title} className={`ps-title-row${profile.activeTitle === title ? ' ps-title-row--active' : ''}`}>
-									<Trophy size={12} className="ps-title-icon" aria-hidden="true" />
-									<span className="ps-title-name">{title}</span>
+									<div className="ps-title-body">
+										<span className="ps-title-name">{title}</span>
+										{TITLE_META[title] && (
+											<span className="ps-title-desc">{TITLE_META[title]}</span>
+										)}
+									</div>
 									{profile.activeTitle === title && (
 										<span className="ps-title-equipped">Equipped</span>
 									)}
