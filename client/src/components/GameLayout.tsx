@@ -545,12 +545,6 @@ export default function GameLayout({
 						{/* end header-mobile-row */}
 					</header>
 
-					{headerNexus && (
-						<div className="resource-subheader">
-							<HeaderResourceStrip nexus={headerNexus} />
-						</div>
-					)}
-
 					<ConnectionStatusBar />
 					<TroopMovementsBar />
 					<DominanceBar />
@@ -767,6 +761,11 @@ export default function GameLayout({
 							user={authUser}
 						/>
 						<main className={`main-content${mainClassName ? ` ${mainClassName}` : ''}`}>
+							{headerNexus && (
+								<div className="resource-subheader">
+									<HeaderResourceStrip nexus={headerNexus} />
+								</div>
+							)}
 							{children}
 						</main>
 						{/* Right rail: Daily Quests live here so the left rail is free for the

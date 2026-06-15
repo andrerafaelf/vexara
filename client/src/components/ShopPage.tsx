@@ -96,6 +96,7 @@ export default function ShopPage() {
 	const [confirmModal, setConfirmModal] = React.useState<{
 		key: string;
 		label: string;
+		description: string;
 		cost: number;
 		isBundle?: boolean;
 	} | null>(null);
@@ -127,12 +128,18 @@ export default function ShopPage() {
 		}, 3500);
 	}
 
-	function handleBuyClick(key: string, label: string, cost: number) {
-		setConfirmModal({ key, label, cost });
+	function handleBuyClick(key: string, label: string, cost: number, description: string) {
+		setConfirmModal({ key, label, description, cost });
 	}
 
 	function handleBundleClick(collectionKey: string, collectionName: string) {
-		setConfirmModal({ key: collectionKey, label: `${collectionName} Collection Bundle`, cost: 300, isBundle: true });
+		setConfirmModal({
+			key: collectionKey,
+			label: `${collectionName} Collection Bundle`,
+			description: `All 6 frames from the ${collectionName} series. Already-owned frames are credited.`,
+			cost: 300,
+			isBundle: true
+		});
 	}
 
 	function handleConfirmPurchase() {
@@ -321,7 +328,7 @@ export default function ShopPage() {
 												<button
 													className="shop-buy-btn"
 													disabled={!canAfford || busy}
-													onClick={() => handleBuyClick(item.key, item.name, item.vpCost)}
+													onClick={() => handleBuyClick(item.key, item.name, item.vpCost, item.description)}
 												>
 													{busy ? 'Working...' : canAfford ? 'Requisition' : 'Insufficient VP'}
 												</button>
@@ -410,7 +417,7 @@ export default function ShopPage() {
 																<button
 																	className="shop-buy-btn"
 																	disabled={!canAfford || busy}
-																	onClick={() => handleBuyClick(item.key, item.name, item.vpCost)}
+																	onClick={() => handleBuyClick(item.key, item.name, item.vpCost, item.description)}
 																>
 																	{busy
 																		? 'Working...'
@@ -609,10 +616,33 @@ export default function ShopPage() {
 							</button>
 						</div>
 						<p className="shop-confirm-item">{confirmModal.label}</p>
-						<p className="shop-confirm-cost">{confirmModal.cost.toLocaleString()} VP</p>
+						{confirmModal.description && (
+							<p className="shop-confirm-desc">{confirmModal.description}</p>
+						)}
+						<div className="shop-confirm-ledger">
+							<div className="shop-confirm-ledger-row">
+								<span>Current balance</span>
+								<span>{vp.toLocaleString()} VP</span>
+							</div>
+							<div className="shop-confirm-ledger-row shop-confirm-ledger-row--deduct">
+								<span>Cost</span>
+								<span>− {confirmModal.cost.toLocaleString()} VP</span>
+							</div>
+							<div className="shop-confirm-ledger-divider" />
+							<div className={`shop-confirm-ledger-row shop-confirm-ledger-row--remaining${vp - confirmModal.cost < 0 ? ' shop-confirm-ledger-row--insufficient' : ''}`}>
+								<span>Remaining</span>
+								<span>{(vp - confirmModal.cost).toLocaleString()} VP</span>
+							</div>
+						</div>
 						<div className="shop-confirm-actions">
 							<button className="shop-cancel-btn" onClick={() => setConfirmModal(null)}>Cancel</button>
-							<button className="shop-buy-btn shop-buy-btn--confirm" onClick={handleConfirmPurchase}>Confirm</button>
+							<button
+								className="shop-buy-btn shop-buy-btn--confirm"
+								onClick={handleConfirmPurchase}
+								disabled={vp < confirmModal.cost}
+							>
+								Confirm — {confirmModal.cost.toLocaleString()} VP
+							</button>
 						</div>
 					</div>
 				</div>,
