@@ -95,11 +95,132 @@ all exactly as they were; we just made them readable.
   single-class wave that's easy to hard-counter) and prompts you to scout
   for a precise read.
 
+---
+
+### Seasons and the Hall of Champions
+
+Galaxies have always run to a winner, but the result evaporated when the
+next one opened. That changes now.
+
+When a galaxy ends, the winning faction's full roster is inscribed
+permanently in the **Hall of Champions** — visible to everyone, every
+season, forever. Each entry records the galaxy name, the winning faction,
+the closing date, and every commander who was on the roster when the flag
+went down.
+
+Alongside that, every galaxy now has an optional **season end timer.**
+When the admin sets it, a countdown appears on the dominance bar so every
+faction knows exactly how long is left to push for the threshold — or
+hold what they have.
+
+---
+
+### The Vex Protocol
+
+The Vex Protocol is a 50-level seasonal battle pass that runs alongside
+each galaxy and resets when it ends. **The free track is open to
+everyone** — no purchase required.
+
+**Protocol: Field (free)**
+
+Every level awards all three resources, scaling from 500 of each at
+level 1 up to 140,000 of each near level 50. Four badge milestones mark
+the climb: Bronze at level 10, Silver at 25, Gold at 40, and the rare
+**Platinum badge at level 50** — proof you went the full distance. The
+Veteran title unlocks free at level 40.
+
+**Protocol: Command (paid — 1,000 Vex Points)**
+
+The paid track layers on top of the free rewards at every level. It adds
+six commander titles that unlock in sequence as you level:
+
+> Recruit (1) → Operative (8) → Proven (18) → Vex Commander (30) →
+> High Commander (45) → **Season Conqueror (50)**
+
+Between titles: escalating production boosts — starting at +5% for 12
+hours at level 2, climbing to +35% for 120 hours in Act V — and
+relocation tokens at levels 20, 35, and 50 (four total on a full pass).
+The paid track also returns 500 Vex Points across 20 reward levels, so
+the net cost is roughly 500 VP.
+
+**Earning XP**
+
+| Action | XP |
+|---|---|
+| Daily Quest completed | 200 |
+| Quest streak bonus | 75 |
+| Attack launched | 25 |
+| Attack won | 100 |
+| Nexus captured | 150 |
+| Defence won | 75 |
+| Coordinated assault | 120 |
+| Faction war operation | 120 |
+| Diplomatic treaty | 60 |
+
+Each level costs 200 XP. A player doing daily quests only reaches level
+50 in about 28 days — comfortably within a standard galaxy's lifespan.
+
+**Titles are permanent.** Every title you earn through the Protocol
+carries to your profile forever. You can choose which one displays at
+any time.
+
+---
+
+### Vex Points and the Shop
+
+**Vex Points (VP)** are your persistent currency. They carry across
+every galaxy — nothing resets.
+
+The Shop refreshes daily at midnight UTC and offers:
+
+- **Three titles** drawn from a pool of 25, priced at 50 VP each. Titles
+  range from flavour picks like *Drifter* and *Signal Runner* at the low
+  end to prestige labels like *Void Architect*, *Hand of Oblivion*, and
+  *The Reckoning* at 400 VP — but the daily rotation prices everything
+  equally at 50 VP, so rarer titles occasionally surface at a discount.
+- **One border collection** (6 variants), cycling through 12 themed sets
+  — Banner, Cube, Edge, Frame, Glitch, Gridlock, Mist, Monolith, Portal,
+  Runner, Sunfall, Terminal — at 75 VP per variant or 300 VP for the
+  full bundle.
+- **Commander Rename** — change your username once for 500 VP. A 30-day
+  cooldown applies between changes.
+- **Gift Vex Protocol Pass** — unlock the paid Protocol track for a
+  galaxy mate for 1,000 VP.
+
+Alpha Commander supporters receive an exclusive non-purchasable portrait
+border automatically.
+
+---
+
+### Commander titles on your profile
+
+Your profile now shows your active title beneath your name, your full
+badge collection, and every title you've ever earned. You can set your
+displayed title at any time from your profile page — switching is free
+and instant.
+
+---
+
+### Early access Vex Points grants
+
+As a thank-you to everyone who played during the alpha period:
+
+- **Every existing account receives 1,000 Vex Points** on this deploy.
+- **Every new account registered before 1 July 2028 receives 500 Vex
+  Points** at signup — a permanent early-access welcome grant.
+
+These are credited automatically. No action required.
+
+---
+
 ### Notes
 
 - The combat math is untouched. Class counters (1.35 / 0.75 on attack,
   1.25 / 0.80 on defense), Targeting Core amplification, Shield Grid,
-  and the loss curves are all exactly as they shipped in v0.23. This
-  patch only makes the existing system legible and the opening faster.
-- The codex and how-to-play guide pick up the role/class glossary and a
-  short "read the matchup before you strike" section for new commanders.
+  and the loss curves are all exactly as they shipped in v0.23.
+- The Vex Protocol XP table has been rebalanced for Beta: each level now
+  costs 200 XP (down from 300), and combat XP rewards are weighted
+  toward meaningful actions — winning a fight earns four times what
+  launching one does.
+- The how-to-play guide and in-game codex now cover the Protocol, the
+  Shop, and commander titles in full.
