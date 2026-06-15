@@ -1,7 +1,9 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { X } from 'lucide-react';
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../context/AuthContext';
 import {
 	getShop,
@@ -91,7 +93,12 @@ export default function ShopPage() {
 	const [giftUsername, setGiftUsername] = React.useState('');
 	const [renameValue, setRenameValue] = React.useState('');
 	const [busyKey, setBusyKey] = React.useState<string | null>(null);
-	const [pendingConfirmKey, setPendingConfirmKey] = React.useState<string | null>(null);
+	const [confirmModal, setConfirmModal] = React.useState<{
+		key: string;
+		label: string;
+		cost: number;
+		isBundle?: boolean;
+	} | null>(null);
 	const [confirmingRename, setConfirmingRename] = React.useState(false);
 	const [confirmingGift, setConfirmingGift] = React.useState(false);
 
@@ -120,22 +127,22 @@ export default function ShopPage() {
 		}, 3500);
 	}
 
-	function handleBuyClick(key: string) {
-		if (pendingConfirmKey === key) {
-			setPendingConfirmKey(null);
-			buyMutation.mutate(key);
-		} else {
-			setPendingConfirmKey(key);
-		}
+	function handleBuyClick(key: string, label: string, cost: number) {
+		setConfirmModal({ key, label, cost });
 	}
 
-	function handleBundleClick(collectionKey: string) {
-		if (pendingConfirmKey === `bundle_${collectionKey}`) {
-			setPendingConfirmKey(null);
-			bundleMutation.mutate(collectionKey);
+	function handleBundleClick(collectionKey: string, collectionName: string) {
+		setConfirmModal({ key: collectionKey, label: `${collectionName} Collection Bundle`, cost: 300, isBundle: true });
+	}
+
+	function handleConfirmPurchase() {
+		if (!confirmModal) return;
+		if (confirmModal.isBundle) {
+			bundleMutation.mutate(confirmModal.key);
 		} else {
-			setPendingConfirmKey(`bundle_${collectionKey}`);
+			buyMutation.mutate(confirmModal.key);
 		}
+		setConfirmModal(null);
 	}
 
 	function selectTab(nextTab: Tab) {
@@ -222,6 +229,7 @@ export default function ShopPage() {
 	});
 
 	return (
+		<>
 		<div className="shop-page">
 			{/* ── Page header ── */}
 			<div className="shop-page-header">
@@ -313,7 +321,7 @@ export default function ShopPage() {
 												<button
 													className="shop-buy-btn"
 													disabled={!canAfford || busy}
-													onClick={() => handleBuyClick(item.key)}
+													onClick={() => handleBuyClick(item.key, item.name, item.vpCost)}
 												>
 													{busy ? 'Working...' : canAfford ? 'Requisition' : 'Insufficient VP'}
 												</button>
@@ -402,7 +410,7 @@ export default function ShopPage() {
 																<button
 																	className="shop-buy-btn"
 																	disabled={!canAfford || busy}
-																	onClick={() => handleBuyClick(item.key)}
+																	onClick={() => handleBuyClick(item.key, item.name, item.vpCost)}
 																>
 																	{busy
 																		? 'Working...'
@@ -431,7 +439,7 @@ export default function ShopPage() {
 											<button
 												className="shop-buy-btn shop-buy-btn--bundle"
 												disabled={vp < 300 || bundleBusy}
-												onClick={() => handleBundleClick(collectionKey)}
+												onClick={() => handleBundleClick(collectionKey, collectionName)}
 											>
 												{bundleBusy
 													? 'Working...'
@@ -582,5 +590,34 @@ export default function ShopPage() {
 				)}
 			</div>
 		</div>
+
+		{/* Purchase confirm modal */}
+		{confirmModal &&
+			typeof document !== 'undefined' &&
+			createPortal(
+				<div className="shop-confirm-backdrop" onClick={() => setConfirmModal(null)}>
+					<div
+						className="shop-confirm-modal"
+						role="dialog"
+						aria-modal="true"
+						onClick={(e) => e.stopPropagation()}
+					>
+						<div className="shop-confirm-header">
+							<span className="shop-confirm-title">Confirm requisition</span>
+							<button className="shop-confirm-close" onClick={() => setConfirmModal(null)} aria-label="Cancel">
+								<X size={14} />
+							</button>
+						</div>
+						<p className="shop-confirm-item">{confirmModal.label}</p>
+						<p className="shop-confirm-cost">{confirmModal.cost.toLocaleString()} VP</p>
+						<div className="shop-confirm-actions">
+							<button className="shop-cancel-btn" onClick={() => setConfirmModal(null)}>Cancel</button>
+							<button className="shop-buy-btn shop-buy-btn--confirm" onClick={handleConfirmPurchase}>Confirm</button>
+						</div>
+					</div>
+				</div>,
+				document.body
+			)}
+		</>
 	);
 }

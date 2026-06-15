@@ -75,15 +75,15 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	height: 38px;
-	background: rgba(6, 10, 20, 0.72);
-	border-bottom: 1px solid var(--border-default);
-	backdrop-filter: blur(8px);
-	-webkit-backdrop-filter: blur(8px);
+	height: 52px;
+	background: rgba(10, 14, 26, 0.55);
+	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
 	position: sticky;
 	top: 56px;
 	z-index: calc(var(--z-sticky) - 1);
-	padding: 0 24px;
+	padding: 0 32px;
 }
 
 /* The strip itself fills the bar horizontally, borderless in this context */
@@ -94,18 +94,17 @@
 	height: 100%;
 }
 
-/* Slimmer cells — less vertical padding than the old header variant */
+/* Cells with generous horizontal breathing room */
 .resource-subheader .header-res {
-	padding: 0 20px;
-	min-width: 112px;
+	padding: 0 28px;
+	min-width: 120px;
 }
 
-/* Dividers between cells become subtler verticals */
+/* Subtler dividers between cells */
 .resource-subheader .header-res + .header-res {
-	border-left: 1px solid rgba(255, 255, 255, 0.06);
+	border-left: 1px solid rgba(255, 255, 255, 0.07);
 }
 
-/* Slightly smaller numbers since we have more breathing room horizontally */
 .resource-subheader .header-res-value {
 	font-size: var(--text-base);
 }
@@ -601,7 +600,7 @@
 	color: var(--accent);
 }
 .header-res-compact.header-res-ore .header-res-compact-value {
-	color: var(--warning);
+	color: #7cc8e4;
 }
 .header-res-compact.header-res-near .header-res-compact-value {
 	color: var(--warning);
@@ -2642,10 +2641,9 @@ label {
 }
 
 /* ── Resource strip in the header ──────────────────────────────── */
-.header-resource-strip {
-	background: var(--color-navy-800);
-	border: 1px solid var(--border-default);
-	border-left: 3px solid var(--accent);
+.resource-subheader .header-resource-strip {
+	background: transparent;
+	border: none;
 	border-radius: 0;
 }
 
