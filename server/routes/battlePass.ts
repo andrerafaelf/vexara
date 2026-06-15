@@ -22,7 +22,7 @@ router.get('/', auth, async (req, res: Response) => {
 			res.status(409).json({ error: 'No active galaxy' });
 			return;
 		}
-		const [player, galaxy] = await Promise.all([
+		const [player, galaxy, appConfig] = await Promise.all([
 			prisma.galaxyPlayer.findUnique({
 				where: { userId_galaxyId: { userId: authReq.userId, galaxyId: authReq.galaxyId } },
 				select: {
@@ -36,16 +36,21 @@ router.get('/', auth, async (req, res: Response) => {
 			prisma.galaxy.findUnique({
 				where: { id: authReq.galaxyId },
 				select: { seasonEndsAt: true }
+			}),
+			prisma.appConfig.findUnique({
+				where: { id: 1 },
+				select: { seasonEndsAt: true }
 			})
 		]);
 		if (!player) {
 			res.status(404).json({ error: 'Not a member of this galaxy' });
 			return;
 		}
+		const seasonEndsAt = galaxy?.seasonEndsAt ?? appConfig?.seasonEndsAt ?? null;
 		res.json({
 			...player,
 			claimedLevels: (player.claimedLevels as number[]) ?? [],
-			seasonEndsAt: galaxy?.seasonEndsAt?.toISOString() ?? null
+			seasonEndsAt: seasonEndsAt?.toISOString() ?? null
 		});
 	} catch (error) {
 		logError('unhandled_controller_error', {

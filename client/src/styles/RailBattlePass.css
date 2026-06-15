@@ -79,6 +79,14 @@
 	letter-spacing: 0.06em;
 }
 
+.rail-bp-season-end {
+	font-size: 10px;
+	color: var(--warning, #e3a846);
+	font-weight: 600;
+	letter-spacing: 0.03em;
+	margin-top: 1px;
+}
+
 /* ── XP bar ───────────────────────────────────────────────────────────────── */
 .rail-bp-bar {
 	position: relative;
@@ -313,6 +321,7 @@
 
 .rail-bp-xp-label,
 .rail-bp-maxed,
+.rail-bp-season-end,
 .rail-bp-title-row,
 .rail-bp-cta {
 	font-size: 11px;

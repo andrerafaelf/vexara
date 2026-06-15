@@ -774,10 +774,20 @@ export default function GameLayout({
 						    starfield. Collapses below the content breakpoint (see CSS). */}
 						{!isMapPage && (
 							<aside className="game-rail-right" aria-label="Activity">
-								<CurrentObjective />
-								<RailMovements />
-								<RailBattlePass />
-								<DailyStreaks variant="rail" />
+								<div className="game-rail-right-scroll">
+									<CurrentObjective />
+									<RailMovements />
+									<RailBattlePass />
+									<DailyStreaks variant="rail" />
+								</div>
+								<div className="game-rail-right-footer">
+									<SupportTiersCard
+										variant="compact"
+										currentTier={authUser?.supporterTier ?? null}
+										isFounder={authUser?.isFounder}
+										isSupporter={authUser?.isSupporter}
+									/>
+								</div>
 							</aside>
 						)}
 					</div>

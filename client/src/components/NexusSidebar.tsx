@@ -12,7 +12,6 @@ import { Check, Pencil, ScrollText, Settings, Trash2, X } from 'lucide-react';
 import { Nexus, NexusGroup, User } from '../types/game';
 import GalaxyChip from './GalaxyChip';
 import NexusTypeBadge from './NexusTypeBadge';
-import SupportTiersCard from './SupportTiersCard';
 import Avatar from './Avatar';
 import { CombatIcon, ConstructionIcon } from './VexaraIcons';
 
@@ -179,12 +178,6 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
 					</div>
 				)}
 
-				<SupportTiersCard
-					variant="compact"
-					currentTier={user?.supporterTier ?? null}
-					isFounder={user?.isFounder}
-					isSupporter={user?.isSupporter}
-				/>
 			</nav>
 
 			{showGroupManager && (

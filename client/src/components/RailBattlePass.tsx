@@ -37,10 +37,19 @@ export default function RailBattlePass() {
 
 	if (!data) return null;
 
-	const { seasonXp, passLevel, hasPaidPass, passTitle } = data;
+	const { seasonXp, passLevel, hasPaidPass, passTitle, seasonEndsAt } = data;
 	const xpIntoLevel = seasonXp - passLevel * XP_PER_LEVEL;
 	const xpPct = Math.min((xpIntoLevel / XP_PER_LEVEL) * 100, 100);
 	const isMaxed = passLevel >= MAX_LEVEL;
+
+	const seasonEndLabel = (() => {
+		if (!seasonEndsAt) return null;
+		const ms = new Date(seasonEndsAt).getTime() - Date.now();
+		if (ms <= 0) return 'Season ended';
+		const days = Math.ceil(ms / 86400000);
+		const date = new Date(seasonEndsAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+		return `Ends ${date} · ${days}d`;
+	})();
 
 	return (
 		<>
@@ -69,6 +78,9 @@ export default function RailBattlePass() {
 					</span>
 				)}
 				{isMaxed && <span className="rail-bp-maxed">Campaign complete</span>}
+				{seasonEndLabel && (
+					<span className="rail-bp-season-end">{seasonEndLabel}</span>
+				)}
 
 				<div
 					className="rail-bp-bar"

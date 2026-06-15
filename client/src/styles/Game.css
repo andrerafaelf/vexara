@@ -651,9 +651,22 @@
 	flex-shrink: 0;
 	background: var(--color-navy-800);
 	border-left: 1px solid var(--border-default);
-	overflow-y: auto;
 	min-height: 0;
-	padding: 16px 14px;
+	display: flex;
+	flex-direction: column;
+}
+
+.game-rail-right-scroll {
+	flex: 1;
+	overflow-y: auto;
+	padding: 16px 14px 8px;
+	min-height: 0;
+}
+
+.game-rail-right-footer {
+	flex-shrink: 0;
+	padding: 0 14px 14px;
+	border-top: 1px solid var(--border-default);
 }
 
 @media (max-width: 1180px) {

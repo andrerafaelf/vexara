@@ -203,8 +203,8 @@
 
 /* ── Compact variant (sidebar / mobile drawer) ───────────── */
 .vx-support-card--compact {
-	padding: 12px 14px;
-	margin: 8px 0 0;
+	padding: 14px 14px 16px;
+	margin: 10px 0 0;
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
@@ -217,7 +217,7 @@
 }
 
 .vx-support-card--compact .vx-support-card-title {
-	font-size: 12px;
+	font-size: 14px;
 	font-weight: 700;
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
@@ -282,7 +282,7 @@
 }
 
 .vx-support-card--compact .vx-support-card-title {
-	font-size: 13px;
+	font-size: 14px;
 }
 
 .vx-support-card-pitch,
