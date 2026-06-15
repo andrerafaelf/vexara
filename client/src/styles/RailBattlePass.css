@@ -190,6 +190,18 @@
 	color: var(--text-faint);
 	margin-top: 1px;
 }
+.rail-shop-tag {
+	font-size: 8px;
+	font-weight: 600;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--text-faint);
+	border: 1px solid #3a4a40;
+	padding: 1px 5px;
+	vertical-align: middle;
+	margin-left: 5px;
+	font-family: var(--font-mono);
+}
 .rail-shop-vp {
 	font-family: var(--font-mono);
 	font-size: 12px;

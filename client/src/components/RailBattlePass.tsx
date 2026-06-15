@@ -52,9 +52,9 @@ export default function RailBattlePass() {
 				<div className="rail-card-head">
 					<span className="rail-card-title">Season One Campaign</span>
 					{hasPaidPass ? (
-						<span className="rail-bp-paid-badge">Command issue</span>
+						<span className="rail-bp-paid-badge">Command Pass</span>
 					) : (
-						<span className="rail-bp-free-badge">Field issue</span>
+						<span className="rail-bp-free-badge">Free Tier</span>
 					)}
 				</div>
 
@@ -97,7 +97,7 @@ export default function RailBattlePass() {
 					</div>
 				)}
 
-				{!hasPaidPass && <div className="rail-bp-cta">Add Command Issue</div>}
+				{!hasPaidPass && <div className="rail-bp-cta">Unlock Command Pass · 1,000 VP</div>}
 			</button>
 
 			{modalOpen && <VexPassModal pass={data} seasonEndsAt={data.seasonEndsAt} onClose={() => setModalOpen(false)} />}
@@ -111,7 +111,7 @@ export default function RailBattlePass() {
 				aria-label="Open quartermaster"
 			>
 				<span className="rail-shop-text">
-					<span className="rail-shop-label">Quartermaster</span>
+					<span className="rail-shop-label">Quartermaster <span className="rail-shop-tag">Shop</span></span>
 					<span className="rail-shop-sub">Titles, borders, campaign pass</span>
 				</span>
 				{user?.vexPoints != null && (
