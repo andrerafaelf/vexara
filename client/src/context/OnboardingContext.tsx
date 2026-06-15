@@ -4,6 +4,7 @@ import { getProfile, updateOnboardingStep } from '../services/api';
 import { useMyNexuses } from '../hooks/useMyNexuses';
 import type { Nexus } from '../types/game';
 import { usePathname } from 'next/navigation';
+import { isOnboardingTrainEligible } from '../realtime/gameConstants.shared';
 
 export interface OnboardingStep {
 	id: string;
@@ -80,9 +81,9 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 		id: 'while_you_build',
 		kind: 'panel',
 		targetAttr: '',
-		title: 'Your First Build is Accelerated',
+		title: 'While Your Command Core Upgrades',
 		message:
-			"This one's fast — about 25 seconds. While it runs: the resource bar at the top shows your Biomass, Alloy, and Ore ticking up in real time. The game keeps running when you close the tab. Come back in a few minutes and your queue will have made progress.",
+			"It finishes in about 25 seconds. While it runs: the resource bar at the top shows your Biomass, Alloy, and Ore ticking up in real time. Resources accumulate even when you're not here — the game never stops.",
 		isReady: (s) => isNexusPath(s.pathname) && s.nexuses.some((n) => isFirstBuildInProgress(n)),
 		isComplete: (s) => s.nexuses.some((n) => (n.buildings?.commandCore ?? 0) >= 1)
 	},
@@ -91,7 +92,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 		targetAttr: 'upgrade-building',
 		title: 'Push to Command Core Lv2',
 		message:
-			'One more upgrade unlocks your production buildings. Queue it now and it will run automatically after the current build finishes.',
+			'One more upgrade unlocks your production buildings. Tap Upgrade — it queues instantly after the current build.',
 		isReady: (s) =>
 			isNexusPath(s.pathname) && s.nexuses.some((n) => (n.buildings?.commandCore ?? 0) >= 1),
 		isComplete: (s) => s.nexuses.some((n) => hasCommandCoreLevelStarted(n, 2))
@@ -101,7 +102,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 		targetAttr: 'build-production',
 		title: 'Build the Armor Foundry',
 		message:
-			'This unlocks Assault Troopers — your first raid unit. Queue it now. The game is running while you wait; check back when it is done.',
+			'This unlocks Assault Troopers — your first raid unit. Tap Build. It completes in seconds.',
 		isReady: (s) =>
 			isNexusPath(s.pathname) && s.nexuses.some((n) => (n.buildings?.commandCore ?? 0) >= 2),
 		isComplete: (s) => s.nexuses.some((n) => hasArmorFoundryStarted(n))
@@ -112,9 +113,11 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 		targetAttr: '',
 		title: 'Before You Train: How Combat Works',
 		message:
-			'Units have classes: Mobile beats Armor, Armor beats Fire, Fire beats Mobile. Each card shows a role too — Strikers attack, Anvils defend. Send Strikers out, keep Anvils home. A mixed force beats a one-class army. The attack screen will tell you if your composition is favoured before you commit.',
+			'Units have classes: Mobile beats Armor, Armor beats Fire, Fire beats Mobile. Each card shows a role — Strikers attack, Anvils defend. Send Strikers out, keep Anvils home. A mixed force beats a one-class army every time.',
+		// Show as soon as the Armor Foundry is queued (not yet built) so the lesson
+		// fills the short build wait rather than leaving the player idle.
 		isReady: (s) =>
-			isNexusPath(s.pathname) && s.nexuses.some((n) => (n.buildings?.armorFoundry ?? 0) >= 1),
+			isNexusPath(s.pathname) && s.nexuses.some((n) => hasArmorFoundryStarted(n)),
 		isComplete: (s) =>
 			s.nexuses.some((n) => {
 				if ((n.trainingQueue?.length ?? 0) > 0) return true;
@@ -125,9 +128,9 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 	{
 		id: 'train_troops',
 		targetAttr: 'train-troops',
-		title: 'Train Assault Troopers',
+		title: 'Train 5 Assault Troopers',
 		message:
-			'Queue at least 10. They raid neutrals, carry loot back, and defend your nexus. Training runs in the background — you do not need to stay on this screen.',
+			'Queue 5 Assault Troopers — training is free during the tutorial and takes seconds. They raid neutrals, carry loot back, and defend your nexus.',
 		isReady: (s) =>
 			isNexusPath(s.pathname) &&
 			s.nexuses.some((n) => (n.buildings?.armorFoundry ?? 0) >= 1),
@@ -145,9 +148,9 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 		id: 'troops_training',
 		kind: 'panel',
 		targetAttr: '',
-		title: 'Troops are Training',
+		title: 'Troops Ready in Seconds',
 		message:
-			"Your Assault Troopers are in the queue — training takes a few minutes. You don't need to wait. Close the app, come back when they're done, and the Starfield step will be waiting for you. The game never stops.",
+			'Your Assault Troopers are training now — they finish in about 25 seconds total. Once they land, the Starfield step unlocks automatically.',
 		// Show while training is queued but no troops have finished yet.
 		isReady: (s) =>
 			isNexusPath(s.pathname) &&
@@ -206,6 +209,12 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 interface OnboardingContextValue {
 	currentStep: OnboardingStep | null;
 	isEnabled: boolean;
+	// True while the player is eligible for the free Assault Trooper training
+	// discount (beginnerTipsEnabled and hasn't yet completed train_troops).
+	isTroopDiscountActive: boolean;
+	// The id of the last completed onboarding step (null = none yet). Exposed
+	// so call sites can compute onboarding build-time discounts client-side.
+	lastCompletedStep: string | null;
 	advance: () => void;
 	dismiss: () => void;
 	disableTips: () => void;
@@ -215,6 +224,8 @@ interface OnboardingContextValue {
 const OnboardingContext = createContext<OnboardingContextValue>({
 	currentStep: null,
 	isEnabled: false,
+	isTroopDiscountActive: false,
+	lastCompletedStep: null,
 	advance: () => {},
 	dismiss: () => {},
 	disableTips: () => {},
@@ -225,6 +236,9 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 	const [stepIndex, setStepIndex] = useState<number | null>(null);
 	const [enabled, setEnabled] = useState(false);
 	const [ready, setReady] = useState(false);
+	// The id of the last completed onboarding step, as stored on the server.
+	// Null means the player hasn't completed any step yet.
+	const [lastCompletedStep, setLastCompletedStep] = useState<string | null>(null);
 	const { nexuses } = useMyNexuses();
 	const pathname = usePathname();
 	// Track which step ids we've already auto-completed in this session so we
@@ -245,10 +259,12 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 				setEnabled(true);
 				// onboardingStep stores the id of the LAST COMPLETED step.
 				// We show the next one after it (or the first if null).
-				if (!user.onboardingStep) {
+				const completedId: string | null = user.onboardingStep ?? null;
+				setLastCompletedStep(completedId);
+				if (!completedId) {
 					setStepIndex(0);
 				} else {
-					const lastIdx = ONBOARDING_STEPS.findIndex((s) => s.id === user.onboardingStep);
+					const lastIdx = ONBOARDING_STEPS.findIndex((s) => s.id === completedId);
 					const next = lastIdx + 1;
 					setStepIndex(next < ONBOARDING_STEPS.length ? next : null);
 				}
@@ -272,6 +288,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 			if (!autoSentRef.current.has(step.id)) {
 				autoSentRef.current.add(step.id);
 				void updateOnboardingStep(step.id).catch(() => {});
+				setLastCompletedStep(step.id);
 			}
 			const next = stepIndex + 1;
 			setStepIndex(next < ONBOARDING_STEPS.length ? next : null);
@@ -292,6 +309,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 		const completedStep = ONBOARDING_STEPS[stepIndex];
 		if (completedStep) {
 			void updateOnboardingStep(completedStep.id).catch(() => {});
+			setLastCompletedStep(completedStep.id);
 		}
 		const next = stepIndex + 1;
 		setStepIndex(next < ONBOARDING_STEPS.length ? next : null);
@@ -314,9 +332,15 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 		setStepIndex(0);
 	}, []);
 
+	const isTroopDiscountActive = isOnboardingTrainEligible(
+		'assaultTrooper',
+		enabled,
+		lastCompletedStep
+	);
+
 	return (
 		<OnboardingContext.Provider
-			value={{ currentStep, isEnabled: enabled, advance, dismiss, disableTips, reenableTips }}
+			value={{ currentStep, isEnabled: enabled, isTroopDiscountActive, lastCompletedStep, advance, dismiss, disableTips, reenableTips }}
 		>
 			{children}
 		</OnboardingContext.Provider>

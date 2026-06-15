@@ -167,6 +167,83 @@ export function isFirstBuild(building: string, currentLevel: number): boolean {
 	return building === FIRST_BUILD_BUILDING && currentLevel === 0;
 }
 
+// Onboarding troop discount: during the guided tutorial the player must train
+// 5 Assault Troopers, but they haven't had time to accumulate real resources.
+// We collapse the cost to 1/1/1 and the train time to 5s per unit so the step
+// is instant and doesn't block the flow. Applies ONLY while beginnerTipsEnabled
+// is true and the player hasn't yet completed the 'train_troops' step.
+// The train-troops step itself marks completion, so after that first queue the
+// player is on normal costs for all future sessions.
+export const ONBOARDING_TROOP_TYPE = 'assaultTrooper';
+export const ONBOARDING_TROOP_COST: Pick<TroopCost, 'biomass' | 'alloy' | 'ore'> = {
+	biomass: 1,
+	alloy: 1,
+	ore: 1
+};
+export const ONBOARDING_TRAIN_TIME_SECONDS = 5;
+
+// The set of onboarding step ids that come BEFORE the player has trained their
+// first batch of troops. Once any of these is the last completed step (or none
+// is yet completed) AND beginnerTipsEnabled is true, we apply the discount.
+// Steps at or after 'train_troops' get normal costs.
+const ONBOARDING_STEPS_BEFORE_TRAIN = new Set([
+	'create_nexus',
+	'upgrade_building',
+	'while_you_build',
+	'reinforce_command',
+	'build_production',
+	'counter_triangle'
+]);
+
+export function isOnboardingTrainEligible(
+	troopType: string,
+	beginnerTipsEnabled: boolean,
+	lastCompletedStep: string | null | undefined
+): boolean {
+	if (!beginnerTipsEnabled) return false;
+	if (troopType !== ONBOARDING_TROOP_TYPE) return false;
+	// null means no step completed yet — player is at the very beginning
+	if (!lastCompletedStep) return true;
+	return ONBOARDING_STEPS_BEFORE_TRAIN.has(lastCompletedStep);
+}
+
+// Onboarding build-time overrides: the two builds between CC Lv0→1 (already
+// collapsed by FIRST_BUILD_TIME_SECONDS) and being able to train troops are
+// CC Lv1→2 and Armor Foundry Lv0→1. Without acceleration these are ~150s and
+// ~180s respectively — dead time that kills first-session momentum. We collapse
+// each to 20s when beginnerTipsEnabled is true and the player hasn't yet passed
+// the 'build_production' step. Only applies once per build (one-time by
+// construction: CC can only hit Lv1 once, Foundry can only be at Lv0 once).
+export const ONBOARDING_BUILD_TIME_SECONDS = 20;
+
+// Builds eligible for the accelerated-onboarding time override.
+// Key: `${building}@${currentLevel}` (the level BEFORE the upgrade starts).
+const ONBOARDING_BUILD_OVERRIDES = new Set([
+	'commandCore@1', // CC Lv1 → Lv2
+	'armorFoundry@0' // Armor Foundry Lv0 → Lv1
+]);
+
+const ONBOARDING_STEPS_BEFORE_BUILD = new Set([
+	'create_nexus',
+	'upgrade_building',
+	'while_you_build',
+	'reinforce_command'
+	// 'build_production' is the step that queues the foundry; once it's queued
+	// (step completed) the override already fired, so no need to list it here.
+]);
+
+export function isOnboardingBuildEligible(
+	building: string,
+	currentLevel: number,
+	beginnerTipsEnabled: boolean,
+	lastCompletedStep: string | null | undefined
+): boolean {
+	if (!beginnerTipsEnabled) return false;
+	if (!ONBOARDING_BUILD_OVERRIDES.has(`${building}@${currentLevel}`)) return false;
+	if (!lastCompletedStep) return true;
+	return ONBOARDING_STEPS_BEFORE_BUILD.has(lastCompletedStep);
+}
+
 // Extra build queue slots from the Veteran tier: +1 at CC 16, +1 at CC 17.
 // Capped at +2 so CC 18-20 don't keep stacking.
 export function getCommandBuildQueueBonus(commandLevel: number): number {

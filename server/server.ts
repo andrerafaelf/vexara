@@ -35,6 +35,7 @@ import troopRoutes from './routes/troop.js';
 import troopTransferRoutes from './routes/troopTransfer.js';
 import usersRoutes from './routes/users.js';
 import battlePassRoutes from './routes/battlePass.js';
+import shopRoutes from './routes/shop.js';
 import { processArrivedAttacks, processArrivedTransfers } from './utils/combat.js';
 import { processScheduledAttacks } from './services/attackService.js';
 import { processDominanceVictories, processSeasonExpiry } from './utils/dominance.js';
@@ -194,6 +195,7 @@ app.use('/api/warroom', warRoomRoutes);
 app.use('/api/referral', referralRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/battle-pass', battlePassRoutes);
+app.use('/api/shop', shopRoutes);
 
 const JOB_LOCKS = {
 	updateResources: 9101,

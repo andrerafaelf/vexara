@@ -72,6 +72,11 @@ import {
 	getStealthVaultPerResource,
 	getTrainingChains,
 	MAX_TRAIN_PER_BATCH,
+	isOnboardingBuildEligible,
+	ONBOARDING_BUILD_TIME_SECONDS,
+	ONBOARDING_TRAIN_TIME_SECONDS,
+	ONBOARDING_TROOP_COST,
+	ONBOARDING_TROOP_TYPE,
 	trainingBuildingFor,
 	trainingChainFor,
 	TROOP_COMBAT_CLASS,
@@ -448,7 +453,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 	onTabChange
 }) => {
 	const router = useRouter();
-	const { currentStep } = useOnboarding();
+	const { currentStep, isTroopDiscountActive, isEnabled, lastCompletedStep } = useOnboarding();
 	const [activeTab, setActiveTabState] = useState<NexusTab>(initialTab);
 	// The section nav is now the vertical .nexus-inner-nav (position: sticky), so
 	// the old horizontal-tab-bar sticky-sentinel detection was removed.
@@ -1044,6 +1049,13 @@ const NexusView: React.FC<NexusViewProps> = ({
 	) => {
 		if (!canTrain) return { maxTrainable: 0, shortageReasons: [] };
 
+		// During onboarding the Assault Trooper is effectively free so the player
+		// can complete the train step without needing to have accumulated resources.
+		const effectiveCosts =
+			isTroopDiscountActive && troopType === ONBOARDING_TROOP_TYPE
+				? { ...costs, ...ONBOARDING_TROOP_COST }
+				: costs;
+
 		// Interpolate from the server snapshot at this render. This does NOT
 		// tick - values only refresh when the snapshot does (refetch or push).
 		// Real-time ticking for the troop cards lives in a future <TroopCard>
@@ -1063,14 +1075,14 @@ const NexusView: React.FC<NexusViewProps> = ({
 		const availableOre = interpolated?.ore ?? nexus.resources.ore;
 
 		const byBiomass =
-			costs.biomass > 0 ? Math.floor(availableBiomass / costs.biomass) : Number.POSITIVE_INFINITY;
+			effectiveCosts.biomass > 0 ? Math.floor(availableBiomass / effectiveCosts.biomass) : Number.POSITIVE_INFINITY;
 		const byAlloy =
-			costs.alloy > 0 ? Math.floor(availableAlloy / costs.alloy) : Number.POSITIVE_INFINITY;
-		const byOre = costs.ore > 0 ? Math.floor(availableOre / costs.ore) : Number.POSITIVE_INFINITY;
+			effectiveCosts.alloy > 0 ? Math.floor(availableAlloy / effectiveCosts.alloy) : Number.POSITIVE_INFINITY;
+		const byOre = effectiveCosts.ore > 0 ? Math.floor(availableOre / effectiveCosts.ore) : Number.POSITIVE_INFINITY;
 		const remainingPopulation = Math.max(0, nexus.population.max - nexus.population.current);
 		const byPopulation =
-			costs.population > 0
-				? Math.floor(remainingPopulation / costs.population)
+			effectiveCosts.population > 0
+				? Math.floor(remainingPopulation / effectiveCosts.population)
 				: Number.POSITIVE_INFINITY;
 
 		let maxTrainable = Math.max(0, Math.floor(Math.min(byBiomass, byAlloy, byOre, byPopulation)));
@@ -1091,11 +1103,11 @@ const NexusView: React.FC<NexusViewProps> = ({
 		const shortageReasons: string[] = [];
 		if (maxTrainable === 0) {
 			if (byBiomass === 0)
-				shortageReasons.push(`Biomass ${Math.floor(availableBiomass)}/${costs.biomass}`);
-			if (byAlloy === 0) shortageReasons.push(`Alloy ${Math.floor(availableAlloy)}/${costs.alloy}`);
-			if (byOre === 0) shortageReasons.push(`Ore ${Math.floor(availableOre)}/${costs.ore}`);
+				shortageReasons.push(`Biomass ${Math.floor(availableBiomass)}/${effectiveCosts.biomass}`);
+			if (byAlloy === 0) shortageReasons.push(`Alloy ${Math.floor(availableAlloy)}/${effectiveCosts.alloy}`);
+			if (byOre === 0) shortageReasons.push(`Ore ${Math.floor(availableOre)}/${effectiveCosts.ore}`);
 			if (byPopulation === 0)
-				shortageReasons.push(`Population ${remainingPopulation}/${costs.population} free`);
+				shortageReasons.push(`Population ${remainingPopulation}/${effectiveCosts.population} free`);
 		}
 
 		return { maxTrainable, shortageReasons };
@@ -1163,13 +1175,21 @@ const NexusView: React.FC<NexusViewProps> = ({
 		// un-discounted base; we display the discounted wall-clock time, so swap
 		// it for the effective build seconds (Command Core + Nexus type applied).
 		const baseCost = getSharedBuildingCost(building, currentLevel);
-		const time = getEffectiveBuildTimeSeconds(
+		const onboardingBuild = isOnboardingBuildEligible(
 			building,
 			currentLevel,
-			nexus.buildings.commandCore,
-			nexus.nexusType,
-			nexus.nexusTypeDoubled ?? false
+			isEnabled,
+			lastCompletedStep
 		);
+		const time = onboardingBuild
+			? ONBOARDING_BUILD_TIME_SECONDS
+			: getEffectiveBuildTimeSeconds(
+					building,
+					currentLevel,
+					nexus.buildings.commandCore,
+					nexus.nexusType,
+					nexus.nexusTypeDoubled ?? false
+				);
 		return { biomass: baseCost.biomass, alloy: baseCost.alloy, ore: baseCost.ore, time };
 	};
 
@@ -3144,22 +3164,28 @@ const NexusView: React.FC<NexusViewProps> = ({
 															(nexus.buildings as unknown as Record<string, number>)[
 																trainingBuildingFor(type)
 															] ?? 0;
-														const trainSeconds = canTrain
-															? getEffectiveTrainTimeSeconds(
-																	type,
-																	classBuildingLevel,
-																	nexus.nexusType,
-																	nexus.nexusTypeDoubled ?? false,
-																	nexus.buildings.stealthArray ?? 0
-																)
-															: costs.time;
+														const isOnboardingUnit = isTroopDiscountActive && type === ONBOARDING_TROOP_TYPE;
+														const trainSeconds = isOnboardingUnit
+															? ONBOARDING_TRAIN_TIME_SECONDS
+															: canTrain
+																? getEffectiveTrainTimeSeconds(
+																		type,
+																		classBuildingLevel,
+																		nexus.nexusType,
+																		nexus.nexusTypeDoubled ?? false,
+																		nexus.buildings.stealthArray ?? 0
+																	)
+																: costs.time;
 														// Pre-bonus time (class-building discount applied, Nexus type NOT applied).
 														// Shown as strikethrough next to the actual time when Military Outpost is active,
 														// so the player can see the bonus working.
-														const preBonusTrainSeconds = canTrain
-															? getRecruitDiscountedTrainSeconds(type, classBuildingLevel, nexus.buildings.stealthArray ?? 0)
-															: costs.time;
+														const preBonusTrainSeconds = isOnboardingUnit
+															? ONBOARDING_TRAIN_TIME_SECONDS
+															: canTrain
+																? getRecruitDiscountedTrainSeconds(type, classBuildingLevel, nexus.buildings.stealthArray ?? 0)
+																: costs.time;
 														const militaryBonusActive =
+															!isOnboardingUnit &&
 															nexus.nexusType === 'Military Outpost' &&
 															type !== 'overseer' &&
 															preBonusTrainSeconds !== trainSeconds;
@@ -3200,8 +3226,25 @@ const NexusView: React.FC<NexusViewProps> = ({
 																	</div>
 																)}
 																<div className="troop-header">
-																	<h5>{TROOP_NAMES[type]}</h5>
-																	<div className="troop-header-right">
+																	<div className="troop-header-top">
+																		<h5>{TROOP_NAMES[type]}</h5>
+																		<button
+																			type="button"
+																			className="troop-info"
+																			title={TROOP_DESCRIPTIONS[type]}
+																			aria-label={`${TROOP_NAMES[type]} info`}
+																			onClick={() =>
+																				handleInfoTap(
+																					TROOP_NAMES[type],
+																					TROOP_DESCRIPTIONS[type],
+																					`/codex?tab=troops#troop-${type}`
+																				)
+																			}
+																		>
+																			<Info size={14} />
+																		</button>
+																	</div>
+																	<div className="troop-header-badges">
 																		{(() => {
 																			const role = troopRole(type as any) as TroopRole;
 																			const roleMeta = TROOP_ROLE_META[role];
@@ -3234,21 +3277,6 @@ const NexusView: React.FC<NexusViewProps> = ({
 																				</span>
 																			);
 																		})()}
-																		<button
-																			type="button"
-																			className="troop-info"
-																			title={TROOP_DESCRIPTIONS[type]}
-																			aria-label={`${TROOP_NAMES[type]} info`}
-																			onClick={() =>
-																				handleInfoTap(
-																					TROOP_NAMES[type],
-																					TROOP_DESCRIPTIONS[type],
-																					`/codex?tab=troops#troop-${type}`
-																				)
-																			}
-																		>
-																			<Info size={14} />
-																		</button>
 																	</div>
 																</div>
 																<div className="train-costs">

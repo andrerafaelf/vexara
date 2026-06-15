@@ -410,3 +410,15 @@
 	font-size: var(--text-xs);
 	padding: 6px 4px;
 }
+
+/* The persistent quest rail remains readable without widening the rail. */
+.daily-streaks-title {
+	font-size: 12px;
+}
+
+.daily-streaks-badge,
+.daily-streaks-bonus,
+.daily-streaks-collapse-btn,
+.daily-quest-count {
+	font-size: 11px;
+}

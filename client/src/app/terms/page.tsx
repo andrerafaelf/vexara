@@ -56,10 +56,45 @@ export default function TermsPage() {
 				are not liable for lost in-game progress due to downtime or technical issues.
 			</p>
 
-			<h2 style={{ color: '#fff', fontSize: 18, marginTop: 32 }}>5. Purchases</h2>
+			<h2 style={{ color: '#fff', fontSize: 18, marginTop: 32 }}>5. Purchases and virtual currency</h2>
 			<p>
-				Ko-fi donations are voluntary and non-refundable. In-game supporter perks are granted as a
-				thank-you and do not constitute a purchase of game advantage.
+				Vexara offers real-money purchases through Ko-fi, including <strong>Vex Points (VP)</strong> —
+				a virtual in-game currency — and supporter tiers. By completing a purchase you agree to the
+				following:
+			</p>
+			<ul style={{ paddingLeft: 20, marginTop: 8 }}>
+				<li>
+					<strong>No refunds.</strong> All purchases, including Vex Points packs and supporter tiers,
+					are final and non-refundable. Vex Points are a consumable virtual currency with no
+					monetary value and cannot be exchanged for cash or transferred to another account.
+				</li>
+				<li>
+					<strong>Virtual items only.</strong> Vex Points and any items or perks unlocked with them
+					(season passes, titles, boosts, badges) are in-game virtual goods. They confer no
+					real-world value and are not a purchase of any tangible product.
+				</li>
+				<li>
+					<strong>No guarantee of availability.</strong> Virtual items and features purchased with VP
+					are provided as part of the current game version. We may alter, remove, or replace
+					in-game items, seasons, or features at any time without obligation to provide a refund or
+					equivalent replacement.
+				</li>
+				<li>
+					<strong>Account termination.</strong> If your account is suspended or terminated for a
+					violation of these terms, any unused Vex Points and associated perks are forfeited without
+					compensation.
+				</li>
+				<li>
+					<strong>Payment processor.</strong> Payments are processed by Ko-fi. By making a purchase
+					you also agree to Ko-fi&apos;s own terms and policies. Vexara does not store your payment
+					card details.
+				</li>
+			</ul>
+			<p style={{ marginTop: 12 }}>
+				If you believe a charge was made in error (e.g. an unauthorised transaction), contact{' '}
+				<a href="mailto:support@vexara.world" style={{ color: '#7aa2ff' }}>support@vexara.world</a>{' '}
+				within 14 days and we will investigate. We cannot issue refunds for purchases that were
+				intentionally made and successfully delivered.
 			</p>
 
 			<h2 style={{ color: '#fff', fontSize: 18, marginTop: 32 }}>6. Termination</h2>

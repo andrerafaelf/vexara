@@ -44,6 +44,7 @@ type ActivePage =
 	| 'factions'
 	| 'players'
 	| 'profile'
+	| 'shop'
 	| 'hall-of-fame';
 
 const PAGE_TITLES: Record<ActivePage, string> = {
@@ -55,6 +56,7 @@ const PAGE_TITLES: Record<ActivePage, string> = {
 	factions: 'Factions',
 	players: 'Players',
 	profile: 'Profile',
+	shop: 'Quartermaster',
 	'hall-of-fame': 'Hall of Champions'
 };
 
@@ -103,7 +105,8 @@ export default function GameLayout({
 
 	// The Starfield/Map page is full-bleed (its own --map padding) and a right
 	// rail would crowd it, so the Daily Quests rail is suppressed there.
-	const isMapPage = activePage === 'starfield' || (mainClassName ?? '').includes('main-content--map');
+	const isMapPage =
+		activePage === 'starfield' || (mainClassName ?? '').includes('main-content--map');
 
 	const resolvedSelectedId =
 		externalSelectedId ?? (hookSelectedNexus ? String(hookSelectedNexus._id) : null);
@@ -114,9 +117,9 @@ export default function GameLayout({
 	// show the player's current nexus economy. Looked up from the loaded list so a
 	// bare id from localStorage resolves to a full Nexus.
 	const headerNexus =
-		(resolvedSelectedId
-			? nexuses.find((n) => String(n._id) === resolvedSelectedId)
-			: null) ?? hookSelectedNexus ?? null;
+		(resolvedSelectedId ? nexuses.find((n) => String(n._id) === resolvedSelectedId) : null) ??
+		hookSelectedNexus ??
+		null;
 
 	// Soft-gate secondary nav (Market / Allies / Factions / Players) for fresh
 	// players so the top bar doesn't look like an airline cockpit on day one.
@@ -138,12 +141,6 @@ export default function GameLayout({
 			(n.buildings?.plasmaForge ?? 0) >= 1 ||
 			(n.buildings?.armorFoundry ?? 0) >= 1
 	);
-	const anyResourceStockpile = nexuses.some((n) => {
-		const r = n.resources;
-		if (!r) return false;
-		return r.biomass >= 5000 || r.alloy >= 5000 || r.ore >= 5000;
-	});
-
 	// We don't have a "has ever sent an attack" or "has any combat logs"
 	// signal here without an extra query, so promote Players once the player
 	// has any unread combat log OR has reached CC≥3 (which by then they've
@@ -151,22 +148,22 @@ export default function GameLayout({
 	// for everyone who has received any attack/scout reply.
 	const liveUnlocks = useMemo(
 		() => ({
-			market: maxCommandCore >= 3 || anyResourceStockpile,
+			market: maxCommandCore >= 3,
 			allies: maxCommandCore >= 2,
 			factions: anyProductionBuilding,
 			players: maxCommandCore >= 3 || hasUnreadReports
 		}),
-		[maxCommandCore, anyResourceStockpile, anyProductionBuilding, hasUnreadReports]
+		[maxCommandCore, anyProductionBuilding, hasUnreadReports]
 	);
 
-	// Sticky promotion: once any of these tabs has been unlocked, remember it so
-	// the player never sees it disappear back into "Discover" even if state
-	// momentarily regresses (e.g. a respawn). Keyed per user so account-switching
-	// doesn't leak unlocks.
+	// Sticky promotion for social tabs. Market deliberately follows the live
+	// Command Core level so it remains under More until level 3.
 	const promoteStorageKey = user?.username ? `vx_nav_promoted_${user.username}` : null;
-	const [promoted, setPromoted] = useState<
-		Record<'market' | 'allies' | 'factions' | 'players', boolean>
-	>({ market: false, allies: false, factions: false, players: false });
+	const [promoted, setPromoted] = useState<Record<'allies' | 'factions' | 'players', boolean>>({
+		allies: false,
+		factions: false,
+		players: false
+	});
 	useEffect(() => {
 		if (!promoteStorageKey) return;
 		try {
@@ -174,7 +171,6 @@ export default function GameLayout({
 			if (raw) {
 				const parsed = JSON.parse(raw);
 				setPromoted({
-					market: !!parsed.market,
 					allies: !!parsed.allies,
 					factions: !!parsed.factions,
 					players: !!parsed.players
@@ -187,13 +183,11 @@ export default function GameLayout({
 	useEffect(() => {
 		if (!promoteStorageKey) return;
 		const merged = {
-			market: promoted.market || liveUnlocks.market,
 			allies: promoted.allies || liveUnlocks.allies,
 			factions: promoted.factions || liveUnlocks.factions,
 			players: promoted.players || liveUnlocks.players
 		};
 		if (
-			merged.market !== promoted.market ||
 			merged.allies !== promoted.allies ||
 			merged.factions !== promoted.factions ||
 			merged.players !== promoted.players
@@ -207,15 +201,20 @@ export default function GameLayout({
 		}
 	}, [liveUnlocks, promoted, promoteStorageKey]);
 
-	// Also promote a tab if the player is currently on it — otherwise navigating
-	// to a hidden route by URL would leave the corresponding nav button missing
-	// from the bar, which is disorienting.
-	const showMarket = promoted.market || liveUnlocks.market || activePage === 'market';
-	const showAllies = promoted.allies || liveUnlocks.allies || activePage === 'allies';
-	const showFactions = promoted.factions || liveUnlocks.factions || activePage === 'factions';
-	const showPlayers = promoted.players || liveUnlocks.players || activePage === 'players';
+	// Keep locked destinations under More even while visiting them. More carries
+	// the active state until the destination is organically promoted.
+	const showMarket = liveUnlocks.market;
+	const showAllies = promoted.allies || liveUnlocks.allies;
+	const showFactions = promoted.factions || liveUnlocks.factions;
+	const showPlayers = promoted.players || liveUnlocks.players;
 	const hiddenCount =
 		(showMarket ? 0 : 1) + (showAllies ? 0 : 1) + (showFactions ? 0 : 1) + (showPlayers ? 0 : 1);
+	const isDiscoverActive =
+		isDiscoverOpen ||
+		(!showMarket && activePage === 'market') ||
+		(!showAllies && activePage === 'allies') ||
+		(!showFactions && activePage === 'factions') ||
+		(!showPlayers && activePage === 'players');
 
 	// Prefetch all sibling routes on mount so cross-page navigation is instant. Next caches
 	// these aggressively (RSC payloads + JS chunks). Doing it once per layout mount is cheap.
@@ -229,7 +228,8 @@ export default function GameLayout({
 				'/allies',
 				'/factions',
 				'/players',
-				'/profile'
+				'/profile',
+				'/shop'
 			].filter(Boolean) as string[],
 		[resolvedSelectedId]
 	);
@@ -322,232 +322,231 @@ export default function GameLayout({
 								<h1 className="vx-wordmark game-wordmark">
 									<img
 										src="/vexara-logo.png"
-										alt=""
-										aria-hidden="true"
+										alt="Vexara"
 										className="vx-wordmark-stamp"
 									/>
-									<span className="vx-wordmark-name">Vexara</span>
 								</h1>
 							</div>
 
-						<div className="header-center">
-							<button
-								className={`nav-btn${is('dashboard') ? ' active' : ''}`}
-								onClick={nav(`/nexus/${resolvedSelectedId ?? ''}`)}
-								onMouseEnter={prefetchOnHover(`/nexus/${resolvedSelectedId ?? ''}`)}
-								onFocus={prefetchOnHover(`/nexus/${resolvedSelectedId ?? ''}`)}
-							>
-								My Nexus
-							</button>
-							<button
-								className={`nav-btn${is('starfield') ? ' active' : ''}`}
-								onClick={nav('/starfield')}
-								onMouseEnter={prefetchOnHover('/starfield')}
-								onFocus={prefetchOnHover('/starfield')}
-								data-onboarding="open-starfield"
-							>
-								Galaxy
-							</button>
-							{showMarket && (
+							<div className="header-center">
 								<button
-									className={`nav-btn${is('market') ? ' active' : ''}`}
-									onClick={nav('/market')}
-									onMouseEnter={prefetchOnHover('/market')}
-									onFocus={prefetchOnHover('/market')}
+									className={`nav-btn${is('dashboard') ? ' active' : ''}`}
+									onClick={nav(`/nexus/${resolvedSelectedId ?? ''}`)}
+									onMouseEnter={prefetchOnHover(`/nexus/${resolvedSelectedId ?? ''}`)}
+									onFocus={prefetchOnHover(`/nexus/${resolvedSelectedId ?? ''}`)}
 								>
-									Market
+									My Nexus
 								</button>
-							)}
-							<button
-								className={`nav-btn${is('combat-logs') ? ' active' : ''}`}
-								onClick={nav('/reports')}
-								onMouseEnter={prefetchOnHover('/reports')}
-								onFocus={prefetchOnHover('/reports')}
-							>
-								<span className="nav-btn-content">
-									Reports
-									{hasUnreadReports && (
-										<span className="nav-attention-mark" aria-label="Unread reports" />
-									)}
-								</span>
-							</button>
-							{showAllies && (
 								<button
-									className={`nav-btn${is('allies') ? ' active' : ''}`}
-									onClick={nav('/allies')}
-									onMouseEnter={prefetchOnHover('/allies')}
-									onFocus={prefetchOnHover('/allies')}
+									className={`nav-btn${is('starfield') ? ' active' : ''}`}
+									onClick={nav('/starfield')}
+									onMouseEnter={prefetchOnHover('/starfield')}
+									onFocus={prefetchOnHover('/starfield')}
+									data-onboarding="open-starfield"
 								>
-									<span className="nav-btn-content">
-										Allies
-										{(hasUnreadFriends || hasTokens) && (
-											<span
-												className="nav-attention-mark"
-												aria-label="Unread ally activity or tokens to redeem"
-											/>
-										)}
-									</span>
+									Galaxy
 								</button>
-							)}
-							{showFactions && (
-								<button
-									className={`nav-btn${is('factions') ? ' active' : ''}`}
-									onClick={nav('/factions')}
-									onMouseEnter={prefetchOnHover('/factions')}
-									onFocus={prefetchOnHover('/factions')}
-									data-onboarding="open-factions"
-								>
-									<span className="nav-btn-content">
-										Factions
-										{hasFactionAttention && (
-											<span className="nav-attention-mark" aria-label="Faction action required" />
-										)}
-									</span>
-								</button>
-							)}
-							{showPlayers && (
-								<button
-									className={`nav-btn${is('players') ? ' active' : ''}`}
-									onClick={nav('/players')}
-									onMouseEnter={prefetchOnHover('/players')}
-									onFocus={prefetchOnHover('/players')}
-								>
-									Players
-								</button>
-							)}
-							<button
-								className={`nav-btn${is('profile') ? ' active' : ''}`}
-								onClick={nav('/profile')}
-								onMouseEnter={prefetchOnHover('/profile')}
-								onFocus={prefetchOnHover('/profile')}
-							>
-								Profile
-							</button>
-							{hiddenCount > 0 && (
-								<div className="nav-discover-wrap">
+								{showMarket && (
 									<button
-										type="button"
-										className={`nav-btn nav-discover-btn${isDiscoverOpen ? ' active' : ''}`}
-										onClick={() => setIsDiscoverOpen((v) => !v)}
-										aria-haspopup="menu"
-										aria-expanded={isDiscoverOpen}
-										title="More features, unlock as you progress"
+										className={`nav-btn${is('market') ? ' active' : ''}`}
+										onClick={nav('/market')}
+										onMouseEnter={prefetchOnHover('/market')}
+										onFocus={prefetchOnHover('/market')}
+									>
+										Market
+									</button>
+								)}
+								<button
+									className={`nav-btn${is('combat-logs') ? ' active' : ''}`}
+									onClick={nav('/reports')}
+									onMouseEnter={prefetchOnHover('/reports')}
+									onFocus={prefetchOnHover('/reports')}
+								>
+									<span className="nav-btn-content">
+										Reports
+										{hasUnreadReports && (
+											<span className="nav-attention-mark" aria-label="Unread reports" />
+										)}
+									</span>
+								</button>
+								{showAllies && (
+									<button
+										className={`nav-btn${is('allies') ? ' active' : ''}`}
+										onClick={nav('/allies')}
+										onMouseEnter={prefetchOnHover('/allies')}
+										onFocus={prefetchOnHover('/allies')}
 									>
 										<span className="nav-btn-content">
-											More
-											<ChevronDown size={14} aria-hidden="true" />
+											Allies
+											{(hasUnreadFriends || hasTokens) && (
+												<span
+													className="nav-attention-mark"
+													aria-label="Unread ally activity or tokens to redeem"
+												/>
+											)}
 										</span>
 									</button>
-									{isDiscoverOpen && (
-										<div className="nav-discover-menu" role="menu">
-											<p className="nav-discover-hint">Unlocks as you progress</p>
-											{!showMarket && (
-												<button
-													type="button"
-													role="menuitem"
-													className="nav-discover-item"
-													onClick={() => {
-														setIsDiscoverOpen(false);
-														nav('/market')();
-													}}
-												>
-													<span>Market</span>
-													<span className="nav-discover-req">Command Core Lv3</span>
-												</button>
+								)}
+								{showFactions && (
+									<button
+										className={`nav-btn${is('factions') ? ' active' : ''}`}
+										onClick={nav('/factions')}
+										onMouseEnter={prefetchOnHover('/factions')}
+										onFocus={prefetchOnHover('/factions')}
+										data-onboarding="open-factions"
+									>
+										<span className="nav-btn-content">
+											Factions
+											{hasFactionAttention && (
+												<span className="nav-attention-mark" aria-label="Faction action required" />
 											)}
-											{!showAllies && (
-												<button
-													type="button"
-													role="menuitem"
-													className="nav-discover-item"
-													onClick={() => {
-														setIsDiscoverOpen(false);
-														nav('/allies')();
-													}}
-												>
-													<span>Allies</span>
-													<span className="nav-discover-req">Command Core Lv2</span>
-												</button>
-											)}
-											{!showFactions && (
-												<button
-													type="button"
-													role="menuitem"
-													className="nav-discover-item"
-													onClick={() => {
-														setIsDiscoverOpen(false);
-														nav('/factions')();
-													}}
-												>
-													<span>Factions</span>
-													<span className="nav-discover-req">Build a production building</span>
-												</button>
-											)}
-											{!showPlayers && (
-												<button
-													type="button"
-													role="menuitem"
-													className="nav-discover-item"
-													onClick={() => {
-														setIsDiscoverOpen(false);
-														nav('/players')();
-													}}
-												>
-													<span>Players</span>
-													<span className="nav-discover-req">First combat log</span>
-												</button>
-											)}
-										</div>
-									)}
+										</span>
+									</button>
+								)}
+								{showPlayers && (
+									<button
+										className={`nav-btn${is('players') ? ' active' : ''}`}
+										onClick={nav('/players')}
+										onMouseEnter={prefetchOnHover('/players')}
+										onFocus={prefetchOnHover('/players')}
+									>
+										Players
+									</button>
+								)}
+								<button
+									className={`nav-btn${is('profile') ? ' active' : ''}`}
+									onClick={nav('/profile')}
+									onMouseEnter={prefetchOnHover('/profile')}
+									onFocus={prefetchOnHover('/profile')}
+								>
+									Profile
+								</button>
+								{hiddenCount > 0 && (
+									<div className="nav-discover-wrap">
+										<button
+											type="button"
+											className={`nav-btn nav-discover-btn${isDiscoverActive ? ' active' : ''}`}
+											onClick={() => setIsDiscoverOpen((v) => !v)}
+											aria-haspopup="menu"
+											aria-expanded={isDiscoverOpen}
+											title="More features, unlock as you progress"
+										>
+											<span className="nav-btn-content">
+												More
+												<ChevronDown size={14} aria-hidden="true" />
+											</span>
+										</button>
+										{isDiscoverOpen && (
+											<div className="nav-discover-menu" role="menu">
+												<p className="nav-discover-hint">Unlocks as you progress</p>
+												{!showMarket && (
+													<button
+														type="button"
+														role="menuitem"
+														className="nav-discover-item"
+														onClick={() => {
+															setIsDiscoverOpen(false);
+															nav('/market')();
+														}}
+													>
+														<span>Market</span>
+														<span className="nav-discover-req">Command Core Lv3</span>
+													</button>
+												)}
+												{!showAllies && (
+													<button
+														type="button"
+														role="menuitem"
+														className="nav-discover-item"
+														onClick={() => {
+															setIsDiscoverOpen(false);
+															nav('/allies')();
+														}}
+													>
+														<span>Allies</span>
+														<span className="nav-discover-req">Command Core Lv2</span>
+													</button>
+												)}
+												{!showFactions && (
+													<button
+														type="button"
+														role="menuitem"
+														className="nav-discover-item"
+														onClick={() => {
+															setIsDiscoverOpen(false);
+															nav('/factions')();
+														}}
+													>
+														<span>Factions</span>
+														<span className="nav-discover-req">Build a production building</span>
+													</button>
+												)}
+												{!showPlayers && (
+													<button
+														type="button"
+														role="menuitem"
+														className="nav-discover-item"
+														onClick={() => {
+															setIsDiscoverOpen(false);
+															nav('/players')();
+														}}
+													>
+														<span>Players</span>
+														<span className="nav-discover-req">First combat log</span>
+													</button>
+												)}
+											</div>
+										)}
+									</div>
+								)}
+							</div>
+
+							{/* ── Mobile: compact resources inline in single-row header ──
+						    On desktop this is display:none; the desktop strip is in header-right below. */}
+							{headerNexus && (
+								<div className="header-resources-inline">
+									<HeaderResourceStrip nexus={headerNexus} compact />
 								</div>
 							)}
-						</div>
 
-						{/* ── Mobile: compact resources inline in single-row header ──
-						    On desktop this is display:none; the desktop strip is in header-right below. */}
-						{headerNexus && (
-							<div className="header-resources-inline">
-								<HeaderResourceStrip nexus={headerNexus} compact />
-							</div>
-						)}
-
-						<div className="header-right">
-							{/* Resources on desktop — hidden on mobile (see header-resources-inline above) */}
-							<div className="header-resources-desktop">
-								{headerNexus && <HeaderResourceStrip nexus={headerNexus} />}
-							</div>
-							<div className="header-utility">
-								<a
-									href="/codex"
-									target="_blank"
-									rel="noopener noreferrer"
-									className="header-utility-link"
-									title="Codex — game reference"
+							<div className="header-right">
+								{/* Resources on desktop — hidden on mobile (see header-resources-inline above) */}
+								<div className="header-resources-desktop">
+									{headerNexus && <HeaderResourceStrip nexus={headerNexus} />}
+								</div>
+								<div className="header-utility">
+									<a
+										href="/codex"
+										target="_blank"
+										rel="noopener noreferrer"
+										className="header-utility-link"
+										title="Codex — game reference"
+									>
+										Codex
+									</a>
+									<a
+										href="/calculator"
+										target="_blank"
+										rel="noopener noreferrer"
+										className="header-utility-link"
+										title="Battle calculator"
+									>
+										Calculator
+									</a>
+								</div>
+								<DiscordButton variant="pill" label="Discord" utm="ingame_header" />
+								<button
+									className={`nexus-drawer-toggle${isNexusDrawerOpen ? ' active' : ''}`}
+									onClick={() => setIsNexusDrawerOpen((v) => !v)}
+									aria-label="Toggle nexus panel"
+									aria-expanded={isNexusDrawerOpen}
+									title="Your Nexuses"
 								>
-									Codex
-								</a>
-								<a
-									href="/calculator"
-									target="_blank"
-									rel="noopener noreferrer"
-									className="header-utility-link"
-									title="Battle calculator"
-								>
-									Calculator
-								</a>
+									<NexusIcon size={20} />
+								</button>
 							</div>
-							<DiscordButton variant="pill" label="Discord" utm="ingame_header" />
-							<button
-								className={`nexus-drawer-toggle${isNexusDrawerOpen ? ' active' : ''}`}
-								onClick={() => setIsNexusDrawerOpen((v) => !v)}
-								aria-label="Toggle nexus panel"
-								aria-expanded={isNexusDrawerOpen}
-								title="Your Nexuses"
-							>
-								<NexusIcon size={20} />
-							</button>
 						</div>
-						</div>{/* end header-mobile-row */}
+						{/* end header-mobile-row */}
 					</header>
 
 					<ConnectionStatusBar />
@@ -581,6 +580,7 @@ export default function GameLayout({
 									avatarUrl={authUser.avatarUrl ?? null}
 									avatarUrlSm={authUser.avatarUrlSm ?? null}
 									size="md"
+									borderKey={authUser.avatarBorder ?? null}
 									className={`commander-avatar${authUser.supporterTier === 'officer' ? ' supporter-border supporter-border-officer' : ''}${authUser.supporterTier === 'commander' ? ' supporter-border supporter-border-commander' : ''}`}
 									ariaHidden
 								/>
@@ -814,7 +814,9 @@ export default function GameLayout({
 						>
 							<span className="mobile-bottom-nav-icon">
 								<FileText size={20} />
-								{hasUnreadReports && <span className="mobile-bottom-nav-dot" aria-label="Unread reports" />}
+								{hasUnreadReports && (
+									<span className="mobile-bottom-nav-dot" aria-label="Unread reports" />
+								)}
 							</span>
 							<span className="mobile-bottom-nav-label">Reports</span>
 						</button>
@@ -829,10 +831,15 @@ export default function GameLayout({
 								<span className="mobile-bottom-nav-icon">
 									<Swords size={20} />
 									{(hasFactionAttention || hasUnreadFriends || hasTokens) && (
-										<span className="mobile-bottom-nav-dot mobile-bottom-nav-dot--accent" aria-label="Action required" />
+										<span
+											className="mobile-bottom-nav-dot mobile-bottom-nav-dot--accent"
+											aria-label="Action required"
+										/>
 									)}
 								</span>
-								<span className="mobile-bottom-nav-label">{showFactions ? 'Factions' : 'Allies'}</span>
+								<span className="mobile-bottom-nav-label">
+									{showFactions ? 'Factions' : 'Allies'}
+								</span>
 							</button>
 						)}
 						<button

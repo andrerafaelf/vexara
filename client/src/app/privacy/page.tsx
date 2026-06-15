@@ -46,6 +46,11 @@ export default function PrivacyPage() {
 					browser/device type via User-Agent.
 				</li>
 				<li>
+					<strong>Purchase data:</strong> if you buy Vex Points or a supporter tier via Ko-fi, we
+					store the transaction reference, amount, date, and your Ko-fi profile name/email to credit
+					your account and maintain billing records.
+				</li>
+				<li>
 					<strong>Optional attribution:</strong> UTM parameters if you arrived via a referral link
 					(source, medium, campaign).
 				</li>
@@ -86,8 +91,11 @@ export default function PrivacyPage() {
 					service for delivery.
 				</li>
 				<li>
-					<strong>Ko-fi</strong> - if you make a voluntary donation, Ko-fi processes the payment. We
-					receive a webhook with your public Ko-fi profile name and email.
+					<strong>Ko-fi</strong> - if you purchase Vex Points or a supporter tier, Ko-fi processes
+					the payment. We receive a webhook containing your public Ko-fi profile name and email
+					address so we can credit your account. We do not receive or store your payment card
+					details. Purchase records (amount, date, Ko-fi transaction ID) are retained to fulfil
+					your order and handle any billing disputes.
 				</li>
 				<li>
 					<strong>Google Analytics</strong> - loaded only if you opt in via the cookie banner.

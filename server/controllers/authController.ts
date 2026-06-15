@@ -250,7 +250,8 @@ export async function register(req: Request, res: Response): Promise<void> {
 				utmMedium: pickUtm(body.utm_medium),
 				utmCampaign: pickUtm(body.utm_campaign),
 				emailVerificationToken: verificationToken,
-				emailVerificationTokenExpiresAt: verificationExpiry
+				emailVerificationTokenExpiresAt: verificationExpiry,
+				avatarKey: 'preset:assaultTrooper',
 			},
 			select: { id: true, username: true, email: true }
 		});

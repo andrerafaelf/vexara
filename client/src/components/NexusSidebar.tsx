@@ -148,6 +148,7 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
 							avatarUrl={user.avatarUrl ?? null}
 							avatarUrlSm={user.avatarUrlSm ?? null}
 							size="md"
+							borderKey={user.avatarBorder ?? null}
 							className={`commander-avatar${user.supporterTier === 'officer' ? ' supporter-border supporter-border-officer' : ''}${user.supporterTier === 'commander' ? ' supporter-border supporter-border-commander' : ''}`}
 							ariaHidden
 						/>
@@ -169,6 +170,9 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
 								{/* No rank badges here: this card is width-constrained and a badge
 								    would truncate the username (see profile page for badges). */}
 							</div>
+							{user.activeTitle && (
+								<div className="commander-title">{user.activeTitle}</div>
+							)}
 							<div className="commander-meta">Commander · {totalPoints.toLocaleString()} inf</div>
 						</div>
 					</div>

@@ -16,7 +16,9 @@ import {
 	BUILDING_COSTS,
 	getBuildingCost,
 	getCommandBuildQueueBonus,
-	getEffectiveBuildTimeSeconds
+	getEffectiveBuildTimeSeconds,
+	isOnboardingBuildEligible,
+	ONBOARDING_BUILD_TIME_SECONDS
 } from '../utils/gameConstants.js';
 import { notifyNexusResources } from '../services/warRoomSocket.js';
 import { getPopulationMax } from '../utils/population.js';
@@ -276,9 +278,13 @@ export async function upgradeBuilding(req: AuthRequest, res: Response): Promise<
 			res.status(400).json({ error: `Requirements not met: ${text}` });
 			return;
 		}
-		const [galaxy, boostPct] = await Promise.all([
+		const [galaxy, boostPct, userForBuild] = await Promise.all([
 			prisma.galaxy.findUnique({ where: { id: req.galaxyId! }, select: { speedMultiplier: true } }),
-			getActiveProductionBoostPct(req.userId!, req.galaxyId!)
+			getActiveProductionBoostPct(req.userId!, req.galaxyId!),
+			prisma.user.findUnique({
+				where: { id: req.userId! },
+				select: { beginnerTipsEnabled: true, onboardingStep: true }
+			})
 		]);
 		const speedMultiplier = galaxy?.speedMultiplier ?? 1.0;
 		const resourceUpdate = computeResourceUpdate(nexus, undefined, speedMultiplier, boostPct);
@@ -298,13 +304,21 @@ export async function upgradeBuilding(req: AuthRequest, res: Response): Promise<
 				: Date.now();
 		const buildDoubled =
 			(nexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled ?? false;
-		const buildSeconds = getEffectiveBuildTimeSeconds(
+		const onboardingBuild = isOnboardingBuildEligible(
 			building,
 			currentLevel,
-			nexus.commandCore,
-			nexus.nexusType,
-			buildDoubled
+			userForBuild?.beginnerTipsEnabled ?? false,
+			userForBuild?.onboardingStep ?? null
 		);
+		const buildSeconds = onboardingBuild
+			? ONBOARDING_BUILD_TIME_SECONDS
+			: getEffectiveBuildTimeSeconds(
+					building,
+					currentLevel,
+					nexus.commandCore,
+					nexus.nexusType,
+					buildDoubled
+				);
 		const completesAt = new Date(queueStart + (buildSeconds * 1000) / speedMultiplier);
 		const newQueue = [...buildQueue, { building, targetLevel: currentLevel + 1, completesAt }];
 		let updated;

@@ -43,7 +43,9 @@ export async function listPlayersInGalaxy(req: AuthRequest, res: Response): Prom
 							supporterTier: true,
 							isFounder: true,
 							isAlphaFounder: true,
-							avatarKey: true
+							avatarKey: true,
+							avatarBorder: true,
+							activeTitle: true
 						}
 					}
 				},
@@ -79,6 +81,8 @@ export async function listPlayersInGalaxy(req: AuthRequest, res: Response): Prom
 					isAlphaFounder: p.user?.isAlphaFounder ?? false,
 					avatarUrl: avatarUrl(p.userId, p.user?.avatarKey ?? null),
 					avatarUrlSm: avatarUrlSm(p.userId, p.user?.avatarKey ?? null),
+					avatarBorder: p.user?.avatarBorder ?? null,
+					activeTitle: p.user?.activeTitle ?? null,
 					points: p.points,
 					joinedAt: p.joinedAt,
 					nexuses: nexusByOwner.get(p.userId) || 0,
@@ -123,7 +127,8 @@ export async function getMe(req: AuthRequest, res: Response): Promise<void> {
 				passTitle: true,
 				earnedBadges: true,
 				earnedTitles: true,
-				activeTitle: true
+				activeTitle: true,
+				avatarBorder: true
 			}
 		});
 		if (!user) {
@@ -150,6 +155,7 @@ export async function getMe(req: AuthRequest, res: Response): Promise<void> {
 			earnedBadges: (user.earnedBadges as string[]) ?? [],
 			earnedTitles: (user.earnedTitles as string[]) ?? [],
 			activeTitle: user.activeTitle ?? null,
+			avatarBorder: user.avatarBorder ?? null,
 			commanderTitle: resolveTitle(user)
 		});
 	} catch (error) {
@@ -268,7 +274,8 @@ export async function getPublicProfile(req: AuthRequest, res: Response): Promise
 				activeGalaxyId: true,
 				earnedBadges: true,
 				earnedTitles: true,
-				activeTitle: true
+				activeTitle: true,
+				avatarBorder: true
 			}
 		});
 		if (!user) {
@@ -515,7 +522,8 @@ export async function getPublicProfile(req: AuthRequest, res: Response): Promise
 			friendship,
 			earnedBadges: (user.earnedBadges as string[]) ?? [],
 			earnedTitles: (user.earnedTitles as string[]) ?? [],
-			activeTitle: user.activeTitle ?? null
+			activeTitle: user.activeTitle ?? null,
+			avatarBorder: user.avatarBorder ?? null
 		});
 	} catch (error) {
 		logError('unhandled_controller_error', {

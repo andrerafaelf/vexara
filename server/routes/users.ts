@@ -67,6 +67,10 @@ router.post(
 	(req, res) => avatarController.uploadAvatar(req as AuthRequest, res as Response)
 );
 
+router.post('/me/avatar/preset', authNoGalaxy, (req, res) =>
+	avatarController.setAvatarPreset(req as AuthRequest, res as Response)
+);
+
 router.delete('/me/avatar', authNoGalaxy, (req, res) =>
 	avatarController.deleteAvatar(req as AuthRequest, res as Response)
 );

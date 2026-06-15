@@ -1,13 +1,22 @@
 'use client';
 
 import { useAuth } from '@/context/AuthContext';
-import { getUserStats, changePassword, getMyNexuses, getDailyStreak, setActiveTitle } from '@/services/api';
+import {
+	getUserStats,
+	changePassword,
+	getMyNexuses,
+	getDailyStreak,
+	setActiveTitle,
+	getShop,
+	shopEquipBorder
+} from '@/services/api';
 import { Nexus, UserStats } from '@/types/game';
-import { Bell, Eye, ExternalLink, Lock, LogOut, MapPin, User as UserIcon, Trophy } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import '../styles/ProfileStats.css';
+import '../styles/Shop.css';
 import NotificationSettings from './NotificationSettings';
 import StatsChart from './StatsChart';
 import { usePageReady } from './NavigationProgress';
@@ -15,8 +24,13 @@ import PageSkeleton from './PageSkeleton';
 import SupportTiersCard from './SupportTiersCard';
 import Username from './Username';
 import ProfileBadges from './ProfileBadges';
-import Avatar from './Avatar';
 import AvatarUpload from './AvatarUpload';
+import Avatar from './Avatar';
+
+interface BorderShopData {
+	equippedBorder: string | null;
+	ownedKeys: string[];
+}
 
 function fmt(n: number): string {
 	if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
@@ -66,6 +80,8 @@ export default function ProfileStats() {
 	const [pwError, setPwError] = useState<string | null>(null);
 	const [pwSuccess, setPwSuccess] = useState(false);
 	const [pwLoading, setPwLoading] = useState(false);
+	const [borderData, setBorderData] = useState<BorderShopData | null>(null);
+	const [borderBusy, setBorderBusy] = useState<string | null>(null);
 
 	type CvdMode = 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia';
 	const [cvdMode, setCvdMode] = useState<CvdMode>(() => {
@@ -120,6 +136,14 @@ export default function ProfileStats() {
 				.catch(() => {}),
 			getDailyStreak()
 				.then((res) => setStreak(res.data))
+				.catch(() => {}),
+			getShop()
+				.then((res) =>
+					setBorderData({
+						equippedBorder: res.data.equippedBorder,
+						ownedKeys: res.data.ownedKeys
+					})
+				)
 				.catch(() => {})
 		])
 			.catch((err) => setError(err.message))
@@ -164,33 +188,28 @@ export default function ProfileStats() {
 					className={`ps-tab ${tab === 'stats' ? 'ps-tab--active' : ''}`}
 					onClick={() => setTab('stats')}
 				>
-					<UserIcon size={14} aria-hidden="true" />
-					<span>Stats</span>
+					<span>Service record</span>
 				</button>
 				<button
 					className={`ps-tab ${tab === 'notifications' ? 'ps-tab--active' : ''}`}
 					onClick={() => setTab('notifications')}
 				>
-					<Bell size={14} aria-hidden="true" />
 					<span>Notifications</span>
 				</button>
 				<button
 					className={`ps-tab ${tab === 'security' ? 'ps-tab--active' : ''}`}
 					onClick={() => setTab('security')}
 				>
-					<Lock size={14} aria-hidden="true" />
 					<span>Security</span>
 				</button>
 				<button
 					className={`ps-tab ${tab === 'accessibility' ? 'ps-tab--active' : ''}`}
 					onClick={() => setTab('accessibility')}
 				>
-					<Eye size={14} aria-hidden="true" />
 					<span>Accessibility</span>
 				</button>
 				<button className="ps-tab ps-tab--logout" onClick={logout}>
-					<LogOut size={14} aria-hidden="true" />
-					<span>Logout</span>
+					<span>Sign out</span>
 				</button>
 			</div>
 
@@ -261,15 +280,22 @@ export default function ProfileStats() {
 				<div className="ps-accessibility-panel">
 					<h3 className="ps-section-title">Colour vision mode</h3>
 					<p className="ps-accessibility-desc">
-						Remaps the six nexus colours on the Starfield so they stay distinguishable under common colour vision deficiencies. The legend updates instantly — no reload required.
+						Remaps the six nexus colours on the Starfield so they stay distinguishable under common
+						colour vision deficiencies. The legend updates instantly without a reload.
 					</p>
 					<div className="ps-cvd-options" role="radiogroup" aria-label="Colour vision mode">
-						{([
-							{ value: 'none',         label: 'Default',      desc: 'Standard palette' },
-							{ value: 'deuteranopia', label: 'Deuteranopia', desc: 'Red-green (green-weak, most common)' },
-							{ value: 'protanopia',   label: 'Protanopia',   desc: 'Red-green (red-weak)' },
-							{ value: 'tritanopia',   label: 'Tritanopia',   desc: 'Blue-yellow (rare)' },
-						] as { value: CvdMode; label: string; desc: string }[]).map(({ value, label, desc }) => (
+						{(
+							[
+								{ value: 'none', label: 'Default', desc: 'Standard palette' },
+								{
+									value: 'deuteranopia',
+									label: 'Deuteranopia',
+									desc: 'Red-green (green-weak, most common)'
+								},
+								{ value: 'protanopia', label: 'Protanopia', desc: 'Red-green (red-weak)' },
+								{ value: 'tritanopia', label: 'Tritanopia', desc: 'Blue-yellow (rare)' }
+							] as { value: CvdMode; label: string; desc: string }[]
+						).map(({ value, label, desc }) => (
 							<button
 								key={value}
 								role="radio"
@@ -278,10 +304,18 @@ export default function ProfileStats() {
 								onClick={() => applyCvd(value)}
 							>
 								<span className="ps-cvd-swatches" aria-hidden="true">
-									<span className={`ps-cvd-swatch ps-cvd-swatch--own${value !== 'none' ? ` ps-cvd-swatch--own-${value}` : ''}`} />
-									<span className={`ps-cvd-swatch ps-cvd-swatch--enemy${value !== 'none' ? ` ps-cvd-swatch--enemy-${value}` : ''}`} />
-									<span className={`ps-cvd-swatch ps-cvd-swatch--faction${value !== 'none' ? ` ps-cvd-swatch--faction-${value}` : ''}`} />
-									<span className={`ps-cvd-swatch ps-cvd-swatch--ally${value !== 'none' ? ` ps-cvd-swatch--ally-${value}` : ''}`} />
+									<span
+										className={`ps-cvd-swatch ps-cvd-swatch--own${value !== 'none' ? ` ps-cvd-swatch--own-${value}` : ''}`}
+									/>
+									<span
+										className={`ps-cvd-swatch ps-cvd-swatch--enemy${value !== 'none' ? ` ps-cvd-swatch--enemy-${value}` : ''}`}
+									/>
+									<span
+										className={`ps-cvd-swatch ps-cvd-swatch--faction${value !== 'none' ? ` ps-cvd-swatch--faction-${value}` : ''}`}
+									/>
+									<span
+										className={`ps-cvd-swatch ps-cvd-swatch--ally${value !== 'none' ? ` ps-cvd-swatch--ally-${value}` : ''}`}
+									/>
 								</span>
 								<span className="ps-cvd-option-text">
 									<span className="ps-cvd-option-label">{label}</span>
@@ -297,48 +331,24 @@ export default function ProfileStats() {
 			{tab === 'stats' && (
 				<>
 					<div className="ps-header">
-						<Avatar
-							username={stats.username}
-							avatarUrl={stats.avatarUrl ?? null}
-							avatarUrlSm={stats.avatarUrlSm ?? null}
-							size="lg"
-							className={`ps-avatar${stats.supporterTier === 'officer' ? ' supporter-border supporter-border-officer' : ''}${stats.supporterTier === 'commander' ? ' supporter-border supporter-border-commander' : ''}`}
-							ariaHidden
-						/>
-						<div className="ps-header-info">
-							<h2 className="ps-username">
-								<Username
-									name={stats.username}
-									isSupporter={stats.isSupporter}
-									supporterTier={stats.supporterTier ?? null}
-								/>
-							</h2>
-							{stats.activeTitle && (
-								<span className="ps-active-title">
-									<Trophy size={11} aria-hidden="true" />
-									{stats.activeTitle}
-								</span>
-							)}
-							<span className="ps-meta">
-								{stats.points.toLocaleString()} influence · {stats.nexusCount} nexus
-								{stats.nexusCount !== 1 ? 'es' : ''} · {stats.accountAgeDays}d played
-							</span>
-							<Link
-								href={`/u/${encodeURIComponent(stats.username)}`}
-								className="ps-meta"
-								style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 4 }}
-							>
-								<ExternalLink size={12} aria-hidden="true" />
-								<span>View public profile</span>
-							</Link>
-						</div>
-					</div>
-
-					{(stats.supporterTier === 'officer' || stats.supporterTier === 'commander') && (
 						<AvatarUpload
 							username={stats.username}
 							avatarUrl={stats.avatarUrl ?? null}
 							avatarUrlSm={stats.avatarUrlSm ?? null}
+							px={88}
+							borderKey={borderData?.equippedBorder ?? null}
+							earnedTitles={stats.earnedTitles ?? []}
+							activeTitle={stats.activeTitle ?? null}
+							onTitleChange={(next) => {
+								setStats((prev) => (prev ? { ...prev, activeTitle: next } : prev));
+								updateUser({ activeTitle: next });
+							}}
+							ownedBorderKeys={borderData?.ownedKeys ?? []}
+							equippedBorder={borderData?.equippedBorder ?? null}
+							onBorderChange={(next) => {
+								setBorderData((prev) => (prev ? { ...prev, equippedBorder: next } : prev));
+								updateUser({ avatarBorder: next });
+							}}
 							onChange={(next) => {
 								setStats((prev) =>
 									prev
@@ -348,10 +358,37 @@ export default function ProfileStats() {
 								updateUser({ avatarUrl: next.avatarUrl, avatarUrlSm: next.avatarUrlSm });
 							}}
 						/>
-					)}
+						<div className="ps-header-info">
+							<p className="ps-dossier-kicker">Commander dossier</p>
+							<h2 className="ps-username">
+								<Username
+									name={stats.username}
+									isSupporter={stats.isSupporter}
+									supporterTier={stats.supporterTier ?? null}
+								/>
+							</h2>
+							{stats.activeTitle && <span className="ps-active-title">{stats.activeTitle}</span>}
+							<div className="ps-service-line">
+								<span>
+									<strong>{stats.points.toLocaleString()}</strong> influence
+								</span>
+								<span>
+									<strong>{stats.nexusCount}</strong> nexus{stats.nexusCount !== 1 ? 'es' : ''}
+								</span>
+								<span>
+									<strong>{stats.accountAgeDays}</strong> days in service
+								</span>
+							</div>
+							<Link href={`/u/${encodeURIComponent(stats.username)}`} className="ps-public-link">
+								View public service record
+							</Link>
+						</div>
+					</div>
 
-					{(stats.isAlphaFounder || stats.supporterTier === 'commander' || (stats.earnedBadges && stats.earnedBadges.length > 0)) && (
-						<Section title="Badges">
+					{(stats.isAlphaFounder ||
+						stats.supporterTier === 'commander' ||
+						(stats.earnedBadges && stats.earnedBadges.length > 0)) && (
+						<Section title="Service ribbons">
 							<ProfileBadges
 								isAlphaFounder={stats.isAlphaFounder}
 								isFounder={stats.isFounder}
@@ -362,13 +399,19 @@ export default function ProfileStats() {
 					)}
 
 					{stats.earnedTitles && stats.earnedTitles.length > 0 && (
-						<Section title="Titles">
+						<Section title="Appointments and honors">
 							<div className="ps-titles-list">
-								{stats.earnedTitles.map((title) => {
+								{[...stats.earnedTitles].sort((a, b) => {
+										if (a === stats.activeTitle) return -1;
+										if (b === stats.activeTitle) return 1;
+										return 0;
+									}).map((title) => {
 									const isActive = stats.activeTitle === title;
 									return (
-										<div key={title} className={`ps-title-row${isActive ? ' ps-title-row--active' : ''}`}>
-											<Trophy size={12} className="ps-title-icon" aria-hidden="true" />
+										<div
+											key={title}
+											className={`ps-title-row${isActive ? ' ps-title-row--active' : ''}`}
+										>
 											<span className="ps-title-name">{title}</span>
 											<button
 												className={`ps-title-btn${isActive ? ' ps-title-btn--active' : ''}`}
@@ -378,42 +421,136 @@ export default function ProfileStats() {
 													try {
 														const next = isActive ? null : title;
 														await setActiveTitle(next);
-														setStats((prev) => prev ? { ...prev, activeTitle: next } : prev);
+														setStats((prev) => (prev ? { ...prev, activeTitle: next } : prev));
 														updateUser({ activeTitle: next });
 													} finally {
 														setTitleBusy(false);
 													}
 												}}
 											>
-												{isActive ? 'Unequip' : 'Equip'}
+												{isActive ? 'Clear appointment' : 'Set active'}
 											</button>
 										</div>
 									);
 								})}
 							</div>
-							<p className="ps-titles-hint">Equipped title appears under your name on your public profile.</p>
+							<p className="ps-titles-hint">
+								Your active appointment appears beneath your name on the public service record.
+							</p>
+						</Section>
+					)}
+
+					{borderData && borderData.ownedKeys.filter((k) => k.startsWith('border_')).length > 0 && (
+						<Section title="Portrait frames">
+							<div className="ps-frame-list">
+								{borderData.ownedKeys
+									.filter((k) => k.startsWith('border_'))
+									.sort((a, b) => {
+										if (a === borderData.equippedBorder) return -1;
+										if (b === borderData.equippedBorder) return 1;
+										return 0;
+									})
+									.map((key) => {
+										const equipped = borderData.equippedBorder === key;
+										const cssClass = key.replace('border_', '').replace(/_/g, '-');
+										const displayName = key.replace('border_', '').replace(/_/g, ' ');
+										const busy = borderBusy === key || (equipped && borderBusy === '__unequip__');
+										return (
+											<div
+												key={key}
+												className={`ps-frame-row${equipped ? ' ps-frame-row--active' : ''}`}
+											>
+												<div
+													className="ps-frame-preview"
+													aria-label={`${displayName} border`}
+												>
+													<div className={`ps-frame-preview-box border-${cssClass}`}>
+														<div className="ps-frame-preview-avatar">
+															<Avatar
+																username={stats.username}
+																avatarUrl={stats.avatarUrl ?? null}
+																avatarUrlSm={stats.avatarUrlSm ?? null}
+																ariaHidden
+															/>
+														</div>
+													</div>
+												</div>
+												<div className="ps-frame-info">
+													<span className="ps-frame-name">{displayName}</span>
+													{equipped && <span className="ps-frame-status">Fitted to dossier</span>}
+												</div>
+												<div className="ps-frame-actions">
+													{!equipped ? (
+														<button
+															className="ps-frame-btn"
+															disabled={busy}
+															onClick={async () => {
+																setBorderBusy(key);
+																try {
+																	await shopEquipBorder(key);
+																	updateUser({ avatarBorder: key });
+																	setBorderData((prev) =>
+																		prev ? { ...prev, equippedBorder: key } : prev
+																	);
+																} finally {
+																	setBorderBusy(null);
+																}
+															}}
+														>
+															{busy ? 'Fitting...' : 'Fit frame'}
+														</button>
+													) : (
+														<button
+															className="ps-frame-btn ps-frame-btn--muted"
+															disabled={busy}
+															onClick={async () => {
+																setBorderBusy('__unequip__');
+																try {
+																	await shopEquipBorder(null);
+																	updateUser({ avatarBorder: null });
+																	setBorderData((prev) =>
+																		prev ? { ...prev, equippedBorder: null } : prev
+																	);
+																} finally {
+																	setBorderBusy(null);
+																}
+															}}
+														>
+															{busy ? 'Removing...' : 'Remove frame'}
+														</button>
+													)}
+												</div>
+											</div>
+										);
+									})}
+							</div>
+							<p className="ps-titles-hint">
+								The fitted frame appears around your portrait.{' '}
+								<Link href="/shop?tab=borders" className="ps-meta">
+									Review quartermaster stock
+								</Link>
+							</p>
 						</Section>
 					)}
 
 					{streak && streak.currentStreak > 0 && (
 						<div className="ps-streak-card">
-							{streak.currentStreak > 3 && <div className="ps-streak-fire-bg" />}
 							<div className="ps-streak-content">
 								<div className="ps-streak-info">
-									<span className="ps-streak-label">Current Streak</span>
+									<span className="ps-streak-label">Active duty</span>
 									<span className="ps-streak-value">
 										{streak.currentStreak} day{streak.currentStreak !== 1 ? 's' : ''}
 									</span>
 								</div>
 								<div className="ps-streak-bonus">
-									<span className="ps-streak-best-label">Bonus</span>
+									<span className="ps-streak-best-label">Current bonus</span>
 									<span className="ps-streak-best-value">
 										x{getStreakMultiplier(streak.currentStreak).toFixed(1)}
 									</span>
 								</div>
 								{streak.longestStreak > streak.currentStreak && (
 									<div className="ps-streak-best">
-										<span className="ps-streak-best-label">Best</span>
+										<span className="ps-streak-best-label">Longest service</span>
 										<span className="ps-streak-best-value">{streak.longestStreak}</span>
 									</div>
 								)}
@@ -421,12 +558,12 @@ export default function ProfileStats() {
 						</div>
 					)}
 
-					<Section title="Resources">
+					<Section title="Logistics record">
 						<div className="ps-cards">
 							<StatCard
 								label="Avg Production / Day"
 								value={fmt(totalAvgDay)}
-								sub={`B ${fmt(stats.resources.avgPerDay.biomass)} · A ${fmt(stats.resources.avgPerDay.alloy)} · O ${fmt(stats.resources.avgPerDay.ore)}`}
+								sub={`B ${fmt(stats.resources.avgPerDay.biomass)} / A ${fmt(stats.resources.avgPerDay.alloy)} / O ${fmt(stats.resources.avgPerDay.ore)}`}
 							/>
 							<StatCard
 								label="Production / Hour"
@@ -435,7 +572,7 @@ export default function ProfileStats() {
 										stats.resources.productionPerHour.alloy +
 										stats.resources.productionPerHour.ore
 								)}
-								sub={`B ${fmt(stats.resources.productionPerHour.biomass)} · A ${fmt(stats.resources.productionPerHour.alloy)} · O ${fmt(stats.resources.productionPerHour.ore)}`}
+								sub={`B ${fmt(stats.resources.productionPerHour.biomass)} / A ${fmt(stats.resources.productionPerHour.alloy)} / O ${fmt(stats.resources.productionPerHour.ore)}`}
 							/>
 							<StatCard
 								label="Current Stockpile"
@@ -444,7 +581,7 @@ export default function ProfileStats() {
 										stats.resources.current.alloy +
 										stats.resources.current.ore
 								)}
-								sub={`B ${fmt(stats.resources.current.biomass)} · A ${fmt(stats.resources.current.alloy)} · O ${fmt(stats.resources.current.ore)}`}
+								sub={`B ${fmt(stats.resources.current.biomass)} / A ${fmt(stats.resources.current.alloy)} / O ${fmt(stats.resources.current.ore)}`}
 							/>
 						</div>
 
@@ -476,7 +613,7 @@ export default function ProfileStats() {
 						</div>
 					</Section>
 
-					<Section title="Combat">
+					<Section title="Combat record">
 						<div className="ps-cards">
 							<StatCard
 								label="Victories"
@@ -495,17 +632,17 @@ export default function ProfileStats() {
 							<StatCard
 								label="Resources Stolen"
 								value={fmt(totalStolen)}
-								sub={`B ${fmt(stats.combat.resourcesStolen.biomass)} · A ${fmt(stats.combat.resourcesStolen.alloy)} · O ${fmt(stats.combat.resourcesStolen.ore)}`}
+								sub={`B ${fmt(stats.combat.resourcesStolen.biomass)} / A ${fmt(stats.combat.resourcesStolen.alloy)} / O ${fmt(stats.combat.resourcesStolen.ore)}`}
 							/>
 							<StatCard
 								label="Resources Lost"
 								value={fmt(totalLost)}
-								sub={`B ${fmt(stats.combat.resourcesLost.biomass)} · A ${fmt(stats.combat.resourcesLost.alloy)} · O ${fmt(stats.combat.resourcesLost.ore)}`}
+								sub={`B ${fmt(stats.combat.resourcesLost.biomass)} / A ${fmt(stats.combat.resourcesLost.alloy)} / O ${fmt(stats.combat.resourcesLost.ore)}`}
 							/>
 						</div>
 					</Section>
 
-					<Section title="Empire">
+					<Section title="Command summary">
 						<div className="ps-cards">
 							<StatCard label="Total Nexuses" value={stats.nexusCount} />
 							<StatCard label="Total Troops" value={fmt(stats.totalTroops)} />
@@ -515,7 +652,7 @@ export default function ProfileStats() {
 					</Section>
 
 					{nexuses.length > 0 && (
-						<Section title="Your Nexuses">
+						<Section title="Active commands">
 							<div className="ps-nexus-list">
 								{nexuses.map((n: any) => (
 									<div key={n.id ?? n._id} className="ps-nexus-row">
@@ -546,7 +683,7 @@ export default function ProfileStats() {
 					)}
 
 					<div className="ps-section">
-						<h3 className="ps-section-title">Activity Graph</h3>
+						<h3 className="ps-section-title">Activity history</h3>
 						<div style={{ padding: '0' }}>
 							<StatsChart />
 						</div>

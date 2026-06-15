@@ -1,0 +1,954 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Vex Shop — Page layout
+   Tokens: --accent (#ff9e3d), --bg-surface/surface-2/surface-3,
+           --border-default/strong, --text-strong/muted/faint,
+           --space-*, --radius-sm/md/lg, --cut-btn
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Page wrapper ────────────────────────────────────────────────────────── */
+.shop-page {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	padding: var(--space-4);
+	max-width: 900px;
+}
+
+/* ── Page header ─────────────────────────────────────────────────────────── */
+.shop-page-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: var(--space-4);
+	margin-bottom: var(--space-4);
+}
+.shop-page-header-left {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+}
+.shop-page-header-icon {
+	color: var(--accent);
+	flex-shrink: 0;
+}
+.shop-page-title {
+	font-size: var(--text-md);
+	font-weight: 700;
+	color: var(--text-strong);
+	letter-spacing: 0.3px;
+	margin: 0;
+}
+.shop-page-subtitle {
+	font-size: var(--text-xs);
+	color: var(--text-faint);
+	margin: 2px 0 0;
+}
+.shop-page-header-right {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	flex-shrink: 0;
+}
+
+/* ── VP balance chip ─────────────────────────────────────────────────────── */
+.shop-vp-balance {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	font-size: var(--text-sm);
+	font-weight: 700;
+	color: var(--accent);
+	background: var(--accent-soft);
+	border: 1px solid var(--border-accent);
+	border-radius: var(--radius-pill);
+	padding: 3px 10px;
+}
+.shop-refresh-countdown {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	font-size: var(--text-xs);
+	color: var(--text-faint);
+}
+
+/* ── Tabs ────────────────────────────────────────────────────────────────── */
+.shop-tabs {
+	display: flex;
+	border-bottom: 1px solid var(--border-default);
+	flex-shrink: 0;
+	overflow-x: auto;
+	scrollbar-width: none;
+}
+.shop-tabs::-webkit-scrollbar {
+	display: none;
+}
+
+.shop-tab {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	padding: 10px var(--space-4);
+	font-size: var(--text-sm);
+	font-weight: 500;
+	color: var(--text-faint);
+	background: none;
+	border: none;
+	border-bottom: 2px solid transparent;
+	cursor: pointer;
+	white-space: nowrap;
+	transition:
+		color 0.15s,
+		border-color 0.15s;
+}
+.shop-tab:hover {
+	color: var(--text-muted);
+}
+.shop-tab--active {
+	color: var(--accent);
+	border-bottom-color: var(--accent);
+}
+
+/* ── Flash ───────────────────────────────────────────────────────────────── */
+.shop-flash {
+	font-size: var(--text-sm);
+	padding: var(--space-2) var(--space-4);
+	flex-shrink: 0;
+}
+.shop-flash--ok {
+	color: var(--success);
+	background: var(--success-soft);
+}
+.shop-flash--error {
+	color: var(--danger);
+	background: var(--danger-soft);
+}
+
+/* ── Body ────────────────────────────────────────────────────────────────── */
+.shop-body {
+	padding: var(--space-4) 0;
+}
+.shop-loading {
+	text-align: center;
+	color: var(--text-faint);
+	font-size: var(--text-base);
+	padding: var(--space-8) 0;
+}
+
+/* ── Section ─────────────────────────────────────────────────────────────── */
+.shop-section-hint {
+	font-size: var(--text-xs);
+	color: var(--text-faint);
+	margin: 0 0 var(--space-3);
+}
+.shop-section-label {
+	font-size: var(--text-xs);
+	font-weight: 600;
+	color: var(--text-faint);
+	text-transform: uppercase;
+	letter-spacing: 0.07em;
+	margin-bottom: var(--space-3);
+}
+
+/* ── Items grid ──────────────────────────────────────────────────────────── */
+.shop-items {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+	gap: var(--space-3);
+}
+.shop-items--border {
+	grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+}
+
+.shop-item {
+	background: var(--bg-surface);
+	border: 1px solid var(--border-default);
+	border-radius: var(--radius-md);
+	padding: var(--space-3);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	transition: border-color 0.15s;
+}
+.shop-item:hover {
+	border-color: var(--border-strong);
+}
+.shop-item--owned {
+	border-color: rgba(86, 211, 100, 0.3);
+}
+.shop-item--premium {
+	border-color: rgba(255, 158, 61, 0.4);
+}
+.shop-item--equipped {
+	border-color: var(--accent);
+}
+
+.shop-item-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+.shop-item-owned-icon {
+	color: var(--success);
+}
+
+.shop-item-name {
+	font-size: var(--text-base);
+	font-weight: 600;
+	color: var(--text-strong);
+	line-height: 1.3;
+	text-transform: capitalize;
+}
+.shop-item-desc {
+	font-size: var(--text-xs);
+	color: var(--text-faint);
+	line-height: 1.45;
+	flex: 1;
+}
+.shop-item-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-top: var(--space-1);
+	gap: var(--space-2);
+}
+.shop-item-cost {
+	display: flex;
+	align-items: center;
+	gap: 3px;
+	font-size: var(--text-xs);
+	font-weight: 700;
+	color: var(--accent);
+}
+.shop-item-owned-label {
+	display: flex;
+	align-items: center;
+	gap: 3px;
+	font-size: var(--text-xs);
+	color: var(--success);
+	font-weight: 500;
+}
+
+/* ── Tier badges ─────────────────────────────────────────────────────────── */
+.shop-tier {
+	font-size: 9px;
+	font-weight: 700;
+	letter-spacing: 0.07em;
+	text-transform: uppercase;
+	border-radius: var(--radius-xs);
+	padding: 2px 5px;
+}
+.shop-tier--common {
+	background: rgba(139, 148, 158, 0.12);
+	color: var(--text-muted);
+}
+.shop-tier--uncommon {
+	background: rgba(74, 158, 176, 0.14);
+	color: var(--accent-2);
+}
+.shop-tier--rare {
+	background: rgba(140, 100, 240, 0.14);
+	color: #a87ff0;
+}
+.shop-tier--premium {
+	background: var(--accent-soft);
+	color: var(--accent);
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+.shop-buy-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	padding: 4px 10px;
+	font-size: var(--text-xs);
+	font-weight: 600;
+	background: var(--accent-soft);
+	color: var(--accent);
+	border: 1px solid var(--border-accent);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+	transition:
+		background 0.15s,
+		opacity 0.15s;
+	white-space: nowrap;
+	clip-path: polygon(0 0, calc(100% - var(--cut-btn)) 0, 100% var(--cut-btn), 100% 100%, 0 100%);
+}
+.shop-buy-btn:hover:not(:disabled) {
+	background: var(--accent-soft-hover);
+}
+.shop-buy-btn:disabled {
+	opacity: 0.35;
+	cursor: not-allowed;
+}
+
+.shop-buy-btn--equip {
+	background: var(--success-soft);
+	color: var(--success);
+	border-color: rgba(86, 211, 100, 0.3);
+}
+.shop-buy-btn--equip:hover:not(:disabled) {
+	background: rgba(86, 211, 100, 0.22);
+}
+
+.shop-buy-btn--unequip {
+	background: rgba(139, 148, 158, 0.08);
+	color: var(--text-muted);
+	border-color: var(--border-default);
+}
+.shop-buy-btn--unequip:hover:not(:disabled) {
+	background: rgba(139, 148, 158, 0.14);
+}
+
+/* ── Utility cards (rename / gift) ──────────────────────────────────────── */
+.shop-section--utility {
+	display: flex;
+	justify-content: center;
+	padding-top: var(--space-2);
+}
+.shop-utility-card {
+	background: var(--bg-surface);
+	border: 1px solid var(--border-default);
+	border-radius: var(--radius-md);
+	padding: var(--space-6);
+	max-width: 400px;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-2);
+	text-align: center;
+}
+.shop-utility-icon {
+	color: var(--accent);
+}
+.shop-utility-name {
+	font-size: var(--text-md);
+	font-weight: 700;
+	color: var(--text-strong);
+}
+.shop-utility-desc {
+	font-size: var(--text-sm);
+	color: var(--text-faint);
+	line-height: 1.5;
+}
+.shop-utility-cost {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	font-size: var(--text-base);
+	font-weight: 700;
+	color: var(--accent);
+	margin: var(--space-1) 0;
+}
+.shop-cooldown {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	font-size: var(--text-sm);
+	color: var(--text-muted);
+	background: rgba(139, 148, 158, 0.07);
+	border: 1px solid var(--border-default);
+	border-radius: var(--radius-sm);
+	padding: var(--space-1) var(--space-3);
+}
+.shop-rename-form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	width: 100%;
+	margin-top: var(--space-1);
+}
+.shop-rename-input {
+	background: var(--bg-app);
+	border: 1px solid var(--border-default);
+	border-radius: var(--radius-sm);
+	color: var(--text-strong);
+	font-size: var(--text-base);
+	padding: var(--space-2) var(--space-3);
+	width: 100%;
+	box-sizing: border-box;
+	outline: none;
+	transition: border-color 0.15s;
+}
+.shop-rename-input:focus {
+	border-color: var(--accent);
+}
+.shop-rename-form .shop-buy-btn {
+	align-self: center;
+	padding: 7px var(--space-5);
+	font-size: var(--text-sm);
+}
+
+/* ── Owned borders section ───────────────────────────────────────────────── */
+.shop-owned-borders {
+	margin-top: var(--space-5);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Border previews — avatar frame system
+   Borders are image-based, rendered via the vx-avatar-bordered wrapper.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.shop-border-preview-wrap {
+	margin: 0 0 var(--space-3);
+}
+
+/* Square box. Avatar fills it; the border PNG (::before) overlays the SAME box. */
+.shop-border-preview-frame {
+	position: relative;
+	width: 100%;
+	aspect-ratio: 1;
+}
+
+/* The avatar fills the entire frame area */
+.shop-border-preview-avatar {
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	border-radius: var(--radius-sm);
+}
+
+.shop-border-preview-avatar .vx-avatar,
+.shop-border-preview-img {
+	width: 100% !important;
+	height: 100% !important;
+	object-fit: cover;
+	display: block;
+	border-radius: var(--radius-sm);
+}
+
+/* The border PNG overlays the exact same box as the avatar — inset: 0, not -20%. */
+.shop-border-preview-frame::before {
+	inset: 0 !important;
+}
+
+/* ── Alpha Commander border ──────────────────────────────────────────────── */
+/* Image-based frame served from CDN. The ::before pseudo-element overlays the
+   PNG on top of the avatar using absolute positioning with pointer-events:none
+   so it doesn't interfere with clicks. */
+
+.border-alpha-commander {
+	overflow: visible;
+}
+
+/* The border PNG overlays the exact same box as the avatar — same size, it's
+   just a frame. */
+.border-alpha-commander::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: url('https://cdn.vexara.world/borders/alphaCommander.png') center / 100% 100% no-repeat;
+	pointer-events: none;
+	z-index: 10;
+}
+
+/* ── Avatar border applied in-app ────────────────────────────────────────── */
+.vx-avatar-bordered {
+	position: relative;
+	border-radius: var(--radius-sm);
+	overflow: visible;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	line-height: 0;
+	box-sizing: border-box;
+	background: transparent;
+}
+
+/* The image itself needs no special clipping — the .vx-avatar-clip wrapper
+   handles the shape. Just ensure it fills the clip box cleanly. */
+.vx-avatar-bordered .vx-avatar {
+	width: 100% !important;
+	height: 100% !important;
+	border-radius: 0;
+	clip-path: none;
+	flex-shrink: 0;
+	display: block;
+	object-fit: cover;
+}
+
+/* Inner clip wrapper: overflow:hidden + border-radius clips the image cleanly.
+   Lives inside the outer bordered div so the ::before overlay on the
+   outer div can extend freely beyond its bounds. */
+.vx-avatar-bordered .vx-avatar-clip {
+	width: 100%;
+	height: 100%;
+	border-radius: var(--radius-sm);
+	overflow: hidden;
+	position: relative;
+	z-index: 1;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+	.shop-page {
+		padding: var(--space-3);
+	}
+	.shop-page-header {
+		flex-direction: column;
+		gap: var(--space-2);
+	}
+	.shop-items {
+		grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+	}
+	.shop-items--border {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+/* Grounded quartermaster treatment */
+.shop-page {
+	max-width: 1040px;
+	padding: 28px 32px 48px;
+	font-family: var(--font-sans);
+}
+
+.shop-page-header {
+	align-items: flex-end;
+	padding: 0 0 18px 18px;
+	margin-bottom: 0;
+	border-left: 3px solid var(--command, var(--accent));
+	border-bottom: 1px solid var(--border-default);
+}
+
+.shop-page-header-left {
+	align-items: flex-end;
+}
+
+.shop-page-kicker,
+.shop-utility-kicker,
+.shop-stock-number {
+	margin: 0 0 4px;
+	font-family: var(--font-mono);
+	font-size: 10px;
+	line-height: 1.3;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--text-faint);
+}
+
+.shop-page-title {
+	font-family: var(--font-display);
+	font-size: 34px;
+	font-weight: 700;
+	letter-spacing: 0.01em;
+}
+
+.shop-page-subtitle {
+	max-width: 560px;
+	font-size: 13px;
+	line-height: 1.5;
+	color: var(--text-muted);
+}
+
+.shop-page-header-right {
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 4px;
+}
+
+.shop-vp-balance {
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 0;
+	padding: 0;
+	background: none;
+	border: 0;
+	border-radius: 0;
+	font-family: var(--font-mono);
+	font-size: 10px;
+	font-weight: 400;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--text-faint);
+}
+
+.shop-vp-balance strong {
+	font-size: 15px;
+	letter-spacing: 0;
+	color: var(--text-strong);
+}
+
+.shop-refresh-countdown {
+	font-family: var(--font-mono);
+	font-size: 10px;
+}
+
+.shop-tabs {
+	gap: 0;
+	padding-left: 18px;
+	background: rgba(0, 0, 0, 0.12);
+}
+
+.shop-tab {
+	padding: 11px 18px 10px;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-muted);
+}
+
+.shop-tab--active {
+	color: var(--text-strong);
+	border-bottom-color: var(--accent);
+}
+
+.shop-body {
+	padding-top: 22px;
+}
+
+.shop-section-intro {
+	margin-bottom: 14px;
+}
+
+.shop-section-label {
+	font-family: var(--font-mono);
+	letter-spacing: 0.11em;
+	color: var(--text-muted);
+}
+
+.shop-section-hint {
+	max-width: 670px;
+	font-size: 13px;
+	line-height: 1.55;
+	color: var(--text-muted);
+}
+
+.shop-items:not(.shop-items--border) {
+	grid-template-columns: 1fr;
+	gap: 0;
+	border-top: 1px solid var(--border-default);
+}
+
+.shop-items:not(.shop-items--border) .shop-item {
+	display: grid;
+	grid-template-columns: 112px minmax(150px, 0.7fr) minmax(220px, 1.5fr) auto;
+	align-items: center;
+	gap: 18px;
+	padding: 14px 16px;
+	border-width: 0 1px 1px;
+}
+
+.shop-items:not(.shop-items--border) .shop-item-footer {
+	margin: 0;
+}
+
+.shop-items--border {
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: 10px;
+}
+
+.shop-item {
+	background: #171918;
+	border-color: #383832;
+	border-radius: 0;
+	box-shadow: none;
+	transition:
+		border-color 120ms ease,
+		background 120ms ease;
+}
+
+.shop-item:hover {
+	background: #1c1e1d;
+	border-color: #565146;
+}
+
+.shop-item--owned,
+.shop-item--premium,
+.shop-item--equipped {
+	border-color: #565146;
+}
+
+.shop-item-name {
+	font-family: var(--font-display);
+	font-size: 18px;
+	font-weight: 700;
+	text-transform: none;
+}
+
+.shop-item-desc {
+	font-size: 12px;
+	line-height: 1.55;
+	color: var(--text-muted);
+}
+
+.shop-item-cost {
+	font-family: var(--font-mono);
+	color: var(--text-default);
+}
+
+.shop-status-stamp,
+.shop-item-owned-label {
+	font-family: var(--font-mono);
+	font-size: 9px;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: #899770;
+}
+
+.shop-status-stamp--command {
+	color: #bd914e;
+}
+
+.shop-buy-btn {
+	padding: 6px 11px;
+	background: transparent;
+	color: var(--text-default);
+	border-color: #5b5143;
+	border-radius: 0;
+	font-weight: 700;
+	clip-path: none;
+}
+
+.shop-buy-btn:hover:not(:disabled) {
+	background: #2d251b;
+	color: var(--text-strong);
+	border-color: var(--accent);
+}
+
+.shop-buy-btn--equip {
+	background: transparent;
+	color: #a5b38a;
+	border-color: #59634b;
+}
+
+.shop-buy-btn--unequip {
+	background: transparent;
+}
+
+.shop-section--utility {
+	justify-content: flex-start;
+}
+
+.shop-utility-card {
+	align-items: flex-start;
+	max-width: 560px;
+	padding: 24px 26px;
+	text-align: left;
+	background: #171918;
+	border-color: #3c3a34;
+	border-left: 3px solid #75664e;
+	border-radius: 0;
+}
+
+.shop-utility-name {
+	font-family: var(--font-display);
+	font-size: 24px;
+}
+
+.shop-utility-desc {
+	max-width: 480px;
+	color: var(--text-muted);
+}
+
+.shop-utility-cost,
+.shop-cooldown {
+	font-family: var(--font-mono);
+	font-size: 11px;
+	color: var(--text-default);
+	background: none;
+	border: 0;
+	padding: 0;
+}
+
+.shop-rename-form .shop-buy-btn {
+	align-self: flex-start;
+}
+
+
+@media (max-width: 720px) {
+	.shop-page {
+		padding: 18px 14px 36px;
+	}
+
+	.shop-page-header {
+		align-items: flex-start;
+	}
+
+	.shop-page-header-right {
+		align-items: flex-start;
+	}
+
+	.shop-tabs {
+		padding-left: 0;
+	}
+
+	.shop-items:not(.shop-items--border) .shop-item {
+		display: flex;
+		gap: 5px;
+	}
+}
+
+/* ── Bundle bar ──────────────────────────────────────────────────────────── */
+.shop-border-collection {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.shop-bundle-bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 14px 18px;
+	background: #171918;
+	border: 1px solid #3c3a34;
+	border-left: 3px solid var(--accent);
+}
+
+.shop-bundle-bar-text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.shop-bundle-name {
+	font-family: var(--font-display);
+	font-size: 15px;
+	font-weight: 700;
+	color: var(--text-strong);
+}
+
+.shop-bundle-desc {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+
+.shop-buy-btn--bundle {
+	flex-shrink: 0;
+	background: rgba(255, 158, 61, 0.08);
+	border-color: var(--accent);
+	color: var(--accent);
+}
+
+.shop-buy-btn--bundle:hover:not(:disabled) {
+	background: rgba(255, 158, 61, 0.18);
+	color: var(--text-strong);
+}
+
+.shop-owned-borders {
+	margin-top: 24px;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+/* ── Image-based portrait borders ────────────────────────────────────────── */
+/* All borders use the same ::before overlay pattern as Alpha Commander.
+   CDN URL: https://cdn.vexara.world/borders/<collection>/<variant>.png  */
+
+/* banner */
+.border-banner-1::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/banner/1.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-banner-2::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/banner/2.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-banner-3::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/banner/3.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-banner-4::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/banner/4.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-banner-5::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/banner/5.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-banner-6::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/banner/6.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+
+/* cube */
+.border-cube-1::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/cube/1.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-cube-2::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/cube/2.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-cube-3::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/cube/3.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-cube-4::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/cube/4.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-cube-5::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/cube/5.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-cube-6::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/cube/6.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+
+/* edge */
+.border-edge-1::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/edge/1.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-edge-2::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/edge/2.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-edge-3::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/edge/3.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-edge-4::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/edge/4.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-edge-5::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/edge/5.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-edge-6::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/edge/6.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+
+/* frame */
+.border-frame-1::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/frame/1.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-frame-2::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/frame/2.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-frame-3::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/frame/3.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-frame-4::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/frame/4.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-frame-5::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/frame/5.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-frame-6::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/frame/6.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+
+/* glitch */
+.border-glitch-1::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/glitch/1.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-glitch-2::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/glitch/2.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-glitch-3::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/glitch/3.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-glitch-4::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/glitch/4.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-glitch-5::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/glitch/5.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-glitch-6::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/glitch/6.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+
+/* gridlock */
+.border-gridlock-1::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/gridlock/1.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-gridlock-2::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/gridlock/2.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-gridlock-3::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/gridlock/3.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-gridlock-4::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/gridlock/4.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-gridlock-5::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/gridlock/5.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-gridlock-6::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/gridlock/6.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+
+/* mist */
+.border-mist-1::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/mist/1.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-mist-2::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/mist/2.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-mist-3::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/mist/3.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-mist-4::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/mist/4.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-mist-5::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/mist/5.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-mist-6::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/mist/6.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+
+/* monolith */
+.border-monolith-1::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/monolith/1.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-monolith-2::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/monolith/2.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-monolith-3::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/monolith/3.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-monolith-4::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/monolith/4.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-monolith-5::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/monolith/5.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-monolith-6::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/monolith/6.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+
+/* portal */
+.border-portal-1::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/portal/1.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-portal-2::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/portal/2.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-portal-3::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/portal/3.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-portal-4::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/portal/4.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-portal-5::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/portal/5.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-portal-6::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/portal/6.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+
+/* runner */
+.border-runner-1::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/runner/1.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-runner-2::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/runner/2.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-runner-3::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/runner/3.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-runner-4::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/runner/4.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-runner-5::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/runner/5.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-runner-6::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/runner/6.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+
+/* sunfall */
+.border-sunfall-1::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/sunfall/1.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-sunfall-2::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/sunfall/2.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-sunfall-3::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/sunfall/3.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-sunfall-4::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/sunfall/4.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-sunfall-5::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/sunfall/5.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-sunfall-6::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/sunfall/6.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+
+/* terminal */
+.border-terminal-1::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/terminal/1.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-terminal-2::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/terminal/2.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-terminal-3::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/terminal/3.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-terminal-4::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/terminal/4.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-terminal-5::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/terminal/5.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+.border-terminal-6::before { content: ''; position: absolute; inset: 0; background: url('https://cdn.vexara.world/borders/terminal/6.png') center / 100% 100% no-repeat; pointer-events: none; z-index: 10; }
+
+/* All collection borders need overflow visible so the frame PNG extends beyond the circle */
+.border-banner-1, .border-banner-2, .border-banner-3, .border-banner-4, .border-banner-5, .border-banner-6,
+.border-cube-1, .border-cube-2, .border-cube-3, .border-cube-4, .border-cube-5, .border-cube-6,
+.border-edge-1, .border-edge-2, .border-edge-3, .border-edge-4, .border-edge-5, .border-edge-6,
+.border-frame-1, .border-frame-2, .border-frame-3, .border-frame-4, .border-frame-5, .border-frame-6,
+.border-glitch-1, .border-glitch-2, .border-glitch-3, .border-glitch-4, .border-glitch-5, .border-glitch-6,
+.border-gridlock-1, .border-gridlock-2, .border-gridlock-3, .border-gridlock-4, .border-gridlock-5, .border-gridlock-6,
+.border-mist-1, .border-mist-2, .border-mist-3, .border-mist-4, .border-mist-5, .border-mist-6,
+.border-monolith-1, .border-monolith-2, .border-monolith-3, .border-monolith-4, .border-monolith-5, .border-monolith-6,
+.border-portal-1, .border-portal-2, .border-portal-3, .border-portal-4, .border-portal-5, .border-portal-6,
+.border-runner-1, .border-runner-2, .border-runner-3, .border-runner-4, .border-runner-5, .border-runner-6,
+.border-sunfall-1, .border-sunfall-2, .border-sunfall-3, .border-sunfall-4, .border-sunfall-5, .border-sunfall-6,
+.border-terminal-1, .border-terminal-2, .border-terminal-3, .border-terminal-4, .border-terminal-5, .border-terminal-6 {
+	overflow: visible;
+}

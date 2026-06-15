@@ -123,6 +123,50 @@ export async function uploadAvatar(req: AuthRequest, res: Response): Promise<voi
 	}
 }
 
+const VALID_TROOP_KEYS = new Set([
+	'assaultTrooper', 'sentinelLancer', 'vanguardBreaker', 'reconOperative',
+	'wraithSkimmer', 'bulwarkGuard', 'aegisSkirmisher', 'pyreSuppressor',
+	'arcDisruptor', 'phantomLance', 'voidStalker', 'siegeMech',
+	'plasmaTurret', 'annihilatorPlatform', 'siegeColossus', 'overseer',
+]);
+
+export async function setAvatarPreset(req: AuthRequest, res: Response): Promise<void> {
+	try {
+		const { troopKey } = req.body as { troopKey?: string };
+		if (!troopKey || !VALID_TROOP_KEYS.has(troopKey)) {
+			res.status(400).json({ error: 'Invalid troop key.' });
+			return;
+		}
+
+		const userId = req.userId;
+		const existing = await prisma.user.findUnique({
+			where: { id: userId },
+			select: { avatarKey: true }
+		});
+
+		await prisma.user.update({
+			where: { id: userId },
+			data: { avatarKey: `preset:${troopKey}` }
+		});
+
+		// Clean up any old R2 upload (preset keys are skipped inside deleteAvatarObjects)
+		if (existing?.avatarKey) {
+			deleteAvatarObjects(userId, existing.avatarKey).catch(() => {});
+		}
+
+		res.json({
+			avatarUrl: avatarUrl(userId, `preset:${troopKey}`),
+			avatarUrlSm: avatarUrlSm(userId, `preset:${troopKey}`),
+		});
+	} catch (error) {
+		logError('unhandled_controller_error', {
+			message: (error as Error).message,
+			file: 'avatarController.ts'
+		});
+		res.status(500).json({ error: 'Internal server error' });
+	}
+}
+
 export async function deleteAvatar(req: AuthRequest, res: Response): Promise<void> {
 	try {
 		const userId = req.userId;

@@ -18,6 +18,7 @@ export interface User {
 	earnedBadges?: string[];
 	earnedTitles?: string[];
 	activeTitle?: string | null;
+	avatarBorder?: string | null;
 	commanderTitle?: string | null;
 	beginnerTipsEnabled?: boolean;
 	onboardingStep?: string | null;
@@ -47,6 +48,7 @@ export interface UserStats {
 	earnedBadges?: string[];
 	earnedTitles?: string[];
 	activeTitle?: string | null;
+	avatarBorder?: string | null;
 	points: number;
 	accountAgeDays: number;
 	nexusCount: number;

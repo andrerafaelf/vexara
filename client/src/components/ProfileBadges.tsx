@@ -1,7 +1,12 @@
 'use client';
 
 import type { SupporterTier } from '@/types/game';
-import { ALPHA_PLAYER_BADGE, ALPHA_COMMANDER_BADGE, VANGUARD_BADGE, badgeIcon } from '@/data/gameIcons';
+import {
+	ALPHA_PLAYER_BADGE,
+	ALPHA_COMMANDER_BADGE,
+	VANGUARD_BADGE,
+	badgeIcon
+} from '@/data/gameIcons';
 
 interface ProfileBadgesProps {
 	isAlphaFounder?: boolean | null;
@@ -12,20 +17,40 @@ interface ProfileBadgesProps {
 
 interface BadgeDef {
 	key: string;
-	src?: string;
-	emoji?: string;
+	src: string;
 	name: string;
 	description: string;
 }
 
 const PASS_BADGE_DEFS: Record<string, Omit<BadgeDef, 'key'>> = {
-	bronze:   { src: badgeIcon('bronzeProtocol'),   name: 'Bronze Protocol',   description: 'Reached Level 10 of the Vex Protocol battle pass — Season 1.' },
-	silver:   { src: badgeIcon('silverProtocol'),   name: 'Silver Protocol',   description: 'Reached Level 25 of the Vex Protocol battle pass — Season 1.' },
-	gold:     { src: badgeIcon('goldProtocol'),     name: 'Gold Protocol',     description: 'Reached Level 40 of the Vex Protocol battle pass — Season 1.' },
-	platinum: { src: badgeIcon('platinumProtocol'), name: 'Platinum Protocol', description: 'Reached Level 50 — completed the full Vex Protocol pass — Season 1.' },
+	bronze: {
+		src: badgeIcon('bronzeProtocol'),
+		name: 'Bronze Service Ribbon',
+		description: 'Awarded at rank 10 of the Season One campaign.'
+	},
+	silver: {
+		src: badgeIcon('silverProtocol'),
+		name: 'Silver Service Ribbon',
+		description: 'Awarded at rank 25 of the Season One campaign.'
+	},
+	gold: {
+		src: badgeIcon('goldProtocol'),
+		name: 'Gold Service Ribbon',
+		description: 'Awarded at rank 40 of the Season One campaign.'
+	},
+	platinum: {
+		src: badgeIcon('platinumProtocol'),
+		name: 'Campaign Service Medal',
+		description: 'Awarded for completing all 50 ranks of the Season One campaign.'
+	}
 };
 
-export default function ProfileBadges({ isAlphaFounder, isFounder, supporterTier, earnedBadges }: ProfileBadgesProps) {
+export default function ProfileBadges({
+	isAlphaFounder,
+	isFounder,
+	supporterTier,
+	earnedBadges
+}: ProfileBadgesProps) {
 	const badges: BadgeDef[] = [];
 
 	if (isAlphaFounder) {
@@ -55,7 +80,7 @@ export default function ProfileBadges({ isAlphaFounder, isFounder, supporterTier
 		}
 	}
 
-	// Pass-tier badges in ascending order so the best badge shows last (most prominent)
+	// Campaign ribbons in ascending order so the highest award reads last.
 	for (const tier of ['bronze', 'silver', 'gold', 'platinum'] as const) {
 		if (earnedBadges?.includes(tier)) {
 			const def = PASS_BADGE_DEFS[tier];
@@ -69,18 +94,14 @@ export default function ProfileBadges({ isAlphaFounder, isFounder, supporterTier
 		<div className="ps-badges">
 			{badges.map((b) => (
 				<div className="ps-badge" key={b.key}>
-					{b.src ? (
-						<img
-							src={b.src}
-							alt={`${b.name} badge`}
-							className="ps-badge-img"
-							loading="lazy"
-							decoding="async"
-							draggable={false}
-						/>
-					) : (
-						<span className="ps-badge-emoji" aria-hidden="true">{b.emoji}</span>
-					)}
+					<img
+						src={b.src}
+						alt={`${b.name} insignia`}
+						className="ps-badge-img"
+						loading="lazy"
+						decoding="async"
+						draggable={false}
+					/>
 					<div className="ps-badge-text">
 						<div className="ps-badge-name">{b.name}</div>
 						<div className="ps-badge-desc">{b.description}</div>

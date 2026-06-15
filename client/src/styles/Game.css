@@ -28,8 +28,7 @@
 	/* Industrial gunmetal + faint amber top sheen (merged from the former Pass C
 	   override so this element is styled in exactly one place). */
 	background:
-		linear-gradient(180deg, rgba(255, 158, 61, 0.025) 0%, transparent 30%),
-		var(--color-navy-900);
+		linear-gradient(180deg, rgba(255, 158, 61, 0.025) 0%, transparent 30%), var(--color-navy-900);
 	padding: 10px 24px;
 	padding-top: max(10px, var(--safe-top));
 	padding-left: calc(24px + env(safe-area-inset-left));
@@ -104,14 +103,20 @@
 	font-weight: 500;
 }
 
-/* header-center: holds nav buttons on most pages */
+/* header-center: holds nav buttons on most pages.
+   Absolutely centered on the whole header so the nav links sit at the true
+   horizontal midpoint regardless of the differing widths of header-left (logo)
+   and header-right (resource strip + Discord). Left/right keep their natural
+   flex sizing; this layer floats above them. The header is position:sticky so
+   it is the containing block. */
 .header-center {
+	position: absolute;
+	left: 50%;
+	transform: translateX(-50%);
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	gap: 2px;
-	flex: 1;
-	min-width: 0;
 	/* Must NOT clip: the "More" dropdown is absolutely positioned inside this
 	   row and overflow:hidden was swallowing it whole (empty-looking menu). The
 	   nav item count is bounded by progressive disclosure, so there's nothing to
@@ -541,11 +546,19 @@
 	white-space: nowrap;
 }
 
-.header-res-compact.header-res-biomass .header-res-compact-value { color: var(--success); }
-.header-res-compact.header-res-alloy   .header-res-compact-value { color: var(--accent); }
-.header-res-compact.header-res-ore     .header-res-compact-value { color: var(--warning); }
-.header-res-compact.header-res-near    .header-res-compact-value { color: var(--warning); }
-.header-res-compact.header-res-full    .header-res-compact-value {
+.header-res-compact.header-res-biomass .header-res-compact-value {
+	color: var(--success);
+}
+.header-res-compact.header-res-alloy .header-res-compact-value {
+	color: var(--accent);
+}
+.header-res-compact.header-res-ore .header-res-compact-value {
+	color: var(--warning);
+}
+.header-res-compact.header-res-near .header-res-compact-value {
+	color: var(--warning);
+}
+.header-res-compact.header-res-full .header-res-compact-value {
 	color: var(--danger);
 	animation: header-res-pulse 1.4s ease-in-out infinite;
 }
@@ -578,7 +591,7 @@
 }
 
 .nexus-nav {
-	width: 260px;
+	width: 240px;
 	background: var(--color-navy-800);
 	border-right: 1px solid var(--border-default);
 	display: flex;
@@ -591,7 +604,7 @@
    main content. Collapses on narrower screens so mid-size viewports don't get
    squeezed; the quest panel still renders inside the Overview tab there. */
 .game-rail-right {
-	width: 280px;
+	width: 240px;
 	flex-shrink: 0;
 	background: var(--color-navy-800);
 	border-left: 1px solid var(--border-default);
@@ -836,6 +849,17 @@
 	letter-spacing: 0.06em;
 	line-height: 1.3;
 	font-variant-numeric: tabular-nums;
+}
+
+/* Active title under the commander name — small, accent-tinted. */
+.commander-title {
+	color: #c0a77e;
+	font-size: var(--text-xs);
+	line-height: 1.3;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 100%;
 }
 
 .commander-card-mobile {
@@ -1773,7 +1797,9 @@
 	.header-left {
 		gap: 0;
 		min-width: 0;
-		flex-shrink: 0;
+		/* Reset the desktop flex:1 — on mobile the inline resource strip owns the
+		   flexible space, logo and right cluster stay intrinsically sized. */
+		flex: 0 0 auto;
 	}
 
 	.vx-wordmark-name {
@@ -1820,7 +1846,7 @@
 	.header-right {
 		gap: 0;
 		margin-left: 0;
-		flex-shrink: 0;
+		flex: 0 0 auto;
 	}
 
 	.header-right .discord-btn--pill,
@@ -2006,7 +2032,8 @@
 	align-items: center;
 	justify-content: center;
 	z-index: 2000;
-	padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+	padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+		env(safe-area-inset-left);
 }
 
 .group-modal {
@@ -2836,4 +2863,22 @@ label {
 
 .nav-discover-item-mobile:hover {
 	opacity: 1;
+}
+
+/* Desktop readability pass. Persistent navigation and rail labels should not
+   collapse into microcopy at wide desktop densities. */
+.objective-card-kicker,
+.rail-card-title,
+.nexus-nav h3 {
+	font-size: 11px;
+}
+
+.commander-meta,
+.nav-discover-req {
+	font-size: 12px;
+}
+
+.header-res-rate,
+.galaxy-chip-tag {
+	font-size: 11px;
 }

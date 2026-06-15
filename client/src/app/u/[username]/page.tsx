@@ -16,6 +16,7 @@ import {
 	sendFriendRequest
 } from '@/services/api';
 import '@/styles/ProfileStats.css';
+import '@/styles/Shop.css';
 import type { SupporterTier } from '@/types/game';
 import { Clock, Crown, MapPin, Trophy, UserCheck, UserMinus, UserPlus } from 'lucide-react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
@@ -74,6 +75,7 @@ interface PublicProfile {
 	isAlphaFounder?: boolean;
 	avatarUrl?: string | null;
 	avatarUrlSm?: string | null;
+	avatarBorder?: string | null;
 	createdAt: string;
 	accountAgeDays: number;
 	totalInfluence: number;
@@ -266,8 +268,9 @@ function PublicProfilePageInner() {
 						username={profile.username}
 						avatarUrl={profile.avatarUrl ?? null}
 						avatarUrlSm={profile.avatarUrlSm ?? null}
-						size="lg"
+						px={88}
 						className={`ps-avatar${profile.supporterTier === 'officer' ? ' supporter-border supporter-border-officer' : ''}${profile.supporterTier === 'commander' ? ' supporter-border supporter-border-commander' : ''}`}
+						borderKey={profile.avatarBorder ?? null}
 						ariaHidden
 					/>
 					<div className="ps-header-info">
@@ -345,7 +348,11 @@ function PublicProfilePageInner() {
 				{profile.earnedTitles && profile.earnedTitles.length > 0 && (
 					<Section title="Titles">
 						<div className="ps-titles-list">
-							{profile.earnedTitles.map((title) => (
+							{[...profile.earnedTitles].sort((a, b) => {
+								if (a === profile.activeTitle) return -1;
+								if (b === profile.activeTitle) return 1;
+								return 0;
+							}).map((title) => (
 								<div key={title} className={`ps-title-row${profile.activeTitle === title ? ' ps-title-row--active' : ''}`}>
 									<Trophy size={12} className="ps-title-icon" aria-hidden="true" />
 									<span className="ps-title-name">{title}</span>

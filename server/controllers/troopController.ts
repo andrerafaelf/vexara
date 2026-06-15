@@ -16,12 +16,15 @@ import type { AuthRequest } from '../types/index.js';
 import { getMaxStorage, getResourceProduction } from '../utils/economy.js';
 import {
 	MAX_TRAIN_PER_BATCH,
+	ONBOARDING_TRAIN_TIME_SECONDS,
+	ONBOARDING_TROOP_COST,
 	TROOP_COSTS,
 	getEffectiveTrainTimeSeconds,
 	getMaxTrainingQueueSlots,
 	getOverseerCost,
 	getTrainTimeSeconds,
 	getTrainingChains,
+	isOnboardingTrainEligible,
 	trainingBuildingFor,
 	trainingChainFor
 } from '../utils/gameConstants.js';
@@ -260,21 +263,34 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
 			}
 		}
 
-		const [galaxyForTrain, trainBoostPct] = await Promise.all([
+		const [galaxyForTrain, trainBoostPct, userOnboarding] = await Promise.all([
 			prisma.galaxy.findUnique({ where: { id: req.galaxyId! }, select: { speedMultiplier: true } }),
-			getActiveProductionBoostPct(req.userId!, req.galaxyId!)
+			getActiveProductionBoostPct(req.userId!, req.galaxyId!),
+			prisma.user.findUnique({
+				where: { id: req.userId! },
+				select: { beginnerTipsEnabled: true, onboardingStep: true }
+			})
 		]);
 		const trainSpeedMultiplier = galaxyForTrain?.speedMultiplier ?? 1.0;
 		const resourceUpdate = computeResourceUpdate(nexus, undefined, trainSpeedMultiplier, trainBoostPct);
 		const current = { ...nexus, ...resourceUpdate } as unknown as Record<string, number>;
 		const baseCost = TROOP_COSTS[troopType];
+
+		const onboardingDiscount = isOnboardingTrainEligible(
+			troopType,
+			userOnboarding?.beginnerTipsEnabled ?? false,
+			userOnboarding?.onboardingStep ?? null
+		);
+
 		const cost =
 			troopType === 'overseer'
 				? {
 						...baseCost,
 						...getOverseerCost(await troopService.countOwnedNexuses(req.userId!, req.galaxyId!))
 					}
-				: baseCost;
+				: onboardingDiscount
+					? { ...baseCost, ...ONBOARDING_TROOP_COST }
+					: baseCost;
 		const totalCost = {
 			biomass: cost.biomass * parsedAmount,
 			alloy: cost.alloy * parsedAmount,
@@ -322,14 +338,15 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
 		const doubled = (nexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled ?? false;
 		const stealthArrayLevel =
 			((nexus as unknown as Record<string, number>).stealthArray as number) ?? 0;
-		const perUnitSeconds =
-			getEffectiveTrainTimeSeconds(
-				troopType,
-				trainingBuildingLevel,
-				nexus.nexusType,
-				doubled,
-				stealthArrayLevel
-			) / trainSpeedMultiplier;
+		const perUnitSeconds = onboardingDiscount
+			? ONBOARDING_TRAIN_TIME_SECONDS
+			: getEffectiveTrainTimeSeconds(
+					troopType,
+					trainingBuildingLevel,
+					nexus.nexusType,
+					doubled,
+					stealthArrayLevel
+				) / trainSpeedMultiplier;
 		const queueStart =
 			sameChainQueue.length > 0
 				? new Date(sameChainQueue[sameChainQueue.length - 1].completesAt as string).getTime()

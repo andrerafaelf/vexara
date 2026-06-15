@@ -196,16 +196,6 @@
 	position: relative;
 }
 
-.plb-pod-ring {
-	position: absolute;
-	inset: -3px;
-	border-radius: 0;
-	pointer-events: none;
-}
-.plb-pod--1 .plb-pod-ring { box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.55); }
-.plb-pod--2 .plb-pod-ring { box-shadow: 0 0 0 2px rgba(176, 184, 196, 0.4); }
-.plb-pod--3 .plb-pod-ring { box-shadow: 0 0 0 2px rgba(205, 127, 50, 0.45); }
-
 /* identity block — name + faction always stack vertically */
 .plb-pod-identity {
 	display: flex;
@@ -353,6 +343,32 @@
 	gap: var(--space-2);
 	flex-wrap: nowrap;
 	min-width: 0;
+}
+
+/* Identity block in table row: name + active title stacked */
+.plb-td-identity {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	min-width: 0;
+}
+
+.plb-td-title {
+	font-size: 10px;
+	line-height: 1.2;
+	color: #c0a77e;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 100%;
+}
+
+/* Active title under name in podium card */
+.plb-pod-title {
+	font-size: 11px;
+	line-height: 1.2;
+	color: #c0a77e;
+	text-align: center;
 }
 
 .plb-td--faction {

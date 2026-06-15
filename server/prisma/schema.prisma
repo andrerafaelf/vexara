@@ -93,6 +93,32 @@ model User {
   // The title the player has chosen to display on their public profile (max 1).
   // Must be a member of earnedTitles. Null = no title shown.
   activeTitle   String? @db.VarChar(32)
+
+  // Key of the avatar border purchased from the shop and currently equipped.
+  // References ShopItem.key where type='border'. Null = no border.
+  avatarBorder  String? @db.VarChar(64)
+
+  // Timestamp of last username change. Enforces the 30-day cooldown.
+  usernameChangedAt DateTime?
+
+  shopPurchases ShopPurchase[]
+}
+
+// Permanent record of every shop purchase. Used for de-duplication
+// (one-time items), audit trail, and restoring inventory after rollbacks.
+model ShopPurchase {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  itemKey   String   @db.VarChar(64)
+  itemType  String   @db.VarChar(32)
+  vpSpent   Int
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, itemKey])
+  @@index([userId, createdAt])
 }
 
 enum GalaxyStatus {

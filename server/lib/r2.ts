@@ -118,9 +118,9 @@ export async function processAndUploadAvatar(
 	};
 }
 
-/** Delete a user's avatar objects from R2. No-op if the key is null. */
+/** Delete a user's avatar objects from R2. No-op if the key is null or a preset. */
 export async function deleteAvatarObjects(userId: number, avatarKey: string | null): Promise<void> {
-	if (!avatarKey) return;
+	if (!avatarKey || avatarKey.startsWith('preset:')) return;
 	const objects: ObjectIdentifier[] = [
 		{ Key: `avatars/${userId}/${avatarKey}.webp` },
 		{ Key: `avatars/${userId}/${avatarKey}-sm.webp` }
@@ -133,14 +133,27 @@ export async function deleteAvatarObjects(userId: number, avatarKey: string | nu
 	);
 }
 
-/** Compose the public CDN URL for a given user + avatarKey. */
+const GAME_CDN = 'https://cdn.vexara.world';
+
+/** Compose the public URL for a given user + avatarKey.
+ *  Keys prefixed with "preset:" point to CDN troop art, not R2 uploads. */
 export function avatarUrl(userId: number, avatarKey: string | null): string | null {
-	if (!avatarKey || !publicUrl) return null;
+	if (!avatarKey) return null;
+	if (avatarKey.startsWith('preset:')) {
+		const troopKey = avatarKey.slice('preset:'.length);
+		return `${GAME_CDN}/troops/${troopKey}.webp`;
+	}
+	if (!publicUrl) return null;
 	return `${publicUrl}/avatars/${userId}/${avatarKey}.webp`;
 }
 
-/** Compose the small (64×64) CDN URL. */
+/** Compose the small (64×64) URL. Presets use the same CDN image (no separate sm variant). */
 export function avatarUrlSm(userId: number, avatarKey: string | null): string | null {
-	if (!avatarKey || !publicUrl) return null;
+	if (!avatarKey) return null;
+	if (avatarKey.startsWith('preset:')) {
+		const troopKey = avatarKey.slice('preset:'.length);
+		return `${GAME_CDN}/troops/${troopKey}.webp`;
+	}
+	if (!publicUrl) return null;
 	return `${publicUrl}/avatars/${userId}/${avatarKey}-sm.webp`;
 }
