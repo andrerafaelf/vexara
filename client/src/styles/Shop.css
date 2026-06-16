@@ -460,22 +460,24 @@
 }
 
 /* ── Supporter tier glow on avatar ───────────────────────────────────────── */
-/* Soft coloured halo only — no hard ring, so the avatar reads as glowing rather
-   than bordered. Cyan = commander, amber = vanguard, slate = officer.
-   Implemented with filter: drop-shadow (not box-shadow) so it (a) follows any
-   clip-path silhouette on themed avatars like .commander-avatar, and (b) isn't
-   killed by a sibling `box-shadow: none` rule on the same element. */
+/* Soft coloured halo around the avatar BOX — no hard spread ring, so it reads
+   as a glow rather than a border. box-shadow (not drop-shadow) is deliberate:
+   drop-shadow traces the transparent troop silhouette and renders as almost
+   nothing, while box-shadow halos the square box regardless of image alpha.
+   Cyan = commander, amber = vanguard, slate = officer.
+   `!important` defeats the `.commander-avatar { box-shadow: none }` themed rule
+   on the header/sidebar avatars, which shares the element and equal specificity. */
 .supporter-border {
 	border-radius: var(--radius-sm);
 }
 .supporter-border-officer {
-	filter: drop-shadow(0 0 5px rgba(148, 163, 184, 0.55)) drop-shadow(0 0 9px rgba(148, 163, 184, 0.35));
+	box-shadow: 0 0 8px 1px rgba(148, 163, 184, 0.5), 0 0 16px 3px rgba(148, 163, 184, 0.3) !important;
 }
 .supporter-border-vanguard {
-	filter: drop-shadow(0 0 5px rgba(255, 158, 61, 0.6)) drop-shadow(0 0 10px rgba(255, 158, 61, 0.4));
+	box-shadow: 0 0 9px 1px rgba(255, 158, 61, 0.55), 0 0 18px 4px rgba(255, 158, 61, 0.35) !important;
 }
 .supporter-border-commander {
-	filter: drop-shadow(0 0 5px rgba(34, 211, 238, 0.65)) drop-shadow(0 0 11px rgba(34, 211, 238, 0.45));
+	box-shadow: 0 0 10px 1px rgba(34, 211, 238, 0.6), 0 0 20px 5px rgba(34, 211, 238, 0.4) !important;
 }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */

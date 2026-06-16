@@ -2571,6 +2571,15 @@ label {
 	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%);
 }
 
+/* A supporter-tier glow is a box-shadow halo, which clip-path would clip away.
+   When a supporter glow is present, drop the angled corner so the glow can
+   render around the full box. The themed `box-shadow: none` is already beaten
+   by the glow rule's !important. */
+.commander-avatar.supporter-border {
+	clip-path: none;
+	border-radius: var(--radius-sm);
+}
+
 .commander-meta {
 	font-family: var(--font-mono);
 }
