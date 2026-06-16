@@ -27,6 +27,7 @@ import ProfileBadges from './ProfileBadges';
 import AvatarUpload from './AvatarUpload';
 import Avatar from './Avatar';
 import { TITLE_META } from '@/constants/titles';
+import ChallengesPanel from './ChallengesPanel';
 
 interface BorderShopData {
 	equippedBorder: string | null;
@@ -73,7 +74,7 @@ export default function ProfileStats() {
 	);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
-	const [tab, setTab] = useState<'stats' | 'notifications' | 'security' | 'accessibility'>('stats');
+	const [tab, setTab] = useState<'stats' | 'challenges' | 'notifications' | 'security' | 'accessibility'>('stats');
 	const [titleBusy, setTitleBusy] = useState(false);
 	const [pwCurrent, setPwCurrent] = useState('');
 	const [pwNew, setPwNew] = useState('');
@@ -191,6 +192,12 @@ export default function ProfileStats() {
 					<span>Service record</span>
 				</button>
 				<button
+					className={`ps-tab ${tab === 'challenges' ? 'ps-tab--active' : ''}`}
+					onClick={() => setTab('challenges')}
+				>
+					<span>Challenges</span>
+				</button>
+				<button
 					className={`ps-tab ${tab === 'notifications' ? 'ps-tab--active' : ''}`}
 					onClick={() => setTab('notifications')}
 				>
@@ -212,6 +219,10 @@ export default function ProfileStats() {
 					<span>Sign out</span>
 				</button>
 			</div>
+
+			{tab === 'challenges' && (
+				<ChallengesPanel />
+			)}
 
 			{tab === 'notifications' && (
 				<div className="ps-notif-panel">

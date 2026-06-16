@@ -4,6 +4,8 @@ import { type AuthRequest, TROOP_KEYS } from '../types/index.js';
 import { getResourceProduction } from '../utils/economy.js';
 import { logError } from '../utils/logger.js';
 import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
+import prisma from '../lib/prisma.js';
+import { CHALLENGE_DEFS, computeChallengeProgress, type ChallengeStats } from '../utils/challenges.js';
 
 function sumTroops(troopObj: unknown): number {
 	if (!troopObj || typeof troopObj !== 'object') return 0;
@@ -133,6 +135,183 @@ export async function getMyStats(req: AuthRequest, res: Response): Promise<void>
 		logError('unhandled_controller_error', {
 			message: (error as Error).message,
 			file: 'statsController.ts'
+		});
+		res.status(500).json({ error: 'Internal server error' });
+	}
+}
+
+export async function getChallenges(req: AuthRequest, res: Response): Promise<void> {
+	try {
+		const userId = req.userId;
+
+		// Fetch username first so we can query MarketTransaction by username
+		const userRow = await prisma.user.findUnique({
+			where: { id: userId },
+			select: {
+				username: true,
+				galaxiesWon: true,
+				galaxiesPlayed: true,
+				lifetimePoints: true,
+				createdAt: true,
+			},
+		});
+
+		if (!userRow) {
+			res.status(404).json({ error: 'User not found' });
+			return;
+		}
+
+		const [allAttacks, nexuses, marketTrades, seasonRecords, referralCount, nexusTroopsTrained] = await Promise.all([
+			// All completed attacks across all galaxies for lifetime combat stats
+			prisma.attack.findMany({
+				where: {
+					status: 'completed',
+					OR: [{ attackerUserId: userId }, { defenderUserId: userId }],
+				},
+				select: { attackerUserId: true, defenderUserId: true, result: true, type: true },
+			}),
+			// Current nexus count (all galaxies, owned)
+			prisma.nexus.count({ where: { ownerId: userId } }),
+			// Market trades as buyer or seller (keyed by username in the transaction table)
+			prisma.marketTransaction.findMany({
+				where: {
+					OR: [
+						{ sellerUsername: userRow.username },
+						{ buyerUsername: userRow.username },
+					],
+				},
+				select: { offerAmount: true, wantAmount: true },
+			}),
+			// Season records for best single-galaxy score
+			prisma.seasonRecord.findMany({
+				where: { userId },
+				select: { points: true },
+			}),
+			// Count of users who used this user's referral code
+			prisma.user.count({ where: { referredById: userId } }),
+			// All nexuses currently owned for troopsTrained counters
+			prisma.nexus.findMany({
+				where: { ownerId: userId },
+				select: { troopsTrained: true },
+			}),
+		]);
+
+		let troopsKilled = 0;
+		let troopsLost = 0;
+		let victories = 0;
+		let defeats = 0;
+		let attacksLaunched = 0;
+		let attacksDefended = 0;
+		let nexusesCaptured = 0;
+		let scoutsMade = 0;
+		let supportMissionsSent = 0;
+		let defenseVictories = 0;
+		let perfectVictories = 0;
+		let resourcesStolen = 0;
+		let resourcesLost = 0;
+
+		for (const attack of allAttacks) {
+			const result = attack.result as Record<string, unknown> | null;
+			if (!result) continue;
+			const isAttacker = attack.attackerUserId === userId;
+			const isDefender = attack.defenderUserId === userId;
+			const won = result.victory === true;
+			const stolen = result.resourcesStolen as
+				| { biomass?: number; alloy?: number; ore?: number }
+				| undefined;
+
+			if (isAttacker) {
+				if (attack.type === 'scout') {
+					scoutsMade++;
+				} else if (attack.type === 'support') {
+					supportMissionsSent++;
+				} else {
+					attacksLaunched++;
+					if (won) {
+						victories++;
+						if (result.nexusCaptured) nexusesCaptured++;
+						if (stolen) {
+							resourcesStolen +=
+								(stolen.biomass || 0) + (stolen.alloy || 0) + (stolen.ore || 0);
+						}
+						const attackerLost = sumTroops(result.attackerLosses);
+						if (attackerLost === 0) perfectVictories++;
+					} else {
+						defeats++;
+					}
+				}
+				troopsKilled += sumTroops(result.defenderLosses);
+				troopsLost += sumTroops(result.attackerLosses);
+			}
+			if (isDefender) {
+				attacksDefended++;
+				if (!won) {
+					defenseVictories++;
+				} else if (stolen) {
+					resourcesLost += (stolen.biomass || 0) + (stolen.alloy || 0) + (stolen.ore || 0);
+				}
+				troopsKilled += sumTroops(result.attackerLosses);
+				troopsLost += sumTroops(result.defenderLosses);
+			}
+		}
+
+		// Lifetime troops trained from nexus troopsTrained JSON counters
+		let totalTroopsEverTrained = 0;
+		for (const nexus of nexusTroopsTrained) {
+			const tt = nexus.troopsTrained as Record<string, number> | null;
+			if (tt && typeof tt === 'object') {
+				for (const v of Object.values(tt)) totalTroopsEverTrained += Number(v) || 0;
+			}
+		}
+
+		// Market aggregates
+		let tradesMade = 0;
+		let totalTradeVolume = 0;
+		for (const trade of marketTrades) {
+			tradesMade++;
+			totalTradeVolume += (trade.offerAmount || 0) + (trade.wantAmount || 0);
+		}
+
+		// Best single-galaxy points from SeasonRecord
+		const bestGalaxyPoints = seasonRecords.reduce((best, r) => Math.max(best, r.points), 0);
+
+		const accountAgeDays = Math.max(
+			1,
+			Math.floor((Date.now() - new Date(userRow.createdAt).getTime()) / (1000 * 60 * 60 * 24))
+		);
+
+		const stats: ChallengeStats = {
+			troopsKilled,
+			troopsLost,
+			victories,
+			defeats,
+			attacksLaunched,
+			attacksDefended,
+			nexusesCaptured,
+			scoutsMade,
+			supportMissionsSent,
+			defenseVictories,
+			perfectVictories,
+			resourcesStolen,
+			resourcesLost,
+			nexusCount: nexuses,
+			lifetimePoints: userRow.lifetimePoints,
+			totalTroopsEverTrained,
+			galaxiesWon: userRow.galaxiesWon,
+			galaxiesPlayed: userRow.galaxiesPlayed,
+			bestGalaxyPoints,
+			tradesMade,
+			totalTradeVolume,
+			accountAgeDays,
+			referralCount,
+		};
+
+		const challenges = computeChallengeProgress(CHALLENGE_DEFS, stats);
+		res.json({ challenges });
+	} catch (error) {
+		logError('unhandled_controller_error', {
+			message: (error as Error).message,
+			file: 'statsController.ts:getChallenges',
 		});
 		res.status(500).json({ error: 'Internal server error' });
 	}

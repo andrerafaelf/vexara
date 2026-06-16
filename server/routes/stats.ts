@@ -48,4 +48,8 @@ router.post('/daily-streak/claim', auth, async (req, res) => {
 	}
 });
 
+router.get('/challenges', auth, (req, res) =>
+	statsController.getChallenges(req as AuthRequest, res as Response)
+);
+
 export default router;

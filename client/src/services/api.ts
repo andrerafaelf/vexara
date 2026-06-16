@@ -133,6 +133,8 @@ export const registerGalaxyAlert = (galaxyId: number | string, email?: string) =
 export const getGalaxyWinResults = (galaxyId: number | string) =>
 	apiRequest(`/galaxies/${galaxyId}/win-results`);
 export const getHallOfFame = () => apiRequest('/galaxies/hall-of-fame');
+export const getChallenges = () => apiRequest('/stats/challenges');
+
 export const getBattlePass = () => apiRequest('/battle-pass');
 export const purchaseBattlePass = () => apiRequest('/battle-pass/purchase', { method: 'POST' });
 export const claimBattlePassLevel = (level: number, nexusId: number) =>
