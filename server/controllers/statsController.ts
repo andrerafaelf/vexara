@@ -381,6 +381,23 @@ export async function getChallenges(req: AuthRequest, res: Response): Promise<vo
 			.filter((c) => c.unlockedTitle !== null)
 			.map((c) => c.unlockedTitle as string);
 		res.json({ challenges, unlockedTitles });
+
+		// Sync any newly unlocked challenge titles into User.earnedTitles so they
+		// can be equipped via PATCH /battle-pass/title (which validates against the DB).
+		if (unlockedTitles.length > 0) {
+			prisma.user.findUnique({ where: { id: userId }, select: { earnedTitles: true } })
+				.then((u) => {
+					const existing = new Set((u?.earnedTitles as string[]) ?? []);
+					const toAdd = unlockedTitles.filter((t) => !existing.has(t));
+					if (toAdd.length > 0) {
+						return prisma.user.update({
+							where: { id: userId },
+							data: { earnedTitles: [...existing, ...toAdd] as any },
+						});
+					}
+				})
+				.catch((err) => logError('challenge_title_sync_failed', { message: (err as Error).message }));
+		}
 	} catch (error) {
 		logError('unhandled_controller_error', {
 			message: (error as Error).message,
