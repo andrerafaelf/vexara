@@ -270,7 +270,8 @@ function PublicProfilePageInner() {
 						avatarUrl={profile.avatarUrl ?? null}
 						avatarUrlSm={profile.avatarUrlSm ?? null}
 						px={88}
-						className={`ps-avatar${profile.supporterTier === 'officer' ? ' supporter-border supporter-border-officer' : ''}${profile.supporterTier === 'vanguard' ? ' supporter-border supporter-border-vanguard' : ''}${profile.supporterTier === 'commander' ? ' supporter-border supporter-border-commander' : ''}`}
+						className="ps-avatar"
+						wrapperClassName={`ps-avatar${profile.supporterTier === 'officer' ? ' supporter-border supporter-border-officer' : ''}${profile.supporterTier === 'vanguard' ? ' supporter-border supporter-border-vanguard' : ''}${profile.supporterTier === 'commander' ? ' supporter-border supporter-border-commander' : ''}`}
 						borderKey={profile.avatarBorder ?? null}
 						ariaHidden
 					/>

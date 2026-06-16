@@ -13,6 +13,8 @@ interface AvatarProps {
 	size?: Size;
 	/** Extra className applied to the wrapping element. */
 	className?: string;
+	/** Extra className applied to the vx-avatar-bordered wrapper when borderKey is set. Falls back to className when no borderKey. */
+	wrapperClassName?: string;
 	/** Inline override for square dimension (px). Useful for one-off sizes. */
 	px?: number;
 	/** Hide from screen readers (use when adjacent text already names the user). */
@@ -43,6 +45,7 @@ const Avatar: React.FC<AvatarProps> = ({
 	avatarUrlSm,
 	size = 'md',
 	className,
+	wrapperClassName,
 	px,
 	ariaHidden,
 	borderKey,
@@ -56,11 +59,13 @@ const Avatar: React.FC<AvatarProps> = ({
 		height: dim
 	};
 
-	const cls = ['vx-avatar', className].filter(Boolean).join(' ');
-
 	const borderCssClass = borderKey
 		? borderKey.replace('border_', '').replace(/_/g, '-')
 		: null;
+
+	// When no border wrapper exists, wrapperClassName falls through to the inner element.
+	const innerExtra = borderCssClass ? className : [className, wrapperClassName].filter(Boolean).join(' ') || undefined;
+	const cls = ['vx-avatar', innerExtra].filter(Boolean).join(' ');
 
 	const inner = src ? (
 		<img
@@ -92,7 +97,7 @@ const Avatar: React.FC<AvatarProps> = ({
 	// border is exactly the same box as the avatar — no padding, no extra size.
 	return (
 		<div
-			className={`vx-avatar-bordered border-${borderCssClass}`}
+			className={['vx-avatar-bordered', `border-${borderCssClass}`, wrapperClassName].filter(Boolean).join(' ')}
 			style={{
 				width: dim,
 				height: dim,

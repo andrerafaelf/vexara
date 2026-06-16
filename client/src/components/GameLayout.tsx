@@ -577,7 +577,8 @@ export default function GameLayout({
 									avatarUrlSm={authUser.avatarUrlSm ?? null}
 									size="md"
 									borderKey={authUser.avatarBorder ?? null}
-									className={`commander-avatar${authUser.supporterTier === 'officer' ? ' supporter-border supporter-border-officer' : ''}${authUser.supporterTier === 'vanguard' ? ' supporter-border supporter-border-vanguard' : ''}${authUser.supporterTier === 'commander' ? ' supporter-border supporter-border-commander' : ''}`}
+									className="commander-avatar"
+									wrapperClassName={`commander-avatar${authUser.supporterTier === 'officer' ? ' supporter-border supporter-border-officer' : ''}${authUser.supporterTier === 'vanguard' ? ' supporter-border supporter-border-vanguard' : ''}${authUser.supporterTier === 'commander' ? ' supporter-border supporter-border-commander' : ''}`}
 									ariaHidden
 								/>
 								<div className="commander-info">
