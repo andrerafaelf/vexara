@@ -459,18 +459,23 @@
 	z-index: 1;
 }
 
-/* ── Supporter tier glow on avatar border ────────────────────────────────── */
+/* ── Supporter tier glow on avatar ───────────────────────────────────────── */
+/* Soft coloured halo only — no hard ring, so the avatar reads as glowing rather
+   than bordered. Cyan = commander, amber = vanguard, slate = officer.
+   Implemented with filter: drop-shadow (not box-shadow) so it (a) follows any
+   clip-path silhouette on themed avatars like .commander-avatar, and (b) isn't
+   killed by a sibling `box-shadow: none` rule on the same element. */
 .supporter-border {
 	border-radius: var(--radius-sm);
 }
 .supporter-border-officer {
-	box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.45), 0 0 10px rgba(148, 163, 184, 0.2);
+	filter: drop-shadow(0 0 5px rgba(148, 163, 184, 0.55)) drop-shadow(0 0 9px rgba(148, 163, 184, 0.35));
 }
 .supporter-border-vanguard {
-	box-shadow: 0 0 0 2px rgba(255, 158, 61, 0.55), 0 0 12px rgba(255, 158, 61, 0.25);
+	filter: drop-shadow(0 0 5px rgba(255, 158, 61, 0.6)) drop-shadow(0 0 10px rgba(255, 158, 61, 0.4));
 }
 .supporter-border-commander {
-	box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.6), 0 0 16px rgba(34, 211, 238, 0.3);
+	filter: drop-shadow(0 0 5px rgba(34, 211, 238, 0.65)) drop-shadow(0 0 11px rgba(34, 211, 238, 0.45));
 }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */

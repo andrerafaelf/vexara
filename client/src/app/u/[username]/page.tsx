@@ -271,8 +271,9 @@ function PublicProfilePageInner() {
 						avatarUrlSm={profile.avatarUrlSm ?? null}
 						px={88}
 						className="ps-avatar"
-						wrapperClassName={`ps-avatar${profile.supporterTier === 'officer' ? ' supporter-border supporter-border-officer' : ''}${profile.supporterTier === 'vanguard' ? ' supporter-border supporter-border-vanguard' : ''}${profile.supporterTier === 'commander' ? ' supporter-border supporter-border-commander' : ''}`}
+						wrapperClassName="ps-avatar"
 						borderKey={profile.avatarBorder ?? null}
+						supporterTier={profile.supporterTier ?? null}
 						ariaHidden
 					/>
 					<div className="ps-header-info">

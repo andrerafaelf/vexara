@@ -149,7 +149,8 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
 							size="md"
 							borderKey={user.avatarBorder ?? null}
 							className="commander-avatar"
-							wrapperClassName={`commander-avatar${user.supporterTier === 'officer' ? ' supporter-border supporter-border-officer' : ''}${user.supporterTier === 'vanguard' ? ' supporter-border supporter-border-vanguard' : ''}${user.supporterTier === 'commander' ? ' supporter-border supporter-border-commander' : ''}`}
+							wrapperClassName="commander-avatar"
+							supporterTier={user.supporterTier ?? null}
 							ariaHidden
 						/>
 						<div className="commander-info">

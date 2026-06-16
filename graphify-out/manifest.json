@@ -405,8 +405,8 @@
     "semantic_hash": ""
   },
   "client/src/app/u/[username]/page.tsx": {
-    "mtime": 1781623443.5457451,
-    "ast_hash": "8e4722bb62358af5727130d5261e6476",
+    "mtime": 1781625576.2775445,
+    "ast_hash": "15894f772e8ffa9d23d6433f5912913f",
     "semantic_hash": ""
   },
   "client/src/app/units/page.tsx": {
@@ -430,13 +430,13 @@
     "semantic_hash": ""
   },
   "client/src/components/Avatar.tsx": {
-    "mtime": 1781623465.7756264,
-    "ast_hash": "0f675252c9083b862b42a354db22fef8",
+    "mtime": 1781625539.2583516,
+    "ast_hash": "f1c8d4d556fa455f6829634e4bcbf7e3",
     "semantic_hash": ""
   },
   "client/src/components/AvatarUpload.tsx": {
-    "mtime": 1781625026.2464163,
-    "ast_hash": "76b4ed72b3affd0af9fe5de7efa9e814",
+    "mtime": 1781625568.912379,
+    "ast_hash": "381be0fe72c7202790756c3b282accc4",
     "semantic_hash": ""
   },
   "client/src/components/BackBar.tsx": {
@@ -555,8 +555,8 @@
     "semantic_hash": ""
   },
   "client/src/components/GameLayout.tsx": {
-    "mtime": 1781623483.0690053,
-    "ast_hash": "2505ba0c60a1862991a740e00705a90c",
+    "mtime": 1781625594.9664483,
+    "ast_hash": "a4fd3c641c54b0994ead8a47f4b2102e",
     "semantic_hash": ""
   },
   "client/src/components/InlineBackButton.tsx": {
@@ -615,8 +615,8 @@
     "semantic_hash": ""
   },
   "client/src/components/NexusSidebar.tsx": {
-    "mtime": 1781623488.7299364,
-    "ast_hash": "983f18cdaac20532b37031b8e0ffbd8e",
+    "mtime": 1781625605.1084054,
+    "ast_hash": "7c2632fcd61199469eaa2955d30b732e",
     "semantic_hash": ""
   },
   "client/src/components/NexusTypeBadge.tsx": {
@@ -650,8 +650,8 @@
     "semantic_hash": ""
   },
   "client/src/components/PlayersView.tsx": {
-    "mtime": 1781546678.280158,
-    "ast_hash": "683be3d83fffcd53c445dba73a712935",
+    "mtime": 1781625618.638062,
+    "ast_hash": "2a6158eab7c670d70efb396640ef1461",
     "semantic_hash": ""
   },
   "client/src/components/ProfileStats.tsx": {

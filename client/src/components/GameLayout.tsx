@@ -578,7 +578,8 @@ export default function GameLayout({
 									size="md"
 									borderKey={authUser.avatarBorder ?? null}
 									className="commander-avatar"
-									wrapperClassName={`commander-avatar${authUser.supporterTier === 'officer' ? ' supporter-border supporter-border-officer' : ''}${authUser.supporterTier === 'vanguard' ? ' supporter-border supporter-border-vanguard' : ''}${authUser.supporterTier === 'commander' ? ' supporter-border supporter-border-commander' : ''}`}
+									wrapperClassName="commander-avatar"
+									supporterTier={authUser.supporterTier ?? null}
 									ariaHidden
 								/>
 								<div className="commander-info">

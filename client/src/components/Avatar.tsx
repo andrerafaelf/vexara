@@ -21,6 +21,16 @@ interface AvatarProps {
 	ariaHidden?: boolean;
 	/** Shop border key (e.g. "border_plasma_arc"). Wraps avatar in a bordered div. */
 	borderKey?: string | null;
+	/** Supporter tier ("officer" | "vanguard" | "commander"). Adds a tier-coloured glow. */
+	supporterTier?: string | null;
+}
+
+/** Maps a supporter tier to its glow class. Cyan = commander, amber = vanguard, slate = officer. */
+function supporterGlowClass(tier?: string | null): string | null {
+	if (tier === 'officer') return 'supporter-border supporter-border-officer';
+	if (tier === 'vanguard') return 'supporter-border supporter-border-vanguard';
+	if (tier === 'commander') return 'supporter-border supporter-border-commander';
+	return null;
 }
 
 const SIZE_PX: Record<Size, number> = {
@@ -49,6 +59,7 @@ const Avatar: React.FC<AvatarProps> = ({
 	px,
 	ariaHidden,
 	borderKey,
+	supporterTier,
 }) => {
 	const dim = px ?? SIZE_PX[size];
 	const isSmall = (px ?? SIZE_PX[size]) <= SIZE_PX.sm;
@@ -63,8 +74,13 @@ const Avatar: React.FC<AvatarProps> = ({
 		? borderKey.replace('border_', '').replace(/_/g, '-')
 		: null;
 
-	// When no border wrapper exists, wrapperClassName falls through to the inner element.
-	const innerExtra = borderCssClass ? className : [className, wrapperClassName].filter(Boolean).join(' ') || undefined;
+	// The supporter glow lands on the same element wrapperClassName targets: the
+	// bordered wrapper when a frame is fitted, otherwise the inner avatar element.
+	const glowClass = supporterGlowClass(supporterTier);
+	const wrapperCombined = [wrapperClassName, glowClass].filter(Boolean).join(' ') || undefined;
+
+	// When no border wrapper exists, wrapperCombined falls through to the inner element.
+	const innerExtra = borderCssClass ? className : [className, wrapperCombined].filter(Boolean).join(' ') || undefined;
 	const cls = ['vx-avatar', innerExtra].filter(Boolean).join(' ');
 
 	const inner = src ? (
@@ -97,7 +113,7 @@ const Avatar: React.FC<AvatarProps> = ({
 	// border is exactly the same box as the avatar — no padding, no extra size.
 	return (
 		<div
-			className={['vx-avatar-bordered', `border-${borderCssClass}`, wrapperClassName].filter(Boolean).join(' ')}
+			className={['vx-avatar-bordered', `border-${borderCssClass}`, wrapperCombined].filter(Boolean).join(' ')}
 			style={{
 				width: dim,
 				height: dim,

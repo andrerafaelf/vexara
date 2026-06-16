@@ -43,6 +43,7 @@ function PodiumCard({ player, rank }: { player: GalaxyPlayer; rank: 1 | 2 | 3 })
 					avatarUrlSm={player.avatarUrlSm ?? null}
 					size="md"
 					borderKey={player.avatarBorder ?? null}
+					supporterTier={player.supporterTier ?? null}
 					ariaHidden
 				/>
 			</div>
@@ -227,6 +228,7 @@ export default function PlayersView() {
 													avatarUrlSm={p.avatarUrlSm ?? null}
 													size="sm"
 													borderKey={p.avatarBorder ?? null}
+													supporterTier={p.supporterTier ?? null}
 													ariaHidden
 												/>
 												<div className="plb-td-identity">
