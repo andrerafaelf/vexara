@@ -1,14 +1,9 @@
-import 'dotenv/config';
-import prisma from '../lib/prisma.js';
-
 // Backfill cumulative supporter titles for all existing supporters.
-// A user at a given tier should hold all titles for that tier and below:
-//   recruit  → ['Recruit']
-//   officer  → ['Recruit', 'Officer']
-//   vanguard → ['Recruit', 'Officer', 'Vanguard']
-//   commander (founder) → titles include 'Alpha Commander' instead of 'Commander'
-//
-// This fixes users who donated €25 directly and never received Recruit/Officer.
+// Runs inside the vx-server container where only dist/ is present.
+// Import path points at the compiled output; tsx transpiles this file on the fly.
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore — resolved at runtime inside the container (dist/ not present locally)
+import prisma from '../dist/lib/prisma.js';
 
 type SupporterTier = 'recruit' | 'officer' | 'vanguard' | 'commander';
 
@@ -36,7 +31,6 @@ for (const u of supporters) {
 	const titlesToAdd: string[] = [];
 	for (const [t, title] of Object.entries(TIER_TITLES) as [SupporterTier, string][]) {
 		if (TIER_RANK[t] > TIER_RANK[tier]) continue;
-		// Founders get 'Alpha Commander' instead of 'Commander'
 		const grantTitle = t === 'commander' && u.isFounder ? 'Alpha Commander' : title;
 		if (!earned.includes(grantTitle)) {
 			titlesToAdd.push(grantTitle);
