@@ -109,6 +109,18 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
 	const selected = currentPresetKey(avatarUrl);
 	const canUpload = supporterTier === 'officer' || supporterTier === 'commander';
 
+	// Supporter-tier glow ring around the avatar, mirroring the public profile
+	// (u/[username]) and sidebar call sites. Cyan for commander, amber for
+	// vanguard, slate for officer.
+	const supporterGlowClass =
+		supporterTier === 'officer'
+			? 'supporter-border supporter-border-officer'
+			: supporterTier === 'vanguard'
+				? 'supporter-border supporter-border-vanguard'
+				: supporterTier === 'commander'
+					? 'supporter-border supporter-border-commander'
+					: undefined;
+
 	const ownedBorders = ownedBorderKeys.filter((k) => k.startsWith('border_'));
 	const hasTitles = earnedTitles.length > 0 && !!onTitleChange;
 	const hasBorders = ownedBorders.length > 0 && !!onBorderChange;
@@ -209,6 +221,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
 					avatarUrlSm={avatarUrlSm}
 					px={px}
 					borderKey={borderKey ?? null}
+					wrapperClassName={supporterGlowClass}
 					ariaHidden
 				/>
 				<div className="ps-avatar-edit-overlay" aria-hidden="true">
