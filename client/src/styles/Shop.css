@@ -459,6 +459,20 @@
 	z-index: 1;
 }
 
+/* ── Supporter tier glow on avatar border ────────────────────────────────── */
+.supporter-border {
+	border-radius: var(--radius-sm);
+}
+.supporter-border-officer {
+	box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.45), 0 0 10px rgba(148, 163, 184, 0.2);
+}
+.supporter-border-vanguard {
+	box-shadow: 0 0 0 2px rgba(255, 158, 61, 0.55), 0 0 12px rgba(255, 158, 61, 0.25);
+}
+.supporter-border-commander {
+	box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.6), 0 0 16px rgba(34, 211, 238, 0.3);
+}
+
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 480px) {
 	.shop-page {
@@ -479,6 +493,7 @@
 /* Grounded quartermaster treatment */
 .shop-page {
 	max-width: 1040px;
+	margin: 0 auto;
 	padding: 28px 32px 48px;
 	font-family: var(--font-sans);
 }

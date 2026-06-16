@@ -301,6 +301,62 @@
 	border-bottom-color: var(--accent);
 }
 
+/* ── Title filters (in modal) ── */
+.ps-title-filters {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 0 0 8px;
+	border-bottom: 1px solid var(--border-default);
+	margin-bottom: 8px;
+}
+.ps-title-filter-row {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	flex-wrap: wrap;
+}
+.ps-title-filter-label {
+	font-size: var(--text-xs);
+	color: var(--text-faint);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	min-width: 52px;
+	flex-shrink: 0;
+}
+.ps-title-filter-chips-scroll {
+	display: flex;
+	gap: 4px;
+	flex-wrap: wrap;
+}
+.ps-title-filter-chip {
+	font-size: 11px;
+	font-weight: 500;
+	padding: 3px 8px;
+	border-radius: 99px;
+	border: 1px solid var(--border-default);
+	background: var(--bg-surface-2);
+	color: var(--text-muted);
+	cursor: pointer;
+	white-space: nowrap;
+	transition: border-color 0.12s, background 0.12s, color 0.12s;
+}
+.ps-title-filter-chip:hover {
+	border-color: var(--border-strong);
+	color: var(--text-strong);
+}
+.ps-title-filter-chip--active {
+	border-color: var(--accent);
+	background: rgba(255, 158, 61, 0.12);
+	color: var(--accent);
+}
+.ps-title-filter-empty {
+	font-size: var(--text-sm);
+	color: var(--text-faint);
+	text-align: center;
+	padding: 24px 0;
+}
+
 /* ── Title list (in modal) ── */
 .ps-identity-title-list {
 	display: flex;

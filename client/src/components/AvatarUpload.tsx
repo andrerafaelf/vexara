@@ -1,11 +1,12 @@
 'use client';
 
 import { Pencil, X, Upload } from 'lucide-react';
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { CDN_BASE } from '../data/gameIcons';
 import { setAvatarPreset, setActiveTitle, shopEquipBorder, uploadAvatar } from '../services/api';
 import Avatar from './Avatar';
+import { TITLE_META } from '../constants/titles';
 
 const TROOP_KEYS = [
 	'assaultTrooper',
@@ -39,6 +40,26 @@ function currentPresetKey(avatarUrl: string | null): string | null {
 }
 
 type ModalTab = 'avatar' | 'title' | 'border';
+type TitleSort = 'equipped' | 'az' | 'za' | 'tier-asc' | 'tier-desc';
+
+function parseTitleCategory(title: string): string {
+	const desc = TITLE_META[title];
+	if (!desc) return 'Other';
+	const m = desc.match(/^([^—]+)—/);
+	return m ? m[1].trim() : 'Other';
+}
+
+function parseTitleTier(title: string): number {
+	const desc = TITLE_META[title] ?? '';
+	if (desc.includes('highest tier')) return 5;
+	if (desc.includes('fourth tier')) return 4;
+	if (desc.includes('third tier')) return 3;
+	if (desc.includes('second tier')) return 2;
+	if (desc.includes('first tier') || desc.includes('entry tier')) return 1;
+	return 0;
+}
+
+const TIER_LABELS: Record<number, string> = { 1: 'Tier 1', 2: 'Tier 2', 3: 'Tier 3', 4: 'Tier 4', 5: 'Highest' };
 
 interface AvatarUploadProps {
 	username: string;
@@ -81,6 +102,9 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
 	const [tab, setTab] = useState<ModalTab>('avatar');
 	const [busy, setBusy] = useState<string | null>(null);
 	const [err, setErr] = useState<string | null>(null);
+	const [titleSort, setTitleSort] = useState<TitleSort>('equipped');
+	const [titleCategory, setTitleCategory] = useState<string | null>(null);
+	const [titleTier, setTitleTier] = useState<number | null>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const selected = currentPresetKey(avatarUrl);
 	const canUpload = supporterTier === 'officer' || supporterTier === 'commander';
@@ -88,6 +112,31 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
 	const ownedBorders = ownedBorderKeys.filter((k) => k.startsWith('border_'));
 	const hasTitles = earnedTitles.length > 0 && !!onTitleChange;
 	const hasBorders = ownedBorders.length > 0 && !!onBorderChange;
+
+	const titleCategories = useMemo(
+		() => [...new Set(earnedTitles.map(parseTitleCategory))].sort(),
+		[earnedTitles]
+	);
+
+	const titleTiersAvailable = useMemo(
+		() => [...new Set(earnedTitles.map(parseTitleTier))].filter(Boolean).sort((a, b) => a - b),
+		[earnedTitles]
+	);
+
+	const displayedTitles = useMemo(() => {
+		let list = [...earnedTitles];
+		if (titleCategory) list = list.filter((t) => parseTitleCategory(t) === titleCategory);
+		if (titleTier) list = list.filter((t) => parseTitleTier(t) === titleTier);
+		list.sort((a, b) => {
+			if (titleSort === 'equipped') return a === activeTitle ? -1 : b === activeTitle ? 1 : 0;
+			if (titleSort === 'az') return a.localeCompare(b);
+			if (titleSort === 'za') return b.localeCompare(a);
+			if (titleSort === 'tier-asc') return parseTitleTier(a) - parseTitleTier(b);
+			if (titleSort === 'tier-desc') return parseTitleTier(b) - parseTitleTier(a);
+			return 0;
+		});
+		return list;
+	}, [earnedTitles, titleSort, titleCategory, titleTier, activeTitle]);
 
 	async function pick(key: TroopKey) {
 		if (busy || key === selected) { setOpen(false); return; }
@@ -270,10 +319,65 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
 
 						{/* TITLE */}
 						{tab === 'title' && hasTitles && (
-							<div className="ps-identity-title-list">
-								{[...earnedTitles]
-									.sort((a, b) => (a === activeTitle ? -1 : b === activeTitle ? 1 : 0))
-									.map((title) => {
+							<>
+								<div className="ps-title-filters">
+									<div className="ps-title-filter-row">
+										<span className="ps-title-filter-label">Sort</span>
+										{(['equipped', 'az', 'za', 'tier-asc', 'tier-desc'] as TitleSort[]).map((s) => (
+											<button
+												key={s}
+												type="button"
+												className={`ps-title-filter-chip${titleSort === s ? ' ps-title-filter-chip--active' : ''}`}
+												onClick={() => setTitleSort(s)}
+											>
+												{s === 'equipped' ? 'Equipped first' : s === 'az' ? 'A–Z' : s === 'za' ? 'Z–A' : s === 'tier-asc' ? 'Tier ↑' : 'Tier ↓'}
+											</button>
+										))}
+									</div>
+									{titleCategories.length > 1 && (
+										<div className="ps-title-filter-row">
+											<span className="ps-title-filter-label">Category</span>
+											<div className="ps-title-filter-chips-scroll">
+												<button
+													type="button"
+													className={`ps-title-filter-chip${titleCategory === null ? ' ps-title-filter-chip--active' : ''}`}
+													onClick={() => setTitleCategory(null)}
+												>
+													All
+												</button>
+												{titleCategories.map((cat) => (
+													<button
+														key={cat}
+														type="button"
+														className={`ps-title-filter-chip${titleCategory === cat ? ' ps-title-filter-chip--active' : ''}`}
+														onClick={() => setTitleCategory(titleCategory === cat ? null : cat)}
+													>
+														{cat}
+													</button>
+												))}
+											</div>
+										</div>
+									)}
+									{titleTiersAvailable.length > 1 && (
+										<div className="ps-title-filter-row">
+											<span className="ps-title-filter-label">Tier</span>
+											{titleTiersAvailable.map((t) => (
+												<button
+													key={t}
+													type="button"
+													className={`ps-title-filter-chip${titleTier === t ? ' ps-title-filter-chip--active' : ''}`}
+													onClick={() => setTitleTier(titleTier === t ? null : t)}
+												>
+													{TIER_LABELS[t] ?? `Tier ${t}`}
+												</button>
+											))}
+										</div>
+									)}
+								</div>
+								<div className="ps-identity-title-list">
+									{displayedTitles.length === 0 ? (
+										<p className="ps-title-filter-empty">No titles match these filters.</p>
+									) : displayedTitles.map((title) => {
 										const isActive = activeTitle === title;
 										const isBusy = busy === title;
 										return (
@@ -291,7 +395,8 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
 											</button>
 										);
 									})}
-							</div>
+								</div>
+							</>
 						)}
 
 						{/* BORDER */}
