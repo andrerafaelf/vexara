@@ -114,6 +114,64 @@ export default function DashboardLogistics({ nexuses, onSend }: Props) {
 				</table>
 			</div>
 
+			{/* Mobile card stack — shown below 600 px, table hidden via CSS */}
+			<div className="log-cards">
+				{rows.map(({ nexus, live }) => (
+					<div key={nexus._id} className="log-nexus-card">
+						<div className="log-nexus-card-header">
+							<div>
+								<div className="log-nexus-card-name">{nexus.name}</div>
+								<div className="log-nexus-card-coords">
+									({nexus.x}|{nexus.y})
+								</div>
+							</div>
+							<button
+								type="button"
+								className="log-nexus-card-send"
+								onClick={() => onSend({ fromNexusId: nexus._id, suggest: 'topup' })}
+							>
+								Send
+							</button>
+						</div>
+						<div className="log-nexus-card-resources">
+							{RES_KINDS.map((res) => {
+								const val = live[res];
+								const ratio = live.cap > 0 ? val / live.cap : 0;
+								const stateClass =
+									ratio <= DEFICIT_RATIO
+										? 'log-nexus-card-res--deficit'
+										: ratio >= SURPLUS_RATIO
+											? 'log-nexus-card-res--surplus'
+											: '';
+								return (
+									<div key={res} className={`log-nexus-card-res ${stateClass}`}>
+										<div className="log-nexus-card-res-label">
+											<ResourceIcon kind={res} size={11} />
+											{res.charAt(0).toUpperCase() + res.slice(1)}
+										</div>
+										<div className="log-nexus-card-res-amount">
+											{fmtAmount(val)}
+											<span className="log-nexus-card-res-cap">
+												/{fmtAmount(live.cap)}
+											</span>
+										</div>
+										<span className="log-bar-wrap">
+											<span
+												className="log-bar"
+												style={{ width: `${Math.min(100, ratio * 100)}%` }}
+											/>
+										</span>
+										<div className="log-nexus-card-res-rate">
+											{fmtRate(live.prod[res])}
+										</div>
+									</div>
+								);
+							})}
+						</div>
+					</div>
+				))}
+			</div>
+
 			<p className="log-legend">
 				<span className="log-legend-dot log-legend-dot--surplus" /> near full ·{' '}
 				<span className="log-legend-dot log-legend-dot--deficit" /> running low
