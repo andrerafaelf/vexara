@@ -161,7 +161,20 @@ export async function getChallenges(req: AuthRequest, res: Response): Promise<vo
 			return;
 		}
 
-		const [allAttacks, nexuses, marketTrades, seasonRecords, referralCount, nexusTroopsTrained] = await Promise.all([
+		const [
+			allAttacks,
+			nexuses,
+			marketTrades,
+			seasonRecords,
+			referralCount,
+			nexusTroopsTrained,
+			referredUsers,
+			factionMessages,
+			treaties,
+			factionsJoined,
+			dailyStreaks,
+			galaxyPlayers,
+		] = await Promise.all([
 			// All completed attacks across all galaxies for lifetime combat stats
 			prisma.attack.findMany({
 				where: {
@@ -182,7 +195,7 @@ export async function getChallenges(req: AuthRequest, res: Response): Promise<vo
 				},
 				select: { offerAmount: true, wantAmount: true },
 			}),
-			// Season records for best single-galaxy score
+			// Season records for best single-galaxy score and total career points
 			prisma.seasonRecord.findMany({
 				where: { userId },
 				select: { points: true },
@@ -193,6 +206,32 @@ export async function getChallenges(req: AuthRequest, res: Response): Promise<vo
 			prisma.nexus.findMany({
 				where: { ownerId: userId },
 				select: { troopsTrained: true },
+			}),
+			// Referred users' lifetime points for Mentor challenge
+			prisma.user.findMany({
+				where: { referredById: userId },
+				select: { lifetimePoints: true },
+			}),
+			// Faction messages sent by this user
+			prisma.factionMessage.count({ where: { userId } }),
+			// Treaties proposed or accepted by this user
+			prisma.factionTreaty.count({
+				where: {
+					status: 'active',
+					OR: [{ proposedByUserId: userId }, { acceptedByUserId: userId }],
+				},
+			}),
+			// Distinct factions joined across all galaxies
+			prisma.factionMember.count({ where: { userId } }),
+			// Daily streak records for longestStreak
+			prisma.dailyStreak.findMany({
+				where: { userId },
+				select: { longestStreak: true },
+			}),
+			// GalaxyPlayer rows for completedQuestIds
+			prisma.galaxyPlayer.findMany({
+				where: { userId },
+				select: { completedQuestIds: true },
 			}),
 		]);
 
@@ -209,6 +248,8 @@ export async function getChallenges(req: AuthRequest, res: Response): Promise<vo
 		let perfectVictories = 0;
 		let resourcesStolen = 0;
 		let resourcesLost = 0;
+		const attackedPlayerIds = new Set<number>();
+		const incomingPlayerIds = new Set<number>();
 
 		for (const attack of allAttacks) {
 			const result = attack.result as Record<string, unknown> | null;
@@ -227,6 +268,7 @@ export async function getChallenges(req: AuthRequest, res: Response): Promise<vo
 					supportMissionsSent++;
 				} else {
 					attacksLaunched++;
+					if (attack.defenderUserId != null) attackedPlayerIds.add(attack.defenderUserId);
 					if (won) {
 						victories++;
 						if (result.nexusCaptured) nexusesCaptured++;
@@ -245,6 +287,7 @@ export async function getChallenges(req: AuthRequest, res: Response): Promise<vo
 			}
 			if (isDefender) {
 				attacksDefended++;
+				if (attack.attackerUserId != null) incomingPlayerIds.add(attack.attackerUserId);
 				if (!won) {
 					defenseVictories++;
 				} else if (stolen) {
@@ -272,8 +315,26 @@ export async function getChallenges(req: AuthRequest, res: Response): Promise<vo
 			totalTradeVolume += (trade.offerAmount || 0) + (trade.wantAmount || 0);
 		}
 
-		// Best single-galaxy points from SeasonRecord
-		const bestGalaxyPoints = seasonRecords.reduce((best, r) => Math.max(best, r.points), 0);
+		// Best single-galaxy points and total career points from SeasonRecord
+		let bestGalaxyPoints = 0;
+		let totalSeasonPoints = 0;
+		for (const r of seasonRecords) {
+			if (r.points > bestGalaxyPoints) bestGalaxyPoints = r.points;
+			totalSeasonPoints += r.points;
+		}
+
+		// Mentor influence — sum of lifetimePoints of all referred users
+		const mentorInfluence = referredUsers.reduce((sum, u) => sum + u.lifetimePoints, 0);
+
+		// Longest quest streak across all galaxies
+		const longestQuestStreak = dailyStreaks.reduce((best, s) => Math.max(best, s.longestStreak), 0);
+
+		// Total quests completed across all GalaxyPlayer rows
+		let questsCompleted = 0;
+		for (const gp of galaxyPlayers) {
+			const ids = gp.completedQuestIds as string[] | null;
+			if (Array.isArray(ids)) questsCompleted += ids.length;
+		}
 
 		const accountAgeDays = Math.max(
 			1,
@@ -294,12 +355,21 @@ export async function getChallenges(req: AuthRequest, res: Response): Promise<vo
 			perfectVictories,
 			resourcesStolen,
 			resourcesLost,
+			uniquePlayersAttacked: attackedPlayerIds.size,
+			uniquePlayersDefendedAgainst: incomingPlayerIds.size,
 			nexusCount: nexuses,
 			lifetimePoints: userRow.lifetimePoints,
 			totalTroopsEverTrained,
 			galaxiesWon: userRow.galaxiesWon,
 			galaxiesPlayed: userRow.galaxiesPlayed,
 			bestGalaxyPoints,
+			totalSeasonPoints,
+			factionMessagesSent: factionMessages,
+			treatiesSigned: treaties,
+			factionsJoined,
+			mentorInfluence,
+			longestQuestStreak,
+			questsCompleted,
 			tradesMade,
 			totalTradeVolume,
 			accountAgeDays,

@@ -33,6 +33,8 @@ export interface ChallengeStats {
 	perfectVictories: number;        // won with 0 troops lost
 	resourcesStolen: number;
 	resourcesLost: number;
+	uniquePlayersAttacked: number;   // distinct enemy players attacked
+	uniquePlayersDefendedAgainst: number; // distinct players who attacked you
 	// empire — from Nexus + User rows
 	nexusCount: number;
 	lifetimePoints: number;
@@ -41,12 +43,20 @@ export interface ChallengeStats {
 	galaxiesWon: number;
 	galaxiesPlayed: number;
 	bestGalaxyPoints: number;
+	totalSeasonPoints: number;       // sum of all season record points
 	// economy — from MarketTransaction rows
 	tradesMade: number;
 	totalTradeVolume: number;
-	// loyalty — from User
+	// social — from Faction/Treaty/Message rows
+	factionMessagesSent: number;
+	treatiesSigned: number;
+	factionsJoined: number;
+	// loyalty — from User + referrals
 	accountAgeDays: number;
 	referralCount: number;
+	mentorInfluence: number;         // sum of lifetimePoints of all referred users
+	longestQuestStreak: number;      // best daily quest streak across all galaxies
+	questsCompleted: number;         // total individual quests completed all-time
 }
 
 export interface ChallengeProgress {
@@ -1657,6 +1667,614 @@ export const CHALLENGE_DEFS: ChallengeDefinition[] = [
 			{ threshold: 15,  title: 'Immaculate Record' },
 			{ threshold: 50,  title: 'Deathless' },
 			{ threshold: 150, title: 'Beyond Reach' },
+		],
+	},
+
+	// ═══════════════════════════════════════════════════════════════════════════
+	// MENTOR / REFERRAL DEPTH
+	// ═══════════════════════════════════════════════════════════════════════════
+
+	{
+		id: 'mentor',
+		name: 'Mentor',
+		description: "Guide new commanders to greatness — your referred players' combined lifetime influence.",
+		category: 'loyalty',
+		rarity: 'legendary',
+		stat: 'mentorInfluence',
+		unit: 'influence',
+		tiers: [
+			{ threshold: 10_000,     title: 'Sponsor' },
+			{ threshold: 100_000,    title: 'Mentor' },
+			{ threshold: 500_000,    title: 'Master Mentor' },
+			{ threshold: 2_000_000,  title: 'Kingmaker' },
+			{ threshold: 10_000_000, title: 'Architect of Empires' },
+		],
+	},
+
+	// ═══════════════════════════════════════════════════════════════════════════
+	// UNIQUE PLAYER TARGETING — rewards breadth of aggression
+	// ═══════════════════════════════════════════════════════════════════════════
+
+	{
+		id: 'man_hunter',
+		name: 'Man Hunter',
+		description: 'Attack many different unique commanders across your career.',
+		category: 'combat',
+		rarity: 'epic',
+		stat: 'uniquePlayersAttacked',
+		unit: 'players',
+		tiers: [
+			{ threshold: 3,   title: 'Aggressor' },
+			{ threshold: 10,  title: 'Pursuer' },
+			{ threshold: 30,  title: 'Man Hunter' },
+			{ threshold: 75,  title: 'The Relentless' },
+			{ threshold: 200, title: 'Face of Fear' },
+		],
+	},
+	{
+		id: 'wanted',
+		name: 'Wanted',
+		description: 'Be targeted by many unique commanders — a sign you matter.',
+		category: 'combat',
+		rarity: 'rare',
+		stat: 'uniquePlayersDefendedAgainst',
+		unit: 'players',
+		tiers: [
+			{ threshold: 2,  title: 'On the Radar' },
+			{ threshold: 8,  title: 'Wanted' },
+			{ threshold: 25, title: 'Public Enemy' },
+			{ threshold: 60, title: 'Most Wanted' },
+			{ threshold: 150, title: 'The Marked One' },
+		],
+	},
+	{
+		id: 'grudge_match',
+		name: 'Grudge Match',
+		description: 'Build a reputation that draws enemies from across the galaxy.',
+		category: 'combat',
+		rarity: 'legendary',
+		stat: 'uniquePlayersAttacked',
+		unit: 'players',
+		tiers: [
+			{ threshold: 5,   title: 'Known' },
+			{ threshold: 20,  title: 'Notorious' },
+			{ threshold: 50,  title: 'Grudge Match' },
+			{ threshold: 125, title: 'The Enemy of All' },
+		],
+	},
+	{
+		id: 'nemesis',
+		name: 'Nemesis',
+		description: 'Become the nemesis of countless commanders who dare attack you.',
+		category: 'combat',
+		rarity: 'epic',
+		stat: 'uniquePlayersDefendedAgainst',
+		unit: 'players',
+		tiers: [
+			{ threshold: 5,  title: 'Rival' },
+			{ threshold: 15, title: 'Nemesis' },
+			{ threshold: 40, title: 'Arch-Nemesis' },
+			{ threshold: 100, title: 'The Inevitable Fate' },
+		],
+	},
+
+	// ═══════════════════════════════════════════════════════════════════════════
+	// FACTION / SOCIAL
+	// ═══════════════════════════════════════════════════════════════════════════
+
+	{
+		id: 'voice_of_the_faction',
+		name: 'Voice of the Faction',
+		description: 'Send messages in faction chat — be an active presence in your alliance.',
+		category: 'loyalty',
+		rarity: 'common',
+		stat: 'factionMessagesSent',
+		unit: 'messages',
+		tiers: [
+			{ threshold: 10,  title: 'Communicator' },
+			{ threshold: 50,  title: 'Active Voice' },
+			{ threshold: 200, title: 'Faction Speaker' },
+			{ threshold: 500, title: 'Voice of the Faction' },
+		],
+	},
+	{
+		id: 'orator',
+		name: 'Orator',
+		description: 'Become a prolific communicator within your faction.',
+		category: 'loyalty',
+		rarity: 'rare',
+		stat: 'factionMessagesSent',
+		unit: 'messages',
+		tiers: [
+			{ threshold: 25,   title: 'Chatty' },
+			{ threshold: 100,  title: 'Vocal' },
+			{ threshold: 400,  title: 'Orator' },
+			{ threshold: 1_000, title: 'The Grand Orator' },
+		],
+	},
+	{
+		id: 'the_diplomat',
+		name: 'The Diplomat',
+		description: 'Sign treaties with other factions — peace and war through negotiation.',
+		category: 'loyalty',
+		rarity: 'epic',
+		stat: 'treatiesSigned',
+		unit: 'treaties',
+		tiers: [
+			{ threshold: 1,  title: 'Negotiator' },
+			{ threshold: 5,  title: 'Diplomat' },
+			{ threshold: 15, title: 'Grand Diplomat' },
+			{ threshold: 40, title: 'Peacekeeper' },
+		],
+	},
+	{
+		id: 'faction_veteran',
+		name: 'Faction Veteran',
+		description: 'Join and fight alongside factions across many galaxy seasons.',
+		category: 'loyalty',
+		rarity: 'rare',
+		stat: 'factionsJoined',
+		unit: 'factions',
+		tiers: [
+			{ threshold: 1,  title: 'Enlisted' },
+			{ threshold: 3,  title: 'Seasoned Member' },
+			{ threshold: 7,  title: 'Faction Veteran' },
+			{ threshold: 15, title: 'Eternal Faction Warrior' },
+		],
+	},
+	{
+		id: 'coalition_builder',
+		name: 'Coalition Builder',
+		description: 'Forge alliances across dozens of factions over your career.',
+		category: 'loyalty',
+		rarity: 'legendary',
+		stat: 'treatiesSigned',
+		unit: 'treaties',
+		tiers: [
+			{ threshold: 3,  title: 'Alliance Seeker' },
+			{ threshold: 10, title: 'Coalition Architect' },
+			{ threshold: 30, title: 'Coalition Builder' },
+			{ threshold: 75, title: 'Lord of Pacts' },
+		],
+	},
+	{
+		id: 'faction_loyalist',
+		name: 'Faction Loyalist',
+		description: 'Fight under many banners across seasons.',
+		category: 'loyalty',
+		rarity: 'common',
+		stat: 'factionsJoined',
+		unit: 'factions',
+		tiers: [
+			{ threshold: 1,  title: 'Recruit' },
+			{ threshold: 2,  title: 'Affiliated' },
+			{ threshold: 5,  title: 'Faction Loyalist' },
+			{ threshold: 10, title: 'Banner Bearer' },
+		],
+	},
+
+	// ═══════════════════════════════════════════════════════════════════════════
+	// QUEST / STREAK
+	// ═══════════════════════════════════════════════════════════════════════════
+
+	{
+		id: 'daily_grind',
+		name: 'Daily Grind',
+		description: 'Complete daily quests consistently — build the longest streak you can.',
+		category: 'loyalty',
+		rarity: 'rare',
+		stat: 'longestQuestStreak',
+		unit: 'day streak',
+		tiers: [
+			{ threshold: 3,  title: 'Consistent' },
+			{ threshold: 7,  title: 'Week Warrior' },
+			{ threshold: 14, title: 'Fortnight Commander' },
+			{ threshold: 30, title: 'Iron Routine' },
+		],
+	},
+	{
+		id: 'streak_legend',
+		name: 'Streak Legend',
+		description: 'Achieve an extraordinary quest streak without missing a single day.',
+		category: 'loyalty',
+		rarity: 'legendary',
+		stat: 'longestQuestStreak',
+		unit: 'day streak',
+		tiers: [
+			{ threshold: 7,  title: 'Unbroken Week' },
+			{ threshold: 21, title: 'Three Week Run' },
+			{ threshold: 60, title: 'Streak Legend' },
+			{ threshold: 100, title: 'The Unbreakable Routine' },
+		],
+	},
+	{
+		id: 'quest_machine',
+		name: 'Quest Machine',
+		description: 'Complete a massive number of daily quests across all seasons.',
+		category: 'loyalty',
+		rarity: 'epic',
+		stat: 'questsCompleted',
+		unit: 'quests',
+		tiers: [
+			{ threshold: 10,  title: 'Diligent' },
+			{ threshold: 50,  title: 'Tasked' },
+			{ threshold: 150, title: 'Quest Machine' },
+			{ threshold: 500, title: 'Eternal Operative' },
+		],
+	},
+	{
+		id: 'grind_eternal',
+		name: 'Grind Eternal',
+		description: 'Complete thousands of quests across your entire career.',
+		category: 'loyalty',
+		rarity: 'legendary',
+		stat: 'questsCompleted',
+		unit: 'quests',
+		tiers: [
+			{ threshold: 30,   title: 'Grinder' },
+			{ threshold: 100,  title: 'Mission Veteran' },
+			{ threshold: 300,  title: 'Grind Eternal' },
+			{ threshold: 1_000, title: 'The Endless Operative' },
+		],
+	},
+
+	// ═══════════════════════════════════════════════════════════════════════════
+	// TOTAL CAREER POINTS
+	// ═══════════════════════════════════════════════════════════════════════════
+
+	{
+		id: 'career_total',
+		name: 'Career Total',
+		description: 'Accumulate total influence points across every season ever played.',
+		category: 'galaxy',
+		rarity: 'epic',
+		stat: 'totalSeasonPoints',
+		unit: 'points',
+		tiers: [
+			{ threshold: 5_000,    title: 'Noted Participant' },
+			{ threshold: 50_000,   title: 'Career Veteran' },
+			{ threshold: 250_000,  title: 'Career Force' },
+			{ threshold: 1_000_000, title: 'Career Total' },
+		],
+	},
+	{
+		id: 'scoreboard_titan',
+		name: 'Scoreboard Titan',
+		description: 'Rack up points across every galaxy you enter — total career score.',
+		category: 'galaxy',
+		rarity: 'legendary',
+		stat: 'totalSeasonPoints',
+		unit: 'points',
+		tiers: [
+			{ threshold: 25_000,    title: 'Scorer' },
+			{ threshold: 200_000,   title: 'Scoreboard Regular' },
+			{ threshold: 750_000,   title: 'Scoreboard Titan' },
+			{ threshold: 3_000_000, title: 'The Unapproachable' },
+		],
+	},
+
+	// ═══════════════════════════════════════════════════════════════════════════
+	// CREATIVE COMBAT
+	// ═══════════════════════════════════════════════════════════════════════════
+
+	{
+		id: 'the_widowmaker',
+		name: 'The Widowmaker',
+		description: 'Destroy so many enemy troops that entire armies are wiped from history.',
+		category: 'combat',
+		rarity: 'legendary',
+		stat: 'troopsKilled',
+		unit: 'troops',
+		tiers: [
+			{ threshold: 3_000,   title: 'Dangerous' },
+			{ threshold: 12_000,  title: 'Lethal' },
+			{ threshold: 35_000,  title: 'The Widowmaker' },
+			{ threshold: 100_000, title: 'Harbinger of Ruin' },
+		],
+	},
+	{
+		id: 'tide_of_battle',
+		name: 'Tide of Battle',
+		description: 'Win and lose battles in equal measure — a commander forged in the chaos of war.',
+		category: 'combat',
+		rarity: 'rare',
+		stat: 'attacksLaunched',
+		unit: 'attacks',
+		tiers: [
+			{ threshold: 20,  title: 'In the Fray' },
+			{ threshold: 80,  title: 'Tide Rider' },
+			{ threshold: 250, title: 'Tide of Battle' },
+			{ threshold: 700, title: 'The War Itself' },
+		],
+	},
+	{
+		id: 'scarred_veteran',
+		name: 'Scarred Veteran',
+		description: 'Take losses in the hundreds of thousands — and keep fighting.',
+		category: 'combat',
+		rarity: 'legendary',
+		stat: 'troopsLost',
+		unit: 'troops',
+		tiers: [
+			{ threshold: 2_000,  title: 'Bloodied Commander' },
+			{ threshold: 10_000, title: 'Scarred' },
+			{ threshold: 40_000, title: 'Scarred Veteran' },
+			{ threshold: 120_000, title: 'The Walking Wound' },
+		],
+	},
+	{
+		id: 'iron_discipline',
+		name: 'Iron Discipline',
+		description: 'Maintain a flawless record — win battles without taking any losses at all.',
+		category: 'combat',
+		rarity: 'legendary',
+		stat: 'perfectVictories',
+		unit: 'flawless wins',
+		tiers: [
+			{ threshold: 8,   title: 'Disciplined' },
+			{ threshold: 25,  title: 'Iron Discipline' },
+			{ threshold: 75,  title: 'Zero Tolerance' },
+			{ threshold: 200, title: 'The Perfect Commander' },
+		],
+	},
+	{
+		id: 'eyes_everywhere',
+		name: 'Eyes Everywhere',
+		description: 'Build a complete picture of the galaxy through relentless scouting.',
+		category: 'combat',
+		rarity: 'legendary',
+		stat: 'scoutsMade',
+		unit: 'scouts',
+		tiers: [
+			{ threshold: 20,  title: 'Informed' },
+			{ threshold: 75,  title: 'Watchful' },
+			{ threshold: 250, title: 'Eyes Everywhere' },
+			{ threshold: 750, title: 'Omniscient Commander' },
+		],
+	},
+
+	// ═══════════════════════════════════════════════════════════════════════════
+	// CREATIVE EMPIRE
+	// ═══════════════════════════════════════════════════════════════════════════
+
+	{
+		id: 'industrial_complex',
+		name: 'Industrial Complex',
+		description: 'Train armies so vast they reshape the galaxy — lifetime troops trained.',
+		category: 'empire',
+		rarity: 'legendary',
+		stat: 'totalTroopsEverTrained',
+		unit: 'troops',
+		tiers: [
+			{ threshold: 5_000,    title: 'Armament Depot' },
+			{ threshold: 30_000,   title: 'War Factory' },
+			{ threshold: 150_000,  title: 'Industrial Complex' },
+			{ threshold: 1_000_000, title: 'Planet Forge' },
+		],
+	},
+	{
+		id: 'ghost_empire',
+		name: 'Ghost Empire',
+		description: 'Dominate galaxies from the shadows — accumulate vast hidden influence.',
+		category: 'empire',
+		rarity: 'legendary',
+		stat: 'lifetimePoints',
+		unit: 'influence',
+		tiers: [
+			{ threshold: 75_000,    title: 'Shadow Presence' },
+			{ threshold: 350_000,   title: 'Ghost Power' },
+			{ threshold: 1_500_000, title: 'Ghost Empire' },
+			{ threshold: 8_000_000, title: 'The Invisible Hand' },
+		],
+	},
+	{
+		id: 'warlord_of_nexuses',
+		name: 'Warlord of Nexuses',
+		description: 'Command enormous nexus holdings across active galaxies.',
+		category: 'empire',
+		rarity: 'epic',
+		stat: 'nexusCount',
+		unit: 'nexuses',
+		tiers: [
+			{ threshold: 7,  title: 'Regional Commander' },
+			{ threshold: 16, title: 'Strategic Commander' },
+			{ threshold: 28, title: 'Warlord of Nexuses' },
+			{ threshold: 45, title: 'Galactic Overlord' },
+		],
+	},
+
+	// ═══════════════════════════════════════════════════════════════════════════
+	// CREATIVE ECONOMY
+	// ═══════════════════════════════════════════════════════════════════════════
+
+	{
+		id: 'cartels',
+		name: 'Cartels',
+		description: 'Control the galactic economy through sheer volume of transactions.',
+		category: 'economy',
+		rarity: 'legendary',
+		stat: 'tradesMade',
+		unit: 'trades',
+		tiers: [
+			{ threshold: 20,  title: 'Corner Dealer' },
+			{ threshold: 75,  title: 'Cartel Associate' },
+			{ threshold: 250, title: 'Cartel Boss' },
+			{ threshold: 750, title: 'Cartels' },
+		],
+	},
+	{
+		id: 'spoils_of_victory',
+		name: 'Spoils of Victory',
+		description: 'Turn every battle into a wealth-generating opportunity.',
+		category: 'economy',
+		rarity: 'epic',
+		stat: 'resourcesStolen',
+		unit: 'resources',
+		tiers: [
+			{ threshold: 75_000,    title: 'Opportunist' },
+			{ threshold: 400_000,   title: 'Spoils Collector' },
+			{ threshold: 2_000_000, title: 'Spoils of Victory' },
+			{ threshold: 8_000_000, title: 'Conquest Banker' },
+		],
+	},
+	{
+		id: 'economic_warfare',
+		name: 'Economic Warfare',
+		description: 'Drain enemy economies through relentless raiding — resources lost by enemies.',
+		category: 'economy',
+		rarity: 'legendary',
+		stat: 'resourcesStolen',
+		unit: 'resources',
+		tiers: [
+			{ threshold: 150_000,    title: 'Economic Raider' },
+			{ threshold: 1_000_000,  title: 'Economic Aggressor' },
+			{ threshold: 5_000_000,  title: 'Economic Warfare' },
+			{ threshold: 20_000_000, title: 'Destroyer of Economies' },
+		],
+	},
+	{
+		id: 'price_gouger',
+		name: 'Price Gouger',
+		description: 'Push enormous quantities of resources through the market at volume.',
+		category: 'economy',
+		rarity: 'rare',
+		stat: 'totalTradeVolume',
+		unit: 'resources',
+		tiers: [
+			{ threshold: 75_000,    title: 'Volume Trader' },
+			{ threshold: 750_000,   title: 'Price Setter' },
+			{ threshold: 7_500_000, title: 'Price Gouger' },
+			{ threshold: 40_000_000, title: 'Market Dictator' },
+		],
+	},
+	{
+		id: 'blood_money',
+		name: 'Blood Money',
+		description: 'Fund your entire operation from stolen resources alone.',
+		category: 'economy',
+		rarity: 'legendary',
+		stat: 'resourcesStolen',
+		unit: 'resources',
+		tiers: [
+			{ threshold: 300_000,    title: 'Profiteer' },
+			{ threshold: 2_000_000,  title: 'Blood Money' },
+			{ threshold: 12_000_000, title: 'War Treasury' },
+			{ threshold: 60_000_000, title: 'The Crimson Vault' },
+		],
+	},
+
+	// ═══════════════════════════════════════════════════════════════════════════
+	// CREATIVE GALAXY
+	// ═══════════════════════════════════════════════════════════════════════════
+
+	{
+		id: 'all_time_great',
+		name: 'All Time Great',
+		description: 'Accumulate a career total score that cements your legacy forever.',
+		category: 'galaxy',
+		rarity: 'legendary',
+		stat: 'totalSeasonPoints',
+		unit: 'points',
+		tiers: [
+			{ threshold: 10_000,    title: 'Notable' },
+			{ threshold: 100_000,   title: 'Well Known' },
+			{ threshold: 500_000,   title: 'All Time Great' },
+			{ threshold: 2_000_000, title: 'Living Monument' },
+		],
+	},
+	{
+		id: 'serial_winner',
+		name: 'Serial Winner',
+		description: 'Win galaxy after galaxy — your name synonymous with victory.',
+		category: 'galaxy',
+		rarity: 'legendary',
+		stat: 'galaxiesWon',
+		unit: 'wins',
+		tiers: [
+			{ threshold: 2,  title: 'Back to Back' },
+			{ threshold: 5,  title: 'Serial Winner' },
+			{ threshold: 10, title: 'Dynasty Maker' },
+			{ threshold: 20, title: 'Unchallenged' },
+		],
+	},
+	{
+		id: 'comeback_kid',
+		name: 'Comeback Kid',
+		description: 'Play season after season no matter the result — resilience incarnate.',
+		category: 'galaxy',
+		rarity: 'epic',
+		stat: 'galaxiesPlayed',
+		unit: 'seasons',
+		tiers: [
+			{ threshold: 2,  title: 'Returned' },
+			{ threshold: 5,  title: 'Persistent' },
+			{ threshold: 10, title: 'Comeback Kid' },
+			{ threshold: 20, title: 'Never Say Die' },
+		],
+	},
+
+	// ═══════════════════════════════════════════════════════════════════════════
+	// CREATIVE LOYALTY
+	// ═══════════════════════════════════════════════════════════════════════════
+
+	{
+		id: 'the_patron',
+		name: 'The Patron',
+		description: 'Your referred players build empires — their influence is your legacy.',
+		category: 'loyalty',
+		rarity: 'legendary',
+		stat: 'mentorInfluence',
+		unit: 'influence',
+		tiers: [
+			{ threshold: 5_000,      title: 'Backer' },
+			{ threshold: 50_000,     title: 'The Patron' },
+			{ threshold: 250_000,    title: 'Legacy Builder' },
+			{ threshold: 1_000_000,  title: 'Empire by Proxy' },
+		],
+	},
+	{
+		id: 'living_legend',
+		name: 'Living Legend',
+		description: 'Survive and thrive for so long you become part of the galaxy itself.',
+		category: 'loyalty',
+		rarity: 'legendary',
+		stat: 'accountAgeDays',
+		unit: 'days',
+		tiers: [
+			{ threshold: 180,   title: 'Established' },
+			{ threshold: 365,   title: 'Year One Legend' },
+			{ threshold: 730,   title: 'Living Legend' },
+			{ threshold: 1_460, title: 'Eternal Presence' },
+		],
+	},
+	{
+		id: 'the_godfather',
+		name: 'The Godfather',
+		description: 'Bring so many commanders into Vexara you become a founding figure.',
+		category: 'loyalty',
+		rarity: 'legendary',
+		stat: 'referralCount',
+		unit: 'referrals',
+		tiers: [
+			{ threshold: 10,  title: 'Recruiter' },
+			{ threshold: 30,  title: 'Talent Scout' },
+			{ threshold: 75,  title: 'The Godfather' },
+			{ threshold: 250, title: 'Father of the Galaxy' },
+		],
+	},
+	{
+		id: 'never_offline',
+		name: 'Never Offline',
+		description: 'Achieve an extraordinary daily quest streak — never miss a day.',
+		category: 'loyalty',
+		rarity: 'legendary',
+		stat: 'longestQuestStreak',
+		unit: 'day streak',
+		tiers: [
+			{ threshold: 14,  title: 'Reliable' },
+			{ threshold: 30,  title: 'Always On' },
+			{ threshold: 60,  title: 'Never Offline' },
+			{ threshold: 120, title: 'The Eternal Operator' },
 		],
 	},
 

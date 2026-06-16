@@ -67,6 +67,7 @@
 	flex-direction: column;
 	gap: 16px;
 	max-width: 400px;
+	margin-left: 20px;
 }
 
 .ps-pw-field {

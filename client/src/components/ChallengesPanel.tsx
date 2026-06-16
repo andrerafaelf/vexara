@@ -31,27 +31,34 @@ interface ChallengeProgress {
 
 type FilterMode = 'all' | ChallengeCategory | ChallengeRarity;
 
-const CATEGORY_META: Record<ChallengeCategory, { label: string; icon: string }> = {
-	combat:  { label: 'Combat',  icon: '⚔️' },
-	empire:  { label: 'Empire',  icon: '🏛️' },
-	galaxy:  { label: 'Galaxy',  icon: '🌌' },
-	economy: { label: 'Economy', icon: '📦' },
-	loyalty: { label: 'Loyalty', icon: '🛡️' },
-};
-
-const RARITY_ORDER: ChallengeRarity[] = ['legendary', 'epic', 'rare', 'common'];
 const CATEGORY_ORDER: ChallengeCategory[] = ['combat', 'empire', 'galaxy', 'economy', 'loyalty'];
 
+const CATEGORY_META: Record<ChallengeCategory, { label: string; abbrev: string }> = {
+	combat:  { label: 'Combat',  abbrev: 'CMB' },
+	empire:  { label: 'Empire',  abbrev: 'EMP' },
+	galaxy:  { label: 'Galaxy',  abbrev: 'GAL' },
+	economy: { label: 'Economy', abbrev: 'ECO' },
+	loyalty: { label: 'Loyalty', abbrev: 'LOY' },
+};
+
+const RARITY_LABEL: Record<ChallengeRarity, string> = {
+	common:    'Common',
+	rare:      'Rare',
+	epic:      'Epic',
+	legendary: 'Legendary',
+};
+
 function fmt(n: number, unit?: string): string {
-	const s = n >= 1_000_000
-		? (n / 1_000_000).toFixed(1) + 'M'
-		: n >= 1_000
-		? (n / 1_000).toFixed(1) + 'K'
-		: String(Math.round(n));
+	const s =
+		n >= 1_000_000
+			? (n / 1_000_000).toFixed(1) + 'M'
+			: n >= 1_000
+			? (n / 1_000).toFixed(1) + 'K'
+			: String(Math.round(n));
 	return unit ? `${s} ${unit}` : s;
 }
 
-function TierPips({
+function TierRow({
 	tiers,
 	completedTierIndex,
 	rarity,
@@ -61,7 +68,7 @@ function TierPips({
 	rarity: ChallengeRarity;
 }) {
 	return (
-		<div className="cp-tiers">
+		<div className="cp-tier-row">
 			{tiers.map((tier, i) => {
 				const done = i <= completedTierIndex;
 				const isNext = i === completedTierIndex + 1;
@@ -69,17 +76,17 @@ function TierPips({
 					<span key={tier.title} className="cp-tier-pip">
 						<span
 							className={[
-								'cp-tier-dot',
-								done ? `cp-tier-dot--done cp-tier-dot--${rarity}` : '',
-								isNext ? 'cp-tier-dot--next' : '',
+								'cp-tier-node',
+								done ? `cp-tier-node--done cp-tier-node--${rarity}` : '',
+								isNext ? 'cp-tier-node--next' : '',
 							]
 								.filter(Boolean)
 								.join(' ')}
 						/>
-						<span className="cp-tier-tooltip">
-							{tier.title} — {fmt(tier.threshold)}
-						</span>
-						{i < tiers.length - 1 && <span className="cp-tier-connector" />}
+						<span className="cp-tier-label">{tier.title}</span>
+						{i < tiers.length - 1 && (
+							<span className={`cp-tier-line${done && i < completedTierIndex ? ` cp-tier-line--${rarity}` : ''}`} />
+						)}
 					</span>
 				);
 			})}
@@ -89,77 +96,90 @@ function TierPips({
 
 function ChallengeCard({ ch }: { ch: ChallengeProgress }) {
 	const allDone = ch.completedTierIndex === ch.tiers.length - 1;
-	const pct = Math.round(ch.progress * 100);
+	const pct = allDone ? 100 : Math.round(ch.progress * 100);
+	const remaining =
+		!allDone && ch.nextTierThreshold != null
+			? ch.nextTierThreshold - ch.currentValue
+			: null;
 
 	return (
 		<div
 			className={[
 				'cp-card',
 				`cp-card--${ch.rarity}`,
-				allDone ? 'cp-card--max-complete' : '',
+				allDone ? 'cp-card--complete' : '',
 			]
 				.filter(Boolean)
 				.join(' ')}
 		>
-			<div className={`cp-icon cp-icon--${ch.rarity}`}>
-				{CATEGORY_META[ch.category].icon}
-				<span className={`cp-icon-rarity-dot cp-icon-rarity-dot--${ch.rarity}`} />
+			<div className="cp-card-left">
+				<span className={`cp-cat-tag cp-cat-tag--${ch.category}`}>
+					{CATEGORY_META[ch.category].abbrev}
+				</span>
+				<span className={`cp-rarity-pip cp-rarity-pip--${ch.rarity}`} title={RARITY_LABEL[ch.rarity]} />
 			</div>
 
-			<div className="cp-body">
-				<div className="cp-body-top">
-					<div className="cp-name-row">
-						<span className="cp-name">{ch.name}</span>
-						<span className="cp-description">{ch.description}</span>
+			<div className="cp-card-body">
+				<div className="cp-card-header">
+					<span className="cp-card-name">{ch.name}</span>
+					{ch.unlockedTitle && (
+						<span className={`cp-current-title cp-current-title--${ch.rarity}`}>
+							{ch.unlockedTitle}
+						</span>
+					)}
+				</div>
+
+				<p className="cp-card-desc">{ch.description}</p>
+
+				<div className="cp-progress-row">
+					<div className="cp-bar-wrap">
+						<div className="cp-bar-track">
+							<div
+								className={`cp-bar-fill cp-bar-fill--${ch.rarity}`}
+								style={{ width: `${pct}%` }}
+							/>
+						</div>
 					</div>
-					<span className={`cp-rarity-badge cp-rarity-badge--${ch.rarity}`}>
-						{ch.rarity}
+					<span className="cp-progress-fig">
+						{allDone ? (
+							<span className="cp-maxed">Maxed</span>
+						) : (
+							<>
+								<strong>{fmt(ch.currentValue)}</strong>
+								{ch.nextTierThreshold != null && (
+									<span className="cp-progress-of"> / {fmt(ch.nextTierThreshold)}</span>
+								)}
+							</>
+						)}
 					</span>
 				</div>
 
-				{ch.unlockedTitle && (
-					<span className={`cp-unlocked-title cp-unlocked-title--${ch.rarity}`}>
-						✦ {ch.unlockedTitle}
-					</span>
+				{!allDone && ch.nextTierTitle && remaining != null && (
+					<p className="cp-next-hint">
+						{fmt(remaining)} more to unlock <em>{ch.nextTierTitle}</em>
+					</p>
 				)}
 
-				<div className="cp-progress-area">
-					<div className="cp-progress-meta">
-						<span className="cp-progress-label">
-							<strong>{fmt(ch.currentValue, ch.unit)}</strong>
-							{!allDone && ch.nextTierThreshold !== null && (
-								<> / {fmt(ch.nextTierThreshold, ch.unit)}</>
-							)}
-						</span>
-						{allDone ? (
-							<span className="cp-complete-badge">
-								<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-									<path d="M13.5 2.5l-7 9L3 7.5" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-								</svg>
-								Max rank
-							</span>
-						) : ch.nextTierTitle ? (
-							<span className="cp-next-title">→ {ch.nextTierTitle}</span>
-						) : null}
-					</div>
-
-					<div className="cp-progress-track">
-						<div
-							className={`cp-progress-fill cp-progress-fill--${ch.rarity}`}
-							style={{ width: `${allDone ? 100 : pct}%` }}
-						/>
-					</div>
-
-					<TierPips
-						tiers={ch.tiers}
-						completedTierIndex={ch.completedTierIndex}
-						rarity={ch.rarity}
-					/>
-				</div>
+				<TierRow
+					tiers={ch.tiers}
+					completedTierIndex={ch.completedTierIndex}
+					rarity={ch.rarity}
+				/>
 			</div>
 		</div>
 	);
 }
+
+const FILTER_BUTTONS: { key: FilterMode; label: string }[] = [
+	{ key: 'all',       label: 'All' },
+	{ key: 'combat',    label: 'Combat' },
+	{ key: 'empire',    label: 'Empire' },
+	{ key: 'galaxy',    label: 'Galaxy' },
+	{ key: 'economy',   label: 'Economy' },
+	{ key: 'loyalty',   label: 'Loyalty' },
+	{ key: 'legendary', label: 'Legendary' },
+	{ key: 'epic',      label: 'Epic' },
+];
 
 export default function ChallengesPanel() {
 	const [challenges, setChallenges] = useState<ChallengeProgress[] | null>(null);
@@ -175,30 +195,18 @@ export default function ChallengesPanel() {
 	}, []);
 
 	if (loading) return <PageSkeleton variant="rows" count={6} />;
-	if (error) return <div className="cp-empty">Failed to load challenges: {error}</div>;
+	if (error) return <div className="cp-error">Failed to load: {error}</div>;
 	if (!challenges) return null;
 
-	const FILTER_BUTTONS: { key: FilterMode; label: string }[] = [
-		{ key: 'all',       label: 'All' },
-		{ key: 'legendary', label: '★ Legendary' },
-		{ key: 'epic',      label: 'Epic' },
-		{ key: 'rare',      label: 'Rare' },
-		{ key: 'combat',    label: '⚔️ Combat' },
-		{ key: 'empire',    label: '🏛️ Empire' },
-		{ key: 'galaxy',    label: '🌌 Galaxy' },
-		{ key: 'economy',   label: '📦 Economy' },
-		{ key: 'loyalty',   label: '🛡️ Loyalty' },
-	];
+	const rarityWeight: Record<ChallengeRarity, number> = {
+		legendary: 4, epic: 3, rare: 2, common: 1,
+	};
 
 	const filtered = challenges.filter((ch) => {
 		if (filter === 'all') return true;
-		if (filter === ch.category) return true;
-		if (filter === ch.rarity) return true;
-		return false;
+		return filter === ch.category || filter === ch.rarity;
 	});
 
-	// Sort: incomplete before complete, then by rarity weight, then by progress desc
-	const rarityWeight: Record<ChallengeRarity, number> = { legendary: 4, epic: 3, rare: 2, common: 1 };
 	const sorted = [...filtered].sort((a, b) => {
 		const aDone = a.completedTierIndex === a.tiers.length - 1 ? 1 : 0;
 		const bDone = b.completedTierIndex === b.tiers.length - 1 ? 1 : 0;
@@ -208,11 +216,17 @@ export default function ChallengesPanel() {
 		return b.progress - a.progress;
 	});
 
-	// Summary counts
-	const titlesUnlocked = challenges.filter((ch) => ch.unlockedTitle !== null).length;
-	const maxedOut = challenges.filter((ch) => ch.completedTierIndex === ch.tiers.length - 1).length;
+	const totalTiers = challenges.reduce((s, ch) => s + ch.tiers.length, 0);
+	const completedTiers = challenges.reduce(
+		(s, ch) => s + (ch.completedTierIndex + 1),
+		0
+	);
+	const titlesHeld = challenges.filter((ch) => ch.unlockedTitle !== null).length;
+	const legendaryUnlocked = challenges.filter(
+		(ch) => ch.rarity === 'legendary' && ch.completedTierIndex >= 0
+	).length;
+	const legendaryTotal = challenges.filter((ch) => ch.rarity === 'legendary').length;
 
-	// Group by category if showing all
 	const showGrouped = filter === 'all';
 	const grouped = CATEGORY_ORDER.map((cat) => ({
 		cat,
@@ -221,31 +235,33 @@ export default function ChallengesPanel() {
 
 	return (
 		<div className="cp-root">
-			{/* Summary */}
-			<div className="cp-summary">
-				<div className="cp-summary-stat">
-					<span className="cp-summary-value">{challenges.length}</span>
-					<span className="cp-summary-label">Total challenges</span>
+			<div className="cp-header">
+				<div className="cp-header-text">
+					<h3 className="cp-heading">Service Commendations</h3>
+					<p className="cp-subheading">
+						Commendations are awarded for lifetime achievement across combat, empire,
+						and loyalty. Each carries a title you can equip on your public record.
+					</p>
 				</div>
-				<div className="cp-summary-stat">
-					<span className="cp-summary-value">{titlesUnlocked}</span>
-					<span className="cp-summary-label">Titles unlocked</span>
-				</div>
-				<div className="cp-summary-stat">
-					<span className="cp-summary-value">{maxedOut}</span>
-					<span className="cp-summary-label">Max ranked</span>
-				</div>
-				<div className="cp-summary-stat">
-					<span className="cp-summary-value">
-						{challenges.filter((ch) => ch.rarity === 'legendary' && ch.completedTierIndex >= 0).length}
-						/{challenges.filter((ch) => ch.rarity === 'legendary').length}
-					</span>
-					<span className="cp-summary-label">Legendary progress</span>
+				<div className="cp-stats-row">
+					<div className="cp-stat">
+						<span className="cp-stat-val">{completedTiers}</span>
+						<span className="cp-stat-key">of {totalTiers} tiers</span>
+					</div>
+					<div className="cp-stat-divider" />
+					<div className="cp-stat">
+						<span className="cp-stat-val">{titlesHeld}</span>
+						<span className="cp-stat-key">titles held</span>
+					</div>
+					<div className="cp-stat-divider" />
+					<div className="cp-stat">
+						<span className="cp-stat-val">{legendaryUnlocked}/{legendaryTotal}</span>
+						<span className="cp-stat-key">legendary</span>
+					</div>
 				</div>
 			</div>
 
-			{/* Filter bar */}
-			<div className="cp-filter-bar" role="group" aria-label="Filter challenges">
+			<div className="cp-filter-bar" role="group" aria-label="Filter commendations">
 				{FILTER_BUTTONS.map(({ key, label }) => (
 					<button
 						key={key}
@@ -253,7 +269,6 @@ export default function ChallengesPanel() {
 							'cp-filter-btn',
 							filter === key ? 'cp-filter-btn--active' : '',
 							key === 'legendary' ? 'cp-filter-btn--legendary' : '',
-							key === 'epic' ? 'cp-filter-btn--epic' : '',
 						]
 							.filter(Boolean)
 							.join(' ')}
@@ -264,22 +279,26 @@ export default function ChallengesPanel() {
 				))}
 			</div>
 
-			{/* Cards */}
 			{sorted.length === 0 ? (
-				<div className="cp-empty">No challenges match this filter.</div>
+				<p className="cp-empty">Nothing here yet.</p>
 			) : showGrouped ? (
 				grouped.map(({ cat, items }) => (
-					<div key={cat} className="cp-category-group">
-						<div className="cp-category-heading">
-							{CATEGORY_META[cat].icon} {CATEGORY_META[cat].label}
+					<div key={cat} className="cp-group">
+						<div className="cp-group-heading">
+							<span className="cp-group-label">{CATEGORY_META[cat].label}</span>
+							<span className="cp-group-count">{items.length}</span>
 						</div>
-						{items.map((ch) => (
-							<ChallengeCard key={ch.id} ch={ch} />
-						))}
+						<div className="cp-card-list">
+							{items.map((ch) => (
+								<ChallengeCard key={ch.id} ch={ch} />
+							))}
+						</div>
 					</div>
 				))
 			) : (
-				sorted.map((ch) => <ChallengeCard key={ch.id} ch={ch} />)
+				<div className="cp-card-list">
+					{sorted.map((ch) => <ChallengeCard key={ch.id} ch={ch} />)}
+				</div>
 			)}
 		</div>
 	);
