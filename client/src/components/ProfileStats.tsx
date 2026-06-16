@@ -389,7 +389,7 @@ export default function ProfileStats() {
 					{(stats.isAlphaFounder ||
 						stats.supporterTier === 'commander' ||
 						(stats.earnedBadges && stats.earnedBadges.length > 0)) && (
-						<Section title="Service ribbons">
+						<Section title="Service badges">
 							<ProfileBadges
 								isAlphaFounder={stats.isAlphaFounder}
 								isFounder={stats.isFounder}
