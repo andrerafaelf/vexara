@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import prisma from '/app/lib/prisma.js';
+import prisma from '../lib/prisma.js';
 
 // Backfill cumulative supporter titles for all existing supporters.
 // A user at a given tier should hold all titles for that tier and below:

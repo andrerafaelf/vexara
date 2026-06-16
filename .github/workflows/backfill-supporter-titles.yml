@@ -30,8 +30,9 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             set -e
-            docker cp /tmp/server/scripts/backfill-supporter-titles.ts vx-server:/app/backfill-supporter-titles.ts
-            docker exec vx-server npx tsx backfill-supporter-titles.ts
-            docker exec vx-server rm backfill-supporter-titles.ts
+            docker exec vx-server mkdir -p scripts
+            docker cp /tmp/server/scripts/backfill-supporter-titles.ts vx-server:/app/scripts/backfill-supporter-titles.ts
+            docker exec vx-server npx tsx scripts/backfill-supporter-titles.ts
+            docker exec vx-server rm scripts/backfill-supporter-titles.ts
             rm -rf /tmp/server
             echo "Done."
