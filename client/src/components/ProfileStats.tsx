@@ -75,6 +75,7 @@ export default function ProfileStats() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [tab, setTab] = useState<'stats' | 'challenges' | 'notifications' | 'security' | 'accessibility'>('stats');
+	const [challengeBadge, setChallengeBadge] = useState(false);
 	const [titleBusy, setTitleBusy] = useState(false);
 	const [pwCurrent, setPwCurrent] = useState('');
 	const [pwNew, setPwNew] = useState('');
@@ -102,6 +103,12 @@ export default function ProfileStats() {
 	}
 
 	usePageReady(!loading, 'profile');
+
+	useEffect(() => {
+		function onNewUnlocks() { setChallengeBadge(true); }
+		window.addEventListener('challenges:new-unlocks', onNewUnlocks);
+		return () => window.removeEventListener('challenges:new-unlocks', onNewUnlocks);
+	}, []);
 
 	async function handleChangePassword(e: React.FormEvent) {
 		e.preventDefault();
@@ -193,9 +200,10 @@ export default function ProfileStats() {
 				</button>
 				<button
 					className={`ps-tab ${tab === 'challenges' ? 'ps-tab--active' : ''}`}
-					onClick={() => setTab('challenges')}
+					onClick={() => { setTab('challenges'); setChallengeBadge(false); }}
 				>
 					<span>Challenges</span>
+					{challengeBadge && <span className="ps-tab-badge" aria-label="New titles unlocked" />}
 				</button>
 				<button
 					className={`ps-tab ${tab === 'notifications' ? 'ps-tab--active' : ''}`}

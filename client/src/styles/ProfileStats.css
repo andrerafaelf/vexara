@@ -54,6 +54,16 @@
 	border-bottom-color: var(--danger);
 }
 
+.ps-tab-badge {
+	display: inline-block;
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: #ef4444;
+	flex-shrink: 0;
+	box-shadow: 0 0 0 2px var(--bg-base);
+}
+
 .ps-notif-panel {
 	padding-top: 4px;
 }
