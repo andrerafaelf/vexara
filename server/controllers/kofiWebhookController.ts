@@ -179,29 +179,24 @@ export async function handleKofiWebhook(req: Request, res: Response): Promise<vo
 			updateData.isFounder = true;
 		}
 
-		// Backfill all supporter titles ≤ the effective tier on every donation.
-		// This ensures a €25 donor who skipped €5/€10 still gets Recruit + Officer,
-		// and fixes any users whose lower-tier titles were never granted.
+		// Append the title for the exact tier granted. Titles are not cumulative
+		// across tiers — each tier has its own distinct title.
 		// Alpha Commander replaces Commander for founder-tier donations during alpha.
-		const SUPPORTER_TITLES: Record<string, string> = {
-			recruit:   'Recruit',
-			officer:   'Officer',
-			vanguard:  'Vanguard',
-			commander: grantFounder ? 'Alpha Commander' : 'Commander',
-		};
-		const effectiveTier = upgradeToTier ?? (user.supporterTier as SupporterTier | null);
-		if (effectiveTier) {
+		if (upgradeToTier) {
+			const SUPPORTER_TITLES: Record<string, string> = {
+				recruit:   'Recruit',
+				officer:   'Officer',
+				vanguard:  'Vanguard',
+				commander: grantFounder ? 'Alpha Commander' : 'Commander',
+			};
+			const titleToGrant = SUPPORTER_TITLES[upgradeToTier];
 			const fullUser = await prisma.user.findUnique({
 				where: { id: user.id },
 				select: { earnedTitles: true }
 			});
 			const earned = (fullUser?.earnedTitles as string[]) ?? [];
-			const titlesToAdd = Object.entries(SUPPORTER_TITLES)
-				.filter(([t]) => TIER_RANK[t as SupporterTier] <= TIER_RANK[effectiveTier])
-				.map(([, title]) => title)
-				.filter((title) => !earned.includes(title));
-			if (titlesToAdd.length > 0) {
-				updateData.earnedTitles = [...earned, ...titlesToAdd] as any;
+			if (titleToGrant && !earned.includes(titleToGrant)) {
+				updateData.earnedTitles = [...earned, titleToGrant] as any;
 			}
 		}
 
