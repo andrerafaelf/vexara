@@ -2410,7 +2410,7 @@ label {
 	}
 	.group-modal {
 		width: 100%;
-		max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 32px);
+		max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 56px - 32px);
 		margin: 0;
 		border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 		align-self: flex-end;
@@ -2418,6 +2418,7 @@ label {
 
 	.group-modal-overlay {
 		align-items: flex-end;
+		padding-bottom: calc(56px + env(safe-area-inset-bottom));
 	}
 
 	.group-modal-body {

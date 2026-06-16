@@ -9,6 +9,15 @@
 	padding: 16px;
 }
 
+@media (max-width: 768px) {
+	.pwa-modal-overlay {
+		padding-bottom: calc(56px + env(safe-area-inset-bottom));
+	}
+	.pwa-modal {
+		max-height: calc(100dvh - 56px - env(safe-area-inset-bottom) - 32px);
+	}
+}
+
 .pwa-modal {
 	background: var(--color-navy-800);
 	border: 1px solid var(--color-navy-500);

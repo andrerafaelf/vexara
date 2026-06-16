@@ -597,6 +597,9 @@
 /* Defined in ProfileStats.css — just in case it's easier to co-locate here */
 
 @media (max-width: 580px) {
+	.cp-modal-backdrop {
+		padding-bottom: calc(56px + env(safe-area-inset-bottom));
+	}
 	.cp-header {
 		flex-direction: column;
 		gap: 16px;

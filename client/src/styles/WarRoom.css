@@ -2204,14 +2204,16 @@ body:has(.warroom-modal-overlay) {
 		padding: 10px 12px max(10px, env(safe-area-inset-bottom));
 	}
 
-	/* Modal: tighter padding, full-width on small screens. */
+	/* Modal: tighter padding, full-width on small screens.
+	   Reserve height for the fixed bottom nav so the actions footer is reachable. */
 	.warroom-modal-overlay {
 		padding: 0;
+		padding-bottom: calc(56px + env(safe-area-inset-bottom));
 	}
 	.warroom-modal {
 		max-width: 100%;
-		max-height: 100dvh;
-		height: 100dvh;
+		max-height: calc(100dvh - 56px - env(safe-area-inset-bottom));
+		height: calc(100dvh - 56px - env(safe-area-inset-bottom));
 		border-radius: 0;
 	}
 	.warroom-modal-body {

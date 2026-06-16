@@ -10,6 +10,15 @@
 	padding: 16px;
 }
 
+@media (max-width: 768px) {
+	.wywa-overlay {
+		padding-bottom: calc(56px + env(safe-area-inset-bottom));
+	}
+	.wywa-modal {
+		max-height: calc(100dvh - 56px - env(safe-area-inset-bottom) - 32px);
+	}
+}
+
 .wywa-modal {
 	background: var(--color-navy-900);
 	border: 1px solid var(--color-navy-500);

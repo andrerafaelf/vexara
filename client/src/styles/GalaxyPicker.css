@@ -635,7 +635,11 @@
 
 /* ── Mobile ─────────────────────────────────────────────────────── */
 @media (max-width: 540px) {
+	.gp-overlay {
+		padding-bottom: calc(56px + env(safe-area-inset-bottom));
+	}
 	.gp-modal {
+		max-height: calc(100dvh - 56px - env(safe-area-inset-bottom) - 32px);
 		padding: 18px 16px 16px;
 	}
 	.gp-card {

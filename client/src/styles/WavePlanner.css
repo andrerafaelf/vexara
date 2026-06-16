@@ -383,9 +383,10 @@
 @media (max-width: 640px) {
 	.wplanner-overlay {
 		padding: 8px;
+		padding-bottom: calc(56px + env(safe-area-inset-bottom));
 	}
 	.wplanner-modal {
-		max-height: 94vh;
+		max-height: calc(100dvh - 56px - env(safe-area-inset-bottom) - 16px);
 	}
 	.wplanner-arrival-row {
 		grid-template-columns: 1fr;

@@ -5526,12 +5526,12 @@
 		overflow-y: hidden;
 		align-items: center;
 		padding: 12px;
+		padding-bottom: calc(56px + env(safe-area-inset-bottom));
 	}
 
 	.attack-modal,
 	.info-modal {
-		max-height: calc(100dvh - 24px);
-		max-height: calc(100vh - 24px);
+		max-height: calc(100dvh - 56px - env(safe-area-inset-bottom) - 24px);
 		overflow-y: auto;
 		width: 100%;
 	}

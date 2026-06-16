@@ -16,6 +16,12 @@
 	animation: srm-fade var(--duration-fast) var(--ease-out);
 }
 
+@media (max-width: 768px) {
+	.srm-backdrop {
+		padding-bottom: calc(56px + env(safe-area-inset-bottom));
+	}
+}
+
 body.srm-scroll-locked .main-content,
 body.srm-scroll-locked .nexus-nav-scroll {
 	overflow: hidden !important;

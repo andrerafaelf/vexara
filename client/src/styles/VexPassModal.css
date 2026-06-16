@@ -977,3 +977,12 @@
 		font-size: 20px;
 	}
 }
+
+@media (max-width: 768px) {
+	.vpm-backdrop {
+		padding-bottom: calc(56px + env(safe-area-inset-bottom));
+	}
+	.vpm-modal {
+		max-height: calc(100dvh - 56px - env(safe-area-inset-bottom) - 2 * var(--space-4));
+	}
+}

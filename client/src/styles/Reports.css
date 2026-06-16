@@ -879,8 +879,11 @@
 }
 
 @media (max-width: 600px) {
+	.share-modal-backdrop {
+		padding-bottom: calc(56px + env(safe-area-inset-bottom));
+	}
 	.share-modal {
-		max-height: 85vh;
+		max-height: calc(100dvh - 56px - env(safe-area-inset-bottom) - 32px);
 	}
 
 	.share-modal-preview {
