@@ -328,7 +328,15 @@ export default function ChallengesPanel() {
 		getChallenges()
 			.then((res) => {
 				const data: ChallengeProgress[] = res.data.challenges;
+				const unlockedTitles: string[] = res.data.unlockedTitles ?? [];
 				setChallenges(data);
+
+				// Notify ProfileStats so it can merge challenge titles into earnedTitles
+				if (unlockedTitles.length > 0) {
+					window.dispatchEvent(
+						new CustomEvent('challenges:titles-loaded', { detail: unlockedTitles })
+					);
+				}
 
 				// Compare to last saved snapshot to detect new unlocks
 				try {

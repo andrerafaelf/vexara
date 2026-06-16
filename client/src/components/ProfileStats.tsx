@@ -8,7 +8,8 @@ import {
 	getDailyStreak,
 	setActiveTitle,
 	getShop,
-	shopEquipBorder
+	shopEquipBorder,
+	getChallenges,
 } from '@/services/api';
 import { Nexus, UserStats } from '@/types/game';
 import { MapPin } from 'lucide-react';
@@ -106,8 +107,21 @@ export default function ProfileStats() {
 
 	useEffect(() => {
 		function onNewUnlocks() { setChallengeBadge(true); }
+		function onTitlesLoaded(e: Event) {
+			const titles = (e as CustomEvent<string[]>).detail;
+			setStats((prev) => {
+				if (!prev) return prev;
+				const existing = new Set(prev.earnedTitles ?? []);
+				const merged = [...existing, ...titles.filter((t) => !existing.has(t))];
+				return { ...prev, earnedTitles: merged };
+			});
+		}
 		window.addEventListener('challenges:new-unlocks', onNewUnlocks);
-		return () => window.removeEventListener('challenges:new-unlocks', onNewUnlocks);
+		window.addEventListener('challenges:titles-loaded', onTitlesLoaded);
+		return () => {
+			window.removeEventListener('challenges:new-unlocks', onNewUnlocks);
+			window.removeEventListener('challenges:titles-loaded', onTitlesLoaded);
+		};
 	}, []);
 
 	async function handleChangePassword(e: React.FormEvent) {
@@ -152,6 +166,19 @@ export default function ProfileStats() {
 						ownedKeys: res.data.ownedKeys
 					})
 				)
+				.catch(() => {}),
+			getChallenges()
+				.then((res: { data: { unlockedTitles?: string[] } }) => {
+					const challengeTitles: string[] = res.data.unlockedTitles ?? [];
+					if (challengeTitles.length > 0) {
+						setStats((prev) => {
+							if (!prev) return prev;
+							const existing = new Set(prev.earnedTitles ?? []);
+							const merged = [...existing, ...challengeTitles.filter((t) => !existing.has(t))];
+							return { ...prev, earnedTitles: merged };
+						});
+					}
+				})
 				.catch(() => {})
 		])
 			.catch((err) => setError(err.message))

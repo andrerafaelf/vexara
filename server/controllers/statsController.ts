@@ -377,7 +377,10 @@ export async function getChallenges(req: AuthRequest, res: Response): Promise<vo
 		};
 
 		const challenges = computeChallengeProgress(CHALLENGE_DEFS, stats);
-		res.json({ challenges });
+		const unlockedTitles = challenges
+			.filter((c) => c.unlockedTitle !== null)
+			.map((c) => c.unlockedTitle as string);
+		res.json({ challenges, unlockedTitles });
 	} catch (error) {
 		logError('unhandled_controller_error', {
 			message: (error as Error).message,
