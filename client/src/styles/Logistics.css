@@ -1,6 +1,5 @@
 .log-card {
 	padding: var(--space-5);
-	overflow: hidden;
 }
 
 .log-hint {
