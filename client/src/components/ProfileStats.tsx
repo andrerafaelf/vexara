@@ -381,7 +381,7 @@ export default function ProfileStats() {
 							username={stats.username}
 							avatarUrl={stats.avatarUrl ?? null}
 							avatarUrlSm={stats.avatarUrlSm ?? null}
-							px={88}
+							px={128}
 							borderKey={borderData?.equippedBorder ?? null}
 							earnedTitles={stats.earnedTitles ?? []}
 							activeTitle={stats.activeTitle ?? null}

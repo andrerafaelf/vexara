@@ -151,12 +151,12 @@
 /* Header */
 .ps-header {
 	display: flex;
-	align-items: center;
-	gap: 20px;
+	align-items: flex-start;
+	gap: 24px;
 	background: var(--bg-surface);
 	border: 1px solid var(--border-default);
 	border-radius: var(--radius-md);
-	padding: 20px 24px;
+	padding: 24px 28px;
 }
 
 .ps-avatar {
