@@ -125,9 +125,18 @@ wait_healthy() {
   local SERVICE="$1"
   local SERVICE_TIMEOUT="$2"
   local ELAPSED=0
-  local HEALTH RUNNING
+  local HEALTH RUNNING CID
+  # Brief pause so Docker registers the new container before we inspect it.
+  sleep 2
   while true; do
-    HEALTH=$($COMPOSE ps -q "$SERVICE" | xargs docker inspect --format='{{.State.Health.Status}}' 2>/dev/null || echo '')
+    CID=$($COMPOSE ps -q "$SERVICE" 2>/dev/null || true)
+    if [ -n "$CID" ]; then
+      HEALTH=$(docker inspect --format='{{.State.Health.Status}}' "$CID" 2>/dev/null || echo '')
+      RUNNING=$(docker inspect --format='{{.State.Running}}' "$CID" 2>/dev/null || echo 'false')
+    else
+      HEALTH=''
+      RUNNING='false'
+    fi
     case "$HEALTH" in
       healthy) break ;;
       unhealthy)
@@ -136,7 +145,7 @@ wait_healthy() {
         exit 1
         ;;
       '')
-        RUNNING=$($COMPOSE ps -q "$SERVICE" | xargs docker inspect --format='{{.State.Running}}' 2>/dev/null || echo 'false')
+        # No healthcheck configured — running is enough.
         [ "$RUNNING" = "true" ] && break
         ;;
     esac
