@@ -5,11 +5,13 @@ import {
 	ALPHA_PLAYER_BADGE,
 	ALPHA_COMMANDER_BADGE,
 	VANGUARD_BADGE,
+	BETA_FOUNDER_BADGE,
 	badgeIcon
 } from '@/data/gameIcons';
 
 interface ProfileBadgesProps {
 	isAlphaFounder?: boolean | null;
+	isBetaFounder?: boolean | null;
 	isFounder?: boolean | null;
 	supporterTier?: SupporterTier | null;
 	earnedBadges?: string[];
@@ -47,6 +49,7 @@ const PASS_BADGE_DEFS: Record<string, Omit<BadgeDef, 'key'>> = {
 
 export default function ProfileBadges({
 	isAlphaFounder,
+	isBetaFounder,
 	isFounder,
 	supporterTier,
 	earnedBadges
@@ -59,6 +62,15 @@ export default function ProfileBadges({
 			src: ALPHA_PLAYER_BADGE,
 			name: 'Alpha Player',
 			description: 'Founding Vexara player - earned by establishing a Nexus during alpha.'
+		});
+	}
+
+	if (isBetaFounder) {
+		badges.push({
+			key: 'beta-founder',
+			src: BETA_FOUNDER_BADGE,
+			name: 'Beta Founder',
+			description: 'Established a Nexus during the beta launch - permanent, never re-issued.'
 		});
 	}
 

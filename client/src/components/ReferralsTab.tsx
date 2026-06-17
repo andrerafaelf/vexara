@@ -229,7 +229,7 @@ export default function ReferralsTab({ mode = 'referrals' }: ReferralsTabProps) 
 	const [nexuses, setNexuses] = useState<NexusSummary[]>([]);
 	const [myReferralCode, setMyReferralCode] = useState('');
 	const [myReferralClicks, setMyReferralClicks] = useState(0);
-	const [codeCopied, setCodeCopied] = useState(false);
+	const [copied, setCopied] = useState<'link' | 'post' | 'code' | null>(null);
 
 	const [redeemState, setRedeemState] = useState<RedeemState | null>(null);
 	const [redeemError, setRedeemError] = useState('');
@@ -276,6 +276,21 @@ export default function ReferralsTab({ mode = 'referrals' }: ReferralsTabProps) 
 	useEffect(() => {
 		void load();
 	}, []);
+
+	const origin =
+		typeof window !== 'undefined' ? window.location.origin : 'https://vexara.world';
+	const inviteLink = myReferralCode ? `${origin}/register?ref=${myReferralCode}` : '';
+	const recruitmentPost = `Come command an empire in Vexara — a free browser MMO RTS. No download, no resets, no pay-to-win. New commanders get 500 Vex Points + Beta Founder status. Join with my invite: ${origin}/register?ref=${myReferralCode}&utm_source=referral&utm_medium=player&utm_campaign=recruitment_orders`;
+
+	const copyToClipboard = async (text: string, which: 'link' | 'post' | 'code') => {
+		try {
+			await navigator.clipboard.writeText(text);
+			setCopied(which);
+			setTimeout(() => setCopied((c) => (c === which ? null : c)), 2000);
+		} catch {
+			// clipboard unavailable — silently ignore
+		}
+	};
 
 	const openRedeem = (tokenId: number, kind: TokenKind) => {
 		setRedeemError('');
@@ -591,92 +606,111 @@ export default function ReferralsTab({ mode = 'referrals' }: ReferralsTabProps) 
 			{/* Your referral code, account-bound, unique across galaxies */}
 			{mode === 'referrals' && myReferralCode && (
 				<section className="referrals-section">
-					<div className="referrals-invite-block referrals-orders">
-						<div className="referrals-invite-row">
-							<span className="referrals-invite-label">Weekly Recruitment Orders</span>
-							<span className="referrals-invite-code">1 recruit</span>
+					{/* Hero invite card — the primary share surface */}
+					<div className="referrals-hero">
+						<div className="referrals-hero-glow" aria-hidden="true" />
+						<div className="referrals-hero-head">
+							<span className="referrals-hero-kicker">Recruit a Commander</span>
+							<h3 className="referrals-hero-title">
+								Bring an ally into the galaxy.
+								<br />
+								Both of you get rewarded.
+							</h3>
+							<p className="referrals-hero-sub">
+								Every recruit who joins before <strong>July 1</strong> claims{' '}
+								<strong>500 Vex Points</strong> and Beta Founder standing. You earn redeemable
+								tokens as they grow.
+							</p>
 						</div>
-						<p className="referrals-hint">
-							Invite one friend this week and post in Discord for manual cosmetic recognition: First
-							Wave, Founding Commander, or War Week Veteran. These titles are community bragging
-							rights only, not power.
-						</p>
-						<div className="referrals-invite-actions">
-							<button
-								type="button"
-								className="referrals-btn"
-								onClick={async () => {
-									const origin =
-										typeof window !== 'undefined' ? window.location.origin : 'https://vexara.world';
-									const link = `${origin}/register?ref=${myReferralCode}&utm_source=referral&utm_medium=player&utm_campaign=recruitment_orders`;
-									const text = `I am recruiting for Vexara's live galaxy. Free browser MMO RTS, no download, no resets, no pay-to-win. Join with my invite: ${link}`;
-									try {
-										await navigator.clipboard.writeText(text);
-										setCodeCopied(true);
-										setTimeout(() => setCodeCopied(false), 2000);
-									} catch {
-										// clipboard unavailable
-									}
-								}}
-							>
-								{codeCopied ? 'Copied!' : 'Copy recruitment post'}
-							</button>
+
+						<div className="referrals-hero-link">
+							<span className="referrals-hero-link-label">Your invite link</span>
+							<div className="referrals-hero-link-row">
+								<code className="referrals-hero-link-value">{inviteLink}</code>
+								<button
+									type="button"
+									className="referrals-btn primary referrals-hero-copy"
+									onClick={() => copyToClipboard(inviteLink, 'link')}
+								>
+									{copied === 'link' ? '✓ Copied' : 'Copy link'}
+								</button>
+							</div>
+							<div className="referrals-hero-actions">
+								<button
+									type="button"
+									className="referrals-btn"
+									onClick={() => copyToClipboard(recruitmentPost, 'post')}
+								>
+									{copied === 'post' ? '✓ Post copied' : 'Copy recruitment post'}
+								</button>
+								<button
+									type="button"
+									className="referrals-btn"
+									onClick={() => copyToClipboard(myReferralCode, 'code')}
+								>
+									{copied === 'code' ? '✓ Code copied' : `Code: ${myReferralCode}`}
+								</button>
+							</div>
+						</div>
+
+						<div className="referrals-hero-stats">
+							<div className="referrals-hero-stat">
+								<span className="referrals-hero-stat-num">{myReferralClicks}</span>
+								<span className="referrals-hero-stat-label">Link clicks</span>
+							</div>
+							<div className="referrals-hero-stat">
+								<span className="referrals-hero-stat-num">{refereeRows.length}</span>
+								<span className="referrals-hero-stat-label">Recruits</span>
+							</div>
+							<div className="referrals-hero-stat">
+								<span className="referrals-hero-stat-num">
+									{refereeRows.filter((r) => r.thresholdMet).length}
+								</span>
+								<span className="referrals-hero-stat-label">Tokens unlocked</span>
+							</div>
 						</div>
 					</div>
-					<h3 className="referrals-section-title">Invite a Friend</h3>
-					<p className="referrals-hint">
-						Share your invite link. Your recruit gets a resource head-start on day one. You earn
-						tokens you can cash in for instant building levels or free troops - at two points in
-						their journey.
-					</p>
-					<div className="referrals-invite-block">
-						<div className="referrals-invite-row">
-							<span className="referrals-invite-label">Your code</span>
-							<span className="referrals-invite-code">{myReferralCode}</span>
+
+					{/* Reward ladder — what each side earns, as cards */}
+					<div className="referrals-ladder">
+						<div className="referrals-ladder-card referrals-ladder-card--them">
+							<span className="referrals-ladder-tag referrals-ladder-tag--them">Your recruit</span>
+							<span className="referrals-ladder-reward">500 VP + troop head start</span>
+							<span className="referrals-ladder-desc">
+								500 Vex Points on signup, a starter squad on their first nexus (15 Recon, 10
+								Sentinel Lancers, 10 Assault Troopers), a milestone token at 500 points, and 250
+								more VP at 5,000 influence.
+							</span>
 						</div>
-						<div className="referrals-invite-actions">
-							<button
-								type="button"
-								className="referrals-btn primary"
-								onClick={async () => {
-									const origin =
-										typeof window !== 'undefined' ? window.location.origin : 'https://vexara.world';
-									const link = `${origin}/register?ref=${myReferralCode}`;
-									try {
-										await navigator.clipboard.writeText(link);
-										setCodeCopied(true);
-										setTimeout(() => setCodeCopied(false), 2000);
-									} catch {
-										// clipboard unavailable
-									}
-								}}
-							>
-								{codeCopied ? 'Link copied!' : 'Copy invite link'}
-							</button>
+						<div className="referrals-ladder-card">
+							<span className="referrals-ladder-tag">You · 100 pts</span>
+							<span className="referrals-ladder-reward">Early Scout token</span>
+							<span className="referrals-ladder-desc">
+								They survive their first day — you earn 1 token for instant building levels or free
+								troops.
+							</span>
 						</div>
-					</div>
-					{myReferralClicks > 0 && (
-						<p className="referrals-hint" style={{ marginTop: 8 }}>
-							Your link has been clicked <strong>{myReferralClicks}</strong> time
-							{myReferralClicks !== 1 ? 's' : ''}.
-						</p>
-					)}
-					<div className="referrals-reward-explainer">
-						<div className="referrals-reward-explainer-item">
-							<span className="referrals-reward-explainer-you">You - 100 pts</span>
-							<span>1 token (Early Scout) - they survived their first day, you get rewarded</span>
+						<div className="referrals-ladder-card">
+							<span className="referrals-ladder-tag">You · 1,000 pts</span>
+							<span className="referrals-ladder-reward">Commander&apos;s Cache</span>
+							<span className="referrals-ladder-desc">
+								They hit their stride — you earn 2 more tokens. Three tokens per recruit.
+							</span>
 						</div>
-						<div className="referrals-reward-explainer-item">
-							<span className="referrals-reward-explainer-you">You - 1,000 pts</span>
-							<span>Commander's Cache - 2 tokens for instant building upgrades or troops</span>
-						</div>
-						<div className="referrals-reward-explainer-item">
-							<span className="referrals-reward-explainer-them">They get</span>
-							<span>
-								+5,000 of each resource on their starter nexus, plus a milestone token at 500 pts
+						<div className="referrals-ladder-card referrals-ladder-card--best">
+							<span className="referrals-ladder-tag referrals-ladder-tag--best">Both · 5,000 pts</span>
+							<span className="referrals-ladder-reward">+250 VP each</span>
+							<span className="referrals-ladder-desc">
+								When your recruit reaches 5,000 influence, you <strong>and</strong> they each get 250
+								Vex Points — straight to your balance.
 							</span>
 						</div>
 					</div>
+
+					<p className="referrals-orders-note">
+						Recruiting actively? Post your link in Discord for cosmetic recognition — First Wave,
+						Founding Commander, War Week Veteran. Bragging rights only, never power.
+					</p>
 				</section>
 			)}
 

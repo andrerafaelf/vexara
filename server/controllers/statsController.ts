@@ -102,6 +102,7 @@ export async function getMyStats(req: AuthRequest, res: Response): Promise<void>
 			supporterTier: user.supporterTier ?? null,
 			isFounder: user.isFounder ?? false,
 			isAlphaFounder: user.isAlphaFounder ?? false,
+			isBetaFounder: user.isBetaFounder ?? false,
 			avatarUrl: avatarUrl(user.id, user.avatarKey),
 			avatarUrlSm: avatarUrlSm(user.id, user.avatarKey),
 			earnedBadges: (user.earnedBadges as string[]) ?? [],

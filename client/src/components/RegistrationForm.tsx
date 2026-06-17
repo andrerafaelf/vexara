@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { register as registerApi, trackReferralClick } from '../services/api';
 import PasswordField from './PasswordField';
 import DiscordButton from './DiscordButton';
+import { screenshot } from '../data/gameIcons';
 import '../styles/Auth.css';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
@@ -142,47 +143,42 @@ function captureUtm(): Utm {
 
 const SCREENSHOTS: { src: string; label: string; caption: string }[] = [
 	{
-		src: '/vexara-overview.png',
+		src: screenshot('overview'),
 		label: 'Overview',
 		caption: 'Your nexus at a glance - resources, buildings, and queues'
 	},
 	{
-		src: '/vexara-starfield.png',
+		src: screenshot('galaxy'),
 		label: 'Galaxy Map',
 		caption: 'A living galaxy shared by real players, running 24/7'
 	},
 	{
-		src: '/vexara-factions.png',
+		src: screenshot('factions'),
 		label: 'Factions',
 		caption: 'Join a faction, climb the leaderboard, and wage galaxy-wide wars'
 	},
 	{
-		src: '/vexara-diplomacy.png',
-		label: 'Diplomacy',
-		caption: 'Sign treaties, declare war, or negotiate vassal terms in real time'
-	},
-	{
-		src: '/vexara-combatreport.png',
+		src: screenshot('reports'),
 		label: 'combat log',
 		caption: 'Detailed blow-by-blow after every raid, strike, or conquest'
 	},
 	{
-		src: '/vexara-troops.png',
+		src: screenshot('troops'),
 		label: 'Troops',
 		caption: 'Twelve unit types - each with attack, defense, speed, and carry'
 	},
 	{
-		src: '/vexara-buildings.png',
+		src: screenshot('buildings'),
 		label: 'Buildings',
 		caption: 'Eight core buildings drive your economy and military'
 	},
 	{
-		src: '/vexara-market.png',
+		src: screenshot('market'),
 		label: 'Market',
 		caption: 'Trade resources with other players at dynamic exchange rates'
 	},
 	{
-		src: '/vexara-profile.png',
+		src: screenshot('profile'),
 		label: 'Profile',
 		caption: 'Track your stats, badges, and founder status'
 	}

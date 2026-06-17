@@ -12,6 +12,7 @@ model User {
   email          String    @unique
   password       String
   isAlphaFounder Boolean   @default(false)
+  isBetaFounder  Boolean   @default(false)
   isSupporter    Boolean   @default(false)
   supporterSince DateTime?
   supporterTier  String?   @db.VarChar(16)
@@ -104,6 +105,11 @@ model User {
   // Set to true by the 20260615030000 migration that granted 1,000 VP to all
   // pre-launch users. Prevents double-grants on re-run.
   earlyAccessVpGranted Boolean @default(false)
+
+  // Set when this (referred) user first reaches the referral VP-bonus influence
+  // threshold, triggering a one-time 250 VP grant to both this user and their
+  // referrer. Null = not yet granted. Idempotency key for the bonus.
+  referralVpBonusAt DateTime?
 
   shopPurchases ShopPurchase[]
 }

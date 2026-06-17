@@ -8,6 +8,7 @@ export interface User {
 	supporterTier?: SupporterTier | null;
 	isFounder?: boolean;
 	isAlphaFounder?: boolean;
+	isBetaFounder?: boolean;
 	avatarUrl?: string | null;
 	avatarUrlSm?: string | null;
 	galaxiesWon?: number;
@@ -43,6 +44,7 @@ export interface UserStats {
 	supporterTier?: SupporterTier | null;
 	isFounder?: boolean;
 	isAlphaFounder?: boolean;
+	isBetaFounder?: boolean;
 	avatarUrl?: string | null;
 	avatarUrlSm?: string | null;
 	earnedBadges?: string[];

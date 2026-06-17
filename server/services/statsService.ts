@@ -12,6 +12,7 @@ export function getUserById(userId: number) {
 			supporterTier: true,
 			isFounder: true,
 			isAlphaFounder: true,
+			isBetaFounder: true,
 			avatarKey: true,
 			earnedBadges: true,
 			earnedTitles: true,

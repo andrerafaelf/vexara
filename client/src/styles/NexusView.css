@@ -1912,8 +1912,15 @@
 
 /* Troops Tab */
 .troops-tab h3 {
-	color: var(--accent);
+	color: var(--text-muted);
 	margin-bottom: 20px;
+	font-size: var(--text-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	font-weight: 700;
+	font-family: var(--font-mono);
+	padding-bottom: 8px;
+	border-bottom: 1px solid var(--border-default);
 }
 
 .troops-current {
@@ -2977,8 +2984,15 @@
 }
 
 .map-tab h3 {
-	color: var(--accent);
+	color: var(--text-muted);
 	margin-bottom: 15px;
+	font-size: var(--text-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	font-weight: 700;
+	font-family: var(--font-mono);
+	padding-bottom: 8px;
+	border-bottom: 1px solid var(--border-default);
 }
 
 .map-tab p {

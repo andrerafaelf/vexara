@@ -1,5 +1,21 @@
 import prisma from '../lib/prisma.js';
 
+// Beta Founder window. Founding a nexus on/after the beta launch
+// (2026-06-28 18:30 UTC) grants the permanent Beta Founder badge. There is NO
+// hard end date — the window stays open for the entire beta. To close it when
+// beta ends, set BETA_FOUNDER_END to a date (leave null to keep it open).
+// Players who founded earlier (pre-launch) do NOT qualify. Alpha is closed;
+// isAlphaFounder is historical.
+const BETA_FOUNDER_START = new Date('2026-06-28T18:30:00Z');
+const BETA_FOUNDER_END: Date | null = null;
+
+function isBetaFounderWindowOpen(): boolean {
+	const now = new Date();
+	if (now < BETA_FOUNDER_START) return false;
+	if (BETA_FOUNDER_END && now > BETA_FOUNDER_END) return false;
+	return true;
+}
+
 export function getAllGalaxies() {
 	return prisma.galaxy.findMany({ orderBy: { createdAt: 'asc' } });
 }
@@ -83,12 +99,16 @@ export function selectGalaxy(userId: number, username: string, galaxyId: number)
 				referredById: user?.referredById
 			});
 		}
-		// Establishing a starter nexus (joining any galaxy) grants Alpha Player /
-		// founding status. Idempotent: only flips false -> true, so re-joining or
+		// Establishing a starter nexus (joining any galaxy) grants Beta Founder
+		// status while the beta window is open. Alpha is closed, so isAlphaFounder
+			// is no longer granted. Idempotent: only flips false -> true, so re-joining or
 		// joining a second galaxy never resets it.
 		await tx.user.update({
 			where: { id: userId },
-			data: { activeGalaxyId: galaxyId, ...(existing ? {} : { isAlphaFounder: true }) }
+			data: {
+					activeGalaxyId: galaxyId,
+					...(!existing && isBetaFounderWindowOpen() ? { isBetaFounder: true } : {})
+				}
 		});
 		return { joined: !existing };
 	});

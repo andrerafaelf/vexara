@@ -74,6 +74,7 @@ interface PublicProfile {
 	supporterTier?: SupporterTier | null;
 	isFounder?: boolean;
 	isAlphaFounder?: boolean;
+	isBetaFounder?: boolean;
 	avatarUrl?: string | null;
 	avatarUrlSm?: string | null;
 	avatarBorder?: string | null;
@@ -335,10 +336,11 @@ function PublicProfilePageInner() {
 					)}
 				</div>
 
-				{(profile.isAlphaFounder || profile.supporterTier === 'commander' || (profile.earnedBadges && profile.earnedBadges.length > 0)) && (
+				{(profile.isAlphaFounder || profile.isBetaFounder || profile.supporterTier === 'commander' || (profile.earnedBadges && profile.earnedBadges.length > 0)) && (
 					<Section title="Badges">
 						<ProfileBadges
 							isAlphaFounder={profile.isAlphaFounder}
+							isBetaFounder={profile.isBetaFounder}
 							isFounder={profile.isFounder}
 							supporterTier={profile.supporterTier ?? null}
 							earnedBadges={profile.earnedBadges}

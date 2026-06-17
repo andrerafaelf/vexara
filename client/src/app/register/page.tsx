@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 		type: 'website',
 		images: [
 			{
-				url: 'https://vexara.world/vexara-overview.png',
+				url: 'https://cdn.vexara.world/screenshots/overview.webp',
 				width: 1280,
 				height: 720,
 				alt: 'Join Vexara'
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
 		card: 'summary_large_image',
 		title: 'Join Vexara - Free Browser 4X Strategy',
 		description: 'Pick a username, claim your nexus, and command your first fleet.',
-		images: ['https://vexara.world/vexara-overview.png']
+		images: ['https://cdn.vexara.world/screenshots/overview.webp']
 	},
 	robots: { index: true, follow: true }
 };

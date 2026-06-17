@@ -238,9 +238,10 @@ export async function register(req: Request, res: Response): Promise<void> {
 		const verificationToken = generateToken();
 		const verificationExpiry = new Date(Date.now() + VERIFY_TOKEN_TTL_MS);
 
-		// 500 VP welcome grant for anyone who registers before 2028-06-30.
-		const EARLY_ACCESS_DEADLINE = new Date('2028-07-01T23:59:59Z');
-		const signupVp = new Date() <= EARLY_ACCESS_DEADLINE ? 500 : 0;
+		// 500 VP beta welcome grant for anyone who registers before the beta cutoff.
+		const EARLY_ACCESS_DEADLINE = new Date('2026-07-01T23:59:59Z');
+		const beforeDeadline = new Date() <= EARLY_ACCESS_DEADLINE;
+		const signupVp = beforeDeadline ? 500 : 0;
 
 		const user = await prisma.user.create({
 			data: {
@@ -610,7 +611,8 @@ export async function login(req: Request, res: Response): Promise<void> {
 				isSupporter: user.isSupporter,
 				supporterTier: user.supporterTier ?? null,
 				isFounder: user.isFounder ?? false,
-				isAlphaFounder: user.isAlphaFounder ?? false
+				isAlphaFounder: user.isAlphaFounder ?? false,
+				isBetaFounder: user.isBetaFounder ?? false
 			}
 		});
 	} catch (error) {

@@ -17,6 +17,7 @@ interface GalaxyPlayer {
 	supporterTier?: SupporterTier | null;
 	isFounder?: boolean;
 	isAlphaFounder?: boolean;
+	isBetaFounder?: boolean;
 	avatarUrl?: string | null;
 	avatarUrlSm?: string | null;
 	avatarBorder?: string | null;

@@ -433,11 +433,13 @@ export default function ProfileStats() {
 					</div>
 
 					{(stats.isAlphaFounder ||
+						stats.isBetaFounder ||
 						stats.supporterTier === 'commander' ||
 						(stats.earnedBadges && stats.earnedBadges.length > 0)) && (
 						<Section title="Service badges">
 							<ProfileBadges
 								isAlphaFounder={stats.isAlphaFounder}
+								isBetaFounder={stats.isBetaFounder}
 								isFounder={stats.isFounder}
 								supporterTier={stats.supporterTier ?? null}
 								earnedBadges={stats.earnedBadges}

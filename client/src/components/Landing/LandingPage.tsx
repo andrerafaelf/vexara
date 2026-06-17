@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { TROOPS_DOC, BUILDINGS_DOC } from '@/data/gameDocs';
-import { TROOP_ICONS, BUILDING_ICONS } from '@/data/gameIcons';
+import { TROOP_ICONS, BUILDING_ICONS, screenshot } from '@/data/gameIcons';
 import SiteFooter from '@/components/SiteFooter';
 import PublicNav from '@/components/PublicNav';
 import { getPublicGalaxyStatus } from '@/services/api';
@@ -14,56 +14,50 @@ import '@/styles/Landing.css';
 
 const FOOTAGE: { src: string; label: string; code: string; caption: string }[] = [
 	{
-		src: '/vexara-overview.png',
+		src: screenshot('overview'),
 		code: 'VX-01',
 		label: 'Overview',
 		caption: 'Your nexus at a glance - resources, buildings, queues.'
 	},
 	{
-		src: '/vexara-starfield.png',
+		src: screenshot('galaxy'),
 		code: 'VX-02',
 		label: 'Galaxy Map',
 		caption: 'A living galaxy shared by real players, running 24/7.'
 	},
 	{
-		src: '/vexara-factions.png',
+		src: screenshot('factions'),
 		code: 'VX-03',
 		label: 'Factions',
 		caption: 'Join a faction. Climb. Wage galaxy-wide war.'
 	},
 	{
-		src: '/vexara-diplomacy.png',
+		src: screenshot('reports'),
 		code: 'VX-04',
-		label: 'Diplomacy',
-		caption: 'Treaties, vassal contracts, declarations of war.'
-	},
-	{
-		src: '/vexara-combatreport.png',
-		code: 'VX-05',
 		label: 'combat log',
 		caption: 'Blow-by-blow after every raid, strike, or conquest.'
 	},
 	{
-		src: '/vexara-troops.png',
-		code: 'VX-06',
+		src: screenshot('troops'),
+		code: 'VX-05',
 		label: 'Troops',
 		caption: 'Twelve unit types - composition wins fights, not numbers.'
 	},
 	{
-		src: '/vexara-buildings.png',
-		code: 'VX-07',
+		src: screenshot('buildings'),
+		code: 'VX-06',
 		label: 'Buildings',
 		caption: 'Eight core structures drive your economy and military.'
 	},
 	{
-		src: '/vexara-market.png',
-		code: 'VX-08',
+		src: screenshot('market'),
+		code: 'VX-07',
 		label: 'Market',
 		caption: 'Trade with players at dynamic exchange rates.'
 	},
 	{
-		src: '/vexara-profile.png',
-		code: 'VX-09',
+		src: screenshot('profile'),
+		code: 'VX-08',
 		label: 'Profile',
 		caption: 'Track your stats, badges, and founder status.'
 	}
@@ -143,8 +137,10 @@ export default function LandingPage() {
 
 	return (
 		<div className="lp-root">
+			<BetaBanner />
 			<PublicNav />
 			<Hero />
+			<BetaCountdown />
 			<GalaxyStatus />
 			<Marquee />
 			<Pillars />
@@ -166,7 +162,7 @@ function Hero() {
 		<section className="lp-hero" aria-labelledby="lp-hero-title">
 			<div className="lp-hero-bg" aria-hidden="true">
 				<Image
-					src="/vexara-starfield.png"
+					src={screenshot('galaxy')}
 					alt=""
 					fill
 					priority
@@ -234,6 +230,155 @@ function Hero() {
 				<span className="lp-hero-corner-id">VEXARA · v0.1</span>
 				<span className="lp-hero-corner-bar" />
 				<span className="lp-hero-corner-coord">QUADRANT 04-7A · LIVE</span>
+			</div>
+		</section>
+	);
+}
+
+/* ──────────────────────────────────────────────────────────── */
+
+// Beta launch: 28 Jun 2026 18:30 UTC. Sign-up reward window closes 1 Jul 2026.
+const BETA_LAUNCH = new Date('2026-06-28T18:30:00Z');
+const SIGNUP_DEADLINE = new Date('2026-07-01T23:59:59Z');
+
+interface Countdown {
+	days: number;
+	hours: number;
+	minutes: number;
+	seconds: number;
+	done: boolean;
+}
+
+function useCountdown(target: Date): Countdown {
+	const compute = (): Countdown => {
+		const diff = target.getTime() - Date.now();
+		if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0, done: true };
+		const s = Math.floor(diff / 1000);
+		return {
+			days: Math.floor(s / 86400),
+			hours: Math.floor((s % 86400) / 3600),
+			minutes: Math.floor((s % 3600) / 60),
+			seconds: s % 60,
+			done: false
+		};
+	};
+	const [cd, setCd] = useState<Countdown>(compute);
+	useEffect(() => {
+		const id = setInterval(() => setCd(compute()), 1000);
+		return () => clearInterval(id);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [target]);
+	return cd;
+}
+
+function BetaBanner() {
+	const [dismissed, setDismissed] = useState(true);
+	const launched = useCountdown(BETA_LAUNCH).done;
+	const windowClosed = useCountdown(SIGNUP_DEADLINE).done;
+
+	useEffect(() => {
+		// Hide once the signup window fully closes, or if the user dismissed it.
+		if (windowClosed) return;
+		if (localStorage.getItem('vx-beta-banner-dismissed') === '1') return;
+		setDismissed(false);
+	}, [windowClosed]);
+
+	if (dismissed || windowClosed) return null;
+
+	return (
+		<div className="lp-beta-banner" role="region" aria-label="Beta announcement">
+			<span className="lp-beta-banner-dot" aria-hidden="true" />
+			<p className="lp-beta-banner-text">
+				{launched ? (
+					<>
+						<strong>Beta is LIVE.</strong> Sign up before <strong>July 1</strong> for{' '}
+						<strong>500 Vex Points</strong> free — found a nexus to earn permanent{' '}
+						<strong>Beta Founder</strong> status.
+					</>
+				) : (
+					<>
+						<strong>Beta launches June 28.</strong> Sign up before <strong>July 1</strong> for{' '}
+						<strong>500 Vex Points</strong> free, plus <strong>Beta Founder</strong> status when you
+						found a nexus.
+					</>
+				)}
+			</p>
+			<Link
+				href="/register?utm_source=site&utm_medium=banner&utm_campaign=beta_launch"
+				className="lp-beta-banner-cta"
+			>
+				Claim 500 VP →
+			</Link>
+			<button
+				type="button"
+				className="lp-beta-banner-close"
+				aria-label="Dismiss"
+				onClick={() => {
+					localStorage.setItem('vx-beta-banner-dismissed', '1');
+					setDismissed(true);
+				}}
+			>
+				✕
+			</button>
+		</div>
+	);
+}
+
+function BetaCountdown() {
+	const launchCd = useCountdown(BETA_LAUNCH);
+	const deadlineCd = useCountdown(SIGNUP_DEADLINE);
+	const launched = launchCd.done;
+	const cd = launched ? deadlineCd : launchCd;
+
+	// Once the signup window closes entirely, retire the section.
+	if (launched && deadlineCd.done) return null;
+
+	const units = [
+		{ v: cd.days, l: 'Days' },
+		{ v: cd.hours, l: 'Hours' },
+		{ v: cd.minutes, l: 'Min' },
+		{ v: cd.seconds, l: 'Sec' }
+	];
+
+	return (
+		<section className="lp-section lp-beta" aria-labelledby="lp-beta-title">
+			<div className="lp-beta-inner">
+				<span className="lp-beta-eyebrow">
+					{launched ? '// BETA LIVE · 500 VP ENDS JULY 1' : '// TRANSMISSION 01A · BETA COUNTDOWN'}
+				</span>
+				<h2 id="lp-beta-title" className="lp-beta-title">
+					{launched ? '500 Vex Points end July 1.' : 'Beta launches June 28.'}
+				</h2>
+				<p className="lp-beta-sub">
+					{launched
+						? 'Sign up before July 1 to claim 500 Vex Points free. Found a nexus any time during the beta to earn the permanent Beta Founder badge — never re-issued.'
+						: 'Enlist now and you are ready the moment the galaxy opens. Sign up before July 1 for 500 Vex Points free, then found a nexus during the beta for permanent Beta Founder status.'}
+				</p>
+
+				<div className="lp-beta-clock" aria-label="Countdown">
+					{units.map((u) => (
+						<div key={u.l} className="lp-beta-unit">
+							<span className="lp-beta-unit-num">{String(u.v).padStart(2, '0')}</span>
+							<span className="lp-beta-unit-label">{u.l}</span>
+						</div>
+					))}
+				</div>
+
+				<div className="lp-beta-perks">
+					<span className="lp-beta-perk">◆ 500 Vex Points on signup</span>
+					<span className="lp-beta-perk">◆ Permanent Beta Founder badge</span>
+					<span className="lp-beta-perk">◆ No download · plays in your browser</span>
+				</div>
+
+				<Link
+					href="/register?utm_source=site&utm_medium=countdown&utm_campaign=beta_launch"
+					className="lp-btn lp-btn-primary lp-btn-lg"
+				>
+					<span className="lp-btn-label">Claim your 500 VP</span>
+					<span className="lp-btn-arrow" aria-hidden="true">
+						→
+					</span>
+				</Link>
 			</div>
 		</section>
 	);

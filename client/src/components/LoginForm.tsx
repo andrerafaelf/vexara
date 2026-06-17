@@ -8,18 +8,18 @@ import { useAuth } from '../context/AuthContext';
 import { login as loginApi, resendVerification as resendVerificationApi } from '../services/api';
 import PasswordField from './PasswordField';
 import DiscordButton from './DiscordButton';
+import { screenshot } from '../data/gameIcons';
 import '../styles/Auth.css';
 
 const SCREENSHOTS: { src: string; label: string }[] = [
-	{ src: '/vexara-overview.png', label: 'Overview' },
-	{ src: '/vexara-starfield.png', label: 'Galaxy Map' },
-	{ src: '/vexara-factions.png', label: 'Factions' },
-	{ src: '/vexara-diplomacy.png', label: 'Diplomacy' },
-	{ src: '/vexara-combatreport.png', label: 'combat log' },
-	{ src: '/vexara-troops.png', label: 'Troops' },
-	{ src: '/vexara-buildings.png', label: 'Buildings' },
-	{ src: '/vexara-market.png', label: 'Market' },
-	{ src: '/vexara-profile.png', label: 'Profile' }
+	{ src: screenshot('overview'), label: 'Overview' },
+	{ src: screenshot('galaxy'), label: 'Galaxy Map' },
+	{ src: screenshot('factions'), label: 'Factions' },
+	{ src: screenshot('reports'), label: 'combat log' },
+	{ src: screenshot('troops'), label: 'Troops' },
+	{ src: screenshot('buildings'), label: 'Buildings' },
+	{ src: screenshot('market'), label: 'Market' },
+	{ src: screenshot('profile'), label: 'Profile' }
 ];
 
 const LoginForm: React.FC = () => {

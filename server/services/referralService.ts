@@ -7,6 +7,12 @@ export const REFERRAL_THRESHOLD = 1000;
 export const REFERRAL_EARLY_THRESHOLD = 100;
 export const MILESTONE_THRESHOLD = 500;
 
+// At this influence, a referred player triggers a one-time VP bonus paid to BOTH
+// sides of the referral. 250 VP each (~half the signup grant). Fires once per
+// referee, deduped by User.referralVpBonusAt.
+export const REFERRAL_VP_BONUS_THRESHOLD = 5000;
+export const REFERRAL_VP_BONUS_AMOUNT = 250;
+
 // Unambiguous alphabet: no 0/O/1/I/L. 8 chars → ~1.1e12 combinations.
 const REFERRAL_CODE_ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
 const REFERRAL_CODE_LENGTH = 8;
@@ -85,6 +91,11 @@ export async function checkAndGrantToken(
 	});
 	const refName = refereeUser?.username ?? 'Your referral';
 
+	// VP bonus is independent of the token milestones and self-deduping, so run it
+	// up front — it must fire even on calls where the token grants already exist
+	// (i.e. a referee who passed 1,000 long ago and is only now crossing 5,000).
+	await grantReferralVpBonus(refereeId, referee.referredById, currentPoints, refName);
+
 	// Early reward: 1 token when the referee hits REFERRAL_EARLY_THRESHOLD points.
 	// Keyed on a negative galaxyId sentinel so it doesn't collide with the main token's unique index.
 	const earlyKey = { refereeId, galaxyId: -galaxyId };
@@ -130,6 +141,52 @@ export async function checkAndGrantToken(
 		data: { url: '/profile' }
 	});
 	notifyBadgeUpdate(referee.referredById);
+}
+
+// One-time VP bonus to both the referee and their referrer once the referee
+// reaches REFERRAL_VP_BONUS_THRESHOLD influence. Deduped by User.referralVpBonusAt:
+// the updateMany WHERE referralVpBonusAt = null guarantees exactly one winner even
+// under concurrent calls, so the VP grant below never double-pays.
+async function grantReferralVpBonus(
+	refereeId: number,
+	referrerId: number,
+	currentPoints: number,
+	refName: string
+): Promise<void> {
+	if (currentPoints < REFERRAL_VP_BONUS_THRESHOLD) return;
+
+	const claim = await prisma.user.updateMany({
+		where: { id: refereeId, referralVpBonusAt: null },
+		data: { referralVpBonusAt: new Date() }
+	});
+	// Another concurrent call already claimed it (or it was granted before).
+	if (claim.count === 0) return;
+
+	await prisma.$transaction([
+		prisma.user.update({
+			where: { id: refereeId },
+			data: { vexPoints: { increment: REFERRAL_VP_BONUS_AMOUNT } }
+		}),
+		prisma.user.update({
+			where: { id: referrerId },
+			data: { vexPoints: { increment: REFERRAL_VP_BONUS_AMOUNT } }
+		})
+	]);
+
+	void sendPushToUser(referrerId, NOTIF.TOKEN_GRANTED, {
+		title: `+${REFERRAL_VP_BONUS_AMOUNT} Vex Points earned`,
+		body: `${refName} reached ${REFERRAL_VP_BONUS_THRESHOLD.toLocaleString()} influence - you both earned ${REFERRAL_VP_BONUS_AMOUNT} VP.`,
+		tag: `referral-vp-${refereeId}`,
+		data: { url: '/shop' }
+	});
+	void sendPushToUser(refereeId, NOTIF.TOKEN_GRANTED, {
+		title: `+${REFERRAL_VP_BONUS_AMOUNT} Vex Points earned`,
+		body: `You hit ${REFERRAL_VP_BONUS_THRESHOLD.toLocaleString()} influence - here's ${REFERRAL_VP_BONUS_AMOUNT} VP from your referral.`,
+		tag: `referral-vp-self-${refereeId}`,
+		data: { url: '/shop' }
+	});
+	notifyBadgeUpdate(referrerId);
+	notifyBadgeUpdate(refereeId);
 }
 
 export async function getReferralStatus(referrerId: number) {

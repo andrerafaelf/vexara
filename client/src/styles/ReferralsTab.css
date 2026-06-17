@@ -461,6 +461,231 @@
 }
 
 /* ╔══════════════════════════════════════════════════════════════════╗
+   ║ Hero invite card + reward ladder (revamp)
+   ╚══════════════════════════════════════════════════════════════════╝ */
+
+.referrals-hero {
+	position: relative;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+	padding: 22px;
+	background:
+		linear-gradient(135deg, rgba(255, 158, 61, 0.08), transparent 60%),
+		var(--color-navy-800, #0d1633);
+	border: 1px solid var(--border-accent, #2c3a78);
+	border-left: 3px solid var(--accent, #ff9e3d);
+}
+
+.referrals-hero-glow {
+	position: absolute;
+	top: -60%;
+	right: -10%;
+	width: 320px;
+	height: 320px;
+	background: radial-gradient(circle, rgba(255, 158, 61, 0.16), transparent 70%);
+	pointer-events: none;
+}
+
+.referrals-hero-head {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.referrals-hero-kicker {
+	font-family: var(--font-mono);
+	font-size: 11px;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--accent, #ff9e3d);
+}
+
+.referrals-hero-title {
+	margin: 0;
+	font-size: 22px;
+	line-height: 1.2;
+	font-weight: 700;
+	color: var(--text-primary, #e0e8ff);
+}
+
+.referrals-hero-sub {
+	margin: 0;
+	font-size: 14px;
+	line-height: 1.5;
+	color: var(--text-muted);
+	max-width: 52ch;
+}
+
+.referrals-hero-sub strong {
+	color: var(--text-primary, #e0e8ff);
+}
+
+.referrals-hero-link {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.referrals-hero-link-label {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+
+.referrals-hero-link-row {
+	display: flex;
+	gap: 8px;
+	align-items: stretch;
+}
+
+.referrals-hero-link-value {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	align-items: center;
+	padding: 10px 12px;
+	background: var(--color-navy-900, #070d20);
+	border: 1px solid var(--border-default, #1e2d5a);
+	font-family: var(--font-mono);
+	font-size: 13px;
+	color: var(--text-primary, #e0e8ff);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.referrals-hero-copy {
+	flex-shrink: 0;
+}
+
+.referrals-hero-actions {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.referrals-hero-actions .referrals-btn {
+	flex: 1;
+	min-width: 140px;
+}
+
+.referrals-hero-stats {
+	position: relative;
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 1px;
+	background: var(--border-default, #1e2d5a);
+	border: 1px solid var(--border-default, #1e2d5a);
+}
+
+.referrals-hero-stat {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	padding: 12px 8px;
+	background: var(--color-navy-900, #070d20);
+}
+
+.referrals-hero-stat-num {
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+	font-size: 22px;
+	font-weight: 700;
+	color: var(--accent, #ff9e3d);
+	line-height: 1;
+}
+
+.referrals-hero-stat-label {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+
+/* Reward ladder */
+.referrals-ladder {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	gap: 10px;
+}
+
+.referrals-ladder-card {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 14px;
+	background: var(--color-navy-800, #0d1633);
+	border: 1px solid var(--border-default, #1e2d5a);
+	border-top: 2px solid var(--border-default, #1e2d5a);
+}
+
+.referrals-ladder-card--best {
+	border-top-color: var(--accent, #ff9e3d);
+	background: linear-gradient(180deg, rgba(255, 158, 61, 0.06), transparent 40%),
+		var(--color-navy-800, #0d1633);
+}
+
+.referrals-ladder-card--them {
+	border-top-color: var(--color-cyan-400, #22d3ee);
+}
+
+.referrals-ladder-tag {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+
+.referrals-ladder-tag--best {
+	color: var(--accent, #ff9e3d);
+}
+
+.referrals-ladder-tag--them {
+	color: var(--color-cyan-400, #22d3ee);
+}
+
+.referrals-ladder-reward {
+	font-size: 15px;
+	font-weight: 700;
+	color: var(--text-primary, #e0e8ff);
+}
+
+.referrals-ladder-desc {
+	font-size: 12px;
+	line-height: 1.45;
+	color: var(--text-muted);
+}
+
+.referrals-orders-note {
+	margin: 0;
+	padding: 10px 12px;
+	font-size: 12px;
+	line-height: 1.5;
+	color: var(--text-muted);
+	background: rgba(255, 158, 61, 0.05);
+	border-left: 2px solid var(--accent, #ff9e3d);
+}
+
+@media (max-width: 640px) {
+	.referrals-ladder {
+		grid-template-columns: 1fr;
+	}
+	.referrals-hero-title {
+		font-size: 19px;
+	}
+}
+
+/* ╔══════════════════════════════════════════════════════════════════╗
    ║ Pass C · ReferralsTab industrial restyle
    ╚══════════════════════════════════════════════════════════════════╝ */
 
@@ -522,4 +747,38 @@
 [class*='referrals-progress'][class*='-bar'],
 [class*='referrals-progress'][class*='-track'] {
 	border-radius: 0;
+}
+
+/* ── Revamp overrides ─────────────────────────────────────────────────
+   The industrial pass above globally restyles every referrals-*-title /
+   -card by attribute selector. Re-assert the hero/ladder treatment here
+   (declared last → wins on equal specificity). */
+.referrals-hero [class*='-title'] {
+	font-family: inherit;
+	font-size: 22px;
+	letter-spacing: -0.01em;
+	text-transform: none;
+	color: var(--text-primary, #e0e8ff);
+}
+
+[class*='referrals-ladder'][class*='-card'] {
+	border-left: 1px solid var(--border-default, #1e2d5a);
+}
+
+.referrals-ladder-card--best {
+	border-top: 2px solid var(--accent, #ff9e3d);
+}
+
+.referrals-ladder-card--them {
+	border-top: 2px solid var(--color-cyan-400, #22d3ee);
+}
+
+[class*='referrals-ladder'][class*='-card']:hover {
+	border-left-color: var(--border-default, #1e2d5a);
+}
+
+@media (max-width: 640px) {
+	.referrals-hero [class*='-title'] {
+		font-size: 19px;
+	}
 }
