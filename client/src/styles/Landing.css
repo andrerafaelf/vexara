@@ -1366,6 +1366,75 @@
 	letter-spacing: 0.04em;
 }
 
+/* Full 50-level reward table */
+.lp-seasons-full {
+	margin-top: 32px;
+	background: var(--color-navy-700);
+	border: 1px solid var(--border-default);
+	border-radius: var(--radius-sm, 4px);
+	overflow: hidden;
+}
+
+.lp-seasons-full-head {
+	padding: 14px 20px 12px;
+	border-bottom: 1px solid var(--border-default);
+}
+
+.lp-seasons-full-scroll {
+	max-height: 520px;
+	overflow-y: auto;
+}
+
+.lp-seasons-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 13px;
+}
+
+.lp-seasons-table th,
+.lp-seasons-table td {
+	text-align: left;
+	padding: 10px 20px;
+	border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
+	vertical-align: top;
+}
+
+.lp-seasons-table thead th {
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	background: var(--color-navy-700);
+	font-family: var(--font-mono);
+	font-size: 10px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	font-weight: 700;
+}
+
+.lp-seasons-table td {
+	color: var(--text-default);
+}
+
+.lp-seasons-table-paid {
+	color: var(--accent);
+}
+
+.lp-seasons-table-lvl {
+	width: 48px;
+	font-family: var(--font-mono);
+	color: var(--text-muted);
+	font-variant-numeric: tabular-nums;
+}
+
+.lp-seasons-table-milestone td {
+	background: rgba(255, 158, 61, 0.04);
+}
+
+.lp-seasons-table-milestone .lp-seasons-table-lvl {
+	color: var(--accent);
+}
+
 /* =========================================================== BUILTBY ==== */
 
 .lp-builtby-card {

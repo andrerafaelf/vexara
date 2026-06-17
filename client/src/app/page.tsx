@@ -38,7 +38,7 @@ const faqSchema = {
 			name: 'Is Vexara free to play?',
 			acceptedAnswer: {
 				'@type': 'Answer',
-				text: 'Yes. Vexara is completely free to play in your browser. A season pass exists: the free track gives every player resources and badges through play. A paid track (1,000 Vex Points, equivalent to €4.99) adds season-scoped titles, temporary production boosts, and 600 Vex Points back over 30 levels. No pass reward affects combat stats or troop power.'
+				text: 'Yes. Vexara is completely free to play in your browser. A season pass exists: the free track gives every player resources and badges through play. A paid track (1,000 Vex Points, equivalent to €4.99) adds season-scoped titles, temporary production boosts, supporter tokens, and 750 Vex Points back across 50 levels. No pass reward affects combat stats or troop power.'
 			}
 		},
 		{
@@ -78,7 +78,7 @@ const faqSchema = {
 			name: 'Is Vexara pay-to-win?',
 			acceptedAnswer: {
 				'@type': 'Answer',
-				text: 'No. Combat power (troops, buildings, attack stats, defense stats) cannot be purchased. The paid season pass track (1,000 Vex Points, equivalent to €4.99) adds season-scoped titles, temporary production boosts, and 600 Vex Points back over 30 levels. Production boosts are time-limited economic perks, not combat multipliers. Every player competes on the same military terms.'
+				text: 'No. Combat power (troops, buildings, attack stats, defense stats) cannot be purchased. The paid season pass track (1,000 Vex Points, equivalent to €4.99) adds season-scoped titles, temporary production boosts, supporter tokens, and 750 Vex Points back across 50 levels. Production boosts are time-limited economic perks, not combat multipliers. Every player competes on the same military terms.'
 			}
 		}
 	]

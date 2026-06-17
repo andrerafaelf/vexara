@@ -10,6 +10,7 @@ import SiteFooter from '@/components/SiteFooter';
 import PublicNav from '@/components/PublicNav';
 import { getPublicGalaxyStatus } from '@/services/api';
 import { DISCORD_URL } from '@/constants/social';
+import { PASS_LEVELS } from '@/constants/vexPass';
 import '@/styles/Landing.css';
 
 const FOOTAGE: { src: string; label: string; code: string; caption: string }[] = [
@@ -734,18 +735,47 @@ function RosterTeaser() {
 
 /* ──────────────────────────────────────────────────────────── */
 
+// Headline milestones. Mirrors server/utils/battlePass.ts + VexPassModal exactly.
 const PASS_TIERS = [
-	{ level: 1,  track: 'Free',  reward: 'Resources: Biomass' },
 	{ level: 1,  track: 'Paid',  reward: 'Season title: Conscript' },
-	{ level: 5,  track: 'Free',  reward: 'Bronze badge' },
-	{ level: 6,  track: 'Paid',  reward: 'Season title: Operative' },
-	{ level: 15, track: 'Free',  reward: 'Silver badge' },
-	{ level: 15, track: 'Paid',  reward: 'Season title: Proven' },
-	{ level: 25, track: 'Free',  reward: 'Gold badge' },
-	{ level: 25, track: 'Paid',  reward: 'Season title: Vex Commander' },
-	{ level: 30, track: 'Free',  reward: 'Title: Veteran + Platinum badge' },
-	{ level: 30, track: 'Paid',  reward: 'Title: Season Conqueror + 200 Vex Points + +25% production 72h' }
+	{ level: 8,  track: 'Paid',  reward: 'Season title: Operative' },
+	{ level: 10, track: 'Free',  reward: 'Bronze badge' },
+	{ level: 18, track: 'Paid',  reward: 'Season title: Proven' },
+	{ level: 25, track: 'Free',  reward: 'Silver badge' },
+	{ level: 30, track: 'Paid',  reward: 'Season title: Vex Commander' },
+	{ level: 40, track: 'Free',  reward: 'Title: Veteran + Gold badge' },
+	{ level: 45, track: 'Paid',  reward: 'Season title: High Commander' },
+	{ level: 50, track: 'Free',  reward: 'Platinum badge + 20 Vex Points' },
+	{ level: 50, track: 'Paid',  reward: 'Season Conqueror + 170 Vex Points + 4 tokens + 35% production 120h' }
 ];
+
+// Reward string → plain marketing label (public page, no in-game icons).
+function fmtPassReward(raw: string | null): string {
+	if (!raw) return '—';
+	return raw
+		.split(',')
+		.map((part) => {
+			const seg = part.trim();
+			const [type, ...rest] = seg.split(':');
+			if (type === 'resources') {
+				const total = (Number(rest[0] ?? 0) + Number(rest[1] ?? 0) + Number(rest[2] ?? 0)).toLocaleString();
+				return `${total} resources`;
+			}
+			if (type === 'boost') return `+${rest[1] ?? '?'}% production / ${rest[2] ?? '?'}h`;
+			if (type === 'title') return `Title: ${rest.join(':')}`;
+			if (type === 'badge') {
+				const tier = rest[0] ?? '';
+				return `${tier.charAt(0).toUpperCase()}${tier.slice(1)} badge`;
+			}
+			if (type === 'vexpoints') return `${rest[0]} Vex Points`;
+			if (type === 'token') {
+				const count = Number(rest[0] ?? 1);
+				return `${count} supporter token${count !== 1 ? 's' : ''}`;
+			}
+			return seg;
+		})
+		.join(' · ');
+}
 
 function Seasons() {
 	return (
@@ -770,11 +800,11 @@ function Seasons() {
 						won, not purchased.
 					</p>
 					<p>
-						A 30-level <strong>Vex Pass</strong> runs alongside every season. The free track
+						A 50-level <strong>Vex Pass</strong> runs alongside every season. The free track
 						(included for everyone) gives resources and badges as you play. The paid track costs
 						1,000 Vex Points (equivalent to €4.99), which adds season-scoped titles, temporary
-						production boosts, and 600 Vex Points back over 30 levels. No pass reward touches
-						combat stats or troop power.
+						production boosts, supporter tokens, and 750 Vex Points back across the 50 levels. No
+						pass reward touches combat stats or troop power.
 					</p>
 				</div>
 
@@ -793,6 +823,41 @@ function Seasons() {
 					</ol>
 					<p className="lp-seasons-pass-note">Paid track: 1,000 Vex Points (€4.99). Free track included for all players.</p>
 				</div>
+			</div>
+
+			<div className="lp-seasons-full">
+				<div className="lp-seasons-full-head">
+					<span className="lp-seasons-pass-label">// VEX PASS · FULL REWARD TABLE · 50 LEVELS</span>
+				</div>
+				<div className="lp-seasons-full-scroll">
+					<table className="lp-seasons-table">
+						<thead>
+							<tr>
+								<th className="lp-seasons-table-lvl">LV</th>
+								<th>
+									<span className="lp-seasons-pass-track lp-seasons-pass-track--free">Free</span> Field issue
+								</th>
+								<th>
+									<span className="lp-seasons-pass-track lp-seasons-pass-track--paid">Paid</span> Command pass
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							{PASS_LEVELS.map((row) => (
+								<tr key={row.level} className={row.level % 10 === 0 ? 'lp-seasons-table-milestone' : undefined}>
+									<td className="lp-seasons-table-lvl">{row.level}</td>
+									<td>{fmtPassReward(row.free)}</td>
+									<td className="lp-seasons-table-paid">{fmtPassReward(row.paid)}</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
+				</div>
+				<p className="lp-seasons-pass-note">
+					Free track returns 250 Vex Points across 50 levels; the paid track returns a further 500 (750
+					total on a 1,000-point pass). Titles and badges are permanent; production boosts and supporter
+					tokens are season-scoped. Nothing here affects combat stats or troop power.
+				</p>
 			</div>
 		</section>
 	);
