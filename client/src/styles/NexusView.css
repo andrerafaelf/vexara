@@ -2983,7 +2983,9 @@
 	overflow-x: hidden;
 }
 
-.map-tab h3 {
+.map-tab h3,
+.deployed-tab h3,
+.logistics-tab h3 {
 	color: var(--text-muted);
 	margin-bottom: 15px;
 	font-size: var(--text-xs);
@@ -4804,7 +4806,9 @@
 /* ── Buildings tab ────────────────────────────────────────────── */
 .buildings-tab h3,
 .troops-tab h3,
-.map-tab h3 {
+.map-tab h3,
+.deployed-tab h3,
+.logistics-tab h3 {
 	font-size: clamp(20px, 2.4vw, 26px);
 	font-weight: 800;
 	letter-spacing: -0.025em;
@@ -4822,10 +4826,18 @@
 .map-tab h3::before {
 	content: '// CARTOGRAPHY';
 }
+.deployed-tab h3::before {
+	content: '// LOGISTICS · FORCES';
+}
+.logistics-tab h3::before {
+	content: '// LOGISTICS · SUPPLY';
+}
 
 .buildings-tab h3::before,
 .troops-tab h3::before,
-.map-tab h3::before {
+.map-tab h3::before,
+.deployed-tab h3::before,
+.logistics-tab h3::before {
 	display: block;
 	font-family: var(--font-mono);
 	font-size: 10px;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -124,6 +124,8 @@ interface PublicGalaxyStatus {
 export default function LandingPage() {
 	const router = useRouter();
 	const [redirectingAuthed, setRedirectingAuthed] = useState(false);
+	const [bannerVisible, setBannerVisible] = useState(false);
+	const rootRef = useRef<HTMLDivElement | null>(null);
 
 	useEffect(() => {
 		if (typeof window === 'undefined') return;
@@ -133,11 +135,20 @@ export default function LandingPage() {
 		}
 	}, [router]);
 
+	// Publish the banner's *measured* height to the root as --lp-banner-content-h
+	// so the nav/hero offsets stay exact even when the banner text wraps to two
+	// lines on narrow screens. Falls back to a sane default via CSS when 0.
+	const handleBannerResize = useCallback((height: number) => {
+		const root = rootRef.current;
+		if (!root) return;
+		root.style.setProperty('--lp-banner-content-h', `${Math.round(height)}px`);
+	}, []);
+
 	if (redirectingAuthed) return null;
 
 	return (
-		<div className="lp-root">
-			<BetaBanner />
+		<div ref={rootRef} className={`lp-root${bannerVisible ? ' lp-has-banner' : ''}`}>
+			<BetaBanner onVisibilityChange={setBannerVisible} onResize={handleBannerResize} />
 			<PublicNav />
 			<Hero />
 			<BetaCountdown />
@@ -271,10 +282,17 @@ function useCountdown(target: Date): Countdown {
 	return cd;
 }
 
-function BetaBanner() {
+function BetaBanner({
+	onVisibilityChange,
+	onResize
+}: {
+	onVisibilityChange?: (visible: boolean) => void;
+	onResize?: (height: number) => void;
+}) {
 	const [dismissed, setDismissed] = useState(true);
 	const launched = useCountdown(BETA_LAUNCH).done;
 	const windowClosed = useCountdown(SIGNUP_DEADLINE).done;
+	const ref = useRef<HTMLDivElement | null>(null);
 
 	useEffect(() => {
 		// Hide once the signup window fully closes, or if the user dismissed it.
@@ -283,43 +301,78 @@ function BetaBanner() {
 		setDismissed(false);
 	}, [windowClosed]);
 
-	if (dismissed || windowClosed) return null;
+	const visible = !dismissed && !windowClosed;
+	useEffect(() => {
+		onVisibilityChange?.(visible);
+	}, [visible, onVisibilityChange]);
+
+	// Report the banner's real rendered height so offsets stay exact when the
+	// text wraps to two lines on narrow screens or grows for a notch inset.
+	useEffect(() => {
+		const el = ref.current;
+		if (!el || !visible) return;
+		const report = () => onResize?.(el.getBoundingClientRect().height);
+		report();
+		const ro = new ResizeObserver(report);
+		ro.observe(el);
+		return () => ro.disconnect();
+	}, [visible, onResize]);
+
+	if (!visible) return null;
 
 	return (
-		<div className="lp-beta-banner" role="region" aria-label="Beta announcement">
-			<span className="lp-beta-banner-dot" aria-hidden="true" />
+		<div className="lp-beta-banner" role="region" aria-label="Beta announcement" ref={ref}>
 			<p className="lp-beta-banner-text">
-				{launched ? (
-					<>
-						<strong>Beta is LIVE.</strong> Sign up before <strong>July 1</strong> for{' '}
-						<strong>500 Vex Points</strong> free — found a nexus to earn permanent{' '}
-						<strong>Beta Founder</strong> status.
-					</>
-				) : (
-					<>
-						<strong>Beta launches June 28.</strong> Sign up before <strong>July 1</strong> for{' '}
-						<strong>500 Vex Points</strong> free, plus <strong>Beta Founder</strong> status when you
-						found a nexus.
-					</>
-				)}
+				<span className="lp-beta-banner-dot" aria-hidden="true" />
+				{/* Full copy on wider screens, concise copy on phones. */}
+				<span className="lp-beta-banner-long">
+					{launched ? (
+						<>
+							<strong>Beta is LIVE.</strong> Sign up before <strong>July 1</strong> for{' '}
+							<strong>500 Vex Points</strong> free — found a nexus to earn permanent{' '}
+							<strong>Beta Founder</strong> status.
+						</>
+					) : (
+						<>
+							<strong>Beta launches June 28.</strong> Sign up before <strong>July 1</strong> for{' '}
+							<strong>500 Vex Points</strong> free, plus <strong>Beta Founder</strong> status when
+							you found a nexus.
+						</>
+					)}
+				</span>
+				<span className="lp-beta-banner-short">
+					{launched ? (
+						<>
+							<strong>Beta is LIVE.</strong> Join by <strong>July 1</strong> for{' '}
+							<strong>500 VP</strong> free.
+						</>
+					) : (
+						<>
+							<strong>Beta June 28.</strong> Join by <strong>July 1</strong> for{' '}
+							<strong>500 VP</strong> free.
+						</>
+					)}
+				</span>
 			</p>
-			<Link
-				href="/register?utm_source=site&utm_medium=banner&utm_campaign=beta_launch"
-				className="lp-beta-banner-cta"
-			>
-				Claim 500 VP →
-			</Link>
-			<button
-				type="button"
-				className="lp-beta-banner-close"
-				aria-label="Dismiss"
-				onClick={() => {
-					localStorage.setItem('vx-beta-banner-dismissed', '1');
-					setDismissed(true);
-				}}
-			>
-				✕
-			</button>
+			<div className="lp-beta-banner-actions">
+				<Link
+					href="/register?utm_source=site&utm_medium=banner&utm_campaign=beta_launch"
+					className="lp-beta-banner-cta"
+				>
+					Claim 500 VP →
+				</Link>
+				<button
+					type="button"
+					className="lp-beta-banner-close"
+					aria-label="Dismiss beta announcement"
+					onClick={() => {
+						localStorage.setItem('vx-beta-banner-dismissed', '1');
+						setDismissed(true);
+					}}
+				>
+					✕
+				</button>
+			</div>
 		</div>
 	);
 }

@@ -685,6 +685,50 @@
 	}
 }
 
+@media (max-width: 520px) {
+	.referrals-hero {
+		padding: 16px;
+		gap: 14px;
+	}
+	.referrals-hero-title {
+		font-size: 18px;
+	}
+	.referrals-hero-sub {
+		font-size: 13px;
+	}
+	/* Stack the link + copy button so the URL field keeps a readable width. */
+	.referrals-hero-link-row {
+		flex-direction: column;
+	}
+	.referrals-hero-copy {
+		width: 100%;
+		justify-content: center;
+	}
+	/* Each secondary action takes a full row; never clip the code text. */
+	.referrals-hero-actions {
+		flex-direction: column;
+	}
+	.referrals-hero-actions .referrals-btn {
+		flex: none;
+		width: 100%;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+}
+
+/* Stat labels need room; let them wrap cleanly and keep the grid 3-up. */
+@media (max-width: 360px) {
+	.referrals-hero-stat-num {
+		font-size: 18px;
+	}
+	.referrals-hero-stat-label {
+		font-size: 9px;
+		letter-spacing: 0.08em;
+	}
+}
+
 /* ╔══════════════════════════════════════════════════════════════════╗
    ║ Pass C · ReferralsTab industrial restyle
    ╚══════════════════════════════════════════════════════════════════╝ */

@@ -888,7 +888,9 @@
 
 .lp-footage-screen-img {
 	position: relative;
-	aspect-ratio: 16 / 9;
+	/* Matches the native ratio of the CDN screenshots (2560×1271) so there are
+	   no letterbox bars. cover keeps it gap-free if a future capture drifts. */
+	aspect-ratio: 2560 / 1271;
 	overflow: hidden;
 	background: #000;
 }
@@ -1489,18 +1491,43 @@
 
 /* ====================================================== BETA BANNER ==== */
 
+/* Measured banner height (set by JS via ResizeObserver), with a safe fallback
+   for first paint / no-JS. Includes the safe-area padding the banner owns. */
+.lp-root {
+	--lp-banner-content-h: 40px;
+	--lp-banner-h: calc(var(--lp-banner-content-h) + var(--safe-top));
+}
+
 .lp-beta-banner {
-	position: sticky;
+	position: fixed;
 	top: 0;
-	z-index: 50;
+	left: 0;
+	right: 0;
+	/* Above the fixed nav (--z-sticky: 100) so it's never hidden underneath it. */
+	z-index: var(--z-drawer);
+	box-sizing: border-box;
 	display: flex;
 	align-items: center;
-	gap: 14px;
-	padding: 9px 18px;
+	gap: 12px;
+	/* The banner is the topmost bar, so it owns the notch inset. */
+	padding: 9px 16px;
+	padding-top: max(9px, var(--safe-top));
 	background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #ff5a3c));
 	color: #0a0e1f;
 	font-family: var(--font-mono);
 	border-bottom: 1px solid color-mix(in srgb, var(--accent) 60%, #000);
+}
+
+/* When the banner is present, drop the nav below it. The banner already consumed
+   the safe-area inset, so the nav reverts to its base padding (no double inset). */
+.lp-has-banner .vx-nav {
+	top: var(--lp-banner-content-h);
+	padding-top: 12px;
+}
+
+/* The hero (.vx-nav + *) already reserves --vx-nav-height; add the banner on top. */
+.lp-has-banner .lp-hero {
+	margin-top: calc(var(--vx-nav-height) + var(--lp-banner-content-h));
 }
 
 .lp-beta-banner-dot {
@@ -1509,6 +1536,9 @@
 	border-radius: 50%;
 	background: #0a0e1f;
 	flex-shrink: 0;
+	display: inline-block;
+	margin-right: 8px;
+	vertical-align: middle;
 	animation: lp-beta-pulse 1.6s ease-in-out infinite;
 }
 
@@ -1519,7 +1549,8 @@
 
 .lp-beta-banner-text {
 	margin: 0;
-	flex: 1;
+	flex: 1 1 auto;
+	min-width: 0;
 	font-size: 13px;
 	line-height: 1.35;
 	letter-spacing: 0.01em;
@@ -1529,8 +1560,22 @@
 	font-weight: 800;
 }
 
+.lp-beta-banner-short {
+	display: none;
+}
+
+.lp-beta-banner-actions {
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
 .lp-beta-banner-cta {
 	flex-shrink: 0;
+	display: inline-flex;
+	align-items: center;
+	min-height: 32px;
 	padding: 6px 14px;
 	background: #0a0e1f;
 	color: var(--accent);
@@ -1539,6 +1584,7 @@
 	letter-spacing: 0.04em;
 	text-transform: uppercase;
 	text-decoration: none;
+	white-space: nowrap;
 	border: 1px solid #0a0e1f;
 	transition: background 0.15s, color 0.15s;
 }
@@ -1551,13 +1597,17 @@
 
 .lp-beta-banner-close {
 	flex-shrink: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
 	background: transparent;
 	border: none;
 	color: #0a0e1f;
-	font-size: 14px;
+	font-size: 15px;
 	cursor: pointer;
-	opacity: 0.7;
-	padding: 2px 4px;
+	opacity: 0.75;
 	line-height: 1;
 }
 
@@ -1613,15 +1663,18 @@
 	display: flex;
 	gap: 10px;
 	margin: 4px 0;
+	width: 100%;
+	max-width: 360px;
 }
 
 .lp-beta-unit {
 	display: flex;
+	flex: 1 1 0;
+	min-width: 0;
 	flex-direction: column;
 	align-items: center;
 	gap: 6px;
-	min-width: 72px;
-	padding: 14px 10px;
+	padding: 14px 6px;
 	background: var(--color-navy-800);
 	border: 1px solid var(--border-default);
 	border-top: 2px solid var(--accent);
@@ -1661,19 +1714,59 @@
 
 @media (max-width: 560px) {
 	.lp-beta-banner {
-		flex-wrap: wrap;
 		gap: 8px;
+		padding-left: 12px;
+		padding-right: 8px;
 	}
 	.lp-beta-banner-text {
-		flex-basis: 100%;
-		order: 2;
+		font-size: 12px;
+		line-height: 1.3;
+	}
+	.lp-beta-banner-long {
+		display: none;
+	}
+	.lp-beta-banner-short {
+		display: inline;
+	}
+	/* Drop the uppercase CTA label to an icon-free compact pill; keep it tappable. */
+	.lp-beta-banner-cta {
+		padding: 6px 10px;
+		letter-spacing: 0.02em;
+	}
+	.lp-beta-clock {
+		gap: 6px;
 	}
 	.lp-beta-unit {
-		min-width: 60px;
-		padding: 10px 6px;
+		padding: 10px 4px;
 	}
 	.lp-beta-unit-num {
-		font-size: 26px;
+		font-size: clamp(20px, 7vw, 26px);
+	}
+	.lp-beta-perks {
+		gap: 8px 14px;
+		font-size: 11px;
+	}
+	.lp-beta-sub {
+		font-size: 14px;
+	}
+	.lp-beta-eyebrow {
+		letter-spacing: 0.12em;
+		font-size: 10px;
+		text-align: center;
+	}
+	/* Full-width CTA reads better and is easier to tap on phones. */
+	.lp-beta .lp-btn-lg {
+		width: 100%;
+		max-width: 360px;
+		justify-content: center;
+	}
+}
+
+/* Very narrow phones: shorten the CTA so the row never overflows. */
+@media (max-width: 380px) {
+	.lp-beta-banner-cta {
+		font-size: 11px;
+		padding: 6px 8px;
 	}
 }
 
