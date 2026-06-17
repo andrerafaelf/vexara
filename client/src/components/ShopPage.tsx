@@ -541,7 +541,7 @@ export default function ShopPage() {
 							<div className="shop-utility-kicker">Campaign issue desk</div>
 							<div className="shop-utility-name">Issue a command campaign pass</div>
 							<div className="shop-utility-desc">
-								Authorize Command Issue rewards for another commander in your active galaxy.
+								Authorize Command Pass rewards for another commander in your active galaxy.
 								Existing pass holders cannot receive a second issue.
 							</div>
 							<div className="shop-utility-cost">Issue cost: 1,000 VP</div>

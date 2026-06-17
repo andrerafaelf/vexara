@@ -374,7 +374,7 @@ export default function VexPassModal({ pass, onClose, seasonEndsAt }: Props) {
 					</div>
 					<div className="vpm-col-paid">
 						<span className="vpm-track-badge vpm-track-badge--paid">Authorized</span>
-						Command issue
+						Command pass
 					</div>
 				</div>
 
@@ -479,14 +479,14 @@ export default function VexPassModal({ pass, onClose, seasonEndsAt }: Props) {
 										onClick={() => setConfirmingPurchase(true)}
 										disabled={mutation.isPending}
 									>
-										Add Command Issue (1,000 VP)
+										Add Command Pass (1,000 VP)
 									</button>
 								)
 							) : (
 								<div className="vpm-need-vp">
 									<p className="vpm-need-vp-text">
 										You need <strong>{(PASS_COST_VP - vexPoints).toLocaleString()} more VP</strong>.
-										Add credit below to authorize Command Issue rewards.
+										Add credit below to authorize Command Pass rewards.
 									</p>
 									<div className="vpm-vp-packs">
 										{VP_PACKS.map((pack) => (
@@ -510,7 +510,7 @@ export default function VexPassModal({ pass, onClose, seasonEndsAt }: Props) {
 
 				{pass.hasPaidPass && (
 					<div className="vpm-footer vpm-footer--owned">
-						<span>Command Issue authorized. Collect earned supplies from the ledger above.</span>
+						<span>Command Pass authorized. Collect earned supplies from the ledger above.</span>
 					</div>
 				)}
 
