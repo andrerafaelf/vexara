@@ -161,6 +161,23 @@ export function isOnboardingTrainEligible(
 	return ONBOARDING_STEPS_BEFORE_TRAIN.has(lastCompletedStep);
 }
 
+// Onboarding discount taper — mirrors server/utils/gameConstants.ts. Once the
+// step-gate above would still grant the discount, scale it down linearly by
+// account age so a returning player who paused mid-tutorial doesn't hit a
+// hard cliff. 1 = full discount, 0 = none; only ever shrinks the discount.
+export const ONBOARDING_TAPER_DURATION_MS = 3 * 24 * 60 * 60 * 1000;
+
+export function getOnboardingTaperFraction(
+	createdAt: Date | string | null | undefined,
+	now: Date = new Date()
+): number {
+	if (!createdAt) return 1;
+	const accountAgeMs = now.getTime() - new Date(createdAt).getTime();
+	if (accountAgeMs <= 0) return 1;
+	if (accountAgeMs >= ONBOARDING_TAPER_DURATION_MS) return 0;
+	return 1 - accountAgeMs / ONBOARDING_TAPER_DURATION_MS;
+}
+
 // Onboarding build-time overrides — mirrors server/utils/gameConstants.ts.
 // CC Lv1→2 and Armor Foundry Lv0→1 collapse to 20s during onboarding so the
 // player reaches troops without waiting multiple minutes doing nothing.

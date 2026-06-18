@@ -27,10 +27,21 @@ export const NOTIF = {
 	FRIEND_MESSAGE: 'friendMessage',
 	NEARBY_GALAXY_EVENT: 'nearbyGalaxyEvent',
 	PROTECTION_EXPIRING: 'protectionExpiring',
-	TOKEN_GRANTED: 'tokenGranted'
+	TOKEN_GRANTED: 'tokenGranted',
+	AUTO_REQUEUE_PAUSED: 'autoRequeuePaused'
 } as const;
 
 export type NotifCategory = (typeof NOTIF)[keyof typeof NOTIF];
+
+// A Notification API action button. `url` is optional extra data the SW
+// reads to navigate somewhere more specific than the notification's own
+// data.url when this particular action is clicked (e.g. "Train Again" deep
+// links to a retrain query param the click-anywhere action doesn't need).
+interface PushAction {
+	action: string;
+	title: string;
+	url?: string;
+}
 
 interface PushPayload {
 	title: string;
@@ -38,6 +49,7 @@ interface PushPayload {
 	icon?: string;
 	tag?: string;
 	data?: { url?: string; [key: string]: unknown };
+	actions?: PushAction[];
 }
 
 export async function sendPushToUser(
@@ -64,7 +76,8 @@ export async function sendPushToUser(
 			icon: payload.icon || '/logo192.png',
 			badge: '/logo192.png',
 			tag: payload.tag || category,
-			data: { url: payload.data?.url || '/', ...payload.data }
+			data: { url: payload.data?.url || '/', ...payload.data },
+			actions: payload.actions
 		});
 
 		const staleEndpoints: string[] = [];

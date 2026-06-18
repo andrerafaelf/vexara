@@ -338,6 +338,71 @@ export const sendBackTroops = (transferId: string) =>
 export const getNexusTroopTransfers = (nexusId: string) =>
 	apiRequest(`/troop-transfer/nexus/${nexusId}`);
 
+// Standing defensive orders — "if this nexus is attacked, auto-send reserve
+// troops from a chosen nexus" (fires via the same troop-transfer mechanic
+// above, triggered server-side on incoming attack).
+export const getStandingOrders = () => apiRequest('/standing-orders');
+
+export const createStandingOrder = (
+	protectedNexusId: string,
+	sourceNexusId: string,
+	troops: Record<string, number>
+) =>
+	apiRequest('/standing-orders', {
+		method: 'POST',
+		body: JSON.stringify({ protectedNexusId, sourceNexusId, troops })
+	});
+
+export const setStandingOrderActive = (id: number, isActive: boolean) =>
+	apiRequest(`/standing-orders/${id}`, {
+		method: 'PATCH',
+		body: JSON.stringify({ isActive })
+	});
+
+export const deleteStandingOrder = (id: number) =>
+	apiRequest(`/standing-orders/${id}`, { method: 'DELETE' });
+
+// Auto-requeue rules — re-queues a training batch or building upgrade each
+// time the previous one drains. Fires server-side through the exact same
+// validation as the manual train/upgrade endpoints; a failed attempt pauses
+// the rule and sends a push notification rather than erroring silently.
+export const getAutoRequeueRules = () => apiRequest('/auto-requeue');
+
+export const createAutoRequeueRule = (params: {
+	nexusId: string;
+	kind: 'training' | 'building';
+	troopType?: string;
+	amount?: number;
+	building?: string;
+}) =>
+	apiRequest('/auto-requeue', {
+		method: 'POST',
+		body: JSON.stringify(params)
+	});
+
+export const setAutoRequeueRuleActive = (id: number, isActive: boolean) =>
+	apiRequest(`/auto-requeue/${id}`, {
+		method: 'PATCH',
+		body: JSON.stringify({ isActive })
+	});
+
+export const deleteAutoRequeueRule = (id: number) =>
+	apiRequest(`/auto-requeue/${id}`, { method: 'DELETE' });
+
+// Queue templates — named, reusable training-queue presets. Saving/loading
+// is purely client convenience; replaying a template still submits through
+// the normal trainTroops() call above, so all server-side validation applies.
+export const getQueueTemplates = () => apiRequest('/queue-templates');
+
+export const saveQueueTemplate = (name: string, troopType: string, amount: number) =>
+	apiRequest('/queue-templates', {
+		method: 'POST',
+		body: JSON.stringify({ name, troopType, amount })
+	});
+
+export const deleteQueueTemplate = (id: number) =>
+	apiRequest(`/queue-templates/${id}`, { method: 'DELETE' });
+
 // Reports
 export const getReports = (nexusId: string) => apiRequest(`/report/reports/${nexusId}`);
 export const getNexusHistory = (nexusId: string) => apiRequest(`/report/nexus-history/${nexusId}`);

@@ -278,20 +278,34 @@ export const WINNER_COINFLIP_LOSS_RATE = 0.45;
 
 // Map a loser/winner power ratio to the fraction of the losing force destroyed.
 // Shared by server resolution and the client calculator so predictions match.
-export function loserLossRate(powerRatio: number): number {
+//
+// survivorFloor (0..1, default 0) is an optional EXTRA guarantee on top of the
+// normal curve: the caller (combat.ts) derives it from the defender's
+// post-protection taper window via getProtectionTaperSurvivorFloor. It can
+// only ever lower the returned loss rate, never raise it — a floor of 0
+// reproduces the exact pre-existing behaviour.
+export function loserLossRate(powerRatio: number, survivorFloor = 0): number {
 	const clampedRatio = Math.max(0, Math.min(1, powerRatio));
-	if (clampedRatio <= LOSER_WIPE_RATIO) return 1.0;
-	// Linearly interpolate from total wipe (at the threshold) up to the even-fight
-	// floor (at ratio = 1).
-	const t = (clampedRatio - LOSER_WIPE_RATIO) / (1 - LOSER_WIPE_RATIO); // 0..1
-	return LOSER_MAX_LOSS_RATE + (LOSER_MIN_LOSS_RATE - LOSER_MAX_LOSS_RATE) * t;
+	const clampedFloor = Math.max(0, Math.min(1, survivorFloor));
+	let rate: number;
+	if (clampedRatio <= LOSER_WIPE_RATIO) {
+		rate = 1.0;
+	} else {
+		// Linearly interpolate from total wipe (at the threshold) up to the
+		// even-fight floor (at ratio = 1).
+		const t = (clampedRatio - LOSER_WIPE_RATIO) / (1 - LOSER_WIPE_RATIO); // 0..1
+		rate = LOSER_MAX_LOSS_RATE + (LOSER_MIN_LOSS_RATE - LOSER_MAX_LOSS_RATE) * t;
+	}
+	if (clampedFloor <= 0) return rate;
+	return Math.min(rate, 1 - clampedFloor);
 }
 
 export function computeLossesForLoser(
 	force: Partial<Record<TroopKey, number>> | Record<string, unknown>,
-	powerRatio = 0
+	powerRatio = 0,
+	survivorFloor = 0
 ): Partial<Record<TroopKey, number>> {
-	const lossRate = loserLossRate(powerRatio);
+	const lossRate = loserLossRate(powerRatio, survivorFloor);
 	const totalWipe = lossRate >= 1.0;
 
 	const losses: Partial<Record<TroopKey, number>> = {};

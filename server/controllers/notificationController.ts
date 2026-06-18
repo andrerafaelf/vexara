@@ -65,7 +65,8 @@ const PREF_KEYS = [
 	'friendMessage',
 	'nearbyGalaxyEvent',
 	'protectionExpiring',
-	'tokenGranted'
+	'tokenGranted',
+	'autoRequeuePaused'
 ] as const;
 
 export async function getPreferences(req: AuthRequest, res: Response): Promise<void> {

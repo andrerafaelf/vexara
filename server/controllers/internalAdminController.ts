@@ -355,7 +355,8 @@ export async function completeBuild(req: Request, res: Response): Promise<void> 
 				title: 'Construction Complete',
 				body: `${label} upgraded to level ${build.targetLevel} at ${updated.name}.`,
 				tag: `build-${updated.id}-${build.building}-${build.targetLevel}`,
-				data: { url: '/' }
+				data: { url: `/nexus/${updated.id}?tab=buildings` },
+				actions: [{ action: 'view', title: 'View Nexus' }]
 			});
 		}
 		res.json({ success: true, nexus: serializeNexus(updated) });
@@ -400,7 +401,14 @@ export async function completeTraining(req: Request, res: Response): Promise<voi
 				title: 'Training Complete',
 				body: `${training.amount}x ${label} ready at ${updated.name}.`,
 				tag: `troop-${updated.id}-${training.troopType}-${Date.now()}`,
-				data: { url: '/' }
+				data: { url: `/nexus/${updated.id}?tab=troops` },
+				actions: [
+					{
+						action: 'retrain',
+						title: 'Train Again',
+						url: `/nexus/${updated.id}?tab=troops&retrain=${training.troopType}:${training.amount}`
+					}
+				]
 			});
 		}
 		res.json({ success: true, nexus: serializeNexus(updated) });

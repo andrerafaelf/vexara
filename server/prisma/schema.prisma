@@ -62,6 +62,9 @@ model User {
   lastPlayedAt     DateTime?
 
   wavePlans WavePlan[]
+  standingOrders StandingOrder[]
+  queueTemplates QueueTemplate[]
+  autoRequeueRules AutoRequeueRule[]
 
   beginnerTipsEnabled Boolean  @default(true)
   onboardingStep      String?  @db.VarChar(64)
@@ -185,6 +188,9 @@ model Galaxy {
   factionTreaties    FactionTreaty[]
   wavePlans          WavePlan[]
   galaxyAlerts       GalaxyAlert[]
+  standingOrders     StandingOrder[]
+  queueTemplates     QueueTemplate[]
+  autoRequeueRules   AutoRequeueRule[]
 }
 
 // Email alert opt-in for a scheduled (pending) galaxy. One row per email per galaxy.
@@ -313,6 +319,7 @@ model NotificationPreferences {
   nearbyGalaxyEvent  Boolean @default(true)
   protectionExpiring Boolean @default(true)
   tokenGranted       Boolean @default(true)
+  autoRequeuePaused  Boolean @default(true)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -467,6 +474,9 @@ model Nexus {
   troopsSent         TroopTransfer[]  @relation("OwnerNexus")
   troopsHosted       TroopTransfer[]  @relation("HostNexus")
   wavePlansTargeting WavePlan[]       @relation("WavePlanTarget")
+  standingOrdersProtecting StandingOrder[] @relation("StandingOrderProtected")
+  standingOrdersSourced    StandingOrder[] @relation("StandingOrderSource")
+  autoRequeueRules         AutoRequeueRule[]
 
   @@index([galaxyId])
   @@index([ownerId, galaxyId])
@@ -670,6 +680,112 @@ model WavePlan {
 
   @@index([userId, galaxyId, targetNexusId])
   @@index([createdAt])
+}
+
+// A persistent "if my nexus is attacked, auto-send support from my reserve
+// nexus" rule. Reuses the existing support-mission rails (attackService.
+// launchAttack with type='support', stationed via TroopTransfer) rather than
+// inventing a new defense mechanic — a standing order is just a pre-armed
+// trigger for a mission a player could already send manually. Fired from the
+// same call site in launchAttack that sends the ATTACK_INCOMING push, so no
+// new background job/interval is needed (PR for Phase 2 of the roadmap).
+model StandingOrder {
+  id       Int @id @default(autoincrement())
+  userId   Int
+  galaxyId Int
+
+  // The nexus this order watches. When it receives an incoming attack, the
+  // order may fire.
+  protectedNexusId Int
+  // The nexus reserve troops are transferred FROM (via troopTransferService).
+  sourceNexusId    Int
+
+  troops Json
+
+  isActive Boolean @default(true)
+
+  // Cooldown + dedup: prevents one inbound wave's multiple attacks (or
+  // repeated raids in quick succession) from draining the source nexus by
+  // firing the same order over and over. Stamped every time the order fires;
+  // the next eligible fire must be at least STANDING_ORDER_COOLDOWN_MS later.
+  lastTriggeredAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user           User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  galaxy         Galaxy @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
+  protectedNexus Nexus @relation("StandingOrderProtected", fields: [protectedNexusId], references: [id], onDelete: Cascade)
+  sourceNexus    Nexus @relation("StandingOrderSource", fields: [sourceNexusId], references: [id], onDelete: Cascade)
+
+  @@unique([protectedNexusId, sourceNexusId])
+  @@index([userId, galaxyId])
+  @@index([protectedNexusId, isActive])
+}
+
+// Named, reusable training-queue presets ("repeat-last" / saved templates).
+// Replaying a template just re-submits {troopType, amount} through the
+// existing POST /api/troop/train endpoint, so all cost/population/queue
+// validation in troopController.trainTroops still applies unchanged.
+model QueueTemplate {
+  id       Int @id @default(autoincrement())
+  userId   Int
+  galaxyId Int
+
+  name      String @db.VarChar(40)
+  troopType String @db.VarChar(32)
+  amount    Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  galaxy Galaxy @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
+
+  @@index([userId, galaxyId])
+}
+
+// Auto-requeue rule: re-queues a training batch or building upgrade each
+// time the previous one drains, picked up by processCompletedQueuesAndNotify
+// (server/models/Nexus.ts). Building rules call buildingController's
+// attemptUpgradeBuilding and training rules call troopController's
+// attemptTrainTroops, so they get the exact same validation as the manual
+// endpoints. A validation failure (e.g. a missing-requirement gate) pauses
+// the rule (isActive=false) and notifies the player instead of erroring
+// silently — see autoRequeueService.ts.
+model AutoRequeueRule {
+  id       Int @id @default(autoincrement())
+  userId   Int
+  galaxyId Int
+  nexusId  Int
+
+  // "training" | "building"
+  kind String @db.VarChar(16)
+
+  // Set when kind = "training".
+  troopType String? @db.VarChar(32)
+  amount    Int?
+
+  // Set when kind = "building". Always means "upgrade to next level".
+  building String? @db.VarChar(32)
+
+  isActive Boolean @default(true)
+
+  // Set when the rule self-pauses after a failed requeue attempt, so the
+  // client can show the player why it stopped.
+  pausedReason String? @db.VarChar(255)
+
+  lastFiredAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  galaxy Galaxy @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
+  nexus  Nexus  @relation(fields: [nexusId], references: [id], onDelete: Cascade)
+
+  @@index([userId, galaxyId])
+  @@index([nexusId, isActive])
 }
 
 model Faction {

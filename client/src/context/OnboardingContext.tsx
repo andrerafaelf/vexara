@@ -4,7 +4,7 @@ import { getProfile, updateOnboardingStep } from '../services/api';
 import { useMyNexuses } from '../hooks/useMyNexuses';
 import type { Nexus } from '../types/game';
 import { usePathname } from 'next/navigation';
-import { isOnboardingTrainEligible } from '../realtime/gameConstants.shared';
+import { getOnboardingTaperFraction, isOnboardingTrainEligible } from '../realtime/gameConstants.shared';
 
 export interface OnboardingStep {
 	id: string;
@@ -212,6 +212,11 @@ interface OnboardingContextValue {
 	// True while the player is eligible for the free Assault Trooper training
 	// discount (beginnerTipsEnabled and hasn't yet completed train_troops).
 	isTroopDiscountActive: boolean;
+	// 1 = full discount, 0 = none. Decays linearly by account age once
+	// isTroopDiscountActive is true, so a returning player who paused
+	// mid-tutorial doesn't see a cost/time cliff. Mirrors the server taper in
+	// getOnboardingTaperFraction — keep both in sync.
+	onboardingTaperFraction: number;
 	// The id of the last completed onboarding step (null = none yet). Exposed
 	// so call sites can compute onboarding build-time discounts client-side.
 	lastCompletedStep: string | null;
@@ -225,6 +230,7 @@ const OnboardingContext = createContext<OnboardingContextValue>({
 	currentStep: null,
 	isEnabled: false,
 	isTroopDiscountActive: false,
+	onboardingTaperFraction: 0,
 	lastCompletedStep: null,
 	advance: () => {},
 	dismiss: () => {},
@@ -239,6 +245,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 	// The id of the last completed onboarding step, as stored on the server.
 	// Null means the player hasn't completed any step yet.
 	const [lastCompletedStep, setLastCompletedStep] = useState<string | null>(null);
+	const [createdAt, setCreatedAt] = useState<string | null>(null);
 	const { nexuses } = useMyNexuses();
 	const pathname = usePathname();
 	// Track which step ids we've already auto-completed in this session so we
@@ -251,6 +258,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 			.then((res: any) => {
 				const user = res?.data;
 				if (!user) return;
+				setCreatedAt(user.createdAt ?? null);
 				if (!user.beginnerTipsEnabled) {
 					setEnabled(false);
 					setReady(true);
@@ -337,10 +345,21 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 		enabled,
 		lastCompletedStep
 	);
+	const onboardingTaperFraction = isTroopDiscountActive ? getOnboardingTaperFraction(createdAt) : 0;
 
 	return (
 		<OnboardingContext.Provider
-			value={{ currentStep, isEnabled: enabled, isTroopDiscountActive, lastCompletedStep, advance, dismiss, disableTips, reenableTips }}
+			value={{
+				currentStep,
+				isEnabled: enabled,
+				isTroopDiscountActive,
+				onboardingTaperFraction,
+				lastCompletedStep,
+				advance,
+				dismiss,
+				disableTips,
+				reenableTips
+			}}
 		>
 			{children}
 		</OnboardingContext.Provider>

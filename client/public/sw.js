@@ -65,6 +65,7 @@ self.addEventListener('push', (event) => {
     badge: '/vexara-icon-v2-192.png',
     tag: data.tag || 'vexara',
     data: data.data || { url: '/' },
+    actions: Array.isArray(data.actions) ? data.actions : undefined,
     requireInteraction: false,
     vibrate: [100, 50, 100],
   };
@@ -72,10 +73,13 @@ self.addEventListener('push', (event) => {
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
-// Notification click: focus or open the app
+// Notification click: focus or open the app. If a specific action button was
+// clicked and that action carries its own `url` (see server/utils/push.ts),
+// navigate there instead of the notification's default data.url.
 self.addEventListener('notificationclick', (event) => {
+  const clickedAction = (event.notification.actions || []).find((a) => a.action === event.action);
+  const targetUrl = clickedAction?.url || event.notification.data?.url || '/';
   event.notification.close();
-  const targetUrl = event.notification.data?.url || '/';
 
   event.waitUntil(
     self.clients

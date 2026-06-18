@@ -43,7 +43,11 @@ export async function findOpenStarterCoordinates(
 	return null;
 }
 
-export const NEWBIE_PROTECTION_DURATION_MS = 3 * 24 * 60 * 60 * 1000;
+// Was 3 days. Raised to 5: long enough to clear the tutorial and build a first
+// defensible garrison without freezing early-map land-grab dynamics for a full
+// week. Paired with PROTECTION_TAPER_DURATION_MS in gameConstants.ts, which
+// softens (not removes) vulnerability for a further 7 days after this expires.
+export const NEWBIE_PROTECTION_DURATION_MS = 5 * 24 * 60 * 60 * 1000;
 
 // Bonus troops credited to a new player's starter nexus when they joined via a referral link.
 // Resources can't exceed day-1 storage (1500 each), so we give troops instead —

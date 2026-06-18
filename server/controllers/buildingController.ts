@@ -17,6 +17,7 @@ import {
 	getBuildingCost,
 	getCommandBuildQueueBonus,
 	getEffectiveBuildTimeSeconds,
+	getOnboardingTaperFraction,
 	isOnboardingBuildEligible,
 	ONBOARDING_BUILD_TIME_SECONDS
 } from '../utils/gameConstants.js';
@@ -234,6 +235,152 @@ function getPlannedBuildingLevels(nexus: Record<string, unknown>) {
 	return planned;
 }
 
+export type AttemptUpgradeBuildingResult =
+	| { ok: true; completesAt: Date; nexus: ReturnType<typeof serializeNexus> }
+	| { ok: false; status: number; error: string };
+
+/**
+ * Core building-upgrade logic shared by the upgradeBuilding HTTP handler and
+ * the auto-requeue background job (Nexus.ts's processCompletedQueuesAndNotify).
+ * Takes an already-authorized, already-completed-queues-applied nexus row —
+ * callers are responsible for ownership/galaxy checks and applyCompletedQueues,
+ * exactly as the HTTP handler always did before this was extracted.
+ */
+export async function attemptUpgradeBuilding(
+	nexus: Awaited<ReturnType<typeof applyCompletedQueues>>,
+	building: string | undefined,
+	userId: number,
+	galaxyId: number
+): Promise<AttemptUpgradeBuildingResult> {
+	if (!building || !BUILDING_COSTS[building]) {
+		return { ok: false, status: 400, error: 'Invalid building' };
+	}
+	const buildQueue = normalizeBuildQueue(nexus.buildQueue);
+	const maxQueue = getMaxBuildQueue(nexus.commandCore);
+	if (buildQueue.length >= maxQueue) {
+		return { ok: false, status: 400, error: `Build queue is full (${maxQueue}/${maxQueue})` };
+	}
+	const plannedLevels = getPlannedBuildingLevels(nexus as unknown as Record<string, unknown>);
+	const currentLevel =
+		plannedLevels[building] ??
+		((nexus as unknown as Record<string, unknown>)[building] as number) ??
+		0;
+	const targetLevel = currentLevel + 1;
+	const rule = BUILDING_RULES[building];
+	if (rule && currentLevel >= rule.maxLevel) {
+		return {
+			ok: false,
+			status: 400,
+			error: `${BUILDING_NAMES[building]} is already at max level (${rule.maxLevel})`
+		};
+	}
+	const missing = getMissingRequirements(
+		nexus as unknown as Record<string, unknown>,
+		building,
+		targetLevel
+	);
+	if (missing.length > 0) {
+		const text = missing
+			.map(({ building: b, level }) => `${BUILDING_NAMES[b] || b} level ${level}`)
+			.join(', ');
+		return { ok: false, status: 400, error: `Requirements not met: ${text}` };
+	}
+	const [galaxy, boostPct, userForBuild] = await Promise.all([
+		prisma.galaxy.findUnique({ where: { id: galaxyId }, select: { speedMultiplier: true } }),
+		getActiveProductionBoostPct(userId, galaxyId),
+		prisma.user.findUnique({
+			where: { id: userId },
+			select: { beginnerTipsEnabled: true, onboardingStep: true, createdAt: true }
+		})
+	]);
+	const speedMultiplier = galaxy?.speedMultiplier ?? 1.0;
+	const resourceUpdate = computeResourceUpdate(nexus, undefined, speedMultiplier, boostPct);
+	const current = { ...nexus, ...resourceUpdate };
+	const cost = getBuildingCost(building, currentLevel);
+	if (
+		(current as unknown as Record<string, number>).biomass < cost.biomass ||
+		(current as unknown as Record<string, number>).alloy < cost.alloy ||
+		(current as unknown as Record<string, number>).ore < cost.ore
+	) {
+		return { ok: false, status: 400, error: 'Insufficient resources' };
+	}
+	const queueStart =
+		buildQueue.length > 0
+			? new Date(buildQueue[buildQueue.length - 1].completesAt as string).getTime()
+			: Date.now();
+	const buildDoubled =
+		(nexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled ?? false;
+	const onboardingBuild = isOnboardingBuildEligible(
+		building,
+		currentLevel,
+		userForBuild?.beginnerTipsEnabled ?? false,
+		userForBuild?.onboardingStep ?? null
+	);
+	const onboardingBuildTaper = onboardingBuild
+		? getOnboardingTaperFraction(userForBuild?.createdAt)
+		: 0;
+	const fullBuildSeconds = getEffectiveBuildTimeSeconds(
+		building,
+		currentLevel,
+		nexus.commandCore,
+		nexus.nexusType,
+		buildDoubled
+	);
+	const buildSeconds =
+		onboardingBuildTaper > 0
+			? ONBOARDING_BUILD_TIME_SECONDS +
+				(fullBuildSeconds - ONBOARDING_BUILD_TIME_SECONDS) * (1 - onboardingBuildTaper)
+			: fullBuildSeconds;
+	const completesAt = new Date(queueStart + (buildSeconds * 1000) / speedMultiplier);
+	const newQueue = [...buildQueue, { building, targetLevel: currentLevel + 1, completesAt }];
+	let updated;
+	try {
+		updated = await atomicUpdateNexusResources(nexus.id, nexus.lastResourceUpdate, {
+			...resourceUpdate,
+			biomass: (current as unknown as Record<string, number>).biomass - cost.biomass,
+			alloy: (current as unknown as Record<string, number>).alloy - cost.alloy,
+			ore: (current as unknown as Record<string, number>).ore - cost.ore,
+			buildQueue: queueToJson(newQueue)
+		});
+	} catch (e) {
+		if (e instanceof ResourceConflictError) {
+			return { ok: false, status: 409, error: 'Resources updated simultaneously - please retry' };
+		}
+		throw e;
+	}
+	const rewardApplied = await applyQuestRewards(updated);
+	try {
+		notifyNexusResources(userId, {
+			nexusId: rewardApplied.id,
+			base: {
+				biomass: rewardApplied.biomass,
+				alloy: rewardApplied.alloy,
+				ore: rewardApplied.ore
+			},
+			production: getResourceProduction(rewardApplied),
+			storageMax: getMaxStorage(rewardApplied),
+			lastResourceUpdate: rewardApplied.lastResourceUpdate
+		});
+	} catch (emitErr) {
+		logError('nexus_resources_emit_failed', {
+			message: (emitErr as Error).message,
+			file: 'buildingController.ts'
+		});
+	}
+	try {
+		const { incrementQuestProgress } = await import('../services/dailyStreakService.js');
+		void (async () => {
+			await incrementQuestProgress(userId, galaxyId, 'upgrade_1', 1);
+			await incrementQuestProgress(userId, galaxyId, 'upgrade_2', 1);
+		})();
+	} catch {}
+	// True funnel milestone: fired at most once per user, the first time they
+	// ever queue a build (logGameEventOnce dedups on userId+event). The old
+	// "queue was empty" guard fired on every later build too.
+	logGameEventOnce('first_build', userId, galaxyId, { building, nexusId: nexus.id });
+	return { ok: true, completesAt, nexus: serializeNexus(rewardApplied) };
+}
+
 export async function upgradeBuilding(req: AuthRequest, res: Response): Promise<void> {
 	try {
 		const { nexusId, building } = req.body as { nexusId?: unknown; building?: string };
@@ -243,131 +390,13 @@ export async function upgradeBuilding(req: AuthRequest, res: Response): Promise<
 			return;
 		}
 		const nexus = await applyCompletedQueues(rawNexus);
-		if (!building || !BUILDING_COSTS[building]) {
-			res.status(400).json({ error: 'Invalid building' });
+
+		const result = await attemptUpgradeBuilding(nexus, building, req.userId!, req.galaxyId!);
+		if (!result.ok) {
+			res.status(result.status).json({ error: result.error });
 			return;
 		}
-		const buildQueue = normalizeBuildQueue(nexus.buildQueue);
-		const maxQueue = getMaxBuildQueue(nexus.commandCore);
-		if (buildQueue.length >= maxQueue) {
-			res.status(400).json({ error: `Build queue is full (${maxQueue}/${maxQueue})` });
-			return;
-		}
-		const plannedLevels = getPlannedBuildingLevels(nexus as unknown as Record<string, unknown>);
-		const currentLevel =
-			plannedLevels[building] ??
-			((nexus as unknown as Record<string, unknown>)[building] as number) ??
-			0;
-		const targetLevel = currentLevel + 1;
-		const rule = BUILDING_RULES[building];
-		if (rule && currentLevel >= rule.maxLevel) {
-			res
-				.status(400)
-				.json({ error: `${BUILDING_NAMES[building]} is already at max level (${rule.maxLevel})` });
-			return;
-		}
-		const missing = getMissingRequirements(
-			nexus as unknown as Record<string, unknown>,
-			building,
-			targetLevel
-		);
-		if (missing.length > 0) {
-			const text = missing
-				.map(({ building: b, level }) => `${BUILDING_NAMES[b] || b} level ${level}`)
-				.join(', ');
-			res.status(400).json({ error: `Requirements not met: ${text}` });
-			return;
-		}
-		const [galaxy, boostPct, userForBuild] = await Promise.all([
-			prisma.galaxy.findUnique({ where: { id: req.galaxyId! }, select: { speedMultiplier: true } }),
-			getActiveProductionBoostPct(req.userId!, req.galaxyId!),
-			prisma.user.findUnique({
-				where: { id: req.userId! },
-				select: { beginnerTipsEnabled: true, onboardingStep: true }
-			})
-		]);
-		const speedMultiplier = galaxy?.speedMultiplier ?? 1.0;
-		const resourceUpdate = computeResourceUpdate(nexus, undefined, speedMultiplier, boostPct);
-		const current = { ...nexus, ...resourceUpdate };
-		const cost = getBuildingCost(building, currentLevel);
-		if (
-			(current as unknown as Record<string, number>).biomass < cost.biomass ||
-			(current as unknown as Record<string, number>).alloy < cost.alloy ||
-			(current as unknown as Record<string, number>).ore < cost.ore
-		) {
-			res.status(400).json({ error: 'Insufficient resources' });
-			return;
-		}
-		const queueStart =
-			buildQueue.length > 0
-				? new Date(buildQueue[buildQueue.length - 1].completesAt as string).getTime()
-				: Date.now();
-		const buildDoubled =
-			(nexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled ?? false;
-		const onboardingBuild = isOnboardingBuildEligible(
-			building,
-			currentLevel,
-			userForBuild?.beginnerTipsEnabled ?? false,
-			userForBuild?.onboardingStep ?? null
-		);
-		const buildSeconds = onboardingBuild
-			? ONBOARDING_BUILD_TIME_SECONDS
-			: getEffectiveBuildTimeSeconds(
-					building,
-					currentLevel,
-					nexus.commandCore,
-					nexus.nexusType,
-					buildDoubled
-				);
-		const completesAt = new Date(queueStart + (buildSeconds * 1000) / speedMultiplier);
-		const newQueue = [...buildQueue, { building, targetLevel: currentLevel + 1, completesAt }];
-		let updated;
-		try {
-			updated = await atomicUpdateNexusResources(nexus.id, nexus.lastResourceUpdate, {
-				...resourceUpdate,
-				biomass: (current as unknown as Record<string, number>).biomass - cost.biomass,
-				alloy: (current as unknown as Record<string, number>).alloy - cost.alloy,
-				ore: (current as unknown as Record<string, number>).ore - cost.ore,
-				buildQueue: queueToJson(newQueue)
-			});
-		} catch (e) {
-			if (e instanceof ResourceConflictError) {
-				res.status(409).json({ error: 'Resources updated simultaneously - please retry' });
-				return;
-			}
-			throw e;
-		}
-		const rewardApplied = await applyQuestRewards(updated);
-		try {
-			notifyNexusResources(req.userId!, {
-				nexusId: rewardApplied.id,
-				base: {
-					biomass: rewardApplied.biomass,
-					alloy: rewardApplied.alloy,
-					ore: rewardApplied.ore
-				},
-				production: getResourceProduction(rewardApplied),
-				storageMax: getMaxStorage(rewardApplied),
-				lastResourceUpdate: rewardApplied.lastResourceUpdate
-			});
-		} catch (emitErr) {
-			logError('nexus_resources_emit_failed', {
-				message: (emitErr as Error).message,
-				file: 'buildingController.ts'
-			});
-		}
-		try {
-			const { incrementQuestProgress } = await import('../services/dailyStreakService.js');
-			void (async () => {
-				await incrementQuestProgress(req.userId, req.galaxyId, 'upgrade_1', 1);
-				await incrementQuestProgress(req.userId, req.galaxyId, 'upgrade_2', 1);
-			})();
-		} catch {}
-		// True funnel milestone: fired at most once per user, the first time they
-		// ever queue a build (logGameEventOnce dedups on userId+event). The old
-		// "queue was empty" guard fired on every later build too.
-		logGameEventOnce('first_build', req.userId, req.galaxyId, { building, nexusId: nexus.id });
-		res.json({ success: true, completesAt, nexus: serializeNexus(rewardApplied) });
+		res.json({ success: true, completesAt: result.completesAt, nexus: result.nexus });
 	} catch (error) {
 		logError('unhandled_controller_error', {
 			message: (error as Error).message,

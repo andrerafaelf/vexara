@@ -14,7 +14,7 @@ import {
 	X,
 	Zap
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -37,12 +37,17 @@ import {
 	upgradeBuilding
 } from '../services/api';
 import '../styles/NexusView.css';
+import '../styles/StandingOrdersModal.css';
+import '../styles/QueueTemplatesBar.css';
 import { Nexus, TroopTransfer } from '../types/game';
 import DailyStreaks from './DailyStreaks';
 import DashboardLogistics from './DashboardLogistics';
 import NexusMap from './NexusMap';
 import NexusTypeBadge from './NexusTypeBadge';
 import SendResourcesModal, { type SendResourcesPrefill } from './SendResourcesModal';
+import StandingOrdersModal from './StandingOrdersModal';
+import AutoRequeueModal from './AutoRequeueModal';
+import QueueTemplatesBar from './QueueTemplatesBar';
 import Username from './Username';
 // Shared source of truth with server/utils/gameConstants.ts.
 // If you change any number or formula here, change the server mirror in the same commit.
@@ -453,7 +458,9 @@ const NexusView: React.FC<NexusViewProps> = ({
 	onTabChange
 }) => {
 	const router = useRouter();
-	const { currentStep, isTroopDiscountActive, isEnabled, lastCompletedStep } = useOnboarding();
+	const searchParams = useSearchParams();
+	const { currentStep, isTroopDiscountActive, onboardingTaperFraction, isEnabled, lastCompletedStep } =
+		useOnboarding();
 	const [activeTab, setActiveTabState] = useState<NexusTab>(initialTab);
 	// The section nav is now the vertical .nexus-inner-nav (position: sticky), so
 	// the old horizontal-tab-bar sticky-sentinel detection was removed.
@@ -586,6 +593,8 @@ const NexusView: React.FC<NexusViewProps> = ({
 	const [dismissedTips, setDismissedTips] = useState<Set<string>>(new Set());
 	const [showSpecModal, setShowSpecModal] = useState(false);
 	const [claimingBatch, setClaimingBatch] = useState<string | null>(null);
+	const [showStandingOrders, setShowStandingOrders] = useState(false);
+	const [showAutoRequeue, setShowAutoRequeue] = useState(false);
 
 	const dismissTip = (id: string) => setDismissedTips((prev) => new Set(prev).add(id));
 
@@ -916,6 +925,28 @@ const NexusView: React.FC<NexusViewProps> = ({
 		handleTrainTroopsRef.current(troopType, rawAmount)
 	).current;
 
+	// "Train Again" push-notification action (server/models/Nexus.ts) deep-links
+	// here with ?retrain=troopType:amount. The SW can't call the authenticated
+	// API itself (no token access), so it just navigates into the app and we
+	// submit the actual train request once mounted, then strip the param so a
+	// refresh doesn't resubmit it.
+	const retrainHandledRef = useRef(false);
+	useEffect(() => {
+		if (retrainHandledRef.current) return;
+		const retrain = searchParams?.get('retrain');
+		if (!retrain) return;
+		retrainHandledRef.current = true;
+		const [troopType, amountStr] = retrain.split(':');
+		if (troopType && amountStr) {
+			handleTrainTroops(troopType, amountStr);
+		}
+		const params = new URLSearchParams(searchParams?.toString());
+		params.delete('retrain');
+		const query = params.toString();
+		router.replace(`/nexus/${nexus._id}${query ? `?${query}` : ''}`, { scroll: false });
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+
 	const handleCancelBuildQueue = async (index: number) => {
 		const key = `cancel-build-${index}`;
 		if (submittingRef.current.has(key)) return;
@@ -1051,9 +1082,26 @@ const NexusView: React.FC<NexusViewProps> = ({
 
 		// During onboarding the Assault Trooper is effectively free so the player
 		// can complete the train step without needing to have accumulated resources.
+		// The discount tapers off by account age (onboardingTaperFraction), so a
+		// returning player who paused mid-tutorial sees a partial discount instead
+		// of a hard cliff — mirrors the server interpolation in troopController.
 		const effectiveCosts =
-			isTroopDiscountActive && troopType === ONBOARDING_TROOP_TYPE
-				? { ...costs, ...ONBOARDING_TROOP_COST }
+			isTroopDiscountActive && troopType === ONBOARDING_TROOP_TYPE && onboardingTaperFraction > 0
+				? {
+						...costs,
+						biomass: Math.round(
+							ONBOARDING_TROOP_COST.biomass +
+								(costs.biomass - ONBOARDING_TROOP_COST.biomass) * (1 - onboardingTaperFraction)
+						),
+						alloy: Math.round(
+							ONBOARDING_TROOP_COST.alloy +
+								(costs.alloy - ONBOARDING_TROOP_COST.alloy) * (1 - onboardingTaperFraction)
+						),
+						ore: Math.round(
+							ONBOARDING_TROOP_COST.ore +
+								(costs.ore - ONBOARDING_TROOP_COST.ore) * (1 - onboardingTaperFraction)
+						)
+					}
 				: costs;
 
 		// Interpolate from the server snapshot at this render. This does NOT
@@ -1175,21 +1223,20 @@ const NexusView: React.FC<NexusViewProps> = ({
 		// un-discounted base; we display the discounted wall-clock time, so swap
 		// it for the effective build seconds (Command Core + Nexus type applied).
 		const baseCost = getSharedBuildingCost(building, currentLevel);
-		const onboardingBuild = isOnboardingBuildEligible(
+		const onboardingBuild =
+			isOnboardingBuildEligible(building, currentLevel, isEnabled, lastCompletedStep) &&
+			onboardingTaperFraction > 0;
+		const fullBuildSeconds = getEffectiveBuildTimeSeconds(
 			building,
 			currentLevel,
-			isEnabled,
-			lastCompletedStep
+			nexus.buildings.commandCore,
+			nexus.nexusType,
+			nexus.nexusTypeDoubled ?? false
 		);
 		const time = onboardingBuild
-			? ONBOARDING_BUILD_TIME_SECONDS
-			: getEffectiveBuildTimeSeconds(
-					building,
-					currentLevel,
-					nexus.buildings.commandCore,
-					nexus.nexusType,
-					nexus.nexusTypeDoubled ?? false
-				);
+			? ONBOARDING_BUILD_TIME_SECONDS +
+				(fullBuildSeconds - ONBOARDING_BUILD_TIME_SECONDS) * (1 - onboardingTaperFraction)
+			: fullBuildSeconds;
 		return { biomass: baseCost.biomass, alloy: baseCost.alloy, ore: baseCost.ore, time };
 	};
 
@@ -3164,18 +3211,24 @@ const NexusView: React.FC<NexusViewProps> = ({
 															(nexus.buildings as unknown as Record<string, number>)[
 																trainingBuildingFor(type)
 															] ?? 0;
-														const isOnboardingUnit = isTroopDiscountActive && type === ONBOARDING_TROOP_TYPE;
+														const isOnboardingUnit =
+															isTroopDiscountActive &&
+															type === ONBOARDING_TROOP_TYPE &&
+															onboardingTaperFraction > 0;
+														const fullTrainSeconds = canTrain
+															? getEffectiveTrainTimeSeconds(
+																	type,
+																	classBuildingLevel,
+																	nexus.nexusType,
+																	nexus.nexusTypeDoubled ?? false,
+																	nexus.buildings.stealthArray ?? 0
+																)
+															: costs.time;
 														const trainSeconds = isOnboardingUnit
-															? ONBOARDING_TRAIN_TIME_SECONDS
-															: canTrain
-																? getEffectiveTrainTimeSeconds(
-																		type,
-																		classBuildingLevel,
-																		nexus.nexusType,
-																		nexus.nexusTypeDoubled ?? false,
-																		nexus.buildings.stealthArray ?? 0
-																	)
-																: costs.time;
+															? ONBOARDING_TRAIN_TIME_SECONDS +
+																(fullTrainSeconds - ONBOARDING_TRAIN_TIME_SECONDS) *
+																	(1 - onboardingTaperFraction)
+															: fullTrainSeconds;
 														// Pre-bonus time (class-building discount applied, Nexus type NOT applied).
 														// Shown as strikethrough next to the actual time when Military Outpost is active,
 														// so the player can see the bonus working.
@@ -3550,6 +3603,14 @@ const NexusView: React.FC<NexusViewProps> = ({
 				>
 					<h3 className="section-title">Supply</h3>
 					<DashboardLogistics nexuses={ownNexuses} onSend={(prefill) => setSendPrefill(prefill)} />
+
+					<h3 className="section-title">Defense</h3>
+					<button className="standing-orders-button" onClick={() => setShowStandingOrders(true)}>
+						Standing Orders
+					</button>
+					<button className="standing-orders-button" onClick={() => setShowAutoRequeue(true)}>
+						Auto-Requeue
+					</button>
 				</div>
 			</div>
 
@@ -3564,6 +3625,18 @@ const NexusView: React.FC<NexusViewProps> = ({
 					onClose={() => setSendPrefill(null)}
 					onTransferred={onUpdate}
 				/>
+			)}
+
+			{showStandingOrders && (
+				<StandingOrdersModal
+					nexus={nexus}
+					ownNexuses={ownNexuses}
+					onClose={() => setShowStandingOrders(false)}
+				/>
+			)}
+
+			{showAutoRequeue && (
+				<AutoRequeueModal nexus={nexus} onClose={() => setShowAutoRequeue(false)} />
 			)}
 
 			{destroyPending &&
@@ -3949,6 +4022,7 @@ const TrainAmountControls = React.memo(function TrainAmountControls({
 					Train
 				</button>
 			</div>
+			<QueueTemplatesBar troopType={troopType} currentAmount={amount} onApply={(n) => setAmount(String(n))} />
 		</div>
 	);
 });

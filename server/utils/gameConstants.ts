@@ -17,6 +17,64 @@ export const NEXUS_ACTIVE_WINDOW_MS = 15 * 60 * 1000;
 // and 1 give a discounted return.
 export const RETURN_TRAVEL_MULTIPLIER = 1;
 
+// ── Post-protection vulnerability taper ─────────────────────────────────────
+// Newbie protection (NEWBIE_PROTECTION_DURATION_MS in starterNexus.ts) used to
+// end on a hard cliff: full wipe risk the instant the timer expired. That cliff
+// is exactly the window where a veteran could annihilate a days-old defender's
+// entire garrison risk-free, repeatedly. Instead of removing the cliff, we
+// soften it: for PROTECTION_TAPER_DURATION_MS after protection ends, a
+// defender who loses keeps a shrinking minimum fraction of their garrison
+// (PROTECTION_TAPER_START_SURVIVOR_PCT at taper start, decaying linearly to 0
+// — the normal floor — by the end of the window). This only ever raises the
+// loser's survivor floor; it never helps the defender WIN, and it never
+// applies to the attacker side, so raiding a taper-window defender is still
+// rational, just not free.
+export const PROTECTION_TAPER_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
+export const PROTECTION_TAPER_START_SURVIVOR_PCT = 0.25;
+
+// Returns the minimum survivor fraction a losing defender is guaranteed right
+// now, given when their nexus's protection ended. 0 outside the taper window
+// (including "never protected" / already long-expired nexuses) — combatMath's
+// existing loserLossRate floor applies unmodified in that case.
+export function getProtectionTaperSurvivorFloor(
+	protectionEndsAt: Date | null | undefined,
+	now: Date = new Date()
+): number {
+	if (!protectionEndsAt) return 0;
+	const elapsedSinceProtectionEnded = now.getTime() - protectionEndsAt.getTime();
+	if (elapsedSinceProtectionEnded < 0) return 0; // still under hard protection — attack is blocked elsewhere
+	if (elapsedSinceProtectionEnded >= PROTECTION_TAPER_DURATION_MS) return 0;
+	const remaining = 1 - elapsedSinceProtectionEnded / PROTECTION_TAPER_DURATION_MS;
+	return PROTECTION_TAPER_START_SURVIVOR_PCT * remaining;
+}
+
+// ── Standing defensive orders ────────────────────────────────────────────────
+// A standing order auto-transfers troops (existing rails, see
+// troopTransferService.sendTroopsTransaction) from a reserve nexus to its
+// protected nexus the moment that nexus receives an incoming attack. Without a
+// cooldown, a multi-wave raid (or repeated raids) would re-fire the same order
+// on every single inbound attack and strip the source nexus's reserve in
+// minutes. This is a flat per-order cooldown, independent of how many distinct
+// attackers hit the protected nexus in the window.
+export const STANDING_ORDER_COOLDOWN_MS = 30 * 60 * 1000; // 30 minutes
+
+// Hard cap on how many standing orders one user may have, to bound the work
+// done per incoming attack (every active order targeting the defender nexus is
+// evaluated) and to keep the UI list manageable.
+export const MAX_STANDING_ORDERS_PER_USER = 20;
+
+// ── Queue templates ──────────────────────────────────────────────────────────
+// Named, reusable training-queue presets a player can save and replay (roadmap
+// Phase 3). Bounds the per-user list size shown in the UI; replaying a
+// template still goes through troopController.trainTroops's full validation.
+export const MAX_QUEUE_TEMPLATES_PER_USER = 30;
+
+// ── Auto-requeue rules ───────────────────────────────────────────────────────
+// Per-nexus rules that re-queue a training batch or building upgrade each time
+// the previous one drains (roadmap Phase 6). Bounds per-user list size and the
+// work done per drain cycle in processCompletedQueuesAndNotify.
+export const MAX_AUTO_REQUEUE_RULES_PER_USER = 30;
+
 export interface BuildingCost {
 	biomass: number;
 	alloy: number;
@@ -194,6 +252,36 @@ const ONBOARDING_STEPS_BEFORE_TRAIN = new Set([
 	'build_production',
 	'counter_triangle'
 ]);
+
+// ── Onboarding discount taper ────────────────────────────────────────────
+// The step-gate above used to be a hard cliff: full discount right up until
+// the 'train_troops' step is marked complete, then instantly gone. A player
+// who pauses mid-tutorial and comes back days later hit that cliff exactly
+// as hard as one who finished in five minutes, even though by then they've
+// had plenty of time to accumulate real resources. We soften it the same way
+// PROTECTION_TAPER_DURATION_MS softens the post-protection cliff: once the
+// step-gate would still grant the discount, scale it down linearly by
+// account age, fully gone by ONBOARDING_TAPER_DURATION_MS after signup. A
+// fast tutorial completion (the common case) never reaches the taper window,
+// so this only ever affects slow/returning players, and only ever shrinks
+// the discount — it can't extend eligibility past the step-gate.
+export const ONBOARDING_TAPER_DURATION_MS = 3 * 24 * 60 * 60 * 1000;
+
+// Returns the discount fraction (1 = full discount, 0 = none) for an account
+// of the given age. 1 for the first half of the window, then decays linearly
+// to 0 by the end of it — same shape as getProtectionTaperSurvivorFloor, just
+// starting at full strength instead of a reduced one (this is a discount
+// fading away, not a survivor floor rising).
+export function getOnboardingTaperFraction(
+	createdAt: Date | string | null | undefined,
+	now: Date = new Date()
+): number {
+	if (!createdAt) return 1;
+	const accountAgeMs = now.getTime() - new Date(createdAt).getTime();
+	if (accountAgeMs <= 0) return 1;
+	if (accountAgeMs >= ONBOARDING_TAPER_DURATION_MS) return 0;
+	return 1 - accountAgeMs / ONBOARDING_TAPER_DURATION_MS;
+}
 
 export function isOnboardingTrainEligible(
 	troopType: string,

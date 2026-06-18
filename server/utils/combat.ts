@@ -24,6 +24,7 @@ import {
 import { getMaxStorage, getNexusTypeEffectiveMultipliers } from './economy.js';
 import { resolveEventForNexus } from './galaxyEvents.js';
 import {
+	getProtectionTaperSurvivorFloor,
 	getStealthScoutFailChance,
 	partitionStealthVault,
 	RETURN_TRAVEL_MULTIPLIER
@@ -493,12 +494,18 @@ async function resolveCoordinatedCombat(attacks: AttackWithNexuses[]): Promise<v
 		// combat can still reproduce its losses from the lead attack id.
 		const seed = lead.id * 2654435761;
 
+		// Post-protection taper — see resolveCombat's identical comment. Defender
+		// only, loser case only.
+		const defenderTaperFloor = getProtectionTaperSurvivorFloor(
+			defenderNexus.newbieProtectionEndsAt
+		);
+
 		// Merged TOTAL losses for both sides (same helpers as singleton path).
 		const mergedAttackerLosses: Partial<Record<TroopKey, number>> = attackerWins
 			? computeLossesForWinner(mergedAttackTroops, powerRatio, seed, mergedDefenderForce)
 			: computeLossesForLoser(mergedAttackTroops, powerRatio);
 		const rawDefenderLosses: Partial<Record<TroopKey, number>> = attackerWins
-			? computeLossesForLoser(mergedDefenderForce, powerRatio)
+			? computeLossesForLoser(mergedDefenderForce, powerRatio, defenderTaperFloor)
 			: computeLossesForWinner(
 					mergedDefenderForce,
 					powerRatio,
@@ -1637,12 +1644,19 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 		// a narrow defeat leaves a remnant instead of wiping the whole army. A
 		// decisive win (low powerRatio) still drives the loser to ~0, which is what
 		// lets a dominant strike clear the garrison and enable conquest.
+		// Post-protection taper: only the DEFENDER benefits, and only when they
+		// lose. Raises their guaranteed survivor floor for a decaying window after
+		// newbieProtectionEndsAt — see getProtectionTaperSurvivorFloor for the curve.
+		const defenderTaperFloor = getProtectionTaperSurvivorFloor(
+			defenderNexus.newbieProtectionEndsAt
+		);
+
 		const attackerLosses: Partial<Record<TroopKey, number>> = attackerWins
 			? computeLossesForWinner(attackTroops, powerRatio, seed, mergedDefenderForce)
 			: computeLossesForLoser(attackTroops, powerRatio);
 
 		const rawDefenderLosses = attackerWins
-			? computeLossesForLoser(mergedDefenderForce, powerRatio)
+			? computeLossesForLoser(mergedDefenderForce, powerRatio, defenderTaperFloor)
 			: computeLossesForWinner(mergedDefenderForce, powerRatio, seed ^ 0xabcd1234, attackTroops);
 
 		const defenderLosses: Partial<Record<TroopKey, number>> = {};

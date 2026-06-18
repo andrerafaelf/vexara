@@ -771,7 +771,8 @@ export async function processCompletedQueuesAndNotify(): Promise<void> {
 					title: 'Construction Complete',
 					body: `${label} upgraded to level ${drained.targetLevel} at ${nexus.name}.`,
 					tag: `build-${nexus.id}-${drained.building}-${drained.targetLevel}`,
-					data: { url: '/' }
+					data: { url: `/nexus/${nexus.id}?tab=buildings` },
+					actions: [{ action: 'view', title: 'View Nexus' }]
 				});
 			}
 
@@ -792,7 +793,14 @@ export async function processCompletedQueuesAndNotify(): Promise<void> {
 					title: 'Training Complete',
 					body: `${amount}x ${label} ready at ${nexus.name}.`,
 					tag: `troop-${nexus.id}-${troopType}-${new Date(drainedTraining[0].completesAt).getTime()}`,
-					data: { url: '/' }
+					data: { url: `/nexus/${nexus.id}?tab=troops` },
+					actions: [
+						{
+							action: 'retrain',
+							title: 'Train Again',
+							url: `/nexus/${nexus.id}?tab=troops&retrain=${troopType}:${amount}`
+						}
+					]
 				});
 			}
 
@@ -835,6 +843,31 @@ export async function processCompletedQueuesAndNotify(): Promise<void> {
 					`processCompletedQueuesAndNotify completion emit failed for nexus ${nexus.id}:`,
 					emitErr
 				);
+			}
+
+			// Auto-requeue: re-queue training/building rules whose kind just
+			// drained on this nexus. attemptAutoRequeue never throws (it
+			// self-pauses + notifies on validation failure), so a misconfigured
+			// rule can't block the rest of this drain cycle.
+			if (drainedBuildCount > 0 || Object.keys(trainTotals).length > 0) {
+				try {
+					const rules = await prisma.autoRequeueRule.findMany({
+						where: { nexusId: nexus.id, isActive: true }
+					});
+					if (rules.length > 0) {
+						// Dynamic import breaks the static cycle: autoRequeueService
+						// imports troopController/buildingController, which import
+						// applyCompletedQueues from this module.
+						const { attemptAutoRequeue } = await import('../services/autoRequeueService.js');
+						for (const rule of rules) {
+							if (rule.kind === 'building' && drainedBuildCount === 0) continue;
+							if (rule.kind === 'training' && Object.keys(trainTotals).length === 0) continue;
+							await attemptAutoRequeue(rule);
+						}
+					}
+				} catch (err) {
+					console.error(`processCompletedQueuesAndNotify auto-requeue failed for nexus ${nexus.id}:`, err);
+				}
 			}
 		} catch (err) {
 			console.error(`processCompletedQueuesAndNotify failed for nexus ${nexus.id}:`, err);

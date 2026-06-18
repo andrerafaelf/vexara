@@ -29,6 +29,11 @@ const PREF_LABELS: { key: keyof NotificationPreferences; label: string; descript
 		description: 'When a troop training batch finishes'
 	},
 	{
+		key: 'autoRequeuePaused',
+		label: 'Auto-Requeue Paused',
+		description: 'When an auto-requeue rule pauses itself because a level failed validation'
+	},
+	{
 		key: 'resourcesFull',
 		label: 'Storage Full',
 		description: 'When all resources hit max capacity'

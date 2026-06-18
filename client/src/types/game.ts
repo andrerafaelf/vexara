@@ -23,6 +23,7 @@ export interface User {
 	commanderTitle?: string | null;
 	beginnerTipsEnabled?: boolean;
 	onboardingStep?: string | null;
+	createdAt?: string;
 }
 
 export interface TimelineDay {

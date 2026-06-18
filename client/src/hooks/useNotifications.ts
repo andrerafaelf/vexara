@@ -27,6 +27,7 @@ export interface NotificationPreferences {
 	nearbyGalaxyEvent: boolean;
 	protectionExpiring: boolean;
 	tokenGranted: boolean;
+	autoRequeuePaused: boolean;
 }
 
 const DEFAULT_PREFS: NotificationPreferences = {
@@ -46,7 +47,8 @@ const DEFAULT_PREFS: NotificationPreferences = {
 	friendMessage: true,
 	nearbyGalaxyEvent: true,
 	protectionExpiring: true,
-	tokenGranted: true
+	tokenGranted: true,
+	autoRequeuePaused: true
 };
 
 function urlBase64ToUint8Array(base64String: string): ArrayBuffer {

@@ -387,8 +387,20 @@ export async function launchAttack(input: LaunchAttackInput): Promise<LaunchAtta
 			title: '⚠️ Incoming Attack',
 			body: `A strike is heading for ${defenderNexus.name}. ETA: ${etaStr}.`,
 			tag: `incoming-${attack.id}`,
-			data: { url: '/' }
+			data: { url: `/nexus/${defenderNexus.id}` },
+			actions: [{ action: 'view', title: 'View Nexus' }]
 		});
+
+		// Standing defensive orders (roadmap Phase 2). Lazy import keeps this
+		// module's dependency graph shallow — standingOrderService is only ever
+		// needed from this one call site.
+		void import('./standingOrderService.js').then(({ triggerStandingOrders }) =>
+			triggerStandingOrders({
+				defenderUserId: defenderNexus.ownerId!,
+				defenderNexusId: defenderNexus.id,
+				galaxyId
+			})
+		);
 	}
 
 	return {

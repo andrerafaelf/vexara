@@ -14,6 +14,9 @@ import {
 	updateAllResources
 } from './models/Nexus.js';
 import attackRoutes from './routes/attack.js';
+import standingOrderRoutes from './routes/standingOrder.js';
+import queueTemplateRoutes from './routes/queueTemplate.js';
+import autoRequeueRoutes from './routes/autoRequeue.js';
 import authRoutes from './routes/auth.js';
 import { unsubscribe } from './controllers/unsubscribeController.js';
 import { handleKofiWebhook } from './controllers/kofiWebhookController.js';
@@ -181,6 +184,9 @@ app.use('/api/building', buildingRoutes);
 app.use('/api/troop', troopRoutes);
 app.use('/api/map', mapRoutes);
 app.use('/api/attack', attackRoutes);
+app.use('/api/standing-orders', standingOrderRoutes);
+app.use('/api/queue-templates', queueTemplateRoutes);
+app.use('/api/auto-requeue', autoRequeueRoutes);
 app.use('/api/market', marketRoutes);
 app.use('/api/report', reportRoutes);
 app.use('/api', replayRoutes);

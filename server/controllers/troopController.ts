@@ -24,6 +24,7 @@ import {
 	getOverseerCost,
 	getTrainTimeSeconds,
 	getTrainingChains,
+	getOnboardingTaperFraction,
 	isOnboardingTrainEligible,
 	trainingBuildingFor,
 	trainingChainFor
@@ -179,6 +180,249 @@ function trainingQueuePopulation(queue: unknown): number {
 	);
 }
 
+export type AttemptTrainTroopsResult =
+	| { ok: true; completesAt: Date; nexus: ReturnType<typeof serializeNexus> }
+	| { ok: false; status: number; error: string };
+
+/**
+ * Core training logic shared by the trainTroops HTTP handler and the
+ * auto-requeue background job (Nexus.ts's processCompletedQueuesAndNotify).
+ * Takes an already-authorized, already-completed-queues-applied nexus row —
+ * callers are responsible for ownership/galaxy checks and applyCompletedQueues,
+ * exactly as the HTTP handler always did before this was extracted.
+ */
+export async function attemptTrainTroops(
+	nexus: Awaited<ReturnType<typeof applyCompletedQueues>>,
+	troopType: string | undefined,
+	amount: number,
+	userId: number,
+	galaxyId: number
+): Promise<AttemptTrainTroopsResult> {
+	const parsedAmount = amount;
+	if (!parsedAmount || parsedAmount > MAX_TRAIN_PER_BATCH) {
+		return { ok: false, status: 400, error: `Amount must be an integer between 1 and ${MAX_TRAIN_PER_BATCH}` };
+	}
+	if (!troopType || !TROOP_COSTS[troopType]) {
+		return { ok: false, status: 400, error: 'Invalid troop type' };
+	}
+	// Each troop is produced by exactly one building (its class building, or
+	// Command Core for specials). At least that building must be > 0.
+	const trainingBuilding = trainingBuildingFor(troopType);
+	const trainingBuildingLevel =
+		((nexus as unknown as Record<string, number>)[trainingBuilding] as number) || 0;
+	if (trainingBuildingLevel === 0) {
+		return { ok: false, status: 400, error: `${BUILDING_NAMES[trainingBuilding] || trainingBuilding} required` };
+	}
+
+	const requirements = TROOP_REQUIREMENTS[troopType] || {};
+	if (requirements.buildings) {
+		for (const [building, requiredLevel] of Object.entries(requirements.buildings)) {
+			if (((nexus as unknown as Record<string, number>)[building] || 0) < requiredLevel) {
+				return {
+					ok: false,
+					status: 400,
+					error: `Requires ${BUILDING_NAMES[building] || building} Level ${requiredLevel}`
+				};
+			}
+		}
+	}
+
+	const [inFlight, outboundTransfers] = await Promise.all([
+		troopService.getInFlightTroops(nexus.id),
+		troopService.getOutboundTransferTroops(nexus.id)
+	]);
+
+	if (requirements.maxPerNexus) {
+		const queuedAmount = normalizeTrainingQueue(nexus.trainingQueue)
+			.filter((e: { troopType: string }) => e.troopType === troopType)
+			.reduce((sum: number, e: { amount: number }) => sum + (Number(e.amount) || 0), 0);
+		const inFlightAmount = inFlight.reduce(
+			(sum, a) => sum + ((a.troops as Record<string, number>)?.[troopType] || 0),
+			0
+		);
+		const transferAmount = outboundTransfers.reduce(
+			(sum, t) => sum + ((t.troops as Record<string, number>)?.[troopType] || 0),
+			0
+		);
+		const current =
+			((nexus as unknown as Record<string, number>)[troopType] || 0) +
+			queuedAmount +
+			inFlightAmount +
+			transferAmount;
+		if (current + parsedAmount > requirements.maxPerNexus) {
+			return {
+				ok: false,
+				status: 400,
+				error: `Maximum ${requirements.maxPerNexus} ${TROOP_NAMES[troopType] || troopType} per nexus`
+			};
+		}
+	}
+
+	const [galaxyForTrain, trainBoostPct, userOnboarding] = await Promise.all([
+		prisma.galaxy.findUnique({ where: { id: galaxyId }, select: { speedMultiplier: true } }),
+		getActiveProductionBoostPct(userId, galaxyId),
+		prisma.user.findUnique({
+			where: { id: userId },
+			select: { beginnerTipsEnabled: true, onboardingStep: true, createdAt: true }
+		})
+	]);
+	const trainSpeedMultiplier = galaxyForTrain?.speedMultiplier ?? 1.0;
+	const resourceUpdate = computeResourceUpdate(nexus, undefined, trainSpeedMultiplier, trainBoostPct);
+	const current = { ...nexus, ...resourceUpdate } as unknown as Record<string, number>;
+	const baseCost = TROOP_COSTS[troopType];
+
+		const onboardingDiscount = isOnboardingTrainEligible(
+			troopType,
+			userOnboarding?.beginnerTipsEnabled ?? false,
+			userOnboarding?.onboardingStep ?? null
+		);
+		const onboardingTaper = onboardingDiscount
+			? getOnboardingTaperFraction(userOnboarding?.createdAt)
+			: 0;
+
+		const cost =
+			troopType === 'overseer'
+				? {
+						...baseCost,
+						...getOverseerCost(await troopService.countOwnedNexuses(userId, galaxyId))
+					}
+				: onboardingTaper > 0
+					? {
+							...baseCost,
+							biomass: Math.round(
+								ONBOARDING_TROOP_COST.biomass +
+									(baseCost.biomass - ONBOARDING_TROOP_COST.biomass) * (1 - onboardingTaper)
+							),
+							alloy: Math.round(
+								ONBOARDING_TROOP_COST.alloy +
+									(baseCost.alloy - ONBOARDING_TROOP_COST.alloy) * (1 - onboardingTaper)
+							),
+							ore: Math.round(
+								ONBOARDING_TROOP_COST.ore +
+									(baseCost.ore - ONBOARDING_TROOP_COST.ore) * (1 - onboardingTaper)
+							)
+						}
+					: baseCost;
+		const totalCost = {
+			biomass: cost.biomass * parsedAmount,
+			alloy: cost.alloy * parsedAmount,
+			ore: cost.ore * parsedAmount,
+			population: cost.population * parsedAmount
+		};
+	if (
+		current.biomass < totalCost.biomass ||
+		current.alloy < totalCost.alloy ||
+		current.ore < totalCost.ore
+	) {
+		return { ok: false, status: 400, error: 'Insufficient resources' };
+	}
+	const nexusTroopPopulation = troopPopulation(nexus);
+	const inFlightPopulation = inFlight.reduce(
+		(sum, attack) => sum + troopPopulation(attack.troops),
+		0
+	);
+	const transferPopulation = outboundTransfers.reduce(
+		(sum, transfer) => sum + troopPopulation(transfer.troops),
+		0
+	);
+	const queuedPopulation = trainingQueuePopulation(nexus.trainingQueue);
+	const committedPopulation =
+		nexusTroopPopulation + inFlightPopulation + transferPopulation + queuedPopulation;
+
+	if (committedPopulation + totalCost.population > nexus.populationMax) {
+		return { ok: false, status: 400, error: 'Insufficient population capacity' };
+	}
+
+	const trainingQueue = normalizeTrainingQueue(nexus.trainingQueue);
+	const sameChainQueue = trainingQueue.filter((e: { troopType: string }) =>
+		sameTrainingChain(e, troopType, nexus.commandCore)
+	);
+	const maxTrainingQueue = getMaxTrainingQueueSlots(nexus.commandCore);
+	if (sameChainQueue.length >= maxTrainingQueue) {
+		return {
+			ok: false,
+			status: 400,
+			error: `Training queue is full (${maxTrainingQueue}/${maxTrainingQueue})`
+		};
+	}
+
+	const doubled = (nexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled ?? false;
+	const stealthArrayLevel =
+		((nexus as unknown as Record<string, number>).stealthArray as number) ?? 0;
+	const fullTrainSeconds =
+		getEffectiveTrainTimeSeconds(
+			troopType,
+			trainingBuildingLevel,
+			nexus.nexusType,
+			doubled,
+			stealthArrayLevel
+		) / trainSpeedMultiplier;
+	const perUnitSeconds =
+		onboardingTaper > 0
+			? ONBOARDING_TRAIN_TIME_SECONDS + (fullTrainSeconds - ONBOARDING_TRAIN_TIME_SECONDS) * (1 - onboardingTaper)
+			: fullTrainSeconds;
+	const queueStart =
+		sameChainQueue.length > 0
+			? new Date(sameChainQueue[sameChainQueue.length - 1].completesAt as string).getTime()
+			: Date.now();
+	const completesAt = new Date(queueStart + perUnitSeconds * parsedAmount * 1000);
+	const perUnitCost =
+		troopType === 'overseer'
+			? { biomass: cost.biomass, alloy: cost.alloy, ore: cost.ore }
+			: undefined;
+	const newQueue = [
+		...trainingQueue,
+		{ troopType, amount: parsedAmount, completesAt, perUnitSeconds, perUnitCost }
+	];
+
+	let updated;
+	try {
+		updated = await atomicUpdateNexusResources(nexus.id, nexus.lastResourceUpdate, {
+			...resourceUpdate,
+			biomass: current.biomass - totalCost.biomass,
+			alloy: current.alloy - totalCost.alloy,
+			ore: current.ore - totalCost.ore,
+			// newQueue already includes the batch being trained, so the recompute
+			// captures the new commitment without re-adding totalCost by hand.
+			populationCurrent: computeNexusPopulation({
+				troops: nexus as unknown as Record<string, unknown>,
+				trainingQueue: newQueue,
+				populationMax: nexus.populationMax,
+				inFlightPopulation,
+				transferPopulation
+			}),
+			trainingQueue: queueToJson(newQueue)
+		});
+	} catch (e) {
+		if (e instanceof ResourceConflictError) {
+			return { ok: false, status: 409, error: 'Resources updated simultaneously - please retry' };
+		}
+		throw e;
+	}
+	const rewardApplied = await applyQuestRewards(updated);
+	try {
+		emitResourceSnapshot(userId, rewardApplied);
+	} catch (e) {
+		logError('nexus_resources_emit_failed', {
+			message: (e as Error).message,
+			file: 'troopController.ts',
+			op: 'trainTroops'
+		});
+	}
+	try {
+		const { incrementQuestProgress } = await import('../services/dailyStreakService.js');
+		void (async () => {
+			await incrementQuestProgress(userId, galaxyId, 'train_5', parsedAmount);
+			await incrementQuestProgress(userId, galaxyId, 'train_15', parsedAmount);
+			await incrementQuestProgress(userId, galaxyId, 'train_30', parsedAmount);
+		})();
+	} catch {}
+	// True funnel milestone: fired once per user on their first-ever training
+	// order (logGameEventOnce dedups on userId+event).
+	logGameEventOnce('first_train', userId, galaxyId, { troopType, amount: parsedAmount });
+	return { ok: true, completesAt, nexus: serializeNexus(rewardApplied) };
+}
+
 export async function trainTroops(req: AuthRequest, res: Response): Promise<void> {
 	try {
 		const { nexusId, troopType, amount } = req.body as {
@@ -205,209 +449,13 @@ export async function trainTroops(req: AuthRequest, res: Response): Promise<void
 			return;
 		}
 		const nexus = await applyCompletedQueues(rawNexus);
-		if (!troopType || !TROOP_COSTS[troopType]) {
-			res.status(400).json({ error: 'Invalid troop type' });
+
+		const result = await attemptTrainTroops(nexus, troopType, parsedAmount, req.userId!, req.galaxyId!);
+		if (!result.ok) {
+			res.status(result.status).json({ error: result.error });
 			return;
 		}
-		// Each troop is produced by exactly one building (its class building, or
-		// Command Core for specials). At least that building must be > 0.
-		const trainingBuilding = trainingBuildingFor(troopType);
-		const trainingBuildingLevel =
-			((nexus as unknown as Record<string, number>)[trainingBuilding] as number) || 0;
-		if (trainingBuildingLevel === 0) {
-			res
-				.status(400)
-				.json({ error: `${BUILDING_NAMES[trainingBuilding] || trainingBuilding} required` });
-			return;
-		}
-
-		const requirements = TROOP_REQUIREMENTS[troopType] || {};
-		if (requirements.buildings) {
-			for (const [building, requiredLevel] of Object.entries(requirements.buildings)) {
-				if (((nexus as unknown as Record<string, number>)[building] || 0) < requiredLevel) {
-					res.status(400).json({
-						error: `Requires ${BUILDING_NAMES[building] || building} Level ${requiredLevel}`
-					});
-					return;
-				}
-			}
-		}
-
-		const [inFlight, outboundTransfers] = await Promise.all([
-			troopService.getInFlightTroops(nexus.id),
-			troopService.getOutboundTransferTroops(nexus.id)
-		]);
-
-		if (requirements.maxPerNexus) {
-			const queuedAmount = normalizeTrainingQueue(nexus.trainingQueue)
-				.filter((e: { troopType: string }) => e.troopType === troopType)
-				.reduce((sum: number, e: { amount: number }) => sum + (Number(e.amount) || 0), 0);
-			const inFlightAmount = inFlight.reduce(
-				(sum, a) => sum + ((a.troops as Record<string, number>)?.[troopType] || 0),
-				0
-			);
-			const transferAmount = outboundTransfers.reduce(
-				(sum, t) => sum + ((t.troops as Record<string, number>)?.[troopType] || 0),
-				0
-			);
-			const current =
-				((nexus as unknown as Record<string, number>)[troopType] || 0) +
-				queuedAmount +
-				inFlightAmount +
-				transferAmount;
-			if (current + parsedAmount > requirements.maxPerNexus) {
-				res.status(400).json({
-					error: `Maximum ${requirements.maxPerNexus} ${TROOP_NAMES[troopType] || troopType} per nexus`
-				});
-				return;
-			}
-		}
-
-		const [galaxyForTrain, trainBoostPct, userOnboarding] = await Promise.all([
-			prisma.galaxy.findUnique({ where: { id: req.galaxyId! }, select: { speedMultiplier: true } }),
-			getActiveProductionBoostPct(req.userId!, req.galaxyId!),
-			prisma.user.findUnique({
-				where: { id: req.userId! },
-				select: { beginnerTipsEnabled: true, onboardingStep: true }
-			})
-		]);
-		const trainSpeedMultiplier = galaxyForTrain?.speedMultiplier ?? 1.0;
-		const resourceUpdate = computeResourceUpdate(nexus, undefined, trainSpeedMultiplier, trainBoostPct);
-		const current = { ...nexus, ...resourceUpdate } as unknown as Record<string, number>;
-		const baseCost = TROOP_COSTS[troopType];
-
-		const onboardingDiscount = isOnboardingTrainEligible(
-			troopType,
-			userOnboarding?.beginnerTipsEnabled ?? false,
-			userOnboarding?.onboardingStep ?? null
-		);
-
-		const cost =
-			troopType === 'overseer'
-				? {
-						...baseCost,
-						...getOverseerCost(await troopService.countOwnedNexuses(req.userId!, req.galaxyId!))
-					}
-				: onboardingDiscount
-					? { ...baseCost, ...ONBOARDING_TROOP_COST }
-					: baseCost;
-		const totalCost = {
-			biomass: cost.biomass * parsedAmount,
-			alloy: cost.alloy * parsedAmount,
-			ore: cost.ore * parsedAmount,
-			population: cost.population * parsedAmount
-		};
-		if (
-			current.biomass < totalCost.biomass ||
-			current.alloy < totalCost.alloy ||
-			current.ore < totalCost.ore
-		) {
-			res.status(400).json({ error: 'Insufficient resources' });
-			return;
-		}
-		const nexusTroopPopulation = troopPopulation(nexus);
-		const inFlightPopulation = inFlight.reduce(
-			(sum, attack) => sum + troopPopulation(attack.troops),
-			0
-		);
-		const transferPopulation = outboundTransfers.reduce(
-			(sum, transfer) => sum + troopPopulation(transfer.troops),
-			0
-		);
-		const queuedPopulation = trainingQueuePopulation(nexus.trainingQueue);
-		const committedPopulation =
-			nexusTroopPopulation + inFlightPopulation + transferPopulation + queuedPopulation;
-
-		if (committedPopulation + totalCost.population > nexus.populationMax) {
-			res.status(400).json({ error: 'Insufficient population capacity' });
-			return;
-		}
-
-		const trainingQueue = normalizeTrainingQueue(nexus.trainingQueue);
-		const sameChainQueue = trainingQueue.filter((e: { troopType: string }) =>
-			sameTrainingChain(e, troopType, nexus.commandCore)
-		);
-		const maxTrainingQueue = getMaxTrainingQueueSlots(nexus.commandCore);
-		if (sameChainQueue.length >= maxTrainingQueue) {
-			res
-				.status(400)
-				.json({ error: `Training queue is full (${maxTrainingQueue}/${maxTrainingQueue})` });
-			return;
-		}
-
-		const doubled = (nexus as unknown as { nexusTypeDoubled?: boolean }).nexusTypeDoubled ?? false;
-		const stealthArrayLevel =
-			((nexus as unknown as Record<string, number>).stealthArray as number) ?? 0;
-		const perUnitSeconds = onboardingDiscount
-			? ONBOARDING_TRAIN_TIME_SECONDS
-			: getEffectiveTrainTimeSeconds(
-					troopType,
-					trainingBuildingLevel,
-					nexus.nexusType,
-					doubled,
-					stealthArrayLevel
-				) / trainSpeedMultiplier;
-		const queueStart =
-			sameChainQueue.length > 0
-				? new Date(sameChainQueue[sameChainQueue.length - 1].completesAt as string).getTime()
-				: Date.now();
-		const completesAt = new Date(queueStart + perUnitSeconds * parsedAmount * 1000);
-		const perUnitCost =
-			troopType === 'overseer'
-				? { biomass: cost.biomass, alloy: cost.alloy, ore: cost.ore }
-				: undefined;
-		const newQueue = [
-			...trainingQueue,
-			{ troopType, amount: parsedAmount, completesAt, perUnitSeconds, perUnitCost }
-		];
-
-		let updated;
-		try {
-			updated = await atomicUpdateNexusResources(nexus.id, nexus.lastResourceUpdate, {
-				...resourceUpdate,
-				biomass: current.biomass - totalCost.biomass,
-				alloy: current.alloy - totalCost.alloy,
-				ore: current.ore - totalCost.ore,
-				// newQueue already includes the batch being trained, so the recompute
-				// captures the new commitment without re-adding totalCost by hand.
-				populationCurrent: computeNexusPopulation({
-					troops: nexus as unknown as Record<string, unknown>,
-					trainingQueue: newQueue,
-					populationMax: nexus.populationMax,
-					inFlightPopulation,
-					transferPopulation
-				}),
-				trainingQueue: queueToJson(newQueue)
-			});
-		} catch (e) {
-			if (e instanceof ResourceConflictError) {
-				res.status(409).json({ error: 'Resources updated simultaneously - please retry' });
-				return;
-			}
-			throw e;
-		}
-		const rewardApplied = await applyQuestRewards(updated);
-		try {
-			emitResourceSnapshot(req.userId!, rewardApplied);
-		} catch (e) {
-			logError('nexus_resources_emit_failed', {
-				message: (e as Error).message,
-				file: 'troopController.ts',
-				op: 'trainTroops'
-			});
-		}
-		try {
-			const { incrementQuestProgress } = await import('../services/dailyStreakService.js');
-			void (async () => {
-				await incrementQuestProgress(req.userId, req.galaxyId, 'train_5', parsedAmount);
-				await incrementQuestProgress(req.userId, req.galaxyId, 'train_15', parsedAmount);
-				await incrementQuestProgress(req.userId, req.galaxyId, 'train_30', parsedAmount);
-			})();
-		} catch {}
-		// True funnel milestone: fired once per user on their first-ever training
-		// order (logGameEventOnce dedups on userId+event).
-		logGameEventOnce('first_train', req.userId, req.galaxyId, { troopType, amount: parsedAmount });
-		res.json({ success: true, completesAt, nexus: serializeNexus(rewardApplied) });
+		res.json({ success: true, completesAt: result.completesAt, nexus: result.nexus });
 	} catch (error) {
 		logError('unhandled_controller_error', {
 			message: (error as Error).message,
