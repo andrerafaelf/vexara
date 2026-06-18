@@ -15,7 +15,7 @@
 // If "I forgot to bump it" becomes a real pattern, swap to a build step
 // that globs the directory and writes this file. Until then: simpler wins.
 
-export const LATEST_PATCH_VERSION = '0.24';
-export const LATEST_PATCH_LABEL = 'Alpha v0.24';
+export const LATEST_PATCH_VERSION = '0.25';
+export const LATEST_PATCH_LABEL = 'Alpha v0.25';
 export const LATEST_PATCH_HEADLINE =
-	'An onboarding and legibility pass. The first build is accelerated to ~25s, the resource bar is pinned to the top on every page, Daily Quests follow you across tabs, and the combat class triangle is finally taught in-context — with no change to any combat number.';
+	'This patch is a defense and quality-of-life pass: a fairer curve for new commanders coming out of protection, real tools to defend a nexus and manage queues without babysitting them, and notifications you can act on without opening the app.';
