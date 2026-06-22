@@ -2,7 +2,11 @@ import prisma from '../lib/prisma.js';
 import { TROOP_KEYS } from '../types/index.js';
 import { NEXUS_TYPE_BONUSES } from '../utils/economy.js';
 import { canStationTroop } from '../utils/gameConstants.js';
-import { MAX_STANDING_ORDERS_PER_USER, STANDING_ORDER_COOLDOWN_MS } from '../utils/gameConstants.js';
+import {
+	MAX_STANDING_ORDERS_PER_USER,
+	STANDING_ORDER_COOLDOWN_MS,
+	STANDING_ORDER_SOURCE_GARRISON_FLOOR
+} from '../utils/gameConstants.js';
 import { logError, logWarn } from '../utils/logger.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
 import { normalizeTroopPayload } from '../utils/validation.js';
@@ -212,17 +216,37 @@ export async function triggerStandingOrders(params: {
 
 			const requestedTroops = order.troops as Record<string, number>;
 			const sourceRecord = sourceNexus as unknown as Record<string, number>;
+
+			// Leave-a-garrison floor: a fired order may only move the SOURCE's
+			// surplus above STANDING_ORDER_SOURCE_GARRISON_FLOOR, so even a baited
+			// trigger can't strip the source to zero and hand it over. The budget
+			// is a TOTAL across all troop types (the floor is a self-defense
+			// reserve, not per-unit), allocated across the requested types in
+			// iteration order. "Present" units are the source's own stationable
+			// garrison — in-transit/away troops aren't on these columns.
+			const sourcePresentTotal = TROOP_KEYS.reduce(
+				(sum, k) => sum + (canStationTroop(k) ? sourceRecord[k] ?? 0 : 0),
+				0
+			);
+			let drainBudget = Math.max(0, sourcePresentTotal - STANDING_ORDER_SOURCE_GARRISON_FLOOR);
+
 			const sending: Record<string, number> = {};
 			let total = 0;
 			for (const [troopType, requested] of Object.entries(requestedTroops)) {
 				if (!canStationTroop(troopType)) continue;
-				const amount = Math.min(Math.max(0, Math.floor(requested)), sourceRecord[troopType] ?? 0);
-				if (amount > 0) sending[troopType] = amount;
-				total += amount;
+				if (drainBudget <= 0) break;
+				const available = Math.min(Math.max(0, Math.floor(requested)), sourceRecord[troopType] ?? 0);
+				const amount = Math.min(available, drainBudget);
+				if (amount > 0) {
+					sending[troopType] = amount;
+					total += amount;
+					drainBudget -= amount;
+				}
 			}
 			if (total === 0) {
-				// Reserve depleted right now — not an error, just nothing to send
-				// this time. The order stays active for the next trigger.
+				// Either the reserve is depleted or the source is already at/below
+				// the self-defense floor. Not an error, just nothing to send this
+				// time. The order stays active for the next trigger.
 				continue;
 			}
 

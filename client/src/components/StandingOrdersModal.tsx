@@ -137,8 +137,10 @@ export default function StandingOrdersModal({ nexus, ownNexuses, onClose }: Prop
 				</button>
 				<h2 className="som-title">Standing Orders — {nexus.name}</h2>
 				<p className="som-subtitle">
-					Auto-deploy reserve troops from another nexus the moment {nexus.name} is attacked. Each
-					order has a 30-minute cooldown so one raid can't drain your reserve in one go.
+					Auto-deploy reserve troops from another nexus the moment {nexus.name} is attacked by a
+					real force. Each order has a 30-minute cooldown so one raid can't drain your reserve in
+					one go, tiny probing attacks won't trigger it, and a defensive reserve is always left
+					behind on the source nexus.
 				</p>
 
 				<div className="som-existing">

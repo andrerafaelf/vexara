@@ -58,6 +58,24 @@ export function getProtectionTaperSurvivorFloor(
 // attackers hit the protected nexus in the window.
 export const STANDING_ORDER_COOLDOWN_MS = 30 * 60 * 1000; // 30 minutes
 
+// Minimum incoming attack size (total units) that fires standing orders. The
+// cooldown caps RE-firing, but the FIRST trigger was free and fully
+// deterministic: an attacker who scouted the source could send a throwaway
+// 1-troop "attack" purely to bait the order into pulling a known reserve into
+// transit, then strike the now-lighter SOURCE nexus on a timer. Ignoring
+// sub-threshold pokes makes the bait cost a credible force instead of one unit,
+// while a real raid (which is what the feature is meant to answer) clears it
+// trivially. Counts every unit including non-combat escorts — the gate is
+// "is this a serious commitment", not "how much damage will it do".
+export const STANDING_ORDER_MIN_TRIGGER_UNITS = 5;
+
+// When a standing order fires, never drain the SOURCE nexus below this many
+// units of self-defense. Even past the trigger gate, a baited order should not
+// be able to strip its source to zero and leave it a free conquest. The drain
+// takes only the surplus above this floor; if the source is already at/below
+// the floor the order sends nothing this trigger (and stays active for later).
+export const STANDING_ORDER_SOURCE_GARRISON_FLOOR = 10;
+
 // Hard cap on how many standing orders one user may have, to bound the work
 // done per incoming attack (every active order targeting the defender nexus is
 // evaluated) and to keep the UI list manageable.

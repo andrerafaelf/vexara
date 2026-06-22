@@ -15,7 +15,7 @@
 // If "I forgot to bump it" becomes a real pattern, swap to a build step
 // that globs the directory and writes this file. Until then: simpler wins.
 
-export const LATEST_PATCH_VERSION = '0.25';
-export const LATEST_PATCH_LABEL = 'Alpha v0.25';
+export const LATEST_PATCH_VERSION = '0.25.1';
+export const LATEST_PATCH_LABEL = 'Alpha v0.25.1';
 export const LATEST_PATCH_HEADLINE =
-	'This patch is a defense and quality-of-life pass: a fairer curve for new commanders coming out of protection, real tools to defend a nexus and manage queues without babysitting them, and notifications you can act on without opening the app.';
+	'A hardening point-release ahead of Beta #1: two safeguards so Standing Orders can\'t be baited into stripping your own nexus, plus behind-the-scenes combat-health instrumentation. No economy, training, or combat numbers changed.';

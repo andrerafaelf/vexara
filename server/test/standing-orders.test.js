@@ -241,3 +241,86 @@ test('triggerStandingOrders skips when ownership of either nexus has changed', a
 	await triggerStandingOrders({ defenderUserId: 1, defenderNexusId: 5, galaxyId: 1 });
 	assert.equal(calls.transactionCalled, false, 'should not transfer troops once ownership changed');
 });
+
+// Capture the troops a fired order actually sends. sendTroopsTransaction builds
+// an array of [nexus.update(deduct), troopTransfer.create({troops})] and hands
+// it to $transaction; patching those two records the real `sending`/`deduct`
+// payloads, and a pass-through $transaction lets the ops build with them.
+function capturingTransfer(t, calls) {
+	withPatched(t, prisma.troopTransfer, {
+		create: async (args) => {
+			calls.sentTroops = args.data.troops;
+			return { id: 777, ownerNexusId: args.data.ownerNexusId, hostNexusId: args.data.hostNexusId };
+		}
+	});
+	withPatched(t, prisma.nexus, calls.nexusPatch);
+	withPatched(t, prisma, {
+		$transaction: async (ops) => Promise.all(ops)
+	});
+}
+
+test('garrison floor: a fired order leaves the source self-defense reserve intact', async (t) => {
+	// Source holds 14 stationable units, floor is 10 → at most 4 may leave even
+	// though the order requests 10. This is the anti-bait guarantee: a triggered
+	// order can never strip the source below the floor.
+	const calls = {
+		nexusPatch: {
+			findUnique: async ({ where }) => {
+				if (where.id === 6) return { id: 6, ownerId: 1, galaxyId: 1, x: 0, y: 0, assaultTrooper: 14 };
+				return { id: 5, ownerId: 1, galaxyId: 1, x: 1, y: 1, name: 'Protected Nexus' };
+			},
+			update: async (args) => ({ id: args.where.id })
+		}
+	};
+	withPatched(t, prisma.standingOrder, {
+		findMany: async () => [
+			{
+				id: 1,
+				userId: 1,
+				sourceNexusId: 6,
+				protectedNexusId: 5,
+				troops: { assaultTrooper: 10 },
+				isActive: true,
+				lastTriggeredAt: null
+			}
+		],
+		updateMany: async () => ({ count: 1 })
+	});
+	capturingTransfer(t, calls);
+
+	await triggerStandingOrders({ defenderUserId: 1, defenderNexusId: 5, galaxyId: 1 });
+	const sentTotal = Object.values(calls.sentTroops ?? {}).reduce((a, b) => a + b, 0);
+	assert.equal(sentTotal, 4, 'should send only the surplus above the floor (14 - 10), not the requested 10');
+});
+
+test('garrison floor: a source already at/below the floor sends nothing', async (t) => {
+	const calls = {
+		transactionCalled: false,
+		nexusPatch: {
+			findUnique: async ({ where }) => {
+				// Exactly at the floor (10) → zero surplus → nothing leaves.
+				if (where.id === 6) return { id: 6, ownerId: 1, galaxyId: 1, x: 0, y: 0, assaultTrooper: 10 };
+				return { id: 5, ownerId: 1, galaxyId: 1, x: 1, y: 1, name: 'Protected Nexus' };
+			}
+		}
+	};
+	withPatched(t, prisma.standingOrder, {
+		findMany: async () => [
+			{
+				id: 1,
+				userId: 1,
+				sourceNexusId: 6,
+				protectedNexusId: 5,
+				troops: { assaultTrooper: 10 },
+				isActive: true,
+				lastTriggeredAt: null
+			}
+		],
+		updateMany: async () => ({ count: 1 })
+	});
+	withPatched(t, prisma.nexus, calls.nexusPatch);
+	withPatched(t, prisma, { $transaction: async () => (calls.transactionCalled = true) });
+
+	await triggerStandingOrders({ defenderUserId: 1, defenderNexusId: 5, galaxyId: 1 });
+	assert.equal(calls.transactionCalled, false, 'a source at the floor must not transfer any troops');
+});

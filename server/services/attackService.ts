@@ -5,7 +5,7 @@ import { incrementQuestProgress } from './dailyStreakService.js';
 import { TROOP_KEYS } from '../types/index.js';
 import { TROOP_STATS } from '../utils/combatMath.js';
 import { NEXUS_TYPE_BONUSES } from '../utils/economy.js';
-import { canStationTroop } from '../utils/gameConstants.js';
+import { canStationTroop, STANDING_ORDER_MIN_TRIGGER_UNITS } from '../utils/gameConstants.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
 import {
 	normalizeTroopPayload,
@@ -394,13 +394,25 @@ export async function launchAttack(input: LaunchAttackInput): Promise<LaunchAtta
 		// Standing defensive orders (roadmap Phase 2). Lazy import keeps this
 		// module's dependency graph shallow — standingOrderService is only ever
 		// needed from this one call site.
-		void import('./standingOrderService.js').then(({ triggerStandingOrders }) =>
-			triggerStandingOrders({
-				defenderUserId: defenderNexus.ownerId!,
-				defenderNexusId: defenderNexus.id,
-				galaxyId
-			})
+		//
+		// Gate on incoming force size: a sub-threshold poke (notably a 1-troop
+		// bait) must NOT fire orders, or an attacker could strip a source nexus
+		// into transit for free and then strike it. The per-order cooldown caps
+		// re-firing; this caps the cheap *first* trigger. See
+		// STANDING_ORDER_MIN_TRIGGER_UNITS.
+		const incomingUnitCount = Object.values(normalizedTroops).reduce(
+			(sum: number, n) => sum + (Number(n) || 0),
+			0
 		);
+		if (incomingUnitCount >= STANDING_ORDER_MIN_TRIGGER_UNITS) {
+			void import('./standingOrderService.js').then(({ triggerStandingOrders }) =>
+				triggerStandingOrders({
+					defenderUserId: defenderNexus.ownerId!,
+					defenderNexusId: defenderNexus.id,
+					galaxyId
+				})
+			);
+		}
 	}
 
 	return {
