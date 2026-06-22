@@ -61,6 +61,20 @@ interface EngagementData {
 	attacksPerDay: AttackDay[];
 	playerHealth: { zeroAttackPlayers: number; stuckOnOnboarding: number; dismissedTips: number };
 }
+type Health = 'healthy' | 'watch' | 'concerning';
+interface CombatHealthData {
+	windowDays: number;
+	totalFights: number;
+	compDiversity: {
+		classPct: { mobile: number; armor: number; fire: number };
+		topClassPct: number;
+		defenderAnvilPct: number;
+		health: Health;
+	};
+	conquestRate: { conquests: number; conquestPct: number; health: Health };
+	postLossRecovery: { medianRecoveryHours: number | null; samples: number; health: Health };
+	firstStrikeWinRate: { mirrorFights: number; mirrorWinPct: number; health: Health };
+}
 interface ReferralLeaderboardEntry {
 	userId: number;
 	username: string;
@@ -113,6 +127,47 @@ function StatCard({
 	);
 }
 
+const HEALTH_COLOR: Record<Health, string> = {
+	healthy: '#4ade80',
+	watch: '#facc15',
+	concerning: '#f87171'
+};
+const HEALTH_LABEL: Record<Health, string> = {
+	healthy: 'Healthy',
+	watch: 'Watch',
+	concerning: 'Concerning'
+};
+
+// One COMBAT_BALANCE §4 signal. `value` is the headline figure; `band` colours
+// it; `detail` carries the doc's healthy/concerning thresholds so the read is
+// self-explaining without cross-referencing the doc.
+function HealthCard({
+	label,
+	value,
+	band,
+	detail
+}: {
+	label: string;
+	value: string;
+	band: Health;
+	detail: string;
+}) {
+	return (
+		<div className="stat-card" style={{ borderLeft: `3px solid ${HEALTH_COLOR[band]}` }}>
+			<div className="stat-card-body" style={{ gap: 4 }}>
+				<div className="stat-card-value" style={{ color: HEALTH_COLOR[band] }}>
+					{value}
+				</div>
+				<div className="stat-card-label">{label}</div>
+				<div style={{ fontSize: 11, color: HEALTH_COLOR[band], fontWeight: 700 }}>
+					{HEALTH_LABEL[band]}
+				</div>
+				<div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{detail}</div>
+			</div>
+		</div>
+	);
+}
+
 function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
 	return (
 		<div className="chart-header" style={{ marginBottom: 12 }}>
@@ -126,6 +181,7 @@ function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }
 export default function AnalyticsPage({ adminFetch }: Props) {
 	const [activation, setActivation] = useState<ActivationData | null>(null);
 	const [engagement, setEngagement] = useState<EngagementData | null>(null);
+	const [combat, setCombat] = useState<CombatHealthData | null>(null);
 	const [referral, setReferral] = useState<ReferralData | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -134,14 +190,21 @@ export default function AnalyticsPage({ adminFetch }: Props) {
 		setLoading(true);
 		setError(null);
 		try {
-			const [aRes, eRes, rRes] = await Promise.all([
+			const [aRes, eRes, cRes, rRes] = await Promise.all([
 				adminFetch(`${API}/analytics/activation`),
 				adminFetch(`${API}/analytics/engagement`),
+				adminFetch(`${API}/analytics/combat`),
 				adminFetch(`${API}/analytics/referrals`)
 			]);
-			const [aData, eData, rData] = await Promise.all([aRes.json(), eRes.json(), rRes.json()]);
+			const [aData, eData, cData, rData] = await Promise.all([
+				aRes.json(),
+				eRes.json(),
+				cRes.json(),
+				rRes.json()
+			]);
 			setActivation(aData);
 			setEngagement(eData);
+			setCombat(cData);
 			setReferral(rData);
 		} catch (err) {
 			setError((err as Error).message);
@@ -167,6 +230,8 @@ export default function AnalyticsPage({ adminFetch }: Props) {
 			</div>
 		);
 	if (!activation || !engagement || !referral) return null;
+	// combat may be null if no PvP has resolved yet in the window — the section
+	// renders a "no data" state rather than blocking the whole page.
 
 	const maxFunnelCount = activation.funnel[0]?.count ?? 1;
 
@@ -392,6 +457,52 @@ export default function AnalyticsPage({ adminFetch }: Props) {
 						</AreaChart>
 					</ResponsiveContainer>
 				</div>
+			</div>
+
+			{/* ── Combat Health (COMBAT_BALANCE §4 playtest signals) ── */}
+			<div className="chart-section">
+				<SectionHeader
+					icon={<Swords size={15} />}
+					title={`Combat Health — playtest signals${
+						combat ? ` (${combat.totalFights.toLocaleString()} PvP fights, ${combat.windowDays}d)` : ''
+					}`}
+				/>
+				{!combat || combat.totalFights === 0 ? (
+					<div style={{ color: 'var(--text-muted)', fontSize: 13, padding: '12px 0' }}>
+						No resolved PvP combat in the window yet. Signals populate as players fight.
+					</div>
+				) : (
+					<div className="stat-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+						<HealthCard
+							label="Comp diversity"
+							value={`${combat.compDiversity.topClassPct}% top class`}
+							band={combat.compDiversity.health}
+							detail={`M ${combat.compDiversity.classPct.mobile}% / A ${combat.compDiversity.classPct.armor}% / F ${combat.compDiversity.classPct.fire}% · anvil in ${combat.compDiversity.defenderAnvilPct}% of defenses · concern: 1 class >60% or anvils <10%`}
+						/>
+						<HealthCard
+							label="Conquest rate"
+							value={`${combat.conquestRate.conquestPct}%`}
+							band={combat.conquestRate.health}
+							detail={`${combat.conquestRate.conquests} conquests · concern: stalemate (<1% of fights)`}
+						/>
+						<HealthCard
+							label="Post-loss recovery"
+							value={
+								combat.postLossRecovery.medianRecoveryHours === null
+									? '—'
+									: `${combat.postLossRecovery.medianRecoveryHours}h median`
+							}
+							band={combat.postLossRecovery.health}
+							detail={`wipe → next attack · n=${combat.postLossRecovery.samples} · concern: >24h (train-time debt)`}
+						/>
+						<HealthCard
+							label="First-strike win-rate"
+							value={`${combat.firstStrikeWinRate.mirrorWinPct}%`}
+							band={combat.firstStrikeWinRate.health}
+							detail={`near-mirror fights (n=${combat.firstStrikeWinRate.mirrorFights}) · healthy 50–60% · concern: >70% or <40%`}
+						/>
+					</div>
+				)}
 			</div>
 
 			{/* ── Player Health ── */}

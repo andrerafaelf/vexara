@@ -1054,6 +1054,175 @@ export async function getEngagementStats() {
 	};
 }
 
+// ---------------------------------------------------------------------------
+// Combat health — the four COMBAT_BALANCE.md §4 playtest signals
+//
+// Reads the `combat_resolved` GameEvent emitted per PvP attack (server
+// utils/logger.ts logCombatResolved). The doc defines healthy/concerning bands
+// for each signal; we compute the value AND classify it so the dashboard can
+// colour it without re-encoding the thresholds in the client.
+// ---------------------------------------------------------------------------
+
+// A near-mirror is a fight where the two sides were within ~25% on power, i.e.
+// powerRatio (loser/winner) ≥ 0.75. The doc's "first-strike win-rate" signal is
+// only meaningful in approximately-mirror matchups; lopsided fights are decided
+// by the size/counter gap, not initiative.
+const MIRROR_POWER_RATIO = 0.75;
+
+interface CombatMeta {
+	powerRatio?: number;
+	victory?: boolean;
+	conquered?: boolean;
+	attackerClass?: string | null;
+	defenderClass?: string | null;
+	attackerHasAnvil?: boolean;
+	defenderHasAnvil?: boolean;
+	attackerWiped?: boolean;
+}
+
+type Health = 'healthy' | 'watch' | 'concerning';
+
+export async function getCombatHealthStats(windowDays = 14) {
+	const since = daysAgo(windowDays);
+
+	const events = await prisma.gameEvent.findMany({
+		where: { event: 'combat_resolved', createdAt: { gte: since } },
+		select: { userId: true, meta: true, createdAt: true },
+		orderBy: { createdAt: 'asc' }
+	});
+
+	const rows = events.map((e) => ({
+		userId: e.userId,
+		createdAt: e.createdAt,
+		meta: (e.meta ?? {}) as CombatMeta
+	}));
+	const total = rows.length;
+
+	// ── Signal 1: comp diversity ──
+	// Distribution of the attacker's dominant class across all PvP fights, plus
+	// how often a defender fielded ANY anvil. "Anvils never built" and "one class
+	// >60%" are the concerning cases the doc names.
+	const classCounts: Record<'mobile' | 'armor' | 'fire', number> = { mobile: 0, armor: 0, fire: 0 };
+	let classedFights = 0;
+	let defenderAnvilFights = 0;
+	for (const r of rows) {
+		const c = r.meta.attackerClass;
+		if (c === 'mobile' || c === 'armor' || c === 'fire') {
+			classCounts[c]++;
+			classedFights++;
+		}
+		if (r.meta.defenderHasAnvil) defenderAnvilFights++;
+	}
+	const classPct = {
+		mobile: classedFights ? Math.round((classCounts.mobile / classedFights) * 100) : 0,
+		armor: classedFights ? Math.round((classCounts.armor / classedFights) * 100) : 0,
+		fire: classedFights ? Math.round((classCounts.fire / classedFights) * 100) : 0
+	};
+	const topClassPct = Math.max(classPct.mobile, classPct.armor, classPct.fire);
+	const anvilPct = total ? Math.round((defenderAnvilFights / total) * 100) : 0;
+	// Concerning: one class dominates (>60%) OR anvils almost never appear (<10%).
+	const compHealth: Health =
+		classedFights < 10
+			? 'watch'
+			: topClassPct > 60 || anvilPct < 10
+				? 'concerning'
+				: topClassPct > 50 || anvilPct < 25
+					? 'watch'
+					: 'healthy';
+
+	// ── Signal 2: conquest rate ──
+	// Share of PvP fights that resulted in a conquest. Stalemate (conquests almost
+	// never happen despite active attacks) is the concerning case.
+	const conquests = rows.filter((r) => r.meta.conquered).length;
+	const conquestPct = total ? Math.round((conquests / total) * 1000) / 10 : 0;
+	const conquestHealth: Health =
+		total < 10 ? 'watch' : conquestPct < 1 ? 'concerning' : conquestPct < 3 ? 'watch' : 'healthy';
+
+	// ── Signal 3: post-loss recovery ──
+	// For each attacker-wipe event, find that user's NEXT attack (any) and measure
+	// the wall-clock gap. Median is the headline; multi-day median = train-time
+	// debt too punishing.
+	const wipeEvents = rows.filter((r) => r.meta.attackerWiped);
+	const recoveryHours: number[] = [];
+	// Batch the "next attack after wipe" lookups; cap to keep this bounded.
+	const wipeSample = wipeEvents.slice(-200);
+	const nextAttacks = await Promise.all(
+		wipeSample.map((w) =>
+			prisma.attack.findFirst({
+				where: { attackerUserId: w.userId, createdAt: { gt: w.createdAt } },
+				select: { createdAt: true },
+				orderBy: { createdAt: 'asc' }
+			})
+		)
+	);
+	for (let i = 0; i < wipeSample.length; i++) {
+		const next = nextAttacks[i];
+		if (next) {
+			const hrs = (next.createdAt.getTime() - wipeSample[i].createdAt.getTime()) / 3_600_000;
+			if (hrs >= 0) recoveryHours.push(hrs);
+		}
+	}
+	recoveryHours.sort((a, b) => a - b);
+	const medianRecoveryHours =
+		recoveryHours.length > 0
+			? Math.round(recoveryHours[Math.floor(recoveryHours.length / 2)] * 10) / 10
+			: null;
+	// Healthy: recover within a session or two (≤ ~6h median). Concerning: >24h.
+	const recoveryHealth: Health =
+		medianRecoveryHours === null || recoveryHours.length < 5
+			? 'watch'
+			: medianRecoveryHours > 24
+				? 'concerning'
+				: medianRecoveryHours > 6
+					? 'watch'
+					: 'healthy';
+
+	// ── Signal 4: first-strike win-rate in near-mirrors ──
+	const mirrorFights = rows.filter(
+		(r) => typeof r.meta.powerRatio === 'number' && r.meta.powerRatio >= MIRROR_POWER_RATIO
+	);
+	const mirrorWins = mirrorFights.filter((r) => r.meta.victory).length;
+	const mirrorWinPct = mirrorFights.length
+		? Math.round((mirrorWins / mirrorFights.length) * 100)
+		: 0;
+	// Healthy: 50–60% (slight attacker initiative). >70% = initiative too strong;
+	// <40% = defender too dominant.
+	const winRateHealth: Health =
+		mirrorFights.length < 10
+			? 'watch'
+			: mirrorWinPct > 70 || mirrorWinPct < 40
+				? 'concerning'
+				: mirrorWinPct > 65 || mirrorWinPct < 45
+					? 'watch'
+					: 'healthy';
+
+	return {
+		windowDays,
+		totalFights: total,
+		compDiversity: {
+			classPct,
+			topClassPct,
+			defenderAnvilPct: anvilPct,
+			health: compHealth
+		},
+		conquestRate: {
+			conquests,
+			conquestPct,
+			health: conquestHealth
+		},
+		postLossRecovery: {
+			medianRecoveryHours,
+			samples: recoveryHours.length,
+			health: recoveryHealth
+		},
+		firstStrikeWinRate: {
+			mirrorFights: mirrorFights.length,
+			mirrorWinPct,
+			health: winRateHealth
+		}
+	};
+}
+
 export async function getReferralAnalytics() {
 	// Top referrers by activated referees (reached REFERRAL_EARLY_THRESHOLD)
 	const referralTokens = await prisma.referralToken.findMany({

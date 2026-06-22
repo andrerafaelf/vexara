@@ -65,6 +65,7 @@ router.get('/flagged-users', adminController.listFlaggedUsers);
 
 router.get('/analytics/activation', adminController.getActivationAnalytics);
 router.get('/analytics/engagement', adminController.getEngagementAnalytics);
+router.get('/analytics/combat', adminController.getCombatHealthAnalytics);
 router.get('/analytics/referrals', adminController.getReferralAnalytics);
 
 export default router;

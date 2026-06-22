@@ -1394,6 +1394,15 @@ export async function getEngagementAnalytics(_req: Request, res: Response): Prom
 	}
 }
 
+export async function getCombatHealthAnalytics(_req: Request, res: Response): Promise<void> {
+	try {
+		const data = await adminService.getCombatHealthStats();
+		res.json(data);
+	} catch (error) {
+		res.status(500).json({ error: (error as Error).message });
+	}
+}
+
 export async function getReferralAnalytics(_req: Request, res: Response): Promise<void> {
 	try {
 		const data = await adminService.getReferralAnalytics();

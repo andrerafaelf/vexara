@@ -29,7 +29,7 @@ import {
 	partitionStealthVault,
 	RETURN_TRAVEL_MULTIPLIER
 } from './gameConstants.js';
-import { logInfo, logWarn } from './logger.js';
+import { logInfo, logWarn, logCombatResolved } from './logger.js';
 import { computeNexusPopulation, getPopulationMax, loadAwayPopulation } from './population.js';
 import { NOTIF, sendPushToUser } from './push.js';
 import { grantPassXp } from './battlePass.js';
@@ -2314,6 +2314,25 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 				}
 			}
 		});
+
+		// Combat-health instrumentation (COMBAT_BALANCE §4). PvP only — NPC
+		// defenders (defenderUserId null) would swamp the comp-diversity and
+		// win-rate signals with scripted garrisons. Fire-and-forget.
+		if (attack.attackerUserId && attack.defenderUserId) {
+			const attackerSent = TROOP_KEYS.reduce((s, t) => s + (attackTroops[t] || 0), 0);
+			const attackerLost = TROOP_KEYS.reduce((s, t) => s + (attackerLosses[t] || 0), 0);
+			logCombatResolved({
+				attackerUserId: attack.attackerUserId,
+				galaxyId: attack.galaxyId,
+				powerRatio,
+				victory: attackerWins,
+				conquered,
+				attackerForce: attackTroops,
+				defenderForce: mergedDefenderForce as Partial<Record<TroopKey, number>>,
+				attackerSent,
+				attackerLost
+			});
+		}
 
 		// Reconcile the attacker's housing now that losses are final. Recompute from
 		// the nexus's own troops + queue + still-away pop rather than subtracting the
