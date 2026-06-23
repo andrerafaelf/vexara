@@ -46,6 +46,9 @@ const TYPE_ART: Partial<Record<string, string>> = {
 	'Forward Base': objectIcon('forwardBase')
 };
 
+// Generic art for a standard nexus (no specialization / unrecognized type).
+const DEFAULT_NEXUS_ART = objectIcon('nexus');
+
 function NexusTypeSvg({
 	size,
 	children
@@ -122,14 +125,11 @@ function ForwardBaseIcon({ size = 12 }: { size?: number }) {
 
 const NexusTypeBadge: React.FC<NexusTypeBadgeProps> = ({ type, doubled = false, size = 12 }) => {
 	const [artFailed, setArtFailed] = React.useState(false);
-	if (!type) return null;
-	const meta = TYPE_META[type];
-	if (!meta) return null;
-	const { Icon } = meta;
-	const tooltip = doubled ? meta.tooltipDoubled : meta.tooltip;
-	const artSrc = TYPE_ART[type];
+	const meta = type ? TYPE_META[type] : undefined;
+	const tooltip = meta ? (doubled ? meta.tooltipDoubled : meta.tooltip) : 'Standard Nexus';
+	const artSrc = (type && TYPE_ART[type]) || DEFAULT_NEXUS_ART;
 
-	if (artSrc && !artFailed) {
+	if (!artFailed) {
 		return (
 			<span
 				className="nexus-type-badge nexus-type-badge--art"
@@ -150,6 +150,8 @@ const NexusTypeBadge: React.FC<NexusTypeBadgeProps> = ({ type, doubled = false, 
 		);
 	}
 
+	if (!meta) return null;
+	const { Icon } = meta;
 	return (
 		<span className="nexus-type-badge" title={tooltip} aria-label={tooltip}>
 			<Icon size={size} />

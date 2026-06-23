@@ -111,30 +111,32 @@ const MobileNexusDrawer: React.FC<MobileNexusDrawerProps> = ({
 							className={`nexus-item ${String(nexus._id) === selectedNexusId ? 'active' : ''}`}
 							onClick={() => handleSelect(nexus)}
 						>
-							<div className="nexus-name">
-								<span className="nexus-name-text">{nexus.name}</span>
-								<NexusTypeBadge type={nexus.nexusType} doubled={nexus.nexusTypeDoubled} />
-							</div>
-							<div className="nexus-coords">
-								({nexus.x}|{nexus.y})
-							</div>
-							<div className="nexus-points">{nexus.points} inf</div>
-							<div className="nexus-badges">
-								{nexus.buildQueue.length > 0 && (
-									<span className="nexus-badge" title="Construction in progress">
-										<ConstructionIcon size={12} />
-									</span>
-								)}
-								{nexus.trainingQueue.length > 0 && (
-									<span className="nexus-badge" title="Training in progress">
-										<CombatIcon size={12} />
-									</span>
-								)}
-								{unreadNexusIds?.has(String(nexus._id)) && (
-									<span className="nexus-badge nexus-badge-unread" title="Unread reports">
-										<ScrollText size={12} />
-									</span>
-								)}
+							<NexusTypeBadge type={nexus.nexusType} doubled={nexus.nexusTypeDoubled} size={72} />
+							<div className="nexus-item-body">
+								<div className="nexus-name">
+									<span className="nexus-name-text">{nexus.name}</span>
+								</div>
+								<div className="nexus-coords">
+									({nexus.x}|{nexus.y})
+								</div>
+								<div className="nexus-points">{nexus.points} inf</div>
+								<div className="nexus-badges">
+									{nexus.buildQueue.length > 0 && (
+										<span className="nexus-badge" title="Construction in progress">
+											<ConstructionIcon size={12} />
+										</span>
+									)}
+									{nexus.trainingQueue.length > 0 && (
+										<span className="nexus-badge" title="Training in progress">
+											<CombatIcon size={12} />
+										</span>
+									)}
+									{unreadNexusIds?.has(String(nexus._id)) && (
+										<span className="nexus-badge nexus-badge-unread" title="Unread reports">
+											<ScrollText size={12} />
+										</span>
+									)}
+								</div>
 							</div>
 						</div>
 					))}

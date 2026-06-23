@@ -988,6 +988,9 @@
 }
 
 .nexus-item {
+	display: flex;
+	align-items: center;
+	gap: 10px;
 	padding: 12px 14px 12px 26px;
 	background: transparent;
 	margin-bottom: 4px;
@@ -1031,6 +1034,11 @@
 .nexus-item.active::before {
 	background: var(--accent);
 	box-shadow: 0 0 8px rgba(255, 158, 61, 0.6);
+}
+
+.nexus-item-body {
+	min-width: 0;
+	flex: 1;
 }
 
 .nexus-name {

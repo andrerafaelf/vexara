@@ -2269,7 +2269,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 									<NexusTypeBadge
 										type={nexus.nexusType}
 										doubled={nexus.nexusTypeDoubled}
-										size={32}
+										size={72}
 									/>
 									<span className="nexus-type-buff-name">{nexus.nexusType}</span>
 									<span
