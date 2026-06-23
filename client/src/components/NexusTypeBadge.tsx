@@ -37,11 +37,13 @@ const TYPE_META: Record<
 	}
 };
 
-// CDN art for the NPC nexus types that have bespoke icons. Types without an
+// CDN art for the nexus types that have bespoke icons. Types without an
 // entry here keep their hand-drawn SVG glyph (see TYPE_META above).
 const TYPE_ART: Partial<Record<string, string>> = {
 	'Resource Depot': objectIcon('resourceDepot'),
-	'Military Outpost': objectIcon('militaryOutpost')
+	'Military Outpost': objectIcon('militaryOutpost'),
+	'Supply Cache': objectIcon('supplyCache'),
+	'Forward Base': objectIcon('forwardBase')
 };
 
 function NexusTypeSvg({
@@ -129,7 +131,12 @@ const NexusTypeBadge: React.FC<NexusTypeBadgeProps> = ({ type, doubled = false, 
 
 	if (artSrc && !artFailed) {
 		return (
-			<span className="nexus-type-badge" title={tooltip} aria-label={tooltip}>
+			<span
+				className="nexus-type-badge nexus-type-badge--art"
+				title={tooltip}
+				aria-label={tooltip}
+				style={{ width: size, height: size }}
+			>
 				<img
 					src={artSrc}
 					alt=""

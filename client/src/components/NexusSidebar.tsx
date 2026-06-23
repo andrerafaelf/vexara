@@ -112,7 +112,7 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
 						>
 							<div className="nexus-name">
 								<span className="nexus-name-text">{nexus.name}</span>
-								<NexusTypeBadge type={nexus.nexusType} doubled={nexus.nexusTypeDoubled} />
+								<NexusTypeBadge type={nexus.nexusType} doubled={nexus.nexusTypeDoubled} size={32} />
 							</div>
 							<div className="nexus-coords">
 								({nexus.x}|{nexus.y})

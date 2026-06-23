@@ -1793,7 +1793,6 @@ const Map: React.FC<MapProps> = ({
 			return (
 				<div className="galaxy-events-section">
 					<div className="galaxy-events-toggle galaxy-events-toggle--pre" aria-live="polite">
-						<Sparkles size={13} aria-hidden="true" />
 						<span>Galaxy events start in {label}</span>
 					</div>
 				</div>
@@ -1808,7 +1807,6 @@ const Map: React.FC<MapProps> = ({
 					onClick={() => setShowEventsPanel((v) => !v)}
 					aria-expanded={showEventsPanel}
 				>
-					<Sparkles size={13} aria-hidden="true" />
 					<span>
 						{galaxyEvents.length} galaxy event{galaxyEvents.length !== 1 ? 's' : ''}
 					</span>
