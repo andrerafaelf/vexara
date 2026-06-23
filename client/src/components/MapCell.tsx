@@ -1,5 +1,5 @@
 import React from 'react';
-import { buildingIcon, nexusTypeIcon } from '../data/gameIcons';
+import { buildingIcon, objectIcon } from '../data/gameIcons';
 import type { MapNexus } from './Map';
 
 // Every nexus on the starfield draws the same Command Core building art by
@@ -105,7 +105,7 @@ function MapCellInner({ data }: { data: MapCellData }) {
 	if (isSelected) classes.push('selected');
 	const markerKind: MarkerGlyphKind =
 		kind === 'current' ? 'current' : kind === 'own' ? 'own' : 'nexus';
-	const markerArtUrl = npcMarkerType ? nexusTypeIcon(npcMarkerType) : COMMAND_CORE_URL;
+	const markerArtUrl = npcMarkerType ? objectIcon(npcMarkerType) : COMMAND_CORE_URL;
 
 	return (
 		<div

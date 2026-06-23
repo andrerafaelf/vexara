@@ -1,6 +1,6 @@
 import { Box, Users } from 'lucide-react';
 import React from 'react';
-import { resourceIcon } from '../data/gameIcons';
+import { objectIcon } from '../data/gameIcons';
 
 type ResourceKind = 'biomass' | 'alloy' | 'ore' | 'population' | 'storage';
 
@@ -30,9 +30,9 @@ const LABELS: Record<ResourceKind, string> = {
 // (see gameIcons.ts) instead of line icons. Population/storage have no art, so
 // they keep their lucide glyphs.
 const ART: Partial<Record<ResourceKind, string>> = {
-	biomass: resourceIcon('biomass'),
-	alloy: resourceIcon('alloy'),
-	ore: resourceIcon('ore')
+	biomass: objectIcon('biomass'),
+	alloy: objectIcon('alloy'),
+	ore: objectIcon('ore')
 };
 
 const GLYPH: Partial<Record<ResourceKind, React.ComponentType<{ size?: number }>>> = {

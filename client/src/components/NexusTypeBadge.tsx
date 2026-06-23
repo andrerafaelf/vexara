@@ -1,5 +1,5 @@
 import React from 'react';
-import { nexusTypeIcon } from '../data/gameIcons';
+import { objectIcon } from '../data/gameIcons';
 
 interface NexusTypeBadgeProps {
 	type?: string | null;
@@ -40,8 +40,8 @@ const TYPE_META: Record<
 // CDN art for the NPC nexus types that have bespoke icons. Types without an
 // entry here keep their hand-drawn SVG glyph (see TYPE_META above).
 const TYPE_ART: Partial<Record<string, string>> = {
-	'Resource Depot': nexusTypeIcon('resourceDepot'),
-	'Military Outpost': nexusTypeIcon('militaryOutpost')
+	'Resource Depot': objectIcon('resourceDepot'),
+	'Military Outpost': objectIcon('militaryOutpost')
 };
 
 function NexusTypeSvg({
