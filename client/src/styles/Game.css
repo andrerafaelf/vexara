@@ -991,7 +991,7 @@
 	display: flex;
 	align-items: center;
 	gap: 10px;
-	padding: 10px 14px 10px 26px;
+	padding: 6px 14px 6px 26px;
 	background: transparent;
 	margin-bottom: 4px;
 	border-radius: var(--radius-md);
@@ -1047,9 +1047,8 @@
 	color: var(--text-strong);
 	font-size: var(--text-base);
 	line-height: 1.25;
-	display: inline-flex;
+	display: flex;
 	align-items: center;
-	gap: 6px;
 }
 
 .nexus-item.active .nexus-name {
@@ -1165,6 +1164,15 @@
 	height: auto;
 	background: none;
 	border-radius: 0;
+}
+
+/* Sidebar list rows: the type art is the visual anchor of the row, sized to
+   72px minimum and clipped to a tidy square so the row height is driven by
+   the icon rather than the text stack beside it. */
+.nexus-item .nexus-type-badge--art {
+	flex-shrink: 0;
+	border-radius: var(--radius-sm);
+	overflow: hidden;
 }
 
 .nexus-type-icon {
@@ -2391,10 +2399,7 @@ label {
 
 /* Ensure nexus sidebar items have a comfortable tap height on desktop too */
 .nexus-item {
-	min-height: 52px;
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
+	min-height: 72px;
 }
 
 /* Desktop sidebar: make group-select easier to interact with */

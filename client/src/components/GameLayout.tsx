@@ -31,6 +31,7 @@ import '@/styles/InGameIdentity.css';
 import { Nexus } from '@/types/game';
 import { ChevronDown, Menu, Home, Globe, FileText, MoreHorizontal, Swords } from 'lucide-react';
 import { NexusIcon } from '@/components/VexaraIcons';
+import { objectIcon } from '@/data/gameIcons';
 import { usePathname, useRouter } from 'next/navigation';
 import { startTransition, useCallback, useEffect, useMemo, useState } from 'react';
 import { useStartProgress } from './NavigationProgress';
@@ -93,6 +94,7 @@ export default function GameLayout({
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 	const [isNexusDrawerOpen, setIsNexusDrawerOpen] = useState(false);
 	const [isDiscoverOpen, setIsDiscoverOpen] = useState(false);
+	const [nexusIconArtFailed, setNexusIconArtFailed] = useState(false);
 	// `user` comes from AuthContext, which reads localStorage — so it's null
 	// during SSR + the first client render but populated immediately after. Any
 	// auth-dependent chrome (the commander cards) must therefore wait until after
@@ -538,7 +540,19 @@ export default function GameLayout({
 									aria-expanded={isNexusDrawerOpen}
 									title="Your Nexuses"
 								>
-									<NexusIcon size={20} />
+									{nexusIconArtFailed ? (
+										<NexusIcon size={20} />
+									) : (
+										<img
+											src={objectIcon('nexus')}
+											alt=""
+											width={20}
+											height={20}
+											draggable={false}
+											onError={() => setNexusIconArtFailed(true)}
+											style={{ display: 'block', objectFit: 'contain' }}
+										/>
+									)}
 								</button>
 							</div>
 						</div>
