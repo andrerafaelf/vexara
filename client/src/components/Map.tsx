@@ -124,6 +124,15 @@ const NPC_NAME_FRAGMENTS = [
 ];
 const isNpcNexusName = (name: string) => NPC_NAME_FRAGMENTS.some((f) => name.includes(f));
 
+// NPC types with bespoke map marker art (see nexusTypeIcon in gameIcons.ts).
+// Types without an entry here keep the shared Command Core marker.
+const NPC_MARKER_TYPE_BY_FRAGMENT: [string, string][] = [
+	['Resource Depot', 'resourceDepot'],
+	['Military Outpost', 'militaryOutpost']
+];
+const npcMarkerType = (name: string): string | null =>
+	NPC_MARKER_TYPE_BY_FRAGMENT.find(([fragment]) => name.includes(fragment))?.[1] ?? null;
+
 const TROOP_LABELS: Record<string, string> = {
 	sentinelLancer: 'Sentinel Lancer',
 	assaultTrooper: 'Assault Trooper',
@@ -984,6 +993,7 @@ const Map: React.FC<MapProps> = ({
 				const isOwn = nexus ? ownNexusIds.has(nexus._id) : false;
 				const isNpc = nexus ? isNpcNexusName(nexus.name) : false;
 				const isEnemy = !!nexus && !isCurrent && !isOwn && !isNpc;
+				const npcMarker = isNpc ? npcMarkerType(nexus!.name) : null;
 
 				let kind: CellKind = 'empty';
 				if (nexus) {
@@ -1038,6 +1048,7 @@ const Map: React.FC<MapProps> = ({
 					cellPx: CELL_PX,
 					nexus,
 					kind,
+					npcMarkerType: npcMarker,
 					isSelected: !!selId && nexus?._id === selId,
 					isFactionTarget,
 					isInStormZone,

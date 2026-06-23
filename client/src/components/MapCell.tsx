@@ -1,11 +1,12 @@
 import React from 'react';
-import { buildingIcon } from '../data/gameIcons';
+import { buildingIcon, nexusTypeIcon } from '../data/gameIcons';
 import type { MapNexus } from './Map';
 
-// Every nexus on the starfield draws the same Command Core building art —
-// the cell's coloured border + glow (set on `.map-cell.<kind>-nexus`) is
-// what carries ownership/relation. Stable URL → resolved once at module
-// load, browser caches it across the whole grid.
+// Every nexus on the starfield draws the same Command Core building art by
+// default — the cell's coloured border + glow (set on `.map-cell.<kind>-nexus`)
+// is what carries ownership/relation. NPC nexuses with bespoke marker art
+// (npcMarkerType) draw that instead. Stable URLs → resolved once at module
+// load, browser caches them across the whole grid.
 const COMMAND_CORE_URL = buildingIcon('commandCore');
 
 export type CellKind = 'current' | 'own' | 'faction' | 'ally' | 'enemy' | 'npc' | 'empty';
@@ -18,6 +19,8 @@ export interface MapCellData {
 	cellPx: number;
 	nexus: MapNexus | null;
 	kind: CellKind;
+	/** NPC nexus type key (e.g. 'resourceDepot') with bespoke marker art, or null for the default Command Core marker. */
+	npcMarkerType: string | null;
 	isSelected: boolean;
 	isFactionTarget: boolean;
 	isInStormZone: boolean;
@@ -41,12 +44,12 @@ const markerClassByKind: Record<CellKind, string> = {
 
 type MarkerGlyphKind = 'current' | 'own' | 'nexus';
 
-function NexusMarkerGlyph({ kind }: { kind: MarkerGlyphKind }) {
+function NexusMarkerGlyph({ kind, artUrl }: { kind: MarkerGlyphKind; artUrl: string }) {
 	return (
 		<div className={`nexus-marker-glyph nexus-marker-glyph--${kind}`}>
 			<img
 				className="nexus-marker-art"
-				src={COMMAND_CORE_URL}
+				src={artUrl}
 				alt=""
 				draggable={false}
 				onError={(e) => {
@@ -78,6 +81,7 @@ function MapCellInner({ data }: { data: MapCellData }) {
 		cellPx,
 		nexus,
 		kind,
+		npcMarkerType,
 		isSelected,
 		isFactionTarget,
 		isInStormZone,
@@ -101,6 +105,7 @@ function MapCellInner({ data }: { data: MapCellData }) {
 	if (isSelected) classes.push('selected');
 	const markerKind: MarkerGlyphKind =
 		kind === 'current' ? 'current' : kind === 'own' ? 'own' : 'nexus';
+	const markerArtUrl = npcMarkerType ? nexusTypeIcon(npcMarkerType) : COMMAND_CORE_URL;
 
 	return (
 		<div
@@ -119,7 +124,7 @@ function MapCellInner({ data }: { data: MapCellData }) {
 		>
 			{nexus && (
 				<div className={`nexus-marker ${markerClassByKind[kind]}`} aria-hidden="true">
-					<NexusMarkerGlyph kind={markerKind} />
+					<NexusMarkerGlyph kind={markerKind} artUrl={markerArtUrl} />
 					{isActive && (
 						<span
 							className="nexus-activity-dot"
@@ -158,6 +163,7 @@ export const MapCell = React.memo(MapCellInner, (prev, next) => {
 		a.cellPx === b.cellPx &&
 		a.nexus === b.nexus &&
 		a.kind === b.kind &&
+		a.npcMarkerType === b.npcMarkerType &&
 		a.isSelected === b.isSelected &&
 		a.isFactionTarget === b.isFactionTarget &&
 		a.isInStormZone === b.isInStormZone &&

@@ -1,5 +1,6 @@
 import { Box, Users } from 'lucide-react';
 import React from 'react';
+import { resourceIcon } from '../data/gameIcons';
 
 type ResourceKind = 'biomass' | 'alloy' | 'ore' | 'population' | 'storage';
 
@@ -25,13 +26,13 @@ const LABELS: Record<ResourceKind, string> = {
 	storage: 'Storage'
 };
 
-// The three economy resources now use bespoke artwork (public/resources/*.webp,
-// ~3KB WebP each) instead of line icons. Population/storage have no art, so they
-// keep their lucide glyphs.
+// The three economy resources now use bespoke artwork served from the CDN
+// (see gameIcons.ts) instead of line icons. Population/storage have no art, so
+// they keep their lucide glyphs.
 const ART: Partial<Record<ResourceKind, string>> = {
-	biomass: '/resources/biomass.webp',
-	alloy: '/resources/alloy.webp',
-	ore: '/resources/ore.webp'
+	biomass: resourceIcon('biomass'),
+	alloy: resourceIcon('alloy'),
+	ore: resourceIcon('ore')
 };
 
 const GLYPH: Partial<Record<ResourceKind, React.ComponentType<{ size?: number }>>> = {

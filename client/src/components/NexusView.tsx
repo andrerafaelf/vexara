@@ -2554,7 +2554,6 @@ const NexusView: React.FC<NexusViewProps> = ({
 					{galaxyEvents.length > 0 && (
 						<div className="overview-galaxy-events">
 							<div className="overview-galaxy-events-header">
-								<Sparkles size={13} aria-hidden="true" />
 								<span>Galaxy Events</span>
 							</div>
 							{(galaxyEvents as any[]).map((ev: any) => {

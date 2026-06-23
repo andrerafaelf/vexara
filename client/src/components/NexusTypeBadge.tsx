@@ -1,4 +1,5 @@
 import React from 'react';
+import { nexusTypeIcon } from '../data/gameIcons';
 
 interface NexusTypeBadgeProps {
 	type?: string | null;
@@ -34,6 +35,13 @@ const TYPE_META: Record<
 		tooltip: 'Forward Base · 25% Faster Travel · 20% Faster Construction',
 		tooltipDoubled: 'Forward Base · ~44% Faster Travel · 36% Faster Construction'
 	}
+};
+
+// CDN art for the NPC nexus types that have bespoke icons. Types without an
+// entry here keep their hand-drawn SVG glyph (see TYPE_META above).
+const TYPE_ART: Partial<Record<string, string>> = {
+	'Resource Depot': nexusTypeIcon('resourceDepot'),
+	'Military Outpost': nexusTypeIcon('militaryOutpost')
 };
 
 function NexusTypeSvg({
@@ -111,11 +119,30 @@ function ForwardBaseIcon({ size = 12 }: { size?: number }) {
 }
 
 const NexusTypeBadge: React.FC<NexusTypeBadgeProps> = ({ type, doubled = false, size = 12 }) => {
+	const [artFailed, setArtFailed] = React.useState(false);
 	if (!type) return null;
 	const meta = TYPE_META[type];
 	if (!meta) return null;
 	const { Icon } = meta;
 	const tooltip = doubled ? meta.tooltipDoubled : meta.tooltip;
+	const artSrc = TYPE_ART[type];
+
+	if (artSrc && !artFailed) {
+		return (
+			<span className="nexus-type-badge" title={tooltip} aria-label={tooltip}>
+				<img
+					src={artSrc}
+					alt=""
+					width={size}
+					height={size}
+					draggable={false}
+					onError={() => setArtFailed(true)}
+					style={{ display: 'inline-block', verticalAlign: 'middle', objectFit: 'contain' }}
+				/>
+			</span>
+		);
+	}
+
 	return (
 		<span className="nexus-type-badge" title={tooltip} aria-label={tooltip}>
 			<Icon size={size} />

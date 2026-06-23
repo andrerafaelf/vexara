@@ -2,8 +2,10 @@
 //
 // All art is served from the Cloudflare CDN at https://cdn.vexara.world as
 // optimized .webp, keyed by the canonical camelCase troop/building key:
-//   troops:    https://cdn.vexara.world/troops/<key>.webp
-//   buildings: https://cdn.vexara.world/buildings/<key>.webp
+//   troops:      https://cdn.vexara.world/troops/<key>.webp
+//   buildings:   https://cdn.vexara.world/buildings/<key>.webp
+//   resources:   https://cdn.vexara.world/resources/<key>.webp
+//   nexusTypes:  https://cdn.vexara.world/nexusTypes/<key>.webp
 //
 // Migrated off bundled local PNG imports (StaticImageData) so the client ships
 // no image bytes and new/updated art is a CDN upload, not a code change. Every
@@ -21,6 +23,14 @@ export function troopIcon(key: string): string {
 
 export function buildingIcon(key: string): string {
 	return `${CDN_BASE}/buildings/${key}.webp`;
+}
+
+export function resourceIcon(key: string): string {
+	return `${CDN_BASE}/resources/${key}.webp`;
+}
+
+export function nexusTypeIcon(key: string): string {
+	return `${CDN_BASE}/nexusTypes/${key}.webp`;
 }
 
 // Player rank/supporter badges, served from the CDN at /badges/<key>.webp.

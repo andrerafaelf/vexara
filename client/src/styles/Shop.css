@@ -459,26 +459,12 @@
 	z-index: 1;
 }
 
-/* ── Supporter tier glow on avatar ───────────────────────────────────────── */
-/* Soft coloured halo around the avatar BOX — no hard spread ring, so it reads
-   as a glow rather than a border. box-shadow (not drop-shadow) is deliberate:
-   drop-shadow traces the transparent troop silhouette and renders as almost
-   nothing, while box-shadow halos the square box regardless of image alpha.
-   Cyan = commander, amber = vanguard, slate = officer.
-   `!important` defeats the `.commander-avatar { box-shadow: none }` themed rule
-   on the header/sidebar avatars, which shares the element and equal specificity. */
-.supporter-border {
-	border-radius: var(--radius-sm);
-}
-.supporter-border-officer {
-	box-shadow: 0 0 8px 1px rgba(148, 163, 184, 0.5), 0 0 16px 3px rgba(148, 163, 184, 0.3) !important;
-}
-.supporter-border-vanguard {
-	box-shadow: 0 0 9px 1px rgba(255, 158, 61, 0.55), 0 0 18px 4px rgba(255, 158, 61, 0.35) !important;
-}
-.supporter-border-commander {
-	box-shadow: 0 0 10px 1px rgba(34, 211, 238, 0.6), 0 0 20px 5px rgba(34, 211, 238, 0.4) !important;
-}
+/* Supporter tier glow (pulsing box-shadow halo) lives in globals.css —
+   .supporter-border-officer/-vanguard/-commander with the vx-border-pulse-*
+   keyframes. Do not redefine it here: a static, differently-coloured copy
+   used to live in this file and silently won the cascade over the animated
+   one because this stylesheet loads after globals.css on pages that import
+   it (e.g. ProfileStats), killing the pulse and showing the wrong colours. */
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 480px) {
