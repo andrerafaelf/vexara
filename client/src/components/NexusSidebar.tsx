@@ -110,7 +110,7 @@ const NexusSidebar: React.FC<NexusSidebarProps> = ({
 							className={`nexus-item ${isSelected ? 'active' : ''}`}
 							onClick={() => onSelectNexus(nexus)}
 						>
-							<NexusTypeBadge type={nexus.nexusType} doubled={nexus.nexusTypeDoubled} size={72} />
+							<NexusTypeBadge type={nexus.nexusType} doubled={nexus.nexusTypeDoubled} size={44} />
 							<div className="nexus-item-body">
 								<div className="nexus-name">
 									<span className="nexus-name-text">{nexus.name}</span>

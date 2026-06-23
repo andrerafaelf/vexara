@@ -991,7 +991,7 @@
 	display: flex;
 	align-items: center;
 	gap: 10px;
-	padding: 12px 14px 12px 26px;
+	padding: 10px 14px 10px 26px;
 	background: transparent;
 	margin-bottom: 4px;
 	border-radius: var(--radius-md);
