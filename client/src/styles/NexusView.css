@@ -454,22 +454,6 @@
 	flex-shrink: 0;
 }
 
-/* The buff banner's type icon is sized via the NexusTypeBadge `size` prop
-   (shared with desktop), so scale it up here for mobile rather than touching
-   the prop and affecting desktop too. */
-@media (max-width: 768px) {
-	.nexus-type-buff-head .nexus-type-badge {
-		width: 28px !important;
-		height: 28px !important;
-	}
-
-	.nexus-type-buff-head .nexus-type-badge img,
-	.nexus-type-buff-head .nexus-type-badge svg {
-		width: 28px;
-		height: 28px;
-	}
-}
-
 .nexus-type-tier-chip--ii {
 	color: var(--text-on-accent);
 	background: var(--accent);

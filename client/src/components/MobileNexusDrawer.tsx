@@ -111,9 +111,9 @@ const MobileNexusDrawer: React.FC<MobileNexusDrawerProps> = ({
 							className={`nexus-item ${String(nexus._id) === selectedNexusId ? 'active' : ''}`}
 							onClick={() => handleSelect(nexus)}
 						>
+							<NexusTypeBadge type={nexus.nexusType} doubled={nexus.nexusTypeDoubled} size={72} />
 							<div className="nexus-item-body">
 								<div className="nexus-name">
-									<NexusTypeBadge type={nexus.nexusType} doubled={nexus.nexusTypeDoubled} size={28} />
 									<span className="nexus-name-text">{nexus.name}</span>
 								</div>
 								<div className="nexus-coords">
