@@ -81,7 +81,7 @@ function LiveResourceStripInner({
 							key={key}
 							className={`header-res-compact header-res-${key} ${fullCls}${flashFresh ? ' header-res-flash' : ''}`}
 						>
-							<ResourceIcon kind={key} size={18} className="header-res-icon" labelled={false} />
+							<ResourceIcon kind={key} size={26} className="header-res-icon" labelled={false} />
 							<span className="header-res-compact-value">{fmt(val)}</span>
 						</div>
 					);

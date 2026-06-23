@@ -113,7 +113,7 @@ const MobileNexusDrawer: React.FC<MobileNexusDrawerProps> = ({
 						>
 							<div className="nexus-item-body">
 								<div className="nexus-name">
-									<NexusTypeBadge type={nexus.nexusType} doubled={nexus.nexusTypeDoubled} size={14} />
+									<NexusTypeBadge type={nexus.nexusType} doubled={nexus.nexusTypeDoubled} size={28} />
 									<span className="nexus-name-text">{nexus.name}</span>
 								</div>
 								<div className="nexus-coords">

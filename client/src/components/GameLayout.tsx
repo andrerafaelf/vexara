@@ -541,13 +541,13 @@ export default function GameLayout({
 									title="Your Nexuses"
 								>
 									{nexusIconArtFailed ? (
-										<NexusIcon size={20} />
+										<NexusIcon size={28} />
 									) : (
 										<img
 											src={objectIcon('nexus')}
 											alt=""
-											width={20}
-											height={20}
+											width={28}
+											height={28}
 											draggable={false}
 											onError={() => setNexusIconArtFailed(true)}
 											style={{ display: 'block', objectFit: 'contain' }}
