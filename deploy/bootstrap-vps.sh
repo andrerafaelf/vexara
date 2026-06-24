@@ -92,6 +92,7 @@ systemctl stop nginx 2>/dev/null || true
 fuser -k 80/tcp 2>/dev/null || true
 
 mkdir -p /var/www/certbot
+mkdir -p /var/www/treble-quest
 
 echo "==> Obtaining SSL certificates..."
 certbot certonly --standalone \
@@ -99,6 +100,13 @@ certbot certonly --standalone \
   -d "admin.${DOMAIN}" \
   --non-interactive --agree-tos -m "admin@${DOMAIN}" \
   --keep-until-expiring
+
+# treble.quest is a separate site served by the same nginx — its own cert,
+# issued separately so a DNS/ownership issue with it can't block the main cert.
+certbot certonly --standalone \
+  -d "treble.quest" \
+  --non-interactive --agree-tos -m "admin@${DOMAIN}" \
+  --keep-until-expiring || echo "==> WARN: treble.quest cert not issued — check its DNS points here"
 
 # Let non-root processes (deploy user, nginx container running as nginx UID)
 # traverse the letsencrypt dirs. Private key files inside archive/ stay 0600.
@@ -118,6 +126,12 @@ sed "s/DOMAIN_PLACEHOLDER/${DOMAIN}/g" \
       { print }
     ' \
   > "$APP_DIR/deploy/nginx/admin.conf"
+
+if [ -f "/etc/letsencrypt/live/treble.quest/fullchain.pem" ]; then
+  cp "$APP_DIR/deploy/nginx/treble.conf.template" "$APP_DIR/deploy/nginx/treble.conf"
+else
+  : > "$APP_DIR/deploy/nginx/treble.conf"
+fi
 
 # ─── Auto-renew: webroot mode — nginx container serves the challenge ──────────
 # No port conflicts; certbot writes to /var/www/certbot, nginx serves it.

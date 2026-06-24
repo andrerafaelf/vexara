@@ -1,0 +1,35 @@
+# Treble Quest — static site served from the same nginx container as Vexara.
+# Included by nginx.conf if the treble.quest SSL cert exists.
+# deploy.sh writes an empty treble.conf if the cert is missing,
+# so the player-facing site stays up regardless.
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name treble.quest;
+
+    ssl_certificate /etc/letsencrypt/live/treble.quest/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/treble.quest/privkey.pem;
+    ssl_trusted_certificate /etc/letsencrypt/live/treble.quest/chain.pem;
+
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 1d;
+    ssl_session_tickets off;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+
+    add_header Strict-Transport-Security "max-age=31536000" always;
+
+    location /.well-known/acme-challenge/ {
+        allow all;
+        root /var/www/certbot;
+    }
+
+    root /var/www/treble-quest;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}

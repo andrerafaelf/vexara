@@ -111,6 +111,20 @@ else
   : > "$APP_DIR/deploy/nginx/admin.conf"
 fi
 
+# Render the Treble Quest server block, but only if its cert exists.
+# Otherwise leave treble.conf empty so the main include is a no-op
+# (same pattern as admin.conf above — a missing cert must never take
+# down the Vexara player-facing site).
+TREBLE_CERT="/etc/letsencrypt/live/treble.quest/fullchain.pem"
+if [ -f "$TREBLE_CERT" ]; then
+  cp "$APP_DIR/deploy/nginx/treble.conf.template" "$APP_DIR/deploy/nginx/treble.conf"
+else
+  echo "[deploy] WARN: treble.quest cert missing at $TREBLE_CERT — treble.quest will be unreachable"
+  echo "[deploy] To issue it, on the VPS run:"
+  echo "  sudo docker stop vx-nginx && sudo certbot certonly --standalone -d treble.quest --non-interactive --agree-tos -m admin@${DOMAIN} && sudo docker start vx-nginx"
+  : > "$APP_DIR/deploy/nginx/treble.conf"
+fi
+
 # Pull all new images (fast, parallel)
 echo "[deploy] Pulling images..."
 $COMPOSE pull --quiet

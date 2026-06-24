@@ -990,10 +990,10 @@
 .nexus-item {
 	display: flex;
 	flex-direction: column;
-	gap: 6px;
-	padding: 6px 14px 6px 26px;
+	gap: 3px;
+	padding: 5px 14px 5px 26px;
 	background: transparent;
-	margin-bottom: 4px;
+	margin-bottom: 2px;
 	border-radius: var(--radius-md);
 	cursor: pointer;
 	transition:
@@ -1006,7 +1006,7 @@
 .nexus-item-row {
 	display: flex;
 	align-items: center;
-	gap: 10px;
+	gap: 8px;
 }
 
 .nexus-item::before {
@@ -1049,10 +1049,9 @@
 
 .nexus-name {
 	font-weight: 500;
-	margin-bottom: 2px;
 	color: var(--text-strong);
 	font-size: var(--text-base);
-	line-height: 1.25;
+	line-height: 1.2;
 	display: flex;
 	align-items: center;
 }
@@ -1187,7 +1186,7 @@
 .nexus-coords {
 	font-size: 12px;
 	color: var(--text-muted);
-	margin-bottom: 3px;
+	margin-bottom: 1px;
 }
 
 .nexus-points {
@@ -2463,8 +2462,8 @@ label {
 /* ── Desktop: widen comfortable interaction zones ── */
 @media (min-width: 769px) {
 	.nexus-item {
-		padding-top: 10px;
-		padding-bottom: 10px;
+		padding-top: 6px;
+		padding-bottom: 6px;
 	}
 
 	.nav-btn {

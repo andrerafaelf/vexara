@@ -228,4 +228,10 @@ http {
     # exists, empty otherwise (so a missing admin cert doesn't take down the
     # player-facing site).
     include /etc/nginx/admin.conf;
+
+    # ─── Treble Quest (separate site, same host) ─────────────────────────────
+    # deploy.sh writes /etc/nginx/treble.conf — populated if the treble.quest
+    # cert exists, empty otherwise (so a missing cert doesn't take down the
+    # player-facing site).
+    include /etc/nginx/treble.conf;
 }
