@@ -989,8 +989,8 @@
 
 .nexus-item {
 	display: flex;
-	align-items: center;
-	gap: 10px;
+	flex-direction: column;
+	gap: 6px;
 	padding: 6px 14px 6px 26px;
 	background: transparent;
 	margin-bottom: 4px;
@@ -1001,6 +1001,12 @@
 		color var(--duration-fast) var(--ease-out);
 	position: relative;
 	border: 1px solid transparent;
+}
+
+.nexus-item-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
 }
 
 .nexus-item::before {
@@ -1057,9 +1063,7 @@
 
 .nexus-name-text {
 	min-width: 0;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+	overflow-wrap: break-word;
 }
 
 /* Inline rename of a nexus in the sidebar list (the in-content name header was
