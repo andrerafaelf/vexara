@@ -990,10 +990,10 @@
 .nexus-item {
 	display: flex;
 	flex-direction: column;
-	gap: 3px;
-	padding: 5px 14px 5px 26px;
+	gap: 1px;
+	padding: 3px 14px 3px 26px;
 	background: transparent;
-	margin-bottom: 2px;
+	margin-bottom: 1px;
 	border-radius: var(--radius-md);
 	cursor: pointer;
 	transition:
@@ -1006,7 +1006,7 @@
 .nexus-item-row {
 	display: flex;
 	align-items: center;
-	gap: 8px;
+	gap: 6px;
 }
 
 .nexus-item::before {
@@ -1186,7 +1186,7 @@
 .nexus-coords {
 	font-size: 12px;
 	color: var(--text-muted);
-	margin-bottom: 1px;
+	margin-bottom: 0;
 }
 
 .nexus-points {
@@ -2462,8 +2462,8 @@ label {
 /* ── Desktop: widen comfortable interaction zones ── */
 @media (min-width: 769px) {
 	.nexus-item {
-		padding-top: 6px;
-		padding-bottom: 6px;
+		padding-top: 3px;
+		padding-bottom: 3px;
 	}
 
 	.nav-btn {
