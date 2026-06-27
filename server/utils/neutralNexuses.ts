@@ -508,3 +508,82 @@ export async function seedNeutralNexuses(galaxyId: number, count: number) {
 	}
 	return created;
 }
+
+// Very low difficulty for the onboarding tutorial target. At 0.15 the nexus
+// gets ~1-2 troops of the weakest types - easily beatable by a player who
+// trained even 5 units, which is the tutorial's first combat quest.
+const TUTORIAL_TARGET_DIFFICULTY = 0.15;
+// Maximum Chebyshev distance from the starter nexus when placing the tutorial
+// target. Keeps it nearby enough to discover quickly on the map.
+const TUTORIAL_TARGET_MAX_RANGE = 8;
+
+/**
+ * Find an open tile within TUTORIAL_TARGET_MAX_RANGE cells of (nearX, nearY),
+ * respecting MIN_NEXUS_SPACING. Falls back to global placement if no nearby
+ * tile is available (e.g. a very crowded map corner).
+ */
+async function findOpenCoordinatesNear(
+	galaxyId: number,
+	nearX: number,
+	nearY: number
+): Promise<{ x: number; y: number } | null> {
+	const existing = await prisma.nexus.findMany({
+		where: { galaxyId },
+		select: { x: true, y: true }
+	});
+	const fits = (x: number, y: number) =>
+		!existing.some((n) => Math.max(Math.abs(n.x - x), Math.abs(n.y - y)) < MIN_NEXUS_SPACING);
+
+	const candidates: Array<{ x: number; y: number; dist: number }> = [];
+	for (
+		let dx = -TUTORIAL_TARGET_MAX_RANGE;
+		dx <= TUTORIAL_TARGET_MAX_RANGE;
+		dx++
+	) {
+		for (
+			let dy = -TUTORIAL_TARGET_MAX_RANGE;
+			dy <= TUTORIAL_TARGET_MAX_RANGE;
+			dy++
+		) {
+			const x = nearX + dx;
+			const y = nearY + dy;
+			if (x < 0 || y < 0 || x >= MAP_SIZE || y >= MAP_SIZE) continue;
+			if (!fits(x, y)) continue;
+			const chebyshev = Math.max(Math.abs(dx), Math.abs(dy));
+			if (chebyshev < MIN_NEXUS_SPACING) continue; // too close to starter itself
+			candidates.push({ x, y, dist: chebyshev });
+		}
+	}
+	if (candidates.length > 0) {
+		// Pick the closest valid tile to keep the tutorial target easy to find.
+		candidates.sort((a, b) => a.dist - b.dist);
+		const pick = candidates[Math.floor(Math.random() * Math.min(3, candidates.length))];
+		return { x: pick.x, y: pick.y };
+	}
+	// No nearby tile: fall back to global placement.
+	return findOpenCoordinates(galaxyId);
+}
+
+/**
+ * Spawn a guaranteed-weak neutral nexus near the given starter coordinates for
+ * the onboarding tutorial. The nexus has very low garrison and no special type
+ * bonuses, so it is always beatable by a player who has trained their first
+ * few units. Fire-and-forget: if placement fails (crowded map) the neutral
+ * pool job will eventually add more targets.
+ */
+export async function spawnTutorialTarget(
+	galaxyId: number,
+	nearX: number,
+	nearY: number
+): Promise<ReturnType<typeof prisma.nexus.create> | null> {
+	const coordinates = await findOpenCoordinatesNear(galaxyId, nearX, nearY);
+	if (!coordinates) return null;
+	return prisma.nexus.create({
+		data: {
+			// Galaxy age 0 forces Neutral Settlement type (no special type bonus),
+			// keeping this purely a beginner combat target.
+			...buildNeutralNexusData(coordinates.x, coordinates.y, TUTORIAL_TARGET_DIFFICULTY, 0),
+			galaxyId
+		}
+	});
+}

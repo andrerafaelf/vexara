@@ -4,6 +4,7 @@ import type { AuthRequest } from '../types/index.js';
 import { logError } from '../utils/logger.js';
 import { refreshResources } from '../models/Nexus.js';
 import { notifyFactionUpdated } from '../services/warRoomSocket.js';
+import { ResourceConflictError } from '../services/nexusService.js';
 
 const MAX_DONATE = 1_000_000;
 
@@ -102,33 +103,48 @@ export async function donate(req: AuthRequest, res: Response): Promise<void> {
 			select: { username: true }
 		});
 
-		await prisma.$transaction([
-			prisma.nexus.update({
-				where: { id: nexus.id },
-				data: {
-					biomass: refreshed.biomass - donBiomass,
-					alloy: refreshed.alloy - donAlloy,
-					ore: refreshed.ore - donOre,
-					lastResourceUpdate: refreshed.lastResourceUpdate
-				}
-			}),
-			prisma.faction.update({
-				where: { id: factionId },
-				data: {
-					treasuryBiomass: { increment: donBiomass },
-					treasuryAlloy: { increment: donAlloy },
-					treasuryOre: { increment: donOre }
-				}
-			}),
-			prisma.factionEvent.create({
-				data: {
-					factionId,
-					type: 'treasury_donate',
-					actorName: me?.username ?? 'Unknown',
-					meta: JSON.stringify({ biomass: donBiomass, alloy: donAlloy, ore: donOre })
-				}
-			})
-		]);
+		// Build per-field gte guards and decrements for any donated amount > 0.
+		// Using conditional decrements instead of absolute writes eliminates the
+		// race where two concurrent donate requests both read the same stale
+		// balance and only one deduction actually lands (minting resources).
+		const nexusWhereGuards: Record<string, { gte: number }> = {};
+		const nexusDecrements: Record<string, { decrement: number }> = {};
+		if (donBiomass > 0) { nexusWhereGuards.biomass = { gte: donBiomass }; nexusDecrements.biomass = { decrement: donBiomass }; }
+		if (donAlloy > 0)   { nexusWhereGuards.alloy   = { gte: donAlloy };   nexusDecrements.alloy   = { decrement: donAlloy };   }
+		if (donOre > 0)     { nexusWhereGuards.ore     = { gte: donOre };     nexusDecrements.ore     = { decrement: donOre };     }
+
+		try {
+			await prisma.$transaction(async (tx) => {
+				const { count } = await tx.nexus.updateMany({
+					where: { id: nexus.id, ...nexusWhereGuards },
+					data: nexusDecrements
+				});
+				if (count === 0) throw new ResourceConflictError();
+
+				await tx.faction.update({
+					where: { id: factionId },
+					data: {
+						treasuryBiomass: { increment: donBiomass },
+						treasuryAlloy: { increment: donAlloy },
+						treasuryOre: { increment: donOre }
+					}
+				});
+				await tx.factionEvent.create({
+					data: {
+						factionId,
+						type: 'treasury_donate',
+						actorName: me?.username ?? 'Unknown',
+						meta: JSON.stringify({ biomass: donBiomass, alloy: donAlloy, ore: donOre })
+					}
+				});
+			});
+		} catch (err) {
+			if (err instanceof ResourceConflictError) {
+				res.status(409).json({ error: 'Insufficient resources - please retry' });
+				return;
+			}
+			throw err;
+		}
 
 		notifyFactionUpdated(factionId);
 		res.json({ success: true });
@@ -183,20 +199,13 @@ export async function spend(req: AuthRequest, res: Response): Promise<void> {
 			return;
 		}
 
-		const faction = await prisma.faction.findUnique({
+		// Verify faction exists first for a clean 404.
+		const factionExists = await prisma.faction.findUnique({
 			where: { id: factionId },
-			select: { treasuryBiomass: true, treasuryAlloy: true, treasuryOre: true }
+			select: { id: true }
 		});
-		if (!faction) {
+		if (!factionExists) {
 			res.status(404).json({ error: 'Faction not found' });
-			return;
-		}
-		if (
-			faction.treasuryBiomass < cost.biomass ||
-			faction.treasuryAlloy < cost.alloy ||
-			faction.treasuryOre < cost.ore
-		) {
-			res.status(400).json({ error: 'Insufficient treasury funds' });
 			return;
 		}
 
@@ -207,17 +216,26 @@ export async function spend(req: AuthRequest, res: Response): Promise<void> {
 
 		const expiresAt = new Date(Date.now() + parsedHours * 3600 * 1000);
 
-		// Record the spend and log the event; active boost tracked as faction event meta
-		await prisma.$transaction([
-			prisma.faction.update({
-				where: { id: factionId },
+		// Deduct and audit in one transaction so a failed factionEvent.create
+		// rolls the deduction back. The gte guard on updateMany still makes the
+		// deduction an atomic check-and-deduct (count === 0 means insufficient
+		// funds, or a concurrent spend drained the treasury first).
+		const spendResult = await prisma.$transaction(async (tx) => {
+			const { count } = await tx.faction.updateMany({
+				where: {
+					id: factionId,
+					treasuryBiomass: { gte: cost.biomass },
+					treasuryAlloy: { gte: cost.alloy },
+					treasuryOre: { gte: cost.ore }
+				},
 				data: {
 					treasuryBiomass: { decrement: cost.biomass },
 					treasuryAlloy: { decrement: cost.alloy },
 					treasuryOre: { decrement: cost.ore }
 				}
-			}),
-			prisma.factionEvent.create({
+			});
+			if (count === 0) return { ok: false as const };
+			await tx.factionEvent.create({
 				data: {
 					factionId,
 					type: 'treasury_spend',
@@ -230,8 +248,13 @@ export async function spend(req: AuthRequest, res: Response): Promise<void> {
 						expiresAt: expiresAt.toISOString()
 					})
 				}
-			})
-		]);
+			});
+			return { ok: true as const };
+		});
+		if (!spendResult.ok) {
+			res.status(400).json({ error: 'Insufficient treasury funds' });
+			return;
+		}
 
 		notifyFactionUpdated(factionId);
 		res.json({ success: true, buff: { pct: parsedPct, hours: parsedHours, expiresAt } });

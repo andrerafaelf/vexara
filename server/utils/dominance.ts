@@ -94,9 +94,21 @@ async function processGalaxy(galaxy: { id: number; name: string } & GalaxyWinSou
 		return;
 	}
 
-	// Require minimum player count in this galaxy
 	const playerCount = await prisma.galaxyPlayer.count({ where: { galaxyId: galaxy.id } });
-	if (playerCount < cfg.minPlayers) {
+
+	// Scale minPlayers down to the actual galaxy size when no explicit admin
+	// override is set (winMinPlayers === null). Engine default of 15 is calibrated
+	// for a full-sized galaxy; a small beta/speed galaxy with e.g. 5 players
+	// would never reach victory without this. A floor of 3 keeps the condition
+	// meaningful (at least a handful of players must be active).
+	// seasonEndsAt (via processSeasonExpiry) remains the guaranteed fallback for
+	// any galaxy that can't win via dominance - no additional changes needed there.
+	const effectiveMinPlayers =
+		galaxy.winMinPlayers != null
+			? cfg.minPlayers
+			: Math.min(cfg.minPlayers, Math.max(3, playerCount));
+
+	if (playerCount < effectiveMinPlayers) {
 		await prisma.faction.updateMany({
 			where: { galaxyId: galaxy.id, dominanceSince: { not: null } },
 			data: { dominanceSince: null }
@@ -121,8 +133,16 @@ async function processGalaxy(galaxy: { id: number; name: string } & GalaxyWinSou
 		}
 	}
 
+	// Similarly scale minFactions when no explicit override. A galaxy with only
+	// 2 active factions can still reach victory - the minimum is the smaller of
+	// the engine default and the actual faction count (floor 1).
+	const effectiveMinFactions =
+		galaxy.winMinFactions != null
+			? cfg.minFactions
+			: Math.min(cfg.minFactions, Math.max(1, factionCounts.size));
+
 	// Require minimum distinct faction count
-	if (factionCounts.size < cfg.minFactions) {
+	if (factionCounts.size < effectiveMinFactions) {
 		await prisma.faction.updateMany({
 			where: { galaxyId: galaxy.id, dominanceSince: { not: null } },
 			data: { dominanceSince: null }

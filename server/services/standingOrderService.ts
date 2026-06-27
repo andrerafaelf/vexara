@@ -10,7 +10,7 @@ import {
 import { logError, logWarn } from '../utils/logger.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
 import { normalizeTroopPayload } from '../utils/validation.js';
-import { sendTroopsTransaction } from './troopTransferService.js';
+import { sendTroopsTransaction, TroopShortfallError } from './troopTransferService.js';
 
 // Mirrors troopTransferController.ts's calcArrivesAt exactly — a standing
 // order is a same-owner troop transfer (the existing "station troops at
@@ -250,20 +250,35 @@ export async function triggerStandingOrders(params: {
 				continue;
 			}
 
-			const deductData: Record<string, number> = {};
+			const decrementData: Record<string, { decrement: number }> = {};
+			const availabilityWhere: Record<string, { gte: number }> = {};
 			for (const [troopType, amount] of Object.entries(sending)) {
-				deductData[troopType] = (sourceRecord[troopType] ?? 0) - amount;
+				decrementData[troopType] = { decrement: amount };
+				availabilityWhere[troopType] = { gte: amount };
 			}
 			const arrivesAt = calcTransferArrivesAt(sourceNexus, protectedNexus);
 
-			const [, transfer] = await sendTroopsTransaction(sourceNexus.id, deductData, {
+			const txResult = await sendTroopsTransaction(sourceNexus.id, decrementData, availabilityWhere, {
 				galaxyId,
 				ownerNexusId: sourceNexus.id,
 				hostNexusId: protectedNexus.id,
 				troops: sending,
 				status: 'traveling',
 				arrivesAt
-			} as Parameters<typeof sendTroopsTransaction>[2]);
+			} as Parameters<typeof sendTroopsTransaction>[3]).catch((txErr: unknown) => {
+				if (txErr instanceof TroopShortfallError) {
+					// Troops were depleted between our read and the transaction commit -
+					// skip this order silently rather than crashing the whole trigger loop.
+					logWarn('standing_order_trigger_shortfall', {
+						standingOrderId: order.id,
+						userId: order.userId
+					});
+					return null;
+				}
+				throw txErr;
+			});
+			if (!txResult) continue;
+			const [, transfer] = txResult;
 
 			void sendPushToUser(order.userId, NOTIF.TROOP_TRANSFER, {
 				title: 'Standing Order Triggered',

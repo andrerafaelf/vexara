@@ -1218,6 +1218,32 @@ async function resolveCoordinatedCombat(attacks: AttackWithNexuses[]): Promise<v
 			);
 		}
 
+		// Combat-health instrumentation (COMBAT_BALANCE §4), mirroring the
+		// single-wave path. PvP only - NPC defenders swamp the comp-diversity and
+		// win-rate signals with scripted garrisons. Fire-and-forget per participant.
+		if (defenderUserId) {
+			for (const p of participantForces) {
+				if (!p.attack.attackerUserId) continue;
+				const myLosses = perParticipantLosses.get(p) as Record<string, number> | undefined;
+				const pSent = TROOP_KEYS.reduce((s, t) => s + (p.troops[t] || 0), 0);
+				const pLost = myLosses
+					? TROOP_KEYS.reduce((s, t) => s + (myLosses[t] || 0), 0)
+					: 0;
+				logCombatResolved({
+					attackerUserId: p.attack.attackerUserId,
+					galaxyId: lead.galaxyId,
+					powerRatio,
+					victory: attackerWins,
+					conquered,
+					attackerForce: p.troops as Partial<Record<TroopKey, number>>,
+					defenderForce: mergedDefenderForce as Partial<Record<TroopKey, number>>,
+					attackerSent: pSent,
+					attackerLost: pLost,
+					merged: true
+				});
+			}
+		}
+
 		// Battle pass XP — coordinated assault bonus for all participants
 		for (const attackerUserId of distinctAttackerUserIds) {
 			void grantPassXp(attackerUserId, lead.galaxyId, 'ATTACK_LAUNCHED');

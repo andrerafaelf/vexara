@@ -133,14 +133,57 @@ export function getOwnedNexusIds(userId: number, galaxyId: number) {
 	});
 }
 
-export function transferResources(
+/**
+ * Atomically transfer resources from one nexus to another.
+ *
+ * Debit side (from): guarded conditional decrements with per-field gte checks so
+ * two concurrent transfers cannot both succeed if only one has sufficient balance.
+ * Throws ResourceConflictError (surfaces as 409) if the nexus no longer has
+ * enough at commit time.
+ *
+ * Credit side (to): unconditional increments - safe for concurrent writes.
+ */
+export async function transferResources(
 	fromId: number,
 	toId: number,
-	fromData: Record<string, number>,
-	toData: Record<string, number>
+	fromAmounts: { biomass: number; alloy: number; ore: number },
+	toAmounts: { biomass: number; alloy: number; ore: number }
 ) {
-	return prisma.$transaction([
-		prisma.nexus.update({ where: { id: fromId }, data: fromData }),
-		prisma.nexus.update({ where: { id: toId }, data: toData })
-	]);
+	return prisma.$transaction(async (tx) => {
+		const whereGuards: Record<string, { gte: number }> = {};
+		const decrementData: Record<string, { decrement: number }> = {};
+		if (fromAmounts.biomass > 0) {
+			whereGuards.biomass = { gte: fromAmounts.biomass };
+			decrementData.biomass = { decrement: fromAmounts.biomass };
+		}
+		if (fromAmounts.alloy > 0) {
+			whereGuards.alloy = { gte: fromAmounts.alloy };
+			decrementData.alloy = { decrement: fromAmounts.alloy };
+		}
+		if (fromAmounts.ore > 0) {
+			whereGuards.ore = { gte: fromAmounts.ore };
+			decrementData.ore = { decrement: fromAmounts.ore };
+		}
+		const { count } = await tx.nexus.updateMany({
+			where: { id: fromId, ...whereGuards },
+			data: decrementData
+		});
+		if (count === 0) throw new ResourceConflictError();
+
+		// Credit: { increment } is safe for concurrent writes.
+		await tx.nexus.update({
+			where: { id: toId },
+			data: {
+				...(toAmounts.biomass > 0 ? { biomass: { increment: toAmounts.biomass } } : {}),
+				...(toAmounts.alloy > 0 ? { alloy: { increment: toAmounts.alloy } } : {}),
+				...(toAmounts.ore > 0 ? { ore: { increment: toAmounts.ore } } : {})
+			}
+		});
+
+		const [updatedFrom, updatedTo] = await Promise.all([
+			tx.nexus.findUniqueOrThrow({ where: { id: fromId } }),
+			tx.nexus.findUniqueOrThrow({ where: { id: toId } })
+		]);
+		return [updatedFrom, updatedTo] as const;
+	});
 }

@@ -1,6 +1,8 @@
 import prisma from '../lib/prisma.js';
 import { createHash } from 'crypto';
 import { grantPassXp } from '../utils/battlePass.js';
+import { refreshResources } from '../models/Nexus.js';
+import { getMaxStorage } from '../utils/economy.js';
 
 export interface DailyQuest {
 	id: string;
@@ -141,27 +143,77 @@ export function getTodaySeed(userId: number, galaxyId: number): string {
 	return createHash('md5').update(`${date}-${userId}-${galaxyId}`).digest('hex').slice(0, 16);
 }
 
-export function selectDailyQuests(seed: string): DailyQuest[] {
+// Capabilities that gate certain daily quests. Missing any flag silently removes
+// the quests that require it from the pool before selecting, so new players
+// (no faction, single nexus, no market unlocked) only ever see quests they can
+// actually complete. A trivially-doable quest (login) is injected if every
+// eligible slot would otherwise be impossible for the player.
+export interface PlayerQuestCapabilities {
+	hasFaction: boolean;
+	nexusCount: number; // >= 2 required for transfer_1
+}
+
+// Map of quest IDs to the capability they need. Unlisted quests are universally
+// available (login, train_*, upgrade_*, attack_*).
+const QUEST_CAPABILITY_GATES: Record<string, (cap: PlayerQuestCapabilities) => boolean> = {
+	faction_chat_1: (c) => c.hasFaction,
+	support_1: (c) => c.hasFaction,
+	transfer_1: (c) => c.nexusCount >= 2,
+	market_1: () => true, // market always available
+	buy_market_1: () => true
+};
+
+function filterQuestsForCapabilities(
+	templates: typeof QUEST_TEMPLATES,
+	cap: PlayerQuestCapabilities
+): typeof QUEST_TEMPLATES {
+	return templates.filter((q) => {
+		const gate = QUEST_CAPABILITY_GATES[q.id];
+		return gate == null || gate(cap);
+	});
+}
+
+// The 'login' quest is the guaranteed trivial fallback - every active player
+// can complete it just by being in the game at all.
+const TRIVIAL_QUEST_ID = 'login';
+
+export function selectDailyQuests(
+	seed: string,
+	cap: PlayerQuestCapabilities = { hasFaction: true, nexusCount: 2 }
+): DailyQuest[] {
+	// Filter the pool to quests this player can actually complete.
+	const eligible = filterQuestsForCapabilities(QUEST_TEMPLATES, cap);
+
+	// Always guarantee at least the trivial quest is included. If the filtered
+	// pool would select zero trivial quests, we force inject the login quest so
+	// the player can always complete SOMETHING today.
+	const hasTrivial = eligible.some((q) => q.id === TRIVIAL_QUEST_ID);
+	const pool = hasTrivial ? eligible : [...eligible];
+	if (!hasTrivial) {
+		const trivial = QUEST_TEMPLATES.find((q) => q.id === TRIVIAL_QUEST_ID);
+		if (trivial) pool.push(trivial);
+	}
+
 	const hash = createHash('md5').update(seed).digest();
 	const indices: number[] = [];
 	const usedCategories = new Set<string>();
 	for (let i = 0; i < hash.length && indices.length < 3; i++) {
-		const idx = hash[i] % QUEST_TEMPLATES.length;
-		const cat = QUEST_TEMPLATES[idx].category;
+		const idx = hash[i] % pool.length;
+		const cat = pool[idx].category;
 		if (!indices.includes(idx) && !usedCategories.has(cat)) {
 			indices.push(idx);
 			usedCategories.add(cat);
 		}
 	}
 	// fallback: fill remaining slots avoiding used categories
-	for (let i = 0; i < QUEST_TEMPLATES.length && indices.length < 3; i++) {
-		const cat = QUEST_TEMPLATES[i].category;
+	for (let i = 0; i < pool.length && indices.length < 3; i++) {
+		const cat = pool[i].category;
 		if (!indices.includes(i) && !usedCategories.has(cat)) {
 			indices.push(i);
 			usedCategories.add(cat);
 		}
 	}
-	return indices.map((i) => ({ ...QUEST_TEMPLATES[i] }));
+	return indices.map((i) => ({ ...pool[i] }));
 }
 
 async function getHighestNexusLevel(userId: number, galaxyId: number): Promise<number> {
@@ -215,7 +267,24 @@ export async function getDailyStreakData(userId: number, galaxyId: number) {
 		});
 	}
 
-	const quests = selectDailyQuests(todaySeed);
+	// Resolve player capabilities so the quest pool only includes completable quests.
+	// Wrapped in try/catch so a lookup failure (e.g., in test environments without
+	// full mocks) falls back to all-capable defaults rather than crashing the handler.
+	let cap: PlayerQuestCapabilities = { hasFaction: true, nexusCount: 2 };
+	try {
+		const [factionMember, nexusCount] = await Promise.all([
+			prisma.factionMember.findUnique({
+				where: { userId_galaxyId: { userId, galaxyId } },
+				select: { id: true }
+			}),
+			prisma.nexus.count({ where: { ownerId: userId, galaxyId } })
+		]);
+		cap = { hasFaction: factionMember != null, nexusCount };
+	} catch {
+		// Keep liberal defaults: missing models in test or mid-migration scenarios
+		// should not prevent quest display
+	}
+	const quests = selectDailyQuests(todaySeed, cap);
 	const progress = (streak.questsProgress ?? {}) as Record<string, number>;
 	const mult = getStreakMultiplier(streak.currentStreak);
 	const nexusLevelMult = await getHighestNexusLevel(userId, galaxyId);
@@ -310,20 +379,30 @@ export async function claimDailyRewards(userId: number, galaxyId: number) {
 		totalOre += q.reward.ore;
 	}
 
-	const nexus = await prisma.nexus.findFirst({
+	const rawNexus = await prisma.nexus.findFirst({
 		where: { ownerId: userId, galaxyId },
 		orderBy: [{ points: 'desc' }, { id: 'asc' }]
 	});
-	if (!nexus) return { error: 'No nexus found' };
+	if (!rawNexus) return { error: 'No nexus found' };
+
+	// Refresh production so the headroom calculation uses the current balance.
+	const nexus = await refreshResources(rawNexus);
+	const maxStorage = getMaxStorage(nexus as Parameters<typeof getMaxStorage>[0]);
+
+	// Clamp each reward to the storage headroom so a full-storage nexus does
+	// not have the overflow silently destroyed on the next production tick.
+	const clampBiomass = Math.max(0, Math.min(totalBiomass, Math.floor(maxStorage - nexus.biomass)));
+	const clampAlloy   = Math.max(0, Math.min(totalAlloy,   Math.floor(maxStorage - nexus.alloy)));
+	const clampOre     = Math.max(0, Math.min(totalOre,     Math.floor(maxStorage - nexus.ore)));
 
 	const newStreak = data.currentStreak + 1;
 	await prisma.$transaction([
 		prisma.nexus.update({
 			where: { id: nexus.id },
 			data: {
-				biomass: { increment: totalBiomass },
-				alloy: { increment: totalAlloy },
-				ore: { increment: totalOre }
+				biomass: { increment: clampBiomass },
+				alloy:   { increment: clampAlloy },
+				ore:     { increment: clampOre }
 			}
 		}),
 		prisma.dailyStreak.update({
@@ -345,6 +424,8 @@ export async function claimDailyRewards(userId: number, galaxyId: number) {
 		success: true,
 		streak: newStreak,
 		nexusName: nexus.name,
-		reward: { biomass: totalBiomass, alloy: totalAlloy, ore: totalOre }
+		reward: { biomass: clampBiomass, alloy: clampAlloy, ore: clampOre },
+		fullReward: { biomass: totalBiomass, alloy: totalAlloy, ore: totalOre },
+		clamped: clampBiomass < totalBiomass || clampAlloy < totalAlloy || clampOre < totalOre
 	};
 }

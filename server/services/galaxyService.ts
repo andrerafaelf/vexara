@@ -80,8 +80,13 @@ export function leaveGalaxy(userId: number, galaxyId: number) {
 	});
 }
 
-export function selectGalaxy(userId: number, username: string, galaxyId: number) {
-	return prisma.$transaction(async (tx) => {
+export async function selectGalaxy(userId: number, username: string, galaxyId: number) {
+	// Track starter nexus coordinates so we can spawn a tutorial target after
+	// the transaction (createNeutralNexus uses the global prisma client and
+	// cannot run inside a nested transaction).
+	let starterCoords: { x: number; y: number } | null = null;
+
+	const result = await prisma.$transaction(async (tx) => {
 		const [existing, user] = await Promise.all([
 			tx.galaxyPlayer.findUnique({
 				where: { userId_galaxyId: { userId, galaxyId } },
@@ -92,24 +97,38 @@ export function selectGalaxy(userId: number, username: string, galaxyId: number)
 		if (!existing) {
 			await tx.galaxyPlayer.create({ data: { userId, galaxyId } });
 			const { createStarterNexus } = await import('../utils/starterNexus.js');
-			await createStarterNexus(tx, {
+			const starter = await createStarterNexus(tx, {
 				userId,
 				username,
 				galaxyId,
 				referredById: user?.referredById
 			});
+			starterCoords = { x: starter.x, y: starter.y };
 		}
 		// Establishing a starter nexus (joining any galaxy) grants Beta Founder
 		// status while the beta window is open. Alpha is closed, so isAlphaFounder
-			// is no longer granted. Idempotent: only flips false -> true, so re-joining or
+		// is no longer granted. Idempotent: only flips false -> true, so re-joining or
 		// joining a second galaxy never resets it.
 		await tx.user.update({
 			where: { id: userId },
 			data: {
-					activeGalaxyId: galaxyId,
-					...(!existing && isBetaFounderWindowOpen() ? { isBetaFounder: true } : {})
-				}
+				activeGalaxyId: galaxyId,
+				...(!existing && isBetaFounderWindowOpen() ? { isBetaFounder: true } : {})
+			}
 		});
 		return { joined: !existing };
 	});
+
+	// Spawn a guaranteed-weak tutorial target near the new player's starter nexus
+	// so there is always at least one easy NPC to attack for the first-attack
+	// onboarding quest. Fire-and-forget: failures are silent (the neutral pool
+	// background job replenishes the map anyway).
+	if (result.joined && starterCoords) {
+		const coords = starterCoords as { x: number; y: number };
+		void import('../utils/neutralNexuses.js')
+			.then(({ spawnTutorialTarget }) => spawnTutorialTarget(galaxyId, coords.x, coords.y))
+			.catch(() => {});
+	}
+
+	return result;
 }

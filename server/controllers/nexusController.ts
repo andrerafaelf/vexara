@@ -8,6 +8,7 @@ import {
 } from '../models/Nexus.js';
 import prisma from '../lib/prisma.js';
 import * as nexusService from '../services/nexusService.js';
+import { ResourceConflictError } from '../services/nexusService.js';
 import type { AuthRequest } from '../types/index.js';
 import { computeNexusPopulation, getPopulationMax } from '../utils/population.js';
 import { TROOP_COSTS } from '../utils/gameConstants.js';
@@ -621,16 +622,22 @@ export async function transferResources(req: AuthRequest, res: Response): Promis
 			return;
 		}
 
-		const [updatedFrom, updatedTo] = await nexusService.transferResources(
-			from.id,
-			to.id,
-			{
-				biomass: from.biomass - finalSpentBiomass,
-				alloy: from.alloy - finalSpentAlloy,
-				ore: from.ore - finalSpentOre
-			},
-			{ biomass: to.biomass + recvBiomass, alloy: to.alloy + recvAlloy, ore: to.ore + recvOre }
-		);
+		let updatedFrom: Awaited<ReturnType<typeof nexusService.transferResources>>[0];
+		let updatedTo: Awaited<ReturnType<typeof nexusService.transferResources>>[1];
+		try {
+			[updatedFrom, updatedTo] = await nexusService.transferResources(
+				from.id,
+				to.id,
+				{ biomass: finalSpentBiomass, alloy: finalSpentAlloy, ore: finalSpentOre },
+				{ biomass: recvBiomass, alloy: recvAlloy, ore: recvOre }
+			);
+		} catch (err) {
+			if (err instanceof ResourceConflictError) {
+				res.status(409).json({ error: 'Resource state changed - please retry' });
+				return;
+			}
+			throw err;
+		}
 		const partiallyClamped = spentTotal < requestedTotal;
 
 		// Push a fresh snapshot to each nexus's OWNER. For an own-empire transfer

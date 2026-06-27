@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Flag } from 'lucide-react';
 import {
 	acceptFactionInvite,
 	createFaction,
@@ -9,6 +11,7 @@ import {
 	getFaction,
 	getMyFaction,
 	getMyFactionInvites,
+	getMyGalaxy,
 	inviteToFaction,
 	kickFactionMember,
 	leaveFaction,
@@ -178,7 +181,22 @@ export default function FactionsView() {
 		}
 	}, [advanceOnboarding, isJoinFactionOnboarding, loading, myFaction]);
 
+	// Galaxy name for the cold-start hero headline. Reuses the cached 'myGalaxy'
+	// query that GalaxyChip already keeps warm, so there is no extra network call.
+	type MyGalaxyResponse = { activeGalaxy?: { name?: string | null } | null };
+	const { data: galaxyData } = useQuery({
+		queryKey: ['myGalaxy'] as const,
+		queryFn: () => getMyGalaxy().then((r) => r.data as MyGalaxyResponse),
+		staleTime: 5 * 60_000
+	});
+	const galaxyName: string | null = galaxyData?.activeGalaxy?.name ?? null;
+
 	const [showCreateForm, setShowCreateForm] = useState(false);
+	// true when the create form was opened from the founding-hero CTA rather
+	// than the secondary "Found Your Own" button in the populated state.
+	const [isFoundingCreate, setIsFoundingCreate] = useState(false);
+	// true for ~600ms after a successful founding, drives the success flourish.
+	const [foundingSuccess, setFoundingSuccess] = useState(false);
 	const [formName, setFormName] = useState('');
 	const [formTag, setFormTag] = useState('');
 	const [formDesc, setFormDesc] = useState('');
@@ -220,6 +238,8 @@ export default function FactionsView() {
 	const [joinRequestMsg, setJoinRequestMsg] = useState<Record<number, string>>({});
 	const [joinRequestSubmitting, setJoinRequestSubmitting] = useState<Record<number, boolean>>({});
 	const [joinRequestError, setJoinRequestError] = useState<Record<number, string>>({});
+	// Per-faction "add a note" toggle in the Recruiting Now cards.
+	const [showJoinNote, setShowJoinNote] = useState<Record<number, boolean>>({});
 
 	// Click-to-expand on faction names: fetch the member list lazily and cache it.
 	const [expandedFactionId, setExpandedFactionId] = useState<number | null>(null);
@@ -349,12 +369,21 @@ export default function FactionsView() {
 		setFormSubmitting(true);
 		try {
 			await createFaction({ name: formName, tag: formTag, description: formDesc });
+			// Founding-hero context gets a brief success flourish before the view
+			// transitions to the in-faction screen.
+			if (isFoundingCreate) {
+				setFoundingSuccess(true);
+				await new Promise<void>((r) => setTimeout(r, 600));
+			}
 			await refreshFaction();
 			setShowCreateForm(false);
+			setIsFoundingCreate(false);
+			setFoundingSuccess(false);
 			setFormName('');
 			setFormTag('');
 			setFormDesc('');
 		} catch (err) {
+			setFoundingSuccess(false);
 			setFormError(
 				(err as { response?: { data?: { error?: string } } }).response?.data?.error ||
 					(err as Error).message
@@ -672,10 +701,226 @@ export default function FactionsView() {
 		return <PageSkeleton variant="rows" count={6} />;
 	}
 
-	// ── No faction: browser + create ────────────────────────────────────────────
+	// ── No faction: cold-start hero or recruiting list ───────────────────────────
 
 	if (!myFaction) {
 		const pendingFactionIds = new Set(myJoinRequests.map((r) => r.factionId));
+
+		// Zero factions = founding wave. Show the founding hero (3A).
+		const isFoundingWave = allGalaxyFactions.length === 0;
+
+		// For populated state (3B): recommend up to 3 joinable factions, ranked
+		// by ascending memberCount so a new member feels impactful.
+		const joinableFactions = allGalaxyFactions.filter((f) => !pendingFactionIds.has(f.id));
+		const recommendedFactions = [...joinableFactions]
+			.sort((a, b) => a.memberCount - b.memberCount)
+			.slice(0, 3);
+		// If factions exist but none are joinable (all pending), promote "Found
+		// Your Own" back to primary -- mirrors the "all full" fallback in the spec.
+		const allFullOrPending = !isFoundingWave && joinableFactions.length === 0;
+
+		// Derive a smart default name + tag from the player's username.
+		const handleFoundYourFaction = () => {
+			const username = authUser?.username ?? '';
+			const defaultName = username ? `${username} Vanguard` : '';
+			// First 3-4 alphanumeric chars of username, uppercased, clamped 2-6.
+			const raw = username.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase();
+			const defaultTag = raw.length >= 2 ? raw : raw.padEnd(2, 'X');
+			setFormName(defaultName);
+			setFormTag(defaultTag);
+			setFormDesc('');
+			setFormError('');
+			setIsFoundingCreate(true);
+			setShowCreateForm(true);
+		};
+
+		const handleOpenSecondaryCreate = () => {
+			setFormName('');
+			setFormTag('');
+			setFormDesc('');
+			setFormError('');
+			setIsFoundingCreate(false);
+			setShowCreateForm((prev) => !prev);
+		};
+
+		// Shared create form used in both the founding (3A) and populated (3B) contexts.
+		const createFormSection = showCreateForm && (
+			<section
+				className={`factions-panel factions-create-form${isFoundingCreate ? ' factions-hero-form' : ''}`}
+			>
+				<h2>{isFoundingCreate ? 'Raise Your Banner' : 'Create a New Faction'}</h2>
+				<form onSubmit={handleCreateFaction}>
+					<label className="factions-field">
+						<span className="factions-label">Faction Name</span>
+						<input
+							type="text"
+							value={formName}
+							onChange={(e) => setFormName(e.target.value)}
+							placeholder="e.g. Vexara Collective"
+							disabled={formSubmitting}
+							required
+							autoCorrect="off"
+							spellCheck={false}
+						/>
+					</label>
+					<label className="factions-field">
+						<span className="factions-label">Tag (2-6 characters)</span>
+						<input
+							type="text"
+							value={formTag}
+							onChange={(e) => setFormTag(e.target.value.toUpperCase())}
+							placeholder="e.g. VEX"
+							maxLength={6}
+							disabled={formSubmitting}
+							required
+							autoCapitalize="characters"
+							autoCorrect="off"
+							spellCheck={false}
+						/>
+					</label>
+					<label className="factions-field">
+						<span className="factions-label">Description (optional)</span>
+						<textarea
+							value={formDesc}
+							onChange={(e) => setFormDesc(e.target.value)}
+							placeholder="Tell us about your faction..."
+							rows={3}
+							disabled={formSubmitting}
+						/>
+					</label>
+					{formError && <div className="factions-field-error">{formError}</div>}
+					<button type="submit" disabled={formSubmitting} className="factions-btn-primary">
+						{formSubmitting
+							? isFoundingCreate
+								? 'Raising...'
+								: 'Creating...'
+							: isFoundingCreate
+								? 'Raise the Banner'
+								: 'Create Faction'}
+					</button>
+				</form>
+			</section>
+		);
+
+		// Full factions browser (all factions, expandable member lists).
+		const fullBrowserSection = (
+			<section className="factions-panel factions-browser">
+				<h2>All Factions ({allGalaxyFactions.length})</h2>
+				<div className="factions-browser-list">
+					{allGalaxyFactions.map((f) => {
+						const hasPending = pendingFactionIds.has(f.id);
+						const submitting = joinRequestSubmitting[f.id] ?? false;
+						const reqError = joinRequestError[f.id] ?? '';
+						const isExpanded = expandedFactionId === f.id;
+						const cachedMembers = factionMemberCache[f.id];
+						return (
+							<div key={f.id} className="factions-browser-card">
+								<div className="factions-browser-card-header">
+									<div className="factions-browser-card-identity">
+										<button
+											type="button"
+											className="factions-browser-card-name factions-browser-card-name-button"
+											onClick={() => toggleFactionExpanded(f.id)}
+											aria-expanded={isExpanded}
+											aria-controls={`faction-members-${f.id}`}
+										>
+											{f.name}
+										</button>
+										<span className="factions-browser-card-tag">[{f.tag}]</span>
+									</div>
+									<span className="factions-browser-card-members">
+										{f.memberCount} member{f.memberCount !== 1 ? 's' : ''}
+									</span>
+								</div>
+								{f.description && <p className="factions-browser-card-desc">{f.description}</p>}
+								{isExpanded && (
+									<div
+										className="factions-browser-card-members-panel"
+										id={`faction-members-${f.id}`}
+									>
+										{cachedMembers === 'loading' && (
+											<span className="factions-browser-card-members-status">
+												Loading members...
+											</span>
+										)}
+										{cachedMembers === 'error' && (
+											<span className="factions-browser-card-members-status factions-field-error">
+												Failed to load members.
+											</span>
+										)}
+										{Array.isArray(cachedMembers) && cachedMembers.length === 0 && (
+											<span className="factions-browser-card-members-status">
+												This faction has no members.
+											</span>
+										)}
+										{Array.isArray(cachedMembers) && cachedMembers.length > 0 && (
+											<ul className="factions-browser-card-members-list">
+												{cachedMembers.map((m) => (
+													<li key={m.userId} className="factions-browser-card-members-item">
+														<div className="factions-browser-card-member-main">
+															<Username
+																name={m.username}
+																isSupporter={m.isSupporter}
+																supporterTier={m.supporterTier as any}
+																linkToProfile
+															/>
+															<span
+																className={`factions-role-badge factions-role-badge--${m.role}`}
+															>
+																{m.role}
+															</span>
+														</div>
+														<div className="factions-browser-card-member-stats">
+															<span>{(m.points ?? 0).toLocaleString()} inf</span>
+															<span>
+																{m.nexusCount ?? 0} nexus{(m.nexusCount ?? 0) !== 1 ? 'es' : ''}
+															</span>
+														</div>
+													</li>
+												))}
+											</ul>
+										)}
+									</div>
+								)}
+								{hasPending ? (
+									<div className="factions-browser-card-pending">
+										<span className="factions-join-req-status">Request pending</span>
+										<button
+											className="factions-btn-small factions-btn-danger"
+											onClick={() => handleCancelJoinRequest(f.id)}
+										>
+											Cancel
+										</button>
+									</div>
+								) : (
+									<div className="factions-browser-card-join">
+										<input
+											className="factions-join-req-msg"
+											type="text"
+											placeholder="Optional message to leader..."
+											value={joinRequestMsg[f.id] ?? ''}
+											onChange={(e) =>
+												setJoinRequestMsg((prev) => ({ ...prev, [f.id]: e.target.value }))
+											}
+											maxLength={256}
+											disabled={submitting}
+										/>
+										<button
+											className="factions-btn-primary factions-btn-join"
+											disabled={submitting}
+											onClick={() => handleRequestToJoin(f.id)}
+										>
+											{submitting ? 'Requesting...' : 'Request to Join'}
+										</button>
+									</div>
+								)}
+								{reqError && <div className="factions-field-error">{reqError}</div>}
+							</div>
+						);
+					})}
+				</div>
+			</section>
+		);
 
 		return (
 			<div className="factions-container">
@@ -685,7 +930,7 @@ export default function FactionsView() {
 					</div>
 				)}
 
-				{/* Pending invites */}
+				{/* Pending invites - spotlight preferred over hero CTA for Flow C */}
 				{invites.length > 0 && (
 					<section className="factions-panel factions-invites">
 						<h2>Pending Invites ({invites.length})</h2>
@@ -744,197 +989,204 @@ export default function FactionsView() {
 					</section>
 				)}
 
-				{/* Create faction */}
-				<section className="factions-panel factions-no-faction">
-					<h2>You are not in a faction</h2>
-					<p>Browse factions below and request to join, or create your own.</p>
-					<button
-						className="factions-btn-primary"
-						onClick={() => setShowCreateForm(!showCreateForm)}
-					>
-						{showCreateForm ? 'Cancel' : 'Create Faction'}
-					</button>
-				</section>
-
-				{showCreateForm && (
-					<section className="factions-panel factions-create-form">
-						<h2>Create a New Faction</h2>
-						<form onSubmit={handleCreateFaction}>
-							<label className="factions-field">
-								<span className="factions-label">Faction Name</span>
-								<input
-									type="text"
-									value={formName}
-									onChange={(e) => setFormName(e.target.value)}
-									placeholder="e.g. Vexara Collective"
-									disabled={formSubmitting}
-									required
-									autoCorrect="off"
-									spellCheck={false}
-								/>
-							</label>
-							<label className="factions-field">
-								<span className="factions-label">Tag (2–6 characters)</span>
-								<input
-									type="text"
-									value={formTag}
-									onChange={(e) => setFormTag(e.target.value.toUpperCase())}
-									placeholder="e.g. VEX"
-									maxLength={6}
-									disabled={formSubmitting}
-									required
-									autoCapitalize="characters"
-									autoCorrect="off"
-									spellCheck={false}
-								/>
-							</label>
-							<label className="factions-field">
-								<span className="factions-label">Description (optional)</span>
-								<textarea
-									value={formDesc}
-									onChange={(e) => setFormDesc(e.target.value)}
-									placeholder="Tell us about your faction..."
-									rows={3}
-									disabled={formSubmitting}
-								/>
-							</label>
-							{formError && <div className="factions-field-error">{formError}</div>}
-							<button type="submit" disabled={formSubmitting} className="factions-btn-primary">
-								{formSubmitting ? 'Creating...' : 'Create Faction'}
+				{isFoundingWave ? (
+					/* 3A: Zero factions -- founding hero ──────────────────────────── */
+					<>
+						<section
+							className={`factions-panel factions-hero${foundingSuccess ? ' factions-hero--success' : ''}`}
+						>
+							<p className="factions-hero-eyebrow">THE WAR COUNCIL</p>
+							<h2>
+								{galaxyName
+									? `Be the first faction in ${galaxyName}`
+									: 'Be the first faction in this galaxy'}
+							</h2>
+							<p className="factions-hero-lede">
+								No factions exist here yet, so the founder's seat is open. Found it, and every
+								commander who lands in this galaxy can rally under your banner.
+							</p>
+							<div className="factions-unlock-chips" aria-label="Faction perks">
+								<span className="factions-unlock-chip">War Room</span>
+								<span className="factions-unlock-chip">Shared Chat</span>
+								<span className="factions-unlock-chip">Allied Garrisons</span>
+								<span className="factions-unlock-chip">Hall of Champions</span>
+							</div>
+							<button
+								className="factions-btn-primary factions-hero-cta"
+								onClick={handleFoundYourFaction}
+								data-onboarding="join-faction"
+							>
+								<Flag size={14} aria-hidden="true" />
+								Found Your Faction
 							</button>
-						</form>
-					</section>
-				)}
+						</section>
 
-				{/* All factions browser */}
-				<section className="factions-panel factions-browser">
-					<h2>All Factions ({allGalaxyFactions.length})</h2>
-					{allGalaxyFactions.length === 0 ? (
-						<p className="factions-browser-empty">
-							No factions exist in this galaxy yet. Be the first!
-						</p>
-					) : (
-						<div className="factions-browser-list">
-							{allGalaxyFactions.map((f) => {
-								const hasPending = pendingFactionIds.has(f.id);
-								const submitting = joinRequestSubmitting[f.id] ?? false;
-								const reqError = joinRequestError[f.id] ?? '';
-								const isExpanded = expandedFactionId === f.id;
-								const cachedMembers = factionMemberCache[f.id];
-								return (
-									<div key={f.id} className="factions-browser-card">
-										<div className="factions-browser-card-header">
-											<div className="factions-browser-card-identity">
-												<button
-													type="button"
-													className="factions-browser-card-name factions-browser-card-name-button"
-													onClick={() => toggleFactionExpanded(f.id)}
-													aria-expanded={isExpanded}
-													aria-controls={`faction-members-${f.id}`}
-												>
-													{f.name}
-												</button>
-												<span className="factions-browser-card-tag">[{f.tag}]</span>
+						{createFormSection}
+					</>
+				) : allFullOrPending ? (
+					/* 3B fallback: all factions full -- promote Found Your Own ─────── */
+					<>
+						<section
+							className={`factions-panel factions-hero${foundingSuccess ? ' factions-hero--success' : ''}`}
+						>
+							<p className="factions-hero-eyebrow">THE WAR COUNCIL</p>
+							<h2>
+								{galaxyName
+									? `Choose your side in ${galaxyName}`
+									: 'Choose your side'}
+							</h2>
+							<p className="factions-hero-lede">
+								All existing factions are full or have your request pending. Found your own and
+								lead it -- every commander who joins can rally under your banner.
+							</p>
+							<div className="factions-unlock-chips" aria-label="Faction perks">
+								<span className="factions-unlock-chip">War Room</span>
+								<span className="factions-unlock-chip">Shared Chat</span>
+								<span className="factions-unlock-chip">Allied Garrisons</span>
+								<span className="factions-unlock-chip">Hall of Champions</span>
+							</div>
+							<button
+								className="factions-btn-primary factions-hero-cta"
+								onClick={handleFoundYourFaction}
+								data-onboarding="join-faction"
+							>
+								<Flag size={14} aria-hidden="true" />
+								Found Your Own Faction
+							</button>
+						</section>
+
+						{createFormSection}
+
+						{fullBrowserSection}
+
+						<section className="factions-panel factions-all">
+							<h2>Galaxy Standings</h2>
+							<FactionLeaderboard />
+						</section>
+					</>
+				) : (
+					/* 3B: Factions exist, join slots available -- recruiting list ─── */
+					<>
+						{/* Recruiting Now header */}
+						<section className="factions-panel factions-create-form factions-recruiting-panel">
+							<p className="factions-hero-eyebrow">THE WAR COUNCIL</p>
+							<h2>
+								{galaxyName
+									? `Choose your side in ${galaxyName}`
+									: 'Choose your side'}
+							</h2>
+
+							<p className="factions-recruiting-label">RECRUITING NOW</p>
+							<div className="factions-recruiting-list">
+								{recommendedFactions.map((f, idx) => {
+									const isFirst = idx === 0;
+									const hasPending = pendingFactionIds.has(f.id);
+									const submitting = joinRequestSubmitting[f.id] ?? false;
+									const reqError = joinRequestError[f.id] ?? '';
+									const noteOpen = showJoinNote[f.id] ?? false;
+									return (
+										<div key={f.id} className="factions-recruiting-card">
+											<div className="factions-recruiting-card-header">
+												<span className="factions-tag">{f.tag}</span>
+												<span className="factions-recruiting-card-name">{f.name}</span>
+												<span className="factions-recruiting-mark" aria-hidden="true" />
+												<span className="factions-recruiting-mark-label">recruiting</span>
 											</div>
-											<span className="factions-browser-card-members">
-												{f.memberCount} member{f.memberCount !== 1 ? 's' : ''}
-											</span>
+											{f.description && (
+												<p className="factions-recruiting-card-desc">{f.description}</p>
+											)}
+											<div className="factions-recruiting-card-meta">
+												<span className="factions-recruiting-card-members">
+													{f.memberCount} member{f.memberCount !== 1 ? 's' : ''}
+												</span>
+											</div>
+											{hasPending ? (
+												<div className="factions-browser-card-pending">
+													<span className="factions-join-req-status">Request pending</span>
+													<button
+														className="factions-btn-small factions-btn-danger"
+														onClick={() => handleCancelJoinRequest(f.id)}
+													>
+														Cancel
+													</button>
+												</div>
+											) : (
+												<div className="factions-recruiting-card-actions">
+													{noteOpen && (
+														<input
+															className="factions-join-req-msg factions-recruiting-note-input"
+															type="text"
+															placeholder="Say something to the leader (optional)..."
+															value={joinRequestMsg[f.id] ?? ''}
+															onChange={(e) =>
+																setJoinRequestMsg((prev) => ({
+																	...prev,
+																	[f.id]: e.target.value
+																}))
+															}
+															maxLength={256}
+															disabled={submitting}
+														/>
+													)}
+													<div className="factions-recruiting-card-cta-row">
+														<button
+															className="factions-btn-primary factions-recruiting-join-btn"
+															disabled={submitting}
+															onClick={() => handleRequestToJoin(f.id)}
+															{...(isFirst && invites.length === 0
+																? { 'data-onboarding': 'join-faction' }
+																: {})}
+														>
+															{submitting ? 'Joining...' : 'Join'}
+														</button>
+														{!noteOpen && (
+															<button
+																type="button"
+																className="factions-recruiting-note-toggle"
+																onClick={() =>
+																	setShowJoinNote((prev) => ({
+																		...prev,
+																		[f.id]: true
+																	}))
+																}
+																disabled={submitting}
+															>
+																add a note
+															</button>
+														)}
+													</div>
+												</div>
+											)}
+											{reqError && <div className="factions-field-error">{reqError}</div>}
 										</div>
-										{f.description && <p className="factions-browser-card-desc">{f.description}</p>}
-										{isExpanded && (
-											<div
-												className="factions-browser-card-members-panel"
-												id={`faction-members-${f.id}`}
-											>
-												{cachedMembers === 'loading' && (
-													<span className="factions-browser-card-members-status">
-														Loading members…
-													</span>
-												)}
-												{cachedMembers === 'error' && (
-													<span className="factions-browser-card-members-status factions-field-error">
-														Failed to load members.
-													</span>
-												)}
-												{Array.isArray(cachedMembers) && cachedMembers.length === 0 && (
-													<span className="factions-browser-card-members-status">
-														This faction has no members.
-													</span>
-												)}
-												{Array.isArray(cachedMembers) && cachedMembers.length > 0 && (
-													<ul className="factions-browser-card-members-list">
-														{cachedMembers.map((m) => (
-															<li key={m.userId} className="factions-browser-card-members-item">
-																<div className="factions-browser-card-member-main">
-																	<Username
-																		name={m.username}
-																		isSupporter={m.isSupporter}
-																		supporterTier={m.supporterTier as any}
-																		linkToProfile
-																	/>
-																	<span
-																		className={`factions-role-badge factions-role-badge--${m.role}`}
-																	>
-																		{m.role}
-																	</span>
-																</div>
-																<div className="factions-browser-card-member-stats">
-																	<span>{(m.points ?? 0).toLocaleString()} inf</span>
-																	<span>
-																		{m.nexusCount ?? 0} nexus{(m.nexusCount ?? 0) !== 1 ? 'es' : ''}
-																	</span>
-																</div>
-															</li>
-														))}
-													</ul>
-												)}
-											</div>
-										)}
-										{hasPending ? (
-											<div className="factions-browser-card-pending">
-												<span className="factions-join-req-status">Request pending</span>
-												<button
-													className="factions-btn-small factions-btn-danger"
-													onClick={() => handleCancelJoinRequest(f.id)}
-												>
-													Cancel
-												</button>
-											</div>
-										) : (
-											<div className="factions-browser-card-join">
-												<input
-													className="factions-join-req-msg"
-													type="text"
-													placeholder="Optional message to leader..."
-													value={joinRequestMsg[f.id] ?? ''}
-													onChange={(e) =>
-														setJoinRequestMsg((prev) => ({ ...prev, [f.id]: e.target.value }))
-													}
-													maxLength={256}
-													disabled={submitting}
-												/>
-												<button
-													className="factions-btn-primary factions-btn-join"
-													disabled={submitting}
-													onClick={() => handleRequestToJoin(f.id)}
-													data-onboarding="join-faction"
-												>
-													{submitting ? 'Requesting...' : 'Request to Join'}
-												</button>
-											</div>
-										)}
-										{reqError && <div className="factions-field-error">{reqError}</div>}
-									</div>
-								);
-							})}
-						</div>
-					)}
-				</section>
+									);
+								})}
+							</div>
 
-				<section className="factions-panel factions-all">
-					<h2>Galaxy Standings</h2>
-					<FactionLeaderboard />
-				</section>
+							{/* Secondary: Found Your Own */}
+							<div className="factions-found-secondary">
+								<button
+									type="button"
+									className="factions-btn-small factions-found-secondary-btn"
+									onClick={handleOpenSecondaryCreate}
+								>
+									{showCreateForm && !isFoundingCreate ? 'Cancel' : 'Found Your Own Faction'}
+								</button>
+							</div>
+						</section>
+
+						{/* Create form (secondary create path) */}
+						{createFormSection}
+
+						{/* Full browser below the fold */}
+						{fullBrowserSection}
+
+						<section className="factions-panel factions-all">
+							<h2>Galaxy Standings</h2>
+							<FactionLeaderboard />
+						</section>
+					</>
+				)}
 			</div>
 		);
 	}

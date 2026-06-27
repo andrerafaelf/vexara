@@ -1,6 +1,7 @@
 import type { Response } from 'express';
 import { serializeNexus } from '../models/Nexus.js';
 import * as transferService from '../services/troopTransferService.js';
+import { TroopShortfallError } from '../services/troopTransferService.js';
 import { type AuthRequest, TROOP_KEYS } from '../types/index.js';
 import { logError } from '../utils/logger.js';
 import { NEXUS_TYPE_BONUSES } from '../utils/economy.js';
@@ -126,14 +127,19 @@ export async function sendTroops(req: AuthRequest, res: Response): Promise<void>
 		}
 
 		const arrivesAt = calcArrivesAt(from, to);
-		const deductData: Record<string, number> = {};
+		const decrementData: Record<string, { decrement: number }> = {};
+		const availabilityWhere: Record<string, { gte: number }> = {};
 		for (const field of TROOP_FIELDS) {
-			if (sending[field] > 0) deductData[field] = (fromRecord[field] ?? 0) - sending[field];
+			if ((sending[field] ?? 0) > 0) {
+				decrementData[field] = { decrement: sending[field] };
+				availabilityWhere[field] = { gte: sending[field] };
+			}
 		}
 
 		const [updatedFrom, transfer] = await transferService.sendTroopsTransaction(
 			from.id,
-			deductData,
+			decrementData,
+			availabilityWhere,
 			{
 				galaxyId: req.galaxyId,
 				ownerNexusId: from.id,
@@ -145,6 +151,10 @@ export async function sendTroops(req: AuthRequest, res: Response): Promise<void>
 		);
 		res.json({ from: serializeNexus(updatedFrom), transfer: serializeTransfer(transfer) });
 	} catch (error) {
+		if (error instanceof TroopShortfallError) {
+			res.status(409).json({ error: 'Insufficient troops - please retry' });
+			return;
+		}
 		logError('unhandled_controller_error', {
 			message: (error as Error).message,
 			file: 'troopTransferController.ts'

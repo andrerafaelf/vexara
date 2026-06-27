@@ -1,4 +1,5 @@
 import prisma from '../lib/prisma.js';
+import { ResourceConflictError } from './nexusService.js';
 
 export const MARKET_COMMISSION_RATE = 0.1;
 
@@ -58,25 +59,44 @@ export function countListingsByNexus(nexusId: number, galaxyId: number) {
 	return prisma.marketListing.count({ where: { sellerNexusId: nexusId, galaxyId } });
 }
 
-export function createListingAndDeductResource(
+/**
+ * Atomically deduct offerAmount from the seller's offer resource and create the
+ * market listing in one transaction. Uses a guarded conditional decrement
+ * (updateMany with gte check) to prevent the stale-snapshot double-deduct race
+ * where two concurrent createListing requests clobber each other's absolute
+ * write and mint resources.
+ *
+ * Throws ResourceConflictError if the nexus no longer has enough at commit time;
+ * callers surface this as HTTP 409.
+ */
+export async function createListingAndDeductResource(
 	listingData: Parameters<typeof prisma.marketListing.create>[0]['data'],
 	nexusId: number,
-	nexusData: Record<string, unknown>
+	offerResource: string,
+	offerAmount: number
 ) {
-	// Persist all three resources + lastResourceUpdate together. If we only
-	// wrote the offer column, a subsequent refreshResources call would replay
-	// production from the stale lastResourceUpdate and effectively refund the
-	// listed amount on the next tick.
-	return prisma.$transaction([
-		prisma.marketListing.create({ data: listingData }),
-		prisma.nexus.update({ where: { id: nexusId }, data: nexusData })
-	]);
+	return prisma.$transaction(async (tx) => {
+		const { count } = await tx.nexus.updateMany({
+			where: { id: nexusId, [offerResource]: { gte: offerAmount } },
+			data: { [offerResource]: { decrement: offerAmount } }
+		});
+		if (count === 0) throw new ResourceConflictError();
+		return tx.marketListing.create({ data: listingData });
+	});
 }
 
 export function getListingWithNexus(id: number) {
 	return prisma.marketListing.findUnique({ where: { id }, include: { sellerNexus: true } });
 }
 
+/**
+ * Atomically settle a market trade.
+ *
+ * Buyer debit: guarded conditional decrement on wantResource (gte totalCost) +
+ * increment of offerResource. Throws ResourceConflictError if the buyer can no
+ * longer afford the trade at commit time (e.g. they just spent that resource).
+ * Seller credit: unconditional increment (safe for concurrent writes).
+ */
 export async function buyListing(
 	listingId: number,
 	buyerNexusId: number,
@@ -87,17 +107,30 @@ export async function buyListing(
 		offerAmount: number;
 		sellerNexusId: number;
 	},
-	buyerNexusData: Record<string, unknown>,
-	sellerNexusData: Record<string, unknown>,
+	totalCost: number,
 	sellerUsername: string,
 	buyerUsername: string,
 	galaxyId: number
 ) {
-	return prisma.$transaction([
-		prisma.nexus.update({ where: { id: buyerNexusId }, data: buyerNexusData }),
-		prisma.nexus.update({ where: { id: listing.sellerNexusId }, data: sellerNexusData }),
-		prisma.marketListing.delete({ where: { id: listingId } }),
-		prisma.marketTransaction.create({
+	return prisma.$transaction(async (tx) => {
+		// Debit buyer: guard with gte on the total cost (wantAmount + commission).
+		const { count } = await tx.nexus.updateMany({
+			where: { id: buyerNexusId, [listing.wantResource]: { gte: totalCost } },
+			data: {
+				[listing.wantResource]: { decrement: totalCost },
+				[listing.offerResource]: { increment: listing.offerAmount }
+			}
+		});
+		if (count === 0) throw new ResourceConflictError();
+
+		// Credit seller: increment is safe for concurrent writes.
+		await tx.nexus.update({
+			where: { id: listing.sellerNexusId },
+			data: { [listing.wantResource]: { increment: listing.wantAmount } }
+		});
+
+		await tx.marketListing.delete({ where: { id: listingId } });
+		await tx.marketTransaction.create({
 			data: {
 				galaxyId,
 				sellerNexusId: listing.sellerNexusId,
@@ -109,8 +142,8 @@ export async function buyListing(
 				wantResource: listing.wantResource,
 				wantAmount: listing.wantAmount
 			}
-		})
-	]);
+		});
+	});
 }
 
 export function getTransactionHistory(galaxyId: number) {
@@ -124,14 +157,35 @@ export function getTransactionHistory(galaxyId: number) {
 export async function cancelListing(
 	listingId: number,
 	sellerNexusId: number,
-	nexusData: Record<string, unknown>
+	offerResource: string,
+	offerAmount: number
 ) {
+	// Array-form transaction: the increment and the delete commit together. If
+	// the delete throws P2025 (a concurrent cancel already removed the row) the
+	// whole transaction rolls back, so the refund can never double-apply.
 	return prisma.$transaction([
-		prisma.nexus.update({ where: { id: sellerNexusId }, data: nexusData }),
+		prisma.nexus.update({
+			where: { id: sellerNexusId },
+			data: { [offerResource]: { increment: offerAmount } }
+		}),
 		prisma.marketListing.delete({ where: { id: listingId } })
 	]);
 }
 
-export function updateNexusResources(id: number, data: Record<string, unknown>) {
-	return prisma.nexus.update({ where: { id }, data });
+/**
+ * Atomically deduct payKey and credit receiveKey. Uses a gte guard on payKey so
+ * two concurrent system-buy requests cannot both succeed if only one has enough.
+ * Returns the updateMany result; callers check count === 1 and surface 0 as 409.
+ */
+export function atomicSystemTrade(
+	nexusId: number,
+	payKey: string,
+	cost: number,
+	receiveKey: string,
+	amount: number
+) {
+	return prisma.nexus.updateMany({
+		where: { id: nexusId, [payKey]: { gte: cost } },
+		data: { [payKey]: { decrement: cost }, [receiveKey]: { increment: amount } }
+	});
 }

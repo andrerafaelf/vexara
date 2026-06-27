@@ -1,6 +1,7 @@
 import type { Response } from 'express';
 import { refreshResources } from '../models/Nexus.js';
 import * as marketService from '../services/marketService.js';
+import { ResourceConflictError } from '../services/nexusService.js';
 import type { AuthRequest } from '../types/index.js';
 import { parsePositiveInt } from '../utils/validation.js';
 import { logError } from '../utils/logger.js';
@@ -85,24 +86,28 @@ export async function createListing(req: AuthRequest, res: Response): Promise<vo
 			return;
 		}
 		const offerKey = String(offerResource);
-		const [listing] = await marketService.createListingAndDeductResource(
-			{
-				galaxyId: req.galaxyId,
-				sellerNexusId: parsedNexusId,
-				offerResource: offerKey,
-				offerAmount: parsedOffer,
-				wantResource: String(wantResource),
-				wantAmount: parsedWant
-			},
-			parsedNexusId,
-			{
-				biomass: nexusRecord['biomass'],
-				alloy: nexusRecord['alloy'],
-				ore: nexusRecord['ore'],
-				[offerKey]: nexusRecord[offerKey] - parsedOffer,
-				lastResourceUpdate: nexus.lastResourceUpdate
+		let listing: Awaited<ReturnType<typeof marketService.createListingAndDeductResource>>;
+		try {
+			listing = await marketService.createListingAndDeductResource(
+				{
+					galaxyId: req.galaxyId,
+					sellerNexusId: parsedNexusId,
+					offerResource: offerKey,
+					offerAmount: parsedOffer,
+					wantResource: String(wantResource),
+					wantAmount: parsedWant
+				},
+				parsedNexusId,
+				offerKey,
+				parsedOffer
+			);
+		} catch (err) {
+			if (err instanceof ResourceConflictError) {
+				res.status(409).json({ error: 'Resource state changed - please retry' });
+				return;
 			}
-		);
+			throw err;
+		}
 		emitMarket();
 		try {
 			const { incrementQuestProgress } = await import('../services/dailyStreakService.js');
@@ -174,39 +179,28 @@ export async function buyListing(req: AuthRequest, res: Response): Promise<void>
 			return;
 		}
 
-		// Refresh both nexuses so writes carry the latest production tick and
-		// persist lastResourceUpdate; otherwise the deducted/added balances are
-		// recalculated on the next tick from a stale baseline.
-		const refreshedBuyer = await refreshResources(buyerNexus);
-		const refreshedSeller = await refreshResources(listing.sellerNexus);
-		const buyerFresh = refreshedBuyer as unknown as Record<string, number>;
-		const sellerFresh = refreshedSeller as unknown as Record<string, number>;
-		const buyerNexusData: Record<string, unknown> = {
-			biomass: buyerFresh['biomass'],
-			alloy: buyerFresh['alloy'],
-			ore: buyerFresh['ore'],
-			lastResourceUpdate: refreshedBuyer.lastResourceUpdate
-		};
-		buyerNexusData[listing.wantResource] = buyerFresh[listing.wantResource] - totalRequired;
-		buyerNexusData[listing.offerResource] = buyerFresh[listing.offerResource] + listing.offerAmount;
-		const sellerNexusData: Record<string, unknown> = {
-			biomass: sellerFresh['biomass'],
-			alloy: sellerFresh['alloy'],
-			ore: sellerFresh['ore'],
-			lastResourceUpdate: refreshedSeller.lastResourceUpdate
-		};
-		sellerNexusData[listing.wantResource] = sellerFresh[listing.wantResource] + listing.wantAmount;
+		// Flush buyer production to DB so the gte guard in buyListing sees a
+		// current balance. Seller production is not needed - the credit uses
+		// { increment } which is safe without a snapshot write.
+		await refreshResources(buyerNexus);
 
-		await marketService.buyListing(
-			listingId,
-			parsedBuyerNexusId,
-			listing,
-			buyerNexusData,
-			sellerNexusData,
-			sellerOwner?.username ?? 'Unknown',
-			buyerOwner?.username ?? 'Unknown',
-			req.galaxyId
-		);
+		try {
+			await marketService.buyListing(
+				listingId,
+				parsedBuyerNexusId,
+				listing,
+				totalRequired,
+				sellerOwner?.username ?? 'Unknown',
+				buyerOwner?.username ?? 'Unknown',
+				req.galaxyId
+			);
+		} catch (err) {
+			if (err instanceof ResourceConflictError) {
+				res.status(409).json({ error: 'Insufficient resources - please retry' });
+				return;
+			}
+			throw err;
+		}
 		emitMarket();
 		try {
 			const { incrementQuestProgress } = await import('../services/dailyStreakService.js');
@@ -251,19 +245,18 @@ export async function cancelListing(req: AuthRequest, res: Response): Promise<vo
 			res.status(403).json({ error: 'Not authorized' });
 			return;
 		}
-		// Refresh seller nexus so the refund lands on a fresh snapshot and we
-		// can persist lastResourceUpdate atomically - otherwise the next tick
-		// would replay production over the refunded balance.
-		const refreshedSeller = await refreshResources(listing.sellerNexus);
-		const sellerRecord = refreshedSeller as unknown as Record<string, number>;
-		const offerKey = listing.offerResource;
-		await marketService.cancelListing(listingId, listing.sellerNexusId, {
-			biomass: sellerRecord['biomass'],
-			alloy: sellerRecord['alloy'],
-			ore: sellerRecord['ore'],
-			[offerKey]: sellerRecord[offerKey] + listing.offerAmount,
-			lastResourceUpdate: refreshedSeller.lastResourceUpdate
-		});
+		// Refund the escrowed offer resource with an atomic increment. An
+		// absolute write would clobber any unrelated balance change (build,
+		// training, transfer, standing order) that commits between a read and
+		// this write, the same stale-snapshot dupe class P0-C1 closes. The
+		// increment adds the escrow back without touching lastResourceUpdate,
+		// so the next production tick is unaffected.
+		await marketService.cancelListing(
+			listingId,
+			listing.sellerNexusId,
+			listing.offerResource,
+			listing.offerAmount
+		);
 		emitMarket();
 		res.json({ success: true });
 	} catch (error) {
@@ -312,14 +305,17 @@ export async function systemBuy(req: AuthRequest, res: Response): Promise<void> 
 		}
 		const payKey = String(payResource);
 		const receiveKey = String(receiveResource);
-		await marketService.updateNexusResources(parsedNexusId, {
-			biomass: nexusRecord['biomass'],
-			alloy: nexusRecord['alloy'],
-			ore: nexusRecord['ore'],
-			[payKey]: nexusRecord[payKey] - cost,
-			[receiveKey]: nexusRecord[receiveKey] + parsedReceive,
-			lastResourceUpdate: nexus.lastResourceUpdate
-		});
+		const { count } = await marketService.atomicSystemTrade(
+			parsedNexusId,
+			payKey,
+			cost,
+			receiveKey,
+			parsedReceive
+		);
+		if (count === 0) {
+			res.status(409).json({ error: 'Resource state changed - please retry' });
+			return;
+		}
 		res.json({ success: true, paid: cost, received: parsedReceive });
 	} catch (error) {
 		logError('unhandled_controller_error', {

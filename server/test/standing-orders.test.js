@@ -242,20 +242,46 @@ test('triggerStandingOrders skips when ownership of either nexus has changed', a
 	assert.equal(calls.transactionCalled, false, 'should not transfer troops once ownership changed');
 });
 
-// Capture the troops a fired order actually sends. sendTroopsTransaction builds
-// an array of [nexus.update(deduct), troopTransfer.create({troops})] and hands
-// it to $transaction; patching those two records the real `sending`/`deduct`
-// payloads, and a pass-through $transaction lets the ops build with them.
+// Capture the troops a fired order actually sends. sendTroopsTransaction now uses
+// the callback form of $transaction (prisma.$transaction(async (tx) => {...})).
+// The mock detects callback vs array form and, for the callback form, supplies a
+// fake tx object with the minimal methods sendTroopsTransaction needs:
+//   tx.nexus.updateMany      - returns { count: 1 } (guard always passes in tests)
+//   tx.nexus.findUniqueOrThrow - proxies through to calls.nexusPatch.findUnique
+//   tx.troopTransfer.create  - captures args.data.troops in calls.sentTroops
 function capturingTransfer(t, calls) {
-	withPatched(t, prisma.troopTransfer, {
-		create: async (args) => {
-			calls.sentTroops = args.data.troops;
-			return { id: 777, ownerNexusId: args.data.ownerNexusId, hostNexusId: args.data.hostNexusId };
-		}
-	});
 	withPatched(t, prisma.nexus, calls.nexusPatch);
 	withPatched(t, prisma, {
-		$transaction: async (ops) => Promise.all(ops)
+		$transaction: async (opsOrFn) => {
+			if (typeof opsOrFn === 'function') {
+				// Callback form used by sendTroopsTransaction
+				const tx = {
+					nexus: {
+						updateMany: async () => ({ count: 1 }),
+						findUniqueOrThrow: async ({ where }) => {
+							const found = await calls.nexusPatch.findUnique({ where });
+							if (!found) throw new Error(`Nexus ${where.id} not found in test mock`);
+							return found;
+						}
+					},
+					troopTransfer: {
+						create: async (args) => {
+							calls.sentTroops = args.data.troops;
+							return {
+								id: 777,
+								ownerNexusId: args.data.ownerNexusId,
+								hostNexusId: args.data.hostNexusId,
+								ownerNexus: { id: args.data.ownerNexusId, name: 'Source', x: 0, y: 0 },
+								hostNexus: { id: args.data.hostNexusId, name: 'Target', x: 1, y: 1 }
+							};
+						}
+					}
+				};
+				return opsOrFn(tx);
+			}
+			// Array form (legacy path)
+			return Promise.all(opsOrFn);
+		}
 	});
 }
 

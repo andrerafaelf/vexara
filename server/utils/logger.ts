@@ -152,6 +152,8 @@ export interface CombatResolvedInput {
 	attackerSent: number;
 	/** total attacker units lost. */
 	attackerLost: number;
+	/** true when this event comes from a coordinated (multi-wave) assault. */
+	merged?: boolean;
 }
 
 // Threshold for "post-loss recovery" signal: an attacker that lost this fraction
@@ -195,7 +197,10 @@ export function deriveCombatSignals(input: CombatResolvedInput): CombatSignals {
 export function logCombatResolved(input: CombatResolvedInput): void {
 	try {
 		const meta = deriveCombatSignals(input);
-		logGameEvent('combat_resolved', input.attackerUserId, input.galaxyId, { ...meta });
+		logGameEvent('combat_resolved', input.attackerUserId, input.galaxyId, {
+			...meta,
+			...(input.merged ? { merged: true } : {})
+		});
 	} catch (err) {
 		// Never let a malformed force shape or anything else escape into the
 		// resolver. logGameEvent already swallows its own DB errors; this guards

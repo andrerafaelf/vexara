@@ -165,9 +165,29 @@ if (process.env.NODE_ENV === 'production') {
 		},
 		message: { error: 'Too many requests. Please try again in a minute.' }
 	});
+	// Tight limiter for email-sending endpoints: 5 requests per hour, keyed by
+	// IP AND normalized email address. Dual-key prevents a single attacker from
+	// cycling email addresses to bypass the per-IP cap, and prevents a shared
+	// IP (e.g. office NAT) from locking out all users when one abuses the endpoint.
+	const emailActionLimiter = rateLimit({
+		windowMs: 60 * 60 * 1000,
+		max: 5,
+		standardHeaders: true,
+		legacyHeaders: false,
+		skip: (req) => req.method === 'OPTIONS',
+		keyGenerator: (req) => {
+			const ip = req.ip ?? 'unknown';
+			const rawEmail = typeof req.body?.email === 'string' ? req.body.email : '';
+			const email = rawEmail.trim().toLowerCase().slice(0, 254);
+			return `email-action:${ip}:${email}`;
+		},
+		message: { error: 'Too many requests. Please try again in an hour.' }
+	});
 	app.use('/api/auth/login', loginLimiter);
 	app.use('/api/auth/register', loginLimiter);
 	app.use('/api/auth/alpha-signup', alphaSignupLimiter);
+	app.use('/api/auth/request-password-reset', emailActionLimiter);
+	app.use('/api/auth/resend-verification', emailActionLimiter);
 	app.use('/api/', apiLimiter);
 }
 

@@ -72,8 +72,12 @@ export default function DailyStreaks({ active = true, variant = 'full' }: DailyS
 			const res = await claimDailyStreak();
 			const result = res.data as any;
 			if (result.success) {
+				const r = result.reward;
+				const base = `Daily streak ${result.streak}! +${r.biomass} biomass, +${r.alloy} alloy, +${r.ore} ore at ${result.nexusName}`;
 				toast(
-					`Daily streak ${result.streak}! +${result.reward.biomass} biomass, +${result.reward.alloy} alloy, +${result.reward.ore} ore at ${result.nexusName}`,
+					result.clamped
+						? `${base} (capped to your storage, spend resources before claiming to keep the full reward)`
+						: base,
 					'success'
 				);
 				await load();

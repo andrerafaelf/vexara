@@ -411,22 +411,23 @@ export async function requestPasswordReset(req: Request, res: Response): Promise
 			select: { id: true, username: true, email: true, emailVerifiedAt: true }
 		});
 
-		if (!user) {
-			res.status(404).json({ error: 'No account found with that email address.' });
-			return;
+		// Always return 200 regardless of whether the email exists. Returning 404
+		// when no account is found is an enumeration oracle that lets an attacker
+		// discover registered email addresses. The client shows the same "check
+		// your inbox" message in all cases.
+		if (user) {
+			const token = generateToken();
+			await prisma.user.update({
+				where: { id: user.id },
+				data: {
+					passwordResetToken: token,
+					passwordResetTokenExpiresAt: new Date(Date.now() + RESET_TOKEN_TTL_MS)
+				}
+			});
+			sendPasswordReset(user.email, user.username, token).catch((err) =>
+				console.error('[emailService] sendPasswordReset failed:', err)
+			);
 		}
-
-		const token = generateToken();
-		await prisma.user.update({
-			where: { id: user.id },
-			data: {
-				passwordResetToken: token,
-				passwordResetTokenExpiresAt: new Date(Date.now() + RESET_TOKEN_TTL_MS)
-			}
-		});
-		sendPasswordReset(user.email, user.username, token).catch((err) =>
-			console.error('[emailService] sendPasswordReset failed:', err)
-		);
 
 		res.json({ ok: true });
 	} catch (error) {

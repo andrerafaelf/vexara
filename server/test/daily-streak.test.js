@@ -91,7 +91,28 @@ test('claimDailyRewards deposits the summed reward into the strongest owned nexu
     questsClaimed: false,
   };
   calls.highestCommandCore = highestCommandCore;
-  calls.rewardNexus = { id: 77, name: 'Stronghold', points: 1200 };
+  // Include resource/building fields required by refreshResources (added by P2-A7).
+  // biomassFarm/alloyForge/oreExtractor: 0 means zero production, resources stay at 0.
+  // storageVault: 20 gives ~5.9 M headroom — no clamping for any realistic reward.
+  // lastResourceUpdate 1 second ago keeps staleMs below LAZY_WRITE_THRESHOLD_MS,
+  // so refreshResources returns without a DB write.
+  calls.rewardNexus = {
+    id: 77,
+    name: 'Stronghold',
+    points: 1200,
+    biomass: 0,
+    alloy: 0,
+    ore: 0,
+    biomassFarm: 0,
+    alloyForge: 0,
+    oreExtractor: 0,
+    storageVault: 20,
+    lastResourceUpdate: new Date(Date.now() - 1000),
+    commandCore: highestCommandCore,
+    nexusType: null,
+    nexusTypeDoubled: false,
+    isDerelict: false,
+  };
 
   const result = await claimDailyRewards(userId, galaxyId);
 
@@ -113,10 +134,14 @@ test('claimDailyRewards deposits the summed reward into the strongest owned nexu
   });
   assert.equal(calls.dailyUpdate.data.questsClaimed, true);
   assert.equal(calls.dailyUpdate.data.currentStreak, 1);
+  // P2-A7 added fullReward (unclamped) and clamped flag. With storageVault: 20
+  // (~5.9 M headroom) and resources at 0, no clamping occurs so reward === fullReward.
   assert.deepEqual(result, {
     success: true,
     streak: 1,
     nexusName: 'Stronghold',
     reward: expectedReward,
+    fullReward: expectedReward,
+    clamped: false,
   });
 });

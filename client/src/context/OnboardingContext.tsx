@@ -170,9 +170,9 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 	{
 		id: 'send_attack',
 		targetAttr: 'send-attack',
-		title: 'Attack a Neutral Nexus',
+		title: 'Run Your First Raid',
 		message:
-			'Grey nexuses are neutral — no owner, low risk. Tap one, then tap Attack. Loot comes home when your troops return. This is how you grow early.',
+			"That grey nexus is an undefended neutral, no owner and no one coming to save it. The force you just trained outmatches its garrison, so press it: tap the target, then tap Attack. Your loot rides home when the troops return.",
 		isReady: (s) => s.pathname === '/starfield'
 		// No reliable client-side signal for "ever attacked"; completes on "Got it"
 		// or when the player navigates away after the target appears.
@@ -180,7 +180,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 	{
 		id: 'open_factions',
 		targetAttr: 'open-factions',
-		title: 'Find a Faction',
+		title: 'Open the War Council',
 		message:
 			'Solo players get outgunned fast. Factions coordinate attacks, share intel, and fight for the season together. The faction that wins gets named in the Hall of Champions. Tap here.',
 		isReady: (s) => s.nexuses.some((n) => hasClassProductionBuilding(n)),
@@ -189,9 +189,9 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 	{
 		id: 'join_faction',
 		targetAttr: 'join-faction',
-		title: 'Apply to a Faction',
+		title: 'Join Forces',
 		message:
-			'Find one with open slots and apply. Once you are in, you get shared chat, war room access, and allied troops that can station at your nexus. This is how the game opens up.',
+			"Factions win seasons. Join one that's recruiting, or found your own and lead it. Either way you unlock a war room, shared chat, and allies who station troops at your nexus.",
 		isReady: (s) => s.pathname === '/factions'
 	},
 	{
