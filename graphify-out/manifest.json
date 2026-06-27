@@ -1595,8 +1595,8 @@
     "semantic_hash": ""
   },
   "server/routes/replay.ts": {
-    "mtime": 1780673902.394033,
-    "ast_hash": "57df72a16609356eb6d77999778bce44",
+    "mtime": 1782599715.7762923,
+    "ast_hash": "5c445148d843b9dcba6c5c0a357479fa",
     "semantic_hash": ""
   },
   "server/routes/report.ts": {
@@ -2685,8 +2685,8 @@
     "semantic_hash": ""
   },
   ".claude/settings.local.json": {
-    "mtime": 1782598413.650188,
-    "ast_hash": "722750b6e659b550c9766ce98e42214d",
+    "mtime": 1782599202.89485,
+    "ast_hash": "f261b527837532e633e85d47f672b443",
     "semantic_hash": ""
   },
   "client/next-env.d.ts": {
@@ -2752,6 +2752,11 @@
   "client/public/patch-notes/PATCH_NOTES_ALPHA_0.26.md": {
     "mtime": 1782598255.0172486,
     "ast_hash": "6179aa14b04366ebff98ef27f71f2224",
+    "semantic_hash": ""
+  },
+  "server/test/c1-conservation.test.js": {
+    "mtime": 1782600424.881989,
+    "ast_hash": "52c3196f992d2b8d3c3f124983bb09c1",
     "semantic_hash": ""
   }
 }
