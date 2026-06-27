@@ -1,14 +1,24 @@
-// Public replay endpoint, no auth required.
-// Returns the minimum data needed for the client-side combat simulator to
-// reproduce the battle exactly. Designed for shareable links and embeds.
+// Participant-only replay endpoint. Authentication is required and the
+// requesting user must be either the attacker or the defender in the battle.
+// activeGalaxyOptional is set so users who have since changed active galaxy
+// (or whose galaxy has ended) can still view their own historical replays.
+// Non-participants receive 404 so existence of the record is not confirmed.
 
-import { Router, type Response, type Request } from 'express';
+import { Router, type Request, type Response, type NextFunction } from 'express';
 import prisma from '../lib/prisma.js';
+import auth from '../middleware/auth.js';
+import type { AuthRequest } from '../types/index.js';
 
 const router = Router();
 
-router.get('/replay/:attackId', async (req: Request, res: Response) => {
+function authNoGalaxy(req: Request, res: Response, next: NextFunction): void {
+	(req as AuthRequest).activeGalaxyOptional = true;
+	void auth(req, res, next);
+}
+
+router.get('/replay/:attackId', authNoGalaxy, async (req: Request, res: Response) => {
 	try {
+		const authReq = req as AuthRequest;
 		const attackId = parseInt(req.params.attackId);
 		if (!Number.isFinite(attackId) || attackId <= 0) {
 			res.status(400).json({ error: 'Invalid attack id' });
@@ -23,6 +33,8 @@ router.get('/replay/:attackId', async (req: Request, res: Response) => {
 				status: true,
 				troops: true,
 				result: true,
+				attackerUserId: true,
+				defenderUserId: true,
 				attackerNexus: {
 					select: { name: true, x: true, y: true, owner: { select: { username: true } } }
 				},
@@ -38,6 +50,18 @@ router.get('/replay/:attackId', async (req: Request, res: Response) => {
 			res.status(404).json({ error: 'Replay not found' });
 			return;
 		}
+
+		// Participant gate: only the attacker or defender may view the replay.
+		// Non-participants get 404 so they cannot confirm the record exists.
+		const isParticipant =
+			(attack.attackerUserId !== null && attack.attackerUserId === authReq.userId) ||
+			(attack.defenderUserId !== null && attack.defenderUserId === authReq.userId);
+
+		if (!isParticipant) {
+			res.status(404).json({ error: 'Replay not found' });
+			return;
+		}
+
 		if (attack.status === 'traveling') {
 			res.status(425).json({ error: 'Battle not yet resolved' });
 			return;
@@ -81,11 +105,13 @@ router.get('/replay/:attackId', async (req: Request, res: Response) => {
 			arrivesAt: attack.arrivesAt?.toISOString() ?? null
 		};
 
-		// Replays are immutable once resolved, cache hard for 24h.
-		res.setHeader('Cache-Control', 'public, max-age=86400, immutable');
+		// Replays are immutable once resolved. Cache privately so the browser
+		// avoids redundant fetches but CDNs/proxies cannot serve one user's
+		// authenticated response to another user.
+		res.setHeader('Cache-Control', 'private, max-age=86400, immutable');
 		res.json(payload);
-	} catch (err) {
-		res.status(500).json({ error: (err as Error).message });
+	} catch {
+		res.status(500).json({ error: 'Internal server error' });
 	}
 });
 
