@@ -2305,9 +2305,9 @@
 
 /* Victim card - urgent red pulse */
 .factions-war-card--nap-broken {
-	border-color: rgba(248, 81, 73, 0.55);
-	background: rgba(248, 81, 73, 0.06);
-	animation: nap-break-pulse 2.5s ease-in-out infinite;
+	border-color: rgba(182, 93, 85, 0.7);
+	background: rgba(182, 93, 85, 0.06);
+	animation: nap-card-breathe 3s ease-in-out infinite;
 }
 
 /* Breaker card - factual amber, no pulse */
@@ -2316,13 +2316,13 @@
 	background: rgba(255, 158, 61, 0.04);
 }
 
-@keyframes nap-break-pulse {
+@keyframes nap-card-breathe {
 	0%,
 	100% {
-		border-color: rgba(248, 81, 73, 0.55);
+		border-color: rgba(182, 93, 85, 0.65);
 	}
 	50% {
-		border-color: rgba(248, 81, 73, 0.2);
+		border-color: rgba(182, 93, 85, 0.9);
 	}
 }
 
@@ -2330,8 +2330,7 @@
 .factions-war-vs--broken {
 	color: var(--danger);
 	background: var(--danger-soft);
-	border-color: rgba(248, 81, 73, 0.3);
-	animation: nap-break-pulse 2.5s ease-in-out infinite;
+	border-color: rgba(182, 93, 85, 0.35);
 }
 
 /* "PACT BROKEN" badge - breaker variant */
@@ -2342,7 +2341,7 @@
 }
 
 /* Live countdown - victim */
-.factions-nap-broken-countdown {
+.factions-nap-countdown {
 	font-family: var(--font-mono);
 	font-size: var(--text-sm);
 	font-weight: 700;
@@ -2352,7 +2351,7 @@
 }
 
 /* Live countdown - breaker */
-.factions-nap-broken-countdown--breaker {
+.factions-nap-countdown--breaker {
 	color: var(--accent);
 }
 
@@ -2380,8 +2379,9 @@
 
 /* Galaxy diplomacy board - broken NAP row */
 .factions-diplomacy-row--broken {
-	border-color: rgba(248, 81, 73, 0.3);
-	background: rgba(248, 81, 73, 0.03);
+	border-color: rgba(182, 93, 85, 0.5);
+	border-left: 3px solid var(--danger);
+	background: rgba(182, 93, 85, 0.07);
 }
 
 .factions-treaty-type--broken {
@@ -3111,5 +3111,63 @@
 		width: 100%;
 		justify-content: center;
 		text-align: center;
+	}
+}
+
+/* NAP betrayal countdown: staged tension (victim) + resolution. Base + breaker
+   colours live above; these escalate the victim spacing/case/flash by stage. */
+.factions-nap-countdown.nap-stage-mid {
+	letter-spacing: 0.09em;
+}
+
+.factions-nap-countdown.nap-stage-critical {
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+}
+
+.factions-nap-countdown.nap-stage-final {
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	animation: nap-final-flash 1s steps(1, end) infinite;
+}
+
+.factions-nap-countdown.nap-stage-expired {
+	font-size: var(--text-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+@keyframes nap-final-flash {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.5;
+	}
+}
+
+/* Mobile: the betrayal countdown is the hero - promote it to its own line at a
+   larger size rather than letting it shrink to fit the war-card row. */
+@media (max-width: 480px) {
+	.factions-war-card--nap-broken .factions-war-info,
+	.factions-war-card--nap-broken-breaker .factions-war-info {
+		flex-wrap: wrap;
+	}
+	.factions-nap-countdown {
+		flex-basis: 100%;
+		font-size: var(--text-md);
+	}
+}
+
+/* Reduced motion: drop the card breathe + final flash, hold a static
+   high-contrast state. Countdown digits still update (data, not motion). */
+@media (prefers-reduced-motion: reduce) {
+	.factions-war-card--nap-broken {
+		animation: none;
+		border-color: rgba(182, 93, 85, 0.9);
+	}
+	.factions-nap-countdown.nap-stage-final {
+		animation: none;
 	}
 }

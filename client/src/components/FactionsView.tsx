@@ -181,17 +181,40 @@ function NapBrokenCountdown({
 }) {
 	const now = useNow();
 	const remainMs = new Date(betrayalEndsAt).getTime() - now;
-	if (remainMs <= 0) {
-		return <span className="factions-nap-open">Attacks are now open</span>;
+	// Resolved: victim settles to "war is live", breaker unlocks to "strike open".
+	if (!(remainMs > 0)) {
+		return (
+			<span
+				className={`factions-nap-countdown nap-stage-expired${isBreaker ? ' factions-nap-countdown--breaker' : ''}`}
+			>
+				{isBreaker ? 'Strike window open' : 'War is live - attacks open'}
+			</span>
+		);
 	}
 	const totalSecs = Math.floor(remainMs / 1000);
 	const mins = Math.floor(totalSecs / 60);
-	const secs = totalSecs % 60;
+	const clock = `${mins}:${(totalSecs % 60).toString().padStart(2, '0')}`;
+	// Breaker is always flat (they chose this). The victim's stage ramps as the
+	// clock runs down, driving the copy verb and the escalating CSS.
+	const stage = isBreaker
+		? 'flat'
+		: totalSecs > 900
+			? 'rising'
+			: totalSecs > 300
+				? 'mid'
+				: totalSecs > 60
+					? 'critical'
+					: 'final';
+	const text = isBreaker
+		? `strike window opens in ${clock}`
+		: stage === 'critical' || stage === 'final'
+			? `BRACE - war in ${clock}`
+			: `war lands in ${clock}`;
 	return (
 		<span
-			className={`factions-nap-broken-countdown${isBreaker ? ' factions-nap-broken-countdown--breaker' : ''}`}
+			className={`factions-nap-countdown nap-stage-${stage}${isBreaker ? ' factions-nap-countdown--breaker' : ''}`}
 		>
-			attacks open in {mins}:{secs.toString().padStart(2, '0')}
+			{text}
 		</span>
 	);
 }
@@ -2010,7 +2033,7 @@ export default function FactionsView() {
 												<span
 													className={`factions-war-vs ${isMyFactionBreaker ? 'factions-war-vs--amber' : 'factions-war-vs--broken'}`}
 												>
-													PACT BROKEN
+													{isMyFactionBreaker ? 'PACT BROKEN' : 'BETRAYED'}
 												</span>
 												<span className="factions-war-faction">
 													[{other?.tag}] {other?.name}
@@ -2024,8 +2047,8 @@ export default function FactionsView() {
 											</div>
 											<span className="factions-nap-broken-label">
 												{isMyFactionBreaker
-													? 'Warning window active'
-													: 'Alert: treaty broken'}
+													? 'Strike window armed'
+													: 'Recall exposed troops and fortify'}
 											</span>
 										</div>
 									);
@@ -2250,7 +2273,12 @@ export default function FactionsView() {
 							<p className="factions-war-empty">No public agreements in this galaxy.</p>
 						) : (
 							<div className="factions-diplomacy-board">
-								{galaxyTreaties.map((t) => (
+								{[...galaxyTreaties]
+										.sort(
+											(a, b) =>
+												Number(b.status === 'broken') - Number(a.status === 'broken')
+										)
+										.map((t) => (
 									<div
 										key={t.id}
 										className={`factions-diplomacy-row${t.status === 'pending' ? ' factions-diplomacy-row--pending' : ''}${t.status === 'broken' ? ' factions-diplomacy-row--broken' : ''}`}
@@ -2266,7 +2294,7 @@ export default function FactionsView() {
 												{t.status === 'pending'
 													? 'proposed to'
 													: t.status === 'broken'
-														? 'broke pact with'
+														? 'no longer at peace with'
 														: 'and'}
 											</span>
 											[{t.targetFaction?.tag}] {t.targetFaction?.name}
