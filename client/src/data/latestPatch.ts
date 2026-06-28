@@ -15,7 +15,7 @@
 // If "I forgot to bump it" becomes a real pattern, swap to a build step
 // that globs the directory and writes this file. Until then: simpler wins.
 
-export const LATEST_PATCH_VERSION = '0.26';
-export const LATEST_PATCH_LABEL = 'Alpha v0.26';
+export const LATEST_PATCH_VERSION = '0.27';
+export const LATEST_PATCH_LABEL = 'Alpha v0.27';
 export const LATEST_PATCH_HEADLINE =
-	'The last hardening pass before Beta #1: a rebuilt first-faction experience so a fresh galaxy is never a dead end, clearer feedback when daily rewards hit your storage cap, and a round of behind-the-scenes anti-exploit work. No economy, training, or combat numbers changed.';
+	'Non-Aggression Pacts now have teeth: while a pact is active neither faction can attack the other, and breaking one opens a 60-minute warning window that alerts your target and posts the betrayal to the whole galaxy. No economy, training, or combat numbers changed.';

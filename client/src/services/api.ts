@@ -763,6 +763,9 @@ export const acceptTreaty = (treatyId: number) =>
 export const cancelTreaty = (treatyId: number) =>
 	apiRequest(`/faction/treaties/${treatyId}/cancel`, { method: 'POST' });
 
+export const breakNap = (treatyId: number) =>
+	apiRequest(`/faction/treaties/${treatyId}/break`, { method: 'POST' });
+
 export const getActiveTreaties = (factionId: number) =>
 	apiRequest(`/faction/${factionId}/treaties`);
 

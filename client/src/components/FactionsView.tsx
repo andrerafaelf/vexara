@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Flag } from 'lucide-react';
+import BreakPactModal from './BreakPactModal';
 import {
 	acceptFactionInvite,
 	createFaction,
@@ -34,6 +35,7 @@ import {
 	proposeTreaty,
 	acceptTreaty,
 	cancelTreaty,
+	breakNap,
 	getGalaxyDiplomacy
 } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -48,6 +50,7 @@ import WarRoom from './WarRoom';
 import { usePageReady } from './NavigationProgress';
 import PageSkeleton from './PageSkeleton';
 import { useTabParam } from '../hooks/useTabParam';
+import { useNow } from '../hooks/useNow';
 import '../styles/Factions.css';
 
 function formatRelativeTime(dateStr: string): string {
@@ -152,7 +155,7 @@ const FACTION_TABS: readonly Tab[] = [
 interface FactionTreaty {
 	id: number;
 	type: 'nap' | 'trade' | 'vassal';
-	status: 'pending' | 'active' | 'expired' | 'cancelled';
+	status: 'pending' | 'active' | 'expired' | 'cancelled' | 'broken';
 	proposerFactionId: number;
 	targetFactionId: number;
 	proposerFaction?: { id: number; name: string; tag: string };
@@ -161,6 +164,36 @@ interface FactionTreaty {
 	startsAt?: string | null;
 	expiresAt?: string | null;
 	createdAt: string;
+	// NAP break fields - populated when status === 'broken'
+	brokenAt?: string | null;
+	betrayalEndsAt?: string | null;
+	brokenByUserId?: number | null;
+}
+
+// Isolated countdown component - calls useNow() so only THIS element re-renders at 1 Hz,
+// not the whole FactionsView. Server-anchored via useNow() / serverNow().
+function NapBrokenCountdown({
+	betrayalEndsAt,
+	isBreaker
+}: {
+	betrayalEndsAt: string;
+	isBreaker: boolean;
+}) {
+	const now = useNow();
+	const remainMs = new Date(betrayalEndsAt).getTime() - now;
+	if (remainMs <= 0) {
+		return <span className="factions-nap-open">Attacks are now open</span>;
+	}
+	const totalSecs = Math.floor(remainMs / 1000);
+	const mins = Math.floor(totalSecs / 60);
+	const secs = totalSecs % 60;
+	return (
+		<span
+			className={`factions-nap-broken-countdown${isBreaker ? ' factions-nap-broken-countdown--breaker' : ''}`}
+		>
+			attacks open in {mins}:{secs.toString().padStart(2, '0')}
+		</span>
+	);
 }
 
 const ROLE_ORDER: Record<string, number> = { leader: 0, officer: 1, member: 2 };
@@ -226,6 +259,14 @@ export default function FactionsView() {
 	const [treatySubmitting, setTreatySubmitting] = useState(false);
 	const [galaxyTreaties, setGalaxyTreaties] = useState<FactionTreaty[]>([]);
 	const [activeDiplomacyTreatyId, setActiveDiplomacyTreatyId] = useState<number | null>(null);
+	// treatyId currently mid-break-request, or null when idle. Used to disable the button.
+	const [breakNapSubmitting, setBreakNapSubmitting] = useState<number | null>(null);
+	// The active break-pact confirm modal (treaty + partner label), or null.
+	const [breakNapModal, setBreakNapModal] = useState<{ treatyId: number; targetLabel: string } | null>(
+		null
+	);
+	// Inline error shown inside the break-pact modal (kept separate from treatyError).
+	const [breakNapError, setBreakNapError] = useState<string | null>(null);
 
 	// Join requests (for leader/officer view inside a faction)
 	const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
@@ -632,6 +673,34 @@ export default function FactionsView() {
 				(err as { response?: { data?: { error?: string } } }).response?.data?.error ||
 					(err as Error).message
 			);
+		}
+	};
+
+	// Open the break-pact confirm modal for a treaty (clears any prior inline error).
+	const openBreakPactModal = (treatyId: number, targetLabel: string) => {
+		setBreakNapError(null);
+		setBreakNapModal({ treatyId, targetLabel });
+	};
+
+	// Break an active NAP. The confirm + warning copy live in BreakPactModal (a
+	// deliberate act-of-war dialog, not a native confirm). The betrayal window and
+	// resign cooldown are computed server-side; the client only consumes the
+	// server-returned `betrayalEndsAt` timestamp shown in the countdown.
+	const handleBreakNap = async (treatyId: number) => {
+		if (!myFaction) return;
+		setBreakNapSubmitting(treatyId);
+		setBreakNapError(null);
+		try {
+			await breakNap(treatyId);
+			await refreshTreaties(myFaction.id);
+			setBreakNapModal(null);
+		} catch (err) {
+			setBreakNapError(
+				(err as { response?: { data?: { error?: string } } }).response?.data?.error ||
+					'Failed to break pact'
+			);
+		} finally {
+			setBreakNapSubmitting(null);
 		}
 	};
 
@@ -1914,6 +1983,56 @@ export default function FactionsView() {
 						<div className="factions-field-error factions-war-error">{treatyError}</div>
 					)}
 
+					{/* Pact Breaking - broken NAPs still inside their betrayal window */}
+					{treaties.filter((t) => t.status === 'broken').length > 0 && (
+						<div className="factions-war-section">
+							<h3 className="factions-war-section-title factions-war-section-title--alert">
+								Pact Breaking
+							</h3>
+							{treaties
+								.filter((t) => t.status === 'broken')
+								.map((t) => {
+									const other =
+										t.proposerFactionId === myFaction.id
+											? t.targetFaction
+											: t.proposerFaction;
+									// Determine which faction broke it: if the breaker is a member of
+									// my faction, we are the aggressor; otherwise we are the victim.
+									const isMyFactionBreaker =
+										myFaction.members?.some((m) => m.userId === t.brokenByUserId) ??
+										false;
+									return (
+										<div
+											key={t.id}
+											className={`factions-war-card ${isMyFactionBreaker ? 'factions-war-card--nap-broken-breaker' : 'factions-war-card--nap-broken'}`}
+										>
+											<div className="factions-war-info">
+												<span
+													className={`factions-war-vs ${isMyFactionBreaker ? 'factions-war-vs--amber' : 'factions-war-vs--broken'}`}
+												>
+													PACT BROKEN
+												</span>
+												<span className="factions-war-faction">
+													[{other?.tag}] {other?.name}
+												</span>
+												{t.betrayalEndsAt && (
+													<NapBrokenCountdown
+														betrayalEndsAt={t.betrayalEndsAt}
+														isBreaker={isMyFactionBreaker}
+													/>
+												)}
+											</div>
+											<span className="factions-nap-broken-label">
+												{isMyFactionBreaker
+													? 'Warning window active'
+													: 'Alert: treaty broken'}
+											</span>
+										</div>
+									);
+								})}
+						</div>
+					)}
+
 					{treaties.filter((t) => t.status === 'pending' && t.targetFactionId === myFaction.id)
 						.length > 0 && (
 						<div className="factions-war-section">
@@ -1992,7 +2111,23 @@ export default function FactionsView() {
 												>
 													{isOpen ? 'Close Chat' : 'Chat'}
 												</button>
-												{canManage && (
+												{canManage && t.type === 'nap' && (
+													<button
+														className="factions-btn-small factions-btn-danger"
+														onClick={() =>
+															openBreakPactModal(
+																t.id,
+																`[${other?.tag}] ${other?.name}`
+															)
+														}
+														disabled={breakNapSubmitting === t.id}
+													>
+														{breakNapSubmitting === t.id
+															? 'Breaking...'
+															: 'Break Pact'}
+													</button>
+												)}
+												{canManage && t.type !== 'nap' && (
 													<button
 														className="factions-btn-small factions-btn-danger"
 														onClick={() => handleCancelTreaty(t.id)}
@@ -2118,22 +2253,32 @@ export default function FactionsView() {
 								{galaxyTreaties.map((t) => (
 									<div
 										key={t.id}
-										className={`factions-diplomacy-row${t.status === 'pending' ? ' factions-diplomacy-row--pending' : ''}`}
+										className={`factions-diplomacy-row${t.status === 'pending' ? ' factions-diplomacy-row--pending' : ''}${t.status === 'broken' ? ' factions-diplomacy-row--broken' : ''}`}
 									>
 										<span
-											className={`factions-treaty-type factions-treaty-type--${t.status === 'active' ? 'active' : 'pending'}`}
+											className={`factions-treaty-type factions-treaty-type--${t.status === 'active' ? 'active' : t.status === 'broken' ? 'broken' : 'pending'}`}
 										>
-											{TREATY_LABELS[t.type]}
+											{t.status === 'broken' ? 'BROKEN NAP' : TREATY_LABELS[t.type]}
 										</span>
 										<span className="factions-diplomacy-parties">
 											[{t.proposerFaction?.tag}] {t.proposerFaction?.name}
 											<span className="factions-diplomacy-sep">
-												{t.status === 'pending' ? 'proposed to' : 'and'}
+												{t.status === 'pending'
+													? 'proposed to'
+													: t.status === 'broken'
+														? 'broke pact with'
+														: 'and'}
 											</span>
 											[{t.targetFaction?.tag}] {t.targetFaction?.name}
 										</span>
-										<span className="factions-diplomacy-status">
-											{t.status === 'pending' ? 'Pending' : 'Active'}
+										<span
+											className={`factions-diplomacy-status${t.status === 'broken' ? ' factions-diplomacy-status--broken' : ''}`}
+										>
+											{t.status === 'pending'
+												? 'Pending'
+												: t.status === 'broken'
+													? 'Broken'
+													: 'Active'}
 										</span>
 									</div>
 								))}
@@ -2141,6 +2286,16 @@ export default function FactionsView() {
 						)}
 					</div>
 				</section>
+			)}
+
+			{breakNapModal && (
+				<BreakPactModal
+					targetLabel={breakNapModal.targetLabel}
+					submitting={breakNapSubmitting === breakNapModal.treatyId}
+					error={breakNapError}
+					onConfirm={() => handleBreakNap(breakNapModal.treatyId)}
+					onClose={() => setBreakNapModal(null)}
+				/>
 			)}
 		</div>
 	);

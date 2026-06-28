@@ -953,6 +953,7 @@ enum FactionTreatyStatus {
   active
   expired
   cancelled
+  broken
 }
 
 model FactionTreaty {
@@ -969,6 +970,9 @@ model FactionTreaty {
   expiresAt          DateTime?
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @default(now())
+  brokenAt           DateTime?
+  betrayalEndsAt     DateTime?
+  brokenByUserId     Int?
   meta               Json?
 
   galaxy           Galaxy  @relation(fields: [galaxyId], references: [id], onDelete: Cascade)
@@ -980,6 +984,7 @@ model FactionTreaty {
   @@index([proposerFactionId])
   @@index([targetFactionId])
   @@index([status])
+  @@index([galaxyId, type, status])
 }
 
 model DiplomacyMessage {

@@ -41,6 +41,9 @@ router.post('/treaties/:treatyId/accept', auth, (req, res) =>
 router.post('/treaties/:treatyId/cancel', auth, (req, res) =>
 	treatyController.cancelTreaty(req as AuthRequest, res as Response)
 );
+router.post('/treaties/:treatyId/break', auth, (req, res) =>
+	treatyController.breakNap(req as AuthRequest, res as Response)
+);
 router.get('/treaties/:treatyId/chat', auth, (req, res) =>
 	diplomacyChatController.getDiplomacyMessages(req as AuthRequest, res as Response)
 );

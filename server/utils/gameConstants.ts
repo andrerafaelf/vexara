@@ -48,6 +48,23 @@ export function getProtectionTaperSurvivorFloor(
 	return PROTECTION_TAPER_START_SURVIVOR_PCT * remaining;
 }
 
+// ── Non-Aggression Pact enforcement ─────────────────────────────────────────
+// SERVER-ONLY. Not mirrored to any client *.shared.ts file (same class as the
+// STANDING_ORDER_* constants below). The client receives server-computed
+// timestamps (betrayalEndsAt, brokenAt), never the raw constants.
+//
+// NAP_BREAK_NOTICE_MS: after a leader/officer formally breaks a NAP, neither
+// faction may land attacks for this window. Divided by galaxy.speedMultiplier
+// so fast galaxies still give a meaningful reaction floor.
+// Deliberately set above STANDING_ORDER_COOLDOWN_MS (30 min) so the defender's
+// automated standing orders can fire at least once inside the window.
+export const NAP_BREAK_NOTICE_MS = 60 * 60 * 1000; // 60 minutes
+
+// NAP_RESIGN_COOLDOWN_MS: the two factions cannot sign a new NAP for this long
+// after a break. Kills the sign -> break -> sign griefing loop. Divided by
+// galaxy.speedMultiplier at check time.
+export const NAP_RESIGN_COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 hours
+
 // ── Standing defensive orders ────────────────────────────────────────────────
 // A standing order auto-transfers troops (existing rails, see
 // troopTransferService.sendTroopsTransaction) from a reserve nexus to its

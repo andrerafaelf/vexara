@@ -485,8 +485,8 @@
     "semantic_hash": ""
   },
   "client/src/components/DailyStreaks.tsx": {
-    "mtime": 1782598163.663952,
-    "ast_hash": "e2c3086680751b6ba7d683ba02e3175c",
+    "mtime": 1782603228.3248,
+    "ast_hash": "7feca5b8d3178a49a492f08504139ae8",
     "semantic_hash": ""
   },
   "client/src/components/Dashboard.tsx": {
@@ -525,8 +525,8 @@
     "semantic_hash": ""
   },
   "client/src/components/FactionsView.tsx": {
-    "mtime": 1782598208.8138022,
-    "ast_hash": "dc89e066f5866a7abcbd9682ed4a2c6c",
+    "mtime": 1782657252.9415073,
+    "ast_hash": "50fe0ba5eb2276b1c0427d32fd1b11ac",
     "semantic_hash": ""
   },
   "client/src/components/FriendsView.tsx": {
@@ -780,7 +780,7 @@
     "semantic_hash": ""
   },
   "client/src/context/OnboardingContext.tsx": {
-    "mtime": 1782564805.7457561,
+    "mtime": 1782603228.3258,
     "ast_hash": "d618d2214101147e32280b6fff4dc968",
     "semantic_hash": ""
   },
@@ -805,8 +805,8 @@
     "semantic_hash": ""
   },
   "client/src/data/latestPatch.ts": {
-    "mtime": 1782598264.1345887,
-    "ast_hash": "fe83850a17156eaa98a343382aea0eb2",
+    "mtime": 1782641657.7139764,
+    "ast_hash": "ea0c588bd27f80a9657e4403085d2fbf",
     "semantic_hash": ""
   },
   "client/src/features/combat/useCombat.ts": {
@@ -935,8 +935,8 @@
     "semantic_hash": ""
   },
   "client/src/services/api.ts": {
-    "mtime": 1781814289.5571146,
-    "ast_hash": "945d3e710308bcd872b84bdbeccac3d2",
+    "mtime": 1782640803.1709087,
+    "ast_hash": "26aa70b5cf347a4d24771586ca2f25d3",
     "semantic_hash": ""
   },
   "client/src/types/css.d.ts": {
@@ -995,7 +995,7 @@
     "semantic_hash": ""
   },
   "server/controllers/authController.ts": {
-    "mtime": 1782565333.6376069,
+    "mtime": 1782603228.3558064,
     "ast_hash": "d1d293eaf7272e9864a22b5c885b87a5",
     "semantic_hash": ""
   },
@@ -1030,8 +1030,8 @@
     "semantic_hash": ""
   },
   "server/controllers/factionTreatyController.ts": {
-    "mtime": 1781546678.4768257,
-    "ast_hash": "4b352e5f43765762cbb6aa8f6e152b68",
+    "mtime": 1782640214.7095418,
+    "ast_hash": "1d65691bb173762b4880d519944478e3",
     "semantic_hash": ""
   },
   "server/controllers/factionWarController.ts": {
@@ -1060,12 +1060,12 @@
     "semantic_hash": ""
   },
   "server/controllers/marketController.ts": {
-    "mtime": 1782585768.8852572,
-    "ast_hash": "6393e664b295dfb740578ac238ed04c2",
+    "mtime": 1782603228.3573055,
+    "ast_hash": "156ea04a2f185003bab065379fb5119c",
     "semantic_hash": ""
   },
   "server/controllers/nexusController.ts": {
-    "mtime": 1782565272.453263,
+    "mtime": 1782603228.357806,
     "ast_hash": "80272b003e1ee42ec3ffeb39ce627c2d",
     "semantic_hash": ""
   },
@@ -1095,8 +1095,8 @@
     "semantic_hash": ""
   },
   "server/controllers/troopTransferController.ts": {
-    "mtime": 1782565158.463282,
-    "ast_hash": "cbbde340620b84f00cc71d79a56fee55",
+    "mtime": 1782603228.3583055,
+    "ast_hash": "32b7b28fae7aec9b297085804566198e",
     "semantic_hash": ""
   },
   "server/controllers/unsubscribeController.ts": {
@@ -1555,8 +1555,8 @@
     "semantic_hash": ""
   },
   "server/routes/faction.ts": {
-    "mtime": 1781546678.5019667,
-    "ast_hash": "94dc376e05147cef5a7ea7a34607590f",
+    "mtime": 1782638980.7000577,
+    "ast_hash": "fd3cd9ad3b51183dda2222074df81c1f",
     "semantic_hash": ""
   },
   "server/routes/friends.ts": {
@@ -1595,8 +1595,8 @@
     "semantic_hash": ""
   },
   "server/routes/replay.ts": {
-    "mtime": 1782599715.7762923,
-    "ast_hash": "5c445148d843b9dcba6c5c0a357479fa",
+    "mtime": 1782603228.3588097,
+    "ast_hash": "5c00436fd128354c5d8d80b48b4c6287",
     "semantic_hash": ""
   },
   "server/routes/report.ts": {
@@ -1630,13 +1630,13 @@
     "semantic_hash": ""
   },
   "server/server.ts": {
-    "mtime": 1782565323.9320138,
+    "mtime": 1782603228.359306,
     "ast_hash": "6e494f46e46686c0b6632f2db210c1c6",
     "semantic_hash": ""
   },
   "server/services/attackService.ts": {
-    "mtime": 1782150400.7021785,
-    "ast_hash": "b8995512291e46758d1fd8ca20af7ade",
+    "mtime": 1782638930.6463604,
+    "ast_hash": "86c50dc0d1e9d04d92432c1b1e9f6ea0",
     "semantic_hash": ""
   },
   "server/services/authService.ts": {
@@ -1660,7 +1660,7 @@
     "semantic_hash": ""
   },
   "server/services/dailyStreakService.ts": {
-    "mtime": 1782569051.1685214,
+    "mtime": 1782603228.3603055,
     "ast_hash": "585d27ebdb18c0ccf81b2945815afe74",
     "semantic_hash": ""
   },
@@ -1675,7 +1675,7 @@
     "semantic_hash": ""
   },
   "server/services/galaxyService.ts": {
-    "mtime": 1782565484.6992536,
+    "mtime": 1782603228.3608057,
     "ast_hash": "51f12bdc6d87ff08e0f14dcf67a445de",
     "semantic_hash": ""
   },
@@ -1685,13 +1685,13 @@
     "semantic_hash": ""
   },
   "server/services/marketService.ts": {
-    "mtime": 1782581462.2056923,
-    "ast_hash": "6453bd4b5607f6ea62659b8b4eb0ab46",
+    "mtime": 1782603228.361307,
+    "ast_hash": "ad45bf5fbbcd5b81e1a3cb55fceb0493",
     "semantic_hash": ""
   },
   "server/services/nexusService.ts": {
-    "mtime": 1782565260.8086836,
-    "ast_hash": "6b202499598093065ca652396b47d772",
+    "mtime": 1782603228.361807,
+    "ast_hash": "0b66d486f27ec8f93fa62f5414109ef4",
     "semantic_hash": ""
   },
   "server/services/notificationService.ts": {
@@ -1725,8 +1725,8 @@
     "semantic_hash": ""
   },
   "server/services/troopTransferService.ts": {
-    "mtime": 1782565143.4282897,
-    "ast_hash": "d3bcf384b0e05e8d9e36b96108c593df",
+    "mtime": 1782603228.3628051,
+    "ast_hash": "ccfbedb8cc2befff837007a0479831e4",
     "semantic_hash": ""
   },
   "server/services/warRoomSocket.ts": {
@@ -1740,8 +1740,8 @@
     "semantic_hash": ""
   },
   "server/test/daily-streak.test.js": {
-    "mtime": 1782569073.453736,
-    "ast_hash": "c7bc6932652fe5cd9ad1ac291031ef4b",
+    "mtime": 1782603228.3638058,
+    "ast_hash": "7a41b9161f7e5c57845f7f7d69442269",
     "semantic_hash": ""
   },
   "server/test/economy-combat.test.js": {
@@ -1800,7 +1800,7 @@
     "semantic_hash": ""
   },
   "server/utils/combat.ts": {
-    "mtime": 1782565408.3592887,
+    "mtime": 1782603228.3653052,
     "ast_hash": "fcecc7560f2948f4d27e2c5ada8426be",
     "semantic_hash": ""
   },
@@ -1810,7 +1810,7 @@
     "semantic_hash": ""
   },
   "server/utils/dominance.ts": {
-    "mtime": 1782565446.3859985,
+    "mtime": 1782603228.3658059,
     "ast_hash": "f700fc69565d679a003acf15c18e5dc3",
     "semantic_hash": ""
   },
@@ -1825,18 +1825,18 @@
     "semantic_hash": ""
   },
   "server/utils/gameConstants.ts": {
-    "mtime": 1782150400.7056785,
-    "ast_hash": "347c9e08c8c10c9b54af7f4cbc8a06fe",
+    "mtime": 1782638905.8040512,
+    "ast_hash": "1ebf3f1118732bdda39901a95626ff27",
     "semantic_hash": ""
   },
   "server/utils/logger.ts": {
-    "mtime": 1782565426.0032735,
+    "mtime": 1782603228.3663063,
     "ast_hash": "62bb9b2efb9d339ea9c5f141048dac28",
     "semantic_hash": ""
   },
   "server/utils/neutralNexuses.ts": {
-    "mtime": 1782565469.5109804,
-    "ast_hash": "9d88ee095d021559cb0c600953e74cac",
+    "mtime": 1782603228.3673062,
+    "ast_hash": "614ddc9908b5b80020831d83a64d9f52",
     "semantic_hash": ""
   },
   "server/utils/population.ts": {
@@ -2415,8 +2415,8 @@
     "semantic_hash": ""
   },
   "server/controllers/factionTreasuryController.ts": {
-    "mtime": 1782586273.3887322,
-    "ast_hash": "f25f319182a0026a7f462df63076c9ec",
+    "mtime": 1782603228.3563058,
+    "ast_hash": "e26bfa254a35a5d77574339e5cae3f40",
     "semantic_hash": ""
   },
   "server/prisma/migrations/20260613000000_add_commander_legacy/migration.sql": {
@@ -2605,7 +2605,7 @@
     "semantic_hash": ""
   },
   "server/services/standingOrderService.ts": {
-    "mtime": 1782565184.892319,
+    "mtime": 1782603228.3623064,
     "ast_hash": "c6ceade814cb1444ff6f2444c674a3ac",
     "semantic_hash": ""
   },
@@ -2630,7 +2630,7 @@
     "semantic_hash": ""
   },
   "server/test/standing-orders.test.js": {
-    "mtime": 1782569090.8406322,
+    "mtime": 1782603228.364307,
     "ast_hash": "6f4282c8a0dabbd55dd868cdc2127514",
     "semantic_hash": ""
   },
@@ -2685,8 +2685,8 @@
     "semantic_hash": ""
   },
   ".claude/settings.local.json": {
-    "mtime": 1782599202.89485,
-    "ast_hash": "f261b527837532e633e85d47f672b443",
+    "mtime": 1782657236.420246,
+    "ast_hash": "9fca42bb8b77afab4270ee432868c17a",
     "semantic_hash": ""
   },
   "client/next-env.d.ts": {
@@ -2750,13 +2750,43 @@
     "semantic_hash": ""
   },
   "client/public/patch-notes/PATCH_NOTES_ALPHA_0.26.md": {
-    "mtime": 1782598255.0172486,
-    "ast_hash": "6179aa14b04366ebff98ef27f71f2224",
+    "mtime": 1782603228.3237996,
+    "ast_hash": "72bfd31b3f38c6f9c0876138c2c1140f",
     "semantic_hash": ""
   },
   "server/test/c1-conservation.test.js": {
-    "mtime": 1782600424.881989,
-    "ast_hash": "52c3196f992d2b8d3c3f124983bb09c1",
+    "mtime": 1782603228.3633065,
+    "ast_hash": "dd44b19914ee8ed0d6bfcc51dfbc1e12",
+    "semantic_hash": ""
+  },
+  "server/prisma/migrations/20260628000000_add_nap_break_fields/migration.sql": {
+    "mtime": 1782638462.1192467,
+    "ast_hash": "6cd40fe52d104773c9eddb3a374bb35c",
+    "semantic_hash": ""
+  },
+  "server/DIPLOMACY_BALANCE.md": {
+    "mtime": 1782637408.8906436,
+    "ast_hash": "7717efb32ae929f130a860f6361c75a2",
+    "semantic_hash": ""
+  },
+  "client/src/components/BreakPactModal.tsx": {
+    "mtime": 1782656121.2464845,
+    "ast_hash": "a2c43307ac4712bbf98536bab029861f",
+    "semantic_hash": ""
+  },
+  "server/prisma/migrations/20260628000001_faction_treaty_nap_composite_idx/migration.sql": {
+    "mtime": 1782641657.908673,
+    "ast_hash": "53d79349be8a38f45219b890bd58e5d1",
+    "semantic_hash": ""
+  },
+  "server/test/nap-enforcement.test.js": {
+    "mtime": 1782641177.0424936,
+    "ast_hash": "cfdd51fc1de0646695e2ee42ff32c8e0",
+    "semantic_hash": ""
+  },
+  "client/public/patch-notes/PATCH_NOTES_ALPHA_0.27.md": {
+    "mtime": 1782641648.815603,
+    "ast_hash": "06ed36ae49764e872732318496143d4a",
     "semantic_hash": ""
   }
 }

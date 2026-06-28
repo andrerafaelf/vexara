@@ -1,0 +1,186 @@
+/* Break-pact confirm. Danger-led variant of the StandingOrdersModal (.som-)
+   scaffold, in Vexara's industrial language: sharp corners, the signature
+   notched cut, skewed bar markers, warm palette, mono labels. No glows. */
+
+.bpm-scroll-locked {
+	overflow: hidden;
+}
+
+.bpm-overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.72);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1000;
+	padding: var(--space-4);
+}
+
+@media (max-width: 768px) {
+	.bpm-overlay {
+		padding-bottom: calc(56px + env(safe-area-inset-bottom));
+	}
+	.bpm-modal {
+		max-height: calc(100dvh - 56px - env(safe-area-inset-bottom) - 32px);
+	}
+}
+
+.bpm-modal {
+	background: var(--color-navy-800);
+	border: 1px solid var(--color-navy-500);
+	border-left: 3px solid var(--danger);
+	border-radius: 0;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+	padding: var(--space-6) var(--space-5) var(--space-5);
+	max-width: 480px;
+	width: 100%;
+	max-height: 90vh;
+	overflow-y: auto;
+	position: relative;
+}
+
+.bpm-eyebrow {
+	margin: 0 0 var(--space-2);
+	font-family: var(--font-mono);
+	font-size: var(--text-xs);
+	font-weight: 600;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--danger);
+}
+
+.bpm-headline {
+	margin: 0 0 var(--space-3);
+	font-family: var(--font-display);
+	font-size: var(--text-2xl);
+	font-weight: 600;
+	line-height: 1.15;
+	color: var(--text-strong);
+}
+
+.bpm-framing {
+	margin: 0 0 var(--space-4);
+	font-size: var(--text-sm);
+	line-height: 1.5;
+	color: var(--text-muted);
+}
+
+.bpm-ledger {
+	list-style: none;
+	margin: 0 0 var(--space-4);
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+.bpm-ledger li {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-3);
+	font-size: var(--text-sm);
+	line-height: 1.45;
+	color: var(--text-default);
+}
+
+/* Skewed bar marker, matching .factions-notice-mark / .factions-recruiting-mark. */
+.bpm-mark {
+	flex: 0 0 auto;
+	width: 3px;
+	height: 15px;
+	margin-top: 2px;
+	background: var(--danger);
+	transform: skewX(-12deg);
+}
+
+.bpm-error {
+	margin: 0 0 var(--space-3);
+	font-size: var(--text-sm);
+	color: var(--danger);
+}
+
+/* Hold-to-confirm: the fill sweeps left-to-right over the same 800ms the
+   component's HOLD_MS timer runs; releasing early removes the holding class and
+   snaps the fill back with no transition. Notched like every Vexara button. */
+.bpm-hold-btn {
+	position: relative;
+	overflow: hidden;
+	display: block;
+	width: 100%;
+	min-height: 48px;
+	margin: 0 0 var(--space-2);
+	padding: var(--space-3) var(--space-4);
+	border: 1px solid rgba(182, 93, 85, 0.4);
+	border-radius: 0;
+	clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
+	background: var(--danger-soft);
+	color: var(--text-strong);
+	font-size: var(--text-sm);
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	cursor: pointer;
+	user-select: none;
+	touch-action: none;
+	-webkit-tap-highlight-color: transparent;
+	transition: border-color var(--duration-fast) var(--ease-out);
+}
+
+.bpm-hold-btn:hover:not(:disabled) {
+	border-color: rgba(182, 93, 85, 0.6);
+}
+
+.bpm-hold-btn:disabled {
+	cursor: default;
+	opacity: 0.85;
+}
+
+.bpm-hold-fill {
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 0;
+	background: var(--danger);
+	opacity: 0.85;
+	transition: width 0s;
+}
+
+.bpm-hold-btn--holding .bpm-hold-fill {
+	width: 100%;
+	transition: width 800ms linear;
+}
+
+.bpm-hold-label {
+	position: relative;
+	z-index: 1;
+}
+
+.bpm-secondary {
+	display: block;
+	width: 100%;
+	padding: var(--space-2) var(--space-4);
+	border: none;
+	background: none;
+	color: var(--text-muted);
+	font-size: var(--text-sm);
+	cursor: pointer;
+	transition: color var(--duration-fast) var(--ease-out);
+}
+
+.bpm-secondary:hover:not(:disabled) {
+	color: var(--text-strong);
+}
+
+.bpm-secondary:disabled {
+	cursor: default;
+	opacity: 0.6;
+}
+
+/* Reduced motion: the fill sweep is decorative; drop it but keep the
+   hold-to-confirm working (the timer still fires, the label still updates). */
+@media (prefers-reduced-motion: reduce) {
+	.bpm-hold-btn--holding .bpm-hold-fill {
+		transition: none;
+	}
+}

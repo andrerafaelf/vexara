@@ -5,7 +5,11 @@ import { incrementQuestProgress } from './dailyStreakService.js';
 import { TROOP_KEYS } from '../types/index.js';
 import { TROOP_STATS } from '../utils/combatMath.js';
 import { NEXUS_TYPE_BONUSES } from '../utils/economy.js';
-import { canStationTroop, STANDING_ORDER_MIN_TRIGGER_UNITS } from '../utils/gameConstants.js';
+import {
+	canStationTroop,
+	NAP_BREAK_NOTICE_MS,
+	STANDING_ORDER_MIN_TRIGGER_UNITS
+} from '../utils/gameConstants.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
 import {
 	normalizeTroopPayload,
@@ -206,6 +210,73 @@ export async function launchAttack(input: LaunchAttackInput): Promise<LaunchAtta
 			error: 'While under newbie protection you can only attack NPC nexuses, not other players.',
 			protectedUntil: attackerNexus.newbieProtectionEndsAt
 		};
+	}
+
+	// NAP enforcement gate. Applies to attack missions against owned defenders only.
+	// Scout and support are intentionally exempt: blocking scouts would give NAPs
+	// free intel blackout (contradicts shared-vision design); blocking support would
+	// prevent a player from reinforcing an allied partner.
+	// Gate at launch only, never at resolution - attacks in flight before a NAP
+	// was signed must still land. See DIPLOMACY_BALANCE.md section 1.
+	if (attackType === 'attack' && defenderNexus.ownerId != null) {
+		const [attackerMember, defenderMember] = await Promise.all([
+			prisma.factionMember.findFirst({ where: { galaxyId, userId } }),
+			prisma.factionMember.findFirst({ where: { galaxyId, userId: defenderNexus.ownerId } })
+		]);
+		// Both parties must be in factions (and different ones) for a NAP to apply.
+		if (
+			attackerMember &&
+			defenderMember &&
+			attackerMember.factionId !== defenderMember.factionId
+		) {
+			const now = new Date();
+			const blockingTreaty = await prisma.factionTreaty.findFirst({
+				where: {
+					galaxyId,
+					type: 'nap',
+					OR: [
+						// Active NAP - always blocks.
+						{
+							status: 'active',
+							OR: [
+								{
+									proposerFactionId: attackerMember.factionId,
+									targetFactionId: defenderMember.factionId
+								},
+								{
+									proposerFactionId: defenderMember.factionId,
+									targetFactionId: attackerMember.factionId
+								}
+							]
+						},
+						// Broken NAP still inside the betrayal window - still blocks.
+						{
+							status: 'broken',
+							betrayalEndsAt: { gt: now },
+							OR: [
+								{
+									proposerFactionId: attackerMember.factionId,
+									targetFactionId: defenderMember.factionId
+								},
+								{
+									proposerFactionId: defenderMember.factionId,
+									targetFactionId: attackerMember.factionId
+								}
+							]
+						}
+					]
+				},
+				select: { id: true, status: true, betrayalEndsAt: true }
+			});
+			if (blockingTreaty) {
+				return {
+					ok: false,
+					status: 403,
+					error: 'A Non-Aggression Pact blocks this attack. Break the pact to declare war.',
+					protectedUntil: blockingTreaty.betrayalEndsAt ?? null
+				};
+			}
+		}
 	}
 
 	const totalTroopsRequested = Object.values(normalizedTroops).reduce((sum, a) => sum + a, 0);
