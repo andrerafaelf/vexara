@@ -1007,8 +1007,24 @@ export async function getLeaderboard(req: AuthRequest, res: Response): Promise<v
 		}
 
 		const factionCount = allFactions.length;
+		// Mirror the victory engine's size-scaled minimums (dominance.ts
+		// processGalaxy): in small galaxies the engine scales the player/faction
+		// floors DOWN and counts only nexus-owning factions. Without this the
+		// displayed lock drifts from when the galaxy can actually be won - a faction
+		// could win a small galaxy while the board still shows "locked". Keep this in
+		// sync with dominance.ts.
+		const nexusOwningFactionCount = factionNexusCounts.size;
+		const effectiveMinPlayers =
+			galaxy?.winMinPlayers != null
+				? cfg.minPlayers
+				: Math.min(cfg.minPlayers, Math.max(3, galaxyPlayerCount));
+		const effectiveMinFactions =
+			galaxy?.winMinFactions != null
+				? cfg.minFactions
+				: Math.min(cfg.minFactions, Math.max(1, nexusOwningFactionCount));
 		const dominanceLocked =
-			galaxyPlayerCount < cfg.minPlayers || factionCount < cfg.minFactions;
+			galaxyPlayerCount < effectiveMinPlayers ||
+			nexusOwningFactionCount < effectiveMinFactions;
 		const now = Date.now();
 
 		// Vassal credit: resolve valid overlord->vassal pairs and compute per-faction

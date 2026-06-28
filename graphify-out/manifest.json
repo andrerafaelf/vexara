@@ -805,8 +805,8 @@
     "semantic_hash": ""
   },
   "client/src/data/latestPatch.ts": {
-    "mtime": 1782683011.6395793,
-    "ast_hash": "22fe0a7ae9f1931c23a5ae70a6f1fb51",
+    "mtime": 1782683439.5533297,
+    "ast_hash": "8b436fa4827b232bfff79cc702ab604f",
     "semantic_hash": ""
   },
   "client/src/features/combat/useCombat.ts": {
@@ -1020,8 +1020,8 @@
     "semantic_hash": ""
   },
   "server/controllers/factionController.ts": {
-    "mtime": 1782662530.164461,
-    "ast_hash": "734fa27d5963386897cd9769ecd4584e",
+    "mtime": 1782683988.233685,
+    "ast_hash": "15855e6e3a9a73f21121bf67d3c15438",
     "semantic_hash": ""
   },
   "server/controllers/factionTargetController.ts": {
@@ -2685,8 +2685,8 @@
     "semantic_hash": ""
   },
   ".claude/settings.local.json": {
-    "mtime": 1782663543.1611075,
-    "ast_hash": "fcce97d1640425a9f55ff53e7baf851d",
+    "mtime": 1782683225.8963106,
+    "ast_hash": "98464d0ab4d70c2d771ab924930a4c6a",
     "semantic_hash": ""
   },
   "client/next-env.d.ts": {
@@ -2765,8 +2765,8 @@
     "semantic_hash": ""
   },
   "server/DIPLOMACY_BALANCE.md": {
-    "mtime": 1782658710.9613721,
-    "ast_hash": "3ca0e20956ec32d7eece5e7772c92568",
+    "mtime": 1782683914.265039,
+    "ast_hash": "4b0eb538785c2bfd7a5d33fcbbaeefa6",
     "semantic_hash": ""
   },
   "client/src/components/BreakPactModal.tsx": {
@@ -2785,8 +2785,8 @@
     "semantic_hash": ""
   },
   "client/public/patch-notes/PATCH_NOTES_ALPHA_0.27.md": {
-    "mtime": 1782658710.937359,
-    "ast_hash": "59b29f3d7b2de9998a15141c566eda56",
+    "mtime": 1782683418.2636523,
+    "ast_hash": "6069fe5facd0729bb580b6621c03a7ef",
     "semantic_hash": ""
   },
   "server/test/vassal-dominance-credit.test.js": {
@@ -2794,9 +2794,9 @@
     "ast_hash": "a7c8ff272add1e266947c10540f75778",
     "semantic_hash": ""
   },
-  "client/public/patch-notes/PATCH_NOTES_ALPHA_0.28.md": {
-    "mtime": 1782683007.8277383,
-    "ast_hash": "d238fe7ac7dbefa8f1953c67e4e6e246",
+  "server/test/vassal-loot-protection.test.js": {
+    "mtime": 1782683779.9790125,
+    "ast_hash": "688f9cb2dc27e41de4c48323ae7680de",
     "semantic_hash": ""
   }
 }

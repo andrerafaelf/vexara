@@ -85,9 +85,13 @@ the breaker valued its word.
   - which the warning offsets.
 - **Garrison stays scout-gated even for allies** (see shared vision). This
   closes "sign NAP -> read defenses free -> break -> alpha-strike."
-- **Vassal implies NAP** (Phase 2): an overlord must not hold a vassal and also
-  free-attack it. Overlord <-> vassal attacks route through the same launch gate
-  and the same betrayal window.
+- **Vassal does NOT imply NAP.** (Superseded by the Phase 2 loot design.) The
+  overlord can attack and raid its own vassal: vassal loot protection in section
+  3 deliberately excepts the overlord, so an overlord disciplining or taxing its
+  vassal by force is intended. The launch gate is NAP-only and a vassal bond
+  carries no betrayal window; a faction that wants a non-aggression guarantee
+  from its overlord signs a separate NAP. (Earlier drafts said "vassal implies
+  NAP"; that predated the loot model and is intentionally not enforced.)
 
 ### Implementation pointers (Phase 1)
 

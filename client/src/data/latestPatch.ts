@@ -15,7 +15,7 @@
 // If "I forgot to bump it" becomes a real pattern, swap to a build step
 // that globs the directory and writes this file. Until then: simpler wins.
 
-export const LATEST_PATCH_VERSION = '0.28';
-export const LATEST_PATCH_LABEL = 'Alpha v0.28';
+export const LATEST_PATCH_VERSION = '0.27';
+export const LATEST_PATCH_LABEL = 'Alpha v0.27';
 export const LATEST_PATCH_HEADLINE =
-	'Diplomacy deepens: active treaty partners now share limited map vision (positions and inbound attacks, but never garrison intel), and vassalage becomes a real bounded path to victory - an overlord counts a capped share of vassal territory toward dominance, while vassals take less loot from outside raiders.';
+	'Diplomacy gets teeth: Non-Aggression Pacts now block attacks and must be formally broken with a public 60-minute warning window, active treaty partners share limited map vision but never garrison intel, and vassalage becomes a bounded diplomatic path to victory with loot protection for the vassal.';
