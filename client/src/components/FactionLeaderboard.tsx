@@ -13,6 +13,17 @@ interface LeaderboardRow {
 	nexusCount: number;
 	totalNexuses: number;
 	pct: number;
+	/** Effective share including vassal credit (server: Diplomacy Teeth Phase 1b). */
+	effectivePct: number;
+	effectiveNexusCount: number;
+	/** How many nexuses came from vassal credit (0 when no vassal treaties). */
+	vassalCreditNexuses: number;
+	vassalCreditBreakdown?: Array<{
+		factionId: number;
+		factionName: string;
+		factionTag: string;
+		creditNexuses: number;
+	}>;
 	isDominating: boolean;
 	dominanceSince: string | null;
 	dominancePct: number;
@@ -188,8 +199,11 @@ export default function FactionLeaderboard({ myFactionId }: { myFactionId?: numb
 
 				{rows.map((row, i) => {
 					const isMe = row.id === myFactionId;
-					const barPct = Math.min((row.pct / dominanceThresholdPct) * 100, 100);
-					const overThreshold = !dominanceLocked && row.pct >= dominanceThresholdPct;
+					// Use effectivePct (includes vassal credit) for bar and win-zone styling.
+					// Fall back to raw pct for older server builds that omit effectivePct.
+					const effectivePct = row.effectivePct ?? row.pct;
+					const barPct = Math.min((effectivePct / dominanceThresholdPct) * 100, 100);
+					const overThreshold = !dominanceLocked && row.isDominating;
 					const isExpanded = expandedFactionId === row.id;
 					const cachedMembers = memberCache[row.id];
 
@@ -216,7 +230,17 @@ export default function FactionLeaderboard({ myFactionId }: { myFactionId?: numb
 
 								<span className="flb-td flb-td--nexus">
 									<span className="flb-nexus-count">{row.nexusCount}</span>
-									<span className="flb-nexus-pct">{row.pct.toFixed(1)}%</span>
+									<span className="flb-nexus-pct">
+										{row.pct.toFixed(1)}%
+										{(row.vassalCreditNexuses ?? 0) > 0 && (
+											<span
+												className="flb-vassal-credit"
+												title={`+${row.vassalCreditNexuses} nexuses credited from vassal treaty`}
+											>
+												+{row.vassalCreditNexuses} vassal
+											</span>
+										)}
+									</span>
 								</span>
 
 								{!dominanceLocked && (

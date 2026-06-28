@@ -12,6 +12,9 @@ interface PublicNexusData {
 	x: number;
 	y: number;
 	points: number;
+	// Nexus specialisation type (e.g. 'citadel', 'forge'). Part of the public
+	// identity visible to all players including allies without a scout report.
+	nexusType: string | null;
 	owner: {
 		_id: number;
 		id: number;
@@ -87,6 +90,7 @@ function buildPublicNexusData(
 		x: nexus.x,
 		y: nexus.y,
 		points: nexus.points,
+		nexusType: nexus.nexusType ?? null,
 		owner: nexus.owner
 			? {
 					_id: nexus.owner.id,
@@ -146,18 +150,25 @@ export function buildDetailedScoutIntel(nexus: Nexus): ScoutIntel {
 	};
 }
 
-type FriendlyRelation = 'faction' | 'friend' | null;
+// Priority order: faction > friend > ally > null.
+// 'ally' is returned only when the viewer's faction has an active nap, trade,
+// or vassal treaty with the nexus owner's faction. A broken NAP does not grant
+// ally vision (status='active' filter excludes 'broken'). Scoped by galaxyId.
+export type FriendlyRelation = 'faction' | 'friend' | 'ally' | null;
 
 async function getFriendlyRelation(
 	userId: number,
 	galaxyId: number,
 	ownerUserId: number
 ): Promise<FriendlyRelation> {
-	const [sameFaction, areFriends] = await Promise.all([
-		prisma.factionMember.findFirst({ where: { galaxyId, userId } }).then(async (m1) => {
-			if (!m1) return false;
-			const m2 = await prisma.factionMember.findFirst({ where: { galaxyId, userId: ownerUserId } });
-			return !!(m2 && m1.factionId === m2.factionId);
+	const [viewerMembership, ownerMembership, areFriends] = await Promise.all([
+		prisma.factionMember.findFirst({
+			where: { galaxyId, userId },
+			select: { factionId: true }
+		}),
+		prisma.factionMember.findFirst({
+			where: { galaxyId, userId: ownerUserId },
+			select: { factionId: true }
 		}),
 		prisma.friendship
 			.findFirst({
@@ -170,10 +181,44 @@ async function getFriendlyRelation(
 			})
 			.then(Boolean)
 	]);
+
 	// Faction takes priority over friend so the map can colour shared-faction
 	// nexuses differently from individual allies.
-	if (sameFaction) return 'faction';
+	if (
+		viewerMembership &&
+		ownerMembership &&
+		viewerMembership.factionId === ownerMembership.factionId
+	) {
+		return 'faction';
+	}
 	if (areFriends) return 'friend';
+
+	// Ally: active nap, trade, or vassal treaty between the two factions.
+	// Requires both players to be in factions; a broken NAP is excluded because
+	// ally vision from a pact that is ending would let the breaker x-ray defenses
+	// and then immediately alpha-strike (the exploit the design is closing).
+	if (viewerMembership && ownerMembership) {
+		const treaty = await prisma.factionTreaty.findFirst({
+			where: {
+				galaxyId,
+				status: 'active',
+				type: { in: ['nap', 'trade', 'vassal'] },
+				OR: [
+					{
+						proposerFactionId: viewerMembership.factionId,
+						targetFactionId: ownerMembership.factionId
+					},
+					{
+						proposerFactionId: ownerMembership.factionId,
+						targetFactionId: viewerMembership.factionId
+					}
+				]
+			},
+			select: { id: true }
+		});
+		if (treaty) return 'ally';
+	}
+
 	return null;
 }
 

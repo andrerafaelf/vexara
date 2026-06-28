@@ -750,11 +750,19 @@ export const proposeTreaty = (
 	factionId: number,
 	targetFactionId: number,
 	type: string,
-	durationDays?: number
+	durationDays?: number,
+	// Required when type === 'vassal': which side is the proposer?
+	// Defaults to 'overlord' on the server when omitted.
+	proposerRole?: 'overlord' | 'vassal'
 ) =>
 	apiRequest(`/faction/${factionId}/treaties/propose`, {
 		method: 'POST',
-		body: JSON.stringify({ targetFactionId, type, durationDays })
+		body: JSON.stringify({
+			targetFactionId,
+			type,
+			durationDays,
+			...(proposerRole ? { proposerRole } : {})
+		})
 	});
 
 export const acceptTreaty = (treatyId: number) =>

@@ -11,7 +11,11 @@ import { logError, logGameEvent } from '../utils/logger.js';
 import { containsBlockedChatWord } from '../utils/profanity.js';
 import { NOTIF, sendPushToUser } from '../utils/push.js';
 import { avatarUrl, avatarUrlSm } from '../lib/r2.js';
-import { resolveWinConfig } from '../utils/dominance.js';
+import {
+	resolveWinConfig,
+	resolveActiveVassalRelationships,
+	computeVassalCreditForOverlord
+} from '../utils/dominance.js';
 
 const FACTION_NAME_MIN = 3;
 const FACTION_NAME_MAX = 32;
@@ -1007,10 +1011,27 @@ export async function getLeaderboard(req: AuthRequest, res: Response): Promise<v
 			galaxyPlayerCount < cfg.minPlayers || factionCount < cfg.minFactions;
 		const now = Date.now();
 
+		// Vassal credit: resolve valid overlord->vassal pairs and compute per-faction
+		// credits using the same guardrails as the victory engine in dominance.ts.
+		// The client must NOT recompute this from raw nexus counts; it lacks the
+		// guardrail constants. We send effectivePct and vassalCreditNexuses directly.
+		const vassalRelationships = await resolveActiveVassalRelationships(galaxyId);
+
 		const rows = allFactions.map((f: any) => {
 			const nexusCount = factionNexusCounts.get(f.id) ?? 0;
-			const pct = totalNexuses > 0 ? nexusCount / totalNexuses : 0;
-			const isDominating = !dominanceLocked && pct >= cfg.threshold;
+			const rawPct = totalNexuses > 0 ? nexusCount / totalNexuses : 0;
+
+			// Compute vassal credit for this faction (0 if it is not an overlord
+			// or its vassals don't qualify). Conservation: nexuses are not moved.
+			const { totalCreditedNexuses, breakdown: vassalCreditBreakdown } =
+				computeVassalCreditForOverlord(f.id, vassalRelationships, factionNexusCounts);
+			const effectiveNexusCount = nexusCount + totalCreditedNexuses;
+			const effectivePct = totalNexuses > 0 ? effectiveNexusCount / totalNexuses : 0;
+
+			// isDominating and the dominance timer use the EFFECTIVE share, matching
+			// the victory engine exactly. The raw pct is still surfaced for
+			// informational display (e.g. "X nexuses of Y = Z%").
+			const isDominating = !dominanceLocked && effectivePct >= cfg.threshold;
 			let dominancePct = 0;
 			// sustainMs can be 0 (instant-win override); guard the divide so we report a
 			// completed (100%) hold rather than NaN/Infinity.
@@ -1026,14 +1047,22 @@ export async function getLeaderboard(req: AuthRequest, res: Response): Promise<v
 				memberCount: f._count.members,
 				nexusCount,
 				totalNexuses,
-				pct: Math.round(pct * 1000) / 10,
+				// Raw share (own nexuses only) - display use.
+				pct: Math.round(rawPct * 1000) / 10,
+				// Server-computed effective share (own + credited vassal nexuses).
+				// The client must use this for threshold comparisons, not recompute.
+				effectiveNexusCount,
+				effectivePct: Math.round(effectivePct * 1000) / 10,
+				vassalCreditNexuses: totalCreditedNexuses,
+				vassalCreditBreakdown,
 				isDominating,
 				dominanceSince: f.dominanceSince,
 				dominancePct: Math.round(dominancePct * 1000) / 10
 			};
 		});
 
-		rows.sort((a: any, b: any) => b.nexusCount - a.nexusCount);
+		// Sort by effective count so leaderboard rank matches the win-track rank.
+		rows.sort((a: any, b: any) => b.effectiveNexusCount - a.effectiveNexusCount);
 
 		res.json({
 			rows,

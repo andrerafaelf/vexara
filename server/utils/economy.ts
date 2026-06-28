@@ -35,6 +35,43 @@ export function getNexusTypeBonuses(nexusType: string | null): NexusTypeBonuses 
 	return NEXUS_TYPE_BONUSES[nexusType] || null;
 }
 
+// Maximum total loot protection on any nexus. Matches the doubled Supply Cache
+// ceiling (0.40 x 2 = 0.80) and is the single shared cap that every loot-
+// protection source folds under, so building protection + diplomatic protection
+// can never strip more than 80% of a raid's haul.
+export const MAX_LOOT_PROTECTION = 0.8;
+
+// Vassal loot protection (Diplomacy Teeth Phase 2b - DIPLOMACY_BALANCE.md section 3).
+// A nexus whose owner's faction is an active vassal takes 25% less loot from
+// third-party attackers (an attacker whose faction is neither the vassal's own
+// faction nor its overlord's). Deliberately weaker than a Supply Cache's
+// building-earned 0.40: diplomacy is cheaper to obtain than a dedicated building
+// slot, so it must protect less.
+//
+// Server-only. Intentionally NOT mirrored into
+// client/src/realtime/economy.shared.ts: the client combat predictor
+// (combatSim.ts) does not model loot protection at all - its estLootCapacity is
+// the surviving carry capacity, an upper bound that already ignores even Supply
+// Cache protection. Reflecting the vassal reduction client-side is impossible
+// anyway (the client has no vassal-treaty data at sim time) and unnecessary: the
+// existing client estimate already over-shows loot relative to the server, so
+// this only widens a safe over-estimate. It can never produce a hidden
+// server-side surprise that hands an attacker more than the client predicted.
+export const VASSAL_LOOT_PROTECTION = 0.25;
+
+// Resolve the effective loot-protection fraction (0..MAX_LOOT_PROTECTION) for a
+// defender nexus by folding the diplomatic vassal bonus on top of the nexus's
+// building-earned protection (which getNexusTypeEffectiveMultipliers has already
+// doubled+capped), under the single shared MAX_LOOT_PROTECTION clamp. So a
+// vassal + a doubled Supply Cache still tops out at 0.80, never higher.
+export function resolveLootProtection(
+	baseLootProtection: number,
+	vassalProtected: boolean
+): number {
+	const raw = baseLootProtection + (vassalProtected ? VASSAL_LOOT_PROTECTION : 0);
+	return Math.min(MAX_LOOT_PROTECTION, raw);
+}
+
 interface NexusForEconomy {
 	nexusType?: string | null;
 	nexusTypeDoubled?: boolean;
@@ -150,7 +187,9 @@ export function getNexusTypeEffectiveMultipliers(nexus: NexusForEconomy): NexusT
 				? Math.pow(base.travelTimeMultiplier, scale)
 				: undefined,
 		lootProtection:
-			base.lootProtection !== undefined ? Math.min(0.8, base.lootProtection * scale) : undefined,
+			base.lootProtection !== undefined
+				? Math.min(MAX_LOOT_PROTECTION, base.lootProtection * scale)
+				: undefined,
 		label: nexus.nexusTypeDoubled ? `[DOUBLED] ${base.label}` : base.label
 	};
 }

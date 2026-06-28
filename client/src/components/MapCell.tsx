@@ -9,7 +9,7 @@ import type { MapNexus } from './Map';
 // load, browser caches them across the whole grid.
 const COMMAND_CORE_URL = buildingIcon('commandCore');
 
-export type CellKind = 'current' | 'own' | 'faction' | 'ally' | 'enemy' | 'npc' | 'empty';
+export type CellKind = 'current' | 'own' | 'faction' | 'ally' | 'treaty' | 'enemy' | 'npc' | 'empty';
 
 export interface MapCellData {
 	x: number;
@@ -37,6 +37,7 @@ const markerClassByKind: Record<CellKind, string> = {
 	own: 'nexus-marker-own',
 	faction: 'nexus-marker-faction',
 	ally: 'nexus-marker-ally',
+	treaty: 'nexus-marker-treaty',
 	enemy: 'nexus-marker-enemy',
 	npc: 'nexus-marker-enemy',
 	empty: ''
@@ -98,6 +99,7 @@ function MapCellInner({ data }: { data: MapCellData }) {
 	else if (kind === 'own') classes.push('own-nexus');
 	else if (kind === 'faction') classes.push('faction-nexus');
 	else if (kind === 'ally') classes.push('ally-nexus');
+	else if (kind === 'treaty') classes.push('treaty-nexus');
 	else if (kind === 'enemy' || kind === 'npc') classes.push('enemy-nexus');
 	if (isInStormZone) classes.push('resource-storm-zone');
 	if (isSpyTarget) classes.push('spy-target');

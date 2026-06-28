@@ -15,7 +15,7 @@
 // If "I forgot to bump it" becomes a real pattern, swap to a build step
 // that globs the directory and writes this file. Until then: simpler wins.
 
-export const LATEST_PATCH_VERSION = '0.27';
-export const LATEST_PATCH_LABEL = 'Alpha v0.27';
+export const LATEST_PATCH_VERSION = '0.28';
+export const LATEST_PATCH_LABEL = 'Alpha v0.28';
 export const LATEST_PATCH_HEADLINE =
-	'Non-Aggression Pacts now have teeth: while a pact is active neither faction can attack the other, and breaking one opens a 60-minute warning window that alerts your target and posts the betrayal to the whole galaxy. No economy, training, or combat numbers changed.';
+	'Diplomacy deepens: active treaty partners now share limited map vision (positions and inbound attacks, but never garrison intel), and vassalage becomes a real bounded path to victory - an overlord counts a capped share of vassal territory toward dominance, while vassals take less loot from outside raiders.';

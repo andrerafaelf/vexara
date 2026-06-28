@@ -148,7 +148,19 @@ export async function getAllAttacks(req: AuthRequest, res: Response): Promise<vo
 export async function getIncomingAttacks(req: AuthRequest, res: Response): Promise<void> {
 	try {
 		const nexus = await attackService.getNexusById(parseInt(req.params.nexusId));
-		if (!nexus || nexus.ownerId !== req.userId || nexus.galaxyId !== req.galaxyId) {
+		if (!nexus || nexus.galaxyId !== req.galaxyId) {
+			res.status(403).json({ error: 'Not authorized' });
+			return;
+		}
+		const isOwner = nexus.ownerId === req.userId;
+		// Allies (active nap/trade/vassal treaty partners) can view incoming attacks
+		// on allied nexuses so they can coordinate defense. Broken NAPs are excluded
+		// by isAllyOfNexusOwner (status='active' check).
+		const isAlly =
+			!isOwner && nexus.ownerId != null
+				? await attackService.isAllyOfNexusOwner(req.userId, nexus.ownerId, req.galaxyId)
+				: false;
+		if (!isOwner && !isAlly) {
 			res.status(403).json({ error: 'Not authorized' });
 			return;
 		}

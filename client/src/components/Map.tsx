@@ -99,9 +99,10 @@ export interface MapNexus {
 	/**
 	 * 'faction' = same faction as the viewer.
 	 * 'friend'  = on the viewer's friends list but not in the same faction.
+	 * 'ally'    = active treaty partner (server Diplomacy Teeth Phase 1b/2).
 	 * Used by the map to colour these owners distinctly from neutrals/enemies.
 	 */
-	relation?: 'faction' | 'friend' | null;
+	relation?: 'faction' | 'friend' | 'ally' | null;
 	isFactionTarget?: boolean;
 	/** Username of the faction member who marked this nexus (inspect drawer only). */
 	factionTargetMarkedBy?: string | null;
@@ -1000,6 +1001,9 @@ const Map: React.FC<MapProps> = ({
 					if (isCurrent) kind = 'current';
 					else if (isOwn) kind = 'own';
 					else if (isEnemy && nexus.relation === 'faction') kind = 'faction';
+					// Active treaty partner (server sends relation:'ally' for diplomacy treaties)
+					else if (isEnemy && nexus.relation === 'ally') kind = 'treaty';
+					// Personal friend on the viewer's friends list
 					else if (isEnemy && nexus.relation === 'friend') kind = 'ally';
 					else if (isEnemy) kind = 'enemy';
 					else kind = 'npc';
@@ -1084,7 +1088,8 @@ const Map: React.FC<MapProps> = ({
 						<div className="legend-row legend-row-current">Active Nexus</div>
 						<div className="legend-row legend-row-own">Your Other Nexus</div>
 						<div className="legend-row legend-row-faction">Faction Member</div>
-						<div className="legend-row legend-row-ally">Ally / Friend</div>
+						<div className="legend-row legend-row-treaty">Treaty Ally</div>
+						<div className="legend-row legend-row-ally">Personal Friend</div>
 						<div className="legend-row legend-row-enemy">Enemy / NPC Nexus</div>
 						<div className="legend-row legend-row-faction-target">Faction Target</div>
 					</div>
@@ -1971,7 +1976,8 @@ const Map: React.FC<MapProps> = ({
 						<span className="map-legend-item map-legend-item--current">Active Nexus</span>
 						<span className="map-legend-item map-legend-item--own">Your Nexus</span>
 						<span className="map-legend-item map-legend-item--faction">Faction</span>
-						<span className="map-legend-item map-legend-item--ally">Ally</span>
+						<span className="map-legend-item map-legend-item--treaty">Treaty</span>
+						<span className="map-legend-item map-legend-item--ally">Friend</span>
 						<span className="map-legend-item map-legend-item--enemy">Enemy</span>
 						<span className="map-legend-item map-legend-item--target">Target</span>
 					</div>

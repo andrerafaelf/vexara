@@ -355,6 +355,7 @@
 .map-legend-item--current::before { background: var(--accent); }
 .map-legend-item--own::before     { background: var(--success); }
 .map-legend-item--faction::before { background: #5a9ee6; }
+.map-legend-item--treaty::before  { background: #4ecdc4; }
 .map-legend-item--ally::before    { background: #a877e8; }
 .map-legend-item--enemy::before   { background: var(--danger); }
 .map-legend-item--target::before  { background: #f97316; }
@@ -573,6 +574,16 @@
 		0 0 5px rgba(168, 119, 232, 0.12);
 }
 
+/* Treaty ally -- active diplomatic partner. Teal distinguishes it from both
+   same-faction (blue) and personal friend (purple). */
+.map-cell.treaty-nexus {
+	background: rgba(78, 205, 196, 0.1);
+	border: 1px solid rgba(78, 205, 196, 0.55);
+	box-shadow:
+		inset 0 0 9px rgba(78, 205, 196, 0.14),
+		0 0 5px rgba(78, 205, 196, 0.12);
+}
+
 /* Resource storm zone - teal/green tint over every cell in the affected quadrant */
 .map-cell.resource-storm-zone {
 	background: rgba(86, 211, 100, 0.08);
@@ -657,7 +668,8 @@
 .map-viewport--lod .map-cell.own-nexus,
 .map-viewport--lod .map-cell.enemy-nexus,
 .map-viewport--lod .map-cell.faction-nexus,
-.map-viewport--lod .map-cell.ally-nexus {
+.map-viewport--lod .map-cell.ally-nexus,
+.map-viewport--lod .map-cell.treaty-nexus {
 	box-shadow: none;
 }
 
@@ -823,6 +835,10 @@
 
 .nexus-marker-ally {
 	color: #a877e8;
+}
+
+.nexus-marker-treaty {
+	color: #4ecdc4;
 }
 
 /* Inspect-drawer "Active" presence badge — mirrors the map pulse, shown beside
@@ -1570,6 +1586,9 @@
 .legend-row-faction::before {
 	background: #5a9ee6;
 }
+.legend-row-treaty::before {
+	background: #4ecdc4;
+}
 .legend-row-ally::before {
 	background: #a877e8;
 }
@@ -2222,6 +2241,13 @@
 	border-color: rgba(204, 121, 167, 0.55);
 	box-shadow: inset 0 0 9px rgba(204, 121, 167, 0.14), 0 0 5px rgba(204, 121, 167, 0.12);
 }
+/* Treaty-nexus: use #00B0B9 (distinct cyan, safe for protan/deutan) */
+[data-cvd='protanopia'] .map-cell.treaty-nexus,
+[data-cvd='deuteranopia'] .map-cell.treaty-nexus {
+	background: rgba(0, 176, 185, 0.1);
+	border-color: rgba(0, 176, 185, 0.55);
+	box-shadow: inset 0 0 9px rgba(0, 176, 185, 0.14), 0 0 5px rgba(0, 176, 185, 0.12);
+}
 [data-cvd='protanopia'] .map-cell.faction-target,
 [data-cvd='deuteranopia'] .map-cell.faction-target {
 	outline-color: #D55E00;
@@ -2237,6 +2263,12 @@
 	border-color: rgba(229, 92, 0, 0.55);
 	box-shadow: inset 0 0 9px rgba(229, 92, 0, 0.14), 0 0 5px rgba(229, 92, 0, 0.12);
 }
+/* Treaty-nexus tritanopia: #D4A900 (gold, distinct from blue/teal confusion) */
+[data-cvd='tritanopia'] .map-cell.treaty-nexus {
+	background: rgba(212, 169, 0, 0.1);
+	border-color: rgba(212, 169, 0, 0.55);
+	box-shadow: inset 0 0 9px rgba(212, 169, 0, 0.14), 0 0 5px rgba(212, 169, 0, 0.12);
+}
 
 /* ── Apply to nexus marker glyphs (text colour) ─────────────────────── */
 [data-cvd='protanopia'] .nexus-marker-own,
@@ -2247,9 +2279,12 @@
 [data-cvd='deuteranopia'] .nexus-marker-faction { color: #009E73; }
 [data-cvd='protanopia'] .nexus-marker-ally,
 [data-cvd='deuteranopia'] .nexus-marker-ally   { color: #CC79A7; }
+[data-cvd='protanopia'] .nexus-marker-treaty,
+[data-cvd='deuteranopia'] .nexus-marker-treaty { color: #00B0B9; }
 
 [data-cvd='tritanopia'] .nexus-marker-faction  { color: #CC0099; }
 [data-cvd='tritanopia'] .nexus-marker-ally     { color: #E55C00; }
+[data-cvd='tritanopia'] .nexus-marker-treaty   { color: #D4A900; }
 
 /* ── Apply to map legend dots ───────────────────────────────────────── */
 [data-cvd='protanopia'] .map-legend-item--own::before,
@@ -2260,11 +2295,14 @@
 [data-cvd='deuteranopia'] .map-legend-item--faction::before { background: #009E73; }
 [data-cvd='protanopia'] .map-legend-item--ally::before,
 [data-cvd='deuteranopia'] .map-legend-item--ally::before   { background: #CC79A7; }
+[data-cvd='protanopia'] .map-legend-item--treaty::before,
+[data-cvd='deuteranopia'] .map-legend-item--treaty::before { background: #00B0B9; }
 [data-cvd='protanopia'] .map-legend-item--target::before,
 [data-cvd='deuteranopia'] .map-legend-item--target::before  { background: #D55E00; }
 
 [data-cvd='tritanopia'] .map-legend-item--faction::before  { background: #CC0099; }
 [data-cvd='tritanopia'] .map-legend-item--ally::before     { background: #E55C00; }
+[data-cvd='tritanopia'] .map-legend-item--treaty::before   { background: #D4A900; }
 
 /* ── Apply to inspect-drawer legend rows (sidebar) ──────────────────── */
 [data-cvd='protanopia'] .legend-row-own::before,
@@ -2275,6 +2313,9 @@
 [data-cvd='deuteranopia'] .legend-row-faction::before { background: #009E73; }
 [data-cvd='protanopia'] .legend-row-ally::before,
 [data-cvd='deuteranopia'] .legend-row-ally::before   { background: #CC79A7; }
+[data-cvd='protanopia'] .legend-row-treaty::before,
+[data-cvd='deuteranopia'] .legend-row-treaty::before { background: #00B0B9; }
 
 [data-cvd='tritanopia'] .legend-row-faction::before  { background: #CC0099; }
 [data-cvd='tritanopia'] .legend-row-ally::before     { background: #E55C00; }
+[data-cvd='tritanopia'] .legend-row-treaty::before   { background: #D4A900; }

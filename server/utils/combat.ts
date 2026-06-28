@@ -21,7 +21,12 @@ import {
 	splitProportionalByForce,
 	TROOP_STATS
 } from './combatMath.js';
-import { getMaxStorage, getNexusTypeEffectiveMultipliers } from './economy.js';
+import {
+	getMaxStorage,
+	getNexusTypeEffectiveMultipliers,
+	resolveLootProtection
+} from './economy.js';
+import { resolveActiveVassalRelationships } from './dominance.js';
 import { resolveEventForNexus } from './galaxyEvents.js';
 import {
 	getProtectionTaperSurvivorFloor,
@@ -349,6 +354,57 @@ export function partitionByCoordination(
  * shared helpers, but doing it now while behavior is unproven would make any
  * regression harder to bisect.
  */
+// Vassal loot protection (Diplomacy Teeth Phase 2b - DIPLOMACY_BALANCE.md section 3).
+// Returns true when the defender nexus owner's faction is an active vassal in this
+// galaxy AND at least one attacker is a third party (a faction that is neither the
+// vassal's own faction nor its overlord's). A factionless attacker is a third
+// party. When true, the caller folds VASSAL_LOOT_PROTECTION into the defender's
+// loot protection via resolveLootProtection.
+//
+// Why "any third party" rather than "the attacker": loot is resolved on the merged
+// force in a coordinated assault, so several attackers (possibly several factions)
+// share one haul and one lootableFraction. Protecting whenever any outside raider
+// is present is the literal reading of the design ("+0.25 for any attacker that is
+// neither the vassal's faction nor the overlord's") and closes the launder-through-
+// the-overlord hole: a third party cannot strip the vassal's protection by simply
+// co-attacking alongside the overlord. Scope is strictly this one galaxy.
+//
+// Server-authoritative and server-only; the client predictor does not model loot
+// protection (see VASSAL_LOOT_PROTECTION in economy.ts).
+async function resolveVassalLootProtection(
+	galaxyId: number,
+	defenderOwnerId: number | null,
+	attackerUserIds: number[]
+): Promise<boolean> {
+	if (defenderOwnerId == null || attackerUserIds.length === 0) return false;
+
+	const relationships = await resolveActiveVassalRelationships(galaxyId);
+	if (relationships.length === 0) return false;
+
+	const userIds = [...new Set([defenderOwnerId, ...attackerUserIds])];
+	const memberships = await prisma.factionMember.findMany({
+		where: { galaxyId, userId: { in: userIds } },
+		select: { userId: true, factionId: true }
+	});
+	const factionByUser = new Map<number, number>();
+	for (const m of memberships) factionByUser.set(m.userId, m.factionId);
+
+	// A factionless defender cannot be a vassal (vassalage is a faction treaty).
+	const defenderFactionId = factionByUser.get(defenderOwnerId);
+	if (defenderFactionId == null) return false;
+
+	const relationship = relationships.find((r) => r.vassalFactionId === defenderFactionId);
+	if (!relationship) return false; // defender's faction is not an active vassal
+
+	const overlordFactionId = relationship.overlordFactionId;
+	// Protection applies if ANY attacker is a third party. A factionless attacker
+	// (faction === undefined) is a third party.
+	return attackerUserIds.some((uid) => {
+		const f = factionByUser.get(uid);
+		return f !== defenderFactionId && f !== overlordFactionId;
+	});
+}
+
 async function resolveCoordinatedCombat(attacks: AttackWithNexuses[]): Promise<void> {
 	if (attacks.length === 0) return;
 	if (attacks.length === 1) {
@@ -805,7 +861,20 @@ async function resolveCoordinatedCombat(attacks: AttackWithNexuses[]): Promise<v
 			const defenderBonuses = getNexusTypeEffectiveMultipliers(
 				defenderNexus as Parameters<typeof getNexusTypeEffectiveMultipliers>[0]
 			);
-			const lootProtection = defenderBonuses?.lootProtection ?? 0;
+			// Diplomatic vassal loot protection (Phase 2b): fold +0.25 in under the
+			// shared MAX_LOOT_PROTECTION cap when the defender is an active vassal and
+			// at least one of the merged attackers is a third party.
+			const vassalProtected = await resolveVassalLootProtection(
+				lead.galaxyId,
+				defenderNexus.ownerId,
+				attacks
+					.map((a) => a.attackerUserId)
+					.filter((id): id is number => id != null)
+			);
+			const lootProtection = resolveLootProtection(
+				defenderBonuses?.lootProtection ?? 0,
+				vassalProtected
+			);
 			const lootableFraction = 1 - lootProtection;
 			const defenderStealthLevel =
 				((defenderNexus as unknown as Record<string, number>).stealthArray as number) ?? 0;
@@ -1999,7 +2068,18 @@ async function resolveCombat(attack: AttackWithNexuses): Promise<void> {
 			const defenderBonuses = getNexusTypeEffectiveMultipliers(
 				defenderNexus as Parameters<typeof getNexusTypeEffectiveMultipliers>[0]
 			);
-			const lootProtection = defenderBonuses?.lootProtection ?? 0;
+			// Diplomatic vassal loot protection (Phase 2b): fold +0.25 in under the
+			// shared MAX_LOOT_PROTECTION cap when the defender is an active vassal and
+			// the lone attacker is a third party.
+			const vassalProtected = await resolveVassalLootProtection(
+				attack.galaxyId,
+				defenderNexus.ownerId,
+				attack.attackerUserId != null ? [attack.attackerUserId] : []
+			);
+			const lootProtection = resolveLootProtection(
+				defenderBonuses?.lootProtection ?? 0,
+				vassalProtected
+			);
 			const lootableFraction = 1 - lootProtection;
 
 			// Stealth Array hidden vault protects the first N units of each

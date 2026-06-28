@@ -10,7 +10,14 @@ import {
 	splitProportionalByForce,
 	splitLootByCarry
 } from '../utils/combatMath.js';
-import { calculatePoints, computeResourceUpdate, getMaxStorage } from '../utils/economy.js';
+import {
+	calculatePoints,
+	computeResourceUpdate,
+	getMaxStorage,
+	resolveLootProtection,
+	VASSAL_LOOT_PROTECTION,
+	MAX_LOOT_PROTECTION
+} from '../utils/economy.js';
 import { getBuildingCost, getOverseerCost, getOverseerCostMultiplier } from '../utils/gameConstants.js';
 import { buildRespawnNexusConfig, RESPAWN_INFLUENCE_FRACTION } from '../utils/starterNexus.js';
 
@@ -275,6 +282,33 @@ test('loot stolen is split proportionally and cannot exceed lootable resources',
 
 	const drained = computeLootStolen({ biomass: 100, alloy: 200, ore: 700 }, 2000);
 	assert.deepEqual(drained, { biomass: 100, alloy: 200, ore: 700 });
+});
+
+// ── Vassal loot protection fold (Diplomacy Teeth Phase 2b) ──────────────────
+// Locks the +0.25 vassal bonus folding under the single shared 0.80 cap, so a
+// future edit on either side can't silently strip a raid below the documented
+// ceiling. resolveLootProtection is the one server-side place the vassal bonus
+// enters the loot path; combatSim.ts deliberately does not model loot protection.
+
+test('resolveLootProtection: no vassal protection returns the base unchanged', () => {
+	assert.equal(resolveLootProtection(0, false), 0);
+	assert.equal(resolveLootProtection(0.4, false), 0.4);
+});
+
+test('resolveLootProtection: vassal adds exactly +0.25 below the cap', () => {
+	assert.equal(VASSAL_LOOT_PROTECTION, 0.25);
+	// Factionless / no-building defender that is a vassal: 0 + 0.25.
+	assert.equal(resolveLootProtection(0, true), 0.25);
+	// Single Supply Cache (0.40) + vassal (0.25) = 0.65, still under the cap.
+	assert.equal(Number(resolveLootProtection(0.4, true).toFixed(10)), 0.65);
+});
+
+test('resolveLootProtection: vassal + doubled Supply Cache clamps to MAX_LOOT_PROTECTION', () => {
+	assert.equal(MAX_LOOT_PROTECTION, 0.8);
+	// Doubled Supply Cache already caps at 0.80; vassal can never push past it.
+	assert.equal(resolveLootProtection(0.8, true), 0.8);
+	// Even a hypothetical over-cap base is clamped.
+	assert.equal(resolveLootProtection(1.0, true), 0.8);
 });
 
 test('respawn config scales to ~55% of peak influence and respects the floor', () => {

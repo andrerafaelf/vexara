@@ -53,10 +53,13 @@ async function getUserFaction(userId: number, galaxyId: number) {
 export async function proposeTreaty(req: AuthRequest, res: Response): Promise<void> {
 	try {
 		const factionId = parseInt(req.params.factionId);
-		const { targetFactionId, type, durationDays } = req.body as {
+		const { targetFactionId, type, durationDays, proposerRole } = req.body as {
 			targetFactionId?: unknown;
 			type?: string;
 			durationDays?: unknown;
+			// For vassal treaties only: 'overlord' means proposer is the overlord,
+			// 'vassal' means proposer is the vassal. Defaults to 'overlord'.
+			proposerRole?: unknown;
 		};
 
 		if (!targetFactionId || isNaN(Number(targetFactionId))) {
@@ -147,6 +150,23 @@ export async function proposeTreaty(req: AuthRequest, res: Response): Promise<vo
 			}
 		}
 
+		// For vassal treaties, the proposer declares their intended directional role.
+		// This is stored in meta at propose time and used at accept time to stamp
+		// the canonical { overlordFactionId, vassalFactionId } pair.
+		// Default: proposer = overlord (the more common case - you propose vassalage
+		// to someone weaker, meaning you intend to be their overlord).
+		let vassalMeta: { proposerRole: 'overlord' | 'vassal' } | undefined;
+		if (type === 'vassal') {
+			const rawRole = proposerRole != null ? String(proposerRole) : 'overlord';
+			if (rawRole !== 'overlord' && rawRole !== 'vassal') {
+				res
+					.status(400)
+					.json({ error: "proposerRole must be 'overlord' or 'vassal' for vassal treaties" });
+				return;
+			}
+			vassalMeta = { proposerRole: rawRole as 'overlord' | 'vassal' };
+		}
+
 		let durDays: number | null = null;
 		if (durationDays != null) {
 			durDays = Math.floor(Number(durationDays));
@@ -168,7 +188,10 @@ export async function proposeTreaty(req: AuthRequest, res: Response): Promise<vo
 				proposerFactionId: factionId,
 				targetFactionId: parsedTarget,
 				proposedByUserId: req.userId,
-				durationDays: durDays
+				durationDays: durDays,
+				// For vassal treaties, store the proposer's declared role so acceptTreaty
+				// can stamp the final directional meta without trusting client ordering.
+				...(vassalMeta !== undefined ? { meta: vassalMeta } : {})
 			}
 		});
 
@@ -222,6 +245,21 @@ export async function acceptTreaty(req: AuthRequest, res: Response): Promise<voi
 			? new Date(now.getTime() + treaty.durationDays * 86400000)
 			: null;
 
+		// For vassal treaties: stamp the canonical directional meta at accept time.
+		// The proposerRole was declared and stored by the proposer at propose time.
+		// Do NOT rely on proposer/target ordering; use the explicit role instead.
+		let acceptMeta: { overlordFactionId: number; vassalFactionId: number } | undefined;
+		if (treaty.type === 'vassal') {
+			const proposeMeta = treaty.meta as { proposerRole?: string } | null;
+			// Default 'overlord' if meta is missing (legacy treaty or old client).
+			const pRole = proposeMeta?.proposerRole === 'vassal' ? 'vassal' : 'overlord';
+			const overlordFactionId =
+				pRole === 'overlord' ? treaty.proposerFactionId : treaty.targetFactionId;
+			const vassalFactionId =
+				pRole === 'overlord' ? treaty.targetFactionId : treaty.proposerFactionId;
+			acceptMeta = { overlordFactionId, vassalFactionId };
+		}
+
 		const updated = await prisma.factionTreaty.update({
 			where: { id: treatyId },
 			data: {
@@ -229,7 +267,9 @@ export async function acceptTreaty(req: AuthRequest, res: Response): Promise<voi
 				acceptedByUserId: req.userId,
 				startsAt: now,
 				expiresAt,
-				updatedAt: now
+				updatedAt: now,
+				// Replace the pending propose-time meta with the accepted directional meta.
+				...(acceptMeta !== undefined ? { meta: acceptMeta } : {})
 			}
 		});
 

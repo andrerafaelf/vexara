@@ -704,6 +704,55 @@ export function getIncomingAttacks(nexusId: number) {
 	});
 }
 
+/**
+ * Returns true when viewerUserId's faction has an active nap, trade, or vassal
+ * treaty with ownerUserId's faction in the given galaxy. Used to authorize
+ * allies to view incoming attacks on each other's nexuses.
+ *
+ * Returns false when either user is factionless, when they are in the same
+ * faction (same-faction visibility is a separate access check), or when the
+ * only relevant treaty is broken/expired.
+ */
+export async function isAllyOfNexusOwner(
+	viewerUserId: number,
+	ownerUserId: number,
+	galaxyId: number
+): Promise<boolean> {
+	const [viewerMembership, ownerMembership] = await Promise.all([
+		prisma.factionMember.findFirst({
+			where: { galaxyId, userId: viewerUserId },
+			select: { factionId: true }
+		}),
+		prisma.factionMember.findFirst({
+			where: { galaxyId, userId: ownerUserId },
+			select: { factionId: true }
+		})
+	]);
+	if (!viewerMembership || !ownerMembership) return false;
+	// Same-faction members use a different auth path.
+	if (viewerMembership.factionId === ownerMembership.factionId) return false;
+
+	const treaty = await prisma.factionTreaty.findFirst({
+		where: {
+			galaxyId,
+			status: 'active',
+			type: { in: ['nap', 'trade', 'vassal'] },
+			OR: [
+				{
+					proposerFactionId: viewerMembership.factionId,
+					targetFactionId: ownerMembership.factionId
+				},
+				{
+					proposerFactionId: ownerMembership.factionId,
+					targetFactionId: viewerMembership.factionId
+				}
+			]
+		},
+		select: { id: true }
+	});
+	return treaty != null;
+}
+
 export function getOutgoingAttacks(nexusId: number) {
 	return prisma.attack.findMany({
 		where: { attackerNexusId: nexusId, status: { in: ['traveling', 'returning'] } },

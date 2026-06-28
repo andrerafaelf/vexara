@@ -168,6 +168,11 @@ interface FactionTreaty {
 	brokenAt?: string | null;
 	betrayalEndsAt?: string | null;
 	brokenByUserId?: number | null;
+	// Vassal treaty metadata: which faction is overlord and which is vassal
+	meta?: {
+		overlordFactionId?: number;
+		vassalFactionId?: number;
+	} | null;
 }
 
 // Isolated countdown component - calls useNow() so only THIS element re-renders at 1 Hz,
@@ -278,6 +283,8 @@ export default function FactionsView() {
 	const [treatyTarget, setTreatyTarget] = useState('');
 	const [treatyType, setTreatyType] = useState<'nap' | 'trade' | 'vassal'>('nap');
 	const [treatyDuration, setTreatyDuration] = useState(30);
+	// For vassal treaties: which role is the proposing faction taking?
+	const [treatyProposerRole, setTreatyProposerRole] = useState<'overlord' | 'vassal'>('overlord');
 	const [treatyError, setTreatyError] = useState('');
 	const [treatySubmitting, setTreatySubmitting] = useState(false);
 	const [galaxyTreaties, setGalaxyTreaties] = useState<FactionTreaty[]>([]);
@@ -660,7 +667,13 @@ export default function FactionsView() {
 		setTreatySubmitting(true);
 		setTreatyError('');
 		try {
-			await proposeTreaty(myFaction.id, parseInt(treatyTarget), treatyType, treatyDuration);
+			await proposeTreaty(
+				myFaction.id,
+				parseInt(treatyTarget),
+				treatyType,
+				treatyDuration,
+				treatyType === 'vassal' ? treatyProposerRole : undefined
+			);
 			setTreatyTarget('');
 			await refreshTreaties(myFaction.id);
 		} catch (err) {
@@ -2107,6 +2120,13 @@ export default function FactionsView() {
 									const other =
 										t.proposerFactionId === myFaction.id ? t.targetFaction : t.proposerFaction;
 									const isOpen = activeDiplomacyTreatyId === t.id;
+									// For vassal treaties, show the directional relationship from the viewer's perspective
+									const vassalLabel: string | null =
+										t.type === 'vassal' && t.meta
+											? t.meta.overlordFactionId === myFaction.id
+												? 'Your vassal'
+												: 'Your overlord'
+											: null;
 									return (
 										<div key={t.id} className="factions-war-card factions-war-card--active">
 											<div className="factions-war-info">
@@ -2114,7 +2134,9 @@ export default function FactionsView() {
 													{TREATY_LABELS[t.type]}
 												</span>
 												<span className="factions-war-faction">
-													[{other?.tag}] {other?.name}
+													{vassalLabel
+														? <>{vassalLabel}: [{other?.tag}] {other?.name}</>
+														: <>[{other?.tag}] {other?.name}</>}
 												</span>
 												{t.expiresAt && (
 													<span className="factions-war-meta">
@@ -2231,7 +2253,11 @@ export default function FactionsView() {
 								</select>
 								<select
 									value={treatyType}
-									onChange={(e) => setTreatyType(e.target.value as 'nap' | 'trade' | 'vassal')}
+									onChange={(e) => {
+										setTreatyType(e.target.value as 'nap' | 'trade' | 'vassal');
+										// Reset role to the default whenever treaty type changes
+										setTreatyProposerRole('overlord');
+									}}
 									className="factions-war-select"
 									disabled={treatySubmitting}
 								>
@@ -2239,6 +2265,28 @@ export default function FactionsView() {
 									<option value="trade">Trade Agreement</option>
 									<option value="vassal">Vassal Treaty</option>
 								</select>
+								{treatyType === 'vassal' && (
+									<div className="factions-vassal-role-choice">
+										<button
+											type="button"
+											className={`factions-vassal-role-btn${treatyProposerRole === 'overlord' ? ' factions-vassal-role-btn--selected' : ''}`}
+											onClick={() => setTreatyProposerRole('overlord')}
+											disabled={treatySubmitting}
+										>
+											<span className="factions-vassal-role-icon">overlord</span>
+											<span className="factions-vassal-role-desc">We protect, they serve. Gains dominance credit from their nexuses.</span>
+										</button>
+										<button
+											type="button"
+											className={`factions-vassal-role-btn${treatyProposerRole === 'vassal' ? ' factions-vassal-role-btn--selected' : ''}`}
+											onClick={() => setTreatyProposerRole('vassal')}
+											disabled={treatySubmitting}
+										>
+											<span className="factions-vassal-role-icon">vassal</span>
+											<span className="factions-vassal-role-desc">We serve under their banner. Gains a protector in wars.</span>
+										</button>
+									</div>
+								)}
 								<input
 									type="number"
 									min={1}
@@ -2261,8 +2309,9 @@ export default function FactionsView() {
 								</button>
 							</form>
 							<p className="factions-treaty-hint">
-								NAP: no-attack agreement. Trade: shared market bonuses. Vassal: protective
-								relationship (vassal agrees to support liege in wars).
+								NAP: no-attack agreement. Trade: shared market bonuses. Vassal: the overlord
+								gains dominance credit from the vassal&apos;s nexuses; the vassal gains military
+								protection. Choose who is who before proposing.
 							</p>
 						</div>
 					)}

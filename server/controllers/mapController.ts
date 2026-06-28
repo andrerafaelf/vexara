@@ -5,7 +5,7 @@ import * as mapService from '../services/mapService.js';
 import type { AuthRequest } from '../types/index.js';
 import { NEXUS_ACTIVE_WINDOW_MS } from '../utils/gameConstants.js';
 import { logError } from '../utils/logger.js';
-import { getNexusIntelForUser } from '../utils/scouting.js';
+import { getNexusIntelForUser, type FriendlyRelation } from '../utils/scouting.js';
 
 export async function getArea(req: AuthRequest, res: Response): Promise<void> {
 	try {
@@ -50,10 +50,54 @@ export async function getArea(req: AuthRequest, res: Response): Promise<void> {
 			friendIds.add(f.userAId === req.userId ? f.userBId : f.userAId);
 		}
 
-		const relationFor = (ownerId: number | null): 'faction' | 'friend' | null => {
+		// Ally vision: factions with an active nap, trade, or vassal treaty with the
+		// viewer's faction get the 'ally' relation. We batch this across all foreign
+		// factionIds visible in the current viewport so it stays a single query per
+		// map fetch. A broken NAP is excluded (status='active') - it does not grant
+		// vision, which prevents x-ray-defenses-then-betray.
+		const alliedFactionIds = new Set<number>();
+		if (myFactionId && ownerIds.length) {
+			const foreignFactionIds = [
+				...new Set(
+					[...factionByUserId.entries()]
+						.filter(([uid, fid]) => uid !== req.userId && fid !== myFactionId)
+						.map(([, fid]) => fid)
+				)
+			];
+			if (foreignFactionIds.length > 0) {
+				const treaties = await prisma.factionTreaty.findMany({
+					where: {
+						galaxyId: req.galaxyId,
+						status: 'active',
+						type: { in: ['nap', 'trade', 'vassal'] },
+						OR: [
+							{
+								proposerFactionId: myFactionId,
+								targetFactionId: { in: foreignFactionIds }
+							},
+							{
+								targetFactionId: myFactionId,
+								proposerFactionId: { in: foreignFactionIds }
+							}
+						]
+					},
+					select: { proposerFactionId: true, targetFactionId: true }
+				});
+				for (const t of treaties) {
+					alliedFactionIds.add(
+						t.proposerFactionId === myFactionId ? t.targetFactionId : t.proposerFactionId
+					);
+				}
+			}
+		}
+
+		const relationFor = (ownerId: number | null): FriendlyRelation => {
 			if (ownerId == null || ownerId === req.userId) return null;
 			if (myFactionId && factionByUserId.get(ownerId) === myFactionId) return 'faction';
 			if (friendIds.has(ownerId)) return 'friend';
+			// Ally: the owner's faction has an active treaty with the viewer's faction.
+			const ownerFactionId = factionByUserId.get(ownerId);
+			if (ownerFactionId && alliedFactionIds.has(ownerFactionId)) return 'ally';
 			return null;
 		};
 
@@ -83,6 +127,9 @@ export async function getArea(req: AuthRequest, res: Response): Promise<void> {
 				x: v.x,
 				y: v.y,
 				points: v.points,
+				// nexusType is public identity - visible to all, including allies
+				// without a scout report. Garrison and buildings remain scout-gated.
+				nexusType: v.nexusType ?? null,
 				owner: v.owner
 					? {
 							_id: String(v.owner.id),
