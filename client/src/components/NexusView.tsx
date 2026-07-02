@@ -1497,9 +1497,9 @@ const NexusView: React.FC<NexusViewProps> = ({
 			Math.max(trained[key] || 0, nexus.troops[key] || 0);
 		const assaultTroopers = trainedOrAlive('assaultTrooper');
 		const reconOperatives = trainedOrAlive('reconOperative');
-		const skimmerBikes = trainedOrAlive('wraithSkimmer');
+		const wraithSkimmers = trainedOrAlive('wraithSkimmer');
 		const siegeMechs = trainedOrAlive('siegeMech');
-		const disruptorUnits = trainedOrAlive('arcDisruptor');
+		const arcDisruptors = trainedOrAlive('arcDisruptor');
 		const annihilatorPlatforms = trainedOrAlive('annihilatorPlatform');
 
 		// First quest line walks the player through the entire opening loop:
@@ -1688,12 +1688,12 @@ const NexusView: React.FC<NexusViewProps> = ({
 			{
 				id: 'fast-raiders',
 				title: 'Fast Raiders',
-				description: 'Train 5 Skimmer Bikes.',
-				completed: done('first_blood', 'train_skimmer_bike_5', skimmerBikes >= 5),
+				description: 'Train 5 Wraith Skimmers.',
+				completed: done('first_blood', 'train_skimmer_bike_5', wraithSkimmers >= 5),
 				tab: 'troops',
 				tip: (
 					<>
-						<strong>Next up:</strong> Train 5 <em>Skimmer Bikes</em> for fast raids.
+						<strong>Next up:</strong> Train 5 <em>Wraith Skimmers</em> for fast raids.
 					</>
 				)
 			},
@@ -1826,8 +1826,8 @@ const NexusView: React.FC<NexusViewProps> = ({
 			{
 				id: 'disruptor-corps',
 				title: 'Disruptor Corps',
-				description: 'Train 10 Disruptor Units.',
-				completed: done('veteran', 'train_disruptor_10', disruptorUnits >= 10),
+				description: 'Train 10 Arc Disruptors.',
+				completed: done('veteran', 'train_disruptor_10', arcDisruptors >= 10),
 				tab: 'troops'
 			},
 			// `complete_attack` is server-driven (set when an attack resolves), so the
@@ -1954,14 +1954,14 @@ const NexusView: React.FC<NexusViewProps> = ({
 				title: 'Ch.2. Expansion',
 				quests: expansionQuests,
 				unlocked: introComplete,
-				reward: '+1500 each resource, +15 pop (×CC bonus), +15 Recon Operatives, +20 Lancer Drones'
+				reward: '+1500 each resource, +15 pop (×CC bonus), +15 Recon Operatives, +20 Sentinel Lancers'
 			},
 			{
 				id: 'first_blood',
 				title: 'Ch.3. First Blood',
 				quests: firstBloodQuests,
 				unlocked: expansionComplete,
-				reward: '+3500 each resource, +30 pop (×CC bonus), +25 Skimmer Bikes, +15 Breaker Units'
+				reward: '+3500 each resource, +30 pop (×CC bonus), +25 Wraith Skimmers, +15 Vanguard Breakers'
 			},
 			{
 				id: 'shadow_ops',
@@ -1969,7 +1969,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 				quests: shadowOpsQuests,
 				unlocked: firstBloodComplete,
 				reward:
-					'+5000 each resource, +25 pop (×CC bonus), +25 Recon Operatives, +10 Disruptor Units'
+					'+5000 each resource, +25 pop (×CC bonus), +25 Recon Operatives, +10 Arc Disruptors'
 			},
 			{
 				id: 'arsenal',
@@ -1977,7 +1977,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 				quests: arsenalQuests,
 				unlocked: shadowOpsComplete,
 				reward:
-					'+8000 each resource, +50 pop (×CC bonus), +15 Siege Mechs, +10 Disruptors, +10 Suppressors'
+					'+8000 each resource, +50 pop (×CC bonus), +15 Siege Mechs, +10 Arc Disruptors, +10 Pyre Suppressors'
 			},
 			{
 				id: 'veteran',
@@ -1985,7 +1985,7 @@ const NexusView: React.FC<NexusViewProps> = ({
 				quests: veteranQuests,
 				unlocked: arsenalComplete,
 				reward:
-					'+15000 each resource, +75 pop (×CC bonus), +20 Siege Mechs, +15 Interceptors, +5 Void Stalkers'
+					'+15000 each resource, +75 pop (×CC bonus), +20 Siege Mechs, +15 Phantom Lances, +5 Void Stalkers'
 			},
 			{
 				id: 'ghost_protocol',
