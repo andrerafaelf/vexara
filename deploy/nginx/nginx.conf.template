@@ -234,4 +234,8 @@ http {
     # cert exists, empty otherwise (so a missing cert doesn't take down the
     # player-facing site).
     include /etc/nginx/treble.conf;
+
+    # ─── Portfolio, andrerfferreira.work (separate site, same host) ───────────
+    # Same pattern: populated if its cert exists, empty otherwise.
+    include /etc/nginx/portfolio.conf;
 }

@@ -15,6 +15,15 @@ on:
       - 'docker-compose*.yml'
       - '**.md'
       - '.gitignore'
+  # Manual run: redeploys the current images (e.g. onto a fresh VPS, or after
+  # deploy/ or compose changes, which push ignores). rebuild_all forces every
+  # image to rebuild from this commit.
+  workflow_dispatch:
+    inputs:
+      rebuild_all:
+        description: Rebuild and push all four images
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -30,17 +39,19 @@ jobs:
     name: Detect changes
     runs-on: ubuntu-latest
     outputs:
-      server: ${{ steps.filter.outputs.server }}
-      admin-server: ${{ steps.filter.outputs.admin-server }}
-      client: ${{ steps.filter.outputs.client }}
-      admin-client: ${{ steps.filter.outputs.admin-client }}
-      any-src: ${{ steps.filter.outputs.any-src }}
+      server: ${{ steps.filter.outputs.server == 'true' || inputs.rebuild_all == true }}
+      admin-server: ${{ steps.filter.outputs.admin-server == 'true' || inputs.rebuild_all == true }}
+      client: ${{ steps.filter.outputs.client == 'true' || inputs.rebuild_all == true }}
+      admin-client: ${{ steps.filter.outputs.admin-client == 'true' || inputs.rebuild_all == true }}
+      any-src: ${{ steps.filter.outputs.any-src == 'true' || inputs.rebuild_all == true }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
       - uses: dorny/paths-filter@v3
         id: filter
+        # No push/PR base to diff against on a manual run; rebuild_all decides.
+        if: github.event_name != 'workflow_dispatch'
         with:
           filters: |
             server:

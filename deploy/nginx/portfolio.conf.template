@@ -1,0 +1,76 @@
+# andrerfferreira.work - static portfolio, served from the same nginx
+# container as Vexara. Source repo: andrerafaelf/andrerfferreira-portfolio.
+# Included by nginx.conf if the andrerfferreira.work SSL cert exists.
+# deploy.sh writes an empty portfolio.conf if the cert is missing,
+# so the player-facing site stays up regardless.
+#
+# The portfolio's own CI extracts each build into
+# /opt/andrerfferreira-portfolio/releases/<sha> and repoints the "current"
+# symlink. That dir is bind-mounted read-only at the same path, so a release
+# swap needs no nginx reload.
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name www.andrerfferreira.work;
+
+    ssl_certificate /etc/letsencrypt/live/andrerfferreira.work/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/andrerfferreira.work/privkey.pem;
+    ssl_trusted_certificate /etc/letsencrypt/live/andrerfferreira.work/chain.pem;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://andrerfferreira.work$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name andrerfferreira.work;
+
+    ssl_certificate /etc/letsencrypt/live/andrerfferreira.work/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/andrerfferreira.work/privkey.pem;
+    ssl_trusted_certificate /etc/letsencrypt/live/andrerfferreira.work/chain.pem;
+
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 1d;
+    ssl_session_tickets off;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+
+    add_header Strict-Transport-Security "max-age=31536000" always;
+
+    location /.well-known/acme-challenge/ {
+        allow all;
+        root /var/www/certbot;
+    }
+
+    root /opt/andrerfferreira-portfolio/current;
+    index index.html;
+
+    # The build is precompressed (adapter-static precompress: true)
+    gzip_static on;
+
+    location /_app/immutable/ {
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        access_log off;
+        try_files $uri =404;
+    }
+
+    location ~* \.(?:css|js|mjs|svg|png|jpg|jpeg|gif|webp|avif|ico|woff2?)$ {
+        expires 30d;
+        add_header Cache-Control "public, max-age=2592000";
+        try_files $uri =404;
+    }
+
+    location / {
+        add_header Cache-Control "no-cache" always;
+        add_header Strict-Transport-Security "max-age=31536000" always;
+        try_files $uri $uri.html $uri/ /index.html;
+    }
+}

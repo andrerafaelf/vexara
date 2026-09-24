@@ -13,3 +13,6 @@ deploy/pgadmin/pgpass
 .env
 .env.*
 !.env.example
+
+# Rendered at deploy time by deploy/deploy.sh on the VPS (nginx + pgAdmin configs)
+runtime/

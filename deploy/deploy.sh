@@ -25,19 +25,28 @@ done < "$APP_DIR/.env"
 
 echo "[deploy] Starting deploy (server=${SERVER_TAG:-latest} admin-server=${ADMIN_SERVER_TAG:-latest} client=${CLIENT_TAG:-latest} admin-client=${ADMIN_CLIENT_TAG:-latest})"
 
-# Verify SSL certs exist before generating nginx.conf — a missing cert
+# Verify SSL certs exist before generating nginx.conf. A missing cert
 # would crash the entire proxy, taking the player-facing site down.
 MAIN_CERT="/etc/letsencrypt/live/${DOMAIN}/fullchain.pem"
 ADMIN_CERT="/etc/letsencrypt/live/admin.${DOMAIN}/fullchain.pem"
 
 if [ ! -f "$MAIN_CERT" ]; then
-  echo "[deploy] FATAL: main cert missing at $MAIN_CERT — run bootstrap-vps.sh first" >&2
+  echo "[deploy] FATAL: main cert missing at $MAIN_CERT, run bootstrap-vps.sh first" >&2
   exit 1
 fi
 
+# Rendered configs live in runtime/, NOT deploy/. CI wipes and re-copies
+# deploy/ on every run, and a single-file bind mount keeps pointing at the old
+# (deleted) inode, so nginx would silently reload stale config. runtime/ is
+# never wiped, and every write below truncates in place (same inode).
+RUNTIME_DIR="$APP_DIR/runtime"
+NGINX_OUT="$RUNTIME_DIR/nginx"
+PGADMIN_OUT="$RUNTIME_DIR/pgadmin"
+mkdir -p "$NGINX_OUT" "$PGADMIN_OUT"
+
 # Render the main config from template
 TEMPLATE="$APP_DIR/deploy/nginx/nginx.conf.template"
-RENDERED="$APP_DIR/deploy/nginx/nginx.conf"
+RENDERED="$NGINX_OUT/nginx.conf"
 
 if [ ! -f "$TEMPLATE" ]; then
   echo "[deploy] FATAL: template not found at $TEMPLATE" >&2
@@ -61,21 +70,20 @@ echo "[deploy] Rendered nginx.conf ($(wc -l < "$RENDERED") lines)"
 
 # ─── pgAdmin auto-registered server ──────────────────────────────────────────
 # Renders servers.json with postgres host/db/user, plus a libpq-format pgpass
-# file so pgAdmin connects with zero clicks. pgpass MUST be mode 0600.
-mkdir -p "$APP_DIR/deploy/pgadmin"
+# file so pgAdmin connects with zero clicks. pgpass MUST be mode 0600 and owned
+# by pgAdmin's UID 5050 inside the container, so it is written through sudo
+# (the file stays owned by 5050 across deploys).
 sed -e "s/POSTGRES_DB_PLACEHOLDER/${POSTGRES_DB}/g" \
     -e "s/POSTGRES_USER_PLACEHOLDER/${POSTGRES_USER}/g" \
     "$APP_DIR/deploy/pgadmin/servers.json.template" \
-    > "$APP_DIR/deploy/pgadmin/servers.json"
+    > "$PGADMIN_OUT/servers.json"
 
 # pgpass format: hostname:port:database:username:password
 # Use * for database so the password matches any DB on this host.
 printf 'postgres:5432:*:%s:%s\n' "$POSTGRES_USER" "$POSTGRES_PASSWORD" \
-    > "$APP_DIR/deploy/pgadmin/pgpass"
-chmod 0600 "$APP_DIR/deploy/pgadmin/pgpass"
-
-# pgAdmin runs as UID 5050 inside the container — make sure it can read the files
-chown 5050:5050 "$APP_DIR/deploy/pgadmin/pgpass" "$APP_DIR/deploy/pgadmin/servers.json" 2>/dev/null || true
+    | sudo -n tee "$PGADMIN_OUT/pgpass" > /dev/null
+sudo -n chmod 0600 "$PGADMIN_OUT/pgpass"
+sudo -n chown 5050:5050 "$PGADMIN_OUT/pgpass" || echo "[deploy] WARN: could not chown pgpass to 5050, pgAdmin auto-login may fail"
 
 # Render the admin server block from its own template, but only if the cert exists.
 # Otherwise leave admin.conf empty so the main include is a no-op.
@@ -103,27 +111,37 @@ if [ -f "$ADMIN_CERT" ]; then
         /^ADMIN_ALLOW_PLACEHOLDER$/ { print block; next }
         { print }
       ' \
-    > "$APP_DIR/deploy/nginx/admin.conf"
+    > "$NGINX_OUT/admin.conf"
 else
-  echo "[deploy] WARN: admin cert missing at $ADMIN_CERT — admin panel will be unreachable"
+  echo "[deploy] WARN: admin cert missing at $ADMIN_CERT, admin panel will be unreachable"
   echo "[deploy] To issue it, on the VPS run:"
-  echo "  sudo docker stop vx-nginx && sudo certbot certonly --standalone -d admin.${DOMAIN} --non-interactive --agree-tos -m admin@${DOMAIN} && sudo docker start vx-nginx"
-  : > "$APP_DIR/deploy/nginx/admin.conf"
+  echo "  sudo certbot certonly --webroot -w /var/www/certbot -d admin.${DOMAIN} --non-interactive --agree-tos -m admin@${DOMAIN}"
+  : > "$NGINX_OUT/admin.conf"
 fi
 
-# Render the Treble Quest server block, but only if its cert exists.
-# Otherwise leave treble.conf empty so the main include is a no-op
-# (same pattern as admin.conf above — a missing cert must never take
-# down the Vexara player-facing site).
-TREBLE_CERT="/etc/letsencrypt/live/treble.quest/fullchain.pem"
-if [ -f "$TREBLE_CERT" ]; then
-  cp "$APP_DIR/deploy/nginx/treble.conf.template" "$APP_DIR/deploy/nginx/treble.conf"
-else
-  echo "[deploy] WARN: treble.quest cert missing at $TREBLE_CERT — treble.quest will be unreachable"
-  echo "[deploy] To issue it, on the VPS run:"
-  echo "  sudo docker stop vx-nginx && sudo certbot certonly --standalone -d treble.quest --non-interactive --agree-tos -m admin@${DOMAIN} && sudo docker start vx-nginx"
-  : > "$APP_DIR/deploy/nginx/treble.conf"
-fi
+# Render a side-site server block (Treble Quest, portfolio), but only if its
+# cert exists. Otherwise leave the file empty so the main include is a no-op
+# (same pattern as admin.conf above, a missing cert must never take down the
+# Vexara player-facing site).
+render_side_site() {
+  local NAME="$1" CERT_NAME="$2" DOMAINS="$3"
+  local CERT="/etc/letsencrypt/live/${CERT_NAME}/fullchain.pem"
+  if [ -f "$CERT" ]; then
+    cat "$APP_DIR/deploy/nginx/${NAME}.conf.template" > "$NGINX_OUT/${NAME}.conf"
+    echo "[deploy] Rendered ${NAME}.conf"
+  else
+    echo "[deploy] WARN: ${CERT_NAME} cert missing at $CERT, ${CERT_NAME} will be unreachable"
+    echo "[deploy] To issue it, on the VPS run:"
+    echo "  sudo certbot certonly --webroot -w /var/www/certbot ${DOMAINS} --non-interactive --agree-tos -m admin@${DOMAIN}"
+    : > "$NGINX_OUT/${NAME}.conf"
+  fi
+}
+
+render_side_site treble treble.quest "-d treble.quest -d www.treble.quest -d api.treble.quest"
+render_side_site portfolio andrerfferreira.work "-d andrerfferreira.work -d www.andrerfferreira.work"
+
+# Bind-mount sources must exist before the first `compose up`
+mkdir -p /var/www/treble-quest /opt/andrerfferreira-portfolio 2>/dev/null || true
 
 # Pull all new images (fast, parallel)
 echo "[deploy] Pulling images..."
@@ -133,7 +151,7 @@ $COMPOSE pull --quiet
 # nginx is handled specially: if the container is already running we reload its
 # config in-place (nginx -s reload) so port 443 is never closed — zero downtime.
 # A full recreate only happens when the container does not yet exist.
-SERVICES_ORDER="postgres server admin-server client admin-client loki promtail grafana pgadmin nginx"
+SERVICES_ORDER="postgres server admin-server client admin-client prometheus loki promtail grafana pgadmin nginx"
 
 wait_healthy() {
   local SERVICE="$1"

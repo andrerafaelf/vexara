@@ -3,12 +3,12 @@
 ## Architecture
 
 ```
-Internet
+Internet ── Cloudflare
    │
    ▼
-[ Hetzner VPS ]
+[ OVH VPS, Ubuntu 26.04, 4 GB ]
    │
-[ Nginx (host) ]  ← TLS termination, rate limiting, static asset caching
+[ vx-nginx (container, owns 80/443) ]  ← TLS termination, rate limiting, static asset caching
    │
    ├──► vx-client        (Next.js, port 3000) , player UI
    ├──► vx-server        (Express, port 3001) , game API + background jobs
@@ -18,38 +18,46 @@ Internet
    ├──► vx-prometheus    (metrics collection)
    ├──► vx-loki          (log aggregation)
    ├──► vx-promtail      (log shipping)
-   └──► vx-grafana       (dashboards, admin.domain/grafana/)
+   ├──► vx-grafana       (dashboards, admin.domain/grafana/)
+   │
+   │  Side sites on the same host (other repos, config lives here in deploy/nginx/):
+   ├──► treble.quest          static files /var/www/treble-quest
+   ├──► api.treble.quest, /r/ host systemd service treble-quest-api on 172.17.0.1:8787
+   │                          (reached as host.docker.internal)
+   └──► andrerfferreira.work  static files /opt/andrerfferreira-portfolio/current
 ```
 
 All services communicate on the internal Docker `app_net` network.  
 PostgreSQL is never exposed to the host, only reachable by other containers.
+
+Rendered nginx and pgAdmin configs live in `/opt/vexara/runtime/` (not `deploy/`,
+which CI wipes on every deploy). Each side site's server block is only rendered
+when its cert exists, so a missing cert never takes down vexara.world.
 
 ---
 
 ## First-Time VPS Setup
 
 ```bash
-# 1. SSH into your fresh Hetzner VPS as root
-ssh root@YOUR_VPS_IP
+# 1. DNS: point every hostname at the VPS with the Cloudflare proxy OFF (grey):
+#    vexara.world, admin.vexara.world, treble.quest, www.treble.quest,
+#    api.treble.quest, andrerfferreira.work, www.andrerfferreira.work
 
-# 2. Clone the repo (or scp bootstrap script)
-git clone https://github.com/YOUR_USERNAME/Vexara.git /opt/vexara
-cd /opt/vexara
+# 2. Copy the bootstrap script up and run it as root. It installs Docker, Node 22,
+#    Certbot, UFW, fail2ban, swap, creates the deploy + trebleq users and dirs,
+#    issues all four certs and adds the renew/backup crons.
+scp deploy/bootstrap-vps.sh root@YOUR_VPS_IP:/root/
+ssh root@YOUR_VPS_IP 'DEPLOY_PUBKEY="ssh-ed25519 AAAA... github-actions-deploy" bash /root/bootstrap-vps.sh vexara.world'
 
-# 3. Run bootstrap (installs Docker, Nginx, Certbot, UFW, creates deploy user)
-bash deploy/bootstrap-vps.sh yourdomain.com
+# 3. Set VPS_HOST, VPS_USER=deploy, VPS_SSH_KEY in all three repos
+#    (vexara, treble-quest, andrerfferreira-portfolio).
 
-# 4. Generate secrets
-node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"  # JWT_SECRET
-npx web-push generate-vapid-keys                                           # VAPID keys
+# 4. Deploy Vexara first: Actions > CI/CD > Run workflow (tick rebuild_all if
+#    the GHCR images are gone). CI writes .env and runs deploy/deploy.sh.
 
-# 5. Create the production .env
-cp .env.production.example .env
-nano .env    # fill in every CHANGE_ME value
+# 5. Deploy treble-quest and the portfolio (Run workflow, or push to main).
 
-# 6. Trigger first deploy via GitHub Actions push to main
-# OR manually:
-bash deploy/deploy.sh latest
+# 6. Turn the Cloudflare proxy back on for the proxied records.
 ```
 
 ---
@@ -205,7 +213,7 @@ Cron on VPS runs daily at 02:00:
 0 2 * * * /opt/vexara/deploy/backup.sh >> /var/log/vx-backup.log 2>&1
 ```
 14 days of backups are kept in `/opt/vexara/backups/`.  
-For off-site backup, configure an S3-compatible object store (Hetzner Object Storage) and `aws s3 cp` from the backup script.
+For off-site backup, configure an S3-compatible object store (Cloudflare R2 is already set up for avatars) and `aws s3 cp` from the backup script.
 
 ---
 
