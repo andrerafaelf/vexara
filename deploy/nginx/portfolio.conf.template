@@ -88,9 +88,12 @@ server {
         try_files $uri =404;
     }
 
+    # Files outside _app/immutable keep their names between releases (the
+    # screenshots in /static especially), so they only cache for a day.
+    # Otherwise a replaced image keeps showing the old one for a month,
+    # both at Cloudflare and in browsers.
     location ~* \.(?:css|js|mjs|svg|png|jpg|jpeg|gif|webp|avif|ico|woff2?)$ {
-        expires 30d;
-        add_header Cache-Control "public, max-age=2592000";
+        add_header Cache-Control "public, max-age=86400";
         try_files $uri =404;
     }
 
