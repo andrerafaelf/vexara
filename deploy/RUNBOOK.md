@@ -136,16 +136,34 @@ IMAGE_TAG=sha-<previous-commit> bash deploy/deploy.sh sha-<previous-commit>
 
 ### Database backup (manual)
 ```bash
-bash /opt/vexara/deploy/backup.sh
+sudo bash /opt/vexara/deploy/backup.sh   # root: reads /root/.secrets/r2-backup.env
 ls /opt/vexara/backups/
 ```
 
 ### Restore a backup
+Local copies are in `/opt/vexara/backups/` (last 7 days). Older ones come from R2
+(`academie-backups` bucket, `vexara/daily/` 30 days, `vexara/monthly/` 12 months).
+Download one from the Cloudflare dashboard (R2 > bucket > object > Download) and
+`scp` it to the VPS, then:
 ```bash
-gunzip -c /opt/vexara/backups/vexara_YYYY-MM-DDTHH-MM-SS.sql.gz \
-  | docker exec -i vx-postgres psql -U neon -d vexara
-```
+# Vexara: stop the game server first so nothing writes mid-restore.
+# This replaces the current data; the dump recreates every table.
+docker stop vx-server vx-admin-server
+docker exec vx-postgres psql -U "$POSTGRES_USER" -d postgres \
+  -c 'DROP DATABASE "<db>" WITH (FORCE);' -c 'CREATE DATABASE "<db>";'
+gunzip -c vexara_YYYY-MM-DDTHH-MM-SSZ.sql.gz \
+  | docker exec -i vx-postgres psql -U "$POSTGRES_USER" -d "<db>"
+docker start vx-server vx-admin-server
 
+# Treble Quest leaderboard
+sudo systemctl stop treble-quest-api
+gunzip -c treble-quest_YYYY-MM-DDTHH-MM-SSZ.db.gz \
+  | sudo tee /opt/treble-quest/server/data/leaderboard.db > /dev/null
+sudo rm -f /opt/treble-quest/server/data/leaderboard.db-wal /opt/treble-quest/server/data/leaderboard.db-shm
+sudo chown trebleq:trebleq /opt/treble-quest/server/data/leaderboard.db
+sudo systemctl start treble-quest-api
+```
+`POSTGRES_USER` / `POSTGRES_DB` are in `/opt/vexara/.env`.
 ### Run Prisma migrations manually
 ```bash
 docker exec vx-server npx prisma migrate deploy
@@ -208,12 +226,23 @@ docker stats --no-stream        # per-container memory
 
 ## Backup Schedule
 
-Cron on VPS runs daily at 02:00:
+Root cron on the VPS runs `deploy/backup.sh` daily at 02:00 (server time, UTC):
 ```
 0 2 * * * /opt/vexara/deploy/backup.sh >> /var/log/vx-backup.log 2>&1
 ```
-14 days of backups are kept in `/opt/vexara/backups/`.  
-For off-site backup, configure an S3-compatible object store (Cloudflare R2 is already set up for avatars) and `aws s3 cp` from the backup script.
+It backs up both stateful stores on the host: the Vexara Postgres DB (`pg_dump`)
+and the Treble Quest leaderboard SQLite (online `.backup`, integrity-checked).
+
+| Where | What | Kept |
+|-------|------|------|
+| `/opt/vexara/backups/` | every nightly file | 7 days |
+| R2 `academie-backups/<app>/daily/` | every nightly file | 30 days |
+| R2 `academie-backups/<app>/monthly/` | the 1st-of-month file | 12 months |
+
+The R2 bucket is private and separate from the public `vexara-avatars` bucket.
+Its credentials live only on the VPS in `/root/.secrets/r2-backup.env` (root-only,
+written by `bootstrap-vps.sh`), not in GitHub. Check the last run with
+`sudo tail -20 /var/log/vx-backup.log`; a failed run ends with `Done WITH ERRORS`.
 
 ---
 

@@ -12,6 +12,9 @@
 # Optional env: DEPLOY_PUBKEY="ssh-ed25519 ..."  CI deploy key for the deploy user
 #               CERT_EMAIL=you@example.com        Let's Encrypt account email
 #               CF_API_TOKEN=...                  Cloudflare token (Zone DNS Edit)
+#               BACKUP_R2_ACCESS_KEY_ID=... BACKUP_R2_SECRET_ACCESS_KEY=...
+#               BACKUP_R2_ACCOUNT_ID=... BACKUP_R2_BUCKET=...
+#                                                 private R2 bucket for off-site backups
 # The script is idempotent, safe to re-run.
 #
 # Certificates:
@@ -47,7 +50,8 @@ DOCKER_GATEWAY="172.17.0.1"
 echo "==> Updating system packages..."
 apt-get update -q
 apt-get upgrade -yq
-apt-get install -yq curl git ufw fail2ban unzip rsync ca-certificates build-essential psmisc
+apt-get install -yq curl git ufw fail2ban unzip rsync ca-certificates build-essential psmisc \
+  rclone sqlite3
 
 # ─── Docker ───────────────────────────────────────────────────────────────────
 if ! command -v docker &>/dev/null; then
@@ -211,7 +215,16 @@ docker kill --signal=HUP vx-nginx >/dev/null 2>&1 || true
 HOOKEOF
 chmod 0755 /etc/letsencrypt/renewal-hooks/deploy/reload-vx-nginx.sh
 
-echo "==> Adding cron jobs (cert renewal, Vexara DB backup)..."
+# ─── Off-site backup credentials (read by deploy/backup.sh) ──────────────────
+if [ -n "${BACKUP_R2_ACCESS_KEY_ID:-}" ]; then
+  install -d -m 700 /root/.secrets
+  ( umask 077
+    printf 'BACKUP_R2_ACCOUNT_ID=%s\nBACKUP_R2_ACCESS_KEY_ID=%s\nBACKUP_R2_SECRET_ACCESS_KEY=%s\nBACKUP_R2_BUCKET=%s\n' \
+      "$BACKUP_R2_ACCOUNT_ID" "$BACKUP_R2_ACCESS_KEY_ID" "$BACKUP_R2_SECRET_ACCESS_KEY" "$BACKUP_R2_BUCKET" \
+      > /root/.secrets/r2-backup.env )
+fi
+
+echo "==> Adding cron jobs (cert renewal, nightly backups)..."
 (crontab -l 2>/dev/null | grep -v 'certbot renew' | grep -v 'deploy/backup.sh' || true
  echo "0 3 * * * certbot renew --quiet ${RENEW_ARGS}"
  echo "0 2 * * * $APP_DIR/deploy/backup.sh >> /var/log/vx-backup.log 2>&1") \
