@@ -109,6 +109,8 @@ ufw allow 443/tcp
 # Let the nginx container (any Docker bridge network) reach the host Treble API.
 # Nothing else can: the API only listens on the docker0 gateway.
 ufw allow proto tcp from 172.16.0.0/12 to "$DOCKER_GATEWAY" port 8787 comment 'treble api from docker nginx'
+# Same for the portfolio's contact form service
+ufw allow proto tcp from 172.16.0.0/12 to "$DOCKER_GATEWAY" port 8788 comment 'portfolio contact form from docker nginx'
 ufw --force enable
 
 # ─── Fail2ban ────────────────────────────────────────────────────────────────
