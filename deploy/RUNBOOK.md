@@ -142,7 +142,7 @@ ls /opt/vexara/backups/
 
 ### Restore a backup
 Local copies are in `/opt/vexara/backups/` (last 7 days). Older ones come from R2
-(`academie-backups` bucket, `vexara/daily/` 30 days, `vexara/monthly/` 12 months).
+(`backups` bucket, `vexara/daily/` 30 days, `vexara/monthly/` 12 months).
 Download one from the Cloudflare dashboard (R2 > bucket > object > Download) and
 `scp` it to the VPS, then:
 ```bash
@@ -236,8 +236,8 @@ and the Treble Quest leaderboard SQLite (online `.backup`, integrity-checked).
 | Where | What | Kept |
 |-------|------|------|
 | `/opt/vexara/backups/` | every nightly file | 7 days |
-| R2 `academie-backups/<app>/daily/` | every nightly file | 30 days |
-| R2 `academie-backups/<app>/monthly/` | the 1st-of-month file | 12 months |
+| R2 `backups/<app>/daily/` | every nightly file | 30 days |
+| R2 `backups/<app>/monthly/` | the 1st-of-month file | 12 months |
 
 The R2 bucket is private and separate from the public `vexara-avatars` bucket.
 Its credentials live only on the VPS in `/root/.secrets/r2-backup.env` (root-only,

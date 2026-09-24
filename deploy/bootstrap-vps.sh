@@ -50,8 +50,18 @@ DOCKER_GATEWAY="172.17.0.1"
 echo "==> Updating system packages..."
 apt-get update -q
 apt-get upgrade -yq
-apt-get install -yq curl git ufw fail2ban unzip rsync ca-certificates build-essential psmisc \
-  rclone sqlite3
+apt-get install -yq curl git ufw fail2ban unzip rsync ca-certificates build-essential psmisc sqlite3
+
+# ─── rclone (off-site backups to R2) ─────────────────────────────────────────
+# Official build, not apt: the distro package (1.60) gets 501 NotImplemented
+# from R2 on the first upload attempt.
+if ! command -v rclone &>/dev/null || rclone version | head -1 | grep -q 'v1\.60'; then
+  echo "==> Installing rclone..."
+  apt-get remove -yq rclone 2>/dev/null || true
+  curl -fsSL https://rclone.org/install.sh | bash
+else
+  echo "==> rclone already installed, skipping."
+fi
 
 # ─── Docker ───────────────────────────────────────────────────────────────────
 if ! command -v docker &>/dev/null; then
