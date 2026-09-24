@@ -11,12 +11,16 @@
 # Run as root:  bash bootstrap-vps.sh vexara.world
 # Optional env: DEPLOY_PUBKEY="ssh-ed25519 ..."  CI deploy key for the deploy user
 #               CERT_EMAIL=you@example.com        Let's Encrypt account email
+#               CF_API_TOKEN=...                  Cloudflare token (Zone DNS Edit)
 # The script is idempotent, safe to re-run.
 #
-# Before running: every hostname above must resolve to this VPS with the
-# Cloudflare proxy OFF (grey cloud), so the HTTP-01 challenge reaches this host.
-# Turn the proxy back on once the certs are issued. Renewals then go through
-# the nginx container's /.well-known/acme-challenge/ location (webroot).
+# Certificates:
+#   With CF_API_TOKEN (preferred): DNS-01 via certbot-dns-cloudflare. Works with
+#   the Cloudflare proxy on or off, and renewals need nothing from nginx. The
+#   token is kept in /root/.secrets/cloudflare.ini for renewals.
+#   Without it: HTTP-01. Every hostname must resolve to this VPS with the
+#   Cloudflare proxy OFF (grey cloud) for the first issue; renewals then go
+#   through the nginx container's /.well-known/acme-challenge/ location.
 
 set -euo pipefail
 
@@ -146,14 +150,29 @@ fi
 
 # ─── SSL certificates ────────────────────────────────────────────────────────
 mkdir -p /var/www/certbot
+CF_INI=/root/.secrets/cloudflare.ini
 
-# First run: nothing listens on 80, so use certbot's standalone server.
-# Re-run with the stack up: the nginx container serves the webroot instead.
-if docker ps --format '{{.Names}}' | grep -qx vx-nginx; then
+if [ -n "${CF_API_TOKEN:-}" ]; then
+  install -d -m 700 /root/.secrets
+  ( umask 077; printf 'dns_cloudflare_api_token = %s\n' "$CF_API_TOKEN" > "$CF_INI" )
+fi
+
+if [ -f "$CF_INI" ]; then
+  echo "==> Using DNS-01 via Cloudflare for certificates..."
+  snap set certbot trust-plugin-with-root=ok
+  snap list certbot-dns-cloudflare &>/dev/null || snap install certbot-dns-cloudflare
+  snap connect certbot:plugin certbot-dns-cloudflare 2>/dev/null || true
+  CERT_METHOD=(--dns-cloudflare --dns-cloudflare-credentials "$CF_INI" --dns-cloudflare-propagation-seconds 30)
+  RENEW_ARGS=""
+elif docker ps --format '{{.Names}}' | grep -qx vx-nginx; then
+  # Re-run with the stack up: the nginx container serves the webroot.
   CERT_METHOD=(--webroot -w /var/www/certbot)
+  RENEW_ARGS="--webroot -w /var/www/certbot"
 else
+  # First run: nothing listens on 80, so use certbot's standalone server.
   systemctl stop nginx 2>/dev/null || true
   CERT_METHOD=(--standalone)
+  RENEW_ARGS="--webroot -w /var/www/certbot"
 fi
 
 issue_cert() {
@@ -164,7 +183,7 @@ issue_cert() {
 
 echo "==> Obtaining SSL certificates..."
 # The main cert is required: deploy.sh refuses to run without it.
-issue_cert "$DOMAIN" -d "$DOMAIN"
+issue_cert "$DOMAIN" -d "$DOMAIN" -d "www.${DOMAIN}"
 # Side sites get their own lineage so a DNS problem with one can't block the others.
 issue_cert "admin.${DOMAIN}" -d "admin.${DOMAIN}" \
   || echo "==> WARN: admin.${DOMAIN} cert not issued, check its DNS points here"
@@ -180,9 +199,10 @@ chmod 0755 /etc/letsencrypt/live /etc/letsencrypt/archive 2>/dev/null || true
 # Disable host nginx so it never races the container for port 80
 systemctl disable --now nginx 2>/dev/null || true
 
-# ─── Auto-renew: webroot mode, the nginx container serves the challenge ───────
-# Passing --webroot on renew also rewrites each lineage's renewal config away
-# from standalone after its first successful renewal.
+# ─── Auto-renew ───────────────────────────────────────────────────────────────
+# DNS-01 lineages renew with their stored authenticator. For HTTP-01, passing
+# --webroot on renew also rewrites each lineage's renewal config away from
+# standalone after its first successful renewal.
 mkdir -p /etc/letsencrypt/renewal-hooks/deploy
 cat > /etc/letsencrypt/renewal-hooks/deploy/reload-vx-nginx.sh <<'HOOKEOF'
 #!/bin/sh
@@ -193,7 +213,7 @@ chmod 0755 /etc/letsencrypt/renewal-hooks/deploy/reload-vx-nginx.sh
 
 echo "==> Adding cron jobs (cert renewal, Vexara DB backup)..."
 (crontab -l 2>/dev/null | grep -v 'certbot renew' | grep -v 'deploy/backup.sh' || true
- echo "0 3 * * * certbot renew --quiet --webroot -w /var/www/certbot"
+ echo "0 3 * * * certbot renew --quiet ${RENEW_ARGS}"
  echo "0 2 * * * $APP_DIR/deploy/backup.sh >> /var/log/vx-backup.log 2>&1") \
   | crontab -
 
