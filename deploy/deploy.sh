@@ -151,8 +151,7 @@ $COMPOSE pull --quiet
 # Rolling restart: database first, then backends, then frontends, nginx last.
 # nginx is handled specially: if the container is already running we reload its
 # config in-place (nginx -s reload) so port 443 is never closed — zero downtime.
-# A full recreate only happens when the container does not yet exist, or when
-# it predates the mount for a newly added side site's conf.
+# A full recreate only happens when the container does not yet exist.
 SERVICES_ORDER="postgres server admin-server client admin-client prometheus loki promtail grafana pgadmin nginx"
 
 wait_healthy() {
@@ -202,23 +201,24 @@ for SERVICE in $SERVICES_ORDER; do
 
   if [ "$SERVICE" = "nginx" ]; then
     NGINX_ID=$($COMPOSE ps -q nginx 2>/dev/null || true)
-    NGINX_RUNNING=false
-    MISSING_MOUNT=""
     if [ -n "$NGINX_ID" ] && [ "$(docker inspect --format='{{.State.Running}}' "$NGINX_ID" 2>/dev/null)" = "true" ]; then
-      NGINX_RUNNING=true
-      # A reload can't add a bind mount. If nginx.conf includes a conf the
-      # running container has no mount for (a side site added to
-      # docker-compose.prod.yml since it was created), it must be recreated.
+      # A reload can't add a bind mount, and recreating the container would
+      # close 80/443 for every site on the host. So when nginx.conf includes a
+      # conf the running container has no mount for (a side site added to
+      # docker-compose.prod.yml after it was created), copy the rendered file
+      # in instead. Every deploy copies it again, and the mount takes over
+      # whenever the container is next recreated.
       MOUNTS=" $(docker inspect --format='{{range .Mounts}}{{.Destination}} {{end}}' "$NGINX_ID") "
       for CONF in $(sed -n 's|^[[:space:]]*include /etc/nginx/\([a-z]*\.conf\);.*|\1|p' "$RENDERED"); do
         case "$MOUNTS" in
           *" /etc/nginx/$CONF "*) ;;
-          *) MISSING_MOUNT="$CONF"; break ;;
+          *)
+            docker cp "$NGINX_OUT/$CONF" "$NGINX_ID:/etc/nginx/$CONF"
+            echo "[deploy] Copied $CONF into nginx, this container has no mount for it yet"
+            ;;
         esac
       done
-    fi
 
-    if [ "$NGINX_RUNNING" = true ] && [ -z "$MISSING_MOUNT" ]; then
       # Container is running: test the new config then reload in-place.
       # nginx -t runs inside the container against the already-mounted config
       # files (written above). If the test fails we abort before touching traffic.
@@ -228,18 +228,6 @@ for SERVICE in $SERVICES_ORDER; do
         echo "[deploy] nginx config reloaded (no downtime)"
       else
         echo "[deploy] ERROR: nginx config test failed — aborting to avoid outage" >&2
-        exit 1
-      fi
-    elif [ "$NGINX_RUNNING" = true ]; then
-      # Test the new config in a throwaway container that has the new mounts
-      # (no ports published), so a bad config never replaces a working one.
-      # The recreate itself closes 80/443 for a few seconds.
-      echo "[deploy] nginx has no mount for $MISSING_MOUNT yet, testing config before recreate..."
-      if $COMPOSE run --rm --no-deps -T --entrypoint nginx nginx -t 2>&1; then
-        $COMPOSE up -d --no-deps --force-recreate nginx
-        wait_healthy nginx $SERVICE_TIMEOUT
-      else
-        echo "[deploy] ERROR: nginx config test failed, aborting to avoid outage" >&2
         exit 1
       fi
     else
