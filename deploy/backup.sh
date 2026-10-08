@@ -2,6 +2,8 @@
 # Nightly backup of everything stateful on the shared VPS:
 #   - Vexara PostgreSQL              pg_dump from vx-postgres
 #   - Treble Quest leaderboard SQLite online .backup (safe while the API runs)
+#   - K'ART data dir                 tar of content.json, backups/ and uploads/
+#                                    (the site writes content.json atomically)
 #
 # Local copies live in $BACKUP_DIR for LOCAL_RETENTION_DAYS.
 # Off-site: when /root/.secrets/r2-backup.env exists, every file is uploaded to
@@ -20,6 +22,7 @@ set -euo pipefail
 APP_DIR="/opt/vexara"
 BACKUP_DIR="$APP_DIR/backups"
 TREBLE_DB="/opt/treble-quest/server/data/leaderboard.db"
+KART_DATA="/opt/k-art/data"
 R2_ENV="/root/.secrets/r2-backup.env"
 LOCAL_RETENTION_DAYS=7
 REMOTE_DAILY_DAYS=30
@@ -78,9 +81,26 @@ backup_treble() {
   fi
 }
 
-# One failing app must not skip the other
+# ─── K'ART content and uploads ────────────────────────────────────────────────
+backup_kart() {
+  if [ ! -d "$KART_DATA" ]; then
+    log "WARN: $KART_DATA not found, skipping K'ART"
+    return 0
+  fi
+  local out="$BACKUP_DIR/k-art_${TIMESTAMP}.tar.gz"
+  log "Archiving K'ART content and uploads..."
+  if ! tar -czf "$out" -C "$(dirname "$KART_DATA")" "$(basename "$KART_DATA")" || ! gzip -t "$out"; then
+    rm -f "$out"
+    return 1
+  fi
+  log "Wrote $out ($(du -h "$out" | cut -f1))"
+  FILES+=("k-art:$out")
+}
+
+# One failing app must not skip the others
 backup_vexara || { log "ERROR: Vexara dump failed"; FAILED=1; }
 backup_treble || { log "ERROR: Treble Quest snapshot failed"; FAILED=1; }
+backup_kart || { log "ERROR: K'ART archive failed"; FAILED=1; }
 
 # ─── Off-site copy to R2 ──────────────────────────────────────────────────────
 if [ -f "$R2_ENV" ]; then
@@ -111,7 +131,7 @@ if [ -f "$R2_ENV" ]; then
     fi
   done
 
-  for app in vexara treble-quest; do
+  for app in vexara treble-quest k-art; do
     rclone delete -q "$DEST/$app/daily" --min-age "${REMOTE_DAILY_DAYS}d" 2>/dev/null || true
     rclone delete -q "$DEST/$app/monthly" --min-age "${REMOTE_MONTHLY_DAYS}d" 2>/dev/null || true
   done
@@ -121,7 +141,7 @@ else
 fi
 
 # ─── Local prune ──────────────────────────────────────────────────────────────
-find "$BACKUP_DIR" -maxdepth 1 \( -name 'vexara_*.sql.gz' -o -name 'treble-quest_*.db.gz' \) \
+find "$BACKUP_DIR" -maxdepth 1 \( -name 'vexara_*.sql.gz' -o -name 'treble-quest_*.db.gz' -o -name 'k-art_*.tar.gz' \) \
   -mtime +"$LOCAL_RETENTION_DAYS" -delete
 log "Local backups retained: $(find "$BACKUP_DIR" -maxdepth 1 -name '*.gz' | wc -l)"
 

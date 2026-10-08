@@ -1,0 +1,75 @@
+# K'ART Racing Team, k-artracing.com - SvelteKit site with its own admin,
+# served from the same nginx container as Vexara. Source repo: andrerafaelf/k-art.
+# Included by nginx.conf if the k-artracing.com SSL cert exists.
+# deploy.sh writes an empty kart.conf if the cert is missing,
+# so the player-facing site stays up regardless.
+#
+# The site is a host systemd service (k-art.service in the k-art repo) bound
+# to the docker0 gateway (172.17.0.1:8789), reached as host.docker.internal
+# like the Treble Quest API. Its content and uploads live on the host in
+# /opt/k-art/data. The UFW rule for port 8789 is in bootstrap-vps.sh.
+
+upstream kart_upstream {
+    server host.docker.internal:8789;
+    keepalive 16;
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name www.k-artracing.com;
+
+    ssl_certificate /etc/letsencrypt/live/k-artracing.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/k-artracing.com/privkey.pem;
+    ssl_trusted_certificate /etc/letsencrypt/live/k-artracing.com/chain.pem;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://k-artracing.com$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name k-artracing.com;
+
+    ssl_certificate /etc/letsencrypt/live/k-artracing.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/k-artracing.com/privkey.pem;
+    ssl_trusted_certificate /etc/letsencrypt/live/k-artracing.com/chain.pem;
+
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 1d;
+    ssl_session_tickets off;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+
+    add_header Strict-Transport-Security "max-age=31536000" always;
+
+    location /.well-known/acme-challenge/ {
+        allow all;
+        root /var/www/certbot;
+    }
+
+    # Admin photo uploads go up to 8 MB (the app's BODY_SIZE_LIMIT is 10M)
+    client_max_body_size 10m;
+
+    # Node sets its own cache headers: immutable for /_app/immutable/,
+    # no-store for /admin. X-Forwarded-Proto and -Host are what the app builds
+    # its origin from, without them every admin save fails the CSRF check.
+    location / {
+        proxy_pass http://kart_upstream;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_read_timeout 60s;
+    }
+}

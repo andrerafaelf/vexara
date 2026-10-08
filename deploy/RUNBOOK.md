@@ -24,7 +24,9 @@ Internet ── Cloudflare
    ├──► treble.quest          static files /var/www/treble-quest
    ├──► api.treble.quest, /r/ host systemd service treble-quest-api on 172.17.0.1:8787
    │                          (reached as host.docker.internal)
-   └──► andrerfferreira.work  static files /opt/andrerfferreira-portfolio/current
+   ├──► andrerfferreira.work  static files /opt/andrerfferreira-portfolio/current
+   └──► k-artracing.com       host systemd service k-art on 172.17.0.1:8789,
+                              data in /opt/k-art/data
 ```
 
 All services communicate on the internal Docker `app_net` network.  
@@ -41,21 +43,22 @@ when its cert exists, so a missing cert never takes down vexara.world.
 ```bash
 # 1. DNS: point every hostname at the VPS with the Cloudflare proxy OFF (grey):
 #    vexara.world, admin.vexara.world, treble.quest, www.treble.quest,
-#    api.treble.quest, andrerfferreira.work, www.andrerfferreira.work
+#    api.treble.quest, andrerfferreira.work, www.andrerfferreira.work,
+#    k-artracing.com, www.k-artracing.com
 
 # 2. Copy the bootstrap script up and run it as root. It installs Docker, Node 22,
-#    Certbot, UFW, fail2ban, swap, creates the deploy + trebleq users and dirs,
-#    issues all four certs and adds the renew/backup crons.
+#    Certbot, UFW, fail2ban, swap, creates the deploy, trebleq and kart users and
+#    dirs, issues all five certs and adds the renew/backup crons.
 scp deploy/bootstrap-vps.sh root@YOUR_VPS_IP:/root/
 ssh root@YOUR_VPS_IP 'DEPLOY_PUBKEY="ssh-ed25519 AAAA... github-actions-deploy" bash /root/bootstrap-vps.sh vexara.world'
 
-# 3. Set VPS_HOST, VPS_USER=deploy, VPS_SSH_KEY in all three repos
-#    (vexara, treble-quest, andrerfferreira-portfolio).
+# 3. Set VPS_HOST, VPS_USER=deploy, VPS_SSH_KEY in all four repos
+#    (vexara, treble-quest, andrerfferreira-portfolio, k-art).
 
 # 4. Deploy Vexara first: Actions > CI/CD > Run workflow (tick rebuild_all if
 #    the GHCR images are gone). CI writes .env and runs deploy/deploy.sh.
 
-# 5. Deploy treble-quest and the portfolio (Run workflow, or push to main).
+# 5. Deploy treble-quest, the portfolio and k-art (Run workflow, or push to main).
 
 # 6. Turn the Cloudflare proxy back on for the proxied records.
 ```
@@ -162,6 +165,13 @@ gunzip -c treble-quest_YYYY-MM-DDTHH-MM-SSZ.db.gz \
 sudo rm -f /opt/treble-quest/server/data/leaderboard.db-wal /opt/treble-quest/server/data/leaderboard.db-shm
 sudo chown trebleq:trebleq /opt/treble-quest/server/data/leaderboard.db
 sudo systemctl start treble-quest-api
+
+# K'ART content and uploads (the old data dir is kept beside it)
+sudo systemctl stop k-art
+sudo mv /opt/k-art/data /opt/k-art/data.old
+sudo tar -xzf k-art_YYYY-MM-DDTHH-MM-SSZ.tar.gz -C /opt/k-art
+sudo chown -R kart:kart /opt/k-art/data
+sudo systemctl start k-art
 ```
 `POSTGRES_USER` / `POSTGRES_DB` are in `/opt/vexara/.env`.
 ### Run Prisma migrations manually
@@ -230,8 +240,9 @@ Root cron on the VPS runs `deploy/backup.sh` daily at 02:00 (server time, UTC):
 ```
 0 2 * * * /opt/vexara/deploy/backup.sh >> /var/log/vx-backup.log 2>&1
 ```
-It backs up both stateful stores on the host: the Vexara Postgres DB (`pg_dump`)
-and the Treble Quest leaderboard SQLite (online `.backup`, integrity-checked).
+It backs up every stateful store on the host: the Vexara Postgres DB (`pg_dump`),
+the Treble Quest leaderboard SQLite (online `.backup`, integrity-checked) and the
+K'ART data dir (`/opt/k-art/data`: content, version history and uploads, as a tar).
 
 | Where | What | Kept |
 |-------|------|------|

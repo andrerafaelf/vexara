@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 # Bootstrap a fresh Ubuntu VPS (22.04+, used on OVH Ubuntu 26.04) as the shared
-# host for three sites. Vexara's nginx container is the only public edge
+# host for four sites. Vexara's nginx container is the only public edge
 # (ports 80/443) and serves all of them:
 #
 #   Vexara        vexara.world, admin.vexara.world    Docker stack in /opt/vexara
 #   Treble Quest  treble.quest, www., api.            static site in /var/www/treble-quest
 #                                                     + leaderboard API (systemd, host)
 #   Portfolio     andrerfferreira.work, www.          static site in /opt/andrerfferreira-portfolio
+#   K'ART         k-artracing.com, www.               Node site (systemd, host) in /opt/k-art
 #
 # Run as root:  bash bootstrap-vps.sh vexara.world
 # Optional env: DEPLOY_PUBKEY="ssh-ed25519 ..."  CI deploy key for the deploy user
@@ -42,9 +43,11 @@ TREBLE_USER="trebleq"
 TREBLE_APP_DIR="/opt/treble-quest"
 TREBLE_SITE_DIR="/var/www/treble-quest"
 PORTFOLIO_DIR="/opt/andrerfferreira-portfolio"
+KART_USER="kart"
+KART_DIR="/opt/k-art"
 CERT_EMAIL="${CERT_EMAIL:-admin@${DOMAIN}}"
-# docker0 gateway. The Treble API binds here and the nginx container reaches
-# it as host.docker.internal (extra_hosts: host-gateway).
+# docker0 gateway. The Treble API and the K'ART site bind here and the nginx
+# container reaches them as host.docker.internal (extra_hosts: host-gateway).
 DOCKER_GATEWAY="172.17.0.1"
 
 echo "==> Updating system packages..."
@@ -79,7 +82,7 @@ else
   echo "==> Docker Compose already installed, skipping."
 fi
 
-# ─── Node 22 (Treble Quest leaderboard API runs on the host) ─────────────────
+# ─── Node 22 (Treble Quest API and the K'ART site run on the host) ──────────
 if ! command -v node &>/dev/null || ! node -v | grep -q '^v22'; then
   echo "==> Installing Node 22..."
   curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
@@ -111,13 +114,15 @@ ufw allow 443/tcp
 ufw allow proto tcp from 172.16.0.0/12 to "$DOCKER_GATEWAY" port 8787 comment 'treble api from docker nginx'
 # Same for the portfolio's contact form service
 ufw allow proto tcp from 172.16.0.0/12 to "$DOCKER_GATEWAY" port 8788 comment 'portfolio contact form from docker nginx'
+# And for the K'ART site
+ufw allow proto tcp from 172.16.0.0/12 to "$DOCKER_GATEWAY" port 8789 comment 'k-art site from docker nginx'
 ufw --force enable
 
 # ─── Fail2ban ────────────────────────────────────────────────────────────────
 echo "==> Configuring fail2ban..."
 systemctl enable --now fail2ban
 
-# ─── Deploy user (all three repos' CI SSH in as this user) ───────────────────
+# ─── Deploy user (all four repos' CI SSH in as this user) ────────────────────
 if ! id "$DEPLOY_USER" &>/dev/null; then
   echo "==> Creating deploy user..."
   adduser --disabled-password --gecos "" "$DEPLOY_USER"
@@ -164,6 +169,14 @@ if [ ! -e "$PORTFOLIO_DIR/current" ]; then
   chown -h -R "$DEPLOY_USER":"$DEPLOY_USER" "$PORTFOLIO_DIR"
 fi
 
+# K'ART: CI extracts releases here and repoints "current". The service runs as
+# kart and only writes to data/ (content, backups, uploads).
+if ! id "$KART_USER" &>/dev/null; then
+  useradd --system --no-create-home --shell /usr/sbin/nologin "$KART_USER"
+fi
+install -d -o "$DEPLOY_USER" -g "$DEPLOY_USER" "$KART_DIR" "$KART_DIR/releases"
+install -d -o "$KART_USER" -g "$KART_USER" -m 750 "$KART_DIR/data"
+
 # ─── SSL certificates ────────────────────────────────────────────────────────
 mkdir -p /var/www/certbot
 CF_INI=/root/.secrets/cloudflare.ini
@@ -207,6 +220,8 @@ issue_cert treble.quest -d treble.quest -d www.treble.quest -d api.treble.quest 
   || echo "==> WARN: treble.quest cert not issued, check treble.quest / www / api DNS point here"
 issue_cert andrerfferreira.work -d andrerfferreira.work -d www.andrerfferreira.work \
   || echo "==> WARN: andrerfferreira.work cert not issued, check its DNS points here"
+issue_cert k-artracing.com -d k-artracing.com -d www.k-artracing.com \
+  || echo "==> WARN: k-artracing.com cert not issued, check its DNS points here"
 
 # Let non-root processes (deploy user, nginx container running as nginx UID)
 # traverse the letsencrypt dirs. Private key files inside archive/ stay 0600.
@@ -272,8 +287,8 @@ echo ""
 certbot certificates 2>/dev/null | grep -E 'Certificate Name|Domains|Expiry' || true
 echo ""
 echo "Next steps:"
-echo "  1. Set VPS_HOST / VPS_USER=$DEPLOY_USER / VPS_SSH_KEY secrets in all three repos"
+echo "  1. Set VPS_HOST / VPS_USER=$DEPLOY_USER / VPS_SSH_KEY secrets in all four repos"
 echo "  2. Deploy Vexara first (Actions > CI/CD > Run workflow): it brings up the nginx edge"
-echo "  3. Then deploy treble-quest and andrerfferreira-portfolio (push to main or Run workflow)"
+echo "  3. Then deploy treble-quest, andrerfferreira-portfolio and k-art (push to main or Run workflow)"
 echo "  4. Turn the Cloudflare proxy back on (orange cloud) for the proxied records"
 echo ""
