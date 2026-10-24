@@ -90,7 +90,7 @@ Set these in your repo → Settings → Secrets and variables → Actions.
 |------|-------------|
 | `DOMAIN` | e.g. `vexara.com` |
 | `CORS_ORIGINS` | e.g. `https://vexara.com` |
-| `ADMIN_CORS_ORIGINS` | e.g. `https://admin.vexara.com` |
+| `ADMIN_CORS_ORIGINS` | `https://admin.vexara.world` (exact origin, no trailing slash; comma-separate extras) |
 | `ADMIN_ALLOW_IPS` | Comma-separated IP/CIDR allowlist for `admin.<domain>` |
 | `VAPID_SUBJECT` | e.g. `mailto:admin@vexara.com` |
 
