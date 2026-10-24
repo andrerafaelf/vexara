@@ -57,6 +57,9 @@ reliable for new commanders.
   from being removed once it had raided anyone, so it kept raiding the
   same nexus every 6 hours indefinitely. Expired cores now stand down and
   revert to an ordinary neutral settlement.
+- **Rogue AI cores give newcomers room to breathe.** Cores no longer pick
+  a commander in the first 48 hours after their starter protection ends,
+  and they leave commanders who have been away for more than 3 days alone.
 - Galaxy events and daily neutral growth now run on a reliable schedule
   instead of restarting their clock on every server update.
 

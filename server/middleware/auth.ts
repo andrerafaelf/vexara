@@ -93,7 +93,13 @@ const auth = async (req: Request, res: Response, next: NextFunction): Promise<vo
 		authReq.galaxyId = cached.activeGalaxyId ?? (null as unknown as number);
 		authReq.galaxyStatus = cached.galaxyStatus as 'active' | 'ended' | null;
 
-		if (authReq.galaxyStatus === 'ended' && !READ_METHODS.has(req.method)) {
+		// Galaxy-optional routes are account-scoped (pass, shop gifts, profile, galaxy
+		// select/leave guard status themselves), so an ended galaxy does not lock them.
+		if (
+			authReq.galaxyStatus === 'ended' &&
+			authReq.activeGalaxyOptional !== true &&
+			!READ_METHODS.has(req.method)
+		) {
 			res
 				.status(423)
 				.json({ error: 'This galaxy has ended and is read-only', code: 'galaxy_ended' });

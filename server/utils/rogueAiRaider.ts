@@ -10,6 +10,10 @@ const RAID_RADIUS = 12;
 const RAID_COOLDOWN_MS = 6 * 60 * 60 * 1000; // 6h between raids per core
 const TROOP_COMMIT_FRACTION = 0.45; // how much of the core's garrison goes on a raid
 const MIN_TROOPS_PER_RAID = 12;
+// New-player guardrails: a commander whose starter protection just ended gets a grace
+// window before cores pick them, and commanders away for days are not farmed while offline.
+const POST_PROTECTION_GRACE_MS = 48 * 60 * 60 * 1000;
+const INACTIVE_OWNER_MS = 72 * 60 * 60 * 1000;
 
 const COMBAT_TROOP_KEYS = [
 	'sentinelLancer',
@@ -80,7 +84,11 @@ export async function processRogueAiRaids(): Promise<void> {
 				where: {
 					galaxyId: event.galaxyId,
 					ownerId: { not: null },
-					OR: [{ newbieProtectionEndsAt: null }, { newbieProtectionEndsAt: { lte: now } }],
+					OR: [
+						{ newbieProtectionEndsAt: null },
+						{ newbieProtectionEndsAt: { lte: new Date(now.getTime() - POST_PROTECTION_GRACE_MS) } }
+					],
+					owner: { lastPlayedAt: { gte: new Date(now.getTime() - INACTIVE_OWNER_MS) } },
 					x: { gte: core.x - RAID_RADIUS, lte: core.x + RAID_RADIUS },
 					y: { gte: core.y - RAID_RADIUS, lte: core.y + RAID_RADIUS }
 				},
