@@ -115,6 +115,62 @@ model User {
   referralVpBonusAt DateTime?
 
   shopPurchases ShopPurchase[]
+
+  // Permanent, account-wide Vex Pass. Lifetime pass XP across every galaxy.
+  // Level = min(50, floor(passXp / 200)); XP past 10,000 feeds repeatable caches.
+  // Supersedes GalaxyPlayer.seasonXp / passLevel.
+  passXp      Int     @default(0)
+  // Paid track unlock. Supersedes GalaxyPlayer.hasPaidPass.
+  hasPaidPass Boolean @default(false)
+  // Daily pass XP cap (800 XP per UTC day). passXpDay is the UTC date key
+  // ('YYYY-MM-DD', toISOString().slice(0,10)) the total belongs to; when it no
+  // longer matches today the total is treated as 0.
+  passXpDay      String? @db.VarChar(10)
+  passXpDayTotal Int     @default(0)
+  passClaims  PassClaim[]
+
+  // Set on password change/reset. Any JWT issued (iat) before this is rejected by
+  // auth middleware and socket auth. Null = no revocation.
+  passwordChangedAt DateTime?
+}
+
+// One row per claimed Vex Pass reward. The (userId, level, track) unique
+// constraint is the atomic claim lock: insert first, a duplicate means already
+// claimed. Separate tracks let a player who buys the paid pass later still claim
+// the paid half of levels they already claimed for free.
+model PassClaim {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  // 'free' | 'paid' (levels 1..50) | 'cache' (post-50 repeatable caches,
+  // level 51 = cache #1, 52 = cache #2, ...). The app always sets it, no default.
+  track     String   @db.VarChar(8)
+  // 1..50 for free/paid; 51+ for cache.
+  level     Int
+  // Audit only, deliberately no FKs: galaxies and nexuses can be deleted.
+  galaxyId  Int?
+  nexusId   Int?
+  claimedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, level, track])
+}
+
+// Claim-before-process ledger for Ko-fi webhook deliveries. Insert first; a
+// duplicate transactionId means the delivery was already processed (Ko-fi retries
+// must never double-credit Vex Points).
+model KofiWebhookEvent {
+  id            Int      @id @default(autoincrement())
+  // Ko-fi kofi_transaction_id.
+  transactionId String   @unique @db.VarChar(128)
+  // Donation | Subscription | Shop Order | Commission
+  type          String   @db.VarChar(32)
+  // Matched user if any. No FK on purpose: audit only, survives user deletion.
+  userId        Int?
+  amount        String?  @db.VarChar(32)
+  receivedAt    DateTime @default(now())
+
+  @@index([userId])
 }
 
 // Permanent record of every shop purchase. Used for de-duplication
@@ -227,12 +283,15 @@ model GalaxyPlayer {
 
   dominanceSince DateTime?
 
+  // DEPRECATED: seasonXp, passLevel, hasPaidPass, passTitle and claimedLevels are
+  // superseded by User.passXp / User.hasPaidPass / PassClaim. Kept for rollback
+  // only; drop in a later release.
   seasonXp      Int     @default(0)
   passLevel     Int     @default(0)
   hasPaidPass   Boolean @default(false)
-  // Highest pass title earned this season. Promoted to User.earnedTitles at season end.
+  // DEPRECATED. Highest pass title earned this season. Promoted to User.earnedTitles at season end.
   passTitle     String? @db.VarChar(32)
-  // JSON array of level numbers the player has already claimed rewards for.
+  // DEPRECATED (see PassClaim). JSON array of level numbers already claimed.
   claimedLevels Json    @default("[]")
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)

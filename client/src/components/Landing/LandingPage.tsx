@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -11,6 +11,7 @@ import PublicNav from '@/components/PublicNav';
 import { getPublicGalaxyStatus } from '@/services/api';
 import { DISCORD_URL } from '@/constants/social';
 import { PASS_LEVELS } from '@/constants/vexPass';
+import { LATEST_PATCH_LABEL } from '@/data/latestPatch';
 import '@/styles/Landing.css';
 
 const FOOTAGE: { src: string; label: string; code: string; caption: string }[] = [
@@ -42,13 +43,13 @@ const FOOTAGE: { src: string; label: string; code: string; caption: string }[] =
 		src: screenshot('troops'),
 		code: 'VX-05',
 		label: 'Troops',
-		caption: 'Twelve unit types - composition wins fights, not numbers.'
+		caption: 'Sixteen unit types - composition wins fights, not numbers.'
 	},
 	{
 		src: screenshot('buildings'),
 		code: 'VX-06',
 		label: 'Buildings',
-		caption: 'Eight core structures drive your economy and military.'
+		caption: 'Twelve core structures drive your economy and military.'
 	},
 	{
 		src: screenshot('market'),
@@ -68,11 +69,11 @@ const PILLARS = [
 	{
 		idx: '01',
 		title: 'Run a three-resource economy',
-		body: 'Biomass, alloy, and ore tick 24/7. Storage and production scale per building level. Capture a Resource Depot - double your output overnight.'
+		body: 'Biomass, alloy, and ore tick 24/7. Storage and production scale per building level. A captured Resource Depot nexus produces at 2x.'
 	},
 	{
 		idx: '02',
-		title: 'Train twelve unit types across three classes',
+		title: 'Train sixteen unit types across three classes',
 		body: 'From 53s Sentinel Lancers to 4h Overseers. Mobile beats Armor, Armor beats Fire, Fire beats Mobile. Every unit card shows its class, its role (Striker / Anvil / Scout / Conquest), and what it counters. You know before you commit.'
 	},
 	{
@@ -83,23 +84,25 @@ const PILLARS = [
 	{
 		idx: '04',
 		title: 'Conquer with Overseers',
-		body: 'Train an Overseer (4h, max 3 per nexus). Each surviving strike drops enemy control by 34. Hit zero - the nexus is yours.'
+		body: 'Train an Overseer (4h, max 3 per nexus, 1 per strike). A winning strike where the Overseer survives drains 15, 34 or 50 control depending on how decisive the win was; control regenerates 10 per hour. Hit zero and the nexus is yours.'
 	},
 	{
 		idx: '05',
 		title: 'Compete in seasons. Build a permanent record.',
-		body: 'Every galaxy runs to a winner. The champion faction earns naming rights and a permanent Hall of Champions entry. Your Vex Points carry to the next galaxy. Permanent commander titles (Veteran, Iron Commander, Conqueror, Warlord) are earned by galaxies played and won, not purchased. Every season you play compounds into a record no wipe can touch.'
+		body: 'Every galaxy runs to a winner. The champion faction earns a permanent Hall of Champions entry. Your Vex Points carry to the next galaxy. Permanent commander titles (Veteran, Iron Commander, Conqueror, Warlord) are earned by galaxies played and won. Every galaxy you play compounds into a record no wipe can touch.'
 	},
 	{
 		idx: '06',
 		title: 'Faction diplomacy and wars',
-		body: 'Declare war on rivals or sign non-aggression pacts, trade agreements, and vassal treaties. Coordinate strikes through the War Room, where every faction-mate\'s pledge shows a live matchup verdict against the actual defending garrison. Every alliance is public.'
+		body: 'Declare war on rivals or sign non-aggression pacts, trade agreements, and vassal treaties. Coordinate strikes through the War Room, where every faction-mate\'s pledge shows a live matchup verdict against your latest scout intel. Every alliance is public.'
 	}
 ];
 
 interface PublicGalaxyStatus {
 	galaxy: { id: number; name: string; createdAt: string } | null;
 	activePlayers: number;
+	activePlayers24h: number;
+	joinedPlayers: number;
 	totalRegistered: number;
 	claimedNexuses: number;
 	topFactions: {
@@ -125,7 +128,6 @@ interface PublicGalaxyStatus {
 export default function LandingPage() {
 	const router = useRouter();
 	const [redirectingAuthed, setRedirectingAuthed] = useState(false);
-	const [bannerVisible, setBannerVisible] = useState(false);
 	const rootRef = useRef<HTMLDivElement | null>(null);
 
 	useEffect(() => {
@@ -136,23 +138,12 @@ export default function LandingPage() {
 		}
 	}, [router]);
 
-	// Publish the banner's *measured* height to the root as --lp-banner-content-h
-	// so the nav/hero offsets stay exact even when the banner text wraps to two
-	// lines on narrow screens. Falls back to a sane default via CSS when 0.
-	const handleBannerResize = useCallback((height: number) => {
-		const root = rootRef.current;
-		if (!root) return;
-		root.style.setProperty('--lp-banner-content-h', `${Math.round(height)}px`);
-	}, []);
-
 	if (redirectingAuthed) return null;
 
 	return (
-		<div ref={rootRef} className={`lp-root${bannerVisible ? ' lp-has-banner' : ''}`}>
-			<BetaBanner onVisibilityChange={setBannerVisible} onResize={handleBannerResize} />
+		<div ref={rootRef} className="lp-root">
 			<PublicNav />
 			<Hero />
-			<BetaCountdown />
 			<GalaxyStatus />
 			<Marquee />
 			<Pillars />
@@ -202,8 +193,8 @@ function Hero() {
 				<p className="lp-hero-sub">
 					Browser-based 4X strategy. Galaxies run to a winner. Your record, titles, and Vex
 					Points carry forward forever.
-					<br className="lp-hero-sub-br" /> No account wipes. No pay-to-win. Just you, your nexus,
-					and the cold math of empire.
+					<br className="lp-hero-sub-br" /> No account wipes. Free to play. Just you, your nexus, and
+					the cold math of empire.
 				</p>
 
 				<div className="lp-hero-ctas">
@@ -220,12 +211,12 @@ function Hero() {
 
 				<dl className="lp-hero-stats">
 					<div>
-						<dt>Live target</dt>
-						<dd>100</dd>
+						<dt>Unit types</dt>
+						<dd>{TROOPS_DOC.length}</dd>
 					</div>
 					<div>
-						<dt>Unit types</dt>
-						<dd>12</dd>
+						<dt>Buildings</dt>
+						<dd>{BUILDINGS_DOC.length}</dd>
 					</div>
 					<div>
 						<dt>Uptime</dt>
@@ -239,7 +230,7 @@ function Hero() {
 			</div>
 
 			<div className="lp-hero-corner" aria-hidden="true">
-				<span className="lp-hero-corner-id">VEXARA · v0.1</span>
+				<span className="lp-hero-corner-id">VEXARA · {LATEST_PATCH_LABEL.toUpperCase()}</span>
 				<span className="lp-hero-corner-bar" />
 				<span className="lp-hero-corner-coord">QUADRANT 04-7A · LIVE</span>
 			</div>
@@ -249,196 +240,10 @@ function Hero() {
 
 /* ──────────────────────────────────────────────────────────── */
 
-// Beta launch: 28 Jun 2026 18:30 UTC. Sign-up reward window closes 1 Jul 2026.
-const BETA_LAUNCH = new Date('2026-06-28T18:30:00Z');
-const SIGNUP_DEADLINE = new Date('2026-07-01T23:59:59Z');
-
-interface Countdown {
-	days: number;
-	hours: number;
-	minutes: number;
-	seconds: number;
-	done: boolean;
-}
-
-function useCountdown(target: Date): Countdown {
-	const compute = (): Countdown => {
-		const diff = target.getTime() - Date.now();
-		if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0, done: true };
-		const s = Math.floor(diff / 1000);
-		return {
-			days: Math.floor(s / 86400),
-			hours: Math.floor((s % 86400) / 3600),
-			minutes: Math.floor((s % 3600) / 60),
-			seconds: s % 60,
-			done: false
-		};
-	};
-	const [cd, setCd] = useState<Countdown>(compute);
-	useEffect(() => {
-		const id = setInterval(() => setCd(compute()), 1000);
-		return () => clearInterval(id);
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [target]);
-	return cd;
-}
-
-function BetaBanner({
-	onVisibilityChange,
-	onResize
-}: {
-	onVisibilityChange?: (visible: boolean) => void;
-	onResize?: (height: number) => void;
-}) {
-	const [dismissed, setDismissed] = useState(true);
-	const launched = useCountdown(BETA_LAUNCH).done;
-	const windowClosed = useCountdown(SIGNUP_DEADLINE).done;
-	const ref = useRef<HTMLDivElement | null>(null);
-
-	useEffect(() => {
-		// Hide once the signup window fully closes, or if the user dismissed it.
-		if (windowClosed) return;
-		if (localStorage.getItem('vx-beta-banner-dismissed') === '1') return;
-		setDismissed(false);
-	}, [windowClosed]);
-
-	const visible = !dismissed && !windowClosed;
-	useEffect(() => {
-		onVisibilityChange?.(visible);
-	}, [visible, onVisibilityChange]);
-
-	// Report the banner's real rendered height so offsets stay exact when the
-	// text wraps to two lines on narrow screens or grows for a notch inset.
-	useEffect(() => {
-		const el = ref.current;
-		if (!el || !visible) return;
-		const report = () => onResize?.(el.getBoundingClientRect().height);
-		report();
-		const ro = new ResizeObserver(report);
-		ro.observe(el);
-		return () => ro.disconnect();
-	}, [visible, onResize]);
-
-	if (!visible) return null;
-
-	return (
-		<div className="lp-beta-banner" role="region" aria-label="Beta announcement" ref={ref}>
-			<p className="lp-beta-banner-text">
-				<span className="lp-beta-banner-dot" aria-hidden="true" />
-				{/* Full copy on wider screens, concise copy on phones. */}
-				<span className="lp-beta-banner-long">
-					{launched ? (
-						<>
-							<strong>Beta is LIVE.</strong> Sign up before <strong>July 1</strong> for{' '}
-							<strong>500 Vex Points</strong> free — found a nexus to earn permanent{' '}
-							<strong>Beta Founder</strong> status.
-						</>
-					) : (
-						<>
-							<strong>Beta launches June 28.</strong> Sign up before <strong>July 1</strong> for{' '}
-							<strong>500 Vex Points</strong> free, plus <strong>Beta Founder</strong> status when
-							you found a nexus.
-						</>
-					)}
-				</span>
-				<span className="lp-beta-banner-short">
-					{launched ? (
-						<>
-							<strong>Beta is LIVE.</strong> Join by <strong>July 1</strong> for{' '}
-							<strong>500 VP</strong> free.
-						</>
-					) : (
-						<>
-							<strong>Beta June 28.</strong> Join by <strong>July 1</strong> for{' '}
-							<strong>500 VP</strong> free.
-						</>
-					)}
-				</span>
-			</p>
-			<div className="lp-beta-banner-actions">
-				<Link
-					href="/register?utm_source=site&utm_medium=banner&utm_campaign=beta_launch"
-					className="lp-beta-banner-cta"
-				>
-					Claim 500 VP →
-				</Link>
-				<button
-					type="button"
-					className="lp-beta-banner-close"
-					aria-label="Dismiss beta announcement"
-					onClick={() => {
-						localStorage.setItem('vx-beta-banner-dismissed', '1');
-						setDismissed(true);
-					}}
-				>
-					✕
-				</button>
-			</div>
-		</div>
-	);
-}
-
-function BetaCountdown() {
-	const launchCd = useCountdown(BETA_LAUNCH);
-	const deadlineCd = useCountdown(SIGNUP_DEADLINE);
-	const launched = launchCd.done;
-	const cd = launched ? deadlineCd : launchCd;
-
-	// Once the signup window closes entirely, retire the section.
-	if (launched && deadlineCd.done) return null;
-
-	const units = [
-		{ v: cd.days, l: 'Days' },
-		{ v: cd.hours, l: 'Hours' },
-		{ v: cd.minutes, l: 'Min' },
-		{ v: cd.seconds, l: 'Sec' }
-	];
-
-	return (
-		<section className="lp-section lp-beta" aria-labelledby="lp-beta-title">
-			<div className="lp-beta-inner">
-				<span className="lp-beta-eyebrow">
-					{launched ? '// BETA LIVE · 500 VP ENDS JULY 1' : '// TRANSMISSION 01A · BETA COUNTDOWN'}
-				</span>
-				<h2 id="lp-beta-title" className="lp-beta-title">
-					{launched ? '500 Vex Points end July 1.' : 'Beta launches June 28.'}
-				</h2>
-				<p className="lp-beta-sub">
-					{launched
-						? 'Sign up before July 1 to claim 500 Vex Points free. Found a nexus any time during the beta to earn the permanent Beta Founder badge — never re-issued.'
-						: 'Enlist now and you are ready the moment the galaxy opens. Sign up before July 1 for 500 Vex Points free, then found a nexus during the beta for permanent Beta Founder status.'}
-				</p>
-
-				<div className="lp-beta-clock" aria-label="Countdown">
-					{units.map((u) => (
-						<div key={u.l} className="lp-beta-unit">
-							<span className="lp-beta-unit-num">{String(u.v).padStart(2, '0')}</span>
-							<span className="lp-beta-unit-label">{u.l}</span>
-						</div>
-					))}
-				</div>
-
-				<div className="lp-beta-perks">
-					<span className="lp-beta-perk">◆ 500 Vex Points on signup</span>
-					<span className="lp-beta-perk">◆ Permanent Beta Founder badge</span>
-					<span className="lp-beta-perk">◆ No download · plays in your browser</span>
-				</div>
-
-				<Link
-					href="/register?utm_source=site&utm_medium=countdown&utm_campaign=beta_launch"
-					className="lp-btn lp-btn-primary lp-btn-lg"
-				>
-					<span className="lp-btn-label">Claim your 500 VP</span>
-					<span className="lp-btn-arrow" aria-hidden="true">
-						→
-					</span>
-				</Link>
-			</div>
-		</section>
-	);
-}
-
 /* ──────────────────────────────────────────────────────────── */
+
+/** Live numbers are only shown once enough commanders are active to be meaningful. */
+const POPULATION_FLOOR = 10;
 
 function GalaxyStatus() {
 	const [status, setStatus] = useState<PublicGalaxyStatus | null>(null);
@@ -459,27 +264,38 @@ function GalaxyStatus() {
 
 	const latest = status?.latestBattles ?? [];
 	const topFactions = status?.topFactions ?? [];
+	// Loading, error and low-population all fall back to the evergreen early-galaxy copy,
+	// so the server-rendered page never shows a placeholder or a tiny number.
+	const showLive = status !== null && status.activePlayers >= POPULATION_FLOOR;
 
 	return (
 		<section className="lp-section lp-galaxy-status" aria-labelledby="lp-galaxy-status-title">
 			<SectionHead
 				label="TRANSMISSION 01B"
 				title="Galaxy status"
-				subtitle="Public proof from the live galaxy."
+				subtitle={
+					showLive ? 'Public proof from the live galaxy.' : 'The galaxy is open. The map is wide.'
+				}
 				titleId="lp-galaxy-status-title"
 			/>
 
 			<div className="lp-status-grid">
 				<div className="lp-status-command">
-					<span className="lp-status-kicker">Recruitment objective</span>
-					<strong>40-ish commanders are already in-galaxy. Next stop: 100 active players.</strong>
+					<span className="lp-status-kicker">
+						{showLive ? 'Recruitment objective' : 'Early galaxy'}
+					</span>
+					<strong>
+						{showLive
+							? 'Commanders are already at war. Claim your place.'
+							: 'Early galaxy. Prime territory is still unclaimed.'}
+					</strong>
 					<p>
 						New commanders get starter protection, guided quests, a relocation token, and a
 						faction-first path into the war.
 					</p>
 					<div className="lp-status-actions">
 						<Link
-							href="/register?utm_source=site&utm_medium=status&utm_campaign=100_active"
+							href="/register?utm_source=site&utm_medium=status&utm_campaign=galaxy_status"
 							className="lp-btn lp-btn-primary"
 						>
 							<span className="lp-btn-label">Join the live galaxy</span>
@@ -490,60 +306,86 @@ function GalaxyStatus() {
 					</div>
 				</div>
 
-				<dl className="lp-status-metrics">
-					<div>
-						<dt>Active players</dt>
-						<dd>{status ? status.activePlayers.toLocaleString() : '...'}</dd>
-					</div>
-					<div>
-						<dt>Registered</dt>
-						<dd>{status ? status.totalRegistered.toLocaleString() : '...'}</dd>
-					</div>
-					<div>
-						<dt>Claimed nexuses</dt>
-						<dd>{status ? status.claimedNexuses.toLocaleString() : '...'}</dd>
-					</div>
-				</dl>
+				{showLive && status ? (
+					<>
+						<dl className="lp-status-metrics">
+							<div>
+								<dt>Active commanders (7d)</dt>
+								<dd>{status.activePlayers.toLocaleString()}</dd>
+							</div>
+							<div>
+								<dt>Registered commanders</dt>
+								<dd>{status.totalRegistered.toLocaleString()}</dd>
+							</div>
+							<div>
+								<dt>Claimed nexuses</dt>
+								<dd>{status.claimedNexuses.toLocaleString()}</dd>
+							</div>
+						</dl>
 
-				<div className="lp-status-panel">
-					<h3>Top factions</h3>
-					{topFactions.length > 0 ? (
-						<ol className="lp-status-list">
-							{topFactions.map((faction) => (
-								<li key={faction.id}>
-									<span>
-										[{faction.tag}] {faction.name}
-									</span>
-									<strong>{faction.points.toLocaleString()} pts</strong>
-								</li>
-							))}
-						</ol>
-					) : (
-						<p className="lp-status-empty">Faction openings are still forming.</p>
-					)}
-				</div>
+						<div className="lp-status-panel">
+							<h3>Top factions</h3>
+							{topFactions.length > 0 ? (
+								<ol className="lp-status-list">
+									{topFactions.map((faction) => (
+										<li key={faction.id}>
+											<span>
+												[{faction.tag}] {faction.name}
+											</span>
+											<strong>{faction.points.toLocaleString()} pts</strong>
+										</li>
+									))}
+								</ol>
+							) : (
+								<p className="lp-status-empty">Faction openings are still forming.</p>
+							)}
+						</div>
 
-				<div className="lp-status-panel">
-					<h3>Latest battles</h3>
-					{latest.length > 0 ? (
+						<div className="lp-status-panel">
+							<h3>Latest battles</h3>
+							{latest.length > 0 ? (
+								<ol className="lp-status-list">
+									{latest.map((battle) => (
+										<li key={battle.id}>
+											<span>
+												{battle.conquered
+													? `${battle.attacker} conquered ${battle.defender}`
+													: battle.victory
+														? `${battle.attacker} defeated ${battle.defender}`
+														: `${battle.defender} held against ${battle.attacker}`}
+											</span>
+											<strong>{battle.totalUnits.toLocaleString()} units</strong>
+										</li>
+									))}
+								</ol>
+							) : (
+								<p className="lp-status-empty">No battles to report yet.</p>
+							)}
+						</div>
+					</>
+				) : (
+					<div className="lp-status-panel">
+						<h3>What you start with</h3>
 						<ol className="lp-status-list">
-							{latest.map((battle) => (
-								<li key={battle.id}>
-									<Link href={`/replay/${battle.id}`}>
-										{battle.conquered
-											? `${battle.attacker} conquered ${battle.defender}`
-											: battle.victory
-												? `${battle.attacker} defeated ${battle.defender}`
-												: `${battle.defender} held against ${battle.attacker}`}
-									</Link>
-									<strong>{battle.totalUnits.toLocaleString()} units</strong>
-								</li>
-							))}
+							<li>
+								<span>Starter protection on your first nexus</span>
+								<strong>INCLUDED</strong>
+							</li>
+							<li>
+								<span>Guided quests that walk you through your first build</span>
+								<strong>INCLUDED</strong>
+							</li>
+							<li>
+								<span>A relocation token to pick a better spot</span>
+								<strong>INCLUDED</strong>
+							</li>
+							<li>
+								<span>Factions to found (one commander is enough)</span>
+								<strong>OPEN</strong>
+							</li>
 						</ol>
-					) : (
-						<p className="lp-status-empty">No public battles yet. Be the first headline.</p>
-					)}
-				</div>
+					</div>
+				)}
 			</div>
 		</section>
 	);
@@ -551,15 +393,15 @@ function GalaxyStatus() {
 
 function Marquee() {
 	const items = [
-		'12 UNIT TYPES',
-		'08 CORE BUILDINGS',
+		`${TROOPS_DOC.length} UNIT TYPES`,
+		`${String(BUILDINGS_DOC.length).padStart(2, '0')} CORE BUILDINGS`,
 		'24/7 LIVE GALAXY',
 		'SEASONAL GALAXIES',
-		'NO PAY-TO-WIN',
+		'FREE TO PLAY',
 		'REAL TRAVEL TIMES',
 		'COMMANDER LEGACY',
 		'HALL OF CHAMPIONS',
-		'BATTLE PASS',
+		'PERMANENT VEX PASS',
 		'PERSISTENT WORLD'
 	];
 	const doubled = [...items, ...items];
@@ -735,18 +577,18 @@ function RosterTeaser() {
 
 /* ──────────────────────────────────────────────────────────── */
 
-// Headline milestones. Mirrors server/utils/battlePass.ts + VexPassModal exactly.
+// Headline milestones. Mirrors server/utils/battlePass.ts + constants/vexPass.ts exactly.
 const PASS_TIERS = [
-	{ level: 1,  track: 'Paid',  reward: 'Season title: Conscript' },
-	{ level: 8,  track: 'Paid',  reward: 'Season title: Operative' },
+	{ level: 1,  track: 'Paid',  reward: 'Title: Conscript' },
+	{ level: 8,  track: 'Paid',  reward: 'Title: Operative' },
 	{ level: 10, track: 'Free',  reward: 'Bronze badge' },
-	{ level: 18, track: 'Paid',  reward: 'Season title: Proven' },
+	{ level: 18, track: 'Paid',  reward: 'Title: Proven' },
 	{ level: 25, track: 'Free',  reward: 'Silver badge' },
-	{ level: 30, track: 'Paid',  reward: 'Season title: Vex Commander' },
+	{ level: 30, track: 'Paid',  reward: 'Title: Vex Commander' },
 	{ level: 40, track: 'Free',  reward: 'Title: Veteran + Gold badge' },
-	{ level: 45, track: 'Paid',  reward: 'Season title: High Commander' },
+	{ level: 45, track: 'Paid',  reward: 'Title: High Commander' },
 	{ level: 50, track: 'Free',  reward: 'Platinum badge + 20 Vex Points' },
-	{ level: 50, track: 'Paid',  reward: 'Season Conqueror + 170 Vex Points + 4 tokens + 35% production 120h' }
+	{ level: 50, track: 'Paid',  reward: 'Protocol Ascendant + 170 Vex Points + 4 supporter tokens + 35% production 120h' }
 ];
 
 // Reward string → plain marketing label (public page, no in-game icons).
@@ -782,29 +624,33 @@ function Seasons() {
 		<section className="lp-section lp-seasons" aria-labelledby="lp-seasons-title">
 			<SectionHead
 				label="TRANSMISSION 05"
-				title="Seasons &amp; the Vex Pass"
-				subtitle="Every galaxy ends with a winner. Your Vex Points carry forward."
+				title="Seasons &amp; the permanent Vex Pass"
+				subtitle="Every galaxy ends with a winner. Your Vex Points and pass progress carry forward."
 				titleId="lp-seasons-title"
 			/>
 
 			<div className="lp-seasons-grid">
 				<div className="lp-seasons-desc">
 					<p>
-						Each galaxy runs to a dominance threshold. When a faction crosses the line, the season
-						closes: the winning faction earns naming rights and a permanent{' '}
+						Each galaxy runs to a dominance threshold: a faction must hold 65% of all nexuses for
+						36 hours. When it does, the season closes and the winning faction earns a permanent{' '}
 						<strong>Hall of Champions</strong> entry. Then a fresh galaxy opens.
 					</p>
 					<p>
 						<strong>Vex Points</strong> carry across every galaxy. Permanent commander titles
 						(Veteran, Iron Commander, Conqueror, Warlord) are earned through galaxies played and
-						won, not purchased.
+						won.
 					</p>
 					<p>
-						A 50-level <strong>Vex Pass</strong> runs alongside every season. The free track
-						(included for everyone) gives resources and badges as you play. The paid track costs
-						1,000 Vex Points (equivalent to €4.99), which adds season-scoped titles, temporary
-						production boosts, supporter tokens, and 750 Vex Points back across the 50 levels. No
-						pass reward touches combat stats or troop power.
+						The <strong>Vex Pass</strong> is one permanent pass for your whole account: your pass
+						XP, levels, claimed rewards and paid unlock carry across every galaxy, with no season
+						timer and no resets. The free track pays out resources, Vex Points, badges and the
+						Veteran title over 50 levels, and the paid track is a one-time 1,000 Vex Points unlock
+						that adds titles, production boosts, supporter tokens and more Vex Points; each reward
+						can be claimed once per account, and unlocking the paid track later also unlocks the
+						paid rewards of every level you have already reached. After level 50, every 200 XP
+						earns a repeatable Resource Cache (50,000 of each resource) for free and paid players
+						alike.
 					</p>
 				</div>
 
@@ -821,7 +667,7 @@ function Seasons() {
 							</li>
 						))}
 					</ol>
-					<p className="lp-seasons-pass-note">Paid track: 1,000 Vex Points (€4.99). Free track included for all players.</p>
+					<p className="lp-seasons-pass-note">Paid track: one-time 1,000 Vex Points (€4.99). Free track included for all players.</p>
 				</div>
 			</div>
 
@@ -854,9 +700,15 @@ function Seasons() {
 					</table>
 				</div>
 				<p className="lp-seasons-pass-note">
-					Free track returns 250 Vex Points across 50 levels; the paid track returns a further 500 (750
-					total on a 1,000-point pass). Titles and badges are permanent; production boosts and supporter
-					tokens are season-scoped. Nothing here affects combat stats or troop power.
+					Free track returns 250 Vex Points across 50 levels; the paid track returns a further 520 (770
+					total), so a 1,000-point unlock nets out at 480. Titles and badges are permanent; production
+					boosts are temporary; supporter tokens are account items that persist (6 on the paid track,
+					each redeemable for +2 levels on one building or a one-time troop grant scaled to your Command
+					Core level). After level 50, every 200 XP earns a repeatable Resource Cache (50,000 of each
+					resource) on both tracks. Resource rewards are delivered to a nexus you choose in the galaxy
+					you are playing and must fit in its storage. In a galaxy you have just joined, rewards open up
+					to level 10 right away and then 4 more levels per day, caches unlock after 10 days, pass XP is
+					capped at 800 per day, and you can bank up to 10 unclaimed caches.
 				</p>
 			</div>
 		</section>
@@ -870,8 +722,8 @@ function Founder() {
 		<section className="lp-section lp-founder" aria-labelledby="lp-founder-title">
 			<SectionHead
 				label="TRANSMISSION 06"
-				title="Founders cohort"
-				subtitle="Permanent. Never re-issued."
+				title="Beta founders"
+				subtitle="Permanent marks on your account."
 				titleId="lp-founder-title"
 			/>
 
@@ -880,49 +732,39 @@ function Founder() {
 					<li>
 						<span className="lp-founder-bullet">◆</span>
 						<span>
-							<strong>Founder&apos;s badge.</strong> Permanent, never re-issued.
+							<strong>Beta Founder badge.</strong> Found a nexus during the beta and the badge is
+							permanent on your account.
 						</span>
 					</li>
 					<li>
 						<span className="lp-founder-bullet">◆</span>
 						<span>
-							<strong>Leaderboard mark</strong> on all rankings, every galaxy.
+							<strong>Hall of Champions entry:</strong> when your faction wins a galaxy, your name
+							is engraved permanently.
 						</span>
 					</li>
 					<li>
 						<span className="lp-founder-bullet">◆</span>
 						<span>
-							<strong>Hall of Champions entry:</strong> when your faction wins a galaxy season, your
-							name is engraved permanently. No future player can claim that slot.
+							<strong>Permanent commander titles</strong> earned through galaxies played and won:
+							Veteran, Iron Commander, Conqueror, Warlord. They never reset.
 						</span>
 					</li>
 					<li>
 						<span className="lp-founder-bullet">◆</span>
 						<span>
-							<strong>Naming rights</strong> if your faction wins the current season.
-						</span>
-					</li>
-					<li>
-						<span className="lp-founder-bullet">◆</span>
-						<span>
-							<strong>Permanent commander title</strong> earned through galaxies played: Veteran,
-							Iron Commander, Conqueror, Warlord. Never purchased, never reset.
-						</span>
-					</li>
-					<li>
-						<span className="lp-founder-bullet">◆</span>
-						<span>
-							<strong>Recruitment Orders.</strong> Invite one friend each week for public cosmetic
-							bragging rights, Discord recognition, and your existing account referral rewards.
+							<strong>Referral rewards.</strong> Share your invite link: recruits start with a bonus
+							troop squad, you earn redeemable tokens as they grow, and you both get 250 Vex Points
+							when they reach 5,000 influence.
 						</span>
 					</li>
 				</ul>
 
 				<div className="lp-founder-stamp" aria-hidden="true">
 					<div className="lp-founder-stamp-inner">
-						<span className="lp-founder-stamp-arc-top">VEXARA · FOUNDERS COHORT</span>
+						<span className="lp-founder-stamp-arc-top">VEXARA · BETA FOUNDERS</span>
 						<span className="lp-founder-stamp-id">№ ∞</span>
-						<span className="lp-founder-stamp-arc-bot">PERMANENT · NEVER REISSUED</span>
+						<span className="lp-founder-stamp-arc-bot">PERMANENT · ON YOUR ACCOUNT</span>
 					</div>
 				</div>
 			</div>
@@ -942,8 +784,8 @@ function BuiltBy() {
 				</h2>
 				<p>
 					Vexara is a solo project. No publisher. No investors. No roadmap dictated by quarterly
-					targets. Just a strategy-game player building the kind of persistent MMO that doesn&apos;t
-					sell wins.
+					targets. Just a strategy-game player building the kind of persistent MMO he wants to play:
+					free to play, with no account wipes.
 				</p>
 				<p>
 					Discord is the command center: #new-commanders, #battle-replays, #faction-recruitment,

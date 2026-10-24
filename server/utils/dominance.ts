@@ -1,7 +1,6 @@
 import prisma from '../lib/prisma.js';
 import { NOTIF, sendPushToUser } from './push.js';
-import { logError } from './logger.js';
-import { promotePassTitle } from './battlePass.js';
+import { logError, logInfo } from './logger.js';
 
 // Engine defaults. Each galaxy may override any of these via its win* columns
 // (see resolveWinConfig); a NULL column falls back to the default here.
@@ -437,8 +436,7 @@ async function endGalaxy(
 					factionName: factionInfo?.name ?? null,
 					factionTag: factionInfo?.tag ?? null
 				}
-			}),
-			promotePassTitle(p.userId, galaxy.id)
+			})
 		]);
 	}
 
@@ -461,17 +459,31 @@ async function endGalaxy(
 	});
 }
 
-// Ends any active galaxies when the global season timer (AppConfig.seasonEndsAt)
-// has passed. The winner is the faction with the most nexuses at expiry.
+// Ends active galaxies whose season timer has passed. The effective end for a
+// galaxy is its own Galaxy.seasonEndsAt, falling back to the global
+// AppConfig.seasonEndsAt. A galaxy that has not opened yet (startsAt in the
+// future) is never ended, and a galaxy created after a stale global timer is left
+// alone (the global timer only applies to galaxies that existed when it elapsed).
+// Once the global timer has fired it is cleared so it cannot kill later galaxies.
+// The winner is the faction with the most nexuses at expiry.
 // If no factions own nexuses the galaxy ends with no winner (rare edge case).
 export async function processSeasonExpiry(): Promise<void> {
+	const now = new Date();
 	const config = await prisma.appConfig.findUnique({ where: { id: 1 } });
-	if (!config?.seasonEndsAt || config.seasonEndsAt > new Date()) return;
+	const globalEnd = config?.seasonEndsAt ?? null;
 
-	const expired = await prisma.galaxy.findMany({
+	const candidates = await prisma.galaxy.findMany({
 		where: { status: 'active' },
-		select: { id: true, name: true }
+		select: { id: true, name: true, startsAt: true, createdAt: true, seasonEndsAt: true }
 	});
+
+	const expired = candidates.filter((g) => {
+		if (g.startsAt && g.startsAt > now) return false;
+		if (g.seasonEndsAt) return g.seasonEndsAt <= now;
+		if (!globalEnd || globalEnd > now) return false;
+		return g.createdAt <= globalEnd;
+	});
+	let failed = 0;
 
 	for (const galaxy of expired) {
 		try {
@@ -517,10 +529,25 @@ export async function processSeasonExpiry(): Promise<void> {
 
 			await endGalaxy(galaxy, winnerFactionId);
 		} catch (err) {
+			failed++;
 			logError('season_expiry_failed', {
 				message: (err as Error).message,
 				galaxyId: galaxy.id
 			});
+		}
+	}
+
+	// Clear the fired global timer (only if nobody changed it meanwhile). Kept when a
+	// galaxy failed to end so the next tick retries it. It is cleared even if some
+	// galaxies were skipped (future startsAt, or their own per-galaxy date): the global
+	// timer is one-shot and must not outlive the galaxies that existed when it fired.
+	if (globalEnd && globalEnd <= now && failed === 0) {
+		const cleared = await prisma.appConfig.updateMany({
+			where: { id: 1, seasonEndsAt: globalEnd },
+			data: { seasonEndsAt: null }
+		});
+		if (cleared.count > 0) {
+			logInfo('global_season_timer_cleared', { endedGalaxies: expired.length });
 		}
 	}
 }

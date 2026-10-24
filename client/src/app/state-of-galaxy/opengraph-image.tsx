@@ -6,7 +6,10 @@ import { ImageResponse } from 'next/og';
 export const revalidate = 300;
 export const contentType = 'image/png';
 export const size = { width: 1200, height: 630 };
-export const alt = 'Vexara Live Galaxy Status';
+export const alt = 'Vexara Galaxy Status';
+
+// Live numbers only appear once enough commanders are active to be meaningful.
+const POPULATION_FLOOR = 10;
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
@@ -39,6 +42,7 @@ async function fetchCounts(): Promise<MinimalStatus> {
 // /public/og-galaxy-status.png and pointing openGraph.images at it.
 export default async function Image() {
 	const { activePlayers, totalRegistered, claimedNexuses } = await fetchCounts();
+	const showLive = activePlayers >= POPULATION_FLOOR;
 
 	return new ImageResponse(
 		(
@@ -95,7 +99,7 @@ export default async function Image() {
 							marginBottom: 8
 						}}
 					>
-						A persistent galaxy.
+						{showLive ? 'A persistent galaxy.' : 'Early galaxy.'}
 					</div>
 					<div
 						style={{
@@ -106,7 +110,7 @@ export default async function Image() {
 							color: '#ffffff'
 						}}
 					>
-						Already moving.
+						{showLive ? 'Already moving.' : 'Territory unclaimed.'}
 					</div>
 				</div>
 
@@ -119,9 +123,25 @@ export default async function Image() {
 						gap: 64
 					}}
 				>
-					<Stat label="Active commanders" value={activePlayers} />
-					<Stat label="Registered" value={totalRegistered} />
-					<Stat label="Claimed nexuses" value={claimedNexuses} />
+					{showLive ? (
+						<>
+							<Stat label="Active commanders" value={activePlayers} />
+							<Stat label="Registered" value={totalRegistered} />
+							<Stat label="Claimed nexuses" value={claimedNexuses} />
+						</>
+					) : (
+						<div
+							style={{
+								display: 'flex',
+								fontSize: 30,
+								color: '#c9d1d9',
+								maxWidth: 760,
+								lineHeight: 1.3
+							}}
+						>
+							Free to play. Starter protection, guided quests, and factions to found.
+						</div>
+					)}
 				</div>
 
 				<div

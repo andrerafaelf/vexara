@@ -14,7 +14,10 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 interface ProfileOg {
 	username: string;
+	/** Ko-fi Alpha Commander supporter flag (User.isFounder). */
 	isFounder: boolean;
+	/** Beta Founder badge. Optional until /users/:username/og returns it. */
+	isBetaFounder?: boolean;
 	supporterTier: string | null;
 	totalInfluence: number;
 	galaxiesWon: number;
@@ -54,8 +57,10 @@ export default async function Image({ params }: { params: Promise<{ username: st
 	].filter(Boolean);
 
 	const badge = data.isFounder
-		? 'ALPHA FOUNDER'
-		: data.supporterTier
+		? 'ALPHA COMMANDER'
+		: data.isBetaFounder
+			? 'BETA FOUNDER'
+			: data.supporterTier
 			? data.supporterTier.toUpperCase()
 			: undefined;
 

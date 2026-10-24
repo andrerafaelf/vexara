@@ -9,7 +9,7 @@ export default async function Image() {
 		eyebrow: 'Briefing',
 		kicker: 'From first nexus to conquest.',
 		title: 'How to Play',
-		subtitle: 'Build, train, scout, raid, and take territory in a galaxy that never stops running.',
+		subtitle: 'Build, train, scout, raid, and take territory in a galaxy that runs 24/7 until a faction wins.',
 		footer: 'vexara.world // how-to-play'
 	});
 }

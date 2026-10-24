@@ -38,12 +38,18 @@ interface OgCardOptions {
 let _interRegular: ArrayBuffer | null = null;
 let _interBold: ArrayBuffer | null = null;
 
+// Buffer.buffer can be a larger shared pool; slice to this file's exact bytes.
+function readFontFile(file: string): ArrayBuffer {
+	const buf = fs.readFileSync(file);
+	return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer;
+}
+
 function loadFonts() {
 	if (_interRegular && _interBold) return { regular: _interRegular, bold: _interBold };
 
 	const fontsDir = path.join(process.cwd(), 'public', 'fonts');
-	_interRegular = fs.readFileSync(path.join(fontsDir, 'Inter-Regular.woff')).buffer as ArrayBuffer;
-	_interBold = fs.readFileSync(path.join(fontsDir, 'Inter-Bold.woff')).buffer as ArrayBuffer;
+	_interRegular = readFontFile(path.join(fontsDir, 'Inter-Regular.woff'));
+	_interBold = readFontFile(path.join(fontsDir, 'Inter-Bold.woff'));
 	return { regular: _interRegular, bold: _interBold };
 }
 

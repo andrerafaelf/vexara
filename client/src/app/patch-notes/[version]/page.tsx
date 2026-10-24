@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 	const description = patch.summary;
 
 	return {
-		title,
+		title: { absolute: title },
 		description,
 		alternates: { canonical: `/patch-notes/${version}` },
 		openGraph: {

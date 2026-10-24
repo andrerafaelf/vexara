@@ -13,7 +13,7 @@ const SITE_URL = 'https://vexara.world';
 const SITE_NAME = 'Vexara';
 const DEFAULT_TITLE = 'Vexara - Free Browser MMO RTS | 4X Strategy Game';
 const DEFAULT_DESCRIPTION =
-	'Vexara is a free browser MMO RTS. Galaxies run to a winner. Your commander record, titles, and Vex Points carry forward permanently. Build your nexus, command 12 unit types, forge alliances, and wage real-time war with players worldwide. No download. No account wipes. No pay-to-win.';
+	'Vexara is a free browser MMO RTS. Galaxies run to a winner. Your commander record, titles, and Vex Points carry forward permanently. Build your nexus, command 16 unit types, forge alliances, and wage real-time war with players worldwide. No download. No account wipes. Free to play.';
 const DEFAULT_OG_IMAGE = 'https://cdn.vexara.world/screenshots/overview.webp';
 
 export const metadata: Metadata = {
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
 		'persistent galaxy game',
 		'browser-based MMO',
 		'real-time strategy browser',
-		'no pay-to-win strategy game',
+		'free to play strategy game',
 		'multiplayer browser strategy'
 	],
 	authors: [{ name: 'Vexara', url: SITE_URL }],
@@ -66,7 +66,7 @@ export const metadata: Metadata = {
 				width: 1280,
 				height: 720,
 				alt: 'Vexara - a persistent sci-fi 4X galaxy',
-				type: 'image/png'
+				type: 'image/webp'
 			}
 		]
 	},
@@ -74,7 +74,7 @@ export const metadata: Metadata = {
 		card: 'summary_large_image',
 		title: DEFAULT_TITLE,
 		description:
-			'Free browser-based 4X strategy in a living sci-fi galaxy. Galaxies run to a winner. Your record carries forever. No pay-to-win.',
+			'Free browser-based 4X strategy in a living sci-fi galaxy. Galaxies run to a winner. Your record carries forever. Free to play.',
 		images: [DEFAULT_OG_IMAGE]
 	},
 	appleWebApp: {
@@ -197,9 +197,7 @@ export default function RootLayout({
 							<Suspense fallback={null}>
 								<ScrollToTop />
 							</Suspense>
-							<Suspense fallback={null}>
-								<NavigationProgress>{children}</NavigationProgress>
-							</Suspense>
+							<NavigationProgress>{children}</NavigationProgress>
 							<CookieConsent />
 						</ToastProvider>
 					</QueryProvider>

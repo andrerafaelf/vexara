@@ -47,71 +47,6 @@ export const CLASS_COUNTERED_BY: Record<TroopClass, TroopClass | null> = {
 // Result: fire gets a slight edge - partial counter, not full.
 //
 // Full counter only applies when 100% of defenders are of the countered class.
-export const CLASS_COUNTER_CODEX = `
-**Class Counter System**
-
-Vexara uses a rock-paper-scissors class triangle: Mobile beats Armor, Armor beats Fire, Fire beats Mobile. Special units (Overseer, Recon Operative) are neutral - they have no counter advantage or vulnerability because they do not fight.
-
-**The triangle:**
-- Mobile (Vanguard Breaker, Wraith Skimmer, Phantom Lance, Void Stalker, Aegis Skirmisher) - fast assault forces that exploit armor gaps and overwhelm armored units
-- Armor (Assault Trooper, Bulwark Guard, Siege Mech, Siege Colossus) - armored units that close distance and suppress fire emplacements
-- Fire (Sentinel Lancer, Pyre Suppressor, Arc Disruptor, Annihilator Platform, Plasma Turret) - fire support that pins down fast-moving mobile forces
-- Special (Overseer, Recon Operative) - no counter in either direction
-
-**The triangle now cuts BOTH ways (attack AND defense).** This is the core of the v0.22 combat rework. Previously the counter only boosted the attacker's damage; defense was raw, so stacking the single highest-defense unit was always the best garrison regardless of what attacked. Now a defending unit whose class counters the incoming attacker has its DEFENSE amplified, and one being countered defends for less. Bringing the wrong class into a fight is punished on both sides of the engagement.
-
-**Multipliers:** On attack, a class that counters the opposing class deals ×1.35 damage; a class being countered deals ×0.75. On defense, the spread is slightly milder - ×1.25 when your garrison counters the attacker, ×0.80 when it's countered - so the attacker keeps a small initiative and can't be stonewalled by a defender who simply sits still. Neutral matchups are ×1.0 on both sides.
-
-**Strikers vs anvils:** Every class has STRIKERS (high attack, low defense - your offensive units) and ANVILS (high defense, low attack - your garrison units). Garrison with anvils and attack with strikers. A glass-cannon striker left on defense barely contributes its tiny defense stat AND can be class-countered on top of that, so a striker garrison folds fast. Each class has at least one anvil, so every attacker has an equal-resource answer on defense: Armor anvils (Assault Trooper / Bulwark Guard / Siege Mech) stop Fire; the Mobile anvil (Aegis Skirmisher) stops Armor; Fire anvils (Arc Disruptor / Plasma Turret) stop Mobile.
-
-**Reading the badges (v0.24):** Every unit card in-game now shows two badges so you don't have to memorize this table. The ROLE badge marks each unit as a Striker, Anvil, Scout, or Conquest unit. The CLASS badge shows its class and what it beats (e.g. "Mobile ▸ Armor"). The Troops tab also warns you when a nexus is garrisoned mostly by strikers, and the attack screen tells you - once you've scouted the target - whether your current composition is favoured or countered by the triangle before you commit. These cues only surface the math described here; they never change it.
-
-**Partial counters in mixed engagements:** The counter bonus is proportional to how much of the enemy force your class actually counters - on attack AND defense. If you send 10 Fire units against a mix of 5 Mobile + 5 Armor defenders, Fire counters the Mobile half (×1.35) but is countered by the Armor half (×0.75). Your effective multiplier is the weighted average: (0.5 × 1.35) + (0.5 × 0.75) = 1.05 - a small edge, not the full bonus. You only get the full counter if 100% of the enemy is the class you counter. Scouting the defender's composition before you commit is no longer optional.
-
-**Targeting Core amplification:** Each level of Targeting Core (+1.5%, cap +30% at Lv20) amplifies your ATTACK counter bonuses above 1.0 and slightly deepens disadvantage penalties. A Lv20 Targeting Core turns a ×1.35 counter into ×1.65 - a significant force multiplier for well-composed attacks. The Targeting Core is an offensive building: it sharpens your strikes and does not boost a defender's class-counter on the wall.
-
-**Matchup affects survival too, not just damage:** When you win an engagement, your per-unit loss rate is also nudged by the same class triangle. Units with the class advantage against the bulk of the enemy take fewer casualties; units with the disadvantage take more. The effect is mild (about ±15% on loss rate) so matchup is a tilt, not a coin flip - sending Armor into a Fire-heavy enemy survives roughly 1.15x as well as sending it into another Armor force. Combine with the defense stat (higher defense = lower loss rate, with a meaningful spread between glass cannons and tank units) to predict how a winning engagement will burn through your stack.
-
-**Defender advantage:** The defender's Shield Grid multiplies total defensive power (now +1.5% per level) on top of all class counters. The attacker never gets the Shield Grid bonus, so a well-composed defensive nexus with anvils, high Shield Grid, and a turret is genuinely hard to break - but it is not unbreakable. A correctly-countered, scouted attack with enough committed force will crack even a deep turtle; it just costs you real losses to do it. Blind or wrong-class assaults still bounce off, no matter how big.
-
-**Stationing is defense-only (support AND transfer):** Parking troops at another nexus - whether an ally's (a support mission) or one of your own (a troop transfer) - is the same operation, and only ANVILS (defensive units) may go: Assault Trooper, Bulwark Guard, Siege Mech, Aegis Skirmisher, and Arc Disruptor. Send them to reinforce a wall wherever you need one. Strikers, Overseers, Recon Operatives, and the stationary Plasma Turret are never stationable - an attacking unit only ever leaves its nexus to attack, and always strikes from the nexus that trained it.
-
-**How losses scale - win or lose:** Combat is no longer all-or-nothing. Both sides' casualties scale with how close the fight was (the loser/winner power ratio). The losing side takes heavy losses - a blowout near-wipes them, but a narrow defeat leaves a real remnant (~85% lost, not 100%). The winning side stays light on a dominant win but bleeds badly on a coin-flip (up to ~45% lost when the fight was nearly even). The lesson: attacking a force of comparable strength is costly even when you win, and being slightly outgunned no longer means automatic annihilation. Use the in-game combat preview on the attack screen to gauge the outcome before committing.
-
-**Conquest is a gradient, not a cliff:** When an Overseer rides with a winning attack, it drains the defender's Control Level by an amount that scales with how dominant the strike was. The same power ratio that decides casualties also decides Control drain - crushing wins (3:1 or better) drain 50, clear wins drain 34, and narrow wins still drain 15. A nexus is conquered the moment its Control hits 0. This means a dominant attacker can take a nexus in two strikes; a careful planned attacker takes it in three; and a coalition of smaller players can grind down a fortified target together. Control regenerates at +10 per hour for owned nexuses, so a lone trickle of weak strikes will never succeed - coordinated waves do, and the Coordinated Assault system is how you make "coordinated" mean something the engine actually rewards.
-`;
-
-// Coordinated Assault — added in v0.23. Documents the asymmetry fix between
-// defender-side support stacking and the previously-throwaway "coordination"
-// of multi-attacker strikes. Stays in lockstep with COORDINATED_ASSAULT.md
-// (the design contract) and COORDINATED_ASSAULT_IMPL.md (the build spec).
-export const COORDINATED_ASSAULT_CODEX = `
-**Coordinated Assault**
-
-A defender can already concentrate force: their garrison plus every allied support transfer collapses into one combined wall when an attack arrives. Before v0.23 the attacker could not do the same. Even when ten waves landed on the same nexus in the same minute, the engine resolved them one at a time, each one fighting the full combined wall by itself. Coordinated offense was something players could attempt but the engine ignored.
-
-Coordinated Assault fixes that asymmetry. Waves that come from a declared coordination - the Wave Planner (solo) or a War Room operation (multi-player) - now merge at the moment they land. One combined attacker force fights one combined defender force, in a single resolution. Loose "everyone click at the same time" dogpiles that did NOT go through a coordination tool still resolve as separate strikes, exactly as they always did. The skill of timing waves is preserved; the payoff is finally there.
-
-**Wave Planner (solo coordination):** Open the Wave Planner against a target and schedule multiple waves from multiple of your own nexuses to land at the same arrival time. Every wave you schedule in that session is automatically grouped into one Wave Plan on the server. At landing, all waves in the plan that share an arrival time merge into one combined attack. Waves with different arrival times in the same plan stay separate strikes - the merge is per-arrival, not per-plan, so staggering waves on purpose still works exactly like before.
-
-**War Room (multi-player coordination):** A faction operation already lets multiple players claim slots under one shared target and arrival time. Those slots now merge at landing - all the contributors' troops fight as one combined force. A five-player War Room strike is one big battle instead of five solo duels, which is the only realistic way for a faction to crack a wall held by another organized faction.
-
-**The trade - no recall.** Joining a coordination is a commitment. Once a wave has launched its troops cannot be pulled out of the coordination before resolution. This is the entire cost: concentration earns you the merged battle, but you accept attacker-grade finality in exchange. The defender's reactive support has no equivalent constraint, so you give up flexibility to gain force.
-
-**One Overseer per coordination.** A coordinated strike is one conquest attempt with concentrated force behind it - not many. If a group somehow ends up carrying more than one Overseer, the engine soft-fails and resolves the waves individually so nobody loses an Overseer to an unexpected merge. As an attacker, plan one Overseer per coordinated wave.
-
-**How the merged combat math works.** It is the same math as a single fight, run once on the combined force. Class counters, Shield Grid, Targeting Core, anvils vs strikers, scout intel - all unchanged. The differences are:
-
-- **Targeting Core uses the BEST Armory** across the participating attacker nexuses, not an average. The contributor with the highest Targeting Core directs fire for the merged force, so investing in your own Armory pays off even when you join someone else's strike.
-- **Losses are split back proportionally.** A merged combat returns a total loss per troop type; each participant absorbs that loss in proportion to how many of that troop type they contributed. No troop is ever lost from a participant who did not bring one.
-- **Loot is split back by surviving carry.** The participant with more living troops at the end carries more loot home, the same way carry capacity already works for a solo strike.
-- **Control drains once, building damage applies once, conquest happens once.** A merged strike is one conquest attempt, not N. If it conquers, the conqueror is whoever brought the Overseer - which is unambiguous by the one-Overseer rule above.
-
-**The tactical shift.** Before v0.23, an organized defense could not be cracked one solo wave at a time - even a faction's worth of attackers fighting one wall got chewed up serially. After v0.23, concentration is the answer to concentration: scout the target, agree on the right counter class, declare the coordination, and commit the force. The triangle still decides the fight, but the fight is finally happening at the right scale.
-
-**What the defender sees.** Defenders keep everything they had: full information on incoming waves and unlimited reactive support. We did not nerf defense to fix this. The change is purely additive on the attacker side. Reactive support that arrives in time still stacks on the wall exactly as before - the merged attacker just has the weight to push through it when it brings the right composition.
-`;
-
 export type BuildingDoc = {
 	key: string;
 	name: string;
@@ -143,7 +78,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		description:
 			'The cheapest garrison anvil. Durable frontline infantry that holds ground and defends hardest against Fire attackers. Low attack, its job is to survive and keep the line while strikers do the killing.',
 		unitClass: 'armor',
-		stats: { attack: 16, defense: 30, speed: 18, carry: 60 },
+		stats: { attack: 16, defense: 30, speed: 16, carry: 60 },
 		cost: { biomass: 150, alloy: 150, ore: 350, population: 1, time: '1m 19s' },
 		requirements: ['Armor Foundry Lv1']
 	},
@@ -171,7 +106,8 @@ export const TROOPS_DOC: TroopDoc[] = [
 		notes: [
 			'Send as a scout mission to gather intel. More operatives = better odds against garrisoned defenders.',
 			'Fastest unit in the game (speed 50) - scout missions arrive faster than any strike.',
-			'Deals no damage and takes no part in normal combat; it only fights other recon (scout-vs-scout) when breaking through to gather intel.'
+			'Deals no damage and takes no part in normal combat; it only fights other recon (scout-vs-scout) when breaking through to gather intel.',
+			'Recon Operatives garrisoned at home still add their defense stat (20 each) to the wall when you are attacked.'
 		]
 	},
 	{
@@ -246,7 +182,7 @@ export const TROOPS_DOC: TroopDoc[] = [
 		name: 'Void Stalker',
 		role: 'Endgame mobile striker - counters Armor',
 		description:
-			'Tier-3 fast striker. The fastest combat unit in the game (only the non-combat Recon Operative is faster) and the mobile half of the endgame line - pairs with the Annihilator Platform as the two top-end offensive units. Cracks armored defensive lines at speed; still lightly armored, so use its speed and shock value rather than slugging it out.',
+			'Tier-3 fast striker. The fastest combat unit in the game (only the non-combat Recon Operative is faster) and the mobile half of the endgame line, alongside the Annihilator Platform and Siege Colossus as the three top-end strikers. Cracks armored defensive lines at speed; still lightly armored, so use its speed and shock value rather than slugging it out.',
 		unitClass: 'mobile',
 		stats: { attack: 215, defense: 36, speed: 32, carry: 60 },
 		cost: { biomass: 1120, alloy: 910, ore: 1420, population: 3, time: '27m 0s' },
@@ -310,13 +246,14 @@ export const TROOPS_DOC: TroopDoc[] = [
 		name: 'Overseer',
 		role: 'Conquest / control unit (Special - no counter in either direction)',
 		description:
-			"The Overseer is a high-value command unit that enables nexus conquest. It does not fight - it administers. Sending an Overseer on a victorious strike reduces the target's Control Level by an amount that scales with how dominant your attack was: a crushing win (3:1 power advantage or better) drains 50, a clear win drains 34, and a narrow win still drains 15. Control starts at 100; once it reaches 0, the nexus is conquered and changes ownership to you. Two crushing strikes, three clear strikes, or a sustained coalition campaign can all reach conquest. The defending force does not need to be wiped - any victory with a surviving Overseer drains Control. Owned nexuses regenerate +10 Control per hour, so a lone weak attacker cannot grind a target down alone - coordinated waves are required for an attrition path. Overseer strikes travel 3x slower than standard attacks - giving defenders time to react. The Overseer is only useful if the attack wins - if the attack fails, the Overseer is not used and survives the defeat alongside its escort. If every non-Overseer troop in the strike is killed, the Overseer dies too. On the final conquering strike (the one that brings Control to 0), the Overseer is consumed - it does not return. The other surviving attackers are stationed at the newly captured nexus. The conquered nexus keeps its type (Resource Depot, Military Outpost, etc.), its name, and its current building levels - you take it as-is and can rename it yourself. NPC nexus bonuses are acquired at base tier; the doubled tier unlocks when the new owner reaches Command Core 15.",
+			"The Overseer is a high-value command unit that enables nexus conquest. It does not fight - it administers. Sending an Overseer on a victorious strike reduces the target's Control Level by an amount that scales with how dominant your attack was: a crushing win (3:1 power advantage or better) drains 50, a clear win drains 34, and a narrow win still drains 15. Control starts at 100; once it reaches 0, the nexus is conquered and changes ownership to you. Two crushing strikes, three clear strikes, or a sustained coalition campaign can all reach conquest. The defending force does not need to be wiped - any victory with a surviving Overseer drains Control. Owned nexuses regenerate +10 Control per hour, so a lone weak attacker cannot grind a target down alone - coordinated waves are required for an attrition path. Overseer strikes are much slower than the unit's own speed suggests: an Overseer strike travels at an effective speed of 6 with a further 3x travel-time multiplier, so it takes roughly 3.6 times as long as a speed-16 strike over the same distance, giving defenders time to react. The Overseer is only useful if the attack wins - if the attack fails, the Overseer is not used and survives the defeat alongside its escort. If every non-Overseer troop in the strike is killed, the Overseer dies too. On the final conquering strike (the one that brings Control to 0), the Overseer is consumed - it does not return. The other surviving attackers are stationed at the newly captured nexus. The conquered nexus keeps its type (Resource Depot, Military Outpost, etc.), its name, and its current building levels - you take it as-is and can rename it yourself. NPC nexus bonuses are acquired at base tier; the doubled tier unlocks when the new owner reaches Command Core 15.",
 		unitClass: 'special',
 		stats: { attack: 0, defense: 8, speed: 15, carry: 0 },
 		cost: { biomass: 180000, alloy: 140000, ore: 120000, population: 5, time: '4h 0m' },
 		requirements: ['Command Core Lv14', 'Shield Grid Lv13'],
 		notes: [
 			'Maximum 3 per nexus at any time; maximum 1 per strike.',
+			'A garrisoned Overseer still adds its small defense stat (8) to the wall.',
 			'Trains in an independent queue - does not block other troop training.',
 			'Overseer resource cost scales with empire size: base cost through 3 owned nexuses, then a smooth ramp to 4x cost at 12+ owned nexuses.',
 			'Control drain scales with strike dominance (power ratio = defender_power / attacker_power):',
@@ -360,7 +297,8 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		key: 'hangarBay',
 		name: 'Hangar Bay',
 		role: 'Mobile-class production building',
-		description: 'Produces mobile-class units (Breaker, Skimmer, Interceptor, Void Stalker).',
+		description:
+			'Produces mobile-class units (Vanguard Breaker, Wraith Skimmer, Aegis Skirmisher, Phantom Lance, Void Stalker).',
 		baseCost: { biomass: 170, alloy: 150, ore: 80, timeSeconds: 180 },
 		maxLevel: 20,
 		unlock: 'Command Core Lv2',
@@ -399,7 +337,8 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		key: 'armorFoundry',
 		name: 'Armor Foundry',
 		role: 'Armor-class production building',
-		description: 'Produces armor-class units (Assault Trooper, Bulwark Guard, Siege Mech).',
+		description:
+			'Produces armor-class units (Assault Trooper, Bulwark Guard, Siege Mech, Siege Colossus).',
 		baseCost: { biomass: 170, alloy: 150, ore: 80, timeSeconds: 180 },
 		maxLevel: 20,
 		unlock: 'Command Core Lv2',
@@ -428,8 +367,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		],
 		impact: [
 			'Each level multiplies population cap by 1.202× (compounding): floor(100 × 1.202^level).',
-			'Worked example: Lv1 = 120, Lv10 = 629 (+106 over Lv9), Lv20 = 3,963 (+666 over Lv19), Lv25 (max) = 9,945 (+1,672 over Lv24). The last few levels add the most housing, population is the real ceiling on army size, so these are high-value late upgrades.',
-			'⚡ Lv8 unlocks deeper population scaling (requires Storage Vault Lv4).'
+			'Worked example: Lv1 = 120, Lv10 = 629 (+106 over Lv9), Lv20 = 3,963 (+666 over Lv19), Lv25 (max) = 9,945 (+1,672 over Lv24). The last few levels add the most housing, population is the real ceiling on army size, so these are high-value late upgrades.'
 		]
 	},
 	{
@@ -462,8 +400,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		milestones: [{ level: 10, requires: ['Life Support Lv5'] }],
 		impact: [
 			'Each level multiplies output by 1.35× (compounding): floor(800 × 1.35^(level-1)) per hour.',
-			'Worked example: Lv1 = 800/h, Lv10 = 11,914/h (+3,089/h over Lv9), Lv20 = 239,570/h (+62,111/h over Lv19). The jump per level grows as you climb, so late levels are the biggest single production gains in the game.',
-			'⚡ Lv10 unlocks deeper production scaling (requires Life Support Lv5).'
+			'Worked example: Lv1 = 800/h, Lv10 = 11,914/h (+3,089/h over Lv9), Lv20 = 239,570/h (+62,111/h over Lv19). The jump per level grows as you climb, so late levels are the biggest single production gains in the game.'
 		]
 	},
 	{
@@ -502,7 +439,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		name: 'Shield Grid',
 		role: 'Defensive multiplier',
 		description:
-			"How defense works: when an enemy attack arrives, every defending troop contributes its Defense stat to the total defending force power. That power is then multiplied by (1 + shieldGrid × 0.02) - so each Shield Grid level is worth +2% of your entire garrison's HP-equivalent. The defending power is then compared against the attacker's class-weighted attack power. The side with higher power wins. Losers take heavy losses (~50–90% depending on the power gap); winners take light losses (~0–18% depending on how close the fight was). Your Shield Grid bonus stacks with allied support troops stationed at your nexus and with the class-counter system. Military Outpost nexus type multiplies shield efficiency by 2x (3x if doubled at CC15).",
+			"How defense works: when an enemy attack arrives, every defending troop contributes its Defense stat to the total defending force power. That power is then multiplied by (1 + shieldGrid × 0.015) - so each Shield Grid level is worth +1.5% of your entire garrison's defensive power. The defending power is then compared against the attacker's class-weighted attack power. The side with higher power wins. The losing side loses 85-100% of its force (100% once the winner has a 3:1 power advantage or better); the winning side loses 0-45% before defense-stat and class-matchup modifiers, with the heaviest losses in near-even fights. Your Shield Grid bonus stacks with allied support troops stationed at your nexus and with the class-counter system. Military Outpost nexus type multiplies shield efficiency by 2x (3x if doubled at CC15).",
 		baseCost: { biomass: 50, alloy: 100, ore: 60, timeSeconds: 180 },
 		maxLevel: 15,
 		unlock: 'Command Core Lv3',
@@ -511,8 +448,8 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 			{ level: 8, requires: ['Alloy Forge Lv5'] }
 		],
 		impact: [
-			'Defense bonus: +2% total defending force power per level (multiplicative with troop defense stats).',
-			"At Lv15 (max): +30% to your entire garrison's effective defense.",
+			'Defense bonus: +1.5% total defending force power per level (multiplicative with troop defense stats).',
+			"At Lv15 (max): +22.5% to your entire garrison's effective defense.",
 			'Military Outpost nexuses gain 2x shield efficiency (3x if the bonus is doubled at CC15).',
 			'Stacks additively with allied support troops stationed at your nexus.'
 		]
@@ -522,7 +459,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 		name: 'Targeting Core',
 		role: 'Counter amplifier + advanced unit unlocks',
 		description:
-			'Amplifies the class-counter damage triangle, and gates training of the Void Stalker and Plasma Turret.',
+			'Amplifies the class-counter damage triangle, and gates training of the Void Stalker, Plasma Turret, and Siege Colossus.',
 		baseCost: { biomass: 115, alloy: 170, ore: 135, timeSeconds: 210 },
 		maxLevel: 20,
 		unlock: 'Command Core Lv5',
@@ -551,7 +488,7 @@ export const BUILDINGS_DOC: BuildingDoc[] = [
 			{ level: 12, requires: ['Targeting Core Lv10', 'Command Core Lv15'] }
 		],
 		impact: [
-			'Hidden vault: floor(550 * 1.35^L) units per resource (biomass, alloy, ore each get their own hidden pool). Roughly 1,500 at Lv3, 11,000 at Lv10, 49,000 at Lv15.',
+			'Hidden vault: floor(550 * 1.35^L) units per resource (biomass, alloy, ore each get their own hidden pool). Lv3 = 1,353, roughly 11,000 at Lv10, 49,600 at Lv15.',
 			'Hidden resources are not lootable in raids and are not visible to scout reports - the defender keeps the full balance, but raiders see only the surplus above the vault.',
 			'Auto-fill: the first units accumulated each tick are placed in the vault until full; anything above the cap sits in normal storage and is fully exposed.',
 			'Scout interception (Gate 2): 1.5% per level, capped at 22.5% at Lv15. This roll only applies to scouts that survive the recon garrison fight (Gate 1). Failed scouts lose all remaining operatives and return no intel.'
@@ -567,24 +504,6 @@ export const BUILDING_SCALING_DOC = {
 		'Target levels 6-10: mid scaling',
 		'Target levels 11+: late scaling'
 	]
-};
-
-/* ─────────────────────────────────────────────── RESOURCE TRANSFERS ===== */
-export const RESOURCE_TRANSFER_DOC = {
-	empireTransfer: {
-		description:
-			'Move resources between your own nexuses instantly. Open the Supply tab on any nexus to see every base you own with fill bars. Hit Send on any row for a pre-suggested top-up, or use the Send Resources button to open a blank dialog. Transfers within your own empire are lossless and arrive immediately.'
-	},
-	factionTransfer: {
-		description:
-			"Send resources to a faction member's nexus from the same Send Resources dialog. Switch to the Faction tab, pick any of your faction-mates' available bases as the destination, and enter amounts. A 10% transit tax applies: the recipient receives 90% of what you send. The dialog shows the tax breakdown before you confirm, and Max buttons account for the tax so the recipient never overflows.",
-		taxRate: 0.1,
-		restrictions: [
-			'Sender must own the source nexus.',
-			'Recipient must be in the same faction as the sender.',
-			'Newbie-protected players cannot receive faction transfers.'
-		]
-	}
 };
 
 /* ─────────────────────────────────────────────────────── SCOUTING ===== */

@@ -44,6 +44,7 @@ router.post('/users/:userId/complete-training', adminController.completeTraining
 router.post('/users/:userId/reset-account', adminController.resetAccount);
 router.delete('/users/:userId', adminController.deleteUser);
 router.post('/users/:userId/resend-verification', adminController.resendVerificationEmail);
+router.post('/users/:userId/verify-email', adminController.verifyUserEmail);
 router.post('/users/:userId/test-notification', adminController.testNotification);
 router.post('/users/:userId/tokens', adminController.grantTokens);
 router.post('/nexuses/:nexusId/resources', adminController.giveResourcesToNexus);

@@ -73,7 +73,7 @@ function ThemeSample() {
 			<div className="pp-sample-hero">
 				<h3 className="pp-hero-h">A persistent galaxy at war.</h3>
 				<p className="pp-hero-sub">
-					Browser-based 4X strategy. Build a nexus, train twelve unit types, and conquer real
+					Browser-based 4X strategy. Build a nexus, train sixteen unit types, and conquer real
 					players one Overseer at a time.
 				</p>
 				<div className="pp-hero-row">

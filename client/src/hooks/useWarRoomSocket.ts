@@ -73,7 +73,8 @@ export function useWarRoomSocket(enabled: boolean): UseWarRoomSocketResult {
 		const socket = io(`${origin}/warroom`, {
 			path: '/ws',
 			transports: ['websocket'],
-			auth: { token },
+			// Read on every (re)connect so a rotated token (password change) is picked up.
+			auth: (cb) => cb({ token: localStorage.getItem('token') ?? token }),
 			reconnectionDelay: 1000,
 			reconnectionDelayMax: 8000
 		});

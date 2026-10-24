@@ -10,7 +10,7 @@ const DESCRIPTION =
 	'Complete unit roster for Vexara, the free browser MMO RTS. Stats, costs, unlock requirements, and class counter relationships for all 16 troop types - Sentinel Lancer to Siege Colossus.';
 
 export const metadata: Metadata = {
-	title: TITLE,
+	title: { absolute: TITLE },
 	description: DESCRIPTION,
 	keywords: [
 		'Vexara units',
@@ -62,9 +62,9 @@ export default function UnitsPage() {
 			<main className="gp-root">
 				<header className="gp-header">
 					<div className="gp-header-label">// UNIT ROSTER</div>
-					<h1 className="gp-title">Vexara Units - All 14 Troops</h1>
+					<h1 className="gp-title">Vexara Units - All {TROOPS_DOC.length} Troops</h1>
 					<p className="gp-subtitle">
-						Vexara fields 14 unit types across four classes. Composition wins fights - not raw
+						Vexara fields {TROOPS_DOC.length} unit types across four classes. Composition wins fights - not raw
 						numbers. Every unit below is available in the free browser version with no download
 						required.
 					</p>
@@ -73,9 +73,12 @@ export default function UnitsPage() {
 				<section className="gp-section">
 					<h2 className="gp-section-title">Class counter triangle</h2>
 					<p className="gp-prose">
-						Vexara uses a rock-paper-scissors damage system. Each of the three combat classes deals
-						×1.35 damage against the class it counters, and receives ×0.75 effective damage when
-						countered. Special units (Overseer, Recon Operative) are neutral - they do not fight.
+						Vexara uses a rock-paper-scissors damage system. On attack, each of the three combat
+						classes deals ×1.35 damage against the class it counters, and an attacker that is
+						countered deals ×0.75. On defense the spread is milder: a garrison that counters the
+						attacker defends at ×1.25, and a countered garrison defends at ×0.80. Special units
+						(Overseer, Recon Operative) are neutral and do not attack, but a garrisoned Recon
+						Operative or Overseer still adds its defense stat to the wall.
 					</p>
 					<ul className="gp-counter-list">
 						{CLASS_COUNTERS.map((c) => (

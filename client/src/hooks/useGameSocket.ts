@@ -99,12 +99,11 @@ function buildOrigin(): string {
 function getSocket(): Socket {
 	if (_socket) return _socket;
 
-	const token = typeof window !== 'undefined' ? (localStorage.getItem('token') ?? '') : '';
-
 	const socket = io(`${buildOrigin()}/game`, {
 		path: '/ws',
 		transports: ['websocket'],
-		auth: { token },
+		// Read on every (re)connect so a rotated token (password change) is picked up.
+		auth: (cb) => cb({ token: typeof window !== 'undefined' ? (localStorage.getItem('token') ?? '') : '' }),
 		reconnectionDelay: 2_000,
 		reconnectionDelayMax: 30_000,
 		// Socket.IO will give up after this many attempts, prevents infinite storm.

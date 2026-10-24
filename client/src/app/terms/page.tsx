@@ -3,7 +3,7 @@ import PublicNav from '@/components/PublicNav';
 import SiteFooter from '@/components/SiteFooter';
 
 export const metadata: Metadata = {
-	title: 'Terms of Service - Vexara',
+	title: { absolute: 'Terms of Service - Vexara' },
 	description: 'Terms of service for Vexara, a browser-based 4X strategy game.',
 	alternates: { canonical: '/terms' },
 	robots: { index: true, follow: true }
@@ -70,8 +70,14 @@ export default function TermsPage() {
 				</li>
 				<li>
 					<strong>Virtual items only.</strong> Vex Points and any items or perks unlocked with them
-					(season passes, titles, boosts, badges) are in-game virtual goods. They confer no
+					(the Vex Pass, titles, boosts, badges) are in-game virtual goods. They confer no
 					real-world value and are not a purchase of any tangible product.
+				</li>
+				<li>
+					<strong>Supporter tokens.</strong> Ko-fi support and the Vex Pass paid track grant
+					supporter tokens. Each token can be redeemed in game for building upgrade levels or a
+					one-time troop grant, so these purchases can give an in-game advantage. The game itself
+					remains free to play, and every unit, building and mechanic is available without paying.
 				</li>
 				<li>
 					<strong>No guarantee of availability.</strong> Virtual items and features purchased with VP

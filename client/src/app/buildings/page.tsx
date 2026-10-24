@@ -5,12 +5,12 @@ import PublicNav from '@/components/PublicNav';
 import { BUILDINGS_DOC } from '@/data/gameDocs';
 import '@/styles/GuidePages.css';
 
-const TITLE = 'Vexara Buildings Guide - All 10 Core Structures & Scaling';
+const TITLE = `Vexara Buildings Guide - All ${BUILDINGS_DOC.length} Core Structures & Scaling`;
 const DESCRIPTION =
-	'Complete buildings reference for Vexara, the free browser MMO RTS. Costs, max levels, unlock requirements, milestones, and production scaling for all 10 structures - Command Core to Stealth Array.';
+	'Complete buildings reference for Vexara, the free browser MMO RTS. Costs, max levels, unlock requirements, milestones, and production scaling for all 12 structures - Command Core to Stealth Array.';
 
 export const metadata: Metadata = {
-	title: TITLE,
+	title: { absolute: TITLE },
 	description: DESCRIPTION,
 	keywords: [
 		'Vexara buildings',
@@ -72,9 +72,9 @@ export default function BuildingsPage() {
 			<main className="gp-root">
 				<header className="gp-header">
 					<div className="gp-header-label">// INFRASTRUCTURE</div>
-					<h1 className="gp-title">Vexara Buildings - All 10 Structures</h1>
+					<h1 className="gp-title">Vexara Buildings - All {BUILDINGS_DOC.length} Structures</h1>
 					<p className="gp-subtitle">
-						Ten core buildings drive every nexus in Vexara. Economy, military, and defence -
+						{BUILDINGS_DOC.length} core buildings drive every nexus in Vexara. Economy, military, and defence -
 						each structure unlocks new capabilities and scales with investment. All available
 						free, in your browser.
 					</p>
@@ -83,10 +83,13 @@ export default function BuildingsPage() {
 				<section className="gp-section">
 					<h2 className="gp-section-title">Cost scaling</h2>
 					<p className="gp-prose">
-						Build costs increase per level in three stages: levels 1–5 scale at ×1.5 per level,
-						levels 6–10 at ×1.65, and levels 11+ at ×1.8. Build time follows the same curve. Plan
-						your upgrade order around the steepest scaling gates - pushing past level 10 on any
-						building is a significant investment.
+						Build costs increase per level in three stages: upgrades to levels 2–5 scale at ×1.5
+						per level, levels 6–10 at ×1.65, and levels 11+ at ×1.8. Build time scales more gently,
+						at ×1.25, ×1.35 and ×1.45 per level over the same stages, before the Command Core
+						construction speed bonus. Life Support, which goes to level 25, uses a compressed curve
+						so its level 25 cost and time match a level 20 building. Plan your upgrade order around
+						the steepest scaling gates - pushing past level 10 on any building is a significant
+						investment.
 					</p>
 				</section>
 

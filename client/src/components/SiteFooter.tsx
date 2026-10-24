@@ -30,7 +30,10 @@ export default function SiteFooter() {
 						<Link href="/register">Join live galaxy</Link>
 						<Link href="/login">Sign in</Link>
 						<Link href="/state-of-galaxy">Galaxy Status</Link>
+						<Link href="/how-to-play">How to Play</Link>
 						<Link href="/codex">Codex</Link>
+						<Link href="/units">Units</Link>
+						<Link href="/buildings">Buildings</Link>
 						<Link href="/calculator">Calculator</Link>
 						<Link href="/patch-notes">Patch Notes</Link>
 					</div>
@@ -53,7 +56,7 @@ export default function SiteFooter() {
 			<div className="site-footer-baseline">
 				<span className="site-footer-baseline-line" aria-hidden="true" />
 				<span className="site-footer-baseline-text">
-					TRANSMISSION CLOSED &nbsp;//&nbsp; NO ACCOUNT WIPES &nbsp;//&nbsp; NO PAY-TO-WIN &nbsp;//&nbsp;
+					TRANSMISSION CLOSED &nbsp;//&nbsp; NO ACCOUNT WIPES &nbsp;//&nbsp; FREE TO PLAY &nbsp;//&nbsp;
 					SOLO DEV {new Date().getFullYear()}
 				</span>
 				<span className="site-footer-baseline-line" aria-hidden="true" />

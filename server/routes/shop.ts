@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import type { Response } from 'express';
+import type { NextFunction, Request } from 'express';
 import auth from '../middleware/auth.js';
 import type { AuthRequest } from '../types/index.js';
 import prisma from '../lib/prisma.js';
@@ -11,10 +12,15 @@ import {
 	getCollectionBorders,
 	BORDER_BUNDLE_COST,
 } from '../utils/shopCatalog.js';
-import { purchasePaidPass, PASS_COST_VP } from '../utils/battlePass.js';
-import { NOTIF, sendPushToUser } from '../utils/push.js';
+import { giftPaidPass } from '../utils/battlePass.js';
 
 const router = Router();
+
+// The Vex Pass is account-wide, so gifting does not need an active galaxy.
+function authNoGalaxy(req: Request, res: Response, next: NextFunction): void {
+	(req as AuthRequest).activeGalaxyOptional = true;
+	void auth(req, res, next);
+}
 
 const USERNAME_COOLDOWN_DAYS = 30;
 const USERNAME_MIN = 3;
@@ -332,107 +338,24 @@ router.post('/rename', auth, async (req, res: Response) => {
 	}
 });
 
-// POST /api/shop/gift-pass — spend 1,000 VP to activate the pass for a player
+// POST /api/shop/gift-pass - spend 1,000 VP to unlock the Vex Pass paid track for a player
 // Moved here from /api/battle-pass/gift so the shop is the canonical spend point.
+// The pass is account-wide, so no active galaxy or shared galaxy is needed.
 // Body: { username: string }
-router.post('/gift-pass', auth, async (req, res: Response) => {
+router.post('/gift-pass', authNoGalaxy, async (req, res: Response) => {
 	const authReq = req as AuthRequest;
 	try {
-		if (!authReq.galaxyId) {
-			res.status(409).json({ error: 'No active galaxy' });
-			return;
-		}
-
 		const { username } = req.body as { username?: string };
 		if (!username || typeof username !== 'string') {
 			res.status(400).json({ error: 'Username is required' });
 			return;
 		}
-
-		const gifter = await prisma.user.findUnique({
-			where: { id: authReq.userId },
-			select: { id: true, username: true, vexPoints: true }
-		});
-		if (!gifter) {
-			res.status(404).json({ error: 'User not found' });
+		const result = await giftPaidPass(authReq.userId, username, 'shop');
+		if (!result.ok) {
+			res.status(result.status).json({ error: result.error });
 			return;
 		}
-		if (gifter.vexPoints < PASS_COST_VP) {
-			res.status(400).json({ error: `Not enough Vex Points (need ${PASS_COST_VP}, have ${gifter.vexPoints})` });
-			return;
-		}
-		if (gifter.username.toLowerCase() === username.toLowerCase()) {
-			res.status(400).json({ error: 'You cannot gift a pass to yourself' });
-			return;
-		}
-
-		const recipient = await prisma.user.findFirst({
-			where: { username: { equals: username, mode: 'insensitive' } },
-			select: { id: true, username: true }
-		});
-		if (!recipient) {
-			res.status(404).json({ error: 'Player not found' });
-			return;
-		}
-		const recipientPlayer = await prisma.galaxyPlayer.findUnique({
-			where: { userId_galaxyId: { userId: recipient.id, galaxyId: authReq.galaxyId } },
-			select: { hasPaidPass: true }
-		});
-		if (!recipientPlayer) {
-			res.status(400).json({ error: 'That player is not in your active galaxy' });
-			return;
-		}
-		if (recipientPlayer.hasPaidPass) {
-			res.status(400).json({ error: 'That player already has the pass this season' });
-			return;
-		}
-
-		// Deduct gifter VP atomically
-		await prisma.user.update({
-			where: { id: gifter.id },
-			data: { vexPoints: { decrement: PASS_COST_VP } }
-		});
-
-		// Give recipient enough VP then auto-purchase so pass remains 1000 VP from their account
-		await prisma.user.update({
-			where: { id: recipient.id },
-			data: { vexPoints: { increment: PASS_COST_VP } }
-		});
-		const passErr = await purchasePaidPass(recipient.id, authReq.galaxyId);
-		if (passErr) {
-			// Rollback both sides
-			await prisma.user.update({ where: { id: gifter.id }, data: { vexPoints: { increment: PASS_COST_VP } } });
-			await prisma.user.update({ where: { id: recipient.id }, data: { vexPoints: { decrement: PASS_COST_VP } } });
-			res.status(400).json({ error: passErr });
-			return;
-		}
-
-		await prisma.shopPurchase.create({
-			data: {
-				userId: gifter.id,
-				itemKey: 'gift_pass',
-				itemType: 'gift_pass',
-				vpSpent: PASS_COST_VP,
-				meta: { recipientId: recipient.id, recipientUsername: recipient.username }
-			}
-		});
-
-		logInfo('shop_gift_pass', {
-			gifterId: gifter.id,
-			gifterUsername: gifter.username,
-			recipientId: recipient.id,
-			recipientUsername: recipient.username,
-			galaxyId: authReq.galaxyId,
-		});
-
-		void sendPushToUser(recipient.id, NOTIF.TOKEN_GRANTED, {
-			title: 'Vex Pass gifted!',
-			body: `Commander ${gifter.username} gifted you the Vex Protocol battle pass. The paid track is now unlocked.`,
-			tag: `vex-pass-gift-${recipient.id}`,
-			data: { url: '/pass' }
-		});
-
-		res.json({ success: true, recipientUsername: recipient.username });
+		res.json({ success: true, recipientUsername: result.recipientUsername });
 	} catch (error) {
 		logError('unhandled_controller_error', { message: (error as Error).message, file: 'shop POST /gift-pass' });
 		res.status(500).json({ error: 'Internal server error' });

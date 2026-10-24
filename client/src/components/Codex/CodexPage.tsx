@@ -85,7 +85,7 @@ export default function CodexPage() {
 							<CodexStreamHead
 								eyebrow="DOSSIER · CORE"
 								title="Buildings"
-								lede="Ten structures drive every nexus. Build order is identity."
+								lede={`${BUILDINGS_DOC.length} structures drive every nexus. Build order is identity.`}
 							/>
 							{BUILDINGS_DOC.map((b, i) => (
 								<BuildingEntry key={b.key} doc={b} index={i + 1} />
@@ -98,7 +98,7 @@ export default function CodexPage() {
 							<CodexStreamHead
 								eyebrow="DOSSIER · MILITARY"
 								title="Troops"
-								lede="Fourteen units. Four stats. Composition wins fights."
+								lede={`${TROOPS_DOC.length} units. Four stats. Composition wins fights.`}
 							/>
 							<ClassCountersPanel />
 							{TROOPS_DOC.map((t, i) => (
@@ -167,10 +167,6 @@ function CodexHeader() {
 					<div>
 						<dt>Max level</dt>
 						<dd>{Math.max(...BUILDINGS_DOC.map((b) => b.maxLevel))}</dd>
-					</div>
-					<div>
-						<dt>Pop cost</dt>
-						<dd>{TROOPS_DOC.reduce((s, t) => s + t.cost.population, 0)}</dd>
 					</div>
 				</dl>
 			</div>
@@ -753,14 +749,15 @@ const TREATY_DOCS = [
 		name: 'Non-Aggression Pact',
 		symbol: '⚖',
 		duration: '1–90 days, negotiated on proposal',
-		effect: 'No mechanical enforcement. A declared ceasefire backed by social contract. Breaking it is visible to all faction members and will be logged in the treaty history.',
+		effect: 'Enforced by the game. While a NAP is active, neither faction can launch attack missions against the other. Scouting and support missions are not blocked.',
 		mechanics: [
-			'Both faction leaders must accept the pact for it to activate.',
-			'Either party can cancel the treaty at any time; cancellation is instant.',
-			'An active NAP is visible to both factions\' members in the Diplomacy tab.',
-			'Breaking a NAP before expiry has no in-game penalty, but the treaty log records the breach.'
+			'A leader or officer of one faction proposes the pact; a leader or officer of the other faction accepts it.',
+			'An active NAP cannot be cancelled. It can only be formally broken by a leader or officer of either faction, or it runs out at its expiry.',
+			'Breaking a NAP opens a public 60-minute betrayal window, shown on the diplomacy board. Attacks between the two factions stay blocked until the window closes.',
+			'After a break, the same two factions cannot sign a new NAP for 24 hours.',
+			'The block applies when an attack is launched, so attacks already in flight before the pact was signed still land.'
 		],
-		tip: 'Use NAPs to stabilise a front while you expand elsewhere. A broken NAP is a statement; other factions will notice.'
+		tip: 'Use NAPs to stabilise a front while you expand elsewhere. Breaking one gives the other side an hour of warning, and everyone can see it.'
 	},
 	{
 		type: 'trade',
@@ -781,14 +778,16 @@ const TREATY_DOCS = [
 		name: 'Vassalage',
 		symbol: '◈',
 		duration: '1–90 days, negotiated on proposal',
-		effect: 'Formalises a protectorate relationship. The vassal faction gains the suzerain\'s diplomatic umbrella; the suzerain gains a declared tributary ally.',
+		effect: 'Formalises a protectorate. The vassal gets loot protection against third parties; the overlord gets dominance credit toward the galaxy victory condition.',
 		mechanics: [
-			'Proposed by the stronger faction (suzerain) to the weaker (vassal). Either side can propose.',
-			'The vassal\'s enemies implicitly become the suzerain\'s enemies, though this is a social contract, not an automated war declaration.',
-			'Vassal factions appear marked in both factions\' diplomacy tabs, signalling the relationship to members.',
-			'Either party can cancel; early cancellation carries the same reputational weight as breaking a NAP.'
+			'Either faction can propose; the proposer states whether it is the overlord or the vassal. A leader or officer of the other faction accepts.',
+			"Vassal protection: attackers outside the vassal's faction and its overlord's faction take 25% less loot from the vassal's nexuses.",
+			"Overlord credit: each qualifying vassal adds 25% of its nexus count to the overlord's dominance total. A vassal needs 4 or more nexuses to count, only the 3 largest vassals count, and the total credit is capped at 50% of the overlord's own nexus count.",
+			'A faction cannot be both an overlord and a vassal, and a vassal credits only one overlord.',
+			"Active treaty partners (NAP, Trade, or Vassalage) can see attacks inbound on each other's nexuses, but never garrison intel.",
+			'Like any treaty it has a negotiated duration of 1 to 90 days and can be cancelled by a leader or officer.'
 		],
-		tip: 'Vassalage is useful for absorbing a smaller ally without merging factions. It also signals to attackers that hitting the vassal means dealing with the suzerain.'
+		tip: 'Vassalage is useful for backing a smaller ally without merging factions, and it moves the overlord closer to the dominance threshold. Remember the credit is deliberately far weaker than conquering nexuses yourself.'
 	}
 ] as const;
 

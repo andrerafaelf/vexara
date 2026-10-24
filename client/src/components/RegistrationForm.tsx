@@ -5,7 +5,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { register as registerApi, trackReferralClick } from '../services/api';
+import {
+	register as registerApi,
+	resendVerification as resendVerificationApi,
+	trackReferralClick
+} from '../services/api';
 import PasswordField from './PasswordField';
 import DiscordButton from './DiscordButton';
 import { screenshot } from '../data/gameIcons';
@@ -165,12 +169,12 @@ const SCREENSHOTS: { src: string; label: string; caption: string }[] = [
 	{
 		src: screenshot('troops'),
 		label: 'Troops',
-		caption: 'Twelve unit types - each with attack, defense, speed, and carry'
+		caption: 'Sixteen unit types - each with attack, defense, speed, and carry'
 	},
 	{
 		src: screenshot('buildings'),
 		label: 'Buildings',
-		caption: 'Eight core buildings drive your economy and military'
+		caption: 'Twelve core buildings drive your economy and military'
 	},
 	{
 		src: screenshot('market'),
@@ -194,6 +198,11 @@ const RegistrationForm: React.FC = () => {
 	const [emailWarning, setEmailWarning] = useState('');
 	const [submitting, setSubmitting] = useState(false);
 	const [success, setSuccess] = useState(false);
+	// False only when the server says the confirmation email did not go out.
+	const [emailSent, setEmailSent] = useState(true);
+	const [sendFailureMessage, setSendFailureMessage] = useState('');
+	const [resendState, setResendState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+	const [resendError, setResendError] = useState('');
 	const [activeIndex, setActiveIndex] = useState(0);
 	const [prevIndex, setPrevIndex] = useState<number | null>(null);
 	const [transitioning, setTransitioning] = useState(false);
@@ -254,6 +263,21 @@ const RegistrationForm: React.FC = () => {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [activeIndex, paused, transitioning]);
 
+	const handleResend = async () => {
+		setResendState('sending');
+		setResendError('');
+		try {
+			await resendVerificationApi(email.trim().toLowerCase());
+			setResendState('sent');
+		} catch (err) {
+			setResendError(
+				(err as { response?: { data?: { error?: string } } })?.response?.data?.error ||
+					'Could not resend the email. Please try again shortly.'
+			);
+			setResendState('error');
+		}
+	};
+
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (submitting) return;
@@ -297,13 +321,22 @@ const RegistrationForm: React.FC = () => {
 		setSubmitting(true);
 		try {
 			const utm = captureUtm();
-			await registerApi({
+			const res = await registerApi({
 				username: usernameTrimmed,
 				email: emailNormalized,
 				password,
 				...(referralNormalized.length > 0 ? { referralCode: referralNormalized } : {}),
 				...utm
 			});
+			// A missing emailSent is treated as sent.
+			if (res.data?.emailSent === false) {
+				setEmailSent(false);
+				setSendFailureMessage(
+					typeof res.data?.message === 'string'
+						? res.data.message
+						: 'We could not send the confirmation email.'
+				);
+			}
 			setSuccess(true);
 		} catch (err) {
 			const message =
@@ -390,11 +423,11 @@ const RegistrationForm: React.FC = () => {
 					</h2>
 					<p className="auth-panel-sub">
 						Browser-based 4X strategy. A living galaxy shared by real players, running 24/7 with no
-						resets and no pay-to-win.
+						account wipes. Free to play.
 					</p>
 					<div className="auth-panel-stats">
 						<div className="auth-panel-stat">
-							<span className="auth-panel-stat-value">12</span>
+							<span className="auth-panel-stat-value">16</span>
 							<span className="auth-panel-stat-label">Unit types</span>
 						</div>
 						<div className="auth-panel-stat">
@@ -438,11 +471,40 @@ const RegistrationForm: React.FC = () => {
 
 					{success ? (
 						<>
-							<h1 className="auth-form-heading">Check your email</h1>
-							<p className="auth-form-subheading">
-								We sent a confirmation link to <strong>{email.trim()}</strong>. Click it to activate
-								your account, then sign in.
-							</p>
+							<h1 className="auth-form-heading">{emailSent ? 'Check your email' : 'Account created'}</h1>
+							{emailSent ? (
+								<p className="auth-form-subheading">
+									We sent a confirmation link to <strong>{email.trim()}</strong>. Click it to activate
+									your account, then sign in.
+								</p>
+							) : (
+								<>
+									<p className="auth-form-subheading">{sendFailureMessage}</p>
+									{resendState === 'sent' ? (
+										<div className="auth-success" role="status">
+											<p className="auth-success-note">
+												Verification email sent to <strong>{email.trim()}</strong>.
+											</p>
+										</div>
+									) : (
+										<>
+											{resendState === 'error' && (
+												<div className="auth-error" role="alert">
+													{resendError}
+												</div>
+											)}
+											<button
+												type="button"
+												className="auth-submit"
+												onClick={handleResend}
+												disabled={resendState === 'sending'}
+											>
+												{resendState === 'sending' ? 'Sending...' : 'Resend verification email'}
+											</button>
+										</>
+									)}
+								</>
+							)}
 							<div className="auth-success" role="status">
 								{isSpamRiskDomain(email) && (
 									<p className="auth-success-note">
@@ -452,8 +514,8 @@ const RegistrationForm: React.FC = () => {
 								)}
 								<div className="auth-discord-cta">
 									<p className="auth-discord-cta-text">
-										While you wait, join the community — find a faction, ask questions, and grab
-										your Alpha Founder role.
+										While you wait, join the community. Find a faction, ask questions, and meet
+										other commanders.
 									</p>
 									<DiscordButton variant="solid" utm="register_success" />
 								</div>

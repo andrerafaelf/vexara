@@ -9,7 +9,8 @@ export default async function Image() {
 		eyebrow: 'Combat Sim',
 		kicker: 'Know the outcome before you commit.',
 		title: 'Battle Calculator',
-		subtitle: 'Model any attack vs defense — losses, survivors, and victory odds, before you send.',
+		subtitle:
+			'Model any attack: losses, survivors, loot capacity, and Overseer control drain, before you send.',
 		footer: 'vexara.world // calculator'
 	});
 }

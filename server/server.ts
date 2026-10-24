@@ -6,6 +6,7 @@ import express from 'express';
 import { createServer } from 'http';
 import rateLimit from 'express-rate-limit';
 import jwt from 'jsonwebtoken';
+import pg from 'pg';
 import prisma from './lib/prisma.js';
 import { initWarRoomSocket, initGameSocket } from './services/warRoomSocket.js';
 import {
@@ -49,11 +50,20 @@ import {
 	dailyNexusGrowth
 } from './utils/neutralNexuses.js';
 import { processGalaxyEvents } from './utils/galaxyEvents.js';
+import {
+	envInt,
+	ipKey,
+	loginAccountIpLimiter,
+	loginAccountLimiter,
+	loginIpLimiter
+} from './middleware/authLimiters.js';
+import { warnIfEmailNotConfigured } from './services/emailService.js';
 import { sendProtectionExpiringWarnings } from './utils/protectionWarnings.js';
 import { processRogueAiRaids } from './utils/rogueAiRaider.js';
 import { processRogueAiGrowth } from './utils/rogueAiGrowth.js';
 
 dotenv.config();
+warnIfEmailNotConfigured();
 
 if (!process.env.JWT_SECRET) {
 	throw new Error('JWT_SECRET is required');
@@ -124,25 +134,31 @@ app.get('/readyz', async (_req, res) => {
 });
 
 if (process.env.NODE_ENV === 'production') {
-	const loginLimiter = rateLimit({
-		windowMs: 15 * 60 * 1000,
-		max: Number(process.env.AUTH_RATE_LIMIT_MAX || 150),
+	// Login and register use SEPARATE limiter instances (separate buckets) so a
+	// burst of sign-ups behind one shared IP (CGNAT, school, Discord raid) cannot
+	// lock existing players out of logging in, and vice versa. Limits are per subnet
+	// (IPv6 collapsed to /64, see ipKey). Login limiters live in middleware/authLimiters.ts.
+	const registerLimiter = rateLimit({
+		windowMs: 60 * 60 * 1000,
+		max: envInt('AUTH_REGISTER_RATE_LIMIT_MAX', 30),
 		standardHeaders: true,
 		legacyHeaders: false,
 		skip: (req) => req.method === 'OPTIONS',
-		message: { error: 'Too many login attempts, please try again in a few minutes.' }
+		keyGenerator: (req) => ipKey(req),
+		message: { error: 'Too many sign-up attempts from this address. Please try again later.' }
 	});
 	const alphaSignupLimiter = rateLimit({
 		windowMs: 60 * 60 * 1000,
-		max: Number(process.env.ALPHA_SIGNUP_RATE_LIMIT_MAX || 25),
+		max: envInt('ALPHA_SIGNUP_RATE_LIMIT_MAX', 25),
 		standardHeaders: true,
 		legacyHeaders: false,
 		skip: (req) => req.method === 'OPTIONS',
+		keyGenerator: (req) => ipKey(req),
 		message: { error: 'Too many sign-up attempts from this address. Please try again later.' }
 	});
 	const apiLimiter = rateLimit({
 		windowMs: 60 * 1000,
-		max: Number(process.env.API_RATE_LIMIT_MAX || 24000),
+		max: envInt('API_RATE_LIMIT_MAX', 24000),
 		standardHeaders: true,
 		legacyHeaders: false,
 		skip: (req) => req.method === 'OPTIONS',
@@ -161,7 +177,7 @@ if (process.env.NODE_ENV === 'production') {
 			const ua = req.header('User-Agent') ?? 'unknown';
 			let h = 0;
 			for (let i = 0; i < ua.length; i++) h = ((h << 5) - h + ua.charCodeAt(i)) | 0;
-			return `ip:${req.ip ?? 'unknown'}:${h}`;
+			return `ip:${ipKey(req)}:${h}`;
 		},
 		message: { error: 'Too many requests. Please try again in a minute.' }
 	});
@@ -176,15 +192,15 @@ if (process.env.NODE_ENV === 'production') {
 		legacyHeaders: false,
 		skip: (req) => req.method === 'OPTIONS',
 		keyGenerator: (req) => {
-			const ip = req.ip ?? 'unknown';
+			const ip = ipKey(req);
 			const rawEmail = typeof req.body?.email === 'string' ? req.body.email : '';
 			const email = rawEmail.trim().toLowerCase().slice(0, 254);
 			return `email-action:${ip}:${email}`;
 		},
 		message: { error: 'Too many requests. Please try again in an hour.' }
 	});
-	app.use('/api/auth/login', loginLimiter);
-	app.use('/api/auth/register', loginLimiter);
+	app.use('/api/auth/login', loginIpLimiter, loginAccountIpLimiter, loginAccountLimiter);
+	app.use('/api/auth/register', registerLimiter);
 	app.use('/api/auth/alpha-signup', alphaSignupLimiter);
 	app.use('/api/auth/request-password-reset', emailActionLimiter);
 	app.use('/api/auth/resend-verification', emailActionLimiter);
@@ -242,29 +258,82 @@ const JOB_LOCKS = {
 	processSeasonExpiry: 9117
 };
 
+// Job locks use a DEDICATED pg pool, separate from Prisma's. pg_try_advisory_lock is
+// session-scoped, so lock and unlock must run on the SAME connection; going through
+// the Prisma pool could issue them on different connections (unlock silently fails and
+// the lock lingers, or a re-acquire on the same connection lets a job overlap itself).
+// Each run checks out ONE client for the whole lock lifetime. The job itself still uses
+// prisma normally. Max covers every JOB_LOCKS entry running at once.
+let lockPool: pg.Pool | null = null;
+function getLockPool(): pg.Pool {
+	if (!lockPool) {
+		lockPool = new pg.Pool({
+			connectionString: process.env.DATABASE_URL,
+			max: Object.keys(JOB_LOCKS).length + 2,
+			connectionTimeoutMillis: 10_000,
+			idleTimeoutMillis: 30_000
+		});
+		// An idle client erroring (DB restart) must not become an uncaught exception.
+		lockPool.on('error', (err) => logError('job_lock_pool_error', { message: err.message }));
+	}
+	return lockPool;
+}
+
+// In-process guard: an overlapping tick of the same job in this process skips
+// immediately instead of queueing behind (or re-entering) its own lock.
+const runningJobs = new Set<number>();
+
 async function runWithPgAdvisoryLock(
 	lockId: number,
 	jobName: string,
 	jobHandler: () => Promise<void>
 ) {
+	if (runningJobs.has(lockId)) {
+		logWarn('job_lock_skipped', { jobName, lockId, reason: 'running_in_process' });
+		return;
+	}
+	runningJobs.add(lockId);
+	let client: pg.PoolClient | null = null;
+	let discardClient = false;
+	const onClientError = (err: Error) =>
+		logError('job_lock_client_error', { jobName, lockId, message: err.message });
 	try {
-		const lockRows = await prisma.$queryRaw<
-			Array<{ locked: boolean }>
-		>`SELECT pg_try_advisory_lock(${lockId}) AS locked`;
-		const locked = Array.isArray(lockRows) && lockRows[0]?.locked;
-		if (!locked) {
+		client = await getLockPool().connect();
+		// A checked-out client erroring (connection reset mid-job) must be logged, not
+		// thrown as an uncaught 'error' event.
+		client.on('error', onClientError);
+		const lockRes = await client.query<{ locked: boolean }>(
+			'SELECT pg_try_advisory_lock($1::bigint) AS locked',
+			[lockId]
+		);
+		if (!lockRes.rows[0]?.locked) {
 			logWarn('job_lock_skipped', { jobName, lockId });
 			return;
 		}
-		const startedAt = Date.now();
 		try {
-			await jobHandler();
-			logInfo('job_completed', { jobName, durationMs: Date.now() - startedAt });
-		} finally {
-			await prisma.$queryRaw`SELECT pg_advisory_unlock(${lockId})`;
+			const startedAt = Date.now();
+			try {
+				await jobHandler();
+				logInfo('job_completed', { jobName, durationMs: Date.now() - startedAt });
+			} finally {
+				try {
+					await client.query('SELECT pg_advisory_unlock($1::bigint)', [lockId]);
+				} catch (unlockErr) {
+					// Destroying the connection ends the session, which drops its advisory locks.
+					discardClient = true;
+					logError('job_unlock_failed', { jobName, message: (unlockErr as Error).message });
+				}
+			}
+		} catch (error) {
+			logError('job_failed', { jobName, message: (error as Error).message });
 		}
 	} catch (error) {
+		discardClient = true;
 		logError('job_failed', { jobName, message: (error as Error).message });
+	} finally {
+		client?.off('error', onClientError);
+		client?.release(discardClient ? true : undefined);
+		runningJobs.delete(lockId);
 	}
 }
 
@@ -366,15 +435,15 @@ prisma
 			},
 			60 * 60 * 1000
 		);
-		setInterval(
-			() => {
-				void runWithPgAdvisoryLock(JOB_LOCKS.dailyNexusGrowth, 'daily_nexus_growth', async () => {
-					const r = await dailyNexusGrowth();
-					if (r.created > 0) logInfo('daily_nexus_growth', { created: r.created });
-				});
-			},
-			24 * 60 * 60 * 1000
-		);
+		// Hourly poll; each galaxy only grows once per 24h (persisted marker in
+		// dailyNexusGrowth), so restarts and deploys neither reset nor skip the cadence.
+		const runDailyNexusGrowth = () =>
+			runWithPgAdvisoryLock(JOB_LOCKS.dailyNexusGrowth, 'daily_nexus_growth', async () => {
+				const r = await dailyNexusGrowth();
+				if (r.created > 0) logInfo('daily_nexus_growth', { created: r.created });
+			});
+		void runDailyNexusGrowth();
+		setInterval(() => void runDailyNexusGrowth(), 60 * 60 * 1000);
 		setInterval(
 			() => {
 				void runWithPgAdvisoryLock(JOB_LOCKS.processDominance, 'process_dominance', () =>
@@ -391,14 +460,12 @@ prisma
 			},
 			10 * 60 * 1000
 		);
-		setInterval(
-			() => {
-				void runWithPgAdvisoryLock(JOB_LOCKS.galaxyEvents, 'galaxy_events', () =>
-					processGalaxyEvents()
-				);
-			},
-			24 * 60 * 60 * 1000
-		);
+		// Hourly poll so expiry always runs; the spawn roll is gated to once per 24h per
+		// galaxy by a persisted marker (galaxyJobMarkers.ts). Also runs once at boot.
+		const runGalaxyEvents = () =>
+			runWithPgAdvisoryLock(JOB_LOCKS.galaxyEvents, 'galaxy_events', () => processGalaxyEvents());
+		void runGalaxyEvents();
+		setInterval(() => void runGalaxyEvents(), 60 * 60 * 1000);
 		setInterval(
 			() => {
 				void runWithPgAdvisoryLock(JOB_LOCKS.protectionWarnings, 'protection_warnings', () =>

@@ -18,7 +18,7 @@ const ALL_EARNED_TITLES = [
 	'Proven',
 	'Vex Commander',
 	'High Commander',
-	'Season Conqueror',
+	'Protocol Ascendant',
 	// All shop titles
 	...ALL_TITLES.map((t) => t.name),
 ];

@@ -4,11 +4,16 @@ import PublicNav from '@/components/PublicNav';
 import SiteFooter from '@/components/SiteFooter';
 import UpdatedAgo from './UpdatedAgo';
 import { DISCORD_URL } from '@/constants/social';
+import { BUILDINGS_DOC } from '@/data/gameDocs';
 import '@/styles/GuidePages.css';
+
+// Live numbers only appear once enough commanders are active to be meaningful;
+// below this the page shows honest evergreen early-galaxy framing instead.
+const POPULATION_FLOOR = 10;
 
 // Refresh the prerendered HTML every 5 minutes. Search crawlers and link
 // previews see fresh galaxy numbers without us hitting the API on every
-// request, and "live" copy on the page stays believable.
+// request. The copy says "updated every few minutes", never "real-time".
 export const revalidate = 300;
 
 const SITE_URL = 'https://vexara.world';
@@ -16,10 +21,10 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 const TITLE = 'Vexara Live Galaxy - Active Players, Battles & Top Factions';
 const DESCRIPTION =
-	'Real-time status of the Vexara MMO galaxy: active commanders, ongoing battles, top factions, and recent conquests. Free browser MMO RTS, no download.';
+	'Status of the Vexara MMO galaxy, updated every few minutes: active commanders, top factions, and recent battles once the galaxy fills out. Free browser MMO RTS, no download.';
 
 export const metadata: Metadata = {
-	title: TITLE,
+	title: { absolute: TITLE },
 	description: DESCRIPTION,
 	keywords: [
 		'Vexara live galaxy',
@@ -54,6 +59,8 @@ export const metadata: Metadata = {
 interface GalaxyStatus {
 	galaxy: { id: number; name: string; createdAt: string } | null;
 	activePlayers: number;
+	activePlayers24h: number;
+	joinedPlayers: number;
 	totalRegistered: number;
 	claimedNexuses: number;
 	topFactions: {
@@ -81,6 +88,8 @@ interface GalaxyStatus {
 const EMPTY: GalaxyStatus = {
 	galaxy: null,
 	activePlayers: 0,
+	activePlayers24h: 0,
+	joinedPlayers: 0,
 	totalRegistered: 0,
 	claimedNexuses: 0,
 	topFactions: [],
@@ -126,6 +135,7 @@ function breadcrumbSchema() {
 export default async function StateOfGalaxyPage() {
 	const { data: status, fetchedAt } = await fetchGalaxyStatus();
 	const { topFactions, latestBattles } = status;
+	const showLive = status.activePlayers >= POPULATION_FLOOR;
 
 	return (
 		<>
@@ -139,15 +149,15 @@ export default async function StateOfGalaxyPage() {
 					<div className="gp-header-label">{'// LIVE GALAXY STATUS'}</div>
 					<h1 className="gp-title">Vexara - Live Galaxy Status</h1>
 					<p className="gp-subtitle">
-						Real-time status of the Vexara MMO galaxy: active commanders, ongoing battles, top
-						factions, and recent conquests. Free in the browser. No download, no account wipes, no
-						pay-to-win.
+						Status of the Vexara MMO galaxy, updated every few minutes: active commanders, top
+						factions, and recent battles. Free to play in the browser. No download, no account
+						wipes.
 					</p>
 					<p className="gp-updated">
 						<UpdatedAgo iso={fetchedAt} />
 					</p>
 					<Link
-						href="/register?utm_source=site&utm_medium=galaxy_status&utm_campaign=100_active"
+						href="/register?utm_source=site&utm_medium=galaxy_status&utm_campaign=galaxy_status"
 						className="gp-hero-cta"
 					>
 						Join the live galaxy
@@ -155,32 +165,45 @@ export default async function StateOfGalaxyPage() {
 				</header>
 
 				<section id="current-signal" className="gp-section">
-					<h2 className="gp-section-title">Current signal</h2>
-					<dl className="sog-metrics" aria-label="Live galaxy metrics">
-						<div className="sog-metric">
-							<dt>Active commanders</dt>
-							<dd>{status.activePlayers.toLocaleString()}</dd>
-						</div>
-						<div className="sog-metric">
-							<dt>Registered commanders</dt>
-							<dd>{status.totalRegistered.toLocaleString()}</dd>
-						</div>
-						<div className="sog-metric">
-							<dt>Claimed nexuses</dt>
-							<dd>{status.claimedNexuses.toLocaleString()}</dd>
-						</div>
-					</dl>
-					<p className="gp-prose">
-						The goal is to grow the active galaxy to 100 commanders so scouting, faction diplomacy,
-						raids, defenses, and conquest stories happen every day. Learn the basics in the{' '}
-						<Link href="/how-to-play">how to play guide</Link> or browse the full{' '}
-						<Link href="/codex">field manual</Link>.
-					</p>
+					<h2 className="gp-section-title">
+						{showLive ? 'Current signal' : 'Early galaxy'}
+					</h2>
+					{showLive ? (
+						<>
+							<dl className="sog-metrics" aria-label="Galaxy metrics">
+								<div className="sog-metric">
+									<dt>Active commanders (7d)</dt>
+									<dd>{status.activePlayers.toLocaleString()}</dd>
+								</div>
+								<div className="sog-metric">
+									<dt>Registered commanders</dt>
+									<dd>{status.totalRegistered.toLocaleString()}</dd>
+								</div>
+								<div className="sog-metric">
+									<dt>Claimed nexuses</dt>
+									<dd>{status.claimedNexuses.toLocaleString()}</dd>
+								</div>
+							</dl>
+							<p className="gp-prose">
+								Scouting, faction diplomacy, raids, defenses, and conquest stories happen every day.
+								Learn the basics in the <Link href="/how-to-play">how to play guide</Link> or browse
+								the full <Link href="/codex">field manual</Link>.
+							</p>
+						</>
+					) : (
+						<p className="gp-prose">
+							Early galaxy. Prime territory is still unclaimed. New commanders get starter
+							protection, guided quests, a relocation token, and a faction-first path into the war,
+							and a single commander can found a faction. Learn the basics in the{' '}
+							<Link href="/how-to-play">how to play guide</Link> or browse the full{' '}
+							<Link href="/codex">field manual</Link>.
+						</p>
+					)}
 				</section>
 
 				<section id="top-factions" className="gp-section">
 					<h2 className="gp-section-title">Top factions</h2>
-					{topFactions.length > 0 ? (
+					{showLive && topFactions.length > 0 ? (
 						<div className="gp-steps">
 							{topFactions.map((faction, index) => (
 								<div className="gp-step" key={faction.id}>
@@ -199,32 +222,29 @@ export default async function StateOfGalaxyPage() {
 						</div>
 					) : (
 						<p className="gp-prose">
-							Factions form when 2 or more commanders sign a charter together. Once the live galaxy
-							has its first faction, leaderboard rankings appear here. Factions share chat, support
-							each other with stationed troops, declare wars, and sign ceasefires. See how factions
-							work in the <Link href="/how-to-play">how to play guide</Link>.
+							A single commander can found a faction. Factions share chat, support each other with
+							stationed troops, declare wars, and sign non-aggression pacts. Once factions are
+							competing, leaderboard rankings appear here. See how factions work in the{' '}
+							<Link href="/how-to-play">how to play guide</Link>.
 						</p>
 					)}
 				</section>
 
 				<section id="recent-battles" className="gp-section">
 					<h2 className="gp-section-title">Recent battles</h2>
-					{latestBattles.length > 0 ? (
+					{showLive && latestBattles.length > 0 ? (
 						<div className="gp-steps">
 							{latestBattles.map((battle) => (
 								<div className="gp-step" key={battle.id}>
 									<div className="gp-step-num">#{battle.id}</div>
 									<div className="gp-step-body">
-										<h3 className="gp-step-title">
-											<Link href={`/replay/${battle.id}`}>{battleText(battle)}</Link>
-										</h3>
+										<h3 className="gp-step-title">{battleText(battle)}</h3>
 										<p className="gp-step-text">
 											{battle.totalUnits.toLocaleString()} units engaged.{' '}
 											<time dateTime={battle.arrivesAt}>
 												{new Date(battle.arrivesAt).toUTCString()}
 											</time>
-											. Replay links are public so commanders can share war stories outside the
-											game.
+											.
 										</p>
 									</div>
 								</div>
@@ -232,10 +252,10 @@ export default async function StateOfGalaxyPage() {
 						</div>
 					) : (
 						<p className="gp-prose">
-							Every resolved attack in Vexara becomes a public replay. Combat resolves with a fixed
-							seed so the replay deterministically reconstructs the fight, troop by troop. Recent
-							battles will appear here as soon as commanders start engaging. Learn what makes a good
-							composition in the <Link href="/units">units guide</Link>.
+							Combat resolves with a fixed seed so a battle can be reconstructed troop by troop, and
+							replays are visible only to the two commanders involved. Recent battles appear here
+							once the galaxy fills out. Learn what makes a good composition in the{' '}
+							<Link href="/units">units guide</Link>.
 						</p>
 					)}
 				</section>
@@ -265,7 +285,7 @@ export default async function StateOfGalaxyPage() {
 									you train your first troop. Every unit card shows its class and what it counters.
 									The attack screen reads your scout data and tells you whether your composition is
 									favoured before you commit. Review the{' '}
-									<Link href="/buildings">10 core buildings</Link> and{' '}
+									<Link href="/buildings">{BUILDINGS_DOC.length} core buildings</Link> and{' '}
 									<Link href="/units">units guide</Link> before you spend your first resources.
 								</p>
 							</div>
@@ -277,7 +297,7 @@ export default async function StateOfGalaxyPage() {
 								<p className="gp-step-text">
 									Factions are where Vexara becomes social: shared chat, invitations, support
 									troops, war planning, treaties, and rivalries. Faction dominance drives the
-									season. The first faction to cross the threshold wins naming rights and a
+									season. A faction wins by holding 65% of all nexuses for 36 hours, which earns a
 									permanent Hall of Champions entry. Find a faction recruiting on the{' '}
 									<a href={DISCORD_URL} target="_blank" rel="noopener noreferrer">
 										Vexara Discord
@@ -289,12 +309,11 @@ export default async function StateOfGalaxyPage() {
 						<div className="gp-step">
 							<div className="gp-step-num">04</div>
 							<div className="gp-step-body">
-								<h3 className="gp-step-title">Scout, raid, and share the replay</h3>
+								<h3 className="gp-step-title">Scout, raid, and learn from every fight</h3>
 								<p className="gp-step-text">
-									Every resolved attack can become a public replay. Good battles are the best way to
-									show new commanders why the galaxy matters. The{' '}
-									<Link href="/calculator">combat calculator</Link> tells you whether your raid
-									wins before you commit troops.
+									Scouts reveal a target&apos;s troops, resources, and buildings before you commit.
+									The <Link href="/calculator">combat calculator</Link> tells you whether your raid
+									wins before you send troops.
 								</p>
 							</div>
 						</div>
@@ -304,7 +323,7 @@ export default async function StateOfGalaxyPage() {
 				<div className="gp-cta-block">
 					<p className="gp-cta-text">The galaxy is already moving. Your first nexus is waiting.</p>
 					<Link
-						href="/register?utm_source=site&utm_medium=galaxy_status_bottom&utm_campaign=100_active"
+						href="/register?utm_source=site&utm_medium=galaxy_status_bottom&utm_campaign=galaxy_status"
 						className="gp-cta-btn"
 					>
 						Claim your starter nexus

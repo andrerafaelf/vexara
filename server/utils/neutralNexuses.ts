@@ -1,7 +1,9 @@
 import prisma from '../lib/prisma.js';
+import { logError } from './logger.js';
 import { computeNexusPopulation, getPopulationMax } from './population.js';
 import { getMaxStorage } from './economy.js';
 import { TROOP_COSTS, trainingBuildingFor } from './gameConstants.js';
+import { MARKER_NEXUS_GROWTH, getLastMarkerAt, stampMarker } from './galaxyJobMarkers.js';
 
 const NPC_LEVELABLE_BUILDINGS = [
 	'commandCore',
@@ -49,6 +51,10 @@ const MIN_NEUTRALS = 12;
 const NEUTRALS_PER_CAPTURED = 1;
 const NEUTRALS_PER_PLAYER = 1.2;
 const DAILY_NEXUS_GROWTH = 2;
+// dailyNexusGrowth is polled hourly; each galaxy only grows once per this window,
+// tracked by a persisted marker so restarts/deploys do not reset the clock.
+// The 5 minute margin keeps an hourly poll from slipping a 24h gate to 25h.
+const NEXUS_GROWTH_INTERVAL_MS = 24 * 60 * 60 * 1000 - 5 * 60 * 1000;
 // How many candidate tiles findOpenCoordinates samples before committing.
 // Pure rejection-sampling (take the first non-colliding cell) clusters badly -
 // random points clump, so the map ends up a dense diagonal blob with empty
@@ -193,6 +199,46 @@ function buildNeutralNexusData(
 		annihilatorPlatform: scaleTroopCount(0, 1, troopMultiplier, difficultyScale),
 		overseer: 0,
 		ownerId: null
+	};
+}
+
+// Column reset used when an expired galaxy-event core (Rogue AI / Derelict Ship)
+// that has Attack history cannot be deleted (Attack nexus FKs are RESTRICT) and
+// is demoted to a plain Neutral Settlement instead. Same garrison, buildings and
+// stockpile a freshly spawned base-difficulty neutral gets, with every
+// event-specific field cleared. Position, owner and id are left untouched.
+export function buildDemotedNeutralData() {
+	const {
+		x: _x,
+		y: _y,
+		ownerId: _ownerId,
+		...fresh
+	} = buildNeutralNexusData(
+		0,
+		0,
+		BASE_NEUTRAL_DIFFICULTY,
+		0 // galaxy age 0 forces the plain Neutral Settlement type
+	);
+	const populationCurrent = computeNexusPopulation({
+		troops: fresh as unknown as Record<string, unknown>,
+		trainingQueue: [],
+		populationMax: fresh.populationMax
+	});
+	return {
+		...fresh,
+		// Columns the neutral builder never sets but an event core may hold.
+		siegeColossus: 0,
+		aegisSkirmisher: 0,
+		voidStalker: 0,
+		plasmaTurret: 0,
+		targetingCore: 0,
+		stealthArray: 0,
+		populationCurrent,
+		isDerelict: false,
+		nexusTypeDoubled: false,
+		controlLevel: 100,
+		buildQueue: [],
+		trainingQueue: []
 	};
 }
 
@@ -481,18 +527,32 @@ export async function dailyNexusGrowth() {
 		select: { id: true, startsAt: true, createdAt: true }
 	});
 
+	const now = new Date();
 	let totalCreated = 0;
 	for (const galaxy of galaxies) {
-		const totalCount = await prisma.nexus.count({ where: { galaxyId: galaxy.id } });
-		const remaining = MAX_NEUTRALS - totalCount;
-		if (remaining <= 0) continue;
+		// Per-galaxy isolation: one failing galaxy must not abort the rest.
+		try {
+			const lastGrowthAt = await getLastMarkerAt(galaxy.id, MARKER_NEXUS_GROWTH);
+			if (lastGrowthAt && now.getTime() - lastGrowthAt.getTime() < NEXUS_GROWTH_INTERVAL_MS) continue;
+			// Claim before growing so a crash mid-run cannot double-grow on the next tick.
+			await stampMarker(galaxy.id, MARKER_NEXUS_GROWTH, now);
 
-		const ageMs = galaxyAgeMs(galaxy);
-		const toCreate = Math.min(DAILY_NEXUS_GROWTH, remaining);
-		for (let i = 0; i < toCreate; i++) {
-			const nexus = await createNeutralNexus(galaxy.id, BASE_NEUTRAL_DIFFICULTY, ageMs);
-			if (!nexus) break;
-			totalCreated++;
+			const totalCount = await prisma.nexus.count({ where: { galaxyId: galaxy.id } });
+			const remaining = MAX_NEUTRALS - totalCount;
+			if (remaining <= 0) continue;
+
+			const ageMs = galaxyAgeMs(galaxy);
+			const toCreate = Math.min(DAILY_NEXUS_GROWTH, remaining);
+			for (let i = 0; i < toCreate; i++) {
+				const nexus = await createNeutralNexus(galaxy.id, BASE_NEUTRAL_DIFFICULTY, ageMs);
+				if (!nexus) break;
+				totalCreated++;
+			}
+		} catch (err) {
+			logError('daily_nexus_growth_galaxy_failed', {
+				galaxyId: galaxy.id,
+				message: (err as Error).message
+			});
 		}
 	}
 

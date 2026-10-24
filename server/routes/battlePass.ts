@@ -1,57 +1,33 @@
-import type { Response } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import { Router } from 'express';
 import prisma from '../lib/prisma.js';
 import auth from '../middleware/auth.js';
+import { notifyNexusResources } from '../services/warRoomSocket.js';
 import type { AuthRequest } from '../types/index.js';
-import {
-	claimPassLevel,
-	grantVexPoints,
-	PASS_COST_VP,
-	purchasePaidPass
-} from '../utils/battlePass.js';
+import { giftPaidPass, purchasePaidPass } from '../utils/battlePass.js';
+import { getMaxStorage, getResourceProduction } from '../utils/economy.js';
 import { logError, logInfo } from '../utils/logger.js';
-import { NOTIF, sendPushToUser } from '../utils/push.js';
+import { claimPassReward, getPassState, type ClaimResult, type ClaimTarget } from '../utils/passClaim.js';
 
 const router = Router();
 
-// GET /api/battle-pass — current player's pass state for active galaxy
-router.get('/', auth, async (req, res: Response) => {
+// The Vex Pass is account-wide, so these routes work without an active galaxy.
+// Claim routes use plain `auth` because a claim delivers into a galaxy nexus.
+function authNoGalaxy(req: Request, res: Response, next: NextFunction): void {
+	(req as AuthRequest).activeGalaxyOptional = true;
+	void auth(req, res, next);
+}
+
+// GET /api/battle-pass - account-level pass state (works without an active galaxy)
+router.get('/', authNoGalaxy, async (req, res: Response) => {
 	const authReq = req as AuthRequest;
 	try {
-		if (!authReq.galaxyId) {
-			res.status(409).json({ error: 'No active galaxy' });
+		const state = await getPassState(authReq.userId, authReq.galaxyId ?? null, authReq.galaxyStatus);
+		if (!state) {
+			res.status(404).json({ error: 'User not found' });
 			return;
 		}
-		const [player, galaxy, appConfig] = await Promise.all([
-			prisma.galaxyPlayer.findUnique({
-				where: { userId_galaxyId: { userId: authReq.userId, galaxyId: authReq.galaxyId } },
-				select: {
-					seasonXp: true,
-					passLevel: true,
-					hasPaidPass: true,
-					passTitle: true,
-					claimedLevels: true
-				}
-			}),
-			prisma.galaxy.findUnique({
-				where: { id: authReq.galaxyId },
-				select: { seasonEndsAt: true }
-			}),
-			prisma.appConfig.findUnique({
-				where: { id: 1 },
-				select: { seasonEndsAt: true }
-			})
-		]);
-		if (!player) {
-			res.status(404).json({ error: 'Not a member of this galaxy' });
-			return;
-		}
-		const seasonEndsAt = galaxy?.seasonEndsAt ?? appConfig?.seasonEndsAt ?? null;
-		res.json({
-			...player,
-			claimedLevels: (player.claimedLevels as number[]) ?? [],
-			seasonEndsAt: seasonEndsAt?.toISOString() ?? null
-		});
+		res.json(state);
 	} catch (error) {
 		logError('unhandled_controller_error', {
 			message: (error as Error).message,
@@ -61,43 +37,97 @@ router.get('/', auth, async (req, res: Response) => {
 	}
 });
 
-// POST /api/battle-pass/claim/:level — claim a specific level's reward
-// Body: { nexusId: number }
-router.post('/claim/:level', auth, async (req, res: Response) => {
+// Shared by the level and cache claim routes: run the claim, push the new nexus
+// resources to the client, and shape the response.
+async function runClaim(
+	req: Request,
+	res: Response,
+	target: ClaimTarget,
+	file: string
+): Promise<void> {
 	const authReq = req as AuthRequest;
 	try {
-		if (!authReq.galaxyId) {
-			res.status(409).json({ error: 'No active galaxy' });
-			return;
-		}
-		const level = parseInt(req.params.level ?? '', 10);
-		if (!Number.isFinite(level) || level < 1 || level > 50) {
-			res.status(400).json({ error: 'Invalid level' });
-			return;
-		}
-		const nexusId = typeof req.body?.nexusId === 'number' ? req.body.nexusId : null;
-		if (!nexusId) {
+		const nexusId = req.body?.nexusId;
+		if (typeof nexusId !== 'number' || !Number.isInteger(nexusId) || nexusId <= 0) {
 			res.status(400).json({ error: 'nexusId is required' });
 			return;
 		}
-		const err = await claimPassLevel(authReq.userId, authReq.galaxyId, level, nexusId);
-		if (err) {
-			res.status(400).json({ error: err });
+		const result: ClaimResult = await claimPassReward(
+			{
+				userId: authReq.userId,
+				galaxyId: authReq.galaxyId ?? null,
+				galaxyStatus: authReq.galaxyStatus,
+				nexusId
+			},
+			target
+		);
+		if (!result.ok) {
+			const { ok: _ok, status, ...body } = result;
+			res.status(status).json(body);
 			return;
 		}
-		res.json({ success: true });
-	} catch (error) {
-		logError('unhandled_controller_error', {
-			message: (error as Error).message,
-			file: 'battlePass route /claim/:level'
+		if (result.nexus) {
+			try {
+				notifyNexusResources(authReq.userId, {
+					nexusId: result.nexus.id,
+					base: {
+						biomass: result.nexus.biomass,
+						alloy: result.nexus.alloy,
+						ore: result.nexus.ore
+					},
+					production: getResourceProduction(result.nexus),
+					storageMax: getMaxStorage(result.nexus),
+					lastResourceUpdate: result.nexus.lastResourceUpdate
+				});
+			} catch (emitErr) {
+				logError('nexus_resources_emit_failed', {
+					message: (emitErr as Error).message,
+					file
+				});
+			}
+		}
+		logInfo('vex_pass_claim', {
+			userId: authReq.userId,
+			level: result.level,
+			tracks: result.tracks,
+			nexusId,
+			delivered: result.delivered,
+			wasted: result.wasted
 		});
+		res.json({
+			success: true,
+			level: result.level,
+			tracks: result.tracks,
+			delivered: result.delivered,
+			wasted: result.wasted
+		});
+	} catch (error) {
+		logError('unhandled_controller_error', { message: (error as Error).message, file });
 		res.status(500).json({ error: 'Internal server error' });
 	}
+}
+
+// POST /api/battle-pass/claim/:level - claim every track still available for a level
+// Body: { nexusId: number }
+router.post('/claim/:level', auth, async (req, res: Response) => {
+	const raw = req.params.level ?? '';
+	const level = /^\d{1,3}$/.test(raw) ? parseInt(raw, 10) : NaN;
+	if (!Number.isFinite(level) || level < 1 || level > 50) {
+		res.status(400).json({ error: 'Invalid level' });
+		return;
+	}
+	await runClaim(req, res, { kind: 'level', level }, 'battlePass route /claim/:level');
 });
 
-// PATCH /api/battle-pass/title — set active display title
+// POST /api/battle-pass/claim-cache - claim the next repeatable post-L50 cache
+// Body: { nexusId: number }
+router.post('/claim-cache', auth, async (req, res: Response) => {
+	await runClaim(req, res, { kind: 'cache' }, 'battlePass route /claim-cache');
+});
+
+// PATCH /api/battle-pass/title - set active display title
 // Body: { title: string | null }
-router.patch('/title', auth, async (req, res: Response) => {
+router.patch('/title', authNoGalaxy, async (req, res: Response) => {
 	const authReq = req as AuthRequest;
 	try {
 		const { title } = req.body as { title?: string | null };
@@ -142,15 +172,11 @@ router.patch('/title', auth, async (req, res: Response) => {
 	}
 });
 
-// POST /api/battle-pass/purchase — unlock paid pass for active galaxy
-router.post('/purchase', auth, async (req, res: Response) => {
+// POST /api/battle-pass/purchase - unlock the paid track for the whole account
+router.post('/purchase', authNoGalaxy, async (req, res: Response) => {
 	const authReq = req as AuthRequest;
 	try {
-		if (!authReq.galaxyId) {
-			res.status(409).json({ error: 'No active galaxy' });
-			return;
-		}
-		const err = await purchasePaidPass(authReq.userId, authReq.galaxyId);
+		const err = await purchasePaidPass(authReq.userId);
 		if (err) {
 			res.status(400).json({ error: err });
 			return;
@@ -165,98 +191,22 @@ router.post('/purchase', auth, async (req, res: Response) => {
 	}
 });
 
-// POST /api/battle-pass/gift — spend 1,000 VP to activate the pass for another player
-// in the same active galaxy. Body: { username: string }
-router.post('/gift', auth, async (req, res: Response) => {
+// POST /api/battle-pass/gift - spend 1,000 VP to unlock the paid track for another
+// player. Account-wide, so no shared galaxy is needed. Body: { username: string }
+router.post('/gift', authNoGalaxy, async (req, res: Response) => {
 	const authReq = req as AuthRequest;
 	try {
-		if (!authReq.galaxyId) {
-			res.status(409).json({ error: 'No active galaxy' });
-			return;
-		}
-
 		const { username } = req.body as { username?: string };
 		if (!username || typeof username !== 'string') {
 			res.status(400).json({ error: 'Username is required' });
 			return;
 		}
-
-		const gifter = await prisma.user.findUnique({
-			where: { id: authReq.userId },
-			select: { id: true, username: true, vexPoints: true }
-		});
-		if (!gifter) {
-			res.status(404).json({ error: 'User not found' });
+		const result = await giftPaidPass(authReq.userId, username, 'battle_pass');
+		if (!result.ok) {
+			res.status(result.status).json({ error: result.error });
 			return;
 		}
-		if (gifter.vexPoints < PASS_COST_VP) {
-			res
-				.status(400)
-				.json({ error: `Not enough Vex Points (need ${PASS_COST_VP}, have ${gifter.vexPoints})` });
-			return;
-		}
-		if (gifter.username.toLowerCase() === username.toLowerCase()) {
-			res.status(400).json({ error: 'You cannot gift a pass to yourself' });
-			return;
-		}
-
-		const recipient = await prisma.user.findFirst({
-			where: { username: { equals: username, mode: 'insensitive' } },
-			select: { id: true, username: true }
-		});
-		if (!recipient) {
-			res.status(404).json({ error: 'Player not found' });
-			return;
-		}
-		const recipientPlayer = await prisma.galaxyPlayer.findUnique({
-			where: { userId_galaxyId: { userId: recipient.id, galaxyId: authReq.galaxyId } },
-			select: { hasPaidPass: true }
-		});
-		if (!recipientPlayer) {
-			res.status(400).json({ error: 'That player is not in your active galaxy' });
-			return;
-		}
-		if (recipientPlayer.hasPaidPass) {
-			res.status(400).json({ error: 'That player already has the pass this season' });
-			return;
-		}
-
-		await prisma.user.update({
-			where: { id: gifter.id },
-			data: { vexPoints: { decrement: PASS_COST_VP } }
-		});
-
-		await grantVexPoints(recipient.id, PASS_COST_VP);
-		const passErr = await purchasePaidPass(recipient.id, authReq.galaxyId);
-		if (passErr) {
-			await prisma.user.update({
-				where: { id: gifter.id },
-				data: { vexPoints: { increment: PASS_COST_VP } }
-			});
-			await prisma.user.update({
-				where: { id: recipient.id },
-				data: { vexPoints: { decrement: PASS_COST_VP } }
-			});
-			res.status(400).json({ error: passErr });
-			return;
-		}
-
-		logInfo('vex_pass_gifted', {
-			gifterId: gifter.id,
-			gifterUsername: gifter.username,
-			recipientId: recipient.id,
-			recipientUsername: recipient.username,
-			galaxyId: authReq.galaxyId
-		});
-
-		void sendPushToUser(recipient.id, NOTIF.TOKEN_GRANTED, {
-			title: 'Vex Pass gifted!',
-			body: `Commander ${gifter.username} gifted you the Vex Protocol battle pass. The paid track is now unlocked.`,
-			tag: `vex-pass-gift-${recipient.id}`,
-			data: { url: '/pass' }
-		});
-
-		res.json({ success: true, recipientUsername: recipient.username });
+		res.json({ success: true, recipientUsername: result.recipientUsername });
 	} catch (error) {
 		logError('unhandled_controller_error', {
 			message: (error as Error).message,

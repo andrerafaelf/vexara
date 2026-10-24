@@ -3,7 +3,7 @@ import PublicNav from '@/components/PublicNav';
 import SiteFooter from '@/components/SiteFooter';
 
 export const metadata: Metadata = {
-	title: 'Privacy Policy - Vexara',
+	title: { absolute: 'Privacy Policy - Vexara' },
 	description:
 		'How Vexara collects, uses, and protects your data. No advertising trackers, no data sales. Optional, consent-based analytics only.',
 	alternates: { canonical: '/privacy' },
@@ -61,8 +61,12 @@ export default function PrivacyPage() {
 
 			<h2 style={{ color: '#fff', fontSize: 18, marginTop: 32 }}>Cookies and analytics</h2>
 			<p>
-				The game itself only uses a session cookie that is strictly necessary to keep you signed
-				in. That cookie requires no consent.
+				The game does not set cookies of its own to keep you signed in. Instead, your sign-in
+				token, a cached copy of your basic account details, and your display and cookie-consent
+				preferences are stored in your browser&apos;s <code>localStorage</code>, and any UTM tags
+				from a campaign link are held in <code>sessionStorage</code> until you register. These
+				are strictly necessary to run the game, stay signed in, and remember your choices, and
+				they stay on your device until you sign out or clear your browser data.
 			</p>
 			<p>
 				We also offer optional <strong>Google Analytics</strong> to understand how players find

@@ -5,6 +5,7 @@ import {
 	ArrowUp,
 	Bell,
 	Building2,
+	Check,
 	Coins,
 	Flag,
 	FlagOff,
@@ -191,6 +192,24 @@ export default function PlayersPage({ adminFetch, showToast }: Props) {
 			const d = await res.json();
 			if (res.ok) showToast(d.message || `Sent to ${u.email}`, 'success');
 			else showToast(d.error || 'Failed', 'error');
+		} catch {
+			showToast('Error', 'error');
+		}
+	};
+
+	// Support tool: mark an account's email verified without the mail round trip.
+	const handleVerifyEmail = async (u: AllUser) => {
+		if (!window.confirm(`Mark ${u.username} (${u.email}) as email verified?`)) return;
+		try {
+			const res = await adminFetch(`${API}/users/${u._id}/verify-email`, { method: 'POST' });
+			const d = await res.json();
+			if (res.ok) {
+				showToast(
+					d.alreadyVerified ? `${u.username} was already verified` : `${u.username} verified`,
+					'success'
+				);
+				load();
+			} else showToast(d.error || 'Failed', 'error');
 		} catch {
 			showToast('Error', 'error');
 		}
@@ -417,6 +436,14 @@ export default function PlayersPage({ adminFetch, showToast }: Props) {
 													onClick={() => handleResendVerification(u)}
 												>
 													<Bell size={10} /> Resend
+												</button>
+											)}
+											{!u.emailVerified && (
+												<button
+													className="btn btn-success btn-xs"
+													onClick={() => handleVerifyEmail(u)}
+												>
+													<Check size={10} /> Verify
 												</button>
 											)}
 											{u.isFlagged ? (

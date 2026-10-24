@@ -2,11 +2,15 @@ import type { Metadata } from 'next';
 import LandingPage from '@/components/Landing/LandingPage';
 
 const TITLE = 'Vexara - Free Browser-Based 4X Strategy Game with Seasons & Commander Legacy';
+
+const PASS_DESCRIPTION =
+	'The Vex Pass is one permanent pass for your whole account: your pass XP, levels, claimed rewards and paid unlock carry across every galaxy, with no season timer and no resets. The free track pays out resources, Vex Points, badges and the Veteran title over 50 levels, and the paid track is a one-time 1,000 Vex Points unlock that adds titles, production boosts, supporter tokens and more Vex Points; each reward can be claimed once per account, and unlocking the paid track later also unlocks the paid rewards of every level you have already reached. After level 50, every 200 XP earns a repeatable Resource Cache (50,000 of each resource) for free and paid players alike.';
+
 const DESCRIPTION =
-	'Play Vexara free in your browser. A 4X sci-fi strategy game shared by real players. Build your nexus, command 12 unit types, forge alliances, and wage 24/7 war. Galaxies run to a winner. Your Vex Points and permanent commander legacy carry forward. No account wipes. No pay-to-win.';
+	'Play Vexara free in your browser. A 4X sci-fi strategy game shared by real players. Build your nexus, command 16 unit types, forge alliances, and wage 24/7 war. Galaxies run to a winner. Your Vex Points and permanent commander legacy carry forward. No account wipes. Free to play.';
 
 export const metadata: Metadata = {
-	title: TITLE,
+	title: { absolute: TITLE },
 	description: DESCRIPTION,
 	alternates: { canonical: '/' },
 	openGraph: {
@@ -38,7 +42,7 @@ const faqSchema = {
 			name: 'Is Vexara free to play?',
 			acceptedAnswer: {
 				'@type': 'Answer',
-				text: 'Yes. Vexara is completely free to play in your browser. A season pass exists: the free track gives every player resources and badges through play. A paid track (1,000 Vex Points, equivalent to €4.99) adds season-scoped titles, temporary production boosts, supporter tokens, and 750 Vex Points back across 50 levels. No pass reward affects combat stats or troop power.'
+				text: `Yes. Vexara is free to play in your browser, and every unit, building and mechanic is available without paying. ${PASS_DESCRIPTION}`
 			}
 		},
 		{
@@ -70,15 +74,15 @@ const faqSchema = {
 			name: 'Does Vexara have seasons?',
 			acceptedAnswer: {
 				'@type': 'Answer',
-				text: "Yes. Each galaxy runs until a faction crosses the dominance threshold. The winning faction earns naming rights and a permanent Hall of Champions entry. A fresh galaxy then opens. Your Vex Points carry into every subsequent galaxy. Permanent commander titles (Veteran, Iron Commander, Conqueror, Warlord) are earned through galaxies played and won, not purchased."
+				text: "Yes. Each galaxy runs until a faction crosses the dominance threshold. The winning faction earns a permanent Hall of Champions entry. A fresh galaxy then opens. Your Vex Points carry into every subsequent galaxy. Permanent commander titles (Veteran, Iron Commander, Conqueror, Warlord) are earned through galaxies played and won."
 			}
 		},
 		{
 			'@type': 'Question',
-			name: 'Is Vexara pay-to-win?',
+			name: 'Does paying give an advantage?',
 			acceptedAnswer: {
 				'@type': 'Answer',
-				text: 'No. Combat power (troops, buildings, attack stats, defense stats) cannot be purchased. The paid season pass track (1,000 Vex Points, equivalent to €4.99) adds season-scoped titles, temporary production boosts, supporter tokens, and 750 Vex Points back across 50 levels. Production boosts are time-limited economic perks, not combat multipliers. Every player competes on the same military terms.'
+				text: `Vexara is free to play and every unit, building and mechanic is available without paying. Paying can speed you up, though: the Vex Pass paid track (a one-time 1,000 Vex Points unlock, equal to EUR 4.99) and Ko-fi support grant supporter tokens, and each token redeems for +2 levels on one building or a one-time troop grant scaled to your Command Core level. Titles, borders and badges are cosmetic. The paid track also adds temporary production boosts and more Vex Points.`
 			}
 		}
 	]

@@ -3,16 +3,16 @@ import RegistrationForm from '@/components/RegistrationForm';
 
 const TITLE = 'Create Your Account - Vexara';
 const DESCRIPTION =
-	'Join Vexara free. Pick a username, claim your nexus, and command your first fleet in a persistent 4X galaxy shared by real players. No download. No pay-to-win.';
+	'Join Vexara free. Pick a username, claim your nexus, and command your first fleet in a persistent 4X galaxy shared by real players. No download. Free to play.';
 
 export const metadata: Metadata = {
-	title: TITLE,
+	title: { absolute: TITLE },
 	description: DESCRIPTION,
 	alternates: { canonical: '/register' },
 	openGraph: {
 		title: 'Join Vexara - Free Browser 4X Strategy',
 		description:
-			'Pick a username, claim your nexus, and command your first fleet. Galaxies run to a winner. Your record and Vex Points carry forward. No account wipes. No pay-to-win.',
+			'Pick a username, claim your nexus, and command your first fleet. Galaxies run to a winner. Your record and Vex Points carry forward. No account wipes. Free to play.',
 		url: 'https://vexara.world/register',
 		siteName: 'Vexara',
 		locale: 'en_US',

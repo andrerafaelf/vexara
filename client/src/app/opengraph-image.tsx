@@ -9,7 +9,7 @@ export default async function Image() {
 		eyebrow: 'Live Galaxy',
 		kicker: 'Seasonal galaxies. Permanent legacy.',
 		title: 'Real opponents.',
-		subtitle: 'Free browser MMO-RTS. Galaxies run to a winner. Your record carries forever. No pay-to-win.',
+		subtitle: 'Free browser MMO-RTS. Galaxies run to a winner. Your record carries forever. Free to play.',
 		footer: 'vexara.world'
 	});
 }

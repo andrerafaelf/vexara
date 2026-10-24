@@ -1,4 +1,6 @@
 import type { Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
+import { invalidateAuthCache } from '../middleware/auth.js';
 import prisma from '../lib/prisma.js';
 import * as friendsService from '../services/friendsService.js';
 import { comparePassword, hashPassword } from '../models/User.js';
@@ -242,13 +244,20 @@ export async function changePassword(req: AuthRequest, res: Response): Promise<v
 		}
 
 		const hashed = await hashPassword(newPassword!);
-		await prisma.user.update({ where: { id: user.id }, data: { password: hashed } });
+		// passwordChangedAt revokes every JWT issued before now (see middleware/auth.ts);
+		// the caller gets a fresh token below so their own session continues.
+		await prisma.user.update({
+			where: { id: user.id },
+			data: { password: hashed, passwordChangedAt: new Date() }
+		});
+		invalidateAuthCache(user.id);
 
 		sendPasswordChanged(user.email, user.username).catch((err) =>
-			console.error('[emailService] sendPasswordChanged failed:', err)
+			logError('password_changed_email_failed', { userId: user.id, message: (err as Error).message })
 		);
 
-		res.json({ ok: true });
+		const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
+		res.json({ ok: true, token });
 	} catch (error) {
 		logError('unhandled_controller_error', {
 			message: (error as Error).message,
@@ -557,7 +566,7 @@ export async function getPublicProfileOg(req: Request, res: Response): Promise<v
 
 		const user = await prisma.user.findUnique({
 			where: { username },
-			select: { id: true, username: true, isFounder: true, supporterTier: true }
+			select: { id: true, username: true, isFounder: true, isBetaFounder: true, supporterTier: true }
 		});
 		if (!user) {
 			res.status(404).json({ error: 'User not found' });
@@ -594,6 +603,7 @@ export async function getPublicProfileOg(req: Request, res: Response): Promise<v
 		res.json({
 			username: user.username,
 			isFounder: user.isFounder ?? false,
+			isBetaFounder: user.isBetaFounder ?? false,
 			supporterTier: user.supporterTier ?? null,
 			totalInfluence,
 			galaxiesWon,

@@ -1,13 +1,13 @@
 {
   "name": "Vexara — Browser 4X Strategy",
   "short_name": "Vexara",
-  "description": "Free browser-based 4X strategy in a persistent sci-fi galaxy. Build, conquer, dominate 24/7. No resets. No pay-to-win.",
+  "description": "Free browser-based 4X strategy in a persistent sci-fi galaxy. 16 unit types, real opponents, build, conquer, dominate 24/7. No account wipes.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "theme_color": "#0F1326",
-  "background_color": "#0F1326",
+  "theme_color": "#0b0c0c",
+  "background_color": "#0b0c0c",
   "lang": "en",
   "categories": ["games", "strategy", "entertainment"],
   "icons": [

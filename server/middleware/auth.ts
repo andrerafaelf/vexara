@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma.js';
 import type { AuthRequest } from '../types/index.js';
+import { isTokenRevoked } from '../utils/sessionRevocation.js';
 
 const READ_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
@@ -15,6 +16,7 @@ const LAST_PLAYED_UPDATE_INTERVAL_MS = 5 * 60 * 1000;
 interface CacheEntry {
 	activeGalaxyId: number | null;
 	galaxyStatus: string | null;
+	passwordChangedAt: Date | null;
 	expiresAt: number;
 	lastPlayedWrittenAt: number;
 }
@@ -24,7 +26,11 @@ const userCache = new Map<number, CacheEntry>();
 setInterval(() => {
 	const now = Date.now();
 	for (const [k, v] of userCache) {
-		if (v.expiresAt < now) userCache.delete(k);
+		// Keep an expired entry until its lastPlayedAt throttle window has also passed,
+		// otherwise the next rebuild would forget it and write again immediately.
+		if (v.expiresAt < now && now - v.lastPlayedWrittenAt > LAST_PLAYED_UPDATE_INTERVAL_MS) {
+			userCache.delete(k);
+		}
 	}
 }, 60_000).unref();
 
@@ -36,7 +42,7 @@ const auth = async (req: Request, res: Response, next: NextFunction): Promise<vo
 			return;
 		}
 
-		const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
+		const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number; iat?: number };
 		const userId = decoded.userId;
 		(req as AuthRequest).userId = userId;
 
@@ -46,7 +52,11 @@ const auth = async (req: Request, res: Response, next: NextFunction): Promise<vo
 		if (!cached || cached.expiresAt < now) {
 			const user = await prisma.user.findUnique({
 				where: { id: userId },
-				select: { activeGalaxyId: true, activeGalaxy: { select: { id: true, status: true } } }
+				select: {
+						activeGalaxyId: true,
+						passwordChangedAt: true,
+						activeGalaxy: { select: { id: true, status: true } }
+					}
 			});
 
 			if (!user) {
@@ -57,10 +67,20 @@ const auth = async (req: Request, res: Response, next: NextFunction): Promise<vo
 			cached = {
 				activeGalaxyId: user.activeGalaxyId ?? null,
 				galaxyStatus: user.activeGalaxy?.status ?? null,
+				passwordChangedAt: user.passwordChangedAt ?? null,
 				expiresAt: now + TTL_MS,
-				lastPlayedWrittenAt: 0
+				// Carry the throttle stamp over from the entry being rebuilt, or the
+				// 5-minute write throttle resets every TTL and writes ~every 30s.
+				lastPlayedWrittenAt: cached?.lastPlayedWrittenAt ?? 0
 			};
 			userCache.set(userId, cached);
+		}
+
+		// Tokens issued before the last password change/reset are revoked (same response
+		// shape as an invalid token).
+		if (isTokenRevoked(decoded.iat, cached.passwordChangedAt)) {
+			res.status(401).json({ error: 'Invalid token' });
+			return;
 		}
 
 		const authReq = req as AuthRequest;
@@ -97,7 +117,9 @@ const auth = async (req: Request, res: Response, next: NextFunction): Promise<vo
 // Call this after any operation that changes a user's active galaxy
 // so the next request sees the updated value immediately.
 export function invalidateAuthCache(userId: number): void {
-	userCache.delete(userId);
+	// Expire rather than delete so the lastPlayedAt write throttle survives.
+	const entry = userCache.get(userId);
+	if (entry) entry.expiresAt = 0;
 }
 
 export default auth;

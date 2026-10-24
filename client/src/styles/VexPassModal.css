@@ -986,3 +986,129 @@
 		max-height: calc(100dvh - 56px - env(safe-area-inset-bottom) - 2 * var(--space-4));
 	}
 }
+
+/* ── Permanent pass additions: daily XP, notes, unlock timers, caches ─────── */
+.vpm-daily-xp {
+	margin-top: 6px;
+	font-size: 10px;
+	color: var(--text-faint);
+	letter-spacing: 0.04em;
+}
+
+.vpm-note {
+	padding: 6px var(--space-5);
+	font-size: 11px;
+	line-height: 1.45;
+	color: var(--text-muted);
+	background: #191b1a;
+	border-bottom: 1px solid #393831;
+	flex-shrink: 0;
+}
+
+.vpm-note--warn {
+	color: var(--warning, #e3a846);
+}
+
+.vpm-claim-error--storage {
+	padding: 6px 10px;
+	font-size: 12px;
+	line-height: 1.45;
+	border: 1px solid var(--danger);
+	background: rgba(220, 70, 60, 0.08);
+}
+
+.vpm-claim-note {
+	width: 100%;
+	font-size: 11px;
+	line-height: 1.4;
+	color: var(--warning, #e3a846);
+}
+
+.vpm-row-unlock {
+	display: inline-block;
+	font-family: var(--font-mono);
+	font-size: 11px;
+	letter-spacing: 0.04em;
+	color: var(--warning, #e3a846);
+}
+
+.vpm-caches {
+	flex-shrink: 0;
+	padding: 8px var(--space-5);
+	border-top: 1px solid #403d36;
+	background: #191b1a;
+}
+
+.vpm-caches-head {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	margin-bottom: 6px;
+}
+
+.vpm-caches-title {
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--text-default);
+}
+
+.vpm-caches-badge {
+	padding: 1px 8px;
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: #111312;
+	background: #a66d32;
+}
+
+.vpm-caches-bank {
+	margin-left: auto;
+	font-family: var(--font-mono);
+	font-size: 11px;
+	color: var(--text-muted);
+}
+
+.vpm-caches-body {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: var(--space-3);
+	flex-wrap: wrap;
+}
+
+.vpm-caches-info {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	flex: 1 1 240px;
+	min-width: 0;
+}
+
+.vpm-caches-reward {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 6px;
+	font-size: 11px;
+	color: var(--text-muted);
+}
+
+.vpm-bar--cache {
+	width: 100%;
+}
+
+.vpm-caches-progress {
+	font-size: 11px;
+	color: var(--text-faint);
+}
+
+@media (max-width: 480px) {
+	.vpm-note,
+	.vpm-caches {
+		padding-left: var(--space-3);
+		padding-right: var(--space-3);
+	}
+}

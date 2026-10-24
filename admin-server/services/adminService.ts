@@ -739,6 +739,20 @@ export function kickFactionMember(factionId: number, memberId: number) {
 	});
 }
 
+// Marks the email verified and clears any pending token. Conditional on
+// emailVerifiedAt being null so a concurrent real verification is never overwritten.
+export async function markEmailVerified(userId: number): Promise<boolean> {
+	const res = await prisma.user.updateMany({
+		where: { id: userId, emailVerifiedAt: null },
+		data: {
+			emailVerifiedAt: new Date(),
+			emailVerificationToken: null,
+			emailVerificationTokenExpiresAt: null
+		}
+	});
+	return res.count > 0;
+}
+
 export function flagUser(userId: number, reason: string) {
 	return prisma.user.update({
 		where: { id: userId },

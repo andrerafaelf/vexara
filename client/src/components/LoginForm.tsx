@@ -188,16 +188,16 @@ const LoginForm: React.FC = () => {
 						Every galaxy ends.
 					</h2>
 					<p className="auth-panel-sub">
-						Build a nexus, control three resources, train twelve unit types, and conquer real
-						players in a galaxy that never stops running.
+						Build a nexus, control three resources, train sixteen unit types, and conquer real
+						players in galaxies that run 24/7 until a faction wins.
 					</p>
 					<div className="auth-panel-stats">
 						<div className="auth-panel-stat">
-							<span className="auth-panel-stat-value">12</span>
+							<span className="auth-panel-stat-value">16</span>
 							<span className="auth-panel-stat-label">Unit types</span>
 						</div>
 						<div className="auth-panel-stat">
-							<span className="auth-panel-stat-value">8</span>
+							<span className="auth-panel-stat-value">12</span>
 							<span className="auth-panel-stat-label">Buildings</span>
 						</div>
 						<div className="auth-panel-stat">

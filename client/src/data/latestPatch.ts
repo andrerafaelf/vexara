@@ -15,7 +15,7 @@
 // If "I forgot to bump it" becomes a real pattern, swap to a build step
 // that globs the directory and writes this file. Until then: simpler wins.
 
-export const LATEST_PATCH_VERSION = '0.27';
-export const LATEST_PATCH_LABEL = 'Alpha v0.27';
+export const LATEST_PATCH_VERSION = '0.28';
+export const LATEST_PATCH_LABEL = 'Alpha v0.28';
 export const LATEST_PATCH_HEADLINE =
-	'Diplomacy gets teeth: Non-Aggression Pacts now block attacks and must be formally broken with a public 60-minute warning window, active treaty partners share limited map vision but never garrison intel, and vassalage becomes a bounded diplomatic path to victory with loot protection for the vassal.';
+	'The Vex Pass is now one permanent pass for your whole account: progress, claimed rewards and the paid unlock carry across every galaxy, buying the paid track later pays out every level you already reached, and after level 50 every 200 XP earns a 50,000-of-each Resource Cache. Rogue AI cores now properly expire.';

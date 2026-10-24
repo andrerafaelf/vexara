@@ -18,8 +18,9 @@ interface AuthDeps {
 const loginLimiter = createRateLimiter(10, 1 / 6);
 
 function clientIp(req: Request): string {
-	const fwd = req.headers['x-forwarded-for'];
-	if (typeof fwd === 'string' && fwd.length > 0) return fwd.split(',')[0].trim();
+	// req.ip honours exactly one trusted proxy hop (app.set('trust proxy', 1) in server.ts).
+	// The leftmost X-Forwarded-For entry is client-controlled and would let an attacker
+	// rotate the limiter key at will, so it is deliberately not read here.
 	return req.ip || req.socket.remoteAddress || 'unknown';
 }
 

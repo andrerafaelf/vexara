@@ -62,7 +62,7 @@ export async function generateMetadata({
 
 	if (!data) {
 		return {
-			title: 'Battle Replay · Vexara',
+			title: { absolute: 'Battle Replay · Vexara' },
 			description: 'Watch a Vexara battle replay.'
 		};
 	}
@@ -82,7 +82,7 @@ export async function generateMetadata({
 	const url = `${SITE_URL}/replay/${id}`;
 
 	return {
-		title,
+		title: { absolute: title },
 		description,
 		openGraph: {
 			title,
@@ -119,9 +119,15 @@ export default async function ReplayPage({ params }: { params: Promise<{ id: str
 					padding: 24
 				}}
 			>
-				<h1 style={{ fontSize: 24, color: '#FF9E3D' }}>Replay not found</h1>
-				<p>This battle either never happened or hasn&apos;t resolved yet.</p>
-				<Link href="/" style={{ color: '#FF9E3D' }}>
+				<h1 style={{ fontSize: 24, color: '#FF9E3D' }}>This battle report is private</h1>
+				<p style={{ maxWidth: 460, textAlign: 'center', lineHeight: 1.5 }}>
+					Battle details are only visible to the two commanders involved. If you fought in it,
+					open your combat reports in-game.
+				</p>
+				<Link href="/reports" style={{ color: '#FF9E3D' }}>
+					Open my reports
+				</Link>
+				<Link href="/" style={{ color: '#8B949E' }}>
 					← Back to Vexara
 				</Link>
 			</div>

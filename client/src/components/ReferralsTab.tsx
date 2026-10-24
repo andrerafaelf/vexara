@@ -280,7 +280,7 @@ export default function ReferralsTab({ mode = 'referrals' }: ReferralsTabProps) 
 	const origin =
 		typeof window !== 'undefined' ? window.location.origin : 'https://vexara.world';
 	const inviteLink = myReferralCode ? `${origin}/register?ref=${myReferralCode}` : '';
-	const recruitmentPost = `Come command an empire in Vexara — a free browser MMO RTS. No download, no resets, no pay-to-win. New commanders get 500 Vex Points + Beta Founder status. Join with my invite: ${origin}/register?ref=${myReferralCode}&utm_source=referral&utm_medium=player&utm_campaign=recruitment_orders`;
+	const recruitmentPost = `Come command an empire in Vexara, a free browser MMO RTS. No download, no account wipes. New commanders who join with my invite start with a bonus troop squad. Join with my invite: ${origin}/register?ref=${myReferralCode}&utm_source=referral&utm_medium=player&utm_campaign=recruitment_orders`;
 
 	const copyToClipboard = async (text: string, which: 'link' | 'post' | 'code') => {
 		try {
@@ -617,8 +617,8 @@ export default function ReferralsTab({ mode = 'referrals' }: ReferralsTabProps) 
 								Both of you get rewarded.
 							</h3>
 							<p className="referrals-hero-sub">
-								Every recruit who joins before <strong>July 1</strong> claims{' '}
-								<strong>500 Vex Points</strong> and Beta Founder standing. You earn redeemable
+								Every recruit who joins with your link starts with a{' '}
+								<strong>bonus troop squad</strong> on their first nexus. You earn redeemable
 								tokens as they grow.
 							</p>
 						</div>
@@ -675,11 +675,10 @@ export default function ReferralsTab({ mode = 'referrals' }: ReferralsTabProps) 
 					<div className="referrals-ladder">
 						<div className="referrals-ladder-card referrals-ladder-card--them">
 							<span className="referrals-ladder-tag referrals-ladder-tag--them">Your recruit</span>
-							<span className="referrals-ladder-reward">500 VP + troop head start</span>
+							<span className="referrals-ladder-reward">Troop head start</span>
 							<span className="referrals-ladder-desc">
-								500 Vex Points on signup, a starter squad on their first nexus (15 Recon, 10
-								Sentinel Lancers, 10 Assault Troopers), a milestone token at 500 points, and 250
-								more VP at 5,000 influence.
+								A starter squad on their first nexus (15 Recon, 10 Sentinel Lancers, 10 Assault
+								Troopers), a milestone token at 500 points, and 250 Vex Points at 5,000 influence.
 							</span>
 						</div>
 						<div className="referrals-ladder-card">

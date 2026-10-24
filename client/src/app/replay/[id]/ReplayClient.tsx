@@ -57,7 +57,7 @@ export default function ReplayClient({ data }: { data: ReplayPayload }) {
 	const shareTitle = buildReplayTitle(data, attackerLabel, defenderLabel);
 	const shareCopy = useMemo(
 		() =>
-			`${shareTitle}\n\n${totalAttackers.toLocaleString()} attackers vs ${totalDefenders.toLocaleString()} defenders. Watch the deterministic battle replay:\n${shareUrl}\n\nVexara is a free browser MMO RTS: no download, no account wipes, no pay-to-win.`,
+			`${shareTitle}\n\n${totalAttackers.toLocaleString()} attackers vs ${totalDefenders.toLocaleString()} defenders. Watch the deterministic battle replay:\n${shareUrl}\n\nVexara is a free browser MMO RTS: no download, no account wipes, free to play.`,
 		[shareTitle, totalAttackers, totalDefenders, shareUrl]
 	);
 	const xShareHref = `https://twitter.com/intent/tweet?text=${encodeURIComponent(

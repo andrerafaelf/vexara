@@ -52,6 +52,7 @@ export default function PublicNav({ loc }: PublicNavProps) {
 					</Link>
 				) : (
 					<>
+						<Link href="/how-to-play">How to Play</Link>
 						<Link href="/codex">Codex</Link>
 						<Link href="/state-of-galaxy">Galaxy Status</Link>
 						<Link href="/calculator">Calculator</Link>

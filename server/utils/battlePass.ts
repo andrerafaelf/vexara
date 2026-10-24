@@ -1,24 +1,39 @@
 import prisma from '../lib/prisma.js';
-import { logError } from './logger.js';
+import { logError, logInfo } from './logger.js';
+import { NOTIF, sendPushToUser } from './push.js';
 
-// XP required to reach each level (cumulative). 50 levels total.
-// 200 XP/level = 10,000 XP to max.
-// Active player (~400 XP/day: dailies + streak + 1 combat win): L50 in ~25 days.
-// Very active (~680 XP/day: above + ops/treaties + captures): L50 in ~15 days.
-// Casual player (~200 XP/day: daily quests only): earns meaningful rewards every session.
-// Season target: 28 days.
-const LEVEL_XP_THRESHOLDS: number[] = (() => {
-	const thresholds: number[] = [0];
-	for (let lvl = 1; lvl <= 50; lvl++) {
-		thresholds.push(lvl * 200); // flat 200 XP per level
-	}
-	return thresholds; // index = level, value = cumulative XP required
-})();
-
+// The Vex Pass is ONE permanent, account-wide pass. XP lives on User.passXp and
+// accumulates across every galaxy, forever. Claims live in PassClaim rows
+// (track 'free' | 'paid' for levels 1..50, track 'cache' for the repeatable
+// post-L50 resource caches, level 51 = cache #1).
+//
+// Level = min(50, floor(passXp / 200)): flat 200 XP per level, 10,000 XP to max.
+// XP past 10,000 keeps feeding repeatable resource caches (one per 200 XP).
+// Daily XP is capped at 800 per account per UTC day, and banked caches are
+// capped so XP cannot be stockpiled without limit (see grantPassXp).
+// Reward claims are paced per galaxy and must fit the target nexus storage
+// (see claimPassReward).
 export const MAX_PASS_LEVEL = 50;
+export const PASS_XP_PER_LEVEL = 200;
+export const PASS_MAX_XP = MAX_PASS_LEVEL * PASS_XP_PER_LEVEL;
 
 // Vex Pass costs 1,000 VP. €4.99 purchase = 1,000 VP.
 export const PASS_COST_VP = 1000;
+
+// Repeatable cache granted for every 200 XP past L50 (same on free and paid).
+export const PASS_CACHE_REWARD = 'resources:50000:50000:50000';
+// Max unclaimed caches that can be banked. Also bounds how far XP can run ahead.
+export const PASS_CACHE_BANK_CAP = 10;
+// Max pass XP an account can earn per UTC day.
+export const PASS_DAILY_XP_CAP = 800;
+// Pacing (Rule B): a fresh join may claim up to level 10 right away, then 4 more
+// levels per (speed-scaled) day. Caches unlock once the allowance reaches level 50.
+export const PASS_PACING_BASE_LEVELS = 10;
+export const PASS_PACING_LEVELS_PER_DAY = 4;
+export const PASS_CACHE_PACING_LEVEL = 50;
+// Storage fit (Rule A): a claim is refused if, for any resource, the part that
+// does not fit exceeds this fraction of the payload.
+export const PASS_CLAIM_WASTE_TOLERANCE = 0.05;
 
 export const PASS_XP = {
 	QUEST_COMPLETE:     200,
@@ -52,20 +67,20 @@ interface PassReward {
 //     L15:20 + L25:25 + L35:30 + L45:35 = 110 ✓  total = 250
 //
 // Paid track  (Protocol: Command):
-//   Titles: Conscript(1) → Operative(8) → Proven(18) → Vex Commander(30) → High Commander(45) → Season Conqueror(50)
+//   Titles: Conscript(1) → Operative(8) → Proven(18) → Vex Commander(30) → High Commander(45) → Protocol Ascendant(50)
 //   Boosts escalate from +5% 12h → +35% 120h.
-//   Tokens: 1 token at L20, 1 at L35, 2 at L50 (total 4 tokens on full paid pass).
-//   VP at 20 levels = 500 VP total.
+//   Tokens: 1 token at L20, 1 at L35, 4 at L50 (total 6 tokens on full paid pass).
+//   VP across the paid track = 520 VP total.
 //
-// Combined total returned to player: 250 (free) + 500 (paid) = 750 VP on a 1,000 VP pass.
+// Combined total returned to player: 250 (free) + 520 (paid) = 770 VP on a 1,000 VP pass.
 //
 // Reward format strings:
-//   resources:<biomass>:<alloy>:<ore>          — all three deposited to selected nexus
-//   boost:production:<pct>:<hours>             — time-limited production multiplier
-//   title:<Name>                               — season-scoped prestige title
-//   badge:<tier>                               — permanent career badge
-//   vexpoints:<amount>                         — credited to User.vexPoints
-//   token:<count>                              — MilestoneToken rows (rewardType: 'battle_pass')
+//   resources:<biomass>:<alloy>:<ore>          - all three deposited to selected nexus
+//   boost:production:<pct>:<hours>             - time-limited production multiplier
+//   title:<Name>                               - permanent prestige title
+//   badge:<tier>                               - permanent career badge
+//   vexpoints:<amount>                         - credited to User.vexPoints
+//   token:<count>                              - MilestoneToken rows (rewardType: 'battle_pass')
 const REWARD_TABLE: PassReward[] = [
 	// ── Act I: Enlistment (1–10) ─────────────────────────────────────────────────
 	{ level:  1, free: 'resources:500:500:500',                                         paid: 'title:Conscript' },
@@ -128,191 +143,93 @@ const REWARD_TABLE: PassReward[] = [
 
 	// ── L50: The Capstone ─────────────────────────────────────────────────────────
 	// Free: Platinum badge + 20 VP. Rarest badge in the game. Proof you went the distance.
-	// Paid: Season Conqueror + 170 VP + 4 tokens + +35% prod 120h.
-	{ level: 50, free: 'badge:platinum,vexpoints:20',                                   paid: 'title:Season Conqueror,vexpoints:170,token:4,boost:production:35:120' },
+	// Paid: Protocol Ascendant + 170 VP + 4 tokens + +35% prod 120h.
+	{ level: 50, free: 'badge:platinum,vexpoints:20',                                   paid: 'title:Protocol Ascendant,vexpoints:170,token:4,boost:production:35:120' },
 ];
 
 const rewardByLevel = new Map(REWARD_TABLE.map((r) => [r.level, r]));
 
-// Grant seasonal XP to a player. Advances passLevel and records newly unlocked
-// levels in claimedLevels (as pending — they must be claimed manually).
-// Safe to call fire-and-forget (void) — errors are caught internally.
+
+// Pass title rank: higher = more prestigious. User.passTitle always holds the
+// highest-ranked pass title the user owns.
+export const PASS_TITLE_RANK: Record<string, number> = {
+	Conscript: 1,
+	Operative: 2,
+	Proven: 3,
+	Veteran: 4,
+	'Vex Commander': 5,
+	'High Commander': 6,
+	'Protocol Ascendant': 7
+};
+
+
+export function passLevelForXp(xp: number): number {
+	return Math.min(MAX_PASS_LEVEL, Math.floor(Math.max(0, xp) / PASS_XP_PER_LEVEL));
+}
+
+// Caches earned so far: one per full 200 XP past the L50 threshold.
+export function cachesEarnedForXp(xp: number): number {
+	return Math.max(0, Math.floor((xp - PASS_MAX_XP) / PASS_XP_PER_LEVEL));
+}
+
+// UTC day key shared with the daily quests.
+export function utcDayKey(): string {
+	return new Date().toISOString().slice(0, 10);
+}
+
+// ---------------------------------------------------------------------------
+// XP
+// ---------------------------------------------------------------------------
+
+// Grant pass XP to an account. ONE atomic UPDATE: concurrent grants (combat fires
+// 3-4 in parallel) cannot lose XP, because every term is evaluated against the
+// locked row. granted = clamp(amount, remaining daily cap, remaining cache-bank
+// room); the daily total counts what was actually granted, not the request.
+// galaxyId is only used for logging. Safe to call fire-and-forget (void): errors
+// are caught and logged.
 export async function grantPassXp(
 	userId: number,
 	galaxyId: number,
 	event: PassXpEvent
 ): Promise<void> {
 	try {
-		const xpAmount = PASS_XP[event];
-
-		const player = await prisma.galaxyPlayer.findUnique({
-			where: { userId_galaxyId: { userId, galaxyId } },
-			select: { seasonXp: true, passLevel: true, hasPaidPass: true, claimedLevels: true }
-		});
-
-		if (!player) return;
-		if (player.passLevel >= MAX_PASS_LEVEL) return;
-
-		const newXp = player.seasonXp + xpAmount;
-		let newLevel = player.passLevel;
-
-		while (newLevel < MAX_PASS_LEVEL && newXp >= LEVEL_XP_THRESHOLDS[newLevel + 1]) {
-			newLevel++;
-		}
-
-		await prisma.galaxyPlayer.update({
-			where: { userId_galaxyId: { userId, galaxyId } },
-			data: { seasonXp: newXp, passLevel: newLevel }
-		});
+		const amount = PASS_XP[event];
+		if (!amount) return;
+		const today = utcDayKey();
+		const cacheCeilingBase = PASS_MAX_XP + PASS_XP_PER_LEVEL * PASS_CACHE_BANK_CAP;
+		await prisma.$executeRaw`
+      UPDATE "User"
+      SET "passXp" = "passXp" + GREATEST(0, LEAST(
+            ${amount}::int,
+            ${PASS_DAILY_XP_CAP}::int - (CASE WHEN "passXpDay" = ${today}::text THEN "passXpDayTotal" ELSE 0 END),
+            ${cacheCeilingBase}::int
+              + ${PASS_XP_PER_LEVEL}::int * (
+                  SELECT COUNT(*)::int FROM "PassClaim"
+                  WHERE "PassClaim"."userId" = "User"."id" AND "PassClaim"."track" = 'cache'
+                )
+              - "passXp"
+          )),
+          "passXpDayTotal" = (CASE WHEN "passXpDay" = ${today}::text THEN "passXpDayTotal" ELSE 0 END)
+            + GREATEST(0, LEAST(
+                ${amount}::int,
+                ${PASS_DAILY_XP_CAP}::int - (CASE WHEN "passXpDay" = ${today}::text THEN "passXpDayTotal" ELSE 0 END),
+                ${cacheCeilingBase}::int
+                  + ${PASS_XP_PER_LEVEL}::int * (
+                      SELECT COUNT(*)::int FROM "PassClaim"
+                      WHERE "PassClaim"."userId" = "User"."id" AND "PassClaim"."track" = 'cache'
+                    )
+                  - "passXp"
+              )),
+          "passXpDay" = ${today}::text
+      WHERE "id" = ${userId}::int
+    `;
 	} catch (err) {
 		logError('battle_pass_xp_error', {
 			message: (err as Error).message,
 			userId,
 			galaxyId,
-			event
+			passEvent: event
 		});
-	}
-}
-
-// Claim a specific level's reward, depositing resources into the chosen nexus.
-// Returns an error string or null on success.
-export async function claimPassLevel(
-	userId: number,
-	galaxyId: number,
-	level: number,
-	nexusId: number
-): Promise<string | null> {
-	if (level < 1 || level > MAX_PASS_LEVEL) return 'Invalid level';
-
-	const player = await prisma.galaxyPlayer.findUnique({
-		where: { userId_galaxyId: { userId, galaxyId } },
-		select: { passLevel: true, hasPaidPass: true, claimedLevels: true }
-	});
-	if (!player) return 'Not a member of this galaxy';
-	if (level > player.passLevel) return 'Level not yet reached';
-
-	const claimed = (player.claimedLevels as number[]) ?? [];
-	if (claimed.includes(level)) return 'Already claimed';
-
-	// Verify the nexus belongs to this player in this galaxy
-	const nexus = await prisma.nexus.findFirst({
-		where: { id: nexusId, ownerId: userId, galaxyId },
-		select: { id: true }
-	});
-	if (!nexus) return 'Nexus not found';
-
-	const reward = rewardByLevel.get(level);
-	if (!reward) return 'No reward defined for this level';
-
-	const tracks = [reward.free, ...(player.hasPaidPass ? [reward.paid] : [])].filter(
-		Boolean
-	) as string[];
-
-	for (const rewardStr of tracks) {
-		for (const part of rewardStr.split(',')) {
-			await applyRewardPart(userId, galaxyId, part.trim(), nexusId);
-		}
-	}
-
-	await prisma.galaxyPlayer.update({
-		where: { userId_galaxyId: { userId, galaxyId } },
-		data: { claimedLevels: [...claimed, level] }
-	});
-
-	return null;
-}
-
-async function applyRewardPart(
-	userId: number,
-	galaxyId: number,
-	part: string,
-	nexusId: number
-): Promise<void> {
-	const [type, ...rest] = part.split(':');
-
-	if (type === 'resources') {
-		// Format: resources:<biomass>:<alloy>:<ore>
-		const biomass = parseInt(rest[0] ?? '0', 10);
-		const alloy   = parseInt(rest[1] ?? '0', 10);
-		const ore     = parseInt(rest[2] ?? '0', 10);
-		if (!biomass && !alloy && !ore) return;
-		await prisma.nexus.update({
-			where: { id: nexusId },
-			data: {
-				biomass: { increment: biomass },
-				alloy:   { increment: alloy },
-				ore:     { increment: ore }
-			}
-		});
-	} else if (type === 'boost') {
-		const pct     = parseInt(rest[1] ?? '0', 10);
-		const hours   = parseInt(rest[2] ?? '24', 10);
-		const expiresAt = new Date(Date.now() + hours * 3_600_000);
-		const player = await prisma.galaxyPlayer.findUnique({
-			where: { userId_galaxyId: { userId, galaxyId } },
-			select: { nexusGroups: true }
-		});
-		if (!player) return;
-		const groups = (player.nexusGroups as any[]) ?? [];
-		groups.push({ type: 'production_boost', pct, expiresAt: expiresAt.toISOString() });
-		await prisma.galaxyPlayer.update({
-			where: { userId_galaxyId: { userId, galaxyId } },
-			data: { nexusGroups: groups }
-		});
-	} else if (type === 'title') {
-		const titleName = rest.join(':').trim();
-		if (!titleName) return;
-		// Append to earnedTitles on User (permanent) and set season title on GalaxyPlayer
-		const user = await prisma.user.findUnique({
-			where: { id: userId },
-			select: { earnedTitles: true }
-		});
-		const titles = (user?.earnedTitles as string[]) ?? [];
-		if (!titles.includes(titleName)) {
-			await prisma.user.update({
-				where: { id: userId },
-				data: { earnedTitles: [...titles, titleName] }
-			});
-		}
-		await prisma.galaxyPlayer.update({
-			where: { userId_galaxyId: { userId, galaxyId } },
-			data: { passTitle: titleName }
-		});
-	} else if (type === 'badge') {
-		const tier = rest[0]?.trim();
-		if (!tier) return;
-		const user = await prisma.user.findUnique({
-			where: { id: userId },
-			select: { earnedBadges: true }
-		});
-		if (!user) return;
-		const badges = (user.earnedBadges as string[]) ?? [];
-		if (!badges.includes(tier)) {
-			await prisma.user.update({
-				where: { id: userId },
-				data: { earnedBadges: [...badges, tier] }
-			});
-		}
-	} else if (type === 'vexpoints') {
-		const amount = parseInt(rest[0] ?? '0', 10);
-		if (!amount) return;
-		await prisma.user.update({
-			where: { id: userId },
-			data: { vexPoints: { increment: amount } }
-		});
-	} else if (type === 'token') {
-		const count = parseInt(rest[0] ?? '1', 10);
-		if (!count) return;
-		for (let i = 0; i < count; i++) {
-			await prisma.milestoneToken.create({
-				data: {
-					userId,
-					milestone: 0,
-					rewardType: 'battle_pass',
-					rewardMeta: { reason: 'battle_pass', tokenIndex: i, tokenCount: count }
-				}
-			});
-		}
 	}
 }
 
@@ -334,38 +251,126 @@ export async function getActiveProductionBoostPct(userId: number, galaxyId: numb
 	return maxPct;
 }
 
-// Purchase the paid pass using Vex Points. Deducts 1,000 VP, sets hasPaidPass.
-// Does NOT back-fill paid rewards — unclaimed levels remain claimable via
-// the normal claim flow, which now includes paid rewards.
+// ---------------------------------------------------------------------------
+// Purchase and gift
+// ---------------------------------------------------------------------------
+
+// Purchase the paid track with Vex Points. One atomic conditional statement, so
+// two concurrent purchases cannot both charge. No back-fill is needed: a claim
+// takes every track still available for a level, so levels claimed earlier on
+// the free track keep their paid half claimable.
 // Returns an error string or null on success.
-export async function purchasePaidPass(userId: number, galaxyId: number): Promise<string | null> {
-	const [player, user] = await Promise.all([
-		prisma.galaxyPlayer.findUnique({
-			where: { userId_galaxyId: { userId, galaxyId } },
-			select: { hasPaidPass: true, passLevel: true }
-		}),
-		prisma.user.findUnique({
-			where: { id: userId },
-			select: { vexPoints: true }
-		})
-	]);
+export async function purchasePaidPass(userId: number): Promise<string | null> {
+	const { count } = await prisma.user.updateMany({
+		where: { id: userId, hasPaidPass: false, vexPoints: { gte: PASS_COST_VP } },
+		data: { hasPaidPass: true, vexPoints: { decrement: PASS_COST_VP } }
+	});
+	if (count === 1) return null;
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
+		select: { hasPaidPass: true }
+	});
+	if (!user) return 'User not found';
+	if (user.hasPaidPass) return 'Already purchased';
+	return 'Not enough Vex Points';
+}
 
-	if (!player) return 'Not a member of this galaxy';
-	if (player.hasPaidPass) return 'Already purchased';
-	if (!user || user.vexPoints < PASS_COST_VP) return 'Not enough Vex Points';
+export type GiftResult =
+	| { ok: true; recipientUsername: string }
+	| { ok: false; status: number; error: string };
 
-	await Promise.all([
-		prisma.galaxyPlayer.update({
-			where: { userId_galaxyId: { userId, galaxyId } },
-			data: { hasPaidPass: true }
-		}),
-		prisma.user.update({
-			where: { id: userId },
-			data: { vexPoints: { decrement: PASS_COST_VP } }
-		})
-	]);
+class GiftAbort extends Error {
+	constructor(readonly failure: 'gifter_vp' | 'recipient_owned') {
+		super(failure);
+		this.name = 'GiftAbort';
+	}
+}
 
-	return null;
+// Gift the paid track to another player for the gifter's 1,000 VP. Single source
+// of truth for /api/battle-pass/gift and /api/shop/gift-pass. One transaction:
+// conditional decrement on the gifter, conditional unlock on the recipient; if
+// either affects no row the whole thing rolls back. The pass is account-wide, so
+// there is no shared-galaxy requirement. The shop source also records the
+// ShopPurchase ledger row inside the same transaction.
+export async function giftPaidPass(
+	gifterId: number,
+	recipientUsername: string,
+	source: 'shop' | 'battle_pass'
+): Promise<GiftResult> {
+	const gifter = await prisma.user.findUnique({
+		where: { id: gifterId },
+		select: { id: true, username: true }
+	});
+	if (!gifter) return { ok: false, status: 404, error: 'User not found' };
+	if (gifter.username.toLowerCase() === recipientUsername.toLowerCase()) {
+		return { ok: false, status: 400, error: 'You cannot gift a pass to yourself' };
+	}
+	const recipient = await prisma.user.findFirst({
+		where: { username: { equals: recipientUsername, mode: 'insensitive' } },
+		select: { id: true, username: true }
+	});
+	if (!recipient) return { ok: false, status: 404, error: 'Player not found' };
+	if (recipient.id === gifter.id) {
+		return { ok: false, status: 400, error: 'You cannot gift a pass to yourself' };
+	}
+
+	try {
+		await prisma.$transaction(async (tx) => {
+			const charged = await tx.user.updateMany({
+				where: { id: gifter.id, vexPoints: { gte: PASS_COST_VP } },
+				data: { vexPoints: { decrement: PASS_COST_VP } }
+			});
+			if (charged.count === 0) throw new GiftAbort('gifter_vp');
+			const unlocked = await tx.user.updateMany({
+				where: { id: recipient.id, hasPaidPass: false },
+				data: { hasPaidPass: true }
+			});
+			if (unlocked.count === 0) throw new GiftAbort('recipient_owned');
+			if (source === 'shop') {
+				await tx.shopPurchase.create({
+					data: {
+						userId: gifter.id,
+						itemKey: 'gift_pass',
+						itemType: 'gift_pass',
+						vpSpent: PASS_COST_VP,
+						meta: { recipientId: recipient.id, recipientUsername: recipient.username }
+					}
+				});
+			}
+		});
+	} catch (err) {
+		if (err instanceof GiftAbort) {
+			if (err.failure === 'recipient_owned') {
+				return { ok: false, status: 400, error: 'That player already owns the Vex Pass paid track.' };
+			}
+			const row = await prisma.user.findUnique({
+				where: { id: gifter.id },
+				select: { vexPoints: true }
+			});
+			return {
+				ok: false,
+				status: 400,
+				error: `Not enough Vex Points (need ${PASS_COST_VP}, have ${row?.vexPoints ?? 0})`
+			};
+		}
+		throw err;
+	}
+
+	logInfo(source === 'shop' ? 'shop_gift_pass' : 'vex_pass_gifted', {
+		gifterId: gifter.id,
+		gifterUsername: gifter.username,
+		recipientId: recipient.id,
+		recipientUsername: recipient.username
+	});
+
+	void sendPushToUser(recipient.id, NOTIF.TOKEN_GRANTED, {
+		title: 'Vex Pass gifted!',
+		body: `Commander ${gifter.username} gifted you the Vex Pass paid track.`,
+		tag: `vex-pass-gift-${recipient.id}`,
+		data: { url: '/play' }
+	});
+
+	return { ok: true, recipientUsername: recipient.username };
 }
 
 // Credit Vex Points to a user (called from payment webhook after €4.99 purchase).
@@ -374,54 +379,6 @@ export async function grantVexPoints(userId: number, amount: number): Promise<vo
 		where: { id: userId },
 		data: { vexPoints: { increment: amount } }
 	});
-}
-
-// Pass title rank — higher index = more prestigious. Used to ensure we never
-// downgrade a user's permanent title when a new season ends.
-export const PASS_TITLE_RANK: Record<string, number> = {
-	Conscript: 1,
-	Operative: 2,
-	Proven: 3,
-	Veteran: 4,
-	'Vex Commander': 5,
-	'High Commander': 6,
-	'Season Conqueror': 7
-};
-
-// Called by endGalaxy() for each participant. Appends the season passTitle to
-// User.earnedTitles (if not already there) and keeps User.passTitle as the
-// highest-ranked title ever earned.
-export async function promotePassTitle(userId: number, galaxyId: number): Promise<void> {
-	const [player, user] = await Promise.all([
-		prisma.galaxyPlayer.findUnique({
-			where: { userId_galaxyId: { userId, galaxyId } },
-			select: { passTitle: true }
-		}),
-		prisma.user.findUnique({
-			where: { id: userId },
-			select: { passTitle: true, earnedTitles: true }
-		})
-	]);
-
-	const newTitle = player?.passTitle;
-	if (!newTitle) return;
-
-	const currentRank = user?.passTitle ? (PASS_TITLE_RANK[user.passTitle] ?? 0) : 0;
-	const newRank = PASS_TITLE_RANK[newTitle] ?? 0;
-
-	const earnedTitles = (user?.earnedTitles as string[]) ?? [];
-	const updates: Record<string, unknown> = {};
-
-	if (!earnedTitles.includes(newTitle)) {
-		updates.earnedTitles = [...earnedTitles, newTitle];
-	}
-	if (newRank > currentRank) {
-		updates.passTitle = newTitle;
-	}
-
-	if (Object.keys(updates).length > 0) {
-		await prisma.user.update({ where: { id: userId }, data: updates });
-	}
 }
 
 export { REWARD_TABLE, rewardByLevel };

@@ -363,7 +363,7 @@ const TROOP_DESCRIPTIONS: { [key: string]: string } = {
 	siegeColossus:
 		'Elite armor walker. Highest single-unit attack and survivability in the roster; the hammer for cracking fortified Nexuses. Slowest unit. Requires Lv13 Armor Foundry, Lv10 Command Core, Lv5 Targeting Core.',
 	overseer:
-		'Conquest unit. Reduces enemy Control by 34 per successful strike. Requires Lv14 Command Core, Lv13 Shield Grid. Up to 3 per nexus.'
+		'Conquest unit. A winning strike it survives drains enemy Control by 15, 34 or 50 depending on how decisive the win was. Requires Lv14 Command Core, Lv13 Shield Grid. Up to 3 per nexus, 1 per strike.'
 };
 
 const TROOP_REQUIREMENTS: { [key: string]: any } = {

@@ -101,7 +101,8 @@ function computeDefensePower(troops: Record<string, number>, shieldLevel: number
 	const raw = Object.entries(troops).reduce((sum, [type, count]) => {
 		return sum + count * (TROOP_STATS[type]?.defense ?? 0);
 	}, 0);
-	return Math.round(raw * (1 + shieldLevel * 0.02));
+	// Mirrors server combat.ts: Shield Grid adds 1.5% defense per level.
+	return Math.round(raw * (1 + shieldLevel * 0.015));
 }
 
 function getThreatLevel(defensePower: number): { label: string; className: string; icon: string } {

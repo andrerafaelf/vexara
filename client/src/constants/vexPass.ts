@@ -1,19 +1,34 @@
 // Single source of truth for the Vex Pass reward table on the client.
-// Mirrors server/utils/battlePass.ts (REWARD_TABLE) exactly — the server stays
-// authoritative for runtime grants; this copy drives the in-game modal and the
-// public landing page so they can never drift from each other again.
+// Mirrors server/utils/battlePass.ts (REWARD_TABLE and the PASS_* constants)
+// exactly. The server stays authoritative for runtime grants; this copy drives
+// the in-game modal and the public landing page so they can never drift from
+// each other again. The pass is permanent and account-wide (no seasons).
 //
 // Reward format strings (parsed by fmtPassReward / VexPassModal.fmtReward):
-//   resources:<biomass>:<alloy>:<ore>   — all three deposited to selected nexus
-//   boost:production:<pct>:<hours>       — time-limited production multiplier
-//   title:<Name>                         — season-scoped prestige title
-//   badge:<tier>                         — permanent career badge
-//   vexpoints:<amount>                   — credited to User.vexPoints
-//   token:<count>                        — supporter / milestone tokens
+//   resources:<biomass>:<alloy>:<ore>   - all three deposited to selected nexus
+//   boost:production:<pct>:<hours>       - time-limited production multiplier
+//   title:<Name>                         - permanent prestige title
+//   badge:<tier>                         - permanent career badge
+//   vexpoints:<amount>                   - credited to User.vexPoints
+//   token:<count>                        - supporter / milestone tokens
 
 export const MAX_PASS_LEVEL = 50;
-export const XP_PER_LEVEL = 300;
+export const XP_PER_LEVEL = 200;
 export const PASS_COST_VP = 1000;
+
+// Repeatable cache granted for every 200 XP past L50 (same on free and paid).
+export const PASS_CACHE_REWARD = 'resources:50000:50000:50000';
+// Max unclaimed caches that can be banked.
+export const PASS_CACHE_BANK_CAP = 10;
+// Max pass XP an account can earn per UTC day.
+export const PASS_DAILY_XP_CAP = 800;
+// Claim pacing per galaxy: levels 1-10 open right away, then 4 more per day.
+// Caches unlock once the allowance reaches level 50.
+export const PASS_PACING_BASE_LEVELS = 10;
+export const PASS_PACING_LEVELS_PER_DAY = 4;
+export const PASS_CACHE_PACING_LEVEL = 50;
+// A claim is refused if more than this fraction of any resource would not fit.
+export const PASS_CLAIM_WASTE_TOLERANCE = 0.05;
 
 export interface PassLevel {
 	level: number;
@@ -76,7 +91,7 @@ export const PASS_LEVELS: PassLevel[] = [
 	{ level: 47, free: 'resources:120000:120000:120000', paid: 'boost:production:35:120' },
 	{ level: 48, free: 'resources:130000:130000:130000', paid: 'vexpoints:25' },
 	{ level: 49, free: 'resources:140000:140000:140000', paid: 'boost:production:35:120' },
-	{ level: 50, free: 'badge:platinum,vexpoints:20', paid: 'title:Season Conqueror,vexpoints:170,token:4,boost:production:35:120' }
+	{ level: 50, free: 'badge:platinum,vexpoints:20', paid: 'title:Protocol Ascendant,vexpoints:170,token:4,boost:production:35:120' }
 ];
 
 export const PASS_ACT_LABELS: Record<number, string> = {

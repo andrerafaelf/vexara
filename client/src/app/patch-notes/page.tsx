@@ -10,7 +10,7 @@ const DESCRIPTION =
 	'Full changelog for Vexara - the free browser MMO RTS. Track every balance change, new feature, and bug fix across all alpha releases.';
 
 export const metadata: Metadata = {
-	title: TITLE,
+	title: { absolute: TITLE },
 	description: DESCRIPTION,
 	keywords: ['Vexara patch notes', 'Vexara updates', 'Vexara changelog', 'Vexara alpha'],
 	alternates: { canonical: '/patch-notes' },

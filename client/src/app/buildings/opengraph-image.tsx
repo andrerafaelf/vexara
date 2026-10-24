@@ -9,7 +9,7 @@ export default async function Image() {
 		eyebrow: 'Infrastructure',
 		kicker: 'Command Core to Stealth Array.',
 		title: 'Buildings',
-		subtitle: 'All 10 core structures — costs, max levels, milestones, and production scaling.',
+		subtitle: 'All 12 core structures: costs, max levels, milestones, and production scaling.',
 		footer: 'vexara.world // buildings'
 	});
 }

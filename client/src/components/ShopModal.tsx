@@ -175,6 +175,7 @@ export default function ShopModal({ onClose }: Props) {
 		mutationFn: () => shopGiftPass(giftUsername.trim()).then((r) => r.data),
 		onSuccess: (data: any) => {
 			queryClient.invalidateQueries({ queryKey: ['shop'] });
+			queryClient.invalidateQueries({ queryKey: ['battlePass'] });
 			queryClient.invalidateQueries({ queryKey: ['user'] });
 			updateUser({ vexPoints: (user?.vexPoints ?? 0) - 1000 });
 			setGiftUsername('');
@@ -533,10 +534,10 @@ export default function ShopModal({ onClose }: Props) {
 								<div className="shop-utility-icon">
 									<Gift size={22} />
 								</div>
-								<div className="shop-utility-name">Gift Vex Protocol Pass</div>
+								<div className="shop-utility-name">Gift Vex Pass</div>
 								<div className="shop-utility-desc">
-									Unlock the battle pass premium track for a galaxy mate. They must be in your
-									active galaxy and not already have the pass.
+									Unlock the Vex Pass paid track for any commander, by username. The pass is
+									account-wide, and they must not already own it.
 								</div>
 								<div className="shop-utility-cost">
 									<Sparkles size={11} aria-hidden="true" />

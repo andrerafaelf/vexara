@@ -1,6 +1,12 @@
 import prisma from '../lib/prisma.js';
-import { logInfo } from './logger.js';
-import { createNeutralNexus } from './neutralNexuses.js';
+import { logError, logInfo, logWarn } from './logger.js';
+import { buildDemotedNeutralData, createNeutralNexus } from './neutralNexuses.js';
+import {
+	MARKER_EVENT_ROLL,
+	getLastMarkerAt,
+	getLastRealEventAt,
+	stampMarker
+} from './galaxyJobMarkers.js';
 import { NOTIF, sendPushToUser } from './push.js';
 
 const NEARBY_EVENT_RADIUS = 15;
@@ -34,8 +40,11 @@ async function notifyOwnersNearEvent(
 	}
 }
 
-// How often events can fire per galaxy (ms between rolls)
+// How often events can fire per galaxy (ms between rolls). The job polls hourly;
+// the last roll is persisted per galaxy (see galaxyJobMarkers.ts).
 const EVENT_ROLL_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
+// Slack subtracted from the roll interval so an hourly poll lands on the 24h mark.
+const ROLL_GATE_MARGIN_MS = 5 * 60 * 1000;
 // Probability of an event firing each roll (per galaxy)
 const EVENT_FIRE_CHANCE = 0.75;
 // Max active events per galaxy at once
@@ -228,6 +237,40 @@ async function spawnRogueAi(galaxyId: number) {
 	});
 }
 
+// Retire the nexus behind an expired derelict / rogue AI event. Attack.attackerNexusId
+// and defenderNexusId are ON DELETE RESTRICT, so a core that ever raided or was
+// attacked cannot be deleted: it is demoted to a plain neutral instead (history
+// intact). Conditioned on ownerId: null so a core captured since the read is left alone.
+async function retireEventNexus(nexusId: number): Promise<'deleted' | 'demoted' | 'skipped'> {
+	const nexus = await prisma.nexus.findUnique({
+		where: { id: nexusId },
+		select: { ownerId: true }
+	});
+	if (!nexus || nexus.ownerId) return 'skipped';
+
+	const attackRows = await prisma.attack.count({
+		where: { OR: [{ attackerNexusId: nexusId }, { defenderNexusId: nexusId }] }
+	});
+	if (attackRows === 0) {
+		try {
+			const res = await prisma.nexus.deleteMany({ where: { id: nexusId, ownerId: null } });
+			if (res.count > 0) return 'deleted';
+			return 'skipped';
+		} catch (err) {
+			// Some other RESTRICT relation (market listing, transfer, ...) still points here.
+			logWarn('galaxy_event_nexus_delete_failed', { nexusId, message: (err as Error).message });
+		}
+	}
+
+	// In-flight NPC attacks from this core keep resolving and their survivors
+	// return to the (now neutral) nexus, so no troops are created or destroyed.
+	await prisma.nexus.updateMany({
+		where: { id: nexusId, ownerId: null },
+		data: buildDemotedNeutralData()
+	});
+	return 'demoted';
+}
+
 async function expireOldEvents(galaxyId: number) {
 	const now = new Date();
 	const expired = await prisma.galaxyEvent.findMany({
@@ -235,75 +278,110 @@ async function expireOldEvents(galaxyId: number) {
 		select: { id: true, nexusId: true, type: true }
 	});
 
+	// Each event is isolated: one failing event must not block the rest.
 	for (const ev of expired) {
-		// For derelict/rogue AI, remove the nexus if it's still unowned
-		if (ev.nexusId && (ev.type === 'derelict_ship' || ev.type === 'rogue_ai')) {
-			const nexus = await prisma.nexus.findUnique({
-				where: { id: ev.nexusId },
-				select: { ownerId: true }
-			});
-			if (!nexus?.ownerId) {
-				await prisma.nexus.delete({ where: { id: ev.nexusId } });
+		try {
+			let outcome: string | null = null;
+			if (ev.nexusId && (ev.type === 'derelict_ship' || ev.type === 'rogue_ai')) {
+				outcome = await retireEventNexus(ev.nexusId);
 			}
+			await prisma.galaxyEvent.update({ where: { id: ev.id }, data: { resolvedAt: now } });
+			logInfo('galaxy_event_expired', { galaxyId, eventId: ev.id, type: ev.type, outcome });
+		} catch (err) {
+			logError('galaxy_event_expire_failed', {
+				galaxyId,
+				eventId: ev.id,
+				type: ev.type,
+				message: (err as Error).message
+			});
 		}
-		await prisma.galaxyEvent.update({ where: { id: ev.id }, data: { resolvedAt: now } });
 	}
 }
 
+async function rollEventForGalaxy(galaxyId: number, now: Date) {
+	// One spawn roll per EVENT_ROLL_INTERVAL_MS per galaxy. The last roll time is
+	// persisted (marker row, falling back to the newest real event for galaxies that
+	// predate markers) so deploys/restarts neither reset nor skip the cadence.
+	const [lastMarker, lastEvent] = await Promise.all([
+		getLastMarkerAt(galaxyId, MARKER_EVENT_ROLL),
+		getLastRealEventAt(galaxyId)
+	]);
+	const lastRollMs = Math.max(lastMarker?.getTime() ?? 0, lastEvent?.getTime() ?? 0);
+	// Gate on the interval minus a margin: the job polls hourly and the stored stamp
+	// is a few ms after the tick that wrote it, so a strict 24h check would slip to 25h.
+	if (lastRollMs && now.getTime() - lastRollMs < EVENT_ROLL_INTERVAL_MS - ROLL_GATE_MARGIN_MS) return;
+
+	// Claim the roll before doing it so a crash cannot trigger an immediate re-roll.
+	await stampMarker(galaxyId, MARKER_EVENT_ROLL, now);
+
+	const activeCount = await prisma.galaxyEvent.count({
+		where: { galaxyId, resolvedAt: null }
+	});
+
+	if (activeCount >= MAX_ACTIVE_EVENTS) return;
+	if (Math.random() > EVENT_FIRE_CHANCE) return;
+
+	// Don't fire same type twice if already active
+	const activeTypes = await prisma.galaxyEvent.findMany({
+		where: { galaxyId, resolvedAt: null },
+		select: { type: true }
+	});
+	const activeTypeSet = new Set(activeTypes.map((e) => e.type));
+
+	const available = (EVENT_TYPES as readonly string[]).filter((t) => !activeTypeSet.has(t));
+	if (available.length === 0) return;
+
+	const chosen = available[Math.floor(Math.random() * available.length)] as EventType;
+	let created = null;
+
+	if (chosen === 'derelict_ship') created = await spawnDerelictShip(galaxyId);
+	else if (chosen === 'resource_storm') created = await spawnResourceStorm(galaxyId);
+	else if (chosen === 'rogue_ai') created = await spawnRogueAi(galaxyId);
+
+	if (created) {
+		logInfo('galaxy_event_spawned', { galaxyId, type: chosen, eventId: created.id });
+		if (created.x != null && created.y != null) {
+			await notifyOwnersNearEvent(
+				galaxyId,
+				created.x,
+				created.y,
+				created.title,
+				`${created.title} at (${created.x}|${created.y}) - check the galaxy map.`,
+				`galaxy-event-${created.id}`
+			);
+		}
+	}
+}
+
+// Runs hourly (see server.ts). Expiry happens on every tick; the spawn roll is
+// gated to once per EVENT_ROLL_INTERVAL_MS per galaxy by rollEventForGalaxy.
 export async function processGalaxyEvents(): Promise<void> {
+	let galaxies: Array<{ id: number; startsAt: Date | null; createdAt: Date }>;
 	try {
-		const galaxies = await prisma.galaxy.findMany({
+		galaxies = await prisma.galaxy.findMany({
 			where: { status: 'active' },
 			select: { id: true, startsAt: true, createdAt: true }
 		});
+	} catch (err) {
+		logError('galaxy_events_list_failed', { message: (err as Error).message });
+		return;
+	}
 
-		const now = new Date();
-		for (const galaxy of galaxies) {
+	const now = new Date();
+	for (const galaxy of galaxies) {
+		try {
 			await expireOldEvents(galaxy.id);
 
 			// Hold off on events until the galaxy has been open for the start delay.
 			if (getEventsStartAt(galaxy).getTime() > now.getTime()) continue;
 
-			const activeCount = await prisma.galaxyEvent.count({
-				where: { galaxyId: galaxy.id, resolvedAt: null }
+			await rollEventForGalaxy(galaxy.id, now);
+		} catch (err) {
+			logError('galaxy_events_galaxy_failed', {
+				galaxyId: galaxy.id,
+				message: (err as Error).message
 			});
-
-			if (activeCount >= MAX_ACTIVE_EVENTS) continue;
-			if (Math.random() > EVENT_FIRE_CHANCE) continue;
-
-			// Don't fire same type twice if already active
-			const activeTypes = await prisma.galaxyEvent.findMany({
-				where: { galaxyId: galaxy.id, resolvedAt: null },
-				select: { type: true }
-			});
-			const activeTypeSet = new Set(activeTypes.map((e) => e.type));
-
-			const available = (EVENT_TYPES as readonly string[]).filter((t) => !activeTypeSet.has(t));
-			if (available.length === 0) continue;
-
-			const chosen = available[Math.floor(Math.random() * available.length)] as EventType;
-			let created = null;
-
-			if (chosen === 'derelict_ship') created = await spawnDerelictShip(galaxy.id);
-			else if (chosen === 'resource_storm') created = await spawnResourceStorm(galaxy.id);
-			else if (chosen === 'rogue_ai') created = await spawnRogueAi(galaxy.id);
-
-			if (created) {
-				logInfo('galaxy_event_spawned', { galaxyId: galaxy.id, type: chosen, eventId: created.id });
-				if (created.x != null && created.y != null) {
-					await notifyOwnersNearEvent(
-						galaxy.id,
-						created.x,
-						created.y,
-						created.title,
-						`${created.title} at (${created.x}|${created.y}) - check the galaxy map.`,
-						`galaxy-event-${created.id}`
-					);
-				}
-			}
 		}
-	} catch (err) {
-		console.error('Error processing galaxy events:', err);
 	}
 }
 

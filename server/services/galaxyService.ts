@@ -86,38 +86,48 @@ export async function selectGalaxy(userId: number, username: string, galaxyId: n
 	// cannot run inside a nested transaction).
 	let starterCoords: { x: number; y: number } | null = null;
 
-	const result = await prisma.$transaction(async (tx) => {
-		const [existing, user] = await Promise.all([
-			tx.galaxyPlayer.findUnique({
-				where: { userId_galaxyId: { userId, galaxyId } },
-				select: { id: true }
-			}),
-			tx.user.findUnique({ where: { id: userId }, select: { referredById: true } })
-		]);
-		if (!existing) {
-			await tx.galaxyPlayer.create({ data: { userId, galaxyId } });
-			const { createStarterNexus } = await import('../utils/starterNexus.js');
-			const starter = await createStarterNexus(tx, {
-				userId,
-				username,
-				galaxyId,
-				referredById: user?.referredById
-			});
-			starterCoords = { x: starter.x, y: starter.y };
-		}
-		// Establishing a starter nexus (joining any galaxy) grants Beta Founder
-		// status while the beta window is open. Alpha is closed, so isAlphaFounder
-		// is no longer granted. Idempotent: only flips false -> true, so re-joining or
-		// joining a second galaxy never resets it.
-		await tx.user.update({
-			where: { id: userId },
-			data: {
-				activeGalaxyId: galaxyId,
-				...(!existing && isBetaFounderWindowOpen() ? { isBetaFounder: true } : {})
+	let result: { joined: boolean };
+	try {
+		result = await prisma.$transaction(async (tx) => {
+			const [existing, user] = await Promise.all([
+				tx.galaxyPlayer.findUnique({
+					where: { userId_galaxyId: { userId, galaxyId } },
+					select: { id: true }
+				}),
+				tx.user.findUnique({ where: { id: userId }, select: { referredById: true } })
+			]);
+			if (!existing) {
+				await tx.galaxyPlayer.create({ data: { userId, galaxyId } });
+				const { createStarterNexus } = await import('../utils/starterNexus.js');
+				const starter = await createStarterNexus(tx, {
+					userId,
+					username,
+					galaxyId,
+					referredById: user?.referredById
+				});
+				starterCoords = { x: starter.x, y: starter.y };
 			}
+			// Establishing a starter nexus (joining any galaxy) grants Beta Founder
+			// status while the beta window is open. Alpha is closed, so isAlphaFounder
+			// is no longer granted. Idempotent: only flips false -> true, so re-joining or
+			// joining a second galaxy never resets it.
+			await tx.user.update({
+				where: { id: userId },
+				data: {
+					activeGalaxyId: galaxyId,
+					...(!existing && isBetaFounderWindowOpen() ? { isBetaFounder: true } : {})
+				}
+			});
+			return { joined: !existing };
 		});
-		return { joined: !existing };
-	});
+	} catch (err) {
+		// Double-click / concurrent join: the other request created the GalaxyPlayer row
+		// first (P2002). Treat it as the "already joined" outcome instead of a 500.
+		if ((err as { code?: unknown } | null)?.code !== 'P2002') throw err;
+		if (!(await isGalaxyMember(userId, galaxyId))) throw err;
+		await prisma.user.update({ where: { id: userId }, data: { activeGalaxyId: galaxyId } });
+		return { joined: false };
+	}
 
 	// Spawn a guaranteed-weak tutorial target near the new player's starter nexus
 	// so there is always at least one easy NPC to attack for the first-attack

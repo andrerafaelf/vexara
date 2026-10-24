@@ -79,6 +79,7 @@
 	letter-spacing: 0.06em;
 }
 
+.rail-bp-ready,
 .rail-bp-season-end {
 	font-size: 10px;
 	color: var(--warning, #e3a846);
@@ -321,6 +322,7 @@
 
 .rail-bp-xp-label,
 .rail-bp-maxed,
+.rail-bp-ready,
 .rail-bp-season-end,
 .rail-bp-title-row,
 .rail-bp-cta {

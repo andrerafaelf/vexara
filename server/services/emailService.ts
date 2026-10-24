@@ -1,6 +1,7 @@
-import { randomBytes } from 'crypto';
+import { randomBytes, randomUUID } from 'crypto';
 import { Resend } from 'resend';
 import prisma from '../lib/prisma.js';
+import { logError, logWarn } from '../utils/logger.js';
 
 const FROM = 'Vexara <hello@vexara.world>';
 const REPLY_TO = 'support@vexara.world';
@@ -15,6 +16,35 @@ let cached: Resend | null = null;
 function client(): Resend {
 	if (!cached) cached = new Resend(process.env.RESEND_API_KEY ?? '');
 	return cached;
+}
+
+/** Logged once at boot (server.ts, after dotenv) so a missing key is visible, not silent. */
+export function warnIfEmailNotConfigured(): void {
+	if (!process.env.RESEND_API_KEY) {
+		logError('email_not_configured', {
+			message: 'RESEND_API_KEY is empty: all transactional email (verification, reset) will fail'
+		});
+	}
+}
+
+// First character of the local part plus the domain; never log a full address.
+function maskEmail(email: string): string {
+	const at = email.lastIndexOf('@');
+	if (at < 1) return '***';
+	return `${email[0]}***${email.slice(at)}`;
+}
+
+// Resend error names worth one more attempt: rate limit and server-side failures
+// (the SDK reports network failures as application_error).
+const RETRYABLE_RESEND_ERRORS = new Set([
+	'rate_limit_exceeded',
+	'application_error',
+	'internal_server_error'
+]);
+const SEND_RETRY_DELAYS_MS = [1500]; // one retry
+
+function sleep(ms: number): Promise<void> {
+	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function unsubscribeLinkFor(token: string): string {
@@ -547,7 +577,8 @@ function tplPasswordReset(email: string, username: string, resetUrl: string): Re
 async function send(
 	to: string,
 	rendered: RenderedEmail,
-	unsubscribeToken: string | null
+	unsubscribeToken: string | null,
+	kind: string
 ): Promise<void> {
 	const headers: Record<string, string> = {};
 	if (rendered.showUnsubscribe && unsubscribeToken) {
@@ -555,7 +586,7 @@ async function send(
 			`<${unsubscribeLinkFor(unsubscribeToken)}>, <mailto:unsubscribe@vexara.world>`;
 		headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
 	}
-	await client().emails.send({
+	const payload = {
 		from: FROM,
 		to: [to],
 		replyTo: REPLY_TO,
@@ -563,22 +594,52 @@ async function send(
 		html: rendered.html,
 		text: rendered.text,
 		headers
-	});
+	};
+
+	// One key per logical send, reused across retries: if a first attempt actually
+	// delivered but the response was lost, Resend dedupes the retry instead of mailing twice.
+	const idempotencyKey = randomUUID();
+
+	// The Resend SDK resolves with { data, error } for API failures (bad key,
+	// unverified domain, quota, 429) instead of throwing, so the result must be
+	// checked or the mail silently vanishes.
+	for (let attempt = 0; ; attempt++) {
+		let errName = 'send_threw';
+		let errMessage = '';
+		try {
+			const { error } = await client().emails.send(payload, { idempotencyKey });
+			if (!error) return;
+			errName = error.name;
+			errMessage = error.message;
+		} catch (err) {
+			errMessage = (err as Error).message;
+		}
+
+		const retryDelay = SEND_RETRY_DELAYS_MS[attempt];
+		const retryable = errName === 'send_threw' || RETRYABLE_RESEND_ERRORS.has(errName);
+		if (retryable && retryDelay !== undefined) {
+			logWarn('email_send_retry', { kind, to: maskEmail(to), errName, errMessage });
+			await sleep(retryDelay);
+			continue;
+		}
+		logError('email_send_failed', { kind, to: maskEmail(to), errName, errMessage });
+		throw new Error(`Email send failed (${kind}): ${errName}: ${errMessage}`);
+	}
 }
 
 export async function sendAlphaWelcome(email: string): Promise<void> {
 	const token = await getOrCreateUnsubscribeToken(email);
-	await send(email, tplAlphaWelcome(email, token), token);
+	await send(email, tplAlphaWelcome(email, token), token, 'alpha_welcome');
 }
 
 export async function sendAlphaInviteAnnouncement(email: string): Promise<void> {
 	const token = await getOrCreateUnsubscribeToken(email);
-	await send(email, tplAlphaInviteAnnouncement(email, token), token);
+	await send(email, tplAlphaInviteAnnouncement(email, token), token, 'alpha_invite');
 }
 
 export async function sendGalaxyLive(email: string, displayName?: string): Promise<void> {
 	const token = await getOrCreateUnsubscribeToken(email);
-	await send(email, tplGalaxyLive(email, token, displayName), token);
+	await send(email, tplGalaxyLive(email, token, displayName), token, 'galaxy_live');
 }
 
 function tplGalaxyAlert(
@@ -680,7 +741,12 @@ export async function sendGalaxyAlert(
 	displayName?: string
 ): Promise<void> {
 	const token = await getOrCreateUnsubscribeToken(email);
-	await send(email, tplGalaxyAlert(email, token, galaxyName, startsAt, displayName), token);
+	await send(
+		email,
+		tplGalaxyAlert(email, token, galaxyName, startsAt, displayName),
+		token,
+		'galaxy_alert'
+	);
 }
 
 export async function sendVerifyEmail(
@@ -689,7 +755,7 @@ export async function sendVerifyEmail(
 	token: string
 ): Promise<void> {
 	const verifyUrl = `${SITE_URL}/verify-email?token=${encodeURIComponent(token)}`;
-	await send(email, tplVerifyEmail(email, username, verifyUrl), null);
+	await send(email, tplVerifyEmail(email, username, verifyUrl), null, 'verify_email');
 }
 
 export async function sendWelcome(
@@ -698,7 +764,7 @@ export async function sendWelcome(
 	referralCode: string
 ): Promise<void> {
 	const token = await getOrCreateUnsubscribeToken(email);
-	await send(email, tplWelcome(email, username, referralCode, token), token);
+	await send(email, tplWelcome(email, username, referralCode, token), token, 'welcome');
 }
 
 export async function sendPasswordReset(
@@ -707,9 +773,9 @@ export async function sendPasswordReset(
 	token: string
 ): Promise<void> {
 	const resetUrl = `${SITE_URL}/reset-password?token=${encodeURIComponent(token)}`;
-	await send(email, tplPasswordReset(email, username, resetUrl), null);
+	await send(email, tplPasswordReset(email, username, resetUrl), null, 'password_reset');
 }
 
 export async function sendPasswordChanged(email: string, username: string): Promise<void> {
-	await send(email, tplPasswordChanged(email, username), null);
+	await send(email, tplPasswordChanged(email, username), null, 'password_changed');
 }

@@ -7,7 +7,8 @@ import {
 	useEffect,
 	useMemo,
 	useRef,
-	useState
+	useState,
+	Suspense
 } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 
@@ -34,18 +35,30 @@ export function usePageReady(isReady: boolean, key: string = 'page') {
 	}, [ctx, isReady, key]);
 }
 
-export default function NavigationProgress({ children }: { children?: React.ReactNode }) {
+/**
+ * Reads usePathname/useSearchParams in isolation. useSearchParams opts its nearest Suspense
+ * boundary out of static rendering, so this must live in its own boundary, NEVER around the
+ * page children (otherwise every static page bails to client-side rendering and ships no HTML).
+ */
+function RouteListener({ onRoute }: { onRoute: (routeKey: string) => void }) {
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
+	const routeKey = `${pathname}?${searchParams?.toString() ?? ''}`;
+	useEffect(() => {
+		onRoute(routeKey);
+	}, [routeKey, onRoute]);
+	return null;
+}
+
+export default function NavigationProgress({ children }: { children?: React.ReactNode }) {
 	const [progress, setProgress] = useState(0);
 	const [visible, setVisible] = useState(false);
 	const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
 	const fadeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const waitersRef = useRef<Set<string>>(new Set());
-	const routeKey = `${pathname}?${searchParams?.toString() ?? ''}`;
-	const prevRouteRef = useRef(routeKey);
+	const prevRouteRef = useRef<string | null>(null);
+	const rafRef = useRef<number | null>(null);
 	const routeCommittedRef = useRef(true);
-	const isFirstRouteEffectRef = useRef(true);
 
 	const clearTimers = () => {
 		if (tickRef.current) {
@@ -100,22 +113,26 @@ export default function NavigationProgress({ children }: { children?: React.Reac
 	// Route change: bar runs until route is committed AND waiters drain.
 	// Crucially we do NOT blank the page, the shell stays visible at all times. Pages
 	// already render skeletons or `null` while their data loads.
-	useEffect(() => {
-		if (isFirstRouteEffectRef.current) {
-			isFirstRouteEffectRef.current = false;
-			return;
-		}
-		if (routeKey === prevRouteRef.current) return;
-		prevRouteRef.current = routeKey;
-		routeCommittedRef.current = false;
-		const raf = requestAnimationFrame(() => {
-			requestAnimationFrame(() => {
-				routeCommittedRef.current = true;
-				tryFinish();
+	const handleRoute = useCallback(
+		(routeKey: string) => {
+			if (prevRouteRef.current === null) {
+				prevRouteRef.current = routeKey;
+				return;
+			}
+			if (routeKey === prevRouteRef.current) return;
+			prevRouteRef.current = routeKey;
+			routeCommittedRef.current = false;
+			if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+			rafRef.current = requestAnimationFrame(() => {
+				rafRef.current = requestAnimationFrame(() => {
+					rafRef.current = null;
+					routeCommittedRef.current = true;
+					tryFinish();
+				});
 			});
-		});
-		return () => cancelAnimationFrame(raf);
-	}, [routeKey, tryFinish]);
+		},
+		[tryFinish]
+	);
 
 	// Link click interception, bar starts immediately, before Next.js begins routing
 	useEffect(() => {
@@ -141,7 +158,13 @@ export default function NavigationProgress({ children }: { children?: React.Reac
 		return () => document.removeEventListener('click', handleClick, true);
 	}, [start]);
 
-	useEffect(() => () => clearTimers(), []);
+	useEffect(
+		() => () => {
+			clearTimers();
+			if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+		},
+		[]
+	);
 
 	const ctxValue = useMemo<Ctx>(() => ({ setWaiting, start }), [setWaiting, start]);
 
@@ -172,6 +195,9 @@ export default function NavigationProgress({ children }: { children?: React.Reac
 					/>
 				</div>
 			)}
+			<Suspense fallback={null}>
+				<RouteListener onRoute={handleRoute} />
+			</Suspense>
 			{children}
 		</LoadingBarCtx.Provider>
 	);

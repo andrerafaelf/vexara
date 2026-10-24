@@ -1411,3 +1411,37 @@ export async function getReferralAnalytics(_req: Request, res: Response): Promis
 		res.status(500).json({ error: (error as Error).message });
 	}
 }
+
+// Support tool: mark a user's email verified (e.g. verification mail never arrived).
+export async function verifyUserEmail(req: Request, res: Response): Promise<void> {
+	try {
+		const userId = adminService.toInt(req.params.userId);
+		if (!Number.isFinite(userId) || userId <= 0) {
+			res.status(400).json({ error: 'Invalid userId' });
+			return;
+		}
+		const user = await adminService.getUserById(userId);
+		if (!user) {
+			res.status(404).json({ error: 'User not found' });
+			return;
+		}
+		if (user.emailVerifiedAt) {
+			res.json({ success: true, alreadyVerified: true });
+			return;
+		}
+		const changed = await adminService.markEmailVerified(userId);
+		// Admin actions have no DB audit table; the structured log line is the trail.
+		const { logInfo } = await import('../../server/utils/logger.js');
+		logInfo('admin_user_email_verified', {
+			requestId: (req as Request & { requestId?: string }).requestId,
+			sessionId: res.locals.adminSessionId,
+			ip: req.ip,
+			targetUserId: userId,
+			targetUsername: user.username,
+			changed
+		});
+		res.json({ success: true, alreadyVerified: !changed });
+	} catch (error) {
+		res.status(500).json({ error: (error as Error).message });
+	}
+}

@@ -20,9 +20,12 @@ export class ResourceConflictError extends Error {
 export async function atomicUpdateNexusResources(
 	id: number,
 	expectedLastUpdate: Date,
-	data: Parameters<typeof prisma.nexus.update>[0]['data']
+	data: Parameters<typeof prisma.nexus.update>[0]['data'],
+	// Optional transaction client so a caller can run the CAS inside its own
+	// interactive transaction (Vex Pass claims). Defaults to the shared client.
+	client: Prisma.TransactionClient = prisma
 ) {
-	const { count } = await prisma.nexus.updateMany({
+	const { count } = await client.nexus.updateMany({
 		where: { id, lastResourceUpdate: expectedLastUpdate },
 		// Every caller of this CAS path is a deliberate owner action (train, build,
 		// cancel, decommission), so stamp the activity timestamp here. Passive
@@ -31,7 +34,7 @@ export async function atomicUpdateNexusResources(
 		data: { lastActivityAt: new Date(), ...data }
 	});
 	if (count === 0) throw new ResourceConflictError();
-	return prisma.nexus.findUniqueOrThrow({ where: { id } });
+	return client.nexus.findUniqueOrThrow({ where: { id } });
 }
 
 type OwnedNexusOrderFields = {

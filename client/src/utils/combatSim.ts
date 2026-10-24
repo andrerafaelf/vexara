@@ -223,6 +223,52 @@ export function defenderCounterMultiplier(baseAttackMult: number): number {
 // (trimmed 0.02 → 0.015 in v0.22 alongside symmetric defense).
 export const SHIELD_GRID_DEFENSE_PER_LEVEL = 0.015;
 
+// Building level caps that bound the calculator inputs. Mirror of the server
+// BUILDING_RULES maxLevel values in server/controllers/buildingController.ts.
+export const SHIELD_GRID_MAX_LEVEL = 15;
+export const TARGETING_CORE_MAX_LEVEL = 20;
+
+// Targeting Core: each level adds this much to every counter-advantage
+// multiplier (and deepens a disadvantage by half as much), up to the cap.
+// Mirror of server combatMath computeClassWeightedAttack.
+export const TARGETING_CORE_BONUS_PER_LEVEL = 0.015;
+export const TARGETING_CORE_BONUS_CAP = 0.3;
+
+// Nexus-type shield efficiency. Mirror of server combat.ts: a Military Outpost
+// multiplies the Shield Grid bonus by 2, and a doubled (CC15) Outpost doubles
+// the extra efficiency again (x3). No other nexus type changes combat power.
+export const MILITARY_OUTPOST_SHIELD_EFFICIENCY = 2;
+export function shieldEfficiencyFor(
+	nexusType: string | null | undefined,
+	nexusTypeDoubled = false
+): number {
+	const base = nexusType === 'Military Outpost' ? MILITARY_OUTPOST_SHIELD_EFFICIENCY : 1;
+	return base === 1 ? 1 : 1 + (base - 1) * (nexusTypeDoubled ? 2 : 1);
+}
+
+// The server rejects any strike carrying more than this many Overseers.
+// Mirror of MAX_OVERSEERS_PER_ATTACK in server/utils/validation.ts.
+export const MAX_OVERSEERS_PER_ATTACK = 1;
+
+// Overseer control drain. Mirror of server combat.ts (single and coordinated
+// paths): on an attacker win where the Overseer survives, control drops by an
+// amount keyed on the same loser/winner powerRatio that sets casualties. The
+// garrison does NOT need to be wiped. Control regenerates +10 per whole hour up
+// to 100 (recoverControlLevels in server/models/Nexus.ts), and the Overseer is
+// consumed on the strike that takes control to 0.
+export const CONTROL_MAX = 100;
+export const CONTROL_REGEN_PER_HOUR = 10;
+export const CONTROL_DRAIN_CRUSHING_RATIO = 0.33;
+export const CONTROL_DRAIN_CLEAR_RATIO = 0.66;
+export const CONTROL_DRAIN_CRUSHING = 50;
+export const CONTROL_DRAIN_CLEAR = 34;
+export const CONTROL_DRAIN_NARROW = 15;
+export function overseerControlDrain(powerRatio: number): number {
+	if (powerRatio <= CONTROL_DRAIN_CRUSHING_RATIO) return CONTROL_DRAIN_CRUSHING;
+	if (powerRatio <= CONTROL_DRAIN_CLEAR_RATIO) return CONTROL_DRAIN_CLEAR;
+	return CONTROL_DRAIN_NARROW;
+}
+
 export const TROOP_KEYS = Object.keys(TROOP_STATS) as TroopKey[];
 
 // Carry capacity per unit — mirrors server combatMath TROOP_STATS.carry. Used by
@@ -247,9 +293,8 @@ export const TROOP_CARRY: Record<TroopKey, number> = {
 	overseer: 0
 };
 
-// Mirror of LOOT_CARRY_THRESHOLD / loss-rate constants in server combat.ts +
-// combatMath.ts. If those change, change these in the same commit.
-export const LOOT_CARRY_THRESHOLD = 8000;
+// Mirror of the loss-rate constants in server combatMath.ts. If those change,
+// change these in the same commit.
 export const WINNER_MAX_LOSS_RATE = 0.45; // coin-flip cap; mirrors server WINNER_COINFLIP_LOSS_RATE
 export const LOSER_MIN_LOSS_RATE = 0.85;
 export const LOSER_MAX_LOSS_RATE = 1.0;
@@ -257,14 +302,102 @@ export const LOSER_MAX_LOSS_RATE = 1.0;
 // survivors). Mirrors server combatMath LOSER_WIPE_RATIO — keep in sync.
 export const LOSER_WIPE_RATIO = 0.33;
 
+// Winner per-unit loss shaping. Mirror of server combatMath
+// computeLossesForWinner: a unit's defense softens its losses (1 - def/250,
+// floored at 0.1), its class matchup against the opposing force nudges them
+// within [0.85, 1.15], and no unit type loses more than half its count on a win.
+export const WINNER_DEF_FACTOR_DIVISOR = 250;
+export const WINNER_DEF_FACTOR_FLOOR = 0.1;
+export const WINNER_MATCHUP_MIN = 0.85;
+export const WINNER_MATCHUP_MAX = 1.15;
+export const WINNER_MAX_UNIT_LOSS_RATE = 0.5;
+
 // Fraction of the losing force destroyed, given the loser/winner power ratio.
 // Mirrors server combatMath loserLossRate so the calculator's prediction matches
 // the resolved battle: a blowout (ratio <= LOSER_WIPE_RATIO) is a 100% wipe.
-export function loserLossRate(powerRatio: number): number {
+// survivorFloor is the server's post-protection taper guarantee (defender only);
+// it can only lower the rate. 0 reproduces the normal curve.
+export function loserLossRate(powerRatio: number, survivorFloor = 0): number {
 	const clamped = Math.max(0, Math.min(1, powerRatio));
-	if (clamped <= LOSER_WIPE_RATIO) return 1.0;
-	const t = (clamped - LOSER_WIPE_RATIO) / (1 - LOSER_WIPE_RATIO);
-	return LOSER_MAX_LOSS_RATE + (LOSER_MIN_LOSS_RATE - LOSER_MAX_LOSS_RATE) * t;
+	const clampedFloor = Math.max(0, Math.min(1, survivorFloor));
+	let rate: number;
+	if (clamped <= LOSER_WIPE_RATIO) {
+		rate = 1.0;
+	} else {
+		const t = (clamped - LOSER_WIPE_RATIO) / (1 - LOSER_WIPE_RATIO);
+		rate = LOSER_MAX_LOSS_RATE + (LOSER_MIN_LOSS_RATE - LOSER_MAX_LOSS_RATE) * t;
+	}
+	if (clampedFloor <= 0) return rate;
+	return Math.min(rate, 1 - clampedFloor);
+}
+
+// Per-unit losses for the side that LOST. Exact mirror of server combatMath
+// computeLossesForLoser: a total wipe kills everything, otherwise each present
+// unit type loses ceil(count * rate). Overseers are excluded here; their fate
+// is decided by the escort rule in predictCombat.
+export function lossesForLoser(force: Force, powerRatio = 0, survivorFloor = 0): Force {
+	const lossRate = loserLossRate(powerRatio, survivorFloor);
+	const totalWipe = lossRate >= 1.0;
+	const losses: Force = {};
+	for (const k of TROOP_KEYS) {
+		if (k === 'overseer') continue;
+		const count = force[k] || 0;
+		if (count <= 0) continue;
+		losses[k] = totalWipe ? count : Math.min(count, Math.ceil(count * lossRate));
+	}
+	return losses;
+}
+
+// Per-unit losses for the side that WON. Mirror of server combatMath
+// computeLossesForWinner without the seeded jitter: the server scales each unit
+// type's rate by a roll of 1 +/- 3-10%, and the prediction uses the centre of
+// that band so it shows the expected result rather than one rolled outcome.
+export function expectedWinnerLosses(
+	force: Force,
+	powerRatio: number,
+	opposingForce: Force = {}
+): Force {
+	const losses: Force = {};
+	const baseLossRate = Math.min(WINNER_MAX_LOSS_RATE, powerRatio * WINNER_MAX_LOSS_RATE);
+	// No resistance at all: the winner walked in unopposed and loses nothing.
+	if (powerRatio === 0) return losses;
+
+	const oppComp: Record<TroopClass, number> = { mobile: 0, armor: 0, fire: 0, special: 0 };
+	let totalOpp = 0;
+	for (const k of TROOP_KEYS) {
+		const n = opposingForce[k] || 0;
+		if (n > 0) {
+			oppComp[TROOP_CLASS[k]] += n;
+			totalOpp += n;
+		}
+	}
+
+	for (const k of TROOP_KEYS) {
+		if (k === 'overseer') continue;
+		const count = force[k] || 0;
+		if (count <= 0) continue;
+		const defFactor = Math.max(
+			WINNER_DEF_FACTOR_FLOOR,
+			1 - TROOP_STATS[k].defense / WINNER_DEF_FACTOR_DIVISOR
+		);
+		let matchupFactor = 1.0;
+		if (totalOpp > 0) {
+			let weightedCounter = 0;
+			for (const oc of ['mobile', 'armor', 'fire', 'special'] as TroopClass[]) {
+				weightedCounter += (oppComp[oc] / totalOpp) * CLASS_COUNTERS[TROOP_CLASS[k]][oc];
+			}
+			matchupFactor = Math.max(
+				WINNER_MATCHUP_MIN,
+				Math.min(WINNER_MATCHUP_MAX, 2.0 - weightedCounter)
+			);
+		}
+		const rate = Math.min(
+			WINNER_MAX_UNIT_LOSS_RATE,
+			Math.max(0, baseLossRate * defFactor * matchupFactor)
+		);
+		losses[k] = Math.max(0, Math.round(count * rate));
+	}
+	return losses;
 }
 
 // ─── Deterministic PRNG ───────────────────────────────────────────────────
@@ -337,7 +470,10 @@ export function classWeightedAttack(
 			totalDef += n;
 		}
 	}
-	const targetingCoreBonus = Math.min(targetingCoreLevel * 0.015, 0.3);
+	const targetingCoreBonus = Math.min(
+		targetingCoreLevel * TARGETING_CORE_BONUS_PER_LEVEL,
+		TARGETING_CORE_BONUS_CAP
+	);
 	let total = 0;
 	for (const k of TROOP_KEYS) {
 		const n = attackers[k] || 0;
@@ -397,33 +533,62 @@ export function classWeightedDefense(defenders: Force, attackers: Force): number
 
 export interface CombatPrediction {
 	attackerWins: boolean;
-	conquerCapable: boolean; // would this strike clear the garrison (enable conquest)?
+	// True when an Overseer in this strike would drain control: the attacker wins
+	// and the Overseer survives (its escort is not wiped). Mirrors server combat.ts
+	// overseerCanAct. The garrison does not need to be cleared.
+	conquerCapable: boolean;
+	// Control removed by this strike's Overseer (50 / 34 / 15 by powerRatio tier),
+	// 0 when no Overseer can act.
+	controlDrain: number;
 	attackPower: number;
 	defensePower: number;
-	powerRatio: number; // loser/winner, 0..1 — how close it was
-	attackerLossPct: number; // 0..1 estimated
-	defenderLossPct: number; // 0..1 estimated
-	estLootCapacity: number; // surviving carry
+	powerRatio: number; // loser/winner, 0..1, how close it was
+	attackerLossPct: number; // 0..1, share of units sent that die (count-based, as the server's loot math)
+	defenderLossPct: number; // 0..1, share of the garrison that dies (count-based)
+	attackerLosses: Force; // expected per-type losses, including a lost Overseer
+	defenderLosses: Force;
+	estLootCapacity: number; // surviving carry: an upper bound before Stealth Array vault and loot protection
 	marginLabel: 'blowout' | 'decisive' | 'close' | 'coinflip';
 }
 
-// Forward prediction mirroring resolveCombat's outcome + loss model. Estimates
-// are deterministic averages (no per-unit variance) so the calculator shows the
-// expected result, not a single rolled outcome.
+function sumUnits(force: Force, includeOverseer: boolean): number {
+	let total = 0;
+	for (const k of TROOP_KEYS) {
+		if (!includeOverseer && k === 'overseer') continue;
+		total += force[k] || 0;
+	}
+	return total;
+}
+
+// Forward prediction mirroring server combat.ts resolveCombat step by step:
+// Plasma Turret strip, class-weighted attack/defense, Shield Grid, outcome,
+// powerRatio, per-unit loser/winner losses, the Overseer escort rule, control
+// drain, and surviving carry. Winner losses use the centre of the server's
+// jitter band, so the calculator shows the expected result rather than a single
+// rolled outcome. Loot protection and the Stealth Array vault are not modelled
+// (estLootCapacity is the carry ceiling the server then caps by visible stock).
 export function predictCombat(opts: {
 	attacker: Force;
 	defender: Force;
 	attackerTargetingCore?: number;
 	defenderShieldGrid?: number;
-	shieldEfficiencyMultiplier?: number; // 2 for Military Outpost, etc.
+	shieldEfficiencyMultiplier?: number; // see shieldEfficiencyFor (Military Outpost = 2, doubled = 3)
+	defenderSurvivorFloor?: number; // post-protection taper floor; 0 outside the taper window
 }): CombatPrediction {
 	const {
-		attacker,
+		attacker: rawAttacker,
 		defender,
 		attackerTargetingCore = 0,
 		defenderShieldGrid = 0,
-		shieldEfficiencyMultiplier = 1
+		shieldEfficiencyMultiplier = 1,
+		defenderSurvivorFloor = 0
 	} = opts;
+
+	// Plasma Turrets cannot leave their nexus: the server strips them from every
+	// attacking force before resolving, so they add no class weight, carry, or
+	// casualties to the strike.
+	const attacker = cloneForce(rawAttacker);
+	delete attacker.plasmaTurret;
 
 	const attackPower = classWeightedAttack(attacker, defender, attackerTargetingCore);
 	// Symmetric triangle: defense is class-weighted against the attacker too
@@ -441,35 +606,67 @@ export function predictCombat(opts: {
 		? Math.min(1, defensePower / Math.max(1, attackPower))
 		: Math.min(1, attackPower / Math.max(1, defensePower));
 
-	const winnerLossRate = Math.min(WINNER_MAX_LOSS_RATE, powerRatio * WINNER_MAX_LOSS_RATE);
-	const loserRate = loserLossRate(powerRatio);
+	const attackerLosses = attackerWins
+		? expectedWinnerLosses(attacker, powerRatio, defender)
+		: lossesForLoser(attacker, powerRatio);
+	const defenderLosses = attackerWins
+		? lossesForLoser(defender, powerRatio, defenderSurvivorFloor)
+		: expectedWinnerLosses(defender, powerRatio, attacker);
 
-	const attackerLossPct = attackerWins ? winnerLossRate : loserRate;
-	const defenderLossPct = attackerWins ? loserRate : winnerLossRate;
+	// Attacker Overseer dies only if it brought an escort and the whole escort
+	// died. A lone Overseer is never lost in the fight itself.
+	const overseerSent = attacker.overseer || 0;
+	const escortSent = sumUnits(attacker, false);
+	const escortLost = sumUnits(attackerLosses, false);
+	if (overseerSent > 0 && escortSent > 0 && escortLost >= escortSent) {
+		attackerLosses.overseer = overseerSent;
+	}
 
-	// Conquest needs the garrison fully cleared. That only happens on a decisive
-	// win — a blowout (ratio <= LOSER_WIPE_RATIO) wipes the defender to 0.
-	const conquerCapable = attackerWins && (defenderHasNoTroops || defenderLossPct >= 0.999);
+	// Defender Overseer dies only when the attacker wins and every other
+	// defending unit is gone.
+	const defenderOverseers = defender.overseer || 0;
+	if (
+		defenderOverseers > 0 &&
+		attackerWins &&
+		sumUnits(defenderLosses, false) >= sumUnits(defender, false)
+	) {
+		defenderLosses.overseer = defenderOverseers;
+	}
 
-	// Loot estimate: surviving carry vs the 8k threshold.
+	const overseerCanAct = attackerWins && overseerSent > 0 && !attackerLosses.overseer;
+	const controlDrain = overseerCanAct ? overseerControlDrain(powerRatio) : 0;
+
+	const attackerLost = sumUnits(attackerLosses, true);
+	const defenderLost = sumUnits(defenderLosses, true);
+	const attackerLossPct = attackerUnits > 0 ? attackerLost / attackerUnits : 0;
+	const defenderLossPct = defenderUnits > 0 ? defenderLost / defenderUnits : 0;
+
+	// Surviving carry, exactly as the server sizes the loot haul: full carry of
+	// the units sent, scaled by the count-based survive ratio.
 	let carry = 0;
 	for (const k of TROOP_KEYS) carry += (attacker[k] || 0) * TROOP_CARRY[k];
 	const estLootCapacity = attackerWins ? carry * (1 - attackerLossPct) : 0;
 
+	// Margin bands line up with the server's control-drain tiers: a blowout is a
+	// crushing (50) strike that also wipes the loser, decisive is a clear (34)
+	// strike, and close / coinflip are both narrow (15) strikes.
 	let marginLabel: CombatPrediction['marginLabel'];
-	if (powerRatio < 0.4) marginLabel = 'blowout';
-	else if (powerRatio < 0.7) marginLabel = 'decisive';
+	if (powerRatio <= CONTROL_DRAIN_CRUSHING_RATIO) marginLabel = 'blowout';
+	else if (powerRatio <= CONTROL_DRAIN_CLEAR_RATIO) marginLabel = 'decisive';
 	else if (powerRatio < 0.9) marginLabel = 'close';
 	else marginLabel = 'coinflip';
 
 	return {
 		attackerWins,
-		conquerCapable,
+		conquerCapable: overseerCanAct,
+		controlDrain,
 		attackPower,
 		defensePower,
 		powerRatio,
 		attackerLossPct,
 		defenderLossPct,
+		attackerLosses,
+		defenderLosses,
 		estLootCapacity,
 		marginLabel
 	};

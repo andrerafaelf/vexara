@@ -139,6 +139,8 @@ export const getBattlePass = () => apiRequest('/battle-pass');
 export const purchaseBattlePass = () => apiRequest('/battle-pass/purchase', { method: 'POST' });
 export const claimBattlePassLevel = (level: number, nexusId: number) =>
 	apiRequest(`/battle-pass/claim/${level}`, { method: 'POST', body: JSON.stringify({ nexusId }) });
+export const claimBattlePassCache = (nexusId: number) =>
+	apiRequest('/battle-pass/claim-cache', { method: 'POST', body: JSON.stringify({ nexusId }) });
 export const setActiveTitle = (title: string | null) =>
 	apiRequest('/battle-pass/title', { method: 'PATCH', body: JSON.stringify({ title }) });
 export const giftBattlePass = (username: string) =>

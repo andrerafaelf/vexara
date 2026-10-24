@@ -4,6 +4,7 @@ import type { CorsOptions } from 'cors';
 import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma.js';
 import { logInfo, logWarn } from '../utils/logger.js';
+import { isTokenRevoked } from '../utils/sessionRevocation.js';
 
 // ────────────────────────────────────────────────────────────────────────────
 // Shared Socket.IO server instance, created once, reused by all namespaces.
@@ -35,12 +36,13 @@ export function initGameSocket(httpServer: HttpServer, opts: { cors: CorsOptions
 		try {
 			const token = (socket.handshake.auth?.token as string | undefined) ?? '';
 			if (!token) return next(new Error('no_token'));
-			const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
+			const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number; iat?: number };
 			const user = await prisma.user.findUnique({
 				where: { id: decoded.userId },
-				select: { id: true, activeGalaxyId: true }
+				select: { id: true, activeGalaxyId: true, passwordChangedAt: true }
 			});
 			if (!user) return next(new Error('no_user'));
+			if (isTokenRevoked(decoded.iat, user.passwordChangedAt)) return next(new Error('no_user'));
 
 			(socket.data as Record<string, unknown>).userId = user.id;
 
@@ -242,16 +244,20 @@ export function initWarRoomSocket(httpServer: HttpServer, opts: { cors: CorsOpti
 		try {
 			const token = (socket.handshake.auth?.token as string | undefined) ?? '';
 			if (!token) return next(new Error('no_token'));
-			const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
+			const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number; iat?: number };
 
 			const user = await prisma.user.findUnique({
 				where: { id: decoded.userId },
 				select: {
 					id: true,
 					username: true,
-					activeGalaxyId: true
+					activeGalaxyId: true,
+					passwordChangedAt: true
 				}
 			});
+			if (user && isTokenRevoked(decoded.iat, user.passwordChangedAt)) {
+				return next(new Error('no_galaxy'));
+			}
 			if (!user || !user.activeGalaxyId) return next(new Error('no_galaxy'));
 
 			const member = await prisma.factionMember.findUnique({

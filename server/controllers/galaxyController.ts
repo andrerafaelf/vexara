@@ -73,9 +73,7 @@ async function getPublicStatusGalaxy() {
 	]);
 
 	const playersByGalaxy = new Map(playerCounts.map((row) => [row.galaxyId, row._count.id]));
-	const nexusesByGalaxy = new Map(
-		claimedNexusCounts.map((row) => [row.galaxyId, row._count.id])
-	);
+	const nexusesByGalaxy = new Map(claimedNexusCounts.map((row) => [row.galaxyId, row._count.id]));
 
 	return candidates.sort((a, b) => {
 		const playerDelta = (playersByGalaxy.get(b.id) ?? 0) - (playersByGalaxy.get(a.id) ?? 0);
@@ -88,102 +86,187 @@ async function getPublicStatusGalaxy() {
 	})[0];
 }
 
+const PUBLIC_STATUS_CACHE_MS = 60 * 1000;
+const ACTIVE_7D_MS = 7 * 24 * 60 * 60 * 1000;
+const ACTIVE_24H_MS = 24 * 60 * 60 * 1000;
+// The unauthenticated battle feed lags real time so it cannot be used as live intel.
+const PUBLIC_BATTLE_DELAY_MS = 2 * 60 * 60 * 1000;
+
+// Round to 2 significant figures (exact force sizes are tactical information).
+function roundTo2Sig(n: number): number {
+	if (!Number.isFinite(n) || n <= 0) return 0;
+	if (n < 100) return Math.round(n);
+	const mag = Math.pow(10, Math.floor(Math.log10(n)) - 1);
+	return Math.round(n / mag) * mag;
+}
+
+// Whole-response in-process cache for the public landing-page stats. The
+// endpoint is unauthenticated and hit on every landing visit, so a wave of
+// visitors must not turn into a wave of group-by queries. In-flight builds are
+// shared so a cold cache under load still runs the queries once.
+let publicStatusCache: { at: number; payload: Record<string, unknown> } | null = null;
+let publicStatusInflight: Promise<Record<string, unknown>> | null = null;
+
+async function buildPublicGalaxyStatus(): Promise<Record<string, unknown>> {
+	const galaxy = await getPublicStatusGalaxy();
+	const now = Date.now();
+	// Real, verified, non-flagged accounts only (unverified/flagged signups are not players).
+	const totalRegistered = await prisma.user.count({
+		where: { emailVerifiedAt: { not: null }, isFlagged: false }
+	});
+
+	if (!galaxy) {
+		return {
+			galaxy: null,
+			activePlayers: 0,
+			activePlayers24h: 0,
+			joinedPlayers: 0,
+			totalRegistered,
+			claimedNexuses: 0,
+			topFactions: [],
+			latestBattles: [],
+			recentConquests: []
+		};
+	}
+
+	const [
+		joinedPlayers,
+		activePlayers,
+		activePlayers24h,
+		claimedNexuses,
+		factions,
+		players,
+		nexusCounts,
+		attacks
+	] = await Promise.all([
+		prisma.galaxyPlayer.count({ where: { galaxyId: galaxy.id } }),
+		prisma.galaxyPlayer.count({
+			where: { galaxyId: galaxy.id, user: { lastPlayedAt: { gte: new Date(now - ACTIVE_7D_MS) } } }
+		}),
+		prisma.galaxyPlayer.count({
+			where: { galaxyId: galaxy.id, user: { lastPlayedAt: { gte: new Date(now - ACTIVE_24H_MS) } } }
+		}),
+		prisma.nexus.count({ where: { galaxyId: galaxy.id, ownerId: { not: null } } }),
+		prisma.faction.findMany({
+			where: { galaxyId: galaxy.id },
+			select: { id: true, name: true, tag: true, members: { select: { userId: true } } }
+		}),
+		prisma.galaxyPlayer.findMany({
+			where: { galaxyId: galaxy.id },
+			select: { userId: true, points: true }
+		}),
+		prisma.nexus.groupBy({
+			by: ['ownerId'],
+			where: { galaxyId: galaxy.id, ownerId: { not: null } },
+			_count: { id: true }
+		}),
+		// Player-initiated battles only: NPC (Rogue AI) raids have a null attackerUserId.
+		prisma.attack.findMany({
+			where: {
+				galaxyId: galaxy.id,
+				status: 'completed',
+				type: 'attack',
+				attackerUserId: { not: null },
+				arrivesAt: { lt: new Date(now - PUBLIC_BATTLE_DELAY_MS) }
+			},
+			orderBy: { arrivesAt: 'desc' },
+			take: 10,
+			select: {
+				id: true,
+				result: true,
+				arrivesAt: true,
+				attackerUserId: true,
+				defenderUserId: true,
+				attackerNexus: { select: { owner: { select: { username: true } }, name: true } },
+				defenderNexus: { select: { owner: { select: { username: true } }, name: true } }
+			}
+		})
+	]);
+
+	const pointsByUser = new Map(players.map((p) => [p.userId, p.points]));
+	const nexusesByOwner = new Map(nexusCounts.map((n) => [n.ownerId!, n._count.id]));
+	const topFactions = factions
+		.map((f) => ({
+			id: f.id,
+			name: f.name,
+			tag: f.tag,
+			members: f.members.length,
+			points: f.members.reduce((sum, m) => sum + (pointsByUser.get(m.userId) ?? 0), 0),
+			nexuses: f.members.reduce((sum, m) => sum + (nexusesByOwner.get(m.userId) ?? 0), 0)
+		}))
+		.sort((a, b) => b.points - a.points)
+		.slice(0, 3);
+
+	// Resolve names from the ids stored on the attack, not the nexus's CURRENT owner:
+	// after a conquest the defender nexus belongs to the attacker.
+	const battleRows = attacks.slice(0, 5);
+	const battleUserIds = [
+		...new Set(
+			battleRows
+				.flatMap((a) => [a.attackerUserId, a.defenderUserId])
+				.filter((id): id is number => id != null)
+		)
+	];
+	const battleUsers =
+		battleUserIds.length > 0
+			? await prisma.user.findMany({
+					where: { id: { in: battleUserIds } },
+					select: { id: true, username: true }
+				})
+			: [];
+	const usernameById = new Map(battleUsers.map((u) => [u.id, u.username]));
+
+	const latestBattles = battleRows.map((a) => {
+		const result = (a.result ?? {}) as Record<string, unknown>;
+		return {
+			id: a.id,
+			attacker:
+				(a.attackerUserId != null ? usernameById.get(a.attackerUserId) : undefined) ??
+				a.attackerNexus.owner?.username ??
+				'Unknown',
+			defender:
+				a.defenderUserId == null
+					? a.defenderNexus.name || 'Neutral'
+					: (usernameById.get(a.defenderUserId) ?? a.defenderNexus.owner?.username ?? 'Unknown'),
+			attackerNexus: a.attackerNexus.name,
+			defenderNexus: a.defenderNexus.name,
+			victory: Boolean(result.victory),
+			conquered: Boolean(result.conquered),
+			totalUnits: roundTo2Sig(
+				sumRecordValues(result.attackerInitial) + sumRecordValues(result.defenderInitial)
+			),
+			arrivesAt: a.arrivesAt
+		};
+	});
+
+	return {
+		galaxy,
+		activePlayers,
+		activePlayers24h,
+		joinedPlayers,
+		totalRegistered,
+		claimedNexuses,
+		topFactions,
+		latestBattles,
+		recentConquests: latestBattles.filter((b) => b.conquered).slice(0, 3)
+	};
+}
+
 export async function getPublicGalaxyStatus(_req: AuthRequest, res: Response): Promise<void> {
 	try {
-		const galaxy = await getPublicStatusGalaxy();
-
-		if (!galaxy) {
-			res.json({
-				galaxy: null,
-				activePlayers: 0,
-				totalRegistered: await prisma.user.count(),
-				claimedNexuses: 0,
-				topFactions: [],
-				latestBattles: [],
-				recentConquests: []
+		const now = Date.now();
+		let payload: Record<string, unknown>;
+		if (publicStatusCache && now - publicStatusCache.at < PUBLIC_STATUS_CACHE_MS) {
+			payload = publicStatusCache.payload;
+		} else {
+			publicStatusInflight ??= buildPublicGalaxyStatus().finally(() => {
+				publicStatusInflight = null;
 			});
-			return;
+			payload = await publicStatusInflight;
+			publicStatusCache = { at: Date.now(), payload };
 		}
-
-		const [
-			activePlayers,
-			totalRegistered,
-			claimedNexuses,
-			factions,
-			players,
-			nexusCounts,
-			attacks
-		] = await Promise.all([
-			prisma.galaxyPlayer.count({ where: { galaxyId: galaxy.id } }),
-			prisma.user.count(),
-			prisma.nexus.count({ where: { galaxyId: galaxy.id, ownerId: { not: null } } }),
-			prisma.faction.findMany({
-				where: { galaxyId: galaxy.id },
-				select: { id: true, name: true, tag: true, members: { select: { userId: true } } }
-			}),
-			prisma.galaxyPlayer.findMany({
-				where: { galaxyId: galaxy.id },
-				select: { userId: true, points: true }
-			}),
-			prisma.nexus.groupBy({
-				by: ['ownerId'],
-				where: { galaxyId: galaxy.id, ownerId: { not: null } },
-				_count: { id: true }
-			}),
-			prisma.attack.findMany({
-				where: { galaxyId: galaxy.id, status: 'completed', type: 'attack' },
-				orderBy: { arrivesAt: 'desc' },
-				take: 20,
-				select: {
-					id: true,
-					result: true,
-					arrivesAt: true,
-					attackerNexus: { select: { owner: { select: { username: true } }, name: true } },
-					defenderNexus: { select: { owner: { select: { username: true } }, name: true } }
-				}
-			})
-		]);
-
-		const pointsByUser = new Map(players.map((p) => [p.userId, p.points]));
-		const nexusesByOwner = new Map(nexusCounts.map((n) => [n.ownerId!, n._count.id]));
-		const topFactions = factions
-			.map((f) => ({
-				id: f.id,
-				name: f.name,
-				tag: f.tag,
-				members: f.members.length,
-				points: f.members.reduce((sum, m) => sum + (pointsByUser.get(m.userId) ?? 0), 0),
-				nexuses: f.members.reduce((sum, m) => sum + (nexusesByOwner.get(m.userId) ?? 0), 0)
-			}))
-			.sort((a, b) => b.points - a.points)
-			.slice(0, 3);
-
-		const latestBattles = attacks.slice(0, 5).map((a) => {
-			const result = (a.result ?? {}) as Record<string, unknown>;
-			return {
-				id: a.id,
-				attacker: a.attackerNexus.owner?.username ?? 'Unknown',
-				defender: a.defenderNexus.owner?.username ?? 'Neutral',
-				attackerNexus: a.attackerNexus.name,
-				defenderNexus: a.defenderNexus.name,
-				victory: Boolean(result.victory),
-				conquered: Boolean(result.conquered),
-				totalUnits:
-					sumRecordValues(result.attackerInitial) + sumRecordValues(result.defenderInitial),
-				arrivesAt: a.arrivesAt
-			};
-		});
-
 		res.setHeader('Cache-Control', 'public, max-age=60');
-		res.json({
-			galaxy,
-			activePlayers,
-			totalRegistered,
-			claimedNexuses,
-			topFactions,
-			latestBattles,
-			recentConquests: latestBattles.filter((b) => b.conquered).slice(0, 3)
-		});
+		res.json(payload);
 	} catch (error) {
 		logError('unhandled_controller_error', {
 			message: (error as Error).message,

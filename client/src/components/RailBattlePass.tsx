@@ -3,24 +3,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { startTransition, useState } from 'react';
+import { MAX_PASS_LEVEL as MAX_LEVEL, PASS_LEVELS } from '../constants/vexPass';
 import { useAuth } from '../context/AuthContext';
 import { getBattlePass } from '../services/api';
 import '../styles/RailBattlePass.css';
 import { useStartProgress } from './NavigationProgress';
-import VexPassModal from './VexPassModal';
+import VexPassModal, { type PassState } from './VexPassModal';
 
-const MAX_LEVEL = 50;
-const XP_PER_LEVEL = 300;
 const MILESTONE_LEVELS = [10, 20, 30, 40, 50];
-
-interface PassState {
-	seasonXp: number;
-	passLevel: number;
-	hasPaidPass: boolean;
-	passTitle: string | null;
-	claimedLevels: number[];
-	seasonEndsAt?: string | null;
-}
 
 export default function RailBattlePass() {
 	const [modalOpen, setModalOpen] = useState(false);
@@ -37,29 +27,36 @@ export default function RailBattlePass() {
 
 	if (!data) return null;
 
-	const { seasonXp, passLevel, hasPaidPass, passTitle, seasonEndsAt } = data;
-	const xpIntoLevel = seasonXp - passLevel * XP_PER_LEVEL;
-	const xpPct = Math.min((xpIntoLevel / XP_PER_LEVEL) * 100, 100);
+	const { passLevel, hasPaidPass, passTitle, xpPerLevel, xpIntoLevel, claimed, caches } = data;
+	const xpPct = xpPerLevel > 0 ? Math.min((xpIntoLevel / xpPerLevel) * 100, 100) : 0;
 	const isMaxed = passLevel >= MAX_LEVEL;
 
-	const seasonEndLabel = (() => {
-		if (!seasonEndsAt) return null;
-		const ms = new Date(seasonEndsAt).getTime() - Date.now();
-		if (ms <= 0) return 'Season ended';
-		const days = Math.ceil(ms / 86400000);
-		const date = new Date(seasonEndsAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-		return `Ends ${date} · ${days}d`;
-	})();
+	// Rewards collectable right now: levels with a pending half (free, or paid once owned)
+	// plus banked caches. Mirrors the server: claims need an active galaxy, and a claim
+	// that carries resources above the pacing allowance is refused as a whole.
+	const { pacing } = data;
+	const claimableLevels = pacing
+		? PASS_LEVELS.filter((row) => {
+				if (row.level > passLevel) return false;
+				const freePending = !!row.free && !claimed.free.includes(row.level);
+				const paidPending = hasPaidPass && !!row.paid && !claimed.paid.includes(row.level);
+				const carriesResources = freePending && row.free!.includes('resources:');
+				if (carriesResources && row.level > pacing.claimableUpToLevel) return false;
+				return freePending || paidPending;
+			}).length
+		: 0;
+	const claimableCaches = pacing && !pacing.cachesUnlockAt ? caches.claimable : 0;
+	const claimableCount = claimableLevels + claimableCaches;
 
 	return (
 		<>
 			<button
 				className="rail-card rail-bp rail-bp--btn"
 				onClick={() => setModalOpen(true)}
-				aria-label="Open campaign record"
+				aria-label="Open Vex Pass"
 			>
 				<div className="rail-card-head">
-					<span className="rail-card-title">Season One Campaign</span>
+					<span className="rail-card-title">Vex Pass</span>
 					{hasPaidPass ? (
 						<span className="rail-bp-paid-badge">Command Pass</span>
 					) : (
@@ -69,17 +66,19 @@ export default function RailBattlePass() {
 
 				<div className="rail-bp-level-row">
 					<span className="rail-bp-level">
-						Rank {passLevel} <span className="rail-bp-level-max">/ {MAX_LEVEL}</span>
+						Level {passLevel} <span className="rail-bp-level-max">/ {MAX_LEVEL}</span>
 					</span>
 				</div>
 				{!isMaxed && (
 					<span className="rail-bp-xp-label">
-						{xpIntoLevel} / {XP_PER_LEVEL} campaign XP
+						{xpIntoLevel} / {xpPerLevel} XP
 					</span>
 				)}
-				{isMaxed && <span className="rail-bp-maxed">Campaign complete</span>}
-				{seasonEndLabel && (
-					<span className="rail-bp-season-end">{seasonEndLabel}</span>
+				{isMaxed && <span className="rail-bp-maxed">Level {MAX_LEVEL} reached</span>}
+				{claimableCount > 0 && (
+					<span className="rail-bp-ready">
+						{claimableCount} reward{claimableCount !== 1 ? 's' : ''} ready to collect
+					</span>
 				)}
 
 				<div
@@ -97,7 +96,7 @@ export default function RailBattlePass() {
 								key={lvl}
 								className={`rail-bp-pip${passLevel >= lvl ? ' rail-bp-pip--reached' : ''}`}
 								style={{ left: `${pipPct}%` }}
-								title={`Campaign rank ${lvl}`}
+								title={`Level ${lvl}`}
 							/>
 						);
 					})}
@@ -112,7 +111,7 @@ export default function RailBattlePass() {
 				{!hasPaidPass && <div className="rail-bp-cta">Unlock Command Pass · 1,000 VP</div>}
 			</button>
 
-			{modalOpen && <VexPassModal pass={data} seasonEndsAt={data.seasonEndsAt} onClose={() => setModalOpen(false)} />}
+			{modalOpen && <VexPassModal pass={data} onClose={() => setModalOpen(false)} />}
 
 			<button
 				className="rail-shop-btn"
@@ -124,7 +123,7 @@ export default function RailBattlePass() {
 			>
 				<span className="rail-shop-text">
 					<span className="rail-shop-label">Quartermaster <span className="rail-shop-tag">Shop</span></span>
-					<span className="rail-shop-sub">Titles, borders, campaign pass</span>
+					<span className="rail-shop-sub">Titles, borders, Vex Pass</span>
 				</span>
 				{user?.vexPoints != null && (
 					<span className="rail-shop-vp">{user.vexPoints.toLocaleString()} VP</span>

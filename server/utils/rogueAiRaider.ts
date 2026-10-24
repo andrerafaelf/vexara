@@ -56,7 +56,13 @@ export async function processRogueAiRaids(): Promise<void> {
 	try {
 		const now = new Date();
 		const activeEvents = await prisma.galaxyEvent.findMany({
-			where: { type: 'rogue_ai', resolvedAt: null, nexusId: { not: null } },
+			where: {
+				type: 'rogue_ai',
+				resolvedAt: null,
+				nexusId: { not: null },
+				// An expired-but-unresolved core stops raiding immediately; expireOldEvents resolves it.
+				OR: [{ expiresAt: null }, { expiresAt: { gt: now } }]
+			},
 			select: { id: true, galaxyId: true, nexusId: true, meta: true }
 		});
 
@@ -103,13 +109,24 @@ export async function processRogueAiRaids(): Promise<void> {
 			const travelMinutes = nearest.dist * (4 + (28 - slowest) / 10);
 			const arrivesAt = new Date(now.getTime() + travelMinutes * 60_000);
 
-			const troopDeductions: Record<string, number> = {};
+			// Conditional atomic decrement: the core's garrison is also written by growth,
+			// level-up and combat under other locks, so only dispatch if every sent troop
+			// column still covers what we send (and the core is still unowned). The attack
+			// row and the cooldown stamp commit in the same transaction.
+			const troopDeductions: Record<string, { decrement: number }> = {};
+			const troopGuards: Record<string, { gte: number }> = {};
 			for (const [key, sent] of Object.entries(raidTroops)) {
-				troopDeductions[key] = (coreRecord[key] || 0) - sent;
+				troopDeductions[key] = { decrement: sent };
+				troopGuards[key] = { gte: sent };
 			}
 
-			await prisma.$transaction([
-				prisma.attack.create({
+			const dispatched = await prisma.$transaction(async (tx) => {
+				const claimed = await tx.nexus.updateMany({
+					where: { id: core.id, ownerId: null, ...troopGuards },
+					data: troopDeductions
+				});
+				if (claimed.count === 0) return false;
+				await tx.attack.create({
 					data: {
 						galaxyId: event.galaxyId,
 						attackerUserId: null,
@@ -120,13 +137,17 @@ export async function processRogueAiRaids(): Promise<void> {
 						arrivesAt,
 						type: 'attack'
 					}
-				}),
-				prisma.nexus.update({ where: { id: core.id }, data: troopDeductions }),
-				prisma.galaxyEvent.update({
+				});
+				await tx.galaxyEvent.update({
 					where: { id: event.id },
 					data: { meta: { ...meta, lastRaidAt: now.toISOString() } }
-				})
-			]);
+				});
+				return true;
+			});
+			if (!dispatched) {
+				logInfo('rogue_ai_raid_skipped_stale', { eventId: event.id, coreNexusId: core.id });
+				continue;
+			}
 
 			logInfo('rogue_ai_raid_dispatched', {
 				eventId: event.id,

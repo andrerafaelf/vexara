@@ -9,7 +9,7 @@ export default async function Image() {
 		eyebrow: 'Roster',
 		kicker: 'Composition wins fights.',
 		title: 'Units',
-		subtitle: 'All 16 troop types — stats, costs, unlocks, and the class counter triangle.',
+		subtitle: 'All 16 troop types: stats, costs, unlocks, and the class counter triangle.',
 		footer: 'vexara.world // units'
 	});
 }

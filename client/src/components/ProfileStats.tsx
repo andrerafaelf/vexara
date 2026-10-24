@@ -66,7 +66,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 export default function ProfileStats() {
-	const { logout, updateUser } = useAuth();
+	const { user, login, logout, updateUser } = useAuth();
 	const router = useRouter();
 	const [stats, setStats] = useState<UserStats | null>(null);
 	const [nexuses, setNexuses] = useState<Nexus[]>([]);
@@ -138,7 +138,10 @@ export default function ProfileStats() {
 		}
 		setPwLoading(true);
 		try {
-			await changePassword(pwCurrent, pwNew);
+			const res = await changePassword(pwCurrent, pwNew);
+			// The server revoked older sessions and issued a fresh token; keep this one signed in.
+			// A missing token keeps the old behavior.
+			if (typeof res.data?.token === 'string' && user) login(res.data.token, user);
 			setPwSuccess(true);
 			setPwCurrent('');
 			setPwNew('');

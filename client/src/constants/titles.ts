@@ -17,13 +17,13 @@ export const TITLE_META: Record<string, string> = {
 	'Eternal Vanguard': 'Earned by completing the Eternal Vanguard faction campaign.',
 	'Static Eye':       'Earned by completing the Static Eye faction campaign.',
 
-	// ── Battle pass titles (Season One) ─────────────────────────────────────
-	'Conscript':        'Unlocked at rank 1 of the Season One paid campaign.',
-	'Operative':        'Unlocked at rank 8 of the Season One paid campaign.',
-	'Proven':           'Unlocked at rank 18 of the Season One paid campaign.',
-	'Vex Commander':    'Unlocked at rank 30 of the Season One paid campaign.',
-	'High Commander':   'Unlocked at rank 45 of the Season One paid campaign.',
-	'Season Conqueror': 'Unlocked by completing all 50 ranks of the Season One paid campaign.',
+	// ── Vex Pass titles ─────────────────────────────────────
+	'Conscript':        'Unlocked at level 1 of the Vex Pass paid track.',
+	'Operative':        'Unlocked at level 8 of the Vex Pass paid track.',
+	'Proven':           'Unlocked at level 18 of the Vex Pass paid track.',
+	'Vex Commander':    'Unlocked at level 30 of the Vex Pass paid track.',
+	'High Commander':   'Unlocked at level 45 of the Vex Pass paid track.',
+	'Protocol Ascendant': 'Unlocked by completing all 50 levels of the Vex Pass paid track.',
 
 	// ── Challenge titles: Butcher ────────────────────────────────────────────
 	'Combatant':       'Butcher — first tier. Troops eliminated in combat.',

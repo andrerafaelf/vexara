@@ -2,6 +2,8 @@ import { randomBytes } from 'crypto';
 import type { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma.js';
+import { invalidateAuthCache } from '../middleware/auth.js';
+import { resetLoginLimits } from '../middleware/authLimiters.js';
 import { comparePassword, hashPassword } from '../models/User.js';
 import * as authService from '../services/authService.js';
 import {
@@ -11,7 +13,7 @@ import {
 	sendWelcome
 } from '../services/emailService.js';
 import { generateUniqueReferralCode } from '../services/referralService.js';
-import { logError, logGameEvent } from '../utils/logger.js';
+import { logError, logGameEvent, logWarn } from '../utils/logger.js';
 import {
 	detectEmailTypo,
 	validateEmail,
@@ -32,6 +34,19 @@ function normalizeEmail(value: unknown): string | null {
 	const trimmed = value.trim().toLowerCase();
 	return validateEmail(trimmed) ? trimmed : null;
 }
+
+// Prisma unique-constraint violation (P2002), e.g. two concurrent registrations
+// that both passed the pre-check. Returns the raw meta text so callers can tell
+// which column clashed (the shape of meta.target varies with the driver adapter).
+function uniqueViolationInfo(err: unknown): { meta: string } | null {
+	if (typeof err !== 'object' || err === null) return null;
+	const e = err as { code?: unknown; meta?: unknown };
+	if (e.code !== 'P2002') return null;
+	return { meta: JSON.stringify(e.meta ?? {}).toLowerCase() };
+}
+
+// Hard cap on how long register waits for the verification mail before replying.
+const VERIFY_EMAIL_WAIT_MS = 8000;
 
 function pickUtm(value: unknown): string | null {
 	// UTM parameters are optional and have no strict format, but we want to enforce a reasonable max length
@@ -257,22 +272,60 @@ export async function register(req: Request, res: Response): Promise<void> {
 				emailVerificationToken: verificationToken,
 				emailVerificationTokenExpiresAt: verificationExpiry,
 				avatarKey: 'preset:assaultTrooper',
-				vexPoints: signupVp,
+				vexPoints: signupVp
 			},
 			select: { id: true, username: true, email: true }
 		});
 
-		sendVerifyEmail(user.email, user.username, verificationToken).catch((err) =>
-			console.error('[emailService] sendVerifyEmail failed:', err)
-		);
+		// Await the send (bounded) so the response can tell the client when the mail
+		// did not go out. The account exists either way, so a failure never fails register.
+		let emailSent = true;
+		let sendTimer: NodeJS.Timeout | undefined;
+		try {
+			await Promise.race([
+				sendVerifyEmail(user.email, user.username, verificationToken),
+				new Promise<never>((_, reject) =>
+					(sendTimer = setTimeout(
+						() => reject(new Error('verification email send timed out')),
+						VERIFY_EMAIL_WAIT_MS
+					))
+				)
+			]);
+		} catch (err) {
+			emailSent = false;
+			logError('register_verify_email_failed', {
+				userId: user.id,
+				message: (err as Error).message
+			});
+		} finally {
+			// Clear the timeout when the send wins so it does not linger for 8s.
+			if (sendTimer) clearTimeout(sendTimer);
+		}
 
 		logGameEvent('user_registered', user.id, null, {
 			utmSource: pickUtm(body.utm_source),
 			referred: referredById != null
 		});
 
-		res.status(201).json({ ok: true, message: 'Check your email to confirm your account.' });
+		res.status(201).json({
+			ok: true,
+			message: emailSent
+				? 'Check your email to confirm your account.'
+				: 'Account created, but we could not send the confirmation email. Use "Resend verification" to try again.',
+			emailSent
+		});
 	} catch (error) {
+		const clash = uniqueViolationInfo(error);
+		if (clash) {
+			// Concurrent duplicate that slipped past the pre-check: same 409 it returns.
+			logWarn('register_unique_race', { meta: clash.meta });
+			res.status(409).json({
+				error: clash.meta.includes('email')
+					? 'An account with that email already exists.'
+					: 'That username is already taken.'
+			});
+			return;
+		}
 		logError('unhandled_controller_error', {
 			message: (error as Error).message,
 			file: 'authController.ts'
@@ -335,7 +388,7 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
 		logGameEvent('user_verified', user.id);
 
 		sendWelcome(user.email, user.username, user.referralCode).catch((err) =>
-			console.error('[emailService] sendWelcome failed:', err)
+			logError('welcome_email_failed', { userId: user.id, message: (err as Error).message })
 		);
 
 		const authToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
@@ -384,7 +437,7 @@ export async function resendVerification(req: Request, res: Response): Promise<v
 				}
 			});
 			sendVerifyEmail(user.email, user.username, token).catch((err) =>
-				console.error('[emailService] sendVerifyEmail (resend) failed:', err)
+				logError('resend_verify_email_failed', { userId: user.id, message: (err as Error).message })
 			);
 		}
 
@@ -425,7 +478,10 @@ export async function requestPasswordReset(req: Request, res: Response): Promise
 				}
 			});
 			sendPasswordReset(user.email, user.username, token).catch((err) =>
-				console.error('[emailService] sendPasswordReset failed:', err)
+				logError('password_reset_email_failed', {
+					userId: user.id,
+					message: (err as Error).message
+				})
 			);
 		}
 
@@ -455,7 +511,7 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
 
 		const user = await prisma.user.findUnique({
 			where: { passwordResetToken: token },
-			select: { id: true, passwordResetTokenExpiresAt: true, emailVerifiedAt: true }
+			select: { id: true, username: true, passwordResetTokenExpiresAt: true, emailVerifiedAt: true }
 		});
 
 		if (
@@ -472,6 +528,8 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
 			where: { id: user.id },
 			data: {
 				password: hashed,
+				// Revokes every JWT issued before this moment (middleware/auth.ts).
+				passwordChangedAt: new Date(),
 				passwordResetToken: null,
 				passwordResetTokenExpiresAt: null,
 				// Clicking through a password reset link proves the user controls the
@@ -486,6 +544,11 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
 						})
 			}
 		});
+
+		invalidateAuthCache(user.id);
+		// Proof of inbox ownership: the real owner is never left locked out by other
+		// people's failed guesses against this account.
+		resetLoginLimits(req, user.username);
 
 		res.json({ ok: true });
 	} catch (error) {
@@ -546,7 +609,7 @@ export async function alphaSignup(req: Request, res: Response): Promise<void> {
 		const isNew = Date.now() - record.createdAt.getTime() < 5_000;
 		if (isNew && !record.unsubscribedAt) {
 			sendAlphaWelcome(email).catch((err) =>
-				console.error('[emailService] alphaWelcome failed:', err)
+				logError('alpha_welcome_email_failed', { message: (err as Error).message })
 			);
 		}
 

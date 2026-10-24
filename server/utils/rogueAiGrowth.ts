@@ -32,7 +32,13 @@ export async function processRogueAiGrowth(): Promise<void> {
 	try {
 		const now = new Date();
 		const events = await prisma.galaxyEvent.findMany({
-			where: { type: 'rogue_ai', resolvedAt: null, nexusId: { not: null } },
+			where: {
+				type: 'rogue_ai',
+				resolvedAt: null,
+				nexusId: { not: null },
+				// An expired-but-unresolved core stops growing immediately.
+				OR: [{ expiresAt: null }, { expiresAt: { gt: now } }]
+			},
 			select: { id: true, nexusId: true, createdAt: true, meta: true }
 		});
 
@@ -50,7 +56,8 @@ export async function processRogueAiGrowth(): Promise<void> {
 			const ageDays = (now.getTime() - event.createdAt.getTime()) / (24 * 60 * 60 * 1000);
 			const ageMultiplier = 1 + ageDays * GROWTH_AGE_SCALE_PER_DAY;
 
-			const updates: Record<string, number> = {};
+			// Atomic increments: the raider decrements the same row under a different lock.
+			const updates: Record<string, { increment: number }> = {};
 			let totalAdded = 0;
 			for (const [key, base] of Object.entries(BASE_GROWTH)) {
 				const ceiling = (INITIAL_TROOP_CEILING[key] ?? base * 10) * GROWTH_TROOP_CAP;
@@ -59,7 +66,7 @@ export async function processRogueAiGrowth(): Promise<void> {
 				const increment = Math.max(1, Math.floor(base * ageMultiplier));
 				const next = Math.min(ceiling, current + increment);
 				if (next > current) {
-					updates[key] = next;
+					updates[key] = { increment: next - current };
 					totalAdded += next - current;
 				}
 			}

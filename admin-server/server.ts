@@ -48,6 +48,7 @@ const requireSession = (
 		res.status(401).json({ error: 'Unauthorized' });
 		return;
 	}
+	res.locals.adminSessionId = payload.jti;
 	next();
 };
 
