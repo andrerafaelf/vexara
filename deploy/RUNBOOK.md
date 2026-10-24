@@ -125,17 +125,29 @@ docker compose -f /opt/vexara/docker-compose.prod.yml logs -f server
 ```
 
 ### Manual deploy (without CI)
+Prefer Actions > CI/CD > Run workflow. It is the only path that rewrites
+`/opt/vexara/.env`, so changed GitHub secrets or variables only reach the VPS
+through CI. A manual run reuses the `.env` CI last wrote.
+
+Run it as `deploy` (it owns `/opt/vexara/runtime/`) and with `bash`, not `sh`
+(the script uses bash-only syntax). The GHCR images are private and the login
+CI leaves behind expires with the job, so log in first with a PAT that has
+`read:packages`:
 ```bash
-cd /opt/vexara
-IMAGE_TAG=sha-abc1234 bash deploy/deploy.sh sha-abc1234
+echo <PAT> | sudo -u deploy docker login ghcr.io -u <github-user> --password-stdin
+sudo -u deploy bash /opt/vexara/deploy/deploy.sh
 ```
 
 ### Rollback to previous image
+deploy.sh takes no arguments. Image tags come from `SERVER_TAG`,
+`ADMIN_SERVER_TAG`, `CLIENT_TAG` and `ADMIN_CLIENT_TAG` in `/opt/vexara/.env`,
+which the script re-reads, so tags passed on the command line are ignored.
 ```bash
-cd /opt/vexara
-# List available tags in GHCR, then:
-IMAGE_TAG=sha-<previous-commit> bash deploy/deploy.sh sha-<previous-commit>
+# List available tags in GHCR, then point the service at the old one:
+sudo -u deploy sed -i 's/^SERVER_TAG=.*/SERVER_TAG=sha-<previous-commit>/' /opt/vexara/.env
+sudo -u deploy bash /opt/vexara/deploy/deploy.sh   # after the GHCR login above
 ```
+The next CI deploy rewrites `.env` and rolls forward again.
 
 ### Database backup (manual)
 ```bash
