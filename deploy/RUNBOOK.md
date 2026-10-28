@@ -25,8 +25,10 @@ Internet ── Cloudflare
    ├──► api.treble.quest, /r/ host systemd service treble-quest-api on 172.17.0.1:8787
    │                          (reached as host.docker.internal)
    ├──► andrerfferreira.work  static files /opt/andrerfferreira-portfolio/current
-   └──► k-artracing.com       host systemd service k-art on 172.17.0.1:8789,
-                              data in /opt/k-art/data
+   ├──► k-artracing.com       host systemd service k-art on 172.17.0.1:8789,
+   │                          data in /opt/k-art/data
+   └──► bisca.treble.quest    host systemd service bisca on 172.17.0.1:8790,
+                              pages + /ws WebSocket, games in memory only
 ```
 
 All services communicate on the internal Docker `app_net` network.  
@@ -44,21 +46,21 @@ when its cert exists, so a missing cert never takes down vexara.world.
 # 1. DNS: point every hostname at the VPS with the Cloudflare proxy OFF (grey):
 #    vexara.world, admin.vexara.world, treble.quest, www.treble.quest,
 #    api.treble.quest, andrerfferreira.work, www.andrerfferreira.work,
-#    k-artracing.com, www.k-artracing.com
+#    k-artracing.com, www.k-artracing.com, bisca.treble.quest
 
 # 2. Copy the bootstrap script up and run it as root. It installs Docker, Node 22,
-#    Certbot, UFW, fail2ban, swap, creates the deploy, trebleq and kart users and
-#    dirs, issues all five certs and adds the renew/backup crons.
+#    Certbot, UFW, fail2ban, swap, creates the deploy, trebleq, kart and bisca
+#    users and dirs, issues all six certs and adds the renew/backup crons.
 scp deploy/bootstrap-vps.sh root@YOUR_VPS_IP:/root/
 ssh root@YOUR_VPS_IP 'DEPLOY_PUBKEY="ssh-ed25519 AAAA... github-actions-deploy" bash /root/bootstrap-vps.sh vexara.world'
 
-# 3. Set VPS_HOST, VPS_USER=deploy, VPS_SSH_KEY in all four repos
-#    (vexara, treble-quest, andrerfferreira-portfolio, k-art).
+# 3. Set VPS_HOST, VPS_USER=deploy, VPS_SSH_KEY in all five repos
+#    (vexara, treble-quest, andrerfferreira-portfolio, k-art, bisca).
 
 # 4. Deploy Vexara first: Actions > CI/CD > Run workflow (tick rebuild_all if
 #    the GHCR images are gone). CI writes .env and runs deploy/deploy.sh.
 
-# 5. Deploy treble-quest, the portfolio and k-art (Run workflow, or push to main).
+# 5. Deploy treble-quest, the portfolio, k-art and bisca (Run workflow, or push to main).
 
 # 6. Turn the Cloudflare proxy back on for the proxied records.
 ```

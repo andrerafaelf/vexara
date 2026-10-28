@@ -262,4 +262,8 @@ http {
     # ─── K'ART Racing Team, k-artracing.com (separate site, same host) ───────
     # Same pattern: populated if its cert exists, empty otherwise.
     include /etc/nginx/kart.conf;
+
+    # ─── Bisca, bisca.treble.quest (separate site, same host) ─────────────────
+    # Same pattern: populated if its cert exists, empty otherwise.
+    include /etc/nginx/bisca.conf;
 }
