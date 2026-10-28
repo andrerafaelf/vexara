@@ -1,0 +1,70 @@
+# Bisca, bisca.treble.quest - online card game, served from the same nginx
+# container as Vexara. Source repo: andrerafaelf/bisca.
+# Included by nginx.conf if the bisca.treble.quest SSL cert exists.
+# deploy.sh writes an empty bisca.conf if the cert is missing,
+# so the player-facing site stays up regardless.
+#
+# The game is a host systemd service (bisca.service in the bisca repo) bound
+# to the docker0 gateway (172.17.0.1:8790), reached as host.docker.internal
+# like K'ART. It serves its own pages plus the game WebSocket at /ws. Games
+# live in the process's memory, so there is nothing to back up. The UFW rule
+# for port 8790 is in bootstrap-vps.sh. The cert is its own lineage, apart
+# from treble.quest's.
+
+upstream bisca_upstream {
+    server host.docker.internal:8790;
+    keepalive 16;
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name bisca.treble.quest;
+
+    ssl_certificate /etc/letsencrypt/live/bisca.treble.quest/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/bisca.treble.quest/privkey.pem;
+    ssl_trusted_certificate /etc/letsencrypt/live/bisca.treble.quest/chain.pem;
+
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 1d;
+    ssl_session_tickets off;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+
+    add_header Strict-Transport-Security "max-age=31536000" always;
+
+    location /.well-known/acme-challenge/ {
+        allow all;
+        root /var/www/certbot;
+    }
+
+    # Game WebSocket (wss://bisca.treble.quest/ws). Without the upgrade headers
+    # the handshake fails and nobody can sit at a table. The server pings every
+    # 30s, so the long timeouts only keep idle players connected.
+    location = /ws {
+        proxy_pass http://bisca_upstream;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+    }
+
+    # Pages and assets. Node sends Cache-Control: no-cache on all of them, so a
+    # deploy reaches phones on their next load.
+    location / {
+        proxy_pass http://bisca_upstream;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 30s;
+    }
+}

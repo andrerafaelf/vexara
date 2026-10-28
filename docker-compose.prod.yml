@@ -183,22 +183,23 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    # Treble Quest's leaderboard API and the K'ART site run on the host
+    # Treble Quest's leaderboard API, the K'ART site and Bisca run on the host
     # (systemd), bound to the docker0 gateway. treble.conf proxies to
-    # host.docker.internal:8787, kart.conf to host.docker.internal:8789.
+    # host.docker.internal:8787, kart.conf to :8789 and bisca.conf to :8790.
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
       # Generated from deploy/nginx/*.template by deploy.sh into runtime/, which
       # CI never wipes. deploy.sh rewrites them in place (same inode) so
       # `nginx -s reload` sees the new config through the single-file mounts.
-      # admin.conf / treble.conf / portfolio.conf / kart.conf are empty if their
-      # cert is missing.
+      # admin.conf / treble.conf / portfolio.conf / kart.conf / bisca.conf are
+      # empty if their cert is missing.
       - ./runtime/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./runtime/nginx/admin.conf:/etc/nginx/admin.conf:ro
       - ./runtime/nginx/treble.conf:/etc/nginx/treble.conf:ro
       - ./runtime/nginx/portfolio.conf:/etc/nginx/portfolio.conf:ro
       - ./runtime/nginx/kart.conf:/etc/nginx/kart.conf:ro
+      - ./runtime/nginx/bisca.conf:/etc/nginx/bisca.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - /var/www/certbot:/var/www/certbot
       - /var/www/treble-quest:/var/www/treble-quest:ro

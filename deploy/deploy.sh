@@ -140,6 +140,7 @@ render_side_site() {
 render_side_site treble treble.quest "-d treble.quest -d www.treble.quest -d api.treble.quest"
 render_side_site portfolio andrerfferreira.work "-d andrerfferreira.work -d www.andrerfferreira.work"
 render_side_site kart k-artracing.com "-d k-artracing.com -d www.k-artracing.com"
+render_side_site bisca bisca.treble.quest "-d bisca.treble.quest"
 
 # Bind-mount sources must exist before the first `compose up`
 mkdir -p /var/www/treble-quest /opt/andrerfferreira-portfolio 2>/dev/null || true
